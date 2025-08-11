@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.008
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 2h
 dependencies: ["v.0.5.0+task.007"]
 ---
 
@@ -101,8 +101,183 @@ Fix the search command so that default exclusion filters work correctly when sea
 - ❌ **Performance Optimization**: Specific strategies for improving filter performance
 - ❌ **Future Enhancements**: Additional filter types or search modes not currently supported
 
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Path normalization pattern to handle absolute to relative conversion
+- [ ] Consistent filter application across all search modes
+- [ ] Separation of concerns between search execution and result filtering
+
+### Technology Stack
+- [ ] Ruby's File and Pathname for path manipulation
+- [ ] Existing ProjectRootDetector for root detection
+- [ ] ResultAggregator for centralized filtering logic
+- [ ] No new dependencies required
+
+### Implementation Strategy
+- [ ] Convert absolute paths to relative before filter matching
+- [ ] Update display formatting to show relative paths
+- [ ] Maintain backward compatibility with existing filters
+- [ ] Test with various directory scenarios
+
+## Tool Selection
+
+No new tools required. Using existing Ruby standard library and project components:
+- `File.expand_path` and path string manipulation for conversions
+- `ProjectRootDetector` already provides project root detection
+- Existing glob pattern matching via `File.fnmatch`
+
+## File Modifications
+
+### Modify
+- `dev-tools/lib/coding_agent_tools/organisms/search/result_aggregator.rb`
+  - Changes: Update `filter_result_array_by_path` to convert absolute paths to relative before matching
+  - Impact: Fixes filter matching for absolute path results from ripgrep
+  - Integration points: Called by aggregate method for all search results
+
+- `dev-tools/exe/search`
+  - Changes: Update `output_single_result` to display relative paths
+  - Impact: Cleaner, more readable output for users
+  - Integration points: Output formatting for all search modes
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] **Analyze Current Path Handling**
+  - Understand how ripgrep returns paths (absolute when searching from project root)
+  - Trace path flow from ripgrep through ResultAggregator to output
+  - Identify where path conversion should occur
+
+* [ ] **Design Path Conversion Strategy**
+  - Determine project root detection method
+  - Plan conversion logic for absolute to relative paths
+  - Consider edge cases (symlinks, paths outside project)
+
+* [ ] **Review Filter Pattern Matching**
+  - Understand current `path_matches_any?` implementation
+  - Verify glob pattern behavior with relative paths
+  - Plan test cases for various filter scenarios
+
+### Execution Steps
+
+- [ ] **Update ResultAggregator Path Filtering**
+  > TEST: Path Conversion in Filter
+  > Type: Unit Test
+  > Assert: Absolute paths are converted to relative before filter matching
+  > Command: ruby -e "require './dev-tools/lib/coding_agent_tools/organisms/search/result_aggregator'; puts 'Test filter conversion logic'"
+  
+  Modify `filter_result_array_by_path` method to:
+  ```ruby
+  # Convert absolute path to relative if it starts with project root
+  if file_path.start_with?('/')
+    project_root = Atoms::ProjectRootDetector.find_project_root
+    if file_path.start_with?(project_root)
+      normalized_path = file_path.sub(project_root + '/', '')
+    else
+      normalized_path = file_path
+    end
+  else
+    normalized_path = file_path.start_with?('./') ? file_path[2..-1] : file_path
+  end
+  ```
+
+- [ ] **Add Project Root Detection to ResultAggregator**
+  > TEST: Project Root Initialization
+  > Type: Integration Test
+  > Assert: ResultAggregator has access to project root
+  > Command: cd dev-tools && ruby -e "require './lib/coding_agent_tools/organisms/search/result_aggregator'; ra = CodingAgentTools::Organisms::Search::ResultAggregator.new; puts ra.instance_variable_get(:@project_root) || 'No project root'"
+  
+  Add initialization:
+  ```ruby
+  def initialize
+    @project_root = Atoms::ProjectRootDetector.find_project_root
+  end
+  ```
+
+- [ ] **Update Display Output Formatting**
+  > TEST: Relative Path Display
+  > Type: End-to-End Test
+  > Assert: Search results show relative paths starting with ./
+  > Command: search "bin/tnid" --exclude none | head -5 | grep -E "^\s+\./"
+  
+  Modify `output_single_result` in exe/search:
+  ```ruby
+  # Convert absolute paths to relative for display
+  if result[:file] && result[:file].start_with?('/')
+    project_root = Atoms::ProjectRootDetector.find_project_root
+    if result[:file].start_with?(project_root)
+      display_path = './' + result[:file].sub(project_root + '/', '')
+    else
+      display_path = result[:file]
+    end
+  else
+    display_path = result[:file]
+  end
+  ```
+
+- [ ] **Test Filter Functionality**
+  > TEST: Default Filters Working
+  > Type: Integration Test
+  > Assert: Results from dev-taskflow/done are excluded
+  > Command: search "bin/tnid" | grep -c "dev-taskflow/done" | grep "^0$"
+
+- [ ] **Test Path Display Format**
+  > TEST: Clean Path Display
+  > Type: End-to-End Test
+  > Assert: All paths show as relative with ./ prefix
+  > Command: search "test" | head -20 | grep -v "^\s+\./" | grep -c ":" | grep "^0$"
+
+- [ ] **Validate Edge Cases**
+  > TEST: Search from Subdirectory
+  > Type: Integration Test
+  > Assert: Filters work when running from subdirectory
+  > Command: cd dev-handbook && search "bin/tnid" | grep -c "dev-taskflow/done" | grep "^0$"
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Path conversion logic might fail for symlinked directories
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Use File.realpath for symlink resolution if needed
+  - **Rollback:** Revert to absolute path matching
+
+### Integration Risks
+- **Risk:** Breaking existing custom filters that expect absolute paths
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Test with various filter patterns
+  - **Monitoring:** Check filter match counts before/after
+
+### Performance Risks
+- **Risk:** Path conversion adds overhead to large result sets
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Cache project root, optimize string operations
+  - **Monitoring:** Measure search time for large result sets
+
+## Acceptance Criteria
+
+### Behavioral Requirement Fulfillment
+- [ ] **Filter Functionality**: Default filters successfully exclude dev-taskflow/done/** paths
+- [ ] **Path Display**: All results show relative paths from project root
+- [ ] **Consistency**: Filtering works from any directory in project
+
+### Implementation Quality Assurance
+- [ ] **Code Quality**: Path conversion logic is clean and efficient
+- [ ] **Test Coverage**: All embedded tests pass successfully
+- [ ] **Integration Verification**: Works with all search modes (file, content, hybrid)
+- [ ] **Performance Requirements**: No noticeable performance degradation
+
+### Documentation and Validation
+- [ ] **Behavioral Validation**: Success criteria from specification are met
+- [ ] **Error Handling**: Invalid paths handled gracefully
+- [ ] **Help Text**: Consider updating if needed for clarity
+
 ## References
 
 - Related issue: v.0.5.0+task.007 (Fix search command --search-root flag behavior)
 - User feedback: Filters showing in output but not being applied to results
 - Current behavior: Absolute paths from ripgrep not matching relative path filter patterns
+- Technical analysis: ResultAggregator filtering expects relative paths but receives absolute
