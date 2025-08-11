@@ -214,13 +214,12 @@ module CodingAgentTools
                  when :content_regex, :literal
                    :content
                  when :hybrid
-                   # Use context to break the tie
-                   if context_hints[:looks_like_file_search]
+                   # For hybrid patterns, prefer content search unless it's clearly a file pattern
+                   if context_hints[:looks_like_file_search] && !context_hints[:looks_like_code_search]
                      :files
-                   elsif context_hints[:looks_like_code_search]
-                     :content
                    else
-                     :both
+                     # Default to content for hybrid patterns
+                     :content
                    end
                  else
                    :content # Safe default
@@ -347,7 +346,9 @@ module CodingAgentTools
         # @param pattern [String] Pattern to check
         # @return [Boolean] True if looks like file operation
         def file_operation_pattern?(pattern)
-          pattern.include?('/') || pattern.include?('*') || pattern.match?(/\.\w+$/)
+          # Only consider it a file pattern if it has wildcards or file extensions
+          # A simple path like "bin/tn" is more likely content search
+          pattern.include?('*') || pattern.match?(/\.\w+$/)
         end
 
         # Analyze common file extensions in directory

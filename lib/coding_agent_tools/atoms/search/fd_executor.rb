@@ -121,7 +121,16 @@ module CodingAgentTools
 
           # Build the complete command
           command_parts = args
-          command_parts << Shellwords.escape(pattern) if pattern
+          
+          # Add pattern with appropriate flag
+          if pattern
+            # Check if pattern looks like a glob
+            if pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
+              command_parts << '--glob'
+            end
+            command_parts << Shellwords.escape(pattern)
+          end
+          
           command_parts.concat(paths.map { |p| Shellwords.escape(p) })
           
           command_parts.join(' ')
