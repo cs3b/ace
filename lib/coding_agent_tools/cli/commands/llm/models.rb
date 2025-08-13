@@ -212,7 +212,7 @@ module CodingAgentTools
 
             default_model_id = default_config.default_model_for("openai")
             # Convert API response to our model structure
-            chat_models.map do |model|
+            api_models = chat_models.map do |model|
               model_id = model[:id]
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
@@ -220,7 +220,34 @@ module CodingAgentTools
                 description: "OpenAI model",
                 default: model_id == default_model_id
               )
-            end.sort_by(&:id)
+            end
+
+            # Always add GPT-5 models from fallback if not present in API response
+            gpt5_ids = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
+            existing_ids = api_models.map(&:id)
+            
+            if (gpt5_ids - existing_ids).any?
+              # Load GPT-5 models from fallback config
+              config_path = File.expand_path("../../../../../config/fallback_models.yaml", __dir__)
+              config = YAML.load_file(config_path)
+              openai_config = config["openai"]
+              
+              gpt5_models = openai_config["models"].select { |m| gpt5_ids.include?(m["id"]) }
+              gpt5_models.each do |model_data|
+                unless existing_ids.include?(model_data["id"])
+                  api_models << CodingAgentTools::Models::LlmModelInfo.new(
+                    id: model_data["id"],
+                    name: model_data["name"],
+                    description: model_data["description"],
+                    default: false,
+                    context_size: model_data["context_size"],
+                    max_output_tokens: model_data["max_output_tokens"]
+                  )
+                end
+              end
+            end
+            
+            api_models.sort_by(&:id)
           end
 
           # Fetch Anthropic models from API
@@ -306,6 +333,12 @@ module CodingAgentTools
           def format_openai_model_name(model_id)
             # Handle common OpenAI model naming patterns
             case model_id
+            when /^gpt-5-mini/
+              "GPT-5 Mini"
+            when /^gpt-5-nano/
+              "GPT-5 Nano"
+            when /^gpt-5/
+              "GPT-5"
             when /^gpt-4o/
               "GPT-4 Omni"
             when /^gpt-4-turbo/
@@ -579,7 +612,7 @@ module CodingAgentTools
               end
 
               puts
-              puts 'Usage: llm-openai-query "Your prompt here" --model MODEL_ID'
+              puts 'Usage: llm-query openai:MODEL_ID "Your prompt here"'
             when "anthropic"
               puts "Available Anthropic Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
@@ -590,7 +623,7 @@ module CodingAgentTools
               end
 
               puts
-              puts 'Usage: llm-anthropic-query "Your prompt here" --model MODEL_ID'
+              puts 'Usage: llm-query anthropic:MODEL_ID "Your prompt here"'
             when "mistral"
               puts "Available Mistral AI Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
@@ -601,7 +634,7 @@ module CodingAgentTools
               end
 
               puts
-              puts 'Usage: llm-mistral-query "Your prompt here" --model MODEL_ID'
+              puts 'Usage: llm-query mistral:MODEL_ID "Your prompt here"'
             when "together_ai"
               puts "Available Together AI Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
@@ -612,7 +645,7 @@ module CodingAgentTools
               end
 
               puts
-              puts 'Usage: llm-together-ai-query "Your prompt here" --model MODEL_ID'
+              puts 'Usage: llm-query together_ai:MODEL_ID "Your prompt here"'
             end
           end
 
