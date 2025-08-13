@@ -31,7 +31,10 @@ module CodingAgentTools
       def self.dynamic_aliases
         {
           "o4mini" => "openai:gpt-4o-mini",
-          "o3" => "openai:o3"
+          "o3" => "openai:o3",
+          "gpt5" => "openai:gpt-5",
+          "gpt5mini" => "openai:gpt-5-mini",
+          "gpt5nano" => "openai:gpt-5-nano"
         }
       end
 
@@ -99,12 +102,27 @@ module CodingAgentTools
           options.fetch(:generation_config, {})
         )
 
-        {
+        # Check if this is a GPT-5 model
+        is_gpt5 = @model.match?(/^gpt-5/)
+        
+        payload = {
           model: @model,
-          messages: messages,
-          temperature: generation_config[:temperature],
-          max_tokens: generation_config[:max_tokens]
+          messages: messages
         }
+        
+        # GPT-5 models have different parameter requirements
+        if is_gpt5
+          # GPT-5 uses max_completion_tokens instead of max_tokens
+          payload[:max_completion_tokens] = generation_config[:max_tokens] if generation_config[:max_tokens]
+          # GPT-5 doesn't support custom temperature (must use default of 1)
+          # So we don't add temperature to the payload
+        else
+          # Regular models use standard parameters
+          payload[:temperature] = generation_config[:temperature] if generation_config[:temperature]
+          payload[:max_tokens] = generation_config[:max_tokens] if generation_config[:max_tokens]
+        end
+        
+        payload
       end
 
       # Extract generated text from response

@@ -66,6 +66,24 @@ openai:
       default: false
       context_size: 16384
       max_output_tokens: 4096
+    - id: "gpt-5"
+      name: "GPT-5"
+      description: "Most advanced OpenAI model with built-in thinking capabilities"
+      default: false
+      context_size: 400000
+      max_output_tokens: 128000
+    - id: "gpt-5-mini"
+      name: "GPT-5 Mini"
+      description: "Smaller, faster GPT-5 variant"
+      default: false
+      context_size: 400000
+      max_output_tokens: 128000
+    - id: "gpt-5-nano"
+      name: "GPT-5 Nano"
+      description: "Smallest, most cost-effective GPT-5"
+      default: false
+      context_size: 400000
+      max_output_tokens: 128000
 
 anthropic:
   default_model: "claude-3-5-sonnet-20241022"
@@ -172,24 +190,24 @@ together_ai:
 # Usage instructions for each provider
 usage_instructions:
   google:
-    command: 'llm-google-query "your prompt" --model MODEL_ID'
+    command: 'llm-query google:MODEL_ID "Your prompt here"'
     header: "Available Google Models:"
 
   lm_studio:
-    command: 'llm-lmstudio-query "your prompt" --model MODEL_ID'
+    command: 'llm-query lmstudio:MODEL_ID "Your prompt here"'
     header: "Available LM Studio Models:"
     note: "Note: Models must be loaded in LM Studio before use."
     server_info: "Server: Ensure LM Studio is running at http://localhost:1234"
     server_url: "http://localhost:1234"
   openai:
-    command: 'llm-openai-query "your prompt" --model MODEL_ID'
+    command: 'llm-query openai:MODEL_ID "Your prompt here"'
     header: "Available OpenAI Models:"
   anthropic:
-    command: 'llm-anthropic-query "your prompt" --model MODEL_ID'
+    command: 'llm-query anthropic:MODEL_ID "Your prompt here"'
     header: "Available Anthropic Models:"
   mistral:
-    command: 'llm-mistral-query "your prompt" --model MODEL_ID'
+    command: 'llm-query mistral:MODEL_ID "Your prompt here"'
     header: "Available Mistral AI Models:"
   together_ai:
-    command: 'llm-together-ai-query "your prompt" --model MODEL_ID'
+    command: 'llm-query together_ai:MODEL_ID "Your prompt here"'
     header: "Available Together AI Models:"
