@@ -33,6 +33,9 @@ Execute the complete task workflow for: <task-path>
   # Extract task ID from task path (e.g., v.0.4.0+task.5)
   TASK_ID="<extracted-task-id>"
 
+- [ ] **Commit all the changes you have made**
+  - read and run @.claude/commands/commit.md
+
   # Tag all repositories
   git -C dev-handbook tag "$TASK_ID"
   git -C dev-tools tag "$TASK_ID"
