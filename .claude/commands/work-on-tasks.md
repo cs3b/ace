@@ -44,6 +44,9 @@ Execute the complete task workflow for: <task-path>
   git -C dev-taskflow tag "$TASK_ID"
   git tag "$TASK_ID"
 
+- [ ] **Commit all the changes you have made**
+  - read and run @.claude/commands/commit.md
+
 - [ ] **Task Summary:**
   - Task ID and title
   - Key changes made
