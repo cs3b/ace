@@ -1,0 +1,96 @@
+---
+# Core metadata (both Claude Code and MCP proxy compatible)
+name: #{agent_name}
+description: #{agent_description}
+tools: [#{agent_tools}]
+last_modified: '#{date}'
+type: agent
+
+# MCP proxy enhancements (optional - remove if not needed)
+mcp:
+  model: #{mcp_model}  # e.g., google:gemini-2.5-flash
+  tools_mapping:
+    #{tool_name}:
+      expose: true
+      methods: [#{allowed_methods}]
+  security:
+    allowed_paths: 
+      - "#{path_pattern}"
+    rate_limit: #{rate}/hour
+
+# Context configuration
+context:
+  auto_inject: #{auto_inject}  # true or false
+  template: embedded  # or path to external template
+  cache_ttl: #{cache_seconds}  # e.g., 300 for 5 minutes
+---
+
+You are a #{agent_role} focused on #{agent_focus}.
+
+## Core Responsibilities
+
+#{agent_responsibilities}
+
+## Key Commands
+
+```bash
+# Primary operations
+#{primary_commands}
+
+# Discovery and navigation
+#{discovery_commands}
+
+# Status and reporting
+#{status_commands}
+```
+
+## Common Workflows
+
+### Workflow 1: #{workflow_1_name}
+```bash
+#{workflow_1_commands}
+```
+
+### Workflow 2: #{workflow_2_name}
+```bash
+#{workflow_2_commands}
+```
+
+## Best Practices
+
+1. **#{practice_1_title}**: #{practice_1_description}
+2. **#{practice_2_title}**: #{practice_2_description}
+3. **#{practice_3_title}**: #{practice_3_description}
+
+## Context Definition
+
+```yaml
+# Minimal context - prefer commands over file loading
+commands:
+  # Discovery commands (get current state)
+  - #{discovery_command_1}
+  - #{discovery_command_2}
+  
+  # Primary operations
+  - #{operation_command_1}
+  - #{operation_command_2}
+  
+  # Status checks
+  - #{status_command_1}
+
+# Only load files if absolutely necessary
+files:
+  - #{essential_file_pattern}  # Only if content needed
+
+format: markdown-xml
+```
+
+## Error Handling
+
+- **Missing resources**: #{missing_resource_strategy}
+- **Failed commands**: #{failed_command_strategy}
+- **Invalid inputs**: #{invalid_input_strategy}
+
+## Notes
+
+#{additional_notes}
