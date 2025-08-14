@@ -9,7 +9,7 @@ Ensure all changes made in the current session or workflow are properly committe
 
 # Implementation
 
-Use the git-commit-manager agent to handle the commit process.
+Use the @agent-git-commit to handle the commit process.
 
 # Usage
 
