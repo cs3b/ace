@@ -61,5 +61,9 @@ module CodingAgentTools
       autoload :MetadataExtractor, "coding_agent_tools/molecules/agents/metadata_extractor"
       autoload :ContextDefinitionParser, "coding_agent_tools/molecules/agents/context_definition_parser"
     end
+
+    # Autoload LLM-related molecules
+    autoload :ClientFactory, "coding_agent_tools/molecules/client_factory"
+    autoload :ProviderModelParser, "coding_agent_tools/molecules/provider_model_parser"
   end
 end
