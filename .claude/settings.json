@@ -44,7 +44,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "ruby $CLAUDE_PROJECT_DIR/.claude/hooks/enforce-git-wrappers.rb"
+                        "command": "ruby $CLAUDE_PROJECT_DIR/.claude/hooks/enforce-wrapper-tools.rb"
                     }
                 ]
             }
