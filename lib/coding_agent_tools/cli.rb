@@ -169,12 +169,10 @@ module CodingAgentTools
         register "handbook", aliases: [] do |prefix|
           prefix.register "sync-templates", Commands::Handbook::SyncTemplates
           # Register claude commands as a proper subcommand namespace
-          prefix.register "claude", aliases: [] do |claude|
-            claude.register "generate-commands", Commands::Handbook::Claude::GenerateCommands
-            claude.register "integrate", Commands::Handbook::Claude::Integrate
-            claude.register "validate", Commands::Handbook::Claude::Validate
-            claude.register "list", Commands::Handbook::Claude::List
-          end
+          prefix.register "claude generate-commands", Commands::Handbook::Claude::GenerateCommands
+          prefix.register "claude integrate", Commands::Handbook::Claude::Integrate
+          prefix.register "claude validate", Commands::Handbook::Claude::Validate
+          prefix.register "claude list", Commands::Handbook::Claude::List
         end
 
         @handbook_commands_registered = true
@@ -272,6 +270,36 @@ module CodingAgentTools
         @search_commands_registered = true
       end
 
+      def self.register_context_commands
+        return if @context_commands_registered
+
+        require_relative "cli/commands/context"
+
+        register "context", Commands::Context
+
+        @context_commands_registered = true
+      end
+
+      def self.register_mcp_commands
+        return if @mcp_commands_registered
+
+        require_relative "cli/commands/mcp_proxy"
+
+        register "mcp-proxy", Commands::McpProxy
+
+        @mcp_commands_registered = true
+      end
+
+      def self.register_agent_commands
+        return if @agent_commands_registered
+
+        require_relative "cli/commands/agent"
+
+        register "agent", Commands::Agent
+
+        @agent_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -289,7 +317,12 @@ module CodingAgentTools
         register_coverage_commands
         register_all_commands
         register_search_commands
-        super
+        register_context_commands
+        register_mcp_commands
+        register_agent_commands
+        
+        # Call Dry::CLI to actually process the commands
+        Dry::CLI.new(self).call(arguments: args)
       end
     end
   end

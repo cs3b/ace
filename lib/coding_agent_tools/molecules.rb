@@ -40,5 +40,26 @@ module CodingAgentTools
     autoload :ProjectSandbox, "coding_agent_tools/molecules/project_sandbox"
     autoload :PathResolver, "coding_agent_tools/molecules/path_resolver"
     autoload :PathAutocorrector, "coding_agent_tools/molecules/path_autocorrector"
+
+    # Autoload context molecules
+    module Context
+      autoload :ContextAggregator, "coding_agent_tools/molecules/context/context_aggregator"
+      autoload :OutputFormatter, "coding_agent_tools/molecules/context/output_formatter"
+      autoload :AgentContextExtractor, "coding_agent_tools/molecules/context/agent_context_extractor"
+    end
+
+    # Autoload MCP molecules
+    module Mcp
+      autoload :MessageHandler, "coding_agent_tools/molecules/mcp/message_handler"
+      autoload :ToolWrapper, "coding_agent_tools/molecules/mcp/tool_wrapper"
+      autoload :SecurityValidator, "coding_agent_tools/molecules/mcp/security_validator"
+    end
+
+    # Autoload agents molecules
+    module Agents
+      autoload :AgentParser, "coding_agent_tools/molecules/agents/agent_parser"
+      autoload :MetadataExtractor, "coding_agent_tools/molecules/agents/metadata_extractor"
+      autoload :ContextDefinitionParser, "coding_agent_tools/molecules/agents/context_definition_parser"
+    end
   end
 end
