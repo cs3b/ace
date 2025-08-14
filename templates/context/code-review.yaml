@@ -1,0 +1,13 @@
+# Code Review Context Template
+# This template gathers files and information relevant for code review
+
+files:
+  - "**/*.rb"
+  - "spec/**/*_spec.rb"
+  - Gemfile
+  - "*.gemspec"
+
+commands:
+  - git diff --name-only HEAD~1
+  - git show --stat HEAD
+  - bundle exec rspec --dry-run

@@ -1,0 +1,14 @@
+# Project Essentials Context Template
+# This template loads key project documentation and status information
+
+files:
+  - README.md
+  - docs/what-do-we-build.md
+  - docs/architecture.md
+  - docs/blueprint.md
+  - "lib/**/*.rb"
+
+commands:
+  - git status --porcelain
+  - git log --oneline -5
+  - pwd
