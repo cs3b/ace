@@ -22,5 +22,15 @@ module CodingAgentTools
       autoload :ReleaseManager, "coding_agent_tools/organisms/taskflow_management/release_manager"
       autoload :TemplateSynchronizer, "coding_agent_tools/organisms/taskflow_management/template_synchronizer"
     end
+
+    # Autoload context organisms
+    autoload :ContextLoader, "coding_agent_tools/organisms/context_loader"
+
+    # Autoload MCP organisms
+    module Mcp
+      autoload :ProxyServer, "coding_agent_tools/organisms/mcp/proxy_server"
+      autoload :HttpTransport, "coding_agent_tools/organisms/mcp/http_transport"
+      autoload :StdioTransport, "coding_agent_tools/organisms/mcp/stdio_transport"
+    end
   end
 end

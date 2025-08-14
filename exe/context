@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Context - Load and format project context from templates
+# 
+# This executable provides context loading with multi-format output support.
+# It can load context from YAML templates, agent markdown files, or inline YAML strings.
+#
+# Usage: context [options]
+#
+# Examples:
+#   context --yaml templates/project-essentials.yaml
+#   context --from-agent .claude/agents/task-manager.md
+#   context --yaml-string 'files: [docs/*.md]' --format xml
+#
+# Output formats:
+#   - xml: Pure XML format
+#   - yaml: YAML format  
+#   - markdown-xml: Markdown with embedded XML (default)
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["context"],
+  registration_method: :register_context_commands,
+  executable_name: "context"
+).call

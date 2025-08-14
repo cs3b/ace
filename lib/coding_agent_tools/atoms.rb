@@ -15,5 +15,15 @@ module CodingAgentTools
       autoload :FileContentReader, "coding_agent_tools/atoms/code/file_content_reader"
       autoload :DirectoryCreator, "coding_agent_tools/atoms/code/directory_creator"
     end
+
+    # Autoload context atoms
+    module Context
+      autoload :TemplateParser, "coding_agent_tools/atoms/context/template_parser"
+    end
+
+    # Autoload MCP atoms
+    module Mcp
+      autoload :ProtocolValidator, "coding_agent_tools/atoms/mcp/protocol_validator"
+    end
   end
 end
