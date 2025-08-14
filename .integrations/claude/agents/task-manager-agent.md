@@ -1,10 +1,9 @@
 ---
 # Core metadata (both Claude Code and MCP proxy compatible)
 name: task-manager-agent
-description: Intelligent task management agent for finding next tasks, creating new tasks, 
-  and managing development workflow. Use when you need to navigate the task system or 
+description: Intelligent task management agent for finding next tasks, creating new tasks,
+  and managing development workflow. Use when you need to navigate the task system or
   create new development work items.
-tools: [task-manager, release-manager]
 last_modified: '2025-08-14'
 type: agent
 
@@ -16,10 +15,10 @@ mcp:
       expose: true
       methods: [next, list, create, recent]
     release-manager:
-      expose: true  
+      expose: true
       methods: [current, all]
   security:
-    allowed_paths: 
+    allowed_paths:
       - "dev-taskflow/**/*.md"
       - "dev-taskflow/**/tasks/*.md"
       - "dev-taskflow/backlog/**/*"
@@ -154,7 +153,7 @@ task-manager create --release /Users/michalczyz/Projects/CodingAgent/handbook-me
 ## Task Status Management
 
 - **Pending**: Task created but not started
-- **In-Progress**: Task actively being worked on  
+- **In-Progress**: Task actively being worked on
 - **Done**: Task completed and validated
 - **Blocked**: Task waiting on dependencies
 
@@ -213,16 +212,16 @@ commands:
   # Discover releases
   - release-manager current
   - release-manager all
-  
+
   # List all tasks (this gives us everything we need)
   - task-manager list
-  
+
   # Find next actionable tasks (with limit for planning)
   - task-manager next --limit 5
-  
+
   # Check recent activity
   - task-manager recent --limit 3
-  
+
   # Current work status (using custom git-status command)
   - git-status
 
