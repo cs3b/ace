@@ -98,6 +98,59 @@ cd dev-taskflow/current/v.0.5.0-insights/  # Version will change
 - Document migration paths for updates
 - Avoid duplicate agent definitions
 
+### 6. Single Purpose Design
+**Principle:** Each agent should have exactly ONE primary purpose.
+
+**Implementation:**
+- Split complex agents into focused, single-purpose agents
+- Clear separation between "execute" vs "analyze" agents
+- Each agent does one thing exceptionally well
+
+**Anti-pattern:** Multi-purpose agent
+```yaml
+name: git-manager
+description: Handles commits, reviews, staging, and history
+# TOO BROAD - will be used incorrectly
+```
+
+**Good pattern:** Focused agents
+```yaml
+name: git-fast-commit
+description: FAST direct commit execution - NO analysis
+
+name: git-review-commit  
+description: ANALYZE and REVIEW changes before committing
+```
+
+## Agent Naming and Description Guidelines
+
+### Naming Patterns
+**Action-First Names:**
+- `fast-commit` - Immediate execution
+- `review-commit` - Analysis first
+- `fix-tests` - Direct action
+- `analyze-tests` - Investigation first
+
+**Avoid:**
+- Generic names (`manager`, `helper`, `assistant`)
+- Similar names that differ only slightly
+- Names that don't indicate the action
+
+### Description Format
+```
+[ACTION_KEYWORD] [specific purpose] - [what it does NOT do]
+```
+
+Examples:
+- "FAST direct commit execution - NO analysis or review"
+- "ANALYZE and REVIEW changes - does NOT auto-commit"
+- "FIX failing tests immediately - NO investigation"
+
+### Keywords to Use
+- **Execution**: FAST, DIRECT, IMMEDIATE, EXECUTE
+- **Analysis**: ANALYZE, REVIEW, INSPECT, INVESTIGATE
+- **Scope limiters**: ONLY, NO, WITHOUT, JUST
+
 ## Agent Format Specification
 
 ### File Structure
@@ -109,6 +162,11 @@ Agents use Markdown with YAML frontmatter for metadata and embedded context defi
 name: agent-name
 description: When to use this agent (clear, specific triggers)
 # tools: [optional - often better to omit]
+expected_params:  # Document expected inputs (optional)
+  optional:
+    - param_name: "Description of parameter"
+  required:
+    - param_name: "Description of required parameter"
 last_modified: 'YYYY-MM-DD'
 type: agent
 
@@ -153,13 +211,20 @@ format: markdown-xml
 #### Required Fields
 - **name**: Unique identifier for the agent (kebab-case)
 - **description**: Clear description of when to use this agent
-- **tools**: (OPTIONAL - Often better to omit)
+- **last_modified**: ISO date of last significant update
+- **type**: Always "agent" for agent definitions
+
+#### Optional Fields
+- **tools**: (Often better to omit)
   - If specified: Comma-separated list like `Read, Edit` (no brackets)
   - **BEST PRACTICE**: Omit this field to inherit permissions from settings.json
   - This ensures agents respect tool restrictions and wrapper enforcement
   - Only specify if you need to explicitly limit agent to specific tools
-- **last_modified**: ISO date of last significant update
-- **type**: Always "agent" for agent definitions
+- **expected_params**: Document expected inputs for the agent
+  - `required`: List of parameters that must be provided
+  - `optional`: List of parameters with defaults
+  - Format: `- param_name: "Description"`
+  - Helps users understand what inputs the agent expects
 
 #### Optional MCP Fields
 - **mcp.model**: Preferred model for this agent's tasks
@@ -604,6 +669,39 @@ files:
 
 format: markdown-xml
 ```
+
+## Input Validation and Parameter Handling
+
+### Expected Parameters Pattern
+Agents should clearly document and validate expected inputs:
+
+```yaml
+expected_params:
+  required:
+    - files: "List of files to commit"
+    - action: "Action to perform"
+  optional:
+    - intention: "Description of changes (auto-generated if not provided)"
+    - verbose: "Enable verbose output (default: false)"
+```
+
+### Validation Rules in Agent Prompt
+```markdown
+**VALIDATION RULES**:
+1. Required inputs MUST be provided - STOP if missing
+2. Do NOT generate missing required inputs
+3. Optional inputs can use defaults
+4. Validate inputs before execution
+
+**EXPECTED PARAMETERS**:
+- `files` (OPTIONAL): List of files to process
+- `intention` (OPTIONAL): User's description of changes
+```
+
+### Handling Missing Parameters
+- **Required missing**: Stop and ask user to provide
+- **Optional missing**: Use sensible defaults or proceed without
+- **Never**: Generate or guess required parameters
 
 ## Error Handling
 
