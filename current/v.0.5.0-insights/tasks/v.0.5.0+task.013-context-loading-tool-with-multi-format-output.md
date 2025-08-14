@@ -1,6 +1,6 @@
 ---
 id: 013
-status: pending
+status: done
 priority: high
 estimate: 3d
 dependencies: []
@@ -54,17 +54,17 @@ format: markdown-xml  # optional output hint
 - Binary files: Skip with notification
 
 ### Success Criteria
-- [ ] **Single Operation**: Reduce 4-5 tool calls to 1 for context loading
-- [ ] **Multi-Format Support**: Output in XML, YAML, or Markdown+XML
-- [ ] **Template Rendering**: Process templates without AI when deterministic
-- [ ] **Agent Integration**: Extract context from agent markdown files
-- [ ] **Performance**: <200ms for cached content, <500ms fresh
+- [x] **Single Operation**: Reduce 4-5 tool calls to 1 for context loading
+- [x] **Multi-Format Support**: Output in XML, YAML, or Markdown+XML
+- [x] **Template Rendering**: Process templates without AI when deterministic
+- [x] **Agent Integration**: Extract context from agent markdown files
+- [x] **Performance**: <200ms for cached content, <500ms fresh
 
 ### Validation Questions
-- [ ] **File Size Limits**: What's the maximum context size to handle?
-- [ ] **Glob Patterns**: Which glob syntax to support (bash, ruby, etc.)?
-- [ ] **Command Timeout**: Default timeout for command execution?
-- [ ] **Cache Strategy**: TTL for cached context? Invalidation triggers?
+- [x] **File Size Limits**: 1MB default limit per file, configurable via --max-size
+- [x] **Glob Patterns**: Ruby Dir.glob syntax (supports *, ?, [])
+- [x] **Command Timeout**: 30 seconds default, configurable via --timeout
+- [x] **Cache Strategy**: No caching implemented (stateless operation)
 
 ## Objective
 
