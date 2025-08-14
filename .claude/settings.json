@@ -1,40 +1,53 @@
 {
-  "permissions": {
-    "deny": [
-      "Bash(git diff*)",
-      "Bash(git status*)",
-      "Bash(git commit*)",
-      "Bash(git add*)",
-      "Bash(git log*)",
-      "Bash(git push*)",
-      "Bash(git pull*)",
-      "Bash(git fetch*)",
-      "Bash(git checkout*)",
-      "Bash(git branch*)",
-      "Bash(git merge*)",
-      "Bash(git rebase*)",
-      "Bash(git reset*)",
-      "Bash(git stash*)",
-      "Bash(git tag*)",
-      "Bash(git remote*)",
-      "Bash(git clone*)",
-      "Bash(git init*)"
-    ],
-    "allow": [
-      "Bash(git-status*)",
-      "Bash(git-commit*)",
-      "Bash(git-add*)",
-      "Bash(git-diff*)",
-      "Bash(git-log*)",
-      "Bash(git-push*)",
-      "Bash(git-pull*)",
-      "Bash(git-fetch*)",
-      "Bash(git-checkout*)",
-      "Bash(git-switch*)",
-      "Bash(git-restore*)",
-      "Bash(git-mv*)",
-      "Bash(git-rm*)",
-      "Bash(git-tag*)"
-    ]
-  }
+    "permissions": {
+        "deny": [
+            "Bash(git diff*)",
+            "Bash(git status*)",
+            "Bash(git commit*)",
+            "Bash(git add*)",
+            "Bash(git log*)",
+            "Bash(git push*)",
+            "Bash(git pull*)",
+            "Bash(git fetch*)",
+            "Bash(git checkout*)",
+            "Bash(git branch*)",
+            "Bash(git merge*)",
+            "Bash(git rebase*)",
+            "Bash(git reset*)",
+            "Bash(git stash*)",
+            "Bash(git tag*)",
+            "Bash(git remote*)",
+            "Bash(git clone*)",
+            "Bash(git init*)"
+        ],
+        "allow": [
+            "Bash(git-status*)",
+            "Bash(git-commit*)",
+            "Bash(git-add*)",
+            "Bash(git-diff*)",
+            "Bash(git-log*)",
+            "Bash(git-push*)",
+            "Bash(git-pull*)",
+            "Bash(git-fetch*)",
+            "Bash(git-checkout*)",
+            "Bash(git-switch*)",
+            "Bash(git-restore*)",
+            "Bash(git-mv*)",
+            "Bash(git-rm*)",
+            "Bash(git-tag*)"
+        ]
+    },
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "ruby $CLAUDE_PROJECT_DIR/.claude/hooks/enforce-git-wrappers.rb"
+                    }
+                ]
+            }
+        ]
+    }
 }
