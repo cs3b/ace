@@ -108,7 +108,7 @@ Agents use Markdown with YAML frontmatter for metadata and embedded context defi
 # Core metadata (required for all agents)
 name: agent-name
 description: When to use this agent (clear, specific triggers)
-tools: [list, of, allowed, tools]
+# tools: [optional - often better to omit]
 last_modified: 'YYYY-MM-DD'
 type: agent
 
@@ -153,10 +153,11 @@ format: markdown-xml
 #### Required Fields
 - **name**: Unique identifier for the agent (kebab-case)
 - **description**: Clear description of when to use this agent
-- **tools**: Comma-separated list of Claude Code tools (e.g., `Bash, Read, Edit`)
-  - Note: Custom executables must be called through `Bash`, not listed directly
-  - Format: `tools: Bash, Read` (comma-separated, no brackets)
-  - Omit entirely to inherit all tools from main thread
+- **tools**: (OPTIONAL - Often better to omit)
+  - If specified: Comma-separated list like `Read, Edit` (no brackets)
+  - **BEST PRACTICE**: Omit this field to inherit permissions from settings.json
+  - This ensures agents respect tool restrictions and wrapper enforcement
+  - Only specify if you need to explicitly limit agent to specific tools
 - **last_modified**: ISO date of last significant update
 - **type**: Always "agent" for agent definitions
 
@@ -383,7 +384,7 @@ Create minimal agent with core functionality:
 ---
 name: prototype-agent
 description: Testing new agent pattern
-tools: [basic-tool]
+# tools: omitted to inherit from settings
 last_modified: '2025-08-14'
 type: agent
 ---
@@ -418,8 +419,9 @@ Reduce context and improve efficiency:
 ### Custom Tool Wrappers
 When agents need to use custom executables (like git wrapper tools):
 
-1. **Agent Definition**: Use `tools: Bash` to enable command execution
+1. **Agent Definition**: Omit the `tools:` field entirely (best practice)
 2. **Permission Configuration**: Use settings.json to enforce tool restrictions
+3. **Result**: Agent inherits all permissions, ensuring wrapper tools are used
 
 Example for git wrapper tools:
 ```json
@@ -487,7 +489,7 @@ Load these files:
 ---
 name: git-commit-manager
 description: Intelligent git commit assistance
-tools: [git-commit, git-status]
+# tools: omitted to respect git wrapper enforcement
 last_modified: '2025-08-14'
 type: agent
 ---
@@ -520,7 +522,7 @@ files:
 # Core metadata (both Claude Code and MCP proxy compatible)
 name: #{agent_name}
 description: #{agent_description}
-tools: [#{agent_tools}]
+# tools: [optional - consider omitting]
 last_modified: '#{date}'
 type: agent
 

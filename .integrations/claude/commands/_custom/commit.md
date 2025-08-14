@@ -4,7 +4,7 @@ Ensure all changes made in the current session or workflow are properly committe
 
 # Implementation
 
-Use the @agent-git-commit to handle the commit process.
+Use the @agent-git-fast-commit to handle the commit process.
 
 # Usage
 
