@@ -9,7 +9,10 @@ Ensure all changes made in the current session or workflow are properly committe
 
 # Implementation
 
-Use the @agent-git-fast-commit to handle the commit process.
+Use the appropriate git commit agent:
+- @agent-git-files-commit - When specific files are provided
+- @agent-git-all-commit - When committing all changes
+- @agent-git-review-commit - When review is needed first
 
 # Usage
 

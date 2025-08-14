@@ -1,0 +1,1 @@
+../../dev-handbook/.integrations/claude/agents/git-all-commit.ag.md
