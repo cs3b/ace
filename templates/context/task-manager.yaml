@@ -1,0 +1,21 @@
+# Task Manager Context Template
+# This template loads task management context without file content
+# Use: context --yaml dev-handbook/templates/context/task-manager.yaml
+
+# No files needed - we work at file level, not content level
+
+commands:
+  # Discover releases dynamically
+  - release-manager current
+  - release-manager all
+  
+  # List all tasks (provides complete task metadata)
+  - task-manager list
+  
+  # Find next actionable work
+  - task-manager next
+  
+  # Current work status (using custom git-status command)
+  - git-status
+  
+format: markdown-xml
