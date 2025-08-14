@@ -123,6 +123,25 @@ TaskManager
 - **Effort**: 2-3 hours
 - **Impact**: Significantly improves agent autonomy
 
+## Additional Insights from Usage
+
+Based on actual usage patterns, these improvements are also needed:
+
+1. **Status Summary Display**: When listing tasks, show a one-line summary at top:
+   ```
+   Status: draft(2), pending(5), in-progress(1), done(20), total(28)
+   ```
+
+2. **Consistent Naming**: Rename all references from "all" to "list" for consistency
+
+3. **Task Creation Migration**: Add `task-manager task-create` subcommand as more intuitive than `create-path task-new`
+
+4. **Common Filter Support**:
+   - `--filter needs_review:true` (with variations)
+   - `--filter status:draft` (heavily used for planning)
+
+5. **Limit Parameter for Next**: Make `--limit` more prominent as it's used frequently (5, 10 are most common)
+
 ## Success Criteria
 
 - [ ] Agent can discover all releases without hard-coded paths
@@ -130,8 +149,11 @@ TaskManager
 - [ ] Agent can find any task file by partial ID match
 - [ ] Context templates auto-update with release changes
 - [ ] All commands have machine-parseable output options
+- [ ] Status summary shown on all list operations
+- [ ] Support for common filter patterns
 
 ## Related Work
 - Task manager agent improvements
 - Context loading enhancements
 - MCP proxy integration for task management
+- Usage research: dev-taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md
