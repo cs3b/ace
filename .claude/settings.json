@@ -34,7 +34,9 @@
             "Bash(git-restore*)",
             "Bash(git-mv*)",
             "Bash(git-rm*)",
-            "Bash(git-tag*)"
+            "Bash(git-tag*)",
+            "Bash(task-manager*)",
+            "Bash(release-manager*)"
         ]
     },
     "hooks": {
