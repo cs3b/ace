@@ -9,11 +9,14 @@ commands:
   - release-manager current
   - release-manager all
   
-  # List all tasks (provides complete task metadata)
+  # List all tasks (provides complete task metadata with status summary)
   - task-manager list
   
-  # Find next actionable work
-  - task-manager next
+  # Find next actionable work (with limit for planning)
+  - task-manager next --limit 5
+  
+  # Check recent activity
+  - task-manager recent --limit 3
   
   # Current work status (using custom git-status command)
   - git-status
