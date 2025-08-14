@@ -60,16 +60,25 @@ This shows all releases (done, current, backlog) with their versions.
 Use the release information with task-manager:
 ```bash
 # Work with current release (default)
+task-manager list                        # Shows all with status summary
 task-manager list --filter status:pending
+task-manager list --filter status:draft  # Draft tasks for planning
+
+# Find next actionable tasks
+task-manager next                        # Single next task
+task-manager next --limit 5              # Next 5 tasks (common usage)
+task-manager next --limit 10             # See more options
+
+# Check recent activity
+task-manager recent --limit 3            # Last 3 modified
+task-manager recent --limit 5 --release v.0.4.0  # Recent in specific release
 
 # Work with specific release
 task-manager list --release v.0.4.0 --filter status:done
 
-# Find next actionable task in current release
-task-manager next
-
 # Create new task in current release
 task-manager create --title "Implement feature X"
+task-manager create --title "Fix bug" --priority high --status draft
 
 # Create task in backlog/draft release (very useful for planning)
 task-manager create --release backlog/v.0.6.0-draft --title "Plan authentication refactor"
@@ -93,11 +102,21 @@ release-manager current           # Get current release info
 release-manager all              # List all releases
 
 # Task operations (file-level, no content needed)
+task-manager list                        # List all tasks with status summary
 task-manager list --filter status:pending
+task-manager list --filter status:draft  # Show draft tasks
 task-manager list --filter priority:high
 task-manager list --release v.0.4.0
-task-manager next
-task-manager recent --limit 10
+
+# Find next actionable tasks
+task-manager next                        # Single next task
+task-manager next --limit 5              # Next 5 actionable tasks
+task-manager next --limit 10             # Common: see more options
+
+# Recent activity
+task-manager recent                      # Recent tasks (default limit)
+task-manager recent --limit 3            # Last 3 modified tasks
+task-manager recent --limit 5 --filter status:done  # Recently completed
 
 # Task creation
 task-manager create --title "New feature"  # Creates in current release
@@ -139,13 +158,52 @@ task-manager create --release /Users/michalczyz/Projects/CodingAgent/handbook-me
 - **Done**: Task completed and validated
 - **Blocked**: Task waiting on dependencies
 
+## Common Workflows
+
+### Planning Session
+```bash
+# See what's pending across all releases
+task-manager list --filter status:pending
+task-manager list --filter status:draft
+
+# Get multiple next tasks to choose from
+task-manager next --limit 10
+
+# Create draft tasks for planning
+task-manager create --title "Research solution" --status draft
+```
+
+### Daily Standup
+```bash
+# What was recently worked on
+task-manager recent --limit 5
+
+# What's next
+task-manager next --limit 3
+
+# Current status
+task-manager list  # Shows status summary at top
+```
+
+### Release Planning
+```bash
+# Check specific release status
+task-manager list --release v.0.6.0
+
+# Create tasks in backlog release
+task-manager create --release backlog/v.0.7.0-planning --title "New feature"
+
+# Generate IDs for batch task creation
+task-manager generate-id
+```
+
 ## Best Practices
 
 1. **Always discover release first**: Use `release-manager current` to work with correct paths
-2. **Work at file level**: No need to load task content - operate on metadata
-3. **Use release flags**: Specify `--release` when working across releases
-4. **One task at a time**: Focus on completing current tasks before starting new ones
-5. **Check dependencies**: Use `task-manager next` to find actionable work
+2. **Use `--limit` with next**: Get multiple options with `task-manager next --limit 5`
+3. **Work at file level**: No need to load task content - operate on metadata
+4. **Use release flags**: Specify `--release` when working across releases
+5. **Check recent activity**: Use `task-manager recent` to understand current work
 
 ## Context Definition
 
@@ -159,8 +217,11 @@ commands:
   # List all tasks (this gives us everything we need)
   - task-manager list
   
-  # Find next actionable task
-  - task-manager next
+  # Find next actionable tasks (with limit for planning)
+  - task-manager next --limit 5
+  
+  # Check recent activity
+  - task-manager recent --limit 3
   
   # Current work status (using custom git-status command)
   - git-status
