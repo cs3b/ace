@@ -11,6 +11,28 @@ The primary goal of agents is to:
 - Standardize task execution patterns across different domains
 - Facilitate autonomous operation with minimal human intervention
 
+## File Naming Convention
+
+All agent files must use the `.ag.md` suffix to distinguish them from other documentation types. This convention enables proper identification and tooling support.
+
+### Naming Pattern
+- **Format:** `<agent-name>.ag.md`
+- **Style:** Use descriptive names that indicate the agent's primary function
+- **Examples:**
+  - `git-commit.ag.md` (not `git-commit-manager.md`)
+  - `task-manager.ag.md` (not `task-manager-agent.md`)
+  - `code-review.ag.md` (not `code-reviewer.md`)
+  - `search.ag.md` (not `search-agent.md`)
+
+### File Type Suffixes
+The project uses consistent suffixes to identify different content types:
+- **`.ag.md`** - Agent definitions (this guide)
+- **`.g.md`** - Development guides
+- **`.wf.md`** - Workflow instructions
+- **`.md`** - General documentation
+
+This naming distinction helps both humans and tools quickly identify agent definitions versus other documentation types.
+
 ## Core Principles
 
 ### 1. Start Minimal
@@ -131,7 +153,10 @@ format: markdown-xml
 #### Required Fields
 - **name**: Unique identifier for the agent (kebab-case)
 - **description**: Clear description of when to use this agent
-- **tools**: Array of tool names the agent can use
+- **tools**: Comma-separated list of Claude Code tools (e.g., `Bash, Read, Edit`)
+  - Note: Custom executables must be called through `Bash`, not listed directly
+  - Format: `tools: Bash, Read` (comma-separated, no brackets)
+  - Omit entirely to inherit all tools from main thread
 - **last_modified**: ISO date of last significant update
 - **type**: Always "agent" for agent definitions
 
@@ -388,6 +413,38 @@ Reduce context and improve efficiency:
 - Add caching where appropriate
 - Optimize command sequences
 
+## Tool Access and Permissions
+
+### Custom Tool Wrappers
+When agents need to use custom executables (like git wrapper tools):
+
+1. **Agent Definition**: Use `tools: Bash` to enable command execution
+2. **Permission Configuration**: Use settings.json to enforce tool restrictions
+
+Example for git wrapper tools:
+```json
+{
+  "permissions": {
+    "deny": [
+      "Bash(git status*)",  // Deny native git commands
+      "Bash(git commit*)",
+      "Bash(git add*)"
+    ],
+    "allow": [
+      "Bash(git-status*)",  // Allow wrapper tools only
+      "Bash(git-commit*)",
+      "Bash(git-add*)"
+    ]
+  }
+}
+```
+
+This pattern:
+- Forces use of enhanced wrapper tools
+- Prevents accidental use of native commands
+- Provides security through permission boundaries
+- Works with Claude Code's existing permission system
+
 ## Best Practices Summary
 
 1. **Start Simple**: Begin with 5-6 essential commands
@@ -400,6 +457,7 @@ Reduce context and improve efficiency:
 8. **Handle Errors**: Graceful degradation is essential
 9. **Version Properly**: Update last_modified on changes
 10. **Single Source**: Maintain agents in .claude/agents/ only
+11. **Secure Tool Access**: Use permission rules for custom tools
 
 ## Migration Guide
 
