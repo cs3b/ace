@@ -165,6 +165,7 @@ module CodingAgentTools
         require_relative "cli/commands/handbook/claude/integrate"
         require_relative "cli/commands/handbook/claude/validate"
         require_relative "cli/commands/handbook/claude/list"
+        require_relative "cli/commands/handbook/claude/update_registry"
 
         register "handbook", aliases: [] do |prefix|
           prefix.register "sync-templates", Commands::Handbook::SyncTemplates
@@ -173,6 +174,7 @@ module CodingAgentTools
           prefix.register "claude integrate", Commands::Handbook::Claude::Integrate
           prefix.register "claude validate", Commands::Handbook::Claude::Validate
           prefix.register "claude list", Commands::Handbook::Claude::List
+          prefix.register "claude update-registry", Commands::Handbook::Claude::UpdateRegistry
         end
 
         @handbook_commands_registered = true
