@@ -24,6 +24,7 @@ require "coding_agent_tools/cli/commands/handbook/claude/generate_commands"
 require "coding_agent_tools/cli/commands/handbook/claude/integrate"
 require "coding_agent_tools/cli/commands/handbook/claude/validate"
 require "coding_agent_tools/cli/commands/handbook/claude/list"
+require "coding_agent_tools/cli/commands/handbook/claude/update_registry"
 require "dry/cli"
 
 module HandbookCli
@@ -39,6 +40,7 @@ module HandbookCli
       prefix.register "integrate", CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
       prefix.register "validate", CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
       prefix.register "list", CodingAgentTools::Cli::Commands::Handbook::Claude::List
+      prefix.register "update-registry", CodingAgentTools::Cli::Commands::Handbook::Claude::UpdateRegistry
     end
 
     # Version command

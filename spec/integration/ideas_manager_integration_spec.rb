@@ -132,12 +132,12 @@ RSpec.describe "capture-it Integration", type: :integration do
         pending "Cannot mock LLM behavior with current subprocess architecture - needs direct library integration"
 
         # Mock LLM response for large idea test (currently not possible with subprocess calls)
-        allow_any_instance_of(CodingAgentTools::Molecules::LLMClient).to receive(:generate_content).and_return(
-          OpenStruct.new(
-            success?: true,
-            content: "# Enhanced Large Idea\n\n## Intention\nProcess large user inputs\n\n## Problem It Solves\nHandles extensive requirements\n\n## Solution Direction\nImplement chunking and processing"
-          )
-        )
+        # allow_any_instance_of(CodingAgentTools::Molecules::LLMClient).to receive(:generate_content).and_return(
+        #   OpenStruct.new(
+        #     success?: true,
+        #     content: "# Enhanced Large Idea\n\n## Intention\nProcess large user inputs\n\n## Problem It Solves\nHandles extensive requirements\n\n## Solution Direction\nImplement chunking and processing"
+        #   )
+        # )
 
         result = run_capture_it([large_idea, "--big-user-input-allowed"])
 
@@ -172,12 +172,12 @@ RSpec.describe "capture-it Integration", type: :integration do
         pending "Cannot mock LLM behavior with current subprocess architecture - needs direct library integration"
 
         # Mock LLM failure to trigger fallback (currently not possible with subprocess calls)
-        allow_any_instance_of(CodingAgentTools::Molecules::LLMClient).to receive(:generate_content).and_return(
-          OpenStruct.new(
-            success?: false,
-            error_message: "Model 'invalid_model_name' not found"
-          )
-        )
+        # allow_any_instance_of(CodingAgentTools::Molecules::LLMClient).to receive(:generate_content).and_return(
+        #   OpenStruct.new(
+        #     success?: false,
+        #     error_message: "Model 'invalid_model_name' not found"
+        #   )
+        # )
 
         # Use invalid model to trigger fallback
         result = run_capture_it([test_idea, "--model", "invalid_model_name"])
