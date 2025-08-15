@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.017
-status: draft
+status: completed
 priority: high
 estimate: 8h
 dependencies: []
