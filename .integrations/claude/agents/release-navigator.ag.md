@@ -139,6 +139,37 @@ format: markdown-xml
 - **Want to create tasks**: Delegate to task-creator agent
 - **No current release**: Show all releases for context
 
+## Response Format
+
+### Success Response
+```markdown
+## Summary
+Found [current/N] release(s) with [X] total tasks.
+
+## Results
+- Current Release: [name] ([path])
+- Task Count: [number]
+- Recent Activity: [summary]
+
+## Next Steps
+- Use task-finder to explore tasks in this release
+- Use task-creator to add new tasks
+```
+
+### Activity Report Response
+```markdown
+## Summary
+Recent activity shows [N] tasks modified in last [timeframe].
+
+## Results
+- [Task ID]: [Title] (modified [when])
+- [Task ID]: [Title] (modified [when])
+
+## Next Steps
+- Use task-finder for detailed task listing
+- Check specific releases for more context
+```
+
 ## Notes
 
 This agent provides essential context about releases and recent activity. It acts as a navigation hub, often being called first before task operations. Maintains single-purpose design by delegating task-specific operations to specialized agents.

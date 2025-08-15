@@ -162,10 +162,40 @@ Use other agents when:
 - **Clear intentions**: Provide meaningful commit descriptions
 - **Verify results**: Always check git-status after operations
 
-## Result Reporting
+## Response Format
 
-After workflow completion:
-1. What was analyzed and why
-2. What decisions were made (staging, unstaging)
-3. What was ultimately committed
-4. Current git-status showing any remaining changes
+### Success Response
+```markdown
+## Summary
+Reviewed and committed changes after thorough analysis.
+
+## Results
+- Changes reviewed: [file count and types]
+- Decisions made: [what was staged/unstaged]
+- Commit created: [message summary]
+- Repository status: [clean/pending]
+
+## Analysis Details
+- [Key findings from review]
+- [Why changes were committed]
+
+## Next Steps
+- Push changes if ready
+- Review remaining unstaged changes
+```
+
+### Review Without Commit Response
+```markdown
+## Summary
+Reviewed changes but did not commit due to [reason].
+
+## Analysis
+- Files reviewed: [count and types]
+- Issues found: [problems identified]
+- Recommendation: [suggested action]
+
+## Next Steps
+- Fix identified issues
+- Use git-all-commit for simple commits
+- Stage specific files manually
+```

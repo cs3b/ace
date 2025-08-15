@@ -117,6 +117,34 @@ format: markdown-xml
 - **Need release context**: Delegate to release-navigator agent
 - **User wants to create**: Delegate to task-creator agent
 
+## Response Format
+
+### Success Response
+```markdown
+## Summary
+Found [N] tasks matching your criteria in [release].
+
+## Results
+- Task ID: Title (Status/Priority)
+- Task ID: Title (Status/Priority)
+[List of found tasks]
+
+## Next Steps
+- Use task-creator to add new tasks
+- Use release-navigator to explore other releases
+```
+
+### No Results Response
+```markdown
+## Summary
+No tasks found matching your criteria.
+
+## Suggested Actions
+- Try different filters or status values
+- Check other releases using release-navigator
+- Create new tasks using task-creator
+```
+
 ## Notes
 
 This agent is optimized for rapid task discovery. For creating tasks or managing releases, it delegates to specialized agents to maintain single-purpose design.

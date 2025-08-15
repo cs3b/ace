@@ -80,8 +80,34 @@ If user doesn't provide specific files:
 - **Always verify**: Run `git-status` after committing
 - **For all changes**: Use git-all-commit agent instead
 
-## Result Reporting
+## Response Format
 
-After commit:
-1. List the specific files that were committed
-2. Show current git-status output
+### Success Response
+```markdown
+## Summary
+Successfully committed [N] specified files.
+
+## Results
+- Files committed: [list of files]
+- Commit message: [generated message]
+- Current branch: [branch name]
+- Remaining changes: [if any]
+
+## Next Steps
+- Check remaining uncommitted files if any
+- Use git-push to push changes
+```
+
+### Error Response
+```markdown
+## Summary
+Failed to commit specified files.
+
+## Issue
+[Specific error or missing files]
+
+## Suggested Solution
+- Verify files exist and have changes
+- Check file paths are correct
+- Use git-all-commit if you want all changes
+```

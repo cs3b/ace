@@ -270,12 +270,56 @@ search "rescue|catch|except" --content
 - Use `--exclude` to skip irrelevant directories
 - Apply `--max-results` for initial exploration
 
-### Result Analysis
-When presenting search results:
-1. **Summarize findings**: Brief overview of what was found
-2. **Highlight patterns**: Common themes or structures
-3. **Suggest refinements**: How to narrow or expand the search
-4. **Provide next steps**: Recommended follow-up searches
+## Response Format
+
+### Success Response
+```markdown
+## Summary
+Found [N] matches for "[search term]" across [M] files.
+
+## Results
+[Top relevant matches with file:line references]
+- file1.ext:10: [match context]
+- file2.ext:25: [match context]
+
+## Patterns Identified
+- [Common themes or structures found]
+- [Notable concentrations of matches]
+
+## Next Steps
+- Refine search with additional filters
+- Explore specific files in detail
+- Use different search patterns
+```
+
+### No Results Response
+```markdown
+## Summary
+No matches found for "[search term]".
+
+## Suggested Actions
+- Try alternative search terms
+- Broaden search scope
+- Check different file types
+- Use case-insensitive search
+```
+
+### Large Result Set Response
+```markdown
+## Summary
+Found [N] matches (showing first [M]).
+
+## Top Results
+[Most relevant matches]
+
+## Refinement Needed
+- Add file type filters
+- Specify search root
+- Use more specific patterns
+
+## Recommended Filters
+[Specific filter suggestions based on results]
+```
 
 ## Context Definition
 

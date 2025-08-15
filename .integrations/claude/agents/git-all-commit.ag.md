@@ -78,8 +78,34 @@ If user provides specific file paths:
 - **Execute immediately**: No analysis, just commit all
 - **For specific files**: Use git-files-commit agent instead
 
-## Result Reporting
+## Response Format
 
-After commit:
-1. Report that ALL changes were committed
-2. Show current git-status output
+### Success Response
+```markdown
+## Summary
+Successfully committed ALL changes across the repository.
+
+## Results
+- Files committed: [count] files changed
+- Commit message: [generated message]
+- Current branch: [branch name]
+- Status: Clean working directory
+
+## Next Steps
+- Use git-push to push changes to remote
+- Continue with next development task
+```
+
+### Error Response
+```markdown
+## Summary
+Failed to commit changes.
+
+## Issue
+[Specific error from git]
+
+## Suggested Solution
+- Check for unstaged changes with git-status
+- Ensure you have commit permissions
+- Fix any pre-commit hook failures
+```

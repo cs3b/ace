@@ -124,6 +124,35 @@ format: markdown-xml
 - **Want to see existing**: Delegate to task-finder agent
 - **Invalid release**: Suggest checking available releases via release-navigator
 
+## Response Format
+
+### Success Response
+```markdown
+## Summary
+Successfully created task [ID] in [release].
+
+## Results
+- Task ID: [generated ID]
+- Title: [task title]
+- Status: [status]
+- Priority: [priority]
+- Location: [file path]
+
+## Next Steps
+- Use task-finder to see all tasks
+- Create additional tasks as needed
+```
+
+### Delegation Response
+```markdown
+## Summary
+Getting release context before creating task.
+
+## Delegating
+Invoking release-navigator for current release...
+[Continue after delegation]
+```
+
 ## Notes
 
 This agent is optimized for rapid task creation. It delegates to other agents for discovery and listing to maintain single-purpose design. Always focuses on the CREATE action only.

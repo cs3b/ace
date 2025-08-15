@@ -294,6 +294,76 @@ context:
   template: .claude/contexts/project-overview.yaml
 ```
 
+## Agent Response Format
+
+### Standardized Response Structure
+Agents should provide clear, structured responses back to their parent (user or calling agent):
+
+```markdown
+## Summary
+[1-2 sentence overview of what was accomplished]
+
+## Results
+[Main findings, actions taken, or items discovered]
+- Key result 1
+- Key result 2
+- Key result 3
+
+## Next Steps (if applicable)
+[Suggested follow-up actions or delegations]
+
+## Issues (if any)
+[Any problems encountered or limitations]
+```
+
+### Response Guidelines
+
+1. **Be Concise**: Keep responses focused and actionable
+2. **Highlight Key Information**: Use formatting to emphasize important results
+3. **Suggest Delegations**: When appropriate, suggest which agent to use next
+4. **Report Errors Clearly**: Explain what failed and potential solutions
+5. **Include Metrics**: When relevant, include counts, statistics, or measurements
+
+### Example Response Patterns
+
+#### Success Response (task-finder)
+```markdown
+## Summary
+Found 5 pending high-priority tasks in the current release.
+
+## Results
+- Task 001: Implement authentication (HIGH)
+- Task 003: Fix database migration (HIGH)
+- Task 007: Update API documentation (MEDIUM)
+
+## Next Steps
+Use task-creator agent if you need to add more tasks.
+```
+
+#### Delegation Response (task-creator)
+```markdown
+## Summary
+Need current release context before creating task.
+
+## Delegating
+Invoking release-navigator to get current release...
+[After delegation completes]
+Created task v.0.5.0+task.042 in current release.
+```
+
+#### Error Response
+```markdown
+## Summary
+Unable to complete the requested operation.
+
+## Issue
+No current release found in dev-taskflow.
+
+## Suggested Solution
+1. Check if dev-taskflow is properly initialized
+2. Use release-navigator to see all available releases
+```
+
 ## Common Patterns
 
 ### Task Management Agent Pattern
@@ -702,6 +772,34 @@ expected_params:
 - **Required missing**: Stop and ask user to provide
 - **Optional missing**: Use sensible defaults or proceed without
 - **Never**: Generate or guess required parameters
+
+## Response Format
+
+When reporting results back to the parent:
+
+### Success Response
+```markdown
+## Summary
+[Brief overview of what was accomplished]
+
+## Results
+[Key findings or actions taken]
+
+## Next Steps
+[Suggested follow-up actions or agent delegations]
+```
+
+### Error Response
+```markdown
+## Summary
+[What went wrong]
+
+## Issue
+[Specific error details]
+
+## Suggested Solution
+[How to resolve the issue]
+```
 
 ## Error Handling
 
