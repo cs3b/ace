@@ -6,21 +6,20 @@ Load essential project documentation to understand the project's objectives, arc
 
 ## Prerequisites
 
-- Access to the project's `docs/context/` directory
-- Context definition files exist (`project.md`, `dev-tools.md`, `dev-handbook.md`)
 - The `context` tool is available (from dev-tools)
+- Context presets configured in `.coding-agent/context.yml`
 
 ## High-Level Execution Plan
 
 ### Planning Steps
 
-- [ ] Verify context definition files exist
-- [ ] Choose appropriate context(s) to load
+- [ ] Verify context presets are available
+- [ ] Choose appropriate preset(s) to load
 
 ### Execution Steps
 
-- [ ] Run context loader for the target context
-- [ ] Read the cached context file
+- [ ] Run context command with preset
+- [ ] Read the generated context output
 - [ ] Review the loaded documentation and command outputs
 - [ ] Summarize key project understanding
 
@@ -28,30 +27,36 @@ Load essential project documentation to understand the project's objectives, arc
 
 1. **Load Project Context Using Context Tool:**
    
-   Use the standardized context loading system:
+   Use the context tool with preset support:
    
    ```bash
    # Load the main project context
-   bin/load-context project
+   context --preset project
    
    # For monorepo submodules, load specific contexts:
-   bin/load-context dev-tools     # For dev-tools work
-   bin/load-context dev-handbook  # For handbook work
+   context --preset dev-tools     # For dev-tools work
+   context --preset dev-handbook  # For handbook work
+   
+   # List available presets
+   context --list-presets
    ```
    
    This will:
-   - Process the context definition from `docs/context/{name}.md`
-   - Load all specified files and run defined commands
-   - Cache the output in `docs/context/cached/{name}.md`
-   - Handle large contexts by splitting into chunks if needed
+   - Load the preset configuration from `.coding-agent/context.yml`
+   - Process the template files and execute commands
+   - Save output to the configured location (or override with --output)
+   - Automatically chunk large contexts (>150K lines) if needed
 
-2. **Read the Cached Context:**
+2. **Read the Generated Context:**
    
-   After running the loader, read the cached context file:
+   The context tool will output to the configured location:
    
    ```bash
-   # The loader will output the path to read
-   # Typically: docs/context/cached/project.md
+   # Check preset configuration for output path
+   context --list-presets
+   
+   # Or specify custom output
+   context --preset project --output /tmp/project-context.md
    ```
    
    The cached context includes:
@@ -90,14 +95,13 @@ Load essential project documentation to understand the project's objectives, arc
 
 ### File Locations
 
-Context definition files are located at:
-- `docs/context/project.md` - Main project context definition
-- `docs/context/dev-tools.md` - Dev-tools submodule context
-- `docs/context/dev-handbook.md` - Dev-handbook submodule context
+Context configuration is located at:
+- `.coding-agent/context.yml` - Preset definitions and configuration
 
-Cached context files are generated at:
-- `docs/context/cached/{name}.md` - Processed context output
-- `docs/context/cached/{name}_chunk*.md` - Large context chunks
+Output files are generated based on preset configuration:
+- Configured in each preset's `output` field
+- Can be overridden with `--output` flag
+- Large files automatically chunked with `_chunk*.md` suffix
 
 Core documentation files referenced:
 - `docs/what-do-we-build.md` - Project objectives and vision
@@ -118,20 +122,20 @@ This workflow is typically invoked:
 ### Verification Commands
 
 ```bash
-# List available context definitions
-nav-ls --long docs/context/
+# List available presets
+context --list-presets
 
-# Check if cached context exists
-nav-ls --long docs/context/cached/
+# View preset configuration
+cat .coding-agent/context.yml
 
-# View context definition structure
-cat docs/context/project.md
+# Load context with preset
+context --preset project
 
-# Load and cache the context
-bin/load-context project
+# Load with custom output
+context --preset project --output /tmp/test.md
 
-# Check context file size
-wc -l docs/context/cached/project.md
+# Check output file size
+wc -l <output-path-from-preset>
 ```
 
 ## Usage Example
