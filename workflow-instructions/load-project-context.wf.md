@@ -6,57 +6,77 @@ Load essential project documentation to understand the project's objectives, arc
 
 ## Prerequisites
 
-- Access to the project's `docs/` directory
-- Project documentation files exist and are populated
+- Access to the project's `docs/context/` directory
+- Context definition files exist (`project.md`, `dev-tools.md`, `dev-handbook.md`)
+- The `context` tool is available (from dev-tools)
 
 ## High-Level Execution Plan
 
 ### Planning Steps
 
-- [ ] Verify core project documentation files exist
-- [ ] Identify any missing or incomplete documentation
+- [ ] Verify context definition files exist
+- [ ] Choose appropriate context(s) to load
 
 ### Execution Steps
 
-- [ ] Load and review project objectives document
-- [ ] Load and review architecture overview document
-- [ ] Load and review project structure document
-- [ ] Summarize key project context
+- [ ] Run context loader for the target context
+- [ ] Read the cached context file
+- [ ] Review the loaded documentation and command outputs
+- [ ] Summarize key project understanding
 
 ## Process Steps
 
-1. **Load Core Project Documentation:**
-   Load and review the following essential project documents:
+1. **Load Project Context Using Context Tool:**
+   
+   Use the standardized context loading system:
+   
+   ```bash
+   # Load the main project context
+   bin/load-context project
+   
+   # For monorepo submodules, load specific contexts:
+   bin/load-context dev-tools     # For dev-tools work
+   bin/load-context dev-handbook  # For handbook work
+   ```
+   
+   This will:
+   - Process the context definition from `docs/context/{name}.md`
+   - Load all specified files and run defined commands
+   - Cache the output in `docs/context/cached/{name}.md`
+   - Handle large contexts by splitting into chunks if needed
 
-   - **Project Objectives**: `docs/what-do-we-build.md`
-     - Understand what the project is building
-     - Review the main goals and value proposition
-     - Identify key features and capabilities
+2. **Read the Cached Context:**
+   
+   After running the loader, read the cached context file:
+   
+   ```bash
+   # The loader will output the path to read
+   # Typically: docs/context/cached/project.md
+   ```
+   
+   The cached context includes:
+   - **Project Objectives**: From `docs/what-do-we-build.md`
+   - **Architecture Overview**: From `docs/architecture.md` 
+   - **Project Structure**: From `docs/blueprint.md`
+   - **Development Tools**: From `docs/tools.md`
+   - **Current Status**: Git status, task information, project tree
+   - **Additional Context**: README files, configuration, etc.
 
-   - **Architecture Overview**: `docs/architecture.md`
-     - Understand the high-level system design
-     - Review architectural patterns and principles
-     - Identify major components and their relationships
+3. **Review and Understand:**
+   
+   From the loaded context, understand:
+   - What the project builds and its value proposition
+   - The system architecture and design principles
+   - The project structure and organization
+   - Available tools and workflows
+   - Current project status and next tasks
 
-   - **Project Structure**: `docs/blueprint.md`
-     - Understand the directory structure
-     - Review key files and their purposes
-     - Identify where different types of work are organized
-
-   - **Development Tools**: `docs/tools.md`
-     - Read the available development tools and utilities
-     - Use tools defined in this documentation for efficient workflows
-
-2. **Verify Documentation Completeness:**
-   - Check that all three core documents exist
-   - Note any missing sections or outdated information
-   - Report if any critical context is missing
-
-3. **Summarize Key Context:**
-   After loading all documents, create a mental model of:
-   - What the project builds
-   - How it's architected
-   - Where things are located
+4. **Handle Large Contexts:**
+   
+   If the context is split into chunks:
+   - The main file (`project.md`) will list all chunks
+   - Read chunks sequentially as needed
+   - Each chunk is under 150K lines for Claude Code compatibility
 
 ## Success Criteria
 
@@ -70,11 +90,20 @@ Load essential project documentation to understand the project's objectives, arc
 
 ### File Locations
 
-The three core project context files are always located at:
+Context definition files are located at:
+- `docs/context/project.md` - Main project context definition
+- `docs/context/dev-tools.md` - Dev-tools submodule context
+- `docs/context/dev-handbook.md` - Dev-handbook submodule context
 
+Cached context files are generated at:
+- `docs/context/cached/{name}.md` - Processed context output
+- `docs/context/cached/{name}_chunk*.md` - Large context chunks
+
+Core documentation files referenced:
 - `docs/what-do-we-build.md` - Project objectives and vision
 - `docs/architecture.md` - System design and technical architecture
 - `docs/blueprint.md` - Project structure and organization
+- `docs/tools.md` - Available development tools
 
 ### Usage Context
 
@@ -84,18 +113,25 @@ This workflow is typically invoked:
 - When onboarding to the project
 - Before starting work on a new area of the codebase
 - When other workflows specify "project context loading" as a prerequisite
+- When switching between different submodules in a monorepo
 
 ### Verification Commands
 
 ```bash
-# Check if all context files exist with enhanced navigation
-nav-ls --long docs/
+# List available context definitions
+nav-ls --long docs/context/
 
-# Access project documentation via handbook
-handbook --section "development"
+# Check if cached context exists
+nav-ls --long docs/context/cached/
 
-# Check file sizes to ensure they're populated
-wc -l docs/what-do-we-build.md docs/architecture.md docs/blueprint.md
+# View context definition structure
+cat docs/context/project.md
+
+# Load and cache the context
+bin/load-context project
+
+# Check context file size
+wc -l docs/context/cached/project.md
 ```
 
 ## Usage Example
