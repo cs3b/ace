@@ -1,0 +1,202 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Load Context - Wrapper script for loading project context definitions
+#
+# This script loads context definitions from docs/context/ and saves
+# the processed output to docs/context/cached/ for efficient access.
+#
+# Usage: load-context [context-name]
+#
+# Examples:
+#   load-context project      # Load main project context
+#   load-context dev-tools    # Load dev-tools submodule context
+#   load-context dev-handbook # Load dev-handbook submodule context
+
+require 'fileutils'
+require 'pathname'
+require 'open3'
+
+class ContextLoader
+  CONTEXT_DIR = 'docs/context'
+  CACHE_DIR = 'docs/context/cached'
+  MAX_FILE_SIZE = 150_000 # Maximum lines per file (safety margin for Claude Code)
+  
+  def initialize(context_name = 'project')
+    @context_name = context_name
+    @project_root = find_project_root
+    @context_path = File.join(@project_root, CONTEXT_DIR, "#{@context_name}.md")
+    @cache_path = File.join(@project_root, CACHE_DIR, "#{@context_name}.md")
+  end
+  
+  def run
+    validate_context_exists
+    ensure_cache_directory
+    load_and_cache_context
+    report_results
+  end
+  
+  private
+  
+  def find_project_root
+    current = Dir.pwd
+    while current != '/'
+      return current if File.exist?(File.join(current, 'docs', 'context'))
+      current = File.dirname(current)
+    end
+    Dir.pwd # Fallback to current directory
+  end
+  
+  def validate_context_exists
+    unless File.exist?(@context_path)
+      available = Dir.glob(File.join(@project_root, CONTEXT_DIR, '*.md'))
+                     .map { |f| File.basename(f, '.md') }
+                     .reject { |f| f == 'README' }
+      
+      puts "Error: Context definition '#{@context_name}' not found."
+      puts "\nAvailable contexts:"
+      available.each { |ctx| puts "  - #{ctx}" }
+      puts "\nUsage: load-context [context-name]"
+      exit 1
+    end
+  end
+  
+  def ensure_cache_directory
+    cache_dir = File.join(@project_root, CACHE_DIR)
+    FileUtils.mkdir_p(cache_dir) unless Dir.exist?(cache_dir)
+  end
+  
+  def load_and_cache_context
+    puts "Loading context: #{@context_name}"
+    puts "Source: #{@context_path}"
+    puts "Target: #{@cache_path}"
+    puts "-" * 50
+    
+    # Run the context tool with the YAML definition
+    cmd = "context --yaml '#{@context_path}' --format markdown-xml"
+    
+    stdout, stderr, status = Open3.capture3(cmd)
+    
+    if status.success?
+      # Check if output is too large and needs chunking
+      lines = stdout.lines
+      
+      if lines.length > MAX_FILE_SIZE
+        write_chunked_context(lines)
+      else
+        write_single_context(stdout)
+      end
+      
+      puts "\n✓ Context loaded successfully"
+    else
+      puts "\n✗ Error loading context:"
+      puts stderr
+      exit 1
+    end
+  end
+  
+  def write_single_context(content)
+    File.write(@cache_path, content)
+    puts "Wrote #{content.lines.length} lines to cache"
+  end
+  
+  def write_chunked_context(lines)
+    chunk_count = (lines.length.to_f / MAX_FILE_SIZE).ceil
+    
+    puts "Output is large (#{lines.length} lines), splitting into #{chunk_count} chunks..."
+    
+    # Write main file with chunk references
+    main_content = <<~CONTENT
+      # #{@context_name.capitalize} Context (Chunked)
+      
+      This context has been split into #{chunk_count} chunks due to size constraints.
+      
+      ## Chunks:
+    CONTENT
+    
+    lines.each_slice(MAX_FILE_SIZE).with_index do |chunk, index|
+      chunk_num = index + 1
+      chunk_path = File.join(@project_root, CACHE_DIR, "#{@context_name}_chunk#{chunk_num}.md")
+      
+      # Write chunk file
+      chunk_header = "# #{@context_name.capitalize} Context - Chunk #{chunk_num}/#{chunk_count}\n\n"
+      File.write(chunk_path, chunk_header + chunk.join)
+      
+      main_content += "- [Chunk #{chunk_num}](#{File.basename(chunk_path)}) - #{chunk.length} lines\n"
+      puts "  Wrote chunk #{chunk_num}: #{chunk.length} lines"
+    end
+    
+    File.write(@cache_path, main_content)
+    puts "Wrote main index file with chunk references"
+  end
+  
+  def report_results
+    puts "-" * 50
+    puts "\nContext cached at: #{@cache_path}"
+    
+    # Show file size info
+    if File.exist?(@cache_path)
+      size = File.size(@cache_path)
+      lines = File.readlines(@cache_path).length
+      puts "File size: #{format_size(size)} (#{lines} lines)"
+    end
+    
+    # Check for chunks
+    chunks = Dir.glob(File.join(@project_root, CACHE_DIR, "#{@context_name}_chunk*.md"))
+    if chunks.any?
+      puts "\nAdditional chunks:"
+      chunks.sort.each do |chunk|
+        size = File.size(chunk)
+        lines = File.readlines(chunk).length
+        puts "  - #{File.basename(chunk)}: #{format_size(size)} (#{lines} lines)"
+      end
+    end
+    
+    puts "\nTo load this context in Claude Code or other tools:"
+    puts "  Read: #{@cache_path}"
+  end
+  
+  def format_size(bytes)
+    case bytes
+    when 0..1023
+      "#{bytes} bytes"
+    when 1024..1_048_575
+      "#{(bytes / 1024.0).round(2)} KB"
+    else
+      "#{(bytes / 1_048_576.0).round(2)} MB"
+    end
+  end
+end
+
+# Main execution
+if __FILE__ == $0
+  context_name = ARGV[0] || 'project'
+  
+  # Handle help flag
+  if context_name == '--help' || context_name == '-h'
+    puts <<~HELP
+      Load Context - Load project context definitions and cache them
+      
+      Usage: load-context [context-name]
+      
+      Arguments:
+        context-name   The name of the context to load (default: project)
+                      Must match a file in docs/context/*.md
+      
+      Examples:
+        load-context              # Load default project context
+        load-context project      # Load main project context
+        load-context dev-tools    # Load dev-tools submodule context
+        load-context dev-handbook # Load dev-handbook submodule context
+      
+      The loaded context will be saved to:
+        docs/context/cached/[context-name].md
+      
+      Large contexts will be automatically split into chunks.
+    HELP
+    exit 0
+  end
+  
+  loader = ContextLoader.new(context_name)
+  loader.run
+end
