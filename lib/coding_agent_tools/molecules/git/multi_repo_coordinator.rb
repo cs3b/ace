@@ -83,7 +83,7 @@ module CodingAgentTools
         end
 
         def execute_for_repository(repository, command, options)
-          repository_path = (repository[:name] == "main") ? nil : repository[:path]
+          repository_path = repository[:path]
 
           # Build the command with any repository-specific modifications
           final_command = build_repository_command(command, repository, options)

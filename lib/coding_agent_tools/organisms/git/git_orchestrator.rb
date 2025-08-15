@@ -359,9 +359,6 @@ module CodingAgentTools
               # Single line commits
               formatted_lines << "#{colored_repo} #{colored_content}"
             end
-
-            # Add spacing between commits for better readability
-            formatted_lines << "" unless index == all_commits.length - 1
           end
 
           formatted_lines.join("\n")
