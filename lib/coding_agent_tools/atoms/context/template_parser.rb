@@ -13,7 +13,7 @@ module CodingAgentTools
       # - Provide standardized template structure validation
       class TemplateParser
         # Expected template structure
-        VALID_KEYS = %w[files commands format].freeze
+        VALID_KEYS = %w[files commands format embed_document_source].freeze
 
         # Parse YAML template from file
         #
@@ -80,6 +80,27 @@ module CodingAgentTools
           {success: false, error: "Failed to parse agent context: #{e.message}"}
         end
 
+        # Parse markdown with <context-tool-config> tags (new format)
+        #
+        # @param markdown_content [String] Markdown content with tagged blocks
+        # @return [Hash] {success: Boolean, template: Hash, error: String}
+        def parse_markdown_with_tags(markdown_content)
+          return {success: false, error: "Markdown content cannot be nil"} if markdown_content.nil?
+
+          # Find <context-tool-config> blocks
+          pattern = /<context-tool-config>\s*\n(.*?)\n<\/context-tool-config>/m
+          match = markdown_content.match(pattern)
+          
+          unless match
+            return {success: false, error: "No <context-tool-config> block found in markdown"}
+          end
+
+          yaml_content = match[1].strip
+          parse_string(yaml_content)
+        rescue => e
+          {success: false, error: "Failed to parse markdown with tags: #{e.message}"}
+        end
+
         private
 
         # Validate and normalize template structure
@@ -99,7 +120,8 @@ module CodingAgentTools
           normalized_template = {
             files: normalize_files_list(parsed_yaml["files"]),
             commands: normalize_commands_list(parsed_yaml["commands"]),
-            format: parsed_yaml["format"]
+            format: parsed_yaml["format"],
+            embed_document_source: parsed_yaml["embed_document_source"]
           }
 
           # Validate that at least files or commands are specified

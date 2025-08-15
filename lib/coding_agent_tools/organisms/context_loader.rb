@@ -4,6 +4,9 @@ require_relative "../atoms/context/template_parser"
 require_relative "../molecules/context/context_aggregator"
 require_relative "../molecules/context/output_formatter"
 require_relative "../molecules/context/agent_context_extractor"
+require_relative "../molecules/context/input_format_detector"
+require_relative "../molecules/context/markdown_yaml_extractor"
+require_relative "../molecules/context/document_embedder"
 
 module CodingAgentTools
   module Organisms
@@ -19,6 +22,9 @@ module CodingAgentTools
         @template_parser = Atoms::Context::TemplateParser.new
         @context_aggregator = Molecules::Context::ContextAggregator.new(options)
         @agent_extractor = Molecules::Context::AgentContextExtractor.new
+        @format_detector = Molecules::Context::InputFormatDetector.new
+        @markdown_extractor = Molecules::Context::MarkdownYamlExtractor.new
+        @document_embedder = Molecules::Context::DocumentEmbedder.new
         @options = options
       end
 
@@ -150,6 +156,83 @@ module CodingAgentTools
         @agent_extractor.analyze_agent_file(agent_file_path)
       end
 
+      # Load context with auto-format detection and optional embedding
+      #
+      # @param input [String] File path or string content
+      # @param options [Hash] Loading and embedding options
+      # @return [Hash] Context result with possible document embedding
+      def load_with_auto_detection(input, options = {})
+        # Detect format
+        detection_result = @format_detector.detect_format(input)
+        unless detection_result[:success]
+          return {
+            success: false,
+            error: detection_result[:error],
+            files: [],
+            commands: [],
+            errors: [detection_result[:error]]
+          }
+        end
+
+        # Prepare template data based on detection
+        if detection_result[:file_path]
+          template_data = {type: detection_result[:format], source: detection_result[:file_path]}
+          source_document = File.read(detection_result[:file_path]) if File.exist?(detection_result[:file_path])
+        else
+          template_data = {type: detection_result[:format], source: detection_result[:content]}
+          source_document = detection_result[:content]
+        end
+
+        # Load context using standard process
+        context_result = load_from_template(template_data, options)
+        return context_result unless context_result[:success]
+
+        # Check if embedding is requested
+        embedding_options = options.merge(
+          yaml_config: context_result[:template]
+        )
+
+        if source_document && @document_embedder.should_embed?(embedding_options)
+          # Format the context result for embedding
+          formatter = Molecules::Context::OutputFormatter.new(options[:format] || "markdown-xml")
+          formatted_output = formatter.format(context_result)
+
+          # Embed into source document
+          embedding_result = @document_embedder.embed_content(
+            source_document,
+            formatted_output,
+            embedding_options
+          )
+
+          if embedding_result[:success]
+            # Replace the context result content with embedded version
+            context_result.merge(
+              embedded_content: embedding_result[:content],
+              embedding_applied: true,
+              embedding_strategy: embedding_result[:strategy],
+              original_content: formatted_output
+            )
+          else
+            # If embedding fails, return original context with error note
+            context_result.merge(
+              embedding_error: embedding_result[:error],
+              embedding_applied: false
+            )
+          end
+        else
+          # No embedding requested or no source document
+          context_result.merge(embedding_applied: false)
+        end
+      rescue => e
+        {
+          success: false,
+          error: "Auto-detection context loading failed: #{e.message}",
+          files: [],
+          commands: [],
+          errors: ["Auto-detection context loading failed: #{e.message}"]
+        }
+      end
+
       private
 
       # Parse template from various source types
@@ -164,6 +247,13 @@ module CodingAgentTools
           @template_parser.parse_string(template_data[:source])
         when :agent_file
           @agent_extractor.extract(template_data[:source])
+        when :markdown_file
+          # New: Handle markdown files with <context-tool-config> tags
+          content = File.read(template_data[:source])
+          @markdown_extractor.extract_yaml_from_markdown(content)
+        when :markdown_string
+          # New: Handle markdown strings with <context-tool-config> tags
+          @markdown_extractor.extract_yaml_from_markdown(template_data[:source])
         else
           {success: false, error: "Unknown template source type: #{template_data[:type]}"}
         end

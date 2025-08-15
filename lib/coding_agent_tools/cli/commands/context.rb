@@ -14,6 +14,9 @@ module CodingAgentTools
       class Context < Dry::CLI::Command
         desc "Load project context from templates with multi-format output"
 
+        argument :input, type: :string, required: false,
+          desc: "Input file path or string (auto-detects format: .yml/.yaml/agent.ag.md/context.md)"
+
         option :yaml, type: :string, aliases: ["y"],
           desc: "YAML template file path"
 
@@ -46,6 +49,9 @@ module CodingAgentTools
           desc: "Enable debug output"
 
         example [
+          "docs/context/project.md",
+          ".claude/agents/task-finder.ag.md",
+          "template.yml",
           "--preset project",
           "--preset project --output custom/output.md",
           "--list-presets",
@@ -56,7 +62,7 @@ module CodingAgentTools
           "--from-agent .claude/agents/git-commit.md --format yaml"
         ]
 
-        def call(**options)
+        def call(input: nil, **options)
           begin
             # Handle list presets request
             if options[:list_presets]
@@ -68,7 +74,12 @@ module CodingAgentTools
               return handle_preset_loading(options)
             end
 
-            # Handle traditional template loading
+            # Handle new positional argument with auto-detection
+            if input
+              return handle_auto_detection_loading(input, options)
+            end
+
+            # Handle traditional template loading (backward compatibility)
             # Validate input options
             validate_input_options(options)
 
@@ -215,6 +226,43 @@ module CodingAgentTools
           else
             # Output to stdout
             puts formatted_output
+          end
+
+          0
+        rescue => e
+          handle_error(e, options[:debug])
+          1
+        end
+
+        def handle_auto_detection_loading(input, options)
+          # Initialize the context loader organism
+          context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
+
+          # Load context with auto-detection and optional embedding
+          context_result = context_loader.load_with_auto_detection(input, options)
+
+          unless context_result[:success]
+            warn "Error loading context: #{context_result[:error]}"
+            return 1
+          end
+
+          # Handle output based on embedding result
+          if context_result[:embedding_applied]
+            # Output the embedded document
+            puts context_result[:embedded_content]
+            
+            if options[:debug]
+              warn "Context embedded using strategy: #{context_result[:embedding_strategy]}"
+            end
+          else
+            # Format and output the standard result
+            formatter = CodingAgentTools::Molecules::Context::OutputFormatter.new(options[:format])
+            formatted_output = formatter.format(context_result)
+            puts formatted_output
+            
+            if context_result[:embedding_error] && options[:debug]
+              warn "Embedding failed: #{context_result[:embedding_error]}"
+            end
           end
 
           0
