@@ -1,1 +1,0 @@
-../../dev-handbook/.integrations/claude/agents/task-manager-agent.md
