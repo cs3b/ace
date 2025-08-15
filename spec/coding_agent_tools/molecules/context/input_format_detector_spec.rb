@@ -44,6 +44,8 @@ RSpec.describe CodingAgentTools::Molecules::Context::InputFormatDetector do
 
       before do
         allow(File).to receive(:exist?).with(agent_file).and_return(true)
+        # Mock file reading for old agent format (no context-tool-config tags)
+        allow(File).to receive(:read).with(agent_file).and_return("# Agent: Task Finder\n\n## Context Definition\nfiles:\n  - '**/*.md'")
       end
 
       it "detects agent file format" do
