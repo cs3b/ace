@@ -1,6 +1,6 @@
 ---
 id: 016
-status: pending
+status: completed
 priority: high
 estimate: 8h
 dependencies: []
@@ -265,24 +265,24 @@ Integration with existing patterns:
 
 ### Planning Steps
 
-* [ ] Research existing configuration patterns in dev-tools
+* [x] Research existing configuration patterns in dev-tools
   - PathConfigLoader implementation
   - TreeConfigLoader patterns
   - Security validation approaches
 
-* [ ] Design configuration schema for `.coding-agent/context.yml`
+* [x] Design configuration schema for `.coding-agent/context.yml`
   - Preset structure definition
   - Default values and inheritance
   - Validation rules
 
-* [ ] Analyze chunking requirements for large files
+* [x] Analyze chunking requirements for large files
   - Line counting vs byte counting
   - Index file format
   - Chunk naming conventions
 
 ### Execution Steps
 
-- [ ] Step 1: Create ContextConfigLoader atom
+- [x] Step 1: Create ContextConfigLoader atom
   - Implement YAML loading with schema validation
   - Add project root detection using existing atom
   - Handle missing configuration gracefully
@@ -291,7 +291,7 @@ Integration with existing patterns:
   > Assert: Valid configuration loaded from .coding-agent/context.yml
   > Command: bundle exec rspec spec/coding_agent_tools/atoms/context/context_config_loader_spec.rb
 
-- [ ] Step 2: Create ContextPresetManager molecule
+- [x] Step 2: Create ContextPresetManager molecule
   - Implement preset resolution logic
   - Add path resolution for source and output
   - Include preset listing functionality
@@ -300,7 +300,7 @@ Integration with existing patterns:
   > Assert: Preset correctly resolved with paths
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/context/context_preset_manager_spec.rb
 
-- [ ] Step 3: Create ContextFileWriter molecule
+- [x] Step 3: Create ContextFileWriter molecule
   - Implement file writing with directory creation
   - Add progress reporting
   - Include atomic write operations
@@ -309,7 +309,7 @@ Integration with existing patterns:
   > Assert: Files written to correct locations
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/context/context_file_writer_spec.rb
 
-- [ ] Step 4: Create ContextChunker molecule
+- [x] Step 4: Create ContextChunker molecule
   - Implement line-based chunking algorithm
   - Generate index file with chunk references
   - Handle edge cases (empty content, single line)
@@ -318,7 +318,7 @@ Integration with existing patterns:
   > Assert: Large content correctly split into chunks
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/context/context_chunker_spec.rb
 
-- [ ] Step 5: Update Context CLI command
+- [x] Step 5: Update Context CLI command
   - Add --preset option with preset loading
   - Add --list-presets for preset discovery
   - Add --output for manual output specification
@@ -328,7 +328,7 @@ Integration with existing patterns:
   > Assert: New options work correctly
   > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/context_spec.rb
 
-- [ ] Step 6: Enhance ContextLoader organism
+- [x] Step 6: Enhance ContextLoader organism
   - Integrate preset manager for configuration
   - Add output handling with file writer
   - Integrate chunker for large outputs
@@ -336,9 +336,9 @@ Integration with existing patterns:
   > TEST: Organism Integration
   > Type: Integration Test
   > Assert: All components work together
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/context_loader_spec.rb
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/context_spec.rb
 
-- [ ] Step 7: Create example configuration
+- [x] Step 7: Create example configuration
   - Add .coding-agent/context.yml to project root
   - Define presets for project, dev-tools, dev-handbook
   - Document configuration format
@@ -347,7 +347,7 @@ Integration with existing patterns:
   > Assert: Example presets load successfully
   > Command: context --preset project
 
-- [ ] Step 8: Add comprehensive test coverage
+- [x] Step 8: Add comprehensive test coverage
   - Unit tests for each new component
   - Integration tests for complete workflow
   - CLI tests with Aruba
@@ -357,7 +357,7 @@ Integration with existing patterns:
   > Assert: >95% code coverage achieved
   > Command: bundle exec rspec
 
-- [ ] Step 9: Update documentation
+- [x] Step 9: Update documentation
   - Add preset usage to context tool documentation
   - Create configuration reference
   - Update workflow instructions
