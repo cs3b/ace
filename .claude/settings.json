@@ -36,7 +36,9 @@
             "Bash(git-rm*)",
             "Bash(git-tag*)",
             "Bash(task-manager*)",
-            "Bash(release-manager*)"
+            "Bash(release-manager*)",
+            "Bash(code-lint*)",
+            "Bash(create-path*)"
         ]
     },
     "hooks": {

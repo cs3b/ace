@@ -16,22 +16,30 @@ centralized task management for coordinated development across **dev-handbook/**
 
 ## Agent Recommendations
 
-When working with specific commands, consider using these specialized agents for more efficient execution:
+When working with specific tasks, use these specialized agents for focused, efficient execution. All agents follow single-purpose design and standardized response formats.
 
 ### Task Management
-- **`task-finder`** - Use when running `task-manager list`, `task-manager next` to find tasks
-- **`task-creator`** - Use when running `task-manager create` to create new tasks
-- **`release-navigator`** - Use when running `release-manager current`, `release-manager all`, or `task-manager recent`
+- **`task-finder`** - FIND tasks only - list, filter, discover next actionable tasks
+- **`task-creator`** - CREATE tasks only - generate task files with content and metadata
+- **`release-navigator`** - NAVIGATE releases - discover current/all releases, track recent activity
 
-### Git Operations
-- **`git-all-commit`** - Use for `git-commit` when committing ALL changes
-- **`git-files-commit`** - Use for `git-commit` when committing specific files
-- **`git-review-commit`** - Use for `git-commit` when you want to review changes before committing
+### Git Operations  
+- **`git-all-commit`** - COMMIT ALL changes - fast execution without file selection
+- **`git-files-commit`** - COMMIT SPECIFIC files - requires file list
+- **`git-review-commit`** - REVIEW then COMMIT - analyze changes before committing
 
 ### Development Tools
-- **`code-lint-agent`** - Use when running linting or code quality checks
-- **`create-path-agent`** - Use when creating new files or directories with `create-path`
-- **`feature-research`** - Use when researching new features or analyzing gaps
-- **`search`** - Use when searching for code patterns or files across the codebase
+- **`lint-files`** - LINT and FIX code quality - supports ruby, markdown, all types with autofix
+- **`create-path`** - CREATE files/directories - supports templates (NOT for tasks)
+- **`feature-research`** - RESEARCH gaps and missing features - outputs .fr.md reports
+- **`search`** - SEARCH code patterns and files - intelligent filtering across codebase
 
-To invoke an agent, use: `@agent-name` or the Task tool with `subagent_type: agent-name`
+### Agent Invocation
+- **Direct**: `@agent-name` or use the Task tool with `subagent_type: agent-name`
+- **With params**: Agents accept expected_params documented in their definitions
+- **Composition**: Agents delegate to each other for complex workflows
+
+### Agent Management
+- **Location**: All agents in `dev-handbook/.integrations/claude/agents/*.ag.md`
+- **Symlinks**: `.claude/agents/` contains symlinks to originals
+- **Workflow**: Use `@manage-agents` workflow for creating/updating agents
