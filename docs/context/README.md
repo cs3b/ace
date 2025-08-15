@@ -22,7 +22,25 @@ docs/context/
 
 ## Usage
 
-### Loading Context
+### Using Presets (Recommended)
+
+The context tool now supports preset-based loading through `.coding-agent/context.yml`:
+
+```bash
+# List available presets
+context --list-presets
+
+# Load a preset (outputs to stdout by default)
+context --preset project
+
+# Load preset and save to file
+context --preset project --output docs/context/cached/project.md
+
+# Load preset with custom output format
+context --preset dev-tools --format xml
+```
+
+### Legacy: Loading Context with Templates
 
 Use the `load-context` script to process context definitions:
 
@@ -38,6 +56,21 @@ bin/load-context dev-handbook
 bin/load-context --help
 ```
 
+### Direct Template Loading
+
+For one-off template loading without presets:
+
+```bash
+# Load from YAML template
+context --yaml docs/context/project.md
+
+# Load from agent context
+context --from-agent .claude/agents/task-manager.md
+
+# Load from inline YAML
+context --yaml-string "files: [README.md]"
+```
+
 ### Reading Cached Context
 
 After loading, read the cached context file:
@@ -46,6 +79,51 @@ After loading, read the cached context file:
 # The tool will output the path, typically:
 cat docs/context/cached/project.md
 ```
+
+## Configuration
+
+### Preset Configuration (`.coding-agent/context.yml`)
+
+Define reusable presets in your project's `.coding-agent/context.yml` file:
+
+```yaml
+presets:
+  project:
+    description: "Complete project context"
+    template: "docs/context/project.md"
+    output: "docs/context/cached/project.md"
+    chunk_limit: 150000
+  
+  dev-tools:
+    description: "Development tools context"
+    template: "docs/context/dev-tools.md"
+    output: "docs/context/cached/dev-tools.md"
+    chunk_limit: 100000
+
+settings:
+  default_chunk_limit: 150000
+  cache_directory: "docs/context/cached"
+  auto_create_directories: true
+
+security:
+  allowed_template_paths:
+    - "docs/**"
+    - "dev-handbook/**"
+  allowed_output_paths:
+    - "docs/**"
+    - ".coding-agent/**"
+  forbidden_patterns:
+    - "**/.git/**"
+    - "**/.env*"
+    - "**/*.key"
+```
+
+### Preset Benefits
+
+- **Reusable**: Define once, use everywhere
+- **Secure**: Built-in path validation and security constraints
+- **Chunking**: Automatic splitting for large contexts
+- **Caching**: Smart file writing with directory creation
 
 ## Context Definition Format
 
@@ -75,19 +153,28 @@ format: markdown-xml
 
 ## Features
 
+### Preset System
+
+- **Configuration-driven**: Define presets in `.coding-agent/context.yml`
+- **Security validation**: Path restrictions prevent access to sensitive files
+- **Flexible output**: Save to file or output to stdout
+- **Multiple formats**: XML, YAML, or Markdown-XML output
+
 ### Automatic Chunking
 
-Large contexts (>150K lines) are automatically split into chunks for tools with file size limitations:
+Large contexts are automatically split into manageable chunks:
 
-- Main file contains chunk references
-- Each chunk is under 150K lines
-- Chunks are numbered sequentially
+- **Configurable limits**: Set chunk_limit per preset (default: 150K lines)
+- **Index generation**: Main file contains references to all chunks
+- **Sequential naming**: Chunks numbered for easy navigation
+- **Metadata inclusion**: Optional chunk headers with line counts
 
-### Caching
+### Smart Caching
 
-- Contexts are cached in `docs/context/cached/`
-- Cache directory is gitignored
-- Caches are overwritten on each run (no incremental updates)
+- **Atomic writes**: Temporary files prevent corruption
+- **Directory creation**: Auto-create output directories
+- **Progress reporting**: Real-time feedback during long operations
+- **Error handling**: Graceful failure with detailed messages
 
 ### Multi-Repository Support
 
@@ -126,9 +213,11 @@ To add a new context definition:
 ## Implementation Details
 
 - **Context Tool**: Uses the `context` executable from dev-tools
-- **Wrapper Script**: `bin/load-context` provides caching and chunking
-- **File Limits**: Chunks at 150K lines for safety with Claude Code
-- **Format**: Default is markdown-xml for best AI agent compatibility
+- **Preset Manager**: Handles configuration loading and path resolution
+- **Chunking System**: Line-based splitting with configurable limits
+- **File Writer**: Atomic operations with progress reporting
+- **Security Layer**: Path validation against allowed/forbidden patterns
+- **Legacy Support**: `bin/load-context` wrapper script for backward compatibility
 
 ## Troubleshooting
 

@@ -1,0 +1,70 @@
+# Context Tool Configuration
+# This file configures presets for the context tool (coding-agent-tools context)
+
+presets:
+  # Main project context - overview of the entire handbook-meta repository
+  project:
+    description: "Complete project context including all submodules and documentation"
+    template: "docs/context/project.md"
+    output: "docs/context/cached/project.md"
+    chunk_limit: 150000
+
+  # Development tools specific context
+  dev-tools:
+    description: "Context focused on the dev-tools Ruby gem implementation"
+    template: "docs/context/dev-tools.md"
+    output: "docs/context/cached/dev-tools.md"
+    chunk_limit: 100000
+
+  # Handbook specific context
+  dev-handbook:
+    description: "Context focused on development guides and workflows"
+    template: "docs/context/dev-handbook.md"
+    output: "docs/context/cached/dev-handbook.md"
+    chunk_limit: 80000
+
+  # Task management context
+  taskflow:
+    description: "Current task and release context for development planning"
+    template: "dev-taskflow/context/current-release.md"
+    output: "docs/context/cached/taskflow.md"
+    chunk_limit: 120000
+
+  # Essential project files only
+  essentials:
+    description: "Minimal context with just README, architecture, and key docs"
+    template: "docs/context/essentials.yaml"
+    output: "docs/context/cached/essentials.md"
+    chunk_limit: 50000
+
+settings:
+  default_chunk_limit: 150000
+  cache_directory: "docs/context/cached"
+  fallback_directory: "docs/context"
+  auto_create_directories: true
+
+security:
+  allowed_template_paths:
+    - "docs/**"
+    - "dev-handbook/**"
+    - "dev-taskflow/**"
+    - ".coding-agent/**"
+    - "templates/**"
+  allowed_output_paths:
+    - "docs/**"
+    - ".coding-agent/**"
+    - "tmp/**"
+  forbidden_patterns:
+    - ".git/**"
+    - "**/.git/**"
+    - "node_modules/**"
+    - "**/node_modules/**"
+    - ".env*"
+    - "**/.env*"
+    - "*.key"
+    - "**/*.key"
+    - "*.pem"
+    - "**/*.pem"
+    - "coverage/**"
+    - "**/coverage/**"
+    - "tmp/test_reliability/**"
