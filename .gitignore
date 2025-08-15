@@ -5,6 +5,3 @@ doc-dependencies*
 node_modules
 .lint*.md
 *.bak
-
-# Context cache files
-docs/context/cached/
