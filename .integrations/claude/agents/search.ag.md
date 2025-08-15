@@ -323,13 +323,13 @@ Found [N] matches (showing first [M]).
 
 ## Context Definition
 
-```yaml
+<context-tool-config>
 # Minimal context - start with just discovery commands
 commands:
   - search --help  # Show available options for reference
   - pwd  # Current location context
 format: markdown-xml
-```
+</context-tool-config>
 
 ## Important Notes
 

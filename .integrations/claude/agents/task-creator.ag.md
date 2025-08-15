@@ -137,14 +137,14 @@ task-manager create --title "Critical fix" --priority high --status pending
 
 ## Context Definition
 
-```yaml
+<context-tool-config>
 # Minimal context for task creation
 commands:
   # Just the creation command
   - task-manager generate-id
   
 format: markdown-xml
-```
+</context-tool-config>
 
 ## Error Handling
 

@@ -323,7 +323,7 @@ markdownlint --config .markdownlint.json docs/
 
 ## Context Definition
 
-```yaml
+<context-tool-config>
 files:
   - .rubocop.yml
   - .markdownlint.json
@@ -335,4 +335,4 @@ commands:
   - find . -name "*.rb" -type f | wc -l
   - find . -name "*.md" -type f | wc -l
 format: markdown-xml
-```
+</context-tool-config>

@@ -120,7 +120,7 @@ task-manager recent --limit 3
 
 ## Context Definition
 
-```yaml
+<context-tool-config>
 # Minimal context for navigation
 commands:
   # Release discovery
@@ -131,7 +131,7 @@ commands:
   - task-manager recent --limit 5
   
 format: markdown-xml
-```
+</context-tool-config>
 
 ## Error Handling
 

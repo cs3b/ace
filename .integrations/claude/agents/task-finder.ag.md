@@ -101,7 +101,7 @@ task-manager list --filter status:pending
 
 ## Context Definition
 
-```yaml
+<context-tool-config>
 # Minimal context for task discovery
 commands:
   # Primary discovery commands
@@ -109,7 +109,7 @@ commands:
   - task-manager list
   
 format: markdown-xml
-```
+</context-tool-config>
 
 ## Error Handling
 

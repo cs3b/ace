@@ -229,7 +229,7 @@ Failed to create [type] at [path].
 
 ## Context Definition
 
-```yaml
+<context-tool-config>
 files:
   - docs/blueprint.md
   - dev-handbook/templates/**/*.md
@@ -239,4 +239,4 @@ commands:
   - ls -la dev-taskflow/current/
   - find dev-handbook/templates -name "*.md" | head -10
 format: markdown-xml
-```
+</context-tool-config>
