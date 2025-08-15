@@ -1,10 +1,16 @@
 ---
 # Core metadata (both Claude Code and MCP proxy compatible)
-name: code-lint-agent
-description: Automated linting and code quality agent with batch processing and intelligent fixes.
-  Use when you need to check code quality, run linters, or apply automated fixes across the codebase.
-tools: [Bash, Read, Grep, Glob]
-last_modified: '2025-08-14'
+name: lint-files
+description: LINT and FIX code quality issues - supports ruby, markdown, all types with autofix
+expected_params:
+  required:
+    - type: "Type to lint (ruby/markdown/all/docs-dependencies)"
+  optional:
+    - paths: "Specific paths to lint (default: project defaults)"
+    - autofix: "Apply automatic fixes (default: true)"
+    - dry_run: "Show what would be done without changes (default: false)"
+    - config: "Path to custom configuration file"
+last_modified: '2025-08-15'
 type: agent
 
 # MCP proxy enhancements (ignored by Claude Code)
@@ -91,25 +97,34 @@ You are a code quality specialist focused on automated linting, style enforcemen
 
 ## Linting Workflows
 
-### Full Project Lint
+### Using code-lint Command
 ```bash
-# Ruby code quality
-cd dev-tools && bundle exec standardrb --fix
+# Lint Ruby files with autofix
+code-lint ruby --autofix
 
-# Documentation quality  
-npm run lint
+# Lint Markdown files with autofix
+code-lint markdown --autofix
 
-# Check for any remaining issues
-cd dev-tools && bundle exec standardrb
+# Lint all supported file types
+code-lint all --autofix
+
+# Analyze documentation dependencies
+code-lint docs-dependencies
+
+# Dry run to see what would change
+code-lint ruby --dry-run
+
+# Use custom config
+code-lint ruby --config .custom-rubocop.yml --autofix
 ```
 
 ### Targeted Linting
 ```bash
-# Specific file type
-standardrb lib/**/*.rb
+# Specific paths
+code-lint ruby dev-tools/lib --autofix
 
-# Specific directory
-markdownlint docs/**/*.md
+# Multiple paths
+code-lint markdown docs/ README.md --autofix
 
 # Recent changes only
 git diff --name-only | grep "\.rb$" | xargs standardrb
@@ -221,24 +236,69 @@ Glob "**/*.js" | process_javascript_files
 - **Breaking changes**: API modifications
 - **Performance**: Optimization suggestions
 
+## Response Format
+
+### Success Response
+```markdown
+## Summary
+Linted [N] [type] files with [--autofix/--dry-run].
+
+## Results
+- Files checked: [count]
+- Issues found: [count]
+- Issues fixed: [count] (if autofix)
+- Remaining issues: [count]
+
+## Details
+[Key issues that need manual attention]
+
+## Next Steps
+- Review remaining issues
+- Run tests to verify fixes
+- Commit the auto-fixed changes
+```
+
+### Progress Response
+```markdown
+## Progress Update
+Processing [type] files...
+
+## Current Status
+- Files processed: [X/Y]
+- Issues found so far: [count]
+- Issues fixed: [count]
+```
+
+### Error Response
+```markdown
+## Summary
+Linting failed for [type] files.
+
+## Issue
+[Specific error message]
+
+## Suggested Resolution
+[How to fix the issue]
+```
+
 ## Integration Points
 
 ### Git Workflow
 ```bash
 # Pre-commit linting
-git add . && standardrb --fix && git add .
+code-lint all --autofix
 
 # Pre-push validation
-standardrb && markdownlint docs/**/*.md
+code-lint all --dry-run
 ```
 
 ### Development Workflow
 ```bash
 # During development
-standardrb lib/new_feature.rb --fix
+code-lint ruby dev-tools/lib/new_feature.rb --autofix
 
 # Before PR
-npm run lint && cd dev-tools && bundle exec standardrb
+code-lint all --autofix
 ```
 
 ### CI/CD Integration
