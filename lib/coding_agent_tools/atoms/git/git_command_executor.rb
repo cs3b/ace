@@ -43,23 +43,27 @@ module CodingAgentTools
         attr_reader :repository_path
 
         def build_command(command)
-          if repository_path && repository_path != "."
+          if repository_path
             resolved_path = resolve_repository_path(repository_path)
             "git -C #{Shellwords.escape(resolved_path)} #{command}"
           else
-            "git #{command}"
+            # When no repository path specified, always use project root
+            project_root = ProjectRootDetector.find_project_root
+            "git -C #{Shellwords.escape(project_root)} #{command}"
           end
         end
 
         def resolve_repository_path(path)
+          # Always resolve relative to project root for consistency
+          project_root = ProjectRootDetector.find_project_root
+          
+          # Special case for "." - use project root
+          return project_root if path == "."
+          
           # If path is already absolute, use it as-is
           return path if File.absolute_path?(path)
 
-          # If relative path exists locally (from current directory), use it
-          return path if File.exist?(path) && File.directory?(path)
-
-          # Otherwise, resolve relative to project root
-          project_root = ProjectRootDetector.find_project_root
+          # Always resolve relative to project root
           absolute_path = File.join(project_root, path)
 
           # Verify the resolved path exists
