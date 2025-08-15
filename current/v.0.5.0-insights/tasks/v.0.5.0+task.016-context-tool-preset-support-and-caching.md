@@ -1,8 +1,8 @@
 ---
 id: 016
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 8h
 dependencies: []
 ---
 
@@ -132,9 +132,280 @@ Enable efficient project context loading through named presets that eliminate re
 - ❌ **Future Enhancements**: Remote preset repositories, preset sharing mechanisms
 - ❌ **Migration Tools**: Automated conversion of existing templates to presets
 
+## Technical Approach
+
+### Architecture Pattern
+Following the ATOM architecture pattern in dev-tools:
+- **Atoms**: Configuration loader for `.coding-agent/context.yml`
+- **Molecules**: Preset manager, file writer with chunking support
+- **Organism**: Enhanced ContextLoader with preset capabilities
+- **CLI**: Updated Context command with new options
+
+Integration with existing patterns:
+- Reuse `ProjectRootDetector` atom for finding project root
+- Follow `PathConfigLoader` pattern for configuration loading
+- Extend existing `ContextLoader` organism rather than replace
+
+### Technology Stack
+- **Configuration**: YAML parsing (already in use)
+- **File Operations**: Ruby File/FileUtils (standard library)
+- **Path Resolution**: Existing ProjectRootDetector atom
+- **Chunking**: Line-based splitting with index generation
+- **CLI Framework**: dry-cli (already integrated)
+
+## Tool Selection
+
+| Criteria | Custom Implementation | External Library | Selected |
+|----------|----------------------|------------------|----------|
+| Performance | Excellent | Good | Custom |
+| Integration | Excellent | Fair | Custom |
+| Maintenance | Good | Fair | Custom |
+| Flexibility | Excellent | Limited | Custom |
+
+**Selection Rationale:** Custom implementation using existing ATOM components provides best integration with current architecture and allows precise control over chunking and caching behavior.
+
+## File Modifications
+
+### Create
+- `lib/coding_agent_tools/atoms/context/context_config_loader.rb`
+  - Purpose: Load and validate `.coding-agent/context.yml`
+  - Key components: YAML parsing, schema validation, default merging
+  - Dependencies: ProjectRootDetector, YAML library
+
+- `lib/coding_agent_tools/molecules/context/context_preset_manager.rb`
+  - Purpose: Manage preset configurations and resolution
+  - Key components: Preset loading, path resolution, validation
+  - Dependencies: ContextConfigLoader atom
+
+- `lib/coding_agent_tools/molecules/context/context_file_writer.rb`
+  - Purpose: Write context to files with directory creation
+  - Key components: File writing, directory creation, progress reporting
+  - Dependencies: FileUtils, SecurityLogger
+
+- `lib/coding_agent_tools/molecules/context/context_chunker.rb`
+  - Purpose: Split large contexts into chunks with index
+  - Key components: Line counting, chunk splitting, index generation
+  - Dependencies: None (pure Ruby)
+
+- `spec/coding_agent_tools/atoms/context/context_config_loader_spec.rb`
+  - Purpose: Test configuration loading behavior
+  - Key components: YAML parsing tests, validation tests
+  - Dependencies: RSpec
+
+- `spec/coding_agent_tools/molecules/context/context_preset_manager_spec.rb`
+  - Purpose: Test preset management
+  - Key components: Preset resolution, validation tests
+  - Dependencies: RSpec
+
+- `spec/coding_agent_tools/molecules/context/context_file_writer_spec.rb`
+  - Purpose: Test file writing behavior
+  - Key components: Directory creation, file writing tests
+  - Dependencies: RSpec, temp directories
+
+- `spec/coding_agent_tools/molecules/context/context_chunker_spec.rb`
+  - Purpose: Test chunking algorithm
+  - Key components: Large file splitting, index generation tests
+  - Dependencies: RSpec
+
+### Modify
+- `lib/coding_agent_tools/cli/commands/context.rb`
+  - Changes: Add --preset, --list-presets, --output options
+  - Impact: New command-line interface capabilities
+  - Integration points: Calls preset manager for preset loading
+
+- `lib/coding_agent_tools/organisms/context_loader.rb`
+  - Changes: Add preset support, output handling, chunking integration
+  - Impact: Core functionality enhancement
+  - Integration points: Uses new molecules for preset and file operations
+
+- `spec/coding_agent_tools/cli/commands/context_spec.rb`
+  - Changes: Add tests for new CLI options
+  - Impact: Test coverage for new features
+  - Integration points: CLI testing with Aruba
+
+- `spec/coding_agent_tools/organisms/context_loader_spec.rb`
+  - Changes: Add tests for preset loading and output handling
+  - Impact: Comprehensive test coverage
+  - Integration points: Organism testing
+
+### Configuration
+- `.coding-agent/context.yml` (in project root, not dev-tools)
+  - Purpose: Define presets for context loading
+  - Format: YAML with preset definitions
+  - Example content provided in implementation
+
+## Test Case Planning
+
+### Happy Path Scenarios
+- Load preset successfully and save to configured path
+- Override preset output with --output flag
+- List available presets with descriptions
+- Process traditional YAML template (backward compatibility)
+
+### Edge Case Scenarios
+- Unknown preset name → Show available presets
+- Missing preset source file → Clear error message
+- Output > 150K lines → Automatic chunking
+- Missing .coding-agent directory → Fall back to defaults
+- Concurrent writes → File locking protection
+
+### Error Condition Scenarios
+- Malformed YAML configuration → Validation error with line number
+- Write permission denied → Suggest alternative location
+- Command execution failure in template → Continue processing
+- Circular template references → Detection and prevention
+
+### Integration Point Scenarios
+- Integration with existing context tool functionality
+- Compatibility with current CLI options
+- File system operations with security validation
+- Progress reporting during long operations
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Research existing configuration patterns in dev-tools
+  - PathConfigLoader implementation
+  - TreeConfigLoader patterns
+  - Security validation approaches
+
+* [ ] Design configuration schema for `.coding-agent/context.yml`
+  - Preset structure definition
+  - Default values and inheritance
+  - Validation rules
+
+* [ ] Analyze chunking requirements for large files
+  - Line counting vs byte counting
+  - Index file format
+  - Chunk naming conventions
+
+### Execution Steps
+
+- [ ] Step 1: Create ContextConfigLoader atom
+  - Implement YAML loading with schema validation
+  - Add project root detection using existing atom
+  - Handle missing configuration gracefully
+  > TEST: Configuration Loading
+  > Type: Unit Test
+  > Assert: Valid configuration loaded from .coding-agent/context.yml
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/context/context_config_loader_spec.rb
+
+- [ ] Step 2: Create ContextPresetManager molecule
+  - Implement preset resolution logic
+  - Add path resolution for source and output
+  - Include preset listing functionality
+  > TEST: Preset Resolution
+  > Type: Unit Test
+  > Assert: Preset correctly resolved with paths
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/context/context_preset_manager_spec.rb
+
+- [ ] Step 3: Create ContextFileWriter molecule
+  - Implement file writing with directory creation
+  - Add progress reporting
+  - Include atomic write operations
+  > TEST: File Writing
+  > Type: Integration Test
+  > Assert: Files written to correct locations
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/context/context_file_writer_spec.rb
+
+- [ ] Step 4: Create ContextChunker molecule
+  - Implement line-based chunking algorithm
+  - Generate index file with chunk references
+  - Handle edge cases (empty content, single line)
+  > TEST: Chunking Algorithm
+  > Type: Unit Test
+  > Assert: Large content correctly split into chunks
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/context/context_chunker_spec.rb
+
+- [ ] Step 5: Update Context CLI command
+  - Add --preset option with preset loading
+  - Add --list-presets for preset discovery
+  - Add --output for manual output specification
+  - Maintain backward compatibility
+  > TEST: CLI Options
+  > Type: CLI Test
+  > Assert: New options work correctly
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/context_spec.rb
+
+- [ ] Step 6: Enhance ContextLoader organism
+  - Integrate preset manager for configuration
+  - Add output handling with file writer
+  - Integrate chunker for large outputs
+  - Preserve existing functionality
+  > TEST: Organism Integration
+  > Type: Integration Test
+  > Assert: All components work together
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/context_loader_spec.rb
+
+- [ ] Step 7: Create example configuration
+  - Add .coding-agent/context.yml to project root
+  - Define presets for project, dev-tools, dev-handbook
+  - Document configuration format
+  > TEST: Example Configuration
+  > Type: Manual Test
+  > Assert: Example presets load successfully
+  > Command: context --preset project
+
+- [ ] Step 8: Add comprehensive test coverage
+  - Unit tests for each new component
+  - Integration tests for complete workflow
+  - CLI tests with Aruba
+  - Edge case and error scenario tests
+  > TEST: Full Test Suite
+  > Type: Test Coverage
+  > Assert: >95% code coverage achieved
+  > Command: bundle exec rspec
+
+- [ ] Step 9: Update documentation
+  - Add preset usage to context tool documentation
+  - Create configuration reference
+  - Update workflow instructions
+  > TEST: Documentation Validation
+  > Type: Manual Review
+  > Assert: Documentation complete and accurate
+  > Command: markdownlint docs/**/*.md
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Breaking existing context tool functionality
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Comprehensive backward compatibility tests
+  - **Rollback:** Git revert with immediate fix
+
+- **Risk:** Performance degradation for large contexts
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Streaming processing for >1GB files
+  - **Rollback:** Disable chunking temporarily
+
+### Integration Risks
+- **Risk:** Configuration conflicts with existing .coding-agent patterns
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Use separate context.yml file
+  - **Monitoring:** Check for file conflicts
+
+### Performance Risks
+- **Risk:** Slow chunking for very large files
+  - **Mitigation:** Line-based processing with buffering
+  - **Monitoring:** Time measurements in tests
+  - **Thresholds:** <5 seconds for 1M lines
+
+## Acceptance Criteria
+
+- [ ] AC 1: All preset functionality working as specified
+- [ ] AC 2: Backward compatibility maintained for existing usage
+- [ ] AC 3: Automatic chunking for files >150K lines
+- [ ] AC 4: All tests passing with >95% coverage
+- [ ] AC 5: Performance targets met (<2 seconds typical load)
+
 ## References
 
 - User feedback: dev-taskflow/current/v.0.5.0-insights/docs/feedback-to-bin/load-context.md
 - Current context tool documentation
 - Claude Code file size limitations research
 - Existing .coding-agent configuration patterns in dev-tools
+- ATOM architecture documentation: docs/architecture-tools.md
