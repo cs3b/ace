@@ -82,6 +82,38 @@ The previous `bin/load-context` wrapper script has been replaced with native pre
 - ✅ Better error messages
 - ✅ Configuration management
 
+## Enhanced Context Tool Examples
+
+The context tool now supports enhanced features with `<context-tool-config>` tagged format:
+
+### Example Files
+
+- **`project.md`** - Main project context with document embedding enabled
+- **`dev-tools.md`** - Ruby gem focused context configuration
+- **`dev-handbook.md`** - Handbook and workflows context with YAML output
+- **`minimal-example.md`** - Simplest possible configuration example
+
+### New Usage Patterns
+
+```bash
+# Auto-detection with positional arguments (NEW)
+context docs/context/project.md
+context .claude/agents/task-finder.ag.md
+context template.yml
+
+# Traditional usage (still supported)
+context --preset project
+context --yaml template.yml
+context --from-agent agent.md
+```
+
+### Key Features
+
+- **Auto-format detection** - Automatically detects YAML files (.yml/.yaml), agent files (.ag.md), and markdown files (.md)
+- **Tagged YAML blocks** - Use `<context-tool-config>` tags for unambiguous configuration
+- **Document embedding** - Set `embed_document_source: true` to embed results back into source document
+- **Backward compatibility** - All existing flags and usage patterns continue to work
+
 ## See Also
 
 - Context tool implementation: `dev-tools/lib/coding_agent_tools/cli/commands/context.rb`
