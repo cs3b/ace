@@ -1,6 +1,6 @@
 # Task Manager Context Template
 # This template loads task management context without file content
-# Use: context --yaml dev-handbook/templates/context/task-manager.yaml
+# Use: context dev-handbook/templates/context/task-manager.yaml
 
 # No files needed - we work at file level, not content level
 
