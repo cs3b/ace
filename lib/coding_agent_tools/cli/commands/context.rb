@@ -125,10 +125,9 @@ module CodingAgentTools
           # Override output path if specified
           output_path = options[:output] || preset[:output]
           
-          # Load context from template
+          # Load context from template using auto-detection
           context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
-          template_data = { type: :yaml_file, source: preset[:template] }
-          context_result = context_loader.load_from_template(template_data, options)
+          context_result = context_loader.load_with_auto_detection(preset[:template], options)
 
           unless context_result[:success]
             warn "Error loading context: #{context_result[:error]}"
