@@ -4,14 +4,14 @@
 # Context - Load and format project context from templates
 # 
 # This executable provides context loading with multi-format output support.
-# It can load context from YAML templates, agent markdown files, or inline YAML strings.
+# It automatically detects input format from file extension or content.
 #
-# Usage: context [options]
+# Usage: context [input] [options]
 #
 # Examples:
-#   context --yaml templates/project-essentials.yaml
-#   context --from-agent .claude/agents/task-manager.md
-#   context --yaml-string 'files: [docs/*.md]' --format xml
+#   context templates/project-essentials.yaml
+#   context .claude/agents/task-manager.ag.md
+#   context 'files: [docs/*.md]' --format xml
 #
 # Output formats:
 #   - xml: Pure XML format
