@@ -60,15 +60,15 @@ The context tool includes security features:
 - Forbidden paths (e.g., .git, node_modules) are blocked
 - Allowed paths can be configured per preset
 
-### Backward Compatibility
+### Usage with YAML Templates
 
-The traditional YAML template mode still works:
+YAML templates are automatically detected:
 ```bash
 # Output to stdout (default)
-context --yaml template.yml
+context template.yml
 
 # Output to file
-context --yaml template.yml --output output.md
+context template.yml --output output.md
 ```
 
 ## Migration from Old System
@@ -93,18 +93,17 @@ The context tool now supports enhanced features with `<context-tool-config>` tag
 - **`dev-handbook.md`** - Handbook and workflows context with YAML output
 - **`minimal-example.md`** - Simplest possible configuration example
 
-### New Usage Patterns
+### Usage Patterns
 
 ```bash
-# Auto-detection with positional arguments (NEW)
+# Auto-detection with positional arguments
 context docs/context/project.md
 context .claude/agents/task-finder.ag.md
 context template.yml
+context 'files: [docs/*.md]'  # Inline YAML
 
-# Traditional usage (still supported)
+# Preset-based usage
 context --preset project
-context --yaml template.yml
-context --from-agent agent.md
 ```
 
 ### Key Features
