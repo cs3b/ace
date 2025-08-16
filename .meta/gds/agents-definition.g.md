@@ -480,7 +480,7 @@ Measure and optimize context usage:
 
 ```bash
 # Measure context size
-context --from-agent .claude/agents/agent-name.md | wc -c
+context .claude/agents/agent-name.md | wc -c
 
 # Target: <10KB for simple agents, <50KB for complex
 ```
