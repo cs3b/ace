@@ -27,7 +27,7 @@ Why a Wrapper Script?
   3. Simplified Interface
 
   Instead of:
-  context --yaml docs/context/project.md --format markdown-xml > docs/context/cached/project.md
+  context --yaml docs/context/project.md --format markdown-xml > docs/context/cached/project.md  # [Legacy syntax - now: context docs/context/project.md]
 
   We can just use:
   bin/load-context project

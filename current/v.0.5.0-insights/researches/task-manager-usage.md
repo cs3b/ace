@@ -1,4 +1,7 @@
-context --from-agent /Users/michalczyz/Projects/CodingAgent/handbook-meta/.claude/agents/task-manager-agent.md
+# Historical Usage Log
+# Note: Contains legacy command syntax. Current syntax: context <file>
+
+context --from-agent /Users/michalczyz/Projects/CodingAgent/handbook-meta/.claude/agents/task-manager-agent.md  # [Legacy - now: context /path/to/agent.md]
 task-manager next --limit 10
 capture-it --commit "task-manager next should return one task by default, but when we pass --limit 0 it shoould return all the pending tasks ready to be work on"
 task-manager next --limit 7
