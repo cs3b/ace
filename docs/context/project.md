@@ -38,8 +38,8 @@ context docs/context/project.md
 # Since embed_document_source: true, the result will be this full document
 # with the processed context embedded at the end
 
-# Traditional usage still works
-context --yaml old-template.yml
+# Usage examples
+context old-template.yml
 context --preset project
 ```
 
