@@ -17,6 +17,7 @@
             "Bash(git stash*)",
             "Bash(git tag*)",
             "Bash(git remote*)",
+            "Bash(git restore*)",
             "Bash(git clone*)",
             "Bash(git init*)"
         ],
