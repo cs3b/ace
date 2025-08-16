@@ -15,16 +15,7 @@ module CodingAgentTools
         desc "Load project context from templates with multi-format output"
 
         argument :input, type: :string, required: false,
-          desc: "Input file path or string (auto-detects format: .yml/.yaml/agent.ag.md/context.md)"
-
-        option :yaml, type: :string, aliases: ["y"],
-          desc: "YAML template file path"
-
-        option :from_agent, type: :string, aliases: ["a"],
-          desc: "Agent markdown file to extract context from"
-
-        option :yaml_string, type: :string, aliases: ["s"],
-          desc: "Inline YAML template string"
+          desc: "Input file path or inline YAML (auto-detects format: .yml/.yaml/.ag.md/.md or inline YAML)"
 
         option :preset, type: :string, aliases: ["p"],
           desc: "Load configuration from preset name"
@@ -49,17 +40,15 @@ module CodingAgentTools
           desc: "Enable debug output"
 
         example [
+          "templates/project-essentials.yaml",
+          ".claude/agents/task-manager.ag.md",
+          "'files: [docs/*.md]'",
+          "templates/project.yaml --format xml",
+          ".claude/agents/git-commit.ag.md --format yaml",
           "docs/context/project.md",
-          ".claude/agents/task-finder.ag.md",
-          "template.yml",
           "--preset project",
           "--preset project --output custom/output.md",
-          "--list-presets",
-          "--yaml templates/project-essentials.yaml",
-          "--from-agent .claude/agents/task-manager.md",
-          "--yaml-string 'files: [docs/*.md]'",
-          "--yaml templates/project.yaml --format xml",
-          "--from-agent .claude/agents/git-commit.md --format yaml"
+          "--list-presets"
         ]
 
         def call(input: nil, **options)
@@ -74,28 +63,18 @@ module CodingAgentTools
               return handle_preset_loading(options)
             end
 
-            # Handle new positional argument with auto-detection
+            # Require input or preset
+            unless input || options[:preset]
+              raise ArgumentError, "Must specify input file/string or use --preset"
+            end
+
+            # Handle input with auto-detection
             if input
               return handle_auto_detection_loading(input, options)
             end
 
-            # Handle traditional template loading (backward compatibility)
-            # Validate input options
-            validate_input_options(options)
-
-            # Initialize the context loader organism
-            context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
-
-            # Load context based on input type
-            template_data = parse_input(options)
-            context_result = context_loader.load_from_template(template_data, options)
-
-            # Format and output the result
-            formatter = CodingAgentTools::Molecules::Context::OutputFormatter.new(options[:format])
-            formatted_output = formatter.format(context_result)
-
-            puts formatted_output
-            0
+            # Should not reach here as preset is handled above
+            raise ArgumentError, "No valid input provided"
           rescue => e
             handle_error(e, options[:debug])
             1
@@ -104,36 +83,6 @@ module CodingAgentTools
 
         private
 
-        def validate_input_options(options)
-          input_methods = [options[:yaml], options[:from_agent], options[:yaml_string], options[:preset]].compact
-          
-          if input_methods.empty?
-            raise ArgumentError, "Must specify one input method: --yaml, --from-agent, --yaml-string, or --preset"
-          elsif input_methods.size > 1
-            raise ArgumentError, "Can only specify one input method at a time"
-          end
-
-          # Validate file existence for file-based inputs
-          if options[:yaml] && !File.exist?(options[:yaml])
-            raise ArgumentError, "YAML template file not found: #{options[:yaml]}"
-          end
-
-          if options[:from_agent] && !File.exist?(options[:from_agent])
-            raise ArgumentError, "Agent file not found: #{options[:from_agent]}"
-          end
-        end
-
-        def parse_input(options)
-          if options[:yaml]
-            {type: :yaml_file, source: options[:yaml]}
-          elsif options[:from_agent]
-            {type: :agent_file, source: options[:from_agent]}
-          elsif options[:yaml_string]
-            {type: :yaml_string, source: options[:yaml_string]}
-          else
-            raise ArgumentError, "No valid input source provided"
-          end
-        end
 
         def handle_list_presets(options)
           preset_manager = CodingAgentTools::Molecules::Context::ContextPresetManager.new
