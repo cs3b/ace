@@ -8,6 +8,10 @@
 * Understanding of each document's specific purpose
 * Access to Git for analyzing changes
 
+## Project Context Loading
+
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+
 ## Core Context Documents
 
 This workflow maintains four essential project documents, each with a distinct purpose:

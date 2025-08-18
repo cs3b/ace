@@ -14,10 +14,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Project Context Loading
 
-* Load project objectives: `docs/what-do-we-build.md`
-* Load architecture overview: `docs/architecture.md`
-* Load project structure: `docs/blueprint.md`
-* Load tools documentation: `docs/tools.md`
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 
 ## Process Steps
 

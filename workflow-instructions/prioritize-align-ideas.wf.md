@@ -13,12 +13,7 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 
 ## Project Context Loading
 
-* Load project overview: `docs/what-do-we-build.md` (or equivalent)
-* Load architecture documentation: `docs/architecture.md`
-* Load project structure: `docs/blueprint.md`
-* Load available tools: `docs/tools.md` (if exists)
-* Review existing tools/executables in project
-* Review existing workflow patterns
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 
 ## Process Steps
 

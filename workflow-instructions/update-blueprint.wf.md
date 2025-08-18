@@ -20,11 +20,7 @@ how to navigate the codebase.
 
 ## Project Context Loading
 
-- Check existing blueprint: `docs/blueprint.md`
-- Load project overview: `docs/what-do-we-build.md`
-- Load architecture: `docs/architecture.md`
-- Check for tools documentation: `docs/tools.md`
-- Review current directory structure
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 
 ## High-Level Execution Plan
 

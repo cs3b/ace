@@ -92,10 +92,7 @@ AI-assisted development workflow in a new or existing project.
 
 ## Project Context Loading
 
-- Load project objectives: `docs/what-do-we-build.md`
-- Load architecture overview: `docs/architecture.md`
-- Load project structure: `docs/blueprint.md`
-- Load tools documentation: `docs/tools.md`
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 
 ## High-Level Execution Plan
 

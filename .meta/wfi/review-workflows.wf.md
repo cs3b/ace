@@ -13,12 +13,11 @@ Systematically review multiple workflow instruction files for compliance with st
 
 ## Project Context Loading
 
+* Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 * Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
 * Load template embedding guide: `dev-handbook/.meta/gds/template-embedding.g.md`
 * Load example workflow: `dev-handbook/workflow-instructions/plan-task.wf.md`
 * Load batch processing example: `dev-handbook/workflow-instructions/draft-release.wf.md`
-* Load project structure: `docs/blueprint.md`
-* Load available tools: `docs/tools.md`
 
 ## Process Steps
 

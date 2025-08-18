@@ -13,10 +13,7 @@ Document significant work completed during a session that wasn't part of any pla
 
 ## Project Context Loading
 
-- Load project structure: `docs/blueprint.md`
-- Load current release tasks: `dev-taskflow/current/*/tasks/*.md`
-- Load task management guide: `dev-handbook/guides/taskflow-management.md`
-- Load task template reference: `dev-taskflow/templates/task.template.md`
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 
 ## High-Level Execution Plan
 

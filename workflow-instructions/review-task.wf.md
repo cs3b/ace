@@ -12,6 +12,10 @@ Review and update task content without changing its status. This workflow enable
 - Write access to task files in `dev-taskflow/`
 - Access to project documentation and codebase for research
 
+## Project Context Loading
+
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+
 ## Process Steps
 
 1. **Load and Analyze Task:**

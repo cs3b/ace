@@ -14,11 +14,7 @@ Rebase all repositories (main repository and submodules) against their respectiv
 
 ## Project Context Loading
 
-- Load project structure: `docs/blueprint.md`
-- Load tools documentation: `docs/tools.md`
-- Load project objectives: `docs/what-do-we-build.md`
-- Check current branch status across repositories
-- Identify submodule structure from `.gitmodules`
+- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
 
 ## High-Level Execution Plan
 
