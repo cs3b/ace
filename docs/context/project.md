@@ -7,18 +7,17 @@ You are working on the Coding Agent Workflow Toolkit (Meta) - a comprehensive me
 <context-tool-config>
 embed_document_source: true
 files:
-  - README.md
   - docs/what-do-we-build.md
   - docs/architecture.md
+  - docs/blueprint.md
+  - CLAUDE.md
+  - CLAUDE.local.md
   - dev-handbook/README.md
   - dev-taskflow/README.md
   - dev-tools/README.md
-  - CLAUDE.md
-  - CLAUDE.local.md
 
 commands:
   - git-status --short
-  - task-manager next
+  - task-manager next --limit 5
   - release-manager current
-  - nav-tree --depth 2
 </context-tool-config>

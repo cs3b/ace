@@ -8,11 +8,6 @@ presets:
         template: "docs/context/project.md"
         output: "docs/context/cached/project.md"
         chunk_limit: 150000
-    # Project context to stdout - use this when you want output directly to terminal
-    project-stdout:
-        description: "Complete project context to stdout (no file output)"
-        template: "docs/context/project.md"
-        output: "-"  # Use "-" or "stdout" to output to terminal instead of file
 
     # Development tools specific context
     dev-tools:
