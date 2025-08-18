@@ -29,7 +29,7 @@ This document provides actionable decisions from Architecture Decision Records (
 **Impact**: When embedding documents in workflows, always use the `<documents>` wrapper with appropriate document type tags. This enables automated synchronization and validation.
 **Details**: [ADR-005](decisions/ADR-005-universal-document-embedding-system.md)
 
-## Ruby Gem Development Decisions
+## Development Tool Decisions
 
 ### CI-Aware VCR Configuration
 **Decision**: VCR cassettes must be environment-aware with CI detection and appropriate recording modes.
@@ -58,7 +58,7 @@ This document provides actionable decisions from Architecture Decision Records (
 
 ### ATOM Architecture Rules
 **Decision**: Strictly follow ATOM architecture layers: Models (pure data), Molecules (focused operations), Organisms (business orchestration), Ecosystems (complete workflows).
-**Impact**: When creating new Ruby components:
+**Impact**: When creating new components in dev-tools:
 - Pure data structures go in `models/` (no behavior)
 - Focused operations composing Atoms go in `molecules/` (single responsibility)
 - Business logic orchestrating Molecules goes in `organisms/` (complex coordination)

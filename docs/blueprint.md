@@ -21,9 +21,9 @@ This is a **meta-repository** using Git submodules to organize different aspects
   - **done/** - Completed releases and tasks
   - **decisions/** - Architecture Decision Records (ADRs)
 
-- **dev-tools/** - Ruby gem with CLI tools for LLM integration (Git submodule)
-  - **lib/** - Ruby gem source code, organized by the ATOM architecture pattern
-    - **coding_agent_tools/** - Main gem module
+- **dev-tools/** - CLI tools submodule for LLM integration (Git submodule)
+  - **lib/** - Ruby source code, organized by the ATOM architecture pattern
+    - **coding_agent_tools/** - Main module
       - **atoms/** - Basic utilities and low-level components
       - **molecules/** - Composed operations and behavior-oriented helpers
       - **organisms/** - Business logic and complex orchestration
@@ -52,7 +52,7 @@ AI agents should treat the following paths as read-only unless explicitly instru
 - `dev-taskflow/done/**/*` # Completed tasks should not be modified
 - `dev-taskflow/current/*/handbook_review/**/*` # Historical review snapshots
 - `dev-taskflow/*/handbook_review/**/*` # All historical review snapshots
-- `dev-tools/lib/**/*` # Ruby gem source code (submodule)
+- `dev-tools/lib/**/*` # Ruby source code (submodule)
 - `dev-tools/spec/**/*` # Test files (submodule)
 - `dev-tools/exe/**/*` # CLI executables (submodule)
 - `*.lock` # Dependency lock files

@@ -2,7 +2,7 @@
 
 ## What We Build 🔍
 
-The **Coding Agent Workflow Toolkit** is a comprehensive meta-system that provides both **development handbook workflows** and **executable tools** to enable seamless AI-assisted software development. It combines structured workflow instructions for autonomous AI agents with a robust Ruby gem (Coding Agent Tools - CAT) that provides CLI tools for LLM integration, Git automation, and project management.
+The **Coding Agent Workflow Toolkit** is a comprehensive meta-system that provides both **development handbook workflows** and **executable tools** to enable seamless AI-assisted software development. It combines structured workflow instructions for autonomous AI agents with a robust CLI toolkit (Coding Agent Tools - CAT) that provides tools for LLM integration, Git automation, and project management.
 
 The system bridges the gap between human developers and AI coding agents by offering:
 - **Standardized workflow instructions** that AI agents can execute independently
@@ -77,7 +77,7 @@ The Coding Agent Workflow Toolkit uses a **multi-repository architecture** coord
 - **Comprehensive workflow instruction system** with self-contained AI workflows that agents can execute independently
 - **Specialized AI agents** designed for focused development tasks, compatible with multiple AI platforms
 - **Development handbook** providing guides, templates, and best practices for consistent development
-- **Ruby gem toolkit** (Coding Agent Tools) with CLI executables for development automation and LLM integration
+- **CLI toolkit** (Coding Agent Tools) with executables for development automation and LLM integration
 - **Multi-provider LLM integrations** supporting both online and offline language models
 - **Documentation-driven task management** system for organizing and tracking development work
 - **Multi-repository coordination** enabling seamless work across interconnected components

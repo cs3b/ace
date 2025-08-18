@@ -70,7 +70,7 @@ The toolkit uses Git submodules to coordinate four interconnected repositories:
 - **Integration**: Exposed to Claude Code via commands (`.claude/commands/`)
 
 ### dev-tools (Executable Tools)
-- **Purpose**: Ruby gem with CLI tools for development automation
+- **Purpose**: CLI tools submodule for development automation
 - **Contents**: 
   - ATOM-structured Ruby code (atoms/, molecules/, organisms/)
   - CLI executables in `exe/` directory
@@ -206,7 +206,7 @@ Agents are designed with multi-platform compatibility in mind:
 The toolkit is designed exclusively for developer environments:
 
 1. **Repository Setup**: `git submodule update --init --recursive`
-2. **Ruby Environment**: Bundle installation in dev-tools directory
+2. **Ruby Environment**: Bundle installation in dev-tools submodule directory
 3. **Shell Integration**: Source appropriate setup script for your shell
 4. **API Configuration**: Set environment variables for LLM providers
 
@@ -226,7 +226,7 @@ This consolidated document provides:
 
 ADRs are organized by scope:
 - **System-Level**: `docs/decisions/ADR-*.md` (architecture, workflows)
-- **Tools-Specific**: `docs/decisions/ADR-*.t.md` (Ruby gem implementation)
+- **Tools-Specific**: `docs/decisions/ADR-*.t.md` (dev-tools implementation)
 
 The decisions.md file is automatically maintained by the `update-context-docs` workflow to ensure it stays current with all ADRs.
 
