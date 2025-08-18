@@ -1,10 +1,9 @@
-# Coding Agent Tools (CAT) Ruby Gem
+# Coding Agent Tools (CAT) 
 
 [![CI](https://github.com/cs3b/coding-agent-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/cs3b/coding-agent-tools/actions/workflows/ci.yml)
-[![Gem Version](https://badge.fury.io/rb/coding_agent_tools.svg)](https://badge.fury.io/rb/coding_agent_tools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Ruby gem providing CLI tools designed for AI coding agents and developers to streamline development workflows through predictable, standardized commands.
+A CLI toolkit designed for AI coding agents and developers to streamline development workflows through predictable, standardized commands. This is distributed as a Git submodule, not as a Ruby gem.
 
 > **⚠️ Breaking Changes in v0.2.0**: The LLM query commands have been unified and cache directory location has changed to XDG-compliant paths. If you're upgrading from v0.1.x, see the **[Migration Guide](docs/MIGRATION.md)** for instructions on updating your scripts and cache migration information.
 
@@ -12,27 +11,22 @@ A Ruby gem providing CLI tools designed for AI coding agents and developers to s
 
 ### Installation
 
-**1. Install as a published gem (once available):**
+**As a Git submodule:**
 
 ```bash
-gem install coding_agent_tools
-```
+# In your project root (usually handbook-meta)
+git submodule add <repository-url> dev-tools
+git submodule update --init --recursive
 
-**2. Or, for local development/use from source:**
-
-Add this line to your application's Gemfile if you are using it as a dependency from a local path (e.g., as a submodule or a local copy):
-
-```ruby
-gem 'coding_agent_tools', path: '.'
-```
-
-Then execute:
-
-```bash
+# Install Ruby dependencies
+cd dev-tools
 bundle install
+
+# Source the shell integration (for Fish shell)
+source config/bin-setup-env/setup.fish
 ```
 
-After installation (either globally or via Bundler in a project), the `coding_agent_tools` command will be available.
+After installation, all CLI tools will be available in your PATH.
 
 ## ✨ Key Features
 
@@ -60,9 +54,9 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 - **Context Tools**: Generate comprehensive project context documents
 - **Offline Support**: Work with local language models via LM Studio
 
-## 🛠 Core Commands (Planned Structure)
+## 🛠 Core Commands
 
-The primary executable for the gem is `coding_agent_tools`. Here's a look at the planned command structure (specific commands and options are illustrative and will be implemented in future tasks):
+The tools are available as individual executables in the `exe/` directory. They are added to your PATH through shell integration:
 
 ```bash
 # General
@@ -92,7 +86,7 @@ coding_agent_tools project release_context
 # coding_agent_tools project build_gem (or gem build coding_agent_tools.gemspec)
 ```
 
-*Note: The existing `bin/*` scripts will be gradually replaced or wrapped by these new gem commands.*
+*Note: All tools are accessed directly as standalone commands after sourcing the shell integration.*
 
 ## 🔧 Available Standalone Commands
 
