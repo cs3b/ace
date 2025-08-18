@@ -52,117 +52,77 @@ For detailed Ruby gem implementation, see [Tools Architecture](./architecture-to
 
 ## System Architecture
 
-### Meta-Repository Structure
+## Multi-Repository Architecture
 
-The Coding Agent Workflow Toolkit uses a sophisticated multi-repository architecture coordinated through Git submodules:
+The toolkit uses Git submodules to coordinate four interconnected repositories:
 
-```mermaid
-flowchart TD
-    subgraph handbook-meta [handbook-meta - Coordination Hub]
-        Docs[📚 System Documentation]
-        MetaBin[🔧 Meta-Level Scripts]
-        Coordination[🎯 Multi-Repo Coordination]
-    end
-    
-    subgraph dev-handbook [dev-handbook - Workflow Instructions]
-        Workflows[📋 AI Workflow Instructions]
-        Guides[📖 Development Guides]
-        Templates[📄 Project Templates]
-    end
-    
-    subgraph dev-tools [dev-tools - Executable Tools]
-        RubyGem[💎 Ruby Gem - CAT]
-        CLITools[⚙️ 25+ CLI Executables]
-        ATOM[🏗️ ATOM Architecture]
-    end
-    
-    subgraph dev-taskflow [dev-taskflow - Task Management]
-        Backlog[📋 Future Tasks]
-        Current[🏃 Active Release]
-        Done[✅ Completed Work]
-    end
-    
-    handbook-meta --> dev-handbook
-    handbook-meta --> dev-tools
-    handbook-meta --> dev-taskflow
-    
-    subgraph External [External Systems]
-        LLMProviders[🤖 LLM Providers]
-        GitHub[🐙 GitHub API]
-        FileSystem[💾 Local File System]
-    end
-    
-    dev-tools --> LLMProviders  
-    dev-tools --> GitHub
-    dev-tools --> FileSystem
-    Workflows --> CLITools
-```
+### handbook-meta (Coordination Hub)
+- **Purpose**: Central coordination and system-level documentation
+- **Contents**: Core docs (what-do-we-build, architecture, blueprint, decisions), meta-level scripts
+- **Role**: Provides unified view across all components
 
-### Repository Descriptions
+### dev-handbook (Workflows & Agents)
+- **Purpose**: AI workflow instructions and specialized development agents
+- **Contents**: 
+  - Self-contained workflows (`.wf.md` files in `workflow-instructions/`)
+  - Specialized agents (`.ag.md` files in `.integrations/claude/agents/`)
+  - Development guides and templates
+- **Integration**: Exposed to Claude Code via commands (`.claude/commands/`)
 
-#### handbook-meta (Coordination Hub)
-- Central coordination and system-level documentation
-- Multi-repository coordination scripts
-- Unified documentation and ADRs
+### dev-tools (Executable Tools)
+- **Purpose**: Ruby gem with CLI tools for development automation
+- **Contents**: 
+  - ATOM-structured Ruby code (atoms/, molecules/, organisms/)
+  - CLI executables in `exe/` directory
+  - Shell integration scripts (`config/bin-setup-env/setup.fish`)
+- **Integration**: Tools added to PATH for direct command-line access
 
-#### dev-handbook (Workflow Instructions & Agents)
-- Self-contained AI workflow instructions (.wf.md files)
-- Specialized development agents (.ag.md files in `.integrations/claude/agents/`)
-- Development guides and templates
-- Complete workflow self-containment (per ADR-001)
+### dev-taskflow (Task Management)
+- **Purpose**: Documentation-driven task and release management
+- **Contents**:
+  - Task organization (backlog/, current/, done/)
+  - Release planning and roadmap
+  - Project-specific decisions
+- **Role**: Central hub for work tracking and planning
 
-#### dev-tools (Executable Tools)
-- Ruby gem with CLI tools and automation
-- ATOM-structured codebase
-- Multi-provider LLM integration
-- Both gem publication and submodule distribution
+## Integration & Data Flow
 
-#### dev-taskflow (Task Management)
-- Documentation-driven task management
-- Structured organization (backlog/, current/, done/)
-- Release planning and decision tracking
+### How Components Connect
 
-## Data Flow Architecture
+1. **Workflows & Agents**: Defined in `dev-handbook/`, exposed to Claude Code through:
+   - Commands: `.claude/commands/` directory with workflow mappings
+   - Subagents: `.integrations/claude/agents/` for specialized task execution
 
-### AI Agent Workflow Execution
+2. **CLI Tools**: Available system-wide through shell integration:
+   - Fish: `source dev-tools/config/bin-setup-env/setup.fish`
+   - Bash/Zsh: Similar setup scripts
+   - Direct PATH access for all agents and workflows
 
-```mermaid
-sequenceDiagram
-    participant AI as AI Agent
-    participant Handbook as dev-handbook
-    participant Tools as dev-tools
-    participant Taskflow as dev-taskflow
-    participant External as External APIs
-    
-    AI->>Handbook: Load workflow instruction
-    Handbook->>AI: Self-contained workflow with embedded context
-    AI->>Tools: Execute CLI commands from workflow
-    Tools->>External: Make API calls (LLM, GitHub, etc.)
-    External->>Tools: Return results
-    Tools->>AI: Formatted output
-    AI->>Taskflow: Update task status/create new tasks
-    AI->>Handbook: Reference templates/guides as needed
-```
+3. **Agent Access**: AI agents have full access to:
+   - All CLI tools via PATH
+   - Workflow instructions via commands
+   - Other agents via Task tool delegation
 
-### Human Developer Workflow
+### Example: Context Loading Flow
 
-```mermaid
-sequenceDiagram
-    participant Developer as Human Developer
-    participant Tools as dev-tools
-    participant Taskflow as dev-taskflow
-    participant Handbook as dev-handbook
-    participant External as External Systems
-    
-    Developer->>Taskflow: Check current tasks
-    Developer->>Tools: Use navigation/management commands
-    Tools->>External: Query LLMs, Git operations
-    External->>Tools: Return results
-    Tools->>Developer: Enhanced development information
-    Developer->>Handbook: Reference guides/templates
-    Developer->>Tools: Execute git/commit workflows
-    Tools->>Taskflow: Update project state
-```
+A concrete example of how the system components work together:
+
+1. **User Action**: Runs Claude Code and types `/load-context`
+2. **Command Mapping**: Claude Code maps to workflow instruction
+3. **Tool Execution**: Workflow guides agent to run `context --preset project --output stdout`
+4. **Configuration**: Tool reads `.coding-agent/context.yml` for settings
+5. **Template Processing**: Based on config, uses template in `docs/context/project.md`
+6. **File Embedding**: Template embeds multiple files according to configuration
+7. **Command Execution**: Runs shell commands to add dynamic content
+8. **Output**: Returns complete context with embedded documents (when `embed_document_source: true`)
+9. **Result**: Agent receives pre-structured context, avoiding manual exploration
+
+### Other Key Workflows
+
+**TODO**: Document detailed flows for:
+- `work-on-task` workflow - Task execution from selection to completion
+- `draft-release` workflow - Release preparation and coordination
+- Agent delegation patterns - How agents invoke each other
 
 
 ## Agent Architecture
@@ -241,82 +201,34 @@ Agents are designed with multi-platform compatibility in mind:
 - **HTTP Optimization**: Connection pooling, retry logic, and timeout management
 - **Memory Efficiency**: Minimal memory footprint with lazy loading
 
-## Deployment Architecture
+## Developer Environment Setup
 
-### Development Environment
+The toolkit is designed exclusively for developer environments:
 
-The toolkit is designed for complete development environment setup:
+1. **Repository Setup**: `git submodule update --init --recursive`
+2. **Ruby Environment**: Bundle installation in dev-tools directory
+3. **Shell Integration**: Source appropriate setup script for your shell
+4. **API Configuration**: Set environment variables for LLM providers
 
-1. **Submodule Installation**: `git submodule update --init --recursive`
-2. **Ruby Gem Setup**: Bundle installation for dev-tools
-3. **Documentation Setup**: Node.js dependencies for markdownlint
-4. **Integration Configuration**: Environment variables and API keys
+This is a developer toolkit - there is no production deployment. All components run locally in the developer's environment.
 
-### Production Deployment
 
-For production use, the toolkit supports:
+## Architectural Decisions
 
-1. **Gem Installation**: Standard RubyGems installation
-2. **Containerization**: Docker support for consistent environments
-3. **CI/CD Integration**: GitHub Actions and other CI systems
-4. **Monitoring**: Comprehensive logging and usage tracking
+All architectural decisions are documented in Architecture Decision Records (ADRs). 
 
-## Future Architecture Evolution
+**For actionable decisions and their impacts**, see: `docs/decisions.md`
 
-### Planned Enhancements
+This consolidated document provides:
+- Core decisions that affect development behavior
+- Direct impacts on how agents and developers work
+- Links to full ADR documents for detailed context
 
-#### Short-Term (v0.4.0 - v0.6.0)
-- **Unified Taskflow**: Merged task management across all repositories
-- **Enhanced Security**: Additional security validations and monitoring
-- **Provider Expansion**: Additional LLM providers and integrations
-- **Performance Optimization**: Caching improvements and startup speed
+ADRs are organized by scope:
+- **System-Level**: `docs/decisions/ADR-*.md` (architecture, workflows)
+- **Tools-Specific**: `docs/decisions/ADR-*.t.md` (Ruby gem implementation)
 
-#### Medium-Term (v0.7.0 - v1.0.0)
-- **Ecosystem Layer**: Complete workflow orchestration in Ruby gem
-- **Plugin Architecture**: Third-party extensibility for providers and workflows
-- **Advanced Analytics**: Comprehensive usage analytics and cost optimization
-- **Multi-Language Support**: Gradual expansion beyond Ruby
-
-#### Long-Term (v1.0.0+)
-- **Distributed Architecture**: Support for team-based development workflows
-- **Cloud Integration**: Native cloud provider integrations
-- **AI Model Training**: Custom model training based on usage patterns
-- **Enterprise Features**: Advanced security, compliance, and governance
-
-### Scalability Considerations
-
-- **Horizontal Scaling**: Support for multiple concurrent operations
-- **Resource Management**: Intelligent resource allocation and limits
-- **Network Optimization**: Advanced caching and connection management
-- **Storage Efficiency**: Compressed caching and intelligent cleanup
-
-## Decision Records
-
-All architectural decisions are documented as ADRs in the following locations:
-
-- **System-Level ADRs**: `docs/decisions/` (handbook-meta)
-- **Workflow ADRs**: Suffixed with `.wf.md`  
-- **Tools ADRs**: Suffixed with `.t.md`
-
-Key architectural decisions:
-- **ADR-001**: Workflow Self-Containment Principle
-- **ADR-002**: XML Template Embedding Architecture
-- **ADR-006**: CI-Aware VCR Configuration (.t.md)
-- **ADR-011**: ATOM Architecture House Rules (.t.md)
-- **ADR-014**: LLM Integration Architecture (.t.md)
-
-## Monitoring and Observability
-
-### System Monitoring
-- **Multi-Repository Health**: Git submodule status and synchronization
-- **Documentation Quality**: Automated link checking and template validation
-- **Task Flow Tracking**: Release progress and completion metrics
-
-### Implementation Monitoring
-- **CLI Usage**: Command execution frequency and success rates
-- **LLM Integration**: API call success rates, costs, and performance
-- **Security Events**: Comprehensive security event logging and analysis
-- **Performance Metrics**: Response times, cache hit rates, and resource usage
+The decisions.md file is automatically maintained by the `update-context-docs` workflow to ensure it stays current with all ADRs.
 
 ---
 
