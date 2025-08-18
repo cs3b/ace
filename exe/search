@@ -639,30 +639,48 @@ module CodingAgentTools
       end
 
       def output_single_result(result)
-        # Convert absolute paths to relative for display
-        display_path = if result[:file]&.start_with?("/")
-          require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
-          project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-          if result[:file].start_with?(project_root)
-            "./" + result[:file].sub(project_root + "/", "")
+        # Handle when result is a plain string (file path)
+        if result.is_a?(String)
+          display_path = if result.start_with?("/")
+            require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            if result.start_with?(project_root)
+              "./" + result.sub(project_root + "/", "")
+            else
+              result
+            end
           else
-            result[:file]
+            result
           end
-        elsif result[:path]&.start_with?("/")
-          require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
-          project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-          if result[:path].start_with?(project_root)
-            "./" + result[:path].sub(project_root + "/", "")
+        # Handle when result is a hash with file/path keys
+        elsif result.is_a?(Hash)
+          display_path = if result[:file]&.start_with?("/")
+            require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            if result[:file].start_with?(project_root)
+              "./" + result[:file].sub(project_root + "/", "")
+            else
+              result[:file]
+            end
+          elsif result[:path]&.start_with?("/")
+            require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            if result[:path].start_with?(project_root)
+              "./" + result[:path].sub(project_root + "/", "")
+            else
+              result[:path]
+            end
           else
-            result[:path]
+            result[:file] || result[:path] || result.to_s
           end
         else
-          result[:file] || result[:path] || result
+          # Fallback for any other type
+          display_path = result.to_s
         end
 
         if @options[:files_only]
           puts "  #{display_path}"
-        elsif result[:line]
+        elsif result.is_a?(Hash) && result[:line]
           puts "  #{display_path}:#{result[:line]}:#{result[:column] || 0}: #{result[:text]}"
         else
           puts "  #{display_path}"
