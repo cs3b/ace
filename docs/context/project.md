@@ -9,13 +9,9 @@ embed_document_source: true
 files:
   - docs/what-do-we-build.md
   - docs/architecture.md
+  - docs/decisions.md
   - docs/blueprint.md
   - docs/tools.md
-  - CLAUDE.md
-  - CLAUDE.local.md
-  - dev-handbook/README.md
-  - dev-taskflow/README.md
-  - dev-tools/README.md
 
 commands:
   - git-status --short
@@ -23,6 +19,6 @@ commands:
   - task-manager next --limit 5
   - release-manager current
   - git ls-files
-  - git -C dev-handbook ls-files
-  - git -C dev-tools ls-files
+  - git -C dev-handbook ls-files -- workflow-instructions
+  - git -C dev-tools ls-files -- lib
 </context-tool-config>
