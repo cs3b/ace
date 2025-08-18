@@ -2,33 +2,53 @@
 
 ## Overview
 
-This document outlines the high-level system architecture of the Coding Agent Workflow Toolkit, a comprehensive meta-system that combines structured workflow instructions with executable development tools. It describes how the different repositories and components interact to enable seamless AI-assisted software development.
+This document outlines the system architecture and technical design decisions for the Coding Agent Workflow Toolkit.
 
-For detailed technical implementation of the Ruby gem tools, see [Tools Architecture](./architecture-tools.md).
+For detailed Ruby gem implementation, see [Tools Architecture](./architecture-tools.md).
+
+## Core Design Principles
+
+### System-Level Principles
+- **Meta-Repository Architecture**: Multi-repository coordination using Git submodules for clear separation of concerns
+- **Workflow Self-Containment**: AI workflows must be completely independent and executable without external dependencies (per ADR-001)
+- **Documentation-Driven Development**: Workflows, tasks, and processes are documented first, then implemented
+- **AI-Native Design**: Built specifically with autonomous AI agent capabilities and limitations in mind
+
+### Implementation Principles
+- **ATOM Architecture**: Structured around Atoms, Molecules, Organisms, and Ecosystems for maintainability and testability (per ADR-011)
+- **Test-Driven Development**: High emphasis on testing with comprehensive unit and integration test coverage using RSpec
+- **Predictable CLI**: Designing commands with ergonomic flags suitable for both human and agent interaction
+- **Modularity**: Components are designed with explicit boundaries and dependency injection
+- **Security-First**: Multi-layered security framework with path validation, sanitization, and secure logging
 
 ## Technology Stack
 
-### Meta-System Technologies
+### Core Technology Choices
+- **Primary Language**: Ruby (>= 3.2) - Chosen for its expressiveness, developer productivity, and suitability for scripting and tooling
+- **Runtime**: MRI (C Ruby) >= 3.2 - Standard and widely adopted Ruby implementation
+- **Architecture Pattern**: ATOM (Atoms, Molecules, Organisms, Ecosystems) - Guiding principle for structuring the codebase
 
+### Technical Infrastructure
 - **Coordination**: Git submodules for multi-repository management
-- **Documentation**: Markdown with markdownlint for quality control
-- **Task Management**: Documentation-driven with structured release cycles
-- **Template Management**: XML-based template embedding with synchronization
-
-### Executable Tools Technologies
-
-- **Primary Language**: Ruby (>= 3.2) with ATOM architecture pattern
+- **Documentation**: Markdown with markdownlint validation
+- **Template System**: XML-based embedding (per ADR-002)
 - **CLI Framework**: dry-cli with comprehensive command structure
-- **HTTP Client**: Faraday with retry middleware and observability
-- **Testing**: RSpec with VCR for HTTP interaction recording
-- **Security**: Multi-layered security with path validation and sanitization
-- **Caching**: XDG-compliant cache management with automatic migration
+- **HTTP Client**: Faraday with retry middleware and observability (per ADR-010)
+- **Testing**: RSpec with VCR for HTTP interaction recording (per ADR-006)
+- **Autoloading**: Zeitwerk with proper inflections (per ADR-007)
+- **Observability**: dry-monitor for event publishing (per ADR-008)
+- **Error Handling**: Centralized ErrorReporter (per ADR-009)
 
 ### External Integrations
-
-- **LLM Providers**: Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio
+- **LLM Providers**: Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio (per ADR-014)
 - **Cost Tracking**: LiteLLM pricing database for accurate cost calculations
-- **Development Tools**: Git CLI, GitHub REST API, comprehensive repository management
+- **Version Control**: Git CLI, GitHub REST API
+
+### Security Architecture
+- **Path Validation**: Multi-layer validation for file operations
+- **Sanitization**: Automatic sanitization of sensitive information
+- **Secure Logging**: Privacy-preserving log output
+- **Defense in Depth**: Multiple validation layers
 
 ## System Architecture
 
@@ -81,39 +101,26 @@ flowchart TD
 ### Repository Descriptions
 
 #### handbook-meta (Coordination Hub)
-- **Purpose**: Central coordination and system-level documentation
-- **Key Components**:
-  - System architecture and vision documentation
-  - Multi-repository coordination scripts
-  - Unified ADRs from all projects
-  - Meta-level automation (documentation analysis, template sync)
-- **Role**: Provides the unified view and coordination layer for the entire toolkit
+- Central coordination and system-level documentation
+- Multi-repository coordination scripts
+- Unified documentation and ADRs
 
-#### dev-handbook (Workflow Instructions)
-- **Purpose**: Self-contained AI workflow instructions and development resources
-- **Key Components**:
-  - 19+ structured AI workflow instructions (.wf.md files)
-  - Development guides organized by language and technology
-  - Project templates and document templates
-  - Editor integrations and development best practices
-- **Architecture Principle**: Complete workflow self-containment (ADR-001)
+#### dev-handbook (Workflow Instructions & Agents)
+- Self-contained AI workflow instructions (.wf.md files)
+- Specialized development agents (.ag.md files in `.integrations/claude/agents/`)
+- Development guides and templates
+- Complete workflow self-containment (per ADR-001)
 
 #### dev-tools (Executable Tools)
-- **Purpose**: Ruby gem providing CLI tools and development automation
-- **Key Components**:
-  - 25+ CLI executables for LLM integration, Git automation, navigation
-  - ATOM-structured Ruby codebase (Atoms, Molecules, Organisms, Ecosystems)
-  - Multi-provider LLM integration with cost tracking
-  - Security framework with path validation and sanitization
-- **Distribution**: Both gem publication and submodule integration
+- Ruby gem with CLI tools and automation
+- ATOM-structured codebase
+- Multi-provider LLM integration
+- Both gem publication and submodule distribution
 
 #### dev-taskflow (Task Management)
-- **Purpose**: Documentation-driven task management and release planning
-- **Key Components**:
-  - Structured task organization (backlog/, current/, done/)
-  - Release planning and roadmap management
-  - Project-specific ADRs and decision tracking
-- **Workflow**: Supports continuous release cycles with clear task progression
+- Documentation-driven task management
+- Structured organization (backlog/, current/, done/)
+- Release planning and decision tracking
 
 ## Data Flow Architecture
 
@@ -157,79 +164,48 @@ sequenceDiagram
     Tools->>Taskflow: Update project state
 ```
 
-## Core Design Principles
 
-### System-Level Principles
+## Agent Architecture
 
-#### 1. Multi-Repository Coordination
-- **Git Submodules**: Clean separation of concerns across repositories
-- **Unified Documentation**: Central coordination through handbook-meta
-- **Independent Development**: Each repository can be developed independently
-- **Coordinated Releases**: Synchronized versioning across components
+### Specialized Development Agents
 
-#### 2. Workflow Self-Containment (ADR-001)
-- **Independent Execution**: AI workflows must be completely self-contained
-- **Embedded Context**: All necessary templates, examples, and guidance embedded
-- **No Cross-Dependencies**: Workflows cannot depend on external context loading
-- **Autonomous Operation**: AI agents can execute workflows without human intervention
+The toolkit includes specialized agents designed for focused development tasks, located in `dev-handbook/.integrations/claude/agents/`. Each agent follows a single-purpose design with standardized interfaces.
 
-#### 3. Documentation-Driven Development
-- **Workflows First**: Document processes before implementing tools
-- **Task Transparency**: All work tracked through documentation
-- **Decision Recording**: ADRs document architectural and implementation decisions
-- **Template Synchronization**: Automated template management across documents
+#### Agent Categories
+- **Task Management**: `task-finder`, `task-creator`, `release-navigator`
+- **Git Operations**: `git-all-commit`, `git-files-commit`, `git-review-commit`
+- **Development Tools**: `lint-files`, `create-path`, `feature-research`
+- **Search & Analysis**: `search` for intelligent code discovery
 
-#### 4. AI-Native Design
-- **Autonomous Execution**: Built for AI agent capabilities and limitations
-- **Predictable Interfaces**: Consistent command structures for automation
-- **Context Efficiency**: Minimize context window usage through self-containment
-- **Error Handling**: Comprehensive error reporting for autonomous debugging
+#### Compatibility Architecture
+Agents are designed with multi-platform compatibility in mind:
+- **Claude Code Subagents**: Primary integration through Claude's Task tool with `subagent_type` parameter
+- **MCP Proxy Integration**: Compatible with the MCP (Model Context Protocol) proxy we're developing for broader AI platform support
+- **Future OpenCode Support**: Architecture designed for direct integration with OpenCode and similar platforms
 
-### Implementation Principles (Tools)
-
-#### 1. ATOM Architecture
-- **Atoms**: Indivisible utilities with no internal dependencies
-- **Molecules**: Behavior-oriented helpers composing atoms
-- **Organisms**: Business logic orchestrating molecules
-- **Ecosystems**: Complete workflow coordination
-- **Models**: Pure data carriers with no behavior
-
-#### 2. Security-First Development
-- **Multi-Layer Security**: Path validation, sanitization, secure logging
-- **Defense in Depth**: Multiple validation layers for file operations
-- **Privacy Protection**: Automatic sanitization of sensitive information
-- **Safe Defaults**: Secure-by-default configuration and behavior
-
-#### 3. Standards Compliance
-- **XDG Compliance**: Follow OS-level directory standards
-- **HTTP Best Practices**: Proper retry logic, timeouts, and error handling
-- **Ruby Conventions**: Adhere to community standards and best practices
+#### Agent Design Principles
+- **Single Purpose**: Each agent performs one focused task exceptionally well
+- **Standardized Response Format**: Consistent output structure across all agents
+- **Parameter Support**: Accept `expected_params` for configuration
+- **Composition Ready**: Agents can delegate to each other for complex workflows
 
 ## Integration Patterns
 
 ### AI Agent Integration
-
-The toolkit provides multiple integration points for AI agents:
-
-1. **Direct CLI Usage**: Execute tools directly via command line
-2. **Workflow Instructions**: Follow structured .wf.md workflow files
-3. **Template System**: Use embedded templates for consistent output
-4. **Task Management**: Integrate with documentation-driven task tracking
+- Direct CLI execution via agent tools
+- Structured workflow instructions (.wf.md)
+- Specialized agent invocation through platform-specific interfaces
+- Embedded template system
+- Documentation-driven task tracking
 
 ### Human Developer Integration
-
-Human developers can integrate through:
-
-1. **Enhanced CLI Tools**: 25+ productivity-focused commands
-2. **Development Guides**: Language and technology-specific guidance
-3. **Template Library**: Reusable project and document templates
-4. **Multi-Repo Coordination**: Seamless work across all repositories
+- Enhanced CLI tools for productivity
+- Development guides and templates
+- Multi-repository coordination
 
 ### CI/CD Integration
-
-The toolkit supports automated workflows through:
-
-1. **Batch Processing**: CLI tools designed for non-interactive execution
+- Batch processing support
+- Non-interactive execution modes
 2. **Configuration Management**: Environment-based configuration
 3. **Security Integration**: Safe defaults for automated environments
 4. **Cost Tracking**: Comprehensive usage and cost monitoring

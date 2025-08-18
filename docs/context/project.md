@@ -10,6 +10,7 @@ files:
   - docs/what-do-we-build.md
   - docs/architecture.md
   - docs/blueprint.md
+  - docs/tools.md
   - CLAUDE.md
   - CLAUDE.local.md
   - dev-handbook/README.md
@@ -18,6 +19,10 @@ files:
 
 commands:
   - git-status --short
+  - task-manager recent --limit 5
   - task-manager next --limit 5
   - release-manager current
+  - git ls-files
+  - git -C dev-handbook ls-files
+  - git -C dev-tools ls-files
 </context-tool-config>
