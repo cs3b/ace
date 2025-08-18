@@ -30,16 +30,19 @@ This workflow maintains four essential project documents, each with a distinct p
 2. **`docs/architecture.md`** - Technical Design
    - Core design principles (system-level and implementation)
    - Technology stack choices and rationale
-   - System architecture and patterns
-   - Data flow and integration points
-   - Security and performance architecture
-   - Technical infrastructure details
+   - Multi-repository architecture (simple list format)
+   - Integration and data flow with concrete examples
+   - Agent architecture and compatibility
+   - Developer environment setup
+   - Reference to decisions.md for actionable decisions
    
    **MUST NOT CONTAIN:**
    - Project vision or business goals
    - User personas or use cases
    - Value propositions
-   - Feature lists (beyond technical capabilities)
+   - Future plans or roadmap items
+   - Production deployment (this is developer tooling only)
+   - Complex diagrams when simple lists suffice
 
 3. **`docs/blueprint.md`** - File Structure
    - Directory organization and structure
