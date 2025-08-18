@@ -9,135 +9,66 @@ Load essential project documentation to understand the project's objectives, arc
 - The `context` tool is available (from dev-tools)
 - Context presets configured in `.coding-agent/context.yml`
 
-## High-Level Execution Plan
-
-### Planning Steps
-
-- [ ] Verify context presets are available
-- [ ] Choose appropriate preset(s) to load
-
-### Execution Steps
-
-- [ ] Run context command with preset
-- [ ] Read the generated context output
-- [ ] Review the loaded documentation and command outputs
-- [ ] Summarize key project understanding
-
 ## Process Steps
 
-1. **Load Project Context Using Context Tool:**
-   
-   Use the context tool with preset support:
-   
+1. **Load Project Context:**
+
    ```bash
-   # Load the main project context
    context --preset project
-   
-   # For monorepo submodules, load specific contexts:
-   context --preset dev-tools     # For dev-tools work
-   context --preset dev-handbook  # For handbook work
-   
-   # List available presets
-   context --list-presets
    ```
-   
-   This will:
-   - Load the preset configuration from `.coding-agent/context.yml`
-   - Process the template files and execute commands
-   - Save output to the configured location (or override with --output)
-   - Automatically chunk large contexts (>150K lines) if needed
 
-2. **Read the Generated Context:**
-   
-   The context tool will output to the configured location:
-   
-   ```bash
-   # Check preset configuration for output path
-   context --list-presets
-   
-   # Or specify custom output
-   context --preset project --output /tmp/project-context.md
-   ```
-   
-   The cached context includes:
-   - **Project Objectives**: From `docs/what-do-we-build.md`
-   - **Architecture Overview**: From `docs/architecture.md` 
-   - **Project Structure**: From `docs/blueprint.md`
-   - **Development Tools**: From `docs/tools.md`
-   - **Current Status**: Git status, task information, project tree
-   - **Additional Context**: README files, configuration, etc.
+   This loads the project context as configured in your preset, typically including:
+   - Core documentation files (README, architecture, design docs)
+   - Project configuration and setup files
+   - Current repository status (git status, branch info)
+   - Recent activity (commits, tasks, changes)
+   - Project structure and file organization
+   - Any custom context defined in the preset
 
-3. **Review and Understand:**
-   
-   From the loaded context, understand:
-   - What the project builds and its value proposition
-   - The system architecture and design principles
-   - The project structure and organization
+2. **Review Loaded Context:**
+
+   From the context output, understand:
+   - Project purpose and objectives
+   - Technical architecture and design patterns
+   - Development conventions and standards
+   - Project structure and organization
    - Available tools and workflows
-   - Current project status and next tasks
+   - Current status and recent activity
 
-4. **Handle Large Contexts:**
-   
-   If the context is split into chunks:
-   - The main file (`project.md`) will list all chunks
-   - Read chunks sequentially as needed
-   - Each chunk is under 150K lines for Claude Code compatibility
+3. **Load Additional Contexts (if requested):**
+
+   ```bash
+   # Load multiple presets if user specifically requests them
+   context --preset dev-tools     # Additional submodule context
+   context --preset dev-handbook  # Another submodule context
+
+   # List available presets to see options
+   context --list-presets
+   ```
+
+   Only load additional presets if the user explicitly asks for them.
 
 ## Success Criteria
 
-- All three core project documents are loaded and understood
-- Clear understanding of project objectives and scope
-- Familiarity with the architecture and design principles
-- Knowledge of project structure and organization
+- Project context successfully loaded from preset
+- Clear understanding of project purpose and structure
+- Familiarity with development conventions
 - Ready to work with project-specific context
 
 ## Common Patterns
 
-### File Locations
-
-Context configuration is located at:
-- `.coding-agent/context.yml` - Preset definitions and configuration
-
-Output files are generated based on preset configuration:
-- Configured in each preset's `output` field
-- Can be overridden with `--output` flag
-- Large files automatically chunked with `_chunk*.md` suffix
-
-Core documentation files referenced:
-- `docs/what-do-we-build.md` - Project objectives and vision
-- `docs/architecture.md` - System design and technical architecture
-- `docs/blueprint.md` - Project structure and organization
-- `docs/tools.md` - Available development tools
-
-### Usage Context
+### When to Use
 
 This workflow is typically invoked:
-
 - At the beginning of a new work session
-- When onboarding to the project
-- Before starting work on a new area of the codebase
-- When other workflows specify "project context loading" as a prerequisite
-- When switching between different submodules in a monorepo
+- Before starting work on a new area
+- When switching between submodules
+- When other workflows require project context
 
-### Verification Commands
+## Usage Examples
 
-```bash
-# List available presets
-context --list-presets
+> `/load-project-context`
+> "Load the project context"
 
-# View preset configuration
-cat .coding-agent/context.yml
-
-# Load context with preset
-context --preset project
-
-# Load with custom output
-context --preset project --output /tmp/test.md
-
-# Check output file size
-wc -l <output-path-from-preset>
-```
-
-## Usage Example
->
-> "Load the project context so I understand what we're building"
+> `/load-project-context dev-tools`
+> "Load both project and dev-tools preset"
