@@ -125,6 +125,9 @@ module CodingAgentTools
           # Override output path if specified
           output_path = options[:output] || preset[:output]
           
+          # Check if output should go to stdout
+          output_to_stdout = output_path && (output_path == "-" || output_path.downcase == "stdout")
+          
           # Load context from template using auto-detection
           context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
           context_result = context_loader.load_with_auto_detection(preset[:template], options)
@@ -139,7 +142,10 @@ module CodingAgentTools
           formatted_output = formatter.format(context_result)
 
           # Handle output
-          if output_path
+          if output_to_stdout || !output_path
+            # Output to stdout
+            puts formatted_output
+          else
             # Write to file with chunking if needed
             file_writer = CodingAgentTools::Molecules::Context::ContextFileWriter.new
             chunker = CodingAgentTools::Molecules::Context::ContextChunker.new(preset[:chunk_limit])
@@ -171,9 +177,6 @@ module CodingAgentTools
                 return 1
               end
             end
-          else
-            # Output to stdout
-            puts formatted_output
           end
 
           0

@@ -57,7 +57,10 @@ module CodingAgentTools
           validate_template_path!(template_path)
 
           output_path = resolve_output_path(preset_name, preset_config)
-          validate_output_path!(output_path) if output_path
+          # Skip validation for stdout indicators
+          if output_path && !is_stdout_indicator?(output_path)
+            validate_output_path!(output_path)
+          end
 
           {
             name: preset_name,
@@ -148,20 +151,32 @@ module CodingAgentTools
         #
         # @param preset_name [String] Name of the preset
         # @param preset_config [Hash] Preset configuration
-        # @return [String] Resolved output path
+        # @return [String, nil] Resolved output path or stdout indicator
         def resolve_output_path(preset_name, preset_config)
           if preset_config["output"]
             # Use configured output path
             output_path = preset_config["output"]
+            
+            # Return stdout indicators as-is
+            return output_path if is_stdout_indicator?(output_path)
+            
             if Pathname.new(output_path).absolute?
               output_path
             else
               File.join(@project_root, output_path)
             end
           else
-            # Use default output path
-            default_output_path(preset_name)
+            # Return nil to indicate no output specified (will use stdout)
+            nil
           end
+        end
+        
+        # Check if a path indicates stdout output
+        #
+        # @param path [String] Path to check
+        # @return [Boolean] true if path indicates stdout
+        def is_stdout_indicator?(path)
+          path && (path == "-" || path.downcase == "stdout")
         end
 
         # Validate template path against security constraints
