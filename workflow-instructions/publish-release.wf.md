@@ -107,22 +107,20 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 ### 4. Package Publication (If Applicable)
 
-11. **Authenticate with Package Registry:**
-    - Ensure authentication with relevant package registries (npm, PyPI, RubyGems, etc.)
-    - Verify credentials are current and have appropriate permissions
-    - Common authentication methods:
+11. **Authenticate with Package Registry (if applicable):**
+    - Note: If the project is distributed as a Git submodule (like dev-tools), skip to step 13
+    - For packages published to registries:
       - npm: `npm login` or use `.npmrc` with auth token
       - PyPI: `pip install twine` and use `.pypirc`
-      - RubyGems: `gem signin` or use API key
+      - RubyGems: `gem signin` or use API key (for traditional Ruby gems)
       - Cargo: `cargo login` with token
 
-12. **Execute Package Publication:**
-    - Run language-specific publish command
-    - Monitor publication process for errors or warnings
-    - Common publish commands:
+12. **Execute Package Publication (if applicable):**
+    - Note: Skip this for Git submodule projects
+    - For published packages:
       - npm: `npm publish`
       - PyPI: `twine upload dist/*`
-      - RubyGems: `gem push *.gem`
+      - RubyGems: `gem push *.gem` (for traditional Ruby gems)
       - Cargo: `cargo publish`
 
 13. **Verify Package Availability:**
