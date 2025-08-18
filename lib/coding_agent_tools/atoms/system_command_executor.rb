@@ -8,8 +8,9 @@ module CodingAgentTools
       # Execute a system command safely
       # @param command [String] Command to execute
       # @param timeout [Integer] Timeout in seconds (default: 120)
+      # @param working_dir [String] Working directory to execute command from (optional)
       # @return [Hash] Result with success status, output, and error
-      def execute(command, timeout: 120)
+      def execute(command, timeout: 120, working_dir: nil)
         return {success: false, error: "Command cannot be nil"} if command.nil?
         return {success: false, error: "Command cannot be empty"} if command.strip.empty?
 
@@ -23,7 +24,11 @@ module CodingAgentTools
           exit_status = nil
 
           Timeout.timeout(timeout) do
-            Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
+            # Set up options for popen3
+            popen3_options = {}
+            popen3_options[:chdir] = working_dir if working_dir
+
+            Open3.popen3(command, popen3_options) do |stdin, stdout, stderr, wait_thr|
               stdin.close # We don't need to send input
 
               # Read output and error streams

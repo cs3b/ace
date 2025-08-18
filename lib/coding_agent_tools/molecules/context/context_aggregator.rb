@@ -2,6 +2,7 @@
 
 require_relative "../../atoms/code/file_content_reader"
 require_relative "../../atoms/system_command_executor"
+require_relative "../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Molecules
@@ -19,6 +20,7 @@ module CodingAgentTools
           @command_executor = Atoms::SystemCommandExecutor.new
           @max_size = options[:max_size] || 1048576  # 1MB default
           @timeout = options[:timeout] || 30
+          @project_root = Atoms::ProjectRootDetector.find_project_root
         end
 
         # Aggregate context from template data
@@ -117,7 +119,7 @@ module CodingAgentTools
         # @param command [String] Command to execute
         # @param result [Hash] Result hash to populate
         def process_single_command(command, result)
-          command_result = @command_executor.execute(command, timeout: @timeout)
+          command_result = @command_executor.execute(command, timeout: @timeout, working_dir: @project_root)
           
           context_entry = {
             command: command,
@@ -142,12 +144,19 @@ module CodingAgentTools
         # @param pattern [String] File pattern (may include globs)
         # @return [Array<String>] List of matching file paths
         def expand_file_pattern(pattern)
+          # Resolve pattern relative to project root
+          absolute_pattern = if pattern.start_with?("/")
+                               pattern
+                             else
+                               File.join(@project_root, pattern)
+                             end
+
           # If pattern contains glob characters, use Dir.glob
           if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
-            Dir.glob(pattern).select { |path| File.file?(path) }
+            Dir.glob(absolute_pattern).select { |path| File.file?(path) }
           else
             # Single file path
-            File.exist?(pattern) && File.file?(pattern) ? [pattern] : []
+            File.exist?(absolute_pattern) && File.file?(absolute_pattern) ? [absolute_pattern] : []
           end
         end
 
