@@ -25,6 +25,11 @@ existing project‑context sections.
 
 ## 2  Project Context Loading
 
+### Load dev-tools context preset
+```bash
+context --preset dev-tools
+```
+
 ### Understand project purpose and architecture
 - docs/what-do-we-build.md
 - docs/architecture.md
