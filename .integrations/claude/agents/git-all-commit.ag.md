@@ -1,18 +1,14 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: git-all-commit
-description: COMMIT ALL CHANGES - no file list needed.
-  Use when you want to commit everything.
-  Executes git-commit without file arguments.
+description: COMMIT ALL CHANGES - no file list needed. Use when you want to commit
+  everything. Executes git-commit without file arguments.
 expected_params:
   optional:
-    - intention: "Description of changes (if not provided, git-commit auto-generates)"
-last_modified: '2025-08-14'
+  - intention: Description of changes (if not provided, git-commit auto-generates)
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for git operations
+  model: google:gemini-2.5-flash
   tools_mapping:
     git-status:
       expose: true
@@ -20,13 +16,12 @@ mcp:
       expose: true
   security:
     allowed_paths:
-      - "**/*"  # Allow all files in repo
+    - "**/*"
     rate_limit: 30/hour
-
-# Context configuration
 context:
   auto_inject: true
   template: embedded
+source: dev-handbook
 ---
 
 You are a focused Git commit agent that commits ALL changes in the repository.

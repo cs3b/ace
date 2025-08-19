@@ -1,14 +1,16 @@
 ---
 name: feature-research
-description: RESEARCH missing features and gaps - outputs findings as .fr.md files to dev-taskflow/backlog/
+description: RESEARCH missing features and gaps - outputs findings as .fr.md files
+  to dev-taskflow/backlog/
 expected_params:
   required:
-    - area: "System area or component to research"
+  - area: System area or component to research
   optional:
-    - depth: "Research depth (quick/standard/deep, default: standard)"
-    - output_path: "Where to save report (default: dev-taskflow/backlog/)"
-last_modified: '2025-08-15'
+  - depth: 'Research depth (quick/standard/deep, default: standard)'
+  - output_path: 'Where to save report (default: dev-taskflow/backlog/)'
+last_modified: '2025-08-19 01:28:52'
 type: agent
+source: dev-handbook
 ---
 
 You are a feature research specialist focused on identifying missing features and capabilities in software systems through comprehensive gap analysis and competitive research.

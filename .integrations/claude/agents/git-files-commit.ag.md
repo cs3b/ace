@@ -1,20 +1,16 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: git-files-commit
-description: COMMIT SPECIFIC FILES - requires file list.
-  Use when you have specific files to commit.
-  Executes git-commit with provided file paths.
+description: COMMIT SPECIFIC FILES - requires file list. Use when you have specific
+  files to commit. Executes git-commit with provided file paths.
 expected_params:
   required:
-    - files: "List of specific files to commit"
+  - files: List of specific files to commit
   optional:
-    - intention: "Description of changes (if not provided, git-commit auto-generates)"
-last_modified: '2025-08-14'
+  - intention: Description of changes (if not provided, git-commit auto-generates)
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for git operations
+  model: google:gemini-2.5-flash
   tools_mapping:
     git-status:
       expose: true
@@ -22,13 +18,12 @@ mcp:
       expose: true
   security:
     allowed_paths:
-      - "**/*"  # Allow all files in repo
+    - "**/*"
     rate_limit: 30/hour
-
-# Context configuration
 context:
   auto_inject: true
   template: embedded
+source: dev-handbook
 ---
 
 You are a focused Git commit agent that commits SPECIFIC FILES provided by the user.

@@ -1,52 +1,47 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: search
 description: SEARCH for files and code patterns - intelligent discovery without modification
-# tools: field omitted to inherit from settings.json (best practice)
 expected_params:
   required:
-    - pattern: "Search pattern (text, regex, or file pattern)"
+  - pattern: Search pattern (text, regex, or file pattern)
   optional:
-    - search_type: "Type of search: file, content, hybrid, auto (default: auto)"
-    - search_root: "Root directory for search (default: project root)"
-    - scope: "Limit scope: staged, tracked, changed files"
-last_modified: '2025-01-14'
+  - search_type: 'Type of search: file, content, hybrid, auto (default: auto)'
+  - search_root: 'Root directory for search (default: project root)'
+  - scope: 'Limit scope: staged, tracked, changed files'
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (optional - ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for search operations
+  model: google:gemini-2.5-flash
   security:
-    allowed_paths: 
-      - "**/*.md"
-      - "**/*.rb"
-      - "**/*.ts"
-      - "**/*.js"
-      - "**/*.py"
-      - "**/*.go"
-      - "**/*.rs"
-      - "**/*.yml"
-      - "**/*.yaml"
-      - "**/*.json"
-      - "docs/**/*"
-      - "dev-*/**/*"
-      - ".claude/**/*"
+    allowed_paths:
+    - "**/*.md"
+    - "**/*.rb"
+    - "**/*.ts"
+    - "**/*.js"
+    - "**/*.py"
+    - "**/*.go"
+    - "**/*.rs"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.json"
+    - docs/**/*
+    - dev-*/**/*
+    - ".claude/**/*"
     forbidden_paths:
-      - "**/.git/**"
-      - "**/node_modules/**"
-      - "**/vendor/**"
-      - "**/.env*"
-      - "**/secrets/**"
+    - "**/.git/**"
+    - "**/node_modules/**"
+    - "**/vendor/**"
+    - "**/.env*"
+    - "**/secrets/**"
     rate_limit: 100/hour
   routing:
     complexity_threshold: medium
-    escalation_model: anthropic:claude-3-5-sonnet  # Escalate for complex searches
-
-# Context configuration
+    escalation_model: anthropic:claude-3-5-sonnet
 context:
   auto_inject: true
   template: embedded
-  cache_ttl: 300  # 5 minute cache for search results
+  cache_ttl: 300
+source: dev-handbook
 ---
 
 You are a search specialist focused on intelligent file and code discovery across codebases using the unified `search` command.

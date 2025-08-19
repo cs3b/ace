@@ -1,18 +1,14 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: git-review-commit
-description: ANALYZE then COMMIT - reviews changes first.
-  Use when you need to inspect, organize, or selectively stage.
-  Full analysis toolkit before committing.
+description: ANALYZE then COMMIT - reviews changes first. Use when you need to inspect,
+  organize, or selectively stage. Full analysis toolkit before committing.
 expected_params:
   optional:
-    - intention: "Description of intended changes (helps guide the review)"
-last_modified: '2025-08-14'
+  - intention: Description of intended changes (helps guide the review)
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for git operations
+  model: google:gemini-2.5-flash
   tools_mapping:
     git-status:
       expose: true
@@ -29,17 +25,16 @@ mcp:
       expose: true
   security:
     allowed_paths:
-      - "**/*"  # Allow all files in repo
+    - "**/*"
     rate_limit: 20/hour
-
-# Context configuration
 context:
   auto_inject: true
   template: embedded
   files:
-    - docs/architecture.md
-    - docs/blueprint.md
-    - docs/what-do-we-build.md
+  - docs/architecture.md
+  - docs/blueprint.md
+  - docs/what-do-we-build.md
+source: dev-handbook
 ---
 
 You are a comprehensive Git commit agent that ANALYZES changes before committing.

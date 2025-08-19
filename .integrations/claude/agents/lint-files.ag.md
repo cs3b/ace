@@ -1,35 +1,33 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: lint-files
-description: LINT and FIX code quality issues - supports ruby, markdown, all types with autofix
+description: LINT and FIX code quality issues - supports ruby, markdown, all types
+  with autofix
 expected_params:
   required:
-    - type: "Type to lint (ruby/markdown/all/docs-dependencies)"
+  - type: Type to lint (ruby/markdown/all/docs-dependencies)
   optional:
-    - paths: "Specific paths to lint (default: project defaults)"
-    - autofix: "Apply automatic fixes (default: true)"
-    - dry_run: "Show what would be done without changes (default: false)"
-    - config: "Path to custom configuration file"
-last_modified: '2025-08-15'
+  - paths: 'Specific paths to lint (default: project defaults)'
+  - autofix: 'Apply automatic fixes (default: true)'
+  - dry_run: 'Show what would be done without changes (default: false)'
+  - config: Path to custom configuration file
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for lint operations
+  model: google:gemini-2.5-flash
   tools_mapping:
     Bash:
       expose: true
-      allowed_commands: 
-        - standardrb
-        - rubocop
-        - npm
-        - markdownlint
-        - rspec
-        - bundle
+      allowed_commands:
+      - standardrb
+      - rubocop
+      - npm
+      - markdownlint
+      - rspec
+      - bundle
     Read:
       expose: true
       settings:
-        max_size: 512000  # 500KB limit for code files
+        max_size: 512000
     Grep:
       expose: true
       settings:
@@ -39,32 +37,31 @@ mcp:
       settings:
         max_files: 100
   security:
-    allowed_paths: 
-      - "**/*.rb"
-      - "**/*.md"
-      - "**/*.js"
-      - "**/*.ts"
-      - "**/*.json"
-      - "**/*.yml"
-      - "**/*.yaml"
-      - "dev-tools/**/*"
-      - "docs/**/*"
-      - ".rubocop.yml"
-      - "package.json"
-      - "Gemfile*"
+    allowed_paths:
+    - "**/*.rb"
+    - "**/*.md"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.json"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - dev-tools/**/*
+    - docs/**/*
+    - ".rubocop.yml"
+    - package.json
+    - Gemfile*
     forbidden_paths:
-      - "**/.git/**"
-      - "**/node_modules/**"
-      - "**/vendor/**"
-      - "**/coverage/**"
-      - "**/.env*"
+    - "**/.git/**"
+    - "**/node_modules/**"
+    - "**/vendor/**"
+    - "**/coverage/**"
+    - "**/.env*"
     rate_limit: 30/hour
-
-# Context configuration
 context:
   auto_inject: true
   template: embedded
-  cache_ttl: 120  # 2 minute cache for lint configs
+  cache_ttl: 120
+source: dev-handbook
 ---
 
 You are a code quality specialist focused on automated linting, style enforcement, and intelligent code quality improvements across multiple languages and file types.

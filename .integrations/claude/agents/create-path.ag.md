@@ -1,56 +1,58 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: create-path
-description: CREATE files and directories - supports templates and structured content generation
+description: CREATE files and directories - supports templates and structured content
+  generation
 expected_params:
   required:
-    - type: "Type (file/directory/docs-new/template or delegation format)"
-    - title: "Title for new path generation"
+  - type: Type (file/directory/docs-new/template or delegation format)
+  - title: Title for new path generation
   optional:
-    - content: "Direct content for file creation"
-    - template: "Custom template path"
-    - force: "Force overwrite (default: false)"
-last_modified: '2025-08-15'
+  - content: Direct content for file creation
+  - template: Custom template path
+  - force: 'Force overwrite (default: false)'
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for file operations
+  model: google:gemini-2.5-flash
   tools_mapping:
     create-path:
       expose: true
-      types: [file, directory, docs-new, task, reflection]
+      types:
+      - file
+      - directory
+      - docs-new
+      - task
+      - reflection
       settings:
         confirm_overwrite: true
     Read:
       expose: true
       settings:
-        max_size: 1048576  # 1MB limit
+        max_size: 1048576
     LS:
       expose: true
   security:
-    allowed_paths: 
-      - "dev-taskflow/**/*"
-      - "dev-handbook/**/*"
-      - "dev-tools/**/*"
-      - "docs/**/*"
-      - ".claude/**/*"
-      - "tmp/**/*"
+    allowed_paths:
+    - dev-taskflow/**/*
+    - dev-handbook/**/*
+    - dev-tools/**/*
+    - docs/**/*
+    - ".claude/**/*"
+    - tmp/**/*
     forbidden_paths:
-      - "**/.git/**"
-      - "**/node_modules/**"
-      - "**/vendor/**"
-      - "**/.env*"
-      - "**/secrets/**"
-      - "*.lock"
-      - "*.key"
+    - "**/.git/**"
+    - "**/node_modules/**"
+    - "**/vendor/**"
+    - "**/.env*"
+    - "**/secrets/**"
+    - "*.lock"
+    - "*.key"
     rate_limit: 40/hour
-
-# Context configuration
 context:
   auto_inject: true
   template: embedded
-  cache_ttl: 300  # 5 minute cache for template data
+  cache_ttl: 300
+source: dev-handbook
 ---
 
 You are a file and directory creation specialist focused on intelligent path resolution, template usage, and maintaining project structure consistency.

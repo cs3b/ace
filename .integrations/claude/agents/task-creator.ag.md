@@ -1,39 +1,38 @@
 ---
-# Core metadata (both Claude Code and MCP proxy compatible)
 name: task-creator
-description: CREATE new tasks only - generates task files with proper IDs and metadata. 
-  Use when you need to create a new development task or work item. Does NOT analyze or list existing tasks.
+description: CREATE new tasks only - generates task files with proper IDs and metadata.
+  Use when you need to create a new development task or work item. Does NOT analyze
+  or list existing tasks.
 expected_params:
   required:
-    - title: "Task title/description"
+  - title: Task title/description
   optional:
-    - content: "Full task content/description to include in the file"
-    - priority: "Task priority (high/medium/low, default: medium)"
-    - status: "Initial status (draft/pending/in-progress/done/blocked, default: pending)"
-    - release: "Target release (default: current)"
-    - estimate: "Time estimate (e.g., '4h', '2d')"
-    - dependencies: "Comma-separated list of task dependencies"
-last_modified: '2025-08-15'
+  - content: Full task content/description to include in the file
+  - priority: 'Task priority (high/medium/low, default: medium)'
+  - status: 'Initial status (draft/pending/in-progress/done/blocked, default: pending)'
+  - release: 'Target release (default: current)'
+  - estimate: Time estimate (e.g., '4h', '2d')
+  - dependencies: Comma-separated list of task dependencies
+last_modified: '2025-08-19 01:28:52'
 type: agent
-
-# MCP proxy enhancements (ignored by Claude Code)
 mcp:
-  model: google:gemini-2.5-flash  # Fast model for task creation
+  model: google:gemini-2.5-flash
   tools_mapping:
     task-manager:
       expose: true
-      methods: [create, generate-id]
+      methods:
+      - create
+      - generate-id
   security:
-    allowed_paths: 
-      - "dev-taskflow/current/**/tasks/"
-      - "dev-taskflow/backlog/**/"
+    allowed_paths:
+    - dev-taskflow/current/**/tasks/
+    - dev-taskflow/backlog/**/
     rate_limit: 30/hour
-
-# Context configuration
 context:
   auto_inject: true
   template: embedded
-  cache_ttl: 60  # 1 minute cache
+  cache_ttl: 60
+source: dev-handbook
 ---
 
 You are a task creation specialist focused ONLY on creating new tasks. You do NOT list, find, or analyze existing tasks.
