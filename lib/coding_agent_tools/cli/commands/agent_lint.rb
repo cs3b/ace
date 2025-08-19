@@ -5,9 +5,9 @@ require "dry/cli"
 module CodingAgentTools
   module Cli
     module Commands
-      # Agent command for managing and validating agents
-      class Agent < Dry::CLI::Command
-        desc "Manage and validate agents with dual compatibility (Claude Code / MCP proxy)"
+      # Agent-Lint command for validating and linting agent definition files
+      class AgentLint < Dry::CLI::Command
+        desc "Validate and lint agent definition files for Claude Code and MCP proxy compatibility"
 
         option :list, type: :boolean, default: false, aliases: ["l"],
           desc: "List all available agents"
@@ -235,11 +235,11 @@ module CodingAgentTools
 
         def show_help
           puts <<~HELP
-            Agent Management Tool
+            Agent-Lint - Agent Definition Validation Tool
             
             Usage:
-              agent --list                    # List all agents
-              agent --validate <file>         # Validate specific agent
+              agent-lint --list                    # List all agents with validation status
+              agent-lint --validate <file>         # Validate specific agent file
               
             Options:
               --format summary|detailed|claude|mcp    # Output format
@@ -247,9 +247,9 @@ module CodingAgentTools
               --agent-dir <path>                      # Agent directory (default: .claude/agents)
               
             Examples:
-              agent --list --format detailed
-              agent --validate .claude/agents/git-commit-manager.md
-              agent --list --compatibility mcp
+              agent-lint --list --format detailed
+              agent-lint --validate .claude/agents/git-commit-manager.md
+              agent-lint --list --compatibility mcp
           HELP
         end
 

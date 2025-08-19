@@ -292,14 +292,14 @@ module CodingAgentTools
         @mcp_commands_registered = true
       end
 
-      def self.register_agent_commands
-        return if @agent_commands_registered
+      def self.register_agent_lint_commands
+        return if @agent_lint_commands_registered
 
-        require_relative "cli/commands/agent"
+        require_relative "cli/commands/agent_lint"
 
-        register "agent", Commands::Agent
+        register "agent-lint", Commands::AgentLint
 
-        @agent_commands_registered = true
+        @agent_lint_commands_registered = true
       end
 
       # Ensure commands are registered when CLI is used
@@ -321,7 +321,7 @@ module CodingAgentTools
         register_search_commands
         register_context_commands
         register_mcp_commands
-        register_agent_commands
+        register_agent_lint_commands
         
         # Call Dry::CLI to actually process the commands
         Dry::CLI.new(self).call(arguments: args)
