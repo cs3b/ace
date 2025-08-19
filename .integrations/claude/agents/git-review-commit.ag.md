@@ -5,7 +5,7 @@ description: ANALYZE then COMMIT - reviews changes first. Use when you need to i
 expected_params:
   optional:
   - intention: Description of intended changes (helps guide the review)
-last_modified: '2025-08-19 01:28:52'
+last_modified: '2025-08-19 01:40:50'
 type: agent
 mcp:
   model: google:gemini-2.5-flash

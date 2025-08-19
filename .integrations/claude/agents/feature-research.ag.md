@@ -8,7 +8,7 @@ expected_params:
   optional:
   - depth: 'Research depth (quick/standard/deep, default: standard)'
   - output_path: 'Where to save report (default: dev-taskflow/backlog/)'
-last_modified: '2025-08-19 01:28:52'
+last_modified: '2025-08-19 01:40:50'
 type: agent
 source: dev-handbook
 ---
