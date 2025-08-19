@@ -3,7 +3,7 @@ description: Fix Linting Issue From
 allowed-tools: Read, Write, Edit, Bash, Grep
 argument-hint: "[linter-output-file]"
 model: claude-sonnet-4-20250514
-last_modified: '2025-08-05 20:07:55'
+last_modified: '2025-08-19 01:28:52'
 source: generated
 ---
 
