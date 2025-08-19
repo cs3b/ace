@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Agent-Lint - Validate and lint agent definition files
+#
+# This executable validates agent definitions for both Claude Code and MCP proxy compatibility.
+# It checks agent file structure, required fields, and compatibility requirements.
+#
+# Usage: agent-lint [options]
+#
+# Examples:
+#   agent-lint --list                    # List all available agents with validation status
+#   agent-lint --validate agent.md       # Validate a specific agent file
+#   agent-lint --list --format detailed  # Show detailed validation information
+#
+# Features:
+#   - Validate agent file structure and required fields
+#   - Check Claude Code compatibility requirements
+#   - Verify MCP proxy enhancement configurations
+#   - List agents with their validation status
+#   - Support multiple output formats for validation results
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["agent-lint"],
+  registration_method: :register_agent_lint_commands,
+  executable_name: "agent-lint"
+).call

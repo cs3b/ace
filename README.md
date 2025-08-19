@@ -92,6 +92,16 @@ coding_agent_tools project release_context
 
 ### New Standalone Commands
 
+- **`exe/agent-lint`**: Validate and lint agent definition files for Claude Code and MCP proxy compatibility
+  - Usage: `exe/agent-lint [--list] [--validate FILE] [--format FORMAT] [--compatibility TYPE]`
+  - Examples:
+    - `exe/agent-lint --list` - List all agents with validation status
+    - `exe/agent-lint --validate agent.md` - Validate specific agent file
+    - `exe/agent-lint --list --format detailed` - Show detailed validation info
+    - `exe/agent-lint --list --compatibility claude` - Filter for Claude-compatible agents
+  - Validates: YAML frontmatter, required fields, Claude/MCP compatibility
+  - Formats: summary, detailed, claude, mcp
+
 - **`exe/llm-query`**: Query any supported LLM provider using unified syntax
   - Usage: `exe/llm-query provider:model "prompt or file path" [--output FILE] [--format json|markdown|text] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--force] [--debug]`
   - Examples:
