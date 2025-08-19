@@ -43,12 +43,18 @@ Review the output to identify:
 For workflows without commands:
 
 ```bash
-# Preview what would be generated
+# Preview what would be generated for regular workflows
 handbook claude generate-commands --dry-run
 
-# Generate missing commands
+# Generate missing commands for regular workflows
 handbook claude generate-commands
+
+# Generate commands for meta workflows (in .meta/wfi/)
+handbook claude generate-commands --meta --dry-run
+handbook claude generate-commands --meta
 ```
+
+Note: Meta workflow commands will be placed in `_custom/meta-*.md` to distinguish them from regular workflow commands.
 
 **Decision Tree: Custom vs Generated Commands**
 
@@ -70,6 +76,8 @@ Examples:
 - `commit.md` → Custom (git operations, special formatting)
 - `capture-idea.wf.md` → Generated (simple workflow reference)
 - `load-project-context.md` → Custom (complex initialization)
+- `meta-manage-agents.md` → Custom meta workflow (agent management)
+- `meta-update-tools-docs.md` → Custom meta workflow (documentation maintenance)
 
 ### 3. Update Registry
 
@@ -105,6 +113,7 @@ The integration process:
 - Copies command files from dev-handbook to project
 - Flattens directory structure for Claude Code compatibility
 - Preserves custom commands while updating generated ones
+- Includes meta workflow commands from _custom/meta-*.md
 
 ### 5. Verify Installation
 
@@ -136,6 +145,8 @@ Review the summary to ensure:
 - Check file permissions in dev-handbook/.integrations/claude/
 - Verify template exists at correct location
 - Ensure workflow files have .wf.md extension
+- For meta workflows, check .meta/wfi/ directory
+- Verify meta commands are in _custom/meta-*.md
 - Run with --verbose flag for detailed output
 
 **Validation failures**
@@ -180,14 +191,21 @@ handbook claude validate --format json
 # Test specific workflow
 handbook claude generate-commands --workflow capture-idea
 
+# Test specific meta workflow
+handbook claude generate-commands --meta --workflow manage-agents
+
 # Check for invalid tool specifications
 grep -r "Bash(" dev-handbook/.integrations/claude/
+
+# List meta workflow commands
+ls -la dev-handbook/.integrations/claude/commands/_custom/meta-*.md
 ```
 
 ## Verification Checklist
 
 ### Pre-Integration Checks
-- [ ] All workflows have commands (custom or generated)
+- [ ] All regular workflows have commands (custom or generated)
+- [ ] All meta workflows have commands in _custom/meta-*.md
 - [ ] No validation errors reported
 - [ ] Registry JSON is valid and complete
 - [ ] Dry-run shows expected changes
@@ -209,7 +227,8 @@ grep -r "Bash(" dev-handbook/.integrations/claude/
 ## Success Criteria
 
 The workflow is successful when:
-- All workflows have corresponding Claude commands
+- All regular workflows have corresponding Claude commands
+- All meta workflows have commands in _custom/meta-*.md
 - Validation passes without errors
 - Installation summary shows expected changes
 - Registry accurately reflects current state
