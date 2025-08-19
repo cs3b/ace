@@ -253,6 +253,8 @@ module CodingAgentTools
           # @raise [SecurityError] If content appears malicious
           def perform_security_checks(yaml_content)
             # Check for potentially dangerous patterns
+            # Focus on actual YAML/Ruby object serialization threats and code execution
+            # Note: Removed overly broad patterns like /\binclude\b/ that match normal documentation
             dangerous_patterns = [
               %r{!ruby/object}i,        # Ruby object serialization
               %r{!ruby/class}i,         # Ruby class references
@@ -266,17 +268,16 @@ module CodingAgentTools
               /<%.*%>/,                # ERB-style tags
               /{{.*}}/,                # Template-style tags
               /\$\{.*\}/,              # Variable substitution
-              /eval\(/i,               # Eval function calls
-              /system\(/i,             # System function calls
+              /\beval\b.*[(\s]/i,      # Eval with parentheses or space (catches "eval(" and "eval code")
+              /\bsystem\s*\(/i,        # System function calls with parentheses
               /`.*`/,                  # Backtick command execution
-              /\bexec\b/i,             # Exec commands
-              /\bpopen\b/i,            # Process opening
-              /\bfork\b/i,             # Process forking
-              /\brequire\b/i,          # Code requiring
-              /\binclude\b/i,          # Code including
-              /\bload\b/i,             # Code loading
-              /\beval\b/i,             # Code evaluation
-              /\bsend\b/i,             # Method sending
+              /\bexec\b\s+/i,          # Exec commands (with space after)
+              /\bpopen\s*\(/i,         # Process opening with parentheses
+              /\bfork\s+(do|\{)/i,     # Process forking with block
+              /\brequire\s+['"`]/i,    # Code requiring with quotes
+              /\binclude\s+[A-Z]/,     # Module include (capital letter indicates module name)
+              /\bload\s+['"`]/i,       # Code loading with quotes
+              /\bsend\s*[:]/i,         # Method sending with symbol
               /\bdefine_method\b/i,    # Method definition
               /\bclass_eval\b/i,       # Class evaluation
               /\bmodule_eval\b/i,      # Module evaluation
