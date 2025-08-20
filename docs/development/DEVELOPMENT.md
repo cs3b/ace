@@ -64,29 +64,65 @@ For complete dependency information, see `coding_agent_tools.gemspec` and `Gemfi
 
 ### Environment Configuration
 
-For running tests that interact with real APIs or recording new VCR cassettes:
+The Coding Agent Tools uses a centralized environment configuration system. API keys and environment variables are loaded from standardized locations:
 
-1. **Copy the example environment files**:
+1. **Global Configuration** (for all projects): `~/.coding-agent/.env`
+2. **Project-Specific Configuration** (overrides global): `.coding-agent/.env`
+
+#### Initial Setup
+
+1. **Create the configuration directory**:
    ```bash
-   cp .env.example .env
-   cp spec/.env.example spec/.env
+   # For global configuration (recommended)
+   mkdir -p ~/.coding-agent
+   
+   # Or for project-specific configuration
+   mkdir -p .coding-agent
    ```
 
-2. **Edit the `.env` files and add your actual API keys** (particularly `GEMINI_API_KEY`):
+2. **Copy the sample environment file**:
    ```bash
-   # In .env file
-   GEMINI_API_KEY="your_actual_gemini_api_key_here"
+   # From dev-handbook (if available)
+   cp dev-handbook/.meta/tpl/dotfiles/.env.sample ~/.coding-agent/.env
+   
+   # Or from dev-tools (legacy)
+   cp .env.example ~/.coding-agent/.env
+   ```
 
-   # In spec/.env file (for testing)
-   GEMINI_API_KEY="your_actual_gemini_api_key_here"
+3. **Edit the `.env` file and add your actual API keys**:
+   ```bash
+   # Edit global configuration
+   $EDITOR ~/.coding-agent/.env
+   
+   # Add your API keys:
+   GOOGLE_API_KEY="your_actual_gemini_api_key_here"
+   OPENAI_API_KEY="your_actual_openai_api_key_here"
+   ANTHROPIC_API_KEY="your_actual_anthropic_api_key_here"
+   # ... other keys as needed
+   ```
+
+4. **For testing with VCR**:
+   ```bash
+   # In your .coding-agent/.env file
    VCR_RECORD=false  # Set to true when recording new cassettes
    ```
 
-3. **When recording new VCR cassettes**, set `VCR_RECORD=true` in `spec/.env`
+#### Migration from Old Setup
+
+If you have an existing `.env` file in your project root:
+
+```bash
+# Move your existing .env to the new location
+mv .env .coding-agent/.env
+```
+
+Note: The system will show a deprecation warning if it finds `.env` in the old location.
 
 ### Getting API Keys
 
 - **Google Gemini API Key**: Get this from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **OpenAI API Key**: Get this from [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Anthropic API Key**: Get this from [Anthropic Console](https://console.anthropic.com/)
 - **GitHub Token** (if needed): Generate from [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
 
 ## Daily Development Workflow
