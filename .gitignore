@@ -1,7 +1,9 @@
 node_modules
 tmp
 doc-dependencies*
+# Environment configuration
 .env
+.coding-agent/.env
 node_modules
 .lint*.md
 *.bak
