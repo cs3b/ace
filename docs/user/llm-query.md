@@ -66,8 +66,15 @@ llm-query gflash "Fast response needed"
 ### 1. Google (`google`)
 
 **Setup:**
+
+API keys are configured in the centralized `.coding-agent/.env` file:
+
 ```bash
-export GOOGLE_API_KEY="your-api-key-here"
+# Create configuration directory (if not exists)
+mkdir -p ~/.coding-agent
+
+# Add to ~/.coding-agent/.env (global) or .coding-agent/.env (project-specific)
+GOOGLE_API_KEY="your-api-key-here"
 ```
 
 **Available Models:**
@@ -82,8 +89,12 @@ export GOOGLE_API_KEY="your-api-key-here"
 ### 2. Anthropic (`anthropic`)
 
 **Setup:**
+
+Configure in your `.coding-agent/.env` file:
+
 ```bash
-export ANTHROPIC_API_KEY="your-api-key-here"
+# Add to ~/.coding-agent/.env (global) or .coding-agent/.env (project-specific)
+ANTHROPIC_API_KEY="your-api-key-here"
 ```
 
 **Available Models:**
@@ -97,8 +108,12 @@ export ANTHROPIC_API_KEY="your-api-key-here"
 ### 3. OpenAI (`openai`)
 
 **Setup:**
+
+Configure in your `.coding-agent/.env` file:
+
 ```bash
-export OPENAI_API_KEY="your-api-key-here"
+# Add to ~/.coding-agent/.env (global) or .coding-agent/.env (project-specific)
+OPENAI_API_KEY="your-api-key-here"
 ```
 
 **Available Models:**
@@ -113,8 +128,12 @@ export OPENAI_API_KEY="your-api-key-here"
 ### 4. Mistral (`mistral`)
 
 **Setup:**
+
+Configure in your `.coding-agent/.env` file:
+
 ```bash
-export MISTRAL_API_KEY="your-api-key-here"
+# Add to ~/.coding-agent/.env (global) or .coding-agent/.env (project-specific)
+MISTRAL_API_KEY="your-api-key-here"
 ```
 
 **Available Models:**
@@ -128,8 +147,12 @@ export MISTRAL_API_KEY="your-api-key-here"
 ### 5. Together AI (`together_ai`)
 
 **Setup:**
+
+Configure in your `.coding-agent/.env` file:
+
 ```bash
-export TOGETHER_API_KEY="your-api-key-here"
+# Add to ~/.coding-agent/.env (global) or .coding-agent/.env (project-specific)
+TOGETHER_API_KEY="your-api-key-here"
 ```
 
 **Available Models:**
@@ -424,7 +447,7 @@ Error: Unknown model 'invalid-model' for provider 'google'
 
 **Authentication:**
 ```
-Error: API key not found. Set GOOGLE_API_KEY environment variable
+Error: API key not found. Please set GOOGLE_API_KEY in ~/.coding-agent/.env or .coding-agent/.env
 ```
 
 **Rate Limiting:**
@@ -438,8 +461,8 @@ Error: Rate limit exceeded. Please wait before retrying
 # Check available providers and models
 llm-query --help
 
-# Verify API key
-echo $GOOGLE_API_KEY
+# Verify API key is configured
+grep GOOGLE_API_KEY ~/.coding-agent/.env
 
 # Test with debug mode
 llm-query google:gemini-2.5-flash "test" --debug
@@ -498,8 +521,9 @@ llm-query openai:gpt-4o "Generate report" --system "Provide your response in mar
 ### Environment Issues
 
 ```bash
-# Check all API keys
-env | grep API_KEY
+# Check API keys in configuration files
+grep API_KEY ~/.coding-agent/.env
+grep API_KEY .coding-agent/.env
 
 # Test specific provider
 llm-query google:gemini-2.5-flash "test" --debug
@@ -507,6 +531,11 @@ llm-query anthropic:claude-sonnet-4-20250514 "test" --debug
 
 # Verify LM Studio connection
 curl http://localhost:1234/v1/models
+
+# If you see deprecation warnings about old .env location:
+# Move your configuration to the new location
+mkdir -p .coding-agent
+mv .env .coding-agent/.env
 ```
 
 ### Performance Issues

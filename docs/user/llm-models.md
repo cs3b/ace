@@ -301,7 +301,7 @@ llm-query google:"$FAST_MODEL" "Quick summary of the news"
 If you encounter connection issues with the Gemini API:
 
 1. **Check Internet Connection**: Ensure you have a stable internet connection
-2. **Verify API Key**: Confirm your `GEMINI_API_KEY` environment variable is set correctly
+2. **Verify API Key**: Confirm your `GOOGLE_API_KEY` is set in `.coding-agent/.env`
 3. **Check API Status**: Visit [Google AI Studio](https://aistudio.google.com/) to verify service status
 
 **Error Example:**
@@ -311,8 +311,10 @@ Error: Failed to connect to Gemini API
 
 **Solution:**
 ```bash
-# Check if API key is set
-echo $GEMINI_API_KEY
+# Check if API key is configured
+grep GOOGLE_API_KEY ~/.coding-agent/.env
+# Or project-specific
+grep GOOGLE_API_KEY .coding-agent/.env
 
 # Test connection with debug output
 llm-models google --debug
@@ -385,7 +387,8 @@ Common authentication problems and solutions:
 
 1. **Missing API Key**:
    ```bash
-   export GEMINI_API_KEY="your-api-key-here"
+   # Add to ~/.coding-agent/.env (global) or .coding-agent/.env (project)
+   echo 'GOOGLE_API_KEY="your-api-key-here"' >> ~/.coding-agent/.env
    ```
 
 2. **Invalid API Key Format**:
@@ -409,7 +412,7 @@ LM Studio typically doesn't require authentication for local use, but if you enc
 For complete setup and usage information, refer to these related guides:
 
 - **[Project Overview](README.md)**: Main project documentation and quick start guide
-- **[Setup Guide](docs/SETUP.md)**: Initial configuration and API key setup
+- **[Setup Guide](docs/SETUP.md)**: Initial configuration and environment setup
 - **[Google Query Guide](docs/llm-integration/google-query-guide.md)**: Detailed information about using Google models
 - **[Development Guide](docs/DEVELOPMENT.md)**: Development environment setup and testing
 

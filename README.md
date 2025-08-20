@@ -113,7 +113,7 @@ coding_agent_tools project release_context
     - `exe/llm-query google "Overwrite example" --output existing.txt --force` (bypass confirmation)
   - Supports: Google Gemini, Anthropic Claude, OpenAI GPT, Mistral, Together AI, LM Studio
   - Provider aliases: `gflash`, `csonet`, `o4mini` and more
-  - Requires: API keys for respective providers (see Setup Guide)
+  - Requires: API keys configured in `.coding-agent/.env` (see Configuration section)
   - **File Operations**: When using `--output`, if the target file exists, you'll be prompted for confirmation unless `--force` (or `-f`) is specified. In non-interactive environments (CI/automation), use `--force` to bypass prompts.
 
 - **`exe/llm-models`**: List available AI models from various providers
@@ -138,7 +138,7 @@ coding_agent_tools project release_context
     ```
 
   - Providers: `google` (default), `lmstudio`
-  - Requires: `GOOGLE_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
+  - Requires: `GOOGLE_API_KEY` in `.coding-agent/.env`, LM Studio running on localhost:1234 for LMStudio
 
 - **`exe/llm-usage-report`**: Generate comprehensive cost and usage reports
   - Usage: `exe/llm-usage-report [--format json|csv|table] [--date-range today|week|month|YYYY-MM-DD:YYYY-MM-DD] [--provider PROVIDER] [--model MODEL] [--output FILE] [--debug]`
@@ -265,7 +265,37 @@ See the [Architecture Document](docs/architecture.md) for more details.
 
 ## 🔧 Configuration
 
-For detailed instructions on configuring API keys (e.g., `GEMINI_API_KEY`) and setting up LM Studio, please refer to the [Setup Guide](docs/SETUP.md#api-keys-optional).
+### Environment Setup
+
+Coding Agent Tools uses a centralized configuration system. API keys and environment variables are stored in:
+
+1. **Global Configuration** (recommended): `~/.coding-agent/.env`
+2. **Project-Specific Configuration**: `.coding-agent/.env` (overrides global)
+
+#### Quick Setup
+
+```bash
+# Create global configuration directory
+mkdir -p ~/.coding-agent
+
+# Copy sample configuration (if using dev-handbook)
+cp dev-handbook/.meta/tpl/dotfiles/.env.sample ~/.coding-agent/.env
+# Or from dev-tools (legacy)
+cp .env.example ~/.coding-agent/.env
+
+# Edit and add your API keys
+$EDITOR ~/.coding-agent/.env
+```
+
+#### Required API Keys
+
+- `GOOGLE_API_KEY` - For Google Gemini models
+- `OPENAI_API_KEY` - For OpenAI GPT models
+- `ANTHROPIC_API_KEY` - For Anthropic Claude models
+- `MISTRAL_API_KEY` - For Mistral models
+- `TOGETHER_API_KEY` - For Together AI models
+
+For detailed setup instructions, see the [Development Guide](docs/development/DEVELOPMENT.md#api-key-setup-for-development).
 
 ### LM Studio
 
@@ -299,16 +329,16 @@ Currently in active development (v0.1.0 focusing on establishing the gem structu
 
 For complete development information including environment setup, testing, build tools, and contribution workflow, see:
 
-- **[Development Guide](docs/DEVELOPMENT.md)** - Complete development workflow and contributor quick start
-- **[Setup Guide](docs/SETUP.md)** - Environment setup instructions
+- **[Development Guide](docs/development/DEVELOPMENT.md)** - Complete development workflow and contributor quick start
+- **[Setup Guide](docs/development/SETUP.md)** - Initial setup and installation
 - **[Contributing](.github/CONTRIBUTING.md)** - Contribution guidelines and standards
 
 ## 📚 Documentation
 
 ### User Documentation
 
-- **[Setup Guide](docs/SETUP.md)** - Development environment setup
-- **[Development Guide](docs/DEVELOPMENT.md)** - Workflow and best practices
+- **[Setup Guide](docs/development/SETUP.md)** - Development environment setup
+- **[Development Guide](docs/development/DEVELOPMENT.md)** - Workflow and best practices
 - **[Contributing](.github/CONTRIBUTING.md)** - How to contribute
 
 ### Project Documentation
