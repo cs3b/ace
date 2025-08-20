@@ -2,9 +2,9 @@
 
 ## Goal
 
-Initialize the `dev-handbook` and `dev-taskflow` directory structures and create core documentation files
-(`what-do-we-build.md`, `architecture.md`, `blueprint.md` in docs/ folder ) to establish the foundation for an
-AI-assisted development workflow in a new or existing project.
+Initialize the `dev-handbook` and `dev-taskflow` directory structures, integrate Claude Code commands,
+and create core documentation files (`what-do-we-build.md`, `architecture.md`, `blueprint.md` in docs/ folder)
+to establish the foundation for an AI-assisted development workflow in a new or existing project.
 
 **Idempotency**: This workflow is designed to be idempotent. Rerunning it will skip already completed steps or safely update existing files without overwriting customized content.
 
@@ -16,6 +16,7 @@ AI-assisted development workflow in a new or existing project.
       (e.g., `git checkout -b project-specific-docs`) to allow for project-specific tailoring
       without affecting the upstream repository.
     - Create project management directories (`backlog`, `current`, `done`) inside the `dev-taskflow` directory.
+    - Create documentation structure (`docs/decisions/`) for Architecture Decision Records.
 
 2. **Core Documentation Generation**:
     - **Identify Source**: Check if `PRD.md` exists at the project root.
@@ -38,26 +39,29 @@ AI-assisted development workflow in a new or existing project.
       - Architecture:
       - Blueprint:
 
-3. **Install and Customize Configuration Files**:
-    - Follow the `dev-handbook/.meta/wfi/install-dotfiles.wf.md` workflow instructions
+3. **Install Claude Integration and Configuration Files**:
+    - Run `handbook claude integrate` to install Claude Code commands and agents to `.claude/` directory
+    - This creates:
+      - `.claude/agents/` - Symlinks to agent definitions
+      - `.claude/commands/` - Claude command files
+      - Updates to `CLAUDE.md` with agent documentation
+    - Install any additional configuration files using `dev-handbook/.meta/wfi/install-dotfiles.wf.md` as needed
 
-4. **Setup Project `bin/` Scripts from Binstubs**:
-    - **Create Project `bin/` Directory**:
-        - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
-    - **Create Standard Binstubs**:
-        - Create the following standard scripts in `bin/` by copying from the binstub templates:
-          - `test` - Run project tests (from template)
-          - `lint` - Run project linting (from template)
-          - `build` - Build project artifacts (from template)
-          - `run` - Run the application (from template)
-        - Skip any that already exist to avoid overwriting
-    - **Make Scripts Executable**:
-        - For all scripts newly created in `bin/`, make them executable: `chmod +x bin/*`.
-    - **Guidance on Binstubs**:
-        - All scripts (`# Run project-specific test command`, `# Run project-specific lint command`, `bin/build`, and `bin/run`) are general placeholders that need to be tailored with project-specific commands based on the technology stack.
-        - Task management commands (`tn`, `tr`, `tree`) are available through the dev-tools if needed but are not automatically added to project bin/.
+4. **Setup Dev-Tools Integration**:
+    - **Ensure dev-tools availability**:
+        - Verify dev-tools commands are accessible from the project
+        - Add dev-tools to PATH if not already available
+        - Key commands include:
+          - `task-manager next` - Find next actionable task
+          - `task-manager recent` - Show recent activity
+          - `git-commit` - Intelligent commit workflow
+          - `code-lint` - Code quality checks
+          - `context` - Load project context
+    - **Create project-specific scripts (optional)**:
+        - Only if the project requires custom wrapper scripts, create them in `bin/`
+        - Most functionality is available directly through dev-tools commands
 
-4. **Setup v.0.0.0 Bootstrap Release Tracking**:
+5. **Setup v.0.0.0 Bootstrap Release Tracking**:
     - **Create v.0.0.0 Structure**: Create the v.0.0.0 bootstrap structure in `dev-taskflow/current/v.0.0.0-bootstrap/` using the bootstrap release template.
     - **Customize Template Tasks**: Replace template placeholders in copied task files:
         - Use `task-manager create` to create actual tasks from templates with proper IDs
@@ -70,14 +74,14 @@ AI-assisted development workflow in a new or existing project.
         - Leave PRD completion and roadmap creation tasks as `pending` for user completion.
     - **Update Release Status**: Set the v.0.0.0 release overview status to `in-progress` and add the current date as the start date.
 
-5. **Review and Update Project Source Documentation**:
+6. **Review and Update Project Source Documentation**:
     - Review the information extracted or gathered through interactive prompts in Step 2.
     - Identify the primary source document (`PRD.md` or `README.md`) determined in Step 2.
     - Update the primary source document with the gathered project information (name, purpose, technology stack, key features, etc.).
     - For any information that was not fully gathered or requires further detail, add clear notes or placeholders within the document indicating where more information is needed.
     - Ensure the updated document aligns with the structure of the relevant template (`dev-handbook/templates/project-docs/prd.template.md` or README.md template) if templates were used to initially populate the file.
 
-6. **Provide Next Steps Guidance**:
+7. **Provide Next Steps Guidance**:
     - **Display v.0.0.0 Tasks**: List the created v.0.0.0 tasks and their current status, explaining what remains to be completed.
     - **PRD Completion Guidance**: Provide clear instructions for completing the PRD using the generated task, including the user verification step.
     - **Roadmap Creation Guidance**: Explain the roadmap creation process and how it integrates with the v.0.0.0 release completion.
@@ -87,7 +91,9 @@ AI-assisted development workflow in a new or existing project.
 ## Prerequisites
 
 - Project root directory must be accessible with write permissions.
-- Optional: An existing `PRD.md` (within `dev-taskflow`) or `README.md` (at project root) can provide information for extraction.
+- `dev-handbook` and `dev-tools` submodules should be initialized.
+- Ruby >= 3.2 for running dev-tools commands.
+- Optional: An existing `PRD.md` or `README.md` (at project root) can provide information for extraction.
 - Optional: Git repository initialized (the workflow instruction can add to `.gitignore`).
 
 ## Project Context Loading
@@ -106,7 +112,8 @@ AI-assisted development workflow in a new or existing project.
 
 - [ ] Create dev-taskflow directory structure and verify submodules
 - [ ] Generate core documentation from embedded templates
-- [ ] Setup bin/ scripts with appropriate stubs
+- [ ] Integrate Claude commands and agents via handbook
+- [ ] Setup dev-tools integration and verify commands
 - [ ] Initialize v.0.0.0 bootstrap release tracking
 - [ ] Review and update source documentation
 
@@ -148,7 +155,7 @@ The workflow instruction analyzes the project structure and gathered info to gen
 - Data flow diagrams (if inferrable)
 - Extension points
 
-The generated file includes sections for technology stack, system architecture, command-line tools, and development patterns using the architecture template.
+The generated file includes sections for technology stack, system architecture, development tools, and development patterns using the architecture template.
 
 ### docs/blueprint.md
 
@@ -162,6 +169,7 @@ The generated file includes sections for project organization, technology stack,
 
 1. **Directory Structure**:
    - `dev-handbook`, `dev-taskflow` directories present with standard structure.
+   - `docs/decisions/` directory created for ADRs.
    - Proper permissions set.
    - Git integration configured (`.gitignore` updated).
 
@@ -174,11 +182,12 @@ The generated file includes sections for project organization, technology stack,
      `dev-taskflow/done/**/*` and common examples).
    - Documentation is concise yet complete and follows established templates.
 
-3. **Basic `bin/` Scripts Initialized**:
-   - The project's `bin/` directory exists.
-   - Standard binstub templates (`test`, `lint`, `build`, `run`) have been copied to the project's `bin/` directory if they didn't already exist.
-   - Copied scripts in `bin/` are executable.
-   - User is aware that all `bin/` scripts are placeholders needing project-specific implementation.
+3. **Claude Integration & Dev-Tools Setup**:
+   - `.claude/agents/` directory exists with agent symlinks.
+   - `.claude/commands/` directory contains Claude command files.
+   - `CLAUDE.md` updated with agent documentation.
+   - Dev-tools commands are accessible and functional.
+   - User understands how to use dev-tools commands for common tasks.
 
 4. **v.0.0.0 Bootstrap Release Tracking**:
    - `dev-taskflow/current/v.0.0.0-bootstrap/` directory exists with customized template structure.
@@ -196,7 +205,9 @@ The generated file includes sections for project organization, technology stack,
 ## Workflow Instruction Context
 
 Initialize an AI-driven development environment by creating necessary documentation structure
-(`dev-handbook`, `dev-taskflow`) and core architectural documents using standardized templates. This command sets up the foundation for effective AI agent collaboration with consistent, well-structured project documentation.
+(`dev-handbook`, `dev-taskflow`), integrating Claude Code commands and agents, and generating core
+architectural documents using standardized templates. This workflow sets up the foundation for
+effective AI agent collaboration with consistent, well-structured project documentation and tooling.
 
 ## Behavior
 
@@ -711,34 +722,22 @@ This document outlines the architectural design and technical implementation det
 - **[Entity 2]**: [Description and key attributes]
 - **[Entity 3]**: [Description and key attributes]
 
-## Command-line Tools (bin/)
+## Development Tools
 
-The `bin/` directory provides convenient wrappers for project automation and development tasks.
+The project leverages the dev-tools suite for development automation and task management.
 
-### Development Scripts
-
-- **bin/run** — Start the development server or main application
-- **bin/build** — Build the project for production deployment
-- **# Run project-specific test command** — Run the complete test suite
-- **# Run project-specific lint command** — Run code quality checks and linting
-
-### Project Management Scripts
+### Core Commands
 
 - **task-manager next** — Find the next actionable task in the current release
 - **task-manager recent** — Summarize recently updated or completed tasks
-- **git-commit** — Commit changes across the project and submodules
-- **git-log** — Show recent git commits across all repositories
-
-### Utility Scripts
-
-- **task-manager recentee** — Display the project directory structure
+- **git-commit** — Intelligent commit workflow with automated message generation
+- **code-lint** — Run code quality checks and linting
+- **context** — Load project context and documentation
 - **release-manager current** — Get current release path and version information
 
-<!-- Add project-specific scripts -->
+### Project-Specific Tools
 
-### Custom Scripts
-
-- **bin/[custom-script]** — [Description of what this script does]
+<!-- Document any custom tools or scripts specific to this project -->
 
 ## File Organization
 
@@ -1069,181 +1068,6 @@ bin/build
 
 </documents>
 
-### Binstub Templates
-
-#### # Run project-specific test command
-
-<documents>
-<template path="dev-handbook/templates/binstubs/test.template.md">
-#!/bin/sh
-# Placeholder for project testing command.
-# This script should be located in the project's `bin/` directory.
-#
-# The `initialize-project-structure.md` workflow, or a developer,
-# should update this script to execute the project's actual test command.
-#
-# Examples:
-# - Node.js: npm test
-# - Node.js (Yarn): yarn test
-# - Node.js (pnpm): pnpm test
-# - Bun: bun test
-# - Ruby (RSpec): bundle exec rspec
-# - Ruby (Minitest): bundle exec rake test
-# - Python (pytest): pytest
-# - Python (unittest): python -m unittest discover
-# - Rust: cargo test
-# - Go: go test ./...
-# - Java (Maven): mvn test
-# - Java (Gradle): ./gradlew test
-#
-# Refer to `dev-handbook/guides/testing/` for
-# technology-specific testing guidance.
-
-set -e
-cd "$(dirname "$0")"/.. # Ensure execution from project root
-
-echo "INFO: Running '# Run project-specific test command' from project root: $(pwd)"
-echo "INFO: This is a placeholder '# Run project-specific test command' script."
-echo "INFO: Please update it to run your project's specific test suite."
-echo "INFO: For example: 'npm test', 'bundle exec rspec', 'cargo test', etc."
-
-# Add your project's actual test command here:
-# Example: npm test -- "$@"
-# Example: bundle exec rspec "$@"
-
-echo "INFO: No test command configured in # Run project-specific test command."
-exit 0 # Succeed by default for placeholder, or change to 'exit 1' to indicate not configured.
-</template>
-</documents>
-
-#### # Run project-specific lint command
-
-<documents>
-<template path="dev-handbook/templates/binstubs/lint.template.md">
-#!/bin/sh
-# Placeholder for project linting script (# Run project-specific lint command)
-# This script should be adapted during project initialization or by developers
-# to execute the project's specific linting command(s).
-#
-# This script might call multiple linters (e.g., code linters, documentation linters).
-#
-# Examples:
-# - Node.js: npm run lint (which might run ESLint, Prettier, etc.)
-# - Bun: bun run lint
-# - Ruby/RuboCop: bundle exec rubocop
-# - Python/Ruff: ruff check .
-# - Python/Flake8: flake8
-# - Rust: cargo clippy && cargo fmt -- --check
-# - Go: golangci-lint run
-# - Markdown links: ruby tools/lint-md-links.rb (example)
-# - Makefile: make lint
-
-set -e
-cd "$(dirname "$0")"/.. # Ensure execution from project root
-
-echo "INFO: Running '# Run project-specific lint command' from project root: $(pwd)"
-echo "INFO: This is a placeholder '# Run project-specific lint command' script."
-echo "INFO: Please update it to run your project's specific linting command(s)."
-echo "INFO: For example: 'npm run lint', 'bundle exec rubocop', 'ruff check .', etc."
-echo "INFO: This script can also call tools like linters for documentation (e.g., Markdown)."
-
-# Add your project's lint command(s) here. For example:
-# npm run lint -- "$@"
-# bundle exec rubocop "$@"
-# ruff check . "$@"
-
-# Example: Call the Markdown link linter if it exists
-# TOOLKIT_MD_LINT="dev-handbook/tools/lint-md-links.rb"
-# if [ -f "$TOOLKIT_MD_LINT" ]; then
-#   echo "Running Markdown link linter..."
-#   ruby "$TOOLKIT_MD_LINT"
-# else
-#   echo "INFO: Toolkit Markdown linter not found at $TOOLKIT_MD_LINT"
-# fi
-
-
-echo "(Placeholder: No lint command executed)"
-exit 0
-</template>
-</documents>
-
-#### bin/build
-
-<documents>
-<template path="dev-handbook/templates/binstubs/build.template.md">
-#!/bin/sh
-# Placeholder for project build script (bin/build)
-# This script should be adapted during project initialization or by developers
-# to execute the project's specific build command, if applicable.
-#
-# Many interpreted language projects (e.g., Python, Ruby) may not have a separate "build" step
-# unless they are producing distributable packages or assets.
-#
-# Examples:
-# - Node.js/TypeScript: npm run build (which might run tsc)
-# - Bun: bun run build
-# - Rust: cargo build
-# - Go: go build ./...
-# - Java (Maven): mvn package
-# - Java (Gradle): ./gradlew build
-# - C/C++/Makefile: make
-#
-# If your project doesn't have a build step, this script can do nothing or be removed.
-
-set -e
-cd "$(dirname "$0")"/.. # Ensure execution from project root
-
-echo "INFO: Running 'bin/build' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/build' script."
-echo "INFO: Please update it to run your project's specific build command, if applicable."
-echo "INFO: For example: 'npm run build', 'cargo build', 'mvn package', etc."
-echo "INFO: If your project doesn't have a dedicated build step, this script can do nothing or be removed."
-
-# Add your project's build command here. For example:
-# npm run build -- "$@"
-# cargo build --release -- "$@"
-
-echo "(Placeholder: No build command executed)"
-exit 0
-</template>
-</documents>
-
-#### bin/run
-
-<documents>
-<template path="dev-handbook/templates/binstubs/run.template.md">
-#!/bin/sh
-# Placeholder for project run script (bin/run)
-# This script should be adapted during project initialization or by developers
-# to execute the project's main application or development server.
-#
-# Examples:
-# - Node.js: npm run start (or npm run dev)
-# - Bun: bun run start (or bun run dev, or bun run <entry-file>)
-# - Ruby/Rails: bundle exec rails server
-# - Python/Django: python manage.py runserver
-# - Python/Flask: flask run
-# - Rust: cargo run
-# - Go: go run main.go (or go run ./cmd/<command>)
-# - Makefile: make run
-
-set -e
-cd "$(dirname "$0")"/.. # Ensure execution from project root
-
-echo "INFO: Running 'bin/run' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/run' script."
-echo "INFO: Please update it to run your project's main application or development server."
-echo "INFO: For example: 'npm run dev', 'cargo run', 'python app.py', etc."
-
-# Add your project's run command here. For example:
-# npm run dev -- "$@"
-# cargo run -- "$@"
-# python app.py "$@"
-
-echo "(Placeholder: No run command executed)"
-exit 0
-</template>
-</documents>
 
 ### v.0.0.0 Release Templates
 
