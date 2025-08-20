@@ -4,6 +4,7 @@ doc-dependencies*
 # Environment configuration
 .env
 .coding-agent/.env
+.coding-agent/.env.sample
 node_modules
 .lint*.md
 *.bak
