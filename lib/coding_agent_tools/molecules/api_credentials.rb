@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/env_reader"
+require_relative '../atoms/env_reader'
 
 module CodingAgentTools
   module Molecules
@@ -31,7 +31,7 @@ module CodingAgentTools
       # @param env_file_path [String, nil] Path to .env file to load
       def initialize(env_key_name: nil, env_file_path: nil)
         @env_key_name = env_key_name
-        @env_file_path = env_file_path || find_env_file
+        @env_file_path = env_file_path || find_standardized_env_file
 
         # Load .env file if it exists
         load_env_file if @env_file_path
@@ -41,7 +41,7 @@ module CodingAgentTools
       # @return [String] The API key
       # @raise [KeyError] If no API key is found or env_key_name not set
       def api_key
-        raise KeyError, "env_key_name not set. Please provide it during initialization." if @env_key_name.nil?
+        raise KeyError, 'env_key_name not set. Please provide it during initialization.' if @env_key_name.nil?
 
         # First check singleton configuration
         return self.class.config[@env_key_name] if self.class.config[@env_key_name]
@@ -88,7 +88,7 @@ module CodingAgentTools
 
         # Filter to API-related variables
         env_vars.select do |key, _|
-          key.include?("API") || key.include?("KEY") || key.include?("TOKEN")
+          key.include?('API') || key.include?('KEY') || key.include?('TOKEN')
         end
       end
 
@@ -99,27 +99,37 @@ module CodingAgentTools
         Atoms::EnvReader.load_env_file(@env_file_path)
       end
 
-      # Find .env file in current or parent directories
+      # Find .env file in standardized locations
       # @return [String, nil] Path to .env file or nil if not found
-      def find_env_file
-        # Normalize current_dir to an absolute path to handle potential symlink issues
+      def find_standardized_env_file
+        # Find project root by looking for .git directory or other markers
+        project_root = find_project_root
+
+        # Use the EnvReader's standardized path finding
+        Atoms::EnvReader.find_standardized_env_path(project_root: project_root)
+      end
+
+      # Find the project root directory
+      # @return [String] The project root directory path
+      def find_project_root
         current_dir = File.expand_path(Dir.pwd)
 
         loop do
-          # Construct and normalize the potential .env file path
-          env_path = File.expand_path(File.join(current_dir, ".env"))
-          return env_path if File.exist?(env_path)
+          # Check for common project root indicators
+          if File.exist?(File.join(current_dir, '.git')) ||
+              File.exist?(File.join(current_dir, 'Gemfile')) ||
+              File.exist?(File.join(current_dir, 'package.json')) ||
+              File.exist?(File.join(current_dir, '.coding-agent'))
+            return current_dir
+          end
 
-          # Get the parent directory and normalize it
           parent = File.expand_path(File.dirname(current_dir))
-
-          # Break if we have reached the root directory (parent is the same as current)
           break if parent == current_dir
-
           current_dir = parent
         end
 
-        nil
+        # Fallback to current directory if no project root found
+        Dir.pwd
       end
     end
   end
