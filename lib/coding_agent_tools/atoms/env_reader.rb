@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dotenv"
+require 'dotenv'
 
 module CodingAgentTools
   module Atoms
@@ -11,7 +11,7 @@ module CodingAgentTools
       # @param path [String] Path to .env file (default: ".env")
       # @param overload [Boolean] Whether to overwrite existing env vars
       # @return [Hash] The loaded environment variables
-      def self.load_env_file(path = ".env", overload: false)
+      def self.load_env_file(path = '.env', overload: false)
         return {} unless File.exist?(path)
 
         if overload
@@ -19,6 +19,52 @@ module CodingAgentTools
         else
           Dotenv.load(path)
         end
+      end
+
+      # Find and load .env file from standardized locations
+      # Priority order:
+      # 1. Project-specific: <project_root>/.coding-agent/.env
+      # 2. Global: ~/.coding-agent/.env
+      # @param project_root [String] The project root directory (default: current working directory)
+      # @param overload [Boolean] Whether to overwrite existing env vars
+      # @return [Hash] The loaded environment variables
+      def self.load_standardized_env(project_root: Dir.pwd, overload: false)
+        # Check for deprecated .env in project root
+        deprecated_env = File.join(project_root, '.env')
+        if File.exist?(deprecated_env)
+          warn '[DEPRECATION WARNING] Found .env in project root. Please migrate to .coding-agent/.env'
+          warn 'Run: mkdir -p .coding-agent && mv .env .coding-agent/.env'
+        end
+
+        # Priority 1: Project-specific .coding-agent/.env
+        project_env = File.join(project_root, '.coding-agent', '.env')
+        if File.exist?(project_env)
+          return load_env_file(project_env, overload: overload)
+        end
+
+        # Priority 2: Global ~/.coding-agent/.env
+        global_env = File.expand_path('~/.coding-agent/.env')
+        if File.exist?(global_env)
+          return load_env_file(global_env, overload: overload)
+        end
+
+        # No .env file found in standard locations
+        {}
+      end
+
+      # Find the path to the .env file in standardized locations
+      # @param project_root [String] The project root directory
+      # @return [String, nil] Path to the .env file or nil if not found
+      def self.find_standardized_env_path(project_root: Dir.pwd)
+        # Priority 1: Project-specific .coding-agent/.env
+        project_env = File.join(project_root, '.coding-agent', '.env')
+        return project_env if File.exist?(project_env)
+
+        # Priority 2: Global ~/.coding-agent/.env
+        global_env = File.expand_path('~/.coding-agent/.env')
+        return global_env if File.exist?(global_env)
+
+        nil
       end
 
       # Get an environment variable value
