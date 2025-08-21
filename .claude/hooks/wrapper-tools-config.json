@@ -54,7 +54,13 @@
                 "git clone",
                 "git init",
                 "git filter-branch",
-                "git filter"
+                "git filter",
+                "git for-each-ref",
+                "git for",
+                "git update-ref",
+                "git update",
+                "git reflog",
+                "git gc"
             ]
         }
     ],
