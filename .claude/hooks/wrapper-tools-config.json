@@ -53,7 +53,8 @@
                 "git remote",
                 "git clone",
                 "git init",
-                "git filter-branch"
+                "git filter-branch",
+                "git filter"
             ]
         }
     ],

@@ -78,7 +78,8 @@ def check_wrapper_enforcement(config, command)
         # Check if this command has no wrapper available
         no_wrapper = enforcement['no_wrapper_available'] || []
         if no_wrapper.include?(native_command)
-          wrapper_tool = "#{native_command} (no wrapper available)"
+          # Allow commands that don't have wrapper replacements
+          return { allow: true }
         end
         
         return {
