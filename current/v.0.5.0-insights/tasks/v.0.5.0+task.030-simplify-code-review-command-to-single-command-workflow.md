@@ -60,6 +60,7 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
 - Implement in-memory processing by default
 - Add config file support with embedded YAML
 - Create direct LLM execution capability
+- Update workflow documentation to promote single-command usage
 - Maintain backwards compatibility
 
 ### Deliverables
@@ -152,6 +153,11 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
   - Impact: More flexible context configuration options
   - Integration points: Used by review command for context generation
 
+- `dev-handbook/workflow-instructions/review-code.wf.md`
+  - Changes: Add new single-command workflow section, update examples to show simplified approach
+  - Impact: Encourages adoption of streamlined workflow, reduces friction for users
+  - Integration points: Documentation for AI agents and developers using the tool
+
 ### Delete
 - No files to delete (maintaining backwards compatibility)
 
@@ -210,6 +216,11 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
   > Type: System Test
   > Assert: Complete review executes with one command
   > Command: code-review --preset pr --context 'presets: [project]' --subject 'commands: ["git diff HEAD~1"]' --auto-execute
+- [ ] **Update Documentation**: Add single-command examples to review-code.wf.md
+  > TEST: Documentation Coverage
+  > Type: Manual Review
+  > Assert: Workflow instructions show new simplified approach prominently
+  > Command: grep -A5 "Single-Command" dev-handbook/workflow-instructions/review-code.wf.md
 
 ## Risk Assessment
 
