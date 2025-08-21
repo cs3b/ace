@@ -3,6 +3,7 @@
 require "dry/cli"
 require "tempfile"
 require "fileutils"
+require "open3"
 require_relative "../../../molecules/code/review_preset_manager"
 require_relative "../../../molecules/code/context_integrator"
 require_relative "../../../molecules/code/prompt_enhancer"
@@ -179,43 +180,100 @@ module CodingAgentTools
           end
 
           def execute_review(config, options)
-            debug_output("Starting review execution...", options[:debug])
+            debug_output("Starting review preparation...", options[:debug])
+
+            # Create session directory
+            session_dir = create_session_directory
+            debug_output("Created session directory: #{session_dir}", options[:debug])
 
             # Initialize components
             context_integrator = CodingAgentTools::Molecules::Code::ContextIntegrator.new
             prompt_enhancer = CodingAgentTools::Molecules::Code::PromptEnhancer.new
-            review_assembler = CodingAgentTools::Molecules::Code::ReviewAssembler.new
 
             # Step 1: Generate context (background information)
             debug_output("Generating context...", options[:debug])
             context_content = context_integrator.generate_context(config[:context])
+            context_file = File.join(session_dir, "in-context.md")
+            File.write(context_file, context_content)
             
-            # Step 2: Load and enhance system prompt with context
-            debug_output("Enhancing system prompt...", options[:debug])
+            # Step 2: Load base system prompt and save it
+            debug_output("Loading system prompt...", options[:debug])
             system_prompt = load_system_prompt(config[:system_prompt])
+            base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
+            File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
+            
+            # Step 3: Enhance system prompt with context
+            debug_output("Enhancing system prompt with context...", options[:debug])
             enhanced_prompt = prompt_enhancer.enhance_prompt(system_prompt, context_content)
+            system_prompt_file = File.join(session_dir, "in-system.prompt.md")
+            File.write(system_prompt_file, enhanced_prompt)
 
-            # Step 3: Generate subject (what to review)
+            # Step 4: Generate subject (what to review)
             debug_output("Generating subject...", options[:debug])
             subject_content = context_integrator.generate_subject(config[:subject])
+            subject_file = File.join(session_dir, "in-subject.prompt.md")
+            File.write(subject_file, subject_content)
 
-            # Step 4: Assemble final review prompt
-            debug_output("Assembling final prompt...", options[:debug])
-            final_prompt = review_assembler.assemble(enhanced_prompt, subject_content)
+            # Step 5: Generate llm-query command
+            # Create model-specific output filename
+            model_name = config[:model].gsub(":", "-").gsub("/", "-")
+            output_file = config[:output] || File.join(session_dir, "report-#{model_name}.md")
+            
+            llm_command = [
+              "llm-query #{config[:model]}",
+              subject_file,
+              "--system #{system_prompt_file}",
+              "--timeout 600",
+              "--output #{output_file}"
+            ].join(" \\\n  ")
 
-            # Step 5: Send to LLM
-            debug_output("Sending to LLM...", options[:debug])
-            review_result = send_to_llm(final_prompt, config[:model])
-
-            # Step 6: Handle output
-            handle_output(review_result, config[:output])
-
-            success_output("✅ Review completed successfully")
+            # Display session info and command
+            success_output("✅ Review session prepared: #{session_dir}")
+            info_output("\n📁 Session files:")
+            info_output("  - in-context.md (project context)")
+            info_output("  - in-system.base.prompt.md (base system prompt)")
+            info_output("  - in-system.prompt.md (enhanced system prompt with context)")
+            info_output("  - in-subject.prompt.md (content to review)")
+            info_output("  - report-#{model_name}.md (will contain review output)")
+            
+            info_output("\n🔄 Next step - run this command:")
+            info_output(llm_command)
+            
             0
           rescue => e
-            error_output("Error during review: #{e.message}")
+            error_output("Error during review preparation: #{e.message}")
             debug_output(e.backtrace.join("\n"), options[:debug])
             1
+          end
+
+          def create_session_directory
+            # Find current release directory
+            current_release = find_current_release_dir
+            
+            # Create code-review directory under current release
+            review_base = File.join(current_release, "code-review")
+            FileUtils.mkdir_p(review_base) unless Dir.exist?(review_base)
+            
+            # Create timestamped session directory
+            timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+            session_name = "review-#{timestamp}"
+            session_dir = File.join(review_base, session_name)
+            FileUtils.mkdir_p(session_dir)
+            
+            session_dir
+          end
+
+          def find_current_release_dir
+            # Look for dev-taskflow/current directory
+            taskflow_current = "dev-taskflow/current"
+            if Dir.exist?(taskflow_current)
+              # Find the release directory (e.g., v.0.5.0-insights)
+              release_dirs = Dir.glob(File.join(taskflow_current, "v.*")).select { |d| File.directory?(d) }
+              return release_dirs.first if release_dirs.any?
+            end
+            
+            # Fallback to temp directory if no current release
+            Dir.mktmpdir("code-review-")
           end
 
           def load_system_prompt(prompt_path)
@@ -237,14 +295,13 @@ module CodingAgentTools
               tmpfile.write(prompt)
               tmpfile.flush
 
-              # Execute llm-query command
-              executor = CodingAgentTools::Organisms::System::CommandExecutor.new
-              result = executor.execute("llm-query", model, "--file", tmpfile.path)
+              # Execute llm-query command using Open3 directly
+              stdout, stderr, status = Open3.capture3("llm-query", model, "--file", tmpfile.path)
 
-              if result.success?
-                result.stdout
+              if status.success?
+                stdout
               else
-                raise "LLM query failed: #{result.stderr}"
+                raise "LLM query failed: #{stderr}"
               end
             end
           end
