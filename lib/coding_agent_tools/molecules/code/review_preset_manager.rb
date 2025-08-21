@@ -65,6 +65,7 @@ module CodingAgentTools
           resolved = {
             description: preset["description"],
             system_prompt: resolve_system_prompt(preset["system_prompt"], overrides[:system_prompt]),
+            prompt_composition: resolve_prompt_composition(preset["prompt_composition"], overrides),
             context: resolve_context_config(preset["context"], overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             model: overrides[:model] || preset["model"] || default_model,
@@ -120,6 +121,42 @@ module CodingAgentTools
           end
           
           preset_prompt
+        end
+
+        def resolve_prompt_composition(preset_composition, overrides)
+          # Build composition from overrides and preset
+          composition = preset_composition ? preset_composition.dup : {}
+          
+          # Apply CLI overrides if provided
+          if overrides[:prompt_base]
+            composition["base"] = overrides[:prompt_base]
+          end
+          
+          if overrides[:prompt_format]
+            composition["format"] = overrides[:prompt_format]
+          end
+          
+          if overrides[:prompt_focus]
+            # Parse comma-separated list or use array directly
+            focus_list = overrides[:prompt_focus]
+            focus_list = focus_list.split(",").map(&:strip) if focus_list.is_a?(String)
+            composition["focus"] = focus_list
+          elsif overrides[:add_focus]
+            # Add to existing focus list
+            existing_focus = Array(composition["focus"])
+            add_list = overrides[:add_focus]
+            add_list = add_list.split(",").map(&:strip) if add_list.is_a?(String)
+            composition["focus"] = (existing_focus + Array(add_list)).uniq
+          end
+          
+          if overrides[:prompt_guidelines]
+            guidelines_list = overrides[:prompt_guidelines]
+            guidelines_list = guidelines_list.split(",").map(&:strip) if guidelines_list.is_a?(String)
+            composition["guidelines"] = guidelines_list
+          end
+          
+          # Return nil if no composition defined
+          composition.empty? ? nil : composition
         end
 
         def resolve_context_config(preset_context, override_context)
