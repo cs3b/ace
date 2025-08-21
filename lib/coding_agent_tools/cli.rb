@@ -122,23 +122,8 @@ module CodingAgentTools
         @code_lint_commands_registered = true
       end
 
-      def self.register_code_review_prepare_commands
-        return if @code_review_prepare_commands_registered
-
-        require_relative "cli/commands/code/review_prepare/session_dir"
-        require_relative "cli/commands/code/review_prepare/project_context"
-        require_relative "cli/commands/code/review_prepare/project_target"
-        require_relative "cli/commands/code/review_prepare/prompt"
-
-        register "code-review-prepare", aliases: [] do |prefix|
-          prefix.register "session-dir", Commands::Code::ReviewPrepare::SessionDir
-          prefix.register "project-context", Commands::Code::ReviewPrepare::ProjectContext
-          prefix.register "project-target", Commands::Code::ReviewPrepare::ProjectTarget
-          prefix.register "prompt", Commands::Code::ReviewPrepare::Prompt
-        end
-
-        @code_review_prepare_commands_registered = true
-      end
+      # Note: code-review-prepare commands have been removed in favor of 
+      # the new preset-based code-review command with context integration
 
       def self.register_nav_commands
         return if @nav_commands_registered
@@ -310,7 +295,7 @@ module CodingAgentTools
         register_dotfiles_commands
         register_code_commands
         register_code_lint_commands
-        register_code_review_prepare_commands
+        # register_code_review_prepare_commands - removed in favor of preset-based review
         register_nav_commands
         register_handbook_commands
         register_reflection_commands
