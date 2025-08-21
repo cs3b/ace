@@ -31,7 +31,8 @@ module CodingAgentTools
         end
 
         # Default system prompt template location
-        DEFAULT_SYSTEM_PROMPT = "dev-handbook/templates/review-synthesizer/system.prompt.md"
+        # Now uses composable prompt system - this can be nil
+        DEFAULT_SYSTEM_PROMPT = nil
 
         # Initialize the synthesis orchestrator
         # @param options [Hash] Configuration options
