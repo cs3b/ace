@@ -32,6 +32,29 @@ This workflow uses TWO main tools: `code-review` and `llm-query`. Follow the pro
 
 ## Quick Start Examples
 
+### Single-Command Workflow (NEW - Recommended)
+
+```bash
+# Simple one-command review with auto-execution
+code-review --preset pr --auto-execute
+
+# Review with custom parameters in one command
+code-review \
+  --preset ruby-atom-modular \
+  --context 'presets: [project, dev-tools]' \
+  --subject 'commands: ["git diff HEAD~1"]' \
+  --model "google:gemini-2.0-flash-exp" \
+  --auto-execute
+
+# In-memory execution without saving session files
+code-review --preset pr --no-save-session --auto-execute
+
+# Use config file for complex setups
+code-review --config-file review-config.md --auto-execute
+```
+
+### Traditional Multi-Step Workflow
+
 ```bash
 # Review recent changes
 code-review code HEAD~5..HEAD --context auto
@@ -44,6 +67,80 @@ code-review code "src/**/*.rb" --context auto
 
 # Combined review
 code-review "code tests" HEAD~3..HEAD --context auto
+```
+
+## Simplified Single-Command Workflow
+
+### Overview
+
+The new single-command workflow eliminates the need for multiple manual steps. Everything happens in one atomic operation:
+
+1. **Context Generation** - Automatically generates project context
+2. **Prompt Composition** - Composes prompts from modular components  
+3. **Subject Collection** - Gathers files/diffs to review
+4. **LLM Execution** - Directly executes the review query
+5. **Result Output** - Streams or saves the review report
+
+### Key Features
+
+#### Auto-Execution
+- `--auto-execute` flag triggers immediate LLM query after preparation
+- No need to manually run `llm-query` command
+- Results stream to console or save to specified file
+
+#### In-Memory Processing
+- `--no-save-session` flag enables memory-only operation
+- No intermediate files created on disk
+- Faster execution with reduced I/O
+
+#### Configuration Files
+- `--config-file` accepts markdown files with YAML front matter
+- Embed review configuration directly in documentation
+- Example config file:
+
+```markdown
+---
+preset: ruby-atom-modular
+model: google:gemini-2.0-flash-exp
+context: 
+  presets: [project, dev-tools]
+subject:
+  commands: ["git diff HEAD~1"]
+auto_execute: true
+---
+
+# Review Configuration
+
+This configuration reviews recent Ruby changes with ATOM architecture focus.
+```
+
+#### Session Management
+- `--session-dir` specifies custom session directory
+- `--save-session` (default: true) controls file persistence
+- Session files useful for debugging and auditing
+
+### Usage Patterns
+
+#### Quick PR Review
+```bash
+code-review --preset pr --auto-execute
+```
+
+#### Custom Context and Subject
+```bash
+code-review \
+  --context 'presets: [project, dev-handbook]' \
+  --subject 'commands: ["git diff HEAD~3..HEAD"]' \
+  --model google:gemini-2.0-flash-exp \
+  --auto-execute
+```
+
+#### Debugging Session
+```bash
+code-review --preset pr \
+  --save-session \
+  --session-dir ./debug-session \
+  --debug
 ```
 
 ## Project Context Loading
