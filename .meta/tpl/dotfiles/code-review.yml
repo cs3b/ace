@@ -4,7 +4,12 @@
 presets:
   pr:
     description: "Pull request review"
-    system_prompt: "dev-handbook/templates/review/pr.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines:
+        - "tone"
+        - "icons"
     context: "project"  # Background: project docs, architecture
     subject:            # What to review: the PR changes
       commands:
@@ -13,7 +18,12 @@ presets:
     
   code:
     description: "Code quality and architecture review"
-    system_prompt: "dev-handbook/templates/review/code.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines:
+        - "tone"
+        - "icons"
     context:            # Background: architecture and conventions
       files:
         - docs/architecture.md
@@ -25,7 +35,14 @@ presets:
   
   docs:
     description: "Documentation review"
-    system_prompt: "dev-handbook/templates/review/docs.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "scope/docs"
+      guidelines:
+        - "tone"
+        - "icons"
     context: "project"  # Background: existing docs
     subject:            # What to review: doc changes
       commands:
@@ -33,7 +50,12 @@ presets:
   
   agents:
     description: "Agent definition review"
-    system_prompt: "dev-handbook/templates/review/agents.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines:
+        - "tone"
+        - "icons"
     context:            # Background: agent standards
       files:
         - dev-handbook/.meta/gds/agents-definition.g.md
@@ -44,7 +66,14 @@ presets:
 
   security:
     description: "Security and vulnerability review"
-    system_prompt: "dev-handbook/templates/review/security.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "quality/security"
+      guidelines:
+        - "tone"
+        - "icons"
     context:            # Background: security standards
       files:
         - docs/security.md
@@ -55,7 +84,14 @@ presets:
 
   performance:
     description: "Performance and optimization review"
-    system_prompt: "dev-handbook/templates/review/performance.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "quality/performance"
+      guidelines:
+        - "tone"
+        - "icons"
     context: "project"
     subject:
       commands:
@@ -63,7 +99,14 @@ presets:
 
   test:
     description: "Test coverage and quality review"
-    system_prompt: "dev-handbook/templates/review/test.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "scope/tests"
+      guidelines:
+        - "tone"
+        - "icons"
     context:
       files:
         - docs/testing.md
