@@ -1,0 +1,4 @@
+files:
+  - dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.028-redesign-code-review-command-with-preset-based-configuration.md
+  - dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.029-implement-composable-prompt-system-for-code-review.md
+  - dev-taskflow/current/v.0.5.0-insights/docs/29-composable-prompt-system-guide.md
