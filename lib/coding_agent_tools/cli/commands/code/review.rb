@@ -7,6 +7,8 @@ require "open3"
 require_relative "../../../molecules/code/review_preset_manager"
 require_relative "../../../molecules/code/context_integrator"
 require_relative "../../../molecules/code/prompt_enhancer"
+require_relative "../../../molecules/code/llm_executor"
+require_relative "../../../molecules/code/config_extractor"
 require_relative "../../../molecules/code/review_assembler"
 require_relative "../../../atoms/project_root_detector"
 require_relative "../../../organisms/system/command_executor"
@@ -61,19 +63,41 @@ module CodingAgentTools
           option :debug, type: :boolean, default: false,
             desc: "Enable debug output"
 
+          option :auto_execute, type: :boolean, default: false,
+            desc: "Automatically execute LLM query after preparation"
+
+          option :save_session, type: :boolean, default: true,
+            desc: "Save session files for debugging (default: true)"
+
+          option :session_dir, type: :string,
+            desc: "Custom session directory path"
+
+          option :config_file, type: :string,
+            desc: "Path to configuration file with YAML front matter"
+
           example [
+            "--preset pr --auto-execute",
             "--preset pr --model google:gemini-2.0-flash-exp",
-            "--context project --subject 'commands: [\"git diff HEAD~1\"]'",
+            "--context project --subject 'commands: [\"git diff HEAD~1\"]' --auto-execute",
             "--context 'files: [docs/api.md]' --subject 'files: [lib/api/**/*.rb]' --system-prompt templates/api-review.md",
-            "--preset code --subject HEAD~1..HEAD --output review.md",
+            "--preset code --subject HEAD~1..HEAD --output review.md --auto-execute",
             "--prompt-base system --prompt-format standard --prompt-focus 'architecture/atom,languages/ruby'",
             "--preset ruby-atom-full --add-focus 'quality/security'",
+            "--preset pr --save-session --session-dir ./review-session",
             "--list-presets"
           ]
 
           def call(**options)
             # Handle listing presets
             return list_presets if options[:list_presets]
+
+            # Load configuration from file if specified
+            if options[:config_file]
+              file_config = load_config_file(options[:config_file])
+              return 1 unless file_config
+              # Merge file config with command-line options
+              options = file_config.merge(options)
+            end
 
             # Validate inputs
             validation_result = validate_inputs(options)
@@ -116,6 +140,34 @@ module CodingAgentTools
             end
 
             0
+          end
+
+          def load_config_file(file_path)
+            unless File.exist?(file_path)
+              error_output("Error: Config file not found: #{file_path}")
+              return nil
+            end
+
+            begin
+              extractor = CodingAgentTools::Molecules::Code::ConfigExtractor.new
+              config = extractor.extract_from_file(file_path)
+              
+              if config.nil?
+                error_output("Error: No valid configuration found in #{file_path}")
+                return nil
+              end
+
+              # Convert string keys to symbols for options
+              symbolized_config = {}
+              config.each do |key, value|
+                symbolized_config[key.to_sym] = value
+              end
+              
+              symbolized_config
+            rescue => e
+              error_output("Error loading config file: #{e.message}")
+              nil
+            end
           end
 
           def validate_inputs(options)
@@ -200,9 +252,13 @@ module CodingAgentTools
           def execute_review(config, options)
             debug_output("Starting review preparation...", options[:debug])
 
-            # Create session directory
-            session_dir = create_session_directory
-            debug_output("Created session directory: #{session_dir}", options[:debug])
+            # Create session directory only if saving session
+            session_dir = if options[:save_session]
+              options[:session_dir] || create_session_directory
+            else
+              nil
+            end
+            debug_output("Session directory: #{session_dir || 'in-memory'}", options[:debug])
 
             # Initialize components
             context_integrator = CodingAgentTools::Molecules::Code::ContextIntegrator.new
@@ -211,10 +267,14 @@ module CodingAgentTools
             # Step 1: Generate context (background information)
             debug_output("Generating context...", options[:debug])
             context_content = context_integrator.generate_context(config[:context])
-            context_file = File.join(session_dir, "in-context.md")
-            File.write(context_file, context_content)
             
-            # Step 2: Load or compose system prompt and save it
+            # Save context file only if session directory exists
+            if session_dir
+              context_file = File.join(session_dir, "in-context.md")
+              File.write(context_file, context_content)
+            end
+            
+            # Step 2: Load or compose system prompt
             debug_output("Loading system prompt...", options[:debug])
             system_prompt = if config[:prompt_composition]
               debug_output("Composing prompt from modules...", options[:debug])
@@ -222,47 +282,116 @@ module CodingAgentTools
             else
               load_system_prompt(config[:system_prompt])
             end
-            base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
-            File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
+            
+            # Save base prompt only if session directory exists
+            if session_dir
+              base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
+              File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
+            end
             
             # Step 3: Enhance system prompt with context
             debug_output("Enhancing system prompt with context...", options[:debug])
             enhanced_prompt = prompt_enhancer.enhance_prompt(system_prompt, context_content)
-            system_prompt_file = File.join(session_dir, "in-system.prompt.md")
-            File.write(system_prompt_file, enhanced_prompt)
+            
+            # Save enhanced prompt only if session directory exists
+            system_prompt_file = nil
+            if session_dir
+              system_prompt_file = File.join(session_dir, "in-system.prompt.md")
+              File.write(system_prompt_file, enhanced_prompt)
+            end
 
             # Step 4: Generate subject (what to review)
             debug_output("Generating subject...", options[:debug])
             subject_content = context_integrator.generate_subject(config[:subject])
-            subject_file = File.join(session_dir, "in-subject.prompt.md")
-            File.write(subject_file, subject_content)
+            
+            # Save subject file only if session directory exists
+            subject_file = nil
+            if session_dir
+              subject_file = File.join(session_dir, "in-subject.prompt.md")
+              File.write(subject_file, subject_content)
+            end
 
-            # Step 5: Generate llm-query command
-            # Create model-specific output filename
+            # Step 5: Execute or prepare llm-query
             model_name = config[:model].gsub(":", "-").gsub("/", "-")
-            output_file = config[:output] || File.join(session_dir, "report-#{model_name}.md")
             
-            llm_command = [
-              "llm-query #{config[:model]}",
-              subject_file,
-              "--system #{system_prompt_file}",
-              "--timeout 600",
-              "--output #{output_file}"
-            ].join(" \\\n  ")
-
-            # Display session info and command
-            success_output("✅ Review session prepared: #{session_dir}")
-            info_output("\n📁 Session files:")
-            info_output("  - in-context.md (project context)")
-            info_output("  - in-system.base.prompt.md (base system prompt)")
-            info_output("  - in-system.prompt.md (enhanced system prompt with context)")
-            info_output("  - in-subject.prompt.md (content to review)")
-            info_output("  - report-#{model_name}.md (will contain review output)")
-            
-            info_output("\n🔄 Next step - run this command:")
-            info_output(llm_command)
-            
-            0
+            if options[:auto_execute]
+              # Execute the LLM query directly
+              debug_output("Auto-executing LLM query...", options[:debug])
+              
+              llm_executor = CodingAgentTools::Molecules::Code::LLMExecutor.new
+              output_file = config[:output]
+              
+              begin
+                if output_file
+                  # Execute with output file
+                  info_output("\n🤖 Executing code review with #{config[:model]}...")
+                  info_output("Output will be saved to: #{output_file}")
+                  
+                  result = llm_executor.execute_query(
+                    config[:model],
+                    subject_content,
+                    enhanced_prompt,
+                    output_file: output_file,
+                    timeout: 600
+                  )
+                  
+                  success_output("\n✅ Review completed successfully!")
+                  info_output("📄 Review saved to: #{output_file}")
+                else
+                  # Stream output to console
+                  info_output("\n🤖 Executing code review with #{config[:model]}...\n")
+                  llm_executor.execute_streaming(
+                    config[:model],
+                    subject_content,
+                    enhanced_prompt,
+                    timeout: 600
+                  )
+                  success_output("\n✅ Review completed successfully!")
+                end
+                
+                # Display session info if saved
+                if session_dir
+                  info_output("\n📁 Session files saved in: #{session_dir}")
+                end
+                
+                0
+              rescue => e
+                error_output("\nError executing LLM query: #{e.message}")
+                1
+              end
+            else
+              # Prepare command for manual execution
+              output_file = config[:output] || (session_dir ? File.join(session_dir, "report-#{model_name}.md") : "review-#{model_name}.md")
+              
+              if session_dir
+                # Traditional workflow with files
+                llm_command = [
+                  "llm-query #{config[:model]}",
+                  subject_file,
+                  "--system #{system_prompt_file}",
+                  "--timeout 600",
+                  "--output #{output_file}"
+                ].join(" \\\n  ")
+                
+                success_output("✅ Review session prepared: #{session_dir}")
+                info_output("\n📁 Session files:")
+                info_output("  - in-context.md (project context)")
+                info_output("  - in-system.base.prompt.md (base system prompt)")
+                info_output("  - in-system.prompt.md (enhanced system prompt with context)")
+                info_output("  - in-subject.prompt.md (content to review)")
+                info_output("  - report-#{model_name}.md (will contain review output)")
+                
+                info_output("\n🔄 Next step - run this command:")
+                info_output(llm_command)
+              else
+                # In-memory mode without auto-execute
+                info_output("\n✅ Review prepared in memory")
+                info_output("\n💡 To execute the review, use --auto-execute flag")
+                info_output("   Or use --save-session to save prompts to files")
+              end
+              
+              0
+            end
           rescue => e
             error_output("Error during review preparation: #{e.message}")
             debug_output(e.backtrace.join("\n"), options[:debug])
