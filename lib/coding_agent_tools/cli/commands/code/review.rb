@@ -31,6 +31,21 @@ module CodingAgentTools
           option :system_prompt, type: :string,
             desc: "System prompt file path (overrides preset)"
 
+          option :prompt_base, type: :string,
+            desc: "Base prompt module for composition (e.g., 'system')"
+
+          option :prompt_format, type: :string,
+            desc: "Format module (standard, detailed, compact)"
+
+          option :prompt_focus, type: :string,
+            desc: "Focus modules (comma-separated, e.g., 'architecture/atom,languages/ruby')"
+
+          option :add_focus, type: :string,
+            desc: "Add focus modules to preset (comma-separated)"
+
+          option :prompt_guidelines, type: :string,
+            desc: "Guideline modules (comma-separated, e.g., 'tone,icons')"
+
           option :model, type: :string,
             desc: "LLM model to use (e.g., google:gemini-2.0-flash-exp)"
 
@@ -51,6 +66,8 @@ module CodingAgentTools
             "--context project --subject 'commands: [\"git diff HEAD~1\"]'",
             "--context 'files: [docs/api.md]' --subject 'files: [lib/api/**/*.rb]' --system-prompt templates/api-review.md",
             "--preset code --subject HEAD~1..HEAD --output review.md",
+            "--prompt-base system --prompt-format standard --prompt-focus 'architecture/atom,languages/ruby'",
+            "--preset ruby-atom-full --add-focus 'quality/security'",
             "--list-presets"
           ]
 
@@ -145,6 +162,7 @@ module CodingAgentTools
               context: options[:context] || preset_config[:context],
               subject: options[:subject] || preset_config[:subject],
               system_prompt: options[:system_prompt] || preset_config[:system_prompt],
+              prompt_composition: preset_config[:prompt_composition],
               model: options[:model] || preset_config[:model],
               output: options[:output]
             }
@@ -196,9 +214,14 @@ module CodingAgentTools
             context_file = File.join(session_dir, "in-context.md")
             File.write(context_file, context_content)
             
-            # Step 2: Load base system prompt and save it
+            # Step 2: Load or compose system prompt and save it
             debug_output("Loading system prompt...", options[:debug])
-            system_prompt = load_system_prompt(config[:system_prompt])
+            system_prompt = if config[:prompt_composition]
+              debug_output("Composing prompt from modules...", options[:debug])
+              prompt_enhancer.compose_prompt(config[:prompt_composition])
+            else
+              load_system_prompt(config[:system_prompt])
+            end
             base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
             File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
             

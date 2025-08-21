@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
+require "yaml"
+require_relative "../../atoms/project_root_detector"
+
 module CodingAgentTools
   module Molecules
     module Code
-      # Enhances system prompts by appending context information
+      # Enhances system prompts by appending context information and composing modular prompts
       class PromptEnhancer
         DEFAULT_SYSTEM_PROMPT = <<~PROMPT
           # Code Review
@@ -70,6 +73,122 @@ module CodingAgentTools
         # Get the default system prompt
         def default_prompt
           DEFAULT_SYSTEM_PROMPT
+        end
+
+        # Compose a prompt from modular components
+        # @param composition_config [Hash] Configuration for prompt composition
+        #   - base: Base module path or name
+        #   - format: Format module (standard, detailed, compact)
+        #   - focus: Array of focus module paths
+        #   - guidelines: Array of guideline module paths
+        # @return [String] The composed prompt
+        def compose_prompt(composition_config)
+          return DEFAULT_SYSTEM_PROMPT if composition_config.nil? || composition_config.empty?
+
+          modules_dir = find_modules_directory
+          return DEFAULT_SYSTEM_PROMPT unless modules_dir
+
+          composed_parts = []
+          
+          # Load base module
+          if composition_config["base"]
+            base_content = load_module(modules_dir, "base", composition_config["base"])
+            composed_parts << base_content if base_content
+          end
+
+          # Load sections (always include if base is specified)
+          if composition_config["base"]
+            sections_content = load_module(modules_dir, "base", "sections")
+            composed_parts << sections_content if sections_content
+          end
+
+          # Load format module
+          if composition_config["format"]
+            format_content = load_module(modules_dir, "format", composition_config["format"])
+            composed_parts << format_content if format_content
+          end
+
+          # Load focus modules
+          if composition_config["focus"]
+            focus_modules = Array(composition_config["focus"])
+            focus_modules.each do |focus_module|
+              focus_content = load_focus_module(modules_dir, focus_module)
+              composed_parts << focus_content if focus_content
+            end
+          end
+
+          # Load guideline modules
+          if composition_config["guidelines"]
+            guideline_modules = Array(composition_config["guidelines"])
+            guideline_modules.each do |guideline_module|
+              guideline_content = load_module(modules_dir, "guidelines", guideline_module)
+              composed_parts << guideline_content if guideline_content
+            end
+          end
+
+          # Join all parts with proper spacing
+          composed_parts.empty? ? DEFAULT_SYSTEM_PROMPT : composed_parts.join("\n\n")
+        end
+
+        # Cache for loaded modules (15-minute TTL)
+        def module_cache
+          @module_cache ||= {}
+          @cache_timestamp ||= Time.now
+          
+          # Clear cache if older than 15 minutes
+          if Time.now - @cache_timestamp > 900
+            @module_cache = {}
+            @cache_timestamp = Time.now
+          end
+          
+          @module_cache
+        end
+
+        private
+
+        def find_modules_directory
+          project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+          return nil unless project_root
+
+          modules_dir = File.join(project_root, "dev-handbook", "templates", "review-modules")
+          File.directory?(modules_dir) ? modules_dir : nil
+        end
+
+        def load_module(modules_dir, category, module_name)
+          # Support both simple names and paths
+          module_file = if module_name.include?("/")
+            File.join(modules_dir, category, "#{module_name}.md")
+          else
+            File.join(modules_dir, category, "#{module_name}.md")
+          end
+
+          cache_key = module_file
+          return module_cache[cache_key] if module_cache.key?(cache_key)
+
+          if File.exist?(module_file)
+            content = File.read(module_file).strip
+            module_cache[cache_key] = content
+            content
+          else
+            nil
+          end
+        end
+
+        def load_focus_module(modules_dir, focus_path)
+          # Focus modules can be in subdirectories
+          # e.g., "architecture/atom", "languages/ruby", "quality/security"
+          module_file = File.join(modules_dir, "focus", "#{focus_path}.md")
+          
+          cache_key = module_file
+          return module_cache[cache_key] if module_cache.key?(cache_key)
+
+          if File.exist?(module_file)
+            content = File.read(module_file).strip
+            module_cache[cache_key] = content
+            content
+          else
+            nil
+          end
         end
       end
     end
