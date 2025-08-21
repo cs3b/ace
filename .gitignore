@@ -5,9 +5,4 @@ prompt.md
 input.xml
 *.meta
 
-**/code_review/*/context.md
-**/code_review/*/*.txt
-**/code_review/*/*.yaml
-**/code_review/*/input.md
-**/code_review/*/readme.md
-**/code_review/*/*.log
+current/*/code-review/*/in-*.md
