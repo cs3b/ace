@@ -381,6 +381,92 @@ This separation ensures the LLM has:
 - Background knowledge (context)
 - Specific content to review (subject)
 
+## Implementation Notes & Session Feedback
+
+### Work Completed (2025-08-21)
+
+#### Phase 1: Configuration System ✅
+- Created `code-review.yml` sample with 7 presets (PR, code, docs, agents, security, performance, test)
+- Added review prompt templates in `dev-handbook/templates/review/`
+- Implemented `ReviewPresetManager` molecule with full test coverage
+
+#### Phase 2: Command Redesign ✅
+- Simplified `code-review` command with preset-based approach
+- Removed focus-based logic and arguments
+- Added `--preset`, `--context`, `--subject` options
+- Implemented `--list-presets` functionality
+
+#### Phase 3: Context Integration ✅
+- Created `ContextIntegrator` for dual context tool calls
+- Implemented `PromptEnhancer` to append context to system prompts
+- Built `ReviewAssembler` to combine prompts with subjects
+- Added `CommandExecutor` organism (later found to have issues)
+
+#### Phase 4: Cleanup ✅
+- Removed `code-review-prepare` command and subcommands
+- Deleted associated test files
+- Updated CLI registry
+- Removed `code_review_new` nav command
+
+#### Phase 5: Documentation ✅
+- Updated `tools.md` with new command syntax
+- Added configuration examples
+- Documented context vs subject separation
+
+#### Phase 6: Testing ✅
+- Created comprehensive test suites for all molecules
+- 44 new test examples added and passing
+
+### Critical Fixes Applied During Testing
+
+#### Session Directory Restoration
+**Issue**: Initially removed session directory creation, breaking the workflow
+**Fix**: Restored session directory creation in `dev-taskflow/current/v.X.Y.Z/code-review/review-TIMESTAMP/`
+**Rationale**: Session directories provide organization, audit trail, and history - removal was NOT part of the task requirements
+
+#### llm-query Command Syntax
+**Issue**: Used incorrect `--file` parameter that doesn't exist
+**Fix**: Changed to correct syntax: `llm-query model prompt-file --system system-file`
+**Learning**: Should have checked actual command syntax instead of assuming
+
+#### File Naming Convention
+**Issue**: Unclear file purposes in session directory
+**Fix**: Adopted clear naming convention:
+- `in-context.md` - Project context
+- `in-system.base.prompt.md` - Original system prompt
+- `in-system.prompt.md` - Enhanced system prompt (base + context)
+- `in-subject.prompt.md` - Content to review (diffs/files)
+- `report-{model-name}.md` - Output file
+
+#### Command Executor Bug
+**Issue**: `CommandExecutor` was incorrectly concatenating arguments
+**Fix**: Used `Open3.capture3` directly in `send_to_llm` method
+**Note**: CommandExecutor needs further investigation for proper argument handling
+
+### Self-Test Results
+
+The code review system successfully reviewed its own implementation and identified:
+
+**Strengths**:
+- Good architectural alignment with project principles
+- Effective separation of concerns
+- Clear CLI design
+- DRY principle adherence through presets
+
+**Areas for Improvement**:
+- Review command complexity (needs decomposition)
+- Tight coupling between command and molecules
+- Need for dependency injection
+- Better error handling required
+
+### Lessons Learned
+
+1. **Don't over-simplify**: Removing session directories was unnecessary and harmful
+2. **Verify tool syntax**: Always check actual command parameters before implementing
+3. **Clear file naming**: Use descriptive prefixes (in-, out-, report-) for clarity
+4. **Test integration early**: Issues with llm-query syntax would have been caught sooner
+5. **Preserve useful features**: Session management was valuable and shouldn't have been removed
+
 ## References
 
 - Original bug report about context --output flag
@@ -388,3 +474,4 @@ This separation ensures the LLM has:
 - Context tool command structure
 - Existing preset patterns in context.yml
 - Discussion on context vs subject separation
+- Self-review session: `dev-taskflow/current/v.0.5.0-insights/code-review/review-20250821-183537/`
