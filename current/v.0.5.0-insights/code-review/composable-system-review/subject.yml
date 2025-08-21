@@ -1,0 +1,7 @@
+commands:
+  - "echo '# Main Repository Changes (8e7882c..HEAD)'"
+  - "git-diff 8e7882c..HEAD"
+  - "echo '# Dev-tools Changes (df8f6e2..HEAD)'"
+  - "git -C dev-tools diff df8f6e2..HEAD"
+  - "echo '# Dev-handbook Changes (0567c83..HEAD)'"
+  - "git -C dev-handbook diff 0567c83..HEAD"
