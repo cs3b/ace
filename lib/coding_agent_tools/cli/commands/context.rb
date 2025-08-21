@@ -216,23 +216,34 @@ module CodingAgentTools
             return 1
           end
 
-          # Handle output based on embedding result
+          # Prepare the output content
           if context_result[:embedding_applied]
-            # Output the embedded document
-            puts context_result[:embedded_content]
+            # Use the embedded document content
+            output_content = context_result[:embedded_content]
             
             if options[:debug]
               warn "Context embedded using strategy: #{context_result[:embedding_strategy]}"
             end
           else
-            # Format and output the standard result
+            # Format the standard result
             formatter = CodingAgentTools::Molecules::Context::OutputFormatter.new(options[:format])
-            formatted_output = formatter.format(context_result)
-            puts formatted_output
+            output_content = formatter.format(context_result)
             
             if context_result[:embedding_error] && options[:debug]
               warn "Embedding failed: #{context_result[:embedding_error]}"
             end
+          end
+
+          # Determine output destination
+          output_path = options[:output]
+          output_to_stdout = !output_path || is_stdout_indicator?(output_path)
+          
+          if output_to_stdout
+            # Output to stdout
+            puts output_content
+          else
+            # Write to file
+            write_to_file(output_path, output_content, options)
           end
 
           0
