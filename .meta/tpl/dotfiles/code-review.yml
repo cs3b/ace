@@ -72,6 +72,112 @@ presets:
       commands:
         - git diff HEAD -- 'spec/**/*.rb' 'tests/**/*.rs' 'test/**/*.ts'
 
+  # New composable prompt presets
+  ruby-atom-modular:
+    description: "Ruby ATOM architecture review using modular prompts"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "architecture/atom"
+        - "languages/ruby"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+  vue-firebase-modular:
+    description: "Vue.js Firebase PWA review using modular prompts"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "frameworks/vue-firebase"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+  rails-modular:
+    description: "Rails application review using modular prompts"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "frameworks/rails"
+        - "languages/ruby"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+  security-focused:
+    description: "Security-focused review with detailed format"
+    prompt_composition:
+      base: "system"
+      format: "detailed"
+      focus:
+        - "quality/security"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~5..HEAD
+
+  performance-focused:
+    description: "Performance optimization review"
+    prompt_composition:
+      base: "system"
+      format: "detailed"
+      focus:
+        - "quality/performance"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD -- '*.rb' '*.rs' '*.ts'
+
+  quick-review:
+    description: "Quick compact review for small changes"
+    prompt_composition:
+      base: "system"
+      format: "compact"
+      guidelines:
+        - "tone"
+    context: null
+    subject:
+      commands:
+        - git diff --cached
+
+  full-stack:
+    description: "Full stack review with tests and docs"
+    prompt_composition:
+      base: "system"
+      format: "detailed"
+      focus:
+        - "scope/tests"
+        - "scope/docs"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
 # Default settings
 defaults:
   model: "google:gemini-2.0-flash-exp"
