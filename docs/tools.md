@@ -6,8 +6,7 @@
 |----------
 | **`search`** | **Unified intelligent search across project** | **`--type`, `--preset`** |
 | `coding-agent-tools all` | List all available tools | `--format`, `--category` |
-| `code-review` | Interactive code review tool | `--interactive`, `--batch` |
-| `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
+| `code-review` | Preset-based code review with context integration | `--preset`, `--context`, `--subject` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
 | `create-path` | Create files/directories with templates | `--force`, `--priority`, `--content` |
 | `git-add` | Enhanced git add | `--patch`, `--all` |
@@ -52,7 +51,7 @@
 
 | Tool | Purpose | Key Flags |
 |------|---------|-----------|
-| `code-review` | Review code interactively | `--interactive`, `--batch` |
+| `code-review` | Review code with presets | `--preset`, `--model` |
 | `handbook` | Access development guides | `sync-templates` |
 | `reflection-synthesize` | Generate session reports | `--session`, `--focus` |
 
@@ -448,7 +447,7 @@ task-manager list --sort priority:desc,id:asc
 ```
 </details>
 
-### `code-review` – Interactive code review tool   {#code-review--interactive-code-review-tool}
+### `code-review` – Preset-based code review with context integration   {#code-review--preset-based-code-review}
 
 <details><summary>Details</summary>
 
@@ -458,35 +457,67 @@ code-review [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--interactive` | Interactive review mode | `false` |
-| `--batch` | Batch processing mode | `false` |
-| `--output-format` | Output format | `text` |
+| `--preset` | Review preset from code-review.yml | None |
+| `--context` | Background information (docs, architecture) | None |
+| `--subject` | What to review (diffs, files, commits) | None |
+| `--system-prompt` | System prompt file path | None |
+| `--model` | LLM model to use | `google:gemini-2.0-flash-exp` |
+| `--output` | Output file for review report | stdout |
+| `--list-presets` | List available review presets | `false` |
+| `--dry-run` | Show what would be done | `false` |
 
 **Examples**
 ```bash
-code-review --interactive
-code-review --batch --output-format json
+# Use a preset for PR review
+code-review --preset pr --model google:gemini-2.0-flash-exp
+
+# Custom review with specific context and subject
+code-review --context project --subject 'commands: ["git diff HEAD~1"]'
+
+# Review with custom system prompt
+code-review --context 'files: [docs/api.md]' --subject 'files: [lib/api/**/*.rb]' --system-prompt templates/api-review.md
+
+# List available presets
+code-review --list-presets
 ```
-</details>
 
-### `code-review-prepare` – Review preparation tool   {#code-review-prepare--review-preparation-tool}
+**Configuration**
 
-<details><summary>Details</summary>
+Create `.coding-agent/code-review.yml` to define custom presets:
 
-```bash
-code-review-prepare [OPTIONS]
+```yaml
+presets:
+  pr:
+    description: "Pull request review"
+    system_prompt: "dev-handbook/templates/review/pr.prompt.md"
+    context: "project"  # Background: project docs
+    subject:            # What to review: PR changes
+      commands:
+        - git diff origin/main...HEAD
+        - git log origin/main..HEAD --oneline
+  
+  code:
+    description: "Code quality review"
+    system_prompt: "dev-handbook/templates/review/code.prompt.md"
+    context:
+      files:
+        - docs/architecture.md
+        - CONTRIBUTING.md
+    subject:
+      commands:
+        - git diff --cached
+
+defaults:
+  model: "google:gemini-2.0-flash-exp"
+  context: "project"
 ```
 
-| Flag | Purpose | Default |
-|------|---------|---------|
-| `--context` | Context level | `basic` |
-| `--diff-only` | Focus on diff only | `false` |
+**Context vs Subject**
+- **Context**: Background information (project docs, architecture) that informs the review
+- **Subject**: The actual content to review (diffs, files, commits)
+- The context enhances the system prompt with project knowledge
+- The subject is what the LLM analyzes and reviews
 
-**Examples**
-```bash
-code-review-prepare --context full
-code-review-prepare --diff-only
-```
 </details>
 
 ### `code-review-synthesize` – Review synthesis tool   {#code-review-synthesize--review-synthesis-tool}
@@ -955,8 +986,7 @@ release-manager report --format detailed
 
 ### By Function   {#by-function}
 
-* **Code Review**: `code-review`, `code-review-prepare`,
-  `code-review-synthesize`
+* **Code Review**: `code-review`, `code-review-synthesize`
 * **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`,
   `git-log`, `git-pull`, `git-push`, `git-status`
 * **LLM Integration**: `llm-query`
@@ -998,7 +1028,7 @@ release-manager report --format detailed
 
     # Sync documentation and review code
     handbook sync-templates
-    code-review --interactive
+    code-review --preset pr --model google:gemini-2.0-flash-exp
 
     # Track recent work and generate reflection
     task-manager recent
