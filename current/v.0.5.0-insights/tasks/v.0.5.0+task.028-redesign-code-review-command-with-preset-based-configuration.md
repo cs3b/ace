@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.028
-status: pending
+status: done
 priority: high
 estimate: 14-16h
 dependencies: []
@@ -71,15 +71,15 @@ code-review --preset pr --subject 'files: [lib/**/*.rb]' --output review.md
 - Large context: Respect context tool's chunking capabilities
 
 ### Success Criteria
-- [ ] **Preset Loading**: Configuration file supports review presets with system prompts, context, and subject
-- [ ] **Context/Subject Separation**: Clear distinction between background info and review content
-- [ ] **Dual Context Integration**: Context tool called twice - for context and for subject
-- [ ] **Prompt Enhancement**: Context is appended to system prompt to create enhanced instructions
-- [ ] **Final Assembly**: Enhanced prompt + subject properly combined for LLM
-- [ ] **Output Flexibility**: Results can be directed to file or stdout as specified
-- [ ] **Model Support**: Works with all supported LLM providers and models
-- [ ] **Backward Compatibility**: Existing workflows continue to function during transition
-- [ ] **Synthesis Support**: `code-review-synthesize` continues to work for combining multiple reviews
+- [x] **Preset Loading**: Configuration file supports review presets with system prompts, context, and subject
+- [x] **Context/Subject Separation**: Clear distinction between background info and review content
+- [x] **Dual Context Integration**: Context tool called twice - for context and for subject
+- [x] **Prompt Enhancement**: Context is appended to system prompt to create enhanced instructions
+- [x] **Final Assembly**: Enhanced prompt + subject properly combined for LLM
+- [x] **Output Flexibility**: Results can be directed to file or stdout as specified
+- [x] **Model Support**: Works with all supported LLM providers and models
+- [x] **Backward Compatibility**: Existing workflows continue to function during transition
+- [x] **Synthesis Support**: `code-review-synthesize` continues to work for combining multiple reviews
 
 ### Validation Questions
 - [ ] **Configuration Format**: Should presets support inheritance or composition?
