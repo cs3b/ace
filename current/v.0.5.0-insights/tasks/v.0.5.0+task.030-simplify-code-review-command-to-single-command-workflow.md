@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.030
-status: pending
+status: done
 priority: high
 estimate: 6-8h
 dependencies: v.0.5.0+task.028, v.0.5.0+task.029
@@ -186,37 +186,37 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
 ### Execution Steps  
 <!-- Concrete implementation actions that modify code, create files, or change system state -->
 
-- [ ] **Fix Context Bug**: Fix enhance_prompt in prompt_enhancer.rb to append context
+- [x] **Fix Context Bug**: Fix enhance_prompt in prompt_enhancer.rb to append context
   > TEST: Context Appending
   > Type: Unit Test
   > Assert: Context content appears in enhanced prompt
   > Command: rspec spec/molecules/code/prompt_enhancer_spec.rb
-- [ ] **Add CLI Options**: Add auto_execute, save_session, session_dir, context, subject options
+- [x] **Add CLI Options**: Add auto_execute, save_session, session_dir, context, subject options
   > TEST: CLI Option Parsing
   > Type: Integration Test
   > Assert: New options parsed and available in execute method
   > Command: code-review --help | grep auto_execute
-- [ ] **In-Memory Processing**: Modify execute_review to keep data in memory by default
+- [x] **In-Memory Processing**: Modify execute_review to keep data in memory by default
   > TEST: Memory-Only Execution
   > Type: Integration Test
   > Assert: No files created when save_session=false
   > Command: code-review --preset pr --dry-run
-- [ ] **Create ConfigExtractor**: Implement YAML extraction from markdown files
+- [x] **Create ConfigExtractor**: Implement YAML extraction from markdown files
   > TEST: Config Extraction
   > Type: Unit Test
   > Assert: YAML blocks correctly extracted from markdown
   > Command: rspec spec/molecules/code/config_extractor_spec.rb
-- [ ] **Create LLMExecutor**: Implement direct LLM execution with tempfiles
+- [x] **Create LLMExecutor**: Implement direct LLM execution with tempfiles
   > TEST: Direct Execution
   > Type: Integration Test
   > Assert: LLM query executes without permanent files
   > Command: code-review --preset pr --auto-execute --dry-run
-- [ ] **Integration Testing**: Full single-command workflow test
+- [x] **Integration Testing**: Full single-command workflow test
   > TEST: End-to-End Single Command
   > Type: System Test
   > Assert: Complete review executes with one command
   > Command: code-review --preset pr --context 'presets: [project]' --subject 'commands: ["git diff HEAD~1"]' --auto-execute
-- [ ] **Update Documentation**: Add single-command examples to review-code.wf.md
+- [x] **Update Documentation**: Add single-command examples to review-code.wf.md
   > TEST: Documentation Coverage
   > Type: Manual Review
   > Assert: Workflow instructions show new simplified approach prominently
@@ -251,20 +251,20 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
 <!-- Focus on verifying that behavioral requirements are met, not just implementation completed -->
 
 ### Behavioral Requirement Fulfillment
-- [ ] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
-- [ ] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
-- [ ] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
+- [x] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
+- [x] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
+- [x] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
 
 ### Implementation Quality Assurance  
-- [ ] **Code Quality**: All code meets project standards and passes quality checks
-- [ ] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
-- [ ] **Integration Verification**: Implementation integrates properly with existing system components
-- [ ] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
+- [x] **Code Quality**: All code meets project standards and passes quality checks
+- [x] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
+- [x] **Integration Verification**: Implementation integrates properly with existing system components
+- [x] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
 
 ### Documentation and Validation
-- [ ] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
-- [ ] **Error Handling**: All error conditions and edge cases handle as specified
-- [ ] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
+- [x] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
+- [x] **Error Handling**: All error conditions and edge cases handle as specified
+- [x] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
 
 ## Out of Scope
 
