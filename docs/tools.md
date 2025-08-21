@@ -489,7 +489,10 @@ Create `.coding-agent/code-review.yml` to define custom presets:
 presets:
   pr:
     description: "Pull request review"
-    system_prompt: "dev-handbook/templates/review/pr.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines: ["tone", "icons"]
     context: "project"  # Background: project docs
     subject:            # What to review: PR changes
       commands:
@@ -498,7 +501,10 @@ presets:
   
   code:
     description: "Code quality review"
-    system_prompt: "dev-handbook/templates/review/code.prompt.md"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines: ["tone", "icons"]
     context:
       files:
         - docs/architecture.md
@@ -506,6 +512,20 @@ presets:
     subject:
       commands:
         - git diff --cached
+
+  ruby-atom:
+    description: "Ruby ATOM architecture review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "architecture/atom"
+        - "languages/ruby"
+      guidelines: ["tone", "icons"]
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
 
 defaults:
   model: "google:gemini-2.0-flash-exp"
