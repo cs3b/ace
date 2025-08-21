@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.029
-status: pending
+status: done
 priority: high
 estimate: 24h
 dependencies: [v.0.5.0+task.028]
@@ -235,79 +235,79 @@ dev-handbook/templates/review-test/system.vue.firebase.prompt.md
 
 ### Planning Steps
 
-* [ ] Analyze existing 19 prompt files for common patterns
+* [x] Analyze existing 19 prompt files for common patterns
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
   > Assert: Common sections, formatting rules, and focus areas identified
   > Command: grep -h "^##" dev-handbook/templates/review*/*.prompt.md | sort | uniq -c | sort -rn
 
-* [ ] Design module hierarchy and naming conventions
-* [ ] Research context tool usage patterns for multi-file loading
-* [ ] Plan caching strategy for assembled prompts
+* [x] Design module hierarchy and naming conventions
+* [x] Research context tool usage patterns for multi-file loading
+* [x] Plan caching strategy for assembled prompts
 
 ### Execution Steps
 
-- [ ] Phase 1: Create module directory structure
+- [x] Phase 1: Create module directory structure
   > TEST: Directory Structure Created
   > Type: Action Validation
   > Assert: review-modules/ directory with base/, format/, focus/, guidelines/ subdirs exists
   > Command: ls -la dev-handbook/templates/review-modules/
 
-- [ ] Phase 1: Extract common content from existing prompts into base modules
+- [x] Phase 1: Extract common content from existing prompts into base modules
   > TEST: Base Modules Extracted
   > Type: Action Validation
   > Assert: system.md and sections.md created with core content
   > Command: wc -l dev-handbook/templates/review-modules/base/*.md
 
-- [ ] Phase 1: Create format modules (standard, detailed, compact)
+- [x] Phase 1: Create format modules (standard, detailed, compact)
 
-- [ ] Phase 1: Extract focus-specific content into categorized modules
+- [x] Phase 1: Extract focus-specific content into categorized modules
 
-- [ ] Phase 2: Implement compose_prompt() method in PromptEnhancer
+- [x] Phase 2: Implement compose_prompt() method in PromptEnhancer
   > TEST: Composition Method Works
   > Type: Unit Test
   > Assert: compose_prompt assembles modules correctly
   > Command: rspec spec/molecules/code/prompt_enhancer_spec.rb -e "compose_prompt"
 
-- [ ] Phase 2: Add module loading with error handling
+- [x] Phase 2: Add module loading with error handling
 
-- [ ] Phase 2: Implement intelligent prompt assembly with deduplication
+- [x] Phase 2: Implement intelligent prompt assembly with deduplication
 
-- [ ] Phase 3: Extend ReviewPresetManager with prompt_composition support
+- [x] Phase 3: Extend ReviewPresetManager with prompt_composition support
   > TEST: Preset Resolution Works
   > Type: Integration Test
   > Assert: Both system_prompt and prompt_composition presets resolve
   > Command: rspec spec/molecules/code/review_preset_manager_spec.rb
 
-- [ ] Phase 3: Create example composition presets in code-review.yml
+- [x] Phase 3: Create example composition presets in code-review.yml
 
-- [ ] Phase 3: Test backwards compatibility with existing system_prompt
+- [x] Phase 3: Test backwards compatibility with existing system_prompt
 
-- [ ] Phase 4: Add CLI options for prompt composition
+- [x] Phase 4: Add CLI options for prompt composition
   > TEST: CLI Options Parse
   > Type: Integration Test
   > Assert: --prompt-base, --prompt-focus options work
   > Command: code-review --help | grep "prompt-"
 
-- [ ] Phase 4: Implement CLI override logic for composition
+- [x] Phase 4: Implement CLI override logic for composition
 
-- [ ] Phase 4: Add --add-focus option for extending presets
+- [x] Phase 4: Add --add-focus option for extending presets
 
-- [ ] Phase 5: Create migration mapping for existing 19 prompts
+- [x] Phase 5: Create migration mapping for existing 19 prompts
   > TEST: All Prompts Migrated
   > Type: Validation Test
   > Assert: Each existing prompt has equivalent composition
   > Command: ls dev-handbook/templates/review*/*.prompt.md | wc -l
 
-- [ ] Phase 5: Test performance of module loading vs monolithic
+- [x] Phase 5: Test performance of module loading vs monolithic
   > TEST: Performance Acceptable
   > Type: Performance Test
   > Assert: Module assembly within 10% of monolithic loading
   > Command: ruby -r benchmark -e "# benchmark module vs monolithic"
 
-- [ ] Phase 5: Document composition system and migration guide
+- [x] Phase 5: Document composition system and migration guide
 
-- [ ] Phase 5: Run full backwards compatibility test suite
+- [x] Phase 5: Run full backwards compatibility test suite
   > TEST: Backwards Compatible
   > Type: End-to-End Test
   > Assert: All existing code-review commands work unchanged
@@ -315,11 +315,11 @@ dev-handbook/templates/review-test/system.vue.firebase.prompt.md
 
 ## Acceptance Criteria
 
-- [ ] Module-based prompts reduce duplication by 60%+ across 19 files
-- [ ] CLI supports both legacy system_prompt and new prompt_composition
-- [ ] Performance of module assembly within 10% of current system
-- [ ] All existing presets work without modification
-- [ ] Clear documentation for module composition system
+- [x] Module-based prompts reduce duplication by 60%+ across 19 files
+- [x] CLI supports both legacy system_prompt and new prompt_composition
+- [x] Performance of module assembly within 10% of current system
+- [x] All existing presets work without modification
+- [x] Clear documentation for module composition system
 
 ## Risk Assessment
 
