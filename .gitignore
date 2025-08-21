@@ -8,3 +8,6 @@ doc-dependencies*
 node_modules
 .lint*.md
 *.bak
+
+# Cached context files
+docs/context/cached/
