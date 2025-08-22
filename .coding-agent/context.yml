@@ -24,10 +24,10 @@ presets:
         chunk_limit: 80000
 
     # Task management context
-    taskflow:
-        description: "Current task and release context for development planning"
-        template: "dev-taskflow/context/dev-taskflow.md"
-        output: "docs/context/cached/dev-taskflow.md"
+    task-create:
+        description: "Context for task creating"
+        template: "docs/context/task-create.md"
+        output: "docs/context/cached/task-create.md"
         chunk_limit: 120000
 
     # Essential project files only
