@@ -200,21 +200,48 @@ module CodingAgentTools
               manager.resolve_preset(options[:preset], options)
             else
               # Build config from individual options
+              prompt_options = {
+                prompt_base: options[:prompt_base],
+                prompt_format: options[:prompt_format],
+                prompt_focus: options[:prompt_focus],
+                prompt_guidelines: options[:prompt_guidelines]
+              }.compact
+              
+              prompt_composition = prompt_options.empty? ? nil : 
+                                  manager.send(:resolve_prompt_composition, nil, prompt_options)
+              
               {
                 context: options[:context],
                 subject: options[:subject],
                 system_prompt: options[:system_prompt],
-                model: options[:model] || manager.default_model || "google:gemini-2.0-flash-exp"
+                prompt_composition: prompt_composition,
+                model: options[:model] || manager.default_model || "google:gemini-2.0-flash-exp",
+                output: options[:output]
               }
             end
           end
 
           def merge_configurations(preset_config, options)
+            # Build prompt composition from CLI options
+            prompt_options = {
+              prompt_base: options[:prompt_base],
+              prompt_format: options[:prompt_format],
+              prompt_focus: options[:prompt_focus],
+              add_focus: options[:add_focus],
+              prompt_guidelines: options[:prompt_guidelines]
+            }.compact
+            
+            # Use ReviewPresetManager to resolve composition
+            manager = CodingAgentTools::Molecules::Code::ReviewPresetManager.new
+            prompt_composition = manager.send(:resolve_prompt_composition, 
+                                              preset_config[:prompt_composition], 
+                                              prompt_options)
+            
             {
               context: options[:context] || preset_config[:context],
               subject: options[:subject] || preset_config[:subject],
               system_prompt: options[:system_prompt] || preset_config[:system_prompt],
-              prompt_composition: preset_config[:prompt_composition],
+              prompt_composition: prompt_composition,
               model: options[:model] || preset_config[:model],
               output: options[:output]
             }
@@ -227,7 +254,16 @@ module CodingAgentTools
             info_output("\nSubject (what to review):")
             info_output("  #{format_config_value(config[:subject])}")
             info_output("\nSystem prompt:")
-            info_output("  #{config[:system_prompt] || '(default review prompt)'}")
+            if config[:prompt_composition]
+              modules = []
+              modules << "base: #{config[:prompt_composition]['base']}" if config[:prompt_composition]['base']
+              modules << "format: #{config[:prompt_composition]['format']}" if config[:prompt_composition]['format']
+              modules << "focus: #{config[:prompt_composition]['focus'].join(', ')}" if config[:prompt_composition]['focus']
+              modules << "guidelines: #{config[:prompt_composition]['guidelines'].join(', ')}" if config[:prompt_composition]['guidelines']
+              info_output("  (composed from modules: #{modules.join('; ')})")
+            else
+              info_output("  #{config[:system_prompt] || '(default review prompt)'}")
+            end
             info_output("\nModel:")
             info_output("  #{config[:model]}")
             info_output("\nOutput:")
