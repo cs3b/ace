@@ -11,7 +11,6 @@
 | `create-path` | Create files/directories with templates | `--force`, `--priority`, `--content` |
 | `git-add` | Enhanced git add | `--patch`, `--all` |
 | `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
-| `git-diff` | Enhanced git diff | `--staged`, `--stat` |
 | `git-fetch` | Enhanced git fetch | `--all`, `--prune` |
 | `git-log` | Enhanced git log | `--oneline`, `--graph` |
 | `git-pull` | Enhanced git pull | `--rebase`, `--ff-only` |
@@ -61,7 +60,6 @@
 |------|---------|-----------|
 | `git-add` | Enhanced file staging | `--patch`, `--all` |
 | `git-commit` | Smart commit tool | `--intention`, `--no-edit` |
-| `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
 | `git-status` | Multi-repo status | `--verbose`, `--short` |
 | `git-tag` | Multi-repo tagging | `[tagname]`, `--annotate`, `--delete`, `--list` |
 
@@ -625,29 +623,6 @@ git-commit --no-edit --all
 ```
 </details>
 
-### `git-diff` – Enhanced git diff   {#git-diff--enhanced-git-diff}
-
-<details><summary>Details</summary>
-
-```bash
-git-diff [OPTIONS]
-```
-
-| Flag | Purpose | Default |
-|------|---------|---------|
-| `--staged` | Show staged changes only | `false` |
-| `--name-only` | Show file names only | `false` |
-| `--stat` | Show diffstat summary | `false` |
-| `--repository` | Specific repository context | Current |
-
-**Examples**
-```bash
-git-diff --staged
-git-diff --stat
-git-diff --repository dev-tools
-```
-</details>
-
 ### `git-fetch` – Enhanced git fetch   {#git-fetch--enhanced-git-fetch}
 
 <details><summary>Details</summary>
@@ -1007,7 +982,7 @@ release-manager report --format detailed
 ### By Function   {#by-function}
 
 * **Code Review**: `code-review`, `code-review-synthesize`
-* **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`,
+* **Git Operations**: `git-add`, `git-commit`, `git-fetch`,
   `git-log`, `git-pull`, `git-push`, `git-status`
 * **LLM Integration**: `llm-query`
 * **Navigation & Documentation**: `handbook`, `nav-ls`, `nav-path`,
@@ -1021,7 +996,7 @@ release-manager report --format detailed
   `task-manager`
 * **Human Developer**: `code-review`, `handbook`,
   `reflection-synthesize`
-* **Git Power-User**: `git-add`, `git-commit`, `git-diff`, `git-status`
+* **Git Power-User**: `git-add`, `git-commit`, `git-status`
 * **Release Manager**: `release-manager`, `task-manager`
 
 ## Common Workflows   {#common-workflows}
@@ -1059,7 +1034,7 @@ release-manager report --format detailed
 
     # Enhanced git operations across repositories
     git-status --verbose
-    git-diff --stat
+    git diff --stat
     git-commit --intention "update features"
     git-push
 {: .language-bash}
