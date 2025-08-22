@@ -12,7 +12,6 @@ files:
   - docs/architecture-tools.md
   - docs/decisions.md
   - docs/blueprint.md
-  - docs/tools.md
 
 commands:
   - git-status --short --no-color
