@@ -91,7 +91,6 @@ module CodingAgentTools
             "git-status" => "Show git repository status with enhanced formatting",
             "git-commit" => "Create intelligent git commits with AI-generated messages",
             "git-add" => "Enhanced git add with interactive options",
-            "git-diff" => "Enhanced git diff with formatting options",
             "task-manager" => "Manage project tasks and todo items",
             "nav-ls" => "Enhanced directory listing with smart filtering",
             "nav-tree" => "Display project tree structure",
