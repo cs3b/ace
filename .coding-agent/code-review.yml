@@ -223,6 +223,6 @@ presets:
 
 # Default settings
 defaults:
-  model: "google:gemini-2.0-flash-exp"
+  model: "google:gemini-2.5-flash"
   output_format: "markdown"
   context: "project"  # Default context if not specified
