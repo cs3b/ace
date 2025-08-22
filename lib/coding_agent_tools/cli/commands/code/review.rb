@@ -49,7 +49,7 @@ module CodingAgentTools
             desc: "Guideline modules (comma-separated, e.g., 'tone,icons')"
 
           option :model, type: :string,
-            desc: "LLM model to use (e.g., google:gemini-2.0-flash-exp)"
+            desc: "LLM model to use (e.g., google:gemini-2.5-flash)"
 
           option :output, type: :string,
             desc: "Output file for review report"
@@ -80,7 +80,7 @@ module CodingAgentTools
 
           example [
             "--preset pr --auto-execute",
-            "--preset pr --model google:gemini-2.0-flash-exp",
+            "--preset pr --model google:gemini-2.5-flash",
             "--context project --subject 'commands: [\"git diff HEAD~1\"]' --auto-execute",
             "--context 'files: [docs/api.md]' --subject 'files: [lib/api/**/*.rb]' --system-prompt templates/api-review.md",
             "--preset code --subject HEAD~1..HEAD --output review.md --auto-execute",
@@ -452,7 +452,7 @@ module CodingAgentTools
                 subject: resolved_subject,
                 system_prompt: options[:system_prompt],
                 prompt_composition: prompt_composition,
-                model: options[:model] || manager.default_model || "google:gemini-2.0-flash-exp",
+                model: options[:model] || manager.default_model || "google:gemini-2.5-flash",
                 output: options[:output]
               }
             end
