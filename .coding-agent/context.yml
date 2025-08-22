@@ -23,12 +23,12 @@ presets:
         output: "docs/context/cached/dev-handbook.md"
         chunk_limit: 80000
 
-    # Task management context
-    task-create:
-        description: "Context for task creating"
-        template: "docs/context/task-create.md"
-        output: "docs/context/cached/task-create.md"
-        chunk_limit: 120000
+    # Handbook specific context
+    code-review:
+        description: "Context focused on development guides and workflows"
+        template: "docs/context/code-review.md"
+        output: "docs/context/cached/code-review.md"
+        chunk_limit: 80000
 
     # Essential project files only
     essentials:

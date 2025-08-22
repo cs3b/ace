@@ -5,19 +5,18 @@ You are working on the Coding Agent Workflow Toolkit (Meta) - a comprehensive me
 ## Context
 
 <context-tool-config>
-embed_document_source: true
+embed_document_source: false
 files:
   - docs/what-do-we-build.md
   - docs/architecture.md
+  - docs/architecture-tools.md
   - docs/decisions.md
   - docs/blueprint.md
   - docs/tools.md
-  - dev-handbook/workflow-instructions/draft-task.wf.md
-  - dev-handbook/workflow-instructions/plan-task.wf.md
 
 commands:
-  - git-status --short
-  - release-manager current
-  - task-manager recent --limit 5
-  - task-manager create --help
+  - git-status --short --no-color
+  - code-review --help
+  - code-review --list-presets
+  - code-review --list-prompts
 </context-tool-config>

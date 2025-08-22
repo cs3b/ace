@@ -14,7 +14,7 @@ files:
   - docs/tools.md
 
 commands:
-  - git-status --short
+  - git-status --short --no-color
   - task-manager recent --limit 5
   - task-manager next --limit 5
   - release-manager current
