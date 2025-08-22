@@ -319,35 +319,23 @@ module CodingAgentTools
               debug_output("Auto-executing LLM query...", options[:debug])
               
               llm_executor = CodingAgentTools::Molecules::Code::LLMExecutor.new
-              output_file = config[:output]
+              output_file = config[:output] || "cr-#{model_name}.md"
               
               begin
-                if output_file
-                  # Execute with output file
-                  info_output("\n🤖 Executing code review with #{config[:model]}...")
-                  info_output("Output will be saved to: #{output_file}")
-                  
-                  result = llm_executor.execute_query(
-                    config[:model],
-                    subject_content,
-                    enhanced_prompt,
-                    output_file: output_file,
-                    timeout: 600
-                  )
-                  
-                  success_output("\n✅ Review completed successfully!")
-                  info_output("📄 Review saved to: #{output_file}")
-                else
-                  # Stream output to console
-                  info_output("\n🤖 Executing code review with #{config[:model]}...\n")
-                  llm_executor.execute_streaming(
-                    config[:model],
-                    subject_content,
-                    enhanced_prompt,
-                    timeout: 600
-                  )
-                  success_output("\n✅ Review completed successfully!")
-                end
+                # Execute with output file
+                info_output("\n🤖 Executing code review with #{config[:model]}...")
+                info_output("Output will be saved to: #{output_file}")
+                
+                result = llm_executor.execute_query(
+                  config[:model],
+                  subject_content,
+                  enhanced_prompt,
+                  output_file: output_file,
+                  timeout: 600
+                )
+                
+                success_output("\n✅ Review completed successfully!")
+                info_output("📄 Review saved to: #{output_file}")
                 
                 # Display session info if saved
                 if session_dir
