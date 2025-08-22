@@ -25,9 +25,33 @@ module CodingAgentTools
           if context_config.is_a?(String)
             execute_context_command("--preset", context_config)
           elsif context_config.is_a?(Hash)
-            # Convert hash to YAML and pass to context tool
-            yaml_content = YAML.dump(context_config)
-            execute_context_command_with_yaml(yaml_content)
+            # Check for presets key for multi-preset support
+            if context_config["presets"] || context_config[:presets]
+              presets = context_config["presets"] || context_config[:presets]
+              validate_preset_names(presets)
+              preset_names = Array(presets).join(",")
+              
+              # Load preset content
+              preset_content = execute_context_command("--preset", preset_names)
+              
+              # If there are additional files/commands, load them too
+              additional_config = context_config.dup
+              additional_config.delete("presets")
+              additional_config.delete(:presets)
+              
+              if additional_config.any?
+                yaml_content = YAML.dump(additional_config)
+                additional_content = execute_context_command_with_yaml(yaml_content)
+                # Merge both contents
+                [preset_content, additional_content].compact.join("\n\n")
+              else
+                preset_content
+              end
+            else
+              # Original behavior for non-preset configs
+              yaml_content = YAML.dump(context_config)
+              execute_context_command_with_yaml(yaml_content)
+            end
           else
             ""
           end
@@ -55,6 +79,14 @@ module CodingAgentTools
         end
 
         private
+
+        def validate_preset_names(presets)
+          Array(presets).each do |preset|
+            unless preset.is_a?(String) && preset.match?(/^[a-z0-9\-_]+$/i)
+              raise ArgumentError, "Invalid preset name: #{preset}"
+            end
+          end
+        end
 
         def execute_context_command(*args)
           Tempfile.create(["context-output-", ".md"]) do |tmpfile|

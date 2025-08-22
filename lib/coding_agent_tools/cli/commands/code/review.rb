@@ -210,9 +210,13 @@ module CodingAgentTools
               prompt_composition = prompt_options.empty? ? nil : 
                                   manager.send(:resolve_prompt_composition, nil, prompt_options)
               
+              resolved_context = manager.send(:resolve_context_config, nil, options[:context])
+              resolved_subject = manager.send(:resolve_subject_config, nil, options[:subject])
+              
+              
               {
-                context: options[:context],
-                subject: options[:subject],
+                context: resolved_context,
+                subject: resolved_subject,
                 system_prompt: options[:system_prompt],
                 prompt_composition: prompt_composition,
                 model: options[:model] || manager.default_model || "google:gemini-2.0-flash-exp",
@@ -237,9 +241,22 @@ module CodingAgentTools
                                               preset_config[:prompt_composition], 
                                               prompt_options)
             
+            # Parse context and subject if provided as CLI options
+            final_context = if options[:context]
+              manager.send(:resolve_context_config, nil, options[:context])
+            else
+              preset_config[:context]
+            end
+            
+            final_subject = if options[:subject]
+              manager.send(:resolve_subject_config, nil, options[:subject])
+            else
+              preset_config[:subject]
+            end
+            
             {
-              context: options[:context] || preset_config[:context],
-              subject: options[:subject] || preset_config[:subject],
+              context: final_context,
+              subject: final_subject,
               system_prompt: options[:system_prompt] || preset_config[:system_prompt],
               prompt_composition: prompt_composition,
               model: options[:model] || preset_config[:model],
