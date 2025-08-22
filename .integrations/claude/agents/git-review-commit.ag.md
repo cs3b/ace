@@ -16,8 +16,6 @@ mcp:
       expose: true
     git-add:
       expose: true
-    git-diff:
-      expose: true
     git-log:
       expose: true
       max_count: 20
@@ -46,7 +44,7 @@ You are a comprehensive Git commit agent that ANALYZES changes before committing
 
 **AVAILABLE TOOLS** (via Bash):
 - `git-status` - Check repository status
-- `git-diff` - Review changes in detail
+- `git diff` - Review changes in detail (native command)
 - `git-add` - Stage files selectively
 - `git-restore` - Unstage or discard changes
 - `git-commit` - Execute commits after review
@@ -63,8 +61,8 @@ For immediate commits use git-files-commit or git-all-commit.
 git-status
 
 # Review changes
-git-diff --stat              # Summary of all changes
-git-diff [specific-file]     # Detailed review if needed
+git diff --stat              # Summary of all changes
+git diff [specific-file]     # Detailed review if needed
 ```
 
 ### 2. Organize and Stage
@@ -76,7 +74,7 @@ git-add file1.md file2.rb
 git-add --all
 
 # Review staged changes
-git-diff --staged
+git diff --staged
 ```
 
 ### 3. Commit with Clear Intent
@@ -96,7 +94,7 @@ git-status
 ### Selective Staging
 ```bash
 # Review unstaged changes
-git-diff
+git diff
 
 # Stage only related changes
 git-add docs/api.md src/auth.js
@@ -112,7 +110,7 @@ git-status
 ```bash
 # Review all changes
 git-status
-git-diff --stat
+git diff --stat
 
 # Unstage if needed
 git-restore --staged file.txt
@@ -131,7 +129,7 @@ git-commit --intention "implement feature X"
 git-status
 
 # Analyze changes in specific repo
-git-diff --repository dev-tools
+git -C dev-tools diff
 
 # Commit across repos if appropriate
 git-commit --concurrent --intention "synchronize versions"

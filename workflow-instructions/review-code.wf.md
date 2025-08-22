@@ -13,7 +13,7 @@ context --preset code-review
 
 This provides:
 - Complete command help and options
-- All 14 available presets with descriptions  
+- All 14 available presets with descriptions
 - Available prompt modules (base, format, focus, guidelines)
 - Tool documentation and examples
 
@@ -37,7 +37,6 @@ This provides:
 
 - Access to `code-review` command (v2.0+)
 - LLM provider configured (default: google:gemini-2.0-flash-exp)
-- Git wrapper tools (`git-diff`, `git-log`, etc.)
 
 ## Primary Workflow: Multi-Repository Review
 
@@ -49,9 +48,9 @@ code-review \
   --preset ruby-atom-modular \
   --context 'presets: [project, dev-handbook, dev-tools]' \
   --subject 'commands: [
-    "git-diff 8e7882c~1..HEAD",
-    "git-diff -C dev-handbook 0567c83~1..HEAD", 
-    "git-diff -C dev-tools df8f6e2~1..HEAD"
+    "git diff 8e7882c~1..HEAD",
+    "git diff -C dev-handbook 0567c83~1..HEAD",
+    "git diff -C dev-tools df8f6e2~1..HEAD"
   ]' \
   --add-focus 'scope/tests,scope/docs' \
   --model "google:gemini-2.0-flash-exp" \
@@ -85,7 +84,7 @@ code-review --preset pr --auto-execute
 ### Pre-Commit Check
 ```bash
 code-review --preset code \
-  --subject 'commands: ["git-diff --staged"]' \
+  --subject 'commands: ["git diff --staged"]' \
   --auto-execute
 ```
 
@@ -124,7 +123,7 @@ Then reference the parameters in your command.
 | Issue | Solution |
 |-------|----------|
 | "Preset not found" | Run `code-review --list-presets` |
-| "Git diff empty" | Check git range with `git-diff` |
+| "Git diff empty" | Check git range with `git diff` |
 | "LLM timeout" | Narrow the review scope |
 
 ### Debug Mode

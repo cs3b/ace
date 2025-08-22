@@ -201,8 +201,8 @@ When no specific context is provided, follow this process:
    # Review recent commits with enhanced context
    git-log --oneline -10
 
-   # Check modified files with intelligent diff
-   git-diff --name-only HEAD~5
+   # Check modified files
+   git diff --name-only HEAD~5
 
    # Review completed tasks using task manager
    task-manager recent --limit 5 --filter status:done
