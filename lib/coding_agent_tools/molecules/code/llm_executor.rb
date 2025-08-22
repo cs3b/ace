@@ -86,7 +86,8 @@ module CodingAgentTools
               success = system(command)
 
               unless success
-                raise "LLM query failed with exit code: #{$?.exitstatus}"
+                exit_code = $? ? $?.exitstatus : "unknown"
+                raise "LLM query failed with exit code: #{exit_code}"
               end
             end
           end
