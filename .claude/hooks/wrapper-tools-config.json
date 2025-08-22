@@ -43,6 +43,7 @@
                 "git rm": "git-rm"
             },
             "no_wrapper_available": [
+                "git diff",
                 "git branch",
                 "git merge",
                 "git rebase",
