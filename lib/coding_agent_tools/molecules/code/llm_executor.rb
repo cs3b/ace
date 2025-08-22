@@ -90,6 +90,21 @@ module CodingAgentTools
               end
             end
           end
+
+          # Find llm-query executable using absolute path resolution
+          # @return [String] Path to llm-query executable
+          def find_llm_query_executable
+            # Try relative path first (from dev-tools)
+            relative_path = File.expand_path("../../../../exe/llm-query", __dir__)
+            return relative_path if File.executable?(relative_path)
+
+            # Try PATH
+            which_result = `which llm-query 2>/dev/null`.strip
+            return which_result unless which_result.empty?
+
+            # Fallback to assumed location
+            "llm-query"
+          end
         end
       end
     end

@@ -91,24 +91,9 @@ module CodingAgentTools
             # Handle listing presets
             return list_presets if options[:list_presets]
 
-            # Load configuration from file if specified
-            if options[:config_file]
-              file_config = load_config_file(options[:config_file])
-              return 1 unless file_config
-              # Merge file config with command-line options
-              options = file_config.merge(options)
-            end
-
-            # Validate inputs
-            validation_result = validate_inputs(options)
-            return validation_result unless validation_result == 0
-
-            # Load preset if specified
-            preset_config = load_preset_config(options)
-            return 1 unless preset_config
-
-            # Merge options with preset
-            final_config = merge_configurations(preset_config, options)
+            # Prepare configuration
+            final_config = prepare_configuration(options)
+            return 1 unless final_config
 
             # Handle dry run
             return show_dry_run(final_config) if options[:dry_run]
@@ -122,6 +107,87 @@ module CodingAgentTools
           end
 
           private
+
+          def prepare_configuration(options)
+            # Load configuration from file if specified
+            if options[:config_file]
+              file_config = load_config_file(options[:config_file])
+              return nil unless file_config
+              # Merge file config with command-line options
+              options = file_config.merge(options)
+            end
+
+            # Validate inputs
+            validation_result = validate_inputs(options)
+            return nil unless validation_result == 0
+
+            # Load preset configuration
+            preset_config = load_preset_config(options)
+            return nil unless preset_config
+
+            # Merge options with preset to create final configuration
+            merge_configurations(preset_config, options)
+          end
+
+          def generate_review_content(config, session_dir, options)
+            # Initialize components
+            context_integrator = CodingAgentTools::Molecules::Code::ContextIntegrator.new
+            prompt_enhancer = CodingAgentTools::Molecules::Code::PromptEnhancer.new
+
+            # Step 1: Generate context (background information)
+            debug_output("Generating context...", options[:debug])
+            context_content = context_integrator.generate_context(config[:context])
+
+            # Save context file only if session directory exists
+            if session_dir
+              context_file = File.join(session_dir, "in-context.md")
+              File.write(context_file, context_content)
+            end
+
+            # Step 2: Load or compose system prompt
+            debug_output("Loading system prompt...", options[:debug])
+            system_prompt = if config[:prompt_composition]
+              debug_output("Composing prompt from modules...", options[:debug])
+              prompt_enhancer.compose_prompt(config[:prompt_composition])
+            else
+              load_system_prompt(config[:system_prompt])
+            end
+
+            # Save base prompt only if session directory exists
+            if session_dir
+              base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
+              File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
+            end
+
+            # Step 3: Enhance system prompt with context
+            debug_output("Enhancing system prompt with context...", options[:debug])
+            enhanced_prompt = prompt_enhancer.enhance_prompt(system_prompt, context_content)
+
+            # Save enhanced prompt only if session directory exists
+            system_prompt_file = nil
+            if session_dir
+              system_prompt_file = File.join(session_dir, "in-system.prompt.md")
+              File.write(system_prompt_file, enhanced_prompt)
+            end
+
+            # Step 4: Generate subject (what to review)
+            debug_output("Generating subject...", options[:debug])
+            subject_content = context_integrator.generate_subject(config[:subject])
+
+            # Save subject file only if session directory exists
+            subject_file = nil
+            if session_dir
+              subject_file = File.join(session_dir, "in-subject.prompt.md")
+              File.write(subject_file, subject_content)
+            end
+
+            {
+              subject_content: subject_content,
+              enhanced_prompt: enhanced_prompt,
+              system_prompt_file: system_prompt_file,
+              subject_file: subject_file
+            }
+          end
 
           def list_presets
             manager = CodingAgentTools::Molecules::Code::ReviewPresetManager.new
@@ -310,56 +376,13 @@ module CodingAgentTools
             end
             debug_output("Session directory: #{session_dir || "in-memory"}", options[:debug])
 
-            # Initialize components
-            context_integrator = CodingAgentTools::Molecules::Code::ContextIntegrator.new
-            prompt_enhancer = CodingAgentTools::Molecules::Code::PromptEnhancer.new
-
-            # Step 1: Generate context (background information)
-            debug_output("Generating context...", options[:debug])
-            context_content = context_integrator.generate_context(config[:context])
-
-            # Save context file only if session directory exists
-            if session_dir
-              context_file = File.join(session_dir, "in-context.md")
-              File.write(context_file, context_content)
-            end
-
-            # Step 2: Load or compose system prompt
-            debug_output("Loading system prompt...", options[:debug])
-            system_prompt = if config[:prompt_composition]
-              debug_output("Composing prompt from modules...", options[:debug])
-              prompt_enhancer.compose_prompt(config[:prompt_composition])
-            else
-              load_system_prompt(config[:system_prompt])
-            end
-
-            # Save base prompt only if session directory exists
-            if session_dir
-              base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
-              File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
-            end
-
-            # Step 3: Enhance system prompt with context
-            debug_output("Enhancing system prompt with context...", options[:debug])
-            enhanced_prompt = prompt_enhancer.enhance_prompt(system_prompt, context_content)
-
-            # Save enhanced prompt only if session directory exists
-            system_prompt_file = nil
-            if session_dir
-              system_prompt_file = File.join(session_dir, "in-system.prompt.md")
-              File.write(system_prompt_file, enhanced_prompt)
-            end
-
-            # Step 4: Generate subject (what to review)
-            debug_output("Generating subject...", options[:debug])
-            subject_content = context_integrator.generate_subject(config[:subject])
-
-            # Save subject file only if session directory exists
-            subject_file = nil
-            if session_dir
-              subject_file = File.join(session_dir, "in-subject.prompt.md")
-              File.write(subject_file, subject_content)
-            end
+            # Generate all content for the review
+            review_content = generate_review_content(config, session_dir, options)
+            
+            subject_content = review_content[:subject_content]
+            enhanced_prompt = review_content[:enhanced_prompt]
+            system_prompt_file = review_content[:system_prompt_file]
+            subject_file = review_content[:subject_file]
 
             # Step 5: Execute or prepare llm-query
             model_name = config[:model].tr(":", "-").tr("/", "-")
