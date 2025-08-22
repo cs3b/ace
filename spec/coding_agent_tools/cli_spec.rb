@@ -117,19 +117,6 @@ RSpec.describe CodingAgentTools::Cli::Commands do
     end
   end
 
-  describe ".register_code_review_prepare_commands" do
-    before do
-      described_class.instance_variable_set(:@code_review_prepare_commands_registered, nil)
-    end
-
-    it "registers code-review-prepare commands only once" do
-      expect(described_class).to receive(:register).with("code-review-prepare", aliases: []).once
-
-      described_class.register_code_review_prepare_commands
-      described_class.register_code_review_prepare_commands
-    end
-  end
-
   describe ".register_nav_commands" do
     before do
       described_class.instance_variable_set(:@nav_commands_registered, nil)
@@ -287,9 +274,9 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       # Reset all registration flags
       %i[@llm_commands_registered @task_commands_registered @release_commands_registered
         @dotfiles_commands_registered @code_commands_registered @code_lint_commands_registered
-        @code_review_prepare_commands_registered @nav_commands_registered @handbook_commands_registered
-        @reflection_commands_registered @git_commands_registered @create_path_commands_registered
-        @coverage_commands_registered @all_commands_registered].each do |flag|
+        @nav_commands_registered @handbook_commands_registered @reflection_commands_registered 
+        @git_commands_registered @create_path_commands_registered @coverage_commands_registered 
+        @all_commands_registered].each do |flag|
         described_class.instance_variable_set(flag, nil)
       end
     end
@@ -304,7 +291,6 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       allow(described_class).to receive(:register_dotfiles_commands) { calls << :dotfiles }
       allow(described_class).to receive(:register_code_commands) { calls << :code }
       allow(described_class).to receive(:register_code_lint_commands) { calls << :code_lint }
-      allow(described_class).to receive(:register_code_review_prepare_commands) { calls << :code_review_prepare }
       allow(described_class).to receive(:register_nav_commands) { calls << :nav }
       allow(described_class).to receive(:register_handbook_commands) { calls << :handbook }
       allow(described_class).to receive(:register_reflection_commands) { calls << :reflection }
@@ -319,8 +305,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
       # Verify all registrations were called
       expect(calls).to eq([:llm, :task, :release, :dotfiles, :code, :code_lint,
-        :code_review_prepare, :nav, :handbook, :reflection,
-        :git, :create_path, :coverage, :all])
+        :nav, :handbook, :reflection, :git, :create_path, :coverage, :all])
     end
 
     it "registers commands only once on multiple calls" do
@@ -331,9 +316,9 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       # Stub other registrations
       %i[register_task_commands register_release_commands
         register_dotfiles_commands register_code_commands register_code_lint_commands
-        register_code_review_prepare_commands register_nav_commands register_handbook_commands
-        register_reflection_commands register_git_commands register_create_path_commands
-        register_coverage_commands register_all_commands].each do |method|
+        register_nav_commands register_handbook_commands register_reflection_commands 
+        register_git_commands register_create_path_commands register_coverage_commands 
+        register_all_commands].each do |method|
         allow(described_class).to receive(method)
       end
 
@@ -349,9 +334,9 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       # Stub all registrations
       %i[register_llm_commands register_task_commands register_release_commands
         register_dotfiles_commands register_code_commands register_code_lint_commands
-        register_code_review_prepare_commands register_nav_commands register_handbook_commands
-        register_reflection_commands register_git_commands register_create_path_commands
-        register_coverage_commands register_all_commands].each do |method|
+        register_nav_commands register_handbook_commands register_reflection_commands 
+        register_git_commands register_create_path_commands register_coverage_commands 
+        register_all_commands].each do |method|
         allow(described_class).to receive(method)
       end
 
@@ -438,23 +423,6 @@ RSpec.describe CodingAgentTools::Cli::Commands do
         allow(described_class).to receive(:register)
 
         described_class.register_code_lint_commands
-      end
-    end
-
-    describe ".register_code_review_prepare_commands" do
-      before do
-        described_class.instance_variable_set(:@code_review_prepare_commands_registered, nil)
-      end
-
-      it "requires all code-review-prepare command files" do
-        expect(described_class).to receive(:require_relative).with("cli/commands/code/review_prepare/session_dir")
-        expect(described_class).to receive(:require_relative).with("cli/commands/code/review_prepare/project_context")
-        expect(described_class).to receive(:require_relative).with("cli/commands/code/review_prepare/project_target")
-        expect(described_class).to receive(:require_relative).with("cli/commands/code/review_prepare/prompt")
-
-        allow(described_class).to receive(:register)
-
-        described_class.register_code_review_prepare_commands
       end
     end
 
