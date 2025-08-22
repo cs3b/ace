@@ -1,5 +1,5 @@
 ---
-name: page-populator
+name: cms-page-populator
 description: POPULATE database with CMS pages - configures sections and component props in Firestore
 expected_params:
   required:

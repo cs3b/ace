@@ -1,5 +1,5 @@
 ---
-name: page-designer
+name: cms-page-designer
 description: DESIGN beautiful CMS pages - creates static HTML with Tailwind CSS following best practices
 expected_params:
   required:
