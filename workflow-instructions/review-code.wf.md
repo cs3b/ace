@@ -28,7 +28,7 @@ This provides:
 4. **Review generated report** for insights
 
 ### What NOT TO DO:
-- ❌ Use Read tool on individual source files (do not run git show and git diff direectly only run the code-review)
+- ❌ Use Read tool on individual source files (do not run git show and git diff directly - only run the code-review)
 - ❌ Manually run llm-query (handled by --auto-execute)
 - ❌ Create tasks (user's responsibility after reviewing reports)
 - ❌ Skip the context loading step
@@ -36,7 +36,7 @@ This provides:
 ## Prerequisites
 
 - Access to `code-review` command (v2.0+)
-- LLM provider configured (default: google:gemini-2.0-flash-exp)
+- LLM provider configured (default: google:gemini-2.5-flash)
 
 ## Primary Workflow: Multi-Repository Review
 
@@ -53,7 +53,7 @@ code-review \
     "git -C dev-tools diff df8f6e2~1..HEAD"
   ]' \
   --add-focus 'scope/tests,scope/docs' \
-  --model "google:gemini-2.0-flash-exp" \
+  --model "google:gemini-2.5-flash" \
   --auto-execute
 ```
 
