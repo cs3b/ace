@@ -28,7 +28,7 @@ This provides:
 4. **Review generated report** for insights
 
 ### What NOT TO DO:
-- ❌ Use Read tool on individual source files
+- ❌ Use Read tool on individual source files (do not run git show and git diff direectly only run the code-review)
 - ❌ Manually run llm-query (handled by --auto-execute)
 - ❌ Create tasks (user's responsibility after reviewing reports)
 - ❌ Skip the context loading step
@@ -49,8 +49,8 @@ code-review \
   --context 'presets: [project, dev-handbook, dev-tools]' \
   --subject 'commands: [
     "git diff 8e7882c~1..HEAD",
-    "git diff -C dev-handbook 0567c83~1..HEAD",
-    "git diff -C dev-tools df8f6e2~1..HEAD"
+    "git -C dev-handbook diff 0567c83~1..HEAD",
+    "git -C dev-tools diff df8f6e2~1..HEAD"
   ]' \
   --add-focus 'scope/tests,scope/docs' \
   --model "google:gemini-2.0-flash-exp" \
