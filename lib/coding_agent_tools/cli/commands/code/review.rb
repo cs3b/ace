@@ -227,7 +227,13 @@ module CodingAgentTools
             # Discover all modules organized by category
             modules = discover_prompt_modules(modules_dir)
 
-            if modules.empty?
+            # Check if any modules were actually found
+            has_modules = !modules[:base].empty? || 
+                         !modules[:format].empty? || 
+                         !modules[:focus].empty? || 
+                         !modules[:guidelines].empty?
+            
+            unless has_modules
               info_output("No prompt modules found.")
               return 0
             end
@@ -239,7 +245,7 @@ module CodingAgentTools
             if modules[:base] && !modules[:base].empty?
               info_output("Base modules:")
               modules[:base].each do |name|
-                description = get_module_description(name)
+                description = get_module_description(name, :base)
                 info_output("  #{name.ljust(20)} - #{description}")
               end
               info_output("")
@@ -249,7 +255,7 @@ module CodingAgentTools
             if modules[:format] && !modules[:format].empty?
               info_output("Format modules:")
               modules[:format].each do |name|
-                description = get_module_description(name)
+                description = get_module_description(name, :format)
                 info_output("  #{name.ljust(20)} - #{description}")
               end
               info_output("")
@@ -261,7 +267,8 @@ module CodingAgentTools
               modules[:focus].each do |subcategory, items|
                 items.each do |name|
                   path = "#{subcategory}/#{name}"
-                  description = get_module_description(name)
+                  # Pass the full path for focus modules
+                  description = get_module_description("#{subcategory}/#{name}", :focus)
                   info_output("  #{path.ljust(25)} - #{description}")
                 end
               end
@@ -272,7 +279,7 @@ module CodingAgentTools
             if modules[:guidelines] && !modules[:guidelines].empty?
               info_output("Guideline modules:")
               modules[:guidelines].each do |name|
-                description = get_module_description(name)
+                description = get_module_description(name, :guidelines)
                 info_output("  #{name.ljust(20)} - #{description}")
               end
               info_output("")
@@ -329,27 +336,44 @@ module CodingAgentTools
             modules
           end
 
-          def get_module_description(name)
-            # Map module names to descriptions based on behavioral specification
-            descriptions = {
-              "system" => "Base system prompt",
-              "sections" => "Standard review sections",
-              "standard" => "Standard format",
-              "detailed" => "Detailed format",
-              "compact" => "Compact format",
-              "atom" => "ATOM architecture patterns",
-              "rails" => "Ruby on Rails framework",
-              "vue-firebase" => "Vue.js with Firebase",
-              "ruby" => "Ruby language specifics",
-              "performance" => "Performance considerations",
-              "security" => "Security review focus",
-              "docs" => "Documentation focus",
-              "tests" => "Test coverage focus",
-              "tone" => "Professional tone guidelines",
-              "icons" => "Review icons and markers"
-            }
+          def get_module_description(name, category = nil)
+            # Try to extract description from the module file itself
+            if category
+              description = extract_module_description(name, category)
+              return description if description
+            end
             
-            descriptions[name] || name.capitalize.gsub("_", " ")
+            # Fallback to filename-based description
+            name.split(/[_-]/).map(&:capitalize).join(" ")
+          end
+
+          def extract_module_description(name, category)
+            # Build the path to the module file
+            enhancer = CodingAgentTools::Molecules::Code::PromptEnhancer.new
+            modules_dir = enhancer.send(:find_modules_directory)
+            return nil unless modules_dir
+            
+            # Handle subcategory paths for focus modules
+            if category == :focus
+              # For focus modules, name contains the subcategory path
+              module_path = File.join(modules_dir, "focus", "#{name}.md")
+            else
+              module_path = File.join(modules_dir, category.to_s, "#{name}.md")
+            end
+            
+            return nil unless File.exist?(module_path)
+            
+            # Read the file and extract the first H1 heading
+            begin
+              content = File.read(module_path)
+              # Look for the first H1 heading (# Title) - only on a single line
+              if match = content.match(/^#\s+(.+?)$/m)
+                return match[1].strip
+              end
+            rescue => e
+              # Silently fall back to filename-based description
+              nil
+            end
           end
 
           def load_config_file(file_path)
@@ -529,14 +553,14 @@ module CodingAgentTools
             subject_file = review_content[:subject_file]
 
             # Step 5: Execute or prepare llm-query
-            model_name = config[:model].tr(":", "-").tr("/", "-")
+            model_name = config[:model].tr(":./", "-")
 
             if options[:auto_execute]
               # Execute the LLM query directly
               debug_output("Auto-executing LLM query...", options[:debug])
 
               llm_executor = CodingAgentTools::Molecules::Code::LLMExecutor.new
-              output_file = config[:output] || "cr-#{model_name}.md"
+              output_file = config[:output] || (session_dir ? File.join(session_dir, "cr-#{model_name}.md") : "cr-#{model_name}.md")
 
               begin
                 # Execute with output file
@@ -566,7 +590,7 @@ module CodingAgentTools
               end
             else
               # Prepare command for manual execution
-              output_file = config[:output] || (session_dir ? File.join(session_dir, "report-#{model_name}.md") : "review-#{model_name}.md")
+              output_file = config[:output] || (session_dir ? File.join(session_dir, "cr-#{model_name}.md") : "cr-#{model_name}.md")
 
               if session_dir
                 # Traditional workflow with files
@@ -584,7 +608,7 @@ module CodingAgentTools
                 info_output("  - in-system.base.prompt.md (base system prompt)")
                 info_output("  - in-system.prompt.md (enhanced system prompt with context)")
                 info_output("  - in-subject.prompt.md (content to review)")
-                info_output("  - report-#{model_name}.md (will contain review output)")
+                info_output("  - cr-#{model_name}.md (will contain review output)")
 
                 info_output("\n🔄 Next step - run this command:")
                 info_output(llm_command)

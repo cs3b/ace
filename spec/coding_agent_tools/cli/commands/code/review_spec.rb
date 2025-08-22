@@ -63,6 +63,104 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       end
     end
 
+    context "with list prompts option" do
+      let(:mock_prompt_enhancer) { instance_double("CodingAgentTools::Molecules::Code::PromptEnhancer") }
+      let(:modules_dir) { File.join(temp_dir, "modules") }
+
+      before do
+        allow(CodingAgentTools::Molecules::Code::PromptEnhancer).to receive(:new).and_return(mock_prompt_enhancer)
+        allow(mock_prompt_enhancer).to receive(:send).with(:find_modules_directory).and_return(modules_dir)
+      end
+
+      it "lists available prompt modules" do
+        # Create test module structure
+        FileUtils.mkdir_p(File.join(modules_dir, "base"))
+        FileUtils.mkdir_p(File.join(modules_dir, "format"))
+        FileUtils.mkdir_p(File.join(modules_dir, "focus", "architecture"))
+        FileUtils.mkdir_p(File.join(modules_dir, "guidelines"))
+
+        # Create test module files with headings
+        File.write(File.join(modules_dir, "base", "system.md"), "# Code Review System Prompt Base\n\nContent...")
+        File.write(File.join(modules_dir, "base", "sections.md"), "# Standard Review Sections\n\nContent...")
+        File.write(File.join(modules_dir, "format", "standard.md"), "# Standard Review Format\n\nContent...")
+        File.write(File.join(modules_dir, "focus", "architecture", "atom.md"), "# ATOM Architecture Focus\n\nContent...")
+        File.write(File.join(modules_dir, "guidelines", "tone.md"), "# Professional Tone Guidelines\n\nContent...")
+
+        result = command.call(list_prompts: true)
+
+        expect(result).to eq(0)
+        expect($stdout).to have_received(:puts).with("Available prompt modules:")
+        expect($stdout).to have_received(:puts).at_least(:once).with("")
+        expect($stdout).to have_received(:puts).with("Base modules:")
+        expect($stdout).to have_received(:puts).with(/sections.*Standard Review Sections/)
+        expect($stdout).to have_received(:puts).with(/system.*Code Review System Prompt Base/)
+        expect($stdout).to have_received(:puts).with("Format modules:")
+        expect($stdout).to have_received(:puts).with(/standard.*Standard Review Format/)
+        expect($stdout).to have_received(:puts).with("Focus modules:")
+        expect($stdout).to have_received(:puts).with(/architecture\/atom.*ATOM Architecture Focus/)
+        expect($stdout).to have_received(:puts).with("Guideline modules:")
+        expect($stdout).to have_received(:puts).with(/tone.*Professional Tone Guidelines/)
+      end
+
+      it "handles missing modules directory gracefully" do
+        allow(mock_prompt_enhancer).to receive(:send).with(:find_modules_directory).and_return(nil)
+
+        result = command.call(list_prompts: true)
+
+        expect(result).to eq(0)
+        expect($stdout).to have_received(:puts).with("No prompt modules found.")
+      end
+
+      it "handles non-existent modules directory" do
+        allow(mock_prompt_enhancer).to receive(:send).with(:find_modules_directory).and_return("/nonexistent/path")
+
+        result = command.call(list_prompts: true)
+
+        expect(result).to eq(0)
+        expect($stdout).to have_received(:puts).with("No prompt modules found.")
+      end
+
+      it "falls back to filename-based descriptions when no heading found" do
+        # Create test module without H1 heading
+        FileUtils.mkdir_p(File.join(modules_dir, "base"))
+        File.write(File.join(modules_dir, "base", "custom_module.md"), "## Not a H1 heading\n\nContent...")
+
+        result = command.call(list_prompts: true)
+
+        expect(result).to eq(0)
+        expect($stdout).to have_received(:puts).with(/custom_module.*Custom Module/)
+      end
+
+      it "handles empty module directories" do
+        # Create empty directories
+        FileUtils.mkdir_p(File.join(modules_dir, "base"))
+        FileUtils.mkdir_p(File.join(modules_dir, "format"))
+
+        result = command.call(list_prompts: true)
+
+        expect(result).to eq(0)
+        expect($stdout).to have_received(:puts).with("No prompt modules found.")
+      end
+
+      it "handles focus modules with multiple subcategories" do
+        # Create multiple subcategories
+        FileUtils.mkdir_p(File.join(modules_dir, "focus", "architecture"))
+        FileUtils.mkdir_p(File.join(modules_dir, "focus", "languages"))
+        FileUtils.mkdir_p(File.join(modules_dir, "focus", "quality"))
+
+        File.write(File.join(modules_dir, "focus", "architecture", "atom.md"), "# ATOM Architecture\n\n")
+        File.write(File.join(modules_dir, "focus", "languages", "ruby.md"), "# Ruby Language\n\n")
+        File.write(File.join(modules_dir, "focus", "quality", "security.md"), "# Security Focus\n\n")
+
+        result = command.call(list_prompts: true)
+
+        expect(result).to eq(0)
+        expect($stdout).to have_received(:puts).with(/architecture\/atom.*ATOM Architecture/)
+        expect($stdout).to have_received(:puts).with(/languages\/ruby.*Ruby Language/)
+        expect($stdout).to have_received(:puts).with(/quality\/security.*Security Focus/)
+      end
+    end
+
     context "with minimal configuration" do
       before do
         # Mock the components used by the new architecture
@@ -430,6 +528,55 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
           hash_including(output_file: /\.md$/, timeout: 600)
         )
         expect($stdout).to have_received(:puts).with(/Review completed successfully/)
+      end
+
+      it "saves output file in session directory when save_session is true" do
+        allow(command).to receive(:create_session_directory).and_return("/path/to/session")
+        
+        allow(mock_llm_executor).to receive(:execute_query) do |model, subject, prompt, **kwargs|
+          expect(model).to eq(config[:model])
+          expect(subject).to eq("Subject content")
+          expect(prompt).to eq("Enhanced prompt")
+          expect(kwargs[:output_file]).to eq("/path/to/session/cr-google-gemini-2-0-flash-exp.md")
+          expect(kwargs[:timeout]).to eq(600)
+          true
+        end
+        
+        result = command.send(:execute_review, config, { auto_execute: true, save_session: true, debug: false })
+        
+        expect(result).to eq(0)
+      end
+
+      it "saves output file in current directory when save_session is false" do
+        allow(mock_llm_executor).to receive(:execute_query) do |model, subject, prompt, **kwargs|
+          expect(model).to eq(config[:model])
+          expect(subject).to eq("Subject content")
+          expect(prompt).to eq("Enhanced prompt")
+          expect(kwargs[:output_file]).to eq("cr-google-gemini-2-0-flash-exp.md")
+          expect(kwargs[:timeout]).to eq(600)
+          true
+        end
+        
+        result = command.send(:execute_review, config, { auto_execute: true, save_session: false, debug: false })
+        
+        expect(result).to eq(0)
+      end
+
+      it "respects custom output path from config" do
+        config[:output] = "custom/path/review.md"
+        
+        allow(mock_llm_executor).to receive(:execute_query) do |model, subject, prompt, **kwargs|
+          expect(model).to eq(config[:model])
+          expect(subject).to eq("Subject content")
+          expect(prompt).to eq("Enhanced prompt")
+          expect(kwargs[:output_file]).to eq("custom/path/review.md")
+          expect(kwargs[:timeout]).to eq(600)
+          true
+        end
+        
+        result = command.send(:execute_review, config, { auto_execute: true, save_session: true, debug: false })
+        
+        expect(result).to eq(0)
       end
 
       it "handles LLM execution errors" do
