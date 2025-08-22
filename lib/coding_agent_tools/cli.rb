@@ -122,7 +122,7 @@ module CodingAgentTools
         @code_lint_commands_registered = true
       end
 
-      # Note: code-review-prepare commands have been removed in favor of 
+      # Note: code-review-prepare commands have been removed in favor of
       # the new preset-based code-review command with context integration
 
       def self.register_nav_commands
@@ -307,7 +307,7 @@ module CodingAgentTools
         register_context_commands
         register_mcp_commands
         register_agent_lint_commands
-        
+
         # Call Dry::CLI to actually process the commands
         Dry::CLI.new(self).call(arguments: args)
       end
