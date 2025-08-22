@@ -57,6 +57,9 @@ module CodingAgentTools
           option :list_presets, type: :boolean, default: false,
             desc: "List available review presets"
 
+          option :list_prompts, type: :boolean, default: false,
+            desc: "List available prompt modules"
+
           option :dry_run, type: :boolean, default: false,
             desc: "Show what would be done without executing"
 
@@ -84,12 +87,16 @@ module CodingAgentTools
             "--prompt-base system --prompt-format standard --prompt-focus 'architecture/atom,languages/ruby'",
             "--preset ruby-atom-full --add-focus 'quality/security'",
             "--preset pr --save-session --session-dir ./review-session",
-            "--list-presets"
+            "--list-presets",
+            "--list-prompts"
           ]
 
           def call(**options)
             # Handle listing presets
             return list_presets if options[:list_presets]
+
+            # Handle listing prompts
+            return list_prompts if options[:list_prompts]
 
             # Prepare configuration
             final_config = prepare_configuration(options)
@@ -206,6 +213,143 @@ module CodingAgentTools
             end
 
             0
+          end
+
+          def list_prompts
+            enhancer = CodingAgentTools::Molecules::Code::PromptEnhancer.new
+            modules_dir = enhancer.send(:find_modules_directory)
+
+            unless modules_dir && File.directory?(modules_dir)
+              info_output("No prompt modules found.")
+              return 0
+            end
+
+            # Discover all modules organized by category
+            modules = discover_prompt_modules(modules_dir)
+
+            if modules.empty?
+              info_output("No prompt modules found.")
+              return 0
+            end
+
+            info_output("Available prompt modules:")
+            info_output("")
+
+            # Display base modules
+            if modules[:base] && !modules[:base].empty?
+              info_output("Base modules:")
+              modules[:base].each do |name|
+                description = get_module_description(name)
+                info_output("  #{name.ljust(20)} - #{description}")
+              end
+              info_output("")
+            end
+
+            # Display format modules
+            if modules[:format] && !modules[:format].empty?
+              info_output("Format modules:")
+              modules[:format].each do |name|
+                description = get_module_description(name)
+                info_output("  #{name.ljust(20)} - #{description}")
+              end
+              info_output("")
+            end
+
+            # Display focus modules with subcategories
+            if modules[:focus] && !modules[:focus].empty?
+              info_output("Focus modules:")
+              modules[:focus].each do |subcategory, items|
+                items.each do |name|
+                  path = "#{subcategory}/#{name}"
+                  description = get_module_description(name)
+                  info_output("  #{path.ljust(25)} - #{description}")
+                end
+              end
+              info_output("")
+            end
+
+            # Display guideline modules
+            if modules[:guidelines] && !modules[:guidelines].empty?
+              info_output("Guideline modules:")
+              modules[:guidelines].each do |name|
+                description = get_module_description(name)
+                info_output("  #{name.ljust(20)} - #{description}")
+              end
+              info_output("")
+            end
+
+            0
+          end
+
+          def discover_prompt_modules(modules_dir)
+            modules = {
+              base: [],
+              format: [],
+              focus: {},
+              guidelines: []
+            }
+
+            # Discover base modules
+            base_dir = File.join(modules_dir, "base")
+            if File.directory?(base_dir)
+              modules[:base] = Dir.glob(File.join(base_dir, "*.md"))
+                .map { |f| File.basename(f, ".md") }
+                .sort
+            end
+
+            # Discover format modules
+            format_dir = File.join(modules_dir, "format")
+            if File.directory?(format_dir)
+              modules[:format] = Dir.glob(File.join(format_dir, "*.md"))
+                .map { |f| File.basename(f, ".md") }
+                .sort
+            end
+
+            # Discover focus modules with subcategories
+            focus_dir = File.join(modules_dir, "focus")
+            if File.directory?(focus_dir)
+              Dir.glob(File.join(focus_dir, "*")).each do |subdir|
+                next unless File.directory?(subdir)
+                subcategory = File.basename(subdir)
+                files = Dir.glob(File.join(subdir, "*.md"))
+                  .map { |f| File.basename(f, ".md") }
+                  .sort
+                modules[:focus][subcategory] = files unless files.empty?
+              end
+            end
+
+            # Discover guideline modules
+            guidelines_dir = File.join(modules_dir, "guidelines")
+            if File.directory?(guidelines_dir)
+              modules[:guidelines] = Dir.glob(File.join(guidelines_dir, "*.md"))
+                .map { |f| File.basename(f, ".md") }
+                .sort
+            end
+
+            modules
+          end
+
+          def get_module_description(name)
+            # Map module names to descriptions based on behavioral specification
+            descriptions = {
+              "system" => "Base system prompt",
+              "sections" => "Standard review sections",
+              "standard" => "Standard format",
+              "detailed" => "Detailed format",
+              "compact" => "Compact format",
+              "atom" => "ATOM architecture patterns",
+              "rails" => "Ruby on Rails framework",
+              "vue-firebase" => "Vue.js with Firebase",
+              "ruby" => "Ruby language specifics",
+              "performance" => "Performance considerations",
+              "security" => "Security review focus",
+              "docs" => "Documentation focus",
+              "tests" => "Test coverage focus",
+              "tone" => "Professional tone guidelines",
+              "icons" => "Review icons and markers"
+            }
+            
+            descriptions[name] || name.capitalize.gsub("_", " ")
           end
 
           def load_config_file(file_path)
