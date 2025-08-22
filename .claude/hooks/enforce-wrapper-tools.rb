@@ -123,8 +123,8 @@ def generate_error_message(result, config)
       error_messages << "  git-add file1.md file2.rb    # Stage specific files"
       error_messages << "  git-add --all                # Stage all changes"
     when 'diff'
-      error_messages << "  git-diff --stat              # Show summary of changes"
-      error_messages << "  git-diff --staged            # Show staged changes"
+      error_messages << "  git diff --stat              # Show summary of changes"
+      error_messages << "  git diff --staged            # Show staged changes"
     when 'log'
       error_messages << "  git-log --oneline -n 10      # Show recent commits"
     end

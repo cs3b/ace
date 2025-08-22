@@ -339,7 +339,7 @@ This is the largest and most comprehensive release in the project's history, est
 #### Ruby Gem - Coding Agent Tools (CAT)
 
 * **Complete 25+ CLI Tool Suite**: Comprehensive development automation toolkit
-  * **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`, `git-checkout`, `git-switch`,
+  * **Git Operations**: `git-add`, `git-commit`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`, `git-checkout`, `git-switch`,
     `git-mv`, `git-rm`, `git-restore` with multi-repository support
   * **Task Management**: `task-manager next`, `task-manager recent`, `task-manager list`, `task-manager generate-id` with dependency resolution and filtering
   * **Release Management**: `release-manager current`, `release-manager next`, `release-manager all` with validation and reporting

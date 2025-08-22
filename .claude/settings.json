@@ -1,7 +1,6 @@
 {
     "permissions": {
         "deny": [
-            "Bash(git diff*)",
             "Bash(git status*)",
             "Bash(git commit*)",
             "Bash(git add*)",
@@ -25,7 +24,6 @@
             "Bash(git-status*)",
             "Bash(git-commit*)",
             "Bash(git-add*)",
-            "Bash(git-diff*)",
             "Bash(git-log*)",
             "Bash(git-push*)",
             "Bash(git-pull*)",
