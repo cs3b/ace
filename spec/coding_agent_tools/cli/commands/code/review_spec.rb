@@ -281,7 +281,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
         allow(mock_preset_manager).to receive(:resolve_preset).with("pr", anything).and_return({
           context: { files: ["README.md"] },
           subject: { commands: ["git diff"] },
-          model: "google:gemini-2.0-flash-exp"
+          model: "google:gemini-2.5-flash"
         })
 
         result = command.call(config_file: config_file)
@@ -363,7 +363,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
         allow(mock_preset_manager).to receive(:resolve_preset).with("pr", anything).and_return({
           context: { files: ["README.md"] },
           subject: { commands: ["git diff"] },
-          model: "google:gemini-2.0-flash-exp"
+          model: "google:gemini-2.5-flash"
         })
 
         result = command.send(:load_preset_config, { preset: "pr" })
@@ -385,7 +385,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
 
     context "without preset option" do
       it "builds config from individual options" do
-        allow(mock_preset_manager).to receive(:default_model).and_return("google:gemini-2.0-flash-exp")
+        allow(mock_preset_manager).to receive(:default_model).and_return("google:gemini-2.5-flash")
         allow(mock_preset_manager).to receive(:send).with(:resolve_context_config, nil, "project").and_return({ files: ["docs/"] })
         allow(mock_preset_manager).to receive(:send).with(:resolve_subject_config, nil, "HEAD~1..HEAD").and_return({ commands: ["git diff HEAD~1..HEAD"] })
 
@@ -411,9 +411,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
     it "merges preset with CLI options" do
       allow(mock_preset_manager).to receive(:send).with(:resolve_prompt_composition, anything, anything).and_return({ base: "system", format: "detailed" })
 
-      result = command.send(:merge_configurations, preset_config, { model: "google:gemini-2.0-flash-exp", prompt_format: "detailed" })
+      result = command.send(:merge_configurations, preset_config, { model: "google:gemini-2.5-flash", prompt_format: "detailed" })
       
-      expect(result[:model]).to eq("google:gemini-2.0-flash-exp")
+      expect(result[:model]).to eq("google:gemini-2.5-flash")
       expect(result[:context]).to eq({ files: ["README.md"] })
     end
 
@@ -441,7 +441,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       {
         context: { files: ["README.md"] },
         subject: { commands: ["git diff"] },
-        model: "google:gemini-2.0-flash-exp",
+        model: "google:gemini-2.5-flash",
         system_prompt: "custom_prompt.md",
         output: "review.md"
       }
@@ -480,7 +480,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       {
         context: { files: ["README.md"] },
         subject: { commands: ["git diff"] },
-        model: "google:gemini-2.0-flash-exp",
+        model: "google:gemini-2.5-flash",
         system_prompt: "Test prompt"
       }
     end
@@ -537,7 +537,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
           expect(model).to eq(config[:model])
           expect(subject).to eq("Subject content")
           expect(prompt).to eq("Enhanced prompt")
-          expect(kwargs[:output_file]).to eq("/path/to/session/cr-google-gemini-2-0-flash-exp.md")
+          expect(kwargs[:output_file]).to eq("/path/to/session/cr-google-gemini-2-5-flash.md")
           expect(kwargs[:timeout]).to eq(600)
           true
         end
@@ -552,7 +552,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
           expect(model).to eq(config[:model])
           expect(subject).to eq("Subject content")
           expect(prompt).to eq("Enhanced prompt")
-          expect(kwargs[:output_file]).to eq("cr-google-gemini-2-0-flash-exp.md")
+          expect(kwargs[:output_file]).to eq("cr-google-gemini-2-5-flash.md")
           expect(kwargs[:timeout]).to eq(600)
           true
         end
