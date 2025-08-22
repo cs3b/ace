@@ -39,8 +39,7 @@ You are a task creation specialist focused ONLY on creating new tasks. You do NO
 
 ## Load Context
 
-- prepare the context `context --preset task-create`
-- read the the return path
+Run and analyze file returned by `context .claude/agents/task-creator.ag.md --output tmp/cache-task-creator.md`
 
 ## Core Responsibility
 
@@ -120,7 +119,20 @@ task-manager create --title "Critical fix" --priority high --status pending
 ## Context Definition
 
 <context-tool-config>
-    preset: task-create
+files:
+    - docs/what-do-we-build.md
+    - docs/architecture.md
+    - docs/decisions.md
+    - docs/blueprint.md
+    - docs/tools.md
+    - dev-handbook/workflow-instructions/draft-task.wf.md
+    - dev-handbook/workflow-instructions/plan-task.wf.md
+
+commands:
+    - git-status --short
+    - release-manager current
+    - task-manager recent --limit 5
+    - task-manager create --help
 </context-tool-config>
 
 ## Error Handling
