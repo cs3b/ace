@@ -10,7 +10,7 @@ module CodingAgentTools
       #
       # Responsibilities:
       # - Format aggregated context as XML
-      # - Format aggregated context as YAML  
+      # - Format aggregated context as YAML
       # - Format aggregated context as Markdown with embedded XML
       # - Handle truncation for large outputs
       class OutputFormatter
@@ -67,7 +67,7 @@ module CodingAgentTools
               escaped_output = CGI.escapeHTML(output)
               cmd_attrs = "command=\"#{CGI.escapeHTML(cmd[:command])}\" success=\"#{cmd[:success]}\""
               cmd_attrs += " error=\"#{CGI.escapeHTML(cmd[:error])}\"" if cmd[:error]
-              
+
               lines << "    <output #{cmd_attrs}>"
               lines << escaped_output
               lines << "    </output>"
@@ -91,7 +91,7 @@ module CodingAgentTools
         # Format as YAML
         #
         # @param context [Hash] Context data
-        # @return [String] YAML formatted output  
+        # @return [String] YAML formatted output
         def format_as_yaml(context)
           formatted_context = {
             "context" => {}
@@ -158,7 +158,7 @@ module CodingAgentTools
               output = truncate_content(cmd[:output] || "")
               cmd_attrs = "command=\"#{CGI.escapeHTML(cmd[:command])}\" success=\"#{cmd[:success]}\""
               cmd_attrs += " error=\"#{CGI.escapeHTML(cmd[:error])}\"" if cmd[:error]
-              
+
               lines << "<output #{cmd_attrs}>"
               lines << output
               lines << "</output>"

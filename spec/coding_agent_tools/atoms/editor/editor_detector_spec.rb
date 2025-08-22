@@ -10,7 +10,7 @@ RSpec.describe CodingAgentTools::Atoms::Editor::EditorDetector do
     context "when explicit editor is provided" do
       it "returns configuration for known editor" do
         result = detector.detect_editor(explicit_editor: "code")
-        
+
         expect(result[:name]).to eq("Visual Studio Code")
         expect(result[:command]).to eq("code")
         expect(result[:line_support]).to be true
@@ -18,7 +18,7 @@ RSpec.describe CodingAgentTools::Atoms::Editor::EditorDetector do
 
       it "returns basic configuration for unknown editor" do
         result = detector.detect_editor(explicit_editor: "unknown_editor")
-        
+
         expect(result[:name]).to eq("unknown_editor")
         expect(result[:command]).to eq("unknown_editor")
         expect(result[:line_support]).to be false
@@ -27,9 +27,9 @@ RSpec.describe CodingAgentTools::Atoms::Editor::EditorDetector do
 
     context "when config provides default editor" do
       it "uses config default" do
-        config = { 'editor' => { 'default' => 'vim' } }
+        config = {"editor" => {"default" => "vim"}}
         result = detector.detect_editor(config: config)
-        
+
         expect(result[:name]).to eq("Vim")
         expect(result[:command]).to eq("vim")
       end
@@ -39,7 +39,7 @@ RSpec.describe CodingAgentTools::Atoms::Editor::EditorDetector do
       it "auto-detects available editor" do
         # This will depend on what's actually available on the system
         result = detector.detect_editor
-        
+
         expect(result).to have_key(:name)
         expect(result).to have_key(:command)
         expect(result).to have_key(:line_support)
@@ -66,7 +66,7 @@ RSpec.describe CodingAgentTools::Atoms::Editor::EditorDetector do
   describe "#available_editors" do
     it "returns array of available editors with metadata" do
       editors = detector.available_editors
-      
+
       expect(editors).to be_an(Array)
       editors.each do |editor|
         expect(editor).to have_key(:name)

@@ -56,10 +56,10 @@ module CodingAgentTools
         def resolve_repository_path(path)
           # Always resolve relative to project root for consistency
           project_root = ProjectRootDetector.find_project_root
-          
+
           # Special case for "." - use project root
           return project_root if path == "."
-          
+
           # If path is already absolute, use it as-is
           return path if File.absolute_path?(path)
 

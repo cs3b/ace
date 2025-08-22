@@ -116,10 +116,8 @@ module CodingAgentTools
           validate_section!(config, "security", Hash)
 
           # Validate presets structure (only user-provided ones, not defaults)
-          if config["presets"]
-            config["presets"].each do |preset_name, preset_config|
-              validate_user_preset!(preset_name, preset_config)
-            end
+          config["presets"]&.each do |preset_name, preset_config|
+            validate_user_preset!(preset_name, preset_config)
           end
         end
 
@@ -216,12 +214,12 @@ module CodingAgentTools
           merged = default_presets.dup
 
           user_presets.each do |preset_name, preset_config|
-            if merged.key?(preset_name)
+            merged[preset_name] = if merged.key?(preset_name)
               # Merge with existing preset
-              merged[preset_name] = deep_merge(merged[preset_name], preset_config)
+              deep_merge(merged[preset_name], preset_config)
             else
               # Add new preset
-              merged[preset_name] = preset_config
+              preset_config
             end
           end
 

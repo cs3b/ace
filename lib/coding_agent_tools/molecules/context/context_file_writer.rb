@@ -42,7 +42,7 @@ module CodingAgentTools
           begin
             # Normalize path
             normalized_path = File.expand_path(output_path)
-            
+
             # Validate security constraints if validator provided
             validate_output_path!(normalized_path) if @security_validator
 
@@ -64,7 +64,7 @@ module CodingAgentTools
             # Calculate and return statistics
             stats = calculate_file_stats(content, normalized_path)
             report_progress(opts[:progress_callback], "Successfully wrote #{stats[:size_formatted]} to #{normalized_path}")
-            
+
             {
               success: true,
               path: normalized_path,
@@ -94,7 +94,7 @@ module CodingAgentTools
           files.each_with_index do |file_spec, index|
             # Merge global options with file-specific options
             file_options = global_options.merge(file_spec[:options] || {})
-            
+
             # Add batch progress callback
             if global_options[:progress_callback]
               file_options[:progress_callback] = ->(message) do
@@ -115,7 +115,7 @@ module CodingAgentTools
         # @return [Boolean] true if path is writable
         def writable?(output_path)
           normalized_path = File.expand_path(output_path)
-          
+
           # Check if file exists and is writable
           if File.exist?(normalized_path)
             File.writable?(normalized_path)
@@ -136,7 +136,7 @@ module CodingAgentTools
         def preview_write(content, output_path)
           normalized_path = File.expand_path(output_path)
           stats = calculate_file_stats(content, normalized_path)
-          
+
           {
             path: normalized_path,
             writable: writable?(normalized_path),
@@ -186,11 +186,11 @@ module CodingAgentTools
         # @param progress_callback [Proc] Progress callback
         def write_atomically(content, output_path, progress_callback)
           temp_path = "#{output_path}.tmp.#{Process.pid}.#{Time.now.to_f}"
-          
+
           begin
             report_progress(progress_callback, "Writing to temporary file")
             File.write(temp_path, content)
-            
+
             report_progress(progress_callback, "Moving to final location")
             File.rename(temp_path, output_path)
           ensure
@@ -216,14 +216,14 @@ module CodingAgentTools
         # @return [Hash] File statistics
         def calculate_file_stats(content, output_path)
           size = content.bytesize
-          
+
           # Count lines correctly - split by newlines and count non-empty segments
-          if content.empty?
-            lines = 0
+          lines = if content.empty?
+            0
           else
-            lines = content.split("\n").length
+            content.split("\n").length
           end
-          
+
           {
             size: size,
             lines: lines,

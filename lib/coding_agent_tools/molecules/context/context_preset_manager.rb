@@ -50,7 +50,7 @@ module CodingAgentTools
           # Validate template file exists
           template_path = resolve_template_path(preset_config["template"])
           unless template_path && File.exist?(template_path)
-            raise Error, "Template file not found for preset '#{preset_name}': #{preset_config['template']}"
+            raise Error, "Template file not found for preset '#{preset_name}': #{preset_config["template"]}"
           end
 
           # Validate security constraints
@@ -97,24 +97,22 @@ module CodingAgentTools
           load_config_if_needed
 
           @config["presets"].map do |name, preset_config|
-            begin
-              resolved = resolve_preset(name)
-              {
-                name: name,
-                valid: true,
-                template_exists: File.exist?(resolved[:template]),
-                output_path: resolved[:output],
-                message: "Valid"
-              }
-            rescue => e
-              {
-                name: name,
-                valid: false,
-                template_exists: false,
-                output_path: nil,
-                message: e.message
-              }
-            end
+            resolved = resolve_preset(name)
+            {
+              name: name,
+              valid: true,
+              template_exists: File.exist?(resolved[:template]),
+              output_path: resolved[:output],
+              message: "Valid"
+            }
+          rescue => e
+            {
+              name: name,
+              valid: false,
+              template_exists: false,
+              output_path: nil,
+              message: e.message
+            }
           end
         end
 
@@ -156,10 +154,10 @@ module CodingAgentTools
           if preset_config["output"]
             # Use configured output path
             output_path = preset_config["output"]
-            
+
             # Return stdout indicators as-is
             return output_path if is_stdout_indicator?(output_path)
-            
+
             if Pathname.new(output_path).absolute?
               output_path
             else
@@ -170,7 +168,7 @@ module CodingAgentTools
             nil
           end
         end
-        
+
         # Check if a path indicates stdout output
         #
         # @param path [String] Path to check

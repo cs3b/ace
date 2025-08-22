@@ -112,7 +112,7 @@ module CodingAgentTools
 
           # Ensure all tools from core are represented in mapping
           core_tools = normalize_tools_field(agent_data&.dig(:core, :tools))
-          
+
           core_tools.each do |tool|
             unless tools_mapping[tool.to_sym] || tools_mapping[tool]
               # Provide default mapping for tools not explicitly configured
@@ -129,7 +129,7 @@ module CodingAgentTools
         # @return [Hash] Context configuration
         def self.extract_context_config(agent_data)
           context_data = agent_data&.dig(:context) || {}
-          
+
           # Default values for context configuration
           {
             auto_inject: context_data[:auto_inject] || false,
@@ -160,7 +160,7 @@ module CodingAgentTools
           return false unless agent_data && agent_data[:core]
 
           core = agent_data[:core]
-          
+
           # Must have required fields
           required_fields = [:name, :description, :tools, :type]
           required_fields.all? { |field| core[field] }
@@ -175,7 +175,7 @@ module CodingAgentTools
 
           core = agent_data[:core] || {}
           mcp = agent_data[:mcp] || {}
-          
+
           {
             name: core[:name],
             tools: normalize_tools_field(core[:tools]),
@@ -225,8 +225,8 @@ module CodingAgentTools
           # Compute MCP routing information
           def compute_mcp_routing(agent_data)
             core = agent_data&.dig(:core) || {}
-            mcp = agent_data&.dig(:mcp) || {}
-            
+            agent_data&.dig(:mcp) || {}
+
             {
               agent_type: core[:name]&.include?("search") ? "search" : "general",
               requires_context: agent_data&.dig(:context, :auto_inject) || false,
@@ -238,7 +238,7 @@ module CodingAgentTools
           # Compute complexity score for routing decisions
           def compute_complexity_score(agent_data)
             score = 0
-            
+
             # Base score from tool count
             tools = normalize_tools_field(agent_data&.dig(:core, :tools))
             score += tools.length * 10

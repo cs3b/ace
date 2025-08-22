@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
   describe "#generate_context" do
     context "with multi-preset configuration" do
       it "handles multiple presets correctly" do
-        config = { "presets" => ["project", "dev-tools", "dev-handbook"] }
+        config = {"presets" => ["project", "dev-tools", "dev-handbook"]}
         expected_preset_string = "project,dev-tools,dev-handbook"
         expected_output = "Combined preset content"
 
@@ -34,7 +34,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
           "presets" => ["project", "dev-tools"],
           "files" => ["docs/custom.md"]
         }
-        
+
         preset_content = "Preset content"
         additional_content = "Additional content"
         expected_output = "Preset content\n\nAdditional content"
@@ -54,7 +54,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
       end
 
       it "handles symbol keys for presets" do
-        config = { :presets => ["project"] }
+        config = {presets: ["project"]}
         expected_output = "Symbol preset content"
 
         expect(integrator).to receive(:execute_context_command)
@@ -66,7 +66,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
       end
 
       it "validates preset names" do
-        config = { "presets" => ["valid-preset", "invalid preset!"] }
+        config = {"presets" => ["valid-preset", "invalid preset!"]}
 
         expect {
           integrator.generate_context(config)
@@ -74,7 +74,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
       end
 
       it "handles single preset in array" do
-        config = { "presets" => ["project"] }
+        config = {"presets" => ["project"]}
         expected_output = "Single preset content"
 
         expect(integrator).to receive(:execute_context_command)
@@ -86,7 +86,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
       end
 
       it "handles string value for presets" do
-        config = { "presets" => "project" }
+        config = {"presets" => "project"}
         expected_output = "String preset content"
 
         expect(integrator).to receive(:execute_context_command)
@@ -114,7 +114,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
 
     context "with hash configuration without presets" do
       it "uses YAML processing" do
-        config = { "files" => ["docs/test.md"] }
+        config = {"files" => ["docs/test.md"]}
         expected_output = "YAML processed content"
 
         expect(integrator).to receive(:execute_context_command_with_yaml)
@@ -142,7 +142,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
   describe "#validate_preset_names" do
     it "accepts valid preset names" do
       valid_names = ["project", "dev-tools", "dev_handbook", "preset123", "UPPER-case"]
-      
+
       expect {
         integrator.send(:validate_preset_names, valid_names)
       }.not_to raise_error
@@ -150,7 +150,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ContextIntegrator do
 
     it "rejects invalid preset names" do
       invalid_names = ["invalid name", "preset!", "preset@domain", "preset/path"]
-      
+
       invalid_names.each do |invalid_name|
         expect {
           integrator.send(:validate_preset_names, [invalid_name])

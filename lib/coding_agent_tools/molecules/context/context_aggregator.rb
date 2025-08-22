@@ -37,7 +37,7 @@ module CodingAgentTools
           # Process files
           process_files(template[:files], result) unless template[:files].empty?
 
-          # Process commands  
+          # Process commands
           process_commands(template[:commands], result) unless template[:commands].empty?
 
           result
@@ -51,20 +51,18 @@ module CodingAgentTools
         # @param result [Hash] Result hash to populate
         def process_files(files_list, result)
           files_list.each do |file_pattern|
-            begin
-              expanded_files = expand_file_pattern(file_pattern)
-              
-              if expanded_files.empty?
-                result[:errors] << "No files found matching pattern: #{file_pattern}"
-                next
-              end
+            expanded_files = expand_file_pattern(file_pattern)
 
-              expanded_files.each do |file_path|
-                process_single_file(file_path, result)
-              end
-            rescue => e
-              result[:errors] << "Error processing file pattern '#{file_pattern}': #{e.message}"
+            if expanded_files.empty?
+              result[:errors] << "No files found matching pattern: #{file_pattern}"
+              next
             end
+
+            expanded_files.each do |file_path|
+              process_single_file(file_path, result)
+            end
+          rescue => e
+            result[:errors] << "Error processing file pattern '#{file_pattern}': #{e.message}"
           end
         end
 
@@ -86,7 +84,7 @@ module CodingAgentTools
           end
 
           file_result = @file_reader.read(file_path)
-          
+
           if file_result[:success]
             result[:files] << {
               path: file_path,
@@ -106,11 +104,9 @@ module CodingAgentTools
         # @param result [Hash] Result hash to populate
         def process_commands(commands_list, result)
           commands_list.each do |command|
-            begin
-              process_single_command(command, result)
-            rescue => e
-              result[:errors] << "Error processing command '#{command}': #{e.message}"
-            end
+            process_single_command(command, result)
+          rescue => e
+            result[:errors] << "Error processing command '#{command}': #{e.message}"
           end
         end
 
@@ -120,16 +116,15 @@ module CodingAgentTools
         # @param result [Hash] Result hash to populate
         def process_single_command(command, result)
           command_result = @command_executor.execute(command, timeout: @timeout, working_dir: @project_root)
-          
+
           context_entry = {
             command: command,
             success: command_result[:success]
           }
 
+          context_entry[:output] = command_result[:output] || ""
           if command_result[:success]
-            context_entry[:output] = command_result[:output] || ""
           else
-            context_entry[:output] = command_result[:output] || ""
             context_entry[:error] = command_result[:error]
             result[:errors] << "Command failed: #{command} - #{command_result[:error]}"
           end
@@ -146,17 +141,17 @@ module CodingAgentTools
         def expand_file_pattern(pattern)
           # Resolve pattern relative to project root
           absolute_pattern = if pattern.start_with?("/")
-                               pattern
-                             else
-                               File.join(@project_root, pattern)
-                             end
+            pattern
+          else
+            File.join(@project_root, pattern)
+          end
 
           # If pattern contains glob characters, use Dir.glob
           if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
             Dir.glob(absolute_pattern).select { |path| File.file?(path) }
           else
             # Single file path
-            File.exist?(absolute_pattern) && File.file?(absolute_pattern) ? [absolute_pattern] : []
+            (File.exist?(absolute_pattern) && File.file?(absolute_pattern)) ? [absolute_pattern] : []
           end
         end
 
@@ -174,7 +169,7 @@ module CodingAgentTools
 
           # Check for null bytes (common in binary files)
           sample.include?("\x00")
-        rescue => e
+        rescue
           # If we can't read the file to check, assume it's not binary
           false
         end

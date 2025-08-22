@@ -43,7 +43,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "extracts YAML from tagged blocks" do
         result = extractor.extract_yaml_from_markdown(markdown_with_tags)
-        
+
         expect(result[:success]).to be true
         expect(result[:source_format]).to eq(:tagged_blocks)
         expect(result[:template][:files]).to eq(["docs/*.md", "README.md"])
@@ -53,7 +53,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "includes the extracted YAML content" do
         result = extractor.extract_yaml_from_markdown(markdown_with_tags)
-        
+
         expect(result[:yaml_content]).to include("files:")
         expect(result[:yaml_content]).to include("- docs/*.md")
         expect(result[:yaml_content]).to include("commands:")
@@ -86,7 +86,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "uses the first block and warns about others" do
         result = extractor.extract_yaml_from_markdown(markdown_with_multiple_blocks)
-        
+
         expect(result[:success]).to be true
         expect(result[:source_format]).to eq(:tagged_blocks)
         expect(result[:total_blocks]).to eq(2)
@@ -120,7 +120,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "extracts YAML from legacy format" do
         result = extractor.extract_yaml_from_markdown(markdown_with_legacy_format)
-        
+
         expect(result[:success]).to be true
         expect(result[:source_format]).to eq(:context_definition)
         expect(result[:template][:files]).to eq(["legacy/*.md"])
@@ -148,7 +148,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "returns error for invalid YAML" do
         result = extractor.extract_yaml_from_markdown(markdown_with_invalid_yaml)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to match(/parse|template/)
         expect(result[:source_format]).to eq(:tagged_blocks)
@@ -170,7 +170,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "returns error when no configuration found" do
         result = extractor.extract_yaml_from_markdown(plain_markdown)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("No <context-tool-config> blocks or Context Definition sections found")
       end
@@ -184,7 +184,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
         files: [docs/*.md]
         </context-tool-config>
       MARKDOWN
-      
+
       blocks = extractor.find_context_tool_config_blocks(content)
       expect(blocks.length).to eq(1)
       expect(blocks.first).to include("files: [docs/*.md]")
@@ -200,7 +200,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
         commands: [git status]
         </context-tool-config>
       MARKDOWN
-      
+
       blocks = extractor.find_context_tool_config_blocks(content)
       expect(blocks.length).to eq(2)
       expect(blocks.first).to include("files: [docs/*.md]")
@@ -223,7 +223,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
         
         </context-tool-config>
       MARKDOWN
-      
+
       blocks = extractor.find_context_tool_config_blocks(content)
       expect(blocks.length).to eq(1)
     end
@@ -236,7 +236,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
         files: [docs/*.md]
         </context-tool-config>
       MARKDOWN
-      
+
       expect(extractor.has_extractable_config?(content)).to be true
     end
 
@@ -247,7 +247,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
         files: [docs/*.md]
         ```
       MARKDOWN
-      
+
       expect(extractor.has_extractable_config?(content)).to be true
     end
 
@@ -275,7 +275,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "returns valid result" do
         result = extractor.validate_markdown_config(valid_content)
-        
+
         expect(result[:valid]).to be true
         expect(result[:source_format]).to eq(:tagged_blocks)
         expect(result[:template]).to be_a(Hash)
@@ -294,7 +294,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
 
       it "returns valid result" do
         result = extractor.validate_markdown_config(legacy_content)
-        
+
         expect(result[:valid]).to be true
         expect(result[:source_format]).to eq(:context_definition)
       end
@@ -303,14 +303,14 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
     context "with invalid content" do
       it "returns invalid for content without configuration" do
         result = extractor.validate_markdown_config("Regular content")
-        
+
         expect(result[:valid]).to be false
         expect(result[:error]).to include("No <context-tool-config> blocks or Context Definition sections found")
       end
 
       it "returns invalid for nil content" do
         result = extractor.validate_markdown_config(nil)
-        
+
         expect(result[:valid]).to be false
         expect(result[:error]).to eq("Content cannot be nil")
       end
@@ -329,7 +329,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
           format: "xml"
         }
       }
-      
+
       summary = extractor.extraction_summary(result)
       expect(summary).to include("YAML extracted successfully")
       expect(summary).to include("Source: <context-tool-config> tagged blocks")
@@ -348,7 +348,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
           format: "yaml"
         }
       }
-      
+
       summary = extractor.extraction_summary(result)
       expect(summary).to include("Source: Legacy Context Definition section")
     end
@@ -358,7 +358,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::MarkdownYamlExtractor do
         success: false,
         error: "Invalid YAML format"
       }
-      
+
       summary = extractor.extraction_summary(result)
       expect(summary).to eq("Extraction failed: Invalid YAML format")
     end

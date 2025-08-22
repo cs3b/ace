@@ -26,7 +26,7 @@ module CodingAgentTools
         def open_search_results(search_results, options = {})
           # Extract files from search results
           files_to_open = extract_files_from_results(search_results, options)
-          
+
           if files_to_open.empty?
             return {
               success: false,
@@ -36,7 +36,7 @@ module CodingAgentTools
 
           # Get editor configuration
           editor_config = get_editor_config(options[:editor])
-          
+
           # Validate editor availability
           unless @launcher.validate_availability(editor_config)
             return {
@@ -58,7 +58,7 @@ module CodingAgentTools
           if editor_command
             # Set specific editor as default
             success = @config_manager.set_default_editor(editor_command, options)
-            
+
             if success
               config = get_editor_config(editor_command)
               {
@@ -75,8 +75,8 @@ module CodingAgentTools
           else
             # Show current configuration
             current_config = @config_manager.load_config
-            editor_config = get_editor_config()
-            
+            editor_config = get_editor_config
+
             {
               success: true,
               current_editor: editor_config,
@@ -102,64 +102,56 @@ module CodingAgentTools
           files = []
 
           # Handle unified search results structure
-          if search_results[:results]
-            search_results[:results].each do |result|
-              file_path = result[:file] || result[:path]
-              next unless file_path
+          search_results[:results]&.each do |result|
+            file_path = result[:file] || result[:path]
+            next unless file_path
 
-              file_info = {
-                path: file_path,
-                line: nil,
-                text: nil
-              }
+            file_info = {
+              path: file_path,
+              line: nil,
+              text: nil
+            }
 
-              # Add line number if available and requested
-              if options[:line_numbers] != false && result[:line]
-                file_info[:line] = result[:line]
-                file_info[:text] = result[:text]
-              end
-
-              files << file_info
+            # Add line number if available and requested
+            if options[:line_numbers] != false && result[:line]
+              file_info[:line] = result[:line]
+              file_info[:text] = result[:text]
             end
+
+            files << file_info
           end
 
           # Handle legacy repository structure
-          if search_results[:repositories]
-            search_results[:repositories].each do |repo_name, repo_data|
-              next unless repo_data[:results]
+          search_results[:repositories]&.each do |repo_name, repo_data|
+            next unless repo_data[:results]
 
-              case repo_data[:results]
-              when Array
-                repo_data[:results].each do |result|
-                  file_path = result[:file] || result[:path] || result
-                  next unless file_path
+            case repo_data[:results]
+            when Array
+              repo_data[:results].each do |result|
+                file_path = result[:file] || result[:path] || result
+                next unless file_path
 
-                  file_info = {
-                    path: file_path.to_s,
-                    line: result.is_a?(Hash) ? result[:line] : nil,
-                    text: result.is_a?(Hash) ? result[:text] : nil
-                  }
+                file_info = {
+                  path: file_path.to_s,
+                  line: result.is_a?(Hash) ? result[:line] : nil,
+                  text: result.is_a?(Hash) ? result[:text] : nil
+                }
 
-                  files << file_info
-                end
-              when Hash
-                # Handle hybrid results
-                if repo_data[:results][:files]
-                  repo_data[:results][:files].each do |file|
-                    files << { path: file.to_s, line: nil, text: nil }
-                  end
-                end
+                files << file_info
+              end
+            when Hash
+              # Handle hybrid results
+              repo_data[:results][:files]&.each do |file|
+                files << {path: file.to_s, line: nil, text: nil}
+              end
 
-                if repo_data[:results][:content]
-                  repo_data[:results][:content].each do |result|
-                    file_info = {
-                      path: result[:file] || result[:path],
-                      line: result[:line],
-                      text: result[:text]
-                    }
-                    files << file_info if file_info[:path]
-                  end
-                end
+              repo_data[:results][:content]&.each do |result|
+                file_info = {
+                  path: result[:file] || result[:path],
+                  line: result[:line],
+                  text: result[:text]
+                }
+                files << file_info if file_info[:path]
               end
             end
           end
@@ -178,7 +170,7 @@ module CodingAgentTools
         # @return [Hash] Editor configuration
         def get_editor_config(explicit_editor = nil)
           config_data = @config_manager.load_config
-          @detector.detect_editor(explicit_editor: explicit_editor, config: { 'editor' => config_data })
+          @detector.detect_editor(explicit_editor: explicit_editor, config: {"editor" => config_data})
         end
 
         # Open files with the configured editor
@@ -198,7 +190,7 @@ module CodingAgentTools
 
           # Open files with line numbers individually (to preserve line positioning)
           files_with_lines.each do |file|
-            line_number = options[:line_numbers] != false ? file[:line] : nil
+            line_number = (options[:line_numbers] != false) ? file[:line] : nil
             result = @launcher.launch_file(file[:path], editor_config, line: line_number)
             result[:file] = file[:path]
             results << result
@@ -246,7 +238,7 @@ module CodingAgentTools
           if total_failed == 0
             {
               success: true,
-              message: "Successfully opened #{total_opened} file#{'s' if total_opened != 1} in #{editor_name}",
+              message: "Successfully opened #{total_opened} file#{"s" if total_opened != 1} in #{editor_name}",
               files_opened: total_opened,
               editor: editor_name
             }
@@ -256,7 +248,7 @@ module CodingAgentTools
 
             {
               success: total_opened > 0,
-              message: "Opened #{total_opened} file#{'s' if total_opened != 1}, failed to open #{total_failed}",
+              message: "Opened #{total_opened} file#{"s" if total_opened != 1}, failed to open #{total_failed}",
               files_opened: total_opened,
               files_failed: total_failed,
               errors: errors.uniq,

@@ -80,7 +80,7 @@ module CodingAgentTools
       # @return [Hash] Validation result
       def validate_template_source(template_data)
         parse_result = parse_template_source(template_data)
-        
+
         if parse_result[:success]
           template = parse_result[:template]
           {
@@ -115,7 +115,7 @@ module CodingAgentTools
         lines << "  Files: #{context_result[:total_files]} (#{format_size(context_result[:total_size])})"
         lines << "  Commands: #{context_result[:total_commands]}"
         lines << "  Processing time: #{format_time(context_result[:processing_time])}"
-        
+
         if context_result[:total_errors] > 0
           lines << "  Errors: #{context_result[:total_errors]}"
         end

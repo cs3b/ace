@@ -30,15 +30,15 @@ module CodingAgentTools
               presets = context_config["presets"] || context_config[:presets]
               validate_preset_names(presets)
               preset_names = Array(presets).join(",")
-              
+
               # Load preset content
               preset_content = execute_context_command("--preset", preset_names)
-              
+
               # If there are additional files/commands, load them too
               additional_config = context_config.dup
               additional_config.delete("presets")
               additional_config.delete(:presets)
-              
+
               if additional_config.any?
                 yaml_content = YAML.dump(additional_config)
                 additional_content = execute_context_command_with_yaml(yaml_content)
@@ -63,7 +63,7 @@ module CodingAgentTools
 
           # Handle git range shorthand
           if subject_config.is_a?(String) && looks_like_git_range?(subject_config)
-            subject_config = { "commands" => ["git diff #{subject_config}"] }
+            subject_config = {"commands" => ["git diff #{subject_config}"]}
           end
 
           if subject_config.is_a?(String)
@@ -92,7 +92,7 @@ module CodingAgentTools
           Tempfile.create(["context-output-", ".md"]) do |tmpfile|
             # Execute context command with output to temp file
             result = executor.execute("context", *args, "--output", tmpfile.path)
-            
+
             if result.success?
               # Read the generated context from the temp file
               File.read(tmpfile.path)
@@ -111,7 +111,7 @@ module CodingAgentTools
             Tempfile.create(["context-output-", ".md"]) do |output_file|
               # Execute context command with YAML file
               result = executor.execute("context", yaml_file.path, "--output", output_file.path)
-              
+
               if result.success?
                 File.read(output_file.path)
               else
@@ -130,8 +130,8 @@ module CodingAgentTools
         def looks_like_git_range?(str)
           # Common git range patterns
           str.match?(/^[A-Z@~^]+(\.\.|\.\.\.)[A-Z@~^]+$/i) ||
-          str.match?(/^[a-f0-9]{6,}(\.\.|\.\.\.)[a-f0-9]{6,}$/i) ||
-          str.match?(/^(HEAD|main|master|develop)(~\d+)?(\.\.|\.\.\.)/i)
+            str.match?(/^[a-f0-9]{6,}(\.\.|\.\.\.)[a-f0-9]{6,}$/i) ||
+            str.match?(/^(HEAD|main|master|develop)(~\d+)?(\.\.|\.\.\.)/i)
         end
       end
     end

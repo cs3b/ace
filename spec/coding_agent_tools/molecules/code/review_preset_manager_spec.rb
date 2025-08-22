@@ -57,7 +57,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewPresetManager do
     it "loads configuration from custom path" do
       custom_path = File.join(temp_dir, "custom-review.yml")
       File.write(custom_path, config_content.to_yaml)
-      
+
       manager = described_class.new(config_path: custom_path)
       expect(manager.config).to eq(config_content)
     end
@@ -118,11 +118,11 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewPresetManager do
 
     it "resolves preset with all components" do
       resolved = manager.resolve_preset("pr")
-      
+
       expect(resolved[:description]).to eq("Pull request review")
       expect(resolved[:system_prompt]).to include("templates/pr.md")
       expect(resolved[:context]).to eq("project")
-      expect(resolved[:subject]).to eq({ "commands" => ["git diff origin/main...HEAD"] })
+      expect(resolved[:subject]).to eq({"commands" => ["git diff origin/main...HEAD"]})
       expect(resolved[:model]).to eq("google:gemini-2.0-flash-exp")
     end
 
@@ -132,17 +132,17 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewPresetManager do
         context: "custom",
         subject: "HEAD~1..HEAD"
       }
-      
+
       resolved = manager.resolve_preset("pr", overrides)
-      
+
       expect(resolved[:model]).to eq("openai:gpt-4")
       expect(resolved[:context]).to eq("custom")
-      expect(resolved[:subject]).to eq({ "commands" => ["git diff HEAD~1..HEAD"] })
+      expect(resolved[:subject]).to eq({"commands" => ["git diff HEAD~1..HEAD"]})
     end
 
     it "handles git range shorthand in subject override" do
       resolved = manager.resolve_preset("pr", subject: "HEAD~3..HEAD")
-      expect(resolved[:subject]).to eq({ "commands" => ["git diff HEAD~3..HEAD"] })
+      expect(resolved[:subject]).to eq({"commands" => ["git diff HEAD~3..HEAD"]})
     end
 
     it "returns nil for non-existent preset" do

@@ -194,7 +194,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextChunker do
       it "writes single file" do
         expect(mock_file_writer).to receive(:write_file)
           .with(small_content, "#{base_path}.md", {})
-          .and_return({ success: true, path: "#{base_path}.md" })
+          .and_return({success: true, path: "#{base_path}.md"})
 
         result = chunker.chunk_and_write(small_content, base_path, mock_file_writer)
 
@@ -210,7 +210,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextChunker do
       it "writes index file and all chunks" do
         # Expect calls for index file + 3 chunk files
         expect(mock_file_writer).to receive(:write_file).exactly(4).times.and_return(
-          { success: true, path: "some_path.md" }
+          {success: true, path: "some_path.md"}
         )
 
         result = chunker.chunk_and_write(large_content, base_path, mock_file_writer)
@@ -223,7 +223,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextChunker do
 
       it "marks file types correctly" do
         allow(mock_file_writer).to receive(:write_file).and_return(
-          { success: true, path: "some_path.md" }
+          {success: true, path: "some_path.md"}
         )
 
         result = chunker.chunk_and_write(large_content, base_path, mock_file_writer)
@@ -234,7 +234,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextChunker do
 
       it "includes chunk numbers for chunk files" do
         allow(mock_file_writer).to receive(:write_file).and_return(
-          { success: true, path: "some_path.md" }
+          {success: true, path: "some_path.md"}
         )
 
         result = chunker.chunk_and_write(large_content, base_path, mock_file_writer)
@@ -266,10 +266,10 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextChunker do
       reconstructed_lines = []
       result[:chunk_files].each do |chunk|
         chunk_lines = chunk[:content].split("\n")
-        
+
         # Skip metadata lines if present
         chunk_lines = chunk_lines.drop_while { |line| line.start_with?("<!--") || line.empty? }
-        
+
         reconstructed_lines.concat(chunk_lines)
       end
 

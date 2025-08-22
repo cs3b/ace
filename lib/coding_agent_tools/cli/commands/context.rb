@@ -53,42 +53,40 @@ module CodingAgentTools
         ]
 
         def call(inputs: [], **options)
-          begin
-            # Handle list presets request
-            if options[:list_presets]
-              return handle_list_presets(options)
-            end
-
-            # Parse preset names if provided
-            preset_names = parse_preset_names(options[:preset])
-            
-            # Validation
-            if inputs.empty? && preset_names.empty?
-              raise ArgumentError, "Must specify input files or use --preset"
-            end
-            
-            # Route to appropriate handler
-            if preset_names.any?
-              if preset_names.size == 1
-                # Single preset - existing behavior
-                return handle_preset_loading(options)
-              else
-                # Multiple presets - new behavior
-                return handle_multiple_presets(preset_names, options)
-              end
-            elsif inputs.any?
-              if inputs.size == 1
-                # Single input - existing behavior
-                return handle_auto_detection_loading(inputs.first, options)
-              else
-                # Multiple inputs - new behavior
-                return handle_multiple_inputs(inputs, options)
-              end
-            end
-          rescue => e
-            handle_error(e, options[:debug])
-            1
+          # Handle list presets request
+          if options[:list_presets]
+            return handle_list_presets(options)
           end
+
+          # Parse preset names if provided
+          preset_names = parse_preset_names(options[:preset])
+
+          # Validation
+          if inputs.empty? && preset_names.empty?
+            raise ArgumentError, "Must specify input files or use --preset"
+          end
+
+          # Route to appropriate handler
+          if preset_names.any?
+            if preset_names.size == 1
+              # Single preset - existing behavior
+              handle_preset_loading(options)
+            else
+              # Multiple presets - new behavior
+              handle_multiple_presets(preset_names, options)
+            end
+          elsif inputs.any?
+            if inputs.size == 1
+              # Single input - existing behavior
+              handle_auto_detection_loading(inputs.first, options)
+            else
+              # Multiple inputs - new behavior
+              handle_multiple_inputs(inputs, options)
+            end
+          end
+        rescue => e
+          handle_error(e, options[:debug])
+          1
         end
 
         private
@@ -99,9 +97,8 @@ module CodingAgentTools
         # @return [Array<String>] Array of preset names
         def parse_preset_names(preset_option)
           return [] unless preset_option
-          preset_option.split(',').map(&:strip)
+          preset_option.split(",").map(&:strip)
         end
-
 
         def handle_list_presets(options)
           preset_manager = CodingAgentTools::Molecules::Context::ContextPresetManager.new
@@ -109,7 +106,7 @@ module CodingAgentTools
 
           puts "Available presets:"
           puts
-          
+
           if presets.empty?
             puts "  No presets configured in .coding-agent/context.yml"
             puts "  See documentation for preset configuration examples."
@@ -132,7 +129,7 @@ module CodingAgentTools
 
         def handle_preset_loading(options)
           preset_manager = CodingAgentTools::Molecules::Context::ContextPresetManager.new
-          
+
           # Resolve preset configuration
           preset = preset_manager.resolve_preset(options[:preset])
           unless preset
@@ -143,10 +140,10 @@ module CodingAgentTools
 
           # Override output path if specified
           output_path = options[:output] || preset[:output]
-          
+
           # Check if output should go to stdout
           output_to_stdout = output_path && (output_path == "-" || output_path.downcase == "stdout")
-          
+
           # Load context from template using auto-detection
           context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
           context_result = context_loader.load_with_auto_detection(preset[:template], options)
@@ -168,13 +165,13 @@ module CodingAgentTools
             # Write to file with chunking if needed
             file_writer = CodingAgentTools::Molecules::Context::ContextFileWriter.new
             chunker = CodingAgentTools::Molecules::Context::ContextChunker.new(preset[:chunk_limit])
-            
+
             # Create progress callback
             progress_callback = ->(message) { puts message } if options[:debug]
-            
+
             # Determine base path (remove extension)
-            base_path = output_path.sub(/\.[^.]+$/, '')
-            
+            base_path = output_path.sub(/\.[^.]+$/, "")
+
             # Chunk and write
             write_result = chunker.chunk_and_write(
               formatted_output,
@@ -220,7 +217,7 @@ module CodingAgentTools
           if context_result[:embedding_applied]
             # Use the embedded document content
             output_content = context_result[:embedded_content]
-            
+
             if options[:debug]
               warn "Context embedded using strategy: #{context_result[:embedding_strategy]}"
             end
@@ -228,7 +225,7 @@ module CodingAgentTools
             # Format the standard result
             formatter = CodingAgentTools::Molecules::Context::OutputFormatter.new(options[:format])
             output_content = formatter.format(context_result)
-            
+
             if context_result[:embedding_error] && options[:debug]
               warn "Embedding failed: #{context_result[:embedding_error]}"
             end
@@ -237,7 +234,7 @@ module CodingAgentTools
           # Determine output destination
           output_path = options[:output]
           output_to_stdout = !output_path || is_stdout_indicator?(output_path)
-          
+
           if output_to_stdout
             # Output to stdout
             puts output_content
@@ -256,48 +253,48 @@ module CodingAgentTools
           preset_manager = CodingAgentTools::Molecules::Context::ContextPresetManager.new
           context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
           merger = CodingAgentTools::Molecules::Context::Merger.new
-          
+
           # Load all presets
           presets = []
           contexts = []
-          
+
           preset_names.each do |preset_name|
             preset = preset_manager.resolve_preset(preset_name)
             unless preset
               warn "Preset '#{preset_name}' not found, skipping"
               next
             end
-            
+
             presets << preset
             result = context_loader.load_with_auto_detection(preset[:template], options)
-            
+
             unless result[:success]
               warn "Error loading preset '#{preset_name}': #{result[:error]}"
               next
             end
-            
+
             result[:preset_name] = preset_name
             result[:preset_info] = preset
             contexts << result
           end
-          
+
           # Check if we have any valid contexts
           if contexts.empty?
             warn "No valid contexts loaded from presets"
             return 1
           end
-          
+
           # Merge contexts
           merged_context = merger.merge_contexts(contexts)
-          
+
           # Format output
           formatter = CodingAgentTools::Molecules::Context::OutputFormatter.new(options[:format])
           formatted_output = formatter.format(merged_context)
-          
+
           # Determine output destination
           output_path = determine_output_path(options, presets, merger)
           output_to_stdout = !output_path || is_stdout_indicator?(output_path)
-          
+
           if output_to_stdout
             puts formatted_output
           else
@@ -305,7 +302,7 @@ module CodingAgentTools
             max_chunk_limit = presets.map { |p| p[:chunk_limit] }.compact.max || 150000
             write_with_chunking(output_path, formatted_output, max_chunk_limit, options)
           end
-          
+
           0
         rescue => e
           handle_error(e, options[:debug])
@@ -315,7 +312,7 @@ module CodingAgentTools
         def handle_multiple_inputs(inputs, options)
           context_loader = CodingAgentTools::Organisms::ContextLoader.new(options)
           merger = CodingAgentTools::Molecules::Context::Merger.new
-          
+
           # Load contexts from all inputs
           contexts = inputs.map do |input|
             result = context_loader.load_with_auto_detection(input, options)
@@ -326,31 +323,31 @@ module CodingAgentTools
             result[:source_input] = input
             result
           end.compact
-          
+
           # Check if we have any valid contexts
           if contexts.empty?
             warn "No valid contexts loaded from inputs"
             return 1
           end
-          
+
           # Merge contexts
           merged_context = merger.merge_contexts(contexts)
-          
+
           # Format output
           formatter = CodingAgentTools::Molecules::Context::OutputFormatter.new(options[:format])
           formatted_output = formatter.format(merged_context)
-          
+
           # Determine output destination (default to stdout for multiple inputs)
           output_path = options[:output]
           output_to_stdout = !output_path || is_stdout_indicator?(output_path)
-          
+
           if output_to_stdout
             puts formatted_output
           else
             # No chunking for direct input files
             write_to_file(output_path, formatted_output, options)
           end
-          
+
           0
         rescue => e
           handle_error(e, options[:debug])
@@ -360,7 +357,7 @@ module CodingAgentTools
         def determine_output_path(options, presets, merger)
           # Command-line flag has highest priority
           return options[:output] if options[:output]
-          
+
           # Use merger to resolve output path from presets
           merger.resolve_output_path(presets, nil)
         end
@@ -368,13 +365,13 @@ module CodingAgentTools
         def write_with_chunking(output_path, formatted_output, chunk_limit, options)
           file_writer = CodingAgentTools::Molecules::Context::ContextFileWriter.new
           chunker = CodingAgentTools::Molecules::Context::ContextChunker.new(chunk_limit)
-          
+
           # Create progress callback
           progress_callback = ->(message) { puts message } if options[:debug]
-          
+
           # Determine base path (remove extension)
-          base_path = output_path.sub(/\.[^.]+$/, '')
-          
+          base_path = output_path.sub(/\.[^.]+$/, "")
+
           # Chunk and write
           write_result = chunker.chunk_and_write(
             formatted_output,
@@ -396,7 +393,7 @@ module CodingAgentTools
               return 1
             end
           end
-          
+
           0
         end
 
@@ -405,7 +402,7 @@ module CodingAgentTools
           lines = content.lines.count
           size = content.bytesize
           size_formatted = format_size(size)
-          
+
           puts "Context saved (#{lines} lines, #{size_formatted})"
           puts "Output file: #{output_path}"
         rescue => e

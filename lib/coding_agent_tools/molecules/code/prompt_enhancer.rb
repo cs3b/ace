@@ -40,18 +40,18 @@ module CodingAgentTools
 
           # Append context to the system prompt
           enhanced = base_prompt.dup
-          
+
           # Add separator if prompt doesn't end with newlines
           enhanced << "\n\n" unless enhanced.end_with?("\n\n")
-          
+
           # Add context section
           enhanced << "## Project Context\n\n"
           enhanced << "The following project-specific information provides background context for this review:\n\n"
           enhanced << context_content
-          
+
           # Ensure proper ending
           enhanced << "\n" unless enhanced.end_with?("\n")
-          
+
           enhanced
         end
 
@@ -89,7 +89,7 @@ module CodingAgentTools
           return DEFAULT_SYSTEM_PROMPT unless modules_dir
 
           composed_parts = []
-          
+
           # Load base module
           if composition_config["base"]
             base_content = load_module(modules_dir, "base", composition_config["base"])
@@ -134,13 +134,13 @@ module CodingAgentTools
         def module_cache
           @module_cache ||= {}
           @cache_timestamp ||= Time.now
-          
+
           # Clear cache if older than 15 minutes
           if Time.now - @cache_timestamp > 900
             @module_cache = {}
             @cache_timestamp = Time.now
           end
-          
+
           @module_cache
         end
 
@@ -156,11 +156,9 @@ module CodingAgentTools
 
         def load_module(modules_dir, category, module_name)
           # Support both simple names and paths
-          module_file = if module_name.include?("/")
-            File.join(modules_dir, category, "#{module_name}.md")
-          else
-            File.join(modules_dir, category, "#{module_name}.md")
+          if module_name.include?("/")
           end
+          module_file = File.join(modules_dir, category, "#{module_name}.md")
 
           cache_key = module_file
           return module_cache[cache_key] if module_cache.key?(cache_key)
@@ -169,8 +167,6 @@ module CodingAgentTools
             content = File.read(module_file).strip
             module_cache[cache_key] = content
             content
-          else
-            nil
           end
         end
 
@@ -178,7 +174,7 @@ module CodingAgentTools
           # Focus modules can be in subdirectories
           # e.g., "architecture/atom", "languages/ruby", "quality/security"
           module_file = File.join(modules_dir, "focus", "#{focus_path}.md")
-          
+
           cache_key = module_file
           return module_cache[cache_key] if module_cache.key?(cache_key)
 
@@ -186,8 +182,6 @@ module CodingAgentTools
             content = File.read(module_file).strip
             module_cache[cache_key] = content
             content
-          else
-            nil
           end
         end
       end

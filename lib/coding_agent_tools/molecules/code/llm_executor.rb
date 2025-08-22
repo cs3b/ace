@@ -84,7 +84,7 @@ module CodingAgentTools
 
               # Execute with system call for real-time output
               success = system(command)
-              
+
               unless success
                 raise "LLM query failed with exit code: #{$?.exitstatus}"
               end

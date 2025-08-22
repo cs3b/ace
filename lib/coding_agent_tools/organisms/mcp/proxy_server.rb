@@ -12,7 +12,7 @@ module CodingAgentTools
           @options = options
           @logger = setup_logger(options[:verbose])
           @config = load_configuration(options[:config])
-          
+
           # Initialize core components
           @security_validator = create_security_validator
           @tool_wrapper = create_tool_wrapper
@@ -24,7 +24,7 @@ module CodingAgentTools
         def start
           logger.info("Starting MCP Proxy Server")
           logger.info("Configuration: #{config_summary}")
-          
+
           validate_configuration!
           transport.start
         rescue => e
@@ -47,12 +47,12 @@ module CodingAgentTools
         def load_configuration(config_path)
           if config_path && File.exist?(config_path)
             logger.info("Loading configuration from: #{config_path}")
-            
+
             case File.extname(config_path).downcase
-            when '.yaml', '.yml'
+            when ".yaml", ".yml"
               YAML.load_file(config_path)
-            when '.json'
-              require 'json'
+            when ".json"
+              require "json"
               JSON.parse(File.read(config_path))
             else
               raise "Unsupported configuration format: #{config_path}"
@@ -69,7 +69,7 @@ module CodingAgentTools
         # Setup logger based on options
         def setup_logger(verbose)
           level = verbose ? Logger::DEBUG : Logger::INFO
-          
+
           # For stdio transport, log to stderr to avoid protocol interference
           if options[:stdio]
             Logger.new($stderr, level: level)
@@ -137,7 +137,7 @@ module CodingAgentTools
           # Validate security configuration
           if config["security"]
             security_config = config["security"]
-            
+
             if security_config["rate_limit"] && !security_config["rate_limit"].match?(/\d+\/(second|minute|hour|day)/)
               errors << "security.rate_limit must be in format 'N/unit' (e.g., '100/hour')"
             end
@@ -146,7 +146,7 @@ module CodingAgentTools
           # Validate routing configuration
           if config["routing"]
             routing_config = config["routing"]
-            
+
             if routing_config["default_model"] && !routing_config["default_model"].is_a?(String)
               errors << "routing.default_model must be a string"
             end
@@ -160,11 +160,11 @@ module CodingAgentTools
         # Generate configuration summary for logging
         def config_summary
           summary = {}
-          
+
           if config["tools"] && config["tools"]["expose"]
             summary[:exposed_tools] = config["tools"]["expose"].keys
           end
-          
+
           if config["security"]
             summary[:security] = {
               rate_limit: config["security"]["rate_limit"],
@@ -172,13 +172,13 @@ module CodingAgentTools
               forbidden_paths: config["security"]["forbidden_paths"]&.length
             }
           end
-          
+
           if config["routing"]
             summary[:routing] = {
               default_model: config["routing"]["default_model"]
             }
           end
-          
+
           summary
         end
 

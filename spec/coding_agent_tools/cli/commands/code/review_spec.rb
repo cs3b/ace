@@ -110,7 +110,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       it "handles prompt composition options" do
         result = command.call(
           prompt_base: "system",
-          prompt_format: "detailed", 
+          prompt_format: "detailed",
           prompt_focus: "architecture/atom,languages/ruby",
           prompt_guidelines: "tone,icons"
         )
@@ -162,7 +162,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
 
       it "loads configuration from file" do
         File.write(config_file, "---\npreset: pr\nauto_execute: true\n---\n# Review")
-        
+
         result = command.call(config_file: config_file)
 
         expect(result).to eq(0)

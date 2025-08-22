@@ -68,7 +68,7 @@ module CodingAgentTools
           # Check if YAML configuration has embedding directive
           if options[:yaml_config].is_a?(Hash)
             return options[:yaml_config][:embed_document_source] ||
-                   options[:yaml_config]["embed_document_source"]
+                options[:yaml_config]["embed_document_source"]
           end
 
           # Default to no embedding
@@ -86,9 +86,9 @@ module CodingAgentTools
           cleaned_document = remove_existing_embedded_content(source_document, marker)
 
           # Add new embedded content at the end
-          embedded_document = cleaned_document.rstrip + "\n\n" + 
-                              "#{marker}\n\n" +
-                              processed_content.strip
+          embedded_document = cleaned_document.rstrip + "\n\n" \
+            "#{marker}\n\n" +
+            processed_content.strip
 
           {
             success: true,
@@ -119,15 +119,15 @@ module CodingAgentTools
           # Insert content after the config block
           insert_position = match.end(0)
           before_content = source_document[0...insert_position]
-          after_content = source_document[insert_position..-1]
+          after_content = source_document[insert_position..]
 
           # Remove any existing embedded content from the after section
           after_content = remove_existing_embedded_content(after_content, marker)
 
           embedded_document = before_content +
-                              "\n\n#{marker}\n\n" +
-                              processed_content.strip +
-                              after_content
+            "\n\n#{marker}\n\n" +
+            processed_content.strip +
+            after_content
 
           {
             success: true,
@@ -148,10 +148,10 @@ module CodingAgentTools
         def replace_config_with_processed(source_document, processed_content, marker)
           # Find and replace <context-tool-config> blocks
           config_pattern = /<context-tool-config>.*?<\/context-tool-config>/m
-          
+
           if source_document.match(config_pattern)
             replaced_document = source_document.gsub(config_pattern) do
-              "#{marker}\n\n#{processed_content.strip}\n\n<!-- END #{marker.gsub(/[<>!-]/, '')} -->"
+              "#{marker}\n\n#{processed_content.strip}\n\n<!-- END #{marker.gsub(/[<>!-]/, "")} -->"
             end
 
             {
@@ -177,7 +177,7 @@ module CodingAgentTools
           # Pattern to match embedded content sections
           # Handles both single marker and marker pairs
           escaped_marker = Regexp.escape(marker)
-          
+
           # Remove content between marker and end of document
           end_pattern = /\n\n#{escaped_marker}\n.*\z/m
           document = document.gsub(end_pattern, "")
@@ -197,7 +197,7 @@ module CodingAgentTools
           return {} if yaml_content.nil? || yaml_content.strip.empty?
 
           YAML.safe_load(yaml_content)
-        rescue => e
+        rescue
           {}
         end
 
@@ -213,7 +213,7 @@ module CodingAgentTools
             valid_positions = [:end, :after_config, :replace_config]
             unless valid_positions.include?(options[:embedding_position])
               errors << "Invalid embedding position: #{options[:embedding_position]}. " \
-                       "Valid options: #{valid_positions.join(', ')}"
+                       "Valid options: #{valid_positions.join(", ")}"
             end
           end
 
@@ -241,19 +241,19 @@ module CodingAgentTools
           return "Embedding failed: #{embedding_result[:error]}" unless embedding_result[:success]
 
           lines = []
-          
+
           if embedding_result[:embedded]
             lines << "Content embedded successfully:"
             lines << "  Strategy: #{embedding_result[:strategy]}"
             lines << "  Source: #{embedding_result[:source]}"
             lines << "  Marker: #{embedding_result[:marker]}"
-            
+
             content_size = embedding_result[:content]&.bytesize || 0
             lines << "  Result size: #{format_size(content_size)}"
           else
             lines << "Content returned without embedding:"
             lines << "  Source: #{embedding_result[:source]}"
-            
+
             content_size = embedding_result[:content]&.bytesize || 0
             lines << "  Content size: #{format_size(content_size)}"
           end

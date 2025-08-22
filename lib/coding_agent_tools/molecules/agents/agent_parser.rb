@@ -22,7 +22,7 @@ module CodingAgentTools
           end
 
           def claude_compatible?
-            agent&.dig(:core, :name) && agent&.dig(:core, :description) && agent&.dig(:core, :tools)
+            agent&.dig(:core, :name) && agent.dig(:core, :description) && agent.dig(:core, :tools)
           end
 
           def mcp_enhanced?

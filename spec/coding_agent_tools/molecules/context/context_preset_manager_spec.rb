@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
   before do
     FileUtils.mkdir_p(config_dir)
     FileUtils.mkdir_p(template_dir)
-    
+
     # Create a basic template file
     File.write(template_file, "# Project Context\n\nSample content")
   end
@@ -29,10 +29,10 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
     context "with default configuration" do
       it "returns default presets" do
         presets = manager.list_presets
-        
+
         expect(presets).to be_an(Array)
         expect(presets.length).to eq(1)
-        
+
         project_preset = presets.find { |p| p[:name] == "project" }
         expect(project_preset).not_to be_nil
         expect(project_preset[:description]).to eq("Main project context")
@@ -57,13 +57,13 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
 
       it "returns both default and custom presets" do
         presets = manager.list_presets
-        
+
         expect(presets.length).to eq(2)
-        
+
         custom_preset = presets.find { |p| p[:name] == "custom" }
         expect(custom_preset[:description]).to eq("Custom preset")
         expect(custom_preset[:chunk_limit]).to eq(200_000)
-        
+
         project_preset = presets.find { |p| p[:name] == "project" }
         expect(project_preset[:output]).to include("custom/project.md")
       end
@@ -74,7 +74,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
     context "with existing preset" do
       it "resolves preset configuration successfully" do
         resolved = manager.resolve_preset("project")
-        
+
         expect(resolved).to be_a(Hash)
         expect(resolved[:name]).to eq("project")
         expect(resolved[:description]).to eq("Main project context")
@@ -109,11 +109,11 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
 
     context "with forbidden template path" do
       let(:forbidden_template) { File.join(temp_dir, ".git", "template.md") }
-      
+
       before do
         FileUtils.mkdir_p(File.dirname(forbidden_template))
         File.write(forbidden_template, "content")
-        
+
         File.write(config_path, <<~YAML)
           presets:
             forbidden:
@@ -152,10 +152,10 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
     context "with valid presets" do
       it "returns validation results for all presets" do
         results = manager.validate_all_presets
-        
+
         expect(results).to be_an(Array)
         expect(results.length).to eq(1)
-        
+
         project_result = results.find { |r| r[:name] == "project" }
         expect(project_result[:valid]).to be true
         expect(project_result[:template_exists]).to be true
@@ -175,7 +175,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
 
       it "returns validation errors" do
         results = manager.validate_all_presets
-        
+
         invalid_result = results.find { |r| r[:name] == "invalid" }
         expect(invalid_result[:valid]).to be false
         expect(invalid_result[:template_exists]).to be false
@@ -197,7 +197,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
 
       it "resolves relative paths correctly" do
         resolved = manager.resolve_preset("relative")
-        
+
         expect(resolved[:template]).to start_with(temp_dir)
         expect(resolved[:output]).to start_with(temp_dir)
         expect(resolved[:template]).to end_with("docs/context/project.md")
@@ -208,11 +208,11 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
     context "with absolute paths" do
       let(:absolute_template) { File.join(temp_dir, "docs", "absolute_template.md") }
       let(:absolute_output) { File.join(temp_dir, "docs", "absolute_output.md") }
-      
+
       before do
         FileUtils.mkdir_p(File.dirname(absolute_template))
         File.write(absolute_template, "content")
-        
+
         File.write(config_path, <<~YAML)
           presets:
             absolute:
@@ -223,7 +223,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
 
       it "uses absolute paths as-is" do
         resolved = manager.resolve_preset("absolute")
-        
+
         expect(resolved[:template]).to eq(absolute_template)
         expect(resolved[:output]).to eq(absolute_output)
       end
@@ -233,7 +233,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
   describe "security validation" do
     let(:allowed_template) { File.join(temp_dir, "docs", "allowed.md") }
     let(:forbidden_template) { File.join(temp_dir, ".env") }
-    
+
     before do
       File.write(allowed_template, "content")
       File.write(forbidden_template, "secret")
@@ -283,7 +283,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextPresetManager do
   describe "#get_config" do
     it "returns loaded configuration" do
       config = manager.get_config
-      
+
       expect(config).to be_a(Hash)
       expect(config).to have_key("presets")
       expect(config).to have_key("settings")

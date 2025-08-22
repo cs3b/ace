@@ -104,12 +104,12 @@ module CodingAgentTools
 
         # Check if this is a GPT-5 model
         is_gpt5 = @model.match?(/^gpt-5/)
-        
+
         payload = {
           model: @model,
           messages: messages
         }
-        
+
         # GPT-5 models have different parameter requirements
         if is_gpt5
           # GPT-5 uses max_completion_tokens instead of max_tokens
@@ -121,7 +121,7 @@ module CodingAgentTools
           payload[:temperature] = generation_config[:temperature] if generation_config[:temperature]
           payload[:max_tokens] = generation_config[:max_tokens] if generation_config[:max_tokens]
         end
-        
+
         payload
       end
 

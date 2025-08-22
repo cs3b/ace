@@ -6,7 +6,7 @@ module CodingAgentTools
       # Assembles the final review prompt from enhanced system prompt and subject
       class ReviewAssembler
         SEPARATOR = "\n---\n\n"
-        
+
         # Assemble the final prompt for LLM review
         def assemble(enhanced_prompt, subject_content)
           # Validate inputs
@@ -15,32 +15,32 @@ module CodingAgentTools
 
           # Build the final prompt structure
           final_prompt = []
-          
+
           # Add the enhanced system prompt (with context)
           final_prompt << enhanced_prompt.strip
-          
+
           # Add separator
           final_prompt << SEPARATOR.strip
-          
+
           # Add subject header and content
           final_prompt << "# Content for Review\n"
           final_prompt << subject_content.strip
-          
+
           # Join everything with proper spacing
           final_prompt.join("\n\n")
         end
 
         # Disassemble a prompt into its components
         def disassemble(full_prompt)
-          return { enhanced_prompt: nil, subject: nil } unless full_prompt
+          return {enhanced_prompt: nil, subject: nil} unless full_prompt
 
           # Split on the separator
           parts = full_prompt.split(SEPARATOR, 2)
-          
+
           if parts.length == 2
             # Extract subject content (remove the "# Content for Review" header if present)
             subject = parts[1].sub(/^# Content for Review\n+/, "")
-            
+
             {
               enhanced_prompt: parts[0].strip,
               subject: subject.strip
@@ -57,20 +57,20 @@ module CodingAgentTools
         # Validate that a prompt is properly assembled
         def valid_assembly?(full_prompt)
           return false unless full_prompt
-          
+
           # Check for required components
           has_separator = full_prompt.include?(SEPARATOR.strip)
           has_content_header = full_prompt.include?("# Content for Review")
-          
+
           has_separator && has_content_header
         end
 
         # Get statistics about the assembled prompt
         def prompt_stats(full_prompt)
           return nil unless full_prompt
-          
+
           components = disassemble(full_prompt)
-          
+
           {
             total_length: full_prompt.length,
             total_lines: full_prompt.lines.count,

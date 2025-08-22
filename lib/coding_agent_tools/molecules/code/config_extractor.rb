@@ -12,7 +12,7 @@ module CodingAgentTools
         # @return [Hash, nil] The extracted configuration or nil if no YAML found
         def extract_from_file(file_path)
           return nil unless File.exist?(file_path)
-          
+
           content = File.read(file_path)
           extract_from_content(content)
         end
@@ -58,15 +58,13 @@ module CodingAgentTools
         # Extract YAML blocks from markdown content
         def extract_yaml_blocks(content)
           blocks = []
-          
+
           # Match ```yaml or ```yml code blocks
           content.scan(/```ya?ml\n(.*?)\n```/m) do |match|
-            begin
-              config = YAML.safe_load(match[0])
-              blocks << config if config.is_a?(Hash)
-            rescue YAML::SyntaxError
-              # Skip invalid YAML blocks
-            end
+            config = YAML.safe_load(match[0])
+            blocks << config if config.is_a?(Hash)
+          rescue YAML::SyntaxError
+            # Skip invalid YAML blocks
           end
 
           blocks
