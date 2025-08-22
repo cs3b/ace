@@ -134,7 +134,7 @@ module CodingAgentTools
             return create_security_error(id, "Tool access denied")
           end
 
-          result = tool_wrapper ? tool_wrapper.call_tool(tool_name, arguments) : nil
+          result = tool_wrapper&.call_tool(tool_name, arguments)
 
           if result
             {

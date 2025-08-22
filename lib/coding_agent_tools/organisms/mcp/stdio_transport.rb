@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "json"
-require "thread"
 
 module CodingAgentTools
   module Organisms
@@ -91,17 +90,17 @@ module CodingAgentTools
           begin
             # Parse JSON message
             message = JSON.parse(line)
-            
+
             # Validate and route message
-            response = message_handler ? message_handler.route_message(message) : nil
-            
+            response = message_handler&.route_message(message)
+
             # Send response if this was a request (has id)
             if response && message["id"]
               send_message(response)
             end
           rescue JSON::ParserError => e
             logger.error("JSON parse error: #{e.message}")
-            
+
             # Send parse error response if possible
             if message_id = extract_id_from_invalid_json(line)
               error_response = create_parse_error_response(message_id, e.message)
@@ -109,7 +108,7 @@ module CodingAgentTools
             end
           rescue => e
             logger.error("Message processing error: #{e.message}")
-            
+
             # Send internal error response
             message_id = message&.dig("id")
             error_response = create_internal_error_response(message_id, e.message)
@@ -124,7 +123,7 @@ module CodingAgentTools
           return nil unless match
 
           id_value = match[1].strip.gsub(/[",]/, "")
-          
+
           # Try to parse as number or return as string
           if id_value.match?(/^\d+$/)
             id_value.to_i

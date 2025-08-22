@@ -54,7 +54,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
       it "returns processed content only" do
         result = embedder.embed_content(source_document, processed_content, options)
-        
+
         expect(result[:success]).to be true
         expect(result[:embedded]).to be false
         expect(result[:source]).to eq(:processed_only)
@@ -67,16 +67,16 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
       it "embeds content at end of document" do
         result = embedder.embed_content(source_document, processed_content, options)
-        
+
         expect(result[:success]).to be true
         expect(result[:embedded]).to be true
         expect(result[:strategy]).to eq(:end)
         expect(result[:source]).to eq(:full_document_with_embedded)
-        
+
         # Check that original content is preserved
         expect(result[:content]).to include("# Project Context")
         expect(result[:content]).to include("<context-tool-config>")
-        
+
         # Check that processed content is added at end
         expect(result[:content]).to end_with(processed_content.strip)
         expect(result[:content]).to include("<!-- PROCESSED CONTEXT -->")
@@ -85,7 +85,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
       it "uses custom marker when provided" do
         custom_options = options.merge(embedding_marker: "<!-- CUSTOM MARKER -->")
         result = embedder.embed_content(source_document, processed_content, custom_options)
-        
+
         expect(result[:success]).to be true
         expect(result[:content]).to include("<!-- CUSTOM MARKER -->")
         expect(result[:marker]).to eq("<!-- CUSTOM MARKER -->")
@@ -97,15 +97,15 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
       it "embeds content after config block" do
         result = embedder.embed_content(source_document, processed_content, options)
-        
+
         expect(result[:success]).to be true
         expect(result[:embedded]).to be true
         expect(result[:strategy]).to eq(:after_config)
-        
+
         # Check that content is inserted after </context-tool-config>
         config_end_index = result[:content].index("</context-tool-config>")
         marker_index = result[:content].index("<!-- PROCESSED CONTEXT -->")
-        
+
         expect(marker_index).to be > config_end_index
         expect(result[:content]).to include(processed_content.strip)
       end
@@ -113,7 +113,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
       it "falls back to end embedding when no config block found" do
         simple_document = "# Simple Document\n\nNo config blocks here."
         result = embedder.embed_content(simple_document, processed_content, options)
-        
+
         expect(result[:success]).to be true
         expect(result[:strategy]).to eq(:end)
       end
@@ -124,12 +124,12 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
       it "replaces config blocks with processed content" do
         result = embedder.embed_content(source_document, processed_content, options)
-        
+
         expect(result[:success]).to be true
         expect(result[:embedded]).to be true
         expect(result[:strategy]).to eq(:replace_config)
         expect(result[:source]).to eq(:replaced_config_blocks)
-        
+
         # Check that config block is replaced
         expect(result[:content]).not_to include("<context-tool-config>")
         expect(result[:content]).not_to include("</context-tool-config>")
@@ -139,7 +139,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
       it "falls back to end embedding when no config blocks found" do
         simple_document = "# Simple Document\n\nNo config blocks here."
         result = embedder.embed_content(simple_document, processed_content, options)
-        
+
         expect(result[:success]).to be true
         expect(result[:strategy]).to eq(:end)
       end
@@ -186,7 +186,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
     it "removes existing embedded content" do
       marker = "<!-- PROCESSED CONTEXT -->"
       cleaned = embedder.remove_existing_embedded_content(document_with_embedded, marker)
-      
+
       expect(cleaned).to include("# Original Content")
       expect(cleaned).to include("Some text here.")
       expect(cleaned).not_to include("Previous embedded content")
@@ -197,7 +197,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
       simple_document = "# Simple Document\n\nNo embedded content."
       marker = "<!-- PROCESSED CONTEXT -->"
       cleaned = embedder.remove_existing_embedded_content(simple_document, marker)
-      
+
       expect(cleaned).to eq(simple_document.strip)
     end
   end
@@ -208,7 +208,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
         embedding_position: :end,
         embedding_marker: "<!-- CUSTOM -->"
       }
-      
+
       result = embedder.validate_embedding_options(options)
       expect(result[:valid]).to be true
       expect(result[:errors]).to be_empty
@@ -216,7 +216,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
     it "rejects invalid embedding position" do
       options = {embedding_position: :invalid_position}
-      
+
       result = embedder.validate_embedding_options(options)
       expect(result[:valid]).to be false
       expect(result[:errors]).to include(/Invalid embedding position/)
@@ -224,7 +224,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
     it "rejects empty embedding marker" do
       options = {embedding_marker: "   "}
-      
+
       result = embedder.validate_embedding_options(options)
       expect(result[:valid]).to be false
       expect(result[:errors]).to include(/Embedding marker cannot be empty/)
@@ -232,7 +232,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
 
     it "rejects marker with newlines" do
       options = {embedding_marker: "<!-- MARKER\nWITH NEWLINE -->"}
-      
+
       result = embedder.validate_embedding_options(options)
       expect(result[:valid]).to be false
       expect(result[:errors]).to include(/Embedding marker cannot contain newlines/)
@@ -249,7 +249,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
         marker: "<!-- TEST -->",
         content: "test content"
       }
-      
+
       summary = embedder.embedding_summary(result)
       expect(summary).to include("Content embedded successfully")
       expect(summary).to include("Strategy: end")
@@ -264,7 +264,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
         source: :processed_only,
         content: "test content"
       }
-      
+
       summary = embedder.embedding_summary(result)
       expect(summary).to include("Content returned without embedding")
       expect(summary).to include("Source: processed_only")
@@ -275,7 +275,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
         success: false,
         error: "Test error message"
       }
-      
+
       summary = embedder.embedding_summary(result)
       expect(summary).to eq("Embedding failed: Test error message")
     end
@@ -285,7 +285,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
     it "parses valid YAML" do
       yaml_content = "embed_document_source: true\nformat: xml"
       config = embedder.extract_yaml_config(yaml_content)
-      
+
       expect(config["embed_document_source"]).to be true
       expect(config["format"]).to eq("xml")
     end
@@ -293,7 +293,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::DocumentEmbedder do
     it "returns empty hash for invalid YAML" do
       yaml_content = "invalid: [unclosed bracket"
       config = embedder.extract_yaml_config(yaml_content)
-      
+
       expect(config).to eq({})
     end
 

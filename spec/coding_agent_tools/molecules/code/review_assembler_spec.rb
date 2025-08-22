@@ -5,11 +5,11 @@ require "coding_agent_tools/molecules/code/review_assembler"
 
 RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
   let(:assembler) { described_class.new }
-  
+
   let(:enhanced_prompt) do
     "You are a code reviewer.\n\n## Project Context\n\nProject uses Ruby 3.0."
   end
-  
+
   let(:subject_content) do
     "diff --git a/file.rb b/file.rb\n+puts 'Hello'"
   end
@@ -17,7 +17,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
   describe "#assemble" do
     it "assembles prompt and subject with proper structure" do
       result = assembler.assemble(enhanced_prompt, subject_content)
-      
+
       expect(result).to include(enhanced_prompt)
       expect(result).to include("---")
       expect(result).to include("# Content for Review")
@@ -38,10 +38,10 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
 
     it "properly formats the assembled prompt" do
       result = assembler.assemble(enhanced_prompt, subject_content)
-      
+
       parts = result.split("\n---\n")
       expect(parts.length).to eq(2)
-      
+
       expect(parts[0]).to include(enhanced_prompt.strip)
       expect(parts[1]).to include("# Content for Review")
       expect(parts[1]).to include(subject_content)
@@ -52,14 +52,14 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
     it "disassembles a properly assembled prompt" do
       original = assembler.assemble(enhanced_prompt, subject_content)
       components = assembler.disassemble(original)
-      
+
       expect(components[:enhanced_prompt]).to eq(enhanced_prompt.strip)
       expect(components[:subject]).to eq(subject_content.strip)
     end
 
     it "handles prompts without clear separator" do
       components = assembler.disassemble(enhanced_prompt)
-      
+
       expect(components[:enhanced_prompt]).to eq(enhanced_prompt.strip)
       expect(components[:subject]).to be_nil
     end
@@ -67,14 +67,14 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
     it "removes Content for Review header from subject" do
       original = assembler.assemble(enhanced_prompt, subject_content)
       components = assembler.disassemble(original)
-      
+
       expect(components[:subject]).not_to include("# Content for Review")
       expect(components[:subject]).to eq(subject_content.strip)
     end
 
     it "handles nil input" do
       components = assembler.disassemble(nil)
-      
+
       expect(components[:enhanced_prompt]).to be_nil
       expect(components[:subject]).to be_nil
     end
@@ -104,7 +104,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
     it "returns statistics for assembled prompt" do
       assembled = assembler.assemble(enhanced_prompt, subject_content)
       stats = assembler.prompt_stats(assembled)
-      
+
       expect(stats[:total_length]).to be > 0
       expect(stats[:total_lines]).to be > 0
       expect(stats[:enhanced_prompt_length]).to eq(enhanced_prompt.strip.length)
@@ -116,7 +116,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReviewAssembler do
       simple_prompt = "Review this code"
       assembled = assembler.assemble(simple_prompt, subject_content)
       stats = assembler.prompt_stats(assembled)
-      
+
       expect(stats[:has_context]).to be false
     end
 

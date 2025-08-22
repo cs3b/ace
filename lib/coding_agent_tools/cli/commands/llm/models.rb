@@ -225,13 +225,13 @@ module CodingAgentTools
             # Always add GPT-5 models from fallback if not present in API response
             gpt5_ids = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
             existing_ids = api_models.map(&:id)
-            
+
             if (gpt5_ids - existing_ids).any?
               # Load GPT-5 models from fallback config
               config_path = File.expand_path("../../../../../config/fallback_models.yaml", __dir__)
               config = YAML.load_file(config_path)
               openai_config = config["openai"]
-              
+
               gpt5_models = openai_config["models"].select { |m| gpt5_ids.include?(m["id"]) }
               gpt5_models.each do |model_data|
                 unless existing_ids.include?(model_data["id"])
@@ -246,7 +246,7 @@ module CodingAgentTools
                 end
               end
             end
-            
+
             api_models.sort_by(&:id)
           end
 

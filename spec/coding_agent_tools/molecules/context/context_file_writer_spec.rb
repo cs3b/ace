@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextFileWriter do
     context "with custom options" do
       it "respects create_directories: false" do
         nested_path = File.join(temp_dir, "nonexistent", "test.md")
-        
+
         result = writer.write_file(content, nested_path, create_directories: false)
         expect(result[:success]).to be false
         expect(result[:error]).to include("No such file or directory")
@@ -134,17 +134,17 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextFileWriter do
         # Create a readonly directory
         readonly_dir = File.join(temp_dir, "readonly")
         FileUtils.mkdir_p(readonly_dir)
-        FileUtils.chmod(0444, readonly_dir)
+        FileUtils.chmod(0o444, readonly_dir)
         readonly_path = File.join(readonly_dir, "test.md")
 
         result = writer.write_file(content, readonly_path)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to be_a(String)
         expect(result[:size]).to eq(0)
       ensure
         # Restore permissions for cleanup
-        FileUtils.chmod(0755, readonly_dir) if Dir.exist?(readonly_dir)
+        FileUtils.chmod(0o755, readonly_dir) if Dir.exist?(readonly_dir)
       end
     end
   end
@@ -189,11 +189,11 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextFileWriter do
 
     it "merges global and file-specific options" do
       files_with_options = files.map.with_index do |file, index|
-        file.merge(options: { atomic: index.even? })
+        file.merge(options: {atomic: index.even?})
       end
 
       results = writer.write_files(files_with_options, create_directories: true)
-      
+
       expect(results.length).to eq(3)
       results.each { |result| expect(result[:success]).to be true }
     end
@@ -214,11 +214,11 @@ RSpec.describe CodingAgentTools::Molecules::Context::ContextFileWriter do
     it "returns false for readonly files" do
       test_path = File.join(temp_dir, "readonly.md")
       File.write(test_path, "content")
-      FileUtils.chmod(0444, test_path)
-      
+      FileUtils.chmod(0o444, test_path)
+
       expect(writer.writable?(test_path)).to be false
     ensure
-      FileUtils.chmod(0644, test_path) if File.exist?(test_path)
+      FileUtils.chmod(0o644, test_path) if File.exist?(test_path)
     end
 
     it "returns false for paths in nonexistent directories" do

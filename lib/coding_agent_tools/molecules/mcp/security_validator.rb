@@ -239,22 +239,22 @@ module CodingAgentTools
           def parse_limit_spec
             return unless @limit_spec
 
-            if @limit_spec.match(/(\d+)\/(\w+)/)
+            if @limit_spec =~ /(\d+)\/(\w+)/
               @max_requests = $1.to_i
               unit = $2.downcase
 
               @time_window = case unit
-                           when "second", "sec", "s"
-                             1
-                           when "minute", "min", "m"
-                             60
-                           when "hour", "hr", "h"
-                             3600
-                           when "day", "d"
-                             86400
-                           else
-                             3600  # Default to hour
-                           end
+              when "second", "sec", "s"
+                1
+              when "minute", "min", "m"
+                60
+              when "hour", "hr", "h"
+                3600
+              when "day", "d"
+                86400
+              else
+                3600  # Default to hour
+              end
             end
           end
         end

@@ -55,8 +55,8 @@ module CodingAgentTools
 
             # Neither format worked
             ContextParseResult.new(
-              false, nil, 
-              "Context Definition must contain either YAML code block or external template reference", 
+              false, nil,
+              "Context Definition must contain either YAML code block or external template reference",
               nil, nil
             )
           rescue => e
@@ -75,12 +75,12 @@ module CodingAgentTools
           begin
             content = File.read(agent_file_path, encoding: "UTF-8")
             result = parse_from_content(content)
-            
+
             # Update source location for file-based parsing
             if result.success?
               result.source_location = agent_file_path
             end
-            
+
             result
           rescue => e
             ContextParseResult.new(false, nil, "Error reading agent file: #{e.message}", nil, agent_file_path)
@@ -110,7 +110,7 @@ module CodingAgentTools
             # Validate that at least files or commands are specified
             has_files = context_template["files"] && !context_template["files"].empty?
             has_commands = context_template["commands"] && !context_template["commands"].empty?
-            
+
             unless has_files || has_commands
               result[:errors] << "Context template must specify at least 'files' or 'commands'"
               result[:valid?] = false
@@ -199,7 +199,7 @@ module CodingAgentTools
               begin
                 parsed_yaml = CodingAgentTools::Atoms::YamlReader.parse_content(yaml_content)
                 validation = validate_context_template(parsed_yaml)
-                
+
                 if validation[:valid?]
                   return ContextParseResult.new(true, parsed_yaml, nil, :embedded, "embedded")
                 else
@@ -227,7 +227,7 @@ module CodingAgentTools
               next unless match
 
               template_path = match[1].strip
-              
+
               # Validate template path exists
               if File.exist?(template_path)
                 return ContextParseResult.new(true, {external_template: template_path}, nil, :external, template_path)

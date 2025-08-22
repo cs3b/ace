@@ -135,7 +135,7 @@ module CodingAgentTools
               presets.each do |name|
                 preset = manager.load_preset(name)
                 desc = preset["description"] if preset
-                info_output("  #{name}: #{desc || '(no description)'}")
+                info_output("  #{name}: #{desc || "(no description)"}")
               end
             end
 
@@ -151,7 +151,7 @@ module CodingAgentTools
             begin
               extractor = CodingAgentTools::Molecules::Code::ConfigExtractor.new
               config = extractor.extract_from_file(file_path)
-              
+
               if config.nil?
                 error_output("Error: No valid configuration found in #{file_path}")
                 return nil
@@ -162,7 +162,7 @@ module CodingAgentTools
               config.each do |key, value|
                 symbolized_config[key.to_sym] = value
               end
-              
+
               symbolized_config
             rescue => e
               error_output("Error loading config file: #{e.message}")
@@ -193,7 +193,7 @@ module CodingAgentTools
             if options[:preset]
               unless manager.preset_exists?(options[:preset])
                 error_output("Error: Preset '#{options[:preset]}' not found")
-                error_output("\nAvailable presets: #{manager.available_presets.join(', ')}")
+                error_output("\nAvailable presets: #{manager.available_presets.join(", ")}")
                 return nil
               end
 
@@ -206,14 +206,13 @@ module CodingAgentTools
                 prompt_focus: options[:prompt_focus],
                 prompt_guidelines: options[:prompt_guidelines]
               }.compact
-              
-              prompt_composition = prompt_options.empty? ? nil : 
+
+              prompt_composition = prompt_options.empty? ? nil :
                                   manager.send(:resolve_prompt_composition, nil, prompt_options)
-              
+
               resolved_context = manager.send(:resolve_context_config, nil, options[:context])
               resolved_subject = manager.send(:resolve_subject_config, nil, options[:subject])
-              
-              
+
               {
                 context: resolved_context,
                 subject: resolved_subject,
@@ -234,26 +233,26 @@ module CodingAgentTools
               add_focus: options[:add_focus],
               prompt_guidelines: options[:prompt_guidelines]
             }.compact
-            
+
             # Use ReviewPresetManager to resolve composition
             manager = CodingAgentTools::Molecules::Code::ReviewPresetManager.new
-            prompt_composition = manager.send(:resolve_prompt_composition, 
-                                              preset_config[:prompt_composition], 
-                                              prompt_options)
-            
+            prompt_composition = manager.send(:resolve_prompt_composition,
+              preset_config[:prompt_composition],
+              prompt_options)
+
             # Parse context and subject if provided as CLI options
             final_context = if options[:context]
               manager.send(:resolve_context_config, nil, options[:context])
             else
               preset_config[:context]
             end
-            
+
             final_subject = if options[:subject]
               manager.send(:resolve_subject_config, nil, options[:subject])
             else
               preset_config[:subject]
             end
-            
+
             {
               context: final_context,
               subject: final_subject,
@@ -273,18 +272,18 @@ module CodingAgentTools
             info_output("\nSystem prompt:")
             if config[:prompt_composition]
               modules = []
-              modules << "base: #{config[:prompt_composition]['base']}" if config[:prompt_composition]['base']
-              modules << "format: #{config[:prompt_composition]['format']}" if config[:prompt_composition]['format']
-              modules << "focus: #{config[:prompt_composition]['focus'].join(', ')}" if config[:prompt_composition]['focus']
-              modules << "guidelines: #{config[:prompt_composition]['guidelines'].join(', ')}" if config[:prompt_composition]['guidelines']
-              info_output("  (composed from modules: #{modules.join('; ')})")
+              modules << "base: #{config[:prompt_composition]["base"]}" if config[:prompt_composition]["base"]
+              modules << "format: #{config[:prompt_composition]["format"]}" if config[:prompt_composition]["format"]
+              modules << "focus: #{config[:prompt_composition]["focus"].join(", ")}" if config[:prompt_composition]["focus"]
+              modules << "guidelines: #{config[:prompt_composition]["guidelines"].join(", ")}" if config[:prompt_composition]["guidelines"]
+              info_output("  (composed from modules: #{modules.join("; ")})")
             else
-              info_output("  #{config[:system_prompt] || '(default review prompt)'}")
+              info_output("  #{config[:system_prompt] || "(default review prompt)"}")
             end
             info_output("\nModel:")
             info_output("  #{config[:model]}")
             info_output("\nOutput:")
-            info_output("  #{config[:output] || '(stdout)'}")
+            info_output("  #{config[:output] || "(stdout)"}")
 
             0
           end
@@ -308,10 +307,8 @@ module CodingAgentTools
             # Create session directory only if saving session
             session_dir = if options[:save_session]
               options[:session_dir] || create_session_directory
-            else
-              nil
             end
-            debug_output("Session directory: #{session_dir || 'in-memory'}", options[:debug])
+            debug_output("Session directory: #{session_dir || "in-memory"}", options[:debug])
 
             # Initialize components
             context_integrator = CodingAgentTools::Molecules::Code::ContextIntegrator.new
@@ -320,13 +317,13 @@ module CodingAgentTools
             # Step 1: Generate context (background information)
             debug_output("Generating context...", options[:debug])
             context_content = context_integrator.generate_context(config[:context])
-            
+
             # Save context file only if session directory exists
             if session_dir
               context_file = File.join(session_dir, "in-context.md")
               File.write(context_file, context_content)
             end
-            
+
             # Step 2: Load or compose system prompt
             debug_output("Loading system prompt...", options[:debug])
             system_prompt = if config[:prompt_composition]
@@ -335,17 +332,17 @@ module CodingAgentTools
             else
               load_system_prompt(config[:system_prompt])
             end
-            
+
             # Save base prompt only if session directory exists
             if session_dir
               base_prompt_file = File.join(session_dir, "in-system.base.prompt.md")
               File.write(base_prompt_file, system_prompt || prompt_enhancer.default_prompt)
             end
-            
+
             # Step 3: Enhance system prompt with context
             debug_output("Enhancing system prompt with context...", options[:debug])
             enhanced_prompt = prompt_enhancer.enhance_prompt(system_prompt, context_content)
-            
+
             # Save enhanced prompt only if session directory exists
             system_prompt_file = nil
             if session_dir
@@ -356,7 +353,7 @@ module CodingAgentTools
             # Step 4: Generate subject (what to review)
             debug_output("Generating subject...", options[:debug])
             subject_content = context_integrator.generate_subject(config[:subject])
-            
+
             # Save subject file only if session directory exists
             subject_file = nil
             if session_dir
@@ -365,36 +362,36 @@ module CodingAgentTools
             end
 
             # Step 5: Execute or prepare llm-query
-            model_name = config[:model].gsub(":", "-").gsub("/", "-")
-            
+            model_name = config[:model].tr(":", "-").tr("/", "-")
+
             if options[:auto_execute]
               # Execute the LLM query directly
               debug_output("Auto-executing LLM query...", options[:debug])
-              
+
               llm_executor = CodingAgentTools::Molecules::Code::LLMExecutor.new
               output_file = config[:output] || "cr-#{model_name}.md"
-              
+
               begin
                 # Execute with output file
                 info_output("\n🤖 Executing code review with #{config[:model]}...")
                 info_output("Output will be saved to: #{output_file}")
-                
-                result = llm_executor.execute_query(
+
+                llm_executor.execute_query(
                   config[:model],
                   subject_content,
                   enhanced_prompt,
                   output_file: output_file,
                   timeout: 600
                 )
-                
+
                 success_output("\n✅ Review completed successfully!")
                 info_output("📄 Review saved to: #{output_file}")
-                
+
                 # Display session info if saved
                 if session_dir
                   info_output("\n📁 Session files saved in: #{session_dir}")
                 end
-                
+
                 0
               rescue => e
                 error_output("\nError executing LLM query: #{e.message}")
@@ -403,7 +400,7 @@ module CodingAgentTools
             else
               # Prepare command for manual execution
               output_file = config[:output] || (session_dir ? File.join(session_dir, "report-#{model_name}.md") : "review-#{model_name}.md")
-              
+
               if session_dir
                 # Traditional workflow with files
                 llm_command = [
@@ -413,7 +410,7 @@ module CodingAgentTools
                   "--timeout 600",
                   "--output #{output_file}"
                 ].join(" \\\n  ")
-                
+
                 success_output("✅ Review session prepared: #{session_dir}")
                 info_output("\n📁 Session files:")
                 info_output("  - in-context.md (project context)")
@@ -421,7 +418,7 @@ module CodingAgentTools
                 info_output("  - in-system.prompt.md (enhanced system prompt with context)")
                 info_output("  - in-subject.prompt.md (content to review)")
                 info_output("  - report-#{model_name}.md (will contain review output)")
-                
+
                 info_output("\n🔄 Next step - run this command:")
                 info_output(llm_command)
               else
@@ -430,7 +427,7 @@ module CodingAgentTools
                 info_output("\n💡 To execute the review, use --auto-execute flag")
                 info_output("   Or use --save-session to save prompts to files")
               end
-              
+
               0
             end
           rescue => e
@@ -442,17 +439,17 @@ module CodingAgentTools
           def create_session_directory
             # Find current release directory
             current_release = find_current_release_dir
-            
+
             # Create code-review directory under current release
             review_base = File.join(current_release, "code-review")
             FileUtils.mkdir_p(review_base) unless Dir.exist?(review_base)
-            
+
             # Create timestamped session directory
             timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
             session_name = "review-#{timestamp}"
             session_dir = File.join(review_base, session_name)
             FileUtils.mkdir_p(session_dir)
-            
+
             session_dir
           end
 
@@ -464,14 +461,14 @@ module CodingAgentTools
               release_dirs = Dir.glob(File.join(taskflow_current, "v.*")).select { |d| File.directory?(d) }
               return release_dirs.first if release_dirs.any?
             end
-            
+
             # Fallback to temp directory if no current release
             Dir.mktmpdir("code-review-")
           end
 
           def load_system_prompt(prompt_path)
             return nil unless prompt_path
-            
+
             if File.exist?(prompt_path)
               File.read(prompt_path)
             else

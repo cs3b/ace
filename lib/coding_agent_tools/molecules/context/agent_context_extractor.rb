@@ -45,7 +45,7 @@ module CodingAgentTools
 
         # Check if agent file has valid context definition
         #
-        # @param agent_file_path [String] Path to agent markdown file  
+        # @param agent_file_path [String] Path to agent markdown file
         # @return [Hash] {valid: Boolean, details: Hash, error: String}
         def validate_agent_file(agent_file_path)
           return {valid: false, error: "Agent file path cannot be nil"} if agent_file_path.nil?
@@ -63,7 +63,7 @@ module CodingAgentTools
           has_context_section = content.match?(/^## Context Definition\s*\n/m)
           unless has_context_section
             return {
-              valid: false, 
+              valid: false,
               details: {has_context_section: false},
               error: "No 'Context Definition' section found"
             }
@@ -119,14 +119,12 @@ module CodingAgentTools
           end
 
           content = file_result[:content]
-          analysis = {
+          {
             file_path: agent_file_path,
             file_size: content.bytesize,
             sections: extract_sections(content),
             context_definition: analyze_context_definition(content)
           }
-
-          analysis
         rescue => e
           {error: "Error analyzing agent file: #{e.message}"}
         end
@@ -168,16 +166,16 @@ module CodingAgentTools
         # @return [Hash] Analysis of context definition
         def analyze_context_definition(content)
           context_match = content.match(/^## Context Definition\s*\n(.*?)(?=^## |\z)/m)
-          
+
           unless context_match
             return {present: false}
           end
 
           context_section = context_match[1].strip
-          
+
           # Look for YAML blocks
           yaml_blocks = context_section.scan(/```(?:yaml|yml)?\s*\n(.*?)\n```/m)
-          
+
           analysis = {
             present: true,
             content_length: context_section.length,

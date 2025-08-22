@@ -60,7 +60,7 @@ module CodingAgentTools
 
           # Look for Context Definition section in markdown
           context_match = agent_content.match(/^## Context Definition\s*\n(.*?)(?=^## |\z)/m)
-          
+
           unless context_match
             return {success: false, error: "No 'Context Definition' section found in agent file"}
           end
@@ -69,7 +69,7 @@ module CodingAgentTools
 
           # Extract YAML from code blocks
           yaml_match = context_section.match(/```(?:yaml|yml)?\s*\n(.*?)\n```/m)
-          
+
           unless yaml_match
             return {success: false, error: "No YAML code block found in Context Definition section"}
           end
@@ -90,7 +90,7 @@ module CodingAgentTools
           # Find <context-tool-config> blocks
           pattern = /<context-tool-config>\s*\n(.*?)\n<\/context-tool-config>/m
           match = markdown_content.match(pattern)
-          
+
           unless match
             return {success: false, error: "No <context-tool-config> block found in markdown"}
           end
@@ -113,7 +113,7 @@ module CodingAgentTools
           # Check for unknown keys
           unknown_keys = parsed_yaml.keys - VALID_KEYS
           unless unknown_keys.empty?
-            return {success: false, error: "Unknown template keys: #{unknown_keys.join(', ')}"}
+            return {success: false, error: "Unknown template keys: #{unknown_keys.join(", ")}"}
           end
 
           # Normalize template structure

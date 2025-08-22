@@ -70,27 +70,27 @@ RSpec.describe CodingAgentTools::Atoms::Context::ContextConfigLoader do
         YAML
 
         config = loader.load
-        
+
         # Default preset should be updated
         expect(config["presets"]["project"]["output"]).to eq("custom/project.md")
         expect(config["presets"]["project"]["template"]).to eq("docs/context/project.md") # from default
-        
+
         # New preset should be added
         expect(config["presets"]["new_preset"]["description"]).to eq("New preset")
-        
+
         # Default settings should be preserved
         expect(config["settings"]["default_chunk_limit"]).to eq(150_000)
       end
 
       it "raises error for invalid YAML" do
         File.write(config_path, "invalid: yaml: [")
-        
+
         expect { loader.load }.to raise_error(CodingAgentTools::Error, /Invalid YAML/)
       end
 
       it "raises error for non-hash root" do
         File.write(config_path, "- not a hash")
-        
+
         expect { loader.load }.to raise_error(CodingAgentTools::Error, /Configuration must be a Hash/)
       end
     end
@@ -104,7 +104,7 @@ RSpec.describe CodingAgentTools::Atoms::Context::ContextConfigLoader do
     it "returns true when config file exists" do
       FileUtils.mkdir_p(config_dir)
       File.write(config_path, "presets: {}")
-      
+
       expect(loader.config_exists?).to be true
     end
   end

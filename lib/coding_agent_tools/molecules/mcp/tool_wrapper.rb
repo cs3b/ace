@@ -117,14 +117,14 @@ module CodingAgentTools
           case tool_name
           when "git-status"
             base_schema["properties"] = {
-              "verbose" => { "type" => "boolean", "description" => "Show detailed status" },
-              "short" => { "type" => "boolean", "description" => "Show short status" }
+              "verbose" => {"type" => "boolean", "description" => "Show detailed status"},
+              "short" => {"type" => "boolean", "description" => "Show short status"}
             }
           when "git-commit"
             base_schema["properties"] = {
-              "intention" => { "type" => "string", "description" => "Commit intention/context" },
-              "all" => { "type" => "boolean", "description" => "Stage all changes" },
-              "message" => { "type" => "string", "description" => "Commit message" }
+              "intention" => {"type" => "string", "description" => "Commit intention/context"},
+              "all" => {"type" => "boolean", "description" => "Stage all changes"},
+              "message" => {"type" => "string", "description" => "Commit message"}
             }
           when "task-manager"
             if config.is_a?(Hash) && config["methods"]
@@ -144,16 +144,16 @@ module CodingAgentTools
             end
           when "llm-query"
             base_schema["properties"] = {
-              "model" => { "type" => "string", "description" => "LLM model to use" },
-              "prompt" => { "type" => "string", "description" => "Query prompt" },
-              "system" => { "type" => "string", "description" => "System instruction" }
+              "model" => {"type" => "string", "description" => "LLM model to use"},
+              "prompt" => {"type" => "string", "description" => "Query prompt"},
+              "system" => {"type" => "string", "description" => "System instruction"}
             }
             base_schema["required"] = ["prompt"]
           when "nav-ls"
             base_schema["properties"] = {
-              "path" => { "type" => "string", "description" => "Directory path to list" },
-              "long" => { "type" => "boolean", "description" => "Use long format" },
-              "all" => { "type" => "boolean", "description" => "Show hidden files" }
+              "path" => {"type" => "string", "description" => "Directory path to list"},
+              "long" => {"type" => "boolean", "description" => "Use long format"},
+              "all" => {"type" => "boolean", "description" => "Show hidden files"}
             }
           end
 

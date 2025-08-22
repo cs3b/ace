@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/env_reader'
+require_relative "../atoms/env_reader"
 
 module CodingAgentTools
   module Molecules
@@ -41,7 +41,7 @@ module CodingAgentTools
       # @return [String] The API key
       # @raise [KeyError] If no API key is found or env_key_name not set
       def api_key
-        raise KeyError, 'env_key_name not set. Please provide it during initialization.' if @env_key_name.nil?
+        raise KeyError, "env_key_name not set. Please provide it during initialization." if @env_key_name.nil?
 
         # First check singleton configuration
         return self.class.config[@env_key_name] if self.class.config[@env_key_name]
@@ -88,7 +88,7 @@ module CodingAgentTools
 
         # Filter to API-related variables
         env_vars.select do |key, _|
-          key.include?('API') || key.include?('KEY') || key.include?('TOKEN')
+          key.include?("API") || key.include?("KEY") || key.include?("TOKEN")
         end
       end
 
@@ -116,10 +116,10 @@ module CodingAgentTools
 
         loop do
           # Check for common project root indicators
-          if File.exist?(File.join(current_dir, '.git')) ||
-              File.exist?(File.join(current_dir, 'Gemfile')) ||
-              File.exist?(File.join(current_dir, 'package.json')) ||
-              File.exist?(File.join(current_dir, '.coding-agent'))
+          if File.exist?(File.join(current_dir, ".git")) ||
+              File.exist?(File.join(current_dir, "Gemfile")) ||
+              File.exist?(File.join(current_dir, "package.json")) ||
+              File.exist?(File.join(current_dir, ".coding-agent"))
             return current_dir
           end
 

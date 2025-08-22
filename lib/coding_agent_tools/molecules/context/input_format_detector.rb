@@ -44,7 +44,7 @@ module CodingAgentTools
         # @return [Boolean] True if it looks like a file path
         def looks_like_file_path?(input)
           # Check for file extensions or path separators
-          input.include?('/') || input.include?('\\') || input.include?('.')
+          input.include?("/") || input.include?("\\") || input.include?(".")
         end
 
         # Detect format from file path
@@ -56,10 +56,10 @@ module CodingAgentTools
           basename = File.basename(file_path, extension)
 
           case extension
-          when '.yml', '.yaml'
+          when ".yml", ".yaml"
             :yaml_file
-          when '.md'
-            if basename.end_with?('.ag')
+          when ".md"
+            if basename.end_with?(".ag")
               # Check content to distinguish between old and new agent formats
               if File.exist?(file_path)
                 content = File.read(file_path)
@@ -82,7 +82,7 @@ module CodingAgentTools
               :unknown
             end
           end
-        rescue => e
+        rescue
           :unknown
         end
 
@@ -96,13 +96,11 @@ module CodingAgentTools
             :yaml_string
           elsif has_context_config_tag?(content)
             :markdown_string
-          else
+          elsif content.include?(":") && !content.include?("#")
             # Default to YAML string if it looks structured
-            if content.include?(':') && !content.include?('#')
-              :yaml_string
-            else
-              :markdown_string
-            end
+            :yaml_string
+          else
+            :markdown_string
           end
         end
 
@@ -111,7 +109,7 @@ module CodingAgentTools
         # @param content [String] Content to check
         # @return [Boolean] True if tags are found
         def has_context_config_tag?(content)
-          content.include?('<context-tool-config>')
+          content.include?("<context-tool-config>")
         end
 
         # Check if content looks like YAML
@@ -121,9 +119,9 @@ module CodingAgentTools
         def looks_like_yaml?(content)
           # Simple heuristic: starts with --- or contains key: value patterns
           trimmed = content.strip
-          trimmed.start_with?('---') || 
-            (trimmed.lines.any? { |line| line.match?(/^\s*\w+\s*:/) } && 
-             !trimmed.include?('<context-tool-config>'))
+          trimmed.start_with?("---") ||
+            (trimmed.lines.any? { |line| line.match?(/^\s*\w+\s*:/) } &&
+             !trimmed.include?("<context-tool-config>"))
         end
 
         # Get format description for display

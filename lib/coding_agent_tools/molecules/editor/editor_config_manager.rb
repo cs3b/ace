@@ -10,7 +10,7 @@ module CodingAgentTools
       class EditorConfigManager
         CONFIG_FILE_NAME = "config.yml"
         CONFIG_SECTION = "editor"
-        
+
         def initialize
           # Use XDG Base Directory specification for config location
           config_dir = ENV.fetch("XDG_CONFIG_HOME", File.join(Dir.home, ".config"))
@@ -22,7 +22,7 @@ module CodingAgentTools
         # @return [Hash] Editor configuration
         def load_config
           return {} unless File.exist?(@config_path)
-          
+
           begin
             full_config = YAML.load_file(@config_path) || {}
             full_config.dig(CONFIG_SECTION) || {}
@@ -72,11 +72,11 @@ module CodingAgentTools
         # @return [Boolean] True if saved successfully
         def set_default_editor(editor_command, options = {})
           config = load_config
-          
+
           config["default"] = editor_command
           config["line_support"] = options[:line_support] if options.key?(:line_support)
           config["args"] = options[:args] if options.key?(:args)
-          
+
           save_config(config)
         end
 
@@ -139,7 +139,7 @@ module CodingAgentTools
             "line_support" => true,
             "args" => []
           }
-          
+
           save_config(config)
         end
 

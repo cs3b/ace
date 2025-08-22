@@ -40,7 +40,7 @@ module CodingAgentTools
           # Otherwise use the generic "no configuration found" error
           if !find_context_tool_config_blocks(content).empty?
             tagged_result  # Return the tagged block parsing error
-          elsif content.match(/^## Context Definition\s*\n/m)
+          elsif /^## Context Definition\s*\n/m.match?(content)
             legacy_result  # Return the legacy parsing error
           else
             # If neither format is found
@@ -59,18 +59,18 @@ module CodingAgentTools
         # @return [Hash] Extraction result
         def extract_from_tagged_blocks(content)
           blocks = find_context_tool_config_blocks(content)
-          
+
           if blocks.empty?
             return {success: false, error: "No <context-tool-config> blocks found"}
           end
 
           # Use first block found, warn about others
           yaml_content = blocks.first
-          warning = blocks.length > 1 ? "Multiple <context-tool-config> blocks found, using first one" : nil
+          warning = (blocks.length > 1) ? "Multiple <context-tool-config> blocks found, using first one" : nil
 
           # Parse the YAML content
           parse_result = @template_parser.parse_string(yaml_content)
-          
+
           if parse_result[:success]
             result = {
               success: true,
@@ -97,7 +97,7 @@ module CodingAgentTools
         # @return [Hash] Extraction result
         def extract_from_context_definition(content)
           legacy_result = @template_parser.parse_agent_context(content)
-          
+
           if legacy_result[:success]
             {
               success: true,
@@ -120,15 +120,15 @@ module CodingAgentTools
         # @return [Array<String>] Array of YAML content from blocks
         def find_context_tool_config_blocks(content)
           blocks = []
-          
+
           # Pattern to match <context-tool-config> blocks
           pattern = /<context-tool-config>\s*\n(.*?)\n<\/context-tool-config>/m
-          
+
           content.scan(pattern) do |match|
             yaml_content = match[0].strip
             blocks << yaml_content unless yaml_content.empty?
           end
-          
+
           blocks
         end
 
@@ -156,14 +156,14 @@ module CodingAgentTools
         # @return [Boolean] True if extractable configuration found
         def has_extractable_config?(content)
           return false if content.nil? || content.strip.empty?
-          
+
           # Check for tagged blocks
           return true unless find_context_tool_config_blocks(content).empty?
-          
+
           # Check for legacy format
           context_match = content.match(/^## Context Definition\s*\n(.*?)(?=^## |\z)/m)
           return false unless context_match
-          
+
           # Check if Context Definition has YAML blocks
           context_section = context_match[1].strip
           yaml_match = context_section.match(/```(?:yaml|yml)?\s*\n(.*?)\n```/m)
@@ -179,7 +179,7 @@ module CodingAgentTools
 
           lines = []
           lines << "YAML extracted successfully:"
-          
+
           case extraction_result[:source_format]
           when :tagged_blocks
             lines << "  Source: <context-tool-config> tagged blocks"
@@ -189,14 +189,14 @@ module CodingAgentTools
           when :context_definition
             lines << "  Source: Legacy Context Definition section"
           end
-          
+
           if extraction_result[:template]
             template = extraction_result[:template]
             lines << "  Files: #{template[:files].length} pattern(s)"
             lines << "  Commands: #{template[:commands].length} command(s)"
-            lines << "  Format: #{template[:format] || 'default'}"
+            lines << "  Format: #{template[:format] || "default"}"
           end
-          
+
           if extraction_result[:warning]
             lines << "  Warning: #{extraction_result[:warning]}"
           end
@@ -222,7 +222,7 @@ module CodingAgentTools
 
           # Try to extract and parse
           extraction_result = extract_yaml_from_markdown(content)
-          
+
           if extraction_result[:success]
             {
               valid: true,

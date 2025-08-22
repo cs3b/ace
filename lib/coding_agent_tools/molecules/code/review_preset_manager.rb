@@ -10,7 +10,7 @@ module CodingAgentTools
       # Manages loading and resolving review presets from configuration file
       class ReviewPresetManager
         DEFAULT_CONFIG_PATH = ".coding-agent/code-review.yml"
-        
+
         attr_reader :config_path, :config, :project_root
 
         def initialize(config_path: nil, project_root: nil)
@@ -22,10 +22,10 @@ module CodingAgentTools
         # Load a specific preset by name
         def load_preset(preset_name)
           return nil unless config && config["presets"]
-          
+
           preset = config["presets"][preset_name]
           return nil unless preset
-          
+
           # Merge with defaults if they exist
           defaults = config["defaults"] || {}
           merge_with_defaults(preset, defaults)
@@ -62,7 +62,7 @@ module CodingAgentTools
           preset = load_preset(preset_name)
           return nil unless preset
 
-          resolved = {
+          {
             description: preset["description"],
             system_prompt: resolve_system_prompt(preset["system_prompt"], overrides[:system_prompt]),
             prompt_composition: resolve_prompt_composition(preset["prompt_composition"], overrides),
@@ -71,8 +71,6 @@ module CodingAgentTools
             model: overrides[:model] || preset["model"] || default_model,
             output_format: overrides[:output_format] || preset["output_format"] || default_output_format
           }
-
-          resolved
         end
 
         private
@@ -87,7 +85,7 @@ module CodingAgentTools
 
         def load_configuration
           return nil unless File.exist?(config_path)
-          
+
           begin
             YAML.load_file(config_path)
           rescue => e
@@ -98,44 +96,44 @@ module CodingAgentTools
 
         def merge_with_defaults(preset, defaults)
           merged = preset.dup
-          
+
           # Only merge in defaults that aren't already set in the preset
           defaults.each do |key, value|
             merged[key] ||= value unless key == "context" && preset["context"].nil?
           end
-          
+
           merged
         end
 
         def resolve_system_prompt(preset_prompt, override_prompt)
           return override_prompt if override_prompt
           return nil unless preset_prompt
-          
+
           # If it's a path, resolve it relative to project root
           if preset_prompt.include?("/") || preset_prompt.end_with?(".md")
             prompt_path = File.join(project_root, preset_prompt)
             return prompt_path if File.exist?(prompt_path)
-            
+
             # Try without project root prefix (might be absolute)
             return preset_prompt if File.exist?(preset_prompt)
           end
-          
+
           preset_prompt
         end
 
         def resolve_prompt_composition(preset_composition, overrides)
           # Build composition from overrides and preset
           composition = preset_composition ? preset_composition.dup : {}
-          
+
           # Apply CLI overrides if provided
           if overrides[:prompt_base]
             composition["base"] = overrides[:prompt_base]
           end
-          
+
           if overrides[:prompt_format]
             composition["format"] = overrides[:prompt_format]
           end
-          
+
           if overrides[:prompt_focus]
             # Parse comma-separated list or use array directly
             focus_list = overrides[:prompt_focus]
@@ -148,13 +146,13 @@ module CodingAgentTools
             add_list = add_list.split(",").map(&:strip) if add_list.is_a?(String)
             composition["focus"] = (existing_focus + Array(add_list)).uniq
           end
-          
+
           if overrides[:prompt_guidelines]
             guidelines_list = overrides[:prompt_guidelines]
             guidelines_list = guidelines_list.split(",").map(&:strip) if guidelines_list.is_a?(String)
             composition["guidelines"] = guidelines_list
           end
-          
+
           # Return nil if no composition defined
           composition.empty? ? nil : composition
         end
@@ -162,27 +160,27 @@ module CodingAgentTools
         def resolve_context_config(preset_context, override_context)
           return parse_context_yaml(override_context) if override_context
           return nil if preset_context.nil?
-          
+
           # If it's a string, it's a preset name for the context tool
           return preset_context if preset_context.is_a?(String)
-          
+
           # Otherwise it should be a hash with files/commands
           preset_context
         end
 
         def resolve_subject_config(preset_subject, override_subject)
           # Handle git range shorthand (e.g., "HEAD~1..HEAD")
-          if override_subject && override_subject.is_a?(String) && looks_like_git_range?(override_subject)
-            return { "commands" => ["git diff #{override_subject}"] }
+          if override_subject&.is_a?(String) && looks_like_git_range?(override_subject)
+            return {"commands" => ["git diff #{override_subject}"]}
           end
-          
+
           return parse_context_yaml(override_subject) if override_subject
           preset_subject
         end
 
         def parse_context_yaml(input)
           return input unless input.is_a?(String)
-          
+
           # Try to parse as YAML if it looks like YAML
           if input.include?(":") || input.start_with?("-")
             begin
@@ -198,8 +196,8 @@ module CodingAgentTools
         def looks_like_git_range?(str)
           # Common git range patterns
           str.match?(/^[A-Z@~^]+(\.\.|\.\.\.)[A-Z@~^]+$/i) ||
-          str.match?(/^[a-f0-9]{6,}(\.\.|\.\.\.)[a-f0-9]{6,}$/i) ||
-          str.match?(/^(HEAD|main|master|develop)(~\d+)?(\.\.|\.\.\.)/i)
+            str.match?(/^[a-f0-9]{6,}(\.\.|\.\.\.)[a-f0-9]{6,}$/i) ||
+            str.match?(/^(HEAD|main|master|develop)(~\d+)?(\.\.|\.\.\.)/i)
         end
       end
     end

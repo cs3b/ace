@@ -7,7 +7,7 @@ require "fileutils"
 # to identify flaky tests and performance issues
 module TestReliabilityTracker
   TRACKING_DIR = "tmp/test_reliability"
-  
+
   class << self
     TRACKING_FILE = File.join(TRACKING_DIR, "test_metrics.json")
     FLAKY_THRESHOLD = 0.2 # 20% failure rate indicates flaky test

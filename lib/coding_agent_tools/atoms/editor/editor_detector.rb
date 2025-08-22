@@ -6,53 +6,53 @@ module CodingAgentTools
       # Detects the user's preferred editor based on various sources
       class EditorDetector
         KNOWN_EDITORS = {
-          'code' => {
-            name: 'Visual Studio Code',
-            command: 'code',
+          "code" => {
+            name: "Visual Studio Code",
+            command: "code",
             line_support: true,
-            line_format: '%file:%line'
+            line_format: "%file:%line"
           },
-          'vim' => {
-            name: 'Vim',
-            command: 'vim',
+          "vim" => {
+            name: "Vim",
+            command: "vim",
             line_support: true,
-            line_format: '+%line %file'
+            line_format: "+%line %file"
           },
-          'nvim' => {
-            name: 'Neovim', 
-            command: 'nvim',
+          "nvim" => {
+            name: "Neovim",
+            command: "nvim",
             line_support: true,
-            line_format: '+%line %file'
+            line_format: "+%line %file"
           },
-          'emacs' => {
-            name: 'Emacs',
-            command: 'emacs',
+          "emacs" => {
+            name: "Emacs",
+            command: "emacs",
             line_support: true,
-            line_format: '+%line %file'
+            line_format: "+%line %file"
           },
-          'subl' => {
-            name: 'Sublime Text',
-            command: 'subl',
+          "subl" => {
+            name: "Sublime Text",
+            command: "subl",
             line_support: true,
-            line_format: '%file:%line'
+            line_format: "%file:%line"
           },
-          'mate' => {
-            name: 'TextMate',
-            command: 'mate',
+          "mate" => {
+            name: "TextMate",
+            command: "mate",
             line_support: true,
-            line_format: '%file -l %line'
+            line_format: "%file -l %line"
           },
-          'atom' => {
-            name: 'Atom',
-            command: 'atom',
+          "atom" => {
+            name: "Atom",
+            command: "atom",
             line_support: true,
-            line_format: '%file:%line'
+            line_format: "%file:%line"
           },
-          'nano' => {
-            name: 'Nano',
-            command: 'nano',
+          "nano" => {
+            name: "Nano",
+            command: "nano",
             line_support: true,
-            line_format: '+%line %file'
+            line_format: "+%line %file"
           }
         }.freeze
 
@@ -63,7 +63,7 @@ module CodingAgentTools
         def detect_editor(explicit_editor: nil, config: {})
           # Priority order:
           # 1. Explicit command line flag
-          # 2. User configuration 
+          # 2. User configuration
           # 3. Environment variables (EDITOR, VISUAL)
           # 4. System default detection
           # 5. Fallback
@@ -72,12 +72,12 @@ module CodingAgentTools
             return resolve_editor(explicit_editor)
           end
 
-          if config.dig('editor', 'default')
-            return resolve_editor(config['editor']['default'])
+          if config.dig("editor", "default")
+            return resolve_editor(config["editor"]["default"])
           end
 
           # Check environment variables
-          env_editor = ENV['VISUAL'] || ENV['EDITOR']
+          env_editor = ENV["VISUAL"] || ENV["EDITOR"]
           if env_editor
             return resolve_editor(env_editor)
           end
@@ -91,7 +91,7 @@ module CodingAgentTools
         # @return [Boolean] True if available
         def available?(editor_command)
           return false if editor_command.nil? || editor_command.empty?
-          
+
           system("command -v #{editor_command} >/dev/null 2>&1")
         end
 
@@ -113,7 +113,7 @@ module CodingAgentTools
         def resolve_editor(editor_name)
           # Handle full paths to editors
           editor_command = File.basename(editor_name)
-          
+
           # Check if it's a known editor
           if KNOWN_EDITORS.key?(editor_command)
             config = KNOWN_EDITORS[editor_command].dup
@@ -126,7 +126,7 @@ module CodingAgentTools
             name: editor_name,
             command: editor_name,
             line_support: false,
-            line_format: '%file'
+            line_format: "%file"
           }
         end
 
@@ -135,7 +135,7 @@ module CodingAgentTools
         def detect_available_editor
           # Preferred order for auto-detection
           preferred_order = %w[code vim nvim emacs subl mate atom nano]
-          
+
           preferred_order.each do |command|
             if available?(command)
               config = KNOWN_EDITORS[command].dup
@@ -146,10 +146,10 @@ module CodingAgentTools
 
           # Fallback to system default
           {
-            name: 'System Default',
-            command: 'open', # macOS default, adjust for other platforms
+            name: "System Default",
+            command: "open", # macOS default, adjust for other platforms
             line_support: false,
-            line_format: '%file',
+            line_format: "%file",
             fallback: true
           }
         end

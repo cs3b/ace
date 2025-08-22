@@ -2,7 +2,6 @@
 
 require "webrick"
 require "json"
-require "thread"
 
 module CodingAgentTools
   module Organisms
@@ -67,7 +66,7 @@ module CodingAgentTools
           # Health check endpoint
           server.mount_proc("/health") do |req, res|
             res.content_type = "application/json"
-            res.body = JSON.generate({ status: "ok", timestamp: Time.now.iso8601 })
+            res.body = JSON.generate({status: "ok", timestamp: Time.now.iso8601})
           end
 
           # CORS preflight
@@ -230,7 +229,7 @@ module CodingAgentTools
 
           begin
             # Send initial connection event
-            send_sse_event(res, { connected: true }, "connect")
+            send_sse_event(res, {connected: true}, "connect")
 
             # Keep connection alive and handle any queued messages
             loop do
