@@ -6,14 +6,9 @@ require "fileutils"
 
 RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
   let(:command) { described_class.new }
-  let(:mock_review_manager) { instance_double("CodingAgentTools::Organisms::Code::ReviewManager") }
-  let(:mock_project_root_detector) { class_double("CodingAgentTools::Atoms::ProjectRootDetector") }
   let(:temp_dir) { Dir.mktmpdir }
 
   before do
-    allow(CodingAgentTools::Organisms::Code::ReviewManager).to receive(:new).and_return(mock_review_manager)
-    allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return("/project/root")
-
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -24,368 +19,201 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
   end
 
   describe "#call" do
-    context "with valid focus and target" do
-      let(:session_result) do
-        {
-          success: true,
-          session: double("session",
-            session_name: "review-20240101-120000",
-            session_id: "20240101-120000",
-            directory_path: "/sessions/review-20240101-120000",
-            focus: "code"),
-          target: double("target", type: "git_range", file_count: 10, line_count: 500),
-          context: double("context", mode: "auto", document_count: 3)
-        }
-      end
+    context "with list presets option" do
+      let(:mock_preset_manager) { instance_double("CodingAgentTools::Molecules::Code::ReviewPresetManager") }
 
       before do
-        allow(mock_review_manager).to receive(:create_review_session).and_return(session_result)
+        allow(CodingAgentTools::Molecules::Code::ReviewPresetManager).to receive(:new).and_return(mock_preset_manager)
       end
 
-      it "executes successfully with valid focus" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD")
+      it "lists available presets" do
+        allow(mock_preset_manager).to receive(:available_presets).and_return(["pr", "code", "docs"])
+        allow(mock_preset_manager).to receive(:load_preset).with("pr").and_return({"description" => "Pull request review"})
+        allow(mock_preset_manager).to receive(:load_preset).with("code").and_return({"description" => "Code review"})
+        allow(mock_preset_manager).to receive(:load_preset).with("docs").and_return({"description" => "Documentation review"})
+
+        result = command.call(list_presets: true)
 
         expect(result).to eq(0)
-        expect(mock_review_manager).to have_received(:create_review_session).with(
-          "code", "HEAD~1..HEAD", "auto", nil, nil
-        )
+        expect($stdout).to have_received(:puts).with("Available review presets:")
+        expect($stdout).to have_received(:puts).with("  pr: Pull request review")
+        expect($stdout).to have_received(:puts).with("  code: Code review")
+        expect($stdout).to have_received(:puts).with("  docs: Documentation review")
       end
 
-      it "handles multiple focus areas" do
-        result = command.call(focus: "code tests", target: "HEAD~1..HEAD")
+      it "shows message when no presets found" do
+        allow(mock_preset_manager).to receive(:available_presets).and_return([])
+
+        result = command.call(list_presets: true)
 
         expect(result).to eq(0)
-        expect(mock_review_manager).to have_received(:create_review_session).with(
-          "code tests", "HEAD~1..HEAD", "auto", nil, nil
-        )
-      end
-
-      it "passes custom context" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", context: "docs/overview.md")
-
-        expect(result).to eq(0)
-        expect(mock_review_manager).to have_received(:create_review_session).with(
-          "code", "HEAD~1..HEAD", "docs/overview.md", nil, nil
-        )
-      end
-
-      it "passes base_path option" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", base_path: "/custom/path")
-
-        expect(result).to eq(0)
-        expect(mock_review_manager).to have_received(:create_review_session).with(
-          "code", "HEAD~1..HEAD", "auto", "/custom/path", nil
-        )
-      end
-
-      it "displays success messages" do
-        command.call(focus: "code", target: "HEAD~1..HEAD")
-
-        expect($stdout).to have_received(:puts).with("✅ Created review session: review-20240101-120000")
-        expect($stdout).to have_received(:puts).with("📁 Session directory: /sessions/review-20240101-120000")
-      end
-
-      it "shows session summary" do
-        command.call(focus: "code", target: "HEAD~1..HEAD")
-
-        expect($stdout).to have_received(:puts).with("\n📊 Session Summary:")
-        expect($stdout).to have_received(:puts).with("  Focus: code")
-        expect($stdout).to have_received(:puts).with("  Target: git_range (10 files, 500 lines)")
-        expect($stdout).to have_received(:puts).with("  Context: auto (3 documents)")
-      end
-
-      it "shows next step information when no model specified" do
-        command.call(focus: "code", target: "HEAD~1..HEAD")
-
-        expect($stdout).to have_received(:puts).with(
-          "\n🔄 Next step: Execute review with llm-query or code-review --session 20240101-120000"
-        )
+        expect($stdout).to have_received(:puts).with("No presets found. Create .coding-agent/code-review.yml to define presets.")
       end
     end
 
-    context "with invalid focus" do
-      it "rejects empty focus" do
-        result = command.call(focus: "", target: "HEAD~1..HEAD")
-
-        expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Error: Invalid focus. Must be one or more of: code, tests, docs\n")
+    context "with minimal configuration" do
+      before do
+        # Mock the components used by the new architecture
+        allow(command).to receive(:validate_inputs).and_return(0)
+        allow(command).to receive(:load_preset_config).and_return({})
+        allow(command).to receive(:merge_configurations).and_return({})
+        allow(command).to receive(:execute_review).and_return(0)
       end
 
-      it "rejects invalid focus option" do
-        result = command.call(focus: "invalid", target: "HEAD~1..HEAD")
+      it "executes successfully with no options" do
+        result = command.call
 
-        expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Error: Invalid focus. Must be one or more of: code, tests, docs\n")
+        expect(result).to eq(0)
       end
 
-      it "rejects mixed valid and invalid focus" do
-        result = command.call(focus: "code invalid tests", target: "HEAD~1..HEAD")
+      it "handles preset option" do
+        result = command.call(preset: "pr")
 
-        expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Error: Invalid focus. Must be one or more of: code, tests, docs\n")
+        expect(result).to eq(0)
       end
 
-      it "accepts all valid focus options" do
-        ["code", "tests", "docs"].each do |focus|
-          allow(mock_review_manager).to receive(:create_review_session).and_return({
-            success: true,
-            session: double("session", session_name: "test", session_id: "test", directory_path: "/test", focus: focus),
-            target: double("target", type: "test", file_count: 1, line_count: 1),
-            context: double("context", mode: "test", document_count: 1)
-          })
+      it "handles context and subject options" do
+        result = command.call(context: "project", subject: "HEAD~1..HEAD")
 
-          result = command.call(focus: focus, target: "HEAD~1..HEAD")
-          expect(result).to eq(0)
-        end
+        expect(result).to eq(0)
       end
     end
 
-    context "with custom system prompt" do
-      let(:system_prompt_file) { File.join(temp_dir, "custom-prompt.md") }
-
+    context "with dry run option" do
       before do
-        File.write(system_prompt_file, "Custom system prompt content")
-        allow(mock_review_manager).to receive(:create_review_session).and_return({
-          success: true,
-          session: double("session", session_name: "test", session_id: "test", directory_path: "/test", focus: "code"),
-          target: double("target", type: "test", file_count: 1, line_count: 1),
-          context: double("context", mode: "test", document_count: 1)
+        allow(command).to receive(:validate_inputs).and_return(0)
+        allow(command).to receive(:load_preset_config).and_return({})
+        allow(command).to receive(:merge_configurations).and_return({
+          preset: "pr",
+          context: "project",
+          subject: "HEAD~1..HEAD"
         })
-      end
-
-      it "validates system prompt file exists" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", system_prompt: "/nonexistent.md")
-
-        expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Error: Custom system prompt file not found: /nonexistent.md\n")
-      end
-
-      it "validates system prompt file is readable" do
-        File.chmod(0o000, system_prompt_file)
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", system_prompt: system_prompt_file)
-
-        expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Error: Custom system prompt file not readable: #{system_prompt_file}\n")
-      ensure
-        File.chmod(0o644, system_prompt_file) if File.exist?(system_prompt_file)
-      end
-
-      it "accepts valid system prompt file" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", system_prompt: system_prompt_file)
-
-        expect(result).to eq(0)
-        expect(mock_review_manager).to have_received(:create_review_session).with(
-          "code", "HEAD~1..HEAD", "auto", nil, system_prompt_file
-        )
-      end
-    end
-
-    context "with session resume" do
-      it "calls resume_session when session option provided" do
-        allow(command).to receive(:resume_session).and_return(0)
-
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", session: "existing-session-id")
-
-        expect(result).to eq(0)
-        expect(command).to have_received(:resume_session).with("existing-session-id", hash_including(session: "existing-session-id"))
-      end
-
-      it "returns error for unimplemented session resume" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", session: "existing-session-id")
-
-        expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Session resume not yet implemented\n")
-      end
-    end
-
-    context "with dry run" do
-      let(:prep_result) do
-        {
-          target_info: {type: "git_range", format: "commit_range"},
-          context_info: {
-            available: true,
-            found: [
-              {type: "README", path: "README.md"},
-              {type: "Architecture", path: "docs/architecture.md"}
-            ]
-          },
-          system_prompt: "review/code-review.md",
-          focus_areas: ["code"]
-        }
-      end
-
-      before do
-        allow(mock_review_manager).to receive(:prepare_review).and_return(prep_result)
-        allow(mock_review_manager).to receive(:create_review_session)
+        allow(command).to receive(:show_dry_run).and_return(0)
       end
 
       it "executes dry run without creating session" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true)
+        result = command.call(preset: "pr", dry_run: true)
 
         expect(result).to eq(0)
-        expect(mock_review_manager).to have_received(:prepare_review).with("code", "HEAD~1..HEAD", "auto", nil)
-        expect(mock_review_manager).not_to have_received(:create_review_session)
-      end
-
-      it "shows dry run analysis output" do
-        command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true)
-
-        expect($stdout).to have_received(:puts).with("🔍 Dry run - Analyzing review configuration:")
-        expect($stdout).to have_received(:puts).with("\nTarget Analysis:")
-        expect($stdout).to have_received(:puts).with("  Type: git_range")
-        expect($stdout).to have_received(:puts).with("  Format: commit_range")
-      end
-
-      it "shows context availability" do
-        command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true)
-
-        expect($stdout).to have_received(:puts).with("\nContext Availability:")
-        expect($stdout).to have_received(:puts).with("  ✅ Project context available")
-        expect($stdout).to have_received(:puts).with("    - README: README.md")
-        expect($stdout).to have_received(:puts).with("    - Architecture: docs/architecture.md")
-      end
-
-      it "shows no context when unavailable" do
-        prep_result[:context_info][:available] = false
-        command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true)
-
-        expect($stdout).to have_received(:puts).with("  ❌ No project context found")
-      end
-
-      it "shows custom system prompt" do
-        custom_prompt_file = File.join(temp_dir, "custom.md")
-        File.write(custom_prompt_file, "Custom prompt content")
-
-        command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true, system_prompt: custom_prompt_file)
-
-        expect($stdout).to have_received(:puts).with("\nSystem Prompt: review/code-review.md (custom)")
+        expect(command).to have_received(:show_dry_run)
       end
     end
 
-    context "with model execution" do
-      let(:session_result) do
-        {
-          success: true,
-          session: double("session",
-            session_name: "review-20240101-120000",
-            session_id: "20240101-120000",
-            directory_path: "/sessions/review-20240101-120000",
-            focus: "code"),
-          target: double("target", type: "git_range", file_count: 10, line_count: 500),
-          context: double("context", mode: "auto", document_count: 3)
-        }
-      end
-
+    context "with prompt composition options" do
       before do
-        allow(mock_review_manager).to receive(:create_review_session).and_return(session_result)
-        allow(mock_review_manager).to receive(:execute_review).and_return({success: true})
+        allow(command).to receive(:validate_inputs).and_return(0)
+        allow(command).to receive(:load_preset_config).and_return({})
+        allow(command).to receive(:merge_configurations).and_return({})
+        allow(command).to receive(:execute_review).and_return(0)
       end
 
-      it "executes review with specified model" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD", model: "google:gemini-2.5-pro")
+      it "handles prompt composition options" do
+        result = command.call(
+          prompt_base: "system",
+          prompt_format: "detailed", 
+          prompt_focus: "architecture/atom,languages/ruby",
+          prompt_guidelines: "tone,icons"
+        )
 
         expect(result).to eq(0)
-        expect($stdout).to have_received(:puts).with("\n🚀 Executing review with model: google:gemini-2.5-pro")
-        expect(mock_review_manager).to have_received(:execute_review).with(session_result[:session])
       end
 
-      it "shows success message on successful execution" do
-        command.call(focus: "code", target: "HEAD~1..HEAD", model: "google:gemini-2.5-pro")
+      it "handles add_focus option with preset" do
+        result = command.call(
+          preset: "pr",
+          add_focus: "quality/security"
+        )
 
-        expect($stdout).to have_received(:puts).with("✅ Review completed successfully")
-      end
-
-      it "saves output to file when specified" do
-        command.call(focus: "code", target: "HEAD~1..HEAD", model: "test", output: "report.md")
-
-        expect($stdout).to have_received(:puts).with("📄 Report saved to: report.md")
-      end
-
-      it "handles execution failure" do
-        allow(mock_review_manager).to receive(:execute_review).and_return({success: false, error: "Model failed"})
-
-        command.call(focus: "code", target: "HEAD~1..HEAD", model: "test")
-
-        expect($stderr).to have_received(:write).with("❌ Review failed: Model failed\n")
+        expect(result).to eq(0)
       end
     end
 
-    context "with session creation failure" do
+    context "with auto execute option" do
       before do
-        allow(mock_review_manager).to receive(:create_review_session).and_return({
-          success: false,
-          error: "Target validation failed"
-        })
+        allow(command).to receive(:validate_inputs).and_return(0)
+        allow(command).to receive(:load_preset_config).and_return({})
+        allow(command).to receive(:merge_configurations).and_return({})
+        allow(command).to receive(:execute_review).and_return(0)
       end
 
-      it "returns error code and shows error message" do
-        result = command.call(focus: "code", target: "invalid-target")
+      it "automatically executes review when auto_execute is true" do
+        result = command.call(preset: "pr", auto_execute: true)
+
+        expect(result).to eq(0)
+        expect(command).to have_received(:execute_review)
+      end
+
+      it "works with output file specification" do
+        result = command.call(preset: "pr", auto_execute: true, output: "review.md")
+
+        expect(result).to eq(0)
+      end
+    end
+
+    context "with config file option" do
+      let(:config_file) { File.join(temp_dir, "config.md") }
+
+      before do
+        allow(command).to receive(:validate_inputs).and_return(0)
+        allow(command).to receive(:load_preset_config).and_return({})
+        allow(command).to receive(:merge_configurations).and_return({})
+        allow(command).to receive(:execute_review).and_return(0)
+      end
+
+      it "loads configuration from file" do
+        File.write(config_file, "---\npreset: pr\nauto_execute: true\n---\n# Review")
+        
+        result = command.call(config_file: config_file)
+
+        expect(result).to eq(0)
+      end
+
+      it "handles missing config file" do
+        result = command.call(config_file: "/nonexistent.md")
 
         expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with("Error: Target validation failed\n")
+        expect($stderr).to have_received(:write).with("Error: Config file not found: /nonexistent.md\n")
       end
     end
 
-    context "with exceptions" do
-      before do
-        allow(mock_review_manager).to receive(:create_review_session).and_raise(StandardError, "Unexpected error")
+    context "with error conditions" do
+      it "handles validation errors gracefully" do
+        allow(command).to receive(:validate_inputs).and_return(1)
+
+        result = command.call(preset: "invalid")
+
+        expect(result).to eq(1)
       end
 
       it "handles exceptions gracefully" do
-        result = command.call(focus: "code", target: "HEAD~1..HEAD")
+        allow(command).to receive(:validate_inputs).and_raise(StandardError, "Unexpected error")
+
+        result = command.call(preset: "pr")
 
         expect(result).to eq(1)
         expect($stderr).to have_received(:write).with("Error: Unexpected error\n")
       end
 
       it "shows backtrace in debug mode" do
-        ENV["DEBUG"] = "true"
+        allow(command).to receive(:validate_inputs).and_raise(StandardError, "Debug error")
 
-        result = command.call(focus: "code", target: "HEAD~1..HEAD")
+        result = command.call(preset: "pr", debug: true)
 
         expect(result).to eq(1)
-        expect($stderr).to have_received(:write).with(match(/Error: Unexpected error/))
-      ensure
-        ENV.delete("DEBUG")
-      end
-    end
-  end
-
-  describe "private methods" do
-    describe "#validate_focus" do
-      it "accepts single valid focus" do
-        expect(command.send(:validate_focus, "code")).to be true
-        expect(command.send(:validate_focus, "tests")).to be true
-        expect(command.send(:validate_focus, "docs")).to be true
-      end
-
-      it "accepts multiple valid focus areas" do
-        expect(command.send(:validate_focus, "code tests")).to be true
-        expect(command.send(:validate_focus, "code tests docs")).to be true
-        expect(command.send(:validate_focus, "tests docs")).to be true
-      end
-
-      it "rejects invalid focus" do
-        expect(command.send(:validate_focus, "invalid")).to be false
-        expect(command.send(:validate_focus, "code invalid")).to be false
-        expect(command.send(:validate_focus, "")).to be false
-      end
-
-      it "rejects empty focus" do
-        expect(command.send(:validate_focus, "")).to be false
+        expect($stderr).to have_received(:write).with("Error: Debug error\n")
       end
     end
   end
 
   describe "command configuration" do
     it "has correct description" do
-      expect(described_class.description).to eq("Execute code review on specified target with configurable focus")
+      expect(described_class.description).to eq("Execute code review using presets or custom configuration")
     end
 
-    it "defines required arguments" do
-      # Test that required arguments are enforced by attempting calls without them
-      expect { command.call }.to raise_error(ArgumentError)
-      expect { command.call(focus: "code") }.to raise_error(ArgumentError)
+    it "allows calls without required arguments" do
+      # The new command structure no longer requires specific arguments
+      # It can run with just defaults or show help
+      expect { command.call }.not_to raise_error
     end
 
     it "has usage examples defined" do
