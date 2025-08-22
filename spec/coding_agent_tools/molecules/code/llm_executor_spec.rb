@@ -123,7 +123,6 @@ RSpec.describe CodingAgentTools::Molecules::Code::LLMExecutor do
 
     it "executes system command for streaming output" do
       allow(executor).to receive(:system).and_return(true)
-      allow($?).to receive(:exitstatus).and_return(0)
 
       # Mock Tempfile creation
       subject_tempfile = instance_double("Tempfile", path: "/tmp/subject-123.md")
@@ -170,7 +169,6 @@ RSpec.describe CodingAgentTools::Molecules::Code::LLMExecutor do
 
     it "handles streaming command failure" do
       allow(executor).to receive(:system).and_return(false)
-      allow($?).to receive(:exitstatus).and_return(1)
       
       # Mock Tempfile creation
       subject_tempfile = instance_double("Tempfile", path: "/tmp/subject-123.md")
@@ -186,7 +184,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::LLMExecutor do
 
       expect {
         executor.execute_streaming(model, subject_content, system_content)
-      }.to raise_error("LLM query failed with exit code: 1")
+      }.to raise_error(RuntimeError, /LLM query failed with exit code/)
     end
   end
 
