@@ -1,46 +1,98 @@
 ---
 id: v.0.5.0+task.041
-status: pending
+status: draft
 priority: high
 estimate: TBD
-dependencies: {dependencies}
+dependencies: []
 ---
 
 # Fix LLM Query Output Not Saving to Markdown
 
-## Behavioral Context
-<!-- Reference the completed behavioral specification from the draft phase -->
-<!-- This section assumes behavioral requirements are already defined -->
+## Behavioral Specification
 
-**Behavioral Specification Reference**: [Link to completed draft task or behavioral requirements]
+### User Experience
+- **Input**: Users execute `llm-query` with GPT-5 models and specify `--output file.md` to save LLM response content to markdown files
+- **Process**: System processes LLM response, extracts actual content (not just metadata), and saves complete response to the specified markdown file
+- **Output**: Markdown file contains the full LLM-generated content, not just metadata headers
 
-**Key Behavioral Requirements**:
-- [Summary of key user experience requirements]
-- [Summary of key system behavior requirements]  
-- [Summary of key interface contract requirements]
+### Expected Behavior
+When users run `llm-query` with GPT-5 models and specify a markdown output file, the system should:
+1. Execute the query against the specified GPT-5 model
+2. Receive the complete LLM response including both metadata and content
+3. Differentiate between metadata and actual response content
+4. Save the actual LLM response content to the specified markdown file
+5. Preserve any necessary metadata separately or in a non-intrusive format
+
+### Interface Contract
+```bash
+# CLI Interface
+llm-query --model gpt-5-turbo --prompt "Generate documentation" --output response.md
+# Expected: response.md contains the actual documentation content, not just metadata
+
+# Success scenario: File contains LLM response content
+cat response.md
+# Should show: Generated documentation content from LLM
+# Not just: YAML metadata headers
+
+# Error scenarios
+llm-query --model gpt-5-turbo --prompt "test" --output invalid/path.md
+# Should show: Error: Cannot write to invalid/path.md - directory does not exist
+```
+
+**Error Handling:**
+- File write permission errors: Clear error message indicating permission issue
+- Invalid output path: Error message with path validation failure details
+- Model response parsing errors: Error indicating response processing failure
+
+**Edge Cases:**
+- Empty LLM responses: File should be created but empty (not just metadata)
+- Very large responses: Content should be fully saved without truncation
+- Special characters in content: Proper encoding and escaping preserved
+
+### Success Criteria
+- [ ] **Content Preservation**: LLM-generated content is fully saved to markdown files, not just metadata
+- [ ] **Format Consistency**: Output format matches expected markdown structure with actual content
+- [ ] **Model Compatibility**: Fix works across all GPT-5 model variants (gpt-5-turbo, etc.)
+- [ ] **Data Integrity**: No loss of content during the save process
+
+### Validation Questions
+- [ ] **Scope Verification**: Is this issue specific to GPT-5 models or does it affect other providers?
+- [ ] **Format Detection**: How does the system determine when to save content vs metadata?
+- [ ] **Backwards Compatibility**: Will the fix affect existing workflows with other models?
+- [ ] **Error Scenarios**: What happens when LLM responses are malformed or incomplete?
 
 ## Objective
 
-Why are we implementing this? Focus on technical objectives that support the defined behavioral requirements.
+Ensure reliable capture of LLM-generated content for documentation, code generation, and AI-assisted development workflows. The bug currently breaks automation pipelines that depend on saving LLM outputs to files for further processing.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+### User Experience Scope
+- LLM query execution with output file specification
+- Content vs metadata differentiation for markdown outputs
+- Error handling for file operations and response processing
+
+### System Behavior Scope
+- GPT-5 model response parsing and content extraction
+- File writing operations for markdown outputs
+- Integration with existing ATOM architecture components
+
+### Interface Scope
+- `llm-query` command with `--output` flag functionality
+- File system operations for markdown file creation/writing
+- Error reporting and user feedback mechanisms
 
 ### Deliverables
 
-#### Create
+#### Behavioral Specifications
+- User experience flow definitions for LLM query output saving
+- System behavior specifications for content vs metadata handling
+- Interface contract definitions for CLI and file operations
 
-- path/to/file.ext
-
-#### Modify
-
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
+#### Validation Artifacts
+- Success criteria validation methods
+- User acceptance criteria for content preservation
+- Behavioral test scenarios for various model types
 
 ## Phases
 
@@ -205,8 +257,13 @@ Why are we implementing this? Focus on technical objectives that support the def
 
 ## Out of Scope
 
-- ❌ …
+- ❌ **Implementation Details**: File structures, code organization, technical architecture
+- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions
+- ❌ **Performance Optimization**: Specific performance improvement strategies
+- ❌ **Future Enhancements**: Support for other output formats or models not mentioned
 
 ## References
 
-```
+- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/041-20250821-2128-llm-query-bug-investigation.md
+- Related ATOM architecture components: HTTPRequestBuilder, JSONFormatter, MetadataNormalizer
+- LLM integration patterns and provider-specific parsers

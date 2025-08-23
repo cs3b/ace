@@ -1,46 +1,105 @@
 ---
 id: v.0.5.0+task.042
-status: pending
+status: draft
 priority: medium
 estimate: TBD
-dependencies: {dependencies}
+dependencies: []
 ---
 
 # Fix YAML Include Pattern Security Validation
 
-## Behavioral Context
-<!-- Reference the completed behavioral specification from the draft phase -->
-<!-- This section assumes behavioral requirements are already defined -->
+## Behavioral Specification
 
-**Behavioral Specification Reference**: [Link to completed draft task or behavioral requirements]
+### User Experience
+- **Input**: Users execute `handbook claude integrate` or `handbook claude integrate --force` to set up Claude integration
+- **Process**: System processes YAML configuration files, validates security patterns, and allows legitimate include patterns while blocking dangerous ones
+- **Output**: Successful Claude integration setup without false positive security validation errors
 
-**Key Behavioral Requirements**:
-- [Summary of key user experience requirements]
-- [Summary of key system behavior requirements]  
-- [Summary of key interface contract requirements]
+### Expected Behavior
+When users run `handbook claude integrate` with YAML files containing legitimate include patterns, the system should:
+1. Parse and validate YAML configuration files for Claude integration
+2. Distinguish between legitimate include patterns and potentially dangerous ones
+3. Allow safe include patterns to proceed with integration setup
+4. Block only genuinely dangerous patterns while providing clear error messages
+5. Respect the `--force` flag for overriding security validations when explicitly requested
+
+### Interface Contract
+```bash
+# CLI Interface - Success scenarios
+handbook claude integrate
+# Expected: Successful integration setup with legitimate YAML includes
+
+handbook claude integrate --force
+# Expected: Integration proceeds even with security warnings (when explicitly forced)
+
+# Error scenarios with clear feedback
+handbook claude integrate
+# Should show helpful error when genuinely dangerous patterns detected:
+# "Error: YAML contains potentially dangerous pattern: [specific pattern]"
+# "Use --force to override if you trust this configuration"
+
+# Success after fixing or forcing
+handbook claude integrate --force
+# Should show: "Warning: Security validation overridden. Integration completed."
+```
+
+**Error Handling:**
+- Legitimate include patterns: Should not trigger security validation errors
+- Actually dangerous patterns: Clear error message with specific pattern details
+- Force flag usage: Warning message but allows integration to proceed
+
+**Edge Cases:**
+- Mixed YAML files (some with includes, some without): Process all files correctly
+- Complex include patterns: Properly differentiate safe vs unsafe patterns
+- Malformed YAML: Separate validation errors from security pattern errors
+
+### Success Criteria
+- [ ] **Pattern Recognition**: System correctly identifies safe vs dangerous include patterns
+- [ ] **Integration Success**: Claude integration works with legitimate YAML includes
+- [ ] **Force Flag Respect**: `--force` flag properly overrides security validation when needed
+- [ ] **Clear Error Messages**: Users understand why validation fails and how to resolve it
+
+### Validation Questions
+- [ ] **Pattern Scope**: What specific include patterns should be considered safe vs dangerous?
+- [ ] **Security Balance**: How to maintain security while avoiding false positives?
+- [ ] **Force Flag Behavior**: Should `--force` override all validations or just security ones?
+- [ ] **User Guidance**: What documentation should help users understand the validation?
 
 ## Objective
 
-Why are we implementing this? Focus on technical objectives that support the defined behavioral requirements.
+Enable successful Claude integration setup by fixing overly aggressive YAML security validation that blocks legitimate include patterns, while maintaining actual security protections against dangerous configurations.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+### User Experience Scope
+- Claude integration command execution workflow
+- YAML configuration file processing and validation
+- Security pattern recognition and error handling
+- Force flag override behavior and user feedback
+
+### System Behavior Scope
+- YAML security validation logic refinement
+- Include pattern differentiation (safe vs dangerous)
+- Integration setup completion with valid configurations
+- Error reporting and user guidance systems
+
+### Interface Scope
+- `handbook claude integrate` command functionality
+- `--force` flag behavior and override mechanisms
+- Error message clarity and actionability
+- Warning and confirmation message systems
 
 ### Deliverables
 
-#### Create
+#### Behavioral Specifications
+- User experience flow definitions for Claude integration
+- System behavior specifications for YAML validation
+- Interface contract definitions for CLI commands and flags
 
-- path/to/file.ext
-
-#### Modify
-
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
+#### Validation Artifacts
+- Success criteria validation methods for integration
+- User acceptance criteria for security vs usability balance
+- Behavioral test scenarios for various YAML configurations
 
 ## Phases
 
@@ -205,8 +264,13 @@ Why are we implementing this? Focus on technical objectives that support the def
 
 ## Out of Scope
 
-- ❌ …
+- ❌ **Implementation Details**: Code organization, validation algorithm specifics
+- ❌ **Technology Decisions**: YAML parser library choices, validation framework decisions
+- ❌ **Security Enhancements**: Adding new security validations beyond fixing the current issue
+- ❌ **Future Features**: Advanced YAML processing or validation capabilities
 
 ## References
 
-```
+- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/042-20250817-1640-yaml-include-error.md
+- Handbook Claude integration patterns
+- YAML security validation components
