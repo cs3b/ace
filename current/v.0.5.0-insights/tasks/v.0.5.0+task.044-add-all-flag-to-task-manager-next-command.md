@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.044
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 3h
 dependencies: []
 ---
 
@@ -105,65 +105,64 @@ Provide users and automation systems with flexibility to retrieve either a singl
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. **Analysis**: Research current CLI command structure and flag handling patterns
+2. **Implementation**: Add `--all` option and modify validation logic to support `--limit -1`
+3. **Testing**: Update existing tests and add comprehensive test coverage for new functionality
+4. **Integration**: Verify compatibility with existing sorting, filtering, and output formatting
 
 ## Technical Approach
 
 ### Architecture Pattern
-- [ ] Pattern selection and rationale
-- [ ] Integration with existing architecture
-- [ ] Impact on system design
+- **Pattern**: Extend existing dry-cli command pattern with additional boolean option
+- **Integration**: Seamless integration with ATOM architecture - modify existing CLI command organism
+- **Impact**: Minimal system impact - purely additive functionality to existing command structure
 
 ### Technology Stack
-- [ ] Libraries/frameworks needed
-- [ ] Version compatibility checks
-- [ ] Performance implications
-- [ ] Security considerations
+- **Framework**: dry-cli (already in use) for option definition and parsing
+- **Validation**: Ruby built-in validation with custom logic for special `-1` case
+- **Testing**: RSpec (existing framework) for comprehensive test coverage
+- **No new dependencies required**: All functionality implementable with existing stack
 
 ### Implementation Strategy
-- [ ] Step-by-step approach
-- [ ] Rollback considerations
-- [ ] Testing strategy
-- [ ] Performance monitoring
+- **Approach**: Additive enhancement preserving full backward compatibility
+- **Rollback**: Simple removal of new option and logic - no breaking changes
+- **Testing**: Update existing tests + comprehensive new test scenarios
+- **Performance**: No performance impact - leverages existing task loading and filtering
 
 ## Tool Selection
 
-| Criteria | Option A | Option B | Option C | Selected |
-|----------|----------|----------|----------|----------|
-| Performance | | | | |
-| Integration | | | | |
-| Maintenance | | | | |
-| Security | | | | |
-| Learning Curve | | | | |
+| Criteria | Boolean Option | Integer Parsing | Special Case | Selected |
+|----------|----------------|-----------------|--------------|----------|
+| Performance | Excellent | Good | Good | Boolean Option |
+| Integration | Excellent | Good | Fair | Boolean Option |
+| Maintenance | Excellent | Good | Fair | Boolean Option |
+| Security | Excellent | Excellent | Good | Boolean Option |
+| Learning Curve | Excellent | Good | Fair | Boolean Option |
 
-**Selection Rationale:** [Explain selection reasoning]
+**Selection Rationale:** Boolean `--all` option provides the clearest user interface while maintaining full backward compatibility. Special handling for `--limit -1` provides the alternative interface specified in requirements without compromising the primary UX.
 
 ### Dependencies
-- [ ] New dependency 1: version and reason
-- [ ] New dependency 2: version and reason
-- [ ] Compatibility verification completed
+- **No new dependencies required**: Implementation uses existing dry-cli framework capabilities
+- **Existing dependencies sufficient**: Ruby stdlib for validation, existing test framework for coverage
+- **Compatibility verified**: Solution works within current ATOM architecture patterns
 
 ## File Modifications
 
 ### Create
-- path/to/new/file.ext
-  - Purpose: [why this file]
-  - Key components: [what it contains]
-  - Dependencies: [what it depends on]
+- No new files required
 
 ### Modify
-- path/to/existing/file.ext
-  - Changes: [what to modify]
-  - Impact: [effects on system]
-  - Integration points: [how it connects]
+- dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb
+  - Changes: Add `--all` boolean option, modify limit validation to accept `-1`, add flag handling logic
+  - Impact: Extends command capability without breaking existing functionality
+  - Integration points: Works with existing TaskManager, filtering, sorting, and formatting systems
+- dev-tools/spec/coding_agent_tools/cli/commands/task_spec.rb
+  - Changes: Update tests that expect `limit: -1` to fail, add comprehensive test coverage for `--all` flag
+  - Impact: Ensures reliability and prevents regressions
+  - Integration points: Uses existing test infrastructure and mocking patterns
 
 ### Delete
-- path/to/obsolete/file.ext
-  - Reason: [why removing]
-  - Dependencies: [what depends on this]
-  - Migration strategy: [how to handle removal]
+- No files to delete
 
 ## Implementation Plan
 
@@ -175,72 +174,106 @@ Provide users and automation systems with flexibility to retrieve either a singl
 <!-- Use asterisk markers (* [ ]) for activities that don't change system state -->
 <!-- Focus on understanding, designing, and preparing for implementation -->
 
-- [ ] **System Analysis**: Analyze current system/codebase to understand existing patterns
+* [ ] **Current Implementation Analysis**: Study existing task/next.rb command structure, option definitions, and validation patterns
   > TEST: Understanding Check
-  > Type: Pre-condition Check  
-  > Assert: Key components, interfaces, and integration points are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] **Architecture Design**: Research best practices and design technical approach
-  > TEST: Design Validation
-  > Type: Design Review
-  > Assert: Architecture decisions align with behavioral requirements
-  > Command: bin/test --validate-design-approach
-- [ ] **Implementation Strategy**: Plan detailed step-by-step implementation approach
-- [ ] **Dependency Analysis**: Identify and validate all required dependencies
-- [ ] **Risk Assessment**: Analyze technical risks and define mitigation strategies
+  > Type: Pre-condition Analysis
+  > Assert: Current dry-cli option patterns and validation logic are understood
+  > Command: # Review dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb structure
+* [ ] **Dry-CLI Option Research**: Research dry-cli boolean option syntax and interaction with existing integer options
+  > TEST: Framework Knowledge Check
+  > Type: Documentation Review
+  > Assert: Optimal approach for adding boolean --all option alongside --limit integer option
+  > Command: # Verify dry-cli documentation for boolean + integer option patterns
+* [ ] **Test Infrastructure Analysis**: Review existing test patterns for CLI commands and validation testing
+  > TEST: Test Pattern Understanding
+  > Type: Code Review
+  > Assert: Test mocking patterns and validation test approaches are clear
+  > Command: # Study spec/coding_agent_tools/cli/commands/task_spec.rb testing patterns
+* [ ] **Output Format Research**: Confirm existing multi-task output formatting handles "all tasks" scenario properly
+  > TEST: Output Compatibility Check
+  > Type: Behavior Analysis
+  > Assert: Existing formatting logic works correctly for unlimited task display
+  > Command: # Test task-manager next --limit 10 to verify multi-task output format
 
 ### Execution Steps  
 <!-- Concrete implementation actions that modify code, create files, or change system state -->
 <!-- Use hyphen markers (- [ ]) for actions that result in tangible system changes -->
 <!-- Each step should be verifiable and move toward behavioral requirement fulfillment -->
 
-- [ ] **Foundation Setup**: [Create base structure/components needed for implementation]
-  > TEST: Foundation Verification
-  > Type: Structural Validation
-  > Assert: Base components exist and have expected structure
-  > Command: bin/test --verify-foundation path/to/base/components
-- [ ] **Core Implementation**: [Implement primary functionality that delivers core behavior]
-  > TEST: Core Functionality Check
-  > Type: Functional Validation
-  > Assert: Core behavior works as specified in behavioral requirements
-  > Command: bin/test --verify-core-behavior
-- [ ] **Interface Integration**: [Implement interfaces defined in behavioral specification]
-  > TEST: Interface Contract Validation
-  > Type: Integration Test
-  > Assert: All interface contracts work as specified
-  > Command: bin/test --verify-interfaces
-- [ ] **Error Handling**: [Implement error conditions and edge cases from behavioral spec]
-  > TEST: Error Scenario Testing
-  > Type: Edge Case Validation
-  > Assert: Error handling matches behavioral specification
-  > Command: bin/test --verify-error-handling
-- [ ] **Integration Validation**: [Ensure integration with existing system components]
-  > TEST: System Integration Check
-  > Type: End-to-End Validation
-  > Assert: Implementation integrates properly with existing system
-  > Command: bin/test --verify-integration
+- [ ] **Add --all Option Definition**: Add boolean `--all` option to Next command class using dry-cli option syntax
+  > TEST: Option Registration
+  > Type: CLI Option Validation
+  > Assert: --all flag appears in help text and is recognized by command parser
+  > Command: task-manager next --help | grep -q "all"
+- [ ] **Update Validation Logic**: Modify `validate_limit` method to accept `-1` as special unlimited value
+  > TEST: Limit Validation Update
+  > Type: Method Behavior Validation
+  > Assert: validate_limit(-1) returns appropriate unlimited value, positive integers still work
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "limit validation"
+- [ ] **Implement --all Flag Logic**: Add logic in `call` method to detect `--all` flag and set unlimited limit
+  > TEST: Flag Processing Logic
+  > Type: Command Logic Validation
+  > Assert: --all flag sets appropriate unlimited limit internally
+  > Command: # Test internal limit processing with --all flag mock
+- [ ] **Handle --limit -1 Equivalence**: Ensure `--limit -1` works as equivalent to `--all` per behavioral specification
+  > TEST: Limit -1 Equivalence
+  > Type: Interface Contract Validation
+  > Assert: task-manager next --limit -1 produces same result as task-manager next --all
+  > Command: # Compare outputs of both commands to ensure equivalence
+- [ ] **Update Help Examples**: Add `--all` flag to example usage in command definition
+  > TEST: Help Text Update
+  > Type: Documentation Validation
+  > Assert: Help text includes --all flag example and explains behavior
+  > Command: task-manager next --help | grep -q "--all"
+- [ ] **Update Existing Tests**: Fix tests that expect `limit: -1` to fail since it should now succeed
+  > TEST: Test Compatibility
+  > Type: Regression Prevention
+  > Assert: Existing test suite passes with updated validation logic
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb
+- [ ] **Add Comprehensive New Tests**: Create test cases for --all flag functionality, edge cases, and integration scenarios
+  > TEST: New Feature Coverage
+  > Type: Feature Validation
+  > Assert: All --all flag scenarios are covered by tests (happy path, edge cases, integration)
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "--all"
 
 ## Risk Assessment
 
 ### Technical Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Rollback:** [Procedure]
+- **Risk: Breaking Existing Validation Logic**
+  - **Probability:** Medium
+  - **Impact:** Medium  
+  - **Mitigation:** Careful testing of validate_limit method changes, preserve existing behavior for positive integers
+  - **Rollback:** Revert validation method to original state, remove new option
+- **Risk: Flag Conflict Handling Issues**
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Clear precedence rules (--all overrides --limit), user-friendly warning messages
+  - **Rollback:** Simple flag removal doesn't break existing functionality
+- **Risk: Output Format Inconsistencies**
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Leverage existing multi-task formatting logic, comprehensive testing
+  - **Rollback:** No changes to existing output formatting code
 
 ### Integration Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [How to detect]
+- **Risk: Test Suite Regressions**
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Update existing tests that depend on -1 validation failure, maintain test coverage
+  - **Monitoring:** Run full test suite to detect any missed dependencies
+- **Risk: CLI Interface Confusion**
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Clear documentation, intuitive flag naming, consistent with existing patterns
+  - **Monitoring:** User feedback on new flag usage
 
 ### Performance Risks
-- **Risk:** [Description]
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [Metrics to track]
-  - **Thresholds:** [Acceptable limits]
+- **Risk: Large Task List Performance**
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Existing code already handles multiple tasks via --limit, no new performance concerns
+  - **Monitoring:** No additional monitoring needed - leverages existing task loading
+  - **Thresholds:** No new thresholds required
 
 ## Acceptance Criteria
 

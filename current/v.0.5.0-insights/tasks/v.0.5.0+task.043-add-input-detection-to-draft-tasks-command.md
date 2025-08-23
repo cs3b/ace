@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.043
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 3h
 dependencies: []
 ---
 
@@ -115,58 +115,53 @@ Enhance the `/draft-tasks` command to be more versatile and user-friendly by int
 ## Technical Approach
 
 ### Architecture Pattern
-- [ ] Pattern selection and rationale
-- [ ] Integration with existing architecture
-- [ ] Impact on system design
+- [x] **Command Enhancement Pattern**: Enhance existing `/draft-tasks` Claude command with input detection layer
+- [x] **Workflow Preservation**: Maintain existing `draft-task.wf.md` workflow for idea processing
+- [x] **Additive Design**: Add new capabilities without breaking existing functionality
+- [x] **Minimal Impact**: Changes limited to command interface layer, no core system modifications
 
 ### Technology Stack
-- [ ] Libraries/frameworks needed
-- [ ] Version compatibility checks
-- [ ] Performance implications
-- [ ] Security considerations
+- [x] **No New Dependencies**: Implementation uses existing Claude command system and workflow patterns
+- [x] **File Analysis**: Uses file content inspection (YAML frontmatter vs LLM metadata headers)
+- [x] **Workflow Integration**: Leverages existing `task-manager create` and workflow infrastructure
+- [x] **Backwards Compatible**: All existing command usage patterns continue to work
 
 ### Implementation Strategy
-- [ ] Step-by-step approach
-- [ ] Rollback considerations
-- [ ] Testing strategy
-- [ ] Performance monitoring
+- [x] **File Type Detection**: Parse file headers to distinguish idea files from completed task files
+- [x] **Dual Workflow Routing**: Route to appropriate processing based on detected type
+- [x] **User Feedback**: Provide clear reporting about file types and actions taken
+- [x] **Error Handling**: Graceful handling of unrecognizable files with user guidance
 
 ## Tool Selection
 
-| Criteria | Option A | Option B | Option C | Selected |
-|----------|----------|----------|----------|----------|
-| Performance | | | | |
-| Integration | | | | |
-| Maintenance | | | | |
-| Security | | | | |
-| Learning Curve | | | | |
+| Criteria | File Header Analysis | External Detection Tool | Filename Patterns | Selected |
+|----------|---------------------|------------------------|-------------------|----------|
+| Performance | Excellent | Fair | Good | File Header Analysis |
+| Integration | Excellent | Poor | Good | File Header Analysis |
+| Maintenance | Good | Fair | Excellent | File Header Analysis |
+| Security | Excellent | Unknown | Good | File Header Analysis |
+| Learning Curve | Low | High | Low | File Header Analysis |
 
-**Selection Rationale:** [Explain selection reasoning]
+**Selection Rationale:** File header analysis is the most reliable method for distinguishing between idea files (LLM metadata headers) and completed task files (YAML frontmatter). It integrates seamlessly with existing Claude command patterns and requires no external dependencies.
 
 ### Dependencies
-- [ ] New dependency 1: version and reason
-- [ ] New dependency 2: version and reason
-- [ ] Compatibility verification completed
+- [x] **No New Dependencies Required**: Implementation uses existing Claude command system
+- [x] **File System Access**: Standard file reading capabilities already available
+- [x] **Compatibility Verified**: Changes are additive to existing workflow system
 
 ## File Modifications
 
 ### Create
-- path/to/new/file.ext
-  - Purpose: [why this file]
-  - Key components: [what it contains]
-  - Dependencies: [what it depends on]
+- No new files required for this implementation
 
 ### Modify
-- path/to/existing/file.ext
-  - Changes: [what to modify]
-  - Impact: [effects on system]
-  - Integration points: [how it connects]
+- `.claude/commands/draft-tasks.md`
+  - Changes: Add file type detection logic and dual workflow routing
+  - Impact: Enhanced command functionality without breaking existing behavior
+  - Integration points: Continues to use existing `draft-task.wf.md` workflow and `task-manager create`
 
 ### Delete
-- path/to/obsolete/file.ext
-  - Reason: [why removing]
-  - Dependencies: [what depends on this]
-  - Migration strategy: [how to handle removal]
+- No file deletions required
 
 ## Implementation Plan
 
@@ -178,72 +173,78 @@ Enhance the `/draft-tasks` command to be more versatile and user-friendly by int
 <!-- Use asterisk markers (* [ ]) for activities that don't change system state -->
 <!-- Focus on understanding, designing, and preparing for implementation -->
 
-- [ ] **System Analysis**: Analyze current system/codebase to understand existing patterns
+- [x] **System Analysis**: Current `/draft-tasks` command and `draft-task.wf.md` workflow analyzed
   > TEST: Understanding Check
   > Type: Pre-condition Check  
-  > Assert: Key components, interfaces, and integration points are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] **Architecture Design**: Research best practices and design technical approach
+  > Assert: Command processes idea files via `task-manager create`, needs dual workflow capability
+  > Command: # Manual verification - Current system understanding complete
+- [x] **File Type Detection Design**: File header analysis approach selected (YAML vs LLM metadata)
   > TEST: Design Validation
   > Type: Design Review
-  > Assert: Architecture decisions align with behavioral requirements
-  > Command: bin/test --validate-design-approach
-- [ ] **Implementation Strategy**: Plan detailed step-by-step implementation approach
-- [ ] **Dependency Analysis**: Identify and validate all required dependencies
-- [ ] **Risk Assessment**: Analyze technical risks and define mitigation strategies
+  > Assert: Detection method reliable for distinguishing file types
+  > Command: # Manual validation - Detection criteria clearly defined
+- [x] **Implementation Strategy**: Additive enhancement to existing command without breaking changes
+- [x] **Dependency Analysis**: No new dependencies required, uses existing Claude command system
+- [x] **Risk Assessment**: Low-risk additive changes with straightforward rollback strategy
 
 ### Execution Steps  
 <!-- Concrete implementation actions that modify code, create files, or change system state -->
 <!-- Use hyphen markers (- [ ]) for actions that result in tangible system changes -->
 <!-- Each step should be verifiable and move toward behavioral requirement fulfillment -->
 
-- [ ] **Foundation Setup**: [Create base structure/components needed for implementation]
-  > TEST: Foundation Verification
-  > Type: Structural Validation
-  > Assert: Base components exist and have expected structure
-  > Command: bin/test --verify-foundation path/to/base/components
-- [ ] **Core Implementation**: [Implement primary functionality that delivers core behavior]
-  > TEST: Core Functionality Check
+- [ ] **Add File Type Detection Logic**: Enhance `.claude/commands/draft-tasks.md` with file analysis capability
+  > TEST: Detection Logic Verification
   > Type: Functional Validation
-  > Assert: Core behavior works as specified in behavioral requirements
-  > Command: bin/test --verify-core-behavior
-- [ ] **Interface Integration**: [Implement interfaces defined in behavioral specification]
-  > TEST: Interface Contract Validation
+  > Assert: Command correctly identifies idea files vs completed task files
+  > Command: # Manual test with sample files of each type
+- [ ] **Implement Dual Workflow Routing**: Add conditional logic to route to appropriate processing workflow
+  > TEST: Workflow Routing Check
   > Type: Integration Test
-  > Assert: All interface contracts work as specified
-  > Command: bin/test --verify-interfaces
-- [ ] **Error Handling**: [Implement error conditions and edge cases from behavioral spec]
+  > Assert: Idea files → draft-task workflow, completed tasks → registration workflow
+  > Command: # Test with mixed input files
+- [ ] **Add User Feedback Reporting**: Implement clear status reporting for file types and actions
+  > TEST: User Feedback Validation
+  > Type: Interface Contract Test
+  > Assert: Users receive clear feedback about detected types and processing actions
+  > Command: # Verify output messages match behavioral specification
+- [ ] **Implement Error Handling**: Add handling for unrecognizable files and processing failures
   > TEST: Error Scenario Testing
   > Type: Edge Case Validation
-  > Assert: Error handling matches behavioral specification
-  > Command: bin/test --verify-error-handling
-- [ ] **Integration Validation**: [Ensure integration with existing system components]
+  > Assert: Graceful handling of edge cases with appropriate user guidance
+  > Command: # Test with malformed, empty, and ambiguous files
+- [ ] **Validate Integration**: Test enhanced command with existing workflow infrastructure
   > TEST: System Integration Check
   > Type: End-to-End Validation
-  > Assert: Implementation integrates properly with existing system
-  > Command: bin/test --verify-integration
+  > Assert: Enhanced command integrates properly with `task-manager create` and workflows
+  > Command: # Full end-to-end test with real task creation and file processing
 
 ## Risk Assessment
 
 ### Technical Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Rollback:** [Procedure]
+- **Risk:** File Type Detection Inaccuracy
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Conservative detection logic with clear error reporting for ambiguous files
+  - **Rollback:** Revert to original command behavior by removing detection logic
+
+- **Risk:** Breaking Existing Workflows
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Preserve existing workflow paths completely, only add new detection layer
+  - **Rollback:** Simple file reversion as changes are additive
 
 ### Integration Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [How to detect]
+- **Risk:** User Confusion About New Adaptive Behavior
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Comprehensive user feedback and clear documentation of new behavior
+  - **Monitoring:** Monitor for user questions about command behavior changes
 
 ### Performance Risks
-- **Risk:** [Description]
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [Metrics to track]
-  - **Thresholds:** [Acceptable limits]
+- **Risk:** Slight performance impact from file header analysis
+  - **Mitigation:** Efficient file header parsing, minimal overhead
+  - **Monitoring:** User-reported performance issues
+  - **Thresholds:** No noticeable delay in command execution
 
 ## Acceptance Criteria
 

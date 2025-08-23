@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.041
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
@@ -96,65 +96,73 @@ Ensure reliable capture of LLM-generated content for documentation, code generat
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. **Root Cause Analysis** - ✅ Completed
+2. **Bug Fix Implementation** - Fix YAML frontmatter generation
+3. **Test Enablement** - Re-enable skipped integration tests
+4. **Validation** - Verify fix works across all providers
 
 ## Technical Approach
 
 ### Architecture Pattern
-- [ ] Pattern selection and rationale
-- [ ] Integration with existing architecture
-- [ ] Impact on system design
+- **Pattern Selected**: Direct bug fix in existing Molecule component (FormatHandlers)
+- **Rationale**: The issue is a simple logic error in YAML frontmatter generation, not an architectural problem
+- **Integration**: No changes to existing ATOM architecture required
+- **Impact**: Minimal - isolated fix to one method in FormatHandlers::Markdown class
 
 ### Technology Stack
-- [ ] Libraries/frameworks needed
-- [ ] Version compatibility checks
-- [ ] Performance implications
-- [ ] Security considerations
+- **Libraries/frameworks**: No new dependencies - using existing Ruby/RSpec stack
+- **Version compatibility**: Existing Ruby >= 3.2 compatibility maintained
+- **Performance implications**: None - fix improves correctness without performance impact
+- **Security considerations**: No security implications - purely output formatting fix
 
 ### Implementation Strategy
-- [ ] Step-by-step approach
-- [ ] Rollback considerations
-- [ ] Testing strategy
-- [ ] Performance monitoring
+- **Step-by-step approach**: 
+  1. Fix YAML frontmatter generation logic
+  2. Update unit tests if needed
+  3. Enable skipped integration tests
+  4. Verify across multiple providers
+- **Rollback considerations**: Simple rollback via git revert - no breaking changes
+- **Testing strategy**: Unit tests + integration tests + manual verification
+- **Performance monitoring**: No monitoring needed - cosmetic output fix
 
-## Tool Selection
+## Root Cause Analysis (Completed)
 
-| Criteria | Option A | Option B | Option C | Selected |
-|----------|----------|----------|----------|----------|
-| Performance | | | | |
-| Integration | | | | |
-| Maintenance | | | | |
-| Security | | | | |
-| Learning Curve | | | | |
+**Issue Identified**: Bug in `FormatHandlers::Markdown#format` method at line 140:
 
-**Selection Rationale:** [Explain selection reasoning]
+```ruby
+# Current (broken) code:
+yaml_front_matter = metadata.to_yaml  # Already includes opening ---
+"#{yaml_front_matter}---\n\n#{content}"  # Adds duplicate ---
+```
 
-### Dependencies
-- [ ] New dependency 1: version and reason
-- [ ] New dependency 2: version and reason
-- [ ] Compatibility verification completed
+**Result**: Invalid YAML frontmatter with duplicate `---` separators:
+```yaml
+---
+provider: google
+model: gemini-2.5-flash
+---  <-- from .to_yaml
+---  <-- manually added
+
+Content here
+```
+
+**Evidence**: Integration tests for markdown output are skipped (`xit`) in lines 56 and 235 of `llm_file_io_integration_spec.rb`
 
 ## File Modifications
 
-### Create
-- path/to/new/file.ext
-  - Purpose: [why this file]
-  - Key components: [what it contains]
-  - Dependencies: [what it depends on]
-
 ### Modify
-- path/to/existing/file.ext
-  - Changes: [what to modify]
-  - Impact: [effects on system]
-  - Integration points: [how it connects]
+- `dev-tools/lib/coding_agent_tools/molecules/format_handlers.rb`
+  - **Changes**: Fix YAML frontmatter generation in Markdown class format method (line ~140)
+  - **Impact**: Resolves markdown file output issue for all LLM providers
+  - **Integration points**: Used by llm-query CLI command for file output
 
-### Delete
-- path/to/obsolete/file.ext
-  - Reason: [why removing]
-  - Dependencies: [what depends on this]
-  - Migration strategy: [how to handle removal]
+- `dev-tools/spec/integration/llm_file_io_integration_spec.rb`
+  - **Changes**: Re-enable skipped markdown integration tests (remove `xit`, use `it`)
+  - **Impact**: Provides test coverage for the bug fix
+  - **Integration points**: Part of integration test suite
+
+### No Files to Create or Delete
+- This is a bug fix in existing functionality, not a feature addition
 
 ## Implementation Plan
 
@@ -163,75 +171,91 @@ Ensure reliable capture of LLM-generated content for documentation, code generat
 
 ### Planning Steps
 <!-- Research, analysis, and design activities that clarify the technical approach -->
-<!-- Use asterisk markers (* [ ]) for activities that don't change system state -->
-<!-- Focus on understanding, designing, and preparing for implementation -->
 
-- [ ] **System Analysis**: Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check  
-  > Assert: Key components, interfaces, and integration points are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] **Architecture Design**: Research best practices and design technical approach
-  > TEST: Design Validation
+* [x] **Root Cause Investigation**: Analyze llm-query command and FormatHandlers for markdown output issue
+  > TEST: Issue Identification Complete
+  > Type: Analysis Validation
+  > Assert: Exact bug location and cause identified in FormatHandlers::Markdown class
+  > Command: # No command needed - analysis completed manually
+
+* [x] **Architecture Impact Assessment**: Evaluate impact on existing ATOM architecture
+  > TEST: Architecture Compatibility Check
   > Type: Design Review
-  > Assert: Architecture decisions align with behavioral requirements
-  > Command: bin/test --validate-design-approach
-- [ ] **Implementation Strategy**: Plan detailed step-by-step implementation approach
-- [ ] **Dependency Analysis**: Identify and validate all required dependencies
-- [ ] **Risk Assessment**: Analyze technical risks and define mitigation strategies
+  > Assert: Fix requires no architectural changes - isolated to one Molecule method
+  > Command: # No command needed - minimal impact confirmed
+
+* [x] **Test Strategy Planning**: Plan approach for unit and integration test updates
+  > TEST: Test Coverage Plan Complete
+  > Type: Test Planning Validation
+  > Assert: Strategy includes fixing existing unit tests and enabling skipped integration tests
+  > Command: # Strategy documented in implementation plan
+
+* [x] **Provider Compatibility Analysis**: Verify fix works across all LLM providers
+  > TEST: Multi-Provider Compatibility Confirmed
+  > Type: Scope Validation
+  > Assert: Bug affects all providers equally - fix applies universally
+  > Command: # Analysis shows provider-agnostic issue in formatting layer
 
 ### Execution Steps  
 <!-- Concrete implementation actions that modify code, create files, or change system state -->
-<!-- Use hyphen markers (- [ ]) for actions that result in tangible system changes -->
-<!-- Each step should be verifiable and move toward behavioral requirement fulfillment -->
 
-- [ ] **Foundation Setup**: [Create base structure/components needed for implementation]
-  > TEST: Foundation Verification
-  > Type: Structural Validation
-  > Assert: Base components exist and have expected structure
-  > Command: bin/test --verify-foundation path/to/base/components
-- [ ] **Core Implementation**: [Implement primary functionality that delivers core behavior]
-  > TEST: Core Functionality Check
-  > Type: Functional Validation
-  > Assert: Core behavior works as specified in behavioral requirements
-  > Command: bin/test --verify-core-behavior
-- [ ] **Interface Integration**: [Implement interfaces defined in behavioral specification]
-  > TEST: Interface Contract Validation
-  > Type: Integration Test
-  > Assert: All interface contracts work as specified
-  > Command: bin/test --verify-interfaces
-- [ ] **Error Handling**: [Implement error conditions and edge cases from behavioral spec]
-  > TEST: Error Scenario Testing
-  > Type: Edge Case Validation
-  > Assert: Error handling matches behavioral specification
-  > Command: bin/test --verify-error-handling
-- [ ] **Integration Validation**: [Ensure integration with existing system components]
-  > TEST: System Integration Check
-  > Type: End-to-End Validation
-  > Assert: Implementation integrates properly with existing system
-  > Command: bin/test --verify-integration
+- [ ] **Fix YAML Frontmatter Generation**: Update FormatHandlers::Markdown#format method to properly handle YAML output
+  > TEST: YAML Frontmatter Fix Validation
+  > Type: Unit Test
+  > Assert: Markdown format produces valid YAML frontmatter with content
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb -fd
+
+- [ ] **Update Unit Tests**: Ensure existing unit tests pass with the YAML frontmatter fix
+  > TEST: Unit Test Suite Validation
+  > Type: Regression Test
+  > Assert: All FormatHandlers unit tests pass after fix
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb
+
+- [ ] **Enable Integration Tests**: Remove `xit` markers from skipped markdown integration tests
+  > TEST: Integration Test Enablement
+  > Type: Test Configuration
+  > Assert: Previously skipped markdown tests now run and pass
+  > Command: cd dev-tools && bundle exec rspec spec/integration/llm_file_io_integration_spec.rb -fd --tag integration
+
+- [ ] **Cross-Provider Verification**: Test markdown output with multiple LLM providers
+  > TEST: Multi-Provider Markdown Output
+  > Type: Integration Validation
+  > Assert: Markdown files contain both metadata and content for Google, OpenAI, and LMStudio providers
+  > Command: llm-query google "Test content" --output test-google.md && cat test-google.md
+
+- [ ] **End-to-End Validation**: Verify complete llm-query workflow with markdown output
+  > TEST: Complete Workflow Validation
+  > Type: End-to-End Test
+  > Assert: llm-query saves both metadata and content to markdown files as specified in behavioral requirements
+  > Command: llm-query google "Generate documentation" --output complete-test.md && grep -A5 -B5 "---" complete-test.md
 
 ## Risk Assessment
 
 ### Technical Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Rollback:** [Procedure]
+- **Risk:** YAML frontmatter fix breaks existing functionality
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Comprehensive unit test coverage and regression testing
+  - **Rollback:** Simple git revert - single method change
+
+- **Risk:** Fix doesn't work across all LLM providers
+  - **Probability:** Low 
+  - **Impact:** Medium
+  - **Mitigation:** Test with multiple providers during validation step
+  - **Rollback:** Provider-specific logic can be added if needed
 
 ### Integration Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [How to detect]
+- **Risk:** Previously skipped tests fail when re-enabled
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Address any test failures during integration test enablement step
+  - **Monitoring:** CI/CD test results after test enablement
 
 ### Performance Risks
-- **Risk:** [Description]
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [Metrics to track]
-  - **Thresholds:** [Acceptable limits]
+- **Risk:** None identified - cosmetic output formatting change only
+  - **Mitigation:** N/A
+  - **Monitoring:** N/A
+  - **Thresholds:** N/A
 
 ## Acceptance Criteria
 
