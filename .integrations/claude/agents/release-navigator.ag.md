@@ -3,7 +3,7 @@ name: release-navigator
 description: NAVIGATE releases and track recent activity - discovers current release,
   lists all releases, and shows recent task modifications. Use when you need release
   context or activity history.
-last_modified: '2025-08-19 01:40:50'
+last_modified: '2025-08-23 23:18:44'
 type: agent
 mcp:
   model: google:gemini-2.5-flash

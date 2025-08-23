@@ -3,7 +3,7 @@ name: task-finder
 description: FIND tasks only - discover next actionable tasks, list all tasks, or
   filter by status/priority. Use when you need to find what to work on or explore
   available tasks.
-last_modified: '2025-08-19 01:40:50'
+last_modified: '2025-08-23 23:18:44'
 type: agent
 mcp:
   model: google:gemini-2.5-flash
