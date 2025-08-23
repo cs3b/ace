@@ -27,13 +27,23 @@ Load essential project documentation to understand the project's objectives, arc
 
 2. **Review Loaded Context:**
 
-   From the context output, understand:
+   Read the complete cached context files to understand:
+   
+   ```bash
+   # Read the full cached context files (not just snippets)
+   # The context tool outputs cache locations like:
+   # /path/to/docs/context/cached/[preset-name].md
+   ```
+   
+   From the full context, understand:
    - Project purpose and objectives
    - Technical architecture and design patterns
    - Development conventions and standards
    - Project structure and organization
    - Available tools and workflows
    - Current status and recent activity
+   
+   **IMPORTANT**: Always read the COMPLETE cached files, not partial snippets. The cached files contain essential project information that may be referenced throughout your work session.
 
 3. **Load Additional Contexts (if requested):**
 
@@ -51,6 +61,7 @@ Load essential project documentation to understand the project's objectives, arc
 ## Success Criteria
 
 - Project context successfully loaded from preset
+- **Full cached context files have been read completely** (not just sampled)
 - Clear understanding of project purpose and structure
 - Familiarity with development conventions
 - Ready to work with project-specific context
