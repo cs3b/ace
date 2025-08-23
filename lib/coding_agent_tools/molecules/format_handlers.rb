@@ -136,8 +136,9 @@ module CodingAgentTools
           if metadata.empty?
             content
           else
-            yaml_front_matter = metadata.to_yaml
-            "#{yaml_front_matter}---\n\n#{content}"
+            # to_yaml includes opening "---" but not closing "---"
+            yaml_front_matter = metadata.to_yaml.chomp
+            "#{yaml_front_matter}\n---\n\n#{content}"
           end
         end
       end
