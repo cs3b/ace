@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.041
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -50,16 +50,16 @@ llm-query --model gpt-5-turbo --prompt "test" --output invalid/path.md
 - Special characters in content: Proper encoding and escaping preserved
 
 ### Success Criteria
-- [ ] **Content Preservation**: LLM-generated content is fully saved to markdown files, not just metadata
-- [ ] **Format Consistency**: Output format matches expected markdown structure with actual content
-- [ ] **Model Compatibility**: Fix works across all GPT-5 model variants (gpt-5-turbo, etc.)
-- [ ] **Data Integrity**: No loss of content during the save process
+- [x] **Content Preservation**: LLM-generated content is fully saved to markdown files, not just metadata
+- [x] **Format Consistency**: Output format matches expected markdown structure with actual content
+- [x] **Model Compatibility**: Fix works across all GPT-5 model variants (gpt-5-turbo, etc.)
+- [x] **Data Integrity**: No loss of content during the save process
 
 ### Validation Questions
-- [ ] **Scope Verification**: Is this issue specific to GPT-5 models or does it affect other providers?
-- [ ] **Format Detection**: How does the system determine when to save content vs metadata?
-- [ ] **Backwards Compatibility**: Will the fix affect existing workflows with other models?
-- [ ] **Error Scenarios**: What happens when LLM responses are malformed or incomplete?
+- [x] **Scope Verification**: Is this issue specific to GPT-5 models or does it affect other providers? (Affects all providers)
+- [x] **Format Detection**: How does the system determine when to save content vs metadata? (Both are saved in markdown format)
+- [x] **Backwards Compatibility**: Will the fix affect existing workflows with other models? (No, fix preserves all functionality)
+- [x] **Error Scenarios**: What happens when LLM responses are malformed or incomplete? (Handled gracefully with proper error messages)
 
 ## Objective
 
@@ -199,31 +199,31 @@ Content here
 ### Execution Steps  
 <!-- Concrete implementation actions that modify code, create files, or change system state -->
 
-- [ ] **Fix YAML Frontmatter Generation**: Update FormatHandlers::Markdown#format method to properly handle YAML output
+- [x] **Fix YAML Frontmatter Generation**: Update FormatHandlers::Markdown#format method to properly handle YAML output
   > TEST: YAML Frontmatter Fix Validation
   > Type: Unit Test
   > Assert: Markdown format produces valid YAML frontmatter with content
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb -fd
 
-- [ ] **Update Unit Tests**: Ensure existing unit tests pass with the YAML frontmatter fix
+- [x] **Update Unit Tests**: Ensure existing unit tests pass with the YAML frontmatter fix
   > TEST: Unit Test Suite Validation
   > Type: Regression Test
   > Assert: All FormatHandlers unit tests pass after fix
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb
 
-- [ ] **Enable Integration Tests**: Remove `xit` markers from skipped markdown integration tests
+- [x] **Enable Integration Tests**: Remove `xit` markers from skipped markdown integration tests
   > TEST: Integration Test Enablement
   > Type: Test Configuration
   > Assert: Previously skipped markdown tests now run and pass
   > Command: cd dev-tools && bundle exec rspec spec/integration/llm_file_io_integration_spec.rb -fd --tag integration
 
-- [ ] **Cross-Provider Verification**: Test markdown output with multiple LLM providers
+- [x] **Cross-Provider Verification**: Test markdown output with multiple LLM providers
   > TEST: Multi-Provider Markdown Output
   > Type: Integration Validation
   > Assert: Markdown files contain both metadata and content for Google, OpenAI, and LMStudio providers
   > Command: llm-query google "Test content" --output test-google.md && cat test-google.md
 
-- [ ] **End-to-End Validation**: Verify complete llm-query workflow with markdown output
+- [x] **End-to-End Validation**: Verify complete llm-query workflow with markdown output
   > TEST: Complete Workflow Validation
   > Type: End-to-End Test
   > Assert: llm-query saves both metadata and content to markdown files as specified in behavioral requirements
@@ -264,20 +264,20 @@ Content here
 <!-- Focus on verifying that behavioral requirements are met, not just implementation completed -->
 
 ### Behavioral Requirement Fulfillment
-- [ ] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
-- [ ] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
-- [ ] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
+- [x] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
+- [x] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
+- [x] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
 
 ### Implementation Quality Assurance  
-- [ ] **Code Quality**: All code meets project standards and passes quality checks
-- [ ] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
-- [ ] **Integration Verification**: Implementation integrates properly with existing system components
-- [ ] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
+- [x] **Code Quality**: All code meets project standards and passes quality checks
+- [x] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
+- [x] **Integration Verification**: Implementation integrates properly with existing system components
+- [x] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
 
 ### Documentation and Validation
-- [ ] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
-- [ ] **Error Handling**: All error conditions and edge cases handle as specified
-- [ ] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
+- [x] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
+- [x] **Error Handling**: All error conditions and edge cases handle as specified
+- [x] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
 
 ## Out of Scope
 
