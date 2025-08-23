@@ -17,7 +17,10 @@ module CodingAgentTools
           desc "Find the next actionable task to work on"
 
           option :limit, type: :integer, default: 1,
-            desc: "Maximum number of tasks to return (default: 1)"
+            desc: "Maximum number of tasks to return (default: 1, use -1 for all)"
+
+          option :all, type: :boolean, default: false,
+            desc: "Return all actionable tasks (equivalent to --limit -1)"
 
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
@@ -37,6 +40,7 @@ module CodingAgentTools
           example [
             "",
             "--limit 3",
+            "--all",
             "--debug",
             "--sort priority:desc,id:asc",
             "--filter status:pending --filter priority:high",
@@ -44,8 +48,14 @@ module CodingAgentTools
           ]
 
           def call(**options)
-            limit = validate_limit(options[:limit]) if options[:limit]
-            limit ||= options[:limit] || 1
+            # Handle --all flag first
+            if options[:all]
+              limit = Float::INFINITY
+            elsif options[:limit]
+              limit = validate_limit(options[:limit])
+            else
+              limit = 1
+            end
 
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
@@ -89,14 +99,20 @@ module CodingAgentTools
               return 0
             end
 
-            # Limit results
-            limited_tasks = final_result.sorted_tasks.take(limit)
+            # Limit results (handle infinity case)
+            limited_tasks = if limit == Float::INFINITY
+              final_result.sorted_tasks
+            else
+              final_result.sorted_tasks.take(limit)
+            end
 
             # Show header with status summary
             puts status_summary.formatted_text
 
             if limit == 1
               puts "Next Task:"
+            elsif limit == Float::INFINITY
+              puts "Next Tasks (#{limited_tasks.size} ready):"
             else
               puts "Next Tasks (#{limited_tasks.size} shown):"
             end
@@ -123,7 +139,12 @@ module CodingAgentTools
 
           def validate_limit(limit)
             limit_int = limit.to_i
-            raise ArgumentError, "Limit must be a positive integer, got: #{limit}" unless limit_int.positive?
+            # Allow -1 as special case for unlimited
+            if limit_int == -1
+              return Float::INFINITY
+            elsif limit_int <= 0
+              raise ArgumentError, "Limit must be a positive integer or -1 for all, got: #{limit}"
+            end
 
             limit_int
           end
