@@ -18,8 +18,9 @@ Systematically analyze and compact multiple reflection notes to extract actionab
 
 ### Execution Steps
 
-- [ ] Run synthesis command to auto-discover and process reflections
-- [ ] Review synthesis report for insights and recommendations
+- [ ] Run enhanced synthesis command with analytics to auto-discover and process reflections
+- [ ] Review comprehensive synthesis report with analytical insights and priority rankings
+- [ ] Extract priority-based action items for implementation planning
 
 ## Process Steps
 
@@ -41,14 +42,18 @@ echo "✅ Synthesis and archival completed automatically"
 
 **What this does:**
 - Automatically discovers all non-archived reflection notes in current release
-- Synthesizes them using specialized LLM analysis
-- Generates comprehensive improvement recommendations
+- Synthesizes them using specialized LLM analysis with enhanced analytics capabilities
+- Generates comprehensive improvement recommendations with priority rankings
+- Identifies automation opportunities ranked by frequency and impact
+- Consolidates tool and workflow proposals with implementation guidance
 - Archives processed reflections to `reflections/archived/` directory
 - Creates archive summary for traceability
 
 **Validation:**
 - Synthesis executes successfully with clear output
-- Synthesis report generated with actionable recommendations
+- Enhanced synthesis report generated with analytical insights and priority rankings
+- Automation opportunities identified and ranked by impact/frequency
+- Tool and workflow proposals consolidated with implementation guidance
 - Original reflections moved to archived directory
 - Archive summary created with metadata
 
@@ -56,9 +61,13 @@ echo "✅ Synthesis and archival completed automatically"
 ## Success Criteria
 
 - ✅ Reflection synthesis executed automatically without manual discovery
-- ✅ Comprehensive analysis report generated with LLM insights
+- ✅ Enhanced analysis report generated with LLM insights and analytical features
+- ✅ Pattern detection identifies recurring themes with frequency analysis
+- ✅ Automation opportunities ranked by frequency, impact, and implementation effort
+- ✅ Tool and workflow proposals consolidated with clear rationale and priorities
+- ✅ Cookbook patterns identified for documentation with reusability assessment
 - ✅ Original reflection notes archived with proper organization
-- ✅ Actionable recommendations provided with implementation guidance
+- ✅ Actionable priority lists generated with implementation guidance
 
 ## Error Handling
 
@@ -119,11 +128,14 @@ reflection-synthesize --output quarterly-reflection-analysis.md --archived
 
 - **Zero-Configuration**: Single command handles discovery, synthesis, and archival
 - **Automated Workflow**: No manual file management or bash scripting required
-- **Comprehensive Analysis**: LLM-powered insights beyond simple pattern matching
+- **Enhanced Analytics**: LLM-powered insights with pattern detection and priority ranking
+- **Strategic Prioritization**: Automation opportunities ranked by frequency and impact
+- **Proposal Consolidation**: Similar tool and workflow needs merged with clear rationale
+- **Cookbook Identification**: Common patterns flagged for documentation with reusability metrics
 - **Proper Archival**: Maintains clean workspace while preserving processed reflections
-- **Actionable Output**: Specific implementation guidance tied to project architecture
+- **Actionable Output**: Specific implementation guidance tied to project architecture with priority lists
 - **Time Efficiency**: Reduces 330+ line workflow to single command execution
-- **Consistent Quality**: Standardized analysis using specialized system prompt
+- **Consistent Quality**: Standardized analysis using enhanced system prompt with analytical capabilities
 
 ## Command Reference
 
