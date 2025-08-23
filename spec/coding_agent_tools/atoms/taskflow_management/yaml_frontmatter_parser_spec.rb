@@ -1013,6 +1013,38 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::YamlFrontmatterParse
       end
 
       describe "perform_security_checks" do
+        it "allows legitimate include patterns in YAML documentation" do
+          # These should NOT trigger security errors as they're legitimate documentation
+          safe_include_patterns = [
+            "description: This will include Claude integration",
+            "note: Please include DataStructure in your code",
+            "text: include: Something important",
+            "command: handbook claude integrate --include MyModule",
+            "docs: The system will include ValidationModule",
+            "title: How to include Components in React",
+            "metadata: include Anthropic features",
+            "include_path: /usr/local/include",
+            "options: --include SomeModule"
+          ]
+
+          safe_include_patterns.each do |pattern|
+            expect { described_class.send(:perform_security_checks, pattern) }.not_to raise_error
+          end
+        end
+
+        it "still detects actual Ruby module inclusion attempts" do
+          # These SHOULD trigger security errors as they look like actual Ruby code
+          dangerous_module_patterns = [
+            "include Module",
+            "  include ActiveRecord::Base",
+            "include Rails::Engine"
+          ]
+
+          dangerous_module_patterns.each do |pattern|
+            expect { described_class.send(:perform_security_checks, pattern) }.to raise_error(described_class::SecurityError)
+          end
+        end
+
         it "covers each dangerous pattern detection" do
           patterns_to_test = [
             "!ruby/object:User", "!ruby/class:String", "!ruby/module:Kernel", "!ruby/regexp:/test/",

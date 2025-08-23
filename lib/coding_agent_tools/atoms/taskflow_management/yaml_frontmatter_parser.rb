@@ -275,7 +275,7 @@ module CodingAgentTools
               /\bpopen\s*\(/i,         # Process opening with parentheses
               /\bfork\s+(do|\{)/i,     # Process forking with block
               /\brequire\s+['"`]/i,    # Code requiring with quotes
-              /\binclude\s+[A-Z]/,     # Module include (capital letter indicates module name)
+              /^\s*include\s+[A-Z]\w*(::\w+)*\s*$/m,  # Ruby module include (only at line start, module format)
               /\bload\s+['"`]/i,       # Code loading with quotes
               /\bsend\s*[:]/i,         # Method sending with symbol
               /\bdefine_method\b/i,    # Method definition
