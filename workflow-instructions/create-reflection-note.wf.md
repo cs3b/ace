@@ -220,6 +220,67 @@ When no specific context is provided, follow this process:
    - Capture new learnings
    - Propose process improvements
 
+## Enhanced Reflection Sections
+
+When creating reflections, systematically populate these enhancement sections to capture improvement opportunities:
+
+### Automation Insights
+Use the prompting guide from `dev-handbook/templates/release-reflections/enhanced-prompts.template.md` to:
+- Identify repetitive manual processes that could be automated
+- Assess time savings and implementation complexity
+- Prioritize automation opportunities by impact
+
+**Key Questions:**
+- What manual steps were repeated multiple times?
+- Which processes took the most time?
+- What could be scripted or automated?
+
+### Tool Proposals
+Document missing or needed tool enhancements:
+- Propose new dev-tools commands that would improve efficiency
+- Identify enhancements to existing tools
+- Specify expected usage patterns and key features
+
+**Key Questions:**
+- What command did you wish existed?
+- Which tool almost met your needs but was missing features?
+- What complex command sequences could be simplified?
+
+### Workflow Proposals
+Capture workflow improvement opportunities:
+- Identify processes that deserve their own workflow
+- Propose enhancements to existing workflows
+- Document trigger conditions and expected frequency
+
+**Key Questions:**
+- What multi-step process should be formalized?
+- Which workflows need enhancement?
+- What knowledge should be captured in a workflow?
+
+### Cookbook Opportunities
+Identify patterns worth documenting:
+- Recognize reusable solutions and techniques
+- Propose cookbook topics with clear problem statements
+- Assess reusability and target audience
+
+**Key Questions:**
+- What complex problem did you solve that others might face?
+- What setup process needs step-by-step documentation?
+- Which patterns appear frequently enough to document?
+
+### Pattern Identification
+Capture reusable elements:
+- Document code snippets that could be extracted
+- Identify template opportunities
+- Note configuration patterns
+
+**Key Questions:**
+- What code could become a helper function?
+- Which file structures follow consistent patterns?
+- What validation logic could be reused?
+
+**Note:** These sections are optional but highly encouraged. Focus on quality over quantity - a few well-articulated insights are more valuable than many vague suggestions. Refer to the enhanced prompting guide for detailed questions and examples.
+
 ## Common Reflection Patterns
 
 ### Technical Reflection
