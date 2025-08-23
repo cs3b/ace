@@ -98,6 +98,6 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 
 ## References
 
-- Related ideas-manager output (if applicable)
+- Related capture-it output (if applicable)
 - User experience requirements
 - Interface specification examples
