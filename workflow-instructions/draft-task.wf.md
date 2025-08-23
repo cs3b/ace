@@ -92,28 +92,36 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Integration with capture-it if applicable
    * Avoid adding implementation details
 
-7.5. **Manage Idea File Organization (Optional)**
-   * If task was created from an idea file path, automatically organize the original idea file:
+8. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
+   * **IMPORTANT**: When task is created from idea files, ALWAYS move them to current release:
+   * Track all source idea files used for this draft task:
+     * List all idea files referenced during behavioral specification
+     * Note: Multiple idea files may be combined into one task
+   * For EACH source idea file:
      * Extract task number from created task path: `echo "$TASK_PATH" | grep -oE "task\.([0-9]{3})" | cut -d. -f2`
      * Get current release path: `RELEASE_PATH=$(release-manager current | grep "Path:" | awk '{print $2}')`
      * Create destination directory if needed: `mkdir -p "$RELEASE_PATH/docs/ideas"`
      * Build destination filename: `$TASK_NUM-$(basename "$IDEA_FILE_PATH")`
-     * Check for existing file with same prefix and handle conflicts:
-       * If file exists with same task prefix, append current task number to create combined prefix
-       * Example: If `014-idea.md` exists and we need to move idea for task 015, create `014-015-idea.md`
-     * Execute file movement: `git mv "$IDEA_FILE_PATH" "$RELEASE_PATH/docs/ideas/$DESTINATION_FILENAME"`
-     * Commit the file movement: `git-commit --intention "Move idea file to current release after task $TASK_NUM creation"`
-   * Handle errors gracefully:
-     * If source idea file doesn't exist: Continue without error, log warning
-     * If release-manager fails: Skip file movement, continue task creation
-     * If git mv fails: Continue task creation, report error to user
-     * If destination directory creation fails: Continue task creation, report error
+       * For multiple files with same task: Use same prefix for all (e.g., `040-017-idea.md`, `040-018-idea.md`)
+     * Execute file movement: `git-mv "$IDEA_FILE_PATH" "$RELEASE_PATH/docs/ideas/$DESTINATION_FILENAME"`
+   * Update task references:
+     * Update the task file's References section with new idea file locations
+     * Ensure all moved files are properly tracked
+   * Commit the movements:
+     * Use `git-commit` to commit all idea file movements together
+     * Clear commit message: "Move idea files to current release for task $TASK_NUM"
+   * **Validation Requirements:**
+     * [ ] All source idea files moved to current release
+     * [ ] Task references updated to new locations
+     * [ ] Git movements committed
+   * Error handling:
+     * If release-manager fails: Create files in backlog/drafts/ instead
+     * If git-mv fails: Report error and manual intervention needed
    * Success indicators:
-     * Report successful file movement: "Idea file moved: [old-path] -> [new-path]"
-     * Original task file maintains reference to source idea (no updates needed)
-     * File operations are atomic and don't interfere with task creation
+     * Report each file movement: "Moved: [old-path] -> [new-path]"
+     * Confirm all source ideas organized: "All X idea files moved to current release"
 
-8. **Ensure Draft Creation Completion**
+9. **Ensure Draft Creation Completion**
    * Verify all behavioral specifications are captured:
      * Cross-reference against initial requirements
      * Confirm each draft file exists with correct status
@@ -125,7 +133,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * [ ] Interface contracts are defined
      * [ ] Success criteria are measurable
 
-9. **Provide Behavioral Summary**
+10. **Provide Behavioral Summary**
    * List all created draft tasks with their:
      * IDs and titles
      * User experience summaries
@@ -171,8 +179,11 @@ Create high-level behavioral specifications that define WHAT the system should d
 * All tasks have status: draft
 * No implementation details mixed with behavioral requirements
 * Clear handoff to implementation planning phase
-* Automated idea file organization with task number prefixes (when applicable)
-* Original idea files moved to current release docs/ideas/ directory for traceability
+* **REQUIRED when drafting from ideas:**
+  * All source idea files moved to current release docs/ideas/ directory
+  * Task number prefixes added to moved idea files
+  * Task references updated to new idea file locations
+  * Git movements properly committed
 
 ## Error Handling
 
