@@ -41,7 +41,7 @@ Users should experience a unified git commit workflow where:
 /commit --intention "description" # Provide commit intention
 
 # Agent Interface (unified git-commit agent)
-git-commit-unified --strategy all|files|review [--intention "text"] [file1 file2 ...]
+git-commit --strategy all|files|review [--intention "text"] [file1 file2 ...]
 
 # Expected outputs for all strategies:
 - Commit hash and message
@@ -101,18 +101,18 @@ Consolidate and standardize the git commit workflow by creating a single source 
 #### Create
 
 - dev-handbook/workflow-instructions/commit.wf.md
-- .claude/agents/git-commit-unified.ag.md (replaces 3 existing agents)
+- .claude/agents/git-commit.ag.md (unified agent, replaces 3 existing agents)
 
 #### Modify
 
-- .claude/commands/commit.md
-- .claude/agents/git-all-commit.ag.md (deprecation notice)
-- .claude/agents/git-files-commit.ag.md (deprecation notice) 
-- .claude/agents/git-review-commit.ag.md (deprecation notice)
+- .claude/commands/commit.md (update to use git-commit agent)
 
 #### Delete
 
-- None (keep existing agents for backward compatibility with deprecation notices)
+- .claude/agents/git-all-commit.ag.md (after verification phase)
+- .claude/agents/git-files-commit.ag.md (after verification phase)
+- .claude/agents/git-review-commit.ag.md (after verification phase)
+- .claude/agents/git-commit-unified.ag.md (cleanup - not needed)
 
 ## Technical Approach
 
@@ -129,8 +129,8 @@ Consolidate and standardize the git commit workflow by creating a single source 
 - **Git Integration**: Leverage existing git-commit wrapper commands
 
 ### Implementation Strategy
-- **Incremental Approach**: Create new unified components alongside existing ones
-- **Backward Compatibility**: Maintain existing agents with deprecation notices
+- **Direct Replacement**: Create unified components and remove old ones (no public release yet)
+- **Clean Migration**: No backward compatibility needed since not shipped publicly
 - **Template Consolidation**: Merge logic from three agents into parameterized single agent
 - **Workflow Extraction**: Move git-specific logic from agent to self-contained workflow
 
@@ -159,26 +159,24 @@ Consolidate and standardize the git commit workflow by creating a single source 
   - Key components: Strategy detection logic, conventional commit templates, error handling
   - Dependencies: Embeds content from existing agents and commit workflow ideas
 
-- .claude/agents/git-commit-unified.ag.md
+- .claude/agents/git-commit.ag.md
   - Purpose: Single agent that can handle all commit strategies via parameters
   - Key components: Strategy parameter validation, workflow delegation, response formatting
   - Dependencies: References commit.wf.md workflow instruction
 
 ### Modify
 - .claude/commands/commit.md
-  - Changes: Update to use unified git-commit-unified agent instead of strategy selection
+  - Changes: Update to use unified git-commit agent instead of strategy selection
   - Impact: Simplified command logic, consistent user experience
   - Integration points: Direct invocation of unified agent
 
+### Delete (Phase 3)
 - .claude/agents/git-all-commit.ag.md
 - .claude/agents/git-files-commit.ag.md
 - .claude/agents/git-review-commit.ag.md
-  - Changes: Add deprecation notices pointing to git-commit-unified
-  - Impact: Maintain backward compatibility while encouraging migration
-  - Integration points: Could delegate to unified agent internally
-
-### Naming Consistency Analysis
-No renaming required - creating new unified components alongside existing ones for smooth transition.
+  - Reason: Replaced by unified git-commit.ag.md agent
+  - Dependencies: Ensure all references updated to new agent
+  - Migration: Direct removal after verification phase
 
 ## Implementation Plan
 
@@ -206,6 +204,8 @@ No renaming required - creating new unified components alongside existing ones f
 
 ### Execution Steps
 
+#### Phase 1: Create Unified Components
+
 - [ ] **Create Unified Workflow**: Implement dev-handbook/workflow-instructions/commit.wf.md
   - Extract and consolidate logic from three existing agents
   - Implement strategy auto-detection based on context analysis
@@ -217,7 +217,7 @@ No renaming required - creating new unified components alongside existing ones f
   > Assert: Workflow covers all commit scenarios from existing agents
   > Command: grep -E "(all changes|specific files|review)" dev-handbook/workflow-instructions/commit.wf.md
 
-- [ ] **Create Unified Agent**: Implement .claude/agents/git-commit-unified.ag.md
+- [ ] **Create Unified Agent**: Implement .claude/agents/git-commit.ag.md
   - Create agent with strategy parameters (all|files|review)
   - Implement parameter validation and strategy selection logic
   - Add workflow delegation to commit.wf.md
@@ -226,7 +226,7 @@ No renaming required - creating new unified components alongside existing ones f
   > TEST: Agent Parameter Validation
   > Type: Interface Validation
   > Assert: Agent accepts and validates strategy parameters correctly
-  > Command: grep -A 5 "expected_params" .claude/agents/git-commit-unified.ag.md
+  > Command: grep -A 5 "expected_params" .claude/agents/git-commit.ag.md
 
 - [ ] **Update Command Interface**: Modify .claude/commands/commit.md
   - Replace strategy selection logic with unified agent invocation
@@ -236,17 +236,9 @@ No renaming required - creating new unified components alongside existing ones f
   > TEST: Command Integration Check
   > Type: Integration Validation
   > Assert: Command properly invokes unified agent with context
-  > Command: grep "git-commit-unified" .claude/commands/commit.md
+  > Command: grep "git-commit" .claude/commands/commit.md
 
-- [ ] **Add Deprecation Notices**: Update existing agents with deprecation guidance
-  - Add deprecation notices to all three existing git commit agents
-  - Include migration guidance pointing to git-commit-unified
-  - Maintain full functionality for backward compatibility
-  - Add cross-references between old and new agents
-  > TEST: Backward Compatibility Verification
-  > Type: Compatibility Check
-  > Assert: Existing agents still function with deprecation notices
-  > Command: grep -l "DEPRECATED\|deprecated" .claude/agents/git-*-commit.ag.md
+#### Phase 2: Verification and Testing
 
 - [ ] **Integration Testing**: Validate unified workflow across all scenarios
   - Test workflow with strategy auto-detection
@@ -259,14 +251,45 @@ No renaming required - creating new unified components alongside existing ones f
   > Assert: All commit scenarios work through unified workflow
   > Command: # Test unified workflow with sample repository changes
 
+- [ ] **Feature Parity Verification**: Ensure no functionality lost
+  - Verify all features from git-all-commit work
+  - Verify all features from git-files-commit work
+  - Verify all features from git-review-commit work
+  - Document any differences or improvements
+  > TEST: Feature Coverage Check
+  > Type: Functionality Validation
+  > Assert: All original agent capabilities preserved
+  > Command: # Manual verification of each strategy
+
+#### Phase 3: Cleanup and Finalization
+
+- [ ] **Remove Legacy Agents**: Delete old agent files
+  - Delete .claude/agents/git-all-commit.ag.md
+  - Delete .claude/agents/git-files-commit.ag.md
+  - Delete .claude/agents/git-review-commit.ag.md
+  - Verify no remaining references to old agents
+  > TEST: Reference Cleanup Check
+  > Type: Reference Validation
+  > Assert: No references to deleted agents remain
+  > Command: grep -r "git-all-commit\|git-files-commit\|git-review-commit" .claude/ dev-handbook/
+
+- [ ] **Update Documentation**: Ensure all docs reflect new structure
+  - Update any workflow instructions that reference old agents
+  - Update command documentation if needed
+  - Add migration notes to project changelog
+  > TEST: Documentation Consistency
+  > Type: Documentation Validation
+  > Assert: All documentation uses new git-commit agent
+  > Command: grep -r "git-commit" dev-handbook/workflow-instructions/ .claude/commands/
+
 ## Risk Assessment
 
 ### Technical Risks
 - **Risk:** Breaking existing workflows that depend on specific agent names
-  - **Probability:** Medium
-  - **Impact:** Medium
-  - **Mitigation:** Maintain existing agents with deprecation notices and full functionality
-  - **Rollback:** Keep existing agents active, remove unified components
+  - **Probability:** Low (not shipped publicly yet)
+  - **Impact:** Low (internal use only)
+  - **Mitigation:** Full verification before deletion, update all references
+  - **Rollback:** Git history allows restoration if needed
 
 - **Risk:** Strategy auto-detection logic makes incorrect choices
   - **Probability:** Medium
@@ -304,9 +327,9 @@ No renaming required - creating new unified components alongside existing ones f
 
 ### Implementation Quality Assurance
 - [ ] **Workflow Self-Containment**: commit.wf.md contains all necessary templates and logic
-- [ ] **Backward Compatibility**: Existing agents continue to work with deprecation notices
+- [ ] **Clean Migration**: All old agents removed after verification
 - [ ] **Code Quality**: All files follow project standards (markdownlint, agent format validation)
-- [ ] **Documentation**: Comprehensive usage examples and migration guidance
+- [ ] **Documentation**: Comprehensive usage examples for new unified approach
 
 ### Integration Verification
 - [ ] **Command Integration**: /commit command works seamlessly with unified agent
