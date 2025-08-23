@@ -22,7 +22,20 @@
 
 # Additional comments
 
-Currenlty we have ...
+Currenlty we have ...a litle bit of mix here
+
+in the end we should have
+
+- workflow that capture all the git strategies dev-handbook/workflow-instructions/commit.wf.md
+- agent that provide additional guardrails and allow to run commmit in sepearte context
+   - still unsure we have 3 to make sure we choose the right strategy - but it should a param to agent and workflow (if we decide upfront)
+   dev-handbook/.integrations/claude/agents/git-all-commit.ag.md
+   dev-handbook/.integrations/claude/agents/git-files-commit.ag.md
+   dev-handbook/.integrations/claude/agents/git-review-commit.ag.md
+   we should keep only one
+- command to trigger the workflow directly dev-handbook/.integrations/claude/commands/_custom/commit.md (after all the changes it might became one of gneerated commands)
+
+we shouldn't duplicate info
 
 
 # Move Git Command Logic to Default Commit Workflow
