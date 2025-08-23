@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.040
-status: draft
+status: in-progress
 priority: high
 estimate: 2h
 dependencies: []
@@ -48,6 +48,23 @@ spec/integration/capture_it_integration_spec.rb  # Test file renamed
 - [ ] **Documentation standard**: Always use hyphenated "capture-it" in text?
 - [ ] **Git history**: Preserve original context in past commits?
 
+## Implementation Plan
+
+### Planning Steps
+* [x] Analyze current state - identify all remaining "ideas_manager" references
+* [x] Confirm scope - active files only, preserve historical context
+* [x] Verify Ruby naming conventions for test files (use underscores)
+
+### Execution Steps
+- [ ] Rename integration test file from ideas_manager_integration_spec.rb to capture_it_integration_spec.rb
+- [ ] Rename unit test file from ideas_manager_spec.rb to capture_it_spec.rb
+- [ ] Update internal test references (lines 13, 319, 369, 395, 567 in integration spec)
+- [ ] Update draft-task.wf.md to reference capture-it instead of ideas-manager
+- [ ] Update capture-idea.wf.md to reference capture-it tool
+- [ ] Update task.draft.template.md to reference capture-it
+- [ ] Run tests to verify renaming doesn't break anything
+- [ ] Create grep report confirming zero "ideas_manager" in active files
+
 ## Objective
 
 Complete the refactoring from "ideas_manager" to "capture-it" ensuring consistent naming throughout the codebase, tests, and documentation for improved maintainability and clarity.
@@ -77,9 +94,17 @@ Complete the refactoring from "ideas_manager" to "capture-it" ensuring consisten
 - ❌ **Binary files**: Modifying git metadata or log files
 - ❌ **External systems**: References outside project repositories
 
+## Acceptance Criteria
+
+- [ ] Test file renamed to capture_it_integration_spec.rb
+- [ ] All workflow documentation references capture-it
+- [ ] All templates reference capture-it
+- [ ] Tests pass with new naming
+- [ ] Zero "ideas_manager" references in active code/docs
+
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/017-filesystem-capture-improvements.md
-- Related idea: dev-taskflow/backlog/ideas/018-filesystem-search-enhancements.md
+- Source idea: dev-taskflow/current/v.0.5.0-insights/docs/ideas/040-017-filesystem-capture-improvements.md
+- Related idea: dev-taskflow/current/v.0.5.0-insights/docs/ideas/040-018-filesystem-search-enhancements.md
 - Current implementation: dev-tools/exe/capture-it
 - Test file to rename: dev-tools/spec/integration/ideas_manager_integration_spec.rb
