@@ -122,15 +122,13 @@ task-manager create --title "Critical fix" --priority high --status pending
 files:
     - docs/what-do-we-build.md
     - docs/architecture.md
+    - docs/architeturee-tools.md
     - docs/decisions.md
-    - docs/blueprint.md
-    - docs/tools.md
     - dev-handbook/workflow-instructions/draft-task.wf.md
     - dev-handbook/workflow-instructions/plan-task.wf.md
 
 commands:
     - git-status --short
-    - release-manager current
     - task-manager recent --limit 5
     - task-manager create --help
 </context-tool-config>
