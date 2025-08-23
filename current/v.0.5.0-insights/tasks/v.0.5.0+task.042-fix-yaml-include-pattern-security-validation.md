@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.042
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
@@ -110,58 +110,56 @@ Enable successful Claude integration setup by fixing overly aggressive YAML secu
 ## Technical Approach
 
 ### Architecture Pattern
-- [ ] Pattern selection and rationale
-- [ ] Integration with existing architecture
-- [ ] Impact on system design
+- **Pattern Selection**: Refine existing security validation patterns in `YamlFrontmatterParser`
+- **Integration**: Enhance existing ATOM architecture component without changing interface  
+- **Impact**: Minimal system design impact - internal security logic refinement only
 
 ### Technology Stack
-- [ ] Libraries/frameworks needed
-- [ ] Version compatibility checks
-- [ ] Performance implications
-- [ ] Security considerations
+- **Libraries/frameworks**: No new dependencies - uses existing Ruby/YAML infrastructure
+- **Version compatibility**: Ruby >= 3.2, existing Psych YAML parser
+- **Performance implications**: Negligible - same pattern matching overhead
+- **Security considerations**: Maintain security while reducing false positives
 
 ### Implementation Strategy
-- [ ] Step-by-step approach
-- [ ] Rollback considerations
-- [ ] Testing strategy
-- [ ] Performance monitoring
+- **Targeted refinement**: Focus on `/\\binclude\\s+[A-Z]/` pattern causing false positives
+- **Context-aware validation**: Distinguish between Ruby code patterns and YAML string values
+- **Backward compatibility**: Maintain all existing test coverage and security protections  
+- **Incremental approach**: Minimal changes with comprehensive testing
 
 ## Tool Selection
 
-| Criteria | Option A | Option B | Option C | Selected |
-|----------|----------|----------|----------|----------|
-| Performance | | | | |
-| Integration | | | | |
-| Maintenance | | | | |
-| Security | | | | |
-| Learning Curve | | | | |
+| Criteria | Pattern Refinement | Additional Context Check | Complete Rewrite | Selected |
+|----------|------------------|-------------------------|------------------|----------|
+| Performance | Excellent | Good | Poor | Pattern Refinement |
+| Integration | Excellent | Good | Poor | Pattern Refinement |
+| Maintenance | Excellent | Fair | Poor | Pattern Refinement |
+| Security | Good | Excellent | Good | Pattern Refinement |
+| Learning Curve | Low | Medium | High | Pattern Refinement |
 
-**Selection Rationale:** [Explain selection reasoning]
+**Selection Rationale:** Pattern refinement provides the best balance of maintaining security while fixing false positives with minimal risk and complexity. The current architecture is sound - we only need to adjust the specific problematic pattern.
 
 ### Dependencies
-- [ ] New dependency 1: version and reason
-- [ ] New dependency 2: version and reason
-- [ ] Compatibility verification completed
+- **No new dependencies required** - using existing Ruby standard library
+- **Compatibility**: Fully compatible with existing Ruby >= 3.2 requirement
+- **Testing framework**: Continue using existing RSpec test infrastructure
 
 ## File Modifications
 
 ### Create
-- path/to/new/file.ext
-  - Purpose: [why this file]
-  - Key components: [what it contains]
-  - Dependencies: [what it depends on]
+*No new files required*
 
 ### Modify
-- path/to/existing/file.ext
-  - Changes: [what to modify]
-  - Impact: [effects on system]
-  - Integration points: [how it connects]
+- `dev-tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb`
+  - **Changes**: Refine the `/\\binclude\\s+[A-Z]/` security pattern to be more context-aware
+  - **Impact**: Reduces false positives while maintaining security against actual Ruby module inclusion attacks
+  - **Integration points**: Used by Claude command installation, YAML frontmatter parsing throughout the system
+- `dev-tools/spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb`
+  - **Changes**: Add test cases for legitimate include patterns that should not trigger security errors
+  - **Impact**: Ensures the fix works correctly and prevents regressions
+  - **Integration points**: Part of the comprehensive test suite
 
 ### Delete
-- path/to/obsolete/file.ext
-  - Reason: [why removing]
-  - Dependencies: [what depends on this]
-  - Migration strategy: [how to handle removal]
+*No files to delete*
 
 ## Implementation Plan
 
@@ -173,72 +171,99 @@ Enable successful Claude integration setup by fixing overly aggressive YAML secu
 <!-- Use asterisk markers (* [ ]) for activities that don't change system state -->
 <!-- Focus on understanding, designing, and preparing for implementation -->
 
-- [ ] **System Analysis**: Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check  
-  > Assert: Key components, interfaces, and integration points are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] **Architecture Design**: Research best practices and design technical approach
-  > TEST: Design Validation
-  > Type: Design Review
-  > Assert: Architecture decisions align with behavioral requirements
-  > Command: bin/test --validate-design-approach
-- [ ] **Implementation Strategy**: Plan detailed step-by-step implementation approach
-- [ ] **Dependency Analysis**: Identify and validate all required dependencies
-- [ ] **Risk Assessment**: Analyze technical risks and define mitigation strategies
+* [ ] **Current Pattern Analysis**: Analyze existing security patterns to understand why `/\\binclude\\s+[A-Z]/` causes false positives
+  > TEST: Pattern Understanding Check
+  > Type: Code Analysis
+  > Assert: All current security patterns are documented and understood
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb --tag security
+* [ ] **False Positive Investigation**: Test various legitimate YAML patterns to identify specific cases causing issues
+  > TEST: Test Case Coverage
+  > Type: Edge Case Discovery
+  > Assert: All problematic legitimate patterns are identified
+  > Command: bundle exec ruby -e 'test_yaml_patterns_script'
+* [ ] **Security Pattern Research**: Research Ruby module inclusion attack vectors to ensure security is maintained
+  > TEST: Security Research Validation
+  > Type: Security Analysis
+  > Assert: Understanding of actual Ruby inclusion threats vs legitimate YAML usage
+  > Command: bundle exec ruby -e 'validate_security_understanding_script'
+* [ ] **Pattern Refinement Design**: Design new pattern that distinguishes between actual Ruby code and YAML string values
+  > TEST: Design Pattern Validation
+  > Type: Pattern Testing
+  > Assert: New pattern catches real threats while allowing legitimate YAML
+  > Command: bundle exec ruby -e 'test_new_pattern_design'
+* [ ] **Test Case Planning**: Design comprehensive test cases covering both security and usability scenarios
+  > TEST: Test Planning Completeness
+  > Type: Test Strategy Review
+  > Assert: All edge cases and security scenarios are covered in test plan
+  > Command: bundle exec rspec --dry-run spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb
 
 ### Execution Steps  
 <!-- Concrete implementation actions that modify code, create files, or change system state -->
 <!-- Use hyphen markers (- [ ]) for actions that result in tangible system changes -->
 <!-- Each step should be verifiable and move toward behavioral requirement fulfillment -->
 
-- [ ] **Foundation Setup**: [Create base structure/components needed for implementation]
-  > TEST: Foundation Verification
-  > Type: Structural Validation
-  > Assert: Base components exist and have expected structure
-  > Command: bin/test --verify-foundation path/to/base/components
-- [ ] **Core Implementation**: [Implement primary functionality that delivers core behavior]
-  > TEST: Core Functionality Check
-  > Type: Functional Validation
-  > Assert: Core behavior works as specified in behavioral requirements
-  > Command: bin/test --verify-core-behavior
-- [ ] **Interface Integration**: [Implement interfaces defined in behavioral specification]
-  > TEST: Interface Contract Validation
-  > Type: Integration Test
-  > Assert: All interface contracts work as specified
-  > Command: bin/test --verify-interfaces
-- [ ] **Error Handling**: [Implement error conditions and edge cases from behavioral spec]
-  > TEST: Error Scenario Testing
-  > Type: Edge Case Validation
-  > Assert: Error handling matches behavioral specification
-  > Command: bin/test --verify-error-handling
-- [ ] **Integration Validation**: [Ensure integration with existing system components]
-  > TEST: System Integration Check
-  > Type: End-to-End Validation
-  > Assert: Implementation integrates properly with existing system
-  > Command: bin/test --verify-integration
+- [ ] **Security Pattern Refinement**: Replace `/\\binclude\\s+[A-Z]/` with more context-aware pattern
+  > TEST: Pattern Replacement Validation
+  > Type: Security Pattern Test
+  > Assert: New pattern allows legitimate YAML while blocking actual Ruby inclusion threats
+  > Command: bundle exec ruby -e 'test_refined_security_patterns'
+- [ ] **Test Case Implementation**: Add comprehensive test cases for legitimate include patterns in YAML
+  > TEST: Test Coverage Validation
+  > Type: Test Suite Enhancement
+  > Assert: All new test cases pass and cover edge cases identified in planning
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb
+- [ ] **Claude Integration Validation**: Test that `handbook claude integrate` works with various YAML configurations
+  > TEST: Claude Integration Check
+  > Type: End-to-End Integration Test
+  > Assert: Claude integration works with legitimate include patterns in YAML frontmatter
+  > Command: handbook claude integrate --force && echo \"Integration successful\"
+- [ ] **Security Regression Testing**: Ensure all existing security protections remain intact
+  > TEST: Security Regression Check
+  > Type: Security Validation
+  > Assert: All dangerous patterns still trigger security errors as expected
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb --tag security_regression
+- [ ] **Full Test Suite Validation**: Run complete test suite to ensure no regressions
+  > TEST: Complete Test Suite Check
+  > Type: Regression Testing
+  > Assert: All existing tests continue to pass with new security pattern changes
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb
 
 ## Risk Assessment
 
 ### Technical Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Rollback:** [Procedure]
+- **Risk:** Weakening security by making pattern too permissive
+  - **Probability:** Medium
+  - **Impact:** High
+  - **Mitigation:** Comprehensive security test cases covering actual Ruby inclusion attack vectors
+  - **Rollback:** Revert to original pattern `/\\binclude\\s+[A-Z]/` if security issues detected
+- **Risk:** New pattern still causes false positives in edge cases
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Extensive testing with real-world YAML configurations from the project
+  - **Rollback:** Iterative pattern refinement or temporary disable of specific problematic checks
+- **Risk:** Pattern matching performance degradation
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Keep pattern complexity minimal, test performance with large YAML files
+  - **Rollback:** Optimize pattern or revert to simpler version if performance issues arise
 
 ### Integration Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [How to detect]
+- **Risk:** Breaking Claude integration workflow during refinement
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Test Claude integration at each step of pattern modification
+  - **Monitoring:** Run `handbook claude integrate` test before committing changes
+- **Risk:** Affecting other YAML parsing throughout the codebase
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Run full test suite and check all YamlFrontmatterParser usage points
+  - **Monitoring:** Monitor for new security-related test failures or parsing errors
 
 ### Performance Risks
-- **Risk:** [Description]
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [Metrics to track]
-  - **Thresholds:** [Acceptable limits]
+- **Risk:** Regex pattern complexity causing YAML parsing slowdown
+  - **Mitigation:** Keep pattern simple and focused, avoid complex lookahead/lookbehind
+  - **Monitoring:** Monitor YAML parsing performance in integration tests
+  - **Thresholds:** YAML parsing should remain under 10ms for typical frontmatter (< 1KB)
 
 ## Acceptance Criteria
 
