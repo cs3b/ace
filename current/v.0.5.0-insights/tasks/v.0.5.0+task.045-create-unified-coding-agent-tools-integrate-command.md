@@ -4,9 +4,44 @@ status: pending
 priority: high
 estimate: 8h
 dependencies: []
+needs_review: true
 ---
 
 # Create Unified coding-agent-tools integrate Command
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the new `coding-agent-tools` executable coexist with or replace `coding_agent_tools`?
+  - **Research conducted**: All other executables use kebab-case (git-commit, code-review, etc.)
+  - **Similar implementations**: Industry standard is kebab-case for CLI commands
+  - **Suggested default**: Create `coding-agent-tools` as symlink to `coding_agent_tools` for compatibility
+  - **Why needs human input**: Breaking change affecting all existing users and documentation
+
+- [ ] How should the command handle existing Claude integration in projects?
+  - **Research conducted**: Found `ClaudeCommandsInstaller` class with backup/force options
+  - **Similar implementations**: Current `handbook claude integrate` has --backup and --force flags
+  - **Suggested default**: Auto-backup existing .claude/ directory before recreating
+  - **Why needs human input**: Data loss risk if user has custom modifications
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should symlinks use relative or absolute paths?
+  - **Research conducted**: Limited symlink usage in codebase, mostly for path resolution
+  - **Industry practice**: Relative symlinks are more portable across environments
+  - **Suggested default**: Use relative symlinks for portability
+  - **Why needs human input**: Affects portability and deployment scenarios
+
+- [ ] What should happen if dev-handbook submodule is missing?
+  - **Research conducted**: Dev-taskflow already exists as submodule with `.git` file
+  - **Current pattern**: Error with setup instructions in existing commands
+  - **Suggested default**: Error with clear instructions: "Run: git submodule add <url> dev-handbook"
+  - **Why needs human input**: User experience vs automatic submodule initialization
+
+### [LOW] Clarification Questions
+- [ ] Should the command support multiple integration types beyond Claude?
+  - **Research conducted**: Task specifies `--claude` flag suggesting future extensibility
+  - **Suggested default**: Design with extensibility but implement Claude only
+  - **Why needs human input**: Affects command structure and future roadmap
 
 ## Behavioral Specification
 
@@ -76,14 +111,27 @@ $ coding-agent-tools integrate --claude
 - [ ] **Old Command Removal**: All deprecated integration commands completely removed
 - [ ] **Development Focus**: Setup optimized for development environment only
 
-### Validation Questions
+### Validation Questions (Resolved Through Research)
 <!-- Questions to clarify requirements and validate understanding -->
 
-- [ ] **Naming Consistency**: Should all dev-tools library references also change from coding_agent_tools?
-- [ ] **Submodule Behavior**: How should dev-taskflow integration work in existing vs new repos?
+- [x] **Naming Consistency**: Should all dev-tools library references also change from coding_agent_tools?
+  - **Resolution**: Keep internal Ruby library as `coding_agent_tools` (Ruby convention), only change executable
+  - **Evidence**: Ruby gems typically use snake_case for library names (e.g., active_record gem)
+  
+- [x] **Submodule Behavior**: How should dev-taskflow integration work in existing vs new repos?
+  - **Resolution**: Dev-taskflow already exists as submodule, create empty if missing
+  - **Evidence**: Found `.git` file in dev-taskflow indicating proper submodule setup
+  
 - [ ] **Symlink Strategy**: Should symlinks be relative or absolute paths?
-- [ ] **Error Recovery**: What should happen if integration partially fails?
-- [ ] **Idempotency**: Should running integrate multiple times be safe?
+  - **Moved to Review Questions** - Needs human decision for portability vs simplicity trade-off
+  
+- [x] **Error Recovery**: What should happen if integration partially fails?
+  - **Resolution**: Implement rollback mechanism with clear error messages
+  - **Evidence**: Existing ClaudeCommandsInstaller has error handling patterns to follow
+  
+- [x] **Idempotency**: Should running integrate multiple times be safe?
+  - **Resolution**: Yes, make idempotent with backup of existing setup
+  - **Evidence**: Current `handbook claude integrate` supports --force flag for re-running
 
 ## Objective
 
@@ -324,3 +372,19 @@ Consolidate fragmented project integration approach into single unified command 
 - Existing ClaudeCommandsInstaller integration logic
 - User requirement for unified integration approach
 - Executable naming consistency requirement
+
+## Review Summary
+
+**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
+**Critical Blockers:** 
+- Executable naming strategy (symlink vs replacement)
+- Existing integration handling (backup strategy)
+
+**Implementation Readiness:** Ready with assumptions, but blocked on critical decisions about breaking changes
+
+**Recommended Next Steps:**
+1. Decide on executable naming approach (symlink recommended for compatibility)
+2. Confirm backup strategy for existing .claude directories
+3. Choose symlink path strategy (relative recommended for portability)
+4. Begin implementation with extensible command structure
+5. Test thoroughly on macOS, Linux, and WSL environments
