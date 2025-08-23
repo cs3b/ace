@@ -20,5 +20,4 @@ commands:
   - release-manager current
   - git ls-files
   - git -C dev-handbook ls-files -- workflow-instructions
-  - git -C dev-tools ls-files -- lib
 </context-tool-config>
