@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.040
-status: in-progress
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -38,15 +38,15 @@ spec/integration/capture_it_integration_spec.rb  # Test file renamed
 - Git metadata: Binary git files not modified
 
 ### Success Criteria
-- [ ] **Zero legacy references**: No "ideas_manager" in active code/documentation
-- [ ] **Test file renamed**: Integration test uses capture_it_integration_spec.rb
-- [ ] **Documentation consistency**: All workflows/templates reference capture-it
+- [x] **Zero legacy references**: No "ideas_manager" in active code/documentation
+- [x] **Test file renamed**: Integration test uses capture_it_integration_spec.rb
+- [x] **Documentation consistency**: All workflows/templates reference capture-it
 
 ### Validation Questions
-- [ ] **Test naming convention**: Use underscore (capture_it) for Ruby file naming?
-- [ ] **Historical scope**: Leave completed tasks/reflections unchanged?
-- [ ] **Documentation standard**: Always use hyphenated "capture-it" in text?
-- [ ] **Git history**: Preserve original context in past commits?
+- [x] **Test naming convention**: Use underscore (capture_it) for Ruby file naming? Yes
+- [x] **Historical scope**: Leave completed tasks/reflections unchanged? Yes
+- [x] **Documentation standard**: Always use hyphenated "capture-it" in text? Yes
+- [x] **Git history**: Preserve original context in past commits? Yes
 
 ## Implementation Plan
 
@@ -56,14 +56,14 @@ spec/integration/capture_it_integration_spec.rb  # Test file renamed
 * [x] Verify Ruby naming conventions for test files (use underscores)
 
 ### Execution Steps
-- [ ] Rename integration test file from ideas_manager_integration_spec.rb to capture_it_integration_spec.rb
-- [ ] Rename unit test file from ideas_manager_spec.rb to capture_it_spec.rb
-- [ ] Update internal test references (lines 13, 319, 369, 395, 567 in integration spec)
-- [ ] Update draft-task.wf.md to reference capture-it instead of ideas-manager
-- [ ] Update capture-idea.wf.md to reference capture-it tool
-- [ ] Update task.draft.template.md to reference capture-it
-- [ ] Run tests to verify renaming doesn't break anything
-- [ ] Create grep report confirming zero "ideas_manager" in active files
+- [x] Rename integration test file from ideas_manager_integration_spec.rb to capture_it_integration_spec.rb
+- [x] Rename unit test file from ideas_manager_spec.rb to capture_it_spec.rb
+- [x] Update internal test references (lines 13, 319, 369, 395, 567 in integration spec)
+- [x] Update draft-task.wf.md to reference capture-it instead of ideas-manager
+- [x] Update capture-idea.wf.md to reference capture-it tool
+- [x] Update task.draft.template.md to reference capture-it
+- [x] Run tests to verify renaming doesn't break anything
+- [x] Create grep report confirming zero "ideas_manager" in active files
 
 ## Objective
 
@@ -96,11 +96,11 @@ Complete the refactoring from "ideas_manager" to "capture-it" ensuring consisten
 
 ## Acceptance Criteria
 
-- [ ] Test file renamed to capture_it_integration_spec.rb
-- [ ] All workflow documentation references capture-it
-- [ ] All templates reference capture-it
-- [ ] Tests pass with new naming
-- [ ] Zero "ideas_manager" references in active code/docs
+- [x] Test file renamed to capture_it_integration_spec.rb
+- [x] All workflow documentation references capture-it
+- [x] All templates reference capture-it
+- [x] Tests pass with new naming
+- [x] Zero "ideas_manager" references in active code/docs
 
 ## References
 
