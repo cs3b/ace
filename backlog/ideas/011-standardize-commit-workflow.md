@@ -20,6 +20,11 @@
   :currency: USD
 ---
 
+# Additional comments
+
+Currenlty we have ...
+
+
 # Move Git Command Logic to Default Commit Workflow
 
 ## Intention
