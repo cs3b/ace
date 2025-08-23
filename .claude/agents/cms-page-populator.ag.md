@@ -11,7 +11,7 @@ expected_params:
   - page_status: 'Page status (draft/published/archived, default: draft)'
   - content_data: JSON file with content or inline content object
   - author: 'Page author (default: ''cms-admin'')'
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 type: agent
 source: dev-handbook
 ---

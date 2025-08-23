@@ -2,7 +2,7 @@
 description: Fix Tests
 allowed-tools: Read, Write, Edit, Bash, Grep
 model: claude-sonnet-4-20250514
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 source: generated
 ---
 

@@ -8,7 +8,7 @@ expected_params:
   - strategy: Commit strategy - all|files|review (auto-detected if not provided)
   - intention: Description of changes (helps message generation)
   - files: List of specific files to commit (required only for 'files' strategy)
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 type: agent
 mcp:
   model: google:gemini-2.5-flash

@@ -10,7 +10,7 @@ expected_params:
   - sections: Specific sections to include (hero, features, testimonials, etc.)
   - brand_colors: 'Use brand colors (teal, coral, sand, default: all)'
   - output_path: 'Where to save the design (default: dev-taskflow/designs/)'
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 type: agent
 source: dev-handbook
 ---

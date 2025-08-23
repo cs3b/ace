@@ -9,7 +9,7 @@ expected_params:
   - component_name: 'Name for the main component (default: derived from design)'
   - skip_registry: 'Skip registry update (default: false)'
   - test_component: 'Create test file (default: true)'
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 type: agent
 source: dev-handbook
 ---
