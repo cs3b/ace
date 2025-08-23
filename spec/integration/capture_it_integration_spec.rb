@@ -10,7 +10,7 @@ RSpec.describe "capture-it Integration", type: :integration do
   include CliHelpers
 
   let(:executable_path) { File.expand_path("../../exe/capture-it", __dir__) }
-  let(:temp_dir) { Dir.mktmpdir("ideas_manager_integration_test") }
+  let(:temp_dir) { Dir.mktmpdir("capture_it_integration_test") }
   let(:project_root) { File.expand_path("../../../", __dir__) }
   let(:ideas_output_dir) { File.join(project_root, "dev-taskflow/backlog/ideas") }
   let(:tmp_dir) { File.join(project_root, "tmp") }
@@ -315,7 +315,7 @@ RSpec.describe "capture-it Integration", type: :integration do
     let(:workflow_idea) { "Implement automated test case generation from user stories" }
 
     it "completes full idea capture workflow with file system integration", :vcr do
-      cassette_name = "ideas_manager_integration/end_to_end_workflow"
+      cassette_name = "capture_it_integration/end_to_end_workflow"
       env = vcr_subprocess_env(cassette_name)
 
       # Run the complete workflow
@@ -366,7 +366,7 @@ RSpec.describe "capture-it Integration", type: :integration do
     end
 
     it "handles LLM enhancement failures gracefully with fallback", :vcr do
-      cassette_name = "ideas_manager_integration/invalid_model_fallback"
+      cassette_name = "capture_it_integration/invalid_model_fallback"
       env = vcr_subprocess_env(cassette_name)
 
       # Use an invalid model to trigger enhancement failure
@@ -392,7 +392,7 @@ RSpec.describe "capture-it Integration", type: :integration do
     end
 
     it "creates all required directories automatically", :vcr do
-      cassette_name = "ideas_manager_integration/auto_create_directories"
+      cassette_name = "capture_it_integration/auto_create_directories"
       env = vcr_subprocess_env(cassette_name)
 
       begin
@@ -412,7 +412,7 @@ RSpec.describe "capture-it Integration", type: :integration do
     end
 
     it "generates unique filenames for concurrent idea captures", :vcr do
-      cassette_name = "ideas_manager_integration/concurrent_captures"
+      cassette_name = "capture_it_integration/concurrent_captures"
       env = vcr_subprocess_env(cassette_name)
 
       ideas = [
@@ -519,7 +519,7 @@ RSpec.describe "capture-it Integration", type: :integration do
         skip "Cannot test permission errors as root user"
       end
 
-      cassette_name = "ideas_manager_integration/permission_errors"
+      cassette_name = "capture_it_integration/permission_errors"
       env = vcr_subprocess_env(cassette_name)
 
       result = run_capture_it(["Test idea for permissions"], env: env)
@@ -539,7 +539,7 @@ RSpec.describe "capture-it Integration", type: :integration do
       # Test with a very long idea that might timeout
       very_long_idea = "Implement advanced AI-powered code analysis. " * 50
 
-      cassette_name = "ideas_manager_integration/interrupted_processing"
+      cassette_name = "capture_it_integration/interrupted_processing"
       env = vcr_subprocess_env(cassette_name)
 
       result = run_capture_it([very_long_idea, "--big-user-input-allowed"], env: env)
@@ -563,7 +563,7 @@ RSpec.describe "capture-it Integration", type: :integration do
       ]
 
       malicious_inputs.each_with_index do |input, index|
-        cassette_name = "ideas_manager_integration/security_test_#{index + 1}"
+        cassette_name = "capture_it_integration/security_test_#{index + 1}"
         env = vcr_subprocess_env(cassette_name)
 
         result = run_capture_it([input], env: env)

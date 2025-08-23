@@ -6,7 +6,7 @@ require "stringio"
 require "tmpdir"
 require "tempfile"
 
-RSpec.describe "Ideas Manager CLI" do
+RSpec.describe "Capture-It CLI" do
   let(:capture_command) { CodingAgentTools::Cli::Commands::Ideas::Capture.new }
   let(:mock_idea_capture) { instance_double(CodingAgentTools::Organisms::IdeaCapture) }
   let(:success_result) do
