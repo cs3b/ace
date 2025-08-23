@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.044
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -56,16 +56,16 @@ task-manager next --limit -1
 - Mixed priority tasks: Returned in appropriate priority/order
 
 ### Success Criteria
-- [ ] **Backward Compatibility**: Default behavior returns single task as before
-- [ ] **All Flag Functionality**: `--all` flag returns all actionable tasks
-- [ ] **Consistent Output**: Same formatting standards for single and multiple task output
-- [ ] **Smart Filtering**: Only ready tasks (no dependency blockers) are included
+- [x] **Backward Compatibility**: Default behavior returns single task as before
+- [x] **All Flag Functionality**: `--all` flag returns all actionable tasks
+- [x] **Consistent Output**: Same formatting standards for single and multiple task output
+- [x] **Smart Filtering**: Only ready tasks (no dependency blockers) are included
 
 ### Validation Questions
-- [ ] **Task Readiness**: What exact criteria determine if a task is "ready for work"?
-- [ ] **Output Format**: Should multiple tasks use JSON, plain text, or structured format?
-- [ ] **Priority Ordering**: How should multiple tasks be ordered when returned?
-- [ ] **Performance Impact**: Any concerns with retrieving all tasks for large backlogs?
+- [x] **Task Readiness**: What exact criteria determine if a task is "ready for work"?
+- [x] **Output Format**: Should multiple tasks use JSON, plain text, or structured format?
+- [x] **Priority Ordering**: How should multiple tasks be ordered when returned?
+- [x] **Performance Impact**: Any concerns with retrieving all tasks for large backlogs?
 
 ## Objective
 
@@ -174,22 +174,22 @@ Provide users and automation systems with flexibility to retrieve either a singl
 <!-- Use asterisk markers (* [ ]) for activities that don't change system state -->
 <!-- Focus on understanding, designing, and preparing for implementation -->
 
-* [ ] **Current Implementation Analysis**: Study existing task/next.rb command structure, option definitions, and validation patterns
+* [x] **Current Implementation Analysis**: Study existing task/next.rb command structure, option definitions, and validation patterns
   > TEST: Understanding Check
   > Type: Pre-condition Analysis
   > Assert: Current dry-cli option patterns and validation logic are understood
   > Command: # Review dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb structure
-* [ ] **Dry-CLI Option Research**: Research dry-cli boolean option syntax and interaction with existing integer options
+* [x] **Dry-CLI Option Research**: Research dry-cli boolean option syntax and interaction with existing integer options
   > TEST: Framework Knowledge Check
   > Type: Documentation Review
   > Assert: Optimal approach for adding boolean --all option alongside --limit integer option
   > Command: # Verify dry-cli documentation for boolean + integer option patterns
-* [ ] **Test Infrastructure Analysis**: Review existing test patterns for CLI commands and validation testing
+* [x] **Test Infrastructure Analysis**: Review existing test patterns for CLI commands and validation testing
   > TEST: Test Pattern Understanding
   > Type: Code Review
   > Assert: Test mocking patterns and validation test approaches are clear
   > Command: # Study spec/coding_agent_tools/cli/commands/task_spec.rb testing patterns
-* [ ] **Output Format Research**: Confirm existing multi-task output formatting handles "all tasks" scenario properly
+* [x] **Output Format Research**: Confirm existing multi-task output formatting handles "all tasks" scenario properly
   > TEST: Output Compatibility Check
   > Type: Behavior Analysis
   > Assert: Existing formatting logic works correctly for unlimited task display
@@ -200,37 +200,37 @@ Provide users and automation systems with flexibility to retrieve either a singl
 <!-- Use hyphen markers (- [ ]) for actions that result in tangible system changes -->
 <!-- Each step should be verifiable and move toward behavioral requirement fulfillment -->
 
-- [ ] **Add --all Option Definition**: Add boolean `--all` option to Next command class using dry-cli option syntax
+- [x] **Add --all Option Definition**: Add boolean `--all` option to Next command class using dry-cli option syntax
   > TEST: Option Registration
   > Type: CLI Option Validation
   > Assert: --all flag appears in help text and is recognized by command parser
   > Command: task-manager next --help | grep -q "all"
-- [ ] **Update Validation Logic**: Modify `validate_limit` method to accept `-1` as special unlimited value
+- [x] **Update Validation Logic**: Modify `validate_limit` method to accept `-1` as special unlimited value
   > TEST: Limit Validation Update
   > Type: Method Behavior Validation
   > Assert: validate_limit(-1) returns appropriate unlimited value, positive integers still work
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "limit validation"
-- [ ] **Implement --all Flag Logic**: Add logic in `call` method to detect `--all` flag and set unlimited limit
+- [x] **Implement --all Flag Logic**: Add logic in `call` method to detect `--all` flag and set unlimited limit
   > TEST: Flag Processing Logic
   > Type: Command Logic Validation
   > Assert: --all flag sets appropriate unlimited limit internally
   > Command: # Test internal limit processing with --all flag mock
-- [ ] **Handle --limit -1 Equivalence**: Ensure `--limit -1` works as equivalent to `--all` per behavioral specification
+- [x] **Handle --limit -1 Equivalence**: Ensure `--limit -1` works as equivalent to `--all` per behavioral specification
   > TEST: Limit -1 Equivalence
   > Type: Interface Contract Validation
   > Assert: task-manager next --limit -1 produces same result as task-manager next --all
   > Command: # Compare outputs of both commands to ensure equivalence
-- [ ] **Update Help Examples**: Add `--all` flag to example usage in command definition
+- [x] **Update Help Examples**: Add `--all` flag to example usage in command definition
   > TEST: Help Text Update
   > Type: Documentation Validation
   > Assert: Help text includes --all flag example and explains behavior
   > Command: task-manager next --help | grep -q "--all"
-- [ ] **Update Existing Tests**: Fix tests that expect `limit: -1` to fail since it should now succeed
+- [x] **Update Existing Tests**: Fix tests that expect `limit: -1` to fail since it should now succeed
   > TEST: Test Compatibility
   > Type: Regression Prevention
   > Assert: Existing test suite passes with updated validation logic
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb
-- [ ] **Add Comprehensive New Tests**: Create test cases for --all flag functionality, edge cases, and integration scenarios
+- [x] **Add Comprehensive New Tests**: Create test cases for --all flag functionality, edge cases, and integration scenarios
   > TEST: New Feature Coverage
   > Type: Feature Validation
   > Assert: All --all flag scenarios are covered by tests (happy path, edge cases, integration)
@@ -282,20 +282,20 @@ Provide users and automation systems with flexibility to retrieve either a singl
 <!-- Focus on verifying that behavioral requirements are met, not just implementation completed -->
 
 ### Behavioral Requirement Fulfillment
-- [ ] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
-- [ ] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
-- [ ] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
+- [x] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
+- [x] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
+- [x] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
 
 ### Implementation Quality Assurance  
-- [ ] **Code Quality**: All code meets project standards and passes quality checks
-- [ ] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
-- [ ] **Integration Verification**: Implementation integrates properly with existing system components
-- [ ] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
+- [x] **Code Quality**: All code meets project standards and passes quality checks
+- [x] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
+- [x] **Integration Verification**: Implementation integrates properly with existing system components
+- [x] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
 
 ### Documentation and Validation
-- [ ] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
-- [ ] **Error Handling**: All error conditions and edge cases handle as specified
-- [ ] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
+- [x] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
+- [x] **Error Handling**: All error conditions and edge cases handle as specified
+- [x] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
 
 ## Out of Scope
 
