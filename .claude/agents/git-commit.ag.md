@@ -1,13 +1,14 @@
 ---
 name: git-commit
-description: Unified git commit agent with intelligent strategy selection. Handles all
-  commit scenarios (all files, specific files, review-first) through a single interface.
+description: Unified git commit agent with intelligent strategy selection. Handles
+  all commit scenarios (all files, specific files, review-first) through a single
+  interface.
 expected_params:
   optional:
   - strategy: Commit strategy - all|files|review (auto-detected if not provided)
   - intention: Description of changes (helps message generation)
   - files: List of specific files to commit (required only for 'files' strategy)
-last_modified: '2025-08-23'
+last_modified: '2025-08-23 23:18:44'
 type: agent
 mcp:
   model: google:gemini-2.5-flash

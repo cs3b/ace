@@ -1,7 +1,7 @@
 ---
 description: Prioritize Align Ideas
 allowed-tools: Read, Write, Edit, Grep
-last_modified: '2025-08-19 01:43:59'
+last_modified: '2025-08-23 23:18:44'
 source: generated
 ---
 

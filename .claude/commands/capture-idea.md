@@ -2,7 +2,7 @@
 description: Capture Idea
 allowed-tools: Write, TodoWrite
 argument-hint: "[idea-description]"
-last_modified: '2025-08-19 01:40:50'
+last_modified: '2025-08-23 23:18:44'
 source: generated
 ---
 
