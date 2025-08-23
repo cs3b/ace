@@ -190,4 +190,4 @@ capture-it --file team-brainstorm-2025-01-30.txt --big-user-input-allowed
 
 ---
 
-This workflow enables efficient capture and enhancement of raw ideas, ensuring they're preserved with proper project context and structured for future development consideration. The ideas-manager tool handles the complexity of context loading and enhancement, providing a simple interface for idea preservation.
+This workflow enables efficient capture and enhancement of raw ideas, ensuring they're preserved with proper project context and structured for future development consideration. The capture-it tool handles the complexity of context loading and enhancement, providing a simple interface for idea preservation.
