@@ -1,46 +1,107 @@
 ---
 id: v.0.5.0+task.044
-status: pending
+status: draft
 priority: medium
 estimate: TBD
-dependencies: {dependencies}
+dependencies: []
 ---
 
 # Add --all Flag to Task-Manager Next Command
 
-## Behavioral Context
-<!-- Reference the completed behavioral specification from the draft phase -->
-<!-- This section assumes behavioral requirements are already defined -->
+## Behavioral Specification
 
-**Behavioral Specification Reference**: [Link to completed draft task or behavioral requirements]
+### User Experience
+- **Input**: Users execute `task-manager next` with optional `--all` flag to retrieve either single next task (default) or all pending ready tasks
+- **Process**: System identifies pending tasks ready for work, filters by dependencies and readiness, returns appropriate number based on flag usage
+- **Output**: Single task (default) or complete list of all actionable tasks with consistent formatting
 
-**Key Behavioral Requirements**:
-- [Summary of key user experience requirements]
-- [Summary of key system behavior requirements]  
-- [Summary of key interface contract requirements]
+### Expected Behavior
+When users run `task-manager next` with different flag combinations, the system should:
+1. **Default behavior**: Return single next pending task ready for work (maintains backward compatibility)
+2. **With `--all` flag**: Return all pending tasks that are ready to be worked on (no dependency blockers)
+3. **Consistent formatting**: Use same output format whether returning one task or multiple tasks
+4. **Proper filtering**: Only include tasks that are actually actionable (no unmet dependencies)
+5. **Clear status reporting**: Indicate when no tasks are available vs when tasks exist but aren't ready
+
+### Interface Contract
+```bash
+# CLI Interface - Default behavior (single task)
+task-manager next
+# Expected output (single task format):
+# "v.0.5.0+task.045 - Fix authentication bug (high priority, 4h estimate)"
+# OR: "No tasks ready for work"
+
+# CLI Interface - All ready tasks
+task-manager next --all
+# Expected output (multiple task format):
+# "3 tasks ready for work:"
+# "v.0.5.0+task.045 - Fix authentication bug (high priority, 4h)"
+# "v.0.5.0+task.046 - Update documentation (medium priority, 2h)"
+# "v.0.5.0+task.047 - Refactor utilities (low priority, 6h)"
+# OR: "No tasks ready for work"
+
+# Alternative flag support (--limit -1)
+task-manager next --limit -1
+# Expected: Same behavior as --all flag for flexibility
+```
+
+**Error Handling:**
+- No tasks available: Clear message indicating no tasks are ready
+- Dependency conflicts: Tasks with unmet dependencies are excluded from results
+- Repository access issues: Error message with specific access problem details
+
+**Edge Cases:**
+- All tasks blocked by dependencies: "No tasks ready (X tasks blocked by dependencies)"
+- Large number of ready tasks: All tasks returned (no arbitrary limits)
+- Mixed priority tasks: Returned in appropriate priority/order
+
+### Success Criteria
+- [ ] **Backward Compatibility**: Default behavior returns single task as before
+- [ ] **All Flag Functionality**: `--all` flag returns all actionable tasks
+- [ ] **Consistent Output**: Same formatting standards for single and multiple task output
+- [ ] **Smart Filtering**: Only ready tasks (no dependency blockers) are included
+
+### Validation Questions
+- [ ] **Task Readiness**: What exact criteria determine if a task is "ready for work"?
+- [ ] **Output Format**: Should multiple tasks use JSON, plain text, or structured format?
+- [ ] **Priority Ordering**: How should multiple tasks be ordered when returned?
+- [ ] **Performance Impact**: Any concerns with retrieving all tasks for large backlogs?
 
 ## Objective
 
-Why are we implementing this? Focus on technical objectives that support the defined behavioral requirements.
+Provide users and automation systems with flexibility to retrieve either a single next task or view all available actionable tasks for better planning and batch processing capabilities while maintaining backward compatibility.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+### User Experience Scope
+- Task retrieval workflow with flag-based behavior control
+- Consistent output formatting for single vs multiple task returns
+- Clear status reporting for task availability and readiness
+- Backward compatibility with existing usage patterns
+
+### System Behavior Scope
+- Task filtering logic for dependency and readiness checking
+- Flag processing and behavior switching (`--all`, `--limit -1`)
+- Output formatting and presentation consistency
+- Performance optimization for large task backlogs
+
+### Interface Scope
+- `task-manager next` command with enhanced flag support
+- Output formatting standards for both single and multiple tasks
+- Error messaging for various task availability scenarios
+- Alternative flag support (`--limit -1`) for user preference
 
 ### Deliverables
 
-#### Create
+#### Behavioral Specifications
+- User experience flow definitions for task retrieval options
+- System behavior specifications for flag-based workflow switching
+- Interface contract definitions for enhanced command functionality
 
-- path/to/file.ext
-
-#### Modify
-
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
+#### Validation Artifacts
+- Success criteria validation methods for backward compatibility
+- User acceptance criteria for all-task retrieval functionality
+- Behavioral test scenarios for various task states and flag combinations
 
 ## Phases
 
@@ -205,8 +266,13 @@ Why are we implementing this? Focus on technical objectives that support the def
 
 ## Out of Scope
 
-- ❌ …
+- ❌ **Implementation Details**: Task filtering algorithm specifics, output formatting code
+- ❌ **Technology Decisions**: Data structure choices, performance optimization techniques
+- ❌ **Advanced Features**: Complex task sorting, filtering, or management capabilities
+- ❌ **UI Enhancements**: Interactive task selection or advanced display formatting
 
 ## References
 
-```
+- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/044-20250814-0024-task-manager-limit-0.md
+- Task management system architecture
+- Existing `task-manager next` command patterns

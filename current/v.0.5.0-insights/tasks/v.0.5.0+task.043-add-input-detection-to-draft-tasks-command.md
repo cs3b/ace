@@ -1,46 +1,110 @@
 ---
 id: v.0.5.0+task.043
-status: pending
+status: draft
 priority: medium
 estimate: TBD
-dependencies: {dependencies}
+dependencies: []
 ---
 
 # Add Input Detection to Draft-Tasks Command
 
-## Behavioral Context
-<!-- Reference the completed behavioral specification from the draft phase -->
-<!-- This section assumes behavioral requirements are already defined -->
+## Behavioral Specification
 
-**Behavioral Specification Reference**: [Link to completed draft task or behavioral requirements]
+### User Experience
+- **Input**: Users execute `/draft-tasks` with various file types (idea files or completed task files)
+- **Process**: System intelligently detects input file type and adapts workflow accordingly - creating new tasks from ideas or registering existing completed tasks
+- **Output**: Appropriate processing based on input type with clear feedback about detected file type and actions taken
 
-**Key Behavioral Requirements**:
-- [Summary of key user experience requirements]
-- [Summary of key system behavior requirements]  
-- [Summary of key interface contract requirements]
+### Expected Behavior
+When users run `/draft-tasks` with different input file types, the system should:
+1. Analyze provided files to determine if they are idea files or completed task specifications
+2. For idea files: Execute existing workflow (transform ideas → create draft tasks via `task-manager create`)
+3. For completed task files: Execute registration workflow (register tasks with `task-manager create` and preserve content)
+4. Provide clear user feedback about detected file types and processing approach
+5. Handle mixed input (both types) appropriately with clear status reporting
+
+### Interface Contract
+```bash
+# CLI Interface - Idea file processing (existing behavior)
+/draft-tasks dev-taskflow/backlog/ideas/feature-concept.md
+# Expected output:
+# "Detected: 1 idea file"
+# "Creating draft tasks from ideas..."
+# "Created: v.0.5.0+task.XXX - Feature Concept"
+
+# CLI Interface - Completed task file processing (new behavior)
+/draft-tasks dev-taskflow/backlog/tasks/completed-task-spec.md
+# Expected output:
+# "Detected: 1 completed task file"
+# "Registering existing tasks..."
+# "Registered: v.0.5.0+task.XXX - Completed Task Spec"
+
+# Mixed input handling
+/draft-tasks idea1.md completed-task1.md idea2.md
+# Expected output:
+# "Detected: 2 idea files, 1 completed task file"
+# "Processing ideas: idea1.md, idea2.md"
+# "Registering tasks: completed-task1.md"
+# "Results: 3 tasks processed (2 created, 1 registered)"
+```
+
+**Error Handling:**
+- Unrecognizable file types: Clear error message with file classification failure details
+- Processing failures: Specific error for each file with recovery suggestions
+- Mixed failures: Partial success reporting with clear status for each file
+
+**Edge Cases:**
+- Empty files: Should be detected and handled with appropriate error message
+- Malformed files: Clear distinction between format errors and content issues
+- Files that don't fit either category: Guidance on expected input format
+
+### Success Criteria
+- [ ] **Intelligent Detection**: System correctly identifies idea files vs completed task files
+- [ ] **Workflow Adaptation**: Appropriate processing workflow selected based on detected file type
+- [ ] **User Clarity**: Clear feedback about file types detected and processing approach taken
+- [ ] **Content Preservation**: Completed task files maintain their full content when registered
+
+### Validation Questions
+- [ ] **Detection Criteria**: What specific characteristics reliably distinguish idea files from completed tasks?
+- [ ] **Error Recovery**: How should the system handle files that don't clearly fit either category?
+- [ ] **User Feedback**: What level of detail should be provided about detection and processing decisions?
+- [ ] **Backwards Compatibility**: Will changes affect existing workflows that depend on current behavior?
 
 ## Objective
 
-Why are we implementing this? Focus on technical objectives that support the defined behavioral requirements.
+Enhance the `/draft-tasks` command to be more versatile and user-friendly by intelligently handling different input file types, reducing user confusion and eliminating the need for manual workarounds when processing completed task files.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+### User Experience Scope
+- File type detection and classification workflow
+- Adaptive processing based on detected input types
+- User feedback and status reporting for processing decisions
+- Error handling for unrecognizable or problematic files
+
+### System Behavior Scope
+- Input analysis logic for distinguishing file types
+- Dual workflow execution (idea processing vs task registration)
+- Content preservation for completed task files
+- Integration with existing `task-manager create` functionality
+
+### Interface Scope
+- `/draft-tasks` command enhanced functionality
+- File path processing and validation
+- Status reporting and user feedback mechanisms
+- Error messaging for various failure scenarios
 
 ### Deliverables
 
-#### Create
+#### Behavioral Specifications
+- User experience flow definitions for file type detection
+- System behavior specifications for adaptive workflow selection
+- Interface contract definitions for enhanced command functionality
 
-- path/to/file.ext
-
-#### Modify
-
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
+#### Validation Artifacts
+- Success criteria validation methods for file type detection
+- User acceptance criteria for workflow adaptation
+- Behavioral test scenarios for various input file combinations
 
 ## Phases
 
@@ -205,8 +269,13 @@ Why are we implementing this? Focus on technical objectives that support the def
 
 ## Out of Scope
 
-- ❌ …
+- ❌ **Implementation Details**: File parsing algorithms, detection heuristic specifics
+- ❌ **Technology Decisions**: File processing library choices, workflow engine decisions
+- ❌ **Advanced Features**: Machine learning-based classification or complex file analysis
+- ❌ **UI Enhancements**: Graphical interfaces or advanced progress reporting
 
 ## References
 
-```
+- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/043-20250812-0033-draft-tasks-input-error.md
+- Task management workflow patterns
+- Existing `/draft-tasks` command implementation
