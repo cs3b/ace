@@ -53,7 +53,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
         expect(parsed["metadata"]["output_tokens"]).to be_a(Integer)
       end
 
-      xit "reads prompt from file and writes Markdown output", :vcr do
+      it "reads prompt from file and writes Markdown output", :vcr do
         md_output = "#{output_file}.md"
 
         cassette_name = "llm_file_io_integration/google_query_command/with_file_input_and_output/reads_prompt_from_file_and_writes_Markdown_output"
@@ -232,7 +232,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
         expect(parsed["metadata"]["output_tokens"]).to be_a(Integer)
       end
 
-      xit "reads prompt from file and writes Markdown output", :vcr do
+      it "reads prompt from file and writes Markdown output", :vcr do
         md_output = "#{output_file}.md"
 
         cassette_name = "llm_file_io_integration/lmstudio/reads_prompt_file_writes_markdown"
