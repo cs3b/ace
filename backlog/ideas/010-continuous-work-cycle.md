@@ -23,3 +23,10 @@ Run on claude tasks
 
 1. update the status of the task, ensuring we know where we finish, and whats left
 2. run create reflection note workflow
+
+
+---
+
+additional:
+
+progresive development / agile way, not one shot - most important first. after each chunk send demo video, so we can verify
