@@ -10,7 +10,7 @@ expected_params:
   - autofix: 'Apply automatic fixes (default: true)'
   - dry_run: 'Show what would be done without changes (default: false)'
   - config: Path to custom configuration file
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 type: agent
 mcp:
   model: google:gemini-2.5-flash

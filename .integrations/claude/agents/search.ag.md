@@ -8,7 +8,7 @@ expected_params:
   - search_type: 'Type of search: file, content, hybrid, auto (default: auto)'
   - search_root: 'Root directory for search (default: project root)'
   - scope: 'Limit scope: staged, tracked, changed files'
-last_modified: '2025-08-23 23:18:44'
+last_modified: '2025-08-24 00:17:47'
 type: agent
 mcp:
   model: google:gemini-2.5-flash
