@@ -158,10 +158,17 @@ module CodingAgentTools
           submodules_config.each do |name, config|
             submodule_path = @project_root + name
 
-            if submodule_path.exist? && (submodule_path + ".git").exist?
+            # Check if submodule is properly initialized (directory exists with content)
+            # A submodule is considered present if:
+            # 1. The directory exists
+            # 2. It has a .git file/directory
+            # 3. It contains actual files (not just empty)
+            if submodule_path.exist? &&
+                (submodule_path + ".git").exist? &&
+                !Dir.empty?(submodule_path.to_s)
               log "  ✓ #{name} present"
             else
-              puts "  → #{name} missing, setting up..."
+              puts "  → #{name} missing or not initialized, setting up..."
               setup_submodule(name, config) unless @dry_run
             end
           end
@@ -169,31 +176,77 @@ module CodingAgentTools
 
         def setup_submodule(name, config)
           url = config["url"]
+          submodule_path = @project_root + name
 
-          # Handle special case for dev-taskflow (auto URL)
+          # Handle auto URL detection
           if url == "auto"
-            origin_url = `git config --get remote.origin.url`.strip
-            # Parse the URL to extract the repository path
-            if origin_url =~ %r{github\.com[:/](.+?)(?:\.git)?$}
-              repo_path = $1
-              # Remove .git extension if present and add -taskflow
-              base_name = repo_path.sub(/\.git$/, "")
-              # Construct proper URL based on original format
-              url = if origin_url.start_with?("git@")
-                "git@github.com:#{base_name}-taskflow.git"
-              else
-                "https://github.com/#{base_name}-taskflow.git"
-              end
+            # First, try to get URL from existing submodule config
+            existing_url = `git config --get submodule.#{name}.url`.strip
+
+            if !existing_url.empty?
+              url = existing_url
+              log "  → Using existing submodule URL: #{url}"
             else
-              log "Warning: Could not parse origin URL: #{origin_url}"
-              return
+              # Fall back to auto-generation based on origin URL
+              origin_url = `git config --get remote.origin.url`.strip
+
+              if origin_url =~ %r{github\.com[:/](.+?)(?:\.git)?$}
+                repo_path = $1
+                base_name = repo_path.sub(/\.git$/, "")
+
+                # Generate URL based on submodule name pattern
+                suffix = case name
+                when "dev-taskflow"
+                  "-taskflow"
+                when "dev-handbook"
+                  "-handbook"
+                when "dev-tools"
+                  "-tools"
+                else
+                  "-#{name}"
+                end
+
+                # Remove any existing suffix that matches and add the correct one
+                base_name = base_name.sub(/-?(taskflow|handbook|tools|meta)$/, "")
+
+                # Construct proper URL based on original format
+                url = if origin_url.start_with?("git@")
+                  "git@github.com:#{base_name}#{suffix}.git"
+                else
+                  "https://github.com/#{base_name}#{suffix}.git"
+                end
+
+                log "  → Auto-generated URL: #{url}"
+              else
+                log "Warning: Could not parse origin URL: #{origin_url}"
+                return
+              end
             end
           end
 
           branch = config["branch"] || "main"
 
-          # Try GitHub CLI first
-          if system("which gh > /dev/null 2>&1")
+          # Check if submodule is already registered in .git/modules but not initialized
+          git_modules_path = @project_root + ".git/modules" + name
+          if git_modules_path.exist?
+            log "  → Found existing git directory for #{name}, attempting to reinitialize..."
+
+            # Try to update and reinitialize the existing submodule
+            if system("git submodule update --init #{name}")
+              log "  ✓ Successfully reinitialized #{name}"
+              return
+            else
+              log "  → Reinitialize failed, trying to remove and re-add..."
+              # Remove the submodule completely and re-add
+              system("git submodule deinit -f #{name}")
+              system("git rm -f #{name}")
+              system("rm -rf #{git_modules_path}")
+              FileUtils.rm_rf(submodule_path) if submodule_path.exist?
+            end
+          end
+
+          # Try GitHub CLI first (only if URL looks like GitHub)
+          if system("which gh > /dev/null 2>&1") && url.include?("github.com")
             # Extract owner/repo from URL for gh CLI
             if url =~ %r{github\.com[:/](.+?)(?:\.git)?$}
               repo_path = $1.sub(/\.git$/, "")
@@ -201,20 +254,22 @@ module CodingAgentTools
               # Use proper gh CLI syntax with owner/repo format
               if system("gh repo clone #{repo_path} #{name} -- --branch #{branch}")
                 # Add as submodule after successful clone
-                system("git submodule add #{url} #{name}")
+                system("git submodule add -f #{url} #{name}")
               else
                 log "GitHub CLI clone failed, falling back to git"
-                system("git submodule add -b #{branch} #{url} #{name}")
+                system("git submodule add -f -b #{branch} #{url} #{name}")
               end
             else
               log "Could not parse GitHub URL, using git directly"
-              system("git submodule add -b #{branch} #{url} #{name}")
+              system("git submodule add -f -b #{branch} #{url} #{name}")
             end
           else
             log "Using git to add submodule"
-            system("git submodule add -b #{branch} #{url} #{name}")
-            system("git submodule update --init --recursive")
+            system("git submodule add -f -b #{branch} #{url} #{name}")
           end
+
+          # Always try to update after adding
+          system("git submodule update --init --recursive #{name}")
         end
 
         def create_backup
