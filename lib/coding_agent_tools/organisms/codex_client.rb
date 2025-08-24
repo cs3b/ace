@@ -27,16 +27,17 @@ module CodingAgentTools
         {}
       end
 
-      # Available models for Codex CLI (based on research)
+      # Available models for Codex CLI
+      # Note: o3 models are no longer available, using gpt-5 models
       AVAILABLE_MODELS = {
-        "o3" => "o3",
-        "o3-mini" => "o3-mini", 
+        "mini" => "gpt-5-mini",
+        "default" => "gpt-5",
         "gpt-5" => "gpt-5",
         "gpt-5-mini" => "gpt-5-mini"
       }.freeze
 
-      # Default model (using o3-mini as suggested in research)
-      DEFAULT_MODEL = "o3-mini"
+      # Default model (using gpt-5 which is confirmed working)
+      DEFAULT_MODEL = "gpt-5"
 
       def initialize(model: nil, **options)
         @model = normalize_model_name(model || DEFAULT_MODEL)
@@ -50,7 +51,7 @@ module CodingAgentTools
         validate_codex_availability!
         
         cmd = build_codex_command(prompt, options)
-        stdout, stderr, status = execute_codex_command(cmd)
+        stdout, stderr, status = execute_codex_command(cmd, prompt, options)
         
         parse_codex_response(stdout, stderr, status, prompt, options)
       rescue => e
@@ -60,20 +61,7 @@ module CodingAgentTools
       # List available Codex models
       def list_models
         # Return array directly, not wrapped in Result
-        unless codex_available?
-          # Fallback models when Codex CLI is unavailable
-          return %w[o3-mini o3 gpt-5-mini gpt-5].map do |model|
-            CodingAgentTools::Models::LlmModelInfo.new(
-              id: model,
-              name: model,
-              description: "Codex CLI model",
-              context_size: 200_000
-            )
-          end
-        end
-        
-        # Get available models
-        available_models = %w[o3-mini o3 gpt-5-mini gpt-5]
+        available_models = %w[gpt-5 gpt-5-mini]
         
         available_models.map do |model_name|
           CodingAgentTools::Models::LlmModelInfo.new(
@@ -88,10 +76,10 @@ module CodingAgentTools
       private
 
       def model_context_size(model_name)
-        # Codex models have large context windows
+        # Codex/GPT-5 models have large context windows
         case model_name
-        when /o3/
-          200_000
+        when /gpt-5-mini/
+          128_000
         when /gpt-5/
           128_000
         else
@@ -134,48 +122,32 @@ module CodingAgentTools
       end
 
       def build_codex_command(prompt, options)
-        # Based on research suggesting codex exec or similar pattern
-        # Using reasonable assumptions for command structure
-        cmd = ["codex"]
+        # Use codex exec for non-interactive execution
+        cmd = ["codex", "exec"]
         
-        # Add model selection (using -m flag as suggested in research)
+        # Add model selection if not default
         if @model && @model != DEFAULT_MODEL
-          cmd << "-m" << @model
+          cmd << "--model" << normalize_model_name(@model)
         end
         
-        # Add sandbox mode (using danger-full-access as suggested in research)
-        cmd << "-s" << "danger-full-access"
-        
-        # Add prompt (assuming similar pattern to Claude)
-        if prompt.is_a?(String) && File.exist?(prompt)
-          cmd << File.read(prompt)
-        else
-          cmd << prompt.to_s
-        end
-        
-        # Add system prompt if provided
-        if options[:system_instruction] || options[:system]
-          system_text = options[:system_instruction] || options[:system]
-          cmd << "--system" << system_text.to_s
-        end
-        
-        # Add temperature if provided
-        if options[:temperature]
-          cmd << "--temperature" << options[:temperature].to_s
-        end
-        
-        # Add max tokens if provided
-        if options[:max_tokens]
-          cmd << "--max-tokens" << options[:max_tokens].to_s
-        end
+        # Note: Codex exec doesn't support direct system prompts or temperature/max_tokens
+        # These would need to be incorporated into the prompt itself
         
         cmd
       end
 
-      def execute_codex_command(cmd)
-        # Execute with timeout to prevent hanging
+      def execute_codex_command(cmd, prompt, options)
+        # Prepare the input - combine system prompt with user prompt if needed
+        input = prompt.to_s
+        
+        if options[:system_instruction] || options[:system]
+          system_text = options[:system_instruction] || options[:system]
+          input = "System: #{system_text}\n\nUser: #{input}"
+        end
+        
+        # Execute with timeout to prevent hanging, piping prompt via stdin
         Timeout.timeout(120) do
-          Open3.capture3(*cmd)
+          Open3.capture3(*cmd, stdin_data: input)
         end
       rescue Timeout::Error
         raise Error, "Codex CLI execution timed out after 120 seconds"
@@ -187,9 +159,23 @@ module CodingAgentTools
           raise Error, "Codex CLI failed: #{error_msg}"
         end
         
-        # Based on research, Codex might not support JSON output
-        # So we'll parse text output and create synthetic metadata
-        text = stdout.strip
+        # Parse Codex output format to extract the actual response
+        # Codex output includes metadata lines and the actual response
+        lines = stdout.split("\n")
+        
+        # Find where the actual response starts (after "codex" header)
+        response_start = lines.find_index { |line| line.include?("codex") }
+        
+        if response_start && response_start < lines.length - 1
+          # Extract text after the "codex" line, skipping empty lines
+          response_lines = lines[(response_start + 1)..-1]
+          # Remove token usage lines at the end
+          response_lines = response_lines.reject { |line| line.include?("tokens used:") }
+          text = response_lines.join("\n").strip
+        else
+          # Fallback: use entire output if we can't parse the format
+          text = stdout.strip
+        end
         
         # Return hash compatible with other providers
         {

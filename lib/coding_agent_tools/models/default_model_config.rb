@@ -24,7 +24,9 @@ module CodingAgentTools
         "mistral" => "open-mistral-nemo",
         "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         "lmstudio" => "mistralai/devstral-small-2505",
-        "cc" => "sonnet"
+        "cc" => "sonnet",
+        "codex" => "gpt-5",
+        "oc" => "google/gemini-2.5-flash"
       }.freeze
 
       # List of all supported providers
