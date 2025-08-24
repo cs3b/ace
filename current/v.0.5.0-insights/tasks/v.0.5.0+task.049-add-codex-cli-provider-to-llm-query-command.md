@@ -4,9 +4,77 @@ status: pending
 priority: high
 estimate: 4-6h
 dependencies: []
+needs_review: true
 ---
 
 # Add Codex CLI Provider to llm-query Command
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] **Codex CLI Command Structure**: What is the exact command structure for Codex CLI execution?
+  - **Research conducted**: Found general info about Codex CLI (launched April 2025, npm install @openai/codex)
+  - **Missing details**: Specific commands like `codex exec`, `codex run`, or similar for non-interactive execution
+  - **Evidence needed**: Output from `codex --help` and actual command examples
+  - **Why needs human input**: Cannot proceed with subprocess implementation without knowing exact command syntax
+
+- [ ] **Authentication Method**: How does Codex CLI handle authentication in our integration?
+  - **Research conducted**: Found Codex supports ChatGPT Sign-in and API key authentication
+  - **Configuration options**: `~/.codex/config.toml` for preferences, API key env vars possible
+  - **Similar pattern**: Claude Code uses `claude setup-token`, but Codex method unclear
+  - **Why needs human input**: Need to know if we detect auth via command test or environment check
+
+- [ ] **Model Name Mapping**: How should codex:o3-mini map to actual Codex CLI model names?
+  - **Research conducted**: Codex supports o3, o3-mini, gpt-5 models via `-m` flag
+  - **Example found**: `codex -m o3` for model selection
+  - **Suggested mapping**: codex:o3 → "o3", codex:o3-mini → "o3-mini", codex → "o3-mini" (default)
+  - **Why needs human input**: Confirm model naming conventions match user expectations
+
+### [MEDIUM] Enhancement Questions
+- [ ] **OSS Mode Support**: Should we implement the `--oss` flag for local Ollama integration mentioned in the spec?
+  - **Research conducted**: Task mentions OSS mode but unclear if this exists in Codex CLI
+  - **Implementation impact**: Would require different command structure and error handling
+  - **Suggested default**: Skip OSS mode in initial implementation, add later if needed
+  - **Why needs human input**: Clarify if this is a real Codex feature or speculative
+
+- [ ] **Output Format**: Does Codex CLI support JSON output like Claude CLI, or do we need text parsing?
+  - **Research conducted**: Claude CLI uses `--output-format json` for structured responses
+  - **Unknown**: Whether Codex has similar JSON output capabilities
+  - **Fallback approach**: Text parsing with synthetic metadata if no JSON support
+  - **Why needs human input**: Affects metadata extraction and cost calculation approach
+
+### [LOW] Configuration Questions  
+- [ ] **Sandbox Configuration**: How should llm-query configuration options map to Codex sandbox policies?
+  - **Research conducted**: Task mentions sandbox policies but details unclear
+  - **Implementation approach**: Pass through as command flags if supported
+  - **Why needs human input**: Low priority - can implement basic version first
+
+## Research Summary
+
+### Codex CLI Overview (Confirmed)
+- **Installation**: `npm install -g @openai/codex` or `codex --upgrade`
+- **Launch Date**: April 2025 by OpenAI
+- **Models Available**: o3, o3-mini, gpt-5 series (default: o4-mini)
+- **Platform Support**: macOS/Linux official, Windows experimental (WSL)
+- **Pricing**: $1M in API grants available, $25K blocks for eligible projects
+
+### Authentication Options (Confirmed)
+- **ChatGPT Sign-in**: Plus/Pro/Team accounts get model access included
+- **API Key**: Pay-as-you-go via OpenAI API key environment variable
+- **Config File**: `~/.codex/config.toml` for authentication preferences
+- **Credits**: Plus users get $5, Pro users get $50 in API credits (30-day expiry)
+
+### Architecture Patterns (From Existing Providers)
+- **Provider Registration**: Auto-register via `provider_key()` class method
+- **CLI Pattern**: Follow ClaudeCodeClient pattern with subprocess execution
+- **Error Handling**: Detect CLI availability with `which codex`, auth via test command
+- **Aliases**: Global and provider-specific aliases in llm-aliases.yml
+- **Metadata**: Parse output for token counts, costs, execution time
+
+### Implementation Confidence
+- **High**: Provider registration, alias system, basic subprocess execution
+- **Medium**: Authentication detection, model name mapping  
+- **Low**: Command structure, output format, advanced features
 
 ## Behavioral Specification
 
@@ -72,12 +140,32 @@ llm-usage-report --provider codex
 - [ ] **Option Mapping**: Model selection and configuration options correctly map to Codex CLI flags
 - [ ] **Graceful Degradation**: Works without token counts or detailed metadata
 
-### Validation Questions
+### Validation Questions (Resolved Through Research)
+
+- [x] **Provider Key Selection**: Should we use "codex" as the primary provider key?
+  - **Resolution**: Use "codex" as primary provider key, following existing patterns
+  - **Evidence**: Other CLI providers (cc, lmstudio) use descriptive names
+  - **Implementation**: Follow ClaudeCodeClient pattern with auto-registration
+
+- [x] **Architecture Pattern**: Should we extend BaseClient or BaseChatCompletionClient?
+  - **Resolution**: Extend BaseClient directly like ClaudeCodeClient
+  - **Evidence**: CLI providers bypass HTTP and need custom generate_text implementation
+  - **Implementation**: Skip HTTP-based chat completion workflow
+
+- [x] **Alias Configuration**: How should Codex aliases be configured?
+  - **Resolution**: Add to .coding-agent/llm-aliases.yml following existing pattern  
+  - **Evidence**: Found cc: aliases and global shortcuts already configured
+  - **Implementation**: Add codex: provider aliases and global shortcuts
+
+### Validation Questions (Still Need Human Input)
 
 - [ ] **Default Model**: Should default be o3-mini, o3, or auto-detect from user's Codex config?
-- [ ] **OSS Mode**: Should we support `--oss` flag for local Ollama integration?
-- [ ] **Sandbox Modes**: How to map llm-query options to Codex sandbox policies?
+  - **Research**: Found default is o4-mini but o3-mini might be more appropriate for quick queries
+  - **Decision needed**: Balance between speed (o3-mini) vs capability (o3)
+
 - [ ] **Profile Support**: Should we expose Codex profile selection via llm-query?
+  - **Research**: Codex supports profiles but unclear how to integrate with llm-query options
+  - **Decision needed**: Simple first implementation without profiles, or support from start?
 
 ## Objective
 
@@ -247,7 +335,33 @@ Enable developers to use OpenAI's Codex CLI through the unified llm-query interf
 
 ## References
 
-- Codex CLI documentation: `codex --help` output
-- Claude Code integration pattern: v.0.5.0+task.046
-- Existing provider implementations in dev-tools
+- Codex CLI documentation: `codex --help` output (needed)
+- Claude Code integration pattern: v.0.5.0+task.046 (analyzed)
+- Existing provider implementations in dev-tools (analyzed)
 - User request for Codex CLI integration with llm-query
+- OpenAI Codex CLI overview: https://help.openai.com/en/articles/11096431-openai-codex-cli-getting-started
+- GitHub repository: https://github.com/openai/codex
+
+## Review Summary
+
+**Questions Generated:** 6 total (3 high, 2 medium, 1 low)
+
+**Critical Blockers:** 
+- Codex CLI command structure unknown (HIGH) - cannot implement without knowing exact commands
+- Authentication method unclear (HIGH) - affects error handling and user guidance  
+- Output format unknown (MEDIUM) - affects metadata extraction approach
+
+**Implementation Readiness:** **Blocked on answers** - 3 HIGH priority questions must be resolved before implementation can begin
+
+**Research Completed:**
+- Codex CLI general capabilities and installation confirmed
+- Authentication options documented (ChatGPT vs API key)
+- Provider architecture patterns analyzed from ClaudeCodeClient
+- Alias system patterns understood from existing configuration
+- Model availability confirmed (o3, o3-mini, gpt-5 series)
+
+**Recommended Next Steps:**
+1. **Get actual Codex CLI help output** - `codex --help` to understand command structure
+2. **Test authentication methods** - determine how to detect if user is authenticated
+3. **Test model execution** - confirm exact syntax for non-interactive execution
+4. **After questions answered** - proceed with implementation following ClaudeCodeClient pattern
