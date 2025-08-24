@@ -539,6 +539,17 @@ module CodingAgentTools
               log "  → Warning: Dotfiles source not found at #{source_pattern} or alternate location"
               return [0, 0]
             end
+          # Check for alternate hooks location if the primary doesn't exist
+          elsif !source_path.exist? && source_pattern.include?("hooks")
+            # Try the template location for hooks
+            alternate_path = @project_root + "dev-handbook/.meta/tpl/claude-hooks"
+            if alternate_path.exist?
+              source_path = alternate_path
+              log "  → Using alternate hooks location: #{alternate_path.relative_path_from(@project_root)}"
+            else
+              log "  → Warning: Hooks source not found at #{source_pattern} or alternate location"
+              return [0, 0]
+            end
           elsif !source_path.exist?
             log "  → Warning: Source path not found: #{source_pattern}"
             return [0, 0]
@@ -583,7 +594,15 @@ module CodingAgentTools
             if target.exist?
               if force
                 log "  → Overwriting: #{target.relative_path_from(@project_root)}"
-                FileUtils.cp(source, target) unless @dry_run
+                unless @dry_run
+                  FileUtils.cp(source, target)
+                  
+                  # Set executable permissions for Ruby hook files
+                  if source_pattern.include?("hooks") && target.extname == ".rb"
+                    log "  → Setting executable permissions for #{target.basename}"
+                    FileUtils.chmod(0755, target)
+                  end
+                end
                 created += 1
               else
                 log "  → Skipping existing: #{target.relative_path_from(@project_root)}"
@@ -594,6 +613,12 @@ module CodingAgentTools
               unless @dry_run
                 FileUtils.mkdir_p(target.parent)
                 FileUtils.cp(source, target)
+                
+                # Set executable permissions for Ruby hook files
+                if source_pattern.include?("hooks") && target.extname == ".rb"
+                  log "  → Setting executable permissions for #{target.basename}"
+                  FileUtils.chmod(0755, target)
+                end
               end
               created += 1
             end
