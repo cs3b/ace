@@ -85,6 +85,22 @@ module CodingAgentTools
           ProviderUsageParsers::MistralUsageParser.parse(response)
         when "together_ai", "togetherai"
           ProviderUsageParsers::TogetheraiUsageParser.parse(response)
+        when "cc"
+          # Claude Code uses CLI and returns usage directly
+          usage = response[:usage_metadata] || {}
+          {
+            input_tokens: usage["input_tokens"] || 0,
+            output_tokens: usage["output_tokens"] || 0,
+            total_tokens: (usage["input_tokens"] || 0) + (usage["output_tokens"] || 0),
+            cached_tokens: usage["cache_read_input_tokens"] || 0,
+            provider_specific: {
+              cache_creation_tokens: usage["cache_creation_input_tokens"],
+              service_tier: usage["service_tier"],
+              total_cost_usd: response[:total_cost_usd],
+              session_id: response[:session_id],
+              duration_ms: response[:duration_ms]
+            }.compact
+          }
         else
           # Fallback for unknown providers
           {
