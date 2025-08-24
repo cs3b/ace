@@ -17,7 +17,10 @@ def load_config
         'enabled' => true,
         'log_file' => '/tmp/wrapper-tools-hook.log'
       },
-      'enforcements' => []
+      'enforcements' => [],
+      'commit_workflow' => {
+        'enabled' => true
+      }
     }
   end
 rescue JSON::ParserError => e
@@ -50,6 +53,67 @@ def save_debug_info(config, input)
       f.puts "Agent: [Not available in hook context]"
     end
   end
+end
+
+def check_commit_workflow(config, command)
+  # Check if commit workflow suggestions are enabled
+  return nil unless config.dig('commit_workflow', 'enabled')
+  
+  # Check if this is a git add command
+  if command =~ /\bgit\s+add\s+(.+)/
+    files = $1.strip
+    
+    # Determine if this is adding specific files or all files
+    specific_files = !files.match(/^(-A|--all|\.)\s*$/)
+    
+    return {
+      type: 'git_add_suggestion',
+      files: files,
+      specific_files: specific_files
+    }
+  end
+  
+  nil
+end
+
+def generate_commit_workflow_suggestion(result)
+  suggestions = []
+  suggestions << "💡 TIP: Consider using semantic commits with intention instead of separate add/commit:"
+  suggestions << ""
+  
+  if result[:specific_files]
+    # Specific files being added
+    suggestions << "Instead of:"
+    suggestions << "  git add #{result[:files]}"
+    suggestions << "  git commit -m \"message\""
+    suggestions << ""
+    suggestions << "Try this streamlined approach:"
+    suggestions << "  git-commit #{result[:files]} --intention \"fix\""
+    suggestions << "  git-commit #{result[:files]} --message \"fix: resolve authentication timeout\""
+    suggestions << ""
+    suggestions << "Or commit all changes with:"
+    suggestions << "  git-commit --intention \"feat\"  # Commits all modified files"
+  else
+    # All files being added
+    suggestions << "Instead of:"
+    suggestions << "  git add ."
+    suggestions << "  git commit -m \"message\""
+    suggestions << ""
+    suggestions << "Try:"
+    suggestions << "  git-commit --intention \"feat\"  # Automatically stages and commits all changes"
+    suggestions << "  git-commit --message \"feat: add user authentication\""
+  end
+  
+  suggestions << ""
+  suggestions << "Benefits of semantic commits:"
+  suggestions << "• Clear intent (feat, fix, docs, chore, etc.)"
+  suggestions << "• AI-assisted message generation"
+  suggestions << "• Consistent format for automation"
+  suggestions << "• Better change tracking"
+  suggestions << ""
+  suggestions << "Common intentions: feat, fix, docs, style, refactor, test, chore"
+  
+  suggestions.join("\n")
 end
 
 def check_wrapper_enforcement(config, command)
@@ -120,8 +184,11 @@ def generate_error_message(result, config)
       error_messages << "  git-commit --intention \"fix bug\"              # Commit all changes"
       error_messages << "  git-commit file.rb --intention \"update code\" # Commit specific files"
     when 'add'
-      error_messages << "  git-add file1.md file2.rb    # Stage specific files"
-      error_messages << "  git-add --all                # Stage all changes"
+      # For git add, provide the commit workflow suggestion
+      error_messages << "  git-commit file.rb --intention \"fix\"  # Stage and commit in one step"
+      error_messages << "  git-commit --intention \"feat\"         # Commit all changes"
+      error_messages << ""
+      error_messages << "💡 Using git-commit directly stages AND commits with semantic intent!"
     when 'diff'
       error_messages << "  git diff --stat              # Show summary of changes"
       error_messages << "  git diff --staged            # Show staged changes"
@@ -158,6 +225,14 @@ begin
   
   # Get the command being executed
   command = input.dig('tool_input', 'command') || ''
+  
+  # First check for commit workflow suggestions (non-blocking)
+  if commit_result = check_commit_workflow(config, command)
+    suggestion = generate_commit_workflow_suggestion(commit_result)
+    $stderr.puts suggestion
+    # Allow the command but show the suggestion
+    exit 0
+  end
   
   # Check wrapper enforcement rules
   result = check_wrapper_enforcement(config, command)

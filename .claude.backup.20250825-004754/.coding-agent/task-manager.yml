@@ -1,0 +1,50 @@
+# Task Manager Configuration
+# This file configures task creation templates and variable handling for task-manager CLI tool
+
+templates:
+  task:
+    # Path to the task template file (relative to project root)
+    path: dev-handbook/templates/task-management/task.pending.template.md
+    
+    # Template variables and their sources
+    variables:
+      id: '{id}'
+      title: '{title}'
+      priority: '{priority}'
+      estimate: '{estimate}'
+      dependencies: '{dependencies}'
+      date: '{date}'
+      timestamp: '{timestamp}'
+
+# Variable processors for dynamic content generation
+variable_processors:
+  defaults:
+    priority: 'medium'
+    estimate: 'TBD'
+    dependencies: '[]'
+    status: 'pending'
+
+  dynamic:
+    # Date/time variables
+    date: 'datetime:%Y-%m-%d'
+    timestamp: 'datetime:%Y%m%d-%H%M%S'
+    
+    # ID generation (handled by task-manager itself)
+    id: 'task-manager generate-id'
+
+# Task creation settings
+task_creation:
+  # Default status for new tasks
+  default_status: 'pending'
+  
+  # Whether to auto-generate task IDs
+  auto_generate_id: true
+  
+  # Number format (zero-padded to 3 digits)
+  id_format: '%03d'
+  
+  # File naming pattern
+  filename_pattern: '{id}-{slug}.md'
+  
+  # Maximum slug length for filenames
+  max_slug_length: 60

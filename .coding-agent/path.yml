@@ -6,13 +6,13 @@ project:
   # Project root directory (relative to this config file)
   root: ".."
   # Project name for path generation
-  name: "handbook-meta"
+  name: "tools-meta"
 
 # Repository scanning configuration
 repositories:
   # Scan order for path resolution across all 4 repositories
   scan_order:
-    - name: "handbook-meta"
+    - name: "tools-meta"
       path: "."
       priority: 1
       description: "Main coordination and scripts"
@@ -20,14 +20,14 @@ repositories:
       path: "dev-tools"
       priority: 2
       description: "Primary development focus (CAT Ruby Gem)"
-    - name: "dev-handbook"
-      path: "dev-handbook"
-      priority: 3
-      description: "Development resources and guides"
     - name: "dev-taskflow"
       path: "dev-taskflow"
-      priority: 4
+      priority: 3
       description: "Task management and project planning"
+    - name: "dev-handbook"
+      path: "dev-handbook"
+      priority: 4
+      description: "Development resources and guides"
 
 # Path generation patterns
 path_patterns:
@@ -54,14 +54,6 @@ path_patterns:
       release_path: "release-manager current --format json | jq -r '.data.path'" # Command to get current release path
       timestamp: "datetime:%Y%m%d-%H%M%S"
       slug: "user_input"
-
-  # Code review session path generation  
-  code_review_new:
-    template: "{release_path}/code_review/{timestamp}-{slug}"
-    variables:
-      release_path: "release-manager current --format json | jq -r '.data.path'" # Command to get current release path
-      timestamp: "datetime:%Y%m%d-%H%M%S" # YYYYMMDD-HHMMSS format  
-      slug: "user_input" # Derived from session name (focus-target format)
 
 # Path resolution settings
 resolution:
@@ -100,19 +92,14 @@ security:
   # Project root sandboxing - all paths must be within project root
   enforce_sandbox: true
   # Simple approach: block dangerous/noisy areas, allow everything else
-  # Skip patterns configuration - controls which directories and files nav-path will skip
-  # These patterns use glob syntax and are applied relative to project root
   forbidden_patterns:
-    - "**/.git/**" # Git internals (version control)
+    - "**/.git/**" # Git internals
     - "**/node_modules/**" # NPM dependencies
     - "**/coverage/**" # Test coverage files
     - "**/tmp/**" # Temporary files
     - "**/*.log" # Log files
-    - "**/.DS_Store" # macOS system files
-    - "**/Gemfile.lock" # Ruby dependency lock files
-    - "**/package-lock.json" # Node.js dependency lock files
-    - "**/.*" # All other dot files and dot directories (except those explicitly needed)
-    - ".*" # Top-level dot files (except .coding-agent)
+    - "**/.*" # All dot files and dot directories
+    - ".*" # Top-level dot files
   # No allowed_patterns - everything within project root is allowed except forbidden
 
 # Custom autocorrect mappings for common path errors
@@ -135,52 +122,52 @@ scoped_autocorrect:
   # Scope mappings define where to search for each scope
   scope_mappings:
     # Architecture layers (ATOM pattern)
-    "atoms":
+    "atoms": 
       - "dev-tools/lib/coding_agent_tools/atoms"
       - "dev-tools/spec/coding_agent_tools/atoms"
-    "molecules":
+    "molecules": 
       - "dev-tools/lib/coding_agent_tools/molecules"
       - "dev-tools/spec/coding_agent_tools/molecules"
-    "organisms":
+    "organisms": 
       - "dev-tools/lib/coding_agent_tools/organisms"
       - "dev-tools/spec/coding_agent_tools/organisms"
-
+    
     # Directory scopes
-    "lib":
+    "lib": 
       - "dev-tools/lib"
       - "*/lib"
-    "spec":
+    "spec": 
       - "dev-tools/spec"
       - "*/spec"
-    "exe":
+    "exe": 
       - "dev-tools/exe"
       - "*/exe"
       - "bin"
     "bin":
       - "bin"
       - "dev-tools/exe"
-
+    
     # Repository scopes
     "tools": ["dev-tools"]
     "taskflow": ["dev-taskflow"]
     "handbook": ["dev-handbook"]
     "meta": ["."]
-
+    
     # File type scopes
     "rb": ["**/*.rb"]
     "md": ["**/*.md"]
     "yml": ["**/*.yml", "**/*.yaml"]
     "yaml": ["**/*.yml", "**/*.yaml"]
     "sh": ["**/*.sh"]
-
+    
     # Functional scopes
-    "cli":
+    "cli": 
       - "dev-tools/lib/coding_agent_tools/cli"
       - "dev-tools/spec/coding_agent_tools/cli"
     "models":
       - "dev-tools/lib/coding_agent_tools/models"
       - "dev-tools/spec/coding_agent_tools/models"
-    "config":
+    "config": 
       - ".coding-agent"
       - "dev-tools/config"
     "tasks":
@@ -205,7 +192,7 @@ scoped_autocorrect:
     "mols": "molecules"
     "organism": "organisms"
     "orgs": "organisms"
-
+    
     # Directory typos
     "liib": "lib"
     "libb": "lib"
@@ -214,7 +201,7 @@ scoped_autocorrect:
     "specc": "spec"
     "binn": "bin"
     "bins": "bin"
-
+    
     # Repository typos
     "tool": "tools"
     "dev-tool": "tools"
@@ -224,13 +211,13 @@ scoped_autocorrect:
     "hanbook": "handbook"
     "hand-book": "handbook"
     "dev-handbook": "handbook"
-
+    
     # File type typos
     "ruby": "rb"
     "markdown": "md"
     "shell": "sh"
     "bash": "sh"
-
+    
     # Functional typos
     "command": "cli"
     "commands": "cli"

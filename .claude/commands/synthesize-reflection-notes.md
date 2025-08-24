@@ -1,7 +1,7 @@
 ---
 description: Synthesize Reflection Notes
 allowed-tools: Read, Write, Grep, TodoWrite
-last_modified: '2025-08-24 00:17:47'
+last_modified: '2025-08-25 00:47:54'
 source: generated
 ---
 

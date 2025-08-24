@@ -14,8 +14,8 @@ blacklist:
   - "*-dev"                  # Development tools (default)
   - "*-debug"                # Debug utilities (default)
   - "test-*"                 # Test utilities (default)
-  - "code-review-prepare"    # Exclude code review preparation tool
-  - "llm-usage-report"       # Exclude LLM usage reporting tool
+  # Add project-specific exclusions here:
+  # - "internal-*"           # Example: exclude internal tools
 
 # Optional: Tool categories configuration
 # You can customize how tools are categorized
@@ -48,10 +48,40 @@ categories:
     description: "Documentation management and handbook tools"
     patterns: ["handbook*"]
     
-  "Reflection & Analysis":
-    description: "Session reflection and analysis tools"
+  "Reflection":
+    description: "Session reflection and synthesis tools"
     patterns: ["reflection-*"]
     
-  "Development Tools":
-    description: "General development and automation tools"
-    patterns: []
+  "Search":
+    description: "Code and file search utilities"
+    patterns: ["search*"]
+
+  "Context":
+    description: "Project context loading and management"
+    patterns: ["context*"]
+
+  # Add custom categories for your project:
+  # "Custom Tools":
+  #   description: "Project-specific custom tools"
+  #   patterns: ["custom-*"]
+
+# Optional: Tool aliases (not yet implemented)
+# Define shorter names for frequently used tools
+# aliases:
+#   "tm": "task-manager"
+#   "rm": "release-manager"
+#   "lr": "llm-query"
+
+# Optional: Default options for specific tools (not yet implemented)
+# Set default flags for tools when run without arguments
+# defaults:
+#   "git-status":
+#     flags: ["--short", "--verbose"]
+#   "task-manager":
+#     flags: ["--limit", "10"]
+
+# Notes:
+# - Patterns support standard glob syntax: *, ?, [abc], [!abc]
+# - Categories are displayed in the order defined here
+# - Tools matching multiple categories appear in the first match
+# - Uncategorized tools appear in an "Other" category at the end
