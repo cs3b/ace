@@ -19,9 +19,13 @@ module CodingAgentTools
         "global" => {
           "gflash" => "google:gemini-2.5-flash",
           "gpro" => "google:gemini-2.5-pro",
+          "gfast" => "google:gemini-2.5-flash-lite",
           "opus" => "cc:opus",
           "sonnet" => "cc:sonnet",
-          "haiku" => "cc:haiku"
+          "haiku" => "cc:haiku",
+          "gpt5" => "openai:gpt-5",
+          "gpt5mini" => "openai:gpt-5-mini",
+          "gpt5nano" => "openai:gpt-5-nano"
         },
         "providers" => {
           "cc" => {
