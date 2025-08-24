@@ -2,18 +2,35 @@
 
 require "yaml"
 require "fileutils"
+require_relative "../atoms/project_root_detector"
 
 module CodingAgentTools
   module Molecules
     # LlmAliasResolver is a molecule that resolves LLM aliases to their actual model names
     # It supports both global aliases and provider-specific aliases with proper precedence
     class LlmAliasResolver
-      # User config file location (relative to HOME/.config/coding-agent-tools/)
+      # Config file locations
+      PROJECT_CONFIG_PATH = ".coding-agent/llm-aliases.yml"
       USER_CONFIG_SUBDIR = ".config/coding-agent-tools"
       USER_CONFIG_FILE = "llm-aliases.yml"
-
-      # Default config location relative to this file
-      DEFAULT_CONFIG_PATH = File.expand_path("../../../config/default-llm-aliases.yml", __dir__)
+      
+      # Minimal hardcoded defaults as emergency fallback
+      DEFAULT_ALIASES = {
+        "global" => {
+          "gflash" => "google:gemini-2.5-flash",
+          "gpro" => "google:gemini-2.5-pro",
+          "opus" => "cc:opus",
+          "sonnet" => "cc:sonnet",
+          "haiku" => "cc:haiku"
+        },
+        "providers" => {
+          "cc" => {
+            "opus" => "opus",
+            "sonnet" => "sonnet",
+            "haiku" => "haiku"
+          }
+        }
+      }.freeze
 
       attr_reader :aliases_config
 
@@ -71,19 +88,30 @@ module CodingAgentTools
 
       private
 
-      # Load aliases configuration from user config or default config
+      # Load aliases configuration from project, user, or default config
       # @return [Hash] Loaded aliases configuration
       def load_aliases_config
-        user_config_path = user_aliases_config_path
-        
-        if File.exist?(user_config_path)
-          load_yaml_config(user_config_path)
-        elsif File.exist?(DEFAULT_CONFIG_PATH)
-          load_yaml_config(DEFAULT_CONFIG_PATH)
-        else
-          # Fallback to empty config if no files found
-          { "global" => {}, "providers" => {} }
+        # Check project config first (.coding-agent/llm-aliases.yml)
+        # Use ProjectRootDetector to find the actual project root
+        begin
+          project_root = Atoms::ProjectRootDetector.find_project_root
+          project_config_path = File.join(project_root, PROJECT_CONFIG_PATH)
+          if File.exist?(project_config_path)
+            return load_yaml_config(project_config_path)
+          end
+        rescue => e
+          # If we can't find project root, just continue to other options
+          # This might happen when running outside a project context
         end
+        
+        # Check user config second (~/.config/coding-agent-tools/llm-aliases.yml)
+        user_config_path = user_aliases_config_path
+        if File.exist?(user_config_path)
+          return load_yaml_config(user_config_path)
+        end
+        
+        # Fallback to hardcoded defaults
+        DEFAULT_ALIASES.dup
       end
 
       # Get path to user aliases config file

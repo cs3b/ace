@@ -15,7 +15,7 @@ module CodingAgentTools
           argument :provider_model, required: true,
             desc: "Provider and model ('provider:model'), provider only ('provider'), or alias ('gflash')"
 
-          argument :prompt, required: true, desc: "The prompt text or file path (auto-detected)"
+          argument :prompt, required: false, desc: "The prompt text or file path (auto-detected)"
 
           option :output, type: :string, aliases: ["o"],
             desc: "Output file path (format inferred from extension)"
@@ -52,7 +52,7 @@ module CodingAgentTools
             "mistral prompt.txt --system system.md --output response.md"
           ]
 
-          def call(provider_model:, prompt:, **options)
+          def call(provider_model:, prompt: nil, **options)
             # Resolve aliases before parsing provider:model
             alias_resolver = Molecules::LlmAliasResolver.new
             resolved_provider_model = alias_resolver.resolve(provider_model)
@@ -71,10 +71,10 @@ module CodingAgentTools
               return 1
             end
 
-            # Validate prompt argument
+            # If no prompt provided, show available aliases for the provider
             if prompt.nil? || prompt.strip.empty?
-              error_output("Error: Prompt is required")
-              return 1
+              show_provider_aliases(parse_result.provider, alias_resolver)
+              return 0
             end
 
             # Execute the unified query logic
@@ -281,6 +281,45 @@ module CodingAgentTools
 
           def error_output(message)
             warn message
+          end
+          
+          def show_provider_aliases(provider, alias_resolver)
+            puts "\nAvailable aliases for #{provider} provider:\n\n"
+            
+            aliases = alias_resolver.available_aliases
+            
+            # Show global aliases that map to this provider
+            global_for_provider = aliases[:global].select do |_, target|
+              target.start_with?("#{provider}:")
+            end
+            
+            if global_for_provider.any?
+              puts "Global aliases:"
+              global_for_provider.each do |alias_name, target|
+                puts "  #{alias_name.ljust(10)} → #{target}"
+              end
+              puts
+            end
+            
+            # Show provider-specific aliases
+            provider_aliases = aliases[:providers][provider]
+            if provider_aliases && provider_aliases.any?
+              puts "Provider aliases (#{provider}:):"
+              provider_aliases.each do |alias_name, model|
+                puts "  #{alias_name.ljust(10)} → #{model}"
+              end
+              puts
+            end
+            
+            # Show usage examples
+            puts "Usage examples:"
+            first_global = global_for_provider.keys.first
+            first_provider = provider_aliases&.keys&.first
+            
+            puts "  llm-query #{first_global} \"Your prompt here\"" if first_global
+            puts "  llm-query #{provider}:#{first_provider} \"Your prompt here\"" if first_provider
+            puts "  llm-query #{provider}:model-name \"Your prompt here\""
+            puts
           end
         end
       end

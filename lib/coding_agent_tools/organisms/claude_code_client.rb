@@ -27,6 +27,13 @@ module CodingAgentTools
         {}
       end
 
+      # Available models for Claude Code
+      AVAILABLE_MODELS = {
+        "opus" => "claude-opus-4-1",
+        "opus4" => "claude-opus-4-0", 
+        "sonnet" => "claude-sonnet-4-0",
+        "haiku" => "claude-3-5-haiku-latest"
+      }.freeze
 
       # Default model for quick access
       DEFAULT_MODEL = "sonnet"
@@ -234,6 +241,11 @@ module CodingAgentTools
       def handle_claude_error(error)
         # Re-raise the error for proper handling by the base client error flow
         raise error
+      end
+      
+      def normalize_model_name(model)
+        # Map aliases to actual model names, or pass through
+        AVAILABLE_MODELS[model] || model
       end
     end
   end
