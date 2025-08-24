@@ -16,16 +16,27 @@ dependencies: []
 - **Output**: Complete project structure with dev-taskflow directories, core documentation files, and Claude integration, plus guidance for remaining manual steps
 
 ### Expected Behavior
-When a developer runs the integration command in a new or existing project:
 
-1. The system automatically detects the current project state (missing docs, no dev-taskflow, etc.)
-2. With `--init-project` flag, it creates the complete project structure automatically
-3. Without the flag, it provides clear guidance about what's missing and how to initialize
-4. For new projects (no dev-taskflow), it creates v.0.0.0-bootstrap release structure
-5. For existing projects, it skips v.0.0.0 creation and preserves existing structure
-6. The system extracts project information from existing files (PRD.md, README.md, package.json, etc.)
-7. Generated documentation uses templates with detected project information
-8. Clear next-steps guidance appears after integration completes
+**Mode 1: Regular Integration (default - run often)**
+```bash
+coding-agent-tools integrate claude
+```
+- Updates all Claude components (agents, commands, hooks, dotfiles)
+- Safe to run repeatedly for getting latest updates
+- Never overwrites without --force flag
+- Reports what was updated/skipped
+
+**Mode 2: Project Initialization (run once per project)**
+```bash
+coding-agent-tools integrate claude --init-project
+```
+- Performs all regular integration PLUS:
+- Creates dev-taskflow/ structure if missing (idempotent)
+- Generates core docs from templates if missing (idempotent)
+- Creates v.0.0.0-bootstrap if dev-taskflow is new (conditional)
+- Creates docs/tools.md symlink if source exists (idempotent)
+- Extracts project info from existing files (PRD.md, README.md, package.json)
+- Provides clear next-steps guidance based on what was created
 
 ### Interface Contract
 
@@ -33,10 +44,8 @@ When a developer runs the integration command in a new or existing project:
 # CLI Interface
 coding-agent-tools integrate claude [OPTIONS]
 
-# New options:
---init-project        # Initialize project structure and documentation
---skip-docs          # Skip documentation generation
---skip-bootstrap     # Skip v.0.0.0 release creation
+# New option (only one needed):
+--init-project        # Initialize project structure and documentation (run once per project)
 
 # Expected outputs for new project:
 🚀 Starting Claude integration with project initialization...
@@ -90,9 +99,13 @@ coding-agent-tools integrate claude [OPTIONS]
 ### Validation Questions
 
 - [ ] **Requirement Clarity**: Should the command prompt for project information or use defaults with later customization?
+  - Answer: Use defaults, guide user to complete manually afterward
 - [ ] **Edge Case Handling**: How should we handle projects with custom directory structures?
+  - Answer: Respect existing structure, only add missing pieces (idempotent)
 - [ ] **User Experience**: Should --init-project be the default behavior or require explicit flag?
+  - Answer: Require explicit flag to avoid surprises (opt-in)
 - [ ] **Success Definition**: What constitutes "sufficient" project initialization for productive work?
+  - Answer: Structure + templates created, user can run task-manager next
 
 ## Objective
 
@@ -168,11 +181,17 @@ Streamline the project initialization process by automating the creation of proj
 - Pathname for cross-platform path handling
 
 ### Implementation Strategy
-1. Add new CLI options to integrate command
+1. Add single --init-project flag to integrate command
 2. Create template directory structure in dev-handbook
-3. Implement project detection methods
-4. Add conditional initialization logic
-5. Enhance output with actionable guidance
+3. Implement project detection methods with idempotent checks
+4. Leverage existing file-checking logic (no skip flags needed)
+5. Enhance output with mode-specific guidance
+
+### Why No Skip Flags Needed
+- Existing code already checks file existence before creating
+- Never overwrites without --force flag  
+- Automatically skips what exists (idempotent by design)
+- Simpler mental model: two clear modes instead of complex flag combinations
 
 ## Tool Selection
 
@@ -248,11 +267,10 @@ Streamline the project initialization process by automating the creation of proj
 - [ ] Create template directory structure in dev-handbook/.meta/tpl/project-structure/
 - [ ] Convert workflow templates to ERB templates with dynamic content
 - [ ] Create symlink for docs/tools.md from dev-tools/docs/tools.md (if exists)
-- [ ] Add CLI options to integrate command
+- [ ] Add single CLI option to integrate command
   ```ruby
-  option :init_project, type: :boolean, default: false
-  option :skip_docs, type: :boolean, default: false
-  option :skip_bootstrap, type: :boolean, default: false
+  option :init_project, type: :boolean, default: false,
+    desc: "Initialize project structure and documentation (run once per project)"
   ```
 - [ ] Implement project detection logic
   ```ruby
@@ -264,10 +282,23 @@ Streamline the project initialization process by automating the creation of proj
     !@project_root.join("dev-taskflow").exist?
   end
   ```
-- [ ] Implement structure creation methods
+- [ ] Implement structure creation methods with idempotent checks
+  ```ruby
+  def create_project_structure
+    return if @project_root.join("dev-taskflow").exist?
+    # Create directories
+  end
+  
+  def generate_core_docs
+    # Only create missing docs
+    create_doc("what-do-we-build") unless doc_exists?("what-do-we-build")
+    create_doc("architecture") unless doc_exists?("architecture")
+    create_doc("blueprint") unless doc_exists?("blueprint")
+  end
+  ```
 - [ ] Add template processing with ERB
-- [ ] Implement conditional v.0.0.0 creation
-- [ ] Enhance output with guidance
+- [ ] Implement conditional v.0.0.0 creation (only if dev-taskflow is new)
+- [ ] Enhance output with clear guidance for both modes
 - [ ] Test with new project scenario
 - [ ] Test with existing project scenario
 - [ ] Test idempotent behavior
@@ -275,15 +306,27 @@ Streamline the project initialization process by automating the creation of proj
 
 ## Acceptance Criteria
 
-- [ ] Integration command accepts --init-project flag
-- [ ] dev-taskflow structure created when missing (backlog/, current/, done/)
-- [ ] Core docs generated from templates when missing
-- [ ] docs/tools.md symlink created from dev-tools/docs/tools.md (if source exists)
-- [ ] v.0.0.0 bootstrap created ONLY for new projects (when dev-taskflow doesn't exist)
-- [ ] Existing files never overwritten (idempotent operation)
-- [ ] Clear next-steps guidance provided based on project state
-- [ ] initialize-project-structure.wf.md NOT created as Claude command (remains workflow only)
-- [ ] All tests pass (new project, existing project, partial project)
+### Mode 1: Regular Integration (default)
+- [ ] Updates Claude components without creating project structure
+- [ ] Safe to run repeatedly without side effects
+- [ ] Reports what was updated/skipped
+
+### Mode 2: Project Initialization (--init-project)
+- [ ] Single flag enables all initialization features
+- [ ] dev-taskflow structure created only when missing (idempotent)
+- [ ] Core docs generated from templates only when missing (idempotent)
+- [ ] docs/tools.md symlink created only if source exists (idempotent)
+- [ ] v.0.0.0 bootstrap created ONLY when dev-taskflow is new
+- [ ] Existing files NEVER overwritten without --force
+- [ ] Clear mode-specific guidance provided
+- [ ] initialize-project-structure.wf.md remains workflow (not command)
+
+### Testing Requirements
+- [ ] Test Mode 1: Regular integration updates components only
+- [ ] Test Mode 2: New project gets full initialization
+- [ ] Test Mode 2: Existing project skips what exists
+- [ ] Test Mode 2: Partial project gets only missing pieces
+- [ ] Verify idempotent behavior in all scenarios
 
 ## References
 
