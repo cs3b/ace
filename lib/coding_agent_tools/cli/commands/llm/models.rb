@@ -40,7 +40,7 @@ module CodingAgentTools
 
           def call(provider: "google", **options)
             unless valid_provider?(provider)
-              warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai"
+              warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai, cc"
               exit(1)
             end
 
@@ -109,7 +109,7 @@ module CodingAgentTools
 
           # Check if provider is valid
           def valid_provider?(provider)
-            ["google", "lmstudio", "openai", "anthropic", "mistral", "together_ai"].include?(provider)
+            ["google", "lmstudio", "openai", "anthropic", "mistral", "together_ai", "cc"].include?(provider)
           end
 
           # Get list of available models for the specified provider
@@ -138,6 +138,8 @@ module CodingAgentTools
               fetch_mistral_models
             when "together_ai"
               fetch_together_ai_models
+            when "cc"
+              fetch_claude_code_models
             end
           rescue => e
             # Fallback to hardcoded list if API fails
@@ -307,6 +309,29 @@ module CodingAgentTools
             end.sort_by(&:id)
           end
 
+          # Fetch Claude Code models
+          def fetch_claude_code_models
+            client = Organisms::ClaudeCodeClient.new
+            models_response = client.list_models
+            
+            default_model_id = default_config.default_model_for("cc")
+            # Models are already LlmModelInfo objects
+            models_response.map do |model|
+              # Update display properties
+              model_id = model.id
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: model_id,
+                name: format_claude_code_model_name(model_id),
+                description: "Claude Code model via CLI",
+                default: model_id == default_model_id,
+                context_size: model.context_size
+              )
+            end.sort_by(&:id)
+          rescue => e
+            # Fallback to hardcoded list if API fails
+            fallback_claude_code_models
+          end
+
           # Format Google model name for display
           def format_model_name(model_name)
             name = model_name.sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
@@ -417,6 +442,20 @@ module CodingAgentTools
             end
           end
 
+          # Format Claude Code model name for display
+          def format_claude_code_model_name(model_id)
+            case model_id
+            when "opus", "opus-4"
+              "Claude Code Opus"
+            when "sonnet", "sonnet-4"
+              "Claude Code Sonnet"
+            when "haiku", "haiku-3"
+              "Claude Code Haiku"
+            else
+              "Claude Code #{model_id.capitalize}"
+            end
+          end
+
           # Fallback models if API call fails
           def fallback_models(provider)
             config_path = File.expand_path("../../../../../config/fallback_models.yaml", __dir__)
@@ -511,6 +550,34 @@ module CodingAgentTools
                 )
               end
             end
+          end
+
+          # Fallback models for Claude Code
+          def fallback_claude_code_models
+            default_model_id = default_config.default_model_for("cc")
+            [
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: "opus",
+                name: "Claude Code Opus",
+                description: "Most capable Claude Code model",
+                default: "opus" == default_model_id,
+                context_size: 200_000
+              ),
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: "sonnet",
+                name: "Claude Code Sonnet",
+                description: "Balanced Claude Code model",
+                default: "sonnet" == default_model_id,
+                context_size: 200_000
+              ),
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: "haiku",
+                name: "Claude Code Haiku",
+                description: "Fast Claude Code model",
+                default: "haiku" == default_model_id,
+                context_size: 200_000
+              )
+            ]
           end
 
           # Cache management methods using XDG-compliant CacheManager
@@ -646,6 +713,17 @@ module CodingAgentTools
 
               puts
               puts 'Usage: llm-query together_ai:MODEL_ID "Your prompt here"'
+            when "cc"
+              puts "Available Claude Code Models"
+              puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
+
+              models.each do |model|
+                puts
+                puts model
+              end
+
+              puts
+              puts 'Usage: llm-query cc:MODEL_ID "Your prompt here"'
             end
           end
 
@@ -677,6 +755,8 @@ module CodingAgentTools
               output[:default_model] = default_model&.id || default_config.default_model_for("mistral")
             when "together_ai"
               output[:default_model] = default_model&.id || default_config.default_model_for("together_ai")
+            when "cc"
+              output[:default_model] = default_model&.id || default_config.default_model_for("cc")
             end
 
             puts JSON.pretty_generate(output)

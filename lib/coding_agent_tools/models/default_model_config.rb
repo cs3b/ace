@@ -23,7 +23,8 @@ module CodingAgentTools
         "openai" => "gpt-4o-mini",
         "mistral" => "open-mistral-nemo",
         "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-        "lmstudio" => "mistralai/devstral-small-2505"
+        "lmstudio" => "mistralai/devstral-small-2505",
+        "cc" => "sonnet"
       }.freeze
 
       # List of all supported providers
