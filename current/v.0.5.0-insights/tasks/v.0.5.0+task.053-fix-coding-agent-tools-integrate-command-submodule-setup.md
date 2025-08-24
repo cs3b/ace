@@ -57,6 +57,11 @@ Fixed critical bugs in the `setup_submodule` method to properly handle GitHub CL
     - Suppressed error output from failed git commands (2>/dev/null)
     - Added cleanup of incomplete directories before adding submodules
     - Improved error handling to continue even when some commands fail
+  - **Fourth fix** (dotfiles integration):
+    - Fixed project root detection when running from submodule directories
+    - Added support for alternate dotfiles location in .meta/tpl/dotfiles
+    - Properly configured dotfiles to copy to .coding-agent directory
+    - Added verbose logging for debugging file copy operations
 - **Validation**: Tested with dry-run and verified Ruby syntax
 
 ### Technical Details
