@@ -1,0 +1,320 @@
+# <%= @project_name || "[Project Name]" %> - Architecture
+
+## Overview
+
+This document outlines the architectural design and technical implementation details for <%= @project_name || "[Project Name]" %>. It serves as a guide for developers and AI agents working on the project.
+
+<%= @architecture_overview || "[High-level description of the system architecture]" %>
+
+## Technology Stack
+
+### Core Technologies
+
+- **Primary Language**: <%= @tech_stack&.dig(:primary_language) || "[e.g., JavaScript, Python, Rust, Ruby]" %>
+- **Runtime/Framework**: <%= @tech_stack&.dig(:framework) || "[e.g., Node.js, Django, Rails, Actix]" %>
+- **Database**: <%= @tech_stack&.dig(:database) || "[e.g., PostgreSQL, MySQL, MongoDB, SQLite]" %>
+- **Package Manager**: <%= @tech_stack&.dig(:package_manager) || "[e.g., npm, pip, cargo, bundler]" %>
+
+### Development Tools
+
+- **Build System**: <%= @tech_stack&.dig(:build_system) || "[e.g., Webpack, Vite, Cargo, Make]" %>
+- **Testing Framework**: <%= @tech_stack&.dig(:testing_framework) || "[e.g., Jest, PyTest, RSpec, Criterion]" %>
+- **Linting/Formatting**: <%= @tech_stack&.dig(:linting) || "[e.g., ESLint/Prettier, Black, RuboCop, rustfmt]" %>
+- **Type System**: <%= @tech_stack&.dig(:type_system) || "[e.g., TypeScript, mypy, Sorbet, native]" %>
+
+### Infrastructure & Deployment
+
+- **Containerization**: <%= @tech_stack&.dig(:containerization) || "[e.g., Docker, Podman]" %>
+- **Cloud Platform**: <%= @tech_stack&.dig(:cloud_platform) || "[e.g., AWS, GCP, Azure, Heroku]" %>
+- **CI/CD**: <%= @tech_stack&.dig(:ci_cd) || "[e.g., GitHub Actions, GitLab CI, Jenkins]" %>
+- **Monitoring**: <%= @tech_stack&.dig(:monitoring) || "[e.g., Sentry, DataDog, Prometheus]" %>
+
+## System Architecture
+
+### High-Level Components
+
+```
+<%= @system_diagram || %q{[Component Diagram - describe or link to actual diagram]
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend/UI   │◄──►│   Backend/API   │◄──►│    Database     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌─────────────────┐
+                       │ External APIs/  │
+                       │    Services     │
+                       └─────────────────┘} %>
+```
+
+### Component Descriptions
+
+<% if @components && @components.any? %>
+<% @components.each do |component| %>
+#### <%= component[:name] %>
+
+- **Purpose**: <%= component[:purpose] %>
+- **Technology**: <%= component[:technology] %>
+- **Key Responsibilities**:
+<% component[:responsibilities]&.each do |responsibility| %>
+  - <%= responsibility %>
+<% end %>
+- **Interfaces**: <%= component[:interfaces] %>
+
+<% end %>
+<% else %>
+#### [Component 1 - e.g., Frontend]
+
+- **Purpose**: [What this component does]
+- **Technology**: [Specific tech stack]
+- **Key Responsibilities**:
+  - Responsibility 1
+  - Responsibility 2
+- **Interfaces**: [How it communicates with other components]
+
+#### [Component 2 - e.g., Backend API]
+
+- **Purpose**: [What this component does]
+- **Technology**: [Specific tech stack]
+- **Key Responsibilities**:
+  - Responsibility 1
+  - Responsibility 2
+- **Interfaces**: [How it communicates with other components]
+
+#### [Component 3 - e.g., Database]
+
+- **Purpose**: [What this component does]
+- **Technology**: [Specific tech stack]
+- **Schema**: [Brief description or link to schema docs]
+<% end %>
+
+## Data Flow
+
+### Request Processing Flow
+
+1. **Input**: <%= @data_flow&.dig(:input) || "[How requests/data enters the system]" %>
+2. **Processing**: <%= @data_flow&.dig(:processing) || "[How data is processed]" %>
+3. **Storage**: <%= @data_flow&.dig(:storage) || "[How data is persisted]" %>
+4. **Output**: <%= @data_flow&.dig(:output) || "[How results are returned]" %>
+
+### Data Models
+
+#### Core Entities
+
+<% if @data_models && @data_models.any? %>
+<% @data_models.each do |model| %>
+- **<%= model[:name] %>**: <%= model[:description] %>
+<% end %>
+<% else %>
+- **[Entity 1]**: [Description and key attributes]
+- **[Entity 2]**: [Description and key attributes]
+- **[Entity 3]**: [Description and key attributes]
+<% end %>
+
+## Development Tools
+
+The project leverages the dev-tools suite for development automation and task management.
+
+### Core Commands
+
+- **task-manager next** — Find the next actionable task in the current release
+- **task-manager recent** — Summarize recently updated or completed tasks
+- **git-commit** — Intelligent commit workflow with automated message generation
+- **code-lint** — Run code quality checks and linting
+- **context** — Load project context and documentation
+- **release-manager current** — Get current release path and version information
+
+### Project-Specific Tools
+
+<% if @project_tools && @project_tools.any? %>
+<% @project_tools.each do |tool| %>
+- **<%= tool[:name] %>**: <%= tool[:description] %>
+<% end %>
+<% else %>
+<!-- Document any custom tools or scripts specific to this project -->
+<% end %>
+
+## File Organization
+
+### Source Code Structure
+
+```
+<%= @source_structure || %q{src/
+├── [main-module]/          # Core application logic
+├── [feature-module]/       # Feature-specific code
+├── utils/                  # Shared utilities
+├── config/                 # Configuration management
+├── types/                  # Type definitions (if applicable)
+└── [other-modules]/        # Additional modules} %>
+```
+
+### Configuration Files
+
+<% if @config_files && @config_files.any? %>
+<% @config_files.each do |config| %>
+- **<%= config[:name] %>**: <%= config[:purpose] %>
+<% end %>
+<% else %>
+- **[config-file]**: [Purpose and key settings]
+- **[env-file]**: [Environment-specific configurations]
+- **[build-config]**: [Build and deployment settings]
+<% end %>
+
+## Development Patterns
+
+### Code Organization Principles
+
+<% if @dev_patterns && @dev_patterns.any? %>
+<% @dev_patterns.each do |pattern| %>
+- **<%= pattern[:name] %>**: <%= pattern[:description] %>
+<% end %>
+<% else %>
+- **[Pattern 1]**: [Description and usage]
+- **[Pattern 2]**: [Description and usage]
+- **[Pattern 3]**: [Description and usage]
+<% end %>
+
+### Error Handling
+
+- **Error Types**: [Different categories of errors]
+- **Error Propagation**: [How errors flow through the system]
+- **Logging Strategy**: [How errors are logged and monitored]
+
+## Security Considerations
+
+### Authentication & Authorization
+
+- **Authentication Method**: [How users are authenticated]
+- **Authorization Model**: [How permissions are managed]
+- **Session Management**: [How sessions are handled]
+
+### Data Protection
+
+- **Encryption**: [What data is encrypted and how]
+- **Input Validation**: [How inputs are validated]
+- **Security Headers**: [Security headers implemented]
+
+## Performance Considerations
+
+### Optimization Strategies
+
+- **Caching**: [Caching strategies used]
+- **Database Optimization**: [Query optimization, indexing]
+- **Asset Optimization**: [How static assets are optimized]
+
+### Monitoring & Metrics
+
+- **Key Metrics**: [Important performance indicators]
+- **Alerting**: [When and how alerts are triggered]
+- **Profiling**: [Tools and strategies for performance profiling]
+
+## Deployment Architecture
+
+### Environment Strategy
+
+- **Development**: [Local development setup]
+- **Staging**: [Staging environment configuration]
+- **Production**: [Production environment details]
+
+### Deployment Process
+
+1. **Build**: [How the application is built]
+2. **Test**: [Testing in deployment pipeline]
+3. **Deploy**: [Deployment steps and strategies]
+4. **Monitor**: [Post-deployment monitoring]
+
+## Extension Points
+
+### Adding New Features
+
+- **[Extension Point 1]**: [How to add functionality here]
+- **[Extension Point 2]**: [How to add functionality here]
+
+### Plugin Architecture
+
+<% if @plugin_architecture %>
+- **Plugin Interface**: <%= @plugin_architecture[:interface] %>
+- **Plugin Discovery**: <%= @plugin_architecture[:discovery] %>
+<% else %>
+<!-- If applicable, describe plugin/module system -->
+<% end %>
+
+## Dependencies
+
+### Runtime Dependencies
+
+<% if @runtime_dependencies && @runtime_dependencies.any? %>
+<% @runtime_dependencies.each do |dep| %>
+- **<%= dep[:name] %>** (v<%= dep[:version] || "[version]" %>): <%= dep[:purpose] %>
+<% end %>
+<% else %>
+- **[Library 1]** (v[version]): [Purpose and why it was chosen]
+- **[Library 2]** (v[version]): [Purpose and why it was chosen]
+<% end %>
+
+### Development Dependencies
+
+<% if @dev_dependencies && @dev_dependencies.any? %>
+<% @dev_dependencies.each do |dep| %>
+- **<%= dep[:name] %>**: <%= dep[:purpose] %>
+<% end %>
+<% else %>
+- **[Dev Tool 1]**: [Purpose in development workflow]
+- **[Dev Tool 2]**: [Purpose in development workflow]
+<% end %>
+
+## Decision Records
+
+### Significant Architectural Decisions
+
+<% if @architectural_decisions && @architectural_decisions.any? %>
+<% @architectural_decisions.each do |decision| %>
+- **<%= decision[:name] %>**: <%= decision[:summary] %>
+<% end %>
+<% else %>
+- **[Decision 1]**: [Brief summary and rationale]
+- **[Decision 2]**: [Brief summary and rationale]
+<% end %>
+
+For detailed decision records, see [docs/decisions/](docs/decisions/).
+
+## Troubleshooting
+
+### Common Issues
+
+<% if @troubleshooting && @troubleshooting.any? %>
+<% @troubleshooting.each do |issue| %>
+**Issue**: <%= issue[:problem] %>
+
+- **Symptoms**: <%= issue[:symptoms] %>
+- **Solution**: <%= issue[:solution] %>
+
+<% end %>
+<% else %>
+**Issue**: [Problem description]
+
+- **Symptoms**: [How to identify this issue]
+- **Solution**: [How to resolve it]
+
+**Issue**: [Problem description]
+
+- **Symptoms**: [How to identify this issue]
+- **Solution**: [How to resolve it]
+<% end %>
+
+## Future Considerations
+
+### Planned Improvements
+
+- **[Improvement 1]**: [Description and timeline]
+- **[Improvement 2]**: [Description and timeline]
+
+### Scalability Roadmap
+
+- **Short-term**: [Immediate scalability plans]
+- **Medium-term**: [6-12 month scalability goals]
+- **Long-term**: [Future architectural evolution]
+
+---
+
+*This architecture document should be updated when significant changes are made to the system design or technology stack.*
