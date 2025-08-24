@@ -40,12 +40,12 @@ to establish the foundation for an AI-assisted development workflow in a new or 
       - Blueprint:
 
 3. **Install Claude Integration and Configuration Files**:
-    - Run `handbook claude integrate` to install Claude Code commands and agents to `.claude/` directory
+    - Run `coding-agent-tools integrate --claude` to install Claude Code commands and agents to `.claude/` directory
     - This creates:
       - `.claude/agents/` - Symlinks to agent definitions
       - `.claude/commands/` - Claude command files
       - Updates to `CLAUDE.md` with agent documentation
-    - Install any additional configuration files using `dev-handbook/.meta/wfi/install-dotfiles.wf.md` as needed
+    - The command automatically handles missing submodules and provides smart merge behavior
 
 4. **Setup Dev-Tools Integration**:
     - **Ensure dev-tools availability**:
