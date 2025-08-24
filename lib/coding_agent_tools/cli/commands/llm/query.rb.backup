@@ -2,7 +2,7 @@
 
 require "dry/cli"
 require_relative "../../../cost_tracker"
-require_relative "../../../molecules/llm_alias_resolver"
+
 module CodingAgentTools
   module Cli
     module Commands
@@ -53,13 +53,10 @@ module CodingAgentTools
           ]
 
           def call(provider_model:, prompt:, **options)
-            # Resolve aliases before parsing provider:model
-            alias_resolver = Molecules::LlmAliasResolver.new
-            resolved_provider_model = alias_resolver.resolve(provider_model)
-            
-            # Parse resolved provider:model argument
+            # Parse provider:model argument
             parser = Molecules::ProviderModelParser.new
-            parse_result = parser.parse(resolved_provider_model)
+            parse_result = parser.parse(provider_model)
+
             unless parse_result.valid?
               error_output("Error: #{parse_result.error}")
               error_output("\nSupported providers: #{parser.supported_providers.join(", ")}")
