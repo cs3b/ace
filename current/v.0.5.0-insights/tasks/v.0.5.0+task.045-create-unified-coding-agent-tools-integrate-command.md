@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.045
-status: in-progress
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -130,12 +130,12 @@ $ coding-agent-tools integrate --claude --only agents,commands
 <!-- Measurable outcomes that define completion -->
 <!-- Focus on behavioral outcomes and user experience -->
 
-- [ ] **Single Command Functionality**: `coding-agent-tools integrate --claude` performs complete setup
-- [ ] **Executable Name Fix**: All references to `coding_agent_tools` changed to `coding-agent-tools`
-- [ ] **Symlink Integration**: All Claude files linked via symlinks, not copied
-- [ ] **Dev-taskflow Handling**: Empty dev-taskflow submodule created when needed
-- [ ] **Old Command Removal**: All deprecated integration commands completely removed
-- [ ] **Development Focus**: Setup optimized for development environment only
+- [x] **Single Command Functionality**: `coding-agent-tools integrate --claude` performs complete setup
+- [x] **Executable Name Fix**: All references to `coding_agent_tools` changed to `coding-agent-tools`
+- [x] **Symlink Integration**: All Claude files linked via symlinks, not copied
+- [x] **Dev-taskflow Handling**: Empty dev-taskflow submodule created when needed
+- [x] **Old Command Removal**: All deprecated integration commands completely removed
+- [x] **Development Focus**: Setup optimized for development environment only
 
 ### Validation Questions (Resolved Through Research)
 <!-- Questions to clarify requirements and validate understanding -->
@@ -394,22 +394,22 @@ Consolidate fragmented project integration approach into single unified command 
 ## Acceptance Criteria
 
 ### Behavioral Requirement Fulfillment
-- [ ] **Single Command Success**: `coding-agent-tools integrate --claude` performs complete setup
-- [ ] **Executable Rename Complete**: All references use coding-agent-tools naming
-- [ ] **Symlink Integration Working**: Claude files properly linked via symlinks
-- [ ] **Submodule Creation Success**: Dev-taskflow submodule created when appropriate
-- [ ] **Old Command Removal**: Deprecated commands completely removed and non-functional
+- [x] **Single Command Success**: `coding-agent-tools integrate --claude` performs complete setup
+- [x] **Executable Rename Complete**: All references use coding-agent-tools naming
+- [x] **Symlink Integration Working**: Claude files properly linked via symlinks
+- [x] **Submodule Creation Success**: Dev-taskflow submodule created when appropriate
+- [x] **Old Command Removal**: Deprecated commands completely removed and non-functional
 
 ### Implementation Quality Assurance
-- [ ] **Code Quality**: New integrate command follows project patterns and passes linting
-- [ ] **Test Coverage**: All integration scenarios covered by automated tests
-- [ ] **Error Handling**: Graceful error handling with clear user messages
-- [ ] **Rollback Capability**: Failed integration can be cleanly rolled back
+- [x] **Code Quality**: New integrate command follows project patterns and passes linting
+- [x] **Test Coverage**: All integration scenarios covered by automated tests
+- [x] **Error Handling**: Graceful error handling with clear user messages
+- [x] **Rollback Capability**: Failed integration can be cleanly rolled back
 
 ### Documentation and Validation
-- [ ] **Documentation Updated**: All references to executable naming updated
-- [ ] **Integration Guide**: Clear documentation for new unified command
-- [ ] **Migration Path**: Clear instructions for users with existing setups
+- [x] **Documentation Updated**: All references to executable naming updated
+- [x] **Integration Guide**: Clear documentation for new unified command
+- [x] **Migration Path**: Clear instructions for users with existing setups
 
 - ❌ **Production Mode**: Production deployment or enterprise configuration
 - ❌ **Backward Compatibility**: Support for old integration commands
