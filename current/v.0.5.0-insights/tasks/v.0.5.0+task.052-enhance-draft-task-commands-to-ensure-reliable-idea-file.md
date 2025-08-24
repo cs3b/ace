@@ -79,6 +79,6 @@ git-status --short
 ## References
 
 - Commits: "Enhance draft-task commands to ensure idea file movement" 
-- Related issue: `dev-taskflow/backlog/ideas/20250812-0033-draft-tasks-input-error.md`
+- Source idea: `dev-taskflow/current/v.0.5.0-insights/docs/ideas/052-20250812-0033-draft-tasks-input-error.md`
 - Documentation: Updated workflow commands in both `.claude/commands/` and `dev-handbook/.integrations/claude/commands/`
 - Follow-up needed: Monitor future `/draft-task` usage to ensure reliability
