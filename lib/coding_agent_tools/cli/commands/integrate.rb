@@ -232,17 +232,24 @@ module CodingAgentTools
             log "  → Found existing git directory for #{name}, attempting to reinitialize..."
 
             # Try to update and reinitialize the existing submodule
-            if system("git submodule update --init #{name}")
+            # Suppress errors since this might fail if submodule isn't in index
+            if system("git submodule update --init #{name} 2>/dev/null")
               log "  ✓ Successfully reinitialized #{name}"
               return
             else
-              log "  → Reinitialize failed, trying to remove and re-add..."
-              # Remove the submodule completely and re-add
-              system("git submodule deinit -f #{name}")
-              system("git rm -f #{name}")
-              system("rm -rf #{git_modules_path}")
+              log "  → Reinitialize failed, cleaning up and re-adding..."
+              # Clean up any partial state (suppress errors for commands that might fail)
+              system("git submodule deinit -f #{name} 2>/dev/null")
+              system("git rm -f #{name} 2>/dev/null")
+              system("rm -rf #{git_modules_path} 2>/dev/null")
               FileUtils.rm_rf(submodule_path) if submodule_path.exist?
             end
+          end
+
+          # Clean up directory if it exists but is empty or partial
+          if submodule_path.exist? && !submodule_path.join(".git").exist?
+            log "  → Removing incomplete directory #{name}"
+            FileUtils.rm_rf(submodule_path)
           end
 
           # Try GitHub CLI first (only if URL looks like GitHub)
@@ -252,24 +259,24 @@ module CodingAgentTools
               repo_path = $1.sub(/\.git$/, "")
               log "Using GitHub CLI to clone #{repo_path}"
               # Use proper gh CLI syntax with owner/repo format
-              if system("gh repo clone #{repo_path} #{name} -- --branch #{branch}")
+              if system("gh repo clone #{repo_path} #{name} -- --branch #{branch} 2>&1")
                 # Add as submodule after successful clone
-                system("git submodule add -f #{url} #{name}")
+                system("git submodule add -f #{url} #{name} 2>&1")
               else
                 log "GitHub CLI clone failed, falling back to git"
-                system("git submodule add -f -b #{branch} #{url} #{name}")
+                system("git submodule add -f -b #{branch} #{url} #{name} 2>&1")
               end
             else
               log "Could not parse GitHub URL, using git directly"
-              system("git submodule add -f -b #{branch} #{url} #{name}")
+              system("git submodule add -f -b #{branch} #{url} #{name} 2>&1")
             end
           else
             log "Using git to add submodule"
-            system("git submodule add -f -b #{branch} #{url} #{name}")
+            system("git submodule add -f -b #{branch} #{url} #{name} 2>&1")
           end
 
-          # Always try to update after adding
-          system("git submodule update --init --recursive #{name}")
+          # Always try to update after adding (suppress errors)
+          system("git submodule update --init --recursive #{name} 2>/dev/null")
         end
 
         def create_backup
