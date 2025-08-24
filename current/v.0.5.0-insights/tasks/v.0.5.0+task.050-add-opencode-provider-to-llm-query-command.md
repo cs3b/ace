@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.050
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 4-6h
 dependencies: []
 ---
 
@@ -118,6 +118,157 @@ Enable developers to use SST's OpenCode CLI through the unified llm-query interf
 - ❌ **Technology Decisions**: Whether to use Open3, IO.popen, or other subprocess methods
 - ❌ **Performance Optimization**: Caching strategies, connection pooling approaches
 - ❌ **Future Enhancements**: GitHub agent integration, headless server mode, advanced features
+
+## Technical Approach
+
+### Architecture Pattern
+- **Provider Pattern**: Follow existing BaseClient/BaseChatCompletionClient inheritance model
+- **Auto-Registration**: Leverage ClientFactory.register via inherited hook with provider name "oc"
+- **Subprocess Execution**: Use Ruby's Open3 for safe command execution with proper error handling
+- **Adapter Pattern**: Wrap OpenCode CLI to match internal provider interface
+- **Dynamic Discovery**: Use `opencode models` for model listing
+
+### Technology Stack
+- **Ruby Open3**: For subprocess execution with stdout/stderr/status capture
+- **Text Parser**: Parse text output and model listings
+- **Which Command**: For detecting OpenCode CLI availability
+- **Timeout**: Protect against hanging subprocess calls
+
+### Implementation Strategy
+- **Model Discovery First**: Implement model listing via `opencode models`
+- **Error-First Design**: Comprehensive error handling for missing CLI, auth failures
+- **Provider/Model Format**: Support OpenCode's provider/model syntax
+- **Metadata Synthesis**: Create synthetic metadata when not available from CLI
+- **Test-Driven**: Mock subprocess calls for reliable testing
+
+## File Modifications
+
+### Create
+- `lib/coding_agent_tools/organisms/open_code_client.rb`
+  - Purpose: OpenCode CLI provider implementation
+  - Key components: generate_text, list_models (dynamic), CLI execution logic
+  - Dependencies: BaseClient, Open3
+
+- `spec/coding_agent_tools/organisms/open_code_client_spec.rb`
+  - Purpose: Unit tests for OpenCodeClient
+  - Key components: Mock subprocess tests, model discovery tests, error handling tests
+  - Dependencies: RSpec, test factories
+
+- `spec/cassettes/llm_query_integration/opencode/*.json`
+  - Purpose: VCR cassettes for integration tests
+  - Key components: Mocked OpenCode CLI responses
+  - Dependencies: VCR framework
+
+### Modify
+- `config/default-llm-aliases.yml`
+  - Changes: Add "opencode" global alias and "oc" provider-specific aliases
+  - Impact: Enable quick access via aliases
+  - Integration points: Alias resolver
+
+- `spec/integration/llm_query_integration_spec.rb`
+  - Changes: Add test cases for oc: provider
+  - Impact: Validate CLI integration
+  - Integration points: Command execution tests
+
+## Test Case Planning
+
+### Happy Path Scenarios
+- Basic prompt execution: `llm-query oc:anthropic/claude "Hello"`
+- File input: `llm-query oc:openai/gpt-4 prompt.txt`
+- Model discovery: `llm-models --provider oc`
+- Session continuation: `llm-query oc:claude "test" --continue`
+- Agent usage: `llm-query oc:claude "test" --agent "reviewer"`
+
+### Edge Case Scenarios
+- Empty prompt handling
+- Invalid provider/model format
+- Model discovery failures
+- Session ID persistence
+- Special characters in prompt
+- Concurrent executions
+
+### Error Condition Scenarios
+- OpenCode CLI not installed
+- Authentication not configured
+- Invalid model format
+- Network timeout during execution
+- Model discovery command failure
+- Subprocess execution failure
+
+### Integration Tests
+- End-to-end llm-query execution
+- Model discovery and listing
+- Session management
+- Cost tracking integration (limited)
+- Multi-provider model access
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** OpenCode CLI output format changes
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Flexible text parsing, version detection
+
+- **Risk:** Model discovery command changes
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Fallback to static model list
+
+### Integration Risks
+- **Risk:** Provider/model format parsing complexity
+  - **Probability:** Medium  
+  - **Impact:** Medium
+  - **Mitigation:** Robust parsing with clear error messages
+
+- **Risk:** Session management complexity
+  - **Probability:** High
+  - **Impact:** Low
+  - **Mitigation:** Start simple, enhance later
+
+## Implementation Plan
+
+### Planning Steps
+* [x] Research OpenCode CLI command structure
+* [x] Analyze run command parameters
+* [x] Explore model discovery via `opencode models`
+* [ ] Test authentication flow
+* [ ] Investigate session management
+
+### Execution Steps
+- [ ] Create OpenCodeClient class structure
+- [ ] Implement OpenCode CLI detection
+- [ ] Implement list_models with `opencode models` parsing
+- [ ] Implement generate_text with subprocess execution
+- [ ] Add provider/model format parsing
+- [ ] Handle session management flags
+- [ ] Add text output parsing
+- [ ] Create synthetic metadata
+- [ ] Add comprehensive unit tests
+- [ ] Add integration tests with mocked responses
+- [ ] Update alias configuration
+- [ ] Document usage in tools.md
+
+## Acceptance Criteria
+
+### Behavioral Requirement Fulfillment
+- [ ] `llm-query oc:anthropic/claude "test"` executes successfully
+- [ ] Model discovery works via `llm-models --provider oc`
+- [ ] Standard llm-query options work where applicable
+- [ ] Error messages provide clear remediation steps
+- [ ] Aliases work for quick access
+
+### Implementation Quality Assurance
+- [ ] OpenCodeClient follows project patterns
+- [ ] Tests pass with good coverage
+- [ ] No security vulnerabilities in subprocess execution
+- [ ] Performance overhead < 500ms
+
+### Documentation and Validation
+- [ ] tools.md updated with OpenCode examples
+- [ ] Integration tests cover main scenarios
+- [ ] Model discovery documented
+- [ ] Provider/model format explained
 
 ## References
 
