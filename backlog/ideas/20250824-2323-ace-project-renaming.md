@@ -26,6 +26,11 @@
 
 To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Environment" (ACE) and update all related artifacts, including repository names, gem names, folder structures, and configuration directories, to reflect this new branding.
 
+## Some more Context
+
+- dev-taskflow/backlog/ideas/ACE-FILES/ace-branding.md
+- dev-taskflow/backlog/ideas/ACE-FILES/ace-banner.md
+
 ## Problem It Solves
 
 **Observed Issues:**
@@ -116,7 +121,7 @@ To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Envi
 rename the project from coding agent to agent coding environemtn - ACE so we wil have:
 ace-handbook
 ace-tools
-ace-taskflow 
+ace-taskflow
 
 we should rename gem / folders / repositories  / the config folder -> .ace/ (both in project and on project root) ...
 ```
