@@ -57,6 +57,8 @@ module CodingAgentTools
           desc: "Preview what would be done without making changes"
         option :verbose, type: :boolean, default: false,
           desc: "Show detailed output"
+        option :init_project, type: :boolean, default: false,
+          desc: "Initialize project structure and documentation (run once per project)"
 
         def call(type: "claude", **options)
           @options = options
@@ -76,7 +78,11 @@ module CodingAgentTools
 
           integration_type = type
 
-          puts "🚀 Starting #{integration_type.capitalize} integration..."
+          if options[:init_project]
+            puts "🚀 Starting #{integration_type.capitalize} integration with project initialization..."
+          else
+            puts "🚀 Starting #{integration_type.capitalize} integration..."
+          end
           puts "   Mode: #{dry_run_mode}" if @dry_run
 
           # Load configuration hierarchy
@@ -114,8 +120,29 @@ module CodingAgentTools
           success = integrate_components(integration_config, components, options[:force])
 
           if success
-            puts "✅ #{integration_type.capitalize} integration complete!"
-            puts "   Backup created at: #{backup_path}" if backup_path
+            # Project initialization if requested
+            if options[:init_project] && !@dry_run
+              puts "\n✓ Claude integration complete! Proceeding with project initialization..."
+              init_success = initialize_project_structure
+              unless init_success
+                success = false
+              end
+            end
+
+            if success
+              puts "✅ #{integration_type.capitalize} integration complete!"
+              puts "   Backup created at: #{backup_path}" if backup_path
+              
+              if options[:init_project] && !@dry_run
+                puts "\n📝 Next steps:"
+                puts "  1. Complete PRD.md with project requirements"
+                puts "  2. Ask Claude: \"Read and follow dev-handbook/workflow-instructions/initialize-project-structure.wf.md\""
+                puts "  3. Or run: task-manager next"
+              end
+            else
+              puts "❌ Integration failed. Check errors above."
+              restore_backup(backup_path) if backup_path && !@dry_run
+            end
           else
             puts "❌ Integration failed. Check errors above."
             restore_backup(backup_path) if backup_path && !@dry_run
@@ -827,6 +854,210 @@ module CodingAgentTools
             *This context file was generated using the coding-agent-tools context command*
             *Template: docs/context/project.md*
           MARKDOWN
+        end
+
+        # Project initialization methods
+
+        def initialize_project_structure
+          begin
+            puts "✓ Creating project structure..."
+            create_project_structure
+            
+            puts "✓ Generating core documentation..."
+            generate_core_docs
+            
+            if should_create_bootstrap?
+              puts "✓ Setting up v.0.0.0 bootstrap release..."
+              setup_bootstrap_release
+            else
+              puts "✓ dev-taskflow structure exists, skipping v.0.0.0 creation"
+            end
+            
+            puts "✓ Creating docs/tools.md symlink..."
+            create_tools_symlink
+            
+            true
+          rescue => e
+            puts "❌ Project initialization failed: #{e.message}"
+            log e.backtrace.join("\n") if @verbose
+            false
+          end
+        end
+
+        def create_project_structure
+          taskflow_dir = @project_root + "dev-taskflow"
+          return if taskflow_dir.exist?
+          
+          log "  → Created dev-taskflow/"
+          FileUtils.mkdir_p(taskflow_dir + "backlog")
+          FileUtils.mkdir_p(taskflow_dir + "current")
+          FileUtils.mkdir_p(taskflow_dir + "done")
+          
+          docs_dir = @project_root + "docs"
+          FileUtils.mkdir_p(docs_dir)
+        end
+
+        def generate_core_docs
+          project_info = detect_project_info
+          
+          create_doc_from_template("what-do-we-build", "docs/what-do-we-build.md", project_info)
+          create_doc_from_template("architecture", "docs/architecture.md", project_info)  
+          create_doc_from_template("blueprint", "docs/blueprint.md", project_info)
+        end
+
+        def create_doc_from_template(template_name, target_path, project_info)
+          target_file = @project_root + target_path
+          return if target_file.exist?
+          
+          template_path = @project_root + "dev-handbook/.meta/tpl/project-structure/docs/#{template_name}.md.erb"
+          unless template_path.exist?
+            log "  → Warning: Template not found: #{template_path}"
+            return
+          end
+          
+          require 'erb'
+          template_content = File.read(template_path)
+          
+          # Set instance variables for ERB template
+          set_template_variables(project_info)
+          
+          erb = ERB.new(template_content)
+          rendered_content = erb.result(binding)
+          
+          FileUtils.mkdir_p(target_file.parent)
+          File.write(target_file, rendered_content)
+          log "  → Created #{target_path}"
+        end
+
+        def set_template_variables(project_info)
+          @project_name = project_info[:name]
+          @project_description = project_info[:description]
+          @tech_stack = project_info[:tech_stack]
+          @key_features = project_info[:key_features]
+          @project_directories = project_info[:project_directories]
+          @is_meta_project = project_info[:is_meta_project]
+          @has_dev_taskflow = true
+          @docs_generated = true
+        end
+
+        def detect_project_info
+          info = {}
+          
+          # Try to detect project name from various sources
+          if (package_json = @project_root + "package.json").exist?
+            begin
+              require 'json'
+              package_data = JSON.parse(File.read(package_json))
+              info[:name] = package_data["name"]
+              info[:description] = package_data["description"]
+              info[:tech_stack] = {
+                primary_language: "JavaScript",
+                framework: detect_js_framework(package_data),
+                package_manager: "npm"
+              }
+            rescue
+              # Ignore JSON parse errors
+            end
+          end
+          
+          if (gemfile = @project_root + "Gemfile").exist?
+            info[:tech_stack] = {
+              primary_language: "Ruby",
+              framework: detect_ruby_framework,
+              package_manager: "bundler"
+            }
+          end
+          
+          if (cargo_toml = @project_root + "Cargo.toml").exist?
+            info[:tech_stack] = {
+              primary_language: "Rust",
+              package_manager: "cargo"
+            }
+          end
+          
+          # Detect if this is a meta project (has submodules)
+          gitmodules = @project_root + ".gitmodules"
+          info[:is_meta_project] = gitmodules.exist?
+          
+          # Set defaults if not detected
+          info[:name] ||= @project_root.basename.to_s.gsub(/[-_]/, " ").split.map(&:capitalize).join(" ")
+          info[:description] ||= "[Brief description of the project's core purpose and value proposition]"
+          info[:tech_stack] ||= { primary_language: "[Primary Language]" }
+          
+          info
+        end
+
+        def detect_js_framework(package_data)
+          deps = (package_data["dependencies"] || {}).keys + (package_data["devDependencies"] || {}).keys
+          return "React" if deps.include?("react")
+          return "Vue" if deps.include?("vue")
+          return "Angular" if deps.include?("@angular/core")
+          return "Next.js" if deps.include?("next")
+          return "Node.js"
+        end
+
+        def detect_ruby_framework
+          gemfile_content = File.read(@project_root + "Gemfile") rescue ""
+          return "Rails" if gemfile_content.include?("rails")
+          return "Sinatra" if gemfile_content.include?("sinatra")
+          return "Ruby"
+        end
+
+        def should_create_bootstrap?
+          !(@project_root + "dev-taskflow").exist?
+        end
+
+        def setup_bootstrap_release
+          release_dir = @project_root + "dev-taskflow/current/v.0.0.0-bootstrap"
+          return if release_dir.exist?
+          
+          FileUtils.mkdir_p(release_dir + "tasks")
+          
+          project_info = detect_project_info
+          
+          # Create release overview
+          create_bootstrap_file("release-overview.md.erb", release_dir + "release-overview.md", project_info)
+          
+          # Create tasks
+          create_bootstrap_file("tasks/01-setup-structure.md.erb", release_dir + "tasks/v.0.0.0+task.001-setup-structure.md", project_info)
+          create_bootstrap_file("tasks/02-complete-documentation.md.erb", release_dir + "tasks/v.0.0.0+task.002-complete-documentation.md", project_info)
+          create_bootstrap_file("tasks/03-complete-prd.md.erb", release_dir + "tasks/v.0.0.0+task.003-complete-prd.md", project_info)
+          create_bootstrap_file("tasks/04-create-roadmap.md.erb", release_dir + "tasks/v.0.0.0+task.004-create-roadmap.md", project_info)
+          
+          log "  → Created 4 tasks in dev-taskflow/current/v.0.0.0-bootstrap/"
+        end
+
+        def create_bootstrap_file(template_name, target_path, project_info)
+          template_path = @project_root + "dev-handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/#{template_name}"
+          return unless template_path.exist?
+          
+          require 'erb'
+          template_content = File.read(template_path)
+          
+          # Set instance variables for ERB template
+          set_template_variables(project_info)
+          
+          erb = ERB.new(template_content)
+          rendered_content = erb.result(binding)
+          
+          FileUtils.mkdir_p(target_path.parent)
+          File.write(target_path, rendered_content)
+        end
+
+        def create_tools_symlink
+          tools_source = @project_root + "dev-tools/docs/tools.md"
+          tools_target = @project_root + "docs/tools.md"
+          
+          return unless tools_source.exist?
+          return if tools_target.exist? || tools_target.symlink?
+          
+          # Calculate relative path from docs/ to dev-tools/docs/tools.md
+          relative_path = tools_source.relative_path_from(tools_target.parent)
+          
+          File.symlink(relative_path, tools_target)
+          log "  → Created docs/tools.md symlink"
+        rescue => e
+          log "  → Warning: Could not create tools.md symlink: #{e.message}"
         end
       end
     end
