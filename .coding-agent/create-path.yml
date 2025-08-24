@@ -1,83 +1,57 @@
-# Configuration for create-path command
-# Maps path types to template files and variable definitions
+# Create Path Configuration
+# This file configures template mappings and variable definitions for create-path CLI tool
 
-# Template mappings - maps path types to template files in dev-handbook/templates/
 templates:
-  # Task creation (draft tasks - behavioral specification)
-  task-new:
-    template: "dev-handbook/templates/task-management/task.draft.template.md"
-    variables:
-      # Metadata variables that can be passed as command arguments
-      id: "task-manager generate-id" # Auto-generated task ID
-      status: "draft" # Default status for new tasks
-      priority: "{metadata.priority}" # From --priority argument
-      estimate: "{metadata.estimate}" # From --estimate argument
-      dependencies: "{metadata.dependencies}" # From --dependencies argument
-      title: "{metadata.title}" # From title or --title argument
-
-  # Implementation planning tasks (pending status)
-  task-pending:
-    template: "dev-handbook/templates/task-management/task.pending.template.md"
-    variables:
-      # Metadata variables that can be passed as command arguments
-      id: "task-manager generate-id" # Auto-generated task ID
-      status: "pending" # Status for implementation-ready tasks
-      priority: "{metadata.priority}" # From --priority argument
-      estimate: "{metadata.estimate}" # From --estimate argument
-      dependencies: "{metadata.dependencies}" # From --dependencies argument
-      title: "{metadata.title}" # From title or --title argument
-
-  # Simple file creation
-  file:
-    content: "{metadata.content}" # Direct content from --content
-
-  # Documentation creation
+  # Documentation creation templates
   docs-new:
-    template: "dev-handbook/templates/release-docs/documentation.template.md"
+    template: dev-handbook/templates/project-docs/README.template.md
     variables:
-      title: "{metadata.title}"
-
-  # Directory creation
-  directory:
-    type: "directory" # Special type for directory creation
-
-  # Custom template by path
-  template:
-    template: "{metadata.template}" # Template path from --template argument
+      title: user_input
+      slug: '{metadata.slug}'
+      date: 'datetime:%Y-%m-%d'
+      
+  # Reflection creation templates  
+  reflection-new:
+    template: dev-handbook/templates/release-reflections/retrospective.template.md
     variables:
-      # All metadata arguments become template variables
+      title: user_input
+      session: '{metadata.session}'
+      date: 'datetime:%Y-%m-%d'
+      
+  # Code review templates
+  code-review-new:
+    template: dev-handbook/templates/review-tasks/task-review-summary.template.md
+    variables:
+      title: user_input
+      reviewer: '{metadata.reviewer}'
+      date: 'datetime:%Y-%m-%d'
 
-# Variable processors - how to handle different variable types
+# Variable processors for dynamic content generation
 variable_processors:
-  # Default values for common variables
   defaults:
-    priority: "medium"
-    status: "pending"
-    estimate: "1h"
-    dependencies: "[]"
+    priority: 'medium'
+    status: 'draft'
+    author: 'unknown'
+    
+  dynamic:
+    # Date/time variables
+    date: 'datetime:%Y-%m-%d'
+    time: 'datetime:%H:%M:%S'
+    timestamp: 'datetime:%Y%m%d-%H%M%S'
+    
+    # User/system variables
+    user: 'whoami'
+    hostname: 'hostname'
 
-  # Variable transformations
-  transformations:
-    # Convert comma-separated dependencies to YAML array format
-    dependencies: "comma_to_yaml_array"
-    # Slugify title for file names
-    slug: "slugify_title"
-
-# Template variable substitution patterns
-substitution:
-  # Pattern for variable substitution in templates
-  pattern: "{metadata.variable_name}"
-
-  # Built-in variables available to all templates
-  built_in:
-    timestamp: "datetime:%Y%m%d-%H%M%S"
-    date: "datetime:%Y-%m-%d"
-    time: "datetime:%H:%M:%S"
-
-# Output path resolution
-output:
-  # Use nav-path for path resolution
-  use_nav_path: true
-
-  # Fallback for when nav-path type isn't specified
-  default_base: "."
+# Path resolution settings
+path_resolution:
+  # Base paths for different content types
+  docs_base: 'docs'
+  reflections_base: 'dev-taskflow/current'
+  reviews_base: 'dev-taskflow/current'
+  
+  # Auto-create missing directories
+  auto_create_dirs: true
+  
+  # File extension handling
+  default_extension: '.md'

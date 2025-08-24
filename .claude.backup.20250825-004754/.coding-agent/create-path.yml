@@ -1,0 +1,83 @@
+# Configuration for create-path command
+# Maps path types to template files and variable definitions
+
+# Template mappings - maps path types to template files in dev-handbook/templates/
+templates:
+  # Task creation (draft tasks - behavioral specification)
+  task-new:
+    template: "dev-handbook/templates/task-management/task.draft.template.md"
+    variables:
+      # Metadata variables that can be passed as command arguments
+      id: "task-manager generate-id" # Auto-generated task ID
+      status: "draft" # Default status for new tasks
+      priority: "{metadata.priority}" # From --priority argument
+      estimate: "{metadata.estimate}" # From --estimate argument
+      dependencies: "{metadata.dependencies}" # From --dependencies argument
+      title: "{metadata.title}" # From title or --title argument
+
+  # Implementation planning tasks (pending status)
+  task-pending:
+    template: "dev-handbook/templates/task-management/task.pending.template.md"
+    variables:
+      # Metadata variables that can be passed as command arguments
+      id: "task-manager generate-id" # Auto-generated task ID
+      status: "pending" # Status for implementation-ready tasks
+      priority: "{metadata.priority}" # From --priority argument
+      estimate: "{metadata.estimate}" # From --estimate argument
+      dependencies: "{metadata.dependencies}" # From --dependencies argument
+      title: "{metadata.title}" # From title or --title argument
+
+  # Simple file creation
+  file:
+    content: "{metadata.content}" # Direct content from --content
+
+  # Documentation creation
+  docs-new:
+    template: "dev-handbook/templates/release-docs/documentation.template.md"
+    variables:
+      title: "{metadata.title}"
+
+  # Directory creation
+  directory:
+    type: "directory" # Special type for directory creation
+
+  # Custom template by path
+  template:
+    template: "{metadata.template}" # Template path from --template argument
+    variables:
+      # All metadata arguments become template variables
+
+# Variable processors - how to handle different variable types
+variable_processors:
+  # Default values for common variables
+  defaults:
+    priority: "medium"
+    status: "pending"
+    estimate: "1h"
+    dependencies: "[]"
+
+  # Variable transformations
+  transformations:
+    # Convert comma-separated dependencies to YAML array format
+    dependencies: "comma_to_yaml_array"
+    # Slugify title for file names
+    slug: "slugify_title"
+
+# Template variable substitution patterns
+substitution:
+  # Pattern for variable substitution in templates
+  pattern: "{metadata.variable_name}"
+
+  # Built-in variables available to all templates
+  built_in:
+    timestamp: "datetime:%Y%m%d-%H%M%S"
+    date: "datetime:%Y-%m-%d"
+    time: "datetime:%H:%M:%S"
+
+# Output path resolution
+output:
+  # Use nav-path for path resolution
+  use_nav_path: true
+
+  # Fallback for when nav-path type isn't specified
+  default_base: "."

@@ -1,10 +1,28 @@
 {
-    "description": "Configuration for enforcing wrapper tools over native commands",
+    "description": "Configuration for enforcing wrapper tools and suggesting semantic commit workflows",
     "debug": {
-        "enabled": true,
+        "enabled": false,
         "log_file": "/tmp/wrapper-tools-hook.log",
-        "save_individual_files": true,
+        "save_individual_files": false,
         "file_pattern": "/tmp/hook-debug-{timestamp}.json"
+    },
+    "commit_workflow": {
+        "enabled": true,
+        "description": "Suggest semantic commits with git-commit instead of separate add/commit",
+        "suggestions": {
+            "show_tips": true,
+            "show_examples": true,
+            "show_benefits": true
+        },
+        "semantic_types": [
+            "feat: A new feature",
+            "fix: A bug fix",
+            "docs: Documentation changes",
+            "style: Code style changes (formatting, etc)",
+            "refactor: Code refactoring",
+            "test: Adding or updating tests",
+            "chore: Maintenance tasks"
+        ]
     },
     "enforcements": [
         {
@@ -30,7 +48,7 @@
             "command_mappings": {
                 "git status": "git-status",
                 "git commit": "git-commit",
-                "git add": "git-add",
+                "git add": "git-add or git-commit --intention",
                 "git log": "git-log",
                 "git push": "git-push",
                 "git pull": "git-pull",
@@ -59,7 +77,40 @@
                 "git update-ref",
                 "git update",
                 "git reflog",
-                "git gc"
+                "git gc",
+                "git submodule",
+                "git config",
+                "git show",
+                "git describe",
+                "git rev-parse",
+                "git rev",
+                "git ls-files",
+                "git ls",
+                "git cherry-pick",
+                "git cherry",
+                "git bisect",
+                "git blame",
+                "git archive",
+                "git am",
+                "git apply",
+                "git format-patch",
+                "git format",
+                "git send-email",
+                "git send",
+                "git request-pull",
+                "git request",
+                "git shortlog",
+                "git whatchanged",
+                "git fsck",
+                "git prune",
+                "git pack-refs",
+                "git pack",
+                "git verify-pack",
+                "git verify",
+                "git count-objects",
+                "git count",
+                "git help",
+                "git version"
             ]
         }
     ],

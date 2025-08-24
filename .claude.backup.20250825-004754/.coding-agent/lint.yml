@@ -1,0 +1,21 @@
+markdown:
+  enabled: true
+  linters:
+    task_metadata:
+      enabled: true
+    link_validation:
+      enabled: true
+    template_embedding:
+      enabled: true
+    styleguide:
+      enabled: true
+      autofix: true
+      # Configuration for KramdownFormatter (if supported)
+      line_width: 160
+      hard_wrap: false
+      auto_ids: true
+  order:
+    - task_metadata
+    - link_validation
+    - template_embedding
+    - styleguide

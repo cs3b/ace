@@ -2,7 +2,7 @@
 description: Create ADR
 allowed-tools: Read, Write, Grep, Glob
 argument-hint: "[decision-title]"
-last_modified: '2025-08-24 00:17:47'
+last_modified: '2025-08-25 00:47:54'
 source: generated
 ---
 
