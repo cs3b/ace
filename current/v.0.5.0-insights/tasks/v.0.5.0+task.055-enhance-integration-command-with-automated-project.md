@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.055
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -264,15 +264,15 @@ Streamline the project initialization process by automating the creation of proj
 
 ### Execution Steps
 
-- [ ] Create template directory structure in dev-handbook/.meta/tpl/project-structure/
-- [ ] Convert workflow templates to ERB templates with dynamic content
-- [ ] Create symlink for docs/tools.md from dev-tools/docs/tools.md (if exists)
-- [ ] Add single CLI option to integrate command
+- [x] Create template directory structure in dev-handbook/.meta/tpl/project-structure/
+- [x] Convert workflow templates to ERB templates with dynamic content
+- [x] Create symlink for docs/tools.md from dev-tools/docs/tools.md (if exists)
+- [x] Add single CLI option to integrate command
   ```ruby
   option :init_project, type: :boolean, default: false,
     desc: "Initialize project structure and documentation (run once per project)"
   ```
-- [ ] Implement project detection logic
+- [x] Implement project detection logic
   ```ruby
   def detect_project_info
     # Check for PRD.md, README.md, package.json, etc.
@@ -282,7 +282,7 @@ Streamline the project initialization process by automating the creation of proj
     !@project_root.join("dev-taskflow").exist?
   end
   ```
-- [ ] Implement structure creation methods with idempotent checks
+- [x] Implement structure creation methods with idempotent checks
   ```ruby
   def create_project_structure
     return if @project_root.join("dev-taskflow").exist?
@@ -296,37 +296,37 @@ Streamline the project initialization process by automating the creation of proj
     create_doc("blueprint") unless doc_exists?("blueprint")
   end
   ```
-- [ ] Add template processing with ERB
-- [ ] Implement conditional v.0.0.0 creation (only if dev-taskflow is new)
-- [ ] Enhance output with clear guidance for both modes
-- [ ] Test with new project scenario
-- [ ] Test with existing project scenario
-- [ ] Test idempotent behavior
-- [ ] Update documentation
+- [x] Add template processing with ERB
+- [x] Implement conditional v.0.0.0 creation (only if dev-taskflow is new)
+- [x] Enhance output with clear guidance for both modes
+- [x] Test with new project scenario
+- [x] Test with existing project scenario  
+- [x] Test idempotent behavior
+- [x] Update documentation
 
 ## Acceptance Criteria
 
 ### Mode 1: Regular Integration (default)
-- [ ] Updates Claude components without creating project structure
-- [ ] Safe to run repeatedly without side effects
-- [ ] Reports what was updated/skipped
+- [x] Updates Claude components without creating project structure
+- [x] Safe to run repeatedly without side effects
+- [x] Reports what was updated/skipped
 
 ### Mode 2: Project Initialization (--init-project)
-- [ ] Single flag enables all initialization features
-- [ ] dev-taskflow structure created only when missing (idempotent)
-- [ ] Core docs generated from templates only when missing (idempotent)
-- [ ] docs/tools.md symlink created only if source exists (idempotent)
-- [ ] v.0.0.0 bootstrap created ONLY when dev-taskflow is new
-- [ ] Existing files NEVER overwritten without --force
-- [ ] Clear mode-specific guidance provided
-- [ ] initialize-project-structure.wf.md remains workflow (not command)
+- [x] Single flag enables all initialization features
+- [x] dev-taskflow structure created only when missing (idempotent)
+- [x] Core docs generated from templates only when missing (idempotent)
+- [x] docs/tools.md symlink created only if source exists (idempotent)
+- [x] v.0.0.0 bootstrap created ONLY when dev-taskflow is new
+- [x] Existing files NEVER overwritten without --force
+- [x] Clear mode-specific guidance provided
+- [x] initialize-project-structure.wf.md remains workflow (not command)
 
 ### Testing Requirements
-- [ ] Test Mode 1: Regular integration updates components only
-- [ ] Test Mode 2: New project gets full initialization
-- [ ] Test Mode 2: Existing project skips what exists
-- [ ] Test Mode 2: Partial project gets only missing pieces
-- [ ] Verify idempotent behavior in all scenarios
+- [x] Test Mode 1: Regular integration updates components only
+- [x] Test Mode 2: New project gets full initialization
+- [x] Test Mode 2: Existing project skips what exists
+- [x] Test Mode 2: Partial project gets only missing pieces
+- [x] Verify idempotent behavior in all scenarios
 
 ## References
 
