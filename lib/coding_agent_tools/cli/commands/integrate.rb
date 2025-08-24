@@ -126,6 +126,14 @@ module CodingAgentTools
 
         def find_project_root
           current = Pathname.pwd
+          
+          # If we're in a submodule (dev-tools, dev-handbook, dev-taskflow), go up
+          if current.basename.to_s =~ /^dev-(tools|handbook|taskflow)$/
+            parent = current.parent
+            return parent if (parent + ".git").exist?
+          end
+          
+          # Otherwise, find the nearest .git directory
           while current.parent != current
             return current if (current + ".git").exist?
             current = current.parent
@@ -520,11 +528,48 @@ module CodingAgentTools
           source_path = @project_root + source_pattern
           target_path = @project_root + target_dir
 
+          # Check for alternate dotfiles location if the primary doesn't exist
+          if !source_path.exist? && source_pattern.include?("dotfiles")
+            # Try the template location for dotfiles
+            alternate_path = @project_root + "dev-handbook/.meta/tpl/dotfiles"
+            if alternate_path.exist?
+              source_path = alternate_path
+              log "  → Using alternate dotfiles location: #{alternate_path.relative_path_from(@project_root)}"
+            else
+              log "  → Warning: Dotfiles source not found at #{source_pattern} or alternate location"
+              return [0, 0]
+            end
+          elsif !source_path.exist?
+            log "  → Warning: Source path not found: #{source_pattern}"
+            return [0, 0]
+          end
+
+          # Special handling for dotfiles - they go into .coding-agent directory
+          if source_pattern.include?("dotfiles")
+            target_path = @project_root + ".coding-agent"
+          end
+
           # Find all files to copy
           source_files = if source_path.directory?
-            Dir.glob(source_path + "**/*").select { |f| File.file?(f) }
+            # Get all files in the directory (not subdirectories for dotfiles)
+            if source_pattern.include?("dotfiles") || source_path.to_s.include?("dotfiles")
+              # For dotfiles, only copy yml files in the root of the directory
+              pattern = File.join(source_path.to_s, "*.yml")
+              log "  → Looking for files matching: #{pattern}" if @verbose
+              files = Dir.glob(pattern)
+              log "  → Found files: #{files.length}" if @verbose
+              files
+            else
+              Dir.glob(File.join(source_path.to_s, "**", "*")).select { |f| File.file?(f) }
+            end
           else
             Dir.glob(source_path.to_s).select { |f| File.file?(f) }
+          end
+
+          if source_files.any?
+            log "  → Found #{source_files.length} files to process"
+          else
+            log "  → No files found to copy"
           end
 
           source_files.each do |source_file|
@@ -534,15 +579,15 @@ module CodingAgentTools
 
             if target.exist?
               if force
-                log "  → Overwriting: #{relative}"
+                log "  → Overwriting: #{target.relative_path_from(@project_root)}"
                 FileUtils.cp(source, target) unless @dry_run
                 created += 1
               else
-                log "  → Skipping existing: #{relative}"
+                log "  → Skipping existing: #{target.relative_path_from(@project_root)}"
                 skipped += 1
               end
             else
-              log "  → Copying: #{relative}"
+              log "  → Copying: #{target.relative_path_from(@project_root)}"
               unless @dry_run
                 FileUtils.mkdir_p(target.parent)
                 FileUtils.cp(source, target)
