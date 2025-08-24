@@ -4,9 +4,31 @@ status: pending
 priority: high
 estimate: 12h
 dependencies: [v.0.5.0+task.045]
+needs_review: true
 ---
 
 # Improve integrate command with positional arguments and configuration support
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should we deprecate --only flag with warnings or remove it immediately?
+  - **Research conducted**: Checked for usage patterns in existing commands
+  - **Similar implementations**: Most commands don't have backward compatibility flags
+  - **Suggested default**: Deprecate with warning for 2 releases, then remove
+  - **Why needs human input**: User impact and migration strategy decision
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should config subcommand be part of integrate or separate command?
+  - **Research conducted**: Analyzed existing command structure patterns
+  - **Similar implementations**: task-manager has subcommands, llm has models subcommand
+  - **Suggested default**: Make it subcommand of integrate (integrate config)
+  - **Why needs human input**: Command organization preference
+
+- [ ] What should happen when user has both project and user config with conflicting module defaults?
+  - **Research conducted**: Standard precedence is CLI > Project > User > System
+  - **Suggested default**: Show warning message about which config is being used
+  - **Why needs human input**: User experience preference for config conflicts
 
 ## Behavioral Specification
 
@@ -88,12 +110,22 @@ coding-agent-tools integrate config --reset   # Reset to defaults
 - [ ] **Helpful error messages**: Mixed flags produce clear guidance
 - [ ] **Predictable behavior**: Flag logic is consistent and documented
 
-### Validation Questions
+### Validation Questions (Resolved Through Research)
 
-- [ ] **Config file format**: Should we use YAML or TOML for configuration files?
-- [ ] **Module granularity**: Are the current modules (agents, commands, etc.) the right level of granularity?
+- [x] **Config file format**: Should we use YAML or TOML for configuration files?
+  - **Resolution**: Use YAML - project already uses YAML extensively (integration.yml, fallback_models.yaml)
+  - **Evidence**: Found existing YAML files and deep_merge implementation for YAML in config_extractor.rb
+  
+- [x] **Module granularity**: Are the current modules (agents, commands, etc.) the right level of granularity?
+  - **Resolution**: Current granularity is appropriate - matches existing config structure
+  - **Evidence**: Existing integration.yml already defines these modules as components
+  
 - [ ] **Backward compatibility**: Should we maintain support for `--only` flag alongside new logic?
-- [ ] **Config locations**: Are the XDG paths correct for all platforms?
+  - **Moved to Review Questions** - Needs human decision on migration strategy
+  
+- [x] **Config locations**: Are the XDG paths correct for all platforms?
+  - **Resolution**: Yes, project already has XDGDirectoryResolver atom with proper implementation
+  - **Evidence**: Found XDGDirectoryResolver in atoms/ with cache_directory method
 
 ## Objective
 
@@ -134,9 +166,9 @@ Improve the user experience of the integrate command by making it more intuitive
 - **Template Method**: Systematic module integration with hooks
 
 ### Technology Stack
-- **CLI Framework**: dry-cli (existing) with argument support
-- **Configuration**: YAML format with deep merge support
-- **Path Resolution**: XDG Base Directory support with Pathname
+- **CLI Framework**: dry-cli (existing) with argument support - CONFIRMED via llm/query.rb
+- **Configuration**: YAML format with deep_merge method from config_extractor.rb
+- **Path Resolution**: XDGDirectoryResolver atom (existing) for config paths
 - **Module Management**: Dynamic module detection and selection
 
 ### Implementation Strategy
@@ -171,11 +203,11 @@ Improve the user experience of the integrate command by making it more intuitive
 
 ## Implementation Plan
 
-### Planning Steps
-* [x] **Research CLI argument patterns**: Analyze dry-cli support for positional arguments
-* [x] **Design configuration hierarchy**: Define precedence and merge strategy
-* [x] **Plan module selection logic**: Create decision tree for flag combinations
-* [x] **Identify XDG paths**: Research cross-platform configuration locations
+### Planning Steps (Completed During Review)
+* [x] **Research CLI argument patterns**: Confirmed dry-cli supports arguments via llm/query.rb example
+* [x] **Design configuration hierarchy**: Defined CLI > Project > User > System precedence
+* [x] **Plan module selection logic**: Created clear decision tree for flag combinations
+* [x] **Identify XDG paths**: Found existing XDGDirectoryResolver atom with proper implementation
 
 ### Execution Steps
 - [ ] **Update Command Structure**: Add positional argument support
@@ -275,3 +307,23 @@ Improve the user experience of the integrate command by making it more intuitive
 - XDG Base Directory Specification
 - Common CLI patterns for module selection (npm, cargo, etc.)
 - dry-cli documentation for argument support
+
+## Review Summary
+
+**Date**: 2025-01-30
+**Questions Generated**: 3 total (1 high, 2 medium)
+**Critical Blockers**: Deprecation strategy for --only flag needs decision
+**Implementation Readiness**: Ready with assumptions - can proceed once migration strategy is decided
+
+### Research Completed
+- Confirmed dry-cli supports positional arguments (found in llm/query.rb)
+- Verified YAML is the standard config format in project
+- Located existing XDGDirectoryResolver for config paths
+- Found deep_merge implementation for config merging
+
+### Recommended Next Steps
+1. Decide on --only flag deprecation strategy (immediate vs gradual)
+2. Confirm config subcommand organization preference
+3. Proceed with implementation using existing atoms and molecules
+
+The task is implementation-ready with the suggested defaults. Only the deprecation strategy requires a business decision before proceeding.
