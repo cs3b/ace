@@ -24,7 +24,7 @@
 
 ## Intention
 
-Enable Claude commands to be directly accessible in the `.claude/commands` directory without requiring agents to navigate through `_custom` or `_generated` subfolders.
+Enable Claude commands to be directly accessible in the `.claude/commands` directory without requiring agents to navigate through `_custom` or `_generated` subfolders. Also we doesn't need to link README.md
 
 ## Problem It Solves
 
@@ -168,7 +168,7 @@ Enable Claude commands to be directly accessible in the `.claude/commands` direc
 > SOURCE
 
 ```text
-when integrating claude commands we should flatten them (no _custom and _generated subfolders when linking) 
+when integrating claude commands we should flatten them (no _custom and _generated subfolders when linking)
 
 eza .claude/commands --tree
 .claude/commands
