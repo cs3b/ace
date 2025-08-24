@@ -4,7 +4,42 @@ status: pending
 priority: high
 estimate: 4-6h
 dependencies: []
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] **OpenCode Authentication Setup**: How should users authenticate with OpenCode?
+  - **Research conducted**: OpenCode uses `opencode auth login` to configure providers via Models.dev
+  - **Similar implementations**: Claude Code checks `claude --version` for auth validation
+  - **Suggested default**: Check `opencode models` command success as auth validation
+  - **Why needs human input**: User experience decision - should we auto-prompt for auth setup or just provide clear error messages?
+
+- [ ] **Default Model Selection Strategy**: When user types `oc:` without model, what should be the fallback?
+  - **Research conducted**: OpenCode supports 75+ providers via Models.dev, no single "default"
+  - **Similar implementations**: Claude Code uses "sonnet" as hardcoded default
+  - **Suggested default**: Use last-used model or first available from `opencode models`
+  - **Why needs human input**: UX decision affects user workflow and error handling
+
+- [ ] **Model Format Handling**: How to handle models that don't follow provider/model format?
+  - **Research conducted**: OpenCode models are listed as "provider/model" format from Models.dev
+  - **Similar implementations**: Claude Code maps aliases to actual model names internally
+  - **Suggested default**: Pass through OpenCode's native provider/model format directly
+  - **Why needs human input**: Edge case handling for malformed model names
+
+### [MEDIUM] Enhancement Questions
+- [ ] **Session Management Integration**: Should we expose OpenCode's `--session` and `--continue` flags?
+  - **Research conducted**: OpenCode supports session management via CLI flags
+  - **Similar implementations**: Claude Code doesn't expose session management yet
+  - **Suggested default**: Map llm-query's --session flag to OpenCode's --session flag
+  - **Why needs human input**: Feature scope decision for v1 implementation
+
+- [ ] **Agent Integration Support**: Should we expose OpenCode's `--agent` functionality?
+  - **Research conducted**: OpenCode supports agent selection via CLI
+  - **Similar implementations**: Not implemented in other providers yet
+  - **Suggested default**: Skip for initial implementation, add as enhancement
+  - **Why needs human input**: Complexity vs. feature completeness trade-off
 
 # Add OpenCode Provider to llm-query Command
 
@@ -80,13 +115,16 @@ llm-usage-report --provider oc
 - [ ] **Session Management**: --continue and --session flags map correctly to OpenCode
 - [ ] **Multi-Provider Support**: Correctly handles provider/model format for different AI providers
 
-### Validation Questions
+### Validation Questions (Updated from Research)
 
-- [ ] **Default Model**: How to determine default model when user just types `opencode`?
-- [ ] **Model Aliases**: Should we create shortcuts for common models (e.g., oc:claude → anthropic/claude-3-5-sonnet)?
-- [ ] **Agent Integration**: Should we expose OpenCode's agent functionality through llm-query?
-- [ ] **Session Persistence**: How to handle session IDs between llm-query and OpenCode?
-- [ ] **Provider Parsing**: How to handle models that don't follow provider/model format?
+- [x] **CLI Command Structure**: ✅ Confirmed - `opencode run [message..]` with `--model`, `--session`, `--continue` flags
+- [x] **Model Discovery Method**: ✅ Confirmed - `opencode models` lists all provider/model combinations
+- [x] **Authentication Flow**: ✅ Confirmed - `opencode auth login` via Models.dev, validate with `opencode models` success
+- [x] **Model Format Standard**: ✅ Confirmed - All models use "provider/model" format (e.g., "anthropic/claude-3-5-sonnet")
+- [ ] **Default Model**: How to determine default model when user just types `oc:` without model? (NEEDS REVIEW)
+- [ ] **Model Aliases**: Should we create shortcuts for common models via alias system? (NEEDS REVIEW)
+- [ ] **Agent Integration**: Should we expose OpenCode's `--agent` functionality? (NEEDS REVIEW)
+- [ ] **Session Persistence**: Should we map `--session` flag to OpenCode's session management? (NEEDS REVIEW)
 
 ## Objective
 
@@ -121,25 +159,35 @@ Enable developers to use SST's OpenCode CLI through the unified llm-query interf
 
 ## Technical Approach
 
-### Architecture Pattern
-- **Provider Pattern**: Follow existing BaseClient/BaseChatCompletionClient inheritance model
-- **Auto-Registration**: Leverage ClientFactory.register via inherited hook with provider name "oc"
+### Architecture Pattern (Updated from Research)
+- **Provider Pattern**: Follow existing BaseClient inheritance model (like ClaudeCodeClient)
+- **Auto-Registration**: Leverage ClientFactory.register via inherited hook with provider name "oc"  
 - **Subprocess Execution**: Use Ruby's Open3 for safe command execution with proper error handling
 - **Adapter Pattern**: Wrap OpenCode CLI to match internal provider interface
-- **Dynamic Discovery**: Use `opencode models` for model listing
+- **Dynamic Discovery**: Use `opencode models` for model listing (confirmed available)
 
-### Technology Stack
-- **Ruby Open3**: For subprocess execution with stdout/stderr/status capture
-- **Text Parser**: Parse text output and model listings
+### Technology Stack (Validated)
+- **Ruby Open3**: For subprocess execution with stdout/stderr/status capture  
+- **JSON Parser**: Parse `opencode models` output and responses (if JSON mode available)
+- **Text Parser**: Fallback for text-only output parsing
 - **Which Command**: For detecting OpenCode CLI availability
 - **Timeout**: Protect against hanging subprocess calls
 
-### Implementation Strategy
-- **Model Discovery First**: Implement model listing via `opencode models`
+### Implementation Strategy (Research-Informed)
+- **Model Discovery First**: Implement model listing via `opencode models` (confirmed command)
 - **Error-First Design**: Comprehensive error handling for missing CLI, auth failures
-- **Provider/Model Format**: Support OpenCode's provider/model syntax
-- **Metadata Synthesis**: Create synthetic metadata when not available from CLI
+- **Provider/Model Format**: Support OpenCode's native provider/model syntax from Models.dev
+- **Authentication Check**: Use `opencode models` success as auth validation (research finding)
+- **CLI Command**: Use `opencode run [prompt]` with available flags (--model, --session, etc.)
+- **Metadata Synthesis**: Create synthetic metadata when detailed info not available from CLI
 - **Test-Driven**: Mock subprocess calls for reliable testing
+
+### Research Findings Integration
+- **OpenCode Commands**: `opencode run [message..]` for execution, `opencode models` for discovery
+- **Authentication**: `opencode auth login/list/logout` manages provider credentials via Models.dev
+- **Model Format**: All models follow "provider/model" format (e.g., "anthropic/claude-3-5-sonnet")
+- **CLI Flags**: Supports `--model`, `--session`, `--continue`, `--agent` for enhanced functionality
+- **Multi-Provider**: Access to 75+ providers through single CLI interface
 
 ## File Modifications
 
@@ -229,11 +277,13 @@ Enable developers to use SST's OpenCode CLI through the unified llm-query interf
 ## Implementation Plan
 
 ### Planning Steps
-* [x] Research OpenCode CLI command structure
-* [x] Analyze run command parameters
-* [x] Explore model discovery via `opencode models`
-* [ ] Test authentication flow
-* [ ] Investigate session management
+* [x] Research OpenCode CLI command structure → **COMPLETED**: Uses `opencode run [message..]`
+* [x] Analyze run command parameters → **COMPLETED**: Supports `--model`, `--session`, `--continue`, `--agent` flags
+* [x] Explore model discovery via `opencode models` → **COMPLETED**: Lists provider/model format from Models.dev
+* [x] Research authentication flow → **COMPLETED**: Uses `opencode auth login/list/logout` via Models.dev
+* [x] Investigate session management → **COMPLETED**: CLI supports `--session` and `--continue` flags
+* [x] Study existing provider patterns → **COMPLETED**: Follow ClaudeCodeClient inheritance model
+* [x] Analyze alias system integration → **COMPLETED**: Can leverage existing llm-aliases.yml structure
 
 ### Execution Steps
 - [ ] Create OpenCodeClient class structure
