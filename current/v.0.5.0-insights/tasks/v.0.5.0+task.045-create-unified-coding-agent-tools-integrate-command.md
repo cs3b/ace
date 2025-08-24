@@ -1,104 +1,130 @@
 ---
 id: v.0.5.0+task.045
-status: pending
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
-needs_review: true
 ---
 
 # Create Unified coding-agent-tools integrate Command
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] Should the new `coding-agent-tools` executable coexist with or replace `coding_agent_tools`?
-  - **Research conducted**: All other executables use kebab-case (git-commit, code-review, etc.)
-  - **Similar implementations**: Industry standard is kebab-case for CLI commands
-  - **Suggested default**: Create `coding-agent-tools` as symlink to `coding_agent_tools` for compatibility
-  - **Why needs human input**: Breaking change affecting all existing users and documentation
+- [x] Should the new `coding-agent-tools` executable coexist with or replace `coding_agent_tools`?
+  - **Decision**: Replace completely - no backward compatibility needed since not deployed
+  - **Implementation**: Remove `coding_agent_tools` entirely, only use `coding-agent-tools`
 
-- [ ] How should the command handle existing Claude integration in projects?
-  - **Research conducted**: Found `ClaudeCommandsInstaller` class with backup/force options
-  - **Similar implementations**: Current `handbook claude integrate` has --backup and --force flags
-  - **Suggested default**: Auto-backup existing .claude/ directory before recreating
-  - **Why needs human input**: Data loss risk if user has custom modifications
+- [x] How should the command handle existing Claude integration in projects?
+  - **Decision**: Smart incremental approach - only create missing files/symlinks by default
+  - **Implementation**: 
+    - Default: Only add missing components (non-destructive)
+    - `--force`: Overwrite with automatic backup to `.claude.backup.TIMESTAMP`
+    - `--no-backup`: Skip backup when using --force
+    - `--only <component>`: Selective update of specific components
 
 ### [MEDIUM] Enhancement Questions
-- [ ] Should symlinks use relative or absolute paths?
-  - **Research conducted**: Limited symlink usage in codebase, mostly for path resolution
-  - **Industry practice**: Relative symlinks are more portable across environments
-  - **Suggested default**: Use relative symlinks for portability
-  - **Why needs human input**: Affects portability and deployment scenarios
+- [x] Should symlinks use relative or absolute paths?
+  - **Decision**: Use relative paths for portability
+  - **Implementation**: All symlinks use relative paths (e.g., `../dev-handbook/.integrations/claude/`)
 
-- [ ] What should happen if dev-handbook submodule is missing?
-  - **Research conducted**: Dev-taskflow already exists as submodule with `.git` file
-  - **Current pattern**: Error with setup instructions in existing commands
-  - **Suggested default**: Error with clear instructions: "Run: git submodule add <url> dev-handbook"
-  - **Why needs human input**: User experience vs automatic submodule initialization
+- [x] What should happen if dev-handbook submodule is missing?
+  - **Decision**: Auto-add submodules using configuration from `dev-tools/config/integration.yml`
+  - **Implementation**: Use GitHub CLI if available, fallback to git commands
+  - **Config**: Store submodule URLs in configuration file
 
 ### [LOW] Clarification Questions
-- [ ] Should the command support multiple integration types beyond Claude?
-  - **Research conducted**: Task specifies `--claude` flag suggesting future extensibility
-  - **Suggested default**: Design with extensibility but implement Claude only
-  - **Why needs human input**: Affects command structure and future roadmap
+- [x] Should the command support multiple integration types beyond Claude?
+  - **Decision**: Extensible design with Claude implemented, OpenCode as placeholder
+  - **Implementation**: `--claude` (implemented), `--opencode` (shows "Coming soon" message)
 
 ## Behavioral Specification
 
 ### User Experience
 - **Input**: Developers run `coding-agent-tools integrate --claude` in any project directory
-- **Process**: Single command handles all Claude integration setup, replacing multiple fragmented commands
-- **Output**: Complete Claude development environment with agents, commands, and tools properly linked
+- **Process**: Single command intelligently handles Claude integration with smart merge behavior
+- **Output**: Complete Claude development environment with only missing components added
 
 ### Expected Behavior
-<!-- Consolidate all project integration functionality into a unified command -->
-<!-- Replace fragmented integration commands with single comprehensive solution -->
-<!-- Handle dev-taskflow as empty submodule within existing repositories -->
+<!-- Smart incremental integration with selective component updates -->
+<!-- Non-destructive by default, force option for overwrite scenarios -->
+<!-- Auto-configure submodules from configuration file -->
 
 The system creates a single `coding-agent-tools integrate --claude` command that:
 
-1. **Fixes executable naming**: Changes from `coding_agent_tools` to `coding-agent-tools` throughout
-2. **Handles submodule integration**: Creates empty dev-taskflow submodule when needed within existing repos
-3. **Uses symlinks by default**: Creates symlinks for all Claude files (agents, commands, configs) instead of copying
-4. **Development-focused**: Optimized for development environment setup only
-5. **Replaces old commands**: Completely removes deprecated integration commands
-6. **No backward compatibility**: Clean break from old fragmented approach
+1. **Smart Merge Behavior**: Only creates missing files/symlinks by default (non-destructive)
+2. **Selective Integration**: Supports `--only` flag for updating specific components (agents, commands, dotfiles, docs)
+3. **Automatic Submodule Setup**: Auto-adds missing submodules using config from `dev-tools/config/integration.yml`
+4. **Force Overwrite Option**: `--force` flag overwrites with automatic backup, `--no-backup` to skip backup
+5. **Relative Symlinks**: All symlinks use relative paths for portability
+6. **Extensible Design**: Supports Claude (implemented) and OpenCode (placeholder) integrations
+7. **Complete Executable Rename**: Removes `coding_agent_tools`, only uses `coding-agent-tools`
 
 ### Interface Contract
-<!-- Single unified command with comprehensive functionality -->
-<!-- Replaces multiple separate integration commands -->
+<!-- Enhanced command interface with smart merge and selective integration -->
+<!-- Non-destructive by default with force option for overwrite -->
 
 ```bash
-# Primary Integration Command
+# Basic usage - only adds missing components (non-destructive)
 coding-agent-tools integrate --claude
-# Comprehensive setup: fixes executables, creates submodules, symlinks all files
-# No additional flags needed - development-focused setup is default
+
+# Force overwrite with automatic backup
+coding-agent-tools integrate --claude --force
+
+# Force without backup
+coding-agent-tools integrate --claude --force --no-backup
+
+# Selective component integration
+coding-agent-tools integrate --claude --only commands
+coding-agent-tools integrate --claude --only agents
+coding-agent-tools integrate --claude --only dotfiles
+coding-agent-tools integrate --claude --only docs
+coding-agent-tools integrate --claude --only agents,commands  # Multiple components
+
+# Preview mode
+coding-agent-tools integrate --claude --dry-run
+
+# Future integration type (placeholder)
+coding-agent-tools integrate --opencode  # Shows "Coming soon" message
 
 # Command Output Examples
 $ coding-agent-tools integrate --claude
-✓ Fixed executable naming: coding_agent_tools → coding-agent-tools
-✓ Created dev-taskflow submodule (empty) 
-✓ Created .claude/agents/ symlinks → dev-handbook/.integrations/claude/agents/
-✓ Created .claude/commands/ symlinks → dev-handbook/.integrations/claude/commands/
-✓ Configured Claude development environment
-✓ Integration complete!
+✓ Checking submodules...
+  ✓ dev-handbook present
+  ✓ dev-taskflow present
+  → dev-tools present
+✓ Creating missing symlinks...
+  → .claude/agents/ (12 symlinks created)
+  → .claude/commands/ (8 new, 4 existing)
+  → .coding-agent/config.yml (existing, skipped)
+✓ Integration complete! (20 new components added)
 
-# Removed Commands (no longer available)
-# handbook claude integrate      # ❌ REMOVED
-# install-dotfiles               # ❌ REMOVED  
-# initialize-project-structure   # ❌ REMOVED
+$ coding-agent-tools integrate --claude --force
+⚠ Backing up existing .claude/ to .claude.backup.20250824-1045
+✓ Recreating all symlinks...
+  → .claude/agents/ (12 symlinks)
+  → .claude/commands/ (12 symlinks)
+  → .coding-agent/*.yml (3 config files)
+✓ Force integration complete!
+
+$ coding-agent-tools integrate --claude --only agents,commands
+✓ Updating selected components...
+  → agents: 3 new symlinks added
+  → commands: 2 new symlinks added
+✓ Selective integration complete!
 ```
 
 **Error Handling:**
-- **Existing .claude directory**: Backup and recreate with symlinks
-- **Missing dev-handbook submodule**: Error with clear setup instructions
-- **Permission issues**: Clear error messages with resolution steps
-- **Git repository not found**: Error requiring git repository
+- **Missing submodule**: Auto-adds from config with GitHub CLI or git commands
+- **Existing files (default)**: Skips existing files/symlinks
+- **Existing files (--force)**: Backs up to timestamped directory before overwrite
+- **Permission issues**: Clear error messages with sudo instructions if needed
+- **Broken symlinks**: Automatically removes and recreates
 
 **Edge Cases:**
-- **Partial existing setup**: Clean existing setup before creating new
-- **Broken symlinks**: Remove and recreate all symlinks
-- **Multiple integration attempts**: Idempotent operation, safe to re-run
+- **Partial existing setup**: Intelligently merges, only adds missing components
+- **Custom user files**: Preserved unless --force is used
+- **Config file missing**: Creates default config from template
 
 ### Success Criteria
 <!-- Measurable outcomes that define completion -->
@@ -195,117 +221,141 @@ Consolidate fragmented project integration approach into single unified command 
 ## File Modifications
 
 ### Create
-- lib/coding_agent_tools/cli/commands/integrate.rb
-  - Purpose: Unified integration command replacing fragmented approach
-  - Key components: Claude setup, submodule creation, symlink management
-  - Dependencies: Existing file operations, git commands, path resolution
+- **lib/coding_agent_tools/cli/commands/integrate.rb**
+  - Purpose: Unified integration command with smart merge and selective component support
+  - Key components: Component selection, smart merge logic, backup handling
+  - Options: --claude, --opencode, --force, --no-backup, --only, --dry-run
+
+- **dev-tools/config/integration.yml**
+  - Purpose: Configuration for submodules and integration types
+  - Content: Submodule URLs, integration status, component definitions
+  ```yaml
+  submodules:
+    dev-handbook:
+      url: https://github.com/org/dev-handbook.git
+      branch: main
+    dev-taskflow:
+      url: auto  # Uses current repo URL
+      branch: main
+  integrations:
+    claude:
+      status: implemented
+      components: [agents, commands, dotfiles, docs]
+    opencode:
+      status: planned
+      message: "OpenCode integration coming soon"
+  ```
 
 ### Modify
-- lib/coding_agent_tools/cli.rb
+- **lib/coding_agent_tools/cli.rb**
   - Changes: Register new integrate command, remove old command registrations
   - Impact: CLI command routing and help system
-  - Integration points: Command discovery and execution
 
-### Rename
-- exe/coding_agent_tools → exe/coding-agent-tools
-  - Type: Executable file rename
-  - Related renames:
-    - Library directories: Keep lib/coding_agent_tools/ (Ruby convention)
-    - Module names: Keep CodingAgentTools (Ruby convention)
-    - Executable references: All shebang lines and documentation
-  - Import updates: No Ruby require/import changes needed
-  - Documentation updates: ~50 markdown files with executable references
+- **dev-handbook/workflow-instructions/initialize-project-structure.wf.md**
+  - Changes: Update to use new `coding-agent-tools integrate --claude` command
+  - Impact: Workflow simplification
 
 ### Delete
-- lib/coding_agent_tools/cli/commands/install_dotfiles.rb
-  - Reason: Functionality integrated into unified command
-  - Dependencies: Remove from CLI command registry
-  - Migration strategy: Functionality absorbed by integrate command
-
-- lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb
-  - Reason: Replaced by unified integrate command
-  - Dependencies: Remove handbook claude subcommand structure
-  - Migration strategy: Core logic moved to new integrate command
+- **exe/coding_agent_tools** (completely remove, no symlink)
+  - Replacement: exe/coding-agent-tools (new executable)
+  
+- **lib/coding_agent_tools/cli/commands/install_dotfiles.rb**
+  - Functionality moved to integrate command
+  
+- **lib/coding_agent_tools/cli/commands/handbook/** (entire directory)
+  - All handbook subcommands removed
 
 ## Implementation Plan
 
 ### Planning Steps
 <!-- Research, analysis, and design activities -->
 
-* [ ] **Current Integration Analysis**: Map all existing integration commands and their functionality
-  - Analyze install_dotfiles.rb functionality and file operations
-  - Analyze handbook claude integrate functionality and ClaudeCommandsInstaller
-  - Document all file patterns and directory structures created
-  - Identify overlap and unique functionality in each approach
+* [x] **Component Selection Architecture**: Design modular component selection system
+  - Design component registry (agents, commands, dotfiles, docs)
+  - Plan --only flag parsing for single and multiple components
+  - Design component-specific integration logic
+  - Plan validation for component names
 
-* [ ] **Naming Impact Assessment**: Comprehensive analysis of coding_agent_tools → coding-agent-tools impact
-  - Search all files containing "coding_agent_tools" references
-  - Categorize by type: executables, documentation, tests, library code
-  - Plan systematic renaming approach maintaining Ruby module conventions
-  - Validate that internal Ruby code keeps snake_case while executable uses kebab-case
+* [x] **Smart Merge Logic Design**: Design non-destructive merge behavior
+  - Plan file/symlink existence checking before creation
+  - Design skip logic for existing components
+  - Plan reporting of skipped vs created items
+  - Design summary statistics for user feedback
 
-* [ ] **Symlink Strategy Design**: Research and design symlink-based integration approach
-  - Analyze relative vs absolute symlink implications
-  - Design directory structure for .claude/ integration
-  - Plan cleanup and recreation strategies for existing setups
-  - Design error recovery for broken or partial symlinks
+* [x] **Backup Strategy Planning**: Design backup system for --force operations
+  - Plan timestamp-based backup directory naming
+  - Design selective backup (only modified components)
+  - Plan --no-backup flag implementation
+  - Design backup cleanup for old backups
 
-* [ ] **Submodule Integration Research**: Design dev-taskflow empty submodule creation
-  - Research Git submodule commands and best practices
-  - Design detection of existing vs new repository scenarios
-  - Plan submodule initialization for empty repositories
-  - Design error handling for submodule creation failures
+* [x] **Submodule Auto-Configuration**: Design config-driven submodule setup
+  - Design integration.yml configuration structure
+  - Plan GitHub CLI detection and usage
+  - Design fallback to git commands
+  - Plan special handling for dev-taskflow (same repo)
 
 ### Execution Steps
 <!-- Concrete implementation actions -->
 
-- [ ] **Create Integrate Command**: Implement unified lib/coding_agent_tools/cli/commands/integrate.rb
-  > TEST: Command Creation Verification
+- [x] **Create Configuration File**: Create dev-tools/config/integration.yml
+  > TEST: Config File Validation
+  > Type: Configuration Check
+  > Assert: integration.yml exists with valid YAML structure
+  > Command: ruby -ryaml -e "YAML.load_file('dev-tools/config/integration.yml')"
+
+- [x] **Implement Integrate Command**: Create lib/coding_agent_tools/cli/commands/integrate.rb
+  > TEST: Command Creation
   > Type: Structural Validation
-  > Assert: Integrate command class exists and is properly structured
-  > Command: rspec spec/coding_agent_tools/cli/commands/integrate_spec.rb
+  > Assert: Integrate command with all option flags
+  > Command: coding-agent-tools integrate --help | grep -E "claude|force|only|backup"
 
-- [ ] **Implement Claude Integration Logic**: Add Claude file symlink creation functionality
-  > TEST: Symlink Creation Validation
+- [x] **Add Smart Merge Logic**: Implement check-before-create behavior
+  > TEST: Non-Destructive Merge
+  > Type: Behavioral Test
+  > Assert: Existing files are not overwritten without --force
+  > Command: # Create test file, run integrate, verify file unchanged
+
+- [x] **Implement Component Selection**: Add --only flag support
+  > TEST: Selective Integration
+  > Type: Component Test
+  > Assert: Only specified components are processed
+  > Command: coding-agent-tools integrate --claude --only agents --dry-run
+
+- [x] **Add Backup Functionality**: Implement --force with backup
+  > TEST: Backup Creation
   > Type: File Operation Test
-  > Assert: .claude directories created with proper symlinks to dev-handbook
-  > Command: bin/test --verify-symlinks .claude/
+  > Assert: Backup directory created with timestamp
+  > Command: coding-agent-tools integrate --claude --force && ls .claude.backup.*
 
-- [ ] **Add Dev-taskflow Submodule Creation**: Implement empty submodule initialization
-  > TEST: Submodule Creation Check
-  > Type: Git Operation Validation
-  > Assert: dev-taskflow submodule created when needed
-  > Command: git submodule status | grep dev-taskflow
+- [x] **Implement Submodule Setup**: Auto-add missing submodules from config
+  > TEST: Submodule Auto-Add
+  > Type: Git Operation Test
+  > Assert: Missing submodules are added automatically
+  > Command: # Remove submodule, run integrate, verify submodule added
 
-- [ ] **Rename Main Executable**: Rename exe/coding_agent_tools to exe/coding-agent-tools
-  > TEST: Executable Rename Validation
+- [x] **Remove Old Executable**: Delete exe/coding_agent_tools completely
+  > TEST: Executable Removal
   > Type: File System Check
-  > Assert: New executable exists and old one is removed
+  > Assert: Only coding-agent-tools executable exists
   > Command: test -f exe/coding-agent-tools && ! test -f exe/coding_agent_tools
 
-- [ ] **Update CLI Command Registration**: Modify lib/coding_agent_tools/cli.rb to register integrate command
-  > TEST: Command Registration Check
-  > Type: CLI Integration Test
-  > Assert: integrate command appears in help and is executable
-  > Command: exe/coding-agent-tools --help | grep "integrate"
+- [x] **Remove Old Commands**: Delete deprecated integration commands
+  > TEST: Command Cleanup
+  > Type: Structure Validation
+  > Assert: Old command files don't exist
+  > Command: ! test -d lib/coding_agent_tools/cli/commands/handbook
 
-- [ ] **Remove Deprecated Commands**: Delete install_dotfiles.rb and handbook/claude/integrate.rb
-  > TEST: Deprecated Command Removal
-  > Type: Cleanup Validation
-  > Assert: Old command files are removed and not registered
-  > Command: ! test -f lib/coding_agent_tools/cli/commands/install_dotfiles.rb
+- [x] **Add OpenCode Placeholder**: Implement coming soon message
+  > TEST: Placeholder Functionality
+  > Type: User Experience Test
+  > Assert: OpenCode shows appropriate message
+  > Command: coding-agent-tools integrate --opencode 2>&1 | grep "Coming soon"
 
-- [ ] **Update All Documentation References**: Change all executable references from coding_agent_tools to coding-agent-tools
-  > TEST: Documentation Update Verification
-  > Type: Content Validation
-  > Assert: No documentation references to old executable name
-  > Command: grep -r "coding_agent_tools" docs/ | wc -l | grep "0"
-
-- [ ] **Run Integration Tests**: Execute comprehensive integration tests for new command
-  > TEST: End-to-End Integration
-  > Type: Full Workflow Test
-  > Assert: coding-agent-tools integrate --claude works end-to-end
-  > Command: rspec spec/integration/unified_integration_spec.rb
+- [x] **Update Workflows**: Modify initialize-project-structure.wf.md
+  > TEST: Workflow Update
+  > Type: Documentation Test
+  > Assert: Workflow uses new integrate command
+  > Command: grep "coding-agent-tools integrate" dev-handbook/workflow-instructions/*.wf.md
 
 ## Risk Assessment
 
@@ -372,19 +422,5 @@ Consolidate fragmented project integration approach into single unified command 
 - Existing ClaudeCommandsInstaller integration logic
 - User requirement for unified integration approach
 - Executable naming consistency requirement
-
-## Review Summary
-
-**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
-**Critical Blockers:** 
-- Executable naming strategy (symlink vs replacement)
-- Existing integration handling (backup strategy)
-
-**Implementation Readiness:** Ready with assumptions, but blocked on critical decisions about breaking changes
-
-**Recommended Next Steps:**
-1. Decide on executable naming approach (symlink recommended for compatibility)
-2. Confirm backup strategy for existing .claude directories
-3. Choose symlink path strategy (relative recommended for portability)
-4. Begin implementation with extensible command structure
-5. Test thoroughly on macOS, Linux, and WSL environments
+- Configuration-driven submodule management
+- Smart merge behavior for non-destructive integration
