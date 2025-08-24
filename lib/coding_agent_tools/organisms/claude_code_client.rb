@@ -27,15 +27,6 @@ module CodingAgentTools
         {}
       end
 
-      # Model name mappings for convenience
-      MODEL_MAPPING = {
-        "opus" => "opus",
-        "sonnet" => "sonnet", 
-        "haiku" => "haiku",
-        "opus-4" => "opus",
-        "sonnet-4" => "sonnet",
-        "haiku-3" => "haiku"
-      }.freeze
 
       # Default model for quick access
       DEFAULT_MODEL = "sonnet"
@@ -88,12 +79,6 @@ module CodingAgentTools
       end
 
       private
-
-      def normalize_model_name(model)
-        # Handle various model name formats
-        model_key = model.to_s.downcase
-        MODEL_MAPPING[model_key] || model_key
-      end
 
       def model_context_size(model_name)
         # Claude Code models have large context windows

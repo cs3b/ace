@@ -1,0 +1,41 @@
+# Default LLM aliases configuration
+# This file provides sensible default aliases for common language models
+# Users can override these by creating ~/.config/coding-agent-tools/llm-aliases.yml
+
+# Global aliases that work with any provider
+global:
+  # Google Gemini aliases
+  gpro: "google:gemini-2.5-pro"
+  gflash: "google:gemini-2.5-flash"
+  gfast: "google:gemini-2.0-flash-lite"
+  
+  # Claude aliases
+  opus: "cc:claude-opus-4-1"
+  sonnet: "cc:claude-sonnet-4-0"
+  haiku: "cc:claude-3-5-haiku-latest"
+  
+  # OpenAI aliases
+  gpt5: "openai:gpt-5"
+  gpt5mini: "openai:gpt-5-mini"
+  gpt5nano: "openai:gpt-5-nano"
+
+# Provider-specific aliases
+providers:
+  # Claude Code aliases
+  cc:
+    opus: "claude-opus-4-1"
+    opus4: "claude-opus-4-0"
+    sonnet: "claude-sonnet-4-0"
+    haiku: "claude-3-5-haiku-latest"
+  
+  # Google aliases
+  google:
+    pro: "gemini-2.5-pro"
+    flash: "gemini-2.5-flash"
+    lite: "gemini-2.0-flash-lite"
+  
+  # OpenAI aliases
+  openai:
+    gpt5: "gpt-5"
+    mini: "gpt-5-mini"
+    nano: "gpt-5-nano"
