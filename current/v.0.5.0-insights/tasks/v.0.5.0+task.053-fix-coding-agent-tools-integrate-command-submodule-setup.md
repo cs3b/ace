@@ -41,11 +41,18 @@ Fixed critical bugs in the `setup_submodule` method to properly handle GitHub CL
 ### What Was Done
 
 - **Problem Identification**: Analyzed error output showing gh CLI couldn't resolve repository and shell parsing errors
-- **Investigation**: Found that gh CLI expects "owner/repo" format but was receiving full URLs
-- **Solution**: 
-  - Added regex parsing to extract owner/repo from GitHub URLs
-  - Fixed auto URL generation to maintain SSH vs HTTPS format
-  - Added proper error handling and fallback to git commands
+- **Investigation**: Found multiple issues:
+  1. gh CLI expects "owner/repo" format but was receiving full URLs
+  2. Submodules existed in .git/modules but weren't initialized in working directory
+  3. Config file had hardcoded incorrect repository URLs
+- **Solution** (Two iterations): 
+  - **First fix**: Added regex parsing to extract owner/repo from GitHub URLs
+  - **Second fix**: 
+    - Improved submodule detection to check if directory is empty
+    - Added logic to reinitialize existing submodules from .git/modules
+    - Changed all submodule URLs to "auto" for intelligent detection
+    - Enhanced auto URL generation to detect from existing config first
+    - Added force flag (-f) to git submodule add commands
 - **Validation**: Tested with dry-run and verified Ruby syntax
 
 ### Technical Details
