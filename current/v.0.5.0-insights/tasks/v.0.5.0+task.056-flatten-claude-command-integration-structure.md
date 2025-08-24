@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.056
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: []
@@ -68,18 +68,18 @@ handbook claude integrate [OPTIONS]
 
 ### Success Criteria
 
-- [ ] **No Subdirectory Symlinks**: The `.claude/commands/` directory contains NO symlinks to `_custom` or `_generated` folders
-- [ ] **Direct Command Access**: All commands are directly accessible as `.claude/commands/[command-name].md`
-- [ ] **Conflict Resolution Works**: When same command exists in both sources, custom version is installed
-- [ ] **Backward Compatible**: Existing installations work after update without breaking changes
-- [ ] **Clear Reporting**: Integration output clearly shows what was installed/skipped/conflicted
+- [x] **No Subdirectory Symlinks**: The `.claude/commands/` directory contains NO symlinks to `_custom` or `_generated` folders
+- [x] **Direct Command Access**: All commands are directly accessible as `.claude/commands/[command-name].md`
+- [x] **Conflict Resolution Works**: When same command exists in both sources, custom version is installed
+- [x] **Backward Compatible**: Existing installations work after update without breaking changes
+- [x] **Clear Reporting**: Integration output clearly shows what was installed/skipped/conflicted
 
 ### Validation Questions
 
-- [ ] **README Handling**: Should README.md files be copied to `.claude/commands/` or excluded entirely?
-- [ ] **Symlink vs Copy**: Should we continue copying files or could we symlink individual files instead of directories?
-- [ ] **Metadata Preservation**: Does the current metadata injection system work correctly with the flattened structure?
-- [ ] **Testing Coverage**: Are there existing tests that expect the subdirectory structure that need updating?
+- [x] **README Handling**: Should README.md files be copied to `.claude/commands/` or excluded entirely? → Currently excluded by orchestrator
+- [x] **Symlink vs Copy**: Should we continue copying files or could we symlink individual files instead of directories? → Using copy for individual files
+- [x] **Metadata Preservation**: Does the current metadata injection system work correctly with the flattened structure? → Yes, metadata is injected during copy
+- [x] **Testing Coverage**: Are there existing tests that expect the subdirectory structure that need updating? → No specific tests found for integrate.rb
 
 ## Objective
 
