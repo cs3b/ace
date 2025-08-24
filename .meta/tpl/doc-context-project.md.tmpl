@@ -1,0 +1,116 @@
+# Project Context
+
+## Overview
+
+[Brief description of your project goes here]
+
+## Repository Structure
+
+{% exec command="ls -la" %}
+
+## Documentation
+
+### Main Documentation
+{% if exists="README.md" %}
+{% embed file="README.md" %}
+{% endif %}
+
+### Architecture
+{% if exists="docs/architecture.md" %}
+{% embed file="docs/architecture.md" %}
+{% endif %}
+
+### API Documentation
+{% if exists="docs/api.md" %}
+{% embed file="docs/api.md" %}
+{% endif %}
+
+## Development Setup
+
+### Dependencies
+{% if exists="package.json" %}
+{% embed file="package.json" lines="1-50" %}
+{% endif %}
+
+{% if exists="Gemfile" %}
+{% embed file="Gemfile" lines="1-50" %}
+{% endif %}
+
+{% if exists="Cargo.toml" %}
+{% embed file="Cargo.toml" lines="1-50" %}
+{% endif %}
+
+### Configuration Files
+{% if exists=".env.sample" %}
+{% embed file=".env.sample" %}
+{% endif %}
+
+## Current Status
+
+### Git Status
+{% exec command="git status --short" %}
+
+### Recent Commits
+{% exec command="git log --oneline -10" %}
+
+### Current Branch
+{% exec command="git branch --show-current" %}
+
+## Source Code Structure
+
+### Main Source Files
+{% if exists="src/" %}
+{% exec command="find src -type f -name '*.js' -o -name '*.ts' -o -name '*.rb' -o -name '*.rs' | head -20" %}
+{% endif %}
+
+{% if exists="lib/" %}
+{% exec command="find lib -type f -name '*.rb' -o -name '*.rs' | head -20" %}
+{% endif %}
+
+## Tests
+
+### Test Structure
+{% if exists="spec/" %}
+{% exec command="find spec -type f -name '*_spec.rb' | head -10" %}
+{% endif %}
+
+{% if exists="test/" %}
+{% exec command="find test -type f -name '*.test.js' -o -name '*.test.ts' | head -10" %}
+{% endif %}
+
+## Tasks and Issues
+
+### Current Tasks
+{% if exists="dev-taskflow/current/" %}
+{% exec command="ls -la dev-taskflow/current/" %}
+{% endif %}
+
+### Backlog
+{% if exists="dev-taskflow/backlog/" %}
+{% exec command="ls dev-taskflow/backlog/ | head -10" %}
+{% endif %}
+
+## Project Metadata
+
+### License
+{% if exists="LICENSE" %}
+{% embed file="LICENSE" lines="1-20" %}
+{% endif %}
+
+### Contributing Guidelines
+{% if exists="CONTRIBUTING.md" %}
+{% embed file="CONTRIBUTING.md" %}
+{% endif %}
+
+## Additional Context
+
+### Custom Project Notes
+{% if exists="docs/context/notes.md" %}
+{% embed file="docs/context/notes.md" %}
+{% endif %}
+
+---
+
+*This context file was generated using the coding-agent-tools context command*
+*Template: docs/context/project.md*
+*Generated: {% exec command="date" %}*
