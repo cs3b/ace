@@ -5,6 +5,7 @@ require "fileutils"
 require "yaml"
 require "pathname"
 require "time"
+require_relative "../../organisms/claude_commands_orchestrator"
 
 module CodingAgentTools
   module Cli
@@ -472,20 +473,38 @@ module CodingAgentTools
 
             puts "✓ Integrating #{component}..."
 
-            case config["method"]
-            when "symlink"
-              created, skipped = create_symlinks(config["source"], config["target"], force)
-              created_count += created
-              skipped_count += skipped
-            when "copy"
-              created, skipped = copy_files(config["source"], config["target"], force)
-              created_count += created
-              skipped_count += skipped
-            when "update"
-              if update_documentation(config["source"], config["target"], force)
-                created_count += 1
-              else
-                skipped_count += 1
+            # Special handling for commands - use the orchestrator
+            if component == "commands"
+              orchestrator = Organisms::ClaudeCommandsOrchestrator.new
+              orchestrator_options = {
+                dry_run: @dry_run,
+                verbose: @verbose,
+                force: force,
+                backup: false  # Already handled by integrate command
+              }
+              result = orchestrator.run(@project_root, orchestrator_options)
+              
+              if result.respond_to?(:stats) && result.stats
+                created_count += result.stats.total_commands || 0
+                skipped_count += result.stats.skipped || 0
+              end
+            else
+              case config["method"]
+              when "symlink"
+                # Pass component name to handle special cases
+                created, skipped = create_symlinks(config["source"], config["target"], force, component)
+                created_count += created
+                skipped_count += skipped
+              when "copy"
+                created, skipped = copy_files(config["source"], config["target"], force)
+                created_count += created
+                skipped_count += skipped
+              when "update"
+                if update_documentation(config["source"], config["target"], force)
+                  created_count += 1
+                else
+                  skipped_count += 1
+                end
               end
             end
           end
@@ -501,7 +520,7 @@ module CodingAgentTools
           false
         end
 
-        def create_symlinks(source_pattern, target_dir, force)
+        def create_symlinks(source_pattern, target_dir, force, component_name = nil)
           created = 0
           skipped = 0
 
@@ -515,7 +534,16 @@ module CodingAgentTools
 
           # Find all files to symlink
           source_files = if source_path.directory?
-            Dir.glob(source_path + "*")
+            items = Dir.glob(source_path + "*")
+            
+            # Special handling for commands component: skip subdirectories
+            if component_name == "commands"
+              # Filter out subdirectories (like _custom and _generated)
+              # Only symlink files, not directories
+              items.select { |item| File.file?(item) }
+            else
+              items
+            end
           else
             Dir.glob(source_path.to_s)
           end
