@@ -18,6 +18,11 @@ global:
   gpt5: "openai:gpt-5"
   gpt5mini: "openai:gpt-5-mini"
   gpt5nano: "openai:gpt-5-nano"
+  
+  # Codex shortcuts (via Codex CLI)
+  codex: "codex:o3-mini"
+  o3: "codex:o3"
+  o3mini: "codex:o3-mini"
 
 # Provider-specific aliases - shortcuts within a provider namespace
 providers:
@@ -38,3 +43,15 @@ providers:
     gpt5: "gpt-5"
     mini: "gpt-5-mini"
     nano: "gpt-5-nano"
+  
+  # Codex provider aliases
+  codex:
+    o3: "o3"
+    mini: "o3-mini"
+    default: "o3-mini"
+  
+  # Codex OSS provider aliases  
+  codexoss:
+    llama: "llama3"
+    mistral: "mistral"
+    codellama: "codellama"

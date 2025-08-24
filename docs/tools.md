@@ -285,9 +285,12 @@ llm-query PROMPT [OPTIONS]
 
 **Key flags:** `--model NAME` (model selection), `--output FILE` (save output)
 
-**Example:**
+**Examples:**
 ```bash
-llm-query "Explain this code" --model gpt4  # Query with GPT-4
+llm-query "Explain this code" --model gpt4     # Query with GPT-4
+llm-query "Review this code" codex:o3          # Query with Codex o3
+llm-query "Hello world" codex:o3-mini         # Query with Codex o3-mini
+llm-query "Local help" codexoss:llama3        # Query with Codex OSS (Ollama)
 ```
 </details>
 
