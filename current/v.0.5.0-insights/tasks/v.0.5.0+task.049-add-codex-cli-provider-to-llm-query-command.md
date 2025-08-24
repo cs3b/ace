@@ -4,7 +4,7 @@ status: pending
 priority: high
 estimate: 4-6h
 dependencies: []
-needs_review: true
+needs_review: false
 ---
 
 # Add Codex CLI Provider to llm-query Command
@@ -157,15 +157,24 @@ llm-usage-report --provider codex
   - **Evidence**: Found cc: aliases and global shortcuts already configured
   - **Implementation**: Add codex: provider aliases and global shortcuts
 
-### Validation Questions (Still Need Human Input)
+### Validation Questions (Resolved)
 
-- [ ] **Default Model**: Should default be o3-mini, o3, or auto-detect from user's Codex config?
-  - **Research**: Found default is o4-mini but o3-mini might be more appropriate for quick queries
-  - **Decision needed**: Balance between speed (o3-mini) vs capability (o3)
+- [x] **Default Model**: Use gpt-5-mini as default
+  - **Decision**: Default to `gpt-5-mini` for balance of speed and capability
+  - **Implementation**: Set as DEFAULT_MODEL constant in CodexClient
 
-- [ ] **Profile Support**: Should we expose Codex profile selection via llm-query?
-  - **Research**: Codex supports profiles but unclear how to integrate with llm-query options
-  - **Decision needed**: Simple first implementation without profiles, or support from start?
+- [x] **OSS Mode**: Create separate provider for open source models
+  - **Decision**: Use `codexoss:` provider prefix for Ollama integration
+  - **Implementation**: Create separate CodexOSSClient that uses `--oss` flag
+
+- [x] **Sandbox Policy**: Use full access by default
+  - **Decision**: Always use `danger-full-access` sandbox mode
+  - **Rationale**: Codex only works in directories we explicitly allow
+  - **Implementation**: No safety flags needed in llm-query for Codex
+
+- [x] **Profile Support**: Skip profile support
+  - **Decision**: No profile selection in v1
+  - **Implementation**: Keep it simple, can add later if needed
 
 ## Objective
 
@@ -211,7 +220,9 @@ Enable developers to use OpenAI's Codex CLI through the unified llm-query interf
 - **Timeout**: Protect against hanging subprocess calls
 
 ### Implementation Strategy
-- **Progressive Enhancement**: Start with basic execution, add features incrementally
+- **Two Providers**: Separate `codex` and `codexoss` providers
+- **Default Model**: Use `gpt-5-mini` as default for codex provider
+- **Sandbox Mode**: Always use `-s danger-full-access` for full functionality
 - **Error-First Design**: Comprehensive error handling for missing CLI, auth failures
 - **Metadata Synthesis**: Create synthetic metadata when not available from CLI
 - **Test-Driven**: Mock subprocess calls for reliable testing
@@ -220,8 +231,13 @@ Enable developers to use OpenAI's Codex CLI through the unified llm-query interf
 
 ### Create
 - `lib/coding_agent_tools/organisms/codex_client.rb`
-  - Purpose: Codex CLI provider implementation
-  - Key components: generate_text, list_models (limited), CLI execution logic
+  - Purpose: Codex CLI provider implementation (cloud models)
+  - Key components: generate_text, uses `-s danger-full-access`, defaults to gpt-5-mini
+  - Dependencies: BaseClient, Open3
+
+- `lib/coding_agent_tools/organisms/codex_oss_client.rb`
+  - Purpose: Codex OSS provider implementation (local Ollama)
+  - Key components: generate_text with `--oss` flag, model discovery
   - Dependencies: BaseClient, Open3
 
 - `spec/coding_agent_tools/organisms/codex_client_spec.rb`

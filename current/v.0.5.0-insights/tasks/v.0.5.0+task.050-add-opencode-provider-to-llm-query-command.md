@@ -4,42 +4,36 @@ status: pending
 priority: high
 estimate: 4-6h
 dependencies: []
-needs_review: true
+needs_review: false
 ---
 
-## Review Questions (Pending Human Input)
+## Review Questions (All Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] **OpenCode Authentication Setup**: How should users authenticate with OpenCode?
-  - **Research conducted**: OpenCode uses `opencode auth login` to configure providers via Models.dev
-  - **Similar implementations**: Claude Code checks `claude --version` for auth validation
-  - **Suggested default**: Check `opencode models` command success as auth validation
-  - **Why needs human input**: User experience decision - should we auto-prompt for auth setup or just provide clear error messages?
+- [x] **OpenCode Authentication Setup**: Use error detection approach
+  - **Resolution**: Try command, detect auth failure, guide with clear error message
+  - **Error message**: "OpenCode authentication required. Run 'opencode auth' to configure providers via Models.dev"
+  - **Implementation**: No auto-prompting, keep it simple
 
-- [ ] **Default Model Selection Strategy**: When user types `oc:` without model, what should be the fallback?
-  - **Research conducted**: OpenCode supports 75+ providers via Models.dev, no single "default"
-  - **Similar implementations**: Claude Code uses "sonnet" as hardcoded default
-  - **Suggested default**: Use last-used model or first available from `opencode models`
-  - **Why needs human input**: UX decision affects user workflow and error handling
+- [x] **Default Model Selection Strategy**: Use Gemini Flash 2.5
+  - **Resolution**: Default to `google/gemini-2.5-flash` 
+  - **Rationale**: Fast, capable, and free model available through OpenCode
+  - **Implementation**: Set as DEFAULT_MODEL constant
 
-- [ ] **Model Format Handling**: How to handle models that don't follow provider/model format?
-  - **Research conducted**: OpenCode models are listed as "provider/model" format from Models.dev
-  - **Similar implementations**: Claude Code maps aliases to actual model names internally
-  - **Suggested default**: Pass through OpenCode's native provider/model format directly
-  - **Why needs human input**: Edge case handling for malformed model names
+- [x] **Model Format Handling**: Strict validation
+  - **Resolution**: Require provider/model format, show error with examples for malformed input
+  - **Implementation**: Validate format before passing to OpenCode
 
 ### [MEDIUM] Enhancement Questions
-- [ ] **Session Management Integration**: Should we expose OpenCode's `--session` and `--continue` flags?
-  - **Research conducted**: OpenCode supports session management via CLI flags
-  - **Similar implementations**: Claude Code doesn't expose session management yet
-  - **Suggested default**: Map llm-query's --session flag to OpenCode's --session flag
-  - **Why needs human input**: Feature scope decision for v1 implementation
+- [x] **Session Management Integration**: Skip for v1
+  - **Resolution**: No session management in initial implementation
+  - **Rationale**: Keep it simple, can add later if needed
+  - **Implementation**: Ignore --session and --continue flags
 
-- [ ] **Agent Integration Support**: Should we expose OpenCode's `--agent` functionality?
-  - **Research conducted**: OpenCode supports agent selection via CLI
-  - **Similar implementations**: Not implemented in other providers yet
-  - **Suggested default**: Skip for initial implementation, add as enhancement
-  - **Why needs human input**: Complexity vs. feature completeness trade-off
+- [x] **Agent Integration Support**: Skip for v1
+  - **Resolution**: No agent support in initial implementation
+  - **Rationale**: Focus on core functionality first
+  - **Implementation**: Can be added as future enhancement
 
 # Add OpenCode Provider to llm-query Command
 
@@ -173,12 +167,13 @@ Enable developers to use SST's OpenCode CLI through the unified llm-query interf
 - **Which Command**: For detecting OpenCode CLI availability
 - **Timeout**: Protect against hanging subprocess calls
 
-### Implementation Strategy (Research-Informed)
-- **Model Discovery First**: Implement model listing via `opencode models` (confirmed command)
+### Implementation Strategy (Final)
+- **Model Discovery**: Implement model listing via `opencode models` (confirmed command)
+- **Default Model**: Use `google/gemini-2.5-flash` as default
 - **Error-First Design**: Comprehensive error handling for missing CLI, auth failures
-- **Provider/Model Format**: Support OpenCode's native provider/model syntax from Models.dev
-- **Authentication Check**: Use `opencode models` success as auth validation (research finding)
-- **CLI Command**: Use `opencode run [prompt]` with available flags (--model, --session, etc.)
+- **Provider/Model Format**: Strict validation, require provider/model syntax
+- **Authentication Check**: Use `opencode models` success as auth validation
+- **CLI Command**: Use `opencode run [prompt]` with `--model` flag only (no session in v1)
 - **Metadata Synthesis**: Create synthetic metadata when detailed info not available from CLI
 - **Test-Driven**: Mock subprocess calls for reliable testing
 
