@@ -4,31 +4,30 @@ status: pending
 priority: high
 estimate: 12h
 dependencies: [v.0.5.0+task.045]
-needs_review: true
 ---
 
 # Improve integrate command with positional arguments and configuration support
 
-## Review Questions (Pending Human Input)
+## Review Questions (All Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] Should we deprecate --only flag with warnings or remove it immediately?
+- [x] Should we deprecate --only flag with warnings or remove it immediately?
   - **Research conducted**: Checked for usage patterns in existing commands
   - **Similar implementations**: Most commands don't have backward compatibility flags
   - **Suggested default**: Deprecate with warning for 2 releases, then remove
-  - **Why needs human input**: User impact and migration strategy decision
+  - **Decision**: Remove immediately - no backward compatibility needed (single developer usage)
 
 ### [MEDIUM] Enhancement Questions
-- [ ] Should config subcommand be part of integrate or separate command?
+- [x] Should config subcommand be part of integrate or separate command?
   - **Research conducted**: Analyzed existing command structure patterns
   - **Similar implementations**: task-manager has subcommands, llm has models subcommand
   - **Suggested default**: Make it subcommand of integrate (integrate config)
-  - **Why needs human input**: Command organization preference
+  - **Decision**: No config subcommand needed - use template from dev-handbook/.meta/tpl/dotfiles
 
-- [ ] What should happen when user has both project and user config with conflicting module defaults?
+- [x] What should happen when user has both project and user config with conflicting module defaults?
   - **Research conducted**: Standard precedence is CLI > Project > User > System
   - **Suggested default**: Show warning message about which config is being used
-  - **Why needs human input**: User experience preference for config conflicts
+  - **Decision**: Project config always takes precedence silently (no warning needed)
 
 ## Behavioral Specification
 
@@ -72,10 +71,8 @@ coding-agent-tools integrate --agents --commands
 coding-agent-tools integrate --no-hooks --no-docs
 # Output: Installing all modules EXCEPT: hooks, docs
 
-# Configuration management
-coding-agent-tools integrate config           # Show current config
-coding-agent-tools integrate config --edit    # Edit config
-coding-agent-tools integrate config --reset   # Reset to defaults
+# Configuration is managed via .coding-agent/integrate.yml file
+# (copied from template during --dotfiles integration)
 
 # Options
 --agents              # Include agent definitions
@@ -180,13 +177,10 @@ Improve the user experience of the integrate command by making it more intuitive
 ## File Modifications
 
 ### Create
-- **dev-handbook/.integrations/claude/dotfiles/.coding-agent/integrate.yml**
+- **dev-handbook/.meta/tpl/dotfiles/.coding-agent/integrate.yml**
   - Purpose: Default configuration template for projects
   - Key components: Module defaults, preferences, integration overrides
-  
-- **lib/coding_agent_tools/cli/commands/integrate/config.rb**
-  - Purpose: Configuration management subcommand
-  - Key components: Show, edit, reset functionality
+  - Note: Gets copied during --dotfiles integration, not a subcommand
 
 ### Modify
 - **lib/coding_agent_tools/cli/commands/integrate.rb**
@@ -225,10 +219,10 @@ Improve the user experience of the integrate command by making it more intuitive
 - [ ] **Add Configuration Loading**: Implement config hierarchy
   > TEST: Configuration Loading
   > Type: Integration Test
-  > Assert: Config files loaded in correct order
-  > Command: coding-agent-tools integrate config --show-sources
+  > Assert: Config files loaded in correct order (CLI > Project > User > System)
+  > Command: coding-agent-tools integrate --verbose --dry-run | grep "Loading config"
 
-- [ ] **Create Config Template**: Add integrate.yml to dotfiles
+- [ ] **Create Config Template**: Add integrate.yml to dev-handbook/.meta/tpl/dotfiles
   > TEST: Template Installation
   > Type: File Operation Test
   > Assert: Config template installed with dotfiles
@@ -239,12 +233,6 @@ Improve the user experience of the integrate command by making it more intuitive
   > Type: Error Handling Test
   > Assert: Mixed flags produce clear error
   > Command: coding-agent-tools integrate --agents --no-commands 2>&1 | grep "Cannot mix"
-
-- [ ] **Add Config Subcommand**: Create config management interface
-  > TEST: Config Command
-  > Type: Subcommand Test
-  > Assert: Config subcommand works
-  > Command: coding-agent-tools integrate config --help
 
 - [ ] **Update Help Text**: Clear documentation of new behavior
   > TEST: Help Documentation
@@ -311,9 +299,13 @@ Improve the user experience of the integrate command by making it more intuitive
 ## Review Summary
 
 **Date**: 2025-01-30
-**Questions Generated**: 3 total (1 high, 2 medium)
-**Critical Blockers**: Deprecation strategy for --only flag needs decision
-**Implementation Readiness**: Ready with assumptions - can proceed once migration strategy is decided
+**Questions Resolved**: All 3 questions answered
+**Implementation Readiness**: Fully ready - all decisions made
+
+### Decisions Made
+1. **--only flag**: Remove immediately, no backward compatibility needed
+2. **Config management**: Use template file from dev-handbook/.meta/tpl/dotfiles (no subcommand)
+3. **Config precedence**: Project config takes precedence silently over user config
 
 ### Research Completed
 - Confirmed dry-cli supports positional arguments (found in llm/query.rb)
@@ -322,8 +314,8 @@ Improve the user experience of the integrate command by making it more intuitive
 - Found deep_merge implementation for config merging
 
 ### Recommended Next Steps
-1. Decide on --only flag deprecation strategy (immediate vs gradual)
-2. Confirm config subcommand organization preference
-3. Proceed with implementation using existing atoms and molecules
+1. Proceed with implementation immediately
+2. Create config template in dev-handbook/.meta/tpl/dotfiles/.coding-agent/integrate.yml
+3. Remove --only flag completely from integrate command
 
-The task is implementation-ready with the suggested defaults. Only the deprecation strategy requires a business decision before proceeding.
+The task is now fully ready for implementation with all decisions made.
