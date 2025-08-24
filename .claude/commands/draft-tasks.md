@@ -58,27 +58,48 @@ For each idea file, use the Task tool to create a sub-agent that executes the co
 **Use Task tool with this prompt:**
 
 ```
-Execute the complete draft-task workflow for: <idea-file-path>
+Execute the complete draft-task workflow for IDEA FILE: <idea-file-path>
+
+CRITICAL: This is an IDEA FILE from backlog/ideas/ - Step 8 of the workflow is MANDATORY!
 
 - [ ] **Draft Task Creation:**
   - Read the entire file: dev-handbook/workflow-instructions/draft-task.wf.md
   - Follow all steps in the workflow exactly as written
   - Input file: <idea-file-path>
+  - THIS IS AN IDEA FILE - Step 8 (Organize Source Idea Files) is REQUIRED
+
+- [ ] **MANDATORY: Move Idea File to Release:**
+  - After task creation, extract task number from created task path
+  - Get current release path: release-manager current
+  - Move idea file: git-mv "<idea-file-path>" "$RELEASE_PATH/docs/ideas/$TASK_NUM-filename"
+  - Update task references to new location
+  - Commit the movement: "Move idea file to current release for task $TASK_NUM"
 
 - [ ] **Create Reflection Note:**
   - Read the entire file: dev-handbook/workflow-instructions/create-reflection-note.wf.md
   - Follow all steps in the workflow exactly as written
   - Context: Reflect on the draft task creation just completed
 
+- [ ] **Validation (REQUIRED):**
+  - Verify original idea file NO LONGER exists in backlog/ideas/
+  - Confirm idea file NOW exists in release docs/ideas/ with task number prefix
+  - Check task file references the NEW location
+
 - [ ] **Processing Summary:**
-  - Idea file processed
+  - Idea file processed: <idea-file-path>
   - Draft tasks created (IDs and titles)
+  - Idea file moved to: [new location]
   - Files modified
   - Any issues encountered
   - Status (completed/partial/blocked)
 ```
 
 **Subagent type:** general-purpose
+
+**Post-execution verification:**
+After the Task tool completes, verify:
+- Original idea file should NOT exist at: <idea-file-path>
+- If file still exists, report: "ERROR: Idea file was not moved - manual intervention required"
 
 #### For Completed Task Files (Register Tasks)
 
