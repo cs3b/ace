@@ -223,7 +223,13 @@ search "TODO" --preset todo  # Find all TODO comments
 ### `llm-query` – Unified LLM query interface
 <details><summary>Details</summary>
 **Key flags:** `--model NAME` (model), `--output FILE` (save output)  
-**Example:** `llm-query google:gemini-2.5-flash "What is Ruby?"`
+**Examples:**
+```bash
+llm-query google:gemini-2.5-flash "What is Ruby?"        # Google Gemini
+llm-query oc:anthropic/claude-3-5-sonnet "Code review"   # OpenCode CLI
+llm-query cc:sonnet "Explain quantum computing"          # Claude Code CLI
+llm-query opencode "Quick question"                      # OpenCode alias
+```
 </details>
 
 ### `mcp-proxy` – MCP server proxy

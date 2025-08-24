@@ -1006,4 +1006,40 @@ RSpec.describe "llm-query integration", type: :integration do
       expect(stderr).not_to match(/Unknown provider|Invalid provider|Unknown model/i)
     end
   end
+
+  describe "OpenCode provider" do
+    it "recognizes oc provider syntax" do
+      # This test verifies the provider is recognized even if CLI is unavailable
+      _, stderr, status = execute_gem_executable(exe_name, ["oc:google/gemini-2.5-flash", "Hello"])
+
+      expect(status.exitstatus).to eq(1)
+      # Should show OpenCode error, not unknown provider error
+      expect(stderr).not_to match(/Unknown provider|Invalid provider/i)
+      expect(stderr).to match(/OpenCode|CLI|not found|auth/i)
+    end
+
+    it "supports opencode alias" do
+      _, stderr, status = execute_gem_executable(exe_name, ["opencode", "Hello"])
+
+      expect(status.exitstatus).to eq(1)
+      # Should show OpenCode error, not unknown provider error
+      expect(stderr).not_to match(/Unknown provider|Invalid provider/i)
+    end
+
+    it "supports provider/model format" do
+      _, stderr, status = execute_gem_executable(exe_name, ["oc:anthropic/claude-3-5-sonnet", "Hello"])
+
+      expect(status.exitstatus).to eq(1)
+      # Should show OpenCode error, not unknown provider/model error
+      expect(stderr).not_to match(/Unknown provider|Invalid provider|Unknown model/i)
+    end
+
+    it "requires proper provider/model format" do
+      _, stderr, status = execute_gem_executable(exe_name, ["oc:invalid-format", "Hello"])
+
+      expect(status.exitstatus).to eq(1)
+      # Should show format error or OpenCode CLI error
+      expect(stderr).to match(/provider\/model format|OpenCode|CLI/i)
+    end
+  end
 end
