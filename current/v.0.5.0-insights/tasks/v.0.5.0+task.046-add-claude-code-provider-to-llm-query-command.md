@@ -4,9 +4,31 @@ status: pending
 priority: high
 estimate: 6h
 dependencies: []
+needs_review: true
 ---
 
 # Add Claude Code Provider to llm-query Command
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] **Provider Key Selection**: Should we use "cc" or "claude_code" as the primary provider key?
+  - **Research conducted**: Checked existing provider patterns (anthropic, openai, google)
+  - **Similar implementations**: All use full names, but aliases provide shortcuts
+  - **Suggested default**: Use "claude_code" as primary, "cc" as alias
+  - **Why needs human input**: User preference and consistency decision
+
+### [MEDIUM] Enhancement Questions
+- [ ] **Cost Calculation Source**: Should costs be calculated from Claude's pricing or tracked separately?
+  - **Research conducted**: Claude CLI returns `total_cost_usd` in JSON output
+  - **Suggested default**: Use Claude's provided cost data directly
+  - **Why needs human input**: Decide if we trust/use Claude's cost vs our own calculations
+
+### [LOW] Clarification Questions
+- [ ] **Error Message Format**: Should error messages match Claude CLI's style or our standard format?
+  - **Research conducted**: Our providers use consistent error format
+  - **Suggested default**: Wrap Claude errors in our standard format
+  - **Why needs human input**: UX consistency preference
 
 ## Behavioral Specification
 
@@ -75,14 +97,33 @@ llm-usage-report --provider cc
 - [ ] **Cost Tracking**: Usage metadata includes token counts and cost calculations
 - [ ] **Option Mapping**: Temperature, max_tokens, and system prompts correctly map to Claude CLI flags
 
-### Validation Questions
-<!-- Questions to clarify requirements, resolve ambiguities, and validate understanding -->
+### Validation Questions (Resolved Through Research)
+<!-- Questions answered through autonomous research -->
 
-- [ ] **Authentication Method**: Should we use ANTHROPIC_API_KEY or rely on Claude's setup-token?
-- [ ] **Model Version Pinning**: Should cc:opus always use latest or pin to specific version?
-- [ ] **Streaming Support**: Should we support Claude's stream-json format for real-time output?
+- [x] **Authentication Method**: Should we use ANTHROPIC_API_KEY or rely on Claude's setup-token?
+  - **Resolution**: Use Claude's setup-token authentication
+  - **Evidence**: Claude CLI manages its own auth via `claude setup-token` command
+  - **Implementation**: Check if claude is authenticated, guide user to run setup-token if not
+
+- [x] **Model Version Pinning**: Should cc:opus always use latest or pin to specific version?
+  - **Resolution**: Use model aliases that map to current versions
+  - **Evidence**: Claude CLI accepts model names like "opus", "sonnet" directly
+  - **Implementation**: Pass model names directly to Claude CLI, it handles version resolution
+
+- [x] **Streaming Support**: Should we support Claude's stream-json format for real-time output?
+  - **Resolution**: Not in initial implementation, can be added later
+  - **Evidence**: --output-format supports stream-json but adds complexity
+  - **Implementation**: Start with json format, streaming can be future enhancement
+
 - [ ] **Tool Capability**: Should we expose Claude Code's tool/function calling capabilities?
-- [ ] **Fallback Behavior**: If Claude CLI fails, should we fall back to standard Anthropic API?
+  - **Needs Review**: Complex feature requiring design decision
+  - **Research**: Claude CLI supports tools but requires additional flags
+  - **Impact**: Would need different command structure
+
+- [x] **Fallback Behavior**: If Claude CLI fails, should we fall back to standard Anthropic API?
+  - **Resolution**: No automatic fallback, clear error messages instead
+  - **Evidence**: Different auth methods and capabilities between Claude CLI and API
+  - **Implementation**: If Claude CLI unavailable, suggest using anthropic: provider
 
 ## Objective
 
@@ -230,20 +271,36 @@ Enable developers to use their Claude Code subscription through the unified llm-
 
 ### Planning Steps
 
-* [ ] Research Claude CLI JSON output format
-  - Analyze exact structure of --output-format json response
-  - Document all fields for metadata extraction
-  - Identify token count locations
+* [x] Research Claude CLI JSON output format
+  - **Completed**: Analyzed actual JSON output structure
+  - **Findings**: Contains `result`, `usage`, `total_cost_usd`, `session_id`, token counts
+  - **Key fields**: `usage.input_tokens`, `usage.output_tokens`, `usage.cache_read_input_tokens`
+  - **Example output structure**:
+    ```json
+    {
+      "type": "result",
+      "result": "response text",
+      "usage": {
+        "input_tokens": N,
+        "output_tokens": N,
+        "cache_read_input_tokens": N,
+        "cache_creation_input_tokens": N
+      },
+      "total_cost_usd": 0.00123,
+      "session_id": "uuid",
+      "duration_ms": 2000
+    }
+    ```
 
 * [ ] Investigate Claude CLI error codes
   - Test various failure scenarios
   - Document exit codes and error messages
   - Plan error message mapping
 
-* [ ] Analyze model name mapping
-  - Research current Claude model names
-  - Plan alias to full name mapping
-  - Consider version pinning strategy
+* [x] Analyze model name mapping
+  - **Completed**: Claude CLI accepts simple model names
+  - **Findings**: Use "opus", "sonnet", "haiku" directly
+  - **No version pinning needed**: Claude CLI handles version resolution
 
 ### Execution Steps
 
@@ -302,9 +359,11 @@ Enable developers to use their Claude Code subscription through the unified llm-
   ```
 
 - [ ] Add metadata normalization for Claude output
-  - Parse JSON response structure
-  - Extract token counts and timing
-  - Calculate costs using Claude pricing
+  - Parse JSON response structure from Claude CLI
+  - Map fields: `result` → text, `usage` → metadata
+  - Extract token counts: input_tokens, output_tokens, cache tokens
+  - Use provided `total_cost_usd` instead of calculating
+  - Map `duration_ms` to execution time
 
 - [ ] Create comprehensive unit tests
   > TEST: Unit Test Coverage
