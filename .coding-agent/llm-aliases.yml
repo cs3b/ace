@@ -23,6 +23,14 @@ global:
   codex: "codex:o3-mini"
   o3: "codex:o3"
   o3mini: "codex:o3-mini"
+  
+  # OpenCode shortcuts (via OpenCode CLI)
+  opencode: "oc:google/gemini-2.5-flash"
+  ocgflash: "oc:google/gemini-2.5-flash"
+  ocgpro: "oc:google/gemini-1.5-pro"
+  ocsonnet: "oc:anthropic/claude-3-5-sonnet"
+  ochaiku: "oc:anthropic/claude-3-5-haiku"
+  ocgpt4: "oc:openai/gpt-4o"
 
 # Provider-specific aliases - shortcuts within a provider namespace
 providers:
@@ -55,3 +63,21 @@ providers:
     llama: "llama3"
     mistral: "mistral"
     codellama: "codellama"
+  
+  # OpenCode provider aliases
+  oc:
+    # Google models
+    gflash: "google/gemini-2.5-flash"
+    gpro: "google/gemini-1.5-pro"
+    g2flash: "google/gemini-2.0-flash-experimental"
+    
+    # Anthropic models
+    sonnet: "anthropic/claude-3-5-sonnet"
+    haiku: "anthropic/claude-3-5-haiku" 
+    
+    # OpenAI models
+    gpt4: "openai/gpt-4o"
+    gpt4mini: "openai/gpt-4o-mini"
+    
+    # Default
+    default: "google/gemini-2.5-flash"
