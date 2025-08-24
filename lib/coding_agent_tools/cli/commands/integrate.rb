@@ -126,13 +126,13 @@ module CodingAgentTools
 
         def find_project_root
           current = Pathname.pwd
-          
+
           # If we're in a submodule (dev-tools, dev-handbook, dev-taskflow), go up
-          if current.basename.to_s =~ /^dev-(tools|handbook|taskflow)$/
+          if /^dev-(tools|handbook|taskflow)$/.match?(current.basename.to_s)
             parent = current.parent
             return parent if (parent + ".git").exist?
           end
-          
+
           # Otherwise, find the nearest .git directory
           while current.parent != current
             return current if (current + ".git").exist?
@@ -547,6 +547,9 @@ module CodingAgentTools
           # Special handling for dotfiles - they go into .coding-agent directory
           if source_pattern.include?("dotfiles")
             target_path = @project_root + ".coding-agent"
+
+            # Also create docs/context/project.md if it doesn't exist
+            create_project_context_template unless @dry_run
           end
 
           # Find all files to copy
@@ -715,6 +718,90 @@ module CodingAgentTools
         def show_coming_soon(integration_type)
           puts "🚧 #{integration_type} integration coming soon!"
           puts "   Follow updates at https://github.com/CodingAgentDev"
+        end
+
+        def create_project_context_template
+          context_dir = @project_root + "docs/context"
+          context_file = context_dir + "project.md"
+
+          # Don't overwrite if it already exists
+          return if context_file.exist?
+
+          log "  → Creating project context template: docs/context/project.md"
+
+          # Create directory if it doesn't exist
+          FileUtils.mkdir_p(context_dir)
+
+          # Check if we have a template file
+          template_path = @project_root + "dev-handbook/.meta/tpl/doc-context-project.md.tmpl"
+          if template_path.exist?
+            # Copy the template
+            FileUtils.cp(template_path, context_file)
+          else
+            # Create a basic template
+            File.write(context_file, create_basic_project_context)
+          end
+        end
+
+        def create_basic_project_context
+          <<~MARKDOWN
+            # Project Context
+
+            ## Overview
+
+            [Brief description of your project goes here]
+
+            ## Repository Structure
+
+            {% exec command="ls -la" %}
+
+            ## Documentation
+
+            ### Main Documentation
+            {% if exists="README.md" %}
+            {% embed file="README.md" %}
+            {% endif %}
+
+            ### Architecture
+            {% if exists="docs/architecture.md" %}
+            {% embed file="docs/architecture.md" %}
+            {% endif %}
+
+            ## Development Setup
+
+            ### Dependencies
+            {% if exists="package.json" %}
+            {% embed file="package.json" lines="1-50" %}
+            {% endif %}
+
+            {% if exists="Gemfile" %}
+            {% embed file="Gemfile" lines="1-50" %}
+            {% endif %}
+
+            ## Current Status
+
+            ### Git Status
+            {% exec command="git status --short" %}
+
+            ### Recent Commits
+            {% exec command="git log --oneline -10" %}
+
+            ## Source Code Structure
+
+            ### Main Source Files
+            {% if exists="src/" %}
+            {% exec command="find src -type f -name '*.js' -o -name '*.ts' -o -name '*.rb' | head -20" %}
+            {% endif %}
+
+            {% if exists="lib/" %}
+            {% exec command="find lib -type f -name '*.rb' | head -20" %}
+            {% endif %}
+
+            ---
+
+            *This context file was generated using the coding-agent-tools context command*
+            *Template: docs/context/project.md*
+          MARKDOWN
         end
       end
     end
