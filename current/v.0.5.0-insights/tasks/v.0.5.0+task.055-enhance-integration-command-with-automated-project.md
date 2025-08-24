@@ -57,6 +57,9 @@ coding-agent-tools integrate claude [OPTIONS]
   2. Ask Claude: "Read and follow @dev-handbook/workflow-instructions/initialize-project-structure.wf.md"
   3. Or run: task-manager next
 
+# Note: initialize-project-structure remains a workflow, NOT a Claude command
+# This is intentional - it's a one-time setup, not a recurring command
+
 # Expected output when project already initialized:
 ✓ Core documentation detected, skipping generation
   → docs/architecture.md exists
@@ -94,6 +97,19 @@ coding-agent-tools integrate claude [OPTIONS]
 ## Objective
 
 Streamline the project initialization process by automating the creation of project structure, documentation templates, and bootstrap releases during Claude integration, reducing manual setup from ~30 minutes to under 1 minute while maintaining flexibility for customization.
+
+### What Gets Automated (~70% of workflow)
+- Directory structure creation (dev-taskflow/)
+- Core documentation generation from templates
+- v.0.0.0 bootstrap release setup (new projects only)
+- Claude integration (agents, commands, hooks)
+- Symlink creation for docs/tools.md
+
+### What Remains Manual (~30% requiring human input)
+- Interactive prompts for missing project information
+- PRD completion with specific requirements
+- Roadmap creation with strategic planning
+- Stakeholder review and approval steps
 
 ## Scope of Work
 
@@ -231,6 +247,7 @@ Streamline the project initialization process by automating the creation of proj
 
 - [ ] Create template directory structure in dev-handbook/.meta/tpl/project-structure/
 - [ ] Convert workflow templates to ERB templates with dynamic content
+- [ ] Create symlink for docs/tools.md from dev-tools/docs/tools.md (if exists)
 - [ ] Add CLI options to integrate command
   ```ruby
   option :init_project, type: :boolean, default: false
@@ -259,13 +276,14 @@ Streamline the project initialization process by automating the creation of proj
 ## Acceptance Criteria
 
 - [ ] Integration command accepts --init-project flag
-- [ ] dev-taskflow structure created when missing
+- [ ] dev-taskflow structure created when missing (backlog/, current/, done/)
 - [ ] Core docs generated from templates when missing
-- [ ] v.0.0.0 bootstrap created only for new projects (no dev-taskflow)
-- [ ] Existing files never overwritten
-- [ ] Clear next-steps guidance provided
-- [ ] Idempotent operation verified
-- [ ] All tests pass
+- [ ] docs/tools.md symlink created from dev-tools/docs/tools.md (if source exists)
+- [ ] v.0.0.0 bootstrap created ONLY for new projects (when dev-taskflow doesn't exist)
+- [ ] Existing files never overwritten (idempotent operation)
+- [ ] Clear next-steps guidance provided based on project state
+- [ ] initialize-project-structure.wf.md NOT created as Claude command (remains workflow only)
+- [ ] All tests pass (new project, existing project, partial project)
 
 ## References
 
