@@ -1,15 +1,16 @@
 ---
 name: cms-page-designer
-description: DESIGN beautiful CMS pages - creates static HTML with Tailwind CSS following best practices
+description: DESIGN beautiful CMS pages - creates static HTML with Tailwind CSS following
+  best practices
 expected_params:
   required:
-    - page_type: "Type of page to design (landing, about, pricing, etc.)"
+  - page_type: Type of page to design (landing, about, pricing, etc.)
   optional:
-    - style: "Design style (modern, minimal, bold, professional, default: modern)"
-    - sections: "Specific sections to include (hero, features, testimonials, etc.)"
-    - brand_colors: "Use brand colors (teal, coral, sand, default: all)"
-    - output_path: "Where to save the design (default: dev-taskflow/designs/)"
-last_modified: '2025-08-21'
+  - style: 'Design style (modern, minimal, bold, professional, default: modern)'
+  - sections: Specific sections to include (hero, features, testimonials, etc.)
+  - brand_colors: 'Use brand colors (teal, coral, sand, default: all)'
+  - output_path: 'Where to save the design (default: dev-taskflow/designs/)'
+last_modified: '2025-08-25 00:47:54'
 type: agent
 source: dev-handbook
 ---

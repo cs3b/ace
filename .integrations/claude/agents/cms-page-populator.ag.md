@@ -1,16 +1,17 @@
 ---
 name: cms-page-populator
-description: POPULATE database with CMS pages - configures sections and component props in Firestore
+description: POPULATE database with CMS pages - configures sections and component
+  props in Firestore
 expected_params:
   required:
-    - page_slug: "URL slug for the page (e.g., 'about-us', 'pricing')"
-    - sections: "List of section types to include or path to component config"
+  - page_slug: URL slug for the page (e.g., 'about-us', 'pricing')
+  - sections: List of section types to include or path to component config
   optional:
-    - page_title: "Page title (default: derived from slug)"
-    - page_status: "Page status (draft/published/archived, default: draft)"
-    - content_data: "JSON file with content or inline content object"
-    - author: "Page author (default: 'cms-admin')"
-last_modified: '2025-08-21'
+  - page_title: 'Page title (default: derived from slug)'
+  - page_status: 'Page status (draft/published/archived, default: draft)'
+  - content_data: JSON file with content or inline content object
+  - author: 'Page author (default: ''cms-admin'')'
+last_modified: '2025-08-25 00:47:54'
 type: agent
 source: dev-handbook
 ---

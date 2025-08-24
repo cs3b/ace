@@ -1,15 +1,16 @@
 ---
 name: cms-field-verifier
-description: VERIFY CMS field editability - tests all fields can be edited and preview updates correctly
+description: VERIFY CMS field editability - tests all fields can be edited and preview
+  updates correctly
 expected_params:
   required:
-    - page_id: "Page ID or slug to verify"
+  - page_id: Page ID or slug to verify
   optional:
-    - cms_url: "CMS URL (default: http://localhost:3001)"
-    - thorough_mode: "Test all field variations (default: false)"
-    - screenshot: "Take screenshots of issues (default: true)"
-    - report_path: "Where to save report (default: dev-taskflow/verification/)"
-last_modified: '2025-08-21'
+  - cms_url: 'CMS URL (default: http://localhost:3001)'
+  - thorough_mode: 'Test all field variations (default: false)'
+  - screenshot: 'Take screenshots of issues (default: true)'
+  - report_path: 'Where to save report (default: dev-taskflow/verification/)'
+last_modified: '2025-08-25 00:47:54'
 type: agent
 source: dev-handbook
 ---

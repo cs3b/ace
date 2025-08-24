@@ -13,7 +13,7 @@ expected_params:
   - release: 'Target release (default: current)'
   - estimate: Time estimate (e.g., '4h', '2d')
   - dependencies: Comma-separated list of task dependencies
-last_modified: '2025-08-24 00:17:47'
+last_modified: '2025-08-25 00:47:54'
 type: agent
 mcp:
   model: google:gemini-2.5-flash

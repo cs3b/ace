@@ -1,14 +1,15 @@
 ---
 name: cms-componentizer
-description: TRANSFORM static designs into Vue CMS components - creates reusable sections with proper registry
+description: TRANSFORM static designs into Vue CMS components - creates reusable sections
+  with proper registry
 expected_params:
   required:
-    - design_path: "Path to the static HTML design file"
+  - design_path: Path to the static HTML design file
   optional:
-    - component_name: "Name for the main component (default: derived from design)"
-    - skip_registry: "Skip registry update (default: false)"
-    - test_component: "Create test file (default: true)"
-last_modified: '2025-08-21'
+  - component_name: 'Name for the main component (default: derived from design)'
+  - skip_registry: 'Skip registry update (default: false)'
+  - test_component: 'Create test file (default: true)'
+last_modified: '2025-08-25 00:47:54'
 type: agent
 source: dev-handbook
 ---
