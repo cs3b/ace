@@ -1,0 +1,97 @@
+# Integration Configuration for coding-agent-tools
+# Place this file in your project's .coding-agent/ directory to customize integration behavior
+
+# Default modules to integrate when no CLI flags are provided
+# These apply to all integration types unless overridden below
+default_modules:
+  - agents      # Agent definitions for AI assistants
+  - commands    # Command files for workflows
+  - dotfiles    # Configuration files
+  - docs        # Documentation updates
+
+# Integration-specific settings
+integrations:
+  claude:
+    # Modules to install for Claude integration
+    # Uncomment and customize to override default_modules
+    # modules:
+    #   - agents
+    #   - commands
+    #   - dotfiles
+    #   - docs
+    #   - config    # Claude-specific configuration
+    #   - hooks     # Git hooks for Claude
+    
+    # Additional Claude-specific settings
+    preferences:
+      # Prefer symlinks over copies for faster updates
+      prefer_symlinks: true
+      # Auto-update documentation on integration
+      update_docs: true
+  
+  opencode:
+    # Future OpenCode integration settings
+    # modules:
+    #   - agents
+    #   - commands
+
+# Module-specific configuration
+modules:
+  dotfiles:
+    # Files to skip when copying dotfiles
+    skip_patterns:
+      - "*.example"
+      - "*.template"
+      - ".env*"
+    
+  docs:
+    # Documentation update behavior
+    preserve_custom_sections: true
+    backup_before_update: true
+    
+  agents:
+    # Agent integration preferences
+    create_aliases: true
+    
+  commands:
+    # Command integration preferences
+    include_custom: true
+    include_generated: true
+
+# General settings
+settings:
+  # Verbosity level for integration output
+  verbose: false
+  
+  # Automatically setup missing submodules
+  auto_setup_submodules: true
+  
+  # Create backups before overwriting
+  backup_on_force: true
+  
+  # Show confirmation prompts
+  confirm_overwrites: true
+
+# Examples of common configurations:
+#
+# Minimal setup (just agents and commands):
+# default_modules:
+#   - agents
+#   - commands
+#
+# Full setup (everything):
+# default_modules:
+#   - agents
+#   - commands
+#   - dotfiles
+#   - docs
+#   - config
+#   - hooks
+#
+# Development setup (exclude docs):
+# default_modules:
+#   - agents
+#   - commands
+#   - dotfiles
+#   - config
+#   - hooks
