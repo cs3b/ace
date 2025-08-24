@@ -4,31 +4,29 @@ status: pending
 priority: high
 estimate: 6h
 dependencies: []
-needs_review: true
 ---
 
 # Add Claude Code Provider to llm-query Command
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] **Provider Key Selection**: Should we use "cc" or "claude_code" as the primary provider key?
-  - **Research conducted**: Checked existing provider patterns (anthropic, openai, google)
-  - **Similar implementations**: All use full names, but aliases provide shortcuts
-  - **Suggested default**: Use "claude_code" as primary, "cc" as alias
-  - **Why needs human input**: User preference and consistency decision
+- [x] **Provider Key Selection**: Should we use "cc" or "claude_code" as the primary provider key?
+  - **Decision**: Use "cc" as primary provider key, no aliases
+  - **Rationale**: Code-assistant providers use short abbreviations (cc, oc, codex)
+  - **Pattern**: Different category from API providers, warrants different naming
 
-### [MEDIUM] Enhancement Questions
-- [ ] **Cost Calculation Source**: Should costs be calculated from Claude's pricing or tracked separately?
-  - **Research conducted**: Claude CLI returns `total_cost_usd` in JSON output
-  - **Suggested default**: Use Claude's provided cost data directly
-  - **Why needs human input**: Decide if we trust/use Claude's cost vs our own calculations
+### [MEDIUM] Enhancement Questions  
+- [x] **Cost Calculation Source**: Should costs be calculated from Claude's pricing or tracked separately?
+  - **Decision**: Use Claude's provided `total_cost_usd` directly
+  - **Rationale**: Authoritative source, includes cache optimizations automatically
+  - **Implementation**: Extract cost from JSON response, no calculation needed
 
 ### [LOW] Clarification Questions
-- [ ] **Error Message Format**: Should error messages match Claude CLI's style or our standard format?
-  - **Research conducted**: Our providers use consistent error format
-  - **Suggested default**: Wrap Claude errors in our standard format
-  - **Why needs human input**: UX consistency preference
+- [x] **Error Message Format**: Should error messages match Claude CLI's style or our standard format?
+  - **Decision**: Wrap Claude errors in our standard format
+  - **Rationale**: Consistency across all providers in llm-query
+  - **Implementation**: Parse Claude errors and format with our error templates
 
 ## Behavioral Specification
 
@@ -161,9 +159,10 @@ Enable developers to use their Claude Code subscription through the unified llm-
 
 ### Architecture Pattern
 - **Provider Pattern**: Follow existing BaseClient/BaseChatCompletionClient inheritance model
-- **Auto-Registration**: Leverage ClientFactory.register via inherited hook
+- **Auto-Registration**: Leverage ClientFactory.register via inherited hook with provider name "cc"
 - **Subprocess Execution**: Use Ruby's Open3 for safe command execution with proper error handling
 - **Adapter Pattern**: Wrap Claude CLI to match internal provider interface
+- **No Aliases**: Provider "cc" stands alone, no "claude_code" alias needed
 
 ### Technology Stack
 - **Ruby Open3**: For subprocess execution with stdout/stderr/status capture
@@ -308,8 +307,8 @@ Enable developers to use their Claude Code subscription through the unified llm-
   ```ruby
   # lib/coding_agent_tools/organisms/claude_code_client.rb
   class ClaudeCodeClient < BaseClient
-    def self.provider_name; "claude_code"; end
-    def self.dynamic_aliases; {...}; end
+    def self.provider_name; "cc"; end
+    def self.dynamic_aliases; {}; end  # No aliases needed
   end
   ```
   > TEST: Class Creation
@@ -418,7 +417,7 @@ Enable developers to use their Claude Code subscription through the unified llm-
 
 **Questions Generated:** 3 total (1 high, 1 medium, 1 low)
 **Critical Blockers:** Provider key naming decision needs user preference
-**Implementation Readiness:** Ready with assumptions - can proceed with "claude_code" as primary key
+**Implementation Readiness:** Fully ready - all questions resolved, can proceed with implementation
 **Research Completed:** 
 - Claude CLI JSON output format fully documented
 - Authentication method determined (setup-token)
