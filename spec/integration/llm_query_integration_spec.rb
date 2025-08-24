@@ -934,4 +934,76 @@ RSpec.describe "llm-query integration", type: :integration do
       end
     end
   end
+
+  describe "Codex CLI provider" do
+    # Mock helper to check Codex availability
+    def codex_available?
+      system("which codex > /dev/null 2>&1")
+    end
+
+    context "with Codex CLI available" do
+      before do
+        skip "Codex CLI not available" unless codex_available?
+      end
+
+      it "shows error when codex cli is not authenticated" do
+        # This test assumes codex is installed but not authenticated
+        _, stderr, status = execute_gem_executable(exe_name, ["codex", "Hello"])
+
+        expect(status.exitstatus).to eq(1)
+        expect(stderr).to match(/Codex authentication required|authentication failed/i)
+      end
+
+      it "recognizes codex provider syntax" do
+        # This test verifies the provider is recognized even if authentication fails
+        _, stderr, status = execute_gem_executable(exe_name, ["codex:o3-mini", "Hello"])
+
+        expect(status.exitstatus).to eq(1)
+        # Should show auth error, not unknown provider error
+        expect(stderr).not_to match(/Unknown provider|Invalid provider/i)
+        expect(stderr).to match(/Codex|authentication|CLI/i)
+      end
+
+      it "supports codex model selection syntax" do
+        _, stderr, status = execute_gem_executable(exe_name, ["codex:o3", "Hello"])
+
+        expect(status.exitstatus).to eq(1)
+        # Should show auth error, not unknown provider/model error
+        expect(stderr).not_to match(/Unknown provider|Invalid provider|Unknown model/i)
+      end
+    end
+
+    context "with Codex CLI unavailable" do
+      before do
+        skip "Codex CLI is available (this test needs it unavailable)" if codex_available?
+      end
+
+      it "shows installation error when codex CLI not found" do
+        _, stderr, status = execute_gem_executable(exe_name, ["codex", "Hello"])
+
+        expect(status.exitstatus).to eq(1)
+        expect(stderr).to match(/Codex CLI not found|Install.*codex/i)
+      end
+    end
+  end
+
+  describe "Codex OSS provider" do
+    it "recognizes codexoss provider syntax" do
+      # This test verifies the provider is recognized even if CLI is unavailable
+      _, stderr, status = execute_gem_executable(exe_name, ["codexoss", "Hello"])
+
+      expect(status.exitstatus).to eq(1)
+      # Should show codex error, not unknown provider error
+      expect(stderr).not_to match(/Unknown provider|Invalid provider/i)
+      expect(stderr).to match(/Codex|CLI|Ollama/i)
+    end
+
+    it "supports codexoss model selection syntax" do
+      _, stderr, status = execute_gem_executable(exe_name, ["codexoss:llama3", "Hello"])
+
+      expect(status.exitstatus).to eq(1)
+      # Should show codex error, not unknown provider/model error  
+      expect(stderr).not_to match(/Unknown provider|Invalid provider|Unknown model/i)
+    end
+  end
 end
