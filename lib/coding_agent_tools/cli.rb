@@ -78,14 +78,14 @@ module CodingAgentTools
         @release_commands_registered = true
       end
 
-      def self.register_dotfiles_commands
-        return if @dotfiles_commands_registered
+      def self.register_integrate_commands
+        return if @integrate_commands_registered
 
-        require_relative "cli/commands/install_dotfiles"
+        require_relative "cli/commands/integrate"
 
-        register "install-dotfiles", Commands::InstallDotfiles
+        register "integrate", Commands::Integrate
 
-        @dotfiles_commands_registered = true
+        @integrate_commands_registered = true
       end
 
       def self.register_code_commands
@@ -146,20 +146,9 @@ module CodingAgentTools
         return if @handbook_commands_registered
 
         require_relative "cli/commands/handbook/sync_templates"
-        require_relative "cli/commands/handbook/claude/generate_commands"
-        require_relative "cli/commands/handbook/claude/integrate"
-        require_relative "cli/commands/handbook/claude/validate"
-        require_relative "cli/commands/handbook/claude/list"
-        require_relative "cli/commands/handbook/claude/update_registry"
 
         register "handbook", aliases: [] do |prefix|
           prefix.register "sync-templates", Commands::Handbook::SyncTemplates
-          # Register claude commands as a proper subcommand namespace
-          prefix.register "claude generate-commands", Commands::Handbook::Claude::GenerateCommands
-          prefix.register "claude integrate", Commands::Handbook::Claude::Integrate
-          prefix.register "claude validate", Commands::Handbook::Claude::Validate
-          prefix.register "claude list", Commands::Handbook::Claude::List
-          prefix.register "claude update-registry", Commands::Handbook::Claude::UpdateRegistry
         end
 
         @handbook_commands_registered = true
@@ -292,7 +281,7 @@ module CodingAgentTools
         register_llm_commands
         register_task_commands
         register_release_commands
-        register_dotfiles_commands
+        register_integrate_commands
         register_code_commands
         register_code_lint_commands
         # register_code_review_prepare_commands - removed in favor of preset-based review
