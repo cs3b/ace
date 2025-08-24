@@ -35,6 +35,14 @@ integrations:
         source: CLAUDE.md
         target: CLAUDE.md
         method: update
+      config:
+        source: dev-handbook/.integrations/claude/config
+        target: .claude
+        method: copy
+      hooks:
+        source: dev-handbook/.integrations/claude/hooks
+        target: .claude/hooks
+        method: copy
   opencode:
     status: planned
     message: "OpenCode integration coming soon! Follow updates at https://github.com/CodingAgentDev"

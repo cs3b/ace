@@ -12,45 +12,74 @@ module CodingAgentTools
       class Integrate < Dry::CLI::Command
         desc "Integrate AI assistant development environment"
 
-        option :claude, type: :boolean, default: false,
-          desc: "Setup Claude Code integration"
-        option :opencode, type: :boolean, default: false,
-          desc: "Setup OpenCode integration (coming soon)"
+        # Positional argument for integration type
+        argument :type, required: false, default: "claude",
+          desc: "Integration type (claude, opencode)"
+
+        # Module selection flags (all default to nil for smart detection)
+        option :agents, type: :boolean, default: nil,
+          desc: "Include agent definitions"
+        option :commands, type: :boolean, default: nil,
+          desc: "Include command files"
+        option :dotfiles, type: :boolean, default: nil,
+          desc: "Include configuration dotfiles"
+        option :docs, type: :boolean, default: nil,
+          desc: "Update documentation"
+        option :submodules, type: :boolean, default: nil,
+          desc: "Setup git submodules"
+        option :config, type: :boolean, default: nil,
+          desc: "Include config files"
+        option :hooks, type: :boolean, default: nil,
+          desc: "Include git hooks"
+        
+        # Negative flags for exclusion
+        option :no_agents, type: :boolean, default: false,
+          desc: "Exclude agent definitions"
+        option :no_commands, type: :boolean, default: false,
+          desc: "Exclude command files"
+        option :no_dotfiles, type: :boolean, default: false,
+          desc: "Exclude configuration dotfiles"
+        option :no_docs, type: :boolean, default: false,
+          desc: "Skip documentation update"
+        option :no_submodules, type: :boolean, default: false,
+          desc: "Skip git submodules setup"
+        option :no_config, type: :boolean, default: false,
+          desc: "Exclude config files"
+        option :no_hooks, type: :boolean, default: false,
+          desc: "Exclude git hooks"
+        
+        # Other options
         option :force, type: :boolean, default: false,
           desc: "Force overwrite existing integration (creates backup)"
         option :no_backup, type: :boolean, default: false,
           desc: "Skip backup when using --force"
-        option :only, type: :string,
-          desc: "Only integrate specific components (agents,commands,dotfiles,docs)"
         option :dry_run, type: :boolean, default: false,
           desc: "Preview what would be done without making changes"
         option :verbose, type: :boolean, default: false,
           desc: "Show detailed output"
 
-        def call(**options)
+        def call(type: "claude", **options)
           @options = options
+          @type = type
           @dry_run = options[:dry_run]
           @verbose = options[:verbose]
           @project_root = find_project_root
           
-          # Determine integration type
-          if options[:opencode]
+          # Validate integration type
+          if type == "opencode"
             show_coming_soon("OpenCode")
             return
-          end
-          
-          # Default to Claude if no specific integration requested
-          integration_type = options[:claude] || !options[:opencode] ? "claude" : nil
-          
-          unless integration_type
-            puts "Please specify an integration type: --claude or --opencode"
+          elsif type != "claude"
+            puts "❌ Unknown integration type '#{type}'. Available: claude, opencode"
             return
           end
+          
+          integration_type = type
           
           puts "🚀 Starting #{integration_type.capitalize} integration..."
           puts "   Mode: #{dry_run_mode}" if @dry_run
           
-          # Load configuration
+          # Load configuration hierarchy
           config = load_configuration
           unless config
             puts "❌ Could not load integration configuration"
@@ -63,8 +92,14 @@ module CodingAgentTools
             return
           end
           
-          # Check submodules
-          check_and_setup_submodules(config["submodules"])
+          # Load user/project specific configuration
+          user_config = load_user_configuration
+          project_config = load_project_configuration
+          
+          # Check submodules unless explicitly skipped
+          unless options[:no_submodules]
+            check_and_setup_submodules(config["submodules"])
+          end
           
           # Handle backup if force mode
           backup_path = nil
@@ -72,8 +107,8 @@ module CodingAgentTools
             backup_path = create_backup
           end
           
-          # Determine components to integrate
-          components = determine_components(integration_config, options[:only])
+          # Determine components to integrate using new logic
+          components = determine_modules(integration_config, project_config, user_config, options)
           
           # Perform integration
           success = integrate_components(integration_config, components, options[:force])
@@ -199,23 +234,107 @@ module CodingAgentTools
           end
         end
         
-        def determine_components(integration_config, only_option)
-          all_components = integration_config["components"].keys
+        def load_user_configuration
+          user_config_path = Pathname.new(ENV["XDG_CONFIG_HOME"] || "#{ENV['HOME']}/.config") + "coding-agent-tools/integrate.yml"
+          return {} unless user_config_path.exist?
           
-          if only_option
-            requested = only_option.split(",").map(&:strip)
-            invalid = requested - all_components
+          log "Loading user configuration from: #{user_config_path}"
+          YAML.load_file(user_config_path) || {}
+        rescue => e
+          log "Error loading user configuration: #{e.message}"
+          {}
+        end
+        
+        def load_project_configuration
+          project_config_path = @project_root + ".coding-agent/integrate.yml"
+          return {} unless project_config_path.exist?
+          
+          log "Loading project configuration from: #{project_config_path}"
+          YAML.load_file(project_config_path) || {}
+        rescue => e
+          log "Error loading project configuration: #{e.message}"
+          {}
+        end
+        
+        def determine_modules(integration_config, project_config, user_config, cli_options)
+          all_modules = integration_config["components"].keys
+          
+          # Check for mixed positive and negative flags
+          positive_flags = []
+          negative_flags = []
+          
+          all_modules.each do |module_name|
+            positive_value = cli_options[module_name.to_sym]
+            negative_value = cli_options["no_#{module_name}".to_sym]
             
-            if invalid.any?
-              puts "❌ Invalid components: #{invalid.join(', ')}"
-              puts "   Available: #{all_components.join(', ')}"
-              return []
-            end
-            
-            requested
-          else
-            all_components
+            positive_flags << module_name if positive_value == true
+            negative_flags << module_name if negative_value == true
           end
+          
+          # Error if mixing positive and negative flags
+          if positive_flags.any? && negative_flags.any?
+            puts "❌ Cannot mix --module and --no-module flags."
+            puts "   Use either positive flags to specify what to install,"
+            puts "   or negative flags to specify what to skip."
+            return []
+          end
+          
+          # Determine modules based on flag patterns
+          selected_modules = if positive_flags.any?
+            # Positive flags only: Install ONLY specified modules
+            puts "Installing ONLY: #{positive_flags.join(', ')}"
+            positive_flags
+          elsif negative_flags.any?
+            # Negative flags only: Install all EXCEPT specified modules
+            excluded = all_modules & negative_flags
+            selected = all_modules - excluded
+            puts "Installing all modules EXCEPT: #{excluded.join(', ')}"
+            selected
+          else
+            # No flags: Use configuration or defaults
+            modules_from_config = get_modules_from_config(project_config, user_config, @type)
+            
+            if modules_from_config.any?
+              log "Using modules from configuration: #{modules_from_config.join(', ')}"
+              modules_from_config
+            else
+              log "Using all available modules (default)"
+              all_modules
+            end
+          end
+          
+          # Filter out any modules that don't exist in the integration config
+          valid_modules = selected_modules & all_modules
+          invalid_modules = selected_modules - all_modules
+          
+          if invalid_modules.any?
+            puts "⚠ Warning: Ignoring unknown modules: #{invalid_modules.join(', ')}"
+          end
+          
+          valid_modules
+        end
+        
+        def get_modules_from_config(project_config, user_config, integration_type)
+          # Project config takes precedence over user config
+          modules = []
+          
+          # Try project config first
+          if project_config.dig("integrations", integration_type, "modules")
+            modules = project_config.dig("integrations", integration_type, "modules") || []
+          elsif project_config.dig("default_modules")
+            modules = project_config["default_modules"] || []
+          end
+          
+          # Fall back to user config if no project config
+          if modules.empty?
+            if user_config.dig("integrations", integration_type, "modules")
+              modules = user_config.dig("integrations", integration_type, "modules") || []
+            elsif user_config.dig("default_modules")
+              modules = user_config["default_modules"] || []
+            end
+          end
+          
+          modules
         end
         
         def integrate_components(integration_config, components, force)
