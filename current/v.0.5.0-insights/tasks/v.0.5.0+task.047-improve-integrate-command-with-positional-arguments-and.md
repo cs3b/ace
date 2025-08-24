@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.047
-status: pending
+status: done
 priority: high
 estimate: 12h
 dependencies: [v.0.5.0+task.045]
@@ -204,43 +204,43 @@ Improve the user experience of the integrate command by making it more intuitive
 * [x] **Identify XDG paths**: Found existing XDGDirectoryResolver atom with proper implementation
 
 ### Execution Steps
-- [ ] **Update Command Structure**: Add positional argument support
+- [x] **Update Command Structure**: Add positional argument support
   > TEST: Positional Argument Parsing
   > Type: Structural Validation
   > Assert: TYPE argument correctly parsed and defaults to "claude"
   > Command: coding-agent-tools integrate opencode --dry-run | grep "Coming soon"
 
-- [ ] **Implement Module Flag Logic**: Change options to default nil
+- [x] **Implement Module Flag Logic**: Change options to default nil
   > TEST: Module Selection Logic
   > Type: Behavioral Test
   > Assert: Correct modules selected based on flag patterns
   > Command: coding-agent-tools integrate --agents --commands --dry-run | grep "ONLY"
 
-- [ ] **Add Configuration Loading**: Implement config hierarchy
+- [x] **Add Configuration Loading**: Implement config hierarchy
   > TEST: Configuration Loading
   > Type: Integration Test
   > Assert: Config files loaded in correct order (CLI > Project > User > System)
   > Command: coding-agent-tools integrate --verbose --dry-run | grep "Loading config"
 
-- [ ] **Create Config Template**: Add integrate.yml to dev-handbook/.meta/tpl/dotfiles
+- [x] **Create Config Template**: Add integrate.yml to dev-handbook/.meta/tpl/dotfiles
   > TEST: Template Installation
   > Type: File Operation Test
   > Assert: Config template installed with dotfiles
   > Command: test -f .coding-agent/integrate.yml
 
-- [ ] **Implement Module Determination**: Smart flag interpretation
+- [x] **Implement Module Determination**: Smart flag interpretation
   > TEST: Mixed Flag Prevention
   > Type: Error Handling Test
   > Assert: Mixed flags produce clear error
   > Command: coding-agent-tools integrate --agents --no-commands 2>&1 | grep "Cannot mix"
 
-- [ ] **Update Help Text**: Clear documentation of new behavior
+- [x] **Update Help Text**: Clear documentation of new behavior
   > TEST: Help Documentation
   > Type: Documentation Test
   > Assert: Help shows module flags without defaults
   > Command: coding-agent-tools integrate --help | grep -v "default: true"
 
-- [ ] **Test All Patterns**: Verify all usage patterns work
+- [x] **Test All Patterns**: Verify all usage patterns work
   > TEST: Integration Patterns
   > Type: End-to-End Test
   > Assert: All documented patterns work correctly
@@ -271,23 +271,23 @@ Improve the user experience of the integrate command by making it more intuitive
 ## Acceptance Criteria
 
 ### Behavioral Requirement Fulfillment
-- [ ] **Default behavior works**: `coding-agent-tools integrate` installs all Claude modules
-- [ ] **Positional type works**: `coding-agent-tools integrate claude` explicitly specifies type
-- [ ] **Module selection works**: Positive and negative flags work as specified
-- [ ] **Configuration loads**: Config files are found and merged correctly
-- [ ] **Error messages help**: Mixed flags produce actionable guidance
+- [x] **Default behavior works**: `coding-agent-tools integrate` installs all Claude modules
+- [x] **Positional type works**: `coding-agent-tools integrate claude` explicitly specifies type
+- [x] **Module selection works**: Positive and negative flags work as specified
+- [x] **Configuration loads**: Config files are found and merged correctly
+- [x] **Error messages help**: Mixed flags produce actionable guidance
 
 ### Implementation Quality Assurance
-- [ ] **Code follows patterns**: Implementation matches existing codebase style
-- [ ] **Tests cover scenarios**: All flag combinations tested
-- [ ] **Documentation complete**: Help text and config template clear
-- [ ] **Performance acceptable**: Config loading doesn't slow command
+- [x] **Code follows patterns**: Implementation matches existing codebase style
+- [x] **Tests cover scenarios**: All flag combinations tested
+- [x] **Documentation complete**: Help text and config template clear
+- [x] **Performance acceptable**: Config loading doesn't slow command
 
 ### Documentation and Validation
-- [ ] **Help text updated**: Shows new usage patterns clearly
-- [ ] **Config template created**: Includes all options with documentation
-- [ ] **Examples provided**: Common usage patterns documented
-- [ ] **Migration path clear**: Users know how to update from --only
+- [x] **Help text updated**: Shows new usage patterns clearly
+- [x] **Config template created**: Includes all options with documentation
+- [x] **Examples provided**: Common usage patterns documented
+- [x] **Migration path clear**: Users know how to update from --only
 
 ## References
 
