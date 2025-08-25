@@ -92,6 +92,6 @@ Initialize the foundational documentation structure for the project using the do
 
 ## References
 
-- dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+- dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
 - dev-handbook/templates/project-docs/ (various templates)
 - dev-handbook/guides/project-management.g.md

@@ -56,7 +56,7 @@ Each guide has Ruby, Rust, and TypeScript variants:
 
 | Category | Key Workflows |
 |----------|--------------|
-| **Foundation** | [initialize-project-structure](./workflow-instructions/initialize-project-structure.wf.md), [load-project-context](./workflow-instructions/load-project-context.wf.md) |
+| **Foundation** | [initialize-project-structure](./.integrations/wfi/initialize-project-structure.wf.md), [load-project-context](./workflow-instructions/load-project-context.wf.md) |
 | **Tasks** | [capture-idea](./workflow-instructions/capture-idea.wf.md), [draft-task](./workflow-instructions/draft-task.wf.md), [plan-task](./workflow-instructions/plan-task.wf.md), [work-on-task](./workflow-instructions/work-on-task.wf.md) |
 | **Quality** | [review-code](./workflow-instructions/review-code.wf.md), [fix-tests](./workflow-instructions/fix-tests.wf.md), [improve-code-coverage](./workflow-instructions/improve-code-coverage.wf.md) |
 | **Release** | [draft-release](./workflow-instructions/draft-release.wf.md), [publish-release](./workflow-instructions/publish-release.wf.md), [update-context-docs](./workflow-instructions/update-context-docs.wf.md) |
