@@ -137,7 +137,7 @@ module CodingAgentTools
               if options[:init_project] && !@dry_run
                 puts "\n📝 Next steps:"
                 puts "  1. Complete PRD.md with project requirements"
-                puts "  2. Ask Claude: \"Read and follow dev-handbook/workflow-instructions/initialize-project-structure.wf.md\""
+                puts "  2. Run: claude \"read and run dev-handbook/.integrations/wfi/initialize-project-structure.wf.md\""
                 puts "  3. Or run: task-manager next"
               end
             else
