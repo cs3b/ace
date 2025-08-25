@@ -77,10 +77,21 @@ Complete the project initialization started by `coding-agent-tools integrate cla
 
 6. **Draft Initial Release and Roadmap**:
     - **Create v.0.1.0 Release Draft** based on PRD/README:
-        - Use `/draft-release` Claude command to create the first development release
-        - Extract initial features from PRD.md's "Must-Have Features (P0)"
-        - Create tasks for core functionality implementation
-        - Set realistic milestones based on project scope
+        - Use `release-manager draft v.0.1.0 foundation` to create proper release structure
+        - This creates `dev-taskflow/backlog/v.0.1.0-foundation/` with:
+            - `README.md` (release overview from template)
+            - `tasks/` directory for properly structured task files
+        - Update the generated README.md with:
+            - Extract initial features from PRD.md's "Must-Have Features (P0)"
+            - Set realistic milestones based on project scope
+            - Define success metrics from PRD requirements
+    - **Create Initial Tasks**:
+        - Use `task-manager create` to add tasks to the v.0.1.0 release:
+            - Setup and configuration tasks (project initialization, dependencies)
+            - Core feature implementation tasks (from PRD's P0 features)
+            - Infrastructure tasks (deployment, CI/CD if applicable)
+        - Tasks are created in `dev-taskflow/backlog/v.0.1.0-foundation/tasks/`
+        - Each task uses proper templates with full specifications
     - **Generate Initial Roadmap**:
         - Create `dev-taskflow/roadmap.md` outlining project phases:
             - **Phase 1 (v.0.1.0)**: Core functionality and MVP features
@@ -88,10 +99,10 @@ Complete the project initialization started by `coding-agent-tools integrate cla
             - **Phase 3 (v.0.3.0)**: Polish, optimization, and "Could-Have Features (P2)"
         - Include timeline estimates if available from PRD
         - Define success metrics for each phase
-    - **Set up Release Structure**:
-        - Move v.0.1.0 draft to `dev-taskflow/backlog/` for planning
-        - Create initial task breakdown for the first milestone
-        - Document release goals and acceptance criteria
+    - **Release Structure Verification**:
+        - Ensure v.0.1.0 draft is properly structured in `dev-taskflow/backlog/`
+        - Verify README.md contains complete release overview
+        - Confirm tasks are created with proper IDs and templates
 
 7. **Review and Update Project Source Documentation**:
     - Review the information extracted or gathered through interactive prompts
@@ -100,22 +111,21 @@ Complete the project initialization started by `coding-agent-tools integrate cla
     - Add any missing sections or information discovered during the initialization process
     - Create a checklist of remaining items that need user input or decisions
 
-8. **Provide Next Steps Guidance**:
-    - **Display Current Status**:
-        - List v.0.0.0 tasks and their status (if bootstrap was created)
-        - Show v.0.1.0 draft release overview
-        - Display roadmap summary
-    - **Immediate Actions**:
-        - Complete any remaining PRD.md sections
-        - Review and refine the v.0.1.0 release plan
-        - Run `task-manager next` to see the next actionable task
-    - **Context Management**:
-        - Explain how to use `context --preset project` to load project context
-        - Guide on updating context templates as the project evolves
-    - **Release Workflow**:
-        - Explain transition from v.0.0.0 bootstrap to v.0.1.0 development
-        - Describe the release cycle: draft → current → done
-        - Show how to use `release-manager` commands
+8. **Create Next Steps Task**:
+    - **Generate Foundation Task**:
+        - Create task file: `dev-taskflow/current/v.0.0.0-bootstrap/tasks/v.0.0.0+task.000-project-initialization-next-steps.md`
+        - Use the next-steps task template to structure the guidance
+        - Populate with project-specific information gathered during initialization
+    - **Task Content**:
+        - Document completed setup (documentation, release planning, tools)
+        - List user prerequisites (environment setup, external services, content)
+        - Provide development workflow setup steps
+        - Include command references and success criteria
+    - **Integration Benefits**:
+        - Task appears in `task-manager next` commands
+        - Can be tracked and marked complete
+        - Maintains consistency with taskflow system
+        - Distinguishes user actions from agent-executable tasks
 
 ## Prerequisites
 
@@ -145,6 +155,7 @@ Complete the project initialization started by `coding-agent-tools integrate cla
 - [ ] Verify dev-tools command availability
 - [ ] Customize bootstrap release tasks (if exists)
 - [ ] Draft v.0.1.0 release and create roadmap
+- [ ] Create next steps task in v.0.0.0 bootstrap release
 - [ ] Review and finalize all documentation
 
 ## User Input (if PRD.md or README.md not present or incomplete)
@@ -179,6 +190,12 @@ The workflow will prompt for:
 - Technical requirements and constraints
 - User stories and acceptance criteria
 
+### dev-taskflow/backlog/v.0.1.0-foundation/
+- README.md with complete release overview
+- tasks/ directory with properly structured task files
+- Task IDs following v.0.1.0+task.XXX format
+- Tasks created using standard templates
+
 ### dev-taskflow/roadmap.md
 - Phased development plan
 - Release milestones
@@ -196,6 +213,12 @@ The workflow will prompt for:
 - Custom context definitions
 - Appropriate chunk limits
 
+### dev-taskflow/current/v.0.0.0-bootstrap/tasks/v.0.0.0+task.000-project-initialization-next-steps.md
+- Structured next steps as trackable task
+- User prerequisites checklist
+- Development workflow setup guide
+- Command references and success criteria
+
 ## Success Criteria
 
 - [ ] PRD.md exists and is complete with project information
@@ -204,7 +227,7 @@ The workflow will prompt for:
 - [ ] Context configuration tested and working
 - [ ] v.0.1.0 release drafted with initial tasks
 - [ ] Roadmap created with phased approach
-- [ ] Clear next steps provided to user
+- [ ] Next steps task created as v.0.0.0+task.000 in bootstrap release
 
 ## Workflow Context
 
@@ -563,4 +586,5 @@ project-root/
 
 - dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
 - dev-handbook/templates/project-docs/ (various templates)
+- dev-handbook/templates/task-management/task.next-steps.template.md
 - dev-handbook/guides/project-management.g.md
