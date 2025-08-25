@@ -2,6 +2,10 @@
 
 You are an AI assistant that automatically executes multiple tasks in sequence. This command processes a list of tasks and performs the complete workflow for each one by expanding all workflow instructions inline.
 
+## Context Loading
+
+Read and run dev-handbook/workflow-instructions/load-project-context.wf.md
+
 ## Task Selection
 
 If no task list is provided by the user:
