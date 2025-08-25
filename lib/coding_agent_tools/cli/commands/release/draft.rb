@@ -76,7 +76,7 @@ module CodingAgentTools
               success_output("  Location: #{release_path}")
               success_output("")
               success_output("Next steps:")
-              success_output("  1. Update release-overview.md with goals and scope")
+              success_output("  1. Update README.md with goals and scope")
               success_output("  2. Create tasks for the release using task-manager")
               success_output("  3. Update dev-taskflow/roadmap.md with the new release")
               
@@ -120,42 +120,91 @@ module CodingAgentTools
           end
 
           def create_release_overview(release_path, version, codename)
-            overview_path = release_path.join("release-overview.md")
+            # Create README.md instead of release-overview.md for better discoverability
+            overview_path = release_path.join("README.md")
             
             content = <<~MARKDOWN
-              # Release #{version} - "#{codename.capitalize}"
+              # #{version} #{codename.capitalize}
               
-              ## Status
-              **Phase**: Planning  
-              **Start Date**: #{Date.today}  
-              **Target Date**: TBD  
-              **Progress**: 0%
+              ## Release Overview
               
-              ## Goals
+              <!-- Brief description of the release's purpose and value proposition. -->
+              This release focuses on [DESCRIBE PRIMARY FOCUS].
               
-              - [ ] Primary goal 1
-              - [ ] Primary goal 2
-              - [ ] Primary goal 3
+              ## Release Information
               
-              ## Scope
+              - **Type**: [Major | Feature | Bug Fix]
+              - **Start Date**: #{Date.today.strftime('%Y-%m-%d')}
+              - **Target Date**: YYYY-MM-DD  
+              - **Status**: Planning
               
-              ### In Scope
-              - Feature or improvement 1
-              - Feature or improvement 2
+              ## Goals & Requirements
               
-              ### Out of Scope
-              - Deferred item 1
-              - Deferred item 2
+              ### Primary Goals
               
-              ## Success Criteria
+              - [ ] <!-- Goal 1 with specific metrics -->
+              - [ ] <!-- Goal 2 with acceptance criteria -->
+              - [ ] <!-- Goal 3 with success strategy -->
               
-              - [ ] All tests passing
-              - [ ] Documentation updated
-              - [ ] Release notes prepared
+              ### Dependencies
+              
+              - <!-- External dependencies -->
+              - <!-- Internal dependencies -->
+              
+              ### Risks & Mitigation
+              
+              - <!-- Risk 1: Description | Mitigation strategy -->
+              - <!-- Risk 2: Description | Mitigation strategy -->
+              
+              ## Implementation Plan
+              
+              ### Core Components
+              
+              1. **Design & Architecture**
+                 - [ ] <!-- Architecture decision/design task -->
+                 - [ ] <!-- API design task -->
+              
+              2. **Dependencies**  
+                 - [ ] <!-- Dependency setup task -->
+                 - [ ] <!-- Integration task -->
+              
+              3. **Implementation Phases**
+                 - [ ] <!-- Phase 1: Foundation -->
+                 - [ ] <!-- Phase 2: Core features -->
+                 - [ ] <!-- Phase 3: Polish and testing -->
+              
+              ## Quality Assurance
+              
+              ### Test Coverage
+              
+              - [ ] Unit Tests (>80% coverage)
+              - [ ] Integration Tests
+              - [ ] Performance Tests
+              - [ ] User Acceptance Tests
+              
+              ### Documentation
+              
+              - [ ] API Documentation
+              - [ ] User Guide
+              - [ ] Developer Guide
+              - [ ] CHANGELOG Entry
+              
+              ## Release Checklist
+              
+              - [ ] All planned features implemented and tested
+              - [ ] All tests passing (unit, integration, e2e)
+              - [ ] Documentation complete and reviewed
+              - [ ] CHANGELOG.md updated with all changes
+              - [ ] Version numbers updated in relevant files
+              - [ ] Security review completed
+              - [ ] Performance benchmarks meet targets
+              - [ ] Backward compatibility verified
+              - [ ] Migration guide prepared (if needed)
+              - [ ] Release notes drafted
               
               ## Notes
               
-              _Add any relevant notes, decisions, or context here._
+              <!-- Additional context, decisions, or clarifications -->
             MARKDOWN
             
             File.write(overview_path, content)
