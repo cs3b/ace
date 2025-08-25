@@ -77,12 +77,12 @@ Complete the project initialization started by `coding-agent-tools integrate cla
 
 6. **Draft Initial Release and Roadmap**:
     - **Create v.0.1.0 Release Draft** based on PRD/README:
-        - Use `release-manager draft v.0.1.0` to create the first development release
+        - Use `/draft-release` Claude command to create the first development release
         - Extract initial features from PRD.md's "Must-Have Features (P0)"
         - Create tasks for core functionality implementation
         - Set realistic milestones based on project scope
     - **Generate Initial Roadmap**:
-        - Create `docs/roadmap.md` outlining project phases:
+        - Create `dev-taskflow/roadmap.md` outlining project phases:
             - **Phase 1 (v.0.1.0)**: Core functionality and MVP features
             - **Phase 2 (v.0.2.0)**: Enhanced features from "Should-Have Features (P1)"
             - **Phase 3 (v.0.3.0)**: Polish, optimization, and "Could-Have Features (P2)"
@@ -179,7 +179,7 @@ The workflow will prompt for:
 - Technical requirements and constraints
 - User stories and acceptance criteria
 
-### docs/roadmap.md
+### dev-taskflow/roadmap.md
 - Phased development plan
 - Release milestones
 - Feature allocation per release
