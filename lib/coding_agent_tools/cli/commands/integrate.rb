@@ -992,10 +992,27 @@ module CodingAgentTools
           template_content = File.read(template_path)
           
           # Set instance variables for ERB template
-          set_template_variables(project_info)
+          # Use template-specific setup for what-do-we-build
+          if template_name == "what-do-we-build"
+            set_template_variables_for_what_do_we_build(project_info)
+          else
+            set_template_variables(project_info)
+          end
           
-          erb = ERB.new(template_content)
-          rendered_content = erb.result(binding)
+          begin
+            erb = ERB.new(template_content)
+            rendered_content = erb.result(binding)
+          rescue => e
+            puts "  → Error processing template: #{template_name}"
+            puts "  → Error details: #{e.message}"
+            puts "  → Error class: #{e.class}"
+            puts "  → Project info keys: #{project_info.keys.inspect}"
+            puts "  → Project info values:"
+            project_info.each do |key, value|
+              puts "    #{key}: #{value.inspect}"
+            end
+            raise e
+          end
           
           FileUtils.mkdir_p(target_file.parent)
           File.write(target_file, rendered_content)
@@ -1007,10 +1024,32 @@ module CodingAgentTools
           @project_description = project_info[:description]
           @tech_stack = project_info[:tech_stack]
           @key_features = project_info[:key_features]
+          @design_principles = project_info[:design_principles]
+          @primary_use_cases = project_info[:primary_use_cases]
+          @secondary_use_cases = project_info[:secondary_use_cases]
           @project_directories = project_info[:project_directories]
           @is_meta_project = project_info[:is_meta_project]
           @has_dev_taskflow = true
           @docs_generated = true
+          
+          # Additional template variables that might be needed
+          @architecture_overview = nil
+          @system_diagram = nil
+          @components = []
+          @tree_command = "nav-tree"
+        end
+        
+        def set_template_variables_for_what_do_we_build(project_info)
+          # Set all the standard variables
+          set_template_variables(project_info)
+          
+          # Override @tech_stack for the what-do-we-build template
+          # This template expects an array of hashes with :name and :rationale
+          # but we have a hash with :primary_language, :framework, etc.
+          # Set it to nil to use the template's fallback
+          if project_info[:tech_stack].is_a?(Hash)
+            @tech_stack = nil
+          end
         end
 
         def detect_project_info
@@ -1118,8 +1157,16 @@ module CodingAgentTools
           # Set instance variables for ERB template
           set_template_variables(project_info)
           
-          erb = ERB.new(template_content)
-          rendered_content = erb.result(binding)
+          begin
+            erb = ERB.new(template_content)
+            rendered_content = erb.result(binding)
+          rescue => e
+            puts "  → Error processing bootstrap template: #{template_name}"
+            puts "  → Error details: #{e.message}"
+            puts "  → Error class: #{e.class}"
+            puts "  → Project info keys: #{project_info.keys.inspect}"
+            raise e
+          end
           
           FileUtils.mkdir_p(target_path.parent)
           File.write(target_path, rendered_content)
