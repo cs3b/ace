@@ -64,6 +64,7 @@ module CodingAgentTools
         require_relative "cli/commands/release/all"
         require_relative "cli/commands/release/generate_id"
         require_relative "cli/commands/release/validate"
+        require_relative "cli/commands/release/draft"
 
         register "release", aliases: [] do |prefix|
           prefix.register "current", Commands::Release::Current
@@ -71,6 +72,7 @@ module CodingAgentTools
           prefix.register "all", Commands::Release::All
           prefix.register "generate-id", Commands::Release::GenerateId
           prefix.register "validate", Commands::Release::Validate
+          prefix.register "draft", Commands::Release::Draft
         end
 
         @release_commands_registered = true
