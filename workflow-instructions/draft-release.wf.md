@@ -26,27 +26,28 @@ user-provided release scope into actionable tasks.
      * Release codename (derive from user input if not explicitly given, using project-themed naming).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
-2. **Create Release Directory and Structure**
-   * Create the target release directory using the specific semantic version:
-     `dev-taskflow/backlog/v.X.Y.Z-codename/` (e.g., `dev-taskflow/backlog/v.0.3.0-new-feature/`).
-   * Create standard sub-directories within the new release directory:
-
+2. **Create Release Using release-manager**
+   * Use the release-manager tool to create the release structure:
+     ```bash
+     release-manager draft v.X.Y.Z codename
      ```
-     dev-taskflow/backlog/v.X.Y.Z-codename/
-     ├── tasks/
-     ├── ideas/
-     ├── docs/
-     ├── reflections/
-     ├── researches/
-     └── user-experience/
+     Example: `release-manager draft v.0.3.0 new-feature`
+   
+   * This automatically creates:
+     - Release directory: `dev-taskflow/backlog/v.X.Y.Z-codename/`  
+     - All standard subdirectories from template (tasks/, ideas/, docs/, reflections/, researches/, user-experience/, etc.)
+     - Initial `release-overview.md` file with basic structure
+
+3. **Rename Overview to README.md**
+   * The release-manager created `release-overview.md` - rename it to follow standard convention:
+     ```bash
+     mv dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
+        dev-taskflow/backlog/v.X.Y.Z-codename/README.md
      ```
+   * This ensures the overview is discoverable and follows GitHub/GitLab conventions
 
-3. **Create Release Overview Document**
-   * Create the release overview file at: `dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md`
-   * Use the release overview template:
-
-4. **Populate Overview Document**
-   * Fill in the release overview with:
+4. **Populate README.md Overview**
+   * Edit the README.md file to add project-specific information:
      * Release title with version and codename
      * Release type based on semantic versioning rules
      * Start date (today) and estimated target date
@@ -101,24 +102,21 @@ user-provided release scope into actionable tasks.
      git-commit -i "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
 
-8. **Validate Directory Structure**
-   * Run validation checks:
+8. **Validate Release Structure**
+   * Verify the release was created successfully:
 
      ```bash
-     # Verify directory structure
+     # Check release directory exists
      ls -la dev-taskflow/backlog/v.X.Y.Z-codename/
 
-     # Check subdirectories
-     for dir in tasks docs decisions codemods reflections researches test-cases user-experience; do
-       [ -d "dev-taskflow/backlog/v.X.Y.Z-codename/$dir" ] && echo "✓ $dir" || echo "✗ $dir missing"
-     done
-
-     # Verify overview file
-     [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md" ] && echo "✓ Overview file" || echo "✗ Overview file missing"
+     # Verify README.md exists
+     [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/README.md" ] && echo "✓ README.md" || echo "✗ README.md missing"
 
      # Count created tasks
      find dev-taskflow/backlog/v.X.Y.Z-codename/tasks -name "*.md" | wc -l
      ```
+     
+   * The subdirectory structure is guaranteed by release-manager draft
 
 9. **Prepare Commit Message (Do NOT Execute)**
    * Display the following git command for the user:
@@ -148,7 +146,7 @@ user-provided release scope into actionable tasks.
 ## Output / Success Criteria
 
 * A new directory `dev-taskflow/backlog/v.X.Y.Z-codename/` exists with all subdirectories
-* Release overview document created and populated with user's notes
+* README.md created and populated with user's notes and release information
 * All user notes have corresponding task files with unique IDs
 * Each task follows the standard format with clear objectives and acceptance criteria
 * Roadmap updated with new release information and committed
@@ -179,6 +177,36 @@ user-provided release scope into actionable tasks.
 ## Error Handling
 
 ### Common Issues
+
+**Release-manager Draft Failures:**
+
+**Symptoms:**
+
+* `release-manager draft` command not found
+* Release creation fails with error
+* Template directory not found
+
+**Recovery Steps:**
+
+1. Verify release-manager is available:
+   ```bash
+   which release-manager || echo "release-manager not found"
+   ```
+2. Check if dev-handbook submodule is properly initialized:
+   ```bash
+   ls -la dev-handbook/.meta/tpl/project-structure/release-dir-structure/
+   ```
+3. If command fails, fall back to manual creation:
+   ```bash
+   mkdir -p dev-taskflow/backlog/v.X.Y.Z-codename/{tasks,ideas,docs,reflections,researches}
+   ```
+4. Create README.md manually with template content
+
+**Prevention:**
+
+* Ensure dev-tools are properly installed and in PATH
+* Verify dev-handbook submodule is initialized
+* Test release-manager command before starting workflow
 
 **Task ID Generation Failures:**
 
@@ -233,32 +261,34 @@ user-provided release scope into actionable tasks.
 * Validate version format early in process
 * Discuss versioning strategy with user upfront
 
-**Directory Creation Failures:**
+**README.md Rename Failures:**
 
 **Symptoms:**
 
-* Cannot create release directory structure
-* Permission denied on filesystem operations
-* Missing parent directories
+* Cannot rename release-overview.md to README.md
+* File not found after release-manager draft
+* Permission denied on rename operation
 
 **Recovery Steps:**
 
-1. Check current directory and permissions: `pwd && ls -la`
-2. Verify `dev-taskflow/backlog/` exists and is writable
-3. Create missing parent directories:
-
+1. Check if release-overview.md was created:
    ```bash
-   mkdir -p dev-taskflow/backlog/
+   ls -la dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md
    ```
-
-4. Check disk space availability: `df -h`
-5. Ask user to check filesystem permissions if issues persist
+2. If file exists but rename fails, check permissions
+3. If file doesn't exist, create README.md manually with template
+4. Alternative rename approach:
+   ```bash
+   cp dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
+      dev-taskflow/backlog/v.X.Y.Z-codename/README.md
+   rm dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md
+   ```
 
 **Prevention:**
 
-* Verify template availability before release creation
-* Check dev-handbook submodule status
-* Have fallback template formats ready
+* Verify release-manager completed successfully before rename
+* Check file permissions in release directory
+* Have template content ready as fallback
 
 **Incomplete User Input:**
 
@@ -366,24 +396,25 @@ user-provided release scope into actionable tasks.
 
 **Symptoms:**
 
-* Directory structure validation finds missing components
-* File count doesn't match expected task creation
-* Release overview file incomplete or corrupted
+* README.md not found after rename
+* Task count doesn't match expected creation
+* Release structure incomplete
 
 **Recovery Steps:**
 
-1. Re-run directory structure creation for missing components
-2. Verify each required subdirectory exists:
-
+1. Check if README.md exists:
    ```bash
-   for dir in tasks docs reflections researches; do
-     [ -d "dev-taskflow/backlog/v.X.Y.Z-codename/$dir" ] && echo "✓ $dir" || mkdir -p "dev-taskflow/backlog/v.X.Y.Z-codename/$dir"
-   done
+   [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/README.md" ] || \
+     echo "README.md missing - check for release-overview.md"
    ```
-
-3. Regenerate missing files using templates
-4. Validate release overview file content and format
-5. Recount created tasks and verify against user scope
+2. If structure is incomplete, re-run release-manager draft:
+   ```bash
+   # Remove partial release and recreate
+   rm -rf dev-taskflow/backlog/v.X.Y.Z-codename
+   release-manager draft v.X.Y.Z codename
+   ```
+3. Verify task creation completed successfully
+4. Validate README.md content has been populated
 
 **Prevention:**
 
