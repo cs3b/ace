@@ -111,16 +111,26 @@ Complete the project initialization started by `coding-agent-tools integrate cla
     - Add any missing sections or information discovered during the initialization process
     - Create a checklist of remaining items that need user input or decisions
 
-8. **Create Next Steps Task**:
+8. **Create Next Steps Task** (Critical for project continuity):
+    - **Determine Task Location**:
+        - If `dev-taskflow/current/v.0.0.0-bootstrap/` exists:
+            - Create task there as: `v.0.0.0+task.000-project-initialization-next-steps.md`
+        - Else if v.0.0.0-bootstrap was not created:
+            - Create as first task in v.0.1.0 backlog: `v.0.1.0+task.000-project-initialization-next-steps.md`
+        - **IMPORTANT**: This task MUST be created for proper project handoff
     - **Generate Foundation Task**:
-        - Create task file: `dev-taskflow/current/v.0.0.0-bootstrap/tasks/v.0.0.0+task.000-project-initialization-next-steps.md`
-        - Use the next-steps task template to structure the guidance
+        - Use the next-steps task template (`dev-handbook/templates/task-management/task.next-steps.template.md`)
         - Populate with project-specific information gathered during initialization
+        - Ensure task ID is 000 to appear first in task listings
     - **Task Content**:
         - Document completed setup (documentation, release planning, tools)
         - List user prerequisites (environment setup, external services, content)
         - Provide development workflow setup steps
         - Include command references and success criteria
+    - **Verification**:
+        - Run `task-manager next` to confirm task appears
+        - Verify task contains project-specific information (not placeholders)
+        - Ensure task status is 'pending' and priority is P0
     - **Integration Benefits**:
         - Task appears in `task-manager next` commands
         - Can be tracked and marked complete
@@ -191,10 +201,11 @@ The workflow will prompt for:
 - User stories and acceptance criteria
 
 ### dev-taskflow/backlog/v.0.1.0-foundation/
-- README.md with complete release overview
+- **README.md** with complete release overview (goals, scope, not task details)
 - tasks/ directory with properly structured task files
 - Task IDs following v.0.1.0+task.XXX format
 - Tasks created using standard templates
+- **First task (000)** is always the next-steps task if no bootstrap release
 
 ### dev-taskflow/roadmap.md
 - Phased development plan
@@ -214,10 +225,12 @@ The workflow will prompt for:
 - Appropriate chunk limits
 
 ### dev-taskflow/current/v.0.0.0-bootstrap/tasks/v.0.0.0+task.000-project-initialization-next-steps.md
-- Structured next steps as trackable task
-- User prerequisites checklist
+- **CRITICAL**: This task MUST be created for proper project handoff
+- Structured next steps as trackable task with ID 000 (appears first)
+- User prerequisites checklist with project-specific requirements
 - Development workflow setup guide
 - Command references and success criteria
+- Falls back to v.0.1.0+task.000 if no bootstrap release exists
 
 ## Success Criteria
 
@@ -225,9 +238,11 @@ The workflow will prompt for:
 - [ ] README.md provides clear project overview
 - [ ] All generated docs updated with actual project details
 - [ ] Context configuration tested and working
-- [ ] v.0.1.0 release drafted with initial tasks
+- [ ] v.0.1.0 release drafted with initial tasks and proper README.md
 - [ ] Roadmap created with phased approach
-- [ ] Next steps task created as v.0.0.0+task.000 in bootstrap release
+- [ ] **Next steps task created as task.000** (in v.0.0.0-bootstrap or v.0.1.0)
+- [ ] Next steps task appears when running `task-manager next`
+- [ ] All placeholders replaced with project-specific information
 
 ## Workflow Context
 
