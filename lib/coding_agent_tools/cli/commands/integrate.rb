@@ -194,18 +194,49 @@ module CodingAgentTools
           submodules_config.each do |name, config|
             submodule_path = @project_root + name
 
-            # Check if submodule is properly initialized (directory exists with content)
-            # A submodule is considered present if:
-            # 1. The directory exists
-            # 2. It has a .git file/directory
-            # 3. It contains actual files (not just empty)
-            if submodule_path.exist? &&
-                (submodule_path + ".git").exist? &&
-                !Dir.empty?(submodule_path.to_s)
-              log "  ✓ #{name} present"
-            else
+            # Special handling for dev-taskflow - it can be either a submodule or directory
+            if name == "dev-taskflow"
+              # If it already exists as a directory with content, use it as-is
+              if submodule_path.exist? && !Dir.empty?(submodule_path.to_s)
+                log "  ✓ #{name} exists as directory"
+                next
+              end
+              
+              # Try to set up as submodule, but fall back to directory if it fails
               puts "  → #{name} missing or not initialized, setting up..."
-              setup_submodule(name, config) unless @dry_run
+              unless @dry_run
+                begin
+                  if setup_submodule(name, config)
+                    log "  ✓ #{name} set up as submodule"
+                  else
+                    log "  → Could not setup #{name} as submodule, creating as directory"
+                    FileUtils.mkdir_p(submodule_path + "backlog")
+                    FileUtils.mkdir_p(submodule_path + "current")
+                    FileUtils.mkdir_p(submodule_path + "done")
+                  end
+                rescue => e
+                  log "  → Error setting up #{name}: #{e.message}"
+                  log "  → Creating as directory instead"
+                  FileUtils.mkdir_p(submodule_path + "backlog")
+                  FileUtils.mkdir_p(submodule_path + "current")
+                  FileUtils.mkdir_p(submodule_path + "done")
+                end
+              end
+            else
+              # Regular submodule handling for dev-handbook and dev-tools
+              # Check if submodule is properly initialized (directory exists with content)
+              # A submodule is considered present if:
+              # 1. The directory exists
+              # 2. It has a .git file/directory
+              # 3. It contains actual files (not just empty)
+              if submodule_path.exist? &&
+                  (submodule_path + ".git").exist? &&
+                  !Dir.empty?(submodule_path.to_s)
+                log "  ✓ #{name} present"
+              else
+                puts "  → #{name} missing or not initialized, setting up..."
+                setup_submodule(name, config) unless @dry_run
+              end
             end
           end
         end
@@ -313,6 +344,16 @@ module CodingAgentTools
 
           # Always try to update after adding (suppress errors)
           system("git submodule update --init --recursive #{name} 2>/dev/null")
+          
+          # Return true if submodule was successfully set up
+          if submodule_path.exist? && (submodule_path + ".git").exist?
+            return true
+          else
+            return false
+          end
+        rescue => e
+          log "  → Failed to setup submodule: #{e.message}"
+          return false
         end
 
         def create_backup
@@ -914,12 +955,16 @@ module CodingAgentTools
 
         def create_project_structure
           taskflow_dir = @project_root + "dev-taskflow"
-          return if taskflow_dir.exist?
           
-          log "  → Created dev-taskflow/"
-          FileUtils.mkdir_p(taskflow_dir + "backlog")
-          FileUtils.mkdir_p(taskflow_dir + "current")
-          FileUtils.mkdir_p(taskflow_dir + "done")
+          # Create structure if it doesn't exist OR if it exists but is empty
+          if !taskflow_dir.exist? || (taskflow_dir.exist? && Dir.empty?(taskflow_dir.to_s))
+            log "  → Creating dev-taskflow directory structure"
+            FileUtils.mkdir_p(taskflow_dir + "backlog")
+            FileUtils.mkdir_p(taskflow_dir + "current")
+            FileUtils.mkdir_p(taskflow_dir + "done")
+          else
+            log "  → dev-taskflow structure already exists"
+          end
           
           docs_dir = @project_root + "docs"
           FileUtils.mkdir_p(docs_dir)
@@ -1011,6 +1056,14 @@ module CodingAgentTools
           info[:name] ||= @project_root.basename.to_s.gsub(/[-_]/, " ").split.map(&:capitalize).join(" ")
           info[:description] ||= "[Brief description of the project's core purpose and value proposition]"
           info[:tech_stack] ||= { primary_language: "[Primary Language]" }
+          
+          # Initialize all template variables with safe defaults to prevent ERB errors
+          info[:key_features] ||= []
+          info[:design_principles] ||= []
+          info[:primary_use_cases] ||= []
+          info[:secondary_use_cases] ||= []
+          info[:project_directories] ||= []
+          info[:is_meta_project] ||= false
           
           info
         end
