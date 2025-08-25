@@ -39,14 +39,25 @@ Complete the project initialization started by `coding-agent-tools integrate cla
 
 3. **Configure Project Context**:
     - Review and customize the context configuration at `.coding-agent/context.yml`
-    - Update the project context template at `docs/context/project.md`:
-        - Add project-specific sections
-        - Include key project decisions and constraints
-        - Reference important documentation
+    - **Customize the project context file** at `docs/context/project.md`:
+        - Replace `[PROJECT_NAME]` with actual project name from PRD/README
+        - Replace `[PROJECT_DESCRIPTION]` with brief project description
+        - Add tech-stack-specific files to the context:
+            - For Node.js/TypeScript: add `package.json`, `tsconfig.json`, key `src/` files
+            - For Ruby: add `Gemfile`, key `lib/` and `spec/` files
+            - For Rust: add `Cargo.toml`, key `src/` files
+            - For Python: add `requirements.txt`, `pyproject.toml`, key modules
+        - Add project-specific commands if needed (build, test, lint commands)
+        - Ensure all referenced files exist or remove them from the list
     - Configure context presets for your project needs:
-        - Modify the `project` preset to capture essential project information
+        - Modify the `project` preset in `.coding-agent/context.yml` to match
         - Add custom presets if needed for specific development areas
-    - Test context loading with `context --preset project` to verify configuration
+    - **Verify the context loads properly**:
+        ```bash
+        context docs/context/project.md  # Test direct loading
+        context --preset project         # Test preset loading
+        ```
+        - Fix any errors about missing files or invalid syntax
 
 4. **Verify Dev-Tools Integration**:
     - **Ensure dev-tools availability**:
@@ -214,10 +225,11 @@ The workflow will prompt for:
 - Success metrics per phase
 
 ### docs/context/project.md
-- Customized context template
-- Project-specific sections
-- Key decisions and constraints
-- Important file references
+- **Uses proper context-tool-config format** (not Jinja2 syntax)
+- Customized with project name and description
+- Tech-stack-specific files added to context
+- Core files always included (docs/*, README, PRD)
+- Essential commands for development workflow
 
 ### .coding-agent/context.yml
 - Configured presets for the project
@@ -237,7 +249,10 @@ The workflow will prompt for:
 - [ ] PRD.md exists and is complete with project information
 - [ ] README.md provides clear project overview
 - [ ] All generated docs updated with actual project details
-- [ ] Context configuration tested and working
+- [ ] **Context configuration tested and working**:
+    - [ ] `docs/context/project.md` uses proper `<context-tool-config>` format
+    - [ ] Context loads without errors: `context --preset project`
+    - [ ] Project name and description are customized
 - [ ] v.0.1.0 release drafted with initial tasks and proper README.md
 - [ ] Roadmap created with phased approach
 - [ ] **Next steps task created as task.000** (in v.0.0.0-bootstrap or v.0.1.0)
