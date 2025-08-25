@@ -194,34 +194,18 @@ module CodingAgentTools
           submodules_config.each do |name, config|
             submodule_path = @project_root + name
 
-            # Special handling for dev-taskflow - it can be either a submodule or directory
+            # Special handling for dev-taskflow - always create as directory from template
             if name == "dev-taskflow"
-              # If it already exists as a directory with content, use it as-is
+              # If it already exists with content, use it as-is
               if submodule_path.exist? && !Dir.empty?(submodule_path.to_s)
-                log "  ✓ #{name} exists as directory"
-                next
-              end
-              
-              # Try to set up as submodule, but fall back to directory if it fails
-              puts "  → #{name} missing or not initialized, setting up..."
-              unless @dry_run
-                begin
-                  if setup_submodule(name, config)
-                    log "  ✓ #{name} set up as submodule"
-                  else
-                    log "  → Could not setup #{name} as submodule, creating as directory"
-                    FileUtils.mkdir_p(submodule_path + "backlog")
-                    FileUtils.mkdir_p(submodule_path + "current")
-                    FileUtils.mkdir_p(submodule_path + "done")
-                  end
-                rescue => e
-                  log "  → Error setting up #{name}: #{e.message}"
-                  log "  → Creating as directory instead"
-                  FileUtils.mkdir_p(submodule_path + "backlog")
-                  FileUtils.mkdir_p(submodule_path + "current")
-                  FileUtils.mkdir_p(submodule_path + "done")
+                log "  ✓ #{name} already exists"
+              else
+                log "  → Creating #{name} from template"
+                unless @dry_run
+                  create_from_template("taskflow", submodule_path)
                 end
               end
+              next  # Skip to next iteration, don't process as submodule
             else
               # Regular submodule handling for dev-handbook and dev-tools
               # Check if submodule is properly initialized (directory exists with content)
@@ -354,6 +338,37 @@ module CodingAgentTools
         rescue => e
           log "  → Failed to setup submodule: #{e.message}"
           return false
+        end
+
+        def create_from_template(template_name, target_path)
+          template_source = @project_root + "dev-handbook/.meta/tpl/project-structure/#{template_name}"
+          
+          unless template_source.exist?
+            # Fallback to hard-coded creation if template doesn't exist
+            log "  → Template not found, creating basic structure"
+            case template_name
+            when "taskflow"
+              FileUtils.mkdir_p(target_path + "backlog")
+              FileUtils.mkdir_p(target_path + "current")
+              FileUtils.mkdir_p(target_path + "done")
+            else
+              FileUtils.mkdir_p(target_path)
+            end
+            return
+          end
+          
+          # Create target directory if it doesn't exist
+          FileUtils.mkdir_p(target_path)
+          
+          # Copy all contents from template to target
+          template_source.children.each do |item|
+            if item.directory?
+              FileUtils.cp_r(item, target_path)
+            else
+              FileUtils.cp(item, target_path)
+            end
+          end
+          log "  → Copied #{template_name} template structure"
         end
 
         def create_backup
@@ -958,10 +973,8 @@ module CodingAgentTools
           
           # Create structure if it doesn't exist OR if it exists but is empty
           if !taskflow_dir.exist? || (taskflow_dir.exist? && Dir.empty?(taskflow_dir.to_s))
-            log "  → Creating dev-taskflow directory structure"
-            FileUtils.mkdir_p(taskflow_dir + "backlog")
-            FileUtils.mkdir_p(taskflow_dir + "current")
-            FileUtils.mkdir_p(taskflow_dir + "done")
+            log "  → Creating dev-taskflow directory structure from template"
+            create_from_template("taskflow", taskflow_dir)
           else
             log "  → dev-taskflow structure already exists"
           end
