@@ -1,0 +1,160 @@
+# Document Ownership & Responsibility Model
+# This file defines what content belongs in each documentation file
+# Used by context tool and update-context-docs workflow for validation
+
+version: 1.0
+description: |
+  Defines ownership boundaries for project documentation.
+  Each topic should appear in exactly ONE document.
+  Other documents should reference, not duplicate.
+
+# Topic definitions - what each topic category means
+topics:
+  # Vision & Business Topics
+  project_vision:
+    description: "Mission, goals, what we're building and why"
+    keywords: [vision, mission, goal, objective, purpose]
+    
+  user_personas:
+    description: "Target users, their needs, pain points, jobs to be done"
+    keywords: [persona, user, customer, audience, needs]
+    
+  business_value:
+    description: "Value proposition, ROI, problems solved, market opportunity"
+    keywords: [value, proposition, advantage, benefit, problem]
+    
+  feature_list_user_facing:
+    description: "High-level features from user perspective (what, not how)"
+    keywords: [feature, capability, functionality, offering]
+
+  # Technical Topics
+  technology_stack:
+    description: "Languages, frameworks, libraries, tools, and versions"
+    keywords: [framework, library, language, tool, version, dependency]
+    
+  system_design:
+    description: "Architecture patterns, component design, data flow, integrations"
+    keywords: [architecture, pattern, design, component, integration]
+    
+  development_patterns:
+    description: "Code conventions, best practices, principles, guidelines"
+    keywords: [convention, practice, principle, guideline, standard]
+    
+  technical_dependencies:
+    description: "Package dependencies, external services, version requirements"
+    keywords: [dependency, package, requirement, service]
+
+  # Structure Topics  
+  directory_structure:
+    description: "Folder organization, project layout, file tree"
+    keywords: [folder, directory, structure, tree, organization]
+    
+  file_organization:
+    description: "Where specific types of files live, naming conventions"
+    keywords: [file, location, path, organization]
+    
+  entry_points:
+    description: "Main files, how to start/build/deploy, quick commands"
+    keywords: [entry, start, build, deploy, command]
+
+  # Design Topics
+  visual_design:
+    description: "Color palette, typography, spacing, layout principles"
+    keywords: [color, typography, spacing, layout, design]
+    
+  component_styles:
+    description: "UI component appearance, CSS classes, styling rules"
+    keywords: [style, css, class, component, appearance]
+    
+  brand_guidelines:
+    description: "Logo usage, tone of voice, visual identity, brand rules"
+    keywords: [brand, logo, identity, tone, guideline]
+
+  # Tool Topics
+  tool_documentation:
+    description: "How to use development tools, CLI commands, utilities"
+    keywords: [tool, command, cli, utility, usage]
+    
+  command_reference:
+    description: "Command syntax, flags, options, parameters"
+    keywords: [command, flag, option, parameter, syntax]
+    
+  usage_examples:
+    description: "Sample workflows, common patterns, recipes"
+    keywords: [example, workflow, pattern, recipe, sample]
+
+# Document ownership - what each file owns and must not contain
+documents:
+  docs/what-do-we-build.md:
+    owns:
+      - project_vision
+      - user_personas
+      - business_value
+      - feature_list_user_facing
+    must_not_contain:
+      - technology_stack
+      - system_design
+      - directory_structure
+      - technical_dependencies
+      - command_reference
+    cross_references:
+      - "For technical details → architecture.md"
+      - "For project structure → blueprint.md"
+
+  docs/architecture.md:
+    owns:
+      - technology_stack
+      - system_design
+      - development_patterns
+      - technical_dependencies
+    must_not_contain:
+      - project_vision
+      - user_personas
+      - directory_structure
+      - command_reference
+      - brand_guidelines
+    cross_references:
+      - "For project goals → what-do-we-build.md"
+      - "For file structure → blueprint.md"
+      - "For commands → tools.md"
+
+  docs/blueprint.md:
+    owns:
+      - directory_structure
+      - file_organization
+      - entry_points
+    must_not_contain:
+      - technology_stack  # (rationale belongs in architecture)
+      - system_design
+      - project_vision
+      - development_patterns
+      - tool_documentation  # (details belong in tools.md)
+    cross_references:
+      - "For technology choices → architecture.md"
+      - "For tool details → tools.md"
+
+  docs/tools.md:
+    owns:
+      - tool_documentation
+      - command_reference
+      - usage_examples
+    must_not_contain:
+      - project_vision
+      - system_design
+      - visual_design
+    cross_references:
+      - "For architecture → architecture.md"
+      - "For project info → what-do-we-build.md"
+
+  docs/styles.md:
+    owns:
+      - visual_design
+      - component_styles
+      - brand_guidelines
+    must_not_contain:
+      - technology_stack
+      - system_design
+      - project_vision
+      - directory_structure
+    cross_references:
+      - "For technical implementation → architecture.md"
