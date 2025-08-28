@@ -72,6 +72,17 @@ This workflow maintains four essential project documents, each with a distinct p
 
 ## Process Steps
 
+### 0. Load Ownership Model
+
+Check if ownership model exists and load it for validation:
+```bash
+# Load ownership rules
+ownership_file="docs/context/ownership.yml"
+if [[ -f "$ownership_file" ]]; then
+    echo "Ownership model found, will validate against it"
+fi
+```
+
 ### 1. Analyze Repository Changes
 
 **Option A: Review Recent Changes**
@@ -196,7 +207,22 @@ Verify each document:
 - [ ] No content is duplicated across documents
 - [ ] All documents reflect current repository state
 
-### 10. Commit Changes
+### 10. Run Ownership Validation
+
+If ownership model exists, validate all documents:
+```bash
+# Run validation script
+if [[ -f "$ownership_file" ]]; then
+    validate-context --preset project
+    if [ $? -eq 0 ]; then
+        echo "✅ All documents comply with ownership model"
+    else
+        echo "❌ Ownership violations detected - review and fix"
+    fi
+fi
+```
+
+### 11. Commit Changes
 
 Create atomic commits for each document:
 ```bash
