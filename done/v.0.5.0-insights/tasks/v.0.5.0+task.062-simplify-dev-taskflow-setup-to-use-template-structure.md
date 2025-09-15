@@ -6,11 +6,11 @@ estimate: 1.5h
 dependencies: [v.0.5.0+task.059]
 ---
 
-# Simplify dev-taskflow setup to use template structure
+# Simplify .ace/taskflow setup to use template structure
 
 ## Behavioral Context
 
-**Issue**: The integrate command was creating dev-taskflow structure using hardcoded directories. A template-based approach would be more maintainable and flexible.
+**Issue**: The integrate command was creating .ace/taskflow structure using hardcoded directories. A template-based approach would be more maintainable and flexible.
 
 **Key Behavioral Requirements**:
 - Use template directory structure instead of hardcoded paths
@@ -19,11 +19,11 @@ dependencies: [v.0.5.0+task.059]
 
 ## Objective
 
-Implemented template-based directory creation for dev-taskflow and other structures, using templates from dev-handbook/.meta/tpl/project-structure/ to replace hardcoded directory creation logic.
+Implemented template-based directory creation for .ace/taskflow and other structures, using templates from .ace/handbook/.meta/tpl/project-structure/ to replace hardcoded directory creation logic.
 
 ## Scope of Work
 
-- Created template directory structure at dev-handbook/.meta/tpl/project-structure/taskflow
+- Created template directory structure at .ace/handbook/.meta/tpl/project-structure/taskflow
 - Implemented create_from_template method in integrate command
 - Modified check_and_setup_submodules to use template-based creation
 - Added fallback logic for when templates don't exist
@@ -32,11 +32,11 @@ Implemented template-based directory creation for dev-taskflow and other structu
 
 #### Create
 
-- dev-handbook/.meta/tpl/project-structure/taskflow/ (template structure)
+- .ace/handbook/.meta/tpl/project-structure/taskflow/ (template structure)
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb
 
 ## Implementation Summary
 
@@ -45,9 +45,9 @@ Implemented template-based directory creation for dev-taskflow and other structu
 - **Problem Identification**: Hardcoded directory creation was inflexible and difficult to maintain
 - **Investigation**: Determined template-based approach would be more maintainable
 - **Solution**: 
-  - Created template directory at dev-handbook/.meta/tpl/project-structure/taskflow
+  - Created template directory at .ace/handbook/.meta/tpl/project-structure/taskflow
   - Implemented create_from_template method to copy template structures
-  - Modified dev-taskflow setup to use template instead of hardcoded paths
+  - Modified .ace/taskflow setup to use template instead of hardcoded paths
   - Added graceful fallback to hardcoded creation if template missing
 - **Validation**: Tested that template-based creation works and fallback functions correctly
 
@@ -57,7 +57,7 @@ Added new method to integrate.rb:
 
 ```ruby
 def create_from_template(template_name, target_path)
-  template_source = @project_root + "dev-handbook/.meta/tpl/project-structure/#{template_name}"
+  template_source = @project_root + ".ace/handbook/.meta/tpl/project-structure/#{template_name}"
   
   unless template_source.exist?
     # Fallback to hard-coded creation if template doesn't exist
@@ -91,9 +91,9 @@ end
 Modified check_and_setup_submodules to use template:
 
 ```ruby
-unless (@project_root + "dev-taskflow").exist?
-  log "Creating dev-taskflow from template..."
-  create_from_template("taskflow", @project_root + "dev-taskflow")
+unless (@project_root + ".ace/taskflow").exist?
+  log "Creating .ace/taskflow from template..."
+  create_from_template("taskflow", @project_root + ".ace/taskflow")
 end
 ```
 
@@ -104,13 +104,13 @@ end
 coding-agent-tools integrate claude --init-project
 
 # Verified template structure copied correctly
-ls -la dev-taskflow/
+ls -la .ace/taskflow/
 ```
 
 **Results**: Template-based creation works correctly with proper fallback behavior
 
 ## References
 
-- Depends on task v.0.5.0+task.059 (flexible dev-taskflow setup)
-- User request: "ok so if anyone create a submodule directory (empty) it will populate it with proper structure instead of having hard coded folders... we should have a directory to copy - dev-handbook/.meta/tpl/project-structure/taskflow"
+- Depends on task v.0.5.0+task.059 (flexible .ace/taskflow setup)
+- User request: "ok so if anyone create a submodule directory (empty) it will populate it with proper structure instead of having hard coded folders... we should have a directory to copy - .ace/handbook/.meta/tpl/project-structure/taskflow"
 - Improves maintainability of integrate command

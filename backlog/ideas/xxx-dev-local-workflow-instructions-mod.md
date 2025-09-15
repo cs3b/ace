@@ -6,6 +6,6 @@ or add local changes as a template and allow to sync it (if present) and then ad
 
 before running instruction - take precedence before)
 
-dev-local/handbook/wfi/../
+.ace/local/handbook/wfi/../
 
 with meta instructions to add additional files

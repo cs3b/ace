@@ -20,7 +20,7 @@ dependencies: []
 Users need a way to discover all available prompt modules that can enhance their code reviews. Similar to how `--list-presets` shows configuration presets, the `--list-prompts` option should provide a comprehensive view of available prompt modules organized by category.
 
 The system should:
-- Discover prompt modules from `dev-handbook/templates/review-modules/` directory
+- Discover prompt modules from `.ace/handbook/templates/review-modules/` directory
 - Categorize modules by their directory structure (base, format, focus, guidelines)
 - Display subcategories for focus modules (architecture, frameworks, languages, quality, scope)
 - Show the usage path for each module (how to reference it in prompts)
@@ -121,7 +121,7 @@ Enable users to discover and understand available prompt modules for code review
 
 - Existing --list-presets implementation pattern
 - PromptEnhancer class for module loading logic  
-- Review module directory structure in dev-handbook/templates/review-modules/
+- Review module directory structure in .ace/handbook/templates/review-modules/
 
 ## Technical Approach
 
@@ -179,13 +179,13 @@ Enable users to discover and understand available prompt modules for code review
   > TEST: Pattern Understanding Check
   > Type: Pre-condition Check
   > Assert: Key implementation patterns identified (option handling, early return, output format)
-  > Command: grep -A 20 "def list_presets" dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb
+  > Command: grep -A 20 "def list_presets" .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb
 
 - [x] **Map Module Structure**: Document the complete module directory structure and categorization logic
   > TEST: Module Structure Documentation
   > Type: Analysis Validation
   > Assert: All module categories and subcategories are identified and documented
-  > Command: find dev-handbook/templates/review-modules -type f -name "*.md" | sort
+  > Command: find .ace/handbook/templates/review-modules -type f -name "*.md" | sort
 
 - [x] **Design Output Format**: Plan the exact output format matching behavioral specification
   > TEST: Output Format Design
@@ -199,19 +199,19 @@ Enable users to discover and understand available prompt modules for code review
   > TEST: Option Addition Verification
   > Type: Structural Validation  
   > Assert: New option is properly defined in command class
-  > Command: grep -A 2 "list_prompts.*boolean" dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb
+  > Command: grep -A 2 "list_prompts.*boolean" .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb
 
 - [x] **Implement Early Return Logic**: Add list_prompts check to call method
   > TEST: Early Return Integration
   > Type: Flow Control Validation
   > Assert: Early return logic properly handles --list-prompts option
-  > Command: grep -A 3 "return list_prompts" dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb
+  > Command: grep -A 3 "return list_prompts" .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb
 
 - [x] **Create Module Discovery Logic**: Implement list_prompts method with directory traversal
   > TEST: Module Discovery Functionality  
   > Type: Functional Validation
   > Assert: Method discovers all modules and organizes by category
-  > Command: ruby -r './dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb' -e "puts 'Module discovery logic implemented'"
+  > Command: ruby -r './.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb' -e "puts 'Module discovery logic implemented'"
 
 - [x] **Add Categorization Logic**: Group modules by base, format, focus, guidelines categories
   > TEST: Categorization Validation
@@ -229,7 +229,7 @@ Enable users to discover and understand available prompt modules for code review
   > TEST: Error Handling Validation
   > Type: Edge Case Validation
   > Assert: Graceful handling of missing directory and permission errors
-  > Command: mv dev-handbook/templates/review-modules dev-handbook/templates/review-modules.bak && code-review --list-prompts; mv dev-handbook/templates/review-modules.bak dev-handbook/templates/review-modules
+  > Command: mv .ace/handbook/templates/review-modules .ace/handbook/templates/review-modules.bak && code-review --list-prompts; mv .ace/handbook/templates/review-modules.bak .ace/handbook/templates/review-modules
 
 - [x] **Integration Testing**: Verify command works alongside existing options and functionality
   > TEST: Integration Validation

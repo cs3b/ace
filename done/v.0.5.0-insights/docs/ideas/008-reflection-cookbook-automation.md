@@ -48,7 +48,7 @@ To enhance the `create-reflection-note` workflow by enabling coding agents to ca
 - **ATOM Architecture**: Automation ideas should consider how they fit into the ATOM structure (e.g., new Atoms, Molecules, or Organisms).
 - **Dynamic Provider System Architecture (ADR-012)**: If automation involves LLM providers, it should leverage the dynamic provider system.
 - **Documentation-Driven Development**: The process of identifying and creating cookbooks is inherently documentation-driven.
-- **Tools Reference (`docs/tools.md`)**: Automation ideas related to code should consider existing `dev-tools` executables.
+- **Tools Reference (`docs/tools.md`)**: Automation ideas related to code should consider existing `.ace/tools` executables.
 
 ## Solution Direction
 
@@ -65,7 +65,7 @@ To enhance the `create-reflection-note` workflow by enabling coding agents to ca
 3. **Develop `create-cookbook.wf.md` Workflow**:
    - Create a new workflow specifically for generating cookbooks.
    - This workflow should take the identified cookbook idea and its outline from the reflection note as input.
-   - It should guide the agent through the process of fleshing out the cookbook, referencing existing documentation, and creating the final cookbook file in `dev-handbook/cookbooks/`.
+   - It should guide the agent through the process of fleshing out the cookbook, referencing existing documentation, and creating the final cookbook file in `.ace/handbook/cookbooks/`.
 
 ## Critical Questions
 

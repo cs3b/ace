@@ -100,5 +100,5 @@ Enhance the `git-commit` tool to better handle large code changes by intelligent
 > SOURCE
 
 ```text
-in dev-tools/exe/git-commit - improve handling of large changes - split diff in parts, or even focus on names and limit diff to 1000 lines to get the commit description; additional we should look for better strategies to get intention from the diff, when intention is not passed
+in .ace/tools/exe/git-commit - improve handling of large changes - split diff in parts, or even focus on names and limit diff to 1000 lines to get the commit description; additional we should look for better strategies to get intention from the diff, when intention is not passed
 ```

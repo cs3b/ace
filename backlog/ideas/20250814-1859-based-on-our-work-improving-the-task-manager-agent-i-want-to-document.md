@@ -17,7 +17,7 @@ What we did with task-manager agent:
 4. Analyzed actual usage patterns from research to understand real workflows
 5. Created minimal context (just 6 commands total)
 6. Added common workflows section based on usage
-7. Emphasized canonical location (dev-handbook) over duplicates
+7. Emphasized canonical location (.ace/handbook) over duplicates
 
 Key learnings for agent creation:
 - Start minimal - agents don't need all data, just enough to make decisions
@@ -50,7 +50,7 @@ What we did with task-manager agent:
 4. Analyzed actual usage patterns from research to understand real workflows
 5. Created minimal context (just 6 commands total)
 6. Added common workflows section based on usage
-7. Emphasized canonical location (dev-handbook) over duplicates
+7. Emphasized canonical location (.ace/handbook) over duplicates
 
 Key learnings for agent creation:
 - Start minimal - agents don't need all data, just enough to make decisions

@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.21]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -80,7 +80,7 @@ Link back to original requirement: Ensure workflow instructions follow proper te
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: All embedded templates use XML <templates> sections format
-  > Command: grep -r "<templates>" dev-handbook/workflow-instructions/
+  > Command: grep -r "<templates>" .ace/handbook/workflow-instructions/
 
 * [x] Check embedded templates are positioned at end of documents
   > TEST: Action Validation
@@ -141,4 +141,4 @@ Link back to original requirement: Ensure workflow instructions follow proper te
 * Original requirement: improve-the-workflow-structure.md
 * Dependencies: v.0.3.0+task.21 (standardized template embedding format)
 * Related guides: Template embedding standard specification
-* Related workflows: All files in dev-handbook/workflow-instructions/
+* Related workflows: All files in .ace/handbook/workflow-instructions/

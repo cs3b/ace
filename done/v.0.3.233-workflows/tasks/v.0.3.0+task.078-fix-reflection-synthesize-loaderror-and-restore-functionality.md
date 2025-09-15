@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules/reflection | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules/reflection | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules/reflection
+.ace/tools/lib/coding_agent_tools/molecules/reflection
 ├── report_collector.rb
 ├── synthesis_orchestrator.rb
 └── timestamp_inferrer.rb
@@ -41,15 +41,15 @@ Resolve the critical LoadError preventing reflection-synthesize tool from functi
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/models/result.rb
-- dev-tools/spec/integration/reflection_synthesize_integration_spec.rb
+- .ace/tools/lib/coding_agent_tools/models/result.rb
+- .ace/tools/spec/integration/reflection_synthesize_integration_spec.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/molecules/reflection/report_collector.rb
-- dev-tools/lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb
-- dev-tools/lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb
-- dev-tools/lib/coding_agent_tools/models.rb
+- .ace/tools/lib/coding_agent_tools/molecules/reflection/report_collector.rb
+- .ace/tools/lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb
+- .ace/tools/lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb
+- .ace/tools/lib/coding_agent_tools/models.rb
 
 #### Delete
 
@@ -71,7 +71,7 @@ Resolve the critical LoadError preventing reflection-synthesize tool from functi
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Result class interface requirements are documented
-  > Command: cd dev-tools && grep -r "Models::Result" lib/ | wc -l
+  > Command: cd .ace/tools && grep -r "Models::Result" lib/ | wc -l
 * [x] Study ValidationResult model pattern for consistency
 * [x] Review existing autoload patterns in models.rb
 
@@ -81,27 +81,27 @@ Resolve the critical LoadError preventing reflection-synthesize tool from functi
   > TEST: Result Class Creation
   > Type: File Creation
   > Assert: Result class file exists and provides required interface
-  > Command: cd dev-tools && bundle exec ruby -r ./lib/coding_agent_tools/models/result -e "puts CodingAgentTools::Models::Result.success(test: 'data').valid?"
+  > Command: cd .ace/tools && bundle exec ruby -r ./lib/coding_agent_tools/models/result -e "puts CodingAgentTools::Models::Result.success(test: 'data').valid?"
 - [x] Phase 2: Fix incorrect require_relative paths in reflection molecule files (../../../models/result → ../../models/result)
   > TEST: Require Path Fix
   > Type: Code Modification
   > Assert: All reflection files can load without require errors
-  > Command: cd dev-tools && bundle exec ruby -c lib/coding_agent_tools/molecules/reflection/report_collector.rb
+  > Command: cd .ace/tools && bundle exec ruby -c lib/coding_agent_tools/molecules/reflection/report_collector.rb
 - [x] Phase 3: Add Result class to models.rb autoload configuration
   > TEST: Autoload Configuration
   > Type: Configuration Update
   > Assert: Result class can be autoloaded through Models module
-  > Command: cd dev-tools && bundle exec ruby -r ./lib/coding_agent_tools/models -e "puts CodingAgentTools::Models::Result"
+  > Command: cd .ace/tools && bundle exec ruby -r ./lib/coding_agent_tools/models -e "puts CodingAgentTools::Models::Result"
 - [x] Phase 4: Create comprehensive integration tests for reflection-synthesize functionality
   > TEST: Integration Test Coverage
   > Type: Test Creation
   > Assert: Integration tests pass and cover main functionality paths
-  > Command: cd dev-tools && bundle exec rspec spec/integration/reflection_synthesize_integration_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/reflection_synthesize_integration_spec.rb
 - [x] Phase 5: Run reflection-synthesize --help to validate complete functionality restoration
   > TEST: Tool Functionality Restoration
   > Type: End-to-End Validation
   > Assert: reflection-synthesize command runs without LoadError
-  > Command: cd dev-tools && bundle exec exe/reflection-synthesize --help
+  > Command: cd .ace/tools && bundle exec exe/reflection-synthesize --help
 
 ## Acceptance Criteria
 

@@ -7,9 +7,9 @@
 ## What Went Well
 
 - **Systematic approach to template conversion**: Successfully converted 17 four-tick markdown template blocks to standardized XML format without losing any content or functionality
-- **Clear path reference updates**: Updated all binstub references from incorrect dev-handbook/templates paths to the actual dev-tools/exe-old/_binstubs location
+- **Clear path reference updates**: Updated all binstub references from incorrect .ace/handbook/templates paths to the actual .ace/tools/exe-old/_binstubs location
 - **Comprehensive validation**: Verified all templates have proper path attributes and maintained workflow functionality throughout the refactoring
-- **Documentation consistency**: Established clear distinction between permanent documentation (docs/) and temporal content (dev-taskflow/) in the core project files
+- **Documentation consistency**: Established clear distinction between permanent documentation (docs/) and temporal content (.ace/taskflow/) in the core project files
 - **Single source of truth**: Eliminated ambiguity about template source locations by pointing all references to actual existing files
 
 ## What Could Be Improved
@@ -22,8 +22,8 @@
 ## Key Learnings
 
 - **XML template format advantages**: The `<templates><template path="..."></template></templates>` format provides clearer source attribution and better tool compatibility than four-tick markdown blocks
-- **Binstub architecture**: Understanding that binstubs should be sourced from dev-tools/exe-old/_binstubs rather than handbook templates clarifies the separation between workflow instructions and actual executable templates
-- **Documentation hierarchy**: Core permanent documentation (docs/) serves different purposes than temporal project management content (dev-taskflow/) and should be clearly distinguished
+- **Binstub architecture**: Understanding that binstubs should be sourced from .ace/tools/exe-old/_binstubs rather than handbook templates clarifies the separation between workflow instructions and actual executable templates
+- **Documentation hierarchy**: Core permanent documentation (docs/) serves different purposes than temporal project management content (.ace/taskflow/) and should be clearly distinguished
 - **Template embedding standards**: Following consistent template embedding standards across all workflow files improves maintainability and tool compatibility
 
 ## Action Items
@@ -57,12 +57,12 @@
 
 **Path Updates:**
 
-- From: `dev-handbook/templates/project-build/`
-- To: `dev-tools/exe-old/_binstubs/`
+- From: `.ace/handbook/templates/project-build/`
+- To: `.ace/tools/exe-old/_binstubs/`
 
 **Files Modified:**
 
-- `dev-handbook/workflow-instructions/initialize-project-structure.wf.md` (17 template conversions)
+- `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md` (17 template conversions)
 - `docs/architecture.md` (directory structure documentation)
 - `docs/blueprint.md` (path organization and read-only definitions)
 - `docs/what-do-we-build.md` (documentation references)

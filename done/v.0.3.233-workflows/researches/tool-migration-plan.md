@@ -2,13 +2,13 @@
 
 ## Executive Summary
 
-This document outlines the comprehensive migration plan to integrate task management tools from `dev-tools/exe-old/` into the `coding_agent_tools` Ruby gem architecture. The migration addresses security/stability risks identified in the Google Pro review while supporting the architectural evolution toward a unified gem-based approach.
+This document outlines the comprehensive migration plan to integrate task management tools from `.ace/tools/exe-old/` into the `coding_agent_tools` Ruby gem architecture. The migration addresses security/stability risks identified in the Google Pro review while supporting the architectural evolution toward a unified gem-based approach.
 
 ## Current State Analysis
 
 ### exe-old Tools Inventory
 
-Based on analysis of `dev-tools/exe-old/`, the following tools are currently in use:
+Based on analysis of `.ace/tools/exe-old/`, the following tools are currently in use:
 
 #### Core Task Management Tools
 
@@ -40,16 +40,16 @@ Based on analysis of `dev-tools/exe-old/`, the following tools are currently in 
 Analysis shows 12 bin/ scripts depend on exe-old tools:
 
 ```bash
-bin/cr-docs -> dev-tools/exe-old/generate-doc-review-prompt
-bin/tree -> dev-tools/exe-old/show-directory-tree  
-bin/lint -> dev-tools/exe-old/lint-md-links.rb + lint-task-metadata
-bin/tal -> dev-tools/exe-old/get-all-tasks
-bin/gl -> dev-tools/exe-old/get-recent-git-log
-bin/tnid -> dev-tools/exe-old/get-next-task-id
-bin/rc -> dev-tools/exe-old/get-current-release-path.sh
-bin/tr -> dev-tools/exe-old/get-recent-tasks
-handbook sync-templates -> dev-tools/exe-old/markdown-sync-embedded-documents
-bin/tn -> dev-tools/exe-old/get-next-task
+bin/cr-docs -> .ace/tools/exe-old/generate-doc-review-prompt
+bin/tree -> .ace/tools/exe-old/show-directory-tree  
+bin/lint -> .ace/tools/exe-old/lint-md-links.rb + lint-task-metadata
+bin/tal -> .ace/tools/exe-old/get-all-tasks
+bin/gl -> .ace/tools/exe-old/get-recent-git-log
+bin/tnid -> .ace/tools/exe-old/get-next-task-id
+bin/rc -> .ace/tools/exe-old/get-current-release-path.sh
+bin/tr -> .ace/tools/exe-old/get-recent-tasks
+handbook sync-templates -> .ace/tools/exe-old/markdown-sync-embedded-documents
+bin/tn -> .ace/tools/exe-old/get-next-task
 ```
 
 ### Current coding_agent_tools Architecture
@@ -139,14 +139,14 @@ Update bin/ scripts to use unified gem access while preserving current interface
 
 ```bash
 #!/usr/bin/env ruby
-exec(File.expand_path('../dev-tools/exe-old/get-next-task', __dir__))
+exec(File.expand_path('../.ace/tools/exe-old/get-next-task', __dir__))
 ```
 
 **After:**
 
 ```bash  
 #!/usr/bin/env ruby
-exec(File.expand_path('../dev-tools/exe/coding_agent_tools', __dir__), 'task', 'next', *ARGV)
+exec(File.expand_path('../.ace/tools/exe/coding_agent_tools', __dir__), 'task', 'next', *ARGV)
 ```
 
 This approach:
@@ -260,7 +260,7 @@ end
 # bin/tn: Get next task (migrated to coding_agent_tools gem)
 
 # Use coding_agent_tools gem for unified access
-exec(File.expand_path('../dev-tools/exe/coding_agent_tools', __dir__), 'task', 'next', *ARGV)
+exec(File.expand_path('../.ace/tools/exe/coding_agent_tools', __dir__), 'task', 'next', *ARGV)
 ```
 
 ## Risk Mitigation

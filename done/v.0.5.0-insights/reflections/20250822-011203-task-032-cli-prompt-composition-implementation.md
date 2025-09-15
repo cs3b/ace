@@ -69,6 +69,6 @@ The implementation successfully used the existing `ReviewPresetManager` infrastr
 
 - **Related Task**: Built on Task 029 (composable prompt system implementation)
 - **Files Modified**: 
-  - `dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb`
+  - `.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb`
 - **Success Criteria Met**: All behavioral specifications from the task were implemented successfully
 - **Validation**: CLI prompt composition works as specified in the interface contract examples

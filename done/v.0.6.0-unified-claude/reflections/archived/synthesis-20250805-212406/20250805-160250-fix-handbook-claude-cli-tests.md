@@ -1,7 +1,7 @@
 # Reflection: Fix Handbook Claude CLI Command Tests
 
 **Date**: 2025-08-05
-**Context**: Fixing failing handbook claude CLI command tests in the dev-tools test suite
+**Context**: Fixing failing handbook claude CLI command tests in the .ace/tools test suite
 **Author**: Development Assistant
 **Type**: Standard
 

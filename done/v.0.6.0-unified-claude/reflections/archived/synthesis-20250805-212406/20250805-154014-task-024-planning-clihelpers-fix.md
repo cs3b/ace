@@ -63,6 +63,6 @@ Wrap the Array response from execute_gem_executable in a CliResult object:
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.024-fix-handbook-claude-cli-command-tests.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.024-fix-handbook-claude-cli-command-tests.md
 - Related files: spec/support/cli_helpers.rb, spec/support/process_helpers.rb
 - Test file: spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb

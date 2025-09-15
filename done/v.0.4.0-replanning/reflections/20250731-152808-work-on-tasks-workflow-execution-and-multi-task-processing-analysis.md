@@ -9,7 +9,7 @@
 
 - **Comprehensive Workflow Execution**: Successfully executed the complete work-on-tasks workflow including task work, reflection creation, commits, and tagging
 - **Task Completion Excellence**: Task v.0.4.0+task.012 was completed with full implementation, testing, and documentation 
-- **Multi-Repository Operations**: All 4 repositories (main, dev-handbook, dev-taskflow, dev-tools) properly synchronized with tags and commits
+- **Multi-Repository Operations**: All 4 repositories (main, dev-handbook, dev-taskflow, .ace/tools) properly synchronized with tags and commits
 - **TodoWrite Integration**: Effective use of task tracking throughout the workflow provided clear progress visibility
 - **Automated Tool Integration**: Seamless integration of project-specific tools (task-manager, create-path, git-* commands)
 
@@ -36,7 +36,7 @@
 - **Template System Gap**: Missing template for reflection_new type
   - Occurrences: 1 time during reflection creation
   - Impact: Required manual template application instead of automated generation
-  - Root Cause: Template not defined in dev-handbook/templates/ structure
+  - Root Cause: Template not defined in .ace/handbook/templates/ structure
 
 - **Tool Assumption Risk**: Workflow assumes availability of project-specific tools
   - Occurrences: Multiple tool calls (task-manager, create-path, git-*)
@@ -58,7 +58,7 @@
 
 #### Tool Enhancements
 
-- Add reflection_new template to dev-handbook/templates/ structure
+- Add reflection_new template to .ace/handbook/templates/ structure
 - Enhance create-path tool to provide better error messages for missing templates
 - Consider workflow command validation capabilities
 

@@ -29,7 +29,7 @@ A complete suite of 20 development workflows was introduced, formalizing an end-
 
 * **Template-Driven Workflows:** A strong pattern of using embedded templates (`<documents>`) within workflow instructions was established. This ensures consistency for generated artifacts like ADRs, user docs, and tasks.
 * **Task-Embedded Tests:** The `task.template.md` introduces an excellent pattern of embedding test/validation blocks (`> TEST:`) directly within implementation steps, providing a clear, verifiable path for AI agents.
-* **Session-Based Organization:** The `review-code` and `synthesize-reviews` workflows establish a pattern of creating timestamped session directories in `dev-taskflow/` to organize inputs, prompts, and multiple LLM outputs for a single operation. This is a robust pattern for traceability and analysis.
+* **Session-Based Organization:** The `review-code` and `synthesize-reviews` workflows establish a pattern of creating timestamped session directories in `.ace/taskflow/` to organize inputs, prompts, and multiple LLM outputs for a single operation. This is a robust pattern for traceability and analysis.
 
 ### 4. Breaking Workflow Changes
 
@@ -43,7 +43,7 @@ A complete suite of 20 development workflows was introduced, formalizing an end-
 
 ### 6. Internal Guide Refactoring
 
-* **Workflow Logic in Guides:** The `review-code` and `synthesize-reviews` workflows contain extensive shell script logic. This blurs the line between a guide and a script. This logic should be abstracted into dedicated `bin/` or `dev-tools/` scripts, with the workflow instruction focusing on the *what* and *why*, not the *how* of the implementation.
+* **Workflow Logic in Guides:** The `review-code` and `synthesize-reviews` workflows contain extensive shell script logic. This blurs the line between a guide and a script. This logic should be abstracted into dedicated `bin/` or `.ace/tools/` scripts, with the workflow instruction focusing on the *what* and *why*, not the *how* of the implementation.
 * **Confusing Section in `fix-tests.wf.md`:** This workflow contains a "Legacy Process Steps" section which is confusing. The modern "Iterative Fix Process" is superior and should be the sole recommended approach. The legacy content should be removed or moved to an appendix.
 
 ## 3. Template & Example Updates
@@ -63,11 +63,11 @@ The handbook introduces a comprehensive set of templates embedded directly withi
 Several workflows rely on assumed knowledge or setup that is not yet documented. The following guides are required to ensure workflow integrity.
 
 * **Missing Guide – Required Workflow – File Path – Priority**
-* **Binstub Implementation Guide** – `initialize-project-structure.wf.md` – `dev-handbook/guides/development/binstub-setup.g.md` – 🔴 **Critical**
+* **Binstub Implementation Guide** – `initialize-project-structure.wf.md` – `.ace/handbook/guides/development/binstub-setup.g.md` – 🔴 **Critical**
   * The initialization workflow copies placeholder scripts (`test`, `lint`, `build`, `run`). A guide is critically needed to instruct the user on how to implement these for their specific technology stack (Ruby, Node, etc.).
-* **Conventional Commits Guide** – `commit.wf.md` – `dev-handbook/guides/development/conventional-commits.g.md` – 🟡 **High**
+* **Conventional Commits Guide** – `commit.wf.md` – `.ace/handbook/guides/development/conventional-commits.g.md` – 🟡 **High**
   * The commit workflow requires this format but does not link to a definitive guide explaining the types, scopes, and formatting rules.
-* **ATOM Architecture Guide** – `Project Vision`, `review-code.wf.md` – `dev-handbook/guides/architecture/atom-pattern.g.md` – 🟡 **High**
+* **ATOM Architecture Guide** – `Project Vision`, `review-code.wf.md` – `.ace/handbook/guides/architecture/atom-pattern.g.md` – 🟡 **High**
   * The ATOM pattern is cited as a core design principle but is not explained anywhere. This guide is essential for developers and AI agents to understand and follow the architecture.
 
 ## 5. AI Agent Instruction Updates
@@ -100,7 +100,7 @@ The workflows are highly interconnected, but explicit links are often missing.
 🔴 **Critical (workflow-blocking)**
 
 * **Create Binstub Implementation Guide:** The project is unusable without a guide on how to configure the placeholder `bin/test`, `bin/lint`, and `bin/build` scripts.
-  * **File:** `dev-handbook/guides/development/binstub-setup.g.md`
+  * **File:** `.ace/handbook/guides/development/binstub-setup.g.md`
 
 🟡 **High**
 
@@ -109,14 +109,14 @@ The workflows are highly interconnected, but explicit links are often missing.
 
 * **Create Conventional Commits Guide:** Document the commit message standard required by `commit.wf.md`.
 @#=> we should extract what is a guide vs workflow -> guides should go to
-* the guide should go to `dev-handbook/guides/version-control-system.g.md`
+* the guide should go to `.ace/handbook/guides/version-control-system.g.md`
 * we should split this guide to two parts:
      a) version-control-system-message.g.md
      b) version-control-system-git.g.md
 
 * **Create ATOM Architecture Guide:** Document the core architectural pattern.
-  * **File:** `dev-handbook/guides/architecture/atom-pattern.g.md`
-@#=> we already have dev-handbook/guides/atom-house-rules.md -> lets rename it to atom-pattern.g.md
+  * **File:** `.ace/handbook/guides/architecture/atom-pattern.g.md`
+@#=> we already have .ace/handbook/guides/atom-house-rules.md -> lets rename it to atom-pattern.g.md
 
 * **Refactor Shell Logic from Workflows:** Move complex script logic from `review-code.wf.md` and `synthesize-reviews.wf.md` into dedicated `bin/` scripts. Update the workflows to call these scripts.
 @#=> thats a big one, yes we should have a plan to extract this logic insdie the tool, to simplify this workflow
@@ -136,7 +136,7 @@ The workflows are highly interconnected, but explicit links are often missing.
 🔵 **Nice-to-have**
 
 * **Create Release Codenames Guide:** The `draft-release` workflow mentions codenames; a guide on the naming philosophy would be helpful.
-  * **File:** `dev-handbook/guides/project-management/release-codenames.g.md`
+  * **File:** `.ace/handbook/guides/project-management/release-codenames.g.md`
 
 ## 8. Risk Assessment
 

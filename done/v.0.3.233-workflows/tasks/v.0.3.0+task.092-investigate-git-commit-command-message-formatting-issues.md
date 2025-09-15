@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-pattern.g.md
     ├── changelog.g.md
@@ -112,7 +112,7 @@ Debug and fix the git-commit command error handling that displays improperly for
 
 ## Scope of Work
 
-- Investigate the git-commit command implementation in dev-tools
+- Investigate the git-commit command implementation in .ace/tools
 - Identify the source of shell character escaping in error messages
 - Fix error message formatting to display properly
 - Ensure error handling doesn't affect commit functionality
@@ -125,8 +125,8 @@ Debug and fix the git-commit command error handling that displays improperly for
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/git_commit.rb (likely)
-- dev-tools/lib/coding_agent_tools/organisms/git_operations.rb (likely)
+- .ace/tools/lib/coding_agent_tools/cli/git_commit.rb (likely)
+- .ace/tools/lib/coding_agent_tools/organisms/git_operations.rb (likely)
 - Error handling and message formatting code
 
 #### Delete
@@ -145,7 +145,7 @@ Debug and fix the git-commit command error handling that displays improperly for
 
 ### Planning Steps
 
-- [x] Examine the git-commit command implementation in dev-tools
+- [x] Examine the git-commit command implementation in .ace/tools
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: git-commit command structure and error handling mechanisms are identified
@@ -155,7 +155,7 @@ Debug and fix the git-commit command error handling that displays improperly for
 
 ### Execution Steps
 
-- [x] Locate the git-commit command source code in dev-tools
+- [x] Locate the git-commit command source code in .ace/tools
 - [x] Reproduce the error condition that generates escaped characters
   > TEST: Error Reproduction
   > Type: Issue Validation
@@ -201,7 +201,7 @@ Error: [main] Error: Git command failed: git commit -m refactor\(git\):\ use\ di
 3. Added comprehensive test cases to verify the fix works correctly
 
 **Files Modified**:
-- `dev-tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb` - Added error message formatting
-- `dev-tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb` - Added test cases
+- `.ace/tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb` - Added error message formatting
+- `.ace/tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb` - Added test cases
 
 **Result**: Error messages now display readable commands like `git commit -m refactor(git): use direct Ruby calls` instead of escaped versions like `git commit -m refactor\(git\):\ use\ direct\ Ruby\ calls\`.

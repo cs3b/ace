@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── README.md
     ├── commit.wf.md
     ├── create-adr.wf.md
@@ -42,7 +42,7 @@ _Result excerpt:_
 
 ## Objective
 
-Create a comprehensive integration guide in dev-handbook/workflow-instructions/README.md that documents end-to-end workflow orchestration from project initialization to release for AI agents. This addresses the critical consensus issue identified by both reviewers about missing core development lifecycle documentation.
+Create a comprehensive integration guide in .ace/handbook/workflow-instructions/README.md that documents end-to-end workflow orchestration from project initialization to release for AI agents. This addresses the critical consensus issue identified by both reviewers about missing core development lifecycle documentation.
 
 ## Scope of Work
 
@@ -56,7 +56,7 @@ Create a comprehensive integration guide in dev-handbook/workflow-instructions/R
 
 #### Create
 
-* dev-handbook/workflow-instructions/README.md - Comprehensive workflow integration guide
+* .ace/handbook/workflow-instructions/README.md - Comprehensive workflow integration guide
 
 #### Modify
 
@@ -102,7 +102,7 @@ Create a comprehensive integration guide in dev-handbook/workflow-instructions/R
   > TEST: Integration Guide Complete
   > Type: Documentation Validation
   > Assert: All workflow scenarios documented with examples
-  > Command: bin/lint dev-handbook/workflow-instructions/README.md
+  > Command: bin/lint .ace/handbook/workflow-instructions/README.md
 
 ## Acceptance Criteria
 
@@ -120,6 +120,6 @@ Create a comprehensive integration guide in dev-handbook/workflow-instructions/R
 
 ## References
 
-* Review synthesis report: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
-* Existing workflows: dev-handbook/workflow-instructions/*.wf.md
+* Review synthesis report: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
+* Existing workflows: .ace/handbook/workflow-instructions/*.wf.md
 * Architecture docs: docs/architecture.md

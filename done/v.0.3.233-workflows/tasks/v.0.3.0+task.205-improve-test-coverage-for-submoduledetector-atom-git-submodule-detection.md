@@ -13,19 +13,19 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools -name "*submodule*" -type f | head -10
+find .ace/tools -name "*submodule*" -type f | head -10
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/atoms/git/submodule_detector.rb
-dev-tools/spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb
+.ace/tools/lib/coding_agent_tools/atoms/git/submodule_detector.rb
+.ace/tools/spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb
 ```
 
 ## Objective
 
-Improve test coverage for the SubmoduleDetector atom in the dev-tools Ruby gem to ensure comprehensive testing of git submodule detection functionality. The current test suite is fairly comprehensive but lacks coverage for some edge cases and error scenarios that could occur in real-world usage.
+Improve test coverage for the SubmoduleDetector atom in the .ace/tools Ruby gem to ensure comprehensive testing of git submodule detection functionality. The current test suite is fairly comprehensive but lacks coverage for some edge cases and error scenarios that could occur in real-world usage.
 
 ## Scope of Work
 
@@ -43,7 +43,7 @@ Improve test coverage for the SubmoduleDetector atom in the dev-tools Ruby gem t
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb
 
 #### Delete
 
@@ -67,7 +67,7 @@ Improve test coverage for the SubmoduleDetector atom in the dev-tools Ruby gem t
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current test coverage gaps are identified and documented
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb --format documentation
 - [x] Identify missing edge cases and error scenarios
   > TEST: Gap Analysis Complete
   > Type: Analysis Validation

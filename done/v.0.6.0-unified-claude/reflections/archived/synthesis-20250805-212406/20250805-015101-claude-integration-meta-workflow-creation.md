@@ -20,7 +20,7 @@
 
 ## Key Learnings
 
-- **Meta Workflow Structure**: Meta workflows live in dev-handbook/.meta/wfi/ and follow similar patterns to regular workflows
+- **Meta Workflow Structure**: Meta workflows live in .ace/handbook/.meta/wfi/ and follow similar patterns to regular workflows
 - **Decision Trees**: Effective way to guide users through complex choices (custom vs generated commands)
 - **Comprehensive Documentation**: Including troubleshooting, diagnostics, and verification checklists greatly improves workflow usability
 - **Workflow Organization**: Meta workflows need their own section in the workflow instructions README
@@ -63,6 +63,6 @@ Key design decisions:
 ## Additional Context
 
 - Task dependencies: v.0.6.0+task.003, v.0.6.0+task.004, v.0.6.0+task.005, v.0.6.0+task.006
-- Created file: dev-handbook/.meta/wfi/update-integration-claude.wf.md
-- Updated: dev-handbook/workflow-instructions/README.md (added Meta Workflows section)
+- Created file: .ace/handbook/.meta/wfi/update-integration-claude.wf.md
+- Updated: .ace/handbook/workflow-instructions/README.md (added Meta Workflows section)
 - Followed patterns from: manage-guides.wf.md and update-blueprint.wf.md

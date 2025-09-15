@@ -135,7 +135,7 @@
 
 - **Task Reference**: v.0.3.0+task.13-implement-module-based-cli-commands.md
 - **Commits Created**: 
-  - `feat: Implement scoped autocorrect navigation with two-phase pattern matching` (dev-tools)
+  - `feat: Implement scoped autocorrect navigation with two-phase pattern matching` (.ace/tools)
   - `feat: Add scoped autocorrect configuration and navigation enhancements` (main repo)
 - **Working Examples**:
   - `nav-path file atom:http` → autocorrects to `atoms:http` → finds `http_client.rb`

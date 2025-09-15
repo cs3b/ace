@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── code-review-diff-for-docs-update.g.md
 ├── initialize-project-templates
 └── ...
@@ -41,7 +41,7 @@ Create a unified, flexible code review system that replaces multiple specialized
 
 #### Create
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 * .claude/commands/review-code.md
 
 #### Modify
@@ -106,7 +106,7 @@ Create a unified, flexible code review system that replaces multiple specialized
 
 ## References
 
-* Existing review templates: dev-handbook/templates/review-_/_.md
-* LLM tools: dev-tools/exe/llm-query
-* Project context loading: dev-handbook/workflow-instructions/load-project-context.wf.md
-* Original requirements: dev-taskflow/current/v.0.3.0-workflows/backlog/code-review.md
+* Existing review templates: .ace/handbook/templates/review-_/_.md
+* LLM tools: .ace/tools/exe/llm-query
+* Project context loading: .ace/handbook/workflow-instructions/load-project-context.wf.md
+* Original requirements: .ace/taskflow/current/v.0.3.0-workflows/backlog/code-review.md

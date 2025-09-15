@@ -110,10 +110,10 @@ This flat structure with hyphenated names provides clear command organization wh
 
 - Task: v.0.6.0+task.002-implement-claude-cli-namespace-in-handbook.md
 - Main files modified:
-  - /dev-tools/exe/handbook (completely rewritten)
-  - /dev-tools/lib/coding_agent_tools/cli.rb (simplified registration)
-  - /dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb (refactored for CLI)
+  - /.ace/tools/exe/handbook (completely rewritten)
+  - /.ace/tools/lib/coding_agent_tools/cli.rb (simplified registration)
+  - /.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb (refactored for CLI)
 - New files created:
-  - /dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/*.rb (5 subcommands)
-  - /dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb
-  - /dev-tools/spec/integration/handbook_claude_cli_spec.rb
+  - /.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/*.rb (5 subcommands)
+  - /.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb
+  - /.ace/tools/spec/integration/handbook_claude_cli_spec.rb

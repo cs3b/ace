@@ -66,7 +66,7 @@ The `code-review` command should provide a way to list all available system prom
 ## Assumptions to Validate
 
 **We assume that:**
-- System prompt components are stored in a predictable directory structure within the `dev-tools` gem. - *Needs validation*
+- System prompt components are stored in a predictable directory structure within the `.ace/tools` gem. - *Needs validation*
 - Each prompt component has some form of discoverable metadata (e.g., a class method or file naming convention) that can be used to describe it. - *Needs validation*
 - Users will find value in a dedicated command to list these components, rather than manually browsing the file system. - *Needs validation*
 

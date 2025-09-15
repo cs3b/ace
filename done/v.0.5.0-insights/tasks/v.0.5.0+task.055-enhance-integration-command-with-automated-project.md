@@ -13,7 +13,7 @@ dependencies: []
 ### User Experience
 - **Input**: Developer runs `coding-agent-tools integrate claude` with optional `--init-project` flag
 - **Process**: Integration detects missing project structure, creates directories, generates documentation from templates, and provides clear next steps
-- **Output**: Complete project structure with dev-taskflow directories, core documentation files, and Claude integration, plus guidance for remaining manual steps
+- **Output**: Complete project structure with .ace/taskflow directories, core documentation files, and Claude integration, plus guidance for remaining manual steps
 
 ### Expected Behavior
 
@@ -31,9 +31,9 @@ coding-agent-tools integrate claude
 coding-agent-tools integrate claude --init-project
 ```
 - Performs all regular integration PLUS:
-- Creates dev-taskflow/ structure if missing (idempotent)
+- Creates .ace/taskflow/ structure if missing (idempotent)
 - Generates core docs from templates if missing (idempotent)
-- Creates v.0.0.0-bootstrap if dev-taskflow is new (conditional)
+- Creates v.0.0.0-bootstrap if .ace/taskflow is new (conditional)
 - Creates docs/tools.md symlink if source exists (idempotent)
 - Extracts project info from existing files (PRD.md, README.md, package.json)
 - Provides clear next-steps guidance based on what was created
@@ -50,15 +50,15 @@ coding-agent-tools integrate claude [OPTIONS]
 # Expected outputs for new project:
 🚀 Starting Claude integration with project initialization...
 ✓ Creating project structure...
-  → Created dev-taskflow/backlog/
-  → Created dev-taskflow/current/
-  → Created dev-taskflow/done/
+  → Created .ace/taskflow/backlog/
+  → Created .ace/taskflow/current/
+  → Created .ace/taskflow/done/
 ✓ Generating core documentation...
   → Created docs/what-do-we-build.md (from template)
   → Created docs/architecture.md (from template)
   → Created docs/blueprint.md (from template)
 ✓ Setting up v.0.0.0 bootstrap release...
-  → Created 4 tasks in dev-taskflow/current/v.0.0.0-bootstrap/
+  → Created 4 tasks in .ace/taskflow/current/v.0.0.0-bootstrap/
 ✓ Integration complete!
 
 📝 Next steps:
@@ -73,7 +73,7 @@ coding-agent-tools integrate claude [OPTIONS]
 ✓ Core documentation detected, skipping generation
   → docs/architecture.md exists
   → docs/blueprint.md exists
-✓ dev-taskflow structure exists, skipping v.0.0.0 creation
+✓ .ace/taskflow structure exists, skipping v.0.0.0 creation
 ```
 
 **Error Handling:**
@@ -112,7 +112,7 @@ coding-agent-tools integrate claude [OPTIONS]
 Streamline the project initialization process by automating the creation of project structure, documentation templates, and bootstrap releases during Claude integration, reducing manual setup from ~30 minutes to under 1 minute while maintaining flexibility for customization.
 
 ### What Gets Automated (~70% of workflow)
-- Directory structure creation (dev-taskflow/)
+- Directory structure creation (.ace/taskflow/)
 - Core documentation generation from templates
 - v.0.0.0 bootstrap release setup (new projects only)
 - Claude integration (agents, commands, hooks)
@@ -133,7 +133,7 @@ Streamline the project initialization process by automating the creation of proj
 - Clear guidance for remaining manual steps
 
 ### System Behavior Scope
-- Create dev-taskflow directory structure when missing
+- Create .ace/taskflow directory structure when missing
 - Generate core documentation from templates
 - Set up v.0.0.0-bootstrap only for new projects
 - Detect and extract project information from existing files
@@ -174,7 +174,7 @@ Streamline the project initialization process by automating the creation of proj
 - Maintain separation between integration and initialization concerns
 
 ### Technology Stack
-- Ruby (existing dev-tools implementation)
+- Ruby (existing .ace/tools implementation)
 - ERB templates for dynamic content generation
 - FileUtils for file system operations
 - YAML for configuration management
@@ -182,7 +182,7 @@ Streamline the project initialization process by automating the creation of proj
 
 ### Implementation Strategy
 1. Add single --init-project flag to integrate command
-2. Create template directory structure in dev-handbook
+2. Create template directory structure in .ace/handbook
 3. Implement project detection methods with idempotent checks
 4. Leverage existing file-checking logic (no skip flags needed)
 5. Enhance output with mode-specific guidance
@@ -207,20 +207,20 @@ Streamline the project initialization process by automating the creation of proj
 ## File Modifications
 
 ### Create
-- dev-handbook/.meta/tpl/project-structure/taskflow/backlog/.gitkeep
-- dev-handbook/.meta/tpl/project-structure/taskflow/current/.gitkeep
-- dev-handbook/.meta/tpl/project-structure/taskflow/done/.gitkeep
-- dev-handbook/.meta/tpl/project-structure/docs/what-do-we-build.md.erb
-- dev-handbook/.meta/tpl/project-structure/docs/architecture.md.erb
-- dev-handbook/.meta/tpl/project-structure/docs/blueprint.md.erb
-- dev-handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/release-overview.md.erb
-- dev-handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/01-setup-structure.md.erb
-- dev-handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/02-complete-documentation.md.erb
-- dev-handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/03-complete-prd.md.erb
-- dev-handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/04-create-roadmap.md.erb
+- .ace/handbook/.meta/tpl/project-structure/taskflow/backlog/.gitkeep
+- .ace/handbook/.meta/tpl/project-structure/taskflow/current/.gitkeep
+- .ace/handbook/.meta/tpl/project-structure/taskflow/done/.gitkeep
+- .ace/handbook/.meta/tpl/project-structure/docs/what-do-we-build.md.erb
+- .ace/handbook/.meta/tpl/project-structure/docs/architecture.md.erb
+- .ace/handbook/.meta/tpl/project-structure/docs/blueprint.md.erb
+- .ace/handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/release-overview.md.erb
+- .ace/handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/01-setup-structure.md.erb
+- .ace/handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/02-complete-documentation.md.erb
+- .ace/handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/03-complete-prd.md.erb
+- .ace/handbook/.meta/tpl/project-structure/bootstrap/v.0.0.0-bootstrap/tasks/04-create-roadmap.md.erb
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb
   - Add new CLI options (--init-project, --skip-docs, --skip-bootstrap)
   - Add create_project_structure method
   - Add generate_core_docs method
@@ -229,7 +229,7 @@ Streamline the project initialization process by automating the creation of proj
   - Add should_create_bootstrap? logic
   - Enhance output with next-steps guidance
 
-- dev-tools/config/integration.yml
+- .ace/tools/config/integration.yml
   - Add project_structure component configuration (optional)
 
 ### Delete
@@ -264,9 +264,9 @@ Streamline the project initialization process by automating the creation of proj
 
 ### Execution Steps
 
-- [x] Create template directory structure in dev-handbook/.meta/tpl/project-structure/
+- [x] Create template directory structure in .ace/handbook/.meta/tpl/project-structure/
 - [x] Convert workflow templates to ERB templates with dynamic content
-- [x] Create symlink for docs/tools.md from dev-tools/docs/tools.md (if exists)
+- [x] Create symlink for docs/tools.md from .ace/tools/docs/tools.md (if exists)
 - [x] Add single CLI option to integrate command
   ```ruby
   option :init_project, type: :boolean, default: false,
@@ -279,13 +279,13 @@ Streamline the project initialization process by automating the creation of proj
   end
   
   def should_create_bootstrap?
-    !@project_root.join("dev-taskflow").exist?
+    !@project_root.join(".ace/taskflow").exist?
   end
   ```
 - [x] Implement structure creation methods with idempotent checks
   ```ruby
   def create_project_structure
-    return if @project_root.join("dev-taskflow").exist?
+    return if @project_root.join(".ace/taskflow").exist?
     # Create directories
   end
   
@@ -297,7 +297,7 @@ Streamline the project initialization process by automating the creation of proj
   end
   ```
 - [x] Add template processing with ERB
-- [x] Implement conditional v.0.0.0 creation (only if dev-taskflow is new)
+- [x] Implement conditional v.0.0.0 creation (only if .ace/taskflow is new)
 - [x] Enhance output with clear guidance for both modes
 - [x] Test with new project scenario
 - [x] Test with existing project scenario  
@@ -313,10 +313,10 @@ Streamline the project initialization process by automating the creation of proj
 
 ### Mode 2: Project Initialization (--init-project)
 - [x] Single flag enables all initialization features
-- [x] dev-taskflow structure created only when missing (idempotent)
+- [x] .ace/taskflow structure created only when missing (idempotent)
 - [x] Core docs generated from templates only when missing (idempotent)
 - [x] docs/tools.md symlink created only if source exists (idempotent)
-- [x] v.0.0.0 bootstrap created ONLY when dev-taskflow is new
+- [x] v.0.0.0 bootstrap created ONLY when .ace/taskflow is new
 - [x] Existing files NEVER overwritten without --force
 - [x] Clear mode-specific guidance provided
 - [x] initialize-project-structure.wf.md remains workflow (not command)
@@ -330,7 +330,7 @@ Streamline the project initialization process by automating the creation of proj
 
 ## References
 
-- Current integration workflow: dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-- Integration command: dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb
+- Current integration workflow: .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
+- Integration command: .ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb
 - Discussion context: User feedback on integration automation needs
 - Related idea: Simplifying one-time initialization workflows

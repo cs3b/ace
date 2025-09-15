@@ -88,7 +88,7 @@
 
 ## Additional Context
 
-- Task File: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.020-configuration-based-repository-filtering-for-git-commands.md
+- Task File: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.020-configuration-based-repository-filtering-for-git-commands.md
 - Status Change: draft → pending
 - Estimate Added: 4h
 - Key Files Analyzed: GitOrchestrator, MultiRepoCoordinator, ExecutableWrapper, ConfigurationLoader

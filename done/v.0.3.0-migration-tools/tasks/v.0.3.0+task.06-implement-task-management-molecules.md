@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.05]
 _Command run:_
 
 ```bash
-tree -L 1 dev-tools/lib/coding_agent_tools/molecules | sed 's/^/    /'
+tree -L 1 .ace/tools/lib/coding_agent_tools/molecules | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/molecules
+    .ace/tools/lib/coding_agent_tools/molecules
     └── (existing molecules)
 ```
 
@@ -72,7 +72,7 @@ Implement molecule components that compose atoms to provide higher-level task ma
   > TEST: Atom Review
   > Type: Pre-condition Check
   > Assert: All required atoms are available
-  > Command: ls dev-tools/lib/coding_agent_tools/atoms/task_management/*.rb | wc -l
+  > Command: ls .ace/tools/lib/coding_agent_tools/atoms/task_management/*.rb | wc -l
 * [x] Analyze exe-old logic for extraction patterns
 * [x] Design molecule interfaces with clear contracts
 
@@ -83,7 +83,7 @@ Implement molecule components that compose atoms to provide higher-level task ma
   > TEST: Task File Loader
   > Type: Unit Test
   > Assert: Loader can read and parse task files
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/task_management/task_file_loader_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/task_management/task_file_loader_spec.rb
 - [x] Implement release_path_resolver.rb for finding current release
 - [x] Implement task_dependency_checker.rb with cycle detection
 - [x] Implement task_id_generator.rb for sequential ID generation
@@ -91,7 +91,7 @@ Implement molecule components that compose atoms to provide higher-level task ma
   > TEST: Git Log Formatter
   > Type: Unit Test
   > Assert: Formatter handles multi-repo logs
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/task_management/git_log_formatter_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/task_management/git_log_formatter_spec.rb
 - [x] Create comprehensive tests for all molecules
 
 ## Acceptance Criteria
@@ -112,5 +112,5 @@ Implement molecule components that compose atoms to provide higher-level task ma
 ## References
 
 * Dependency: v.0.3.0+task.05 (atoms implementation)
-* Molecule pattern: dev-tools/lib/coding_agent_tools/molecules/
-* Logic reference: dev-tools/exe-old/get-next-task, get-recent-tasks
+* Molecule pattern: .ace/tools/lib/coding_agent_tools/molecules/
+* Logic reference: .ace/tools/exe-old/get-next-task, get-recent-tasks

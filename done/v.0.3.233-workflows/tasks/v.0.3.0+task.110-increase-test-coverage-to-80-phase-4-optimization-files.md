@@ -13,20 +13,20 @@ dependencies: [v.0.3.0+task.109]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/atoms
+.ace/tools/lib/coding_agent_tools/atoms
 ├── directory_scanner.rb
 └── project_root_detector.rb
 ```
 
 ## Objective
 
-Optimize test coverage from good levels (71-78%) to at least 80% for 2 well-tested atom files in the dev-tools Ruby gem. This phase focuses on fine-tuning coverage for files that are already well-tested but need minor improvements to reach the 80% target.
+Optimize test coverage from good levels (71-78%) to at least 80% for 2 well-tested atom files in the .ace/tools Ruby gem. This phase focuses on fine-tuning coverage for files that are already well-tested but need minor improvements to reach the 80% target.
 
 ## Scope of Work
 
@@ -39,8 +39,8 @@ Optimize test coverage from good levels (71-78%) to at least 80% for 2 well-test
 
 #### Modify
 
-- `dev-tools/spec/coding_agent_tools/atoms/directory_scanner_spec.rb` (enhance existing tests)
-- `dev-tools/spec/coding_agent_tools/atoms/project_root_detector_spec.rb` (enhance existing tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/directory_scanner_spec.rb` (enhance existing tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/project_root_detector_spec.rb` (enhance existing tests)
 
 #### Create
 
@@ -61,14 +61,14 @@ Optimize test coverage from good levels (71-78%) to at least 80% for 2 well-test
   > TEST: Directory Scanner Gap Analysis
   > Type: Pre-condition Check
   > Assert: Specific untested lines and scenarios are identified
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/directory_scanner_spec.rb --format documentation && bundle exec rake coverage:show[coding_agent_tools/atoms/directory_scanner.rb]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/directory_scanner_spec.rb --format documentation && bundle exec rake coverage:show[coding_agent_tools/atoms/directory_scanner.rb]
   > RESULT: Found that directory_scanner_spec.rb didn't exist (71.43% coverage from indirect testing). Created comprehensive test suite.
 
 - [x] Review existing test coverage for project_root_detector.rb and identify improvement opportunities
   > TEST: Project Root Detector Gap Analysis
   > Type: Pre-condition Check
   > Assert: Specific untested scenarios are documented
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/project_root_detector_spec.rb --format documentation && bundle exec rake coverage:show[coding_agent_tools/atoms/project_root_detector.rb]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/project_root_detector_spec.rb --format documentation && bundle exec rake coverage:show[coding_agent_tools/atoms/project_root_detector.rb]
   > RESULT: Found 78.21% coverage with 17 missed lines. Identified edge cases around caching, tertiary markers, and special directory detection.
 
 - [x] Identify edge cases and boundary conditions that may be missing from current tests
@@ -83,7 +83,7 @@ Optimize test coverage from good levels (71-78%) to at least 80% for 2 well-test
   > TEST: Directory Scanner Coverage Enhancement
   > Type: Coverage Validation
   > Assert: Coverage increased from 71.43% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/directory_scanner_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/directory_scanner.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/directory_scanner_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/directory_scanner.rb,80]
   > RESULT: Created complete directory_scanner_spec.rb with 15 test cases covering all scenarios. Achieved 100% coverage (21/21 lines).
 
 - [x] Enhance tests for project_root_detector.rb (78.21% → 100%)
@@ -93,14 +93,14 @@ Optimize test coverage from good levels (71-78%) to at least 80% for 2 well-test
   > TEST: Project Root Detector Coverage Enhancement
   > Type: Coverage Validation
   > Assert: Coverage increased from 78.21% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/project_root_detector_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/project_root_detector.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/project_root_detector_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/project_root_detector.rb,80]
   > RESULT: Added 4 additional test cases covering tertiary markers, deep nesting, and special directory scenarios. Achieved 100% coverage (78/78 lines).
 
 - [x] Run comprehensive test suite and verify Phase 4 coverage improvements
   > TEST: Phase 4 Overall Coverage
   > Type: Final Validation
   > Assert: Both target files achieve 80%+ coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/directory_scanner_spec.rb spec/coding_agent_tools/atoms/project_root_detector_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/directory_scanner_spec.rb spec/coding_agent_tools/atoms/project_root_detector_spec.rb --format progress
   > RESULT: Both files now achieve 100% coverage. All 43 test examples pass (15 for directory_scanner, 28 for project_root_detector).
 
 - [x] Generate final coverage report for all phases combined

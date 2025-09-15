@@ -8,7 +8,7 @@
 ## What Went Well
 
 - **Efficient Task Execution**: Successfully completed the Claude Code hooks task in a single session
-- **Template-Based Distribution**: Created reusable hook templates in `dev-handbook/.meta/tpl/claude-hooks/` for easy distribution
+- **Template-Based Distribution**: Created reusable hook templates in `.ace/handbook/.meta/tpl/claude-hooks/` for easy distribution
 - **Enhanced Git Workflow**: Added helpful git-commit suggestions when developers use `git add`, guiding them toward semantic commits
 - **Comprehensive Documentation**: Created clear README with installation, configuration, and troubleshooting guidance
 - **Automated Integration**: Modified integrate.rb to handle hooks with proper executable permissions

@@ -22,7 +22,7 @@
 
 - **Test Coverage Strategy**: Systematic approach to improving test coverage across CLI commands and organisms yields consistent results
 - **Workflow Instruction Value**: Following structured workflow instructions ensures comprehensive coverage of reflection process
-- **Multi-Repository Development**: The project's 4-repository structure (main, dev-handbook, dev-taskflow, dev-tools) requires careful coordination
+- **Multi-Repository Development**: The project's 4-repository structure (main, dev-handbook, dev-taskflow, .ace/tools) requires careful coordination
 - **Template System**: Project uses embedded templates in workflow instructions for consistency
 
 ## Conversation Analysis
@@ -98,7 +98,7 @@
 ## Technical Details
 
 **Files Modified in Session:**
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-070450-cli-tool-development-and-testing-session.md` (created)
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-070450-cli-tool-development-and-testing-session.md` (created)
 
 **Tools Used:**
 - TodoWrite: Task progression tracking

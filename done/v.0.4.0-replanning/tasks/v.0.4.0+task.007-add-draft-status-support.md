@@ -62,9 +62,9 @@ that are not yet ready for implementation, supporting the new specification cycl
 
 #### Modify
 
-* dev-tools/lib/coding\_agent\_tools/organisms/task\_creator.rb (if exists)
-* dev-tools/lib/coding\_agent\_tools/models/task.rb (add draft status)
-* dev-tools/spec/ (related test files)
+* .ace/tools/lib/coding\_agent\_tools/organisms/task\_creator.rb (if exists)
+* .ace/tools/lib/coding\_agent\_tools/models/task.rb (add draft status)
+* .ace/tools/spec/ (related test files)
 * docs/tools.md (document --status parameter)
 
 ## Acceptance Criteria
@@ -84,7 +84,7 @@ create-path task-new --title "implement user authentication system" --status "dr
 ```
 
 1.  The command creates a new task file with draft status:
-        # => Created: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.8-implement-user-authentication-system.md
+        # => Created: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.8-implement-user-authentication-system.md
 
 2.  The generated task file includes the draft status in metadata:
         ---

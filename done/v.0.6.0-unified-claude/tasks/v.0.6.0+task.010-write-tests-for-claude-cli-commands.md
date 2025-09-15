@@ -159,21 +159,21 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
 ## File Modifications
 
 ### Create
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb`
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/generate_commands_spec.rb`
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/update_registry_spec.rb`
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/validate_spec.rb`
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb`
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/list_spec.rb`
-- `dev-tools/spec/support/claude_test_helpers.rb`
-- `dev-tools/spec/fixtures/claude/` - Test fixtures directory
-- **[Added on review]** `dev-tools/spec/fixtures/claude/sample_workflows/` - Sample workflow files
-- **[Added on review]** `dev-tools/spec/fixtures/claude/commands/` - Sample command files
-- **[Added on review]** `dev-tools/spec/integration/claude_workflow_spec.rb` - Integration tests
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/generate_commands_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/update_registry_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/validate_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/list_spec.rb`
+- `.ace/tools/spec/support/claude_test_helpers.rb`
+- `.ace/tools/spec/fixtures/claude/` - Test fixtures directory
+- **[Added on review]** `.ace/tools/spec/fixtures/claude/sample_workflows/` - Sample workflow files
+- **[Added on review]** `.ace/tools/spec/fixtures/claude/commands/` - Sample command files
+- **[Added on review]** `.ace/tools/spec/integration/claude_workflow_spec.rb` - Integration tests
 
 ### Modify
-- `dev-tools/spec/spec_helper.rb` - Add Claude test configuration
-- **[Added on review]** `dev-tools/spec/support/cli_helpers.rb` - Add Claude command execution helpers
+- `.ace/tools/spec/spec_helper.rb` - Add Claude test configuration
+- **[Added on review]** `.ace/tools/spec/support/cli_helpers.rb` - Add Claude command execution helpers
 
 ### Delete
 - None required
@@ -216,7 +216,7 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
   module ClaudeTestHelpers
     def setup_claude_test_environment
       @temp_dir = Dir.mktmpdir
-      @handbook_dir = File.join(@temp_dir, "dev-handbook")
+      @handbook_dir = File.join(@temp_dir, ".ace/handbook")
       @claude_dir = File.join(@handbook_dir, ".integrations/claude")
       FileUtils.mkdir_p(@claude_dir)
     end
@@ -436,7 +436,7 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
 ## References
 
 - RSpec best practices
-- Existing test patterns in dev-tools
+- Existing test patterns in .ace/tools
 - Testing file system operations
 - **[Added on review]** spec/coding_agent_tools/cli/commands/handbook/sync_templates_spec.rb - Similar command test pattern
 - **[Added on review]** spec/support/cli_helpers.rb - CLI command testing infrastructure

@@ -64,7 +64,7 @@ Print a summary of task states (draft, pending, done, total) on top of any task 
 
 3. What is the most efficient way to query task states without impacting performance, especially for large task lists?
 
-> not sure, there might be more then houndreds, but lest then thousends files (meybe start with: `grep -r 'status:' dev-taskflow/current/v.0.4.0-replanning/tasks/**/*.md`)
+> not sure, there might be more then houndreds, but lest then thousends files (meybe start with: `grep -r 'status:' .ace/taskflow/current/v.0.4.0-replanning/tasks/**/*.md`)
 
 
 **Open Questions:**

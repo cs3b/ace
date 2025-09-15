@@ -93,5 +93,5 @@ To ensure that the output of `llm-query` commands targeting GPT-5 models is corr
 > SOURCE
 
 ```text
-in context of dev-tools/exe/llm-query with gpt5 models the result is not saved to markdown file, only the metadata - we need to investigate it
+in context of .ace/tools/exe/llm-query with gpt5 models the result is not saved to markdown file, only the metadata - we need to investigate it
 ```

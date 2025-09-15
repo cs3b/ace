@@ -48,12 +48,12 @@ Update all project documentation to remove old tool references (bin/tn, bin/tr, 
 #### Create
 
 * docs/migration-guide.md
-* dev-tools/exe-old/DEPRECATION_NOTICE.md
+* .ace/tools/exe-old/DEPRECATION_NOTICE.md
 
 #### Modify
 
 * CLAUDE.md
-* dev-handbook/workflow-instructions/*.wf.md
+* .ace/handbook/workflow-instructions/*.wf.md
 * docs/tools.md
 * README files as needed
 
@@ -78,7 +78,7 @@ Update all project documentation to remove old tool references (bin/tn, bin/tr, 
   > TEST: Old Tool References Audit
   > Type: Pre-condition Check
   > Assert: All old tool references found and categorized by priority
-  > Command: grep -r "bin/tn\|bin/tr\|bin/tal\|bin/tnid\|bin/rc" dev-handbook --include="*.md" | wc -l
+  > Command: grep -r "bin/tn\|bin/tr\|bin/tal\|bin/tnid\|bin/rc" .ace/handbook --include="*.md" | wc -l
   > RESULT: 80 references in dev-handbook, 3 in CLAUDE.md
 * [x] Create comprehensive tool mapping prioritizing higher-order tools over primitive commands
   > TEST: Higher-Order Tool Mapping
@@ -90,7 +90,7 @@ Update all project documentation to remove old tool references (bin/tn, bin/tr, 
   > TEST: Non-Ported Tool Usage
   > Type: Pre-condition Check
   > Assert: All usage of non-ported tools documented for future porting
-  > Command: grep -r "git " dev-handbook/workflow-instructions/ --include="*.md" | wc -l
+  > Command: grep -r "git " .ace/handbook/workflow-instructions/ --include="*.md" | wc -l
   > RESULT: 129 git references found in workflow instructions - leaving as-is per current tooling
 * [x] Prioritize documentation updates by user impact
   > TEST: Priority Classification
@@ -118,12 +118,12 @@ Update all project documentation to remove old tool references (bin/tn, bin/tr, 
   > TEST: Higher-Order Tool Adoption
   > Type: Content Validation
   > Assert: Workflows use complete operations (nav-path task-new, not bin/rc+bin/tnid+manual)
-  > Command: grep -c "nav-path task-new\|nav-path file\|nav-path reflection-new" dev-handbook/workflow-instructions/create-task.wf.md dev-handbook/workflow-instructions/save-session-context.wf.md
+  > Command: grep -c "nav-path task-new\|nav-path file\|nav-path reflection-new" .ace/handbook/workflow-instructions/create-task.wf.md .ace/handbook/workflow-instructions/save-session-context.wf.md
   > RESULT: Workflow files updated to use higher-order tools
   > TEST: Primitive Command Elimination
   > Type: Content Validation
   > Assert: No primitive command sequences remain
-  > Command: grep -r "bin/rc.*bin/tnid\|manual.*path.*construction" dev-handbook/workflow-instructions/ --include="*.md" | wc -l
+  > Command: grep -r "bin/rc.*bin/tnid\|manual.*path.*construction" .ace/handbook/workflow-instructions/ --include="*.md" | wc -l
   > RESULT: 0 primitive command sequences found
 - [x] Create migration guide emphasizing higher-order tool patterns for AI agents
   > TEST: Higher-Order Tool Guide
@@ -135,19 +135,19 @@ Update all project documentation to remove old tool references (bin/tn, bin/tr, 
   > TEST: Deprecation Notice
   > Type: File Check
   > Assert: Notice exists and is clear
-  > Command: test -f dev-tools/exe-old/DEPRECATION_NOTICE.md && grep -c "DEPRECATED" dev-tools/exe-old/DEPRECATION_NOTICE.md
+  > Command: test -f .ace/tools/exe-old/DEPRECATION_NOTICE.md && grep -c "DEPRECATED" .ace/tools/exe-old/DEPRECATION_NOTICE.md
   > RESULT: 2 DEPRECATED references found in notice
 - [x] Update README files with new installation and usage instructions
   > TEST: README Updates
   > Type: Content Validation
   > Assert: READMEs reference new gem executables (using tool names, not paths)
-  > Command: grep -c "llm-query\|task-manager" README.md dev-tools/README.md
-  > RESULT: 15 gem executable references found in dev-tools/README.md (main README not present)
+  > Command: grep -c "llm-query\|task-manager" README.md .ace/tools/README.md
+  > RESULT: 15 gem executable references found in .ace/tools/README.md (main README not present)
 - [x] Test updated documentation with actual tool execution
   > TEST: Documentation Testing
   > Type: Integration Test
   > Assert: Migration guide can be followed successfully
-  > Command: cd /tmp && fish -c "source /path/to/dev-tools/config/bin-setup-env/setup.fish && llm-models --help"
+  > Command: cd /tmp && fish -c "source /path/to/.ace/tools/config/bin-setup-env/setup.fish && llm-models --help"
   > RESULT: Testing deferred - documentation structure verified, tools functional per existing CI
 
 ## Acceptance Criteria
@@ -204,7 +204,7 @@ nav-path file architecture
 **❌ AVOID: Manual Session Management**
 ```bash
 # Manual session directory and filename construction
-RELEASE_DIR=$(ls -d dev-taskflow/current/*/ 2>/dev/null | head -1)
+RELEASE_DIR=$(ls -d .ace/taskflow/current/*/ 2>/dev/null | head -1)
 SESSION_DIR="${RELEASE_DIR}sessions/"
 mkdir -p "$SESSION_DIR"
 FILENAME="$(date +%Y%m%d-%H%M%S)-compact-log.md"
@@ -231,4 +231,4 @@ nav-path reflection-new --title "oauth-implementation-review"
 * Higher-order tool focus: nav-path, task-manager, release-manager, code-review
 * Target audience: AI agents requiring efficient complete operations
 * Tool hierarchy: Complete operations > Domain operations > Individual executables > Primitives
-* Workflow instruction reference: dev-handbook/.meta/wfi/update-tools-documentation.wf.md
+* Workflow instruction reference: .ace/handbook/.meta/wfi/update-tools-documentation.wf.md

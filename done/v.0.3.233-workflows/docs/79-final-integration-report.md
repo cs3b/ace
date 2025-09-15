@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-This report documents the completion of Task 79, which served as a coordination role for validating the integration of focused testing tasks 107-110 aimed at achieving 80%+ test coverage for the dev-tools Ruby gem.
+This report documents the completion of Task 79, which served as a coordination role for validating the integration of focused testing tasks 107-110 aimed at achieving 80%+ test coverage for the .ace/tools Ruby gem.
 
 ## Key Findings
 

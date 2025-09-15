@@ -124,6 +124,6 @@ The draft-tasks workflow successfully processed 10 feedback items:
 
 ## Additional Context
 
-- Original feedback source: `dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
+- Original feedback source: `.ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
 - Related to v.0.6.0 unified Claude integration milestone
 - All draft tasks ready for implementation planning phase

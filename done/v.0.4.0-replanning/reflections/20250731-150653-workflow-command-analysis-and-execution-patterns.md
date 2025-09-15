@@ -23,7 +23,7 @@
 ## Key Learnings
 
 - The project uses a sophisticated workflow system with embedded templates and structured file organization
-- Reflection notes are organized within release contexts (`dev-taskflow/current/v.0.4.0-replanning/reflections/`)
+- Reflection notes are organized within release contexts (`.ace/taskflow/current/v.0.4.0-replanning/reflections/`)
 - The `create-path` tool automatically handles directory creation, filename generation with timestamps, and release context determination
 - Workflow instructions contain comprehensive process guidance but depend on external tools for execution
 - The template system supports multiple document types but may have gaps in template availability

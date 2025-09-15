@@ -28,7 +28,7 @@ This is a monumental and transformative set of changes. It represents a complete
 This diff executes a massive refactoring that replaces the previous script-based system with a formal ATOM (Atoms, Molecules, Organisms) architecture, implemented as a Ruby gem. Key improvements include:
 
 *   **Unified Architecture**: The introduction of `atoms`, `molecules`, and `organisms` provides a clear separation of concerns, making the codebase more modular and testable.
-*   **Consolidated Repository**: The `docs-dev` submodule is removed, and the project structure is simplified into `dev-tools`, `dev-handbook`, and `dev-taskflow`, which greatly improves maintainability.
+*   **Consolidated Repository**: The `docs-dev` submodule is removed, and the project structure is simplified into `.ace/tools`, `.ace/handbook`, and `.ace/taskflow`, which greatly improves maintainability.
 *   **Robust CLI**: A new, unified CLI is introduced under `exe/`, replacing the scattered `bin/` scripts and `.claude` commands. This provides a consistent and powerful user interface.
 *   **Enhanced Security**: The new architecture appears to incorporate dedicated security components, a significant improvement over the previous implementation.
 
@@ -38,13 +38,13 @@ While the architectural direction is excellent, the deletion of the entire `docs
 
 *   **ATOM Architecture**: The new structure in `lib/` is a textbook implementation of the ATOM pattern. This is a huge step up in architectural maturity, promoting reusability and separation of concerns.
 *   **CLI Design**: The move from scattered `bin` scripts and `.claude` commands to a unified set of `exe/` executables is excellent. Using `dry-cli` with a thin `ExecutableWrapper` is a robust and scalable pattern.
-*   **Repository Structure**: Consolidating the `docs-dev` submodule and renaming `docs-project` to `dev-taskflow` simplifies the project structure significantly. This makes the project self-contained and easier for new contributors to set up.
+*   **Repository Structure**: Consolidating the `docs-dev` submodule and renaming `docs-project` to `.ace/taskflow` simplifies the project structure significantly. This makes the project self-contained and easier for new contributors to set up.
 
 ### Code Quality & Best Practices
 
 *   **Code Duplication**: The new architecture is clearly designed to reduce code duplication. The `ExecutableWrapper` and the shared components in `lib/` are great examples of this.
 *   **Dependency Management**: The addition of `kramdown` and `kramdown-parser-gfm` to the gemspec suggests more powerful in-gem markdown processing capabilities, which is a smart move for a tool that interacts heavily with documentation.
-*   **File Naming and Organization**: The new file structure is logical and follows Ruby conventions. The renaming of `docs-project` and `docs-dev` to `dev-taskflow` and `dev-handbook` provides much clearer semantic meaning.
+*   **File Naming and Organization**: The new file structure is logical and follows Ruby conventions. The renaming of `docs-project` and `docs-dev` to `.ace/taskflow` and `.ace/handbook` provides much clearer semantic meaning.
 
 ### Security Assessment
 
@@ -57,7 +57,7 @@ Here are the most important points that need clarification or changes:
 #### 🔴 Critical
 
 1.  **Data Migration of `docs-project`**: The entire `docs-project` directory, which contained all historical tasks, ADRs, reflections, and code reviews, has been deleted.
-    *   **Question**: Was this data migrated to the new `dev-taskflow` directory? If not, the loss of this project history is a major concern that needs to be justified. Please confirm the status of this data.
+    *   **Question**: Was this data migrated to the new `.ace/taskflow` directory? If not, the loss of this project history is a major concern that needs to be justified. Please confirm the status of this data.
 
 #### 🟡 High
 

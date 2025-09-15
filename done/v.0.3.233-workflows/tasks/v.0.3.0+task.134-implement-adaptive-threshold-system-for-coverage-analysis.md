@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools
+.ace/tools/lib/coding_agent_tools
 ├── atoms/
 ├── molecules/
 ├── organisms/
@@ -45,15 +45,15 @@ Implement an adaptive threshold system that automatically finds the optimal cove
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/atoms/adaptive_threshold_calculator.rb
-- dev-tools/spec/coding_agent_tools/atoms/adaptive_threshold_calculator_spec.rb
+- .ace/tools/lib/coding_agent_tools/atoms/adaptive_threshold_calculator.rb
+- .ace/tools/spec/coding_agent_tools/atoms/adaptive_threshold_calculator_spec.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/coverage/analyze.rb
-- dev-tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
-- dev-tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb
-- dev-tools/lib/coding_agent_tools/molecules/report_formatter.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/coverage/analyze.rb
+- .ace/tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
+- .ace/tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb
+- .ace/tools/lib/coding_agent_tools/molecules/report_formatter.rb
 
 #### Delete
 
@@ -79,7 +79,7 @@ Implement an adaptive threshold system that automatically finds the optimal cove
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current threshold validation and usage patterns are identified
-  > Command: rg "threshold" dev-tools/lib --type rb -A 3 -B 3
+  > Command: rg "threshold" .ace/tools/lib --type rb -A 3 -B 3
 - [x] Research progressive threshold detection algorithms and best practices
 - [x] Design AdaptiveThresholdCalculator API for seamless integration with existing workflow
 
@@ -91,42 +91,42 @@ Implement an adaptive threshold system that automatically finds the optimal cove
   > TEST: Verify AdaptiveThresholdCalculator Creation
   > Type: Action Validation
   > Assert: AdaptiveThresholdCalculator atom file exists with core detection methods
-  > Command: test -f dev-tools/lib/coding_agent_tools/atoms/adaptive_threshold_calculator.rb && ruby -c dev-tools/lib/coding_agent_tools/atoms/adaptive_threshold_calculator.rb
+  > Command: test -f .ace/tools/lib/coding_agent_tools/atoms/adaptive_threshold_calculator.rb && ruby -c .ace/tools/lib/coding_agent_tools/atoms/adaptive_threshold_calculator.rb
 - [x] Implement calculate_optimal_threshold method with 10-90% progressive logic
   > TEST: Verify Threshold Calculation Logic
   > Type: Functionality Test
   > Assert: Method returns appropriate threshold based on file coverage distribution
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/adaptive_threshold_calculator_spec.rb::AdaptiveThresholdCalculator
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/adaptive_threshold_calculator_spec.rb::AdaptiveThresholdCalculator
 - [x] Add --adaptive CLI flag to coverage analyze command
   > TEST: Verify CLI Flag Addition
   > Type: Action Validation
   > Assert: --adaptive flag is properly defined in CLI command options
-  > Command: cd dev-tools && ruby -r./lib/coding_agent_tools -e "puts CodingAgentTools::Cli::Commands::Coverage::Analyze.new.class.options[:adaptive]"
+  > Command: cd .ace/tools && ruby -r./lib/coding_agent_tools -e "puts CodingAgentTools::Cli::Commands::Coverage::Analyze.new.class.options[:adaptive]"
 - [x] Integrate adaptive threshold calculation into CoverageAnalyzer organism
   > TEST: Verify Analyzer Integration
   > Type: Integration Test
   > Assert: CoverageAnalyzer can perform adaptive threshold detection
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/coverage_analyzer_spec.rb -t adaptive_threshold
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/coverage_analyzer_spec.rb -t adaptive_threshold
 - [x] Update CoverageAnalysisWorkflow to support adaptive mode execution
   > TEST: Verify Workflow Integration
   > Type: Integration Test
   > Assert: Workflow properly handles adaptive threshold selection and passes it through analysis pipeline
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb -t adaptive_mode
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb -t adaptive_mode
 - [x] Enhance ReportFormatter to display adaptive threshold selection reasoning
   > TEST: Verify Report Enhancement
   > Type: Output Validation
   > Assert: Reports show selected threshold and reasoning when adaptive mode is used
-  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; puts 'Adaptive reporting ready'" && echo "Manual verification: Check report output contains adaptive threshold info"
+  > Command: cd .ace/tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; puts 'Adaptive reporting ready'" && echo "Manual verification: Check report output contains adaptive threshold info"
 - [x] Create comprehensive test suite for AdaptiveThresholdCalculator with edge cases
   > TEST: Verify Test Coverage
   > Type: Test Validation
   > Assert: AdaptiveThresholdCalculator has comprehensive test coverage including edge cases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/adaptive_threshold_calculator_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/adaptive_threshold_calculator_spec.rb --format documentation
 - [x] Test adaptive threshold system with real SimpleCov data across different scenarios
   > TEST: Verify Real-World Functionality
   > Type: End-to-End Test
   > Assert: Adaptive threshold system works correctly with actual coverage data
-  > Command: cd dev-tools && coverage-analyze coverage/.resultset.json --adaptive --threshold 85 && echo "Manual verification: Adaptive mode produces actionable results"
+  > Command: cd .ace/tools && coverage-analyze coverage/.resultset.json --adaptive --threshold 85 && echo "Manual verification: Adaptive mode produces actionable results"
 
 ## Acceptance Criteria
 
@@ -152,8 +152,8 @@ Implement an adaptive threshold system that automatically finds the optimal cove
 ## References
 
 - Current coverage analysis implementation: `v.0.3.0+task.133-optimize-coverage-report-format-for-compact-output.md`
-- Coverage analysis architecture: `dev-tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb`
-- CLI command structure: `dev-tools/lib/coding_agent_tools/cli/commands/coverage/analyze.rb`
+- Coverage analysis architecture: `.ace/tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb`
+- CLI command structure: `.ace/tools/lib/coding_agent_tools/cli/commands/coverage/analyze.rb`
 - Atom architecture pattern: ATOM design principles (Atoms/Molecules/Organisms/Ecosystems)
 
 ## Implementation Notes
@@ -174,5 +174,5 @@ Implement an adaptive threshold system that automatically finds the optimal cove
 
 ✅ **Task Review Completed** - 2025-01-27
 - **Status**: Excellent implementation exceeding original requirements
-- **Review Document**: `dev-taskflow/current/v.0.3.0-workflows/reviews/task-134-review-adaptive-threshold-system.md`
-- **Reflection Document**: `dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-003238-adaptive-threshold-system-implementation.md`
+- **Review Document**: `.ace/taskflow/current/v.0.3.0-workflows/reviews/task-134-review-adaptive-threshold-system.md`
+- **Reflection Document**: `.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-003238-adaptive-threshold-system-implementation.md`

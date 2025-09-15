@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/exe-old/_binstubs | sed 's/^/    /'
+tree -L 2 .ace/tools/exe-old/_binstubs | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/exe-old/_binstubs
+    .ace/tools/exe-old/_binstubs
     ├── build
     ├── lint
     ├── run
@@ -28,12 +28,12 @@ _Result excerpt:_
 
 ## Objective
 
-The initialize-project-structure.wf.md workflow uses outdated four-tick markdown blocks for embedding templates, which violates the template-embedding.g.md guide. This critical workflow must be refactored to use the standard XML `<templates>` format and clarify that binstubs should be sourced from `dev-tools/exe-old/_binstubs`.
+The initialize-project-structure.wf.md workflow uses outdated four-tick markdown blocks for embedding templates, which violates the template-embedding.g.md guide. This critical workflow must be refactored to use the standard XML `<templates>` format and clarify that binstubs should be sourced from `.ace/tools/exe-old/_binstubs`.
 
 ## Scope of Work
 
 * Convert all four-tick markdown template embeddings to XML format
-* Update binstub references to point to dev-tools/exe-old/_binstubs
+* Update binstub references to point to .ace/tools/exe-old/_binstubs
 * Ensure single source of truth for all templates
 * Maintain workflow functionality while improving compliance
 
@@ -45,7 +45,7 @@ The initialize-project-structure.wf.md workflow uses outdated four-tick markdown
 
 #### Modify
 
-* dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+* .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
 #### Delete
 
@@ -68,7 +68,7 @@ The initialize-project-structure.wf.md workflow uses outdated four-tick markdown
   > Assert: All embedded templates identified and catalogued
   > Command: bin/test --check-template-analysis
 * [x] Count and list all four-tick markdown blocks to convert
-* [x] Verify binstub templates exist in dev-tools/exe-old/_binstubs
+* [x] Verify binstub templates exist in .ace/tools/exe-old/_binstubs
 
 ### Execution Steps
 
@@ -77,7 +77,7 @@ The initialize-project-structure.wf.md workflow uses outdated four-tick markdown
   > Type: Syntax Validation
   > Assert: No four-tick markdown blocks remain, all use XML format
   > Command: bin/test --check-xml-template-format
-* [x] Update binstub creation instructions to reference dev-tools/exe-old/_binstubs
+* [x] Update binstub creation instructions to reference .ace/tools/exe-old/_binstubs
 * [x] Ensure each template has proper path attribute in XML
 * [x] Remove any ambiguity about template source locations
   > TEST: Single Source of Truth
@@ -90,7 +90,7 @@ The initialize-project-structure.wf.md workflow uses outdated four-tick markdown
 
 * [x] All templates use XML `<templates><template path="..."></template></templates>` format
 * [x] No four-tick markdown blocks remain in the file
-* [x] Binstub references clearly point to dev-tools/exe-old/_binstubs
+* [x] Binstub references clearly point to .ace/tools/exe-old/_binstubs
 * [x] Single source of truth established for each template
 * [x] Workflow remains executable by AI agents
 
@@ -105,4 +105,4 @@ The initialize-project-structure.wf.md workflow uses outdated four-tick markdown
 
 * template-embedding.g.md (XML format specification)
 * Workflow review reports identifying the violation
-* dev-tools/exe-old/_binstubs directory for binstub templates
+* .ace/tools/exe-old/_binstubs directory for binstub templates

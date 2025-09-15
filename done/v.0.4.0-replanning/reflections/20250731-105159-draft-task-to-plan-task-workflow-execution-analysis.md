@@ -24,7 +24,7 @@
 
 ## Key Learnings
 
-- **ATOM Architecture Pattern**: Understanding of the existing dev-tools structure using Atoms/Molecules/Organisms/Ecosystems
+- **ATOM Architecture Pattern**: Understanding of the existing .ace/tools structure using Atoms/Molecules/Organisms/Ecosystems
 - **Multi-Repository Coordination**: GitOrchestrator and MultiRepoCoordinator provide infrastructure for multi-repo operations
 - **Command Registration Pattern**: All git commands follow ExecutableWrapper → CLI registration → command class pattern
 - **Behavioral vs Technical Separation**: Clear value in separating WHAT (behavioral) from HOW (technical) in task planning
@@ -110,7 +110,7 @@
 ## Technical Details
 
 **Architecture Insights Gained:**
-- ExecutableWrapper pattern in dev-tools/exe/* files
+- ExecutableWrapper pattern in .ace/tools/exe/* files
 - ATOM architecture: Atoms (core functions) → Molecules (combinations) → Organisms (complex operations)
 - Multi-repository coordination via GitOrchestrator and MultiRepoCoordinator
 - dry-cli framework for command structure and option parsing

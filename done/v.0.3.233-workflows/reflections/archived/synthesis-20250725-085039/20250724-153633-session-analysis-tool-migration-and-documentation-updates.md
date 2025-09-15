@@ -16,14 +16,14 @@
 
 ## What Could Be Improved
 
-- Initial command syntax confusion between `dev-tools/exe/git-commit` and `git-commit` required user correction
+- Initial command syntax confusion between `.ace/tools/exe/git-commit` and `git-commit` required user correction
 - Task creation process had minor issues with nav-path commands returning paths but not actually creating files properly
 - Required manual task file creation using task-manager generate-id to ensure proper sequential numbering
 - Documentation inconsistencies between different files (CLAUDE.md vs tools.md) needed systematic resolution
 
 ## Key Learnings
 
-- Direct command names (git-commit) are preferred over full executable paths (dev-tools/exe/git-commit) for user experience
+- Direct command names (git-commit) are preferred over full executable paths (.ace/tools/exe/git-commit) for user experience
 - Multi-repository coordination requires careful attention to command context and proper Git submodule handling
 - Systematic documentation updates need comprehensive scanning to catch all references to deprecated tools
 - Task creation workflows benefit from sequential processing rather than parallel execution to avoid ID conflicts
@@ -83,7 +83,7 @@
 
 ### Stop Doing
 
-- Using full executable paths (dev-tools/exe/) when direct command names are available
+- Using full executable paths (.ace/tools/exe/) when direct command names are available
 - Creating multiple tasks in parallel without waiting for completion confirmation
 - Assuming documentation consistency without systematic cross-reference validation
 
@@ -104,10 +104,10 @@
 ## Technical Details
 
 Key files modified during this session:
-- docs/tools.md: Updated all command references to use direct names instead of dev-tools/exe/ paths
+- docs/tools.md: Updated all command references to use direct names instead of .ace/tools/exe/ paths
 - CLAUDE.md: Fixed git-commit command reference and updated project focus description
 - CHANGELOG.md: Added comprehensive v0.3.0 release documentation with 25+ CLI tools
-- dev-taskflow/roadmap.md: Updated status, timestamps, and removed completed releases
+- .ace/taskflow/roadmap.md: Updated status, timestamps, and removed completed releases
 - Created 3 modernization tasks (IDs 73, 74, 75) for bin script replacement with CAT equivalents
 
 ## Additional Context

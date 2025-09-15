@@ -13,14 +13,14 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools -name "*shell_command_executor*" -type f | sed 's/^/    /'
+find .ace/tools -name "*shell_command_executor*" -type f | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
-    dev-tools/spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb
+    .ace/tools/lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
+    .ace/tools/spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb
 ```
 
 ## Objective
@@ -42,7 +42,7 @@ Replace the custom `escape_argument` method in ShellCommandExecutor with the mor
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
+- .ace/tools/lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
 
 #### Delete
 
@@ -62,7 +62,7 @@ Replace the custom `escape_argument` method in ShellCommandExecutor with the mor
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Custom escape method is identified
-  > Command: cd dev-tools && grep -A 5 "def.*escape_argument" lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
+  > Command: cd .ace/tools && grep -A 5 "def.*escape_argument" lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
 - [x] Identify all usages of escape_argument
 - [x] Review Shellwords.escape capabilities
 
@@ -74,7 +74,7 @@ Replace the custom `escape_argument` method in ShellCommandExecutor with the mor
   > TEST: Verify Shellwords Usage
   > Type: Action Validation
   > Assert: Shellwords.escape is used instead of custom method
-  > Command: cd dev-tools && grep -n "Shellwords.escape" lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
+  > Command: cd .ace/tools && grep -n "Shellwords.escape" lib/coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb
 - [x] Step 3: Remove the custom escape_argument method
   - Delete the entire method definition
   - Ensure no references remain
@@ -87,12 +87,12 @@ Replace the custom `escape_argument` method in ShellCommandExecutor with the mor
   > TEST: All Tests Pass
   > Type: Integration Test
   > Assert: ShellCommandExecutor tests pass with new implementation
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb
 - [x] Step 7: Verify no breaking changes
   > TEST: Integration Check
   > Type: Functional Test
   > Assert: Components using ShellCommandExecutor still work
-  > Command: cd dev-tools && grep -r "ShellCommandExecutor" --include="*.rb" | head -5
+  > Command: cd .ace/tools && grep -r "ShellCommandExecutor" --include="*.rb" | head -5
 
 ## Acceptance Criteria
 
@@ -111,6 +111,6 @@ Replace the custom `escape_argument` method in ShellCommandExecutor with the mor
 
 ## References
 
-- Code review report: dev-taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 133-138)
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 133-138)
 - Ruby Shellwords documentation
 - Shell command injection prevention best practices

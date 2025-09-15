@@ -97,7 +97,7 @@ Enable efficient context loading for AI agents and developers by consolidating m
 
 ## References
 
-- Original idea: dev-taskflow/backlog/ideas/001-context-loading-optimization.md
+- Original idea: .ace/taskflow/backlog/ideas/001-context-loading-optimization.md
 - Existing code: ProjectContextLoader from code-review
 - Similar tools: code-review-prepare project-context
 
@@ -115,42 +115,42 @@ Enable efficient context loading for AI agents and developers by consolidating m
 
 #### 1. Create Core Executable and CLI Command
 
-- [ ] Create `dev-tools/exe/context` executable
+- [ ] Create `.ace/tools/exe/context` executable
   ```ruby
   #!/usr/bin/env ruby
   require_relative "../lib/coding_agent_tools"
   CodingAgentTools::CLI.start(ARGV)
   ```
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/cli/commands/context.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/cli/commands/context.rb`
   - Define CLI options: --yaml, --from-agent, --yaml-string, --format
   - Parse and validate input parameters
   - Call ContextLoader organism
 
 #### 2. Create ATOM Components
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/atoms/context/template_parser.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/atoms/context/template_parser.rb`
   - Parse YAML template structure
   - Validate template format
   - Extract files and commands lists
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/context/context_aggregator.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/context/context_aggregator.rb`
   - Combine file contents and command outputs
   - Handle glob pattern expansion
   - Manage error collection
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/context/output_formatter.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/context/output_formatter.rb`
   - Format as XML structure
   - Format as YAML structure
   - Format as Markdown with embedded XML
   - Handle truncation for large outputs
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/context/agent_context_extractor.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/context/agent_context_extractor.rb`
   - Parse agent markdown files
   - Extract YAML from Context Definition section
   - Handle embedded vs external templates
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/organisms/context_loader.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/organisms/context_loader.rb`
   - Orchestrate template parsing
   - Execute file reading (reuse FileContentReader)
   - Execute commands (reuse SystemCommandExecutor)
@@ -267,7 +267,7 @@ Enable efficient context loading for AI agents and developers by consolidating m
 - [ ] Update `docs/tools.md` with context tool documentation
 - [ ] Add usage examples for all input methods
 - [ ] Document template format specification
-- [ ] Create example templates in `dev-tools/templates/context/`
+- [ ] Create example templates in `.ace/tools/templates/context/`
 
 ### Risk Analysis
 

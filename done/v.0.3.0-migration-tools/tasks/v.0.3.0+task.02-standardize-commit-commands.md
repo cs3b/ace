@@ -14,7 +14,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 docs dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 docs .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -24,7 +24,7 @@ _Result excerpt:_
     ├── architecture.md
     ├── blueprint.md
     └── what-do-we-build.md
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── commit.wf.md
     ├── draft-release.wf.md
     └── ...
@@ -50,7 +50,7 @@ Standardize all commit command references across documentation to use the consis
 #### Modify
 
 * docs/blueprint.md
-* dev-handbook/workflow-instructions/commit.wf.md
+* .ace/handbook/workflow-instructions/commit.wf.md
 
 #### Delete
 
@@ -105,5 +105,5 @@ Standardize all commit command references across documentation to use the consis
 ## References
 
 * Current inconsistent usage in docs/blueprint.md
-* Workflow documentation: dev-handbook/workflow-instructions/commit.wf.md
+* Workflow documentation: .ace/handbook/workflow-instructions/commit.wf.md
 * Related task from original plan: task.68

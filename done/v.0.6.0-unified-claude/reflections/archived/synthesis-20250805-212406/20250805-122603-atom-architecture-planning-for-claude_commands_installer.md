@@ -117,4 +117,4 @@ Each of these can be cleanly separated into focused components.
 - Task: v.0.6.0+task.022
 - Related: claude_command_generator.rb (already an Organism, good reference)
 - Architecture docs: docs/architecture-tools.md, ADR-011
-- Current implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Current implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb

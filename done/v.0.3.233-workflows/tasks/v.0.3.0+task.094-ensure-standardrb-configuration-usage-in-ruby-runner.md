@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.93]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-pattern.g.md
     ├── changelog.g.md
@@ -126,8 +126,8 @@ Verify and enhance the Ruby runner's integration with StandardRB configuration t
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb (if needed)
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/ruby_runner.rb (from task 93)
+- .ace/tools/lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb (if needed)
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/ruby_runner.rb (from task 93)
 
 #### Delete
 
@@ -149,7 +149,7 @@ Verify and enhance the Ruby runner's integration with StandardRB configuration t
   > Type: Pre-condition Check
   > Assert: .standard.yml file exists and contains expected configuration
   > Command: nav-path file .standard.yml
-  - Configuration found at dev-tools/.standard.yml with ignore patterns for vendor/, tmp/, coverage/, etc.
+  - Configuration found at .ace/tools/.standard.yml with ignore patterns for vendor/, tmp/, coverage/, etc.
 - [x] Review StandardRB validator implementation for configuration usage
   - StandardRbValidator defaults to .standard.yml and passes it to standardrb via --config flag
   - Config file detection works correctly via File.exist? check
@@ -163,7 +163,7 @@ Verify and enhance the Ruby runner's integration with StandardRB configuration t
   > TEST: Ignore Pattern Validation
   > Type: Configuration Validation
   > Assert: Files matching ignore patterns in .standard.yml are not processed
-  > Command: code-lint ruby dev-tools/vendor/ --dry-run
+  > Command: code-lint ruby .ace/tools/vendor/ --dry-run
 - [ ] Ensure Ruby runner passes correct working directory to StandardRB validator
 - [ ] Validate autofix functionality works correctly with StandardRB configuration
   > TEST: Autofix with Configuration
@@ -175,7 +175,7 @@ Verify and enhance the Ruby runner's integration with StandardRB configuration t
 
 ## Acceptance Criteria
 
-- [x] AC 1: Ruby runner correctly uses existing dev-tools/.standard.yml configuration file
+- [x] AC 1: Ruby runner correctly uses existing .ace/tools/.standard.yml configuration file
 - [x] AC 2: StandardRB validator respects ignore patterns defined in configuration
 - [x] AC 3: Autofix functionality applies StandardRB rules according to configuration settings
 - [x] AC 4: Ruby runner logs which StandardRB configuration file is being used
@@ -191,7 +191,7 @@ Verify and enhance the Ruby runner's integration with StandardRB configuration t
 ## References
 
 ```
-StandardRB config: dev-tools/.standard.yml
+StandardRB config: .ace/tools/.standard.yml
 Configuration reference: .coding-agent/lint.yml (ruby.linters.standardrb.config_file)
-Validator implementation: dev-tools/lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb
+Validator implementation: .ace/tools/lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb
 ```

@@ -23,7 +23,7 @@ Analyze and improve test coverage for the DotGraphWriter atom to ensure comprehe
 
 #### Status
 
-- dev-tools/spec/coding_agent_tools/atoms/dot_graph_writer_spec.rb (enhanced with comprehensive coverage)
+- .ace/tools/spec/coding_agent_tools/atoms/dot_graph_writer_spec.rb (enhanced with comprehensive coverage)
 
 ## Implementation Plan
 
@@ -38,7 +38,7 @@ Analyze and improve test coverage for the DotGraphWriter atom to ensure comprehe
   > TEST: Verify existing tests
   > Type: Pre-condition Check
   > Assert: Tests exist and run successfully
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/dot_graph_writer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/dot_graph_writer_spec.rb
 - [x] Enhance tests with comprehensive edge cases and error handling
 - [x] Add performance and memory efficiency tests
 - [x] Add DOT format compliance validation tests
@@ -46,7 +46,7 @@ Analyze and improve test coverage for the DotGraphWriter atom to ensure comprehe
   > TEST: Enhanced test suite validation
   > Type: Comprehensive Validation
   > Assert: All 34 test examples pass successfully
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/dot_graph_writer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/dot_graph_writer_spec.rb
 
 ## Acceptance Criteria
 

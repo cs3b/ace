@@ -96,7 +96,7 @@
 
 **Configuration Features:**
 - Configurable file patterns for different document types
-- Skip folders capability (e.g., dev-taskflow)
+- Skip folders capability (e.g., .ace/taskflow)
 - Exclude patterns for granular filtering
 - External/anchor link inclusion controls
 
@@ -104,11 +104,11 @@
 - **Files Created**: 17 new files (13 implementation + 3 tests + 1 CLI restructure)
 - **Lines Added**: 1,458 lines of new code
 - **Test Coverage**: 9/10 unit tests passing
-- **Configuration Impact**: File analysis reduced from 261 to 54 files with dev-taskflow skipped
+- **Configuration Impact**: File analysis reduced from 261 to 54 files with .ace/taskflow skipped
 
 ## Additional Context
 
 - Task completed in single session with all acceptance criteria met
-- All commits made across 3 repositories (main, dev-taskflow, dev-tools)
+- All commits made across 3 repositories (main, dev-taskflow, .ace/tools)
 - New command fully replaces deprecated bin/analyze-doc-dependencies
 - Enhanced capabilities include better statistics and configurable analysis scope

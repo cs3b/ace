@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-house-rules.md
     ├── changelog.g.md
     ├── code-review
@@ -109,8 +109,8 @@ Resolve critical path inconsistencies across workflow files where some workflows
 
 ## Scope of Work
 
-* Fix path conflicts in `initialize-project-structure.wf.md` where "Project Context Loading" section incorrectly references `dev-taskflow/` instead of canonical `docs/` location
-* Fix path conflicts in `update-blueprint.wf.md` where the workflow targets `dev-taskflow/blueprint.md` instead of canonical `docs/blueprint.md`
+* Fix path conflicts in `initialize-project-structure.wf.md` where "Project Context Loading" section incorrectly references `.ace/taskflow/` instead of canonical `docs/` location
+* Fix path conflicts in `update-blueprint.wf.md` where the workflow targets `.ace/taskflow/blueprint.md` instead of canonical `docs/blueprint.md`
 * Fix path conflicts in `load-project-context.wf.md` if similar issues exist
 * Ensure all workflow files consistently reference the single source of truth in `docs/` directory
 
@@ -118,9 +118,9 @@ Resolve critical path inconsistencies across workflow files where some workflows
 
 #### Modify
 
-* dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-* dev-handbook/workflow-instructions/update-blueprint.wf.md
-* dev-handbook/workflow-instructions/load-project-context.wf.md (if applicable)
+* .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
+* .ace/handbook/workflow-instructions/update-blueprint.wf.md
+* .ace/handbook/workflow-instructions/load-project-context.wf.md (if applicable)
 
 ## Phases
 
@@ -143,11 +143,11 @@ Resolve critical path inconsistencies across workflow files where some workflows
 ### Execution Steps
 
 * [x] Fix initialize-project-structure.wf.md "Project Context Loading" section paths
-* [x] Fix update-blueprint.wf.md target file path from dev-taskflow/ to docs/
+* [x] Fix update-blueprint.wf.md target file path from .ace/taskflow/ to docs/
   > TEST: Verify Blueprint Path Update
   > Type: Action Validation
   > Assert: update-blueprint.wf.md correctly targets docs/blueprint.md
-  > Command: bin/test --check-workflow-paths dev-handbook/workflow-instructions/update-blueprint.wf.md
+  > Command: bin/test --check-workflow-paths .ace/handbook/workflow-instructions/update-blueprint.wf.md
 * [x] Update load-project-context.wf.md if path conflicts exist
 * [x] Verify all workflow files use consistent `docs/` references for core documents
   > TEST: Verify Core Document Path Consistency
@@ -170,7 +170,7 @@ Resolve critical path inconsistencies across workflow files where some workflows
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying path conflicts
+* .ace/taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying path conflicts
 * docs/what-do-we-build.md - Canonical project vision document
 * docs/architecture.md - Canonical architecture document  
 * docs/blueprint.md - Canonical project structure document

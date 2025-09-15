@@ -15,13 +15,13 @@ dependencies: [v.0.3.0+task.06]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/cli/commands
+    .ace/tools/lib/coding_agent_tools/cli/commands
     ├── llm
     └── (other command directories)
 ```
@@ -85,7 +85,7 @@ Implement intelligent navigation CLI commands that provide sophisticated path re
 #### Modify
 
 * lib/coding_agent_tools/cli.rb (register nav module namespace) - already updated
-* dev-tools/config/binstub-aliases.yml (add np/nt shortcuts for nav commands)
+* .ace/tools/config/binstub-aliases.yml (add np/nt shortcuts for nav commands)
 
 #### Delete
 
@@ -114,7 +114,7 @@ Implement intelligent navigation CLI commands that provide sophisticated path re
   > TEST: Tree Options Analysis
   > Type: Pre-condition Check
   > Assert: Tree command options understood
-  > Command: grep -E "depth|exclude|include" dev-tools/exe-old/show-directory-tree | wc -l
+  > Command: grep -E "depth|exclude|include" .ace/tools/exe-old/show-directory-tree | wc -l
 * [x] Research path resolution security requirements (project root sandbox)
   > TEST: Security Requirements Analysis
   > Type: Pre-condition Check
@@ -142,54 +142,54 @@ Implement intelligent navigation CLI commands that provide sophisticated path re
   > TEST: Nav Config Loaders
   > Type: Unit Test
   > Assert: Nav configuration loaders parse YAML files correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/nav_tree_config_loader_spec.rb spec/coding_agent_tools/molecules/nav_path_config_loader_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/nav_tree_config_loader_spec.rb spec/coding_agent_tools/molecules/nav_path_config_loader_spec.rb
 - [x] Implement project_sandbox molecule for project root security boundary
   > TEST: Project Sandbox Security
   > Type: Security Test
   > Assert: All path operations stay within project root
-  > Command: cd dev-tools && bundle exec rspec spec/molecules/project_sandbox_spec.rb --tag security
+  > Command: cd .ace/tools && bundle exec rspec spec/molecules/project_sandbox_spec.rb --tag security
 - [x] Implement path_resolver molecule with sandbox integration
   > TEST: Path Resolver Security
   > Type: Security Test
   > Assert: Path resolver works within project sandbox
-  > Command: cd dev-tools && bundle exec rspec spec/molecules/path_resolver_spec.rb --tag security
+  > Command: cd .ace/tools && bundle exec rspec spec/molecules/path_resolver_spec.rb --tag security
 - [x] Implement path_autocorrector molecule with fzf integration and fallback
   > TEST: Path Autocorrector with FZF
   > Type: Unit Test
   > Assert: Path autocorrector uses fzf when available, fallback otherwise
-  > Command: cd dev-tools && bundle exec rspec spec/molecules/path_autocorrector_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/molecules/path_autocorrector_spec.rb
 - [x] Add multiple match handling with selectable list output
   > TEST: Multiple Match Selection
   > Type: CLI Test
   > Assert: Multiple matches displayed as numbered list for selection
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools nav path file "test" | grep -E "^[0-9]+\)"
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools nav path file "test" | grep -E "^[0-9]+\)"
 - [x] Create nav.rb module namespace with intelligent path resolution
 - [x] Implement nav-path with task-new, task, docs-new, reflection-new, and file subcommands
   > TEST: Nav Path Intelligent Resolution
   > Type: CLI Test
   > Assert: Nav path resolves and generates paths correctly
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools nav path task-new --title "test-task"
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools nav path task-new --title "test-task"
 - [x] Implement nav-tree with parameter parsing, path filtering, and system tree delegation
   > TEST: Nav Tree Implementation
   > Type: CLI Test
   > Assert: Nav tree parses parameters, filters paths, and delegates to system tree command
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools nav tree
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools nav tree
 - [x] Add integration with bin/rc and bin/tnid for path generation across all 4 repositories
   > TEST: Multi-Repository Integration
   > Type: Integration Test
   > Assert: Nav commands scan all 4 repositories using path.yml ordering
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools nav path task-new --title "integration-test"
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools nav path task-new --title "integration-test"
 - [x] Register nav module namespace in CLI module
 - [ ] Update binstub-aliases.yml to add nav command shortcuts (np for nav-path, nt for nav-tree)
   > TEST: Binstub Integration
   > Type: Configuration Test
   > Assert: Binstub aliases are properly configured for nav commands
-  > Command: grep -E "(np|nt):" dev-tools/config/binstub-aliases.yml
+  > Command: grep -E "(np|nt):" .ace/tools/config/binstub-aliases.yml
 - [x] Create comprehensive CLI tests using Aruba including security and performance tests
   > TEST: Comprehensive CLI Testing
   > Type: Integration Test
   > Assert: All nav commands work correctly with edge cases
-  > Command: cd dev-tools && bundle exec rspec spec/cli/nav_integration_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/nav_integration_spec.rb
 
 ## Acceptance Criteria
 
@@ -226,7 +226,7 @@ Implement intelligent navigation CLI commands that provide sophisticated path re
 ## References
 
 * Dependency: v.0.3.0+task.06 (molecules for shell operations and path handling) - ✅ COMPLETED
-* Tree tool: dev-tools/exe-old/show-directory-tree (116 lines) - reference for parameter parsing patterns
+* Tree tool: .ace/tools/exe-old/show-directory-tree (116 lines) - reference for parameter parsing patterns
 * Current tree wrapper: bin/tree - simple eza wrapper that nav-tree complements (different use case)
 * System tree command: nav-tree will parse parameters, filter paths, then delegate to system `tree` command
 * Nav-specific configs: .coding-agent/nav-tree.yml and .coding-agent/nav-path.yml (new files for nav commands)
@@ -237,5 +237,5 @@ Implement intelligent navigation CLI commands that provide sophisticated path re
 * Security considerations: Project root sandboxing prevents path traversal outside project
 * Performance optimization: fzf integration for fast fuzzy search with graceful fallback
 * Configuration approach: Repository-specific .coding-agent/ configs (tree.yml, path.yml)
-* Multi-repository scanning: All 4 repos (tools-meta, dev-tools, dev-taskflow, dev-handbook)
+* Multi-repository scanning: All 4 repos (tools-meta, dev-tools, dev-taskflow, .ace/handbook)
 * XDG compliance: Follow existing patterns from XDGDirectoryResolver atom

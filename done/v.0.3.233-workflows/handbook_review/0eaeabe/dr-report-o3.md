@@ -10,7 +10,7 @@ Fixing these items will restore strict self-containment, ensure parsing reliabil
 
 | Missing / Incorrect | Required Workflow Action | File Path | Priority |
 |---------------------|--------------------------|-----------|----------|
-| Wrong extension (.md) | Rename to comply with `<verb>-<context>.wf.md` | `dev-handbook/workflow-instructions/save-session-context.md` | 🔴 |
+| Wrong extension (.md) | Rename to comply with `<verb>-<context>.wf.md` | `.ace/handbook/workflow-instructions/save-session-context.md` | 🔴 |
 | Check-boxes inside Process section | Convert to numbered / bullet lists per guide | `…/commit.wf.md` | 🟡 |
 | H1 title includes “Let’s” (style clash) | Change to “Commit Workflow Instruction” | `…/commit.wf.md` | 🟢 |
 | Residual “path (…)” refs (should be prose or removed) | Replace with neutral description or remove | `create-adr.wf.md`, `create-api-docs.wf.md`, `create-task.wf.md`, others | 🟢 |

@@ -23,7 +23,7 @@ Improve test coverage for the FileAnalyzer molecule by fixing failing tests and 
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/molecules/file_analyzer_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/file_analyzer_spec.rb
 
 ## Phases
 
@@ -43,7 +43,7 @@ Improve test coverage for the FileAnalyzer molecule by fixing failing tests and 
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current test failures and coverage gaps are identified
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
 - [x] Run coverage analysis to identify specific uncovered lines
 - [x] Plan targeted test improvements for maximum impact
 
@@ -55,17 +55,17 @@ Improve test coverage for the FileAnalyzer molecule by fixing failing tests and 
   > TEST: Test Suite Recovery
   > Type: Action Validation
   > Assert: All FileAnalyzer tests pass without errors
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
 - [x] Add edge case test for "no methods found" scenario (line 84 coverage)
   > TEST: Edge Case Coverage
   > Type: Action Validation
   > Assert: Fallback behavior when method mapper returns empty array is tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
 - [x] Add comprehensive sorting functionality tests for all sort criteria
   > TEST: Sort Logic Coverage
   > Type: Action Validation
   > Assert: All sort methods (priority, unknown default) are covered
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/file_analyzer_spec.rb
 - [x] Verify overall coverage improvement with targeted approach
 
 ## Acceptance Criteria
@@ -87,8 +87,8 @@ Improve test coverage for the FileAnalyzer molecule by fixing failing tests and 
 
 ## References
 
-- FileAnalyzer implementation: `dev-tools/lib/coding_agent_tools/molecules/file_analyzer.rb`
-- Test file: `dev-tools/spec/coding_agent_tools/molecules/file_analyzer_spec.rb`
+- FileAnalyzer implementation: `.ace/tools/lib/coding_agent_tools/molecules/file_analyzer.rb`
+- Test file: `.ace/tools/spec/coding_agent_tools/molecules/file_analyzer_spec.rb`
 - Coverage report analysis from development workflow
 - ATOM architecture principles for molecule-level testing
 - Reflection note: `task-219-reflection.md`

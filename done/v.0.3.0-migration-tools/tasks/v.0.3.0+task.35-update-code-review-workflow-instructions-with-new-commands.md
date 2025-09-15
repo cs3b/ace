@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.34]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/
+    .ace/handbook/workflow-instructions/
       - README.md
       - review-code.wf.md
       - ... (20 workflow files total)
@@ -45,7 +45,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
 
 #### Modify
 
-- dev-handbook/workflow-instructions/review-code.wf.md
+- .ace/handbook/workflow-instructions/review-code.wf.md
 
 #### Delete
 
@@ -65,7 +65,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Script Identification Check
   > Type: Pre-condition Check
   > Assert: All bash script sections requiring replacement are identified
-  > Command: grep -n "```bash" dev-handbook/workflow-instructions/review-code.wf.md | wc -l
+  > Command: grep -n "```bash" .ace/handbook/workflow-instructions/review-code.wf.md | wc -l
 - [x] Map each bash script functionality to corresponding new command
 - [x] Verify new command options match workflow requirements
 
@@ -86,7 +86,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Session Creation Command
   > Type: Command Validation
   > Assert: Session directory creation uses new command
-  > Command: grep -A5 "session-dir" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A5 "session-dir" .ace/handbook/workflow-instructions/review-code.wf.md
 
 - [x] Update Project Context Loading (lines 112-128)
   - Replace manual loading with `code-review-prepare project-context` command
@@ -94,7 +94,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Context Loading Update
   > Type: Content Check
   > Assert: Context loading uses code-review-prepare command
-  > Command: grep -B2 -A2 "project-context" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -B2 -A2 "project-context" .ace/handbook/workflow-instructions/review-code.wf.md
 
 - [x] Replace Target Content Resolution (lines 130-201)
   - Replace git diff scripts with `code-review-prepare project-target` command
@@ -102,7 +102,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Target Resolution Update
   > Type: Content Validation
   > Assert: Target resolution uses new command
-  > Command: grep -n "project-target" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -n "project-target" .ace/handbook/workflow-instructions/review-code.wf.md
 
 - [x] Update Combined Prompt Construction (lines 231-314)
   - Replace manual prompt building with `code-review-prepare prompt` command
@@ -110,7 +110,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Prompt Construction Update
   > Type: Content Check
   > Assert: Prompt construction uses new command
-  > Command: grep -A3 "code-review-prepare prompt" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A3 "code-review-prepare prompt" .ace/handbook/workflow-instructions/review-code.wf.md
 
 - [x] Simplify Multi-Model LLM Execution (lines 324-387)
   - Update to show how `code-review` command handles multi-model execution
@@ -118,7 +118,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: LLM Execution Update
   > Type: Content Validation
   > Assert: LLM execution section references code-review command
-  > Command: grep -B2 -A5 "code-review.*--model" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -B2 -A5 "code-review.*--model" .ace/handbook/workflow-instructions/review-code.wf.md
 
 - [x] Update Usage Examples (lines 503-577)
   - Replace all `@review-code` with `code-review` command syntax
@@ -127,7 +127,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Examples Update
   > Type: Example Count
   > Assert: All examples use new command syntax
-  > Command: grep -c "code-review " dev-handbook/workflow-instructions/review-code.wf.md | grep -E "[5-9]|[1-9][0-9]"
+  > Command: grep -c "code-review " .ace/handbook/workflow-instructions/review-code.wf.md | grep -E "[5-9]|[1-9][0-9]"
 
 - [x] Update Error Handling section (lines 593-841)
   - Adjust error recovery to match new command behaviors
@@ -135,7 +135,7 @@ Replace custom bash scripts and manual processes in the code review workflow doc
   > TEST: Error Handling Update
   > Type: Content Check
   > Assert: Error handling references new commands
-  > Command: grep -A5 "code-review.*--session" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A5 "code-review.*--session" .ace/handbook/workflow-instructions/review-code.wf.md
 
 ## Acceptance Criteria
 
@@ -156,4 +156,4 @@ Replace custom bash scripts and manual processes in the code review workflow doc
 
 - Recently completed task: v.0.3.0+task.34 (Implement Code Review Module)
 - Command help: `code-review --help` and `code-review-prepare --help`
-- Current workflow: dev-handbook/workflow-instructions/review-code.wf.md
+- Current workflow: .ace/handbook/workflow-instructions/review-code.wf.md

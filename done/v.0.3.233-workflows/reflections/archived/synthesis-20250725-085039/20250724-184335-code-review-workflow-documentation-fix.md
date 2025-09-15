@@ -107,13 +107,13 @@
 ## Technical Details
 
 **Architecture Discovered:**
-- System prompts stored in `dev-handbook/templates/review-{focus}/system.prompt.md`
+- System prompts stored in `.ace/handbook/templates/review-{focus}/system.prompt.md`
 - Focus mapping: `code` → `review-code`, `docs` → `review-docs`, `tests` → `review-test`
 - `code-review` tool generates session content in `prompt.md`
 - `llm-query` syntax: `llm-query MODEL INPUT_FILE --system SYSTEM_PROMPT --timeout 600 --output OUTPUT_FILE`
 
 **Files Modified:**
-- `dev-handbook/workflow-instructions/review-code.wf.md`: Lines 147-148, 167-171, 155, added focus mapping
+- `.ace/handbook/workflow-instructions/review-code.wf.md`: Lines 147-148, 167-171, 155, added focus mapping
 
 ## Additional Context
 

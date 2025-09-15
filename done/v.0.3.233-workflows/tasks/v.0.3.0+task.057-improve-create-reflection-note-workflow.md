@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/
+    .ace/handbook/workflow-instructions/
     ├── create-reflection-note.wf.md
     └── other workflow files...
 ```
@@ -42,7 +42,7 @@ Enhance the create-reflection-note.wf.md workflow to incorporate self-reflection
 
 #### Modify
 
-* dev-handbook/workflow-instructions/create-reflection-note.wf.md
+* .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 ## Phases
 
@@ -60,13 +60,13 @@ Enhance the create-reflection-note.wf.md workflow to incorporate self-reflection
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current workflow sections and capabilities are documented
-  > Command: grep -E "^##|^###" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -E "^##|^###" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Review conversation analysis requirements from claude-commands/create-self-reflection-note.md
   > TEST: Requirements Analysis
   > Type: Pre-condition Check
   > Assert: Conversation analysis requirements are understood and documented
-  > Command: cat dev-taskflow/current/v.0.3.0-workflows/backlog/claude-commands/create-self-reflection-note.md
+  > Command: cat .ace/taskflow/current/v.0.3.0-workflows/backlog/claude-commands/create-self-reflection-note.md
 
 * [x] Design enhanced workflow structure with conversation analysis capabilities
   > TEST: Design Completeness
@@ -80,49 +80,49 @@ Enhance the create-reflection-note.wf.md workflow to incorporate self-reflection
   > TEST: Goal Section Update
   > Type: Action Validation
   > Assert: Goal section includes conversation analysis and self-reflection capabilities
-  > Command: grep -A 5 "## Goal" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 5 "## Goal" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Add conversation analysis process steps for self-reflection scenarios
   > TEST: Process Steps Addition
   > Type: Action Validation
   > Assert: Process steps include conversation analysis methodology
-  > Command: grep -A 10 "conversation analysis" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 10 "conversation analysis" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Implement pattern grouping and impact-based prioritization logic
   > TEST: Pattern Grouping Implementation
   > Type: Action Validation
   > Assert: Workflow includes pattern grouping by impact and challenge type
-  > Command: grep -A 5 "pattern grouping\|impact.*priorit" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 5 "pattern grouping\|impact.*priorit" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Add enhanced file naming with timestamp format (YYYYMMDD-HHMMSS)
   > TEST: File Naming Enhancement
   > Type: Action Validation
   > Assert: File naming includes timestamp format with example
-  > Command: grep -A 3 "YYYYMMDD-HHMMSS" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 3 "YYYYMMDD-HHMMSS" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Improve directory structure handling for current release context
   > TEST: Directory Structure Update
   > Type: Action Validation
   > Assert: Workflow includes proper directory structure for current release
-  > Command: grep -A 5 "bin/rc\|current release" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 5 "bin/rc\|current release" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Add token limit and truncation issue handling guidance
   > TEST: Token Limit Handling
   > Type: Action Validation
   > Assert: Workflow includes token limit and truncation handling
-  > Command: grep -A 3 "token limit\|truncat" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 3 "token limit\|truncat" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Update embedded templates to support conversation analysis
   > TEST: Template Update
   > Type: Action Validation
   > Assert: Embedded templates include conversation analysis sections
-  > Command: grep -A 10 "<template" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -A 10 "<template" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 * [x] Validate workflow follows self-containment principles
   > TEST: Self-Containment Check
   > Type: Post-condition Check
   > Assert: Workflow includes all necessary context and examples
-  > Command: grep -c "## Project Context Loading\|## Process Steps\|## Success Criteria" dev-handbook/workflow-instructions/create-reflection-note.wf.md
+  > Command: grep -c "## Project Context Loading\|## Process Steps\|## Success Criteria" .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 ## Acceptance Criteria
 
@@ -144,6 +144,6 @@ Enhance the create-reflection-note.wf.md workflow to incorporate self-reflection
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/backlog/claude-commands/create-self-reflection-note.md
-* dev-handbook/.meta/gds/workflow-instructions-definition.g.md
-* dev-handbook/workflow-instructions/create-reflection-note.wf.md (current version)
+* .ace/taskflow/current/v.0.3.0-workflows/backlog/claude-commands/create-self-reflection-note.md
+* .ace/handbook/.meta/gds/workflow-instructions-definition.g.md
+* .ace/handbook/workflow-instructions/create-reflection-note.wf.md (current version)

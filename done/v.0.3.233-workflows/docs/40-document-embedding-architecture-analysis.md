@@ -4,18 +4,18 @@
 
 ### Template Embedding Patterns Found
 
-Based on analysis of dev-handbook/workflow-instructions/*.wf.md files:
+Based on analysis of .ace/handbook/workflow-instructions/*.wf.md files:
 
 **High Duplication:**
 
-- `dev-handbook/templates/release-tasks/task.template.md` - Used 3 times
-- `dev-handbook/templates/project-docs/blueprint.template.md` - Used 2 times
+- `.ace/handbook/templates/release-tasks/task.template.md` - Used 3 times
+- `.ace/handbook/templates/project-docs/blueprint.template.md` - Used 2 times
 
 **Current XML Structure:**
 
 ```xml
 <templates>
-    <template path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path=".ace/handbook/templates/release-tasks/task.template.md">
         [template content here]
     </template>
 </templates>
@@ -24,8 +24,8 @@ Based on analysis of dev-handbook/workflow-instructions/*.wf.md files:
 **Path Patterns:**
 
 - All template paths are relative to project root
-- Templates are stored in `dev-handbook/templates/` with `.template.md` extension
-- Guides are stored in `dev-handbook/guides/` with `.g.md` extension
+- Templates are stored in `.ace/handbook/templates/` with `.template.md` extension
+- Guides are stored in `.ace/handbook/guides/` with `.g.md` extension
 
 ## Proposed Universal Document Embedding Architecture
 
@@ -40,11 +40,11 @@ Based on analysis of dev-handbook/workflow-instructions/*.wf.md files:
 
 ```xml
 <documents>
-    <template path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path=".ace/handbook/templates/release-tasks/task.template.md">
         [template content here]
     </template>
     
-    <guide path="dev-handbook/guides/testing.g.md">
+    <guide path=".ace/handbook/guides/testing.g.md">
         [guide content here]
     </guide>
 </documents>
@@ -95,9 +95,9 @@ Based on analysis of dev-handbook/workflow-instructions/*.wf.md files:
 
 ### File Organization Impact
 
-- Templates: `dev-handbook/templates/**/*.template.md`
-- Guides: `dev-handbook/guides/**/*.g.md`
-- Workflows: `dev-handbook/workflow-instructions/**/*.wf.md`
+- Templates: `.ace/handbook/templates/**/*.template.md`
+- Guides: `.ace/handbook/guides/**/*.g.md`
+- Workflows: `.ace/handbook/workflow-instructions/**/*.wf.md`
 
 ## Migration Plan
 

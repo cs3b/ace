@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.225, v.0.3.0+task.226, v.0.3.0+task.227, v.0.3.0+tas
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules | grep -A2 -B2 path_resolver
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules | grep -A2 -B2 path_resolver
 ```
 
 _Result excerpt:_
@@ -47,8 +47,8 @@ Prepare PathResolver to use ReleaseManager for release-relative path resolution.
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb
-- dev-tools/spec/coding_agent_tools/molecules/path_resolver_spec.rb
+- .ace/tools/lib/coding_agent_tools/molecules/path_resolver.rb
+- .ace/tools/spec/coding_agent_tools/molecules/path_resolver_spec.rb
 
 #### Delete
 
@@ -134,7 +134,7 @@ All acceptance criteria have been met:
 
 ## References
 
-- PathResolver: dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb
+- PathResolver: .ace/tools/lib/coding_agent_tools/molecules/path_resolver.rb
 - Future integration: This prepares for nav-path and create-path enhancements
 - Pattern design: Consider consistency with existing scoped patterns
 - Depends on all previous tasks being completed

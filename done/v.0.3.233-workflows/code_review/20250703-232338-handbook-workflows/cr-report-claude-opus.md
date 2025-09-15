@@ -19,13 +19,13 @@
   :currency: USD
 ---
 
-# Handbook Review: dev-handbook Changes Analysis
+# Handbook Review: .ace/handbook Changes Analysis
 
 ## 1. Executive Summary
 
 **Status: ⚠️ Major workflow updates implemented**
 
-The diff shows comprehensive workflow instruction additions covering 17 new workflows, each with detailed implementation guidance and embedded templates. The changes significantly expand the dev-handbook's capability to guide AI agents through complex development tasks. While the coverage is extensive, there are critical gaps in integration guides and cross-reference documentation that need immediate attention.
+The diff shows comprehensive workflow instruction additions covering 17 new workflows, each with detailed implementation guidance and embedded templates. The changes significantly expand the .ace/handbook's capability to guide AI agents through complex development tasks. While the coverage is extensive, there are critical gaps in integration guides and cross-reference documentation that need immediate attention.
 
 ## 2. Workflow Instructions Updates
 
@@ -109,7 +109,7 @@ Templates are embedded within workflow files rather than referenced from central
 
 **🔴 Critical Cross-Reference Issues:**
 
-1. Workflows reference `dev-handbook/templates/` paths that may not exist
+1. Workflows reference `.ace/handbook/templates/` paths that may not exist
 2. Multiple references to `llm-query` without documentation
 3. References to `bin/tnid`, `bin/rc`, `bin/gc` commands without specification
 4. Inconsistent template path references between workflows
@@ -117,7 +117,7 @@ Templates are embedded within workflow files rather than referenced from central
 **🟡 Documentation Dependencies:**
 
 - Workflows assume existence of `docs/what-do-we-build.md`, `docs/architecture.md`, `docs/blueprint.md`
-- Heavy reliance on `dev-taskflow/` directory structure
+- Heavy reliance on `.ace/taskflow/` directory structure
 - Integration with submodules not fully documented
 
 ## 7. Prioritised Handbook Tasks
@@ -176,7 +176,7 @@ Templates are embedded within workflow files rather than referenced from central
 
 1. **Template Management Chaos**: Embedded templates in 17+ files create maintenance nightmare
 2. **Missing Integration Documentation**: AI agents lack guidance on workflow orchestration
-3. **External Tool Dependencies**: Undocumented dependencies on `dev-tools` utilities
+3. **External Tool Dependencies**: Undocumented dependencies on `.ace/tools` utilities
 4. **Cross-Reference Fragility**: Hardcoded paths may break with restructuring
 
 **🟡 Medium Risk Areas:**

@@ -1,7 +1,7 @@
 # Reflection: Systematic Test Suite Maintenance
 
 **Date**: 2025-08-05
-**Context**: Implementation of test reliability tracking and optimization for the dev-tools test suite
+**Context**: Implementation of test reliability tracking and optimization for the .ace/tools test suite
 **Author**: AI Development Assistant
 **Type**: Standard
 
@@ -21,7 +21,7 @@
 
 ## Key Learnings
 
-- **Test Suite Health**: The dev-tools test suite is actually in good condition with minimal failures
+- **Test Suite Health**: The .ace/tools test suite is actually in good condition with minimal failures
 - **Performance vs Accuracy Trade-off**: Timeout tests need to balance speed with realistic timeout scenarios
 - **Nil-Safe Operations**: Always handle nil values in metrics collection to prevent runtime errors
 - **Test Isolation**: Global test helpers can interfere with specific test stubs and mocks
@@ -46,7 +46,7 @@
 4. **Flaky Test Retry Logic**: Added retry capability to spec_helper
 
 ### Documentation
-- Created comprehensive test maintenance guide at `dev-handbook/guides/testing/test-maintenance.md`
+- Created comprehensive test maintenance guide at `.ace/handbook/guides/testing/test-maintenance.md`
 - Covers flaky test identification, optimization strategies, and Ruby 3.4.2 compatibility
 - Includes troubleshooting section and migration guides
 

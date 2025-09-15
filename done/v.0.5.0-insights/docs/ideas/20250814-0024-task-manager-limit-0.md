@@ -41,9 +41,9 @@ To enhance the `task-manager next` command to return a single pending task by de
 
 ## Key Patterns from Reflections
 
-- **CLI Tool Patterns**: Existing executables in `dev-tools/exe/` follow consistent interfaces and argument parsing.
+- **CLI Tool Patterns**: Existing executables in `.ace/tools/exe/` follow consistent interfaces and argument parsing.
 - **User Control**: Providing flags for granular control over command output (e.g., `--limit`, `--format`) is a common pattern.
-- **Task Management**: The `dev-taskflow` repository structures tasks, implying that tools should interact with this structure.
+- **Task Management**: The `.ace/taskflow` repository structures tasks, implying that tools should interact with this structure.
 - **Workflow Instructions**: AI agents rely on predictable command outputs for executing workflows.
 
 ## Solution Direction
@@ -55,7 +55,7 @@ To enhance the `task-manager next` command to return a single pending task by de
 ## Critical Questions
 
 **Before proceeding, we need to answer:**
-1. What is the exact definition of a "pending task ready to be worked on" in the context of the `dev-taskflow` structure? (e.g., status, specific fields)
+1. What is the exact definition of a "pending task ready to be worked on" in the context of the `.ace/taskflow` structure? (e.g., status, specific fields)
 2. How should multiple tasks be formatted and returned when `--limit 0` is used? (e.g., JSON array, newline-delimited, structured text)
 3. What is the expected performance impact of retrieving all pending tasks, and are there any optimizations needed for very large task backlogs?
 
@@ -67,7 +67,7 @@ To enhance the `task-manager next` command to return a single pending task by de
 ## Assumptions to Validate
 
 **We assume that:**
-- The `dev-taskflow` repository contains a consistent way to identify pending tasks ready for work. - *Needs validation*
+- The `.ace/taskflow` repository contains a consistent way to identify pending tasks ready for work. - *Needs validation*
 - The current task retrieval mechanism within `task-manager` can be extended to handle multiple results efficiently. - *Needs validation*
 - Users will benefit from the ability to view multiple ready tasks at once, especially for planning or batch processing. - *Needs validation*
 

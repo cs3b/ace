@@ -83,7 +83,7 @@ Successfully completed comprehensive planning for improving test coverage of the
 ## Implementation Readiness
 
 ### Ready-to-Implement Specifications
-- **File Target**: `dev-tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb`
+- **File Target**: `.ace/tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb`
 - **Implementation Approach**: Additive testing (no existing test modifications)
 - **Validation Commands**: Specific RSpec commands for each test area
 - **Success Metrics**: Clear acceptance criteria with measurable outcomes

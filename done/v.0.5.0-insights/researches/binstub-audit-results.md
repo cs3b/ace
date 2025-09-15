@@ -6,7 +6,7 @@ Comprehensive audit of binstub references (bin/tn, bin/gc, bin/tnid, etc.) acros
 
 ## Findings by Repository
 
-### dev-handbook (ACTION REQUIRED)
+### .ace/handbook (ACTION REQUIRED)
 
 Found **extensive binstub references** in active documentation:
 
@@ -53,7 +53,7 @@ Found **extensive binstub references** in active documentation:
 - `templates/binstubs/test.template.md`
 - `templates/binstubs/lint.template.md`
 
-### dev-tools
+### .ace/tools
 
 **CLEAN** - No binstub references found in documentation
 
@@ -61,7 +61,7 @@ Found **extensive binstub references** in active documentation:
 
 **CLEAN** - No binstub references found
 
-### dev-taskflow
+### .ace/taskflow
 
 Only historical references in:
 - `done/` folders (historical records - no action needed)
@@ -70,18 +70,18 @@ Only historical references in:
 
 ## Replacement Mapping
 
-All binstub references should be replaced with dev-tools executable paths:
+All binstub references should be replaced with .ace/tools executable paths:
 
 | Old Pattern | New Pattern (from submodule) | New Pattern (gem installed) |
 |------------|------------------------------|----------------------------|
-| `bin/tn` | `dev-tools/exe/task-manager next` | `task-manager next` |
-| `bin/tnid` | `dev-tools/exe/task-manager generate-id` | `task-manager generate-id` |
-| `bin/gc` | `dev-tools/exe/git-commit` | `git-commit` |
-| `bin/gs` | `dev-tools/exe/git-status` | `git-status` |
-| `bin/gl` | `dev-tools/exe/git-log` | `git-log` |
-| `bin/tr` | `dev-tools/exe/task-manager recent` | `task-manager recent` |
-| `bin/rc` | `dev-tools/exe/release-manager current` | `release-manager current` |
-| `bin/tal` | `dev-tools/exe/task-manager list` | `task-manager list` |
+| `bin/tn` | `.ace/tools/exe/task-manager next` | `task-manager next` |
+| `bin/tnid` | `.ace/tools/exe/task-manager generate-id` | `task-manager generate-id` |
+| `bin/gc` | `.ace/tools/exe/git-commit` | `git-commit` |
+| `bin/gs` | `.ace/tools/exe/git-status` | `git-status` |
+| `bin/gl` | `.ace/tools/exe/git-log` | `git-log` |
+| `bin/tr` | `.ace/tools/exe/task-manager recent` | `task-manager recent` |
+| `bin/rc` | `.ace/tools/exe/release-manager current` | `release-manager current` |
+| `bin/tal` | `.ace/tools/exe/task-manager list` | `task-manager list` |
 | `bin/test` | Project-specific test command | Project-specific |
 | `bin/lint` | Project-specific lint command | Project-specific |
 
@@ -92,7 +92,7 @@ All binstub references should be replaced with dev-tools executable paths:
 3. **Template Updates**: Update templates to prevent propagation of old patterns
 4. **Verification**: After updates, run comprehensive search to confirm cleanup:
    ```bash
-   rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" dev-handbook --type md
+   rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" .ace/handbook --type md
    ```
 
 ## Task Status Update
@@ -102,7 +102,7 @@ The original task assessment was incorrect. The documentation is **NOT clean** a
 ## Audit Command Used
 
 ```bash
-rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook --type md -n -o | sort | uniq -c | sort -rn
+rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook --type md -n -o | sort | uniq -c | sort -rn
 ```
 
 This audit was performed on 2025-08-09 and found 200+ references requiring updates.

@@ -65,6 +65,6 @@
 
 ## Additional Context
 
-- Task path: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
-- Related feedback: `dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
-- Primary affected component: `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
+- Task path: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
+- Related feedback: `.ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
+- Primary affected component: `.ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`

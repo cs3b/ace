@@ -182,8 +182,8 @@
 
 ## Additional Context
 
-- Source task: dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.036-enhanced-reflection-note-creation-with-automation-and-tool.md
-- Related idea: dev-taskflow/backlog/ideas/008-reflection-cookbook-automation.md
-- Templates modified: dev-handbook/templates/release-reflections/retrospective.template.md
-- New template created: dev-handbook/templates/release-reflections/enhanced-prompts.template.md
-- Workflow updated: dev-handbook/workflow-instructions/create-reflection-note.wf.md
+- Source task: .ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.036-enhanced-reflection-note-creation-with-automation-and-tool.md
+- Related idea: .ace/taskflow/backlog/ideas/008-reflection-cookbook-automation.md
+- Templates modified: .ace/handbook/templates/release-reflections/retrospective.template.md
+- New template created: .ace/handbook/templates/release-reflections/enhanced-prompts.template.md
+- Workflow updated: .ace/handbook/workflow-instructions/create-reflection-note.wf.md

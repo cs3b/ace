@@ -72,7 +72,7 @@ Improve code reliability and maintainability by increasing test coverage to 70%,
 ## Scope of Work
 
 - **User Experience Scope**: Developer testing and coverage reporting workflow
-- **System Behavior Scope**: All production code in dev-tools requiring tests
+- **System Behavior Scope**: All production code in .ace/tools requiring tests
 - **Interface Scope**: RSpec test suite and SimpleCov coverage reports
 
 ### Deliverables

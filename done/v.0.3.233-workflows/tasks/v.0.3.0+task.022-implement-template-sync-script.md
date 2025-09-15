@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.21]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools | sed 's/^/    /'
+tree -L 2 .ace/tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -43,8 +43,8 @@ Link back to original requirement: Automated template synchronization script (im
 
 #### Create
 
-* dev-tools/exe-old/markdown-sync-embedded-documents - main script implementation
-* dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents - binstub for the script
+* .ace/tools/exe-old/markdown-sync-embedded-documents - main script implementation
+* .ace/tools/exe-old/_binstubs/markdown-sync-embedded-documents - binstub for the script
 * bin/markdown-sync-embedded-documents - thin wrapper pointing to exe-old script
 
 #### Modify  
@@ -70,19 +70,19 @@ Link back to original requirement: Automated template synchronization script (im
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Guide uses only `path` attribute pointing to template file
-  > Command: grep -A 5 -B 5 'template-path' dev-handbook/guides/.meta/template-embedding.g.md
+  > Command: grep -A 5 -B 5 'template-path' .ace/handbook/guides/.meta/template-embedding.g.md
 
 * [x] Update all workflow instructions to use single `path` attribute
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All workflow files use simplified XML format with single `path` attribute
-  > Command: grep -r 'template-path' dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep -r 'template-path' .ace/handbook/workflow-instructions/*.wf.md
 
 * [x] Analyze simplified XML template embedding format
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Simplified XML template embedding format is clearly defined and implemented
-  > Command: grep -r "<templates>" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep -r "<templates>" .ace/handbook/workflow-instructions/*.wf.md
 
 * [x] Design script architecture and command-line interface
   > TEST: Pre-condition Check
@@ -92,17 +92,17 @@ Link back to original requirement: Automated template synchronization script (im
 
 ### Execution Steps
 
-* [x] Create main script in dev-tools/exe-old/markdown-sync-embedded-documents
+* [x] Create main script in .ace/tools/exe-old/markdown-sync-embedded-documents
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Script correctly identifies all XML template sections
-  > Command: dev-tools/exe-old/markdown-sync-embedded-documents --dry-run --verbose
+  > Command: .ace/tools/exe-old/markdown-sync-embedded-documents --dry-run --verbose
 
-* [x] Create binstub in dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents
+* [x] Create binstub in .ace/tools/exe-old/_binstubs/markdown-sync-embedded-documents
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Binstub follows project patterns and makes script accessible
-  > Command: dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents --help
+  > Command: .ace/tools/exe-old/_binstubs/markdown-sync-embedded-documents --help
 
 * [x] Create thin wrapper in bin/markdown-sync-embedded-documents
   > TEST: Action Validation
@@ -142,8 +142,8 @@ Link back to original requirement: Automated template synchronization script (im
 
 ## Acceptance Criteria
 
-* [x] Main script created in dev-tools/exe-old/markdown-sync-embedded-documents
-* [x] Binstub created in dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents
+* [x] Main script created in .ace/tools/exe-old/markdown-sync-embedded-documents
+* [x] Binstub created in .ace/tools/exe-old/_binstubs/markdown-sync-embedded-documents
 * [x] Thin wrapper created in bin/markdown-sync-embedded-documents
 * [x] Script successfully scans all workflow instruction files
 * [x] Correctly identifies XML template sections using simplified `<templates>` format with single `path` attribute
@@ -153,7 +153,7 @@ Link back to original requirement: Automated template synchronization script (im
 * [x] Provides comprehensive summary of changes made
 * [x] Handles error cases gracefully with helpful messages
 * [x] Can be run safely multiple times (idempotent)
-* [x] Follows project's dev-tools/exe-old organizational pattern
+* [x] Follows project's .ace/tools/exe-old organizational pattern
 * [x] Template embedding guide updated to use single `path` attribute format
 * [x] All workflow instructions updated to remove `template-path` and use only `path`
 * [x] Validates simplified XML template structure using updated regex patterns

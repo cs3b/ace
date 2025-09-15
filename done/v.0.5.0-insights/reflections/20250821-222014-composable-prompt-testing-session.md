@@ -124,7 +124,7 @@ The `prompt_enhancer.rb` compose_prompt method appears to:
 2. Compose the prompt structure
 3. Fail to append context content to the system prompt
 
-Suspected issue in `/dev-tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb`:
+Suspected issue in `/.ace/tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb`:
 - compose_prompt method may not be reading context file
 - File handle might not be properly opened or positioned
 - Content appending logic could be bypassed
@@ -151,8 +151,8 @@ end
 
 ## Additional Context
 
-- Test Report: `dev-taskflow/current/v.0.5.0-insights/code-review/composable-system-review/test-report.md`
-- Failed Session: `dev-taskflow/current/v.0.5.0-insights/code-review/review-20250821-221520/`
+- Test Report: `.ace/taskflow/current/v.0.5.0-insights/code-review/composable-system-review/test-report.md`
+- Failed Session: `.ace/taskflow/current/v.0.5.0-insights/code-review/review-20250821-221520/`
 - Task Specifications: v.0.5.0+task.028 and v.0.5.0+task.029
 
 ## Conclusion

@@ -21,7 +21,7 @@
 
 ## Key Learnings
 
-- **ATOM Architecture Pattern**: The dev-tools Ruby gem follows a well-structured ATOM architecture (Atoms, Molecules, Organisms, Ecosystems) which provides clear guidance for where functionality is implemented
+- **ATOM Architecture Pattern**: The .ace/tools Ruby gem follows a well-structured ATOM architecture (Atoms, Molecules, Organisms, Ecosystems) which provides clear guidance for where functionality is implemented
 - **Multi-Repository Complexity**: The project's submodule-based structure requires careful consideration of which repository contains which components and how changes propagate
 - **CLI Tool Structure**: Ruby CLI tools in this project follow a consistent pattern with executable wrappers in `exe/` directory and actual command implementations in `lib/coding_agent_tools/cli/commands/`
 - **Test Coverage Patterns**: The project maintains comprehensive test coverage with both unit tests (RSpec) and integration tests, including VCR cassettes for HTTP interactions
@@ -48,8 +48,8 @@
 ## Technical Details
 
 ### Files Analyzed
-- **Primary Executable**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe/ideas-manager`
-- **Command Implementation**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb`
+- **Primary Executable**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/exe/ideas-manager`
+- **Command Implementation**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb`
 - **Test Coverage**: Multiple test files in `spec/cli/` and `spec/integration/` directories
 - **Usage References**: Found 31 files containing "ideas-manager" references across the project
 
@@ -63,5 +63,5 @@
 - **Task ID**: v.0.4.0+task.013
 - **Status Change**: draft → pending
 - **Estimated Effort**: 3 hours (based on scope analysis)
-- **Dependencies**: None (self-contained within dev-tools submodule)
+- **Dependencies**: None (self-contained within .ace/tools submodule)
 - **Next Steps**: Task is ready for implementation with complete technical specification

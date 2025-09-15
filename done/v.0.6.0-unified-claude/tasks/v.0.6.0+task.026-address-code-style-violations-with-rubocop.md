@@ -72,7 +72,7 @@ Establish and maintain consistent code style across the entire Ruby codebase, ma
 ## Scope of Work
 
 - **User Experience Scope**: Developer experience when checking and fixing code style
-- **System Behavior Scope**: All Ruby files in the dev-tools directory
+- **System Behavior Scope**: All Ruby files in the .ace/tools directory
 - **Interface Scope**: RuboCop CLI interface and configuration
 
 ### Deliverables

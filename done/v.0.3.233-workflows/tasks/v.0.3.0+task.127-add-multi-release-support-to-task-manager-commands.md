@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -29,7 +29,7 @@ Enable task-manager commands to work across different releases by adding `--rele
 ## Scope of Work
 
 - Add `--release` flag to all task-manager commands (next, all, recent, reschedule, generate-id)
-- Support multiple release identification formats: version (v.0.3.0), codename (workflows), fullname (v.0.3.0-workflows), path (dev-taskflow/current/v.0.3.0-workflows)
+- Support multiple release identification formats: version (v.0.3.0), codename (workflows), fullname (v.0.3.0-workflows), path (.ace/taskflow/current/v.0.3.0-workflows)
 - Implement release resolution logic
 - Maintain backward compatibility (default to current release)
 - Update commands to work with specified release context
@@ -38,15 +38,15 @@ Enable task-manager commands to work across different releases by adding `--rele
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/molecules/taskflow_management/release_resolver.rb
+- .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/release_resolver.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb
-- dev-tools/lib/coding_agent_tools/cli/commands/task/all.rb
-- dev-tools/lib/coding_agent_tools/cli/commands/task/recent.rb
-- dev-tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
-- dev-tools/lib/coding_agent_tools/cli/commands/task/generate_id.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/next.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/all.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/recent.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/generate_id.rb
 
 #### Delete
 
@@ -71,7 +71,7 @@ Enable task-manager commands to work across different releases by adding `--rele
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current release detection mechanisms are documented
-  > Command: grep -r "current.*release\|release.*current" dev-tools/lib/coding_agent_tools/cli/commands/task/
+  > Command: grep -r "current.*release\|release.*current" .ace/tools/lib/coding_agent_tools/cli/commands/task/
 - [ ] Design release identification formats and resolution strategy
 - [ ] Plan `--release` flag API and backward compatibility approach
 
@@ -83,7 +83,7 @@ Enable task-manager commands to work across different releases by adding `--rele
   > TEST: Verify Release Resolver Creation
   > Type: Action Validation
   > Assert: Release resolver handles all specified formats
-  > Command: grep -E "class.*ReleaseResolver" dev-tools/lib/coding_agent_tools/molecules/taskflow_management/release_resolver.rb
+  > Command: grep -E "class.*ReleaseResolver" .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/release_resolver.rb
 - [ ] Add `--release` flag to all task-manager commands
 - [ ] Update commands to use release resolver for context
   > TEST: Verify Multi-Release Support
@@ -112,6 +112,6 @@ Enable task-manager commands to work across different releases by adding `--rele
 
 ## References
 
-Based on feedback from: dev-taskflow/backlog/ideas/exe-task-manager-improvements.md
+Based on feedback from: .ace/taskflow/backlog/ideas/exe-task-manager-improvements.md
 - Item #1: Multi-release support with `--release` flag
-- Supported formats: version (v.0.3.0), codename (workflows), fullname (v.0.3.0-workflows), path (dev-taskflow/current/v.0.3.0-workflows)
+- Supported formats: version (v.0.3.0), codename (workflows), fullname (v.0.3.0-workflows), path (.ace/taskflow/current/v.0.3.0-workflows)

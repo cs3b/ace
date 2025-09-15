@@ -1,5 +1,5 @@
 ---
-id: v.0.2.0+task.4 # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see dev-handbook/guides/project-management.md#task-id-convention.
+id: v.0.2.0+task.4 # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see .ace/handbook/guides/project-management.md#task-id-convention.
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: medium
 estimate: 3h
@@ -13,7 +13,7 @@ dependencies: [v.0.2.0+task.1, v.0.2.0+task.3]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -127,8 +127,8 @@ Implement `--model` flag support (R-LLM-4) for both `llm-gemini-query` and `lms-
 ## References
 
 - Fish implementations: 
-  - dev-taskflow/backlog/v.0.2.0-synapse/docs/gemini-query.fish
-  - dev-taskflow/backlog/v.0.2.0-synapse/docs/lms-query.fish
+  - .ace/taskflow/backlog/v.0.2.0-synapse/docs/gemini-query.fish
+  - .ace/taskflow/backlog/v.0.2.0-synapse/docs/lms-query.fish
 - Default models:
   - Gemini: gemini-2.0-flash-lite
   - LM Studio: mistral-small-24b-instruct-2501@8bit

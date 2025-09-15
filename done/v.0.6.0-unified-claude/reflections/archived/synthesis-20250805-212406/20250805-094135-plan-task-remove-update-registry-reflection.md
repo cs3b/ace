@@ -14,7 +14,7 @@
 
 ## What Could Be Improved
 
-- **Initial Context Loading**: The project context files (architecture.md, blueprint.md, etc.) were in the root docs/ folder, not in dev-tools/docs/ as initially attempted
+- **Initial Context Loading**: The project context files (architecture.md, blueprint.md, etc.) were in the root docs/ folder, not in .ace/tools/docs/ as initially attempted
 - **Understanding of Feature**: Initially assumed the command might be actively used, but research revealed it was just a placeholder
 - **Documentation Search**: Could have started with a broader search for commands.json to understand the full scope earlier
 

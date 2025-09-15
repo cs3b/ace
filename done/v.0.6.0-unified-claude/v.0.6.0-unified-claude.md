@@ -12,7 +12,7 @@
 ## Collected Notes
 
 From user requirements:
-- Improve Claude Code integration script (dev-handbook/.integrations/claude/install-prompts.md)
+- Improve Claude Code integration script (.ace/handbook/.integrations/claude/install-prompts.md)
 - Move from auto-generated commands only to a mix of agents, custom commands, and auto-generated
 - Unify Claude commands under handbook CLI:
   - `handbook claude generate-commands`
@@ -30,15 +30,15 @@ From user requirements:
 ### Primary Goals
 
 1. **Unify Claude Integration**: Move all Claude-related commands under the handbook CLI for better discoverability and consistency
-2. **Static Command Management**: Version control all Claude commands within dev-handbook for better maintenance
+2. **Static Command Management**: Version control all Claude commands within .ace/handbook for better maintenance
 3. **Hybrid Command System**: Support both custom hand-crafted commands and auto-generated ones with clear separation
 4. **Validation Framework**: Ensure complete coverage of all workflow instructions with corresponding Claude commands
 
 ### Dependencies
 
-- Existing handbook CLI infrastructure in dev-tools
+- Existing handbook CLI infrastructure in .ace/tools
 - Current Claude integration script functionality
-- Workflow instruction files in dev-handbook
+- Workflow instruction files in .ace/handbook
 
 ### Risks & Mitigation
 

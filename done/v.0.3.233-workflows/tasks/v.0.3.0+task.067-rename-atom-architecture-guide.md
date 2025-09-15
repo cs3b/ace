@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── README.md
 ├── ai-agent-integration.g.md
 ├── atom-house-rules.md
@@ -46,16 +46,16 @@ Rename the existing ATOM architecture guide from `atom-house-rules.md` to `atom-
 
 #### Create
 
-* dev-handbook/guides/atom-pattern.g.md (renamed from atom-house-rules.md)
+* .ace/handbook/guides/atom-pattern.g.md (renamed from atom-house-rules.md)
 
 #### Modify
 
-* dev-handbook/guides/README.md (update reference to renamed guide)
+* .ace/handbook/guides/README.md (update reference to renamed guide)
 * Any other files that reference the old filename
 
 #### Delete
 
-* dev-handbook/guides/atom-house-rules.md (original file)
+* .ace/handbook/guides/atom-house-rules.md (original file)
 
 ## Phases
 
@@ -105,7 +105,7 @@ Rename the existing ATOM architecture guide from `atom-house-rules.md` to `atom-
 
 ## References
 
-* Review finding: "we already have dev-handbook/guides/atom-house-rules.md -> lets rename it to atom-pattern.g.md"
-* Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
-* Current file: dev-handbook/guides/atom-house-rules.md
+* Review finding: "we already have .ace/handbook/guides/atom-house-rules.md -> lets rename it to atom-pattern.g.md"
+* Source: .ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
+* Current file: .ace/handbook/guides/atom-house-rules.md
 * User note: Existing guide should be renamed to follow standard naming convention

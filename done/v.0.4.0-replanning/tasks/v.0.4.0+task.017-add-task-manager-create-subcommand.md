@@ -180,51 +180,51 @@ Based on research, the following additional files need modification:
 - **Related systems**: nav-path command also recognizes task-new type
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/task/create.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/commands/task/create.rb`
   - Purpose: New CLI command class implementing task creation logic
   - Key components: Dry::CLI::Command subclass with dynamic flag handling
   - Dependencies: ReleasePathManager, FileIoHandler, TemplateRenderer
 
 ### Modify
-- `dev-tools/exe/task-manager`
+- `.ace/tools/exe/task-manager`
   - Changes: Add require statement for new create command
   - Impact: Loads new command class for registry
   - Integration points: Existing CLI command loading pattern
 
-- `dev-tools/exe/task-manager` (registry section)
+- `.ace/tools/exe/task-manager` (registry section)
   - Changes: Add "create" command registration to TaskManagerCli::Commands
   - Impact: Makes create subcommand available in task-manager CLI
   - Integration points: Existing command registry pattern
 
 ### Delete/Remove
-- `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb`
   - Changes: Remove 'task-new' case from switch statement (lines 201-202)
   - Impact: Breaking change - create-path task-new will no longer work
   - Migration: Users must use task-manager create instead
 
-- `dev-tools/lib/coding_agent_tools/cli/commands/nav/path.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/commands/nav/path.rb`
   - Changes: Remove 'task-new', 'task_new' cases (lines 36-37)
   - Impact: nav-path task-new will no longer generate new paths
   - Migration: Not needed - nav-path should only find existing tasks
 
 ### Update Documentation
 - `docs/tools.md`: Update all examples using create-path task-new
-- `dev-tools/docs/tools.md`: Update CLI tool reference
-- `dev-handbook/workflow-instructions/*.wf.md`: Update 4 workflow files
-- `dev-taskflow/` various task files: Update references in documentation
+- `.ace/tools/docs/tools.md`: Update CLI tool reference
+- `.ace/handbook/workflow-instructions/*.wf.md`: Update 4 workflow files
+- `.ace/taskflow/` various task files: Update references in documentation
 
 ### Test Coverage
-- `dev-tools/spec/coding_agent_tools/cli/commands/task/create_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/task/create_spec.rb`
   - Purpose: Unit tests for new create command
   - Key components: Test identical behavior to create-path task-new
   - Dependencies: Existing test patterns and fixtures
 
 ### Update Existing Tests
-- `dev-tools/spec/coding_agent_tools/cli/commands/create_path_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/create_path_spec.rb`
   - Changes: Remove tests for task-new functionality
   - Impact: Ensures create-path doesn't support task-new anymore
 
-- `dev-tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb`
   - Changes: Remove tests for task-new path type
   - Impact: Ensures nav-path doesn't generate task-new paths
 
@@ -258,22 +258,22 @@ Based on research, the following additional files need modification:
   > TEST: Interface Analysis Complete
   > Type: Pre-condition Check
   > Assert: All CLI options, arguments, and behaviors documented
-  > Command: grep -r "option\|argument" dev-tools/lib/coding_agent_tools/cli/create_path_command.rb
+  > Command: grep -r "option\|argument" .ace/tools/lib/coding_agent_tools/cli/create_path_command.rb
 * [x] Review task-manager CLI command patterns and registry structure
 * [x] Plan CLI command class structure following ATOM architecture
 
 ### Execution Steps
 
-- [x] Create new CLI command class at dev-tools/lib/coding_agent_tools/cli/commands/task/create.rb
+- [x] Create new CLI command class at .ace/tools/lib/coding_agent_tools/cli/commands/task/create.rb
   > TEST: Command Class Created
   > Type: Action Validation
   > Assert: File exists with proper class structure and dry-cli inheritance
-  > Command: test -f dev-tools/lib/coding_agent_tools/cli/commands/task/create.rb
+  > Command: test -f .ace/tools/lib/coding_agent_tools/cli/commands/task/create.rb
 - [x] Implement task creation logic with ReleasePathManager integration
   > TEST: Path Resolution Working
   > Type: Functional Validation
   > Assert: Task files created in correct release directory
-  > Command: task-manager create --title "test-task" && ls -la dev-taskflow/current/*/tasks/
+  > Command: task-manager create --title "test-task" && ls -la .ace/taskflow/current/*/tasks/
 - [x] Add dynamic flag handling to accept arbitrary metadata flags
   > TEST: Dynamic Flags Working
   > Type: Integration Validation
@@ -293,7 +293,7 @@ Based on research, the following additional files need modification:
   > TEST: Test Coverage
   > Type: Quality Validation
   > Assert: All create command scenarios covered by tests
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/create_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/create_spec.rb
 - [x] Run integration tests to verify identical behavior
   > TEST: Behavioral Equivalence
   > Type: Integration Validation
@@ -313,12 +313,12 @@ Based on research, the following additional files need modification:
   > TEST: Documentation Updated
   > Type: Quality Validation
   > Assert: No references to create-path task-new remain
-  > Command: grep -r "create-path task-new" docs/ dev-handbook/ dev-taskflow/ | wc -l
+  > Command: grep -r "create-path task-new" docs/ .ace/handbook/ .ace/taskflow/ | wc -l
 - [x] Update workflow instructions to use new command
   > TEST: Workflows Updated
   > Type: Quality Validation
   > Assert: All workflows use task-manager create
-  > Command: grep -r "task-manager create" dev-handbook/workflow-instructions/*.wf.md | wc -l
+  > Command: grep -r "task-manager create" .ace/handbook/workflow-instructions/*.wf.md | wc -l
 
 ## Acceptance Criteria
 
@@ -338,10 +338,10 @@ Based on research, the following additional files need modification:
 
 ## References
 
-- Original idea file: dev-taskflow/backlog/ideas/20250731-0828-task-create-migrate.md
+- Original idea file: .ace/taskflow/backlog/ideas/20250731-0828-task-create-migrate.md
 - Existing create-path task-new command behavior and implementation
 - Task-manager CLI architecture and subcommand patterns
-- ATOM architecture principles for dev-tools Ruby gem
+- ATOM architecture principles for .ace/tools Ruby gem
 - Dry-CLI command patterns in existing task commands
 
 ## Review Summary

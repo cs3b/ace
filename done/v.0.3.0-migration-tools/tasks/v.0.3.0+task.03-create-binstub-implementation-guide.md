@@ -14,13 +14,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── development
     ├── patterns
     └── ...
@@ -28,11 +28,11 @@ _Result excerpt:_
 
 ## Objective
 
-Create a focused implementation guide for simple shell binstubs that delegate to `dev-tools/exe/` executables, ensuring proper directory context management and argument passing as specified in user requirements.
+Create a focused implementation guide for simple shell binstubs that delegate to `.ace/tools/exe/` executables, ensuring proper directory context management and argument passing as specified in user requirements.
 
 ## Scope of Work
 
-* Create dev-handbook/.meta/gds/shell-binstub-patterns.g.md
+* Create .ace/handbook/.meta/gds/shell-binstub-patterns.g.md
 * Document shell script patterns used in this project
 * Provide directory context management examples
 * Include argument passing and delegation patterns
@@ -42,11 +42,11 @@ Create a focused implementation guide for simple shell binstubs that delegate to
 
 #### Create
 
-* dev-handbook/guides/development/shell-binstub-patterns.g.md
+* .ace/handbook/guides/development/shell-binstub-patterns.g.md
 
 #### Modify
 
-* dev-handbook/guides/development/README.md (add reference to new guide)
+* .ace/handbook/guides/development/README.md (add reference to new guide)
 
 #### Delete
 
@@ -69,7 +69,7 @@ Create a focused implementation guide for simple shell binstubs that delegate to
   > Assert: Understanding of current shell binstub patterns documented
   > Command: ls -la bin/ | grep -E "test|gc|setup" | wc -l
 * [x] Study directory context requirements for delegation
-* [x] Map relationship between bin/ and dev-tools/exe/ executables
+* [x] Map relationship between bin/ and .ace/tools/exe/ executables
 
 ### Execution Steps
 
@@ -78,21 +78,21 @@ Create a focused implementation guide for simple shell binstubs that delegate to
   > TEST: Shell Template Section Complete
   > Type: Content Validation
   > Assert: Shell script templates are present
-  > Command: grep -c "#!/bin/sh" dev-handbook/.meta/gds/shell-binstub-patterns.g.md
+  > Command: grep -c "#!/bin/sh" .ace/handbook/.meta/gds/shell-binstub-patterns.g.md
 - [x] Add argument passing and delegation examples
 - [x] Document when to use directory context vs direct execution
 - [x] Create troubleshooting section for common delegation issues
   > TEST: Troubleshooting Section
   > Type: Content Validation
   > Assert: Common delegation issues are documented
-  > Command: grep -c "Troubleshooting" dev-handbook/.meta/gds/shell-binstub-patterns.g.md
+  > Command: grep -c "Troubleshooting" .ace/handbook/.meta/gds/shell-binstub-patterns.g.md
 - [x] Update development README to reference the new guide
 
 ## Acceptance Criteria
 
 * [x] Guide focuses on shell script binstub patterns for this project
 * [x] Clear examples of directory context management are provided
-* [x] Argument passing to dev-tools/exe/ is documented
+* [x] Argument passing to .ace/tools/exe/ is documented
 * [x] Troubleshooting section addresses common delegation issues
 * [x] Development README references the new guide
 
@@ -105,7 +105,7 @@ Create a focused implementation guide for simple shell binstubs that delegate to
 
 ## References
 
-* Target location: dev-handbook/.meta/gds/shell-binstub-patterns.g.md
-* Current exe directory: dev-tools/exe/
+* Target location: .ace/handbook/.meta/gds/shell-binstub-patterns.g.md
+* Current exe directory: .ace/tools/exe/
 * Existing patterns: bin/test, bin/gc, bin/setup
 * User requirement: Simple bin/sh scripts with directory context and argument delegation

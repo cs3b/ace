@@ -1,4 +1,4 @@
-In context of dev-handbook/workflow-instructions/create-reflection-note.wf.md
+In context of .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
 Add sections that will encourage coding agent review to capture:
 
@@ -13,7 +13,7 @@ we should synthezie it by feature complitness (whatever number of session was re
 
 2. what cookbooks can we created based on the work we have done, to make it easier to do similar job in the future
 
-- we should have keep them in dev-handbook/cookbooks
+- we should have keep them in .ace/handbook/cookbooks
 - we should defined the template for cookbook
 - example of cookbooks ideas:
   - vue.js firebase integration with local emulator setup (with all the detailed steps, and links do docuemntation how to do it straighforward)

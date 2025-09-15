@@ -26,10 +26,10 @@ This release completes the comprehensive migration from the old naming conventio
 - **Total affected files**: ~1,000+ files
 
 ### Path Mappings
-- `dev-tools/` → `.ace/tools/`
-- `dev-handbook/` → `.ace/handbook/`
-- `dev-taskflow/` → `.ace/taskflow/`
-- `dev-local/` → `.ace/local/`
+- `.ace/tools/` → `.ace/tools/`
+- `.ace/handbook/` → `.ace/handbook/`
+- `.ace/taskflow/` → `.ace/taskflow/`
+- `.ace/local/` → `.ace/local/`
 
 ### Module/Gem Mappings
 - `CodingAgentTools` → `AceTools`

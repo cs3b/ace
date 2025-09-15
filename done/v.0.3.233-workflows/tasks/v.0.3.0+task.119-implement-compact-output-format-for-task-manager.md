@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools
+.ace/tools/lib/coding_agent_tools
 ├── atoms
 ├── cli
 ├── constants
@@ -50,8 +50,8 @@ Replace the verbose multi-line task output format with a compact single-line for
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/task_manager.rb (or equivalent CLI class)
-- dev-tools/exe/task-manager (output formatting logic)
+- .ace/tools/lib/coding_agent_tools/cli/task_manager.rb (or equivalent CLI class)
+- .ace/tools/exe/task-manager (output formatting logic)
 - Task display formatting methods
 
 #### Delete
@@ -103,7 +103,7 @@ Replace the verbose multi-line task output format with a compact single-line for
 
 ## References
 
-Based on requirements from: dev-taskflow/backlog/ideas/exe-task-manager.md
+Based on requirements from: .ace/taskflow/backlog/ideas/exe-task-manager.md
 Item #2: Compact format specification:
 - From: Multi-line verbose format with separate lines for title, status, path, dependencies
 - To: "v.0.3.0+task.116 * PENDING * Refactor create-path executable to use dry library pattern"

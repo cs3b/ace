@@ -6,32 +6,32 @@ estimate: 1h
 dependencies: []
 ---
 
-# Improve initialize-project-structure workflow to use modern dev-tools
+# Improve initialize-project-structure workflow to use modern .ace/tools
 
 ## Behavioral Context
 
 **Issue**: The initialize-project-structure workflow was outdated and contained deprecated patterns:
-- Still created bin/ scripts (test, lint, build, run) that are now handled by dev-tools
+- Still created bin/ scripts (test, lint, build, run) that are now handled by .ace/tools
 - Manual dotfiles installation instead of using `handbook claude integrate`
-- Incorrect decisions directory location (dev-taskflow/decisions instead of docs/decisions)
+- Incorrect decisions directory location (.ace/taskflow/decisions instead of docs/decisions)
 - Redundant tool documentation in architecture template
 
 **Key Behavioral Requirements**:
-- Workflow should leverage modern dev-tools commands
+- Workflow should leverage modern .ace/tools commands
 - Use handbook CLI for Claude integration
 - Follow current project structure standards
 - Remove deprecated binstub patterns
 
 ## Objective
 
-Updated the initialize-project-structure workflow to align with current dev-tools architecture and remove deprecated patterns.
+Updated the initialize-project-structure workflow to align with current .ace/tools architecture and remove deprecated patterns.
 
 ## Scope of Work
 
 - Removed outdated binstub creation and templates
 - Added Claude integration via `handbook claude integrate`
 - Fixed decisions directory location
-- Updated architecture template to reference dev-tools
+- Updated architecture template to reference .ace/tools
 - Enhanced prerequisites and workflow context
 
 ### Deliverables
@@ -40,8 +40,8 @@ Updated the initialize-project-structure workflow to align with current dev-tool
 - None (modification only)
 
 #### Modify
-- dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-  - Replaced binstub setup with dev-tools integration
+- .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
+  - Replaced binstub setup with .ace/tools integration
   - Added Claude integration step
   - Updated documentation generation
   - Fixed directory structure creation
@@ -54,8 +54,8 @@ Updated the initialize-project-structure workflow to align with current dev-tool
 
 ### What Was Done
 
-- **Problem Identification**: Reviewed feedback in dev-taskflow/backlog/ideas/wf-initiliaze-project-structure-feedback.md
-- **Investigation**: Analyzed current dev-tools capabilities and handbook CLI features
+- **Problem Identification**: Reviewed feedback in .ace/taskflow/backlog/ideas/wf-initiliaze-project-structure-feedback.md
+- **Investigation**: Analyzed current .ace/tools capabilities and handbook CLI features
 - **Solution**: Systematically updated workflow to use modern patterns
 - **Validation**: Verified all changes align with current project structure
 
@@ -74,10 +74,10 @@ Key changes made:
 
 ```bash
 # Verified handbook command exists and has Claude integration
-dev-tools/exe/handbook claude --help
+.ace/tools/exe/handbook claude --help
 
-# Checked available dev-tools commands
-ls -la dev-tools/exe/
+# Checked available .ace/tools commands
+ls -la .ace/tools/exe/
 ```
 
 **Results**: Confirmed all referenced tools and commands are available and functional
@@ -85,6 +85,6 @@ ls -la dev-tools/exe/
 ## References
 
 - Commits: Made changes to initialize-project-structure.wf.md
-- Related issues: dev-taskflow/backlog/ideas/wf-initiliaze-project-structure-feedback.md
+- Related issues: .ace/taskflow/backlog/ideas/wf-initiliaze-project-structure-feedback.md
 - Documentation: Updated embedded templates within workflow
 - Follow-up needed: None - work is complete

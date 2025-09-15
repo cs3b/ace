@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.227, v.0.3.0+task.228]
 _Command run:_
 
 ```bash
-grep -n "archived.*default" dev-tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb | head -3
+grep -n "archived.*default" .ace/tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb | head -3
 ```
 
 _Result excerpt:_
@@ -42,8 +42,8 @@ Update the reflection-synthesize test suite to cover the new output path behavio
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb (if exists)
+- .ace/tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb (if exists)
 
 #### Delete
 
@@ -111,6 +111,6 @@ Update the reflection-synthesize test suite to cover the new output path behavio
 
 ## References
 
-- Synthesize spec: dev-tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb
+- Synthesize spec: .ace/tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb
 - Implementation tasks: v.0.3.0+task.227, v.0.3.0+task.228
 - Test should verify new behavior while maintaining compatibility

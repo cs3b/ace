@@ -26,14 +26,14 @@ Currenlty we have ...a litle bit of mix here
 
 in the end we should have
 
-- workflow that capture all the git strategies dev-handbook/workflow-instructions/commit.wf.md
+- workflow that capture all the git strategies .ace/handbook/workflow-instructions/commit.wf.md
 - agent that provide additional guardrails and allow to run commmit in sepearte context
    - still unsure we have 3 to make sure we choose the right strategy - but it should a param to agent and workflow (if we decide upfront)
-   dev-handbook/.integrations/claude/agents/git-all-commit.ag.md
-   dev-handbook/.integrations/claude/agents/git-files-commit.ag.md
-   dev-handbook/.integrations/claude/agents/git-review-commit.ag.md
+   .ace/handbook/.integrations/claude/agents/git-all-commit.ag.md
+   .ace/handbook/.integrations/claude/agents/git-files-commit.ag.md
+   .ace/handbook/.integrations/claude/agents/git-review-commit.ag.md
    we should keep only one
-- command to trigger the workflow directly dev-handbook/.integrations/claude/commands/_custom/commit.md (after all the changes it might became one of gneerated commands)
+- command to trigger the workflow directly .ace/handbook/.integrations/claude/commands/_custom/commit.md (after all the changes it might became one of gneerated commands)
 
 we shouldn't duplicate info
 
@@ -62,13 +62,13 @@ To centralize and standardize the logic for Git commands, including `git-commit`
 
 - **Workflow Self-Containment (ADR-001)**: Emphasizes that all necessary instructions and context should be embedded within a workflow file, rather than relying on external references or agent-specific logic.
 - **ATOM Architecture**: Suggests that common utilities like Git operations should reside in reusable components, which in this context translates to a generic workflow instruction.
-- **Multi-Repository Coordination**: The `dev-handbook` repository is designated for workflow instructions, making it the appropriate home for a default `commit.wf.md`.
+- **Multi-Repository Coordination**: The `.ace/handbook` repository is designated for workflow instructions, making it the appropriate home for a default `commit.wf.md`.
 - **CLI Tool Patterns**: The project aims for a consistent CLI interface and reusable logic, which applies to how Git commands are invoked within workflows.
 - **Documentation-Driven Development**: Workflows are the primary mechanism for defining how tasks are executed, so general Git operations should be defined as workflows.
 
 ## Solution Direction
 
-1. **Create `commit.wf.md`**: A new workflow instruction file will be created in `dev-handbook/workflow-instructions/commit.wf.md` to encapsulate the logic for performing Git commits.
+1. **Create `commit.wf.md`**: A new workflow instruction file will be created in `.ace/handbook/workflow-instructions/commit.wf.md` to encapsulate the logic for performing Git commits.
 2. **Extract and Embed Git Logic**: The existing logic for `git-commit` and related Git commands currently in Claude-specific files will be extracted and embedded within the new `commit.wf.md` workflow. This includes any necessary logic for generating commit messages, staging changes, and handling commit intentions.
 3. **Remove Duplicated Logic**: The duplicated Git command logic will be removed from Claude-specific command files, potentially replaced with a reference to the new `commit.wf.md` workflow if an agent needs to initiate this specific action.
 
@@ -88,7 +88,7 @@ To centralize and standardize the logic for Git commands, including `git-commit`
 
 **We assume that:**
 - The Git command logic currently implemented in Claude-specific files is generic enough to be reused as a default workflow for all agents. - *Needs validation*
-- Moving this logic to `dev-handbook/workflow-instructions/` aligns with the project's multi-repository architecture and the role of the `dev-handbook` repository. - *Needs validation*
+- Moving this logic to `.ace/handbook/workflow-instructions/` aligns with the project's multi-repository architecture and the role of the `.ace/handbook` repository. - *Needs validation*
 - AI agents can effectively discover and execute workflow instructions from the handbook, allowing them to leverage the centralized `commit.wf.md`. - *Needs validation*
 
 ## Expected Benefits

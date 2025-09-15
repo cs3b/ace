@@ -91,5 +91,5 @@ The draft task workflow successfully created task v.0.6.0+task.014 with a compre
 
 ## Additional Context
 
-- Created task: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
+- Created task: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
 - Original feedback addressed: Template organization, potential duplication, and extension standardization

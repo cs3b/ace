@@ -40,9 +40,9 @@ To provide a detailed, feature-centric description of the Coding Agent Workflow 
 
 ## Key Patterns from Reflections
 
-- **ATOM Architecture**: The underlying structure of the `dev-tools` gem supports modularity and clear separation of concerns, enabling distinct functionalities to be built as independent components.
+- **ATOM Architecture**: The underlying structure of the `.ace/tools` gem supports modularity and clear separation of concerns, enabling distinct functionalities to be built as independent components.
 - **Workflow Self-Containment**: Workflows (`.wf.md` files) are designed to guide AI agents through specific scenarios, demonstrating practical application of the tools.
-- **CLI Tooling**: The existence of over 25 CLI tools in `dev-tools/exe/` signifies a focus on providing actionable capabilities for common development tasks.
+- **CLI Tooling**: The existence of over 25 CLI tools in `.ace/tools/exe/` signifies a focus on providing actionable capabilities for common development tasks.
 - **Multi-Repository Coordination**: The toolkit's functionality is spread across repositories, requiring an understanding of how these pieces fit together to support user scenarios.
 - **Documentation-Driven Development**: The project emphasizes documenting functionality and scenarios, making this a natural extension of the existing documentation strategy.
 
@@ -50,7 +50,7 @@ To provide a detailed, feature-centric description of the Coding Agent Workflow 
 
 1. **Feature-Centric Document**: Create a new markdown document (e.g., `features.md` or `user-scenarios.md`) that details supported functionalities and user scenarios.
 2. **Scenario-Based Descriptions**: Structure the document around common user scenarios (e.g., setting up a new project, reviewing code, managing releases) and describe how the toolkit's features support each scenario.
-3. **Tool and Workflow Mapping**: Explicitly map which tools (from `dev-tools`) and workflows (from `dev-handbook`) are used in each scenario.
+3. **Tool and Workflow Mapping**: Explicitly map which tools (from `.ace/tools`) and workflows (from `.ace/handbook`) are used in each scenario.
 
 ## Critical Questions
 
@@ -60,7 +60,7 @@ To provide a detailed, feature-centric description of the Coding Agent Workflow 
 3. How should the document be structured to clearly link functionalities to specific tools and workflows?
 
 **Open Questions:**
-- Should this document be part of the `handbook-meta` repository or a submodule like `dev-handbook`?
+- Should this document be part of the `handbook-meta` repository or a submodule like `.ace/handbook`?
 - What level of detail is appropriate for each scenario (e.g., step-by-step instructions or high-level descriptions)?
 - How will this document be kept in sync with new feature development and workflow updates?
 

@@ -13,33 +13,33 @@ dependencies: [v.0.3.0+task.8]
 _Command run:_
 
 ```bash
-find dev-handbook/workflow-instructions -name "*.wf.md" | sort | sed 's/^/    /'
+find .ace/handbook/workflow-instructions -name "*.wf.md" | sort | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
-    dev-handbook/workflow-instructions/commit.wf.md
-    dev-handbook/workflow-instructions/create-adr.wf.md
-    dev-handbook/workflow-instructions/create-api-docs.wf.md
-    dev-handbook/workflow-instructions/create-reflection-note.wf.md
-    dev-handbook/workflow-instructions/create-release-overview.wf.md
-    dev-handbook/workflow-instructions/create-retrospective-document.wf.md
-    dev-handbook/workflow-instructions/create-review-checklist.wf.md
-    dev-handbook/workflow-instructions/create-test-cases.wf.md
-    dev-handbook/workflow-instructions/create-user-docs.wf.md
-    dev-handbook/workflow-instructions/draft-release.wf.md
-    dev-handbook/workflow-instructions/fix-tests.wf.md
-    dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-    dev-handbook/workflow-instructions/load-env.wf.md
-    dev-handbook/workflow-instructions/save-session-context.md
-    dev-handbook/workflow-instructions/publish-release.wf.md
-    dev-handbook/workflow-instructions/review-task.wf.md
-    dev-handbook/workflow-instructions/review-tasks-board-status.wf.md
-    dev-handbook/workflow-instructions/update-blueprint.wf.md
-    dev-handbook/workflow-instructions/update-roadmap.wf.md
-    dev-handbook/workflow-instructions/work-on-task.wf.md
+    .ace/handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+    .ace/handbook/workflow-instructions/commit.wf.md
+    .ace/handbook/workflow-instructions/create-adr.wf.md
+    .ace/handbook/workflow-instructions/create-api-docs.wf.md
+    .ace/handbook/workflow-instructions/create-reflection-note.wf.md
+    .ace/handbook/workflow-instructions/create-release-overview.wf.md
+    .ace/handbook/workflow-instructions/create-retrospective-document.wf.md
+    .ace/handbook/workflow-instructions/create-review-checklist.wf.md
+    .ace/handbook/workflow-instructions/create-test-cases.wf.md
+    .ace/handbook/workflow-instructions/create-user-docs.wf.md
+    .ace/handbook/workflow-instructions/draft-release.wf.md
+    .ace/handbook/workflow-instructions/fix-tests.wf.md
+    .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
+    .ace/handbook/workflow-instructions/load-env.wf.md
+    .ace/handbook/workflow-instructions/save-session-context.md
+    .ace/handbook/workflow-instructions/publish-release.wf.md
+    .ace/handbook/workflow-instructions/review-task.wf.md
+    .ace/handbook/workflow-instructions/review-tasks-board-status.wf.md
+    .ace/handbook/workflow-instructions/update-blueprint.wf.md
+    .ace/handbook/workflow-instructions/update-roadmap.wf.md
+    .ace/handbook/workflow-instructions/work-on-task.wf.md
 
 Total files: 21
 ```
@@ -60,7 +60,7 @@ Analyze all 21 existing workflow instruction files to identify cross-dependencie
 
 #### Create
 
-- dev-taskflow/backlog/v.0.3.0-workflows/researches/workflow-dependency-analysis.md
+- .ace/taskflow/backlog/v.0.3.0-workflows/researches/workflow-dependency-analysis.md
 
 #### Modify
 
@@ -81,11 +81,11 @@ Analyze all 21 existing workflow instruction files to identify cross-dependencie
 
 ### Planning Steps
 
-- [x] Survey all workflow instruction files in dev-handbook/workflow-instructions/
+- [x] Survey all workflow instruction files in .ace/handbook/workflow-instructions/
   > TEST: Complete Workflow Inventory
   > Type: Pre-condition Check
   > Assert: All workflow files are identified and catalogued
-  > Command: bin/test --check-file-exists dev-taskflow/backlog/v.0.3.0-workflows/researches/workflow-inventory.md
+  > Command: bin/test --check-file-exists .ace/taskflow/backlog/v.0.3.0-workflows/researches/workflow-inventory.md
 - [x] Research coding agent integration requirements for Claude Code, Windsurf, and Zed
 - [x] Analyze patterns in current workflow cross-references
 
@@ -116,6 +116,6 @@ Analyze all 21 existing workflow instruction files to identify cross-dependencie
 
 ## References
 
-- dev-handbook/workflow-instructions/ (all workflow files)
-- dev-handbook/guides/draft-release/ (template references)
+- .ace/handbook/workflow-instructions/ (all workflow files)
+- .ace/handbook/guides/draft-release/ (template references)
 - CLAUDE.md (project context)

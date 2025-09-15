@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/spec -name "*task_dependency_checker*" -type f
+find .ace/tools/spec -name "*task_dependency_checker*" -type f
 ```
 
 _Result excerpt:_
@@ -38,7 +38,7 @@ Create comprehensive test coverage for the TaskDependencyChecker molecule to ens
 
 #### Create
 
-- /dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_dependency_checker_spec.rb
+- /.ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_dependency_checker_spec.rb
 
 #### Modify
 
@@ -141,5 +141,5 @@ Total: 52 comprehensive test cases providing thorough coverage of dependency val
 
 ## References
 
-- TaskDependencyChecker implementation: /dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_dependency_checker.rb
-- Created test file: /dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_dependency_checker_spec.rb
+- TaskDependencyChecker implementation: /.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_dependency_checker.rb
+- Created test file: /.ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_dependency_checker_spec.rb

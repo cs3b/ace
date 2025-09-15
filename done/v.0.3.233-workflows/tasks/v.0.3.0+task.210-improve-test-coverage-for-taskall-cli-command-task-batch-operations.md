@@ -23,7 +23,7 @@ The `task-manager all` CLI command (`CodingAgentTools::Cli::Commands::Task::All`
 
 #### Create
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/all_spec.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/task/all_spec.rb`
 
 #### Modify
 
@@ -62,11 +62,11 @@ The `task-manager all` CLI command (`CodingAgentTools::Cli::Commands::Task::All`
   > TEST: Test Suite Passes
   > Type: Action Validation
   > Assert: All tests pass and provide comprehensive coverage of the Task::All command
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/all_spec.rb -v
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/all_spec.rb -v
 
 ## Acceptance Criteria
 
-- [x] AC 1: Complete spec file created at dev-tools/spec/coding_agent_tools/cli/commands/task/all_spec.rb with comprehensive test coverage
+- [x] AC 1: Complete spec file created at .ace/tools/spec/coding_agent_tools/cli/commands/task/all_spec.rb with comprehensive test coverage
 - [x] AC 2: All CLI options and flags are tested including --debug, --show-cycles, --sort, --filter, --verbose, --release
 - [x] AC 3: Error handling, edge cases, and integration scenarios are properly tested
 - [x] AC 4: Test suite passes completely and follows established patterns from existing CLI command tests
@@ -81,6 +81,6 @@ The `task-manager all` CLI command (`CodingAgentTools::Cli::Commands::Task::All`
 
 ## References
 
-- Existing implementation: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/task/all.rb`
-- Test pattern reference: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb`
+- Existing implementation: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/task/all.rb`
+- Test pattern reference: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb`
 - CLI framework: dry-cli gem documentation

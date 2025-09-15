@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Comprehensive audit of 29 executables in `dev-tools/exe/` directory to assess dry library usage patterns and identify standardization needs.
+Comprehensive audit of 29 executables in `.ace/tools/exe/` directory to assess dry library usage patterns and identify standardization needs.
 
 ## Audit Results
 

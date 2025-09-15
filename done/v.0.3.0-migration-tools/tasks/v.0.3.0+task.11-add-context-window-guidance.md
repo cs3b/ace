@@ -14,13 +14,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-handbook/workflow-instructions/review-code.wf.md | sed 's/^/    /'
+ls -la .ace/handbook/workflow-instructions/review-code.wf.md | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/review-code.wf.md
+    .ace/handbook/workflow-instructions/review-code.wf.md
 ```
 
 ## Objective
@@ -46,7 +46,7 @@ Enhance the code review workflow with comprehensive guidance for handling large 
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 
 #### Delete
 
@@ -67,7 +67,7 @@ Enhance the code review workflow with comprehensive guidance for handling large 
   > TEST: Current Structure
   > Type: Pre-condition Check
   > Assert: Current workflow structure understood
-  > Command: grep -n "^##" dev-handbook/workflow-instructions/review-code.wf.md | wc -l
+  > Command: grep -n "^##" .ace/handbook/workflow-instructions/review-code.wf.md | wc -l
 * [x] Research effective context window management strategies
   > TEST: Research Completeness
   > Type: Knowledge Validation
@@ -89,17 +89,17 @@ Enhance the code review workflow with comprehensive guidance for handling large 
   > TEST: Prioritization Section
   > Type: Content Validation
   > Assert: File prioritization strategies documented with examples
-  > Command: grep -c "prioritization" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -c "prioritization" .ace/handbook/workflow-instructions/review-code.wf.md
 - [x] Define chunking approaches for different content types (git diffs, file patterns, individual files)
   > TEST: Chunking Approaches
   > Type: Content Validation
   > Assert: Multiple chunking strategies documented
-  > Command: grep -c "chunking" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -c "chunking" .ace/handbook/workflow-instructions/review-code.wf.md
 - [x] Add context overflow error handling patterns
   > TEST: Error Handling
   > Type: Content Validation
   > Assert: Context overflow scenarios covered
-  > Command: grep -c "overflow" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -c "overflow" .ace/handbook/workflow-instructions/review-code.wf.md
 - [x] Include practical examples of effective review splitting
 - [x] Document indicators that suggest chunking is needed
 - [x] Add guidance on maintaining context across chunks
@@ -107,7 +107,7 @@ Enhance the code review workflow with comprehensive guidance for handling large 
   > TEST: Context Window Section
   > Type: Content Validation
   > Assert: Comprehensive context window guidance exists
-  > Command: grep -i -c "context window" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -i -c "context window" .ace/handbook/workflow-instructions/review-code.wf.md
 
 ## Acceptance Criteria
 
@@ -130,7 +130,7 @@ Enhance the code review workflow with comprehensive guidance for handling large 
 
 ## References
 
-* Target file: dev-handbook/workflow-instructions/review-code.wf.md
+* Target file: .ace/handbook/workflow-instructions/review-code.wf.md
 * Related task from original plan: task.73
 * Context: Handling reviews that exceed LLM token limits
 * LLM Context Limits: Claude 3.5 Sonnet (200k tokens), GPT-4 (128k tokens), Gemini Pro (2M tokens)

@@ -99,7 +99,7 @@ To improve the clarity and discoverability of creating new tasks within the `tas
 
 **Technical Unknowns:**
 - The precise implementation details for handling task ID generation and file creation within the `task-manager` executable.
-- The best approach for managing the deprecation lifecycle of `create-path task-new` within the `dev-tools` gem.
+- The best approach for managing the deprecation lifecycle of `create-path task-new` within the `.ace/tools` gem.
 
 **User/Market Unknowns:**
 - The extent to which existing AI agent workflows rely on the specific `create-path task-new` command, and the potential impact of its deprecation.
@@ -107,4 +107,4 @@ To improve the clarity and discoverability of creating new tasks within the `tas
 
 **Implementation Unknowns:**
 - The effort required to refactor the `create-path task-new` logic and integrate it into `task-manager`.
-- The process for updating all relevant documentation (e.g., `docs/tools.md`, `dev-handbook/guides/`) to reflect the new command structure and deprecation.
+- The process for updating all relevant documentation (e.g., `docs/tools.md`, `.ace/handbook/guides/`) to reflect the new command structure and deprecation.

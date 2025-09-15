@@ -122,7 +122,7 @@
 - ProjectRootDetector: `lib/coding_agent_tools/atoms/project_root_detector.rb`
 - Fish PATH setup: `bin/setup-env.fish` with `fish_add_path --path --move`
 - Location-aware executables: All use `File.expand_path("../../lib", __FILE__)`
-- Cross-shell setup: Separate `setup.sh` and `setup.fish` templates in `dev-tools/config/bin-setup-env/`
+- Cross-shell setup: Separate `setup.sh` and `setup.fish` templates in `.ace/tools/config/bin-setup-env/`
 
 **Architecture Decisions:**
 - PROJECT_ROOT env variable as highest priority fallback

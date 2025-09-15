@@ -63,5 +63,5 @@ yaml_lines << "allowed-tools: #{metadata[:allowed_tools]}" if metadata[:allowed_
 
 - Task completed successfully with all acceptance criteria met
 - Generated commands tested and working with proper YAML front-matter
-- Documentation created at `dev-handbook/.integrations/claude/metadata-field-reference.md`
+- Documentation created at `.ace/handbook/.integrations/claude/metadata-field-reference.md`
 - All 25 workflow types have appropriate metadata inference rules

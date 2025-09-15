@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions
+.ace/handbook/workflow-instructions
 ├── commit.wf.md
 ├── create-adr.wf.md
 ├── create-api-docs.wf.md
@@ -50,7 +50,7 @@ Link back to original requirement: Unified template embedding workflow structure
 
 ## Scope of Work
 
-* All workflow instruction files in dev-handbook/workflow-instructions/
+* All workflow instruction files in .ace/handbook/workflow-instructions/
 * Embedded templates and document fragments within workflow files
 * Comparison framework for template matching
 * Template location and format analysis
@@ -84,7 +84,7 @@ Link back to original requirement: Unified template embedding workflow structure
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All workflow files are accessible and readable
-  > Command: find dev-handbook/workflow-instructions -name "*.wf.md" | wc -l
+  > Command: find .ace/handbook/workflow-instructions -name "*.wf.md" | wc -l
   > RESULT: ✅ 16 workflow files found and accessible
 
 ### Execution Steps
@@ -93,7 +93,7 @@ Link back to original requirement: Unified template embedding workflow structure
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: All embedded templates are identified and cataloged
-  > Command: grep -r "```" dev-handbook/workflow-instructions/ | grep -v "bash"
+  > Command: grep -r "```" .ace/handbook/workflow-instructions/ | grep -v "bash"
   > RESULT: ✅ Comprehensive scan completed, 27+ templates identified
 
 * [x] Identify template types (task templates, document templates, configuration templates)
@@ -134,5 +134,5 @@ Link back to original requirement: Unified template embedding workflow structure
 ## References
 
 * Original requirement: improve-the-workflow-structure.md
-* Related guides: dev-handbook/workflow-instructions/
+* Related guides: .ace/handbook/workflow-instructions/
 * Dependencies: None (foundational task)

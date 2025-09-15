@@ -115,11 +115,11 @@ Key design decisions:
 
 - Task: v.0.6.0+task.005
 - Files created:
-  - `/dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb`
-  - `/dev-tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb`
-  - `/dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/validate_spec.rb`
+  - `/.ace/tools/lib/coding_agent_tools/organisms/claude_validator.rb`
+  - `/.ace/tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb`
+  - `/.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/validate_spec.rb`
 - Files modified:
-  - `/dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb`
+  - `/.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb`
 
 The validation revealed significant issues in the current codebase:
 - 25 outdated commands (content mismatch)

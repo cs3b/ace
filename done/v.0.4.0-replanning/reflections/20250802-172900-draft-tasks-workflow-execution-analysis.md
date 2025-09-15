@@ -16,7 +16,7 @@
 
 ## What Could Be Improved
 
-- **Git Commit Scope Issue**: Task agent only committed within dev-taskflow submodule, not in main repository
+- **Git Commit Scope Issue**: Task agent only committed within .ace/taskflow submodule, not in main repository
 - **Commit Status Communication**: Failed to clearly communicate that commits were only local to submodule
 - **Multi-Repository Workflow**: Need better handling of changes across submodules and main repo
 - **Verification Process**: Should have verified commit status in main repository before claiming completion
@@ -87,9 +87,9 @@
 ## Technical Details
 
 **Files Created:**
-- Task file: `dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.6.0+task.1-integrate-custom-claude-commands-into-claude-code.md`
-- Reflection file: `dev-taskflow/current/v.0.4.0-replanning/reflections/20250802-094231-draft-task-creation-for-claude-commands-integration.md`
-- Idea file moved: `dev-taskflow/current/v.0.4.0-replanning/ideas/1-20250802-0934-claude-commands-prompts.md`
+- Task file: `.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.6.0+task.1-integrate-custom-claude-commands-into-claude-code.md`
+- Reflection file: `.ace/taskflow/current/v.0.4.0-replanning/reflections/20250802-094231-draft-task-creation-for-claude-commands-integration.md`
+- Idea file moved: `.ace/taskflow/current/v.0.4.0-replanning/ideas/1-20250802-0934-claude-commands-prompts.md`
 
 **Commit Status:**
 - Submodule commits: ✅ Completed

@@ -15,7 +15,7 @@
 
 ## What Could Be Improved
 
-- **Initial Path Navigation**: Multiple directory navigation attempts when working across submodules (dev-handbook, dev-tools, dev-taskflow)
+- **Initial Path Navigation**: Multiple directory navigation attempts when working across submodules (dev-handbook, dev-tools, .ace/taskflow)
 - **Test Execution**: Build command failed initially, had to fall back to running tests directly
 - **File Reading Before Writing**: Attempted to edit synthesis_orchestrator.rb before reading it first
 - **Directory Context**: Lost track of current directory when switching between submodules
@@ -33,7 +33,7 @@
 
 #### High Impact Issues
 
-- **Cross-Submodule Coordination**: Working across three submodules (dev-handbook, dev-tools, dev-taskflow)
+- **Cross-Submodule Coordination**: Working across three submodules (dev-handbook, dev-tools, .ace/taskflow)
   - Occurrences: 5+ times during implementation
   - Impact: Required careful path management and multiple directory switches
   - Root Cause: Complex project structure with integrated submodules
@@ -123,6 +123,6 @@
 ## Additional Context
 
 - Task: v.0.5.0+task.029-implement-composable-prompt-system-for-code-review.md
-- Documentation: dev-taskflow/current/v.0.5.0-insights/docs/29-composable-prompt-system-guide.md
+- Documentation: .ace/taskflow/current/v.0.5.0-insights/docs/29-composable-prompt-system-guide.md
 - Commits: 2 major implementation commits + 1 cleanup commit
 - Files Modified: 22 files in implementation, 21 files in cleanup

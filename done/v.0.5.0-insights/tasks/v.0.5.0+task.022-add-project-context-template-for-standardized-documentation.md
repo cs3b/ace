@@ -32,7 +32,7 @@ Create a project context template that defines a standard structure for loading 
 ### Deliverables
 
 #### Create
-- `dev-handbook/templates/context/project.md` - Project context template with embedded configuration
+- `.ace/handbook/templates/context/project.md` - Project context template with embedded configuration
 
 #### Modify
 - None
@@ -80,7 +80,7 @@ commands:
   - `task-manager next --limit 5` - Upcoming tasks
   - `release-manager current` - Current release info
   - `git ls-files` - Project file listing
-  - Submodule file listings for dev-handbook and dev-tools
+  - Submodule file listings for .ace/handbook and .ace/tools
 
 ### Use Cases
 
@@ -100,7 +100,7 @@ While automatic installation isn't implemented yet, this template:
 
 ## References
 
-- Template location: `dev-handbook/templates/context/project.md`
+- Template location: `.ace/handbook/templates/context/project.md`
 - Context tool configuration: `.coding-agent/context.yml`
-- Context tool documentation: `dev-tools/docs/exe/context.md`
+- Context tool documentation: `.ace/tools/docs/exe/context.md`
 - Related work: Task 021 (dotfile templates creation)

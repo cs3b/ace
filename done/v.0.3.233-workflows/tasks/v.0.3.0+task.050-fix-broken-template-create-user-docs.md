@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook | sed 's/^/    /'
+tree -L 2 .ace/handbook | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook
+    .ace/handbook
     ├── guides
     ├── templates
     └── workflow-instructions
@@ -44,7 +44,7 @@ Repair the broken template embedding/reference in create-user-docs.wf.md workflo
 
 #### Modify
 
-* dev-handbook/workflow-instructions/create-user-docs.wf.md - Fix broken template reference
+* .ace/handbook/workflow-instructions/create-user-docs.wf.md - Fix broken template reference
 
 #### Delete
 
@@ -65,7 +65,7 @@ Repair the broken template embedding/reference in create-user-docs.wf.md workflo
   > Type: Pre-condition Check
   > Assert: Broken template reference located and understood
   > Command: bin/test --check-template-issue
-* [x] Check if referenced template exists in dev-handbook/templates/
+* [x] Check if referenced template exists in .ace/handbook/templates/
 * [x] Understand the correct template embedding syntax from working workflows
 
 ### Execution Steps
@@ -80,7 +80,7 @@ Repair the broken template embedding/reference in create-user-docs.wf.md workflo
   > TEST: Workflow Functional
   > Type: Syntax Validation
   > Assert: Workflow file passes linting with valid template
-  > Command: bin/lint dev-handbook/workflow-instructions/create-user-docs.wf.md
+  > Command: bin/lint .ace/handbook/workflow-instructions/create-user-docs.wf.md
 
 ## Acceptance Criteria
 
@@ -97,6 +97,6 @@ Repair the broken template embedding/reference in create-user-docs.wf.md workflo
 
 ## References
 
-* Review report: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md (Google Pro finding)
-* Template directory: dev-handbook/templates/
-* Workflow file: dev-handbook/workflow-instructions/create-user-docs.wf.md
+* Review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md (Google Pro finding)
+* Template directory: .ace/handbook/templates/
+* Workflow file: .ace/handbook/workflow-instructions/create-user-docs.wf.md

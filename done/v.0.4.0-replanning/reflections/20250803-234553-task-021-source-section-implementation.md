@@ -64,7 +64,7 @@
 
 - Task ID: v.0.4.0+task.021
 - Files Modified:
-  - `/dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb`
-  - `/dev-tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb`
+  - `/.ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb`
+  - `/.ace/tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb`
 - Test Results: All SOURCE section tests passing (8 unit tests, 3 integration tests)
 - Manual Testing: Successfully tested with simple text, markdown code blocks, and multi-line input

@@ -33,11 +33,11 @@ The documentation system should provide developers with:
 ```bash
 # Developer Navigation Flow
 # 1. Navigate to Claude integration quickstart
-dev-handbook/.integrations/claude/README.md
+.ace/handbook/.integrations/claude/README.md
 # Expected: Focused quickstart guide with immediate actionable steps
 
 # 2. Navigate to detailed tool documentation
-dev-tools/docs/user/handbook-claude-{subcommand}.md
+.ace/tools/docs/user/handbook-claude-{subcommand}.md
 # Expected: Comprehensive documentation for each handbook claude tool
 ```
 
@@ -108,7 +108,7 @@ Restructure Claude integration documentation to provide a clear separation betwe
 ## Technical Approach
 
 ### Architecture Pattern
-- [ ] Follow existing documentation architecture patterns from dev-tools/docs/user/
+- [ ] Follow existing documentation architecture patterns from .ace/tools/docs/user/
 - [ ] Maintain consistency with unified command documentation style (e.g., llm-query.md)
 - [ ] Ensure clear separation between quickstart and reference documentation
 
@@ -119,7 +119,7 @@ Restructure Claude integration documentation to provide a clear separation betwe
 - [ ] Troubleshooting sections with common issues
 
 ### Implementation Strategy
-- [ ] Create focused quickstart guide in dev-handbook/.integrations/claude/README.md
+- [ ] Create focused quickstart guide in .ace/handbook/.integrations/claude/README.md
 - [ ] Create comprehensive reference documentation for each handbook claude subcommand
 - [ ] Establish clear cross-references between quickstart and detailed docs
 - [ ] Remove incorrect installation instructions (gem installation)
@@ -131,36 +131,36 @@ No external tools required - standard markdown documentation approach.
 ## File Modifications
 
 ### Create
-- dev-tools/docs/user/handbook-claude-list.md
+- .ace/tools/docs/user/handbook-claude-list.md
   - Purpose: Comprehensive documentation for `handbook claude list` subcommand
   - Key components: Command syntax, options, examples, troubleshooting
   - Dependencies: None
 
-- dev-tools/docs/user/handbook-claude-validate.md
+- .ace/tools/docs/user/handbook-claude-validate.md
   - Purpose: Comprehensive documentation for `handbook claude validate` subcommand
   - Key components: Validation rules, options, error messages, fixes
   - Dependencies: None
 
-- dev-tools/docs/user/handbook-claude-generate-commands.md
+- .ace/tools/docs/user/handbook-claude-generate-commands.md
   - Purpose: Comprehensive documentation for `handbook claude generate-commands` subcommand
   - Key components: Generation process, templates, customization options
   - Dependencies: None
 
-- dev-tools/docs/user/handbook-claude-update-registry.md
+- .ace/tools/docs/user/handbook-claude-update-registry.md
   - Purpose: Comprehensive documentation for `handbook claude update-registry` subcommand
   - Key components: Registry format, update process, backup procedures
   - Dependencies: None
 
-- dev-tools/docs/user/handbook-claude-integrate.md
+- .ace/tools/docs/user/handbook-claude-integrate.md
   - Purpose: Comprehensive documentation for `handbook claude integrate` subcommand
   - Key components: Integration workflow, prerequisites, troubleshooting
   - Dependencies: None
 
 ### Modify
-- dev-handbook/.integrations/claude/README.md
+- .ace/handbook/.integrations/claude/README.md
   - Changes: Transform into focused quickstart guide
   - Impact: Clearer onboarding experience for new users
-  - Integration points: Cross-references to detailed docs in dev-tools
+  - Integration points: Cross-references to detailed docs in .ace/tools
 
 ## Risk Assessment
 
@@ -188,7 +188,7 @@ No external tools required - standard markdown documentation approach.
   > Assert: All handbook claude subcommands are understood
   > Command: handbook claude --help
 
-* [x] Study existing user documentation patterns in dev-tools/docs/user/
+* [x] Study existing user documentation patterns in .ace/tools/docs/user/
 * [x] Design consistent documentation structure for all subcommands
 * [x] Plan cross-reference strategy between quickstart and detailed docs
 
@@ -198,19 +198,19 @@ No external tools required - standard markdown documentation approach.
   > TEST: List Documentation Complete
   > Type: Action Validation
   > Assert: handbook-claude-list.md created with all sections
-  > Command: ls -la dev-tools/docs/user/handbook-claude-list.md
+  > Command: ls -la .ace/tools/docs/user/handbook-claude-list.md
 
 - [x] Step 2: Create comprehensive documentation for handbook claude validate subcommand
   > TEST: Validate Documentation Complete
   > Type: Action Validation
   > Assert: handbook-claude-validate.md created with all sections
-  > Command: ls -la dev-tools/docs/user/handbook-claude-validate.md
+  > Command: ls -la .ace/tools/docs/user/handbook-claude-validate.md
 
 - [x] Step 3: Create comprehensive documentation for handbook claude generate-commands subcommand
   > TEST: Generate Commands Documentation Complete
   > Type: Action Validation
   > Assert: handbook-claude-generate-commands.md created with all sections
-  > Command: ls -la dev-tools/docs/user/handbook-claude-generate-commands.md
+  > Command: ls -la .ace/tools/docs/user/handbook-claude-generate-commands.md
 
 - [x] Step 4: ~~Create comprehensive documentation for handbook claude update-registry subcommand~~
   > Note: This command does not exist in the current implementation. Skipping this step.
@@ -219,7 +219,7 @@ No external tools required - standard markdown documentation approach.
   > TEST: Integrate Documentation Complete
   > Type: Action Validation
   > Assert: handbook-claude-integrate.md created with all sections
-  > Command: ls -la dev-tools/docs/user/handbook-claude-integrate.md
+  > Command: ls -la .ace/tools/docs/user/handbook-claude-integrate.md
 
 - [x] Step 6: Transform Claude README into focused quickstart guide
   - Focus on immediate setup steps and first-time use
@@ -229,19 +229,19 @@ No external tools required - standard markdown documentation approach.
   > TEST: Quickstart Guide Transformed
   > Type: Action Validation
   > Assert: README.md is focused quickstart with cross-references
-  > Command: grep -c "Quick Start" dev-handbook/.integrations/claude/README.md
+  > Command: grep -c "Quick Start" .ace/handbook/.integrations/claude/README.md
 
 - [x] Step 7: Update tools.md to reference new detailed documentation
   > TEST: Tools Reference Updated
   > Type: Action Validation
   > Assert: tools.md includes links to new documentation
-  > Command: grep -c "handbook-claude" dev-tools/docs/tools.md
+  > Command: grep -c "handbook-claude" .ace/tools/docs/tools.md
 
 - [x] Step 8: Validate all cross-references work correctly
   > TEST: Cross-References Valid
   > Type: Action Validation
   > Assert: All documentation links are valid
-  > Command: markdownlint dev-handbook/.integrations/claude/README.md dev-tools/docs/user/handbook-claude-*.md
+  > Command: markdownlint .ace/handbook/.integrations/claude/README.md .ace/tools/docs/user/handbook-claude-*.md
 
 ## Acceptance Criteria
 

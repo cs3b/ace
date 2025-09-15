@@ -20,16 +20,16 @@
   :currency: USD
 ---
 
-# Implement --dry-run for all `dev-tools` Executables and Standardize Parameters
+# Implement --dry-run for all `.ace/tools` Executables and Standardize Parameters
 
 ## Intention
 
-To ensure all executable tools within `dev-tools/exe/` support a `--dry-run` flag for safe previewing of operations, and to standardize parameter definitions (flags, positional arguments) and internal command invocation patterns across the CLI.
+To ensure all executable tools within `.ace/tools/exe/` support a `--dry-run` flag for safe previewing of operations, and to standardize parameter definitions (flags, positional arguments) and internal command invocation patterns across the CLI.
 
 ## Problem It Solves
 
 **Observed Issues:**
-- Not all `dev-tools` executables support a `--dry-run` flag, preventing users from previewing the effects of their commands.
+- Not all `.ace/tools` executables support a `--dry-run` flag, preventing users from previewing the effects of their commands.
 - Parameter definitions (flags, positional arguments) and command invocation patterns vary across executables, leading to inconsistency and a steeper learning curve.
 - Some commands might directly call other commands via `system()` or `exec()`, bypassing internal Ruby library usage and making testing and integration more difficult.
 - Lack of a standardized way to check if commands can be directly used as Ruby libraries without needing to be invoked via the command line.
@@ -45,12 +45,12 @@ To ensure all executable tools within `dev-tools/exe/` support a `--dry-run` fla
 - **ATOM Architecture**: The gem is structured using ATOM principles, implying components should ideally be usable as libraries.
 - **CLI Framework (`dry-cli`)**: The project uses `dry-cli`, which provides a structured way to define commands, arguments, and flags, facilitating standardization.
 - **Existing `--dry-run` Implementations**: Some commands already implement `--dry-run` (e.g., `git-commit`, `git-push`), providing a pattern to follow.
-- **Multi-Repository Coordination**: The `dev-tools` gem is a core component, and its consistency impacts the entire toolkit.
+- **Multi-Repository Coordination**: The `.ace/tools` gem is a core component, and its consistency impacts the entire toolkit.
 - **Test-Driven Development**: A robust testing strategy is in place, which can be leveraged to verify `--dry-run` functionality and parameter consistency.
 
 ## Solution Direction
 
-1. **Implement `--dry-run` Flag**: For every executable in `dev-tools/exe/`, add a `--dry-run` flag. This flag should simulate the command's actions without making actual changes, printing what *would* happen instead.
+1. **Implement `--dry-run` Flag**: For every executable in `.ace/tools/exe/`, add a `--dry-run` flag. This flag should simulate the command's actions without making actual changes, printing what *would* happen instead.
 2. **Standardize Parameter Definitions**: Review and standardize the definition of flags (options) and positional arguments for all commands. Ensure consistent naming, types, and required/optional status. Leverage `dry-cli`'s capabilities for this.
 3. **Internal Command Invocation**: Refactor any commands that currently call other commands via shell execution to instead directly invoke the corresponding Ruby library classes or methods. This ensures modularity and testability.
 
@@ -70,7 +70,7 @@ To ensure all executable tools within `dev-tools/exe/` support a `--dry-run` fla
 
 **We assume that:**
 - All commands can technically support a `--dry-run` flag without fundamentally altering their core logic or becoming overly complex. - *Needs validation*
-- Direct Ruby library calls can replace all instances of shell-based command execution within the `dev-tools` gem. - *Needs validation*
+- Direct Ruby library calls can replace all instances of shell-based command execution within the `.ace/tools` gem. - *Needs validation*
 - `dry-cli`'s capabilities are sufficient to enforce parameter consistency and define `--dry-run` flags effectively. - *Needs validation*
 
 ## Expected Benefits
@@ -99,5 +99,5 @@ To ensure all executable tools within `dev-tools/exe/` support a `--dry-run` fla
 > SOURCE
 
 ```text
-in conxtext of dev-tools/exe/* :: each should have --dry-run, we should review the --help and consistenncy of other params (flag, and positional), and next check if that any cmd the reuse other cmd, never call by cmd line, but run it dirrectly as ruby lib, we have review if all commands are defined the way that allows that
+in conxtext of .ace/tools/exe/* :: each should have --dry-run, we should review the --help and consistenncy of other params (flag, and positional), and next check if that any cmd the reuse other cmd, never call by cmd line, but run it dirrectly as ruby lib, we have review if all commands are defined the way that allows that
 ```

@@ -165,5 +165,5 @@ Improve user experience by providing sensible defaults for output file naming, r
 ## References
 
 - Testing session: This issue was discovered during code-review command testing
-- Related command: code-review CLI implementation at dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb:314-364
+- Related command: code-review CLI implementation at .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb:314-364
 - Model name sanitization: Line 315 in review.rb

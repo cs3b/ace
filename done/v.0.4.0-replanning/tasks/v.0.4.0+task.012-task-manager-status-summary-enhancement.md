@@ -52,13 +52,13 @@ task-manager next       # Shows: "Status: X draft, Y pending... (N total)" + nor
 _Command run:_
 
 ```bash
-tree -L 2 dev-taskflow/current | sed 's/^/    /'
+tree -L 2 .ace/taskflow/current | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-taskflow/current
+    .ace/taskflow/current
     └── v.0.4.0-replanning
         ├── codemods
         ├── decisions
@@ -193,13 +193,13 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: TaskData structure and status field access patterns are identified
-  > Command: grep -n "status" dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb
+  > Command: grep -n "status" .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb
 
 * [x] Research CLI output patterns across all task-manager commands
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Consistent header/output patterns identified in all CLI commands
-  > Command: grep -n "puts.*Tasks" dev-tools/lib/coding_agent_tools/cli/commands/task/*.rb
+  > Command: grep -n "puts.*Tasks" .ace/tools/lib/coding_agent_tools/cli/commands/task/*.rb
 
 * [x] Design TaskStatusSummary molecule interface and implementation approach
 
@@ -209,13 +209,13 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
   > TEST: Molecule Creation
   > Type: Action Validation
   > Assert: TaskStatusSummary molecule exists with proper ATOM structure
-  > Command: test -f dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_status_summary.rb
+  > Command: test -f .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_status_summary.rb
 
 - [x] Implement status counting algorithm in TaskStatusSummary molecule
   > TEST: Counting Logic
   > Type: Action Validation
   > Assert: Status counting returns correct distribution from task collection
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb
 
 - [x] Add status summary output to task/all.rb command (list command)
   > TEST: All Command Enhancement
@@ -239,19 +239,19 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
   > TEST: Test Coverage
   > Type: Action Validation
   > Assert: TaskStatusSummary molecule has complete test coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb --format documentation
 
 - [x] Run integration tests to verify CLI command behavior
   > TEST: Integration Verification
   > Type: Action Validation
   > Assert: All task-manager commands work correctly with status summaries
-  > Command: cd dev-tools && bundle exec rspec spec/integration/task_manager_integration_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/task_manager_integration_spec.rb
 
 - [x] Run linting and code quality checks
   > TEST: Code Quality
   > Type: Action Validation
   > Assert: All new code passes StandardRB and security checks
-  > Command: cd dev-tools && bin/lint
+  > Command: cd .ace/tools && bin/lint
 
 ## Acceptance Criteria
 
@@ -275,8 +275,8 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
 
 ## References
 
-- Enhanced idea: dev-taskflow/backlog/ideas/20250731-0914-task-status-summary.md
+- Enhanced idea: .ace/taskflow/backlog/ideas/20250731-0914-task-status-summary.md
 - Task manager interface: Uses current release context for task scoping
 - CLI output patterns: Consistent with existing task-manager command outputs
-- ATOM Architecture: dev-tools/docs/architecture.md
-- TaskFileLoader: dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb
+- ATOM Architecture: .ace/tools/docs/architecture.md
+- TaskFileLoader: .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb

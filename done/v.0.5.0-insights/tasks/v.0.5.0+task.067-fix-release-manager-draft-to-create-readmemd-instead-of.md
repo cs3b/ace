@@ -31,7 +31,7 @@ Update the release-manager draft command to create README.md with proper release
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools/cli/commands/release/draft.rb`:
+- `.ace/tools/lib/coding_agent_tools/cli/commands/release/draft.rb`:
   - Changed `release-overview.md` to `README.md` in line 124
   - Updated template content with full release overview structure
   - Fixed success message to reference README.md
@@ -49,18 +49,18 @@ Update the release-manager draft command to create README.md with proper release
 
 Changed the `create_release_overview` method to:
 1. Create `README.md` instead of `release-overview.md`
-2. Use comprehensive template based on `dev-handbook/templates/release-management/release-overview.template.md`
+2. Use comprehensive template based on `.ace/handbook/templates/release-management/release-overview.template.md`
 3. Include all standard sections: Goals, Dependencies, Implementation Plan, Quality Assurance, Release Checklist
 
 ### Testing/Validation
 
 ```bash
 # Created test release
-cd /tmp && mkdir -p test-project/dev-taskflow/backlog
+cd /tmp && mkdir -p test-project/.ace/taskflow/backlog
 cd test-project && release-manager draft v.0.1.0 test-foundation
 
 # Verified README.md was created
-ls -la /tmp/test-project/dev-taskflow/backlog/v.0.1.0-test-foundation/
+ls -la /tmp/test-project/.ace/taskflow/backlog/v.0.1.0-test-foundation/
 # Confirmed README.md exists with proper content
 ```
 
@@ -71,4 +71,4 @@ ls -la /tmp/test-project/dev-taskflow/backlog/v.0.1.0-test-foundation/
 - Commits: 
   - dev-tools: `a516787` - feat(release): update release overview to README and improve content
 - Related feedback: User reported missing README.md in v.0.1.0-foundation release directories
-- Template source: `dev-handbook/templates/release-management/release-overview.template.md`
+- Template source: `.ace/handbook/templates/release-management/release-overview.template.md`

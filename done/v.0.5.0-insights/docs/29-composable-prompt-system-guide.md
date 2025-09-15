@@ -9,7 +9,7 @@ The composable prompt system eliminates duplication across code review prompts b
 ### Module Organization
 
 ```
-dev-handbook/templates/review-modules/
+.ace/handbook/templates/review-modules/
 ├── base/            # Core review instructions
 │   ├── system.md    # Base system prompt
 │   └── sections.md  # Standard section structure
@@ -125,7 +125,7 @@ The system maintains full backwards compatibility:
 
 ```bash
 # Old approach still works
-code-review --system-prompt "dev-handbook/templates/review-code/system.ruby.atom.prompt.md"
+code-review --system-prompt ".ace/handbook/templates/review-code/system.ruby.atom.prompt.md"
 
 # New modular approach
 code-review --preset ruby-atom-modular
@@ -143,7 +143,7 @@ code-review --preset ruby-atom-modular
 
 1. Create file in appropriate subdirectory:
    ```bash
-   touch dev-handbook/templates/review-modules/focus/languages/python.md
+   touch .ace/handbook/templates/review-modules/focus/languages/python.md
    ```
 
 2. Define focus-specific criteria:
@@ -167,7 +167,7 @@ code-review --preset ruby-atom-modular
 
 1. Create format variation:
    ```bash
-   touch dev-handbook/templates/review-modules/format/checklist.md
+   touch .ace/handbook/templates/review-modules/format/checklist.md
    ```
 
 2. Define output structure:

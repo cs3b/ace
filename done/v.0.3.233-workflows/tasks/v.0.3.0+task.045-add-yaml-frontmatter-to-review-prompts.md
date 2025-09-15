@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.44]
 _Command run:_
 
 ```bash
-head -10 dev-taskflow/current/v.0.3.0-workflows/code_review/*/prompt.md | grep -E '^(---|\w+:)'
+head -10 .ace/taskflow/current/v.0.3.0-workflows/code_review/*/prompt.md | grep -E '^(---|\w+:)'
 ```
 
 _Result excerpt:_
@@ -43,7 +43,7 @@ Replace plain text metadata headers in review prompts with machine-readable YAML
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 
 ## Phases
 
@@ -60,7 +60,7 @@ Replace plain text metadata headers in review prompts with machine-readable YAML
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current metadata format is documented
-  > Command: grep -A 10 "Generated:" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A 10 "Generated:" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Define standard YAML frontmatter fields for all review types
 * [x] Research YAML frontmatter best practices for LLM prompts
 

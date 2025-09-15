@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- **Clear existing patterns**: The dev-tools project had well-established testing patterns (integrate_spec.rb, sync_templates_spec.rb) that provided excellent guidance
+- **Clear existing patterns**: The .ace/tools project had well-established testing patterns (integrate_spec.rb, sync_templates_spec.rb) that provided excellent guidance
 - **Helper infrastructure**: Existing CLI helpers and process helpers made test implementation straightforward
 - **Test organization**: Following RSpec conventions with describe/context/it structure made tests readable and maintainable
 - **Coverage configuration**: SimpleCov was already set up, making it easy to add Claude-specific coverage groups

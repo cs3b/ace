@@ -23,7 +23,7 @@ Enhance existing `llm-query` and new `context` tools to automatically delegate s
 
 **Add Model Routing Logic:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/molecules/model_router.rb
+# .ace/tools/lib/coding_agent_tools/molecules/model_router.rb
 module CodingAgentTools::Molecules
   class ModelRouter
     TASK_MODELS = {
@@ -44,7 +44,7 @@ end
 
 **Automatic Model Selection:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/organisms/context_loader.rb
+# .ace/tools/lib/coding_agent_tools/organisms/context_loader.rb
 def load_files(paths, use_llm: true)
   if use_llm && simple_text_files?(paths)
     model = model_router.select_model(:file_reading)
@@ -70,7 +70,7 @@ context --files docs/*.md --model gflash
 
 **Extend existing aliases:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/constants/model_aliases.rb
+# .ace/tools/lib/coding_agent_tools/constants/model_aliases.rb
 CHEAP_MODELS = {
   "gflash" => "google:gemini-2.5-flash-lite",
   "haiku" => "anthropic:claude-3-haiku",

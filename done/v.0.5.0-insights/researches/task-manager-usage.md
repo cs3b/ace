@@ -55,7 +55,7 @@ task-manager all --release v.0.2.0
 task-manager all --version v.0.2.0
 task-manager all --version v.0.2.0-synapse
 task-manager recent --limit 5 --version v.0.2.0-synapse
-task-manager recent --limit 5 --version /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/done/v.0.2.0-synapse
+task-manager recent --limit 5 --version /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/done/v.0.2.0-synapse
 task-manager recent --limit 5 --help
 task-manager all --last 1.year --release v.0.2.0-synapse-tools
 task-manager recent --help
@@ -85,19 +85,19 @@ task-manager next --help
 task-manager recent --limit 1
 task-manager all --filter status:pending | pbcopy
 task-manager all next
-dev-tools/exe/task-manager generate-id
-dev-tools/exe/task-manager next
-dev-tools/exe/task-manager next --limit 3
-dev-tools/exe/task-manager
-dev-tools/exe/task-manager all
-dev-tools/exe/task-manager all]
-dev-tools/exe/task-manager recent --limit 3
-dev-tools/exe/task-manager recent
-dev-tools/exe/task-manager next --help
-dev-tools/exe/task-manager recent --limit 5
-dev-tools/exe/task-manager --help
-dev-tools/exe/task-manager generate-id --limit 3
-dev-tools/exe/task-manager generete-id --limit 3
+.ace/tools/exe/task-manager generate-id
+.ace/tools/exe/task-manager next
+.ace/tools/exe/task-manager next --limit 3
+.ace/tools/exe/task-manager
+.ace/tools/exe/task-manager all
+.ace/tools/exe/task-manager all]
+.ace/tools/exe/task-manager recent --limit 3
+.ace/tools/exe/task-manager recent
+.ace/tools/exe/task-manager next --help
+.ace/tools/exe/task-manager recent --limit 5
+.ace/tools/exe/task-manager --help
+.ace/tools/exe/task-manager generate-id --limit 3
+.ace/tools/exe/task-manager generete-id --limit 3
 tree -L 3 -I docs-dev -I tmp -I task-manager | pbcopy
 tree -L 3 -I docs-dev -I tmp -I task-manager | pbcopy`
 cd task-manager/

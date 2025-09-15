@@ -98,7 +98,7 @@ To enhance the `/draft-tasks` command to intelligently detect whether it's proce
 > SOURCE
 
 ```text
-I see the issue now! The /draft-tasks command is designed to work with idea files (from dev-taskflow/backlog/ideas/), not with already-completed task files. You provided it with task files that were already fully drafted with complete specifications.
+I see the issue now! The /draft-tasks command is designed to work with idea files (from .ace/taskflow/backlog/ideas/), not with already-completed task files. You provided it with task files that were already fully drafted with complete specifications.
 
   Here's what went wrong:
 
@@ -116,7 +116,7 @@ I see the issue now! The /draft-tasks command is designed to work with idea file
   Option 1: If Starting from Ideas
 
   # If you had idea files:
-  /draft-tasks dev-taskflow/backlog/ideas/vue-component-storage.md
+  /draft-tasks .ace/taskflow/backlog/ideas/vue-component-storage.md
   This would have:
   - Read the idea file
   - Used task-manager create to generate tasks in the current release
@@ -127,7 +127,7 @@ I see the issue now! The /draft-tasks command is designed to work with idea file
   You should have used a different approach since you already had complete task files:
 
   # Loop through existing task files and register them:
-  for task in dev-taskflow/backlog/tasks/vue-component-storage-*.md; do
+  for task in .ace/taskflow/backlog/tasks/vue-component-storage-*.md; do
     # Extract title from the file
     title=$(grep "^# " "$task" | head -1 | sed 's/^# //')
 

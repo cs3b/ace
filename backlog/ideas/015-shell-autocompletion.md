@@ -24,7 +24,7 @@
 
 ## Intention
 
-To configure the CLI scripts within the `dev-tools/exe/` directory to support autocompletion for shells like Fish, enhancing user experience and developer productivity.
+To configure the CLI scripts within the `.ace/tools/exe/` directory to support autocompletion for shells like Fish, enhancing user experience and developer productivity.
 
 ## Problem It Solves
 
@@ -62,7 +62,7 @@ To configure the CLI scripts within the `dev-tools/exe/` directory to support au
 
 **Open Questions:**
 - Will a single command be provided to generate all completion scripts, or will it be per-tool?
-- Are there any existing patterns within the `dev-tools` gem for generating or managing shell completions that should be followed?
+- Are there any existing patterns within the `.ace/tools` gem for generating or managing shell completions that should be followed?
 - How will autocompletion be updated when new commands or flags are added to the CLI tools?
 
 ## Assumptions to Validate
@@ -78,7 +78,7 @@ To configure the CLI scripts within the `dev-tools/exe/` directory to support au
 - Reduced command-line errors due to mistyping.
 - Faster and more efficient use of the CLI tools.
 - Enhanced developer experience and satisfaction.
-- Increased adoption and usage of the `dev-tools` gem.
+- Increased adoption and usage of the `.ace/tools` gem.
 
 ## Big Unknowns
 

@@ -17,7 +17,7 @@
 
 ### 3. Template Path Validation
 
-- [ ] All paths start with `dev-handbook/templates/`
+- [ ] All paths start with `.ace/handbook/templates/`
 - [ ] All paths end with `.template.md`
 - [ ] Path references follow standard directory structure
 - [ ] Variable placeholders (if any) use proper format: `{current-release-path}`, `{current-project-path}`
@@ -71,9 +71,9 @@
 
 ### Quick Checks
 
-1. **XML Template Search**: `grep -r "<templates>" dev-handbook/workflow-instructions/`
-2. **Deprecated Format Search**: `grep -r "````markdown" dev-handbook/workflow-instructions/`
-3. **Template Path Validation**: Check all paths start with `dev-handbook/templates/` and end with `.template.md`
+1. **XML Template Search**: `grep -r "<templates>" .ace/handbook/workflow-instructions/`
+2. **Deprecated Format Search**: `grep -r "````markdown" .ace/handbook/workflow-instructions/`
+3. **Template Path Validation**: Check all paths start with `.ace/handbook/templates/` and end with `.template.md`
 4. **Position Check**: Verify templates are at document end
 
 ### Comprehensive Review

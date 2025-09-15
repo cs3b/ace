@@ -115,7 +115,7 @@
    - Version format: `v.0.3.0`
    - Codename format: `workflows`
    - Fullname format: `v.0.3.0-workflows`
-   - Path format: `dev-taskflow/current/v.0.3.0-workflows`
+   - Path format: `.ace/taskflow/current/v.0.3.0-workflows`
 
 2. **Multiple Match Handling**: When ambiguous identifiers match multiple releases, system displays options and requests specific full name
 
@@ -134,6 +134,6 @@
 ## Additional Context
 
 - **Tasks Completed**: v.0.3.0+task.126 (compact formatter) and v.0.3.0+task.127 (multi-release support)
-- **Repositories Updated**: dev-tools (primary implementation), dev-taskflow (task status updates), main (submodule references)
+- **Repositories Updated**: .ace/tools (primary implementation), .ace/taskflow (task status updates), main (submodule references)
 - **Testing Approach**: Real-world scenario testing with actual release data from project history
 - **User Collaboration**: Effective feedback loop with user testing revealing important UX considerations

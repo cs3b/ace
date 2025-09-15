@@ -19,16 +19,16 @@ Based on user clarifications, this migration will be performed as a one-time pro
 Migrate existing Claude commands to the new directory structure:
 
 1. First, check if the directories exist:
-   - dev-handbook/.integrations/claude/commands/_custom
-   - dev-handbook/.integrations/claude/commands/_generated
+   - .ace/handbook/.integrations/claude/commands/_custom
+   - .ace/handbook/.integrations/claude/commands/_generated
    - .claude/commands/_custom
    - .claude/commands/_generated
 
 2. If directories don't exist, create them:
-   mkdir -p dev-handbook/.integrations/claude/commands/{_custom,_generated}
+   mkdir -p .ace/handbook/.integrations/claude/commands/{_custom,_generated}
    mkdir -p .claude/commands/{_custom,_generated}
 
-3. In dev-handbook/.integrations/claude/commands/, use git mv to move the 6 custom commands to _custom/:
+3. In .ace/handbook/.integrations/claude/commands/, use git mv to move the 6 custom commands to _custom/:
    - commit.md
    - draft-tasks.md
    - load-project-context.md
@@ -37,14 +37,14 @@ Migrate existing Claude commands to the new directory structure:
    - work-on-tasks.md
 
 4. In .claude/commands/, analyze each file:
-   - If the file exists in dev-handbook/.integrations/claude/commands/_custom/, move it to _custom/
+   - If the file exists in .ace/handbook/.integrations/claude/commands/_custom/, move it to _custom/
    - Otherwise, move it to _generated/
    - Skip any files that are already in _custom/ or _generated/ directories
 
 5. Use git mv when possible for all file movements to preserve history
 
 6. Generate a migration report and save it to:
-   dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+   .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 Report format:
 # Command Migration Report - [Date]
@@ -54,7 +54,7 @@ Report format:
 - Commands migrated in .claude: Y  
 - Commands skipped (already migrated): Z
 
-## dev-handbook Migration
+## .ace/handbook Migration
 ### Custom Commands Moved
 - List each file moved
 
@@ -83,7 +83,7 @@ The system should identify all existing Claude commands in the flat structure an
 ### Interface Contract
 ```bash
 # Manual migration process
-cd dev-handbook/.integrations/claude
+cd .ace/handbook/.integrations/claude
 mkdir -p commands/{_custom,_generated}
 
 # Move known custom commands
@@ -174,7 +174,7 @@ Safely migrate existing Claude commands from flat structure to new organized dir
 - Backup of original structure (optional)
 
 ### Modify
-- `dev-handbook/.integrations/claude/commands/` - Restructured with subdirectories
+- `.ace/handbook/.integrations/claude/commands/` - Restructured with subdirectories
 
 ### Delete
 - None (files moved, not deleted)
@@ -196,14 +196,14 @@ Safely migrate existing Claude commands from flat structure to new organized dir
 ## Research Notes
 
 ### Current State Analysis
-- **Primary source location**: dev-handbook/.integrations/claude/commands/ (6 custom commands)
+- **Primary source location**: .ace/handbook/.integrations/claude/commands/ (6 custom commands)
 - **.claude directory EXISTS** at project root with 35 command files
-- **ClaudeCommandsInstaller**: Copies custom commands from dev-handbook to .claude/commands/
-- **User clarification**: dev-handbook is the source, .claude is the deployed location
+- **ClaudeCommandsInstaller**: Copies custom commands from .ace/handbook to .claude/commands/
+- **User clarification**: .ace/handbook is the source, .claude is the deployed location
 
 ### Directory Structure Findings
 ```
-dev-handbook/.integrations/claude/
+.ace/handbook/.integrations/claude/
 ├── agents/           # Contains feature-research.md, git-commit-manager.md
 ├── commands/         # 6 custom command files (flat structure)
 └── install-prompts.md
@@ -221,7 +221,7 @@ dev-handbook/.integrations/claude/
 - **This task (008)**: Migrates existing 6 commands to _custom
 
 ### Implementation Readiness Assessment
-**Ready for implementation**: All critical questions have been answered by the user. The migration will be performed using a Claude Code prompt (one-time execution), using git mv to preserve history, without creating backups (relying on git), and will migrate files in both dev-handbook and .claude directories. The migration report will be saved to the release docs folder.
+**Ready for implementation**: All critical questions have been answered by the user. The migration will be performed using a Claude Code prompt (one-time execution), using git mv to preserve history, without creating backups (relying on git), and will migrate files in both .ace/handbook and .claude directories. The migration report will be saved to the release docs folder.
 
 ## Implementation Plan
 
@@ -229,17 +229,17 @@ dev-handbook/.integrations/claude/
 
 * [x] Inventory all existing command files
   - **Completed Research**: 
-    - Found 6 commands in dev-handbook/.integrations/claude/commands/ (source)
+    - Found 6 commands in .ace/handbook/.integrations/claude/commands/ (source)
     - Found 35 files in .claude/commands/ (target location)
     - Confirmed .claude/commands/ DOES exist at project root
 * [x] Identify custom vs generated commands
   - **Research Finding**: 
-    - All 6 commands in dev-handbook are custom (hand-crafted)
-    - The .claude/commands/ contains mix of custom (copied from dev-handbook) and generated files
+    - All 6 commands in .ace/handbook are custom (hand-crafted)
+    - The .claude/commands/ contains mix of custom (copied from .ace/handbook) and generated files
 * [x] Search codebase for hardcoded paths
   - **Found references in**:
-    - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-    - dev-tools/spec files
+    - .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+    - .ace/tools/spec files
     - Various task files in v.0.6.0-unified-claude
   - **Critical files to update**: ClaudeCommandsInstaller class (will be handled in separate task)
 * [x] Plan migration approach
@@ -271,4 +271,4 @@ dev-handbook/.integrations/claude/
 - Current command inventory (6 custom commands identified)
 - Version control best practices
 - Task.001 for directory structure creation
-- ClaudeCommandsInstaller implementation in dev-tools
+- ClaudeCommandsInstaller implementation in .ace/tools

@@ -113,8 +113,8 @@ IMPORTANT: Each task must be executed as a SINGLE INTEGRATED WORKFLOW maintainin
 For each task, send ONE task tool call containing the COMPLETE EXPANDED workflow:
 
 ### 1. Expand All Slash Commands
-- `/work-on-task` → Full content from `dev-handbook/workflow-instructions/work-on-task.wf.md`
-- `/create-reflection-note` → Full content from `dev-handbook/workflow-instructions/create-reflection-note.wf.md`
+- `/work-on-task` → Full content from `.ace/handbook/workflow-instructions/work-on-task.wf.md`
+- `/create-reflection-note` → Full content from `.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
 - `/commit` → Full content from `.claude/commands/commit.md`
 
 ### 2. Integrated Workflow Structure

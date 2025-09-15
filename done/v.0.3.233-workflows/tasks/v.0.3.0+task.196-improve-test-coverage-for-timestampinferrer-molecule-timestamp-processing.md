@@ -10,7 +10,7 @@ dependencies: []
 
 ## Objective
 
-The TimestampInferrer molecule (`dev-tools/lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb`) currently lacks comprehensive test coverage. This molecule is responsible for extracting timestamp ranges from reflection note files and is used by the reflection synthesis CLI command. We need to create comprehensive unit tests to ensure robust timestamp processing for various file formats and content patterns.
+The TimestampInferrer molecule (`.ace/tools/lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb`) currently lacks comprehensive test coverage. This molecule is responsible for extracting timestamp ranges from reflection note files and is used by the reflection synthesis CLI command. We need to create comprehensive unit tests to ensure robust timestamp processing for various file formats and content patterns.
 
 ## Scope of Work
 
@@ -24,7 +24,7 @@ The TimestampInferrer molecule (`dev-tools/lib/coding_agent_tools/molecules/refl
 
 #### Create
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb`
 
 #### Modify
 
@@ -48,22 +48,22 @@ The TimestampInferrer molecule (`dev-tools/lib/coding_agent_tools/molecules/refl
   > TEST: Test File Creation
   > Type: Action Validation
   > Assert: Test file exists and follows RSpec conventions
-  > Command: test -f dev-tools/spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb
+  > Command: test -f .ace/tools/spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb
 - [x] Implement tests for the main infer_timestamp_range method
   > TEST: Main Method Tests
   > Type: Action Validation
   > Assert: Tests cover success cases, error cases, and edge cases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb -f d
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb -f d
 - [x] Implement tests for private helper methods (extract_dates_from_file, extract_date_from_string, extract_dates_from_content)
   > TEST: Helper Method Tests
   > Type: Action Validation
   > Assert: All private methods are thoroughly tested via public interface
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb --format progress
 - [x] Verify all tests pass and provide comprehensive coverage
   > TEST: Test Suite Verification
   > Type: Action Validation
   > Assert: All tests pass without errors
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/timestamp_inferrer_spec.rb
 
 ## Acceptance Criteria
 
@@ -81,6 +81,6 @@ The TimestampInferrer molecule (`dev-tools/lib/coding_agent_tools/molecules/refl
 
 ## References
 
-- Existing TimestampInferrer implementation: `dev-tools/lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb`
-- Similar test pattern: `dev-tools/spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb`
+- Existing TimestampInferrer implementation: `.ace/tools/lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb`
+- Similar test pattern: `.ace/tools/spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb`
 - Ruby Date class documentation for date parsing edge cases

@@ -11,7 +11,7 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: User specifies multiple presets in context YAML: `'presets: [project, dev-tools, dev-handbook]'`
+- **Input**: User specifies multiple presets in context YAML: `'presets: [project, dev-tools, .ace/handbook]'`
 - **Process**: System loads and combines context from all specified presets
 - **Output**: Complete context includes files from all three presets, plus any additional files specified
 
@@ -22,17 +22,17 @@ When users specify multiple context presets in YAML format, the system should lo
 ```bash
 # CLI Interface - Multiple presets
 code-review \
-  --context 'presets: [project, dev-tools, dev-handbook]' \
+  --context 'presets: [project, dev-tools, .ace/handbook]' \
   --subject '...' \
   --auto-execute
 # Expected: Context includes files from all three presets
 
 # CLI Interface - Presets plus files
 code-review \
-  --context 'presets: [project, dev-tools]
+  --context 'presets: [project, .ace/tools]
 files:
   - docs/custom-context.md
-  - dev-taskflow/current/tasks/specific-task.md' \
+  - .ace/taskflow/current/tasks/specific-task.md' \
   --subject '...' \
   --auto-execute
 # Expected: Context includes preset files PLUS specified files
@@ -241,5 +241,5 @@ This would be less efficient but safer for backward compatibility.
 
 - Testing session: Only one file loaded when three presets specified
 - Context configuration: .coding-agent/context.yml preset definitions
-- Related tool: context CLI command at dev-tools/lib/coding_agent_tools/cli/commands/context.rb:255-285
-- ContextIntegrator: dev-tools/lib/coding_agent_tools/molecules/code/context_integrator.rb:21-34
+- Related tool: context CLI command at .ace/tools/lib/coding_agent_tools/cli/commands/context.rb:255-285
+- ContextIntegrator: .ace/tools/lib/coding_agent_tools/molecules/code/context_integrator.rb:21-34

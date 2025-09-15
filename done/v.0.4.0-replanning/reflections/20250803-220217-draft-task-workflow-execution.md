@@ -32,7 +32,7 @@
 
 #### Medium Impact Issues
 
-- **Submodule Navigation**: Working with files in dev-taskflow submodule
+- **Submodule Navigation**: Working with files in .ace/taskflow submodule
   - Occurrences: 1
   - Impact: Required retry of git mv command from correct directory
   - Root Cause: Need to execute git commands within submodule directory
@@ -92,6 +92,6 @@ The idea file organization step (7.5) worked smoothly once Git tracking was esta
 
 ## Additional Context
 
-- Source idea: dev-taskflow/backlog/ideas/20250803-1644-raw-input-capture.md (moved to current/v.0.4.0-replanning/docs/ideas/021-20250803-1644-raw-input-capture.md)
-- Created task: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.021-capture-raw-input-at-end-of-idea-file.md
-- Workflow followed: dev-handbook/workflow-instructions/draft-task.wf.md
+- Source idea: .ace/taskflow/backlog/ideas/20250803-1644-raw-input-capture.md (moved to current/v.0.4.0-replanning/docs/ideas/021-20250803-1644-raw-input-capture.md)
+- Created task: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.021-capture-raw-input-at-end-of-idea-file.md
+- Workflow followed: .ace/handbook/workflow-instructions/draft-task.wf.md

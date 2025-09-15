@@ -38,7 +38,7 @@ The workflow transforms scattered insights into strategic improvement roadmaps.
 # - Strategic Improvement Roadmap (prioritized actions)
 
 # Input: All reflection notes in current release
-# Output: Synthesis report in dev-taskflow/current/[release]/synthesis/
+# Output: Synthesis report in .ace/taskflow/current/[release]/synthesis/
 # Format: [timestamp]-synthesis-report.md
 ```
 
@@ -106,7 +106,7 @@ Transform distributed reflection insights into strategic improvement priorities 
 - **Existing Tools**: `reflection-synthesize` command (Ruby CLI)
 - **LLM Integration**: Google Gemini 2.5 Pro (current default model)
 - **Templates**: Markdown-based system prompts and output templates
-- **Storage**: File-based outputs in dev-taskflow synthesis directories
+- **Storage**: File-based outputs in .ace/taskflow synthesis directories
 
 ### Implementation Strategy
 - **Workflow Enhancement**: Modify existing synthesize-reflection-notes.wf.md
@@ -118,24 +118,24 @@ Transform distributed reflection insights into strategic improvement priorities 
 
 ### Modify
 
-- `dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md`
+- `.ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md`
   - **Changes**: Add analytics and prioritization guidance to workflow steps
   - **Impact**: Enhances synthesis process with ranking and priority logic
   - **Integration**: Maintains compatibility with existing reflection-synthesize command
 
-- `dev-handbook/templates/release-reflections/synthsize.system.prompt.md`
+- `.ace/handbook/templates/release-reflections/synthsize.system.prompt.md`
   - **Changes**: Add analytical sections for pattern detection, priority ranking, automation opportunities
   - **Impact**: Generates enhanced synthesis reports with actionable priorities
   - **Integration**: Works with existing SynthesisOrchestrator architecture
 
 ### Create
 
-- `dev-handbook/templates/release-reflections/synthesis-analytics.template.md`
+- `.ace/handbook/templates/release-reflections/synthesis-analytics.template.md`
   - **Purpose**: Template for analytical synthesis outputs with priority rankings
   - **Key components**: Pattern frequency analysis, automation opportunity ranking, tool proposal consolidation
   - **Dependencies**: Used by enhanced system prompt for structured output
 
-- `dev-handbook/templates/release-reflections/priority-matrix.template.md`
+- `.ace/handbook/templates/release-reflections/priority-matrix.template.md`
   - **Purpose**: Template for priority/impact matrix generation
   - **Key components**: Effort vs Impact analysis, frequency-based ranking, implementation timelines
   - **Dependencies**: Embedded within main synthesis template
@@ -254,9 +254,9 @@ Transform distributed reflection insights into strategic improvement priorities 
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/008-reflection-cookbook-automation.md
-- Enhanced workflow: dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
-- Input source: dev-taskflow/current/[release]/reflections/
-- Output location: dev-taskflow/current/[release]/synthesis/
-- Current implementation: dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
-- System prompt: dev-handbook/templates/release-reflections/synthsize.system.prompt.md
+- Source idea: .ace/taskflow/backlog/ideas/008-reflection-cookbook-automation.md
+- Enhanced workflow: .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+- Input source: .ace/taskflow/current/[release]/reflections/
+- Output location: .ace/taskflow/current/[release]/synthesis/
+- Current implementation: .ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
+- System prompt: .ace/handbook/templates/release-reflections/synthsize.system.prompt.md

@@ -13,15 +13,15 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/lib/coding_agent_tools/molecules/git -name "*.rb" | head -5
+find .ace/tools/lib/coding_agent_tools/molecules/git -name "*.rb" | head -5
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
-dev-tools/lib/coding_agent_tools/molecules/git/concurrent_executor.rb
-dev-tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb
+.ace/tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
+.ace/tools/lib/coding_agent_tools/molecules/git/concurrent_executor.rb
+.ace/tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb
 ```
 
 ## Objective
@@ -64,7 +64,7 @@ Improve test coverage for the CommitMessageGenerator molecule which previously h
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Key components and their relationships are identified
-  > Command: grep -r "CommitMessageGenerator" dev-tools/
+  > Command: grep -r "CommitMessageGenerator" .ace/tools/
   > Result: Found CommitMessageGenerator in lib/, no existing tests
 * [x] Research best practices and design approach
 * [x] Plan detailed implementation strategy
@@ -141,6 +141,6 @@ Created comprehensive test coverage for CommitMessageGenerator molecule with:
 
 ## References
 
-- CommitMessageGenerator source: `dev-tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb`
-- Test specification: `dev-tools/spec/coding_agent_tools/molecules/git/commit_message_generator_spec.rb`
-- Related CLI command tests: `dev-tools/spec/coding_agent_tools/cli/commands/git/commit_spec.rb`
+- CommitMessageGenerator source: `.ace/tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb`
+- Test specification: `.ace/tools/spec/coding_agent_tools/molecules/git/commit_message_generator_spec.rb`
+- Related CLI command tests: `.ace/tools/spec/coding_agent_tools/cli/commands/git/commit_spec.rb`

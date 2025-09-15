@@ -76,12 +76,12 @@ specification cycle architecture. The template should guide users to think behav
 ### Dependencies
 - [ ] Current task.pending.template.md as baseline structure
 - [ ] Template synchronization system (handbook sync-templates)
-- [ ] Backup directory structure in dev-handbook/templates/task-management/
+- [ ] Backup directory structure in .ace/handbook/templates/task-management/
 
 ## File Modifications
 
 ### Create
-- dev-handbook/templates/task-management/task.template.md
+- .ace/handbook/templates/task-management/task.template.md
   - Purpose: New behavior-first task template with What/How sections
   - Key components: Behavioral specification sections, implementation planning sections, inline guidance
   - Dependencies: Based on task.pending.template.md structure
@@ -104,7 +104,7 @@ specification cycle architecture. The template should guide users to think behav
   > TEST: Template Analysis Complete
   > Type: Pre-condition Check
   > Assert: Current template structure documented and reusable components identified
-  > Command: grep -E "^##|^###" dev-handbook/templates/task-management/task.pending.template.md
+  > Command: grep -E "^##|^###" .ace/handbook/templates/task-management/task.pending.template.md
 - [x] Research behavioral specification best practices from software engineering
 - [x] Design section hierarchy prioritizing behavioral specification over implementation
 - [x] Create inline documentation strategy with examples and guidance comments
@@ -119,7 +119,7 @@ specification cycle architecture. The template should guide users to think behav
   > TEST: What Section Structure
   > Type: Action Validation
   > Assert: Template contains What section with Expected Behavior, Interface Contract, Success Criteria subsections
-  > Command: grep -A 10 "## What:" dev-handbook/templates/task-management/task.template.md
+  > Command: grep -A 10 "## What:" .ace/handbook/templates/task-management/task.template.md
 - [x] Add "Expected Behavior" subsection with inline guidance and examples
 - [x] Add "Interface Contract" subsection with API/interface specification guidance
 - [x] Move "Objective" content into What section as behavioral context
@@ -131,7 +131,7 @@ specification cycle architecture. The template should guide users to think behav
   > TEST: Template Functionality
   > Type: Action Validation
   > Assert: Sample task created successfully demonstrates behavior-first approach
-  > Command: test -f dev-handbook/templates/task-management/sample-auth-task.md
+  > Command: test -f .ace/handbook/templates/task-management/sample-auth-task.md
 
 ## Risk Assessment
 
@@ -161,11 +161,11 @@ specification cycle architecture. The template should guide users to think behav
 
 #### Modify
 
-* dev-handbook/templates/release-tasks/task.template.md
+* .ace/handbook/templates/release-tasks/task.template.md
 
 #### Create
 
-* dev-handbook/templates/release-tasks/task.template.old.md (backup)
+* .ace/handbook/templates/release-tasks/task.template.old.md (backup)
 
 ## Acceptance Criteria
 

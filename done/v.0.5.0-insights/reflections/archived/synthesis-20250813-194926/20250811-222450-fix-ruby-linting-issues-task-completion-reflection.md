@@ -1,7 +1,7 @@
 # Reflection: Fix Ruby linting issues task completion
 
 **Date**: 2025-08-11
-**Context**: Completed task v.0.5.0+task.009 - Fix Ruby linting issues in dev-tools codebase
+**Context**: Completed task v.0.5.0+task.009 - Fix Ruby linting issues in .ace/tools codebase
 **Author**: Claude Code
 **Type**: Self-Review
 
@@ -22,7 +22,7 @@
 
 ## Key Learnings
 
-- The dev-tools codebase has a sophisticated bin/lint wrapper around code-lint ruby command
+- The .ace/tools codebase has a sophisticated bin/lint wrapper around code-lint ruby command
 - StandardRB can automatically fix many style issues with --fix and --fix-unsafely flags
 - Critical issues (syntax errors, duplicate methods) must be fixed manually while style issues can often be auto-fixed
 - The search tool implementation in task.006 introduced several duplicate method definitions and syntax errors

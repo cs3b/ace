@@ -46,9 +46,9 @@ The SOURCE section can be added by:
 
 ### Key Files Identified
 
-- Main implementation: `dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb`
-- LLM interaction: `dev-tools/lib/coding_agent_tools/molecules/llm_client.rb`
-- Test coverage: `dev-tools/spec/organisms/idea_capture_spec.rb`
+- Main implementation: `.ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb`
+- LLM interaction: `.ace/tools/lib/coding_agent_tools/molecules/llm_client.rb`
+- Test coverage: `.ace/tools/spec/organisms/idea_capture_spec.rb`
 
 ## Action Items
 
@@ -72,7 +72,7 @@ The SOURCE section can be added by:
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.021-capture-raw-input-at-end-of-idea-file.md`
-- Source idea: `dev-taskflow/backlog/ideas/20250803-1644-raw-input-capture.md`
-- Tool workflow: `dev-handbook/workflow-instructions/capture-idea.wf.md`
-- Implementation follows ATOM architecture pattern used throughout dev-tools
+- Task file: `.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.021-capture-raw-input-at-end-of-idea-file.md`
+- Source idea: `.ace/taskflow/backlog/ideas/20250803-1644-raw-input-capture.md`
+- Tool workflow: `.ace/handbook/workflow-instructions/capture-idea.wf.md`
+- Implementation follows ATOM architecture pattern used throughout .ace/tools

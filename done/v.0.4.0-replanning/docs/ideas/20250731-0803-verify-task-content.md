@@ -42,7 +42,7 @@ To define two distinct AI workflow files (`redraft-task.wf.md` and `replan-task.
 
 - **Workflow Self-Containment (ADR-001)**: Both `redraft-task.wf.md` and `replan-task.wf.md` must be self-contained, embedding all necessary context, templates, and examples.
 - **XML Template Embedding (ADR-002)**: Utilize `<documents>` and `<template>` tags for embedding task templates or verification checklists if needed.
-- **Consistent Path Standards (ADR-004)**: Reference task files using consistent relative paths (e.g., `dev-taskflow/current/tasks/task-XYZ.md`).
+- **Consistent Path Standards (ADR-004)**: Reference task files using consistent relative paths (e.g., `.ace/taskflow/current/tasks/task-XYZ.md`).
 - **Universal Document Embedding System (ADR-005)**: If guides or other documents are referenced, use the `<documents>` container structure.
 - **ATOM Architecture**: These workflows would likely orchestrate `task-manager` (organism) and potentially `llm-query` (organism) for generating summaries or suggesting edits.
 - **YAML Front Matter**: Task files themselves use YAML front matter for metadata, which these workflows will read and display.

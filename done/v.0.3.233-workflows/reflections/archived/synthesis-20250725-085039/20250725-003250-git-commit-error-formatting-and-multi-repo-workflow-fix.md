@@ -122,8 +122,8 @@
 
 - **Task Completed**: v.0.3.0+task.92 - Investigate git-commit Command Message Formatting Issues
 - **Files Modified**: 
-  - `dev-tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb`
-  - `dev-tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb`
-  - `dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb`
+  - `.ace/tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb`
+  - `.ace/tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb`
+  - `.ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb`
 - **Test Results**: All 1744 tests pass, no regressions introduced
 - **Validation**: Successfully tested multi-repository commit with readable error messages# Test no errors in taskflow

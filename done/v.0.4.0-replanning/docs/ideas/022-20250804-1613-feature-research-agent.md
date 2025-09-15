@@ -60,7 +60,7 @@ Using Claude Code Sub Agent ability - so the goal is to create and agent -
 
 **Before proceeding, we need to answer:**
 1. What are the specific sources of information the agent should consult (e.g., GitHub issues, competitor analysis, user feedback repositories, technical blogs)?
-2. What is the desired output format for a feature proposal (e.g., a new `.wf.md` file, an ADR, a markdown document in `dev-taskflow/backlog/`)?
+2. What is the desired output format for a feature proposal (e.g., a new `.wf.md` file, an ADR, a markdown document in `.ace/taskflow/backlog/`)?
 3. What criteria should the agent use to evaluate the potential impact, feasibility, and alignment of a proposed feature with the project's goals?
 
 **Open Questions:**

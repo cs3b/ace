@@ -104,7 +104,7 @@ Complete the refactoring from "ideas_manager" to "capture-it" ensuring consisten
 
 ## References
 
-- Source idea: dev-taskflow/current/v.0.5.0-insights/docs/ideas/040-017-filesystem-capture-improvements.md
-- Related idea: dev-taskflow/current/v.0.5.0-insights/docs/ideas/040-018-filesystem-search-enhancements.md
-- Current implementation: dev-tools/exe/capture-it
-- Test file to rename: dev-tools/spec/integration/ideas_manager_integration_spec.rb
+- Source idea: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/040-017-filesystem-capture-improvements.md
+- Related idea: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/040-018-filesystem-search-enhancements.md
+- Current implementation: .ace/tools/exe/capture-it
+- Test file to rename: .ace/tools/spec/integration/ideas_manager_integration_spec.rb

@@ -60,6 +60,6 @@
 ## Additional Context
 
 - Task: v.0.3.0+task.21-standardize-template-embedding-format.md
-- Commits: Multiple commits across dev-handbook and dev-taskflow submodules
+- Commits: Multiple commits across .ace/handbook and .ace/taskflow submodules
 - Next step: This standardization enables future automated template synchronization workflows
 - Related: Prepares for template management and consistency checking automation

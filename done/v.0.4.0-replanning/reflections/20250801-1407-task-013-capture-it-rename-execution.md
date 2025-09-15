@@ -30,7 +30,7 @@
 ## Technical Details
 
 ### Changes Made:
-1. **Executable Creation**: Created `dev-tools/exe/capture-it` from `dev-tools/exe/ideas-manager`
+1. **Executable Creation**: Created `.ace/tools/exe/capture-it` from `.ace/tools/exe/ideas-manager`
 2. **Module Restructuring**: Changed `IdeasManagerCli` to `CaptureItCli` and simplified command structure
 3. **Usage Message Updates**: Updated error messages in `capture.rb` to reference new command name
 4. **Test Updates**: Updated all test files to reference `capture-it` instead of `ideas-manager`
@@ -60,4 +60,4 @@
 - Task completed successfully with all acceptance criteria met
 - Command name reduced from 19 characters (`ideas-manager capture`) to 10 characters (`capture-it`)
 - Maintained full backward compatibility in terms of functionality while removing the old command entirely
-- Task file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.013-rename-ideas-manager-capture-command-to-capture-it.md`
+- Task file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.013-rename-ideas-manager-capture-command-to-capture-it.md`

@@ -33,7 +33,7 @@
 
 ### Documentation Structure Added
 
-Added comprehensive "Glob Pattern Guide" section to `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/docs/tools.md` including:
+Added comprehensive "Glob Pattern Guide" section to `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/docs/tools.md` including:
 
 1. **Basic Pattern Syntax Table** - Clear mapping of patterns to meanings with examples
 2. **Directory vs File Matching Behavior** - Critical distinction between `**` and `**/*`
@@ -78,6 +78,6 @@ All success criteria met:
 
 - Task completed following the standard work-on-task workflow
 - Documentation follows existing tools.md structure and formatting conventions
-- Changes integrated into dev-tools submodule documentation
+- Changes integrated into .ace/tools submodule documentation
 - Task status updated from pending → in-progress → done
 - All success criteria marked as completed

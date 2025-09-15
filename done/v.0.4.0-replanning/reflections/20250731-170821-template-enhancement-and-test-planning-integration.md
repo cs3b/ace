@@ -109,10 +109,10 @@
 ## Additional Context
 
 **Files Modified:**
-- `dev-handbook/templates/task-management/task.draft.template.md` - Enhanced behavioral specification
-- `dev-handbook/templates/task-management/task.pending.template.md` - Added test planning integration  
-- `dev-handbook/templates/task-management/README.md` - Created comprehensive usage guide
-- `dev-handbook/workflow-instructions/plan-task.wf.md` - Added test case planning step
-- `dev-handbook/workflow-instructions/draft-task.wf.md` - Updated embedded template
+- `.ace/handbook/templates/task-management/task.draft.template.md` - Enhanced behavioral specification
+- `.ace/handbook/templates/task-management/task.pending.template.md` - Added test planning integration  
+- `.ace/handbook/templates/task-management/README.md` - Created comprehensive usage guide
+- `.ace/handbook/workflow-instructions/plan-task.wf.md` - Added test case planning step
+- `.ace/handbook/workflow-instructions/draft-task.wf.md` - Updated embedded template
 
 **Key Innovation**: Successfully integrated test planning into the specification cycle architecture while maintaining the behavior-first approach and existing draft/pending workflow separation.

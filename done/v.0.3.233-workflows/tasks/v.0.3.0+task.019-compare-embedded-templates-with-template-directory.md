@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.18]
 _Command run:_
 
 ```bash
-tree -L 3 dev-handbook/templates | sed 's/^/    /'
+tree -L 3 .ace/handbook/templates | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/templates
+.ace/handbook/templates
 ├── project-docs
 │   ├── architecture.template.md
 │   ├── blueprint.template.md
@@ -68,7 +68,7 @@ dev-handbook/templates
 
 ## Objective
 
-Perform detailed comparison between embedded templates found in workflow instructions and existing template files in dev-handbook/templates/ directory. Identify matches, differences, and gaps to determine which templates need to be created, updated, or synchronized.
+Perform detailed comparison between embedded templates found in workflow instructions and existing template files in .ace/handbook/templates/ directory. Identify matches, differences, and gaps to determine which templates need to be created, updated, or synchronized.
 
 Link back to original requirement: Template unification and synchronization (improve-the-workflow-structure.md)
 
@@ -109,14 +109,14 @@ Link back to original requirement: Template unification and synchronization (imp
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Embedded templates audit is complete and accessible
-  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/docs/embedded-templates-audit.md
+  > Command: test -f .ace/taskflow/current/v.0.3.0-workflows/docs/embedded-templates-audit.md
   > RESULT: ✅ Audit file exists and accessible
 
 * [x] Examine current template directory structure and contents
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Template directory exists and contains template files
-  > Command: find dev-handbook/templates -name "*.md" | head -5
+  > Command: find .ace/handbook/templates -name "*.md" | head -5
   > RESULT: ✅ 27 template files found in 16 directories
 
 ### Execution Steps
@@ -145,7 +145,7 @@ Link back to original requirement: Template unification and synchronization (imp
 * [x] Propose locations for missing template files following project conventions
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: Proposed locations follow dev-handbook/templates structure
+  > Assert: Proposed locations follow .ace/handbook/templates structure
   > Command: Verify proposed paths against existing template organization
   > RESULT: ✅ All proposed locations follow existing directory conventions and naming patterns
 
@@ -175,4 +175,4 @@ Link back to original requirement: Template unification and synchronization (imp
 
 * Original requirement: improve-the-workflow-structure.md
 * Dependencies: v.0.3.0+task.18 (embedded templates audit)
-* Related templates: dev-handbook/templates/
+* Related templates: .ace/handbook/templates/

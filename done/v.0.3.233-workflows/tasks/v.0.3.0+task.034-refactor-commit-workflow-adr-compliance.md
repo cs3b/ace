@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-house-rules.md
     ├── changelog.g.md
     ├── code-review
@@ -110,7 +110,7 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 ## Scope of Work
 
 * Convert commit message templates in `commit.wf.md` from markdown code blocks to XML `<templates>` format per ADR-002
-* Extract commit message templates to separate template files in `dev-handbook/templates/` directory
+* Extract commit message templates to separate template files in `.ace/handbook/templates/` directory
 * Update the workflow to reference the extracted templates via the XML embedding system
 * Ensure templates are discoverable by the template synchronization system
 
@@ -118,13 +118,13 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 
 #### Create
 
-* dev-handbook/templates/commit/conventional-commit.template.md
-* dev-handbook/templates/commit/intention-based-commit.template.md
-* dev-handbook/templates/commit/multi-repo-commit.template.md
+* .ace/handbook/templates/commit/conventional-commit.template.md
+* .ace/handbook/templates/commit/intention-based-commit.template.md
+* .ace/handbook/templates/commit/multi-repo-commit.template.md
 
 #### Modify
 
-* dev-handbook/workflow-instructions/commit.wf.md
+* .ace/handbook/workflow-instructions/commit.wf.md
 
 ## Phases
 
@@ -143,23 +143,23 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
   > Assert: All commit message templates are identified and catalogued
   > Command: bin/test --check-commit-templates
 * [x] Review ADR-002 requirements for XML template format
-* [x] Plan template file organization in dev-handbook/templates/commit/ directory
+* [x] Plan template file organization in .ace/handbook/templates/commit/ directory
 
 ### Execution Steps
 
-* [x] Create dev-handbook/templates/commit/ directory structure
+* [x] Create .ace/handbook/templates/commit/ directory structure
 * [x] Extract feature implementation commit template to separate file
   > TEST: Verify Feature Implementation Template
   > Type: Action Validation
   > Assert: Feature implementation template is properly extracted and formatted
-  > Command: bin/test --check-template-file dev-handbook/templates/commit/feature-implementation.template.md
+  > Command: bin/test --check-template-file .ace/handbook/templates/commit/feature-implementation.template.md
 * [x] Extract bug fix commit template to separate file
 * [x] Extract refactoring commit template to separate file
 * [x] Update commit.wf.md to use XML `<templates>` format with proper path references
   > TEST: Verify XML Template Embedding
   > Type: Action Validation
   > Assert: commit.wf.md uses proper XML template embedding format
-  > Command: bin/test --check-xml-templates dev-handbook/workflow-instructions/commit.wf.md
+  > Command: bin/test --check-xml-templates .ace/handbook/workflow-instructions/commit.wf.md
 * [x] Verify template synchronization system can discover new templates
   > TEST: Template Sync Compatibility
   > Type: Action Validation
@@ -169,7 +169,7 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 ## Acceptance Criteria
 
 * [x] AC 1: commit.wf.md uses XML `<templates>` format instead of markdown code blocks
-* [x] AC 2: All commit message templates are extracted to dev-handbook/templates/commit/ directory
+* [x] AC 2: All commit message templates are extracted to .ace/handbook/templates/commit/ directory
 * [x] AC 3: Template synchronization system can discover and process the extracted templates
 * [x] AC 4: Workflow complies with ADR-002 XML template embedding requirements
 
@@ -181,7 +181,7 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying ADR-002 violation
+* .ace/taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying ADR-002 violation
 * docs/decisions/ADR-002.md - XML template embedding standard
-* dev-handbook/workflow-instructions/commit.wf.md - Target workflow file
+* .ace/handbook/workflow-instructions/commit.wf.md - Target workflow file
 * handbook sync-templates - Template synchronization tool

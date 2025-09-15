@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools
+.ace/tools/lib/coding_agent_tools
 ├── atoms
 ├── cli
 ├── ecosystems
@@ -47,41 +47,41 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
 
 #### Create
 
-- `dev-tools/lib/coding_agent_tools/atoms/coverage_file_reader.rb`
-- `dev-tools/lib/coding_agent_tools/atoms/ruby_method_parser.rb`
-- `dev-tools/lib/coding_agent_tools/atoms/coverage_calculator.rb`
-- `dev-tools/lib/coding_agent_tools/atoms/threshold_validator.rb`
-- `dev-tools/lib/coding_agent_tools/molecules/coverage_data_processor.rb`
-- `dev-tools/lib/coding_agent_tools/molecules/method_coverage_mapper.rb`
-- `dev-tools/lib/coding_agent_tools/molecules/file_analyzer.rb`
-- `dev-tools/lib/coding_agent_tools/molecules/report_formatter.rb`
-- `dev-tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb`
-- `dev-tools/lib/coding_agent_tools/organisms/undercovered_items_extractor.rb`
-- `dev-tools/lib/coding_agent_tools/organisms/coverage_report_generator.rb`
-- `dev-tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb`
-- `dev-tools/lib/coding_agent_tools/cli/coverage_analyze_command.rb`
-- `dev-tools/exe/coverage-analyze`
-- `dev-tools/spec/atoms/coverage_file_reader_spec.rb`
-- `dev-tools/spec/atoms/ruby_method_parser_spec.rb`
-- `dev-tools/spec/atoms/coverage_calculator_spec.rb`
-- `dev-tools/spec/atoms/threshold_validator_spec.rb`
-- `dev-tools/spec/molecules/coverage_data_processor_spec.rb`
-- `dev-tools/spec/molecules/method_coverage_mapper_spec.rb`
-- `dev-tools/spec/molecules/file_analyzer_spec.rb`
-- `dev-tools/spec/molecules/report_formatter_spec.rb`
-- `dev-tools/spec/organisms/coverage_analyzer_spec.rb`
-- `dev-tools/spec/organisms/undercovered_items_extractor_spec.rb`
-- `dev-tools/spec/organisms/coverage_report_generator_spec.rb`
-- `dev-tools/spec/ecosystems/coverage_analysis_workflow_spec.rb`
-- `dev-tools/spec/cli/coverage_analyze_command_spec.rb`
-- `dev-tools/spec/fixtures/coverage_samples/sample.resultset.json`
-- `dev-tools/spec/fixtures/coverage_samples/sample_ruby_file.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/coverage_file_reader.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/ruby_method_parser.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/coverage_calculator.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/threshold_validator.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/coverage_data_processor.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/method_coverage_mapper.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/file_analyzer.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/report_formatter.rb`
+- `.ace/tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb`
+- `.ace/tools/lib/coding_agent_tools/organisms/undercovered_items_extractor.rb`
+- `.ace/tools/lib/coding_agent_tools/organisms/coverage_report_generator.rb`
+- `.ace/tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/coverage_analyze_command.rb`
+- `.ace/tools/exe/coverage-analyze`
+- `.ace/tools/spec/atoms/coverage_file_reader_spec.rb`
+- `.ace/tools/spec/atoms/ruby_method_parser_spec.rb`
+- `.ace/tools/spec/atoms/coverage_calculator_spec.rb`
+- `.ace/tools/spec/atoms/threshold_validator_spec.rb`
+- `.ace/tools/spec/molecules/coverage_data_processor_spec.rb`
+- `.ace/tools/spec/molecules/method_coverage_mapper_spec.rb`
+- `.ace/tools/spec/molecules/file_analyzer_spec.rb`
+- `.ace/tools/spec/molecules/report_formatter_spec.rb`
+- `.ace/tools/spec/organisms/coverage_analyzer_spec.rb`
+- `.ace/tools/spec/organisms/undercovered_items_extractor_spec.rb`
+- `.ace/tools/spec/organisms/coverage_report_generator_spec.rb`
+- `.ace/tools/spec/ecosystems/coverage_analysis_workflow_spec.rb`
+- `.ace/tools/spec/cli/coverage_analyze_command_spec.rb`
+- `.ace/tools/spec/fixtures/coverage_samples/sample.resultset.json`
+- `.ace/tools/spec/fixtures/coverage_samples/sample_ruby_file.rb`
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools.rb` (add requires for new components)
-- `dev-tools/lib/coding_agent_tools/cli.rb` (register new command)
-- `dev-tools/coding_agent_tools.gemspec` (update dependencies if needed)
+- `.ace/tools/lib/coding_agent_tools.rb` (add requires for new components)
+- `.ace/tools/lib/coding_agent_tools/cli.rb` (register new command)
+- `.ace/tools/coding_agent_tools.gemspec` (update dependencies if needed)
 
 ## Phases
 
@@ -117,7 +117,7 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
   > TEST: Basic Infrastructure
   > Type: Unit Tests
   > Assert: Model classes instantiate correctly and have expected interfaces
-  > Command: cd dev-tools && bundle exec rspec spec/models/coverage*_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/models/coverage*_spec.rb
 
 - [ ] **Phase 2: Implement Core Atoms**
   - [ ] Create `CoverageFileReader` with JSON parsing, validation, and error handling for malformed files
@@ -127,7 +127,7 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
   > TEST: Atoms Functionality
   > Type: Unit Tests
   > Assert: Each atom handles valid inputs correctly and fails gracefully on invalid inputs
-  > Command: cd dev-tools && bundle exec rspec spec/atoms/coverage_*_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/atoms/coverage_*_spec.rb
 
 - [ ] **Phase 3: Implement Data Processing Molecules**
   - [ ] Create `CoverageDataProcessor` to transform SimpleCov JSON into internal format, handling multiple test frameworks
@@ -137,7 +137,7 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
   > TEST: Molecules Integration
   > Type: Integration Tests
   > Assert: Molecules correctly process real SimpleCov data and produce expected internal formats
-  > Command: cd dev-tools && bundle exec rspec spec/molecules/coverage_*_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/molecules/coverage_*_spec.rb
 
 - [ ] **Phase 4: Implement Business Logic Organisms**
   - [ ] Create `CoverageAnalyzer` for main analysis orchestration with performance optimization
@@ -146,7 +146,7 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
   > TEST: Business Logic Validation
   > Type: Integration Tests
   > Assert: Complex analysis workflows produce accurate results matching expected coverage calculations
-  > Command: cd dev-tools && bundle exec rspec spec/organisms/coverage_*_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/organisms/coverage_*_spec.rb
 
 - [ ] **Phase 5: Implement Ecosystem & CLI Interface**
   - [ ] Create `CoverageAnalysisWorkflow` ecosystem coordinating all components
@@ -156,17 +156,17 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
   > TEST: End-to-End CLI Functionality
   > Type: CLI Integration Tests with Aruba
   > Assert: Complete CLI workflow processes real coverage data and outputs expected formats
-  > Command: cd dev-tools && bundle exec rspec spec/cli/coverage_analyze_command_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/coverage_analyze_command_spec.rb
 
 - [ ] **Phase 6: Comprehensive Testing & Performance Validation**
   - [ ] Test with edge cases: empty files, 100%/0% coverage, malformed JSON, missing files
   - [ ] Validate performance with large coverage files (>1MB) and many files (>200)
-  - [ ] Test integration with actual dev-tools coverage data
+  - [ ] Test integration with actual .ace/tools coverage data
   - [ ] Verify all output formats with complex scenarios
   > TEST: Production Readiness
   > Type: Integration & Performance Tests
   > Assert: Tool handles real-world coverage data efficiently (<10s for 200+ files) and accurately
-  > Command: cd dev-tools && bundle exec rspec && time exe/coverage-analyze --coverage-path coverage
+  > Command: cd .ace/tools && bundle exec rspec && time exe/coverage-analyze --coverage-path coverage
 
 ## Acceptance Criteria
 
@@ -178,13 +178,13 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
 - [ ] AC 6: All ATOM architecture components follow established patterns
 - [ ] AC 7: Comprehensive test coverage (>90%) for all new components
 - [ ] AC 8: Performance is acceptable for large codebases (handles 200+ files)
-- [ ] AC 9: Tool integrates seamlessly with existing dev-tools ecosystem
+- [ ] AC 9: Tool integrates seamlessly with existing .ace/tools ecosystem
 
 ## Technical Implementation Details
 
 ### SimpleCov Format Analysis (Completed)
 
-Based on examination of `dev-tools/coverage/.resultset.json`:
+Based on examination of `.ace/tools/coverage/.resultset.json`:
 
 **Structure:**
 ```json
@@ -311,5 +311,5 @@ end
 
 - SimpleCov JSON format documentation
 - Parser gem documentation for Ruby AST parsing
-- Existing ATOM architecture patterns in dev-tools
-- CLI command patterns in dev-tools/lib/coding_agent_tools/cli/
+- Existing ATOM architecture patterns in .ace/tools
+- CLI command patterns in .ace/tools/lib/coding_agent_tools/cli/

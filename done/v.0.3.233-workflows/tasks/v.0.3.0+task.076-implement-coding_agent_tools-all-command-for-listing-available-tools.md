@@ -24,16 +24,16 @@ Implement a `coding_agent_tools all` command that provides a comprehensive list 
 
 #### Create
 
-- `dev-tools/lib/coding_agent_tools/cli/all.rb` - CLI command implementation
-- `dev-tools/lib/coding_agent_tools/organisms/tool_lister.rb` - Core tool listing logic
-- `dev-tools/spec/coding_agent_tools/cli/all_spec.rb` - CLI command tests
-- `dev-tools/spec/coding_agent_tools/organisms/tool_lister_spec.rb` - Tool lister tests
+- `.ace/tools/lib/coding_agent_tools/cli/all.rb` - CLI command implementation
+- `.ace/tools/lib/coding_agent_tools/organisms/tool_lister.rb` - Core tool listing logic
+- `.ace/tools/spec/coding_agent_tools/cli/all_spec.rb` - CLI command tests
+- `.ace/tools/spec/coding_agent_tools/organisms/tool_lister_spec.rb` - Tool lister tests
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Register new command
-- `dev-tools/docs/development/SETUP.md` - Update tool discovery documentation
-- `dev-tools/docs/tools.md` - Add reference to new command
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Register new command
+- `.ace/tools/docs/development/SETUP.md` - Update tool discovery documentation
+- `.ace/tools/docs/tools.md` - Add reference to new command
 
 ## Implementation Plan
 
@@ -43,7 +43,7 @@ Implement a `coding_agent_tools all` command that provides a comprehensive list 
   > TEST: Command Structure Analysis
   > Type: Pre-condition Check
   > Assert: Understanding of existing CLI patterns and ATOM architecture usage
-  > Command: find dev-tools/lib/coding_agent_tools/cli -name "*.rb" | head -5
+  > Command: find .ace/tools/lib/coding_agent_tools/cli -name "*.rb" | head -5
 - [x] Design tool discovery mechanism (scan exe/ directory, read command metadata)
 - [x] Define blacklist structure and default entries (internal/dev tools to exclude)
 - [x] Plan output format (table, categories, descriptions, usage examples)
@@ -51,7 +51,7 @@ Implement a `coding_agent_tools all` command that provides a comprehensive list 
 ### Execution Steps
 
 - [x] Implement ToolLister organism following ATOM architecture
-  - Scan dev-tools/exe/ directory for available executables
+  - Scan .ace/tools/exe/ directory for available executables
   - Read command descriptions from --help output or metadata
   - Apply blacklist filtering
   - Categorize tools (LLM, Git, Navigation, Task Management, etc.)
@@ -72,7 +72,7 @@ Implement a `coding_agent_tools all` command that provides a comprehensive list 
   > TEST: Command Integration
   > Type: Action Validation
   > Assert: `coding_agent_tools all` command works and shows expected tools
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools all | wc -l
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools all | wc -l
 
 ## Acceptance Criteria
 
@@ -132,7 +132,7 @@ Total: 25+ tools available
 ```markdown
 ## Development Tools
 
-The project includes various `bin/` scripts to automate development tasks, testing, and common workflows. For a comprehensive list and description of all available `bin/` and `dev-tools/exe/` commands, refer to the [Project Blueprint](docs/blueprint.md#entry-points).
+The project includes various `bin/` scripts to automate development tasks, testing, and common workflows. For a comprehensive list and description of all available `bin/` and `.ace/tools/exe/` commands, refer to the [Project Blueprint](docs/blueprint.md#entry-points).
 
 You can also run `bin/help` (once implemented) or `bin/<command> --help` for specific command usage.
 ```
@@ -156,7 +156,7 @@ For detailed documentation, see [Tools Reference](docs/tools.md).
 
 ## References
 
-- CAT gem CLI architecture in `dev-tools/lib/coding_agent_tools/cli/`
+- CAT gem CLI architecture in `.ace/tools/lib/coding_agent_tools/cli/`
 - ATOM architecture patterns in CAT gem
-- Existing tool documentation in `dev-tools/docs/tools.md`
+- Existing tool documentation in `.ace/tools/docs/tools.md`
 - Current SETUP.md tool discovery section (lines 287-292)

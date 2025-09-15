@@ -13,15 +13,15 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-handbook/.meta/gds/template-embedding.g.md dev-handbook/guides/document-synchronization.md dev-handbook/guides/document-sync-operations.md
+ls -la .ace/handbook/.meta/gds/template-embedding.g.md .ace/handbook/guides/document-synchronization.md .ace/handbook/guides/document-sync-operations.md
 ```
 
 _Result excerpt:_
 
 ```
--rw-r--r--@ 1 michalczyz  staff  15247 Dec 30 18:42 dev-handbook/.meta/gds/template-embedding.g.md
--rw-r--r--@ 1 michalczyz  staff  25678 Dec 30 18:42 dev-handbook/guides/document-synchronization.md
--rw-r--r--@ 1 michalczyz  staff  19823 Dec 30 18:42 dev-handbook/guides/document-sync-operations.md
+-rw-r--r--@ 1 michalczyz  staff  15247 Dec 30 18:42 .ace/handbook/.meta/gds/template-embedding.g.md
+-rw-r--r--@ 1 michalczyz  staff  25678 Dec 30 18:42 .ace/handbook/guides/document-synchronization.md
+-rw-r--r--@ 1 michalczyz  staff  19823 Dec 30 18:42 .ace/handbook/guides/document-sync-operations.md
 ```
 
 ## Objective
@@ -40,14 +40,14 @@ Consolidate three overlapping document embedding guides into two comprehensive g
 
 #### Create
 
-* dev-handbook/guides/documents-embedding.g.md
-* dev-handbook/guides/documents-embedded-sync.g.md
+* .ace/handbook/guides/documents-embedding.g.md
+* .ace/handbook/guides/documents-embedded-sync.g.md
 
 #### Delete
 
-* dev-handbook/.meta/gds/template-embedding.g.md
-* dev-handbook/guides/document-synchronization.md
-* dev-handbook/guides/document-sync-operations.md
+* .ace/handbook/.meta/gds/template-embedding.g.md
+* .ace/handbook/guides/document-synchronization.md
+* .ace/handbook/guides/document-sync-operations.md
 
 #### Modify
 
@@ -68,7 +68,7 @@ Consolidate three overlapping document embedding guides into two comprehensive g
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Content organization plan is clear and no content will be lost
-  > Command: grep -r "template-embedding\|document-synchronization\|document-sync-operations" dev-handbook/workflow-instructions/
+  > Command: grep -r "template-embedding\|document-synchronization\|document-sync-operations" .ace/handbook/workflow-instructions/
 * [x] Identify all cross-references to guides being deleted
 * [x] Plan content distribution between embedding principles and tool usage
 
@@ -78,23 +78,23 @@ Consolidate three overlapping document embedding guides into two comprehensive g
   > TEST: Verify Embedding Guide Content
   > Type: Content Validation
   > Assert: All XML format standards and embedding principles are preserved
-  > Command: grep -E "<documents>|<template>|<guide>" dev-handbook/guides/documents-embedding.g.md
+  > Command: grep -E "<documents>|<template>|<guide>" .ace/handbook/guides/documents-embedding.g.md
 * [x] Create documents-embedded-sync.g.md focused on bin/markdown-sync-embedded-documents tool
   > TEST: Verify Tool Documentation
   > Type: Tool Reference Validation
   > Assert: All tool commands and operational workflows are documented
-  > Command: grep "bin/markdown-sync-embedded-documents" dev-handbook/guides/documents-embedded-sync.g.md
+  > Command: grep "bin/markdown-sync-embedded-documents" .ace/handbook/guides/documents-embedded-sync.g.md
 * [x] Update all workflow instruction files with new guide path references
   > TEST: Verify Reference Updates
   > Type: Reference Integrity Check
   > Assert: No broken references to deleted guides remain
-  > Command: grep -r "template-embedding\|document-synchronization\|document-sync-operations" dev-handbook/workflow-instructions/
+  > Command: grep -r "template-embedding\|document-synchronization\|document-sync-operations" .ace/handbook/workflow-instructions/
 * [x] Remove the three obsolete guide files
 * [x] Validate all cross-references and ensure no content loss
   > TEST: Verify No Content Loss
   > Type: Content Completeness Check
   > Assert: All essential content from source guides is preserved in new guides
-  > Command: wc -l dev-handbook/guides/documents-*.g.md
+  > Command: wc -l .ace/handbook/guides/documents-*.g.md
 
 ## Acceptance Criteria
 

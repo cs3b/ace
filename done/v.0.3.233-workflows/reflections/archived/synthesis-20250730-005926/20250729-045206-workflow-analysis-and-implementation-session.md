@@ -98,7 +98,7 @@ The workflow instruction file is well-organized with:
 
 The `create-path` tool successfully generated:
 - Timestamped filename: `20250729-045206-workflow-analysis-and-implementation-session.md`
-- Appropriate directory placement: `dev-taskflow/current/v.0.3.0-workflows/reflections/`
+- Appropriate directory placement: `.ace/taskflow/current/v.0.3.0-workflows/reflections/`
 - Valid file path for content population
 
 ## Additional Context

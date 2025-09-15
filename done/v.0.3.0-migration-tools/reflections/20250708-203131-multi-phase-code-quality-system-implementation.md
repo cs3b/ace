@@ -15,7 +15,7 @@
 
 ## What Could Be Improved
 
-- Initial file creation in wrong directories (exe/ and lib/ instead of dev-tools/exe and dev-tools/lib)
+- Initial file creation in wrong directories (exe/ and lib/ instead of .ace/tools/exe and .ace/tools/lib)
 - Forgot to use enhanced git commands (git-commit, git-status) as instructed
 - StandardRB output display issues took multiple iterations to resolve
 - Method signature errors during phase coordination required debugging
@@ -34,7 +34,7 @@
 
 #### High Impact Issues
 
-- **File Path Errors**: Created files in root directories instead of dev-tools subdirectory
+- **File Path Errors**: Created files in root directories instead of .ace/tools subdirectory
   - Occurrences: Multiple files affected initially
   - Impact: Required moving files and cleaning up empty directories
   - Root Cause: Not maintaining awareness of project structure
@@ -124,8 +124,8 @@ Key implementation decisions:
 
 - Task: v.0.3.0+task.36
 - Primary files created:
-  - dev-tools/exe/code-lint
-  - dev-tools/lib/coding_agent_tools/cli/commands/code/lint.rb
+  - .ace/tools/exe/code-lint
+  - .ace/tools/lib/coding_agent_tools/cli/commands/code/lint.rb
   - Multiple ATOM architecture components
 - Successfully integrated with existing linting infrastructure
 - Foundation ready for agent-based parallel error resolution

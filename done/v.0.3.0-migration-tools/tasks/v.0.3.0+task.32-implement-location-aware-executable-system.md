@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.31]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/exe | sed 's/^/    /'
+tree -L 2 .ace/tools/exe | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/exe
+    .ace/tools/exe
     ├── coding_agent_tools
     ├── generate-review-prompt
     ├── llm-models
@@ -30,7 +30,7 @@ _Result excerpt:_
 
 ## Objective
 
-Make all executables in `dev-tools/exe/*` location-aware so they work predictably regardless of the directory from which they're executed. This resolves the current SecurityError with binstubs trying to access `../dev-taskflow` from the `dev-tools` directory and enables flexible usage patterns including PATH-based access.
+Make all executables in `.ace/tools/exe/*` location-aware so they work predictably regardless of the directory from which they're executed. This resolves the current SecurityError with binstubs trying to access `../.ace/taskflow` from the `.ace/tools` directory and enables flexible usage patterns including PATH-based access.
 
 ## Scope of Work
 
@@ -54,11 +54,11 @@ Make all executables in `dev-tools/exe/*` location-aware so they work predictabl
 * lib/coding_agent_tools/cli/commands/task/recent.rb  
 * lib/coding_agent_tools/cli/commands/task/all.rb
 * lib/coding_agent_tools/cli/commands/task/generate_id.rb
-* dev-tools/exe/task-manager
-* dev-tools/exe/llm-query
-* dev-tools/exe/llm-models
-* dev-tools/exe/llm-usage-report
-* dev-tools/exe/coding_agent_tools
+* .ace/tools/exe/task-manager
+* .ace/tools/exe/llm-query
+* .ace/tools/exe/llm-models
+* .ace/tools/exe/llm-usage-report
+* .ace/tools/exe/coding_agent_tools
 
 #### Delete
 
@@ -80,7 +80,7 @@ Make all executables in `dev-tools/exe/*` location-aware so they work predictabl
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current path resolution mechanisms and failure modes are documented
-  > Command: grep -r "base_path\|Dir.pwd" dev-tools/lib dev-tools/exe
+  > Command: grep -r "base_path\|Dir.pwd" .ace/tools/lib .ace/tools/exe
 * [x] Research project structure markers for reliable root detection
   - Primary markers: `.git` directory (highest priority for development)
   - Secondary markers: `coding_agent_tools.gemspec`, `Gemfile`
@@ -101,7 +101,7 @@ Make all executables in `dev-tools/exe/*` location-aware so they work predictabl
   > TEST: Project Root Detection
   > Type: Unit Test
   > Assert: ProjectRootDetector finds correct root from various locations
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/project_root_detector_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/project_root_detector_spec.rb
 - [x] Update task CLI commands to use ProjectRootDetector instead of brittle path logic
 - [x] Update task-manager executable to be location-aware
 - [x] Update all LLM executables to be location-aware
@@ -119,14 +119,14 @@ Make all executables in `dev-tools/exe/*` location-aware so they work predictabl
   > TEST: Location Independence
   > Type: Integration Test  
   > Assert: All executables work from arbitrary directories
-  > Command: cd /tmp && /full/path/to/dev-tools/exe/task-manager next
+  > Command: cd /tmp && /full/path/to/.ace/tools/exe/task-manager next
 - [x] Update binstub configuration to leverage location-aware executables
 
 ## Acceptance Criteria
 
-* [x] All executables in dev-tools/exe/* work correctly when run from any directory
+* [x] All executables in .ace/tools/exe/* work correctly when run from any directory
 * [x] ProjectRootDetector reliably finds project root from nested subdirectories
-* [x] Task management commands resolve correct paths to dev-taskflow regardless of execution location
+* [x] Task management commands resolve correct paths to .ace/taskflow regardless of execution location
 * [x] PATH setup script enables system-wide access to executables
 * [x] SecurityError with binstubs is resolved
 * [x] All existing functionality remains intact
@@ -141,7 +141,7 @@ Make all executables in `dev-tools/exe/*` location-aware so they work predictabl
 
 ## References
 
-* Current issue: SecurityError in bin/tn when accessing ../dev-taskflow from dev-tools directory
+* Current issue: SecurityError in bin/tn when accessing ../.ace/taskflow from .ace/tools directory
 * Related: v.0.3.0+task.31 (binstub installation system implementation)
 * Path detection logic: lib/coding_agent_tools/cli/commands/task/next.rb:31
 * Security validation: lib/coding_agent_tools/atoms/task_management/file_system_scanner.rb:127

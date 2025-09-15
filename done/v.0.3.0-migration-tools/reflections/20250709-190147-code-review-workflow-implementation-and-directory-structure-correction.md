@@ -1,7 +1,7 @@
 # Reflection: Code Review Workflow Implementation and Directory Structure Correction
 
 **Date**: 2025-07-09
-**Context**: Implementing code review workflow for dev-tools ef03d04..HEAD using Google Pro reviewer, following @dev-handbook/workflow-instructions/review-code.wf.md, with significant directory structure corrections
+**Context**: Implementing code review workflow for .ace/tools ef03d04..HEAD using Google Pro reviewer, following @dev-handbook/workflow-instructions/review-code.wf.md, with significant directory structure corrections
 **Author**: Claude Code Assistant
 **Type**: Conversation Analysis
 
@@ -27,7 +27,7 @@
 ## Key Learnings
 
 - Code review workflow requires precise directory structure understanding
-- dev-taskflow should be at same level as dev-tools, not nested within it
+- .ace/taskflow should be at same level as dev-tools, not nested within it
 - Session directory naming follows specific timestamp patterns
 - Large prompts (307K words) require explicit timeout configuration
 - Google Gemini 2.5 Pro can handle substantial code review tasks effectively
@@ -130,12 +130,12 @@
 - Cost: $0.924
 
 **Session Structure:**
-- Location: `dev-taskflow/current/v.0.3.0-migration/code_review/code-ef03d04..HEAD-20250709-110217`
+- Location: `.ace/taskflow/current/v.0.3.0-migration/code_review/code-ef03d04..HEAD-20250709-110217`
 - Generated files: cr-report-gpro.md, prompt.md, input.diff, session metadata
 - Workflow: session-dir → project-context → project-target → prompt → llm-query
 
 ## Additional Context
 
-This reflection documents a successful code review workflow implementation that required significant directory structure corrections. The core workflow functioned well once proper parameters and locations were established. The review itself identified critical architectural insights about the ATOM pattern transformation in the dev-tools codebase.
+This reflection documents a successful code review workflow implementation that required significant directory structure corrections. The core workflow functioned well once proper parameters and locations were established. The review itself identified critical architectural insights about the ATOM pattern transformation in the .ace/tools codebase.
 
 Key takeaway: Directory structure understanding is crucial for multi-repository workflows and should be validated early in the process to avoid multiple corrections.

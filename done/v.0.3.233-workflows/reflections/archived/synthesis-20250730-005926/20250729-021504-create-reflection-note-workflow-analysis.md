@@ -71,5 +71,5 @@ The reflection workflow instruction demonstrates sophisticated capabilities:
 
 ## Additional Context
 
-- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
-- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-create-reflection-note-workflow-analysis.md`
+- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
+- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-create-reflection-note-workflow-analysis.md`

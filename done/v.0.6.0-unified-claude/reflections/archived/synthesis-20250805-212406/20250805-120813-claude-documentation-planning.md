@@ -8,14 +8,14 @@
 ## What Went Well
 
 - Clear behavioral specification in the draft task made it easy to understand the requirements
-- Existing documentation patterns in dev-tools/docs/user/ provided excellent reference examples
+- Existing documentation patterns in .ace/tools/docs/user/ provided excellent reference examples
 - The separation between quickstart and detailed reference documentation is a well-established pattern
 - Task structure with validation questions helped clarify the scope
 
 ## What Could Be Improved
 
 - The current Claude integration documentation mixes quickstart and detailed reference content
-- No existing handbook-claude-*.md documentation files in dev-tools/docs/user/
+- No existing handbook-claude-*.md documentation files in .ace/tools/docs/user/
 - Gem installation instructions in current documentation are incorrect (it's a git submodule)
 - Cross-repository references need careful planning to avoid broken links
 
@@ -37,7 +37,7 @@
 
 ### Continue Doing
 
-- Following existing documentation patterns from dev-tools/docs/user/
+- Following existing documentation patterns from .ace/tools/docs/user/
 - Using clear table of contents and section headers
 - Including troubleshooting sections in documentation
 - Providing realistic command examples
@@ -52,13 +52,13 @@
 ## Technical Details
 
 The implementation plan includes:
-- 5 new documentation files to be created in dev-tools/docs/user/
-- 1 existing file to be transformed (dev-handbook/.integrations/claude/README.md)
+- 5 new documentation files to be created in .ace/tools/docs/user/
+- 1 existing file to be transformed (.ace/handbook/.integrations/claude/README.md)
 - Consistent structure following the llm-query.md pattern
-- Clear separation between quickstart (in dev-handbook) and reference (in dev-tools)
+- Clear separation between quickstart (in .ace/handbook) and reference (in .ace/tools)
 
 ## Additional Context
 
-- Task file: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
-- Reference documentation pattern: dev-tools/docs/user/llm-query.md
-- Current Claude integration docs: dev-handbook/.integrations/claude/README.md
+- Task file: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
+- Reference documentation pattern: .ace/tools/docs/user/llm-query.md
+- Current Claude integration docs: .ace/handbook/.integrations/claude/README.md

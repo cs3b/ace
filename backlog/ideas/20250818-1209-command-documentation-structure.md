@@ -8,10 +8,10 @@ Use --debug flag for more information
 
 ## Original Idea
 
-in context dev-tools docs - each cmd should have each own documentaion in docs/command/name-of-the-command.md, and the docs/tools.rm should only show the basic usacases of each cmd
+in context .ace/tools docs - each cmd should have each own documentaion in docs/command/name-of-the-command.md, and the docs/tools.rm should only show the basic usacases of each cmd
 
 > SOURCE
 
 ```text
-in context dev-tools docs - each cmd should have each own documentaion in docs/command/name-of-the-command.md, and the docs/tools.rm should only show the basic usacases of each cmd
+in context .ace/tools docs - each cmd should have each own documentaion in docs/command/name-of-the-command.md, and the docs/tools.rm should only show the basic usacases of each cmd
 ```

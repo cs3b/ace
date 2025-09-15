@@ -9,8 +9,8 @@ Design document for the `markdown-sync-embedded-documents` script that synchroni
 ### File Structure
 
 ```
-dev-tools/exe-old/markdown-sync-embedded-documents    # Main Ruby script implementation
-dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents  # Binstub wrapper
+.ace/tools/exe-old/markdown-sync-embedded-documents    # Main Ruby script implementation
+.ace/tools/exe-old/_binstubs/markdown-sync-embedded-documents  # Binstub wrapper
 handbook sync-templates                 # Thin wrapper for project root
 ```
 
@@ -33,7 +33,7 @@ markdown-sync-embedded-documents --dry-run
 markdown-sync-embedded-documents --verbose
 
 # Custom path to scan
-markdown-sync-embedded-documents --path dev-handbook/workflow-instructions
+markdown-sync-embedded-documents --path .ace/handbook/workflow-instructions
 
 # Auto-commit changes
 markdown-sync-embedded-documents --commit
@@ -60,7 +60,7 @@ markdown-sync-embedded-documents --help
 **`--path PATH`**
 
 - Specify directory to scan for workflow files
-- Default: `dev-handbook/workflow-instructions`
+- Default: `.ace/handbook/workflow-instructions`
 - Recursively processes `.wf.md` files
 
 **`--commit`**
@@ -138,15 +138,15 @@ end
 ### Template File Not Found
 
 ```
-ERROR: Template file not found: dev-handbook/templates/missing.template.md
-  Referenced in: dev-handbook/workflow-instructions/example.wf.md
+ERROR: Template file not found: .ace/handbook/templates/missing.template.md
+  Referenced in: .ace/handbook/workflow-instructions/example.wf.md
   Action: Create template file or update path reference
 ```
 
 ### Invalid XML Structure
 
 ```
-ERROR: Invalid XML template structure in: dev-handbook/workflow-instructions/example.wf.md
+ERROR: Invalid XML template structure in: .ace/handbook/workflow-instructions/example.wf.md
   Line 123: <template path="..." missing closing tag
   Action: Fix XML syntax in workflow file
 ```
@@ -154,7 +154,7 @@ ERROR: Invalid XML template structure in: dev-handbook/workflow-instructions/exa
 ### Permission Errors
 
 ```
-ERROR: Cannot write to file: dev-handbook/workflow-instructions/example.wf.md
+ERROR: Cannot write to file: .ace/handbook/workflow-instructions/example.wf.md
   Reason: Permission denied
   Action: Check file permissions
 ```
@@ -164,17 +164,17 @@ ERROR: Cannot write to file: dev-handbook/workflow-instructions/example.wf.md
 ### Standard Operation
 
 ```
-Scanning workflow files in: dev-handbook/workflow-instructions/
+Scanning workflow files in: .ace/handbook/workflow-instructions/
 Found 17 workflow files to process
 
 Processing: create-adr.wf.md
-  ✅ Template synchronized: dev-handbook/templates/project-docs/decisions/adr.template.md
+  ✅ Template synchronized: .ace/handbook/templates/project-docs/decisions/adr.template.md
 
 Processing: create-task.wf.md
-  ℹ️  Template up-to-date: dev-handbook/templates/release-tasks/task.template.md
+  ℹ️  Template up-to-date: .ace/handbook/templates/release-tasks/task.template.md
 
 Processing: update-roadmap.wf.md
-  ⚠️  Template file not found: dev-handbook/templates/missing.template.md
+  ⚠️  Template file not found: .ace/handbook/templates/missing.template.md
 
 Summary:
   Files processed: 17
@@ -189,7 +189,7 @@ Summary:
 DRY RUN MODE - No files will be modified
 
 Processing: create-adr.wf.md
-  📋 WOULD UPDATE: dev-handbook/templates/project-docs/decisions/adr.template.md
+  📋 WOULD UPDATE: .ace/handbook/templates/project-docs/decisions/adr.template.md
   
   Differences found:
   - Line 5: [OLD] ## Status
@@ -206,11 +206,11 @@ Summary:
 ### Verbose Output
 
 ```
-DEBUG: Scanning directory: dev-handbook/workflow-instructions/
+DEBUG: Scanning directory: .ace/handbook/workflow-instructions/
 DEBUG: Found workflow file: create-adr.wf.md
 DEBUG: Extracting templates from: create-adr.wf.md
-DEBUG: Found template: dev-handbook/templates/project-docs/decisions/adr.template.md
-DEBUG: Reading template file: dev-handbook/templates/project-docs/decisions/adr.template.md
+DEBUG: Found template: .ace/handbook/templates/project-docs/decisions/adr.template.md
+DEBUG: Reading template file: .ace/handbook/templates/project-docs/decisions/adr.template.md
 DEBUG: Comparing content...
 DEBUG: Content differs, updating embedded template
 DEBUG: Writing updated content to: create-adr.wf.md
@@ -235,7 +235,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 - Verify workflow file paths exist and are readable
 - Validate XML template structure before processing
-- Check template file paths are within `dev-handbook/templates/`
+- Check template file paths are within `.ace/handbook/templates/`
 
 ### Edge Cases
 

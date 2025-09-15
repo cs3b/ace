@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.20]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions
+.ace/handbook/workflow-instructions
 ├── commit.wf.md
 ├── create-adr.wf.md
 ├── create-api-docs.wf.md
@@ -63,7 +63,7 @@ Link back to original requirement: Standardized template embedding with referenc
 
 #### Modify  
 
-* All workflow instruction files in dev-handbook/workflow-instructions/
+* All workflow instruction files in .ace/handbook/workflow-instructions/
 * Update embedded template locations and reference format
 
 #### Delete
@@ -99,25 +99,25 @@ Link back to original requirement: Standardized template embedding with referenc
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Templates are moved to end with proper formatting
-  > Command: grep -n "````" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep -n "````" .ace/handbook/workflow-instructions/*.wf.md
 
 * [ ] Replace inline template references with standardized path references
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Template references use format: path (template-path)
-  > Command: grep "dev-handbook/templates" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep ".ace/handbook/templates" .ace/handbook/workflow-instructions/*.wf.md
 
 * [ ] Implement four-tick escaping format for embedded templates
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: All embedded templates use ````four-tick escaping
-  > Command: grep -c "````" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep -c "````" .ace/handbook/workflow-instructions/*.wf.md
 
 * [ ] Add template path references in format: ````path (template_path)
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: All embedded templates have proper path references
-  > Command: grep "\.template\.md)" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep "\.template\.md)" .ace/handbook/workflow-instructions/*.wf.md
 
 * [ ] Verify workflow instructions remain readable and functional
   > TEST: Action Validation

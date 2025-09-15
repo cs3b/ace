@@ -33,7 +33,7 @@ Refactored the initialize-project-structure workflow to remove duplications with
 
 #### Modify
 
-- dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
+- .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md
 
 ## Implementation Summary
 
@@ -91,5 +91,5 @@ Verified that the workflow:
 ## References
 
 - Depends on task v.0.5.0+task.060 (workflow relocation)
-- User feedback: "lets update the dev-handbook/.integrations/wfi/initialize-project-structure.wf.md - and remove what is a duplication from the base setup done by coding-agent-tools integrate claude --init-project"
+- User feedback: "lets update the .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md - and remove what is a duplication from the base setup done by coding-agent-tools integrate claude --init-project"
 - User suggestion: "i would add to review the context configuration ( template in docs/context and context.yml ) and also to draft the first release and roadmap based on prd / readme"

@@ -63,6 +63,6 @@
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.025-complete-atom-refactoring-for-handbook-claude-tools.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.025-complete-atom-refactoring-for-handbook-claude-tools.md
 - Related ADR: docs/decisions/adr-011-atom-architecture-house-rules.t.md
 - Integration tests: All passing in spec/integration/handbook_claude*_spec.rb

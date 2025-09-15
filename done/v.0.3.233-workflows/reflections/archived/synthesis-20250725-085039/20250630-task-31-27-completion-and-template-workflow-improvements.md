@@ -81,8 +81,8 @@ Successfully resolved violation where save-session-context.md lacked the require
 
 Demonstrated proper sequence:
 
-1. Commit changes in dev-handbook submodule
-2. Commit task status updates in dev-taskflow submodule  
+1. Commit changes in .ace/handbook submodule
+2. Commit task status updates in .ace/taskflow submodule  
 3. Commit submodule pointer updates in main repository
 4. Handle linter fixes separately as style commits
 5. Maintain conventional commit format throughout

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-architecture.g.md
     ├── definition-guide.g.md
     └── llm-provider-configurations.g.md
@@ -41,7 +41,7 @@ Document command wrapper patterns (e.g., @review-code) and AI-specific guidance 
 
 #### Create
 
-* dev-handbook/guides/ai-agent-integration.g.md - Comprehensive AI agent guide
+* .ace/handbook/guides/ai-agent-integration.g.md - Comprehensive AI agent guide
 
 #### Modify
 
@@ -66,7 +66,7 @@ Document command wrapper patterns (e.g., @review-code) and AI-specific guidance 
   > TEST: Reflection Analysis Complete
   > Type: Pre-condition Check
   > Assert: AI usage patterns extracted from reflections
-  > Command: ls dev-taskflow/current/v.0.3.0-workflows/reflections/
+  > Command: ls .ace/taskflow/current/v.0.3.0-workflows/reflections/
 * [x] Research reflections from v.0.2.0 and v.0.1.0 if available
 * [x] Identify command wrapper patterns (@ commands) in use
 * [x] Study AI agent pain points and common errors
@@ -88,7 +88,7 @@ Document command wrapper patterns (e.g., @review-code) and AI-specific guidance 
   > TEST: Guide Complete
   > Type: Documentation Validation
   > Assert: All sections complete with examples
-  > Command: bin/lint dev-handbook/guides/ai-agent-integration.g.md
+  > Command: bin/lint .ace/handbook/guides/ai-agent-integration.g.md
 
 ## Acceptance Criteria
 
@@ -106,7 +106,7 @@ Document command wrapper patterns (e.g., @review-code) and AI-specific guidance 
 
 ## References
 
-* Review synthesis: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
-* Reflections: dev-taskflow/current/v.0.3.0-workflows/reflections/
-* Previous version reflections: dev-taskflow/done/*/reflections/ (if available)
+* Review synthesis: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
+* Reflections: .ace/taskflow/current/v.0.3.0-workflows/reflections/
+* Previous version reflections: .ace/taskflow/done/*/reflections/ (if available)
 * Architecture: docs/architecture.md

@@ -37,11 +37,11 @@ Lines with `````markdown` format (from grep analysis):
 
 #### Step 2: Extract Templates to Template Files
 
-Create new template files in `dev-handbook/templates/`:
+Create new template files in `.ace/handbook/templates/`:
 
-- `dev-handbook/templates/project-docs/readme.template.md`
-- `dev-handbook/templates/project-docs/blueprint.template.md` (if different from existing)
-- `dev-handbook/templates/release-planning/roadmap.template.md`
+- `.ace/handbook/templates/project-docs/readme.template.md`
+- `.ace/handbook/templates/project-docs/blueprint.template.md` (if different from existing)
+- `.ace/handbook/templates/release-planning/roadmap.template.md`
 - Additional templates as identified during extraction
 
 #### Step 3: Convert to XML Format
@@ -49,7 +49,7 @@ Create new template files in `dev-handbook/templates/`:
 Replace each `````markdown` block with:
 
 ```xml
-<template path="dev-handbook/templates/category/template-name.template.md">
+<template path=".ace/handbook/templates/category/template-name.template.md">
 [template content]
 </template>
 ```
@@ -73,7 +73,7 @@ Add `<templates>` section at end of document with all extracted templates.
 
 #### Step 2: Extract Template
 
-Create: `dev-handbook/templates/session-management/session-context.template.md`
+Create: `.ace/handbook/templates/session-management/session-context.template.md`
 
 #### Step 3: Convert to XML Format
 
@@ -90,8 +90,8 @@ Add `<templates>` section at end of document.
 1. **Create Template Directories** (if needed):
 
    ```bash
-   mkdir -p dev-handbook/templates/session-management
-   mkdir -p dev-handbook/templates/project-setup
+   mkdir -p .ace/handbook/templates/session-management
+   mkdir -p .ace/handbook/templates/project-setup
    ```
 
 2. **Extract Template Content**:
@@ -127,14 +127,14 @@ Add `<templates>` section at end of document.
 
 **For `initialize-project-structure.wf.md`:**
 
-- Project documentation templates: `dev-handbook/templates/project-setup/`
+- Project documentation templates: `.ace/handbook/templates/project-setup/`
 - README template: `readme.template.md`
 - Blueprint template: `blueprint.template.md`
 - Roadmap template: `roadmap.template.md`
 
 **For `save-session-context.md`:**
 
-- Session management templates: `dev-handbook/templates/session-management/`
+- Session management templates: `.ace/handbook/templates/session-management/`
 - Session context template: `session-context.template.md`
 
 ### XML Template Structure
@@ -142,7 +142,7 @@ Add `<templates>` section at end of document.
 Each converted template should follow:
 
 ```xml
-<template path="dev-handbook/templates/category/name.template.md">
+<template path=".ace/handbook/templates/category/name.template.md">
 [Original template content without modification]
 </template>
 ```
@@ -153,13 +153,13 @@ After applying fixes, run these commands to verify compliance:
 
 ```bash
 # Check for remaining deprecated format
-grep -r "````markdown" dev-handbook/workflow-instructions/
+grep -r "````markdown" .ace/handbook/workflow-instructions/
 
 # Verify XML template sections
-grep -r "<templates>" dev-handbook/workflow-instructions/
+grep -r "<templates>" .ace/handbook/workflow-instructions/
 
 # Check template positioning
-for file in dev-handbook/workflow-instructions/*.md; do 
+for file in .ace/handbook/workflow-instructions/*.md; do 
   if grep -q "<templates>" "$file"; then 
     echo "=== $file ==="; 
     tail -3 "$file"; 
@@ -167,8 +167,8 @@ for file in dev-handbook/workflow-instructions/*.md; do
 done
 
 # Validate template paths
-grep -r "template path=" dev-handbook/workflow-instructions/ | \
-  grep -v "dev-handbook/templates/" || echo "All paths valid"
+grep -r "template path=" .ace/handbook/workflow-instructions/ | \
+  grep -v ".ace/handbook/templates/" || echo "All paths valid"
 ```
 
 ## Success Criteria

@@ -35,7 +35,7 @@ tools:
         methods: [list, next, create]
   
 security:
-  allowed_paths: [dev-taskflow/**, docs/**]
+  allowed_paths: [.ace/taskflow/**, docs/**]
   forbidden_paths: [.env, secrets/**, *.key]
   rate_limit: 100/hour
 
@@ -81,7 +81,7 @@ agents:
 
 ## Objective
 
-Create a secure, intelligent gateway that bridges MCP clients with our dev-tools ecosystem, providing enhanced security, cost optimization, and context awareness while maintaining full MCP protocol compatibility.
+Create a secure, intelligent gateway that bridges MCP clients with our .ace/tools ecosystem, providing enhanced security, cost optimization, and context awareness while maintaining full MCP protocol compatibility.
 
 ## Scope of Work
 
@@ -111,7 +111,7 @@ Create a secure, intelligent gateway that bridges MCP clients with our dev-tools
 ## References
 
 - MCP Protocol Specification: modelcontextprotocol.io
-- Original idea: dev-taskflow/backlog/ideas/002-cheap-model-delegation.md
+- Original idea: .ace/taskflow/backlog/ideas/002-cheap-model-delegation.md
 - Existing proxies: sparfenyuk/mcp-proxy, open-webui/mcpo
 
 ## Implementation Plan
@@ -120,7 +120,7 @@ Create a secure, intelligent gateway that bridges MCP clients with our dev-tools
 
 * [x] Research MCP protocol specification and transport options (stdio, HTTP/SSE)
 * [x] Analyze existing MCP proxy implementations for patterns
-* [x] Design tool wrapping strategy for dev-tools executables
+* [x] Design tool wrapping strategy for .ace/tools executables
 * [x] Research Ruby HTTP server options (Rack, Sinatra, Puma)
 * [x] Investigate SSE implementation for streaming responses
 * [x] Design security layer architecture and validation rules
@@ -129,48 +129,48 @@ Create a secure, intelligent gateway that bridges MCP clients with our dev-tools
 
 #### 1. Create MCP Proxy Executable and Core Structure
 
-- [x] Create `dev-tools/exe/mcp-proxy` executable
+- [x] Create `.ace/tools/exe/mcp-proxy` executable
   ```ruby
   #!/usr/bin/env ruby
   require_relative "../lib/coding_agent_tools"
   CodingAgentTools::CLI.start(ARGV)
   ```
 
-- [x] Create `dev-tools/lib/coding_agent_tools/cli/commands/mcp_proxy.rb`
+- [x] Create `.ace/tools/lib/coding_agent_tools/cli/commands/mcp_proxy.rb`
   - Define CLI options: --port, --stdio, --config
   - Initialize appropriate transport (HTTP or stdio)
   - Start proxy server
 
 #### 2. Implement MCP Protocol Core
 
-- [x] Create `dev-tools/lib/coding_agent_tools/atoms/mcp/protocol_validator.rb`
+- [x] Create `.ace/tools/lib/coding_agent_tools/atoms/mcp/protocol_validator.rb`
   - Validate MCP message format
   - Check required fields
   - Verify protocol version
 
-- [x] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/message_handler.rb`
+- [x] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/message_handler.rb`
   - Parse incoming MCP messages
   - Route to appropriate handlers
   - Format MCP responses
 
-- [x] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/tool_wrapper.rb`
-  - Wrap dev-tools executables as MCP tools
+- [x] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/tool_wrapper.rb`
+  - Wrap .ace/tools executables as MCP tools
   - Map tool parameters to CLI arguments
   - Capture and format tool output
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/resource_provider.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/resource_provider.rb`
   - Define available resources
   - Handle resource queries
   - Format resource responses
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/prompt_manager.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/prompt_manager.rb`
   - Manage prompt templates
   - Handle prompt invocations
   - Variable substitution
 
 #### 3. Implement Transport Layers
 
-- [x] Create `dev-tools/lib/coding_agent_tools/organisms/mcp/http_transport.rb`
+- [x] Create `.ace/tools/lib/coding_agent_tools/organisms/mcp/http_transport.rb`
   - HTTP server setup (using Rack/Sinatra)
   - SSE endpoint for streaming
   - Request/response handling
@@ -179,14 +179,14 @@ Create a secure, intelligent gateway that bridges MCP clients with our dev-tools
   > Assert: Server responds to MCP requests
   > Command: curl -X POST localhost:3000/tools -d '{"jsonrpc":"2.0","method":"tools/list"}'
 
-- [x] Create `dev-tools/lib/coding_agent_tools/organisms/mcp/stdio_transport.rb`
+- [x] Create `.ace/tools/lib/coding_agent_tools/organisms/mcp/stdio_transport.rb`
   - Stdio message reading
   - JSON-RPC over stdio
   - Compatible with Claude Desktop
 
 #### 4. Implement Security and Routing
 
-- [x] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/security_validator.rb`
+- [x] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/security_validator.rb`
   - Path validation and sanitization
   - Tool access control
   - Rate limiting implementation
@@ -195,12 +195,12 @@ Create a secure, intelligent gateway that bridges MCP clients with our dev-tools
   > Assert: Forbidden paths rejected
   > Command: rspec spec/unit/molecules/mcp/security_validator_spec.rb
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/model_router.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/model_router.rb`
   - Route requests to appropriate models
   - Cost optimization logic
   - Fallback handling
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/context_injector.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/context_injector.rb`
   - Auto-inject project context
   - Use context tool from task 013
   - Agent-specific context loading
@@ -225,7 +225,7 @@ Create a secure, intelligent gateway that bridges MCP clients with our dev-tools
 
 #### 6. Implement Agent Discovery and Loading
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/mcp/agent_discoverer.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/mcp/agent_discoverer.rb`
   - Scan .claude/agents/ directory
   - Parse agent metadata
   - Extract MCP-specific configuration

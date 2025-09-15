@@ -12,7 +12,7 @@ Synthesis of 9 reflection notes.
 
 ## Reflection 1: 20250103-emotion-carousel-implementation.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250103-emotion-carousel-implementation.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250103-emotion-carousel-implementation.md`
 **Modified**: 2025-07-03 03:58:08
 
 # Reflection: Emotion-Based Onboarding Carousel Implementation
@@ -123,7 +123,7 @@ This implementation successfully delivered a polished, responsive emotion-based 
 
 ## Reflection 2: 20250103-emotional-radar-multi-emotion-implementation.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250103-emotional-radar-multi-emotion-implementation.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250103-emotional-radar-multi-emotion-implementation.md`
 **Modified**: 2025-07-03 09:51:02
 
 # Reflection: EmotionalRadar Multi-Emotion Implementation
@@ -228,7 +228,7 @@ This implementation successfully delivers the multi-emotion selection capability
 
 ## Reflection 3: 20250103-progress-tracking-system-implementation.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250103-progress-tracking-system-implementation.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250103-progress-tracking-system-implementation.md`
 **Modified**: 2025-07-03 10:17:56
 
 # Reflection: Progress Tracking and Insights System Implementation
@@ -333,7 +333,7 @@ This implementation establishes a solid foundation for user engagement and reten
 
 ## Reflection 4: 20250103-session-management-system-implementation.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250103-session-management-system-implementation.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250103-session-management-system-implementation.md`
 **Modified**: 2025-07-03 04:26:26
 
 # Reflection: Session Management System Implementation
@@ -429,7 +429,7 @@ This implementation establishes a solid foundation for user engagement and reten
 
 ## Reflection 5: 20250718-133117-media-analysis-enhancement-and-task-review-session.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250718-133117-media-analysis-enhancement-and-task-review-session.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250718-133117-media-analysis-enhancement-and-task-review-session.md`
 **Modified**: 2025-07-18 13:32:12
 
 # Reflection: Media Analysis Enhancement and Task Review Session
@@ -584,7 +584,7 @@ media/
 **Files Created:**
 - `scripts/comprehensive-media-analyzer.js`: Content-aware analysis engine
 - `media/sessions-catalog.json`: Single source of truth (28KB)
-- `dev-taskflow/current/v.0.2.0-mvp/docs/context-transcript-analysis.md`: Pattern documentation
+- `.ace/taskflow/current/v.0.2.0-mvp/docs/context-transcript-analysis.md`: Pattern documentation
 
 **Tasks Updated:**
 - Task 15: Enhanced to leverage catalog structure for Firestore schema
@@ -602,7 +602,7 @@ This session demonstrates the value of iterative refinement based on user feedba
 
 ## Reflection 6: 20250719-122238-system-prompt-initialization-workflow-improvements.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250719-122238-system-prompt-initialization-workflow-improvements.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250719-122238-system-prompt-initialization-workflow-improvements.md`
 **Modified**: 2025-07-19 12:23:16
 
 # Reflection: System Prompt Initialization Workflow Improvements
@@ -616,7 +616,7 @@ This session demonstrates the value of iterative refinement based on user feedba
 
 - Successfully identified the mismatch between Ruby gem system prompts and Vue.js project requirements
 - Created comprehensive Vue.js-specific system prompts tailored to Firebase/PWA architecture
-- Established proper directory structure for local system prompt overrides (`dev-local/handbook/templates/`)
+- Established proper directory structure for local system prompt overrides (`.ace/local/handbook/templates/`)
 - Implemented effective gitignore configuration for code review session management
 - Generated comprehensive code review report using the enhanced workflow
 
@@ -630,7 +630,7 @@ This session demonstrates the value of iterative refinement based on user feedba
 ## Key Learnings
 
 - **Technology Stack Matters**: System prompts need to be tailored to the specific technology stack (Vue.js vs Ruby) for effective reviews
-- **Local Overrides Work**: The `dev-local/handbook/templates/` pattern successfully allows project-specific customization without modifying shared templates
+- **Local Overrides Work**: The `.ace/local/handbook/templates/` pattern successfully allows project-specific customization without modifying shared templates
 - **Comprehensive Coverage Needed**: System prompts should cover framework-specific patterns, platform integrations (Firebase), and architecture paradigms (PWA)
 - **Early Setup Prevents Issues**: Project-specific system prompts should be configured during project initialization, not discovered during first use
 
@@ -676,7 +676,7 @@ This session demonstrates the value of iterative refinement based on user feedba
 #### Tool Enhancements
 
 - **Template Generator**: Create tool to generate project-specific system prompts based on technology stack
-- **Template Library**: Expand dev-handbook with technology-specific template collections
+- **Template Library**: Expand .ace/handbook with technology-specific template collections
 - **Initialization Command**: Create command to set up project-specific review infrastructure
 - **Template Validation**: Add validation to ensure system prompts are appropriate for project type
 
@@ -703,7 +703,7 @@ This session demonstrates the value of iterative refinement based on user feedba
 
 ### Continue Doing
 
-- Using `dev-local/` directory pattern for project-specific customizations
+- Using `.ace/local/` directory pattern for project-specific customizations
 - Creating comprehensive, technology-specific system prompts
 - Documenting template selection in command configuration
 
@@ -711,7 +711,7 @@ This session demonstrates the value of iterative refinement based on user feedba
 
 - **Add Project Initialization Workflow**: Create workflow instruction for setting up project-specific system prompts during project bootstrap
 - **Create Technology Detection Guide**: Document how to assess project technology stack and select appropriate templates
-- **Build Template Library**: Expand dev-handbook with pre-built templates for common technology stacks (Vue.js, React, Node.js, Python, etc.)
+- **Build Template Library**: Expand .ace/handbook with pre-built templates for common technology stacks (Vue.js, React, Node.js, Python, etc.)
 - **Develop Template Generator Tool**: Create tool to generate custom system prompts based on project characteristics
 - **Document Local Customization Patterns**: Create clear documentation on when and how to customize system prompts
 - **Add Review Readiness Checklist**: Include system prompt verification in pre-review validation
@@ -739,21 +739,21 @@ This session demonstrates the value of iterative refinement based on user feedba
 1. **Initialize Project Structure Workflow**: Add system prompt setup to project initialization
 2. **Technology Template Library**: Create `/templates/review-[tech]/` directories for different stacks
 3. **Template Selection Guide**: Document decision tree for template selection
-4. **Local Customization Documentation**: Clarify `/dev-local/handbook/templates/` usage patterns
+4. **Local Customization Documentation**: Clarify `/.ace/local/handbook/templates/` usage patterns
 5. **Command Configuration Templates**: Provide examples for updating Claude commands with custom templates
 
 ## Additional Context
 
 - Related to comprehensive code review session for Vue.js application
-- Links to created templates: `dev-local/handbook/templates/review-{code,test,docs}/system.prompt.md`
+- Links to created templates: `.ace/local/handbook/templates/review-{code,test,docs}/system.prompt.md`
 - Command configuration: `.claude/commands/review-code.md`
-- Generated review report: `dev-taskflow/current/v.0.2.0-mvp/code_review/code-src--.vuejs-20250719-115326/cr-report.md`
+- Generated review report: `.ace/taskflow/current/v.0.2.0-mvp/code_review/code-src--.vuejs-20250719-115326/cr-report.md`
 
 ---
 
 ## Reflection 7: 20250719-135416-git-toolbox-workflow-usage.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250719-135416-git-toolbox-workflow-usage.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250719-135416-git-toolbox-workflow-usage.md`
 **Modified**: 2025-07-19 13:54:46
 
 # Reflection: Git Toolbox Workflow Usage
@@ -869,14 +869,14 @@ The custom git toolbox provides enhanced multi-repository management:
 
 - Custom tools are defined in `.claude/commands/commit.md`
 - nav-path tool used for automatic reflection file location determination
-- Multi-repository project structure with dev-handbook, dev-taskflow, dev-tools submodules
+- Multi-repository project structure with dev-handbook, dev-taskflow, .ace/tools submodules
 - Enhanced git workflow designed for complex project management
 
 ---
 
 ## Reflection 8: 20250719-144031-technology-specific-template-architecture-implementation.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250719-144031-technology-specific-template-architecture-implementation.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250719-144031-technology-specific-template-architecture-implementation.md`
 **Modified**: 2025-07-19 14:41:21
 
 # Reflection: Technology-Specific Template Architecture Implementation
@@ -905,7 +905,7 @@ The custom git toolbox provides enhanced multi-repository management:
 ## Key Learnings
 
 - **Separation of Concerns**: Generic workflows should be technology-agnostic, with project-specific configurations in `.claude/commands/`
-- **Template Inheritance**: Moving from local overrides (`dev-local/`) to official technology templates creates better maintainability
+- **Template Inheritance**: Moving from local overrides (`.ace/local/`) to official technology templates creates better maintainability
 - **Naming Conventions Matter**: Clear `system.{tech}.{framework}.prompt.md` pattern makes template purpose immediately obvious
 - **Structured Output Validation**: Testing for specific section headers (##) and checkboxes ([ ]) ensures template compliance
 - **Submodule Workflow**: Changes spanning multiple repositories require careful commit ordering (submodule first, then main repo)
@@ -985,7 +985,7 @@ The custom git toolbox provides enhanced multi-repository management:
 ### Template Architecture Implemented
 
 ```
-dev-handbook/templates/
+.ace/handbook/templates/
 ├── review-code/
 │   ├── system.ruby.atom.prompt.md      (Ruby gem code reviews)
 │   └── system.vue.firebase.prompt.md   (Vue.js + Firebase code reviews)  
@@ -1003,7 +1003,7 @@ dev-handbook/templates/
 
 - **Project Config**: `.claude/commands/review-code.md` specifies `vue.firebase` technology context
 - **Template Mapping**: All review types mapped to appropriate Vue.js templates
-- **Workflow Integration**: Updated `dev-handbook/workflow-instructions/review-code.wf.md` with technology detection logic
+- **Workflow Integration**: Updated `.ace/handbook/workflow-instructions/review-code.wf.md` with technology detection logic
 
 ## Additional Context
 
@@ -1016,7 +1016,7 @@ dev-handbook/templates/
 
 ## Reflection 9: 20250719-154031-review-code-workflow-claude-code-integration.md
 
-**Source**: `dev-taskflow/current/v.0.2.0-mvp/reflections/20250719-154031-review-code-workflow-claude-code-integration.md`
+**Source**: `.ace/taskflow/current/v.0.2.0-mvp/reflections/20250719-154031-review-code-workflow-claude-code-integration.md`
 **Modified**: 2025-07-19 15:15:12
 
 # Reflection: Review Code Workflow Claude Code Integration
@@ -1123,8 +1123,8 @@ dev-handbook/templates/
 
 ### Files Modified
 - `.claude/commands/review-code.md`: Simplified to essential patterns, removed duplication
-- `dev-handbook/workflow-instructions/review-code.wf.md`: Added Claude Code integration
-- Removed obsolete template files from `dev-local/handbook/templates/`
+- `.ace/handbook/workflow-instructions/review-code.wf.md`: Added Claude Code integration
+- Removed obsolete template files from `.ace/local/handbook/templates/`
 
 ### Key Changes
 - Added "Claude Code Command Interface" section explaining translation

@@ -45,7 +45,7 @@
 ## Technical Details
 
 **Files Modified:**
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.036-enhanced-reflection-note-creation-with-automation-and-tool.md`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.036-enhanced-reflection-note-creation-with-automation-and-tool.md`
   - Status: draft → pending
   - Added: Complete technical approach, file modifications plan, implementation steps with embedded tests, risk assessment
   - Estimate: TBD → 8h

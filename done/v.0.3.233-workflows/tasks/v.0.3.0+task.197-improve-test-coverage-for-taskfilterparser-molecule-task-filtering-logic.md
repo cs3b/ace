@@ -13,15 +13,15 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/lib -name "*task_filter*" -type f
-find dev-tools/spec -name "*task_filter*" -type f
+find .ace/tools/lib -name "*task_filter*" -type f
+find .ace/tools/spec -name "*task_filter*" -type f
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_parser.rb
-dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_engine.rb
+.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_parser.rb
+.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_engine.rb
 # No existing test files found for TaskFilterParser
 ```
 
@@ -44,7 +44,7 @@ The TaskFilterParser is used by TaskFilterEngine to filter tasks in the task man
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb
 
 #### Modify
 
@@ -73,7 +73,7 @@ The TaskFilterParser is used by TaskFilterEngine to filter tasks in the task man
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All public methods, FilterCriteria behavior, and edge cases are identified
-  > Command: ruby -e "require './dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_parser'; puts CodingAgentTools::Modules::TaskflowManagement::TaskFilterParser.methods(false)"
+  > Command: ruby -e "require './.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_parser'; puts CodingAgentTools::Modules::TaskflowManagement::TaskFilterParser.methods(false)"
 - [x] Examine existing test patterns in the project to follow conventions
 - [x] Design test structure covering all parsing scenarios, matching logic, and validation
 - [x] Identify integration points with TaskFilterEngine and task data structures
@@ -86,32 +86,32 @@ The TaskFilterParser is used by TaskFilterEngine to filter tasks in the task man
   > TEST: Test File Creation
   > Type: Action Validation
   > Assert: Test file exists with proper RSpec structure and can be loaded
-  > Command: ruby -e "require './dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb'; puts 'Test file loads successfully'"
+  > Command: ruby -e "require './.ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb'; puts 'Test file loads successfully'"
 - [x] Implement tests for FilterCriteria struct matching logic
   > TEST: FilterCriteria Tests
   > Type: Action Validation
   > Assert: All FilterCriteria matching scenarios are tested including OR conditions, negation, and attribute access
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "FilterCriteria"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "FilterCriteria"
 - [x] Implement tests for parse_filter method covering all valid and invalid scenarios
   > TEST: Parse Filter Tests
   > Type: Action Validation
   > Assert: All filter parsing scenarios are tested including edge cases and malformed input
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "parse_filter"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "parse_filter"
 - [x] Implement tests for parse_filters method handling arrays of filter strings
   > TEST: Parse Filters Tests
   > Type: Action Validation
   > Assert: Batch parsing scenarios are tested including mixed valid/invalid filters
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "parse_filters"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "parse_filters"
 - [x] Implement tests for validate_filters method checking known attributes
   > TEST: Validate Filters Tests
   > Type: Action Validation
   > Assert: Filter validation scenarios are tested including valid/invalid attributes
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "validate_filters"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb -t "validate_filters"
 - [x] Run complete test suite to ensure all tests pass and provide coverage
   > TEST: Complete Test Suite
   > Type: Action Validation
   > Assert: All TaskFilterParser tests pass and provide comprehensive coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_filter_parser_spec.rb
 
 ## Acceptance Criteria
 
@@ -134,7 +134,7 @@ The TaskFilterParser is used by TaskFilterEngine to filter tasks in the task man
 
 ## References
 
-- TaskFilterParser implementation: `dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_parser.rb`
-- TaskFilterEngine usage: `dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_engine.rb`
-- Existing test patterns: `dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_engine_spec.rb`
-- RSpec testing conventions: `dev-tools/spec/support/TESTING_CONVENTIONS.md`
+- TaskFilterParser implementation: `.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_parser.rb`
+- TaskFilterEngine usage: `.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_filter_engine.rb`
+- Existing test patterns: `.ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_engine_spec.rb`
+- RSpec testing conventions: `.ace/tools/spec/support/TESTING_CONVENTIONS.md`

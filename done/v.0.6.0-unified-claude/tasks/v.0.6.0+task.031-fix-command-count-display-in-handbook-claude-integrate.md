@@ -50,7 +50,7 @@ Fix the statistics tracking in CommandInstaller to properly count installed comm
 
 ### Technical Details
 
-The issue was in `dev-tools/lib/coding_agent_tools/organisms/command_installer.rb`:
+The issue was in `.ace/tools/lib/coding_agent_tools/organisms/command_installer.rb`:
 
 1. CommandInstaller was recording operations with type `:command`
 2. StatisticsCollector's `record_by_type` method only recognized:

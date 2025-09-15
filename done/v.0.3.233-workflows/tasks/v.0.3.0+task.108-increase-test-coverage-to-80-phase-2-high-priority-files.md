@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.107]
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/atoms
+.ace/tools/lib/coding_agent_tools/atoms
 ├── code
 │   └── file_content_reader.rb
 ├── code_quality
@@ -34,7 +34,7 @@ dev-tools/lib/coding_agent_tools/atoms
 
 ## Objective
 
-Increase test coverage from low levels (28-35%) to at least 80% for 7 high-priority atom files in the dev-tools Ruby gem. This phase targets files with low coverage in code quality validation and Git operations that are critical for the toolkit's core functionality.
+Increase test coverage from low levels (28-35%) to at least 80% for 7 high-priority atom files in the .ace/tools Ruby gem. This phase targets files with low coverage in code quality validation and Git operations that are critical for the toolkit's core functionality.
 
 ## Scope of Work
 
@@ -47,13 +47,13 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
 
 #### Create
 
-- `dev-tools/spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/git/repository_scanner_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/git/repository_scanner_spec.rb` (comprehensive tests)
 
 #### Modify
 
@@ -75,13 +75,13 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Code Quality Analysis
   > Type: Pre-condition Check
   > Assert: All validation paths and error conditions are identified
-  > Command: cd dev-tools && find lib/coding_agent_tools/atoms/code_quality -name "*.rb" | xargs grep -n "raise\|rescue\|validate"
+  > Command: cd .ace/tools && find lib/coding_agent_tools/atoms/code_quality -name "*.rb" | xargs grep -n "raise\|rescue\|validate"
 
 - [x] Review Git operation atoms and their repository interaction patterns
   > TEST: Git Operations Analysis
   > Type: Pre-condition Check
   > Assert: All Git command paths and error scenarios are documented
-  > Command: cd dev-tools && find lib/coding_agent_tools/atoms/git -name "*.rb" | xargs grep -n "git\|command\|execute"
+  > Command: cd .ace/tools && find lib/coding_agent_tools/atoms/git -name "*.rb" | xargs grep -n "git\|command\|execute"
 
 - [x] Design test scenarios covering validation logic, error distribution, and Git operations
 
@@ -94,7 +94,7 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Path Resolver Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 28.57% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/path_resolver.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/path_resolver.rb,80]
 
 - [x] Implement tests for language_file_filter.rb (31.58% → 80%+)
   - Cover file extension filtering and language detection
@@ -103,7 +103,7 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Language File Filter Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 31.58% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/language_file_filter.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/language_file_filter.rb,80]
 
 - [x] Implement tests for error_distributor.rb (31.71% → 80%+)
   - Cover error categorization and distribution logic
@@ -112,7 +112,7 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Error Distributor Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 31.71% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/error_distributor.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/error_distributor.rb,80]
 
 - [x] Implement tests for template_embedding_validator.rb (31.82% → 80%+)
   - Cover XML template validation and parsing
@@ -121,7 +121,7 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Template Embedding Validator Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 31.82% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/template_embedding_validator.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code_quality/template_embedding_validator.rb,80]
 
 - [x] Implement tests for log_color_formatter.rb (32.65% → 80%+)
   - Cover Git log color formatting and ANSI codes
@@ -130,7 +130,7 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Log Color Formatter Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 32.65% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/log_color_formatter.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/log_color_formatter.rb,80]
 
 - [x] Implement tests for file_content_reader.rb (33.33% → 80%+)
   - Cover file reading, encoding detection, and content parsing
@@ -139,7 +139,7 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: File Content Reader Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 33.33% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code/file_content_reader.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/code/file_content_reader.rb,80]
 
 - [x] Implement tests for repository_scanner.rb (35.48% → 80%+)
   - Cover repository structure analysis and scanning
@@ -148,13 +148,13 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
   > TEST: Repository Scanner Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 35.48% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/repository_scanner_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/repository_scanner.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/repository_scanner_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/repository_scanner.rb,80]
 
 - [x] Run comprehensive test suite and verify Phase 2 coverage improvements
   > TEST: Phase 2 Overall Coverage
   > Type: Final Validation
   > Assert: All 7 target files achieve 80%+ coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb spec/coding_agent_tools/atoms/git/repository_scanner_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb spec/coding_agent_tools/atoms/git/repository_scanner_spec.rb --format progress
 
 ## Acceptance Criteria
 
@@ -175,5 +175,5 @@ Increase test coverage from low levels (28-35%) to at least 80% for 7 high-prior
 
 - Phase 1 task completion (v.0.3.0+task.107) for established testing patterns
 - Code quality validation requirements from project security guidelines
-- Git operations documentation in dev-tools architecture
+- Git operations documentation in .ace/tools architecture
 - ATOM architecture testing patterns for molecules and validation logic

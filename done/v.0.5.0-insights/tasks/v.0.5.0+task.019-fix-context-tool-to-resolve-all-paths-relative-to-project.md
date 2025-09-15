@@ -16,7 +16,7 @@ The context tool currently fails when run from subdirectories because it resolve
 ### Current Issues
 
 1. **Path Resolution Failures**: When running from subdirectories, file patterns fail to match
-   - Example: Running from `dev-tools/`: "No files found matching pattern: docs/what-do-we-build.md"
+   - Example: Running from `.ace/tools/`: "No files found matching pattern: docs/what-do-we-build.md"
    
 2. **Command Execution Failures**: Commands that reference project paths fail
    - Example: "cd: dev-tools: No such file or directory" when not at project root
@@ -39,7 +39,7 @@ The context tool currently fails when run from subdirectories because it resolve
 ### 3. Command Execution
 - [x] Execute each command independently from project root directory
 - [x] No state maintained between commands (each starts from clean project root context)
-- [x] Support complex commands like "cd dev-tools && bundle list"
+- [x] Support complex commands like "cd .ace/tools && bundle list"
 - [x] Preserve command output and error handling
 
 ### 4. Backward Compatibility
@@ -63,19 +63,19 @@ The context tool currently fails when run from subdirectories because it resolve
 
 ### Files to Modify
 
-#### `dev-tools/lib/coding_agent_tools/molecules/context/context_aggregator.rb`
+#### `.ace/tools/lib/coding_agent_tools/molecules/context/context_aggregator.rb`
 - **Changes**: Add project root detection, update path resolution logic
 - **Impact**: Core fix for file pattern resolution
 - **Dependencies**: Will require ProjectRootDetector atom
 
-#### `dev-tools/lib/coding_agent_tools/atoms/system_command_executor.rb`
+#### `.ace/tools/lib/coding_agent_tools/atoms/system_command_executor.rb`
 - **Changes**: Add working_dir parameter to execute method
 - **Impact**: Enables command execution from specified directory
 - **Dependencies**: Uses Open3 with :chdir option
 
 ### Files to Create
 
-#### `dev-tools/spec/integration/context_path_resolution_spec.rb`
+#### `.ace/tools/spec/integration/context_path_resolution_spec.rb`
 - **Purpose**: Comprehensive integration tests for path resolution
 - **Coverage**: Test from various directories, with different presets
 - **Key Tests**: Subdirectory execution, path resolution, command independence
@@ -149,12 +149,12 @@ end
 ### File Pattern Resolution
 ```bash
 # Current behavior (fails from subdirectory):
-cd dev-tools/
+cd .ace/tools/
 context --preset basic
 # Error: "No files found matching pattern: docs/what-do-we-build.md"
 
 # Expected behavior (should work):
-cd dev-tools/
+cd .ace/tools/
 context --preset basic
 # Success: Finds docs/what-do-we-build.md relative to project root
 ```
@@ -163,7 +163,7 @@ context --preset basic
 ```bash
 # Current behavior (fails from project root when command references relative paths):
 context --preset full
-# Command: "cd dev-tools && bundle list"
+# Command: "cd .ace/tools && bundle list"
 # Error: "cd: dev-tools: No such file or directory" (when not in project root)
 
 # Expected behavior (should work from anywhere):
@@ -185,19 +185,19 @@ context --preset full
 ## Related Files
 
 ### Core Implementation
-- `dev-tools/lib/coding_agent_tools/molecules/context/context_aggregator.rb`
-- `dev-tools/lib/coding_agent_tools/atoms/system_command_executor.rb`
-- `dev-tools/lib/coding_agent_tools/atoms/project_root_detector.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/context/context_aggregator.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/system_command_executor.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/project_root_detector.rb`
 
 ### Configuration Files
-- `dev-tools/presets/basic.yml`
-- `dev-tools/presets/full.yml` 
-- `dev-tools/presets/agents.yml`
+- `.ace/tools/presets/basic.yml`
+- `.ace/tools/presets/full.yml` 
+- `.ace/tools/presets/agents.yml`
 
 ### Test Files
-- `dev-tools/spec/molecules/context/context_aggregator_spec.rb`
-- `dev-tools/spec/atoms/system_command_executor_spec.rb`
-- `dev-tools/spec/integration/context_tool_spec.rb`
+- `.ace/tools/spec/molecules/context/context_aggregator_spec.rb`
+- `.ace/tools/spec/atoms/system_command_executor_spec.rb`
+- `.ace/tools/spec/integration/context_tool_spec.rb`
 
 ## Implementation Plan
 
@@ -256,7 +256,7 @@ context --preset full
   > TEST: Manual Validation
   > Type: Manual Test
   > Assert: Context tool works from any project subdirectory
-  > Command: cd dev-tools && exe/context --preset project --output -
+  > Command: cd .ace/tools && exe/context --preset project --output -
 
 ## Risk Assessment
 

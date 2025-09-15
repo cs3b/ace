@@ -12,7 +12,7 @@ Synthesis of 68 reflection notes.
 
 ## Reflection 1: 2025-01-29-task-215-git-commit-test-coverage-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/2025-01-29-task-215-git-commit-test-coverage-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/2025-01-29-task-215-git-commit-test-coverage-analysis.md`
 **Modified**: 2025-07-29 10:03:39
 
 # Task 215: Git Commit Test Coverage Analysis - Reflection Note
@@ -86,7 +86,7 @@ This analysis provides a foundation for future test coverage improvement initiat
 
 ## Reflection 2: 20250726-160614-create-path-implementation-and-code-review-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250726-160614-create-path-implementation-and-code-review-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250726-160614-create-path-implementation-and-code-review-session.md`
 **Modified**: 2025-07-26 16:06:54
 
 # Reflection: Create-Path Implementation and Code Review Session
@@ -229,7 +229,7 @@ This analysis provides a foundation for future test coverage improvement initiat
 - v.0.3.0+task.116: Refactor executable to use dry library pattern (Medium)
 - v.0.3.0+task.117: Audit and standardize dry library usage (Medium)
 
-**Code Review Report:** `/dev-taskflow/current/v.0.3.0-workflows/code_review/20250726-155346-code-head1head/cr-report-gpro.md`
+**Code Review Report:** `/.ace/taskflow/current/v.0.3.0-workflows/code_review/20250726-155346-code-head1head/cr-report-gpro.md`
 
 **Session Accomplishments:**
 - Fully functional create-path command implementation
@@ -244,7 +244,7 @@ This session demonstrates the value of thorough implementation followed by rigor
 
 ## Reflection 3: 20250727-013324-project-context-loading-and-nav-path-analysis-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-013324-project-context-loading-and-nav-path-analysis-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-013324-project-context-loading-and-nav-path-analysis-session.md`
 **Modified**: 2025-07-27 01:33:49
 
 # Reflection: Project Context Loading and nav-path Analysis Session
@@ -332,21 +332,21 @@ This session demonstrates the value of thorough implementation followed by rigor
 
 **Files requiring updates:**
 - docs/tools.md (examples and documentation)
-- dev-handbook/workflow-instructions/*.wf.md (multiple workflow files)
+- .ace/handbook/workflow-instructions/*.wf.md (multiple workflow files)
 - Various reflection and migration documents
 - Command examples and comments
 
 ## Additional Context
 
 - Task created: v.0.3.0+task.122-replace-nav-path-with-create-path-for-creation-operations.md
-- All changes committed across 4 repositories (main, dev-handbook, dev-taskflow, dev-tools)
+- All changes committed across 4 repositories (main, dev-handbook, dev-taskflow, .ace/tools)
 - Project context successfully loaded providing comprehensive understanding of the toolkit architecture
 
 ---
 
 ## Reflection 4: 20250727-013325-create-path-template-variable-substitution-fixes.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-013325-create-path-template-variable-substitution-fixes.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-013325-create-path-template-variable-substitution-fixes.md`
 **Modified**: 2025-07-27 01:34:27
 
 # Reflection: create-path Template Variable Substitution Fixes
@@ -469,8 +469,8 @@ This session demonstrates the value of thorough implementation followed by rigor
 - Fixed template path in create-path.yml configuration
 
 **Files Modified:**
-- `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
-- `dev-handbook/templates/release-tasks/task.template.md`
+- `.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb`
+- `.ace/handbook/templates/release-tasks/task.template.md`
 - `.coding-agent/create-path.yml`
 
 **Template Variable System:**
@@ -494,7 +494,7 @@ The create-path command uses a sophisticated template variable system where:
 
 ## Reflection 5: 20250727-134633-multi-release-support-implementation-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-134633-multi-release-support-implementation-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-134633-multi-release-support-implementation-session.md`
 **Modified**: 2025-07-27 13:47:15
 
 # Reflection: Multi-Release Support Implementation Session
@@ -614,7 +614,7 @@ The create-path command uses a sophisticated template variable system where:
    - Version format: `v.0.3.0`
    - Codename format: `workflows`
    - Fullname format: `v.0.3.0-workflows`
-   - Path format: `dev-taskflow/current/v.0.3.0-workflows`
+   - Path format: `.ace/taskflow/current/v.0.3.0-workflows`
 
 2. **Multiple Match Handling**: When ambiguous identifiers match multiple releases, system displays options and requests specific full name
 
@@ -633,7 +633,7 @@ The create-path command uses a sophisticated template variable system where:
 ## Additional Context
 
 - **Tasks Completed**: v.0.3.0+task.126 (compact formatter) and v.0.3.0+task.127 (multi-release support)
-- **Repositories Updated**: dev-tools (primary implementation), dev-taskflow (task status updates), main (submodule references)
+- **Repositories Updated**: .ace/tools (primary implementation), .ace/taskflow (task status updates), main (submodule references)
 - **Testing Approach**: Real-world scenario testing with actual release data from project history
 - **User Collaboration**: Effective feedback loop with user testing revealing important UX considerations
 
@@ -641,7 +641,7 @@ The create-path command uses a sophisticated template variable system where:
 
 ## Reflection 6: 20250727-135027-task-125-nav-path-to-create-path-completion-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-135027-task-125-nav-path-to-create-path-completion-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-135027-task-125-nav-path-to-create-path-completion-analysis.md`
 **Modified**: 2025-07-27 13:51:01
 
 # Reflection: Task v.0.3.0+task.125 - Replace nav-path with create-path completion
@@ -654,7 +654,7 @@ The create-path command uses a sophisticated template variable system where:
 ## What Went Well
 
 - Successfully followed the work-on-task workflow instruction from start to completion
-- Comprehensive search and replacement across 22 instances in the multi-repo scope (docs/, dev-handbook/, dev-tools/)
+- Comprehensive search and replacement across 22 instances in the multi-repo scope (docs/, .ace/handbook/, .ace/tools/)
 - Maintained proper workflow discipline by updating task status from pending → in-progress → done
 - User provided valuable insight about the key improvement: create-path creates files immediately, eliminating ID duplication issues
 - Efficient bulk operations using find/replace tools across multiple files
@@ -670,7 +670,7 @@ The create-path command uses a sophisticated template variable system where:
 ## Key Learnings
 
 - The create-path task-new command provides significant improvement over nav-path task-new by creating files immediately, preventing ID sequencing issues
-- Multi-repo documentation updates require systematic approach across all three repositories (docs/, dev-handbook/, dev-tools/)
+- Multi-repo documentation updates require systematic approach across all three repositories (docs/, .ace/handbook/, .ace/tools/)
 - The work-on-task workflow provides excellent structure for complex tasks with embedded tests and acceptance criteria
 - User input during execution enhanced the task by highlighting the key benefit of the transition
 
@@ -741,13 +741,13 @@ The create-path command uses a sophisticated template variable system where:
 
 ### Files Modified
 
-- `dev-handbook/workflow-instructions/create-task.wf.md` - Updated primary workflow
+- `.ace/handbook/workflow-instructions/create-task.wf.md` - Updated primary workflow
 - `docs/tools.md` - Updated main cheat sheet and AI Agent workflow examples
-- `dev-tools/docs/tools.md` - Updated tools documentation and examples  
-- `dev-handbook/workflow-instructions/draft-release.wf.md` - Updated workflow references
-- `dev-handbook/workflow-instructions/initialize-project-structure.wf.md` - Updated template references
-- `dev-handbook/.meta/wfi/install-dotfiles.wf.md` - Updated example command
-- `dev-tools/docs/migrations/migration-guide.md` - Updated all references
+- `.ace/tools/docs/tools.md` - Updated tools documentation and examples  
+- `.ace/handbook/workflow-instructions/draft-release.wf.md` - Updated workflow references
+- `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md` - Updated template references
+- `.ace/handbook/.meta/wfi/install-dotfiles.wf.md` - Updated example command
+- `.ace/tools/docs/migrations/migration-guide.md` - Updated all references
 
 ### Verification Results
 
@@ -762,16 +762,16 @@ The transition from `nav-path task-new` to `create-path task-new` eliminates the
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.125-replace-nav-path-with-create-path-for-creation-operations.md`
+- Task file: `.ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.125-replace-nav-path-with-create-path-for-creation-operations.md`
 - Related task: v.0.3.0+task.112 (Add create-path command for file/directory creation with metadata)
-- Scope: Multi-repo documentation update (docs/, dev-handbook/, dev-tools/)
+- Scope: Multi-repo documentation update (docs/, .ace/handbook/, .ace/tools/)
 - Impact: Improved user experience for task creation workflows across all AI agents and human developers
 
 ---
 
 ## Reflection 7: 20250727-155122-rspec-output-pollution-cleanup-challenges.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-155122-rspec-output-pollution-cleanup-challenges.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-155122-rspec-output-pollution-cleanup-challenges.md`
 **Modified**: 2025-07-27 15:52:01
 
 # Reflection: RSpec Output Pollution Cleanup Challenges
@@ -931,7 +931,7 @@ expect { code }.to raise_error(NoMethodError)
 
 ## Reflection 8: 20250727-181312-comprehensive-test-implementation-and-output-cleanup.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-181312-comprehensive-test-implementation-and-output-cleanup.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-181312-comprehensive-test-implementation-and-output-cleanup.md`
 **Modified**: 2025-07-27 18:13:47
 
 # Reflection: Comprehensive Test Implementation and Output Cleanup
@@ -1100,7 +1100,7 @@ The implemented testing best practices can be reused across other projects in th
 
 ## Reflection 9: 20250727-183035-test-structure-analysis-and-task-creation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-183035-test-structure-analysis-and-task-creation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-183035-test-structure-analysis-and-task-creation.md`
 **Modified**: 2025-07-27 18:31:07
 
 # Reflection: Test Structure Analysis and Task Creation
@@ -1249,7 +1249,7 @@ The analysis revealed that successful test implementation (99 passing tests) can
 
 ## Reflection 10: 20250727-185339-test-consolidation-and-fix-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-185339-test-consolidation-and-fix-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-185339-test-consolidation-and-fix-session.md`
 **Modified**: 2025-07-27 18:54:16
 
 # Reflection: Test Structure Consolidation and Fix Session
@@ -1381,7 +1381,7 @@ The analysis revealed that successful test implementation (99 passing tests) can
 
 ## Reflection 11: 20250727-191919-test-optimization-and-cli-fixes-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-191919-test-optimization-and-cli-fixes-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-191919-test-optimization-and-cli-fixes-session.md`
 **Modified**: 2025-07-27 19:19:57
 
 # Reflection: Test Optimization and CLI Fixes Session
@@ -1520,7 +1520,7 @@ This session demonstrated the importance of systematic debugging, proper test in
 
 ## Reflection 12: 20250727-202412-coverage-analysis-tool-implementation-complete-atom-architecture-development.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250727-202412-coverage-analysis-tool-implementation-complete-atom-architecture-development.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250727-202412-coverage-analysis-tool-implementation-complete-atom-architecture-development.md`
 **Modified**: 2025-07-27 20:24:50
 
 # Reflection: Coverage Analysis Tool Implementation - Complete ATOM Architecture Development
@@ -1671,7 +1671,7 @@ This session demonstrated the importance of systematic debugging, proper test in
 
 ## Additional Context
 
-This implementation represents a complete, production-ready coverage analysis tool that integrates seamlessly with the existing dev-tools architecture. The ATOM pattern proved highly effective for managing complexity and ensuring testability. The systematic approach from atoms to ecosystem created a robust, maintainable solution that addresses real-world SimpleCov analysis needs.
+This implementation represents a complete, production-ready coverage analysis tool that integrates seamlessly with the existing .ace/tools architecture. The ATOM pattern proved highly effective for managing complexity and ensuring testability. The systematic approach from atoms to ecosystem created a robust, maintainable solution that addresses real-world SimpleCov analysis needs.
 
 **Related Task**: `v.0.3.0+task.131-implement-coverage-analysis-tool-for-under-tested-code-detection`
 **Implementation Status**: ✅ Complete and ready for real-world usage
@@ -1680,7 +1680,7 @@ This implementation represents a complete, production-ready coverage analysis to
 
 ## Reflection 13: 20250728-003238-adaptive-threshold-system-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-003238-adaptive-threshold-system-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-003238-adaptive-threshold-system-implementation.md`
 **Modified**: 2025-07-28 00:33:33
 
 # Reflection: Adaptive Threshold System Implementation
@@ -1827,7 +1827,7 @@ This implementation represents a complete, production-ready coverage analysis to
 
 ## Reflection 14: 20250728-022916-improve-code-coverage-workflow-execution-systematic-test-task-creation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-022916-improve-code-coverage-workflow-execution-systematic-test-task-creation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-022916-improve-code-coverage-workflow-execution-systematic-test-task-creation.md`
 **Modified**: 2025-07-28 02:29:58
 
 # Reflection: Improve Code Coverage Workflow Execution - Systematic Test Task Creation
@@ -1859,7 +1859,7 @@ This implementation represents a complete, production-ready coverage analysis to
 - **Coverage Analysis Tool Effectiveness**: The coverage-analyze tool provided excellent structured data for systematic task creation, with clear priority identification
 - **ATOM Architecture Benefits**: The structured architecture made it easy to categorize and prioritize test tasks across different component types
 - **Quality Over Quantity Principle**: The workflow's emphasis on meaningful test scenarios rather than coverage percentages aligns well with software quality best practices
-- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across dev-handbook, dev-taskflow, and dev-tools repositories
+- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across dev-handbook, dev-taskflow, and .ace/tools repositories
 - **Test Task Template Structure**: Learned effective patterns for documenting test improvement tasks with specific line ranges, edge cases, and integration requirements
 
 ## Conversation Analysis
@@ -1949,15 +1949,15 @@ This implementation represents a complete, production-ready coverage analysis to
 - CLI Commands: 6 tasks (Coverage::Analyze, LLM::UsageReport, LLM::Models, Task::Reschedule, Release::Validate, CodeReviewNew)
 
 **Repository Coordination:**
-- 3 commits created across dev-taskflow and dev-tools submodules
+- 3 commits created across .ace/taskflow and .ace/tools submodules
 - All priority files from coverage analysis addressed (100% coverage)
 - Quality-focused approach with comprehensive edge case documentation
 
 ## Additional Context
 
-- **Workflow Source**: dev-handbook/workflow-instructions/improve-code-coverage.wf.md
-- **Coverage Analysis Report**: dev-tools/coverage_analysis/coverage_analysis.json
-- **Tasks Created**: dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.143 through v.0.3.0+task.153
+- **Workflow Source**: .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
+- **Coverage Analysis Report**: .ace/tools/coverage_analysis/coverage_analysis.json
+- **Tasks Created**: .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.143 through v.0.3.0+task.153
 - **Commit References**: Three feature commits documenting systematic test task creation process
 - **Success Metrics**: All workflow success criteria met - comprehensive test tasks created for every priority file identified in coverage analysis
 
@@ -1965,7 +1965,7 @@ This implementation represents a complete, production-ready coverage analysis to
 
 ## Reflection 15: 20250728-023505-test-coverage-implementation-for-llm-usage-report-command.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-023505-test-coverage-implementation-for-llm-usage-report-command.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-023505-test-coverage-implementation-for-llm-usage-report-command.md`
 **Modified**: 2025-07-28 02:35:36
 
 # Reflection: Test Coverage Implementation for LLM Usage Report Command
@@ -2094,7 +2094,7 @@ This implementation represents a complete, production-ready coverage analysis to
 
 ## Reflection 16: 20250728-025617-improve-code-coverage-workflow-execution-systematic-test-development.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-025617-improve-code-coverage-workflow-execution-systematic-test-development.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-025617-improve-code-coverage-workflow-execution-systematic-test-development.md`
 **Modified**: 2025-07-28 02:56:52
 
 # Reflection: Improve Code Coverage Workflow Execution - Systematic Test Development
@@ -2125,7 +2125,7 @@ This implementation represents a complete, production-ready coverage analysis to
 - **Test-Driven Bug Discovery**: Writing comprehensive tests reveals real bugs in source code, making testing both a quality assurance and debugging tool
 - **CLI Testing Patterns**: Established clear patterns for testing dry-cli commands with proper mocking and output capture
 - **RSpec Configuration Sensitivity**: The codebase has specific RSpec configuration that requires `double` instead of `instance_double` for some test scenarios
-- **Submodule Git Operations**: Successfully navigated multi-repository commits across dev-tools and dev-taskflow submodules
+- **Submodule Git Operations**: Successfully navigated multi-repository commits across .ace/tools and .ace/taskflow submodules
 
 ## Conversation Analysis
 
@@ -2211,13 +2211,13 @@ This implementation represents a complete, production-ready coverage analysis to
 - Tasks completed: 150 (Task Reschedule), 151 (Release Validate), 152 (CodeReviewNew) 
 - Task remaining: 153 (AgentCoordinationFoundation - 4h complexity)
 - Total session time: ~6+ hours across 3 completed tasks
-- Git commits: Multi-repository commits across dev-tools and dev-taskflow successfully completed
+- Git commits: Multi-repository commits across .ace/tools and .ace/taskflow successfully completed
 
 ---
 
 ## Reflection 17: 20250728-030741-improve-code-coverage-workflow-implementation-and-test-task-creation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-030741-improve-code-coverage-workflow-implementation-and-test-task-creation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-030741-improve-code-coverage-workflow-implementation-and-test-task-creation.md`
 **Modified**: 2025-07-28 03:08:44
 
 # Reflection: Improve Code Coverage Workflow Implementation and Test Task Creation
@@ -2239,7 +2239,7 @@ This implementation represents a complete, production-ready coverage analysis to
 
 - **Template System Gaps**: Multiple instances of missing templates (task.template.md, reflection_new template) requiring manual content creation
 - **Tool Command Uncertainty**: Initially unclear about exact usage of coverage-analyze tool and nav-path vs create-path commands
-- **File Path Navigation**: Some confusion about working directory context when switching between root and dev-tools subdirectory
+- **File Path Navigation**: Some confusion about working directory context when switching between root and .ace/tools subdirectory
 - **Task Estimation Refinement**: Estimates (2-4h) were somewhat generic and could benefit from more granular analysis
 
 ## Key Learnings
@@ -2334,7 +2334,7 @@ This reflection covers the complete execution of the improve-code-coverage workf
 
 ## Reflection 18: 20250728-030922-self-review-session-code-coverage-test-improvements.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-030922-self-review-session-code-coverage-test-improvements.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-030922-self-review-session-code-coverage-test-improvements.md`
 **Modified**: 2025-07-28 03:09:48
 
 # Reflection: Self-Review Session - Code Coverage Test Improvements
@@ -2432,7 +2432,7 @@ This reflection was created as part of following the `/create-reflection-note` c
 
 ## Reflection 19: 20250728-032018-test-coverage-implementation-for-diffreviewanalyzer-and-llm-models-cli.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-032018-test-coverage-implementation-for-diffreviewanalyzer-and-llm-models-cli.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-032018-test-coverage-implementation-for-diffreviewanalyzer-and-llm-models-cli.md`
 **Modified**: 2025-07-28 03:20:42
 
 # Reflection: Test Coverage Implementation for DiffReviewAnalyzer and LLM Models CLI
@@ -2519,7 +2519,7 @@ This reflection was created as part of following the `/create-reflection-note` c
 
 ## Reflection 20: 20250728-032612-gitorchestrator-test-coverage-improvement.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-032612-gitorchestrator-test-coverage-improvement.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-032612-gitorchestrator-test-coverage-improvement.md`
 **Modified**: 2025-07-28 03:26:44
 
 # Reflection: GitOrchestrator Test Coverage Improvement
@@ -2652,7 +2652,7 @@ This reflection was created as part of following the `/create-reflection-note` c
 
 ## Reflection 21: 20250728-134208-adaptive-threshold-algorithm-improvement-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-134208-adaptive-threshold-algorithm-improvement-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-134208-adaptive-threshold-algorithm-improvement-session.md`
 **Modified**: 2025-07-28 13:42:52
 
 # Reflection: Adaptive Threshold Algorithm Improvement
@@ -2770,7 +2770,7 @@ This improvement addresses a real user pain point where the algorithm was techni
 
 ## Reflection 22: 20250728-134805-gitorchestrator-test-coverage-implementation-task-160-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-134805-gitorchestrator-test-coverage-implementation-task-160-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-134805-gitorchestrator-test-coverage-implementation-task-160-analysis.md`
 **Modified**: 2025-07-28 13:48:57
 
 # Reflection: GitOrchestrator Test Coverage Implementation - Task 160
@@ -2928,7 +2928,7 @@ This reflection captures a successful test coverage improvement effort that sign
 
 ## Reflection 23: 20250728-134807-llm-models-cli-test-coverage-improvement-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-134807-llm-models-cli-test-coverage-improvement-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-134807-llm-models-cli-test-coverage-improvement-session.md`
 **Modified**: 2025-07-28 13:48:45
 
 # Reflection: LLM Models CLI Test Coverage Improvement Session
@@ -3015,7 +3015,7 @@ This reflection captures a successful test coverage improvement effort that sign
 
 ## Reflection 24: 20250728-150157-comprehensive-test-coverage-workflow-implementation-and-task-creation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-150157-comprehensive-test-coverage-workflow-implementation-and-task-creation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-150157-comprehensive-test-coverage-workflow-implementation-and-task-creation.md`
 **Modified**: 2025-07-28 15:02:41
 
 # Reflection: Comprehensive Test Coverage Workflow Implementation and Task Creation
@@ -3133,7 +3133,7 @@ This reflection captures a successful test coverage improvement effort that sign
 ### Command Execution
 ```bash
 # Key commands used successfully
-cd dev-tools && bin/test spec/                    # Test execution
+cd .ace/tools && bin/test spec/                    # Test execution
 coverage-analyze coverage/.resultset.json --threshold 20  # Analysis
 create-path task-new --title "..." --priority medium --estimate "2h"  # Task creation
 git-status && git-add && git-commit -i "..."     # Multi-repo operations
@@ -3141,7 +3141,7 @@ git-status && git-add && git-commit -i "..."     # Multi-repo operations
 
 ### File Operations
 - **Coverage Reports**: Generated in `coverage_analysis/` directory
-- **Tasks Created**: In `dev-taskflow/current/v.0.3.0-workflows/tasks/`
+- **Tasks Created**: In `.ace/taskflow/current/v.0.3.0-workflows/tasks/`
 - **Commits**: Applied across all 4 repositories with contextual messages
 
 ## Additional Context
@@ -3157,14 +3157,14 @@ The resulting 59 tasks provide a comprehensive roadmap for achieving meaningful 
 **Related Files**:
 - Coverage analysis: `coverage_analysis/coverage_analysis.json`
 - Text report: `coverage_analysis/coverage_analysis.text`
-- Tasks: `dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.163-221.md`
-- Workflow: `dev-handbook/workflow-instructions/improve-code-coverage.wf.md`
+- Tasks: `.ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.163-221.md`
+- Workflow: `.ace/handbook/workflow-instructions/improve-code-coverage.wf.md`
 
 ---
 
 ## Reflection 25: 20250728-152209-ci-test-failures-investigation-and-quick-fix-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-152209-ci-test-failures-investigation-and-quick-fix-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-152209-ci-test-failures-investigation-and-quick-fix-implementation.md`
 **Modified**: 2025-07-28 15:22:49
 
 # Reflection: CI Test Failures Investigation and Quick Fix Implementation
@@ -3272,7 +3272,7 @@ The resulting 59 tasks provide a comprehensive roadmap for achieving meaningful 
 ```
 
 **Files Modified:**
-- `dev-tools/.github/workflows/ci.yml` - Added PATH configuration
+- `.ace/tools/.github/workflows/ci.yml` - Added PATH configuration
 - Created task documentation for future architectural cleanup
 
 ## Additional Context
@@ -3286,7 +3286,7 @@ The resulting 59 tasks provide a comprehensive roadmap for achieving meaningful 
 
 ## Reflection 26: 20250728-170214-test-suite-directory-management-recovery-and-best-practices.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-170214-test-suite-directory-management-recovery-and-best-practices.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-170214-test-suite-directory-management-recovery-and-best-practices.md`
 **Modified**: 2025-07-28 17:03:09
 
 # Reflection: Test Suite Directory Management Recovery and Best Practices
@@ -3502,7 +3502,7 @@ The recovery demonstrates the importance of having robust test infrastructure an
 
 ## Reflection 27: 20250728-224459-simplecov-coverage-investigation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-224459-simplecov-coverage-investigation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-224459-simplecov-coverage-investigation.md`
 **Modified**: 2025-07-28 22:45:39
 
 # Reflection: SimpleCov Coverage Investigation
@@ -3618,7 +3618,7 @@ When any test triggers CLI command registration before models_spec.rb runs, the 
 
 ## Additional Context
 
-- Related to dev-tools SimpleCov configuration
+- Related to .ace/tools SimpleCov configuration
 - The "fix" was to understand this is expected behavior, not a bug
 - Options for projects facing similar issues:
   1. Accept the coverage reflects actual usage
@@ -3629,7 +3629,7 @@ When any test triggers CLI command registration before models_spec.rb runs, the 
 
 ## Reflection 28: 20250728-232259-test-coverage-improvement-initiative-5-molecule-test-suites.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-232259-test-coverage-improvement-initiative-5-molecule-test-suites.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-232259-test-coverage-improvement-initiative-5-molecule-test-suites.md`
 **Modified**: 2025-07-28 23:23:44
 
 # Reflection: Test Coverage Improvement Initiative - 5 Molecule Test Suites
@@ -3675,7 +3675,7 @@ When any test triggers CLI command registration before models_spec.rb runs, the 
 - **Working Directory Context**: Inconsistent working directory caused multiple file access failures
   - Occurrences: 8-10 times across different tasks
   - Impact: Required multiple attempts to locate and access files correctly
-  - Root Cause: Working directory was set to dev-tools but needed to access parent directories
+  - Root Cause: Working directory was set to .ace/tools but needed to access parent directories
 
 - **Test Failures from Algorithm Misunderstanding**: Initial test expectations didn't match actual algorithm behavior
   - Occurrences: 3-4 instances (particularly with dependency level calculations)
@@ -3783,8 +3783,8 @@ When any test triggers CLI command registration before models_spec.rb runs, the 
 - v.0.3.0+task.173: TaskSortEngine (41 tests)
 
 **Repository Impact:**
-- All test files created and committed to dev-tools repository
-- Task documentation updated and committed to dev-taskflow repository
+- All test files created and committed to .ace/tools repository
+- Task documentation updated and committed to .ace/taskflow repository
 - No regressions introduced to existing test suites
 - Significantly improved test coverage for critical workflow molecules
 
@@ -3799,7 +3799,7 @@ When any test triggers CLI command registration before models_spec.rb runs, the 
 
 ## Reflection 29: 20250728-233604-test-coverage-improvement-session-comprehensive-enhancement-across-atom-components.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250728-233604-test-coverage-improvement-session-comprehensive-enhancement-across-atom-components.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250728-233604-test-coverage-improvement-session-comprehensive-enhancement-across-atom-components.md`
 **Modified**: 2025-07-28 23:36:56
 
 # Reflection: Test Coverage Improvement Session - Comprehensive Enhancement Across ATOM Components
@@ -3943,7 +3943,7 @@ The work completed significantly improves the robustness and maintainability of 
 
 ## Reflection 30: 20250729-021504-create-reflection-note-workflow-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-create-reflection-note-workflow-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-create-reflection-note-workflow-analysis.md`
 **Modified**: 2025-07-29 02:15:23
 
 # Reflection: Create Reflection Note Workflow Analysis
@@ -4019,14 +4019,14 @@ The reflection workflow instruction demonstrates sophisticated capabilities:
 
 ## Additional Context
 
-- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
-- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-create-reflection-note-workflow-analysis.md`
+- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
+- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-create-reflection-note-workflow-analysis.md`
 
 ---
 
 ## Reflection 31: 20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md`
 **Modified**: 2025-07-29 02:15:24
 
 # Reflection: Workflow Instruction Reading and Reflection Creation Process
@@ -4038,7 +4038,7 @@ The reflection workflow instruction demonstrates sophisticated capabilities:
 
 ## What Went Well
 
-- Successfully located and read the complete workflow instruction file at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
+- Successfully located and read the complete workflow instruction file at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
 - The workflow instruction was comprehensive and well-structured with clear steps
 - The `create-path` command worked correctly to generate an appropriate file path and filename
 - The embedded template provides excellent structure for creating meaningful reflections
@@ -4094,9 +4094,9 @@ The reflection workflow instruction demonstrates sophisticated capabilities:
 
 ## Technical Details
 
-- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
-- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md`
-- Template path referenced in instruction: `dev-handbook/templates/release-reflections/retrospective.template.md`
+- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
+- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md`
+- Template path referenced in instruction: `.ace/handbook/templates/release-reflections/retrospective.template.md`
 
 ## Additional Context
 
@@ -4106,7 +4106,7 @@ This reflection was created as part of following the create-reflection-note work
 
 ## Reflection 32: 20250729-022434-test-coverage-workflow-session-july-29-2025.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-022434-test-coverage-workflow-session-july-29-2025.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-022434-test-coverage-workflow-session-july-29-2025.md`
 **Modified**: 2025-07-29 02:24:57
 
 # Reflection: Test Coverage Workflow Session - July 29 2025
@@ -4137,7 +4137,7 @@ This reflection was created as part of following the create-reflection-note work
 - Task management with `task-manager recent` gives excellent context for reflection sessions
 - The create-path tool successfully generated appropriate timestamp-based filename for reflection notes
 - Recent work pattern shows focused effort on systematic test coverage improvement across molecules and CLI components
-- ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems) being followed in dev-tools testing
+- ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems) being followed in .ace/tools testing
 
 ## Action Items
 
@@ -4172,13 +4172,13 @@ This reflection was created as part of following the create-reflection-note work
 - Current release context: v.0.3.0-workflows
 - Recent completed tasks: 190, 192, 193, 194, 196 (all test coverage related)
 - Untracked test file present indicating recent test creation work
-- Multi-repo status shows active development across main, dev-taskflow, and dev-tools repositories
+- Multi-repo status shows active development across main, dev-taskflow, and .ace/tools repositories
 
 ---
 
 ## Reflection 33: 20250729-022445-create-reflection-note-workflow-execution-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-022445-create-reflection-note-workflow-execution-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-022445-create-reflection-note-workflow-execution-session.md`
 **Modified**: 2025-07-29 02:25:15
 
 # Reflection: Create Reflection Note Workflow Execution Session
@@ -4273,7 +4273,7 @@ This reflection was created as part of following the create-reflection-note work
 The reflection process successfully utilized:
 - Git commit history analysis showing systematic test coverage work
 - Task manager recent activity showing completed test coverage tasks
-- Multi-repository status checking across dev-tools, dev-taskflow, and dev-handbook
+- Multi-repository status checking across dev-tools, dev-taskflow, and .ace/handbook
 - Template-based reflection structure for consistent documentation
 
 Recent work patterns show a focused effort on improving test coverage across various components including molecules (TimestampInferrer, ReportCollector, AutofixOrchestrator), organisms (TaskManager, ReviewManager), and CLI commands.
@@ -4286,7 +4286,7 @@ This reflection was created as part of executing the create-reflection-note work
 
 ## Reflection 34: 20250729-025346-conversation-analysis-reflection-note-creation-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-025346-conversation-analysis-reflection-note-creation-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-025346-conversation-analysis-reflection-note-creation-session.md`
 **Modified**: 2025-07-29 02:54:32
 
 # Reflection: Conversation Analysis - Reflection Note Creation Session
@@ -4398,15 +4398,15 @@ create-path file:reflection-new --title 'Conversation Analysis - Reflection Note
 
 ## Additional Context
 
-This reflection represents a unique case of meta-analysis - using the reflection creation workflow to reflect on the process of creating reflections. The workflow instruction document at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md` is comprehensive and well-structured, demonstrating mature thinking about reflection processes and conversation analysis patterns.
+This reflection represents a unique case of meta-analysis - using the reflection creation workflow to reflect on the process of creating reflections. The workflow instruction document at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md` is comprehensive and well-structured, demonstrating mature thinking about reflection processes and conversation analysis patterns.
 
-The embedded template at `dev-handbook/templates/release-reflections/retrospective.template.md` provides excellent scaffolding for structured reflection, though the template discovery mechanism may need attention for seamless workflow execution.
+The embedded template at `.ace/handbook/templates/release-reflections/retrospective.template.md` provides excellent scaffolding for structured reflection, though the template discovery mechanism may need attention for seamless workflow execution.
 
 ---
 
 ## Reflection 35: 20250729-025429-workflow-instruction-analysis-and-implementation-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-025429-workflow-instruction-analysis-and-implementation-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-025429-workflow-instruction-analysis-and-implementation-session.md`
 **Modified**: 2025-07-29 02:55:00
 
 # Reflection: Workflow Instruction Analysis and Implementation Session
@@ -4477,7 +4477,7 @@ Current session demonstrates the effectiveness of the workflow instruction syste
 
 ## Reflection 36: 20250729-032735-reflection-note-creation-process-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-032735-reflection-note-creation-process-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-032735-reflection-note-creation-process-analysis.md`
 **Modified**: 2025-07-29 03:28:56
 
 # Reflection: Reflection Note Creation Process Analysis
@@ -4578,13 +4578,13 @@ This reflection was created as part of testing the create-reflection-note workfl
 
 ## Reflection 37: 20250729-033036-test-coverage-initiative-workflow-session-self-review-and-conversation-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-033036-test-coverage-initiative-workflow-session-self-review-and-conversation-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-033036-test-coverage-initiative-workflow-session-self-review-and-conversation-analysis.md`
 **Modified**: 2025-07-29 03:31:21
 
 # Reflection: Test Coverage Initiative Workflow Session - Self-Review and Conversation Analysis
 
 **Date**: 2025-07-29
-**Context**: Comprehensive test coverage improvement session across Ruby gem components in dev-tools submodule
+**Context**: Comprehensive test coverage improvement session across Ruby gem components in .ace/tools submodule
 **Author**: Development System
 **Type**: Self-Review
 
@@ -4666,7 +4666,7 @@ The work completed in this session significantly advances the v0.3.0 release goa
 
 ## Reflection 38: 20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md`
 **Modified**: 2025-07-29 04:14:24
 
 # Reflection: Workflow Instruction Execution and Understanding Enhancement
@@ -4781,15 +4781,15 @@ The `create-path file:reflection-new` command successfully created the target fi
 
 ## Additional Context
 
-- Workflow instruction location: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
-- Created reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md`
+- Workflow instruction location: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
+- Created reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md`
 - Command executed: `create-reflection-note` with `/commit` directive
 
 ---
 
 ## Reflection 39: 20250729-041338-workflow-instruction-analysis-and-implementation-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-041338-workflow-instruction-analysis-and-implementation-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-041338-workflow-instruction-analysis-and-implementation-session.md`
 **Modified**: 2025-07-29 04:15:24
 
 # Reflection: Workflow Instruction Analysis and Implementation Session
@@ -4820,7 +4820,7 @@ The `create-path file:reflection-new` command successfully created the target fi
 - The project has extensive recent activity focused on test coverage improvements across ATOM architecture components
 - Multiple reflection notes have already been created recently, showing active use of the workflow
 - The workflow instruction provides sophisticated conversation analysis capabilities including challenge pattern identification
-- Enhanced git commands operate across all 4 repositories (main, dev-tools, dev-taskflow, dev-handbook) automatically
+- Enhanced git commands operate across all 4 repositories (main, dev-tools, dev-taskflow, .ace/handbook) automatically
 - Template system needs refinement for reflection note creation workflow
 
 ## Conversation Analysis
@@ -4901,13 +4901,13 @@ Recent development activity shows active focus on test coverage improvements acr
 
 ## Additional Context
 
-This reflection was created following the /create-reflection-note command which specifically requested reading and following the workflow instruction at dev-handbook/workflow-instructions/create-reflection-note.wf.md. The session demonstrates successful workflow instruction execution despite minor tool limitations.
+This reflection was created following the /create-reflection-note command which specifically requested reading and following the workflow instruction at .ace/handbook/workflow-instructions/create-reflection-note.wf.md. The session demonstrates successful workflow instruction execution despite minor tool limitations.
 
 ---
 
 ## Reflection 40: 20250729-045206-workflow-analysis-and-implementation-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-045206-workflow-analysis-and-implementation-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-045206-workflow-analysis-and-implementation-session.md`
 **Modified**: 2025-07-29 04:52:57
 
 # Reflection: Workflow Analysis and Implementation Session
@@ -5010,7 +5010,7 @@ The workflow instruction file is well-organized with:
 
 The `create-path` tool successfully generated:
 - Timestamped filename: `20250729-045206-workflow-analysis-and-implementation-session.md`
-- Appropriate directory placement: `dev-taskflow/current/v.0.3.0-workflows/reflections/`
+- Appropriate directory placement: `.ace/taskflow/current/v.0.3.0-workflows/reflections/`
 - Valid file path for content population
 
 ## Additional Context
@@ -5021,7 +5021,7 @@ This reflection demonstrates the workflow's effectiveness for documenting develo
 
 ## Reflection 41: 20250729-045214-conversation-analysis-and-development-session-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-045214-conversation-analysis-and-development-session-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-045214-conversation-analysis-and-development-session-reflection.md`
 **Modified**: 2025-07-29 04:55:05
 
 # Reflection: Conversation Analysis and Development Session
@@ -5106,7 +5106,7 @@ This reflection demonstrates the workflow's effectiveness for documenting develo
 
 - Recent development session focused on test coverage improvements across multiple components
 - Systematic completion of 5 test coverage tasks within approximately 1 hour timeframe
-- Strong adherence to ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems) in dev-tools development
+- Strong adherence to ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems) in .ace/tools development
 - Effective use of automated path creation and task management systems
 
 ## Additional Context
@@ -5120,7 +5120,7 @@ This reflection demonstrates the workflow's effectiveness for documenting develo
 
 ## Reflection 42: 20250729-052720-workflow-analysis-and-improvement-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-052720-workflow-analysis-and-improvement-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-052720-workflow-analysis-and-improvement-session.md`
 **Modified**: 2025-07-29 05:28:03
 
 # Reflection: Workflow Analysis and Improvement Session
@@ -5220,13 +5220,13 @@ This reflection demonstrates the workflow instruction execution process while si
 
 ## Reflection 43: 20250729-052724-reflection-note-creation-workflow-analysis.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-052724-reflection-note-creation-workflow-analysis.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-052724-reflection-note-creation-workflow-analysis.md`
 **Modified**: 2025-07-29 05:28:56
 
 # Reflection: Create Reflection Note Workflow Execution
 
 **Date**: 2025-07-29
-**Context**: Executing the create-reflection-note workflow instruction from dev-handbook/workflow-instructions/create-reflection-note.wf.md
+**Context**: Executing the create-reflection-note workflow instruction from .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 **Author**: Claude Code
 **Type**: Conversation Analysis
 
@@ -5340,7 +5340,7 @@ The meta-nature of this reflection (reflecting on the reflection creation proces
 
 ## Reflection 44: 20250729-055238-unified-development-workflow-implementation-and-testing.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-055238-unified-development-workflow-implementation-and-testing.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-055238-unified-development-workflow-implementation-and-testing.md`
 **Modified**: 2025-07-29 05:55:14
 
 # Reflection: Unified Development Workflow Implementation and Testing
@@ -5451,7 +5451,7 @@ This reflection captures insights from executing the create-reflection-note work
 
 ## Reflection 45: 20250729-055243-conversation-analysis-and-tool-usage-review.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-055243-conversation-analysis-and-tool-usage-review.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-055243-conversation-analysis-and-tool-usage-review.md`
 **Modified**: 2025-07-29 05:54:46
 
 # Reflection: Workflow Instruction Execution Pattern Analysis
@@ -5558,8 +5558,8 @@ This reflection captures insights from executing the create-reflection-note work
 
 ## Technical Details
 
-- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md` (406 lines)
-- Reflection file created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-055243-conversation-analysis-and-tool-usage-review.md`
+- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md` (406 lines)
+- Reflection file created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-055243-conversation-analysis-and-tool-usage-review.md`
 - Recent work focus: Test coverage improvement across ATOM architecture components
 - Template system: Embedded template exists but integration gaps present
 
@@ -5577,7 +5577,7 @@ The conversation demonstrates successful workflow instruction execution despite 
 
 ## Reflection 46: 20250729-070239-cli-tool-development-and-testing-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-070239-cli-tool-development-and-testing-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-070239-cli-tool-development-and-testing-session.md`
 **Modified**: 2025-07-29 07:05:12
 
 # Reflection: CLI Tool Development and Testing Session
@@ -5661,7 +5661,7 @@ The work demonstrates a mature approach to technical debt reduction through syst
 
 ## Reflection 47: 20250729-070450-cli-tool-development-and-testing-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-070450-cli-tool-development-and-testing-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-070450-cli-tool-development-and-testing-session.md`
 **Modified**: 2025-07-29 07:06:07
 
 # Reflection: CLI Tool Development and Testing Session
@@ -5688,7 +5688,7 @@ The work demonstrates a mature approach to technical debt reduction through syst
 
 - **Test Coverage Strategy**: Systematic approach to improving test coverage across CLI commands and organisms yields consistent results
 - **Workflow Instruction Value**: Following structured workflow instructions ensures comprehensive coverage of reflection process
-- **Multi-Repository Development**: The project's 4-repository structure (main, dev-handbook, dev-taskflow, dev-tools) requires careful coordination
+- **Multi-Repository Development**: The project's 4-repository structure (main, dev-handbook, dev-taskflow, .ace/tools) requires careful coordination
 - **Template System**: Project uses embedded templates in workflow instructions for consistency
 
 ## Conversation Analysis
@@ -5764,7 +5764,7 @@ The work demonstrates a mature approach to technical debt reduction through syst
 ## Technical Details
 
 **Files Modified in Session:**
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-070450-cli-tool-development-and-testing-session.md` (created)
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-070450-cli-tool-development-and-testing-session.md` (created)
 
 **Tools Used:**
 - TodoWrite: Task progression tracking
@@ -5791,7 +5791,7 @@ The session demonstrates effective use of project automation tools and systemati
 
 ## Reflection 48: 20250729-082213-workflow-execution-error-analysis-and-improvement.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-082213-workflow-execution-error-analysis-and-improvement.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-082213-workflow-execution-error-analysis-and-improvement.md`
 **Modified**: 2025-07-29 08:22:59
 
 # Reflection: Workflow Execution Error Analysis and Improvement
@@ -5916,7 +5916,7 @@ This error analysis is critical for correcting the approach for the remaining 16
 
 ## Reflection 49: 20250729-084437-task-212-coverage-analysis-workflow-test-improvement-planning.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-084437-task-212-coverage-analysis-workflow-test-improvement-planning.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-084437-task-212-coverage-analysis-workflow-test-improvement-planning.md`
 **Modified**: 2025-07-29 08:45:42
 
 # Reflection Note: Task 212 - CoverageAnalysisWorkflow Test Coverage Improvement
@@ -6004,7 +6004,7 @@ Successfully completed comprehensive planning for improving test coverage of the
 ## Implementation Readiness
 
 ### Ready-to-Implement Specifications
-- **File Target**: `dev-tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb`
+- **File Target**: `.ace/tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb`
 - **Implementation Approach**: Additive testing (no existing test modifications)
 - **Validation Commands**: Specific RSpec commands for each test area
 - **Success Metrics**: Clear acceptance criteria with measurable outcomes
@@ -6066,7 +6066,7 @@ The CoverageAnalysisWorkflow class shows excellent design patterns for ecosystem
 
 ## Reflection 50: 20250729-085734-task-211-rubylintingpipeline-test-coverage-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-085734-task-211-rubylintingpipeline-test-coverage-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-085734-task-211-rubylintingpipeline-test-coverage-implementation.md`
 **Modified**: 2025-07-29 08:58:29
 
 # Reflection: Task 211 - RubyLintingPipeline Test Coverage Implementation
@@ -6149,7 +6149,7 @@ The CoverageAnalysisWorkflow class shows excellent design patterns for ecosystem
 ## Additional Context
 
 - Task: v.0.3.0+task.211-improve-test-coverage-for-rubylintingpipeline-molecule-ruby-linting-workflow.md
-- Test file: `/dev-tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb`
+- Test file: `/.ace/tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb`
 - Reference pattern: MarkdownLintingPipeline test implementation
 - All tests passing: 29 examples, 0 failures
 - Coverage improvement achieved for previously untested molecule
@@ -6158,7 +6158,7 @@ The CoverageAnalysisWorkflow class shows excellent design patterns for ecosystem
 
 ## Reflection 51: 20250729-090238-workflow-correction-success-proper-task-agent-execution-validation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-090238-workflow-correction-success-proper-task-agent-execution-validation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-090238-workflow-correction-success-proper-task-agent-execution-validation.md`
 **Modified**: 2025-07-29 09:04:48
 
 # Reflection: Workflow Correction Success - Proper Task Agent Execution Validation
@@ -6296,7 +6296,7 @@ This reflection documents the successful correction and validation of the workfl
 
 ## Reflection 52: 20250729-105000-task-217-executablewrapper-test-coverage-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-105000-task-217-executablewrapper-test-coverage-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-105000-task-217-executablewrapper-test-coverage-implementation.md`
 **Modified**: 2025-07-29 10:50:41
 
 # Reflection: Task 217 ExecutableWrapper Test Coverage Implementation
@@ -6384,7 +6384,7 @@ This session successfully demonstrated the effectiveness of systematic test cove
 
 ## Reflection 53: 20250729-112645-task-220-test-coverage-improvement-implementation-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-112645-task-220-test-coverage-improvement-implementation-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-112645-task-220-test-coverage-improvement-implementation-session.md`
 **Modified**: 2025-07-29 11:27:54
 
 # Reflection: Task 220 Test Coverage Improvement Implementation Session
@@ -6461,8 +6461,8 @@ This session successfully demonstrated the effectiveness of systematic test cove
 ## Additional Context
 
 - Task ID: v.0.3.0+task.220
-- File Modified: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
-- Command Under Test: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/release/current.rb`
+- File Modified: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
+- Command Under Test: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/release/current.rb`
 - Test execution successfully validated all new test scenarios
 - Task status updated to completed with comprehensive summary documentation
 
@@ -6470,7 +6470,7 @@ This session successfully demonstrated the effectiveness of systematic test cove
 
 ## Reflection 54: 20250729-113326-near-completion-success-task-workflow-excellence-at-79-progress.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-113326-near-completion-success-task-workflow-excellence-at-79-progress.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-113326-near-completion-success-task-workflow-excellence-at-79-progress.md`
 **Modified**: 2025-07-29 11:40:58
 
 # Reflection: Near Completion Success - Task Workflow Excellence at 79% Progress
@@ -6610,7 +6610,7 @@ This reflection documents a remarkable achievement in systematic task execution 
 
 ## Reflection 55: 20250729-121708-complete-29-task-initiative-achievement-exceptional-workflow-excellence.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-121708-complete-29-task-initiative-achievement-exceptional-workflow-excellence.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-121708-complete-29-task-initiative-achievement-exceptional-workflow-excellence.md`
 **Modified**: 2025-07-29 12:18:11
 
 # Reflection: Complete 29-Task Initiative Achievement - Exceptional Workflow Excellence
@@ -6767,7 +6767,7 @@ This reflection documents a truly exceptional achievement in systematic task exe
 
 ## Reflection 56: 20250729-180007-parallel-testing-reversion-session.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-180007-parallel-testing-reversion-session.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-180007-parallel-testing-reversion-session.md`
 **Modified**: 2025-07-29 18:00:52
 
 # Reflection: Parallel Testing Implementation and Reversion Session
@@ -6901,7 +6901,7 @@ This reflection documents a truly exceptional achievement in systematic task exe
 
 ## Reflection 57: 20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md`
 **Modified**: 2025-07-29 20:14:48
 
 # Reflection: Conversation Analysis - Create Reflection Note Workflow Implementation
@@ -6997,13 +6997,13 @@ The template structure includes sections for:
 
 This reflection demonstrates the meta-nature of the task - using the create-reflection-note workflow to reflect on the process of implementing the create-reflection-note workflow itself. The workflow instruction provides a robust framework for capturing insights and improvements across different types of development work.
 
-File created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md`
+File created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md`
 
 ---
 
 ## Reflection 58: 20250729-202149-self-review-session-reflection-july-29-2025.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-202149-self-review-session-reflection-july-29-2025.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-202149-self-review-session-reflection-july-29-2025.md`
 **Modified**: 2025-07-29 20:22:20
 
 # Reflection: Self-Review Session July 29 2025
@@ -7081,7 +7081,7 @@ Recent task completion shows steady progress on v.0.3.0 workflows with tasks 225
 
 ## Reflection 59: 20250729-213520-conversation-analysis-claude-code-reflection-workflow-execution.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-213520-conversation-analysis-claude-code-reflection-workflow-execution.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-213520-conversation-analysis-claude-code-reflection-workflow-execution.md`
 **Modified**: 2025-07-29 21:35:55
 
 # Reflection: Conversation Analysis - Claude Code Reflection Workflow Execution
@@ -7199,14 +7199,14 @@ Key technical observations:
 This reflection was created as part of testing the create-reflection-note workflow instruction. The session demonstrates the workflow's effectiveness while identifying areas for tool and process improvement. Recent commits show active work on path resolution features and reflection synthesis tools, indicating ongoing development in this area.
 
 Related files:
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
 - Recent tasks: v.0.3.0+task.227, v.0.3.0+task.226, v.0.3.0+task.225 (path resolution work)
 
 ---
 
 ## Reflection 60: 20250729-214634-task-228-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-214634-task-228-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-214634-task-228-reflection.md`
 **Modified**: 2025-07-29 21:47:06
 
 # Task 228 Reflection: Change reflection-synthesize Archive Default
@@ -7224,11 +7224,11 @@ The task was to change the default value of the `--archived` flag in the `reflec
 
 ### Changes Made
 
-1. **Modified synthesize.rb** (`dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb`):
+1. **Modified synthesize.rb** (`.ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb`):
    - Changed `option :archived, type: :boolean, default: false` to `default: true`
    - Updated description to `"Automatically move reflection notes to archived directory after synthesis (default: true)"`
 
-2. **Updated Test** (`dev-tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb`):
+2. **Updated Test** (`.ace/tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb`):
    - Modified test "skips archiving when option not specified" to "skips archiving when explicitly disabled"
    - Updated test to explicitly pass `archived: false` to maintain expected behavior
 
@@ -7305,7 +7305,7 @@ The task was to change the default value of the `--archived` flag in the `reflec
 
 ## Reflection 61: 20250729-215909-task-229-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-215909-task-229-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-215909-task-229-reflection.md`
 **Modified**: 2025-07-29 21:59:55
 
 # Reflection: Task 229 ReleaseManager Path Resolution Tests Implementation
@@ -7410,7 +7410,7 @@ The implementation demonstrates the value of the project's ATOM architecture, wh
 
 ## Reflection 62: 20250729-221224-task-230-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-221224-task-230-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-221224-task-230-reflection.md`
 **Modified**: 2025-07-29 22:13:14
 
 # Task 230 Implementation Reflection
@@ -7537,7 +7537,7 @@ The work demonstrates effective problem-solving through careful analysis of fail
 
 ## Reflection 63: 20250729-223216-task-231-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-223216-task-231-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-223216-task-231-reflection.md`
 **Modified**: 2025-07-29 22:33:20
 
 # Reflection: Task 231 - Update reflection-synthesize Tests
@@ -7608,7 +7608,7 @@ The work demonstrates effective problem-solving through careful analysis of fail
 
 ### Files Modified
 
-- `dev-tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb`: Main test updates
+- `.ace/tools/spec/coding_agent_tools/cli/commands/reflection/synthesize_spec.rb`: Main test updates
 - Task file: Updated to track progress and mark as completed
 
 ## Additional Context
@@ -7622,7 +7622,7 @@ The work demonstrates effective problem-solving through careful analysis of fail
 
 ## Reflection 64: 20250729-230128-task-232-integration-test-suite-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-230128-task-232-integration-test-suite-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-230128-task-232-integration-test-suite-implementation.md`
 **Modified**: 2025-07-29 23:03:36
 
 # Reflection: Task 232 Integration Test Suite Implementation
@@ -7674,9 +7674,9 @@ The work demonstrates effective problem-solving through careful analysis of fail
 ## Technical Notes
 
 ### Files Created/Modified
-- **New**: `dev-tools/spec/integration/release_path_resolution_integration_spec.rb` - Complete integration test suite
-- **Enhanced**: `dev-tools/spec/integration/reflection_synthesize_integration_spec.rb` - Added path resolution tests
-- **Extended**: `dev-tools/spec/support/cli_helpers.rb` - Added release-manager command support
+- **New**: `.ace/tools/spec/integration/release_path_resolution_integration_spec.rb` - Complete integration test suite
+- **Enhanced**: `.ace/tools/spec/integration/reflection_synthesize_integration_spec.rb` - Added path resolution tests
+- **Extended**: `.ace/tools/spec/support/cli_helpers.rb` - Added release-manager command support
 
 ### Test Coverage Achieved
 - CLI to ReleaseManager communication (text and JSON formats)
@@ -7697,7 +7697,7 @@ The work demonstrates effective problem-solving through careful analysis of fail
 
 ## Reflection 65: 20250729-232404-task-233-pathresolver-release-integration-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-232404-task-233-pathresolver-release-integration-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-232404-task-233-pathresolver-release-integration-implementation.md`
 **Modified**: 2025-07-29 23:24:53
 
 # Task 233 Reflection: PathResolver Release Integration Implementation
@@ -7775,13 +7775,13 @@ The implementation maintains full backward compatibility while providing a clean
 ## Codebase Impact
 
 ### Files Modified
-- **PathResolver** (`dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb`):
+- **PathResolver** (`.ace/tools/lib/coding_agent_tools/molecules/path_resolver.rb`):
   - Added ReleaseManager dependency
   - Implemented release-relative pattern detection and resolution
   - Updated main resolve_path routing logic
   - Added comprehensive documentation
 
-- **PathResolver Tests** (`dev-tools/spec/coding_agent_tools/molecules/path_resolver_spec.rb`):
+- **PathResolver Tests** (`.ace/tools/spec/coding_agent_tools/molecules/path_resolver_spec.rb`):
   - Added 17 new test cases
   - Covered all functionality and edge cases
   - Maintained all existing test coverage
@@ -7824,7 +7824,7 @@ The work sets up the codebase for the next phase of development where these patt
 
 ## Reflection 66: 20250729-task-224-session-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-task-224-session-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-task-224-session-reflection.md`
 **Modified**: 2025-07-29 15:40:53
 
 # Reflection: Task 224 Parallel RSpec Implementation & Test Fixes - Complete Session Analysis
@@ -7914,7 +7914,7 @@ bundle exec parallel_rspec spec/ -n 4 --exclude-pattern 'pattern' -o '--tag ~slo
 
 ## Reflection 67: 20250729-taskdependencychecker-test-coverage-improvement.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-taskdependencychecker-test-coverage-improvement.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-taskdependencychecker-test-coverage-improvement.md`
 **Modified**: 2025-07-29 10:44:18
 
 # Reflection: TaskDependencyChecker Test Coverage Improvement
@@ -8015,7 +8015,7 @@ This reflection documents a successful test coverage improvement initiative that
 
 ## Reflection 68: 20250730-004707-work-on-tasks-command-analysis-and-improvement-recommendations.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250730-004707-work-on-tasks-command-analysis-and-improvement-recommendations.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250730-004707-work-on-tasks-command-analysis-and-improvement-recommendations.md`
 **Modified**: 2025-07-30 00:48:06
 
 # Reflection: Work-on-Tasks Command Analysis and Improvement Recommendations
@@ -8133,8 +8133,8 @@ IMPORTANT: Each task must be executed as a SINGLE INTEGRATED WORKFLOW maintainin
 For each task, send ONE task tool call containing the COMPLETE EXPANDED workflow:
 
 ### 1. Expand All Slash Commands
-- `/work-on-task` → Full content from `dev-handbook/workflow-instructions/work-on-task.wf.md`
-- `/create-reflection-note` → Full content from `dev-handbook/workflow-instructions/create-reflection-note.wf.md`
+- `/work-on-task` → Full content from `.ace/handbook/workflow-instructions/work-on-task.wf.md`
+- `/create-reflection-note` → Full content from `.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
 - `/commit` → Full content from `.claude/commands/commit.md`
 
 ### 2. Integrated Workflow Structure

@@ -82,7 +82,7 @@ response = client.generate_text(prompt, system_instruction: system_message)
 ## Additional Context
 
 - **Task Reference**: v.0.3.0+task.88 - Refactor CommitMessageGenerator to use direct Ruby calls
-- **Files Modified**: 40+ files across dev-tools for linting improvements
+- **Files Modified**: 40+ files across .ace/tools for linting improvements
 - **Configuration Changes**: Moved fallback_models.yml to config/ directory with updated path references
 - **Test Results**: All 1740 tests pass after refactoring (0 failures)
 - **Performance Impact**: Eliminated subprocess creation overhead and temporary file I/O operations

@@ -32,9 +32,9 @@ Created a comprehensive workflow instruction for documenting application feature
 ### Deliverables
 
 #### Create
-- `dev-handbook/workflow-instructions/capture-application-features.wf.md` - Main workflow file
+- `.ace/handbook/workflow-instructions/capture-application-features.wf.md` - Main workflow file
 - `.claude/commands/capture-application-features.md` - Claude command
-- `dev-handbook/.integrations/claude/commands/_generated/capture-application-features.md` - Generated command
+- `.ace/handbook/.integrations/claude/commands/_generated/capture-application-features.md` - Generated command
 
 #### Modify
 - Claude integration updated with new command
@@ -44,7 +44,7 @@ Created a comprehensive workflow instruction for documenting application feature
 ### What Was Done
 
 - **Problem Identification**: Identified need for structured feature documentation based on CMS documentation patterns
-- **Investigation**: Reviewed existing documentation in `dev-taskflow/current/v.0.5.0-insights/docs/docs-features-update-worfkwol.md`
+- **Investigation**: Reviewed existing documentation in `.ace/taskflow/current/v.0.5.0-insights/docs/docs-features-update-worfkwol.md`
 - **Solution**: Created comprehensive workflow with embedded templates for feature documentation
 - **Validation**: Verified workflow follows handbook standards and integrates with Claude
 
@@ -61,7 +61,7 @@ The workflow includes:
 
 ```bash
 # Verified workflow file creation
-ls -la dev-handbook/workflow-instructions/capture-application-features.wf.md
+ls -la .ace/handbook/workflow-instructions/capture-application-features.wf.md
 
 # Confirmed Claude integration
 handbook claude list | grep capture-application
@@ -73,6 +73,6 @@ handbook claude list | grep capture-application
 
 - Commits: 
   - `163cced` - feat(workflow): Add capture-application-features workflow (main)
-  - `23ffd85` - feat(workflow): Add capture-application-features workflow (dev-handbook)
-- Source document: `dev-taskflow/current/v.0.5.0-insights/docs/docs-features-update-worfkwol.md`
+  - `23ffd85` - feat(workflow): Add capture-application-features workflow (.ace/handbook)
+- Source document: `.ace/taskflow/current/v.0.5.0-insights/docs/docs-features-update-worfkwol.md`
 - Follow-up needed: None

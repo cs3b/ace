@@ -36,9 +36,9 @@ None - used existing load-project-context.wf.md workflow
 
 #### Modify
 
-- dev-handbook/workflow-instructions/*.wf.md (25 files)
-- dev-handbook/.meta/wfi/*.wf.md (4 files)
-- dev-taskflow/backlog/ideas/commit.wf.md (checked but not a standard workflow)
+- .ace/handbook/workflow-instructions/*.wf.md (25 files)
+- .ace/handbook/.meta/wfi/*.wf.md (4 files)
+- .ace/taskflow/backlog/ideas/commit.wf.md (checked but not a standard workflow)
 
 #### Delete
 
@@ -69,7 +69,7 @@ With:
 ```markdown
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `.ace/handbook/workflow-instructions/load-project-context.wf.md`
 ```
 
 ### Files Modified
@@ -111,8 +111,8 @@ With:
 
 ```bash
 # Verified changes maintain workflow functionality
-grep -r "## Project Context Loading" dev-handbook/workflow-instructions/
-grep -r "load-project-context.wf.md" dev-handbook/workflow-instructions/
+grep -r "## Project Context Loading" .ace/handbook/workflow-instructions/
+grep -r "load-project-context.wf.md" .ace/handbook/workflow-instructions/
 ```
 
 **Results**: All 27 workflow files now consistently reference the centralized load-project-context.wf.md workflow.
@@ -128,7 +128,7 @@ grep -r "load-project-context.wf.md" dev-handbook/workflow-instructions/
 
 - Commits: 
   - `704cffd` - refactor: Centralize project context loading (main)
-  - `3b87e66` - refactor: Centralize project context loading (dev-handbook)
+  - `3b87e66` - refactor: Centralize project context loading (.ace/handbook)
   - `994297a` - chore: update submodule commit hash
-- Related workflow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Related workflow: `.ace/handbook/workflow-instructions/load-project-context.wf.md`
 - Discussion: User identified duplication and requested centralization

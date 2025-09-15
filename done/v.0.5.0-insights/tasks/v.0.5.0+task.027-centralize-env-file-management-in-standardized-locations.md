@@ -10,7 +10,7 @@ dependencies: []
 
 ## Behavioral Context
 
-**Issue**: The dev-tools were searching for .env files in multiple directories, making it difficult to manage API keys consistently across projects. Need a standardized approach for global and project-specific environment configurations.
+**Issue**: The .ace/tools were searching for .env files in multiple directories, making it difficult to manage API keys consistently across projects. Need a standardized approach for global and project-specific environment configurations.
 
 **Key Behavioral Requirements**:
 - Single global configuration in `~/.coding-agent/.env`
@@ -27,18 +27,18 @@ Implement centralized .env file management that allows global configuration with
 
 - Updated EnvReader atom to support new standardized paths only
 - Modified APICredentials to use new search logic
-- Created .env.sample template in dev-handbook dotfiles
+- Created .env.sample template in .ace/handbook dotfiles
 - Added deprecation warnings for old .env locations
 - Updated .gitignore to exclude new locations
 
 ### Deliverables
 
 #### Create
-- `dev-handbook/.meta/tpl/dotfiles/.env.sample` - Comprehensive environment template
+- `.ace/handbook/.meta/tpl/dotfiles/.env.sample` - Comprehensive environment template
 
 #### Modify
-- `dev-tools/lib/coding_agent_tools/atoms/env_reader.rb` - Added standardized env loading methods
-- `dev-tools/lib/coding_agent_tools/molecules/api_credentials.rb` - Updated to use new search logic
+- `.ace/tools/lib/coding_agent_tools/atoms/env_reader.rb` - Added standardized env loading methods
+- `.ace/tools/lib/coding_agent_tools/molecules/api_credentials.rb` - Updated to use new search logic
 - `.gitignore` - Added .coding-agent/.env exclusion
 
 #### Delete
@@ -72,7 +72,7 @@ Implement centralized .env file management that allows global configuration with
 - Comprehensive .env.sample with all API keys and settings
 - Clear documentation for each variable
 - Instructions for installation locations
-- Lives in dev-handbook/.meta/tpl/dotfiles/ for installation with other dotfiles
+- Lives in .ace/handbook/.meta/tpl/dotfiles/ for installation with other dotfiles
 
 ### Testing/Validation
 

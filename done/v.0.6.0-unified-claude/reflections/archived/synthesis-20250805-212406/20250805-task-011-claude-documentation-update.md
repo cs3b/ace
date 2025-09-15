@@ -24,7 +24,7 @@
 - **Documentation Structure Matters**: Having clear organization with separate directories for custom vs generated commands makes the system more maintainable
 - **Migration Guides Are Essential**: When deprecating old systems, a clear migration guide with command mapping is crucial for user adoption
 - **Comprehensive Examples Help**: Including 2-3 examples per command subcommand provides better user understanding than minimal documentation
-- **Cross-Module Documentation**: Documentation spanning multiple submodules (dev-handbook, dev-tools) requires careful cross-referencing
+- **Cross-Module Documentation**: Documentation spanning multiple submodules (dev-handbook, .ace/tools) requires careful cross-referencing
 
 ## Conversation Analysis
 
@@ -94,9 +94,9 @@ The new handbook claude commands provide a much cleaner interface than the old s
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.011-update-documentation-for-new-claude-integration.md`
+- Task file: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.011-update-documentation-for-new-claude-integration.md`
 - Related PRs: This work updates documentation for features implemented in tasks 002-007
 - Key documentation created:
-  - Main guide: `dev-handbook/.integrations/claude/README.md`
-  - Migration guide: `dev-handbook/.integrations/claude/MIGRATION.md`  
-  - Developer guide: `dev-tools/docs/development/claude-integration.md`
+  - Main guide: `.ace/handbook/.integrations/claude/README.md`
+  - Migration guide: `.ace/handbook/.integrations/claude/MIGRATION.md`  
+  - Developer guide: `.ace/tools/docs/development/claude-integration.md`

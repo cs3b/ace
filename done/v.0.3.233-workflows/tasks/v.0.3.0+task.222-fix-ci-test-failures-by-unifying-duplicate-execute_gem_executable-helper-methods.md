@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-tools/spec/support/
+ls -la .ace/tools/spec/support/
 ```
 
 _Result excerpt:_
@@ -41,7 +41,7 @@ Fix the 23 failing integration tests in CI by resolving the inconsistent `execut
 
 #### Modify
 
-- dev-tools/spec/support/cli_helpers.rb
+- .ace/tools/spec/support/cli_helpers.rb
 
 #### Delete
 
@@ -63,12 +63,12 @@ Fix the 23 failing integration tests in CI by resolving the inconsistent `execut
   > TEST: Method Analysis Complete
   > Type: Understanding Check  
   > Assert: Both methods' behavior and usage patterns are documented
-  > Command: grep -n "execute_gem_executable" dev-tools/spec/support/*.rb
+  > Command: grep -n "execute_gem_executable" .ace/tools/spec/support/*.rb
 - [x] Identify all test files that call the duplicate method
   > TEST: Usage Analysis Complete
   > Type: Dependency Check
   > Assert: All usages of the problematic method are identified  
-  > Command: grep -r "execute_gem_executable" dev-tools/spec/integration/
+  > Command: grep -r "execute_gem_executable" .ace/tools/spec/integration/
 
 ### Execution Steps
 
@@ -76,22 +76,22 @@ Fix the 23 failing integration tests in CI by resolving the inconsistent `execut
   > TEST: Method Removal Verified
   > Type: Code Change Validation
   > Assert: Duplicate method is removed from cli_helpers.rb
-  > Command: grep -n "def execute_gem_executable" dev-tools/spec/support/cli_helpers.rb
+  > Command: grep -n "def execute_gem_executable" .ace/tools/spec/support/cli_helpers.rb
 - [x] Update any references in execute_cli_command to use ProcessHelpers directly
   > TEST: Reference Update Verified
   > Type: Code Integration Check
   > Assert: CliHelpers properly delegates to ProcessHelpers
-  > Command: grep -A5 -B5 "execute_cli_command" dev-tools/spec/support/cli_helpers.rb
+  > Command: grep -A5 -B5 "execute_cli_command" .ace/tools/spec/support/cli_helpers.rb
 - [x] Run integration tests locally to verify fix
   > TEST: Local Integration Tests Pass
   > Type: Functional Validation
   > Assert: Integration tests execute successfully with executable resolution
-  > Command: cd dev-tools && bundle exec rspec spec/integration/llm_file_io_integration_spec.rb --fail-fast
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/llm_file_io_integration_spec.rb --fail-fast
 - [x] Verify CI workflow will find executables correctly
   > TEST: Path Resolution Works
   > Type: Environment Check
   > Assert: execute_gem_executable resolves to correct exe/ directory
-  > Command: cd dev-tools && ruby -e "require_relative 'spec/support/process_helpers'; include ProcessHelpers; puts File.expand_path('../../exe/llm-query', __dir__)"
+  > Command: cd .ace/tools && ruby -e "require_relative 'spec/support/process_helpers'; include ProcessHelpers; puts File.expand_path('../../exe/llm-query', __dir__)"
 
 ## Acceptance Criteria
 
@@ -122,5 +122,5 @@ QUICK FIX APPLIED (Option A):
 - Added step to CI workflow: echo "${{ github.workspace }}/exe" >> $GITHUB_PATH
 - This makes exe/ directory available in PATH for CI environment
 - Addresses immediate issue while preserving Option B for long-term solution
-- File modified: dev-tools/.github/workflows/ci.yml (line 38-39)
+- File modified: .ace/tools/.github/workflows/ci.yml (line 38-39)
 ```

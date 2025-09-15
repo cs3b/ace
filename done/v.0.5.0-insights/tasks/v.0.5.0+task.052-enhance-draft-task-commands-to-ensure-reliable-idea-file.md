@@ -28,15 +28,15 @@ Enhanced both `/draft-task` and `/draft-tasks` commands to explicitly detect ide
 - Added mandatory Step 3 for idea file movement with detailed instructions
 - Enhanced `/draft-tasks` Task tool prompt to emphasize Step 8 requirement
 - Added post-execution verification to ensure files were actually moved
-- Updated both Claude commands and source files in dev-handbook
+- Updated both Claude commands and source files in .ace/handbook
 
 ### Deliverables
 
 #### Modify
 - `.claude/commands/draft-task.md` - Added 6-step process with explicit idea file handling
 - `.claude/commands/draft-tasks.md` - Enhanced Task tool prompt with mandatory movement section
-- `dev-handbook/.integrations/claude/commands/_generated/draft-task.md` - Synchronized with main command
-- `dev-handbook/.integrations/claude/commands/_custom/draft-tasks.md` - Enhanced with verification
+- `.ace/handbook/.integrations/claude/commands/_generated/draft-task.md` - Synchronized with main command
+- `.ace/handbook/.integrations/claude/commands/_custom/draft-tasks.md` - Enhanced with verification
 
 ## Implementation Summary
 
@@ -70,8 +70,8 @@ The `/draft-tasks` command Task tool prompt now explicitly states:
 git-status --short
 
 # Verified idea files were moved from backlog to release
-# Deleted from: dev-taskflow/backlog/ideas/
-# Present in: dev-taskflow/current/v.0.5.0-insights/docs/ideas/
+# Deleted from: .ace/taskflow/backlog/ideas/
+# Present in: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/
 ```
 
 **Results**: Confirmed that idea files were successfully moved with proper task number prefixes
@@ -79,6 +79,6 @@ git-status --short
 ## References
 
 - Commits: "Enhance draft-task commands to ensure idea file movement" 
-- Source idea: `dev-taskflow/current/v.0.5.0-insights/docs/ideas/052-20250812-0033-draft-tasks-input-error.md`
-- Documentation: Updated workflow commands in both `.claude/commands/` and `dev-handbook/.integrations/claude/commands/`
+- Source idea: `.ace/taskflow/current/v.0.5.0-insights/docs/ideas/052-20250812-0033-draft-tasks-input-error.md`
+- Documentation: Updated workflow commands in both `.claude/commands/` and `.ace/handbook/.integrations/claude/commands/`
 - Follow-up needed: Monitor future `/draft-task` usage to ensure reliability

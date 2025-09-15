@@ -2,17 +2,17 @@
 
 ## Executive Summary
 
-This audit identifies **27+ distinct embedded templates** across 16 workflow instruction files in `dev-handbook/workflow-instructions/`. These templates range from complete document structures to specialized formatting patterns, representing significant reusable content that could be centralized for better template management.
+This audit identifies **27+ distinct embedded templates** across 16 workflow instruction files in `.ace/handbook/workflow-instructions/`. These templates range from complete document structures to specialized formatting patterns, representing significant reusable content that could be centralized for better template management.
 
 **Generated**: 2024-12-30  
-**Audit Scope**: All workflow files in `dev-handbook/workflow-instructions/`  
+**Audit Scope**: All workflow files in `.ace/handbook/workflow-instructions/`  
 **Total Files Analyzed**: 16 workflow files  
 **Templates Identified**: 27+ distinct templates  
 
 ## Directory Structure Overview
 
 ```
-dev-handbook/workflow-instructions
+.ace/handbook/workflow-instructions
 ├── commit.wf.md
 ├── create-adr.wf.md
 ├── create-api-docs.wf.md

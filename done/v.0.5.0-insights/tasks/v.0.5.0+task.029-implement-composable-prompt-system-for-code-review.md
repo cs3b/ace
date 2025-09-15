@@ -118,8 +118,8 @@ Eliminate the 60-80% duplication across 19+ code review prompt files by creating
 
 ## References
 
-- Current implementation: dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb
-- Existing prompts: dev-handbook/templates/review*/*.prompt.md (19 files)
+- Current implementation: .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb
+- Existing prompts: .ace/handbook/templates/review*/*.prompt.md (19 files)
 - Related task: v.0.5.0+task.028 (code-review preset system)
 
 ---
@@ -131,31 +131,31 @@ Eliminate the 60-80% duplication across 19+ code review prompt files by creating
 _Command run:_
 
 ```bash
-find dev-handbook/templates -name "*.prompt.md" -type f | head -20
+find .ace/handbook/templates -name "*.prompt.md" -type f | head -20
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/templates/idea-manager/system.prompt.md
-dev-handbook/templates/release-reflections/synthsize.system.prompt.md
-dev-handbook/templates/review/agents.prompt.md
-dev-handbook/templates/review/code.prompt.md
-dev-handbook/templates/review/docs.prompt.md
-dev-handbook/templates/review/performance.prompt.md
-dev-handbook/templates/review/pr.prompt.md
-dev-handbook/templates/review/security.prompt.md
-dev-handbook/templates/review/test.prompt.md
-dev-handbook/templates/review-code/system.prompt.rails.md
-dev-handbook/templates/review-code/system.ruby.atom.prompt.md
-dev-handbook/templates/review-code/system.vue.firebase.prompt.md
-dev-handbook/templates/review-docs/system.cc.agent.prompt.md
-dev-handbook/templates/review-docs/system.ruby.atom.prompt.md
-dev-handbook/templates/review-docs/system.vue.firebase.prompt.md
-dev-handbook/templates/review-synthesizer/system.prompt.md
-dev-handbook/templates/review-test/system.prompt.rails.md
-dev-handbook/templates/review-test/system.ruby.atom.prompt.md
-dev-handbook/templates/review-test/system.vue.firebase.prompt.md
+.ace/handbook/templates/idea-manager/system.prompt.md
+.ace/handbook/templates/release-reflections/synthsize.system.prompt.md
+.ace/handbook/templates/review/agents.prompt.md
+.ace/handbook/templates/review/code.prompt.md
+.ace/handbook/templates/review/docs.prompt.md
+.ace/handbook/templates/review/performance.prompt.md
+.ace/handbook/templates/review/pr.prompt.md
+.ace/handbook/templates/review/security.prompt.md
+.ace/handbook/templates/review/test.prompt.md
+.ace/handbook/templates/review-code/system.prompt.rails.md
+.ace/handbook/templates/review-code/system.ruby.atom.prompt.md
+.ace/handbook/templates/review-code/system.vue.firebase.prompt.md
+.ace/handbook/templates/review-docs/system.cc.agent.prompt.md
+.ace/handbook/templates/review-docs/system.ruby.atom.prompt.md
+.ace/handbook/templates/review-docs/system.vue.firebase.prompt.md
+.ace/handbook/templates/review-synthesizer/system.prompt.md
+.ace/handbook/templates/review-test/system.prompt.rails.md
+.ace/handbook/templates/review-test/system.ruby.atom.prompt.md
+.ace/handbook/templates/review-test/system.vue.firebase.prompt.md
 ```
 
 ## Technical Approach
@@ -182,48 +182,48 @@ dev-handbook/templates/review-test/system.vue.firebase.prompt.md
 ## File Modifications
 
 ### Create
-- dev-handbook/templates/review-modules/base/system.md
+- .ace/handbook/templates/review-modules/base/system.md
   - Purpose: Core review instruction template
   - Key components: Role definition, placeholder sections
   - Dependencies: None (base module)
 
-- dev-handbook/templates/review-modules/base/sections.md
+- .ace/handbook/templates/review-modules/base/sections.md
   - Purpose: Standard section structure
   - Key components: Common review sections
   - Dependencies: base/system.md
 
-- dev-handbook/templates/review-modules/format/*.md (3 files)
+- .ace/handbook/templates/review-modules/format/*.md (3 files)
   - Purpose: Output formatting rules
   - Key components: standard.md, detailed.md, compact.md
   - Dependencies: Formatting guidelines
 
-- dev-handbook/templates/review-modules/focus/*/*.md (15+ files)
+- .ace/handbook/templates/review-modules/focus/*/*.md (15+ files)
   - Purpose: Specific review focus areas
   - Key components: architecture/, languages/, quality/, scope/ subdirs
   - Dependencies: Base modules
 
-- dev-handbook/templates/review-modules/guidelines/*.md (3 files)
+- .ace/handbook/templates/review-modules/guidelines/*.md (3 files)
   - Purpose: Style and tone guidelines
   - Key components: tone.md, icons.md, approval.md
   - Dependencies: None
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb
+- .ace/tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb
   - Changes: Add compose_prompt() method for module assembly
   - Impact: Enables modular prompt composition
   - Integration points: ReviewPresetManager, ContextIntegrator
 
-- dev-tools/lib/coding_agent_tools/molecules/code/review_preset_manager.rb
+- .ace/tools/lib/coding_agent_tools/molecules/code/review_preset_manager.rb
   - Changes: Add prompt_composition support alongside system_prompt
   - Impact: Backwards compatible preset resolution
   - Integration points: Review command, configuration loading
 
-- dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb
   - Changes: Add composition CLI options (--prompt-base, --prompt-focus, etc.)
   - Impact: User-facing composition interface
   - Integration points: Option parsing, preset override logic
 
-- dev-handbook/.meta/tpl/dotfiles/code-review.yml
+- .ace/handbook/.meta/tpl/dotfiles/code-review.yml
   - Changes: Add example prompt_composition configurations
   - Impact: User configuration examples
   - Integration points: Preset definitions
@@ -239,7 +239,7 @@ dev-handbook/templates/review-test/system.vue.firebase.prompt.md
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
   > Assert: Common sections, formatting rules, and focus areas identified
-  > Command: grep -h "^##" dev-handbook/templates/review*/*.prompt.md | sort | uniq -c | sort -rn
+  > Command: grep -h "^##" .ace/handbook/templates/review*/*.prompt.md | sort | uniq -c | sort -rn
 
 * [x] Design module hierarchy and naming conventions
 * [x] Research context tool usage patterns for multi-file loading
@@ -251,13 +251,13 @@ dev-handbook/templates/review-test/system.vue.firebase.prompt.md
   > TEST: Directory Structure Created
   > Type: Action Validation
   > Assert: review-modules/ directory with base/, format/, focus/, guidelines/ subdirs exists
-  > Command: ls -la dev-handbook/templates/review-modules/
+  > Command: ls -la .ace/handbook/templates/review-modules/
 
 - [x] Phase 1: Extract common content from existing prompts into base modules
   > TEST: Base Modules Extracted
   > Type: Action Validation
   > Assert: system.md and sections.md created with core content
-  > Command: wc -l dev-handbook/templates/review-modules/base/*.md
+  > Command: wc -l .ace/handbook/templates/review-modules/base/*.md
 
 - [x] Phase 1: Create format modules (standard, detailed, compact)
 
@@ -297,7 +297,7 @@ dev-handbook/templates/review-test/system.vue.firebase.prompt.md
   > TEST: All Prompts Migrated
   > Type: Validation Test
   > Assert: Each existing prompt has equivalent composition
-  > Command: ls dev-handbook/templates/review*/*.prompt.md | wc -l
+  > Command: ls .ace/handbook/templates/review*/*.prompt.md | wc -l
 
 - [x] Phase 5: Test performance of module loading vs monolithic
   > TEST: Performance Acceptable

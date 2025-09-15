@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.90]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-pattern.g.md
     ├── changelog.g.md
@@ -122,15 +122,15 @@ Refactor the code-lint command to use separate language-specific runners instead
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/ruby_runner.rb
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/markdown_runner.rb
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/language_runner_factory.rb
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/ruby_runner.rb
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/markdown_runner.rb
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/language_runner_factory.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/code_lint/all.rb
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/multi_phase_quality_manager.rb
-- dev-tools/lib/coding_agent_tools/cli.rb (command registration)
+- .ace/tools/lib/coding_agent_tools/cli/commands/code_lint/all.rb
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/multi_phase_quality_manager.rb
+- .ace/tools/lib/coding_agent_tools/cli.rb (command registration)
 
 #### Delete
 
@@ -187,7 +187,7 @@ Refactor the code-lint command to use separate language-specific runners instead
   - Integration with existing pipeline tests remains intact
 - [x] Create configuration migration script to handle .coding-agent/lint.yml updates if needed
   - No migration needed - runners use same configuration structure
-- [x] Update dev-handbook/.meta/tpl/dotfiles with new configuration template
+- [x] Update .ace/handbook/.meta/tpl/dotfiles with new configuration template
   - No template update needed - maintaining backward compatibility
 
 ## Acceptance Criteria

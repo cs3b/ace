@@ -1,7 +1,7 @@
 # v.0.3.0 Migration
 
 ## Release Overview
-This release focuses on the comprehensive migration of 12 task management and development tools from `dev-tools/exe-old/` into the `coding_agent_tools` Ruby gem architecture. The migration addresses security/stability risks while evolving the codebase to a unified gem-based approach, following the established ATOM pattern.
+This release focuses on the comprehensive migration of 12 task management and development tools from `.ace/tools/exe-old/` into the `coding_agent_tools` Ruby gem architecture. The migration addresses security/stability risks while evolving the codebase to a unified gem-based approach, following the established ATOM pattern.
 
 ## Release Information
 
@@ -11,7 +11,7 @@ This release focuses on the comprehensive migration of 12 task management and de
 * **Status**: Planning
 
 ## Collected Notes
-From dev-taskflow/backlog/migrate-tools/backlog/plan.md:
+From .ace/taskflow/backlog/migrate-tools/backlog/plan.md:
 
 - Comprehensive migration of 12 tools from exe-old to coding_agent_tools gem
 - Address security/stability risks with current exe-old implementation

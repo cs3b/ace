@@ -8,10 +8,10 @@ Use --debug flag for more information
 
 ## Original Idea
 
-for workflow initialize project - we still create decision folder on dev-taskflow
+for workflow initialize project - we still create decision folder on .ace/taskflow
 
 > SOURCE
 
 ```text
-for workflow initialize project - we still create decision folder on dev-taskflow
+for workflow initialize project - we still create decision folder on .ace/taskflow
 ```

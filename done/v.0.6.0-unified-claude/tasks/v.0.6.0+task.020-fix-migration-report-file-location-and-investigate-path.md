@@ -22,10 +22,10 @@ The system should automatically place migration reports in the correct directory
 ```bash
 # CLI Interface (hypothetical - need to identify actual command)
 command-that-creates-migration-report
-# Expected output location: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+# Expected output location: .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 # Directory Structure Interface
-dev-taskflow/
+.ace/taskflow/
 ├── current/
 │   └── v.0.6.0-unified-claude/
 │       └── docs/
@@ -93,16 +93,16 @@ Fix the incorrect file placement logic that causes migration reports to be creat
 ## References
 
 - Feedback item #7 from user input
-- Current file location: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
-- Expected location: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Current file location: .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Expected location: .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 - Task that created the file: v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
 
 ## Technical Approach
 
 ### Root Cause Analysis
 - [x] The migration task (v.0.6.0+task.008) explicitly specified the wrong path in its instructions
-- [x] Line 46-47 of task.008 states: "Generate a migration report and save it to: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md"
-- [x] This should have been: "dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md"
+- [x] Line 46-47 of task.008 states: "Generate a migration report and save it to: .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md"
+- [x] This should have been: ".ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md"
 - [x] The error was in the task specification, not in the execution
 
 ### Directory Structure Understanding
@@ -114,12 +114,12 @@ Fix the incorrect file placement logic that causes migration reports to be creat
 ## File Modifications
 
 ### Move
-- dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md → dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md → .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
   - Purpose: Move migration report to correct location
   - Method: Use git mv to preserve history
 
 ### Delete
-- dev-taskflow/releases/ directory (if empty after move)
+- .ace/taskflow/releases/ directory (if empty after move)
   - Reason: This directory structure is not used in the current project
   - Check: Verify no other files exist before deletion
 
@@ -131,13 +131,13 @@ Fix the incorrect file placement logic that causes migration reports to be creat
   > TEST: Directory State Check
   > Type: Pre-condition Check
   > Assert: releases/ directory exists with MIGRATION_REPORT.md, current/../docs/ exists
-  > Command: ls -la dev-taskflow/releases/v.0.6.0-unified-claude/docs/ && ls -la dev-taskflow/current/v.0.6.0-unified-claude/docs/
+  > Command: ls -la .ace/taskflow/releases/v.0.6.0-unified-claude/docs/ && ls -la .ace/taskflow/current/v.0.6.0-unified-claude/docs/
 
 * [x] Check for any other files in the releases directory structure
   > TEST: Releases Directory Contents
   > Type: Pre-condition Check
   > Assert: Only MIGRATION_REPORT.md exists in releases structure
-  > Command: find dev-taskflow/releases -type f | grep -v .DS_Store
+  > Command: find .ace/taskflow/releases -type f | grep -v .DS_Store
 
 ### Execution Steps
 
@@ -145,31 +145,31 @@ Fix the incorrect file placement logic that causes migration reports to be creat
   > TEST: File Move Verification
   > Type: Action Validation
   > Assert: File moved with git history preserved
-  > Command: git mv dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+  > Command: git mv .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 - [x] Verify the file is in the correct location
   > TEST: File Location Verification
   > Type: Action Validation
   > Assert: MIGRATION_REPORT.md exists in current/../docs/
-  > Command: ls -la dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+  > Command: ls -la .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 - [x] Check if releases directory is now empty
   > TEST: Empty Directory Check
   > Type: Action Validation
   > Assert: releases directory structure is empty
-  > Command: find dev-taskflow/releases -type f | grep -v .DS_Store | wc -l
+  > Command: find .ace/taskflow/releases -type f | grep -v .DS_Store | wc -l
 
 - [x] Remove empty releases directory structure if confirmed empty
   > TEST: Directory Removal
   > Type: Action Validation
   > Assert: releases directory removed cleanly
-  > Command: rm -rf dev-taskflow/releases
+  > Command: rm -rf .ace/taskflow/releases
 
 - [x] Update the reflection note from task.008 to correct the file location references
   > TEST: Reflection Update
   > Type: Action Validation
   > Assert: Reflection note updated with correct paths
-  > Command: grep -n "releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md" dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-014022-claude-commands-migration-task-008.md
+  > Command: grep -n "releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md" .ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-014022-claude-commands-migration-task-008.md
 
 ## Risk Assessment
 

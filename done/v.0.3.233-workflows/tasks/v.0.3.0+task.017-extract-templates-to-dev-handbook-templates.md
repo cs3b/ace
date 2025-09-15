@@ -6,20 +6,20 @@ estimate: 8h
 dependencies: []
 ---
 
-# Extract Templates to dev-handbook/templates Directory
+# Extract Templates to .ace/handbook/templates Directory
 
 ## 0. Directory Audit ✅
 
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-house-rules.md
     ├── changelog.g.md
     ├── code-review
@@ -47,7 +47,7 @@ _Result excerpt:_
 
 ## Objective
 
-Improve the workflow structure by extracting all template files from `dev-handbook/guides/` to a dedicated `dev-handbook/templates/` directory with proper naming conventions. This will:
+Improve the workflow structure by extracting all template files from `.ace/handbook/guides/` to a dedicated `.ace/handbook/templates/` directory with proper naming conventions. This will:
 
 1. **Separate templates from guides**: Clear distinction between reusable templates and instructional guides
 2. **Categorize template types**: Organize document templates, task templates, and system prompts separately
@@ -55,11 +55,11 @@ Improve the workflow structure by extracting all template files from `dev-handbo
 4. **Improve discoverability**: Organize templates by category for easier navigation
 5. **Prevent mixing**: Ensure templates are never mixed with real documentation when searching for files
 
-Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backlog/improve-the-workflow-structure.md`
+Link back to original requirement: `.ace/taskflow/current/v.0.3.0-workflows/backlog/improve-the-workflow-structure.md`
 
 ## Scope of Work
 
-* **Primary Focus**: Move 27 identified template files from `dev-handbook/guides/` to `dev-handbook/templates/`
+* **Primary Focus**: Move 27 identified template files from `.ace/handbook/guides/` to `.ace/handbook/templates/`
 * **Key Areas**: System prompts, document templates, task templates, release management templates
 * **Technical Components**: File system reorganization, reference updates, link validation
 
@@ -69,42 +69,42 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 
 **Code Review Templates:**
 
-* `dev-handbook/guides/code-review/_code-review-system.md` → `dev-handbook/templates/review-code/system.prompt.md`
-* `dev-handbook/guides/code-review/_code-review-from-diff.md` → `dev-handbook/templates/review-code/diff.prompt.md`
-* `dev-handbook/guides/code-review/_doc-review-system.md` → `dev-handbook/templates/review-docs/system.prompt.md`
-* `dev-handbook/guides/code-review/_documentation-update-from-diff.md` → `dev-handbook/templates/review-docs/diff.prompt.md`
-* `dev-handbook/guides/code-review/_test-review-system.md` → `dev-handbook/templates/review-test/system.prompt.md`
-* `dev-handbook/guides/code-review/_meta-code-review-comprison.md` → `dev-handbook/templates/review-synthesizer/system.prompt.md`
-* `dev-handbook/guides/code-review/_meta-doc-review-combine.md` → `dev-handbook/templates/review-synthesizer/docs-system.prompt.md`
-* `dev-handbook/guides/code-review/_meta-test-review-combine.md` → `dev-handbook/templates/review-synthesizer/test-system.prompt.md`
+* `.ace/handbook/guides/code-review/_code-review-system.md` → `.ace/handbook/templates/review-code/system.prompt.md`
+* `.ace/handbook/guides/code-review/_code-review-from-diff.md` → `.ace/handbook/templates/review-code/diff.prompt.md`
+* `.ace/handbook/guides/code-review/_doc-review-system.md` → `.ace/handbook/templates/review-docs/system.prompt.md`
+* `.ace/handbook/guides/code-review/_documentation-update-from-diff.md` → `.ace/handbook/templates/review-docs/diff.prompt.md`
+* `.ace/handbook/guides/code-review/_test-review-system.md` → `.ace/handbook/templates/review-test/system.prompt.md`
+* `.ace/handbook/guides/code-review/_meta-code-review-comprison.md` → `.ace/handbook/templates/review-synthesizer/system.prompt.md`
+* `.ace/handbook/guides/code-review/_meta-doc-review-combine.md` → `.ace/handbook/templates/review-synthesizer/docs-system.prompt.md`
+* `.ace/handbook/guides/code-review/_meta-test-review-combine.md` → `.ace/handbook/templates/review-synthesizer/test-system.prompt.md`
 
 **Release Management Templates:**
 
-* `dev-handbook/guides/draft-release/v.x.x.x/tasks/_template.md` → `dev-handbook/templates/release-tasks/task.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/tasks/_example.md` → `dev-handbook/templates/release-tasks/example.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md` → `dev-handbook/templates/release-reflections/retrospective.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/docs/_template.md` → `dev-handbook/templates/release-docs/documentation.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/researches/_template.md` → `dev-handbook/templates/release-research/investigation.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/test-cases/_template.md` → `dev-handbook/templates/release-testing/test-case.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/user-experience/_template.md` → `dev-handbook/templates/release-ux/user-experience.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/codemods/_template.md` → `dev-handbook/templates/release-codemods/transformation.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md` → `dev-handbook/templates/release-planning/release-readme.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/tasks/_template.md` → `.ace/handbook/templates/release-tasks/task.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/tasks/_example.md` → `.ace/handbook/templates/release-tasks/example.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/reflections/_template.md` → `.ace/handbook/templates/release-reflections/retrospective.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/docs/_template.md` → `.ace/handbook/templates/release-docs/documentation.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/researches/_template.md` → `.ace/handbook/templates/release-research/investigation.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/test-cases/_template.md` → `.ace/handbook/templates/release-testing/test-case.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/user-experience/_template.md` → `.ace/handbook/templates/release-ux/user-experience.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/codemods/_template.md` → `.ace/handbook/templates/release-codemods/transformation.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md` → `.ace/handbook/templates/release-planning/release-readme.template.md`
 
 **Project Initialization Templates:**
 
-* `dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md` → `dev-handbook/templates/project-docs/decisions/adr.template.md`
-* `dev-handbook/guides/initialize-project-templates/PRD.md` → `dev-handbook/templates/project-docs/prd.template.md`
-* `dev-handbook/guides/initialize-project-templates/architecture.md` → `dev-handbook/templates/project-docs/architecture.template.md`
-* `dev-handbook/guides/initialize-project-templates/blueprint.md` → `dev-handbook/templates/project-docs/blueprint.template.md`
-* `dev-handbook/guides/initialize-project-templates/what-do-we-build.md` → `dev-handbook/templates/project-docs/vision.template.md`
+* `.ace/handbook/guides/draft-release/v.x.x.x/decisions/_template.md` → `.ace/handbook/templates/project-docs/decisions/adr.template.md`
+* `.ace/handbook/guides/initialize-project-templates/PRD.md` → `.ace/handbook/templates/project-docs/prd.template.md`
+* `.ace/handbook/guides/initialize-project-templates/architecture.md` → `.ace/handbook/templates/project-docs/architecture.template.md`
+* `.ace/handbook/guides/initialize-project-templates/blueprint.md` → `.ace/handbook/templates/project-docs/blueprint.template.md`
+* `.ace/handbook/guides/initialize-project-templates/what-do-we-build.md` → `.ace/handbook/templates/project-docs/vision.template.md`
 
 **Project Setup Task Templates:**
 
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-prd.md` → `dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-core-documentation.md` → `dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-create-project-roadmap.md` → `dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-setup-docs-project-structure.md` → `dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-archive-v000-release.md` → `dev-handbook/templates/release-v.0.0.0/05-archive-release.task.template.md`
+* `.ace/handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-prd.md` → `.ace/handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
+* `.ace/handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-core-documentation.md` → `.ace/handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
+* `.ace/handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-create-project-roadmap.md` → `.ace/handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
+* `.ace/handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-setup-docs-project-structure.md` → `.ace/handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
+* `.ace/handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-archive-v000-release.md` → `.ace/handbook/templates/release-v.0.0.0/05-archive-release.task.template.md`
 
 **Total:** 27 template files to be moved from `guides/` to `templates/` with proper naming conventions
 
@@ -123,7 +123,7 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
   > TEST: Template Discovery Validation
   > Type: Pre-condition Check
   > Assert: All 27 template files identified and cataloged by type and purpose
-  > Command: `find dev-handbook/guides -name "_*" -o -name "*template*" -o -name "TEMPLATE-*" | wc -l`
+  > Command: `find .ace/handbook/guides -name "_*" -o -name "*template*" -o -name "TEMPLATE-*" | wc -l`
 
 * [x] **Propose the new directory structure with proper naming conventions**
   > TEST: Structure Design Approval
@@ -136,32 +136,32 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * [x] **Create the new template directory structure**
   > TEST: Directory Creation Validation
   > Type: Action Validation
-  > Assert: All required directories exist under dev-handbook/templates/
-  > Command: `find dev-handbook/templates -type d | sort`
+  > Assert: All required directories exist under .ace/handbook/templates/
+  > Command: `find .ace/handbook/templates -type d | sort`
 
 * [x] **Move all template files to their new locations with proper names**
   > TEST: File Migration Validation
   > Type: Action Validation
   > Assert: All 27 files moved successfully with correct naming conventions
-  > Command: `find dev-handbook/templates -name "*.prompt.md" -o -name "*.template.md" | wc -l`
+  > Command: `find .ace/handbook/templates -name "*.prompt.md" -o -name "*.template.md" | wc -l`
 
-* [x] **Scan dev-handbook for references to old template paths**
+* [x] **Scan .ace/handbook for references to old template paths**
   > TEST: Reference Discovery
   > Type: Action Validation
   > Assert: All references to old template paths identified for updating
-  > Command: `grep -r "guides.*_.*\.md\|guides.*template\|guides.*TEMPLATE" dev-handbook/`
+  > Command: `grep -r "guides.*_.*\.md\|guides.*template\|guides.*TEMPLATE" .ace/handbook/`
 
-* [x] **Scan dev-tools for references to old template paths**
+* [x] **Scan .ace/tools for references to old template paths**
   > TEST: Dev-tools Reference Discovery
   > Type: Action Validation
-  > Assert: All references in dev-tools scripts identified for updating
-  > Command: `grep -r "guides.*_.*\.md\|guides.*template\|guides.*TEMPLATE" dev-tools/`
+  > Assert: All references in .ace/tools scripts identified for updating
+  > Command: `grep -r "guides.*_.*\.md\|guides.*template\|guides.*TEMPLATE" .ace/tools/`
 
 * [x] **Update all references to point to new template locations**
   > TEST: Reference Update Validation
   > Type: Action Validation
   > Assert: All references updated to new paths in templates/ directory
-  > Command: `grep -r "templates.*\.prompt\.md\|templates.*\.template\.md" dev-handbook/ dev-tools/`
+  > Command: `grep -r "templates.*\.prompt\.md\|templates.*\.template\.md" .ace/handbook/ .ace/tools/`
 
 * [x] **Validate no broken links exist after migration**
   > TEST: Link Validation
@@ -174,8 +174,8 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * [x] All 27 template files successfully moved from guides/ to templates/
 * [x] New directory structure follows the approved naming convention
 * [x] All template files use appropriate suffixes (.prompt.md or .template.md)
-* [x] All references in dev-handbook updated to new paths
-* [x] All references in dev-tools updated to new paths
+* [x] All references in .ace/handbook updated to new paths
+* [x] All references in .ace/tools updated to new paths
 * [x] No broken links remain after migration
 * [x] `bin/lint` command passes without link-related errors
 * [x] Original requirement from improve-the-workflow-structure.md fully addressed
@@ -189,6 +189,6 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 
 ## References
 
-* Original requirement: `dev-taskflow/current/v.0.3.0-workflows/backlog/improve-the-workflow-structure.md`
-* Related workflow: `dev-handbook/workflow-instructions/create-task.wf.md`
+* Original requirement: `.ace/taskflow/current/v.0.3.0-workflows/backlog/improve-the-workflow-structure.md`
+* Related workflow: `.ace/handbook/workflow-instructions/create-task.wf.md`
 * Linting command: `bin/lint` (for link validation)

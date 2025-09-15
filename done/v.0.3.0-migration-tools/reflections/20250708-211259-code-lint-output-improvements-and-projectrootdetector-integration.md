@@ -9,7 +9,7 @@
 
 - Successfully modified code-lint to show only summary in console and save detailed results to files
 - Implemented ProjectRootDetector integration for consistent project root detection
-- Achieved proper relative path display in all reports (e.g., `dev-tools/lib/...` from project root)
+- Achieved proper relative path display in all reports (e.g., `.ace/tools/lib/...` from project root)
 - Added all lint report files to .gitignore to keep repository clean
 - Maintained backwards compatibility while improving functionality
 
@@ -18,7 +18,7 @@
 - Initial confusion about multi-repository structure and where reports should be saved
 - Multiple iterations needed to understand ProjectRootDetector's intended behavior
 - Zeitwerk autoloading complexity with code_quality namespace required special handling
-- Path adjustment logic needed for StandardRB since it runs from dev-tools directory
+- Path adjustment logic needed for StandardRB since it runs from .ace/tools directory
 
 ## Key Learnings
 
@@ -45,10 +45,10 @@
 
 #### Medium Impact Issues
 
-- **Path Relativity**: StandardRB returning paths relative to dev-tools instead of project root
+- **Path Relativity**: StandardRB returning paths relative to .ace/tools instead of project root
   - Occurrences: 1
   - Impact: Reports showed incorrect relative paths
-  - Root Cause: StandardRB executes from dev-tools directory, returns paths relative to its execution context
+  - Root Cause: StandardRB executes from .ace/tools directory, returns paths relative to its execution context
 
 - **User Requirements Clarification**: Understanding user's preference for output format
   - Occurrences: 1
@@ -108,7 +108,7 @@
 Key implementation insights:
 - ProjectRootDetector uses special logic to detect dev-* directories and find parent
 - Zeitwerk autoloading can be triggered with `defined?` checks before using constants
-- StandardRB paths need adjustment: `File.join("dev-tools", file_path)`
+- StandardRB paths need adjustment: `File.join(".ace/tools", file_path)`
 - Git ignore patterns for lint reports: `.lint-report.md`, `.lint-errors-*.md`, `.lint-diff-review.md`
 
 The final implementation ensures:

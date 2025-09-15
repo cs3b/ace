@@ -107,6 +107,6 @@ create-path file:reflection-new --title 'Conversation Analysis - Reflection Note
 
 ## Additional Context
 
-This reflection represents a unique case of meta-analysis - using the reflection creation workflow to reflect on the process of creating reflections. The workflow instruction document at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md` is comprehensive and well-structured, demonstrating mature thinking about reflection processes and conversation analysis patterns.
+This reflection represents a unique case of meta-analysis - using the reflection creation workflow to reflect on the process of creating reflections. The workflow instruction document at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md` is comprehensive and well-structured, demonstrating mature thinking about reflection processes and conversation analysis patterns.
 
-The embedded template at `dev-handbook/templates/release-reflections/retrospective.template.md` provides excellent scaffolding for structured reflection, though the template discovery mechanism may need attention for seamless workflow execution.
+The embedded template at `.ace/handbook/templates/release-reflections/retrospective.template.md` provides excellent scaffolding for structured reflection, though the template discovery mechanism may need attention for seamless workflow execution.

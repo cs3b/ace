@@ -35,9 +35,9 @@ Fix invalid tool specifications in the Claude command metadata inferrer to ensur
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_metadata_inferrer.rb
-- dev-handbook/.meta/wfi/update-integration-claude.wf.md
-- dev-handbook/.integrations/claude/metadata-field-reference.md
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_metadata_inferrer.rb
+- .ace/handbook/.meta/wfi/update-integration-claude.wf.md
+- .ace/handbook/.integrations/claude/metadata-field-reference.md
 
 #### Delete
 
@@ -129,7 +129,7 @@ Fix invalid tool specifications in the Claude command metadata inferrer to ensur
 
 - [x] **Update Workflow Documentation**: Added validation section to update-integration-claude.wf.md
   - Added tool specification validation guidelines
-  - Added diagnostic command: `grep -r "Bash(" dev-handbook/.integrations/claude/`
+  - Added diagnostic command: `grep -r "Bash(" .ace/handbook/.integrations/claude/`
   - Added quality check item for invalid specifications
 
 - [x] **Update Reference Documentation**: Fixed metadata-field-reference.md
@@ -141,7 +141,7 @@ Fix invalid tool specifications in the Claude command metadata inferrer to ensur
   - Successfully regenerated 24 commands with correct tool specifications
 
 - [x] **Validate Fix**: Verified no invalid specifications remain
-  > Command: grep -r "Bash(" dev-handbook/.integrations/claude/commands/
+  > Command: grep -r "Bash(" .ace/handbook/.integrations/claude/commands/
   > Result: No matches (success)
 
 ## Risk Assessment

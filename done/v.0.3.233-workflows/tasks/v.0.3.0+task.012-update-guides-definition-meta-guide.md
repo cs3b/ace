@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.10]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides/.meta | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides/.meta | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides/.meta/
+.ace/handbook/guides/.meta/
 ├── guides-definition.g.md
 ├── workflow-instructions-definition.g.md
 └── [other meta files...]
@@ -46,7 +46,7 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 
 #### Modify
 
-- dev-handbook/guides/.meta/guides-definition.g.md
+- .ace/handbook/guides/.meta/guides-definition.g.md
 
 #### Delete
 
@@ -67,13 +67,13 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Current guide definition is understood and documented
-  > Command: `grep -E "^## |^### " dev-handbook/guides/.meta/guides-definition.g.md`
+  > Command: `grep -E "^## |^### " .ace/handbook/guides/.meta/guides-definition.g.md`
 
 - [x] Identify sections that need updates based on new workflow model
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All sections requiring updates are identified
-  > Command: `grep -i "procedure\|workflow\|instruction" dev-handbook/guides/.meta/guides-definition.g.md`
+  > Command: `grep -i "procedure\|workflow\|instruction" .ace/handbook/guides/.meta/guides-definition.g.md`
 
 ### Execution Steps
 
@@ -81,7 +81,7 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: New principle is clearly stated in Core Principles
-  > Command: `grep -A 5 -B 5 "Why.*How" dev-handbook/guides/.meta/guides-definition.g.md`
+  > Command: `grep -A 5 -B 5 "Why.*How" .ace/handbook/guides/.meta/guides-definition.g.md`
 
 - [x] Add explicit content guidelines distinguishing guides from workflows:
   - Guides should focus on principles, concepts, best practices, and deep-dive knowledge
@@ -91,19 +91,19 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Clear content guidelines are established
-  > Command: `grep -i "procedural\|step-by-step\|workflow.*action" dev-handbook/guides/.meta/guides-definition.g.md`
+  > Command: `grep -i "procedural\|step-by-step\|workflow.*action" .ace/handbook/guides/.meta/guides-definition.g.md`
 
 - [x] Update "Guide Structure" section to reflect new relationship with workflows
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Guide structure reflects conceptual vs procedural separation
-  > Command: `grep -A 10 "Guide Structure" dev-handbook/guides/.meta/guides-definition.g.md`
+  > Command: `grep -A 10 "Guide Structure" .ace/handbook/guides/.meta/guides-definition.g.md`
 
 - [x] Add examples of appropriate vs inappropriate guide content
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Examples clearly illustrate the new guide philosophy
-  > Command: `grep -C 3 "example\|appropriate\|inappropriate" dev-handbook/guides/.meta/guides-definition.g.md`
+  > Command: `grep -C 3 "example\|appropriate\|inappropriate" .ace/handbook/guides/.meta/guides-definition.g.md`
 
 ## Acceptance Criteria
 
@@ -126,5 +126,5 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 
 - Original requirement: Documentation review report "HIGH PRIORITY UPDATES"
 - Related ADR: Task v.0.3.0+task.10 (dependency)
-- New workflow model: dev-handbook/guides/.meta/workflow-instructions-definition.g.md
+- New workflow model: .ace/handbook/guides/.meta/workflow-instructions-definition.g.md
 - Context: Fundamental shift from reference-based to self-contained workflows

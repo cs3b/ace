@@ -1,0 +1,58 @@
+# Module renaming mappings for CodingAgentTools -> AceTools migration
+# This file defines all the patterns to be replaced
+
+modules:
+  # Main module name
+  CodingAgentTools: AceTools
+
+paths:
+  # Snake case for file paths and requires
+  coding_agent_tools: ace_tools
+
+  # Dash case for executables and URLs
+  coding-agent-tools: ace-tools
+
+# File/directory renaming patterns
+# These will be handled by rename_files.sh script
+files:
+  # Main library files
+  "lib/coding_agent_tools": "lib/ace_tools"
+  "lib/coding_agent_tools.rb": "lib/ace_tools.rb"
+
+  # Signature files
+  "sig/coding_agent_tools.rbs": "sig/ace_tools.rbs"
+
+  # Executables
+  "exe/coding-agent-tools": "exe/ace-tools"
+
+  # Spec files
+  "spec/coding_agent_tools": "spec/ace_tools"
+  "spec/coding_agent_tools_spec.rb": "spec/ace_tools_spec.rb"
+
+# Special patterns that need context-aware replacement
+patterns:
+  # Module definitions
+  "module CodingAgentTools": "module AceTools"
+  "class CodingAgentTools": "class AceTools"
+
+  # Namespace references
+  "CodingAgentTools::": "AceTools::"
+  "::CodingAgentTools": "::AceTools"
+
+  # Require statements
+  "require 'coding_agent_tools'": "require 'ace_tools'"
+  "require \"coding_agent_tools\"": "require \"ace_tools\""
+  "require_relative 'coding_agent_tools'": "require_relative 'ace_tools'"
+  "require_relative \"coding_agent_tools\"": "require_relative \"ace_tools\""
+
+  # Autoload paths
+  "autoload :CodingAgentTools": "autoload :AceTools"
+
+  # String references (commonly in specs)
+  "\"CodingAgentTools\"": "\"AceTools\""
+  "'CodingAgentTools'": "'AceTools'"
+
+  # Comments and documentation
+  "# CodingAgentTools": "# AceTools"
+  "# coding_agent_tools": "# ace_tools"
+  "# coding-agent-tools": "# ace-tools"

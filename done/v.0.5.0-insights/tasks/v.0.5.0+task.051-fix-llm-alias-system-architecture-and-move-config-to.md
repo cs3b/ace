@@ -10,7 +10,7 @@ dependencies: [v.0.5.0+task.048]
 
 ## Behavioral Context
 
-**Issue**: The LLM alias configuration was incorrectly placed as a hardcoded file within the gem (`dev-tools/config/default-llm-aliases.yml`), preventing project-specific customization and not following the established dotfile pattern used by other configuration files.
+**Issue**: The LLM alias configuration was incorrectly placed as a hardcoded file within the gem (`.ace/tools/config/default-llm-aliases.yml`), preventing project-specific customization and not following the established dotfile pattern used by other configuration files.
 
 **Key Behavioral Requirements**:
 - Aliases must be configurable per project via `.coding-agent/llm-aliases.yml`
@@ -33,16 +33,16 @@ Restructure the LLM alias system to follow the project's established dotfile pat
 ### Deliverables
 
 #### Create
-- `dev-handbook/.meta/tpl/dotfiles/llm-aliases.yml` - Template for project aliases
+- `.ace/handbook/.meta/tpl/dotfiles/llm-aliases.yml` - Template for project aliases
 - `.coding-agent/llm-aliases.yml` - Installed project configuration
 
 #### Modify
-- `dev-tools/lib/coding_agent_tools/molecules/llm_alias_resolver.rb` - Added ProjectRootDetector integration
-- `dev-tools/lib/coding_agent_tools/organisms/claude_code_client.rb` - Added missing normalize_model_name method
-- `dev-tools/lib/coding_agent_tools/cli/commands/llm/query.rb` - Added alias display functionality
+- `.ace/tools/lib/coding_agent_tools/molecules/llm_alias_resolver.rb` - Added ProjectRootDetector integration
+- `.ace/tools/lib/coding_agent_tools/organisms/claude_code_client.rb` - Added missing normalize_model_name method
+- `.ace/tools/lib/coding_agent_tools/cli/commands/llm/query.rb` - Added alias display functionality
 
 #### Delete
-- `dev-tools/config/default-llm-aliases.yml` - Removed wrongly placed config
+- `.ace/tools/config/default-llm-aliases.yml` - Removed wrongly placed config
 
 ## Implementation Summary
 

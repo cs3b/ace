@@ -61,6 +61,6 @@ The development pattern shows iterative improvement of the meta-project's workfl
 
 ## Additional Context
 
-- Working in dev-taskflow submodule context with current release v.0.4.0-replanning
+- Working in .ace/taskflow submodule context with current release v.0.4.0-replanning
 - Project follows git submodule architecture with enhanced multi-repo operations
 - Documentation-focused project with emphasis on AI-assisted development workflows

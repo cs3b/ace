@@ -13,14 +13,14 @@ dependencies: [v.0.3.0+task.112]
 _Command run:_
 
 ```bash
-ls -la dev-tools/exe/create-path dev-tools/exe/git-commit | sed 's/^/    /'
+ls -la .ace/tools/exe/create-path .ace/tools/exe/git-commit | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    -rw-r--r--  1 user  group  xxxx date dev-tools/exe/create-path
-    -rw-r--r--  1 user  group  xxxx date dev-tools/exe/git-commit
+    -rw-r--r--  1 user  group  xxxx date .ace/tools/exe/create-path
+    -rw-r--r--  1 user  group  xxxx date .ace/tools/exe/git-commit
 ```
 
 ## Objective
@@ -30,7 +30,7 @@ Refactor the create-path executable to follow the established dry library patter
 ## Scope of Work
 
 - Replace manual argument parsing with dry-cli integration
-- Follow the same pattern as dev-tools/exe/git-commit
+- Follow the same pattern as .ace/tools/exe/git-commit
 - Ensure consistency with other dry library executables
 - Maintain existing command-line interface compatibility
 - Update any related documentation
@@ -43,8 +43,8 @@ Refactor the create-path executable to follow the established dry library patter
 
 #### Modify
 
-- `dev-tools/exe/create-path` (refactor to use dry library pattern)
-- `dev-tools/lib/coding_agent_tools/cli.rb` (ensure proper command registration)
+- `.ace/tools/exe/create-path` (refactor to use dry library pattern)
+- `.ace/tools/lib/coding_agent_tools/cli.rb` (ensure proper command registration)
 
 #### Delete
 
@@ -65,12 +65,12 @@ Refactor the create-path executable to follow the established dry library patter
   > TEST: Current Implementation Analysis
   > Type: Code Review
   > Assert: Manual argument parsing patterns are identified
-  > Command: cd dev-tools && cat exe/create-path | head -20
+  > Command: cd .ace/tools && cat exe/create-path | head -20
 - [x] Study git-commit executable as reference pattern
   > TEST: Pattern Analysis
   > Type: Reference Study
   > Assert: Dry library usage pattern is understood
-  > Command: cd dev-tools && cat exe/git-commit | head -20
+  > Command: cd .ace/tools && cat exe/git-commit | head -20
 - [x] Review other executables for consistency
 - [x] Plan the refactoring approach
 
@@ -80,32 +80,32 @@ Refactor the create-path executable to follow the established dry library patter
   > TEST: Dry Library Integration
   > Type: Refactoring Validation
   > Assert: Executable uses ExecutableWrapper pattern instead of manual parsing
-  > Command: cd dev-tools && grep -n "ExecutableWrapper" exe/create-path
+  > Command: cd .ace/tools && grep -n "ExecutableWrapper" exe/create-path
 - [x] Step 2: Ensure command is properly registered in CLI module
   > TEST: Command Registration
   > Type: Integration Validation
   > Assert: CreatePathCommand is registered in the CLI system
-  > Command: cd dev-tools && grep -n "CreatePathCommand" lib/coding_agent_tools/cli.rb
+  > Command: cd .ace/tools && grep -n "CreatePathCommand" lib/coding_agent_tools/cli.rb
 - [x] Step 3: Verify executable follows same pattern as git-commit
   > TEST: Pattern Consistency
   > Type: Consistency Validation
   > Assert: Executable structure matches established patterns
-  > Command: cd dev-tools && diff -u exe/git-commit exe/create-path | grep -E "^[+-]" | head -10
+  > Command: cd .ace/tools && diff -u exe/git-commit exe/create-path | grep -E "^[+-]" | head -10
 - [x] Step 4: Test command execution works correctly
   > TEST: Execution Validation
   > Type: Functional Testing
   > Assert: Command executes properly with new pattern
-  > Command: cd dev-tools && bundle exec exe/create-path --help
+  > Command: cd .ace/tools && bundle exec exe/create-path --help
 - [x] Step 5: Verify argument parsing works as expected
   > TEST: Argument Parsing Validation
   > Type: Interface Testing
   > Assert: All command arguments are properly parsed
-  > Command: cd dev-tools && bundle exec exe/create-path --version 2>/dev/null || echo "Expected behavior"
+  > Command: cd .ace/tools && bundle exec exe/create-path --version 2>/dev/null || echo "Expected behavior"
 - [x] Step 6: Run integration tests
   > TEST: Integration Testing
   > Type: End-to-End Validation
   > Assert: Full command functionality works with dry library
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb
 
 ## Acceptance Criteria
 
@@ -150,7 +150,7 @@ end
 ## References
 
 - Code review feedback: Brittle argument parsing should use dry library pattern
-- Reference implementation: dev-tools/exe/git-commit
+- Reference implementation: .ace/tools/exe/git-commit
 - Dry-cli documentation and patterns
 - Existing CLI command registration in lib/coding_agent_tools/cli.rb
 - Other executable implementations for consistency

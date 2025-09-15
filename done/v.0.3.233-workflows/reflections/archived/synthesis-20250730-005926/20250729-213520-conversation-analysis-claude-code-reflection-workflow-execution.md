@@ -113,5 +113,5 @@ Key technical observations:
 This reflection was created as part of testing the create-reflection-note workflow instruction. The session demonstrates the workflow's effectiveness while identifying areas for tool and process improvement. Recent commits show active work on path resolution features and reflection synthesis tools, indicating ongoing development in this area.
 
 Related files:
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
 - Recent tasks: v.0.3.0+task.227, v.0.3.0+task.226, v.0.3.0+task.225 (path resolution work)

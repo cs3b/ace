@@ -26,7 +26,7 @@ The current test coverage exists but has gaps in edge cases, error scenarios, an
 
 #### Modify
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/all_spec.rb` - Enhanced test coverage
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/all_spec.rb` - Enhanced test coverage
 
 ## Implementation Plan
 
@@ -36,7 +36,7 @@ The current test coverage exists but has gaps in edge cases, error scenarios, an
   > TEST: Coverage Analysis Check
   > Type: Pre-condition Check
   > Assert: Current test gaps are identified and documented
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/all_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/all_spec.rb --format documentation
 * [x] Review ToolLister organism tests to understand batch operation patterns
 * [x] Research edge cases and error scenarios that need testing
 * [x] Plan test cases for comprehensive batch operations coverage
@@ -54,7 +54,7 @@ The current test coverage exists but has gaps in edge cases, error scenarios, an
   > TEST: Comprehensive Test Suite Validation
   > Type: Action Validation
   > Assert: All new and existing tests pass with improved coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/all_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/all_spec.rb --format documentation
 
 ## Acceptance Criteria
 
@@ -76,6 +76,6 @@ The current test coverage exists but has gaps in edge cases, error scenarios, an
 
 ## References
 
-- Current implementation: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/all.rb`
-- Current tests: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/all_spec.rb`
-- ToolLister organism: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/organisms/tool_lister.rb`
+- Current implementation: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/all.rb`
+- Current tests: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/all_spec.rb`
+- ToolLister organism: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/organisms/tool_lister.rb`

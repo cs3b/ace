@@ -22,7 +22,7 @@
 
 - The draft-task workflow effectively separates behavioral requirements from implementation details
 - Task files use a specific status progression: draft → pending → in_progress → done
-- The dev-taskflow structure clearly separates current work from completed releases
+- The .ace/taskflow structure clearly separates current work from completed releases
 - File location issues may indicate broader path resolution problems in the tooling
 
 ## Action Items
@@ -47,13 +47,13 @@
 ## Technical Details
 
 The issue involves a MIGRATION_REPORT.md file created at:
-- **Incorrect**: `dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
-- **Correct**: `dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- **Incorrect**: `.ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- **Correct**: `.ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
 
 This suggests a path resolution issue where the system is using "releases" instead of "current" when determining the target directory for new files.
 
 ## Additional Context
 
 - Draft task created: v.0.6.0+task.020
-- File path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md`
+- File path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md`
 - Related to user feedback item #7

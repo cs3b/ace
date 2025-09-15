@@ -11,14 +11,14 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Developers and AI agents working with Claude integration templates in the dev-handbook repository
+- **Input**: Developers and AI agents working with Claude integration templates in the .ace/handbook repository
 - **Process**: Discovering, referencing, and maintaining Claude command templates with clear organization and consistent naming conventions
 - **Output**: Well-organized template structure that is intuitive to navigate, eliminates duplication, and follows consistent naming patterns
 
 ### Expected Behavior
 The system should provide a clear, consistent template organization for Claude integrations where:
 
-1. **Template Discovery**: Developers and AI agents can easily locate Claude templates in a predictable location (`dev-handbook/.integrations/claude/templates/`)
+1. **Template Discovery**: Developers and AI agents can easily locate Claude templates in a predictable location (`.ace/handbook/.integrations/claude/templates/`)
 2. **Naming Consistency**: All template files follow a consistent naming convention with `.tmpl` extension to clearly distinguish them from regular markdown files
 3. **No Duplication**: Each template serves a unique purpose with no overlapping functionality or duplicated content
 4. **Clear Purpose**: Template names and content clearly indicate their specific use case (e.g., workflow commands vs general commands)
@@ -27,13 +27,13 @@ The system should provide a clear, consistent template organization for Claude i
 ### Interface Contract
 ```bash
 # File System Interface
-dev-handbook/.integrations/claude/templates/
+.ace/handbook/.integrations/claude/templates/
 ├── command.md.tmpl                 # General command template
 ├── workflow-command.md.tmpl        # Workflow-specific command template
 └── agent-command.md.tmpl          # Agent-specific command template
 
 # Ruby Gem Interface (ClaudeCommandGenerator)
-@template_path = @project_root / "dev-handbook/.integrations/claude/templates/command.md.tmpl"
+@template_path = @project_root / ".ace/handbook/.integrations/claude/templates/command.md.tmpl"
 
 # Template Usage Pattern
 template = load_template('command.md.tmpl')          # For general commands
@@ -50,7 +50,7 @@ template = load_template('workflow-command.md.tmpl') # For workflow commands
 - Cross-repository template usage: Clear documentation on template scope and boundaries
 
 ### Success Criteria
-- [ ] **Organizational Clarity**: All Claude templates reside in `dev-handbook/.integrations/claude/templates/` directory
+- [ ] **Organizational Clarity**: All Claude templates reside in `.ace/handbook/.integrations/claude/templates/` directory
 - [ ] **Naming Standardization**: 100% of template files use `.tmpl` extension consistently
 - [ ] **Duplication Elimination**: Zero duplicate templates with overlapping functionality
 - [ ] **Tool Compatibility**: Ruby gem ClaudeCommandGenerator successfully uses templates from new location
@@ -98,9 +98,9 @@ Improve the developer and AI agent experience when working with Claude integrati
 
 - Feedback context: Template organization improvement request
 - Current template locations: 
-  - `dev-handbook/.integrations/claude/command.template.md`
-  - `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl`
-- Ruby gem usage: `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
+  - `.ace/handbook/.integrations/claude/command.template.md`
+  - `.ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl`
+- Ruby gem usage: `.ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
 
 ## Technical Approach
 
@@ -125,39 +125,39 @@ Improve the developer and AI agent experience when working with Claude integrati
 ## File Modifications
 
 ### Create
-- `dev-handbook/.integrations/claude/templates/command.md.tmpl`
+- `.ace/handbook/.integrations/claude/templates/command.md.tmpl`
   - Purpose: Consolidated command template with YAML front-matter
   - Key components: YAML front-matter variables, workflow reference, commit command
   - Dependencies: ERB templating in ClaudeCommandGenerator
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
+- `.ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
   - Changes: Update template path from `command.template.md` to `templates/command.md.tmpl`
   - Impact: All generated commands will use new template location
   - Integration points: Template loading in `load_template` method
 
-- `dev-tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb`
   - Changes: Update test expectations for new template path
   - Impact: Tests will validate new template location
   - Integration points: Template path setup in test fixtures
 
-- `dev-tools/docs/development/claude-integration.md`
+- `.ace/tools/docs/development/claude-integration.md`
   - Changes: Update documentation to reflect new template organization
   - Impact: Developer documentation accuracy
   - Integration points: Template usage examples
 
 ### Delete
-- `dev-handbook/.integrations/claude/command.template.md`
+- `.ace/handbook/.integrations/claude/command.template.md`
   - Reason: Replaced by standardized template in templates directory
   - Dependencies: ClaudeCommandGenerator after it's updated
   - Migration strategy: Move content to new location first
 
-- `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl`
+- `.ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl`
   - Reason: Duplicate functionality with main command template
   - Dependencies: None currently in use
   - Migration strategy: Verify no active usage before removal
 
-- `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl`
+- `.ace/handbook/.integrations/claude/templates/agent-command.md.tmpl`
   - Reason: Not currently used, adds unnecessary complexity
   - Dependencies: None found in codebase
   - Migration strategy: Direct removal after verification
@@ -186,7 +186,7 @@ Improve the developer and AI agent experience when working with Claude integrati
   > TEST: Template Analysis
   > Type: Pre-condition Check
   > Assert: All template variations and their purposes are documented
-  > Command: diff -u dev-handbook/.integrations/claude/command.template.md dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl
+  > Command: diff -u .ace/handbook/.integrations/claude/command.template.md .ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl
 
 * [x] Search for all references to old template paths in codebase
   > TEST: Reference Search
@@ -200,33 +200,33 @@ Improve the developer and AI agent experience when working with Claude integrati
 
 - [x] Create consolidated template at new location
   ```bash
-  mkdir -p dev-handbook/.integrations/claude/templates
-  cp dev-handbook/.integrations/claude/command.template.md dev-handbook/.integrations/claude/templates/command.md.tmpl
+  mkdir -p .ace/handbook/.integrations/claude/templates
+  cp .ace/handbook/.integrations/claude/command.template.md .ace/handbook/.integrations/claude/templates/command.md.tmpl
   ```
   > TEST: Template Creation
   > Type: Action Validation
   > Assert: New template file exists with correct content
-  > Command: test -f dev-handbook/.integrations/claude/templates/command.md.tmpl && grep -q "description:" dev-handbook/.integrations/claude/templates/command.md.tmpl
+  > Command: test -f .ace/handbook/.integrations/claude/templates/command.md.tmpl && grep -q "description:" .ace/handbook/.integrations/claude/templates/command.md.tmpl
 
 - [x] Update ClaudeCommandGenerator to use new template path
-  - Change line 18: `@template_path = @project_root / "dev-handbook/.integrations/claude/templates/command.md.tmpl"`
+  - Change line 18: `@template_path = @project_root / ".ace/handbook/.integrations/claude/templates/command.md.tmpl"`
   > TEST: Ruby Syntax Check
   > Type: Action Validation
   > Assert: Ruby file has valid syntax after modification
-  > Command: cd dev-tools && ruby -c lib/coding_agent_tools/organisms/claude_command_generator.rb
+  > Command: cd .ace/tools && ruby -c lib/coding_agent_tools/organisms/claude_command_generator.rb
 
 - [x] Update ClaudeCommandGenerator spec file for new path
   - Update all occurrences of `command.template.md` to `templates/command.md.tmpl`
   > TEST: Spec Syntax Check
   > Type: Action Validation
   > Assert: Spec file has valid syntax
-  > Command: cd dev-tools && ruby -c spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
+  > Command: cd .ace/tools && ruby -c spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
 
 - [x] Run ClaudeCommandGenerator tests to ensure functionality
   > TEST: Generator Tests
   > Type: Integration Test
   > Assert: All ClaudeCommandGenerator tests pass
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
 
 - [x] Update documentation in claude-integration.md
   - Update template paths and examples
@@ -234,42 +234,42 @@ Improve the developer and AI agent experience when working with Claude integrati
   > TEST: Documentation Consistency
   > Type: Action Validation
   > Assert: No references to old template paths remain
-  > Command: grep -c "command\.template\.md\|workflow-command\.md\.tmpl\|agent-command\.md\.tmpl" dev-tools/docs/development/claude-integration.md | grep -q "0"
+  > Command: grep -c "command\.template\.md\|workflow-command\.md\.tmpl\|agent-command\.md\.tmpl" .ace/tools/docs/development/claude-integration.md | grep -q "0"
 
 - [x] Remove old template file
   ```bash
-  rm dev-handbook/.integrations/claude/command.template.md
+  rm .ace/handbook/.integrations/claude/command.template.md
   ```
   > TEST: Old Template Removal
   > Type: Action Validation
   > Assert: Old template file no longer exists
-  > Command: test ! -f dev-handbook/.integrations/claude/command.template.md
+  > Command: test ! -f .ace/handbook/.integrations/claude/command.template.md
 
 - [x] Remove duplicate template files
   ```bash
-  rm dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl
-  rm dev-handbook/.integrations/claude/templates/agent-command.md.tmpl
+  rm .ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl
+  rm .ace/handbook/.integrations/claude/templates/agent-command.md.tmpl
   ```
   > TEST: Duplicate Removal
   > Type: Action Validation
   > Assert: Duplicate templates no longer exist
-  > Command: test ! -f dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl && test ! -f dev-handbook/.integrations/claude/templates/agent-command.md.tmpl
+  > Command: test ! -f .ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl && test ! -f .ace/handbook/.integrations/claude/templates/agent-command.md.tmpl
 
 - [x] Generate a test command to verify functionality
   > TEST: Command Generation
   > Type: End-to-End Test
   > Assert: Commands can be generated successfully with new template
-  > Command: cd dev-tools && bin/claude generate --dry-run
+  > Command: cd .ace/tools && bin/claude generate --dry-run
 
 - [x] Run full test suite to ensure no regression
   > TEST: Full Test Suite
   > Type: Regression Test
   > Assert: All tests pass
-  > Command: cd dev-tools && bundle exec rspec
+  > Command: cd .ace/tools && bundle exec rspec
 
 ## Acceptance Criteria
 
-- [x] AC 1: All Claude templates consolidated in `dev-handbook/.integrations/claude/templates/` with `.tmpl` extension
+- [x] AC 1: All Claude templates consolidated in `.ace/handbook/.integrations/claude/templates/` with `.tmpl` extension
 - [x] AC 2: ClaudeCommandGenerator successfully uses new template location
 - [x] AC 3: All duplicate templates removed
 - [x] AC 4: Documentation updated to reflect new template organization

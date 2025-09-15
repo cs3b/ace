@@ -41,7 +41,7 @@ Why a Wrapper Script?
   - Provides helpful error messages for missing contexts
   - Lists available contexts when one isn't found
 
-> in dev-tools we have already a logic to reuse (for project root, file create, and yes we should error message and also tests for this cases)
+> in .ace/tools we have already a logic to reuse (for project root, file create, and yes we should error message and also tests for this cases)
 
   5. Standardized Workflow
 

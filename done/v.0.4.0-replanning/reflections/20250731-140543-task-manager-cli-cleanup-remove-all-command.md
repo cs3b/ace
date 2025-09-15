@@ -100,5 +100,5 @@
 
 - Task: v.0.4.0+task.008 - Add list command as primary alias for task-manager
 - Final Decision: Remove 'all' command entirely rather than maintain dual interface
-- Files Modified: 10 files across dev-tools, docs, and dev-taskflow repositories
-- Commits: 2 commits with proper separation by repository (dev-tools and dev-taskflow)
+- Files Modified: 10 files across dev-tools, docs, and .ace/taskflow repositories
+- Commits: 2 commits with proper separation by repository (.ace/tools and .ace/taskflow)

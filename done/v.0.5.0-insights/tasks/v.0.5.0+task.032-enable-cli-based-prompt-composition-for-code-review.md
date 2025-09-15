@@ -237,8 +237,8 @@ The CLI options for prompt composition (`--prompt-base`, `--prompt-format`, `--p
 ## References
 
 - Testing session: Issue discovered when CLI prompt options were ignored
-- Related modules: dev-handbook/templates/review-modules/
+- Related modules: .ace/handbook/templates/review-modules/
 - Related task: Task 029 (composable prompt system implementation)
 - Key files:
-  - dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb:212-221 (merge_configurations)
-  - dev-tools/lib/coding_agent_tools/molecules/code/review_preset_manager.rb:126-160 (resolve_prompt_composition)
+  - .ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb:212-221 (merge_configurations)
+  - .ace/tools/lib/coding_agent_tools/molecules/code/review_preset_manager.rb:126-160 (resolve_prompt_composition)

@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- Discovered that comprehensive documentation for all handbook claude subcommands already existed in dev-tools/docs/user/
+- Discovered that comprehensive documentation for all handbook claude subcommands already existed in .ace/tools/docs/user/
 - The existing documentation follows a consistent, high-quality pattern similar to llm-query.md
 - Cross-references between quickstart guide and detailed documentation were already in place in tools.md
 - Successfully transformed the Claude README into a more focused quickstart guide with enhanced maintenance workflows
@@ -22,7 +22,7 @@
 
 - Always verify the current state of the system before executing planned changes
 - Documentation work often involves discovering existing resources rather than creating from scratch
-- The dev-tools documentation structure is well-organized with consistent patterns across different tool guides
+- The .ace/tools documentation structure is well-organized with consistent patterns across different tool guides
 - Cross-repository documentation references work well when using relative paths
 
 ## Conversation Analysis
@@ -88,8 +88,8 @@
 ## Technical Details
 
 The documentation structure follows a clear pattern:
-- User guides in `dev-tools/docs/user/` with consistent naming: `handbook-claude-{subcommand}.md`
-- Quickstart guide in `dev-handbook/.integrations/claude/README.md`
+- User guides in `.ace/tools/docs/user/` with consistent naming: `handbook-claude-{subcommand}.md`
+- Quickstart guide in `.ace/handbook/.integrations/claude/README.md`
 - Cross-references in `docs/tools.md` linking all components together
 
 The existing documentation quality is excellent, with comprehensive coverage including:
@@ -102,7 +102,7 @@ The existing documentation quality is excellent, with comprehensive coverage inc
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
 - All planned documentation files already existed from previous work
 - Successfully enhanced the quickstart guide with better maintenance workflows
 - The only real work needed was transforming the README to be more focused as a quickstart guide

@@ -1,7 +1,7 @@
 # Reflection: Fix-Tests Workflow Implementation and Test Suite Recovery
 
 **Date**: 2025-07-25
-**Context**: Following the fix-tests workflow instruction to systematically diagnose and fix failing automated tests in dev-tools Ruby gem
+**Context**: Following the fix-tests workflow instruction to systematically diagnose and fix failing automated tests in .ace/tools Ruby gem
 **Author**: Claude Code Agent
 **Type**: Conversation Analysis
 
@@ -125,11 +125,11 @@
 
 ## Additional Context
 
-- **Workflow Source**: `/dev-handbook/workflow-instructions/fix-tests.wf.md`
+- **Workflow Source**: `/.ace/handbook/workflow-instructions/fix-tests.wf.md`
 - **Primary Files Modified**: 
-  - `dev-tools/lib/coding_agent_tools/cli/commands/nav/tree.rb`
-  - `dev-tools/spec/coding_agent_tools/cli/commands/nav/tree_spec.rb`
-  - `dev-tools/spec/coding_agent_tools/molecules/code/prompt_combiner_spec.rb`
+  - `.ace/tools/lib/coding_agent_tools/cli/commands/nav/tree.rb`
+  - `.ace/tools/spec/coding_agent_tools/cli/commands/nav/tree_spec.rb`
+  - `.ace/tools/spec/coding_agent_tools/molecules/code/prompt_combiner_spec.rb`
 - **Commits Created**: 
   - `87d7cdd`: fix(cli): address failing tests in tree and prompt combiner
   - `1072154`: chore: update submodule references after test fixes

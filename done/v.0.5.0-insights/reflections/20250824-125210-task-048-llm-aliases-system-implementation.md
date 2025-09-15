@@ -13,14 +13,14 @@ Successfully replaced the complex model fetching/caching system with a simple, u
 ## Key Changes Made
 
 ### 1. Created LLM Aliases Configuration System
-- **File:** `dev-tools/config/default-llm-aliases.yml`
+- **File:** `.ace/tools/config/default-llm-aliases.yml`
 - **Purpose:** Provides sensible default aliases for common models
 - **Structure:** 
   - Global aliases (work with any provider): `opus` → `cc:claude-opus-4-1`
   - Provider-specific aliases: `cc:opus` → `claude-opus-4-1`
 
 ### 2. Implemented LlmAliasResolver Molecule
-- **File:** `dev-tools/lib/coding_agent_tools/molecules/llm_alias_resolver.rb`
+- **File:** `.ace/tools/lib/coding_agent_tools/molecules/llm_alias_resolver.rb`
 - **Features:**
   - Loads config from `~/.config/coding-agent-tools/llm-aliases.yml` or defaults
   - Falls back to default aliases if user config missing
@@ -28,30 +28,30 @@ Successfully replaced the complex model fetching/caching system with a simple, u
   - Maintains backward compatibility (direct model names pass through)
 
 ### 3. Updated llm-query Command Integration
-- **File:** `dev-tools/lib/coding_agent_tools/cli/commands/llm/query.rb`
+- **File:** `.ace/tools/lib/coding_agent_tools/cli/commands/llm/query.rb`
 - **Changes:** Added alias resolution before provider parsing
 - **Result:** Users can now use aliases like `opus` instead of `cc:claude-opus-4-1`
 
 ### 4. Simplified ClaudeCodeClient
-- **File:** `dev-tools/lib/coding_agent_tools/organisms/claude_code_client.rb`
+- **File:** `.ace/tools/lib/coding_agent_tools/organisms/claude_code_client.rb`
 - **Removed:** MODEL_MAPPING constant and normalize_model_name method
 - **Rationale:** Aliases are now handled centrally by LlmAliasResolver
 
 ### 5. Removed Model Fetching Infrastructure
 **Deleted files:**
-- `dev-tools/exe/llm-models` - Executable command
-- `dev-tools/lib/coding_agent_tools/cli/commands/llm/models.rb` - Models command
-- `dev-tools/spec/coding_agent_tools/cli/commands/llm/models_spec.rb` - Tests
-- `dev-tools/lib/coding_agent_tools/molecules/cache_manager.rb` - Cache management
-- `dev-tools/spec/coding_agent_tools/molecules/cache_manager_spec.rb` - Cache tests  
-- `dev-tools/config/fallback_models.yaml` - Fallback model definitions
+- `.ace/tools/exe/llm-models` - Executable command
+- `.ace/tools/lib/coding_agent_tools/cli/commands/llm/models.rb` - Models command
+- `.ace/tools/spec/coding_agent_tools/cli/commands/llm/models_spec.rb` - Tests
+- `.ace/tools/lib/coding_agent_tools/molecules/cache_manager.rb` - Cache management
+- `.ace/tools/spec/coding_agent_tools/molecules/cache_manager_spec.rb` - Cache tests  
+- `.ace/tools/config/fallback_models.yaml` - Fallback model definitions
 
 ### 6. Updated CLI Registration
-- **File:** `dev-tools/lib/coding_agent_tools/cli.rb`
+- **File:** `.ace/tools/lib/coding_agent_tools/cli.rb`
 - **Change:** Removed models command registration from CLI registry
 
 ### 7. Comprehensive Test Coverage
-- **File:** `dev-tools/spec/coding_agent_tools/molecules/llm_alias_resolver_spec.rb`
+- **File:** `.ace/tools/spec/coding_agent_tools/molecules/llm_alias_resolver_spec.rb`
 - **Coverage:** All resolution scenarios, edge cases, and config loading
 - **Result:** 13 examples, 0 failures
 

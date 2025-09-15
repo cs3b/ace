@@ -15,7 +15,7 @@ This document outlines the comprehensive git module architecture following the A
 - `bin/gl` - Ruby wrapper executing `get-recent-git-log` with multi-repo flags
 
 **Key Patterns Identified:**
-1. **Repository List**: `[main, dev-tools, dev-taskflow, dev-handbook]`
+1. **Repository List**: `[main, dev-tools, dev-taskflow, .ace/handbook]`
 2. **Intention-Based Commits**: `-i/--intention` flag for LLM-generated messages
 3. **Sequential Execution**: Scripts process repos one by one with output prefixes
 4. **Fish Function Integration**: `gcama` (git add all + commit all + message all) patterns
@@ -91,11 +91,11 @@ Git Command Executor + Repository Scanner + Submodule Detector (atoms)
 ### Repository Detection
 1. Use `ProjectRootDetector` for base path resolution
 2. Scan for submodules using `git submodule status`
-3. Hardcoded fallback: `[main, dev-tools, dev-taskflow, dev-handbook]`
+3. Hardcoded fallback: `[main, dev-tools, dev-taskflow, .ace/handbook]`
 
 ### Path Resolution
-- `git add dev-handbook/file.md lib/file.rb` → 
-  - Group 1: `git -C dev-handbook add file.md`
+- `git add .ace/handbook/file.md lib/file.rb` → 
+  - Group 1: `git -C .ace/handbook add file.md`
   - Group 2: `git add lib/file.rb`
 
 ### Concurrent Execution
@@ -140,7 +140,7 @@ coding_agent_tools git <command> [options] [files...]
 
 ### Binstub Mapping
 ```yaml
-# dev-tools/config/binstub-aliases.yml
+# .ace/tools/config/binstub-aliases.yml
 gc: "git commit"
 gp: "git push"
 gpull: "git pull"

@@ -15,20 +15,20 @@
 ## What Could Be Improved
 
 - Initial uncertainty about where Claude commands were located required multiple directory searches
-- Could have started with the dev-tools exploration earlier since that's where the implementation lives
+- Could have started with the .ace/tools exploration earlier since that's where the implementation lives
 - Documentation about the Claude commands structure could be clearer in the project
 
 ## Key Learnings
 
 - The system already implements a hybrid approach: organized source structure with flat deployment
-- Ruby gem in dev-tools handles all Claude command generation and installation logic
+- Ruby gem in .ace/tools handles all Claude command generation and installation logic
 - The task is primarily about simplifying the source structure rather than changing end-user experience
 - Metadata injection is already implemented for tracking command properties
 
 ## Technical Details
 
 ### Current Architecture
-- Source commands organized in: `dev-handbook/.integrations/claude/commands/{_custom,_generated}/`
+- Source commands organized in: `.ace/handbook/.integrations/claude/commands/{_custom,_generated}/`
 - Target installation always flat: `.claude/commands/`
 - ClaudeCommandGenerator creates files in _generated/ subdirectory
 - ClaudeCommandsInstaller copies from subdirectories to flat structure
@@ -62,6 +62,6 @@
 
 - Related task: v.0.6.0+task.018-flatten-claude-commands-structure.md
 - Key files modified in plan:
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
-  - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-  - dev-handbook/.integrations/claude/commands/
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+  - .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - .ace/handbook/.integrations/claude/commands/

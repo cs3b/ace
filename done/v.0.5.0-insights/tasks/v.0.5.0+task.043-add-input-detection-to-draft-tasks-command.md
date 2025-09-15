@@ -26,14 +26,14 @@ When users run `/draft-tasks` with different input file types, the system should
 ### Interface Contract
 ```bash
 # CLI Interface - Idea file processing (existing behavior)
-/draft-tasks dev-taskflow/backlog/ideas/feature-concept.md
+/draft-tasks .ace/taskflow/backlog/ideas/feature-concept.md
 # Expected output:
 # "Detected: 1 idea file"
 # "Creating draft tasks from ideas..."
 # "Created: v.0.5.0+task.XXX - Feature Concept"
 
 # CLI Interface - Completed task file processing (new behavior)
-/draft-tasks dev-taskflow/backlog/tasks/completed-task-spec.md
+/draft-tasks .ace/taskflow/backlog/tasks/completed-task-spec.md
 # Expected output:
 # "Detected: 1 completed task file"
 # "Registering existing tasks..."
@@ -277,6 +277,6 @@ Enhance the `/draft-tasks` command to be more versatile and user-friendly by int
 
 ## References
 
-- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/043-20250812-0033-draft-tasks-input-error.md
+- Original idea file: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/043-20250812-0033-draft-tasks-input-error.md
 - Task management workflow patterns
 - Existing `/draft-tasks` command implementation

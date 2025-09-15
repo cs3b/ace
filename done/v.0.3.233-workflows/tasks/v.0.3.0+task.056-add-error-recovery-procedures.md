@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 1 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 1 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── README.md
     ├── commit.wf.md
     ├── create-adr.wf.md
@@ -60,7 +60,7 @@ Add workflow failure handling and recovery guidance to improve robustness. This 
 
 #### Modify
 
-* dev-handbook/workflow-instructions/*.wf.md - Add error handling sections to critical workflows
+* .ace/handbook/workflow-instructions/*.wf.md - Add error handling sections to critical workflows
 
 #### Delete
 
@@ -81,7 +81,7 @@ Add workflow failure handling and recovery guidance to improve robustness. This 
   > TEST: Failure Analysis Complete
   > Type: Pre-condition Check
   > Assert: Common failure modes identified
-  > Command: rg -i "error|fail|issue" dev-taskflow/current/v.0.3.0-workflows/reflections/
+  > Command: rg -i "error|fail|issue" .ace/taskflow/current/v.0.3.0-workflows/reflections/
 * [x] Review critical workflows (commit, release, review-code)
 * [x] Design standard error handling section format
 * [x] Create recovery procedure templates
@@ -92,7 +92,7 @@ Add workflow failure handling and recovery guidance to improve robustness. This 
   > TEST: Commit Error Handling
   > Type: Content Validation
   > Assert: Common git errors addressed
-  > Command: rg "Error Handling" dev-handbook/workflow-instructions/commit.wf.md
+  > Command: rg "Error Handling" .ace/handbook/workflow-instructions/commit.wf.md
 * [x] Add error handling to review-code.wf.md (LLM failures, rate limits)
 * [x] Add error handling to release workflows (version conflicts, incomplete tasks)
 * [x] Add error handling to work-on-task.wf.md (missing dependencies, test failures)
@@ -105,7 +105,7 @@ Add workflow failure handling and recovery guidance to improve robustness. This 
   > TEST: Error Sections Complete
   > Type: Documentation Validation
   > Assert: Critical workflows have error handling
-  > Command: rg "Error Handling" dev-handbook/workflow-instructions/commit.wf.md dev-handbook/workflow-instructions/review-code.wf.md dev-handbook/workflow-instructions/draft-release.wf.md dev-handbook/workflow-instructions/work-on-task.wf.md
+  > Command: rg "Error Handling" .ace/handbook/workflow-instructions/commit.wf.md .ace/handbook/workflow-instructions/review-code.wf.md .ace/handbook/workflow-instructions/draft-release.wf.md .ace/handbook/workflow-instructions/work-on-task.wf.md
 
 ## Acceptance Criteria
 
@@ -123,6 +123,6 @@ Add workflow failure handling and recovery guidance to improve robustness. This 
 
 ## References
 
-* Review report: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
-* Reflections: dev-taskflow/current/v.0.3.0-workflows/reflections/
+* Review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
+* Reflections: .ace/taskflow/current/v.0.3.0-workflows/reflections/
 * Critical workflows: commit, release-*, review-code, work-on-task

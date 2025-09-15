@@ -149,11 +149,11 @@ Enable successful Claude integration setup by fixing overly aggressive YAML secu
 *No new files required*
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb`
+- `.ace/tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb`
   - **Changes**: Refine the `/\\binclude\\s+[A-Z]/` security pattern to be more context-aware
   - **Impact**: Reduces false positives while maintaining security against actual Ruby module inclusion attacks
   - **Integration points**: Used by Claude command installation, YAML frontmatter parsing throughout the system
-- `dev-tools/spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb`
   - **Changes**: Add test cases for legitimate include patterns that should not trigger security errors
   - **Impact**: Ensures the fix works correctly and prevents regressions
   - **Integration points**: Part of the comprehensive test suite
@@ -296,6 +296,6 @@ Enable successful Claude integration setup by fixing overly aggressive YAML secu
 
 ## References
 
-- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/042-20250817-1640-yaml-include-error.md
+- Original idea file: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/042-20250817-1640-yaml-include-error.md
 - Handbook Claude integration patterns
 - YAML security validation components

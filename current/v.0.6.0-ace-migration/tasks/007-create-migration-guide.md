@@ -64,7 +64,7 @@ Create a comprehensive migration guide to help existing users transition from th
   - New: `AceTools::CLI`
 
   ### Directory Structure
-  - Old: `dev-tools/`, `dev-handbook/`, `dev-taskflow/`
+  - Old: `.ace/tools/`, `.ace/handbook/`, `.ace/taskflow/`
   - New: `.ace/tools/`, `.ace/handbook/`, `.ace/taskflow/`
 
   ## Migration Steps

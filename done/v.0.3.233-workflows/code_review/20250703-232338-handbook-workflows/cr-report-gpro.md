@@ -89,7 +89,7 @@ A robust set of templates has been introduced to support the new workflows, prom
   - **Binstubs:** Templates for `bin/test`, `lint`, `build`, `run`, `tn`, `tr`, `tree`.
 
 - **Identified Issues:**
-  - ❌ **Missing Template Integration:** The `create-user-docs.wf.md` workflow states "Use the user documentation template:" but fails to embed or link to the provided `dev-handbook/templates/user-docs/user-guide.template.md`. This breaks the workflow.
+  - ❌ **Missing Template Integration:** The `create-user-docs.wf.md` workflow states "Use the user documentation template:" but fails to embed or link to the provided `.ace/handbook/templates/user-docs/user-guide.template.md`. This breaks the workflow.
   - ⚠️ **Inconsistent Referencing:** The method for referencing templates varies (e.g., "Use the embedded template", "Use the X template:", "Reference the session context template"). This should be standardized for AI agent clarity.
 
 ## 4. Integration Guide Requirements
@@ -99,13 +99,13 @@ The current set of workflows lacks high-level documentation explaining how they 
 - **Missing Guides – Required Workflow – File Path – Priority**
   - **Missing Guide:** Core Development Lifecycle Guide
   - **Required Workflow:** A guide explaining the end-to-end flow from `initialize-project-structure` -> `draft-release` -> `work-on-task` -> `commit` -> `review-code` -> `publish-release`.
-  - **File Path:** `dev-handbook/guides/core-development-lifecycle.g.md`
+  - **File Path:** `.ace/handbook/guides/core-development-lifecycle.g.md`
   - **Priority:** 🔴 Critical
 
 - **Missing Guides – Required Workflow – File Path – Priority**
   - **Missing Guide:** AI Agent Command Integration
   - **Required Workflow:** The `review-code.wf.md` workflow explicitly mentions being called by a wrapper like `@review-code`. The architecture and usage of this integration layer must be documented.
-  - **File Path:** `dev-handbook/guides/ai-agent-integration.g.md`
+  - **File Path:** `.ace/handbook/guides/ai-agent-integration.g.md`
   - **Priority:** 🟡 High
 
 ## 5. AI Agent Instruction Updates
@@ -113,7 +113,7 @@ The current set of workflows lacks high-level documentation explaining how they 
 The workflow instructions are generally detailed and well-structured for AI agent consumption. However, some areas present risks or require clarification.
 
 - **Complex Shell Commands:** The `review-code` and `review-synthesizer` workflows rely on complex, multi-step shell command sequences. These are potentially brittle and may not be portable. Their robustness should be reviewed, and error handling should be enhanced.
-- **Outdated Dependencies:** ⚠️ The `initialize-project-structure.wf.md` workflow copies binstubs from `dev-tools/exe-old/_binstubs/`. The `-old` suffix is a major red flag, suggesting these tools may be deprecated or unmaintained. This dependency must be investigated and updated.
+- **Outdated Dependencies:** ⚠️ The `initialize-project-structure.wf.md` workflow copies binstubs from `.ace/tools/exe-old/_binstubs/`. The `-old` suffix is a major red flag, suggesting these tools may be deprecated or unmaintained. This dependency must be investigated and updated.
 - **Implicit Assumptions:** Workflows assume the presence and functionality of custom `bin/` scripts (`tnid`, `rc`, `llm-query`). The setup and maintenance of these tools need to be clearly documented in a developer setup guide.
 
 ## 6. Cross-Reference Integrity
@@ -138,7 +138,7 @@ Cross-referencing between related workflows is present but incomplete. A more in
 
 🟡 **High**
 
-- **Task:** Investigate and resolve the dependency on `dev-tools/exe-old/`. Update `initialize-project-structure.wf.md` to use current, supported tools.
+- **Task:** Investigate and resolve the dependency on `.ace/tools/exe-old/`. Update `initialize-project-structure.wf.md` to use current, supported tools.
   - **Reason:** This dependency represents a significant stability and security risk to the entire system.
 - **Task:** Create the "AI Agent Command Integration" guide to document command wrappers like `@review-code`.
   - **Reason:** This is a core part of the intended user/agent experience that is currently undocumented.

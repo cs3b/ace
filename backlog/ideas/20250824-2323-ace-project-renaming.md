@@ -28,8 +28,8 @@ To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Envi
 
 ## Some more Context
 
-- dev-taskflow/backlog/ideas/ACE-FILES/ace-branding.md
-- dev-taskflow/backlog/ideas/ACE-FILES/ace-banner.md
+- .ace/taskflow/backlog/ideas/ACE-FILES/ace-branding.md
+- .ace/taskflow/backlog/ideas/ACE-FILES/ace-banner.md
 
 ## Problem It Solves
 
@@ -47,9 +47,9 @@ To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Envi
 
 ## Key Patterns from Reflections
 
-- **Meta-Repository Architecture**: The project is structured across multiple repositories (`handbook-meta`, `dev-handbook`, `dev-tools`, `dev-taskflow`) coordinated via Git submodules. This renaming effort must be applied consistently across all these repositories.
-- **ATOM Architecture**: While the ATOM architecture applies to `dev-tools/lib`, the renaming should not directly impact the ATOM layer's internal naming unless it pertains to top-level directories like `atoms`, `molecules`, `organisms`, `ecosystems`.
-- **CLI Tool Patterns**: Renaming will affect CLI tool executables (in `dev-tools/exe/`) and their internal references.
+- **Meta-Repository Architecture**: The project is structured across multiple repositories (`handbook-meta`, `.ace/handbook`, `.ace/tools`, `.ace/taskflow`) coordinated via Git submodules. This renaming effort must be applied consistently across all these repositories.
+- **ATOM Architecture**: While the ATOM architecture applies to `.ace/tools/lib`, the renaming should not directly impact the ATOM layer's internal naming unless it pertains to top-level directories like `atoms`, `molecules`, `organisms`, `ecosystems`.
+- **CLI Tool Patterns**: Renaming will affect CLI tool executables (in `.ace/tools/exe/`) and their internal references.
 - **Security-First Development**: Renaming must be done with careful consideration to avoid breaking security configurations or path validations.
 - **XDG Compliance**: Configuration directories (`.coding-agent`) need to be renamed to `.ace` while maintaining XDG compliance.
 - **Bundler and Gem Management**: The Ruby gem name and associated files (`.gemspec`, `Gemfile`, `Gemfile.lock`) need to be updated.
@@ -58,27 +58,27 @@ To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Envi
 
 ## Solution Direction
 
-1. **Rename Repositories**: **Update repository names** from `handbook-meta`, `dev-handbook`, `dev-tools`, `dev-taskflow` to `ace-handbook`, `ace-tools`, `ace-taskflow`. The `ace-handbook` repository will become the primary meta-repository.
-2. **Rename Gem and Core Folders**: **Update the Ruby gem name** in `dev-tools/.gemspec` and `dev-tools/Gemfile` from `coding_agent_tools` to `ace_tools`. Rename the core library directory `lib/coding_agent_tools` to `lib/ace_tools`.
+1. **Rename Repositories**: **Update repository names** from `handbook-meta`, `.ace/handbook`, `.ace/tools`, `.ace/taskflow` to `ace-handbook`, `ace-tools`, `ace-taskflow`. The `ace-handbook` repository will become the primary meta-repository.
+2. **Rename Gem and Core Folders**: **Update the Ruby gem name** in `.ace/tools/.gemspec` and `.ace/tools/Gemfile` from `coding_agent_tools` to `ace_tools`. Rename the core library directory `lib/coding_agent_tools` to `lib/ace_tools`.
 3. **Update Configuration Directory**: **Rename all configuration directories** from `.coding-agent` or `.coding-agent-tools` to `.ace`, ensuring this change is applied both within the project structure and in user environments adhering to XDG standards.
-4. **Update Tool Executables and References**: **Rename all CLI executables** in `dev-tools/exe/` (e.g., `coding-agent-tools` to `ace-tools`) and update any internal references within the `dev-tools` gem that call these executables.
+4. **Update Tool Executables and References**: **Rename all CLI executables** in `.ace/tools/exe/` (e.g., `coding-agent-tools` to `ace-tools`) and update any internal references within the `.ace/tools` gem that call these executables.
 5. **Update Workflow Instructions and Documentation**: **Scan all workflow files** (`.wf.md`) and documentation files (`.md`) across all repositories for references to "coding agent", "coding-agent-tools", repository names, gem names, and configuration paths, and update them accordingly to use "ACE", "ace-tools", new repository names, and `.ace`. This includes updating embedded XML templates.
 
 ## Critical Questions
 
 **Before proceeding, we need to answer:**
 1. What is the precise list of all repositories that need to be renamed? (e.g., `handbook-meta` will become the primary `ace-handbook`?)
-2. What are all the specific files and directories within the `dev-tools` gem that reference the `coding_agent_tools` gem name or its internal library structure?
+2. What are all the specific files and directories within the `.ace/tools` gem that reference the `coding_agent_tools` gem name or its internal library structure?
 3. What is the strategy for updating Git submodules across all repositories to point to the new repository names?
 4. How will the renaming of configuration directories (`.coding-agent` to `.ace`) be communicated to users and handled for existing user configurations?
-5. What is the comprehensive list of all CLI executables in `dev-tools/exe/` that need to be renamed?
+5. What is the comprehensive list of all CLI executables in `.ace/tools/exe/` that need to be renamed?
 6. What is the strategy for updating all embedded XML templates and documentation files that reference old names, paths, or repository structures?
 
 **Open Questions:**
 - What is the impact of renaming on existing user configurations and data stored in `.coding-agent` directories?
 - How will the CI/CD pipelines be updated to reflect the repository renames and new gem names?
 - What is the process for updating the `README.md` and other top-level documentation in each repository to reflect the new project name and structure?
-- Will there be any changes to the `dev-handbook` repository's internal structure or purpose as part of this renaming initiative?
+- Will there be any changes to the `.ace/handbook` repository's internal structure or purpose as part of this renaming initiative?
 - How will the transition be managed to ensure minimal disruption for existing users and contributors?
 
 ## Assumptions to Validate

@@ -22,7 +22,7 @@
 
 - **Documentation consistency is critical**: Even small command references need to be updated across all documentation for a smooth user experience
 - **Historical context preservation**: Completed tasks and reflections should preserve the historical context and not be updated retroactively
-- **Workflow files already updated**: The dev-handbook workflow files were already using the new command, showing good proactive documentation practices
+- **Workflow files already updated**: The .ace/handbook workflow files were already using the new command, showing good proactive documentation practices
 
 ## Technical Details
 

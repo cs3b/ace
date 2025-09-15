@@ -45,7 +45,7 @@ To provide agents with a more secure, controlled, and configurable environment b
 - **Security-First Development**: The project emphasizes path validation, sanitization, and secure logging. This proposal extends that by focusing on runtime agent security. (docs/architecture.md, docs/architecture-tools.md)
 - **ATOM Architecture**: The custom shell and firewall components could be designed as Molecules or Organisms, leveraging existing Atoms for execution and path management. (docs/architecture-tools.md)
 - **Multi-Provider LLM Integration**: The system's flexibility with LLMs should extend to how agents interact with the environment, implying a need for provider-agnostic control mechanisms. (docs/architecture-tools.md)
-- **MCP Proxy Integration**: The mention of MCP proxy suggests an existing framework for agent communication that can be leveraged and tested. (dev-handbook/.integrations/README.md)
+- **MCP Proxy Integration**: The mention of MCP proxy suggests an existing framework for agent communication that can be leveraged and tested. (.ace/handbook/.integrations/README.md)
 - **Workflow Self-Containment**: While this proposal is about agent environment, it aligns with the principle of making components functional and testable in isolation. (docs/decisions/ADR-001-workflow-self-containment-principle.md)
 
 ## Solution Direction:

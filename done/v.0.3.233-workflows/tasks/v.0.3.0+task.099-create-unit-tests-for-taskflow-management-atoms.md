@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/atoms/taskflow_management | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/atoms/taskflow_management | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/taskflow_management
+    .ace/tools/lib/coding_agent_tools/atoms/taskflow_management
     └── task_id_parser.rb
 ```
 
@@ -39,7 +39,7 @@ Create comprehensive unit tests for the TaskFlow Management Atom class (TaskIdPa
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb
 
 #### Modify
 
@@ -64,12 +64,12 @@ Create comprehensive unit tests for the TaskFlow Management Atom class (TaskIdPa
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All supported task ID formats and parsing methods are identified
-  > Command: cd dev-tools && grep -n "def\|class" lib/coding_agent_tools/atoms/taskflow_management/task_id_parser.rb
+  > Command: cd .ace/tools && grep -n "def\|class" lib/coding_agent_tools/atoms/taskflow_management/task_id_parser.rb
 - [x] Research existing task ID patterns in the project to understand expected formats
   > TEST: Format Pattern Research
   > Type: Pattern Analysis
   > Assert: Real-world task ID examples are collected for test cases
-  > Command: find dev-taskflow -name "*.md" | head -10 | xargs basename -s .md | grep -E "v\.[0-9]"
+  > Command: find .ace/taskflow -name "*.md" | head -10 | xargs basename -s .md | grep -E "v\.[0-9]"
 - [x] Plan test scenarios for both valid parsing and error handling cases
 
 ### Execution Steps
@@ -79,25 +79,25 @@ Create comprehensive unit tests for the TaskFlow Management Atom class (TaskIdPa
   > TEST: Verify Standard Format Parsing
   > Type: Format Parsing Validation
   > Assert: Standard task ID formats are parsed correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb -t standard_format
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb -t standard_format
 - [x] Test extraction of version numbers from task IDs
 - [x] Test extraction of task numbers from task IDs
   > TEST: Verify Component Extraction
   > Type: Data Extraction Validation
   > Assert: Version and task number extraction works correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb -t extraction
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb -t extraction
 - [x] Test validation logic for task ID format compliance
 - [x] Test edge cases with malformed, incomplete, or invalid task IDs
   > TEST: Verify Edge Case Handling
   > Type: Error Handling Validation
   > Assert: Invalid task IDs are handled gracefully with appropriate error messages
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb -t edge_cases
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb -t edge_cases
 - [x] Test boundary conditions (very long IDs, special characters, unicode)
 - [x] Run complete TaskIdParser test suite
   > TEST: Full TaskIdParser Test Suite
   > Type: Complete Validation
   > Assert: All TaskIdParser functionality is thoroughly tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/task_id_parser_spec.rb
 
 ## Acceptance Criteria
 
@@ -117,7 +117,7 @@ Create comprehensive unit tests for the TaskFlow Management Atom class (TaskIdPa
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/atoms/taskflow_management/task_id_parser.rb
-- dev-taskflow/current/v.0.3.0-workflows/tasks/ (for real task ID examples)
-- dev-tools/spec/spec_helper.rb
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/tools/lib/coding_agent_tools/atoms/taskflow_management/task_id_parser.rb
+- .ace/taskflow/current/v.0.3.0-workflows/tasks/ (for real task ID examples)
+- .ace/tools/spec/spec_helper.rb
+- .ace/handbook/guides/testing/ruby-rspec.md

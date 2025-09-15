@@ -50,9 +50,9 @@ Thoroughly test the migrated codebase to ensure all functionality works correctl
   #!/bin/bash
 
   echo "=== Path Verification ==="
-  search "dev-tools/" --content --hidden || echo "✓ No dev-tools references"
-  search "dev-handbook/" --content --hidden || echo "✓ No dev-handbook references"
-  search "dev-taskflow/" --content --hidden || echo "✓ No dev-taskflow references"
+  search ".ace/tools/" --content --hidden || echo "✓ No .ace/tools references"
+  search ".ace/handbook/" --content --hidden || echo "✓ No .ace/handbook references"
+  search ".ace/taskflow/" --content --hidden || echo "✓ No .ace/taskflow references"
 
   echo "=== Module Verification ==="
   search "CodingAgentTools" --content || echo "✓ No CodingAgentTools references"

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.93]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-pattern.g.md
     ├── changelog.g.md
@@ -122,14 +122,14 @@ Implement robust language-specific file filtering to ensure that even when glob 
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/atoms/code_quality/file_type_detector.rb
-- dev-tools/lib/coding_agent_tools/atoms/code_quality/language_file_filter.rb
+- .ace/tools/lib/coding_agent_tools/atoms/code_quality/file_type_detector.rb
+- .ace/tools/lib/coding_agent_tools/atoms/code_quality/language_file_filter.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/ruby_runner.rb (from task 93)
-- dev-tools/lib/coding_agent_tools/organisms/code_quality/markdown_runner.rb (from task 93)
-- dev-tools/lib/coding_agent_tools/atoms/code_quality/configuration_loader.rb (add file pattern config)
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/ruby_runner.rb (from task 93)
+- .ace/tools/lib/coding_agent_tools/organisms/code_quality/markdown_runner.rb (from task 93)
+- .ace/tools/lib/coding_agent_tools/atoms/code_quality/configuration_loader.rb (add file pattern config)
 
 #### Delete
 
@@ -164,7 +164,7 @@ Implement robust language-specific file filtering to ensure that even when glob 
   > Assert: FileTypeDetector correctly identifies file types using configured patterns
   > Command: ruby -r ./lib/coding_agent_tools -e "puts CodingAgentTools::Atoms::CodeQuality::FileTypeDetector.detect_type('test.rb')"
 - [ ] Update .coding-agent/lint.yml to include explicit file patterns for Ruby (*.rb, *.gemspec, Gemfile, exe/*) and Markdown (*.md, *.markdown)
-- [ ] Update dev-handbook/.meta/tpl/dotfiles template with new file pattern configuration
+- [ ] Update .ace/handbook/.meta/tpl/dotfiles template with new file pattern configuration
 - [ ] Create LanguageFileFilter class that filters file lists by language
 - [ ] Integrate file filtering into RubyRunner to only process Ruby files
   > TEST: Ruby File Filtering

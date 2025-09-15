@@ -13,10 +13,10 @@ dependencies: []
 ### User Experience
 - **Input**: Developers and AI agents reading documentation and templates
 - **Process**: Navigate documentation to understand how to use CLI tools correctly
-- **Output**: Accurate guidance on accessing tools via dev-tools Ruby gem
+- **Output**: Accurate guidance on accessing tools via .ace/tools Ruby gem
 
 ### Expected Behavior
-Users accessing documentation in dev-handbook and dev-tools will find accurate, up-to-date instructions for using CLI tools. All references to obsolete binstub patterns (bin/gc, bin/tn, bin/tnid, etc.) will be removed and replaced with correct tool access methods via the dev-tools/exe/ directory or installed gem commands.
+Users accessing documentation in .ace/handbook and .ace/tools will find accurate, up-to-date instructions for using CLI tools. All references to obsolete binstub patterns (bin/gc, bin/tn, bin/tnid, etc.) will be removed and replaced with correct tool access methods via the .ace/tools/exe/ directory or installed gem commands.
 
 ### Interface Contract
 ```bash
@@ -27,8 +27,8 @@ bin/tnid         # Should not appear in documentation
 ./bin/[tool]     # Should not appear in documentation
 
 # Correct patterns to use:
-dev-tools/exe/git-commit      # When working in submodule
-dev-tools/exe/task-manager     # When working in submodule
+.ace/tools/exe/git-commit      # When working in submodule
+.ace/tools/exe/task-manager     # When working in submodule
 git-commit                     # When gem is installed
 task-manager                   # When gem is installed
 ```
@@ -42,7 +42,7 @@ task-manager                   # When gem is installed
 - Example outputs: May show old patterns if documenting migration
 
 ### Success Criteria
-- [ ] **Behavioral Outcome 1**: All documentation correctly references tools via dev-tools/exe/ or gem commands
+- [ ] **Behavioral Outcome 1**: All documentation correctly references tools via .ace/tools/exe/ or gem commands
 - [ ] **User Experience Goal 2**: Zero confusion about how to access CLI tools
 - [ ] **System Performance 3**: Documentation audit shows no active binstub references
 
@@ -54,18 +54,18 @@ task-manager                   # When gem is installed
 
 ## Objective
 
-Remove all obsolete binstub references from documentation to ensure users have accurate, up-to-date guidance on accessing CLI tools through the dev-tools Ruby gem.
+Remove all obsolete binstub references from documentation to ensure users have accurate, up-to-date guidance on accessing CLI tools through the .ace/tools Ruby gem.
 
 ## Scope of Work
 
 - **User Experience Scope**: Documentation readers finding accurate tool usage instructions
 - **System Behavior Scope**: All documentation files correctly referencing tool access methods
-- **Interface Scope**: Clear guidance on dev-tools/exe/ paths and gem command usage
+- **Interface Scope**: Clear guidance on .ace/tools/exe/ paths and gem command usage
 
 ### Deliverables
 
 #### Behavioral Specifications
-- Comprehensive audit of binstub references across dev-handbook and dev-tools
+- Comprehensive audit of binstub references across .ace/handbook and .ace/tools
 - Updated documentation with correct tool access patterns
 - Clear migration guidance for users familiar with old patterns
 
@@ -93,42 +93,42 @@ Comprehensive search using ripgrep reveals **extensive binstub references still 
 - `bin/tnid`: 14 occurrences
 - `bin/tr`, `bin/gc`, `bin/gs`, `bin/gl`, `bin/rc`: Multiple occurrences each
 
-See `dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` for complete audit.
+See `.ace/taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` for complete audit.
 
 ## File Modifications
 
 ### Files Requiring Updates
 
 #### High Priority - Workflow Instructions (10 files)
-- dev-handbook/workflow-instructions/work-on-task.wf.md
-- dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-- dev-handbook/workflow-instructions/fix-tests.wf.md
-- dev-handbook/workflow-instructions/rebase-against.wf.md
-- dev-handbook/workflow-instructions/save-session-context.wf.md
-- dev-handbook/workflow-instructions/plan-task.wf.md
-- dev-handbook/workflow-instructions/draft-release.wf.md
-- dev-handbook/workflow-instructions/publish-release.wf.md
-- dev-handbook/workflow-instructions/improve-code-coverage.wf.md
-- dev-handbook/workflow-instructions/update-blueprint.wf.md
+- .ace/handbook/workflow-instructions/work-on-task.wf.md
+- .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
+- .ace/handbook/workflow-instructions/fix-tests.wf.md
+- .ace/handbook/workflow-instructions/rebase-against.wf.md
+- .ace/handbook/workflow-instructions/save-session-context.wf.md
+- .ace/handbook/workflow-instructions/plan-task.wf.md
+- .ace/handbook/workflow-instructions/draft-release.wf.md
+- .ace/handbook/workflow-instructions/publish-release.wf.md
+- .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
+- .ace/handbook/workflow-instructions/update-blueprint.wf.md
 
 #### Critical - AI Agent Guide (1 file)
-- dev-handbook/guides/ai-agent-integration.g.md (Lines 31, 34, 37, 40-41, 44-45, 67-68)
+- .ace/handbook/guides/ai-agent-integration.g.md (Lines 31, 34, 37, 40-41, 44-45, 67-68)
 
 #### Important - Development Guides (7 files)
-- dev-handbook/guides/project-management.g.md
-- dev-handbook/guides/version-control-system-git.g.md
-- dev-handbook/guides/task-definition.g.md
-- dev-handbook/guides/embedded-testing-guide.g.md
-- dev-handbook/guides/testing.g.md
-- dev-handbook/guides/release-publish.g.md
-- dev-handbook/guides/testing/test-maintenance.md
+- .ace/handbook/guides/project-management.g.md
+- .ace/handbook/guides/version-control-system-git.g.md
+- .ace/handbook/guides/task-definition.g.md
+- .ace/handbook/guides/embedded-testing-guide.g.md
+- .ace/handbook/guides/testing.g.md
+- .ace/handbook/guides/release-publish.g.md
+- .ace/handbook/guides/testing/test-maintenance.md
 
 #### Templates (10+ files)
-- dev-handbook/templates/release-v.0.0.0/*.task.template.md (5 files)
-- dev-handbook/templates/project-docs/architecture.template.md
-- dev-handbook/templates/project-docs/blueprint.template.md
-- dev-handbook/templates/task-management/task.pending.template.md
-- dev-handbook/templates/binstubs/*.template.md
+- .ace/handbook/templates/release-v.0.0.0/*.task.template.md (5 files)
+- .ace/handbook/templates/project-docs/architecture.template.md
+- .ace/handbook/templates/project-docs/blueprint.template.md
+- .ace/handbook/templates/task-management/task.pending.template.md
+- .ace/handbook/templates/binstubs/*.template.md
 
 ## Implementation Plan
 
@@ -138,49 +138,49 @@ See `dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` 
   > TEST: Comprehensive Search
   > Type: Pre-condition Check
   > Assert: All repositories searched for binstub patterns
-  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint)" dev-handbook --type md
+  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint)" .ace/handbook --type md
 
 * [x] **Current State Assessment**: Found 200+ references requiring updates
   > TEST: Documentation Audit
   > Type: Discovery Check
   > Assert: All binstub references identified and documented
-  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" dev-handbook --type md -n -o | wc -l
+  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" .ace/handbook --type md -n -o | wc -l
 
 ### Execution Steps
 
-- [x] **Update Critical AI Agent Guide**: Fix dev-handbook/guides/ai-agent-integration.g.md
+- [x] **Update Critical AI Agent Guide**: Fix .ace/handbook/guides/ai-agent-integration.g.md
   > TEST: AI Guide Validation
   > Type: Content Check
   > Assert: No binstub references remain in AI agent guide
-  > Command: search "bin/(tn|gc|tnid)" --content -r dev-handbook -g "ai-agent*.md"
+  > Command: search "bin/(tn|gc|tnid)" --content -r .ace/handbook -g "ai-agent*.md"
   > Result: No results found ✅
 
 - [x] **Update Workflow Instructions**: Fix all 26 workflow instruction files
   > TEST: Workflow Validation
   > Type: Content Check
-  > Assert: All workflows use dev-tools commands
-  > Command: search "bin/(tn|gc|tnid)" --content -r dev-handbook -g "**/workflow-instructions/*.md"
+  > Assert: All workflows use .ace/tools commands
+  > Command: search "bin/(tn|gc|tnid)" --content -r .ace/handbook -g "**/workflow-instructions/*.md"
   > Result: No results found ✅
 
 - [x] **Update Development Guides**: Fix 7 guide files
   > TEST: Guide Validation
   > Type: Content Check
   > Assert: All guides reference correct tool paths
-  > Command: search "bin/(tn|gc|tnid)" --content -r dev-handbook -g "**/*.g.md"
+  > Command: search "bin/(tn|gc|tnid)" --content -r .ace/handbook -g "**/*.g.md"
   > Result: No results found ✅
 
 - [x] **Update Templates**: Fix all template files
   > TEST: Template Validation
   > Type: Content Check
   > Assert: Templates use correct tool references
-  > Command: search "bin/(tn|gc|tnid)" --content -r dev-handbook -g "**/*.template.md"
+  > Command: search "bin/(tn|gc|tnid)" --content -r .ace/handbook -g "**/*.template.md"
   > Result: No results found ✅
 
 - [x] **Final Verification**: Confirm all references removed
   > TEST: Complete Cleanup Validation
   > Type: Final Check
-  > Assert: Zero binstub references in dev-handbook
-  > Command: search "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" --content -r dev-handbook
+  > Assert: Zero binstub references in .ace/handbook
+  > Command: search "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" --content -r .ace/handbook
   > Result: No results found ✅
 
 ## Risk Assessment
@@ -203,7 +203,7 @@ See `dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` 
 
 ### Behavioral Requirement Fulfillment
 - [x] **User Experience Delivery**: Documentation provides accurate tool access guidance
-- [x] **Interface Contract Compliance**: All docs use dev-tools commands (task-manager, release-manager, etc.)
+- [x] **Interface Contract Compliance**: All docs use .ace/tools commands (task-manager, release-manager, etc.)
 - [x] **System Behavior Validation**: No confusing binstub references found
 
 ### Implementation Quality Assurance
@@ -221,22 +221,22 @@ See `dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` 
 
 ## References
 
-- Related ideas-manager output: dev-taskflow/backlog/ideas/20250809-0840-tool-guide-updates.md
+- Related ideas-manager output: .ace/taskflow/backlog/ideas/20250809-0840-tool-guide-updates.md
 - Current tools documentation: docs/tools.md (verified clean)
-- Dev-tools documentation: dev-tools/docs/tools.md (verified clean)
+- Dev-tools documentation: .ace/tools/docs/tools.md (verified clean)
 
 ## Replacement Mapping Table
 
 | Old Reference | New Reference (when in submodule) | New Reference (gem installed) |
 |--------------|-----------------------------------|------------------------------|
-| `bin/tn` | `dev-tools/exe/task-manager next` | `task-manager next` |
-| `bin/tnid` | `dev-tools/exe/task-manager generate-id VERSION` | `task-manager generate-id VERSION` |
-| `bin/tal` | `dev-tools/exe/task-manager list` | `task-manager list` |
-| `bin/tr` | `dev-tools/exe/task-manager recent` | `task-manager recent` |
-| `bin/gc` | `dev-tools/exe/git-commit` | `git-commit` |
-| `bin/gs` | `dev-tools/exe/git-status` | `git-status` |
-| `bin/gl` | `dev-tools/exe/git-log` | `git-log` |
-| `bin/rc` | `dev-tools/exe/release-manager current` | `release-manager current` |
+| `bin/tn` | `.ace/tools/exe/task-manager next` | `task-manager next` |
+| `bin/tnid` | `.ace/tools/exe/task-manager generate-id VERSION` | `task-manager generate-id VERSION` |
+| `bin/tal` | `.ace/tools/exe/task-manager list` | `task-manager list` |
+| `bin/tr` | `.ace/tools/exe/task-manager recent` | `task-manager recent` |
+| `bin/gc` | `.ace/tools/exe/git-commit` | `git-commit` |
+| `bin/gs` | `.ace/tools/exe/git-status` | `git-status` |
+| `bin/gl` | `.ace/tools/exe/git-log` | `git-log` |
+| `bin/rc` | `.ace/tools/exe/release-manager current` | `release-manager current` |
 | `bin/test` | *Project-specific test command* | *Project-specific* |
 | `bin/lint` | *Project-specific lint command* | *Project-specific* |
 
@@ -252,8 +252,8 @@ See `dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` 
    - Task Definition Guide
    - 26 Workflow Instruction files
    - 10+ Template files
-3. **Replaced all references** with correct dev-tools commands
+3. **Replaced all references** with correct .ace/tools commands
 4. **Verified cleanup** - Zero binstub references remain in active documentation
 
 ### Key Achievement
-The new `search` tool proved invaluable for this task, enabling efficient discovery and verification of all references across the codebase. All documentation now correctly guides users to use dev-tools commands that are available in PATH.
+The new `search` tool proved invaluable for this task, enabling efficient discovery and verification of all references across the codebase. All documentation now correctly guides users to use .ace/tools commands that are available in PATH.

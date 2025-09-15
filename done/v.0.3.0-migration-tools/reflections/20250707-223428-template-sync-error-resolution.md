@@ -17,7 +17,7 @@
 ## What Could Be Improved
 
 - **Initial Context Loading**: Had to read multiple files to understand the existing implementation
-- **Template Discovery**: Required investigation to find the actual template files in `dev-tools/exe-old/_binstubs/`
+- **Template Discovery**: Required investigation to find the actual template files in `.ace/tools/exe-old/_binstubs/`
 - **Path Validation Logic**: The original path validation was too restrictive, causing valid operations to fail
 - **Documentation Alignment**: Workflow documentation contained references to unused templates that needed cleanup
 
@@ -111,10 +111,10 @@
 
 ### Key Files Modified
 
-- `dev-tools/lib/coding_agent_tools/organisms/task_management/template_synchronizer.rb` - Improved logging logic
-- `dev-tools/lib/coding_agent_tools/molecules/task_management/file_synchronizer.rb` - Removed FileOperationConfirmer
-- `dev-handbook/workflow-instructions/initialize-project-structure.wf.md` - Updated template references
-- `dev-handbook/templates/binstubs/*.template.md` - Created proper template files
+- `.ace/tools/lib/coding_agent_tools/organisms/task_management/template_synchronizer.rb` - Improved logging logic
+- `.ace/tools/lib/coding_agent_tools/molecules/task_management/file_synchronizer.rb` - Removed FileOperationConfirmer
+- `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md` - Updated template references
+- `.ace/handbook/templates/binstubs/*.template.md` - Created proper template files
 
 ### Architecture Insights
 

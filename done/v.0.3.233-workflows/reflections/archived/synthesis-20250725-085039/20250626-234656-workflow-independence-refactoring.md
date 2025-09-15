@@ -27,7 +27,7 @@
 
 - Looked for dependency analysis in `backlog/` directory
 - File was actually in `current/` directory
-- Required user correction: "/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/researches/workflow-dependency-analysis.md"
+- Required user correction: "/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/researches/workflow-dependency-analysis.md"
 
 **Proposed Improvements**:
 
@@ -70,7 +70,7 @@
 
 **Challenge**: Required user guidance on architectural decisions
 
-- User intervened: "we should get rid off all the dev-handbook/workflow-instructions/breakdown-notes-into-tasks/*"
+- User intervened: "we should get rid off all the .ace/handbook/workflow-instructions/breakdown-notes-into-tasks/*"
 - User clarified approach: "always treat them in similar way"
 - Needed guidance on which workflows to remove
 

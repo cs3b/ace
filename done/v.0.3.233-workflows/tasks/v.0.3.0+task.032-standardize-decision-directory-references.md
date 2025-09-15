@@ -13,22 +13,22 @@ dependencies: []
 _Command run:_
 
 ```bash
-find . -name "*.md" -type f | xargs grep -l "dev-taskflow/decisions" | wc -l | sed 's/^/    /'
+find . -name "*.md" -type f | xargs grep -l ".ace/taskflow/decisions" | wc -l | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    38 files contain dev-taskflow/decisions references
+    38 files contain .ace/taskflow/decisions references
 ```
 
 ## Objective
 
-Standardize all decision directory references across the codebase to use `docs/decisions/` for permanent Architecture Decision Records (ADRs). Currently, many files reference `dev-taskflow/decisions` or `current/*/decisions`, which conflicts with the principle that `docs/` contains permanent project context while `dev-taskflow/` contains point-in-time information.
+Standardize all decision directory references across the codebase to use `docs/decisions/` for permanent Architecture Decision Records (ADRs). Currently, many files reference `.ace/taskflow/decisions` or `current/*/decisions`, which conflicts with the principle that `docs/` contains permanent project context while `.ace/taskflow/` contains point-in-time information.
 
 ## Scope of Work
 
-* Find all references to dev-taskflow/decisions or current/*/decisions
+* Find all references to .ace/taskflow/decisions or current/*/decisions
 * Update references to use docs/decisions/ for permanent ADRs
 * Document the distinction in architecture.md
 * Ensure consistent understanding of permanent vs temporal documentation
@@ -41,7 +41,7 @@ Standardize all decision directory references across the codebase to use `docs/d
 
 #### Modify
 
-* docs/architecture.md (add clarification about docs/ vs dev-taskflow/)
+* docs/architecture.md (add clarification about docs/ vs .ace/taskflow/)
 * All files containing incorrect decision directory references
 * Any workflow instructions referencing the wrong path
 
@@ -66,11 +66,11 @@ Standardize all decision directory references across the codebase to use `docs/d
   > Assert: Complete list of files with decision references compiled
   > Command: bin/test --check-all-references-found
 * [x] Categorize which references should point to docs/decisions/
-* [x] Identify any legitimate dev-taskflow decision references
+* [x] Identify any legitimate .ace/taskflow decision references
 
 ### Execution Steps
 
-* [x] Update docs/architecture.md to clarify docs/ vs dev-taskflow/ distinction
+* [x] Update docs/architecture.md to clarify docs/ vs .ace/taskflow/ distinction
   > TEST: Architecture Clarification Added
   > Type: Content Check
   > Assert: Clear explanation of permanent vs point-in-time docs
@@ -88,7 +88,7 @@ Standardize all decision directory references across the codebase to use `docs/d
 
 * [x] All permanent ADR references use docs/decisions/ path
 * [x] Architecture.md clearly documents the distinction
-* [x] No references to dev-taskflow/decisions for permanent ADRs
+* [x] No references to .ace/taskflow/decisions for permanent ADRs
 * [x] Point-in-time decisions (if any) clearly marked as such
 * [x] All links remain functional after updates
 

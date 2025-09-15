@@ -13,7 +13,7 @@ dependencies: []
 **Issue**: The `coding-agent-tools integrate claude` command was failing during submodule setup with multiple errors:
 1. Repository URL mismatch (expecting CodingAgentDev/* but actual repos are cs3b/*)
 2. Incorrect GitHub CLI syntax causing "Could not resolve to a Repository" errors
-3. Shell injection vulnerability with auto URL generation for dev-taskflow
+3. Shell injection vulnerability with auto URL generation for .ace/taskflow
 
 **Key Behavioral Requirements**:
 - GitHub CLI must receive owner/repo format, not full URLs
@@ -34,7 +34,7 @@ Fixed critical bugs in the `setup_submodule` method to properly handle GitHub CL
 ### Deliverables
 
 #### Modify
-- `dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb` - Fixed setup_submodule method (lines 170-218)
+- `.ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb` - Fixed setup_submodule method (lines 170-218)
 
 ## Implementation Summary
 
@@ -99,5 +99,5 @@ bundle exec standardrb lib/coding_agent_tools/cli/commands/integrate.rb
 ## References
 
 - Related issues: User reported integration command failures
-- Files modified: dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb
+- Files modified: .ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb
 - Follow-up needed: User will test manually on their repository

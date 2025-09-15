@@ -12,7 +12,7 @@ Synthesis of 6 reflection notes.
 ## Reflection 1: 20250725-095553-synthesis-and-reflection-workflow-implementation.md
 
 **Source**:
-`./dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-095553-synthesis-and-reflection-workflow-implementation.md`
+`./.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-095553-synthesis-and-reflection-workflow-implementation.md`
 **Modified**: 2025-07-25 09:57:41
 
 # Reflection: Synthesis and Reflection Workflow Implementation
@@ -31,7 +31,7 @@ Analysis
   with 15.88% coverage improvement across molecule classes
 * **Multi-Repository Git Management**: Successfully committed changes
   across all four repositories (main, dev-tools, dev-taskflow,
-  dev-handbook) using proper commit messages
+  .ace/handbook) using proper commit messages
 * **Template-Based Workflow Adherence**: Consistently followed embedded
   templates and workflow instructions for structured execution
 
@@ -221,14 +221,14 @@ practices.
 ## Reflection 2: 20250725-134609-fix-tests-workflow-implementation.md
 
 **Source**:
-`./dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-134609-fix-tests-workflow-implementation.md`
+`./.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-134609-fix-tests-workflow-implementation.md`
 **Modified**: 2025-07-25 13:47:49
 
 # Reflection: Fix-Tests Workflow Implementation and Test Suite Recovery
 
 **Date**: 2025-07-25 **Context**: Following the fix-tests workflow
 instruction to systematically diagnose and fix failing automated tests
-in dev-tools Ruby gem **Author**: Claude Code Agent **Type**:
+in .ace/tools Ruby gem **Author**: Claude Code Agent **Type**:
 Conversation Analysis
 
 ## What Went Well
@@ -406,11 +406,11 @@ File.exist?, and Dir.exist? stubbing
 ## Additional Context
 
 * **Workflow Source**:
-  `/dev-handbook/workflow-instructions/fix-tests.wf.md`
+  `/.ace/handbook/workflow-instructions/fix-tests.wf.md`
 * **Primary Files Modified**:
-  * `dev-tools/lib/coding_agent_tools/cli/commands/nav/tree.rb`
-  * `dev-tools/spec/coding_agent_tools/cli/commands/nav/tree_spec.rb`
-  * `dev-tools/spec/coding_agent_tools/molecules/code/prompt_combiner_spec.rb`
+  * `.ace/tools/lib/coding_agent_tools/cli/commands/nav/tree.rb`
+  * `.ace/tools/spec/coding_agent_tools/cli/commands/nav/tree_spec.rb`
+  * `.ace/tools/spec/coding_agent_tools/molecules/code/prompt_combiner_spec.rb`
 * **Commits Created**:
   * `87d7cdd`: fix(cli): address failing tests in tree and prompt
 combiner
@@ -423,7 +423,7 @@ combiner
 ## Reflection 3: 20250725-134835-atom-test-fixes-path-resolution.md
 
 **Source**:
-`./dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-134835-atom-test-fixes-path-resolution.md`
+`./.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-134835-atom-test-fixes-path-resolution.md`
 **Modified**: 2025-07-25 13:49:17
 
 # Reflection: Atom Test Fixes - Path Resolution & Formatter Issues
@@ -609,7 +609,7 @@ preserve user path format
 ## Reflection 4: 20250725-165253-review-synthesize-spec-test-fixes.md
 
 **Source**:
-`./dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-165253-review-synthesize-spec-test-fixes.md`
+`./.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-165253-review-synthesize-spec-test-fixes.md`
 **Modified**: 2025-07-25 16:53:27
 
 # Reflection: Review Synthesize Spec Test Fixes Implementation
@@ -793,7 +793,7 @@ architecture while satisfying all test requirements.
 ## Reflection 5: 20250725-molecule-unit-testing-implementation.md
 
 **Source**:
-`./dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-molecule-unit-testing-implementation.md`
+`./.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-molecule-unit-testing-implementation.md`
 **Modified**: 2025-07-25 09:50:36
 
 # Reflection: Molecule Unit Testing Implementation Session
@@ -1016,7 +1016,7 @@ coordination and error handling capabilities.
 ## Reflection 6: 20250725-single-reflection-analysis.md
 
 **Source**:
-`./dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-single-reflection-analysis.md`
+`./.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-single-reflection-analysis.md`
 **Modified**: 2025-07-25 09:51:44
 
 # Coding Agent Tools: Single Reflection Analysis

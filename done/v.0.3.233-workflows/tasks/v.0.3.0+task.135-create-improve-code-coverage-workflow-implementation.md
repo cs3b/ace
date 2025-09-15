@@ -32,7 +32,7 @@ Implement a comprehensive workflow instruction that systematically analyzes code
 
 #### Create
 
-- dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+- .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
 
 #### Modify
 
@@ -62,7 +62,7 @@ Implement a comprehensive workflow instruction that systematically analyzes code
   > TEST: Tool Analysis Complete
   > Type: Pre-condition Check
   > Assert: coverage-analyze executable exists and JSON report format is understood
-  > Command: ls -la dev-tools/exe/coverage-analyze && coverage-analyze --help && ls -la dev-tools/coverage_analysis/coverage_analysis.json
+  > Command: ls -la .ace/tools/exe/coverage-analyze && coverage-analyze --help && ls -la .ace/tools/coverage_analysis/coverage_analysis.json
 - [x] Study existing workflow instruction patterns and standards
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
@@ -87,32 +87,32 @@ Implement a comprehensive workflow instruction that systematically analyzes code
   > TEST: Workflow File Created
   > Type: Action Validation
   > Assert: improve-code-coverage.wf.md file exists with proper sections
-  > Command: ls -la dev-handbook/workflow-instructions/improve-code-coverage.wf.md && grep -c "## Goal\|## Prerequisites\|## Process Steps" dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+  > Command: ls -la .ace/handbook/workflow-instructions/improve-code-coverage.wf.md && grep -c "## Goal\|## Prerequisites\|## Process Steps" .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
 - [x] Implement comprehensive process steps for coverage analysis
   > TEST: Process Steps Complete
   > Type: Action Validation
   > Assert: All required process steps documented with specific commands and procedures
-  > Command: grep -A 5 "bin/tests\|coverage-analyze\|create-path task-new" dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+  > Command: grep -A 5 "bin/tests\|coverage-analyze\|create-path task-new" .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
 - [x] Add detailed source code analysis and test scenario identification procedures
   > TEST: Analysis Procedures Documented
   > Type: Action Validation
   > Assert: Edge case identification and test strategy design steps are detailed
-  > Command: grep -i "edge case\|test scenario\|error condition" dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+  > Command: grep -i "edge case\|test scenario\|error condition" .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
 - [x] Embed task template and integrate with create-task workflow
   > TEST: Template Integration
   > Type: Action Validation
   > Assert: Task template embedded and create-task workflow integration documented
-  > Command: grep -A 10 "<template path=" dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+  > Command: grep -A 10 "<template path=" .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
 - [x] Add quality guidelines, error handling, and success criteria
   > TEST: Quality Framework Complete
   > Type: Action Validation
   > Assert: Quality guidelines and error handling procedures documented
-  > Command: grep -c "Quality\|Error Handling\|Success Criteria" dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+  > Command: grep -c "Quality\|Error Handling\|Success Criteria" .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
 - [x] Validate workflow follows project standards and conventions
   > TEST: Standards Compliance
   > Type: Action Validation
   > Assert: Workflow follows established patterns and includes all required sections
-  > Command: diff -q <(grep "^## " dev-handbook/workflow-instructions/improve-code-coverage.wf.md) <(grep "^## " dev-handbook/workflow-instructions/create-task.wf.md | head -5)
+  > Command: diff -q <(grep "^## " .ace/handbook/workflow-instructions/improve-code-coverage.wf.md) <(grep "^## " .ace/handbook/workflow-instructions/create-task.wf.md | head -5)
 
 ## Acceptance Criteria
 
@@ -138,10 +138,10 @@ Implement a comprehensive workflow instruction that systematically analyzes code
 ## References
 
 - Coverage analysis tool: `coverage-analyze --help`
-- Coverage analysis output: `dev-tools/coverage_analysis/coverage_analysis.json` (default location)
-- Task creation workflow: `dev-handbook/workflow-instructions/create-task.wf.md`
-- Testing standards: `dev-tools/docs/development/guides/testing-with-vcr.md`
+- Coverage analysis output: `.ace/tools/coverage_analysis/coverage_analysis.json` (default location)
+- Task creation workflow: `.ace/handbook/workflow-instructions/create-task.wf.md`
+- Testing standards: `.ace/tools/docs/development/guides/testing-with-vcr.md`
 - Architecture reference: `docs/architecture-tools.md` (ATOM pattern, Ruby best practices)
 - Testing approach: Edge case focus with coverage as attention indicator, not percentage target
 - Ruby testing stack: RSpec, VCR, ATOM architecture components
-- Submodule requirements: dev-handbook, dev-tools, dev-taskflow (all must be initialized)
+- Submodule requirements: dev-handbook, dev-tools, .ace/taskflow (all must be initialized)

@@ -17,7 +17,7 @@
 
 - **Template System Gaps**: Multiple instances of missing templates (task.template.md, reflection_new template) requiring manual content creation
 - **Tool Command Uncertainty**: Initially unclear about exact usage of coverage-analyze tool and nav-path vs create-path commands
-- **File Path Navigation**: Some confusion about working directory context when switching between root and dev-tools subdirectory
+- **File Path Navigation**: Some confusion about working directory context when switching between root and .ace/tools subdirectory
 - **Task Estimation Refinement**: Estimates (2-4h) were somewhat generic and could benefit from more granular analysis
 
 ## Key Learnings

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/organisms | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/organisms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/organisms
+    .ace/tools/lib/coding_agent_tools/organisms
     ├── code/
     │   ├── content_extractor.rb
     │   ├── context_loader.rb
@@ -51,18 +51,18 @@ Create comprehensive unit tests for all 12 Organism classes to validate high-lev
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code/context_loader_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code/review_manager_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code/session_manager_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/language_runner_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/language_runner_factory_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/markdown_runner_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/multi_phase_quality_manager_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/ruby_runner_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/code_quality/validation_workflow_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/context_loader_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/review_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/session_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/language_runner_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/language_runner_factory_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/markdown_runner_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/multi_phase_quality_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/ruby_runner_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code_quality/validation_workflow_manager_spec.rb
 
 #### Modify
 
@@ -88,7 +88,7 @@ Create comprehensive unit tests for all 12 Organism classes to validate high-lev
   > TEST: Organism Business Logic Analysis
   > Type: Pre-condition Check
   > Assert: All organism classes and their orchestration patterns are identified
-  > Command: cd dev-tools && find lib/coding_agent_tools/organisms -name "*.rb" -exec grep -l "Molecules::\|def.*orchestrate\|def.*manage\|def.*coordinate" {} \;
+  > Command: cd .ace/tools && find lib/coding_agent_tools/organisms -name "*.rb" -exec grep -l "Molecules::\|def.*orchestrate\|def.*manage\|def.*coordinate" {} \;
 - [ ] Research patterns for testing complex business logic with multiple dependencies
 - [ ] Plan mocking strategies for molecule dependencies and external integrations
 
@@ -99,7 +99,7 @@ Create comprehensive unit tests for all 12 Organism classes to validate high-lev
   > TEST: Content Processing Orchestration
   > Type: Business Logic Validation
   > Assert: Content extraction orchestrates multiple components correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
 - [x] Implement ContextLoader tests with context aggregation and loading logic
 - [x] Implement PromptBuilder tests with complex prompt construction workflows
 - [ ] Implement ReviewManager tests with review process orchestration
@@ -107,14 +107,14 @@ Create comprehensive unit tests for all 12 Organism classes to validate high-lev
   > TEST: Code Organism Coordination
   > Type: Multi-Component Orchestration Test
   > Assert: Code organisms coordinate molecules correctly for business workflows
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code/
 - [ ] Implement AgentCoordinationFoundation tests with agent workflow coordination
 - [ ] Implement LanguageRunner tests with language-specific execution workflows
 - [ ] Implement LanguageRunnerFactory tests with runner creation and selection logic
   > TEST: Language Runner System
   > Type: Factory and Execution Validation
   > Assert: Language runner system creates and manages runners correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/ -t language_runner
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/ -t language_runner
 - [ ] Implement MarkdownRunner tests with Markdown processing workflows
 - [ ] Implement MultiPhaseQualityManager tests with complex quality assurance coordination
 - [ ] Implement RubyRunner tests with Ruby-specific quality workflows
@@ -122,17 +122,17 @@ Create comprehensive unit tests for all 12 Organism classes to validate high-lev
   > TEST: Quality Management Orchestration
   > Type: Complex Workflow Validation
   > Assert: Quality management organisms handle multi-phase workflows correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/
 - [ ] Test error handling and recovery in complex orchestration scenarios
   > TEST: Complex Error Handling
   > Type: Error Recovery Validation
   > Assert: Organisms handle errors gracefully across multiple workflow phases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/ --tag error_handling
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/ --tag error_handling
 - [ ] Run complete organism test suite
   > TEST: Full Organism Test Suite
   > Type: Complete Business Logic Test
   > Assert: All organism classes are thoroughly tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/
 
 ## Acceptance Criteria
 
@@ -153,8 +153,8 @@ Create comprehensive unit tests for all 12 Organism classes to validate high-lev
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/organisms/**/*.rb
-- dev-tools/lib/coding_agent_tools/molecules/**/*.rb (for dependency understanding)
-- dev-tools/spec/support/mock_helpers.rb
+- .ace/tools/lib/coding_agent_tools/organisms/**/*.rb
+- .ace/tools/lib/coding_agent_tools/molecules/**/*.rb (for dependency understanding)
+- .ace/tools/spec/support/mock_helpers.rb
 - docs/architecture-tools.md (ATOM architecture principles for organisms)
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/handbook/guides/testing/ruby-rspec.md

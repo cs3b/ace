@@ -61,11 +61,11 @@
 - **Criteria-based validation**: Created comprehensive checklist covering XML format, positioning, naming, and structure
 - **Automated commands**: Developed reliable grep and validation commands for consistent checking
 - **Report generation**: Standardized compliance reporting with detailed analysis and action plans
-- **Template path validation**: Verified all paths follow dev-handbook/templates/ structure with .template.md extension
+- **Template path validation**: Verified all paths follow .ace/handbook/templates/ structure with .template.md extension
 
 ### Documentation Organization Standards
 
-- **Location rule**: Task-specific docs in dev-taskflow/current/v.X.Y.Z-release/docs/
+- **Location rule**: Task-specific docs in .ace/taskflow/current/v.X.Y.Z-release/docs/
 - **Naming convention**: Task ID prefix (e.g., 25-validation-criteria-checklist.md)
 - **Document types**: Analysis reports, action plans, process guides, validation criteria
 - **Integration**: Added comprehensive guidelines to work-on-task workflow
@@ -79,10 +79,10 @@
 
 ### Key Deliverables Created
 
-- dev-taskflow/current/v.0.3.0-workflows/docs/25-validation-criteria-checklist.md
-- dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-report.md
-- dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-fixes.md
-- dev-handbook/templates/session-management/session-context.template.md
+- .ace/taskflow/current/v.0.3.0-workflows/docs/25-validation-criteria-checklist.md
+- .ace/taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-report.md
+- .ace/taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-fixes.md
+- .ace/handbook/templates/session-management/session-context.template.md
 
 ### Remaining Work
 

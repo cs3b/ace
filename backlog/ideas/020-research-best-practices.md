@@ -45,10 +45,10 @@ Improve the efficiency and accuracy of how AI agents research repository structu
 
 - **ADR-001: Workflow Self-Containment Principle**: Workflows must be self-contained, implying that necessary research context should ideally be discoverable or embedded.
 - **ADR-002: XML Template Embedding Architecture**: Templates and potentially other document types can be embedded, suggesting a structured way to include knowledge.
-- **ADR-004: Consistent Path Standards**: Defined paths for templates and guides (`dev-handbook/templates/`, `dev-handbook/guides/`) provide a structured way to locate resources.
+- **ADR-004: Consistent Path Standards**: Defined paths for templates and guides (`.ace/handbook/templates/`, `.ace/handbook/guides/`) provide a structured way to locate resources.
 - **ADR-005: Universal Document Embedding System**: The ability to embed multiple document types (guides, templates) within workflows suggests a pattern for providing context.
 - **ADR-011: ATOM Architecture House Rules**: Emphasizes clear component classification, which could be extended to how research capabilities are structured (e.g., a dedicated "research" molecule or organism).
-- **`nav-tree` and `nav-path` Tools**: Existing CLI tools (`dev-tools/exe/nav-tree`, `dev-tools/exe/nav-path`) are designed for repository navigation, indicating a foundational capability that can be enhanced.
+- **`nav-tree` and `nav-path` Tools**: Existing CLI tools (`.ace/tools/exe/nav-tree`, `.ace/tools/exe/nav-path`) are designed for repository navigation, indicating a foundational capability that can be enhanced.
 - **`handbook` Tool**: The `handbook sync-templates` command suggests a mechanism for accessing and synchronizing documentation, which could be leveraged for research.
 - **`llm-query` Tool**: The ability to query LLMs with specific prompts is a core mechanism that can be used for synthesizing information found during research.
 - **Project Blueprint (`docs/blueprint.md`)**: Provides an overview of project structure, which can be a starting point for repository research.
@@ -59,7 +59,7 @@ Improve the efficiency and accuracy of how AI agents research repository structu
 1. **Enhanced `nav-tree` and `nav-path` Usage**:
     - **Description**: Augment existing navigation tools within workflows to intelligently identify relevant directories and files based on task context (e.g., `draft-task`, `plan-task`, `review-task`). This could involve context-aware file discovery beyond simple path resolution.
 2. **Structured Guide Indexing and Querying**:
-    - **Description**: Develop a mechanism to index or create a searchable map of the `dev-handbook/guides/` directory. AI agents could then query this index to find the most relevant guides for a given task, potentially using LLM summarization or keyword matching.
+    - **Description**: Develop a mechanism to index or create a searchable map of the `.ace/handbook/guides/` directory. AI agents could then query this index to find the most relevant guides for a given task, potentially using LLM summarization or keyword matching.
 3. **LLM-Powered Synthesis of Research Findings**:
     - **Description**: Combine the output from navigation tools and guide searches, then use `llm-query` to synthesize this information into actionable insights or summaries directly relevant to the current task workflow. This allows AI agents to "understand" the repository and best practices rather than just listing files.
 
@@ -67,7 +67,7 @@ Improve the efficiency and accuracy of how AI agents research repository structu
 
 **Before proceeding, we need to answer:**
 1. What specific search queries or patterns should AI agents use to effectively identify relevant guides and repository sections for different task types (drafting, planning, reviewing)?
-2. How can we systematically index or map the `dev-handbook/guides/` directory to enable efficient programmatic searching and retrieval of relevant information?
+2. How can we systematically index or map the `.ace/handbook/guides/` directory to enable efficient programmatic searching and retrieval of relevant information?
 3. What is the optimal way to integrate `llm-query` to synthesize research findings, ensuring the output is concise, accurate, and directly applicable to the workflow's current step?
 
 **Open Questions:**
@@ -78,7 +78,7 @@ Improve the efficiency and accuracy of how AI agents research repository structu
 ## Assumptions to Validate
 
 **We assume that:**
-- The `dev-handbook/guides/` directory contains sufficiently relevant and well-structured information to be useful for AI agent research. - *Needs validation*
+- The `.ace/handbook/guides/` directory contains sufficiently relevant and well-structured information to be useful for AI agent research. - *Needs validation*
 - The existing `nav-tree` and `nav-path` tools can be extended or used in conjunction with new logic to effectively identify task-relevant project context. - *Needs validation*
 - AI agents can effectively process and act upon LLM-synthesized research findings. - *Needs validation*
 
@@ -93,7 +93,7 @@ Improve the efficiency and accuracy of how AI agents research repository structu
 ## Big Unknowns
 
 **Technical Unknowns:**
-- The specific implementation details for indexing the `dev-handbook/guides/` directory and performing efficient searches.
+- The specific implementation details for indexing the `.ace/handbook/guides/` directory and performing efficient searches.
 - The optimal LLM prompts required for synthesizing research findings relevant to various task types.
 
 **User/Market Unknowns:**

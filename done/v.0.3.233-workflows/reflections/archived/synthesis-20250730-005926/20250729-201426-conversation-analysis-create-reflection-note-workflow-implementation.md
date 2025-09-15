@@ -91,4 +91,4 @@ The template structure includes sections for:
 
 This reflection demonstrates the meta-nature of the task - using the create-reflection-note workflow to reflect on the process of implementing the create-reflection-note workflow itself. The workflow instruction provides a robust framework for capturing insights and improvements across different types of development work.
 
-File created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md`
+File created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-201426-conversation-analysis-create-reflection-note-workflow-implementation.md`

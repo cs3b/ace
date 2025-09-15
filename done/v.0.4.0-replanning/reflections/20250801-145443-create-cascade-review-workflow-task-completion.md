@@ -14,7 +14,7 @@
 
 ## What Could Be Improved
 
-- **Tool limitations**: The needs_review counter display requires modification in dev-tools which is beyond the workflow creation scope
+- **Tool limitations**: The needs_review counter display requires modification in .ace/tools which is beyond the workflow creation scope
 - **Dependency exploration**: Could have analyzed more examples of complex dependency patterns in the current release
 - **Example scenarios**: While comprehensive, the examples could have included more edge cases like circular dependencies
 
@@ -53,4 +53,4 @@ The workflow implements:
 - Manual confirmation gates to prevent uncontrolled cascade execution
 - Support for draft, pending, and in-progress task handling with appropriate modifications
 
-The `needs_review` metadata flag was designed to track impacted tasks, though display implementation requires dev-tools changes.
+The `needs_review` metadata flag was designed to track impacted tasks, though display implementation requires .ace/tools changes.

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.225]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/spec/coding_agent_tools/organisms/taskflow_management | sed 's/^/    /'
+tree -L 2 .ace/tools/spec/coding_agent_tools/organisms/taskflow_management | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/spec/coding_agent_tools/organisms/taskflow_management
+    .ace/tools/spec/coding_agent_tools/organisms/taskflow_management
     └── release_manager_spec.rb
 ```
 
@@ -44,7 +44,7 @@ Add comprehensive test coverage for the new resolve_path functionality in Releas
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/organisms/taskflow_management/release_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/taskflow_management/release_manager_spec.rb
 
 #### Delete
 
@@ -115,6 +115,6 @@ Add comprehensive test coverage for the new resolve_path functionality in Releas
 
 ## References
 
-- ReleaseManager spec: dev-tools/spec/coding_agent_tools/organisms/taskflow_management/release_manager_spec.rb
+- ReleaseManager spec: .ace/tools/spec/coding_agent_tools/organisms/taskflow_management/release_manager_spec.rb
 - Implementation task: v.0.3.0+task.225
 - Testing patterns: Follow existing RSpec patterns in the codebase

@@ -37,8 +37,8 @@ dependencies: []
 
 ### Expected Behavior
 
-The `dev-handbook/.integrations/claude/install-prompts.md` script should be enhanced to automatically:
-1. Scan `dev-handbook/workflow-instructions/*.wf.md` files
+The `.ace/handbook/.integrations/claude/install-prompts.md` script should be enhanced to automatically:
+1. Scan `.ace/handbook/workflow-instructions/*.wf.md` files
 2. Generate corresponding command files in `.claude/commands/`
 3. Automatically update `.claude/commands/commands.json` with new command entries
 4. Skip existing commands to preserve user modifications
@@ -55,7 +55,7 @@ This automation ensures all workflow instructions are immediately available as C
 claude-integrate                  # Alternative command name
 
 # Script Behavior
-- Scans: dev-handbook/workflow-instructions/*.wf.md
+- Scans: .ace/handbook/workflow-instructions/*.wf.md
 - Creates: .claude/commands/[workflow-name].md (if not exists)
 - Updates: .claude/commands/commands.json (adds missing entries)
 - Preserves: Existing commands and user modifications
@@ -92,7 +92,7 @@ Installation complete: 2 created, 1 skipped
 
 ### Validation Questions
 
-- [x] **Script Analysis**: What is the exact structure and copying mechanism of `dev-handbook/.integrations/claude/install-prompts.md`?
+- [x] **Script Analysis**: What is the exact structure and copying mechanism of `.ace/handbook/.integrations/claude/install-prompts.md`?
   - **Answer found through research**: The install-prompts.md file provides a template-based approach for creating commands. Each workflow file (*.wf.md) maps to a command file in .claude/commands/. The script uses a simple template: "read whole file and follow @dev-handbook/workflow-instructions/[workflow-name].wf.md" followed by "/commit".
 
 - [x] **Command Location**: Where should custom command markdown files be placed for script discovery?
@@ -176,19 +176,19 @@ To create an automated script that generates Claude Code commands from workflow 
 ## Technical Approach
 
 ### Architecture Pattern
-- **Script Type**: Ruby executable leveraging existing dev-tools infrastructure
+- **Script Type**: Ruby executable leveraging existing .ace/tools infrastructure
 - **Integration Point**: New executable in bin/ directory: `bin/claude-integrate`
 - **Pattern**: Command-pattern with JSON manipulation and file generation
 - **Architecture Fit**: Aligns with existing Ruby-based tooling ecosystem
 
 ### Technology Stack
-- **Language**: Ruby (consistent with dev-tools ecosystem)
+- **Language**: Ruby (consistent with .ace/tools ecosystem)
 - **Libraries**: 
   - JSON (Ruby standard library) for commands.json manipulation
   - FileUtils (Ruby standard library) for file operations
   - Pathname (Ruby standard library) for path manipulation
 - **Template Engine**: ERB or simple string interpolation for command file generation
-- **Version Compatibility**: Ruby 3.0+ (matching dev-tools requirements)
+- **Version Compatibility**: Ruby 3.0+ (matching .ace/tools requirements)
 
 ### Implementation Strategy
 - **Discovery**: Scan workflow directory for *.wf.md files
@@ -207,7 +207,7 @@ To create an automated script that generates Claude Code commands from workflow 
 | Testing | Excellent | Poor | Good | Ruby |
 | JSON Handling | Good | Poor | Excellent | Ruby |
 
-**Selection Rationale:** Ruby selected for consistency with existing dev-tools ecosystem, excellent testing support via RSpec, and native JSON handling capabilities.
+**Selection Rationale:** Ruby selected for consistency with existing .ace/tools ecosystem, excellent testing support via RSpec, and native JSON handling capabilities.
 
 ## File Modifications
 
@@ -217,18 +217,18 @@ To create an automated script that generates Claude Code commands from workflow 
   - Key components: Workflow scanner, command generator, JSON updater
   - Dependencies: Ruby standard libraries, filesystem access
 
-- dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
   - Purpose: Core logic for command installation process
   - Key components: WorkflowScanner, CommandGenerator, JsonRegistry classes
   - Dependencies: JSON, FileUtils, Pathname libraries
 
-- dev-tools/spec/integrations/claude_commands_installer_spec.rb
+- .ace/tools/spec/integrations/claude_commands_installer_spec.rb
   - Purpose: Comprehensive test suite for installer
   - Key components: Unit tests, integration tests, edge case tests
   - Dependencies: RSpec, test fixtures
 
 ### Modify
-- dev-handbook/.integrations/claude/install-prompts.md
+- .ace/handbook/.integrations/claude/install-prompts.md
   - Changes: Add section referencing automated script
   - Impact: Documentation now guides users to automation
   - Integration points: Links to bin/claude-integrate
@@ -271,7 +271,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > TEST: Template Pattern Validation
   > Type: Pre-condition Check
   > Assert: All workflow files follow consistent naming pattern
-  > Command: ls dev-handbook/workflow-instructions/*.wf.md | wc -l
+  > Command: ls .ace/handbook/workflow-instructions/*.wf.md | wc -l
 
 * [x] Research Ruby JSON manipulation best practices for atomic updates
 * [x] Design class structure for modular installer components
@@ -281,7 +281,7 @@ To create an automated script that generates Claude Code commands from workflow 
 - [x] Step 1: Create main executable script bin/claude-integrate
   ```ruby
   #!/usr/bin/env ruby
-  require_relative '../dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer'
+  require_relative '../.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer'
   CodingAgentTools::Integrations::ClaudeCommandsInstaller.new.run
   ```
   > TEST: Executable Creation
@@ -295,7 +295,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > TEST: Workflow Discovery
   > Type: Component Test
   > Assert: Scanner finds all workflow files
-  > Command: ruby -e "require './dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer'; puts CodingAgentTools::Integrations::ClaudeCommandsInstaller::WorkflowScanner.new.scan.count"
+  > Command: ruby -e "require './.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer'; puts CodingAgentTools::Integrations::ClaudeCommandsInstaller::WorkflowScanner.new.scan.count"
 
 - [x] Step 3: Implement command file generator with template support
   - Load templates from install-prompts.md if custom template exists
@@ -332,7 +332,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > TEST: Test Coverage
   > Type: Quality Check
   > Assert: Test suite covers main functionality
-  > Command: bin/test dev-tools/spec/integrations/claude_commands_installer_spec.rb
+  > Command: bin/test .ace/tools/spec/integrations/claude_commands_installer_spec.rb
 
 - [x] Step 7: Update install-prompts.md documentation
   - Add automated installation section
@@ -341,7 +341,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > TEST: Documentation Update
   > Type: Content Validation
   > Assert: Documentation references automation script
-  > Command: grep -q "claude-integrate" dev-handbook/.integrations/claude/install-prompts.md
+  > Command: grep -q "claude-integrate" .ace/handbook/.integrations/claude/install-prompts.md
 
 - [x] Step 8: Perform end-to-end validation
   - Run script to install all commands
@@ -371,8 +371,8 @@ To create an automated script that generates Claude Code commands from workflow 
 
 ## References
 
-- Source idea file: dev-taskflow/backlog/ideas/20250802-0934-claude-commands-prompts.md
-- Integration script: dev-handbook/.integrations/claude/install-prompts.md
-- Task management workflow documentation in dev-handbook
+- Source idea file: .ace/taskflow/backlog/ideas/20250802-0934-claude-commands-prompts.md
+- Integration script: .ace/handbook/.integrations/claude/install-prompts.md
+- Task management workflow documentation in .ace/handbook
 - Existing commands: .claude/commands/
-- Ruby dev-tools: dev-tools/lib/coding_agent_tools/
+- Ruby dev-tools: .ace/tools/lib/coding_agent_tools/

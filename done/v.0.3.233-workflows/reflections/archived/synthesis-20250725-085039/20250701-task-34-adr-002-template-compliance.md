@@ -51,8 +51,8 @@
 
 **Files Modified:**
 
-- `dev-handbook/workflow-instructions/commit.wf.md` - Converted from inline markdown to XML template embedding
-- Created `dev-handbook/templates/commit/` directory structure
+- `.ace/handbook/workflow-instructions/commit.wf.md` - Converted from inline markdown to XML template embedding
+- Created `.ace/handbook/templates/commit/` directory structure
 - Extracted 3 template files:
   - `feature-implementation.template.md`
   - `bug-fix.template.md`

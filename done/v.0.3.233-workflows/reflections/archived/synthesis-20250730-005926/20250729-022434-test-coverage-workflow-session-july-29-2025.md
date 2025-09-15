@@ -26,7 +26,7 @@
 - Task management with `task-manager recent` gives excellent context for reflection sessions
 - The create-path tool successfully generated appropriate timestamp-based filename for reflection notes
 - Recent work pattern shows focused effort on systematic test coverage improvement across molecules and CLI components
-- ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems) being followed in dev-tools testing
+- ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems) being followed in .ace/tools testing
 
 ## Action Items
 
@@ -61,4 +61,4 @@
 - Current release context: v.0.3.0-workflows
 - Recent completed tasks: 190, 192, 193, 194, 196 (all test coverage related)
 - Untracked test file present indicating recent test creation work
-- Multi-repo status shows active development across main, dev-taskflow, and dev-tools repositories
+- Multi-repo status shows active development across main, dev-taskflow, and .ace/tools repositories

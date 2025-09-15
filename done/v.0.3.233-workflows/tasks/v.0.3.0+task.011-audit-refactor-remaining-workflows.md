@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.9]
 _Command run:_
 
 ```bash
-tree -L 1 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 1 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions/
+.ace/handbook/workflow-instructions/
 ├── README.md
 ├── *.wf.md files
 └── [workflow files to be audited]
@@ -47,7 +47,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 
 #### Modify
 
-- All non-compliant workflow instruction files in dev-handbook/workflow-instructions/
+- All non-compliant workflow instruction files in .ace/handbook/workflow-instructions/
 - Any workflow files lacking required self-containment sections
 
 #### Delete
@@ -69,7 +69,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Complete inventory of all workflow files exists
-  > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | sort`
+  > Command: `find .ace/handbook/workflow-instructions -name "*.wf.md" | sort`
 
 - [x] Audit each workflow against self-containment criteria:
   - Has Project Context Loading section
@@ -80,7 +80,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Audit results categorize all workflows as compliant/non-compliant
-  > Command: `grep -L "Project Context Loading" dev-handbook/workflow-instructions/*.wf.md`
+  > Command: `grep -L "Project Context Loading" .ace/handbook/workflow-instructions/*.wf.md`
 
 **AUDIT RESULTS:**
 
@@ -109,7 +109,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Refactoring plan exists with clear priorities
-  > Command: `wc -l dev-handbook/workflow-instructions/*.wf.md | sort -n`
+  > Command: `wc -l .ace/handbook/workflow-instructions/*.wf.md | sort -n`
 
 **REFACTORING PRIORITY ORDER:**
 
@@ -165,7 +165,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No workflows contain procedural links to guides or other workflows
-  > Command: `grep -E "\[.*\]\(.*\.g\.md\)|see.*workflow|run.*workflow" dev-handbook/workflow-instructions/*.wf.md`
+  > Command: `grep -E "\[.*\]\(.*\.g\.md\)|see.*workflow|run.*workflow" .ace/handbook/workflow-instructions/*.wf.md`
 
 **VALIDATION COMPLETED:**
 ✅ All workflows validated as fully self-contained
@@ -176,7 +176,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No duplicate or obsolete workflows remain
-  > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | xargs grep -l "DEPRECATED\|OBSOLETE"`
+  > Command: `find .ace/handbook/workflow-instructions -name "*.wf.md" | xargs grep -l "DEPRECATED\|OBSOLETE"`
 
 **REDUNDANCY CHECK COMPLETED:**
 ✅ No workflows marked as DEPRECATED or OBSOLETE found
@@ -204,6 +204,6 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 ## References
 
 - Original requirement: Documentation review report "CRITICAL UPDATES"
-- New standard: dev-handbook/guides/.meta/workflow-instructions-definition.g.md
+- New standard: .ace/handbook/guides/.meta/workflow-instructions-definition.g.md
 - Migration guide: Task v.0.3.0+task.9 (dependency)
 - Examples: Recently refactored workflows in current diff

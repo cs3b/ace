@@ -8,7 +8,7 @@
 ## What Went Well
 
 - Successfully followed the work-on-task workflow instruction from start to completion
-- Comprehensive search and replacement across 22 instances in the multi-repo scope (docs/, dev-handbook/, dev-tools/)
+- Comprehensive search and replacement across 22 instances in the multi-repo scope (docs/, .ace/handbook/, .ace/tools/)
 - Maintained proper workflow discipline by updating task status from pending → in-progress → done
 - User provided valuable insight about the key improvement: create-path creates files immediately, eliminating ID duplication issues
 - Efficient bulk operations using find/replace tools across multiple files
@@ -24,7 +24,7 @@
 ## Key Learnings
 
 - The create-path task-new command provides significant improvement over nav-path task-new by creating files immediately, preventing ID sequencing issues
-- Multi-repo documentation updates require systematic approach across all three repositories (docs/, dev-handbook/, dev-tools/)
+- Multi-repo documentation updates require systematic approach across all three repositories (docs/, .ace/handbook/, .ace/tools/)
 - The work-on-task workflow provides excellent structure for complex tasks with embedded tests and acceptance criteria
 - User input during execution enhanced the task by highlighting the key benefit of the transition
 
@@ -95,13 +95,13 @@
 
 ### Files Modified
 
-- `dev-handbook/workflow-instructions/create-task.wf.md` - Updated primary workflow
+- `.ace/handbook/workflow-instructions/create-task.wf.md` - Updated primary workflow
 - `docs/tools.md` - Updated main cheat sheet and AI Agent workflow examples
-- `dev-tools/docs/tools.md` - Updated tools documentation and examples  
-- `dev-handbook/workflow-instructions/draft-release.wf.md` - Updated workflow references
-- `dev-handbook/workflow-instructions/initialize-project-structure.wf.md` - Updated template references
-- `dev-handbook/.meta/wfi/install-dotfiles.wf.md` - Updated example command
-- `dev-tools/docs/migrations/migration-guide.md` - Updated all references
+- `.ace/tools/docs/tools.md` - Updated tools documentation and examples  
+- `.ace/handbook/workflow-instructions/draft-release.wf.md` - Updated workflow references
+- `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md` - Updated template references
+- `.ace/handbook/.meta/wfi/install-dotfiles.wf.md` - Updated example command
+- `.ace/tools/docs/migrations/migration-guide.md` - Updated all references
 
 ### Verification Results
 
@@ -116,7 +116,7 @@ The transition from `nav-path task-new` to `create-path task-new` eliminates the
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.125-replace-nav-path-with-create-path-for-creation-operations.md`
+- Task file: `.ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.125-replace-nav-path-with-create-path-for-creation-operations.md`
 - Related task: v.0.3.0+task.112 (Add create-path command for file/directory creation with metadata)
-- Scope: Multi-repo documentation update (docs/, dev-handbook/, dev-tools/)
+- Scope: Multi-repo documentation update (docs/, .ace/handbook/, .ace/tools/)
 - Impact: Improved user experience for task creation workflows across all AI agents and human developers

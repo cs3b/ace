@@ -1,7 +1,7 @@
 # Workflow Dependency Analysis
 
 **Analysis Date:** 2025-06-26
-**Scope:** All 21 workflow instruction files in `dev-handbook/workflow-instructions/`
+**Scope:** All 21 workflow instruction files in `.ace/handbook/workflow-instructions/`
 **Purpose:** Identify cross-dependencies, external references, and missing context preventing independent execution by coding agents
 
 ## Executive Summary
@@ -48,7 +48,7 @@ Most workflows require loading fundamental project context:
 
 **High-Frequency Guide References:**
 
-**`dev-handbook/guides/task-definition.g.md` (5 workflows):**
+**`.ace/handbook/guides/task-definition.g.md` (5 workflows):**
 
 - breakdown-notes-into-tasks.wf.md
 - draft-release.wf.md
@@ -59,7 +59,7 @@ Most workflows require loading fundamental project context:
 - initialize-project-structure.wf.md (project structure should not create tasks, only roadmap, prd and so on, draft release is what will take it, but not as part of initialize project)
 - work-on-task.wf.md
 
-**`dev-handbook/guides/documentation.g.md` (4 workflows):**
+**`.ace/handbook/guides/documentation.g.md` (4 workflows):**
 
 - create-adr.wf.md
 - create-api-docs.wf.md
@@ -69,7 +69,7 @@ Most workflows require loading fundamental project context:
 
 - commit.wf.md
 
-**`dev-handbook/guides/testing.g.md` (3 workflows):**
+**`.ace/handbook/guides/testing.g.md` (3 workflows):**
 
 - create-test-cases.wf.md
 - fix-tests.wf.md
@@ -78,7 +78,7 @@ Most workflows require loading fundamental project context:
 
 - commit.wf.md
 
-**`dev-handbook/guides/version-control-system.g.md` (3 workflows):**
+**`.ace/handbook/guides/version-control-system.g.md` (3 workflows):**
 
 - commit.wf.md
 
@@ -87,7 +87,7 @@ Most workflows require loading fundamental project context:
 - draft-release.wf.md
 - publish-release.wf.md
 
-**`dev-handbook/guides/project-management.g.md` (4 workflows):**
+**`.ace/handbook/guides/project-management.g.md` (4 workflows):**
 
 - draft-release.wf.md (should stay)
 
@@ -104,7 +104,7 @@ Most workflows require loading fundamental project context:
 - commit.wf.md
 - create-retrospective-document.wf.md
 
-**`dev-handbook/guides/quality-assurance.g.md` (2 workflows):**
+**`.ace/handbook/guides/quality-assurance.g.md` (2 workflows):**
 
 - publish-release.wf.md
 
@@ -112,7 +112,7 @@ Most workflows require loading fundamental project context:
 
 - create-review-checklist.wf.md
 
-**`dev-handbook/guides/coding-standards.g.md` (3 workflows):**
+**`.ace/handbook/guides/coding-standards.g.md` (3 workflows):**
 
 - fix-tests.wf.md
 
@@ -125,7 +125,7 @@ Most workflows require loading fundamental project context:
 - review-task.wf.md
 - create-api-docs.wf.md
 
-**`dev-handbook/guides/release-publish.g.md` (2 workflows):**
+**`.ace/handbook/guides/release-publish.g.md` (2 workflows):**
 
 - publish-release.wf.md
 
@@ -135,14 +135,14 @@ Most workflows require loading fundamental project context:
 
 **Other Guide Dependencies:**
 
-- `dev-handbook/guides/roadmap-definition.g.md`: update-roadmap.wf.md, publish-release.wf.md
-- `dev-handbook/guides/strategic-planning.g.md`: update-roadmap.wf.md
-- `dev-handbook/guides/changelog.g.md`: publish-release.wf.md
-- `dev-handbook/guides/temporary-file-management.g.md`: work-on-task.wf.md
+- `.ace/handbook/guides/roadmap-definition.g.md`: update-roadmap.wf.md, publish-release.wf.md
+- `.ace/handbook/guides/strategic-planning.g.md`: update-roadmap.wf.md
+- `.ace/handbook/guides/changelog.g.md`: publish-release.wf.md
+- `.ace/handbook/guides/temporary-file-management.g.md`: work-on-task.wf.md
 
 ### 3. Template Dependencies (12 workflows)
 
-**`dev-handbook/guides/draft-release/v.x.x.x/` templates (7 workflows):**
+**`.ace/handbook/guides/draft-release/v.x.x.x/` templates (7 workflows):**
 
 - create-adr.wf.md → `decisions/_template.md`
 - create-reflection-note.wf.md → `reflections/_template.md`
@@ -152,7 +152,7 @@ Most workflows require loading fundamental project context:
 - create-user-docs.wf.md → `docs/_template.md`, `user-experience/_template.md`
 - draft-release.wf.md → Multiple templates in subdirectories
 
-**`dev-handbook/guides/initialize-project-templates/` (2 workflows):**
+**`.ace/handbook/guides/initialize-project-templates/` (2 workflows):**
 
 - initialize-project-structure.wf.md → `PRD.md`, `README.md`, `what-do-we-build.md`, `architecture.md`, `blueprint.md`, `v.0.0.0/`
 - draft-release.wf.md → References for structure validation
@@ -266,7 +266,7 @@ Most workflows require loading fundamental project context:
 **Examples:**
 @#=> we should prefer using tools for dynamic parts if tools avaiable
 
-- `dev-taskflow/current/{release_dir}/` - requires discovering active release
+- `.ace/taskflow/current/{release_dir}/` - requires discovering active release
 - `bin/rc` output parsing for directory determination
 - Template paths with variable version numbers
 

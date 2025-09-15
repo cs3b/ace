@@ -14,7 +14,7 @@ dependencies: [v.0.3.0+task.18]
 _Command run:_
 
 ```bash
-ls -la dev-tools/lib/bash/ 2>/dev/null || echo "Directory will be created" | sed 's/^/    /'
+ls -la .ace/tools/lib/bash/ 2>/dev/null || echo "Directory will be created" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -32,7 +32,7 @@ Implement a comprehensive Git module with full CLI command suite that provides m
 * Analyze existing git implementations: `bin/g*` scripts, fish functions (`gc-llm.fish`, `git.fish`)
 * Implement complete git CLI command suite: `git-commit`, `git-status`, `git-push`, `git-pull`, `git-log`, `git-diff`, `git-add`, `git-mv`, `git-rm`, `git-restore`, `git-fetch`
 * Create multi-repository support for all git commands with automatic submodule detection
-* Implement intelligent path resolution (e.g., `git-add dev-handbook/file.md` auto-detects submodule)
+* Implement intelligent path resolution (e.g., `git-add .ace/handbook/file.md` auto-detects submodule)
 * Build intention-based commit system merging `gcam`/`gcama` patterns with `-i` flag support
 * Create comprehensive Ruby ATOM architecture with git/ module organization
 * Integrate task-manager ATOM patterns for consistent CLI design
@@ -72,7 +72,7 @@ Implement a comprehensive Git module with full CLI command suite that provides m
 
 #### Modify
 
-* dev-tools/config/binstub-aliases.yml (map bin/g* to git commands)
+* .ace/tools/config/binstub-aliases.yml (map bin/g* to git commands)
 * lib/coding_agent_tools/cli.rb (register git module namespace)
 * Update binstub configuration for shell integration
 
@@ -104,7 +104,7 @@ Implement a comprehensive Git module with full CLI command suite that provides m
   > TEST: Fish Function Analysis
   > Type: Pre-condition Check
   > Assert: gc-llm patterns and gcam/gcama workflows understood
-  > Command: grep -E "(intention|gcam|gcama)" dev-taskflow/current/v.0.3.0-migration/docs/fish-git-commit/*.fish
+  > Command: grep -E "(intention|gcam|gcama)" .ace/taskflow/current/v.0.3.0-migration/docs/fish-git-commit/*.fish
 * [x] Review task-manager ATOM architecture for CLI pattern reuse
   > TEST: ATOM Pattern Analysis
   > Type: Pre-condition Check
@@ -129,7 +129,7 @@ Implement a comprehensive Git module with full CLI command suite that provides m
   > TEST: Binstub Analysis
   > Type: Pre-condition Check
   > Assert: Understand bin/* → exe/* mapping and ProjectRootDetector usage
-  > Command: cat dev-tools/config/binstub-aliases.yml && find . -name "project_root_detector.rb"
+  > Command: cat .ace/tools/config/binstub-aliases.yml && find . -name "project_root_detector.rb"
 
 ### Execution Steps
 
@@ -140,56 +140,56 @@ Implement a comprehensive Git module with full CLI command suite that provides m
   > TEST: ATOM Components
   > Type: Unit Test
   > Assert: All git ATOM components load and initialize correctly
-  > Command: cd dev-tools && bundle exec rspec spec/unit/coding_agent_tools/atoms/git/ -v
+  > Command: cd .ace/tools && bundle exec rspec spec/unit/coding_agent_tools/atoms/git/ -v
 
 **Multi-Repo Infrastructure:**
 - [x] Implement intelligent path dispatcher with submodule detection
   > TEST: Path Dispatcher
   > Type: Integration Test
-  > Assert: Groups paths by repository and dispatches correctly (e.g., dev-handbook/file1.md + dev-handbook/file2.md → git -C dev-handbook add file1.md file2.md)
-  > Command: cd dev-tools && bundle exec rspec spec/integration/git_path_dispatcher_spec.rb
+  > Assert: Groups paths by repository and dispatches correctly (e.g., .ace/handbook/file1.md + .ace/handbook/file2.md → git -C .ace/handbook add file1.md file2.md)
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/git_path_dispatcher_spec.rb
 - [x] Create concurrent execution framework using threads/fibers for submodules
   > TEST: Concurrent Execution
   > Type: Integration Test
   > Assert: Submodule operations run concurrently, main repo waits for synchronization
-  > Command: cd dev-tools && bundle exec rspec spec/integration/git_concurrent_execution_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/git_concurrent_execution_spec.rb
 - [x] Integrate ProjectRootDetector for directory-agnostic operation
   > TEST: Directory Agnostic Operations
   > Type: Integration Test
   > Assert: Commands work from any directory depth within project
-  > Command: cd dev-tools/lib/coding_agent_tools && bundle exec exe/coding_agent_tools git status
+  > Command: cd .ace/tools/lib/coding_agent_tools && bundle exec exe/coding_agent_tools git status
 
 **CLI Command Implementation:**
 - [x] Implement git-status with all-repos-by-default behavior and clear prefixes
   > TEST: Git Status Command
   > Type: CLI Test
   > Assert: Shows status for all repos (main + all submodules) with repository prefixes
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools git status
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools git status
 - [x] Implement git-log with concurrent submodule processing and date-sorted unified output
   > TEST: Git Log Command
   > Type: CLI Test
   > Assert: Shows logs from all repos sorted by date with repository prefixes
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools git log --oneline -10
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools git log --oneline -10
 - [x] Implement git-add with intelligent path grouping and dispatcher
   > TEST: Git Add Path Dispatcher
   > Type: CLI Test
   > Assert: Groups paths by repo and executes git -C <repo> add <paths...> correctly
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools git add ../dev-handbook/file1.md ../dev-taskflow/file2.md lib/file3.rb
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools git add ../.ace/handbook/file1.md ../.ace/taskflow/file2.md lib/file3.rb
 - [x] Implement git-commit with gem-based LLM integration and intention support
   > TEST: Git Commit with Intention
   > Type: CLI Test
   > Assert: Uses llm-query from gem instead of fish functions, supports -i/--intention flag
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools git commit -i "implement feature X"
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools git commit -i "implement feature X"
 - [x] Implement git-push/pull with concurrent submodule operations and main repo sync
   > TEST: Git Push/Pull Concurrency
   > Type: CLI Test
   > Assert: Pushes/pulls all submodules concurrently, then main repo after sync
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools git push --dry-run
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools git push --dry-run
 - [ ] Implement remaining git commands (diff, mv, rm, restore, fetch) with path intelligence
   > TEST: Complete Git Suite
   > Type: CLI Test
   > Assert: All commands support path resolution and multi-repo operations
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools git --help
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools git --help
   > NOTE: diff and fetch completed, mv/rm/restore still needed
 
 **Integration and Testing:**
@@ -206,7 +206,7 @@ Implement a comprehensive Git module with full CLI command suite that provides m
   > TEST: Directory Agnostic
   > Type: Integration Test
   > Assert: Commands work correctly from any directory within project
-  > Command: cd dev-taskflow/current && ../../dev-tools/exe/coding_agent_tools git status
+  > Command: cd .ace/taskflow/current && ../../.ace/tools/exe/coding_agent_tools git status
   > NOTE: Tests passing (1689 examples, 0 failures)
 
 ## Acceptance Criteria
@@ -217,15 +217,15 @@ Implement a comprehensive Git module with full CLI command suite that provides m
 * [ ] Each command supports multi-repository operations by default (all repos processed)
 
 **Multi-Repository Concurrent Operations:**
-* [ ] All commands work across submodules automatically (dev-tools, dev-taskflow, dev-handbook)
+* [ ] All commands work across submodules automatically (dev-tools, dev-taskflow, .ace/handbook)
 * [ ] Submodule operations execute concurrently using threads/fibers for performance
 * [ ] Main repository operations wait for submodule synchronization
 * [ ] `git-status` shows unified status for all repositories with clear prefixes by default
 * [ ] `git-log` displays logs sorted by date with repository indicators
 
 **Intelligent Path Dispatching:**
-* [ ] Path grouping: `git-add dev-handbook/file1.md dev-handbook/file2.md lib/file3.rb` groups paths by repository
-* [ ] Automatic dispatching: `git -C dev-handbook add file1.md file2.md` + `git add lib/file3.rb`
+* [ ] Path grouping: `git-add .ace/handbook/file1.md .ace/handbook/file2.md lib/file3.rb` groups paths by repository
+* [ ] Automatic dispatching: `git -C .ace/handbook add file1.md file2.md` + `git add lib/file3.rb`
 * [ ] `-C` flag allows explicit repository context specification for advanced use
 * [ ] Works from any directory depth within project using ProjectRootDetector
 
@@ -284,20 +284,20 @@ Implement a comprehensive Git module with full CLI command suite that provides m
 
 **Source Analysis:**
 * Current shell scripts: `bin/gc`, `bin/gl`, `bin/gs`, `bin/gp`, `bin/gpull` (to be replaced via binstub mapping)
-* Binstub system: `dev-tools/config/binstub-aliases.yml` (target for integration)
-* Fish functions: `dev-taskflow/current/v.0.3.0-migration/docs/fish-git-commit/gc-llm.fish` (patterns to extract)
-* Fish aliases: `dev-taskflow/current/v.0.3.0-migration/docs/fish-git-commit/git.fish` (gcam/gcama workflows)
-* Project root detection: `dev-tools/lib/coding_agent_tools/atoms/project_root_detector.rb`
+* Binstub system: `.ace/tools/config/binstub-aliases.yml` (target for integration)
+* Fish functions: `.ace/taskflow/current/v.0.3.0-migration/docs/fish-git-commit/gc-llm.fish` (patterns to extract)
+* Fish aliases: `.ace/taskflow/current/v.0.3.0-migration/docs/fish-git-commit/git.fish` (gcam/gcama workflows)
+* Project root detection: `.ace/tools/lib/coding_agent_tools/atoms/project_root_detector.rb`
 
 **Architecture References:**
 * Task-manager ATOM patterns: `lib/coding_agent_tools/cli/commands/task/` (CLI structure template)
 * CLI framework: `lib/coding_agent_tools/cli/` and dry-cli integration
-* Existing LLM integration: `dev-tools/exe/llm-*` commands for intention-based commits
+* Existing LLM integration: `.ace/tools/exe/llm-*` commands for intention-based commits
 
 **Target Implementation:**
 * CLI commands: `lib/coding_agent_tools/cli/commands/git/` (complete command suite)
 * ATOM components: `lib/coding_agent_tools/{atoms,molecules,organisms}/git/` (Ruby-only implementation)
-* Binstub integration: `dev-tools/config/binstub-aliases.yml` (bin/* → exe/* mapping)
+* Binstub integration: `.ace/tools/config/binstub-aliases.yml` (bin/* → exe/* mapping)
 * Pure Ruby implementation following task-manager patterns
 
 **Estimated Scope:**

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli/commands/release | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli/commands/release | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/cli/commands/release
+.ace/tools/lib/coding_agent_tools/cli/commands/release
 ├── all.rb
 ├── current.rb
 ├── generate_id.rb
@@ -136,6 +136,6 @@ The ReleaseNext CLI command (`release-manager next`) is a core component for fin
 
 ## References
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/release/next.rb` - Implementation to test
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/release_spec.rb` - Existing test file
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/release/next.rb` - Implementation to test
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/release_spec.rb` - Existing test file
 - ATOM Architecture principles for proper test structure and organization

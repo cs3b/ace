@@ -121,28 +121,28 @@ Simplify the Claude Code command structure to improve user experience by elimina
 ## File Modifications
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
   - Changes: Update generated command output path from `_generated/` subdirectory to flat structure
   - Impact: Commands will be generated directly into the flat directory
   - Integration points: ClaudeCommandsInstaller, handbook claude generate-commands CLI
 
-- dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
   - Changes: Simplify installation logic to handle flat target structure
   - Impact: Installation process will be streamlined, subdirectory handling removed
   - Integration points: handbook claude integrate CLI, command discovery logic
 
-- dev-handbook/.integrations/claude/commands/
+- .ace/handbook/.integrations/claude/commands/
   - Changes: Restructure from subdirectory organization to flat structure
   - Impact: All command files will exist at the same level
   - Migration strategy: Move all files from _custom/ and _generated/ to parent directory
 
 ### Delete
-- dev-handbook/.integrations/claude/commands/_custom/
+- .ace/handbook/.integrations/claude/commands/_custom/
   - Reason: Subdirectory structure being flattened
   - Dependencies: ClaudeCommandsInstaller references this path
   - Migration strategy: Move all .md files to parent commands/ directory first
 
-- dev-handbook/.integrations/claude/commands/_generated/
+- .ace/handbook/.integrations/claude/commands/_generated/
   - Reason: Subdirectory structure being flattened
   - Dependencies: ClaudeCommandGenerator outputs to this path
   - Migration strategy: Move all .md files to parent commands/ directory first
@@ -174,7 +174,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
 ### Planning Steps
 
 * [x] Analyze current directory structure and file organization
-  - Identified _custom/ and _generated/ subdirectories in dev-handbook/.integrations/claude/commands/
+  - Identified _custom/ and _generated/ subdirectories in .ace/handbook/.integrations/claude/commands/
   - Confirmed installer already flattens to .claude/commands/ during installation
   - Found ClaudeCommandGenerator creates files in _generated/ subdirectory
 
@@ -192,7 +192,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
 
 - [x] Step 1: Create backup of current command structure
   ```bash
-  cp -r dev-handbook/.integrations/claude/commands dev-handbook/.integrations/claude/commands.backup
+  cp -r .ace/handbook/.integrations/claude/commands .ace/handbook/.integrations/claude/commands.backup
   ```
 
 - [x] Step 2: Update ClaudeCommandGenerator to output to flat structure
@@ -211,7 +211,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
   > TEST: File Migration Verification
   > Type: Action Validation
   > Assert: All command files exist in flat structure with no subdirectories
-  > Command: ls -la dev-handbook/.integrations/claude/commands/
+  > Command: ls -la .ace/handbook/.integrations/claude/commands/
 
 - [x] Step 4: Update ClaudeCommandsInstaller to handle flat source structure
   - Simplify copy_custom_commands method
@@ -226,8 +226,8 @@ Simplify the Claude Code command structure to improve user experience by elimina
   - Delete _custom/ directory after verification
   - Delete _generated/ directory after verification
   ```bash
-  rmdir dev-handbook/.integrations/claude/commands/_custom
-  rmdir dev-handbook/.integrations/claude/commands/_generated
+  rmdir .ace/handbook/.integrations/claude/commands/_custom
+  rmdir .ace/handbook/.integrations/claude/commands/_generated
   ```
 
 - [x] Step 6: Test complete workflow
@@ -265,13 +265,13 @@ Simplify the Claude Code command structure to improve user experience by elimina
 - Current structure example: `.claude/commands/_custom/` and `.claude/commands/_generated/`
 - Target structure example: `tmp/gtree/bench-against-qwen3/.claude/commands/` (flat structure)
 - Related files:
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
-  - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-  - dev-handbook/.integrations/claude/commands/
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+  - .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - .ace/handbook/.integrations/claude/commands/
 
 ## Implementation Notes
 
-**Initial Misunderstanding**: The task was initially misunderstood to require flattening the source structure in `dev-handbook/.integrations/claude/commands/`. However, the actual requirement was to ensure the installed commands in `.claude/commands/` are in a flat structure.
+**Initial Misunderstanding**: The task was initially misunderstood to require flattening the source structure in `.ace/handbook/.integrations/claude/commands/`. However, the actual requirement was to ensure the installed commands in `.claude/commands/` are in a flat structure.
 
 **Actual Solution**: The ClaudeCommandsInstaller was already correctly flattening the structure during installation. The source structure should remain organized with `_custom/` and `_generated/` subdirectories for maintainability, while the installer copies all commands to a flat structure in the target directory.
 

@@ -73,13 +73,13 @@ The implementation maintains full backward compatibility while providing a clean
 ## Codebase Impact
 
 ### Files Modified
-- **PathResolver** (`dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb`):
+- **PathResolver** (`.ace/tools/lib/coding_agent_tools/molecules/path_resolver.rb`):
   - Added ReleaseManager dependency
   - Implemented release-relative pattern detection and resolution
   - Updated main resolve_path routing logic
   - Added comprehensive documentation
 
-- **PathResolver Tests** (`dev-tools/spec/coding_agent_tools/molecules/path_resolver_spec.rb`):
+- **PathResolver Tests** (`.ace/tools/spec/coding_agent_tools/molecules/path_resolver_spec.rb`):
   - Added 17 new test cases
   - Covered all functionality and edge cases
   - Maintained all existing test coverage

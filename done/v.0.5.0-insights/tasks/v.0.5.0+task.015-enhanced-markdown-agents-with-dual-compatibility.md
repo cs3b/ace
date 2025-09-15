@@ -126,7 +126,7 @@ Create a unified agent format that works directly with Claude Code while enablin
 ## References
 
 - Existing agent: .claude/agents/git-commit-manager.md
-- Original idea: dev-taskflow/backlog/ideas/004-specialized-sub-agents.md
+- Original idea: .ace/taskflow/backlog/ideas/004-specialized-sub-agents.md
 - MCP agent patterns: Industry best practices from 2025
 
 ## Implementation Plan
@@ -210,8 +210,8 @@ Create a unified agent format that works directly with Claude Code while enablin
   ## Context Definition
   ```yaml
   files:
-    - dev-taskflow/current/*/tasks/*.task.md
-    - dev-taskflow/backlog/**/*.md
+    - .ace/taskflow/current/*/tasks/*.task.md
+    - .ace/taskflow/backlog/**/*.md
   commands:
     - task-manager list
     - task-manager next
@@ -235,17 +235,17 @@ Create a unified agent format that works directly with Claude Code while enablin
 
 #### 3. Implement Agent Parsing Components
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/agents/agent_parser.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/agents/agent_parser.rb`
   - Parse markdown files with YAML frontmatter
   - Extract metadata sections
   - Validate agent structure
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/agents/metadata_extractor.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/agents/metadata_extractor.rb`
   - Extract core Claude fields
   - Extract MCP-specific metadata
   - Handle missing/unknown fields gracefully
 
-- [ ] Create `dev-tools/lib/coding_agent_tools/molecules/agents/context_definition_parser.rb`
+- [ ] Create `.ace/tools/lib/coding_agent_tools/molecules/agents/context_definition_parser.rb`
   - Find Context Definition section
   - Extract embedded YAML
   - Support external template references

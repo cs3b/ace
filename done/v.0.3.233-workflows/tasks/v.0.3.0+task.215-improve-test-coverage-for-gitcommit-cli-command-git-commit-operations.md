@@ -13,19 +13,19 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools -name "*commit*" -type f | head -10
+find .ace/tools -name "*commit*" -type f | head -10
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/exe/git-commit
-dev-tools/lib/coding_agent_tools/cli/commands/git/commit.rb
-dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
-dev-tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
-dev-tools/spec/coding_agent_tools/cli/commands/git/commit_spec.rb
-dev-tools/spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb
-dev-tools/spec/coding_agent_tools/molecules/git/commit_message_generator_spec.rb
+.ace/tools/exe/git-commit
+.ace/tools/lib/coding_agent_tools/cli/commands/git/commit.rb
+.ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+.ace/tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
+.ace/tools/spec/coding_agent_tools/cli/commands/git/commit_spec.rb
+.ace/tools/spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb
+.ace/tools/spec/coding_agent_tools/molecules/git/commit_message_generator_spec.rb
 ```
 
 ## Objective

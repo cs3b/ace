@@ -21,11 +21,11 @@ needs_review: false
   - **Decision**: Use Ruby string interpolation with `#{}` syntax as specified in task.003
 
 - [x] Where exactly should the template file be created?
-  - **Research conducted**: Task.003 mentions `dev-handbook/.integrations/claude/command.template.md`
+  - **Research conducted**: Task.003 mentions `.ace/handbook/.integrations/claude/command.template.md`
   - **Current task**: Shows same path in file modifications section
-  - **Suggested default**: Create at `dev-handbook/.integrations/claude/command.template.md`
+  - **Suggested default**: Create at `.ace/handbook/.integrations/claude/command.template.md`
   - **Human answer**: "we are enhancing what will be defined by task.003"
-  - **Decision**: Enhance the template file that task.003 creates at `dev-handbook/.integrations/claude/command.template.md`
+  - **Decision**: Enhance the template file that task.003 creates at `.ace/handbook/.integrations/claude/command.template.md`
 
 ### [MEDIUM] Enhancement Questions (Resolved)
 - [x] Should the template be a literal file or programmatically generated?
@@ -160,9 +160,9 @@ read and run @.claude/commands/commit.md
 - None (template file will be created/enhanced by task.003)
 
 ### Modify
-- `dev-handbook/.integrations/claude/command.template.md` - Enhance with YAML front-matter structure (created by task.003)
-- `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb` - Update to use enhanced template with YAML
-- `dev-tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb` - Update tests for YAML validation
+- `.ace/handbook/.integrations/claude/command.template.md` - Enhance with YAML front-matter structure (created by task.003)
+- `.ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb` - Update to use enhanced template with YAML
+- `.ace/tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb` - Update tests for YAML validation
 
 ### Delete
 - None required (no commands.json references to remove)
@@ -194,7 +194,7 @@ read and run @.claude/commands/commit.md
 
 - [x] Enhance command template with YAML front-matter (building on task.003's template)
   ```markdown
-  # dev-handbook/.integrations/claude/command.template.md
+  # .ace/handbook/.integrations/claude/command.template.md
   ---
   description: #{description}
   #{allowed_tools ? "allowed-tools: #{allowed_tools}" : ""}
@@ -215,7 +215,7 @@ read and run @.claude/commands/commit.md
     metadata = infer_metadata(workflow)
     
     # Load template from file (created by task.003, enhanced here)
-    template_path = File.join('dev-handbook', '.integrations', 'claude', 'command.template.md')
+    template_path = File.join('.ace/handbook', '.integrations', 'claude', 'command.template.md')
     template = File.read(template_path)
     
     # Build YAML front-matter programmatically (safer than eval)
@@ -240,7 +240,7 @@ read and run @.claude/commands/commit.md
     metadata = infer_metadata(workflow)
     
     # Load template from file
-    template_path = File.join('dev-handbook', '.integrations', 'claude', 'command.template.md')
+    template_path = File.join('.ace/handbook', '.integrations', 'claude', 'command.template.md')
     template = File.read(template_path)
     
     # Replace placeholders in template

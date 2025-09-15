@@ -51,7 +51,7 @@ The project generally complies well with the ATOM architecture.
     *   Three `PathResolver` atoms exist (`atoms/`, `atoms/code_quality/`, `atoms/git/`).
     *   Two `GitCommandExecutor` atoms exist (`atoms/code/`, `atoms/git/`).
     These should be consolidated into single, definitive components.
-*   ⚠️ **Leaky Abstractions**: Some Atoms contain logic that makes them dependent on a specific project context, weakening their atomic nature. For example, `StandardRbValidator` hardcodes a `chdir` to a `dev-tools` directory, making it less reusable.
+*   ⚠️ **Leaky Abstractions**: Some Atoms contain logic that makes them dependent on a specific project context, weakening their atomic nature. For example, `StandardRbValidator` hardcodes a `chdir` to a `.ace/tools` directory, making it less reusable.
 
 ---
 
@@ -116,7 +116,7 @@ The codebase demonstrates a strong security-aware development culture. However, 
 *   **Issue**: Brittle file path logic and context dependency
 *   **Severity**: 🟡 High
 *   **Location**: `lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb:63-67`
-*   **Suggestion**: The atom should not change its own working directory (`Dir.chdir`). This makes it non-reentrant and stateful. Pass the correct working directory to `Open3.capture3` via the `:chdir` option. The path adjustment logic (`File.join("dev-tools", file_path)`) also makes it less portable. The project root should be passed in and used to construct correct paths.
+*   **Suggestion**: The atom should not change its own working directory (`Dir.chdir`). This makes it non-reentrant and stateful. Pass the correct working directory to `Open3.capture3` via the `:chdir` option. The path adjustment logic (`File.join(".ace/tools", file_path)`) also makes it less portable. The project root should be passed in and used to construct correct paths.
 
 ### `molecules/git/commit_message_generator.rb`
 *   **Issue**: Shelling out to an internal executable

@@ -10,7 +10,7 @@
 - **Comprehensive task execution**: Successfully followed the work-on-task workflow systematically, completing all planned steps including reading project context, selecting task, validating structure, and executing the implementation plan
 - **Effective nav-path integration**: Successfully added new `code_review_new` path type to the configuration and PathResolver with proper CLI command support
 - **Thorough testing approach**: Updated all 28 SessionNameBuilder tests to match new timestamp-first format, ensuring comprehensive coverage
-- **Multi-repository coordination**: Successfully committed changes across multiple repositories (main, dev-tools, dev-taskflow) with appropriate context
+- **Multi-repository coordination**: Successfully committed changes across multiple repositories (main, dev-tools, .ace/taskflow) with appropriate context
 - **Bug discovery through real usage**: The git-commit tool bug was discovered organically through actual usage, demonstrating the value of end-to-end testing
 
 ## What Could Be Improved
@@ -26,7 +26,7 @@
 - **SessionDirectoryBuilder architecture**: Understanding the flow from SessionManager → SessionDirectoryBuilder → SessionNameBuilder and how to integrate nav-path at the appropriate level
 - **Multi-repository git operations**: Discovered that git-commit has file sorting logic that needs to correctly distinguish between main repo and submodule files
 - **Test update methodology**: When changing core logic like timestamp format, all related tests need systematic updates to match new expectations
-- **ATOM architecture navigation**: Better understanding of how Atoms, Molecules, and Organisms interact in the dev-tools codebase structure
+- **ATOM architecture navigation**: Better understanding of how Atoms, Molecules, and Organisms interact in the .ace/tools codebase structure
 
 ## Conversation Analysis
 
@@ -127,14 +127,14 @@ The solution involved three main technical components:
 
 The git-commit tool bug was discovered when attempting to commit files across repositories:
 ```bash
-git-commit .coding-agent/path.yml dev-tools/lib/... dev-taskflow/tasks/...
+git-commit .coding-agent/path.yml .ace/tools/lib/... .ace/taskflow/tasks/...
 ```
 
-The tool incorrectly tried to add the main repo file `.coding-agent/path.yml` to the dev-tools repository, revealing a fundamental flaw in the file sorting logic.
+The tool incorrectly tried to add the main repo file `.coding-agent/path.yml` to the .ace/tools repository, revealing a fundamental flaw in the file sorting logic.
 
 ## Additional Context
 
 - **Related Task**: Created task v.0.3.0+task.105 to fix the git-commit tool file sorting issue
 - **Original Task**: Successfully completed v.0.3.0+task.96 for code-review session directory format
-- **Repository Impact**: Changes spanned 3 repositories (main, dev-tools, dev-taskflow) and were successfully committed
+- **Repository Impact**: Changes spanned 3 repositories (main, dev-tools, .ace/taskflow) and were successfully committed
 - **Integration Success**: Nav-path integration working correctly, generating paths like `20250725-005852-docs-handbook-workflows`

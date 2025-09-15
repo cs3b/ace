@@ -126,9 +126,9 @@
 - Branch: `wt/v.0.3.0+task.19-git` in worktree
 
 ### Submodule Structure
-- `dev-tools/` - Ruby gem (primary development focus)
-- `dev-taskflow/` - Task management 
-- `dev-handbook/` - Development resources
+- `.ace/tools/` - Ruby gem (primary development focus)
+- `.ace/taskflow/` - Task management 
+- `.ace/handbook/` - Development resources
 
 ### Key Commands Used
 - `git-fetch` - Multi-repository fetch (failed on submodules initially)

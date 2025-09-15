@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.06]
 _Command run:_
 
 ```bash
-tree -L 1 dev-tools/lib/coding_agent_tools/organisms | sed 's/^/    /'
+tree -L 1 .ace/tools/lib/coding_agent_tools/organisms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/organisms
+    .ace/tools/lib/coding_agent_tools/organisms
     └── (existing organisms)
 ```
 
@@ -67,7 +67,7 @@ Implement the core TaskManager organism that orchestrates molecules to provide h
   > TEST: Algorithm Analysis
   > Type: Pre-condition Check
   > Assert: Topological sort logic is understood
-  > Command: grep -n "topological" dev-tools/exe-old/get-all-tasks | wc -l
+  > Command: grep -n "topological" .ace/tools/exe-old/get-all-tasks | wc -l
 * [x] Study priority and status sorting requirements
 * [x] Design organism API for all three main operations
 
@@ -79,14 +79,14 @@ Implement the core TaskManager organism that orchestrates molecules to provide h
   > TEST: Next Task Finding
   > Type: Integration Test
   > Assert: Finds correct next actionable task
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/task_management/task_manager_spec.rb -e "find_next_task"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/task_management/task_manager_spec.rb -e "find_next_task"
 - [x] Implement find_recent_tasks with time-based filtering
 - [x] Implement get_all_tasks with topological sorting
 - [x] Add cycle detection for dependency graphs
   > TEST: Cycle Detection
   > Type: Integration Test
   > Assert: Detects circular dependencies
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/task_management/task_manager_spec.rb -e "cycle"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/task_management/task_manager_spec.rb -e "cycle"
 - [x] Implement color-coded output for next actionable task
 - [x] Create comprehensive integration tests
 
@@ -107,6 +107,6 @@ Implement the core TaskManager organism that orchestrates molecules to provide h
 ## References
 
 * Dependency: v.0.3.0+task.06 (molecules implementation)
-* Complex logic reference: dev-tools/exe-old/get-all-tasks (270 lines)
-* Next task logic: dev-tools/exe-old/get-next-task (82 lines)
-* Recent tasks logic: dev-tools/exe-old/get-recent-tasks (78 lines)
+* Complex logic reference: .ace/tools/exe-old/get-all-tasks (270 lines)
+* Next task logic: .ace/tools/exe-old/get-next-task (82 lines)
+* Recent tasks logic: .ace/tools/exe-old/get-recent-tasks (78 lines)

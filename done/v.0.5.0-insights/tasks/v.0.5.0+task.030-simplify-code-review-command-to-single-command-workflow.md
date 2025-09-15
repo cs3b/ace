@@ -26,7 +26,7 @@ code-review --preset pr --auto-execute
 # Full parameters  
 code-review \
   --preset ruby-atom-modular \
-  --context 'presets: [project, dev-tools, dev-handbook]' \
+  --context 'presets: [project, dev-tools, .ace/handbook]' \
   --subject 'commands: ["git diff HEAD~1"]' \
   --model "google:gemini-2.0-flash-exp" \
   --auto-execute
@@ -73,8 +73,8 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
 
 #### Modify
 
-- dev-tools/bin/code-review: Add new CLI options and single-command workflow
-- dev-tools/lib/prompt_enhancer.rb: Fix context appending bug
+- .ace/tools/bin/code-review: Add new CLI options and single-command workflow
+- .ace/tools/lib/prompt_enhancer.rb: Fix context appending bug
 - Existing command handlers to support in-memory processing
 
 #### Delete
@@ -127,33 +127,33 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/molecules/code/config_extractor.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/code/config_extractor.rb`
   - Purpose: Extract YAML configuration from markdown files
   - Key components: YAML parser, markdown scanner, config merger
   - Dependencies: yaml (stdlib), existing molecules
 
-- `dev-tools/lib/coding_agent_tools/molecules/code/llm_executor.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/code/llm_executor.rb`
   - Purpose: Direct LLM query execution without intermediate files
   - Key components: Tempfile management, command execution, result handling
   - Dependencies: tempfile, open3, command_executor
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb`
   - Changes: Add new CLI options, implement in-memory workflow, add auto_execute
   - Impact: Enables single-command workflow while maintaining compatibility
   - Integration points: Uses existing molecules, adds new execution path
 
-- `dev-tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb`
   - Changes: Fix enhance_prompt method to actually append context content
   - Impact: Resolves empty context bug, enables proper prompt enhancement
   - Integration points: Called by review command during prompt preparation
 
-- `dev-tools/lib/coding_agent_tools/molecules/code/context_integrator.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/code/context_integrator.rb`
   - Changes: Add support for merging context_add, improve YAML string parsing
   - Impact: More flexible context configuration options
   - Integration points: Used by review command for context generation
 
-- `dev-handbook/workflow-instructions/review-code.wf.md`
+- `.ace/handbook/workflow-instructions/review-code.wf.md`
   - Changes: Add new single-command workflow section, update examples to show simplified approach
   - Impact: Encourages adoption of streamlined workflow, reduces friction for users
   - Integration points: Documentation for AI agents and developers using the tool
@@ -173,7 +173,7 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
   > TEST: Understanding Check
   > Type: Pre-condition Check  
   > Assert: Identified bug in enhance_prompt, understood execution flow
-  > Command: grep -r "enhance_prompt" dev-tools/lib
+  > Command: grep -r "enhance_prompt" .ace/tools/lib
 - [x] **Architecture Design**: Pipeline architecture with optional persistence selected
   > TEST: Design Validation
   > Type: Design Review
@@ -220,7 +220,7 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
   > TEST: Documentation Coverage
   > Type: Manual Review
   > Assert: Workflow instructions show new simplified approach prominently
-  > Command: grep -A5 "Single-Command" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A5 "Single-Command" .ace/handbook/workflow-instructions/review-code.wf.md
 
 ## Risk Assessment
 
@@ -275,8 +275,8 @@ Simplify the code review workflow from multiple manual steps to a single atomic 
 
 ## References
 
-- Testing session reflection: dev-taskflow/current/v.0.5.0-insights/reflections/20250821-222014-composable-prompt-testing-session.md
-- Test report: dev-taskflow/current/v.0.5.0-insights/code-review/composable-system-review/test-report.md
+- Testing session reflection: .ace/taskflow/current/v.0.5.0-insights/reflections/20250821-222014-composable-prompt-testing-session.md
+- Test report: .ace/taskflow/current/v.0.5.0-insights/code-review/composable-system-review/test-report.md
 - Related tasks: v.0.5.0+task.028 and v.0.5.0+task.029
 
 ```

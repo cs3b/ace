@@ -52,7 +52,7 @@
 
 **Files Modified:**
 
-- `dev-handbook/workflow-instructions/review-code.wf.md`: Added system prompt parameter handling and --output flag usage
+- `.ace/handbook/workflow-instructions/review-code.wf.md`: Added system prompt parameter handling and --output flag usage
 - `.claude/commands/handbook-review.md`: Fixed prompt construction and updated llm-query calls
 
 **Key Changes:**

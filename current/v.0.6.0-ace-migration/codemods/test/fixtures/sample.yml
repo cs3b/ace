@@ -1,0 +1,60 @@
+# Test fixture for YAML files
+# This file contains various references to dev-* paths that should be updated
+
+project:
+  name: Test Project
+  directories:
+    tools: .ace/tools/
+    handbook: .ace/handbook/
+    taskflow: .ace/taskflow/
+    local: .ace/local/
+
+paths:
+  - .ace/tools/bin
+  - .ace/handbook/docs
+  - .ace/taskflow/current
+  - .ace/local/config
+
+configuration:
+  tool_path: ".ace/tools/"
+  handbook_path: '.ace/handbook/'
+  taskflow_path: .ace/taskflow/
+  local_path: ".ace/local/"
+
+scripts:
+  build: .ace/tools/scripts/build.sh
+  test: .ace/tools/scripts/test.sh
+  docs: .ace/handbook/scripts/generate.rb
+  deploy: .ace/local/scripts/deploy.sh
+
+# Comments with paths
+# Located in .ace/tools/config
+# Documented in .ace/handbook/README.md
+# Tasks in .ace/taskflow/backlog
+# Cache in .ace/local/tmp
+
+nested:
+  deep:
+    paths:
+      tool: .ace/tools/lib/core/tool.rb
+      guide: .ace/handbook/guides/setup.md
+      task: .ace/taskflow/done/2024/task.md
+      cache: .ace/local/cache/data.json
+
+includes:
+  - ./.ace/tools/config/base.yml
+  - ../.ace/handbook/config/docs.yml
+  - /absolute/path/.ace/taskflow/config.yml
+  - ~/home/.ace/local/settings.yml
+
+environment:
+  TOOLS_DIR: ${PWD}/.ace/tools/
+  HANDBOOK_DIR: "${PWD}/.ace/handbook/"
+  TASKFLOW_DIR: $PWD/.ace/taskflow/
+  LOCAL_DIR: "$PWD/.ace/local/"
+
+commands:
+  - cd .ace/tools/ && make build
+  - "cd .ace/handbook/ && bundle install"
+  - 'cd .ace/taskflow/ && ls -la'
+  - cd .ace/local/ && ./setup.sh

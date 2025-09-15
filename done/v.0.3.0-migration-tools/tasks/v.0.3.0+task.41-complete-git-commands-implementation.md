@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.19]
 _Command run:_
 
 ```bash
-ls -la dev-tools/lib/coding_agent_tools/cli/commands/git/ | sed 's/^/    /'
+ls -la .ace/tools/lib/coding_agent_tools/cli/commands/git/ | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -59,7 +59,7 @@ Complete the git module implementation by adding the 3 missing standard git comm
 #### Modify
 
 - lib/coding_agent_tools/cli.rb (register new commands)
-- dev-tools/config/binstub-aliases.yml (add gmv, grm, grestore aliases)
+- .ace/tools/config/binstub-aliases.yml (add gmv, grm, grestore aliases)
 
 #### Delete
 
@@ -99,29 +99,29 @@ Complete the git module implementation by adding the 3 missing standard git comm
   > TEST: Git MV Command
   > Type: CLI Test
   > Assert: Moves files within and across repositories with correct path grouping
-  > Command: cd dev-tools && bundle exec exe/git-mv old-file.rb new-file.rb --dry-run
+  > Command: cd .ace/tools && bundle exec exe/git-mv old-file.rb new-file.rb --dry-run
 - [x] Implement git-rm command with path intelligence and recursive directory support
   > TEST: Git RM Command
   > Type: CLI Test
   > Assert: Removes files with proper path resolution and multi-repo coordination
-  > Command: cd dev-tools && bundle exec exe/git-rm test-file.rb --dry-run
+  > Command: cd .ace/tools && bundle exec exe/git-rm test-file.rb --dry-run
 - [x] Implement git-restore command with staging and working tree restoration options
   > TEST: Git Restore Command
   > Type: CLI Test
   > Assert: Restores files with proper path grouping and repository context
-  > Command: cd dev-tools && bundle exec exe/git-restore --staged test-file.rb --dry-run
+  > Command: cd .ace/tools && bundle exec exe/git-restore --staged test-file.rb --dry-run
 - [x] Update CLI module registration to include new git commands
 - [x] Add binstub aliases (gmv, grm, grestore) to binstub-aliases.yml configuration
 - [x] Create comprehensive test suites for all 3 new commands with multi-repo scenarios
   > TEST: Complete Test Coverage
   > Type: Unit Test
   > Assert: All new commands have full test coverage including multi-repo scenarios
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/git/ -v
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/git/ -v
 - [x] Verify integration with existing git orchestrator and multi-repo coordinator
   > TEST: Integration Verification
   > Type: Integration Test
   > Assert: New commands work seamlessly with existing git infrastructure
-  > Command: cd dev-tools && bundle exec exe/git-status && bundle exec exe/git-mv --help
+  > Command: cd .ace/tools && bundle exec exe/git-status && bundle exec exe/git-mv --help
 
 ## Acceptance Criteria
 
@@ -132,7 +132,7 @@ Complete the git module implementation by adding the 3 missing standard git comm
 
 **Multi-Repository Support:**
 * [x] All new commands work across submodules automatically with path intelligence
-* [x] Path grouping works correctly (e.g., `git-mv dev-handbook/old.md dev-handbook/new.md` uses `git -C dev-handbook mv`)
+* [x] Path grouping works correctly (e.g., `git-mv .ace/handbook/old.md .ace/handbook/new.md` uses `git -C .ace/handbook mv`)
 * [x] Multi-repo coordinator integration functional for all commands
 
 **CLI Integration:**

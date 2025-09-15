@@ -16,7 +16,7 @@
 ## What Could Be Improved
 
 - **Incomplete Analysis Output**: The synthesis report only contained individual reflection notes without actual synthesis analysis
-- **File Location Error**: Report was initially generated in project root instead of proper directory structure (`dev-taskflow/current/v.0.2.0-mvp/reflections/synthesis/`)
+- **File Location Error**: Report was initially generated in project root instead of proper directory structure (`.ace/taskflow/current/v.0.2.0-mvp/reflections/synthesis/`)
 - **Missing Cross-Reflection Analysis**: No pattern analysis, trend identification, or comparative insights across the 9 reflections
 - **Template Issue**: The create-path tool couldn't find a template for reflection files, suggesting missing template configuration
 
@@ -122,12 +122,12 @@
 
 - Investigate `reflection-synthesize` system prompt configuration
 - Add proper output directory configuration to synthesis tool
-- Create missing reflection template in dev-handbook
+- Create missing reflection template in .ace/handbook
 - Add synthesis quality validation workflow
 
 ## Additional Context
 
-- **Command Used**: `reflection-synthesize dev-taskflow/current/v.0.2.0-mvp/reflections/*.md --archived`
+- **Command Used**: `reflection-synthesize .ace/taskflow/current/v.0.2.0-mvp/reflections/*.md --archived`
 - **Files Processed**: 9 reflection notes spanning January 3 to July 19, 2025
 - **Expected Output**: Cross-reflection analysis with patterns, trends, and actionable recommendations
 - **Actual Output**: Compilation of individual reflections without synthesis analysis

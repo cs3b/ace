@@ -30,7 +30,7 @@ Fix the overly restrictive security patterns in YamlFrontmatterParser that were 
 ### Deliverables
 
 #### Modify
-- `dev-tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb` - Refined security patterns to remove false positives while maintaining security
+- `.ace/tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb` - Refined security patterns to remove false positives while maintaining security
 
 ## Implementation Summary
 

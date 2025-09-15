@@ -13,14 +13,14 @@ dependencies: [v.0.3.0+task.43]
 _Command run:_
 
 ```bash
-grep -n "prompt.md" dev-handbook/workflow-instructions/review-code.wf.md | head -5
+grep -n "prompt.md" .ace/handbook/workflow-instructions/review-code.wf.md | head -5
 ```
 
 _Result excerpt:_
 
 ```
 216: cat > "${SESSION_DIR}/prompt.md" <<EOF
-229: cat "dev-handbook/templates/review-${focus}/system.prompt.md" >> "${SESSION_DIR}/prompt.md"
+229: cat ".ace/handbook/templates/review-${focus}/system.prompt.md" >> "${SESSION_DIR}/prompt.md"
 231: echo -e "\n\n## Project Context\n" >> "${SESSION_DIR}/prompt.md"
 ```
 
@@ -40,7 +40,7 @@ Transform review prompt construction from plain markdown to structured XML forma
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 
 #### Create
 
@@ -61,7 +61,7 @@ Transform review prompt construction from plain markdown to structured XML forma
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current markdown prompt structure is documented
-  > Command: grep -A 20 "Combined Prompt Construction" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A 20 "Combined Prompt Construction" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Design XML schema with semantic tags (project-context, focus-areas, review-target)
 * [x] Plan YAML frontmatter integration with XML structure
 

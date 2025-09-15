@@ -26,10 +26,10 @@ dependencies: []
 ### [MEDIUM] Enhancement Questions
 - [x] Should symlinks use relative or absolute paths?
   - **Decision**: Use relative paths for portability
-  - **Implementation**: All symlinks use relative paths (e.g., `../dev-handbook/.integrations/claude/`)
+  - **Implementation**: All symlinks use relative paths (e.g., `../.ace/handbook/.integrations/claude/`)
 
-- [x] What should happen if dev-handbook submodule is missing?
-  - **Decision**: Auto-add submodules using configuration from `dev-tools/config/integration.yml`
+- [x] What should happen if .ace/handbook submodule is missing?
+  - **Decision**: Auto-add submodules using configuration from `.ace/tools/config/integration.yml`
   - **Implementation**: Use GitHub CLI if available, fallback to git commands
   - **Config**: Store submodule URLs in configuration file
 
@@ -54,7 +54,7 @@ The system creates a single `coding-agent-tools integrate --claude` command that
 
 1. **Smart Merge Behavior**: Only creates missing files/symlinks by default (non-destructive)
 2. **Selective Integration**: Supports `--only` flag for updating specific components (agents, commands, dotfiles, docs)
-3. **Automatic Submodule Setup**: Auto-adds missing submodules using config from `dev-tools/config/integration.yml`
+3. **Automatic Submodule Setup**: Auto-adds missing submodules using config from `.ace/tools/config/integration.yml`
 4. **Force Overwrite Option**: `--force` flag overwrites with automatic backup, `--no-backup` to skip backup
 5. **Relative Symlinks**: All symlinks use relative paths for portability
 6. **Extensible Design**: Supports Claude (implemented) and OpenCode (placeholder) integrations
@@ -90,9 +90,9 @@ coding-agent-tools integrate --opencode  # Shows "Coming soon" message
 # Command Output Examples
 $ coding-agent-tools integrate --claude
 ✓ Checking submodules...
-  ✓ dev-handbook present
-  ✓ dev-taskflow present
-  → dev-tools present
+  ✓ .ace/handbook present
+  ✓ .ace/taskflow present
+  → .ace/tools present
 ✓ Creating missing symlinks...
   → .claude/agents/ (12 symlinks created)
   → .claude/commands/ (8 new, 4 existing)
@@ -133,20 +133,20 @@ $ coding-agent-tools integrate --claude --only agents,commands
 - [x] **Single Command Functionality**: `coding-agent-tools integrate --claude` performs complete setup
 - [x] **Executable Name Fix**: All references to `coding_agent_tools` changed to `coding-agent-tools`
 - [x] **Symlink Integration**: All Claude files linked via symlinks, not copied
-- [x] **Dev-taskflow Handling**: Empty dev-taskflow submodule created when needed
+- [x] **Dev-taskflow Handling**: Empty .ace/taskflow submodule created when needed
 - [x] **Old Command Removal**: All deprecated integration commands completely removed
 - [x] **Development Focus**: Setup optimized for development environment only
 
 ### Validation Questions (Resolved Through Research)
 <!-- Questions to clarify requirements and validate understanding -->
 
-- [x] **Naming Consistency**: Should all dev-tools library references also change from coding_agent_tools?
+- [x] **Naming Consistency**: Should all .ace/tools library references also change from coding_agent_tools?
   - **Resolution**: Keep internal Ruby library as `coding_agent_tools` (Ruby convention), only change executable
   - **Evidence**: Ruby gems typically use snake_case for library names (e.g., active_record gem)
   
-- [x] **Submodule Behavior**: How should dev-taskflow integration work in existing vs new repos?
+- [x] **Submodule Behavior**: How should .ace/taskflow integration work in existing vs new repos?
   - **Resolution**: Dev-taskflow already exists as submodule, create empty if missing
-  - **Evidence**: Found `.git` file in dev-taskflow indicating proper submodule setup
+  - **Evidence**: Found `.git` file in .ace/taskflow indicating proper submodule setup
   
 - [ ] **Symlink Strategy**: Should symlinks be relative or absolute paths?
   - **Moved to Review Questions** - Needs human decision for portability vs simplicity trade-off
@@ -168,7 +168,7 @@ Consolidate fragmented project integration approach into single unified command 
 - Create new unified `coding-agent-tools integrate --claude` command
 - Fix executable naming throughout codebase (coding_agent_tools → coding-agent-tools)
 - Implement symlink-based Claude file integration
-- Handle dev-taskflow as empty submodule creation
+- Handle .ace/taskflow as empty submodule creation
 - Remove all deprecated integration commands
 - Update related documentation and workflows
 
@@ -178,14 +178,14 @@ Consolidate fragmented project integration approach into single unified command 
 
 - lib/coding_agent_tools/cli/commands/integrate.rb - New unified integrate command class
 - exe/coding-agent-tools - Renamed main executable (from coding_agent_tools)
-- dev-handbook/.integrations/claude/agents/ symlinks in .claude/agents/
-- dev-handbook/.integrations/claude/commands/ symlinks in .claude/commands/
+- .ace/handbook/.integrations/claude/agents/ symlinks in .claude/agents/
+- .ace/handbook/.integrations/claude/commands/ symlinks in .claude/commands/
 
 #### Modify
 
 - lib/coding_agent_tools/cli.rb - Update command registration for integrate
 - lib/coding_agent_tools.rb - Update main module for renamed executable
-- dev-tools/exe/* - All executable shebang references to use coding-agent-tools
+- .ace/tools/exe/* - All executable shebang references to use coding-agent-tools
 - lib/coding_agent_tools/**/*.rb - All internal library references to new naming
 - spec/**/*.rb - All test references to new naming
 - docs/**/*.md - All documentation references to new naming
@@ -203,7 +203,7 @@ Consolidate fragmented project integration approach into single unified command 
 - **Command Pattern**: Unified integrate command following existing CLI structure
 - **Facade Pattern**: Single command interface hiding complexity of multiple operations
 - **Template Method**: Systematic integration steps with error handling
-- **Integration Point**: Extends existing dry-cli framework in dev-tools
+- **Integration Point**: Extends existing dry-cli framework in .ace/tools
 
 ### Technology Stack
 - **CLI Framework**: dry-cli (existing)
@@ -292,16 +292,16 @@ Consolidate fragmented project integration approach into single unified command 
   - Design integration.yml configuration structure
   - Plan GitHub CLI detection and usage
   - Design fallback to git commands
-  - Plan special handling for dev-taskflow (same repo)
+  - Plan special handling for .ace/taskflow (same repo)
 
 ### Execution Steps
 <!-- Concrete implementation actions -->
 
-- [x] **Create Configuration File**: Create dev-tools/config/integration.yml
+- [x] **Create Configuration File**: Create .ace/tools/config/integration.yml
   > TEST: Config File Validation
   > Type: Configuration Check
   > Assert: integration.yml exists with valid YAML structure
-  > Command: ruby -ryaml -e "YAML.load_file('dev-tools/config/integration.yml')"
+  > Command: ruby -ryaml -e "YAML.load_file('.ace/tools/config/integration.yml')"
 
 - [x] **Implement Integrate Command**: Create lib/coding_agent_tools/cli/commands/integrate.rb
   > TEST: Command Creation
@@ -355,7 +355,7 @@ Consolidate fragmented project integration approach into single unified command 
   > TEST: Workflow Update
   > Type: Documentation Test
   > Assert: Workflow uses new integrate command
-  > Command: grep "coding-agent-tools integrate" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep "coding-agent-tools integrate" .ace/handbook/workflow-instructions/*.wf.md
 
 ## Risk Assessment
 

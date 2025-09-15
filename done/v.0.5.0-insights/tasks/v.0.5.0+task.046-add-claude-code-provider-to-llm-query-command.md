@@ -431,10 +431,10 @@ Enable developers to use their Claude Code subscription through the unified llm-
 
 ## References
 
-- Research document: dev-taskflow/current/v.0.5.0-insights/researches/run-cloud-code-by-llm-query.md
+- Research document: .ace/taskflow/current/v.0.5.0-insights/researches/run-cloud-code-by-llm-query.md
 - Claude CLI documentation: `claude --help` output
 - Claude CLI actual JSON output testing
 - Existing provider pattern: AnthropicClient, OpenAIClient, LmstudioClient implementations
 - User request for Claude Code integration with llm-query
 - Ruby Open3 documentation for subprocess execution
-- BaseClient inheritance pattern in dev-tools
+- BaseClient inheritance pattern in .ace/tools

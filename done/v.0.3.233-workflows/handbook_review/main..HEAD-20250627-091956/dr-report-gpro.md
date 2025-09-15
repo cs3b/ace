@@ -121,7 +121,7 @@ This plan outlines the critical, high, and medium-priority updates required acro
   - **Action**: In `guides/project-management.g.md`, `guides/testing-tdd-cycle.g.md`, and `guides/test-driven-development-cycle/meta-documentation.md`, update all links and references from `create-retrospective-document.wf.md` and `log-compact-session.wf.md` to `create-reflection-note.wf.md` and `save-session-context.md`. Ensure the surrounding text reflects the new, simpler workflows.
 - [ ] **Update `guides/initialize-project-templates/architecture.md`**: The link to decision records is outdated.
   - **Rationale**: The link points to a non-standard location.
-  - **Action**: Change the link from `dev-taskflow/decisions/` to the more standard `dev-taskflow/decisions/`.
+  - **Action**: Change the link from `.ace/taskflow/decisions/` to the more standard `.ace/taskflow/decisions/`.
 - [ ] **Standardize Formatting in All Guides**: Many guides have minor formatting inconsistencies (e.g., missing newlines).
   - **Rationale**: Consistent formatting improves readability for both humans and AI parsers.
   - **Action**: Run a formatting check/linter across all `.md` files in the `guides/` directory to enforce consistent spacing and structure, similar to the changes seen in the `code-review` guides.
@@ -167,7 +167,7 @@ This plan outlines the critical, high, and medium-priority updates required acro
 | `load-env.wf.md` | `load-project-context.wf.md` | `workflow-instructions/README.md`, all workflows that previously depended on it. |
 | `breakdown-notes-into-tasks.wf.md` and its sub-directory | `create-task.md` | `workflow-instructions/README.md`, any related process guides. |
 | `create-retrospective-document.wf.md` | `create-reflection-note.wf.md` | `guides/project-management.g.md`, `guides/testing-tdd-cycle.g.md`, `guides/test-driven-development-cycle/meta-documentation.md` |
-| `dev-handbook/guides/draft-release/v.x.x.x/.../_template.md` | Embedded content | All workflows that previously linked to external templates (e.g., `initialize-project-structure.wf.md`, `draft-release.wf.md`). |
+| `.ace/handbook/guides/draft-release/v.x.x.x/.../_template.md` | Embedded content | All workflows that previously linked to external templates (e.g., `initialize-project-structure.wf.md`, `draft-release.wf.md`). |
 
 ## Quality Assurance Validation
 

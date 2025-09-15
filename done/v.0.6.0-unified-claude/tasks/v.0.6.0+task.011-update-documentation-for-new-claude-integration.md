@@ -13,16 +13,16 @@ needs_review: false
 ## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [x] Should the main Claude integration guide be created at `dev-handbook/.integrations/claude/README.md` or elsewhere?
+- [x] Should the main Claude integration guide be created at `.ace/handbook/.integrations/claude/README.md` or elsewhere?
   - **Research conducted**: Directory `.integrations/claude/` exists with only `install-prompts.md`
   - **No README.md found**: Main integration guide doesn't exist yet
-  - **Suggested default**: Create at `dev-handbook/.integrations/claude/README.md`
-  - **Decision**: Confirmed - create at `dev-handbook/.integrations/claude/README.md`
+  - **Suggested default**: Create at `.ace/handbook/.integrations/claude/README.md`
+  - **Decision**: Confirmed - create at `.ace/handbook/.integrations/claude/README.md`
 
 - [x] How should we handle the transition from `bin/claude-integrate` script references?
   - **Research conducted**: Found 23 files referencing `claude-integrate` or `ClaudeCommandsInstaller`
   - **Current state**: Script exists at `bin/claude-integrate` using old approach
-  - **Script content**: Ruby script that loads ClaudeCommandsInstaller from dev-tools or inline
+  - **Script content**: Ruby script that loads ClaudeCommandsInstaller from .ace/tools or inline
   - **Decision**: Delete the bin/claude-integrate script and cleanup references
 
 ### [MEDIUM] Enhancement Questions
@@ -31,7 +31,7 @@ needs_review: false
   - **Similar patterns**: Other commands have 1-2 examples each
   - **Decision**: Use suggested default - 2-3 examples per subcommand showing common use cases
 
-- [x] What level of detail for the developer guide in `dev-tools/docs/development/`?
+- [x] What level of detail for the developer guide in `.ace/tools/docs/development/`?
   - **Research conducted**: Existing dev guides focus on implementation details
   - **Current structure**: Has BUILD.md, DEVELOPMENT.md, etc.
   - **Decision**: Developer guide is for contributors - include architecture, extension points, and testing guide
@@ -55,14 +55,14 @@ All documentation should be updated to reflect the new unified handbook CLI appr
 ### Interface Contract
 ```markdown
 # Documentation Structure
-dev-handbook/.integrations/claude/
+.ace/handbook/.integrations/claude/
 ├── README.md                    # Main integration guide
 ├── install-prompts.md          # Updated installation instructions
 ├── MIGRATION.md                # Migration from old system
 └── commands/
     └── README.md               # Command structure explanation
 
-dev-tools/docs/
+.ace/tools/docs/
 ├── tools.md                    # Add Claude commands section
 └── development/
     └── claude-integration.md   # Developer guide
@@ -161,15 +161,15 @@ Update all documentation to comprehensively cover the new unified Claude integra
 ## File Modifications
 
 ### Create
-- `dev-handbook/.integrations/claude/README.md` - Main integration guide (new file)
-- `dev-handbook/.integrations/claude/MIGRATION.md` - Migration guide
-- `dev-handbook/.integrations/claude/commands/README.md` - Command structure docs
-- `dev-tools/docs/development/claude-integration.md` - Developer guide
+- `.ace/handbook/.integrations/claude/README.md` - Main integration guide (new file)
+- `.ace/handbook/.integrations/claude/MIGRATION.md` - Migration guide
+- `.ace/handbook/.integrations/claude/commands/README.md` - Command structure docs
+- `.ace/tools/docs/development/claude-integration.md` - Developer guide
 
 ### Modify
-- `dev-handbook/.integrations/claude/install-prompts.md` - Update installation process
-- `dev-tools/docs/tools.md` - Update Claude commands section (already has entries)
-- `dev-tools/README.md` - Update feature list
+- `.ace/handbook/.integrations/claude/install-prompts.md` - Update installation process
+- `.ace/tools/docs/tools.md` - Update Claude commands section (already has entries)
+- `.ace/tools/README.md` - Update feature list
 
 ### Delete
 - `bin/claude-integrate` - Remove deprecated script
@@ -205,7 +205,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
 * [x] Identify all references to old system
   - Found: 23 files reference `claude-integrate` or installer
   - Includes: bin script, specs, tasks, reflections
-  - bin/claude-integrate loads ClaudeCommandsInstaller from dev-tools
+  - bin/claude-integrate loads ClaudeCommandsInstaller from .ace/tools
 * [x] Plan example scenarios
   - First-time setup flow: `handbook claude integrate`
   - Migration from old system: Show command mapping
@@ -252,7 +252,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
 
   ## Migration Steps
 
-  1. Update to latest dev-tools
+  1. Update to latest .ace/tools
   2. Use new commands:
      - `claude-integrate` → `handbook claude integrate`
      - Manual generation → `handbook claude generate-commands`
@@ -359,9 +359,9 @@ Update all documentation to comprehensively cover the new unified Claude integra
 - Current documentation structure
 - Documentation style guide
 - User feedback on old documentation
-- Existing `dev-handbook/.integrations/claude/install-prompts.md`
-- Current `dev-tools/docs/tools.md` format
-- Migration guide pattern at `dev-tools/docs/migrations/migration-guide.md`
+- Existing `.ace/handbook/.integrations/claude/install-prompts.md`
+- Current `.ace/tools/docs/tools.md` format
+- Migration guide pattern at `.ace/tools/docs/migrations/migration-guide.md`
 - Related task dependencies (task.002 through task.007)
 
 ## Review Summary
@@ -378,7 +378,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
 - ✅ Confirmed tools.md already has handbook claude commands documented
 - ✅ Verified handbook CLI has claude subcommands implemented and working
 - ✅ Examined bin/claude-integrate script content
-- ✅ Reviewed existing migration guide pattern at dev-tools/docs/migrations/
+- ✅ Reviewed existing migration guide pattern at .ace/tools/docs/migrations/
 - ✅ Checked OAuth2 session timeout best practices for documentation example
 
 **Content Updates Made:**
@@ -392,7 +392,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
 **Implementation Readiness:** Ready for implementation
 
 **Recommended Next Steps:**
-1. Create main Claude integration guide at `dev-handbook/.integrations/claude/README.md`
+1. Create main Claude integration guide at `.ace/handbook/.integrations/claude/README.md`
 2. Create migration guide with clear command mappings
 3. Delete bin/claude-integrate script
 4. Update all 23 file references to use new handbook claude commands

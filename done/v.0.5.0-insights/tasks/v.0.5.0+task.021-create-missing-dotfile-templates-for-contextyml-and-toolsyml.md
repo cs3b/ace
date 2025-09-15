@@ -31,8 +31,8 @@ Create missing template files for `context.yml` and `tools.yml` in the dotfiles 
 ### Deliverables
 
 #### Create
-- `dev-handbook/.meta/tpl/dotfiles/context.yml` - Template for context tool configuration
-- `dev-handbook/.meta/tpl/dotfiles/tools.yml` - Template for tools listing configuration
+- `.ace/handbook/.meta/tpl/dotfiles/context.yml` - Template for context tool configuration
+- `.ace/handbook/.meta/tpl/dotfiles/tools.yml` - Template for tools listing configuration
 
 #### Modify
 - None - only new files were created
@@ -45,7 +45,7 @@ Create missing template files for `context.yml` and `tools.yml` in the dotfiles 
 ### What Was Done
 
 - **Problem Identification**: User reported that `install-dotfiles` was only recognizing 5 files instead of 7
-- **Investigation**: Found that `context.yml` and `tools.yml` existed in `.coding-agent/` but had no corresponding templates in `dev-handbook/.meta/tpl/dotfiles/`
+- **Investigation**: Found that `context.yml` and `tools.yml` existed in `.coding-agent/` but had no corresponding templates in `.ace/handbook/.meta/tpl/dotfiles/`
 - **Solution**: Created generic template versions of both missing configuration files based on the existing customized versions
 - **Validation**: Tested the `install-dotfiles` command to confirm it now recognizes all 7 configuration files
 
@@ -91,6 +91,6 @@ rm -rf .coding-agent && mv .coding-agent.backup .coding-agent
 ## References
 
 - Original issue: User investigation of missing dotfiles
-- Template directory: `dev-handbook/.meta/tpl/dotfiles/`
-- Install command source: `dev-tools/lib/coding_agent_tools/cli/commands/install_dotfiles.rb`
-- Related documentation: Context tool docs at `dev-tools/docs/exe/context.md`
+- Template directory: `.ace/handbook/.meta/tpl/dotfiles/`
+- Install command source: `.ace/tools/lib/coding_agent_tools/cli/commands/install_dotfiles.rb`
+- Related documentation: Context tool docs at `.ace/tools/docs/exe/context.md`

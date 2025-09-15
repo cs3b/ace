@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -121,9 +121,9 @@ Improve test coverage for the LLM Models CLI command (`lib/coding_agent_tools/cl
 
 ## References
 - Coverage analysis: coverage_analysis/coverage_analysis.json
-- Source file: dev-tools/lib/coding_agent_tools/cli/commands/llm/models.rb (8.78% coverage)
-- Existing tests: dev-tools/spec/coding_agent_tools/cli/commands/llm/models_spec.rb
-- Testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Source file: .ace/tools/lib/coding_agent_tools/cli/commands/llm/models.rb (8.78% coverage)
+- Existing tests: .ace/tools/spec/coding_agent_tools/cli/commands/llm/models_spec.rb
+- Testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md
 
 ## Summary of Accomplishments
 

@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.116]
 _Command run:_
 
 ```bash
-ls -la dev-tools/exe/ | sed 's/^/    /'
+ls -la .ace/tools/exe/ | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -30,7 +30,7 @@ _Result excerpt:_
 
 ## Objective
 
-Conduct a comprehensive audit of all executables in the dev-tools/exe/ directory to identify commands that don't use the dry library pattern and standardize them. This addresses the code review feedback about ensuring consistency across all command implementations.
+Conduct a comprehensive audit of all executables in the .ace/tools/exe/ directory to identify commands that don't use the dry library pattern and standardize them. This addresses the code review feedback about ensuring consistency across all command implementations.
 
 ## Scope of Work
 
@@ -71,12 +71,12 @@ Conduct a comprehensive audit of all executables in the dev-tools/exe/ directory
   > TEST: Executable Inventory
   > Type: Discovery
   > Assert: All executables in exe/ directory are catalogued
-  > Command: cd dev-tools && ls -1 exe/ | grep -v '\.' | head -20
+  > Command: cd .ace/tools && ls -1 exe/ | grep -v '\.' | head -20
 - [x] Analyze each executable for dry library usage
   > TEST: Pattern Analysis
   > Type: Code Review
   > Assert: Usage patterns for each executable are documented
-  > Command: cd dev-tools && for f in exe/*; do echo "=== $f ==="; head -10 "$f"; done
+  > Command: cd .ace/tools && for f in exe/*; do echo "=== $f ==="; head -10 "$f"; done
 - [x] Identify which executables need updates
 - [x] Plan standardization approach
 
@@ -86,32 +86,32 @@ Conduct a comprehensive audit of all executables in the dev-tools/exe/ directory
   > TEST: Audit Completion
   > Type: Documentation
   > Assert: Audit report shows current state of all executables
-  > Command: cd dev-tools && find exe/ -type f -executable | wc -l
+  > Command: cd .ace/tools && find exe/ -type f -executable | wc -l
 - [x] Step 2: Identify non-dry library executables
   > TEST: Non-Compliant Identification
   > Type: Pattern Detection
   > Assert: Executables not using dry library are identified
-  > Command: cd dev-tools && grep -l "ARGV" exe/nav-*
+  > Command: cd .ace/tools && grep -l "ARGV" exe/nav-*
 - [x] Step 3: Refactor identified executables to use dry pattern
   > TEST: Standardization Progress
   > Type: Refactoring Validation
   > Assert: All executables use consistent dry library pattern
-  > Command: cd dev-tools && grep -l "ARGV" exe/nav-* || echo "All nav executables standardized"
+  > Command: cd .ace/tools && grep -l "ARGV" exe/nav-* || echo "All nav executables standardized"
 - [x] Step 4: Ensure all commands are properly registered
   > TEST: Command Registration
   > Type: Integration Validation
   > Assert: All commands are registered in the CLI system
-  > Command: cd dev-tools && grep -n "register.*command" lib/coding_agent_tools/cli.rb
+  > Command: cd .ace/tools && grep -n "register.*command" lib/coding_agent_tools/cli.rb
 - [x] Step 5: Test all standardized executables
   > TEST: Execution Validation
   > Type: Functional Testing
   > Assert: All executables work correctly with dry library
-  > Command: cd dev-tools && for f in exe/nav-*; do echo "Testing $f"; timeout 5 bundle exec "$f" --help >/dev/null 2>&1 && echo "OK" || echo "ISSUE"; done
+  > Command: cd .ace/tools && for f in exe/nav-*; do echo "Testing $f"; timeout 5 bundle exec "$f" --help >/dev/null 2>&1 && echo "OK" || echo "ISSUE"; done
 - [x] Step 6: Create standard executable template
   > TEST: Template Creation
   > Type: Documentation
   > Assert: Standard template is available for future commands
-  > Command: cd dev-tools && test -f docs/executable-template.rb && echo "Template exists"
+  > Command: cd .ace/tools && test -f docs/executable-template.rb && echo "Template exists"
 
 ## Acceptance Criteria
 
@@ -177,7 +177,7 @@ end
 ## References
 
 - Code review feedback: Check for other commands that don't use dry library
-- Reference pattern: dev-tools/exe/git-commit
+- Reference pattern: .ace/tools/exe/git-commit
 - Dry-cli documentation
 - Project CLI architecture in lib/coding_agent_tools/cli.rb
 - ATOM architecture patterns for consistency

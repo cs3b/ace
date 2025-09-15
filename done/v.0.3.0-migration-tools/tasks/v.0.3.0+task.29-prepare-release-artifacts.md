@@ -14,14 +14,14 @@ dependencies: [v.0.3.0+task.28]
 _Command run:_
 
 ```bash
-ls -la dev-tools/{CHANGELOG.md,lib/coding_agent_tools/version.rb} | sed 's/^/    /'
+ls -la .ace/tools/{CHANGELOG.md,lib/coding_agent_tools/version.rb} | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/CHANGELOG.md
-    dev-tools/lib/coding_agent_tools/version.rb
+    .ace/tools/CHANGELOG.md
+    .ace/tools/lib/coding_agent_tools/version.rb
 ```
 
 ## Objective
@@ -42,12 +42,12 @@ Prepare all release artifacts for v.0.3.0, including changelog updates, version 
 #### Create
 
 * docs/release-notes-v0.3.0.md
-* dev-taskflow/backlog/v.0.3.0-migration/migration-artifacts/
+* .ace/taskflow/backlog/v.0.3.0-migration/migration-artifacts/
 
 #### Modify
 
-* dev-tools/CHANGELOG.md
-* dev-tools/lib/coding_agent_tools/version.rb
+* .ace/tools/CHANGELOG.md
+* .ace/tools/lib/coding_agent_tools/version.rb
 
 #### Delete
 
@@ -69,7 +69,7 @@ Prepare all release artifacts for v.0.3.0, including changelog updates, version 
   > TEST: Task Review
   > Type: Pre-condition Check
   > Assert: All tasks documented
-  > Command: find dev-taskflow/backlog/v.0.3.0-migration/tasks -name "*.md" | wc -l
+  > Command: find .ace/taskflow/backlog/v.0.3.0-migration/tasks -name "*.md" | wc -l
 * [ ] Compile feature list from migrations
 * [ ] Plan release note structure
 
@@ -79,7 +79,7 @@ Prepare all release artifacts for v.0.3.0, including changelog updates, version 
   > TEST: Version Update
   > Type: File Check
   > Assert: Version updated correctly
-  > Command: grep "VERSION.*0.3.0" dev-tools/lib/coding_agent_tools/version.rb
+  > Command: grep "VERSION.*0.3.0" .ace/tools/lib/coding_agent_tools/version.rb
 - [ ] Update CHANGELOG.md with comprehensive changes
 - [ ] Create detailed release notes document
 - [ ] Archive performance benchmarks
@@ -109,6 +109,6 @@ Prepare all release artifacts for v.0.3.0, including changelog updates, version 
 ## References
 
 * All completed migration tasks
-* Version file: dev-tools/lib/coding_agent_tools/version.rb
+* Version file: .ace/tools/lib/coding_agent_tools/version.rb
 * Changelog format: Keep a Changelog
 * Release process: Standard gem release

@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -38,7 +38,7 @@ Improve test coverage for the SessionManager organism to ensure reliable session
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/organisms/code/session_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/session_manager_spec.rb
 
 #### Modify
 
@@ -103,7 +103,7 @@ Improve test coverage for the SessionManager organism to ensure reliable session
   > TEST: Full Test Suite
   > Type: Integration Test
   > Assert: All SessionManager tests pass and provide good coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code/session_manager_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code/session_manager_spec.rb
 
 ## Acceptance Criteria
 

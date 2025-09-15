@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.04]
 _Command run:_
 
 ```bash
-tree -L 1 dev-tools/lib/coding_agent_tools/atoms/task_management | sed 's/^/    /'
+tree -L 1 .ace/tools/lib/coding_agent_tools/atoms/task_management | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/task_management
+    .ace/tools/lib/coding_agent_tools/atoms/task_management
     ├── file_system_scanner.rb
     └── yaml_frontmatter_parser.rb
 ```
@@ -73,7 +73,7 @@ Implement additional core atoms for task management including task ID parsing, d
   > TEST: Format Analysis
   > Type: Pre-condition Check
   > Assert: All task ID formats are documented
-  > Command: grep -E "task\.[0-9]+" dev-tools/exe-old/get-next-task-id | head -5
+  > Command: grep -E "task\.[0-9]+" .ace/tools/exe-old/get-next-task-id | head -5
 * [x] Study directory navigation patterns in existing tools
 * [x] Design atom interfaces with clear responsibilities
 
@@ -83,7 +83,7 @@ Implement additional core atoms for task management including task ID parsing, d
   > TEST: Task ID Parser
   > Type: Unit Test
   > Assert: Parser handles various task ID formats
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/task_management/task_id_parser_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/task_management/task_id_parser_spec.rb
 - [x] Implement directory_navigator.rb for finding release directories
 - [x] Implement shell_command_executor.rb with error handling
 - [x] Create unit tests achieving 100% coverage
@@ -107,10 +107,10 @@ Implement additional core atoms for task management including task ID parsing, d
 ## References
 
 * **Dependency**: v.0.3.0+task.04 (ATOM structure initialization - ✅ COMPLETED)
-* Task ID formats: dev-tools/exe-old/get-next-task-id
-* Directory patterns: dev-tools/exe-old/get-current-release-path.sh
-* Task management logic: dev-tools/exe-old/get-next-task
-* Existing patterns: dev-tools/lib/coding_agent_tools/atoms/
+* Task ID formats: .ace/tools/exe-old/get-next-task-id
+* Directory patterns: .ace/tools/exe-old/get-current-release-path.sh
+* Task management logic: .ace/tools/exe-old/get-next-task
+* Existing patterns: .ace/tools/lib/coding_agent_tools/atoms/
 
 ## Research Findings
 
@@ -124,7 +124,7 @@ Based on research of existing task management tools:
 
 ### Directory Navigation Patterns
 
-- Base path: `dev-taskflow/current/*/tasks/`
+- Base path: `.ace/taskflow/current/*/tasks/`
 - Release directories: `v.X.Y.Z-codename` format
 - Version extraction: `/^(v\.\d+\.\d+\.\d+)/`
 - YAML frontmatter parsing with `---` delimiters

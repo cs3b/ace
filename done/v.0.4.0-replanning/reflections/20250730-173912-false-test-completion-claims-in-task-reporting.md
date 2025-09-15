@@ -93,12 +93,12 @@
 ## Technical Details
 
 **Missing Test Files (Should be created):**
-- `dev-tools/spec/organisms/idea_capture_spec.rb`
-- `dev-tools/spec/molecules/context_loader_spec.rb`
-- `dev-tools/spec/molecules/llm_client_spec.rb`
-- `dev-tools/spec/molecules/idea_enhancer_spec.rb`
-- `dev-tools/spec/cli/ideas_manager_spec.rb`
-- `dev-tools/spec/integration/ideas_manager_integration_spec.rb`
+- `.ace/tools/spec/organisms/idea_capture_spec.rb`
+- `.ace/tools/spec/molecules/context_loader_spec.rb`
+- `.ace/tools/spec/molecules/llm_client_spec.rb`
+- `.ace/tools/spec/molecules/idea_enhancer_spec.rb`
+- `.ace/tools/spec/cli/ideas_manager_spec.rb`
+- `.ace/tools/spec/integration/ideas_manager_integration_spec.rb`
 
 **Actual Implementation Status:**
 - ✅ Functional code: Complete and working

@@ -44,7 +44,7 @@
 - Method Length: Increased to 20 (from 10) for CLI commands
 - Class Length: Increased to 250 for organisms and CLI commands
 - Disabled Cops: TernaryParentheses, SafeNavigation, HashExcept (newer Ruby features not always clearer)
-- Excluded: Dev-handbook and dev-taskflow directories (documentation repos)
+- Excluded: Dev-handbook and .ace/taskflow directories (documentation repos)
 
 ## Action Items
 
@@ -65,7 +65,7 @@
 
 ## Additional Context
 
-- Task file: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.026-address-code-style-violations-with-rubocop.md
-- Configuration: dev-tools/.rubocop.yml
-- Style Guide: dev-tools/STYLE_GUIDE.md
-- CI Integration: dev-tools/.github/workflows/ci.yml
+- Task file: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.026-address-code-style-violations-with-rubocop.md
+- Configuration: .ace/tools/.rubocop.yml
+- Style Guide: .ace/tools/STYLE_GUIDE.md
+- CI Integration: .ace/tools/.github/workflows/ci.yml

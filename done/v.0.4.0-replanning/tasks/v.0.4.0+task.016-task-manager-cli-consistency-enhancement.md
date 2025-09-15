@@ -223,7 +223,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All "all" references identified and categorized by scope
-  > Command: grep -r "Task::All\|all.*task\|get_all_tasks\|AllTasksResult\|default_all_sort" dev-tools/
+  > Command: grep -r "Task::All\|all.*task\|get_all_tasks\|AllTasksResult\|default_all_sort" .ace/tools/
 * [x] Plan detailed implementation strategy
 * [x] Design systematic renaming approach
 
@@ -236,7 +236,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Verify Core File Updates
   > Type: Action Validation
   > Assert: New list.rb file exists with correct class name and no "All" references
-  > Command: test -f dev-tools/lib/coding_agent_tools/cli/commands/task/list.rb && ! grep -q "Task::All" dev-tools/lib/coding_agent_tools/cli/commands/task/list.rb
+  > Command: test -f .ace/tools/lib/coding_agent_tools/cli/commands/task/list.rb && ! grep -q "Task::All" .ace/tools/lib/coding_agent_tools/cli/commands/task/list.rb
 
 - [ ] **Phase 2: Supporting Method Renaming**
   - [ ] Update `task_sort_engine.rb` to rename `default_all_sort` to `default_list_sort`
@@ -246,7 +246,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Verify Method Renaming
   > Type: Action Validation
   > Assert: New method names exist and old method names are removed
-  > Command: grep -q "default_list_sort\|get_list_tasks\|ListTasksResult" dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_sort_engine.rb dev-tools/lib/coding_agent_tools/organisms/taskflow_management/task_manager.rb
+  > Command: grep -q "default_list_sort\|get_list_tasks\|ListTasksResult" .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_sort_engine.rb .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/task_manager.rb
 
 - [ ] **Phase 3: CLI Registration Updates**
   - [ ] Update `exe/task-manager` require statement to use new list.rb file
@@ -256,7 +256,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Verify CLI Updates
   > Type: Action Validation
   > Assert: Both "list" and "all" commands work correctly
-  > Command: cd dev-tools && bundle exec exe/task-manager list --help && bundle exec exe/task-manager all --help
+  > Command: cd .ace/tools && bundle exec exe/task-manager list --help && bundle exec exe/task-manager all --help
 
 - [ ] **Phase 4: Test File Updates**
   - [ ] Rename `spec/coding_agent_tools/cli/commands/task/all_spec.rb` to `list_spec.rb`
@@ -266,7 +266,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Verify Test Updates
   > Type: Action Validation
   > Assert: All tests pass with new naming structure
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/list_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/list_spec.rb
 
 - [ ] **Phase 5: Comprehensive Testing**
   - [ ] Run full test suite to ensure no regressions
@@ -276,7 +276,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Verify Full Integration
   > Type: Integration Validation
   > Assert: Full test suite passes and CLI functionality is preserved
-  > Command: cd dev-tools && bundle exec rspec && bundle exec exe/task-manager list && bundle exec exe/task-manager all
+  > Command: cd .ace/tools && bundle exec rspec && bundle exec exe/task-manager list && bundle exec exe/task-manager all
 
 - [ ] **Phase 6: Documentation Updates**
   - [ ] Update any remaining documentation references to use "list" terminology
@@ -285,7 +285,7 @@ Improve consistency between the public CLI interface and internal implementation
   > TEST: Verify Documentation Consistency
   > Type: Documentation Validation
   > Assert: All documentation uses consistent "list" terminology
-  > Command: ! grep -r "All command for listing all tasks" dev-tools/ --include="*.rb" --include="*.md"
+  > Command: ! grep -r "All command for listing all tasks" .ace/tools/ --include="*.rb" --include="*.md"
 
 ## Acceptance Criteria
 
@@ -305,7 +305,7 @@ Improve consistency between the public CLI interface and internal implementation
 
 ## References
 
-- Original idea file: dev-taskflow/backlog/ideas/20250731-1454-task-list-rename.md
+- Original idea file: .ace/taskflow/backlog/ideas/20250731-1454-task-list-rename.md
 - Project CLI consistency standards from docs/tools.md
 - Task-manager tool documentation and help output
 - ATOM Architecture patterns from docs/architecture-tools.md

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.37]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/exe | sed 's/^/    /'
+tree -L 2 .ace/tools/exe | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/exe
+    .ace/tools/exe
     ├── coding_agent_tools
     ├── git-add
     ├── git-commit
@@ -50,14 +50,14 @@ Add git-checkout and git-switch commands to allow running the same git branch op
 
 #### Create
 
-- dev-tools/exe/git-checkout
-- dev-tools/exe/git-switch
-- dev-tools/lib/coding_agent_tools/cli/commands/git/checkout.rb
-- dev-tools/lib/coding_agent_tools/cli/commands/git/switch.rb
+- .ace/tools/exe/git-checkout
+- .ace/tools/exe/git-switch
+- .ace/tools/lib/coding_agent_tools/cli/commands/git/checkout.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/git/switch.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
 
 ## Phases
 
@@ -139,7 +139,7 @@ Add git-checkout and git-switch commands to allow running the same git branch op
 ## References
 
 ```
-Pattern source: dev-tools/exe/git-status, git-add, etc.
-Implementation reference: dev-tools/lib/coding_agent_tools/cli/commands/git/status.rb
-Orchestrator reference: dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+Pattern source: .ace/tools/exe/git-status, git-add, etc.
+Implementation reference: .ace/tools/lib/coding_agent_tools/cli/commands/git/status.rb
+Orchestrator reference: .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
 ```

@@ -80,8 +80,8 @@ end
 
 Implemented path validation that differs by document type:
 
-- Templates: Must be in `dev-handbook/templates/` with `.template.md` extension
-- Guides: Must be in `dev-handbook/guides/` with `.g.md` extension
+- Templates: Must be in `.ace/handbook/templates/` with `.template.md` extension
+- Guides: Must be in `.ace/handbook/guides/` with `.g.md` extension
 
 ### Migration Results
 
@@ -93,7 +93,7 @@ Successfully migrated 14 workflow files from `<templates>` to `<documents>` form
 - **Follow-up Task 41**: [task.41-update-document-synchronization-guides.md](../tasks/task.41-update-document-synchronization-guides.md)
 - **ADR-004**: [docs/decisions/ADR-004-consistent-path-standards.md](../../../docs/decisions/ADR-004-consistent-path-standards.md)
 - **ADR-005**: [docs/decisions/ADR-005-universal-document-embedding-system.md](../../../docs/decisions/ADR-005-universal-document-embedding-system.md)
-- **Enhanced Sync Script**: [dev-tools/exe-old/markdown-sync-embedded-documents](../../../dev-tools/exe-old/markdown-sync-embedded-documents)
+- **Enhanced Sync Script**: [.ace/tools/exe-old/markdown-sync-embedded-documents](../../../.ace/tools/exe-old/markdown-sync-embedded-documents)
 
 ### Commits
 

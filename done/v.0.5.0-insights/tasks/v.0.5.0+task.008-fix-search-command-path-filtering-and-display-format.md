@@ -16,7 +16,7 @@ dependencies: ["v.0.5.0+task.007"]
 - **Output**: Clean, readable search results showing relative paths from project root instead of verbose absolute paths
 
 ### Expected Behavior
-Users expect the search command to respect its default exclusion filters regardless of where they run the command from. When searching for patterns, they should not see results from directories that are supposed to be excluded by default (like `dev-taskflow/done/**/*` and `dev-taskflow/current/*/tasks/x/*`). 
+Users expect the search command to respect its default exclusion filters regardless of where they run the command from. When searching for patterns, they should not see results from directories that are supposed to be excluded by default (like `.ace/taskflow/done/**/*` and `.ace/taskflow/current/*/tasks/x/*`). 
 
 Additionally, users want search results to display clean, relative paths that are easy to read and understand in the context of their project, rather than long absolute paths that clutter the output and make it harder to scan results quickly.
 
@@ -25,22 +25,22 @@ The search command should provide consistent, predictable filtering behavior tha
 ### Interface Contract
 ```bash
 # Current broken behavior
-$ cd dev-handbook/workflow-instructions
+$ cd .ace/handbook/workflow-instructions
 $ search "bin/tnid"
-Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: dev-taskflow/current/*/tasks/x/*,dev-taskflow/done/**/*]
+Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: .ace/taskflow/current/*/tasks/x/*,dev-taskflow/done/**/*]
 Found 73 results
-  /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/done/v.0.2.0-synapse/tasks/v.0.2.0+task.3:2:0: ...
+  /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/done/v.0.2.0-synapse/tasks/v.0.2.0+task.3:2:0: ...
   # ^^ Shows results from excluded paths (filters not working)
   # ^^ Shows full absolute paths (verbose and hard to read)
 
 # Expected behavior after fix
-$ cd dev-handbook/workflow-instructions  
+$ cd .ace/handbook/workflow-instructions  
 $ search "bin/tnid"
-Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: dev-taskflow/current/*/tasks/x/*,dev-taskflow/done/**/*]
+Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: .ace/taskflow/current/*/tasks/x/*,dev-taskflow/done/**/*]
 Found 11 results
   ./CHANGELOG.md:663:0: ...
-  ./dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md:5:0: ...
-  # ^^ Excludes dev-taskflow/done/ results (filters working correctly)
+  ./.ace/taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md:5:0: ...
+  # ^^ Excludes .ace/taskflow/done/ results (filters working correctly)
   # ^^ Shows relative paths from project root (clean and readable)
 
 # Filter control interface remains unchanged
@@ -60,7 +60,7 @@ $ search "pattern" --include "specific/**"  # Limits search to specific paths
 - Case sensitivity in filters: Should follow platform conventions
 
 ### Success Criteria
-- [x] **Default Filter Functionality**: Default exclusion filters (`dev-taskflow/current/*/tasks/x/*`, `dev-taskflow/done/**/*`) successfully filter out matching paths from results
+- [x] **Default Filter Functionality**: Default exclusion filters (`.ace/taskflow/current/*/tasks/x/*`, `.ace/taskflow/done/**/*`) successfully filter out matching paths from results
 - [x] **Relative Path Display**: All search results show paths relative to project root (e.g., `./path/to/file.md` or `path/to/file.md`)
 - [x] **Consistent Filtering**: Path filtering works correctly regardless of user's current working directory
 - [x] **Custom Filter Support**: User-specified include/exclude filters continue to work as documented
@@ -130,12 +130,12 @@ No new tools required. Using existing Ruby standard library and project componen
 ## File Modifications
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/organisms/search/result_aggregator.rb`
+- `.ace/tools/lib/coding_agent_tools/organisms/search/result_aggregator.rb`
   - Changes: Update `filter_result_array_by_path` to convert absolute paths to relative before matching
   - Impact: Fixes filter matching for absolute path results from ripgrep
   - Integration points: Called by aggregate method for all search results
 
-- `dev-tools/exe/search`
+- `.ace/tools/exe/search`
   - Changes: Update `output_single_result` to display relative paths
   - Impact: Cleaner, more readable output for users
   - Integration points: Output formatting for all search modes
@@ -165,7 +165,7 @@ No new tools required. Using existing Ruby standard library and project componen
   > TEST: Path Conversion in Filter
   > Type: Unit Test
   > Assert: Absolute paths are converted to relative before filter matching
-  > Command: ruby -e "require './dev-tools/lib/coding_agent_tools/organisms/search/result_aggregator'; puts 'Test filter conversion logic'"
+  > Command: ruby -e "require './.ace/tools/lib/coding_agent_tools/organisms/search/result_aggregator'; puts 'Test filter conversion logic'"
   
   Modify `filter_result_array_by_path` method to:
   ```ruby
@@ -186,7 +186,7 @@ No new tools required. Using existing Ruby standard library and project componen
   > TEST: Project Root Initialization
   > Type: Integration Test
   > Assert: ResultAggregator has access to project root
-  > Command: cd dev-tools && ruby -e "require './lib/coding_agent_tools/organisms/search/result_aggregator'; ra = CodingAgentTools::Organisms::Search::ResultAggregator.new; puts ra.instance_variable_get(:@project_root) || 'No project root'"
+  > Command: cd .ace/tools && ruby -e "require './lib/coding_agent_tools/organisms/search/result_aggregator'; ra = CodingAgentTools::Organisms::Search::ResultAggregator.new; puts ra.instance_variable_get(:@project_root) || 'No project root'"
   
   Add initialization:
   ```ruby
@@ -219,8 +219,8 @@ No new tools required. Using existing Ruby standard library and project componen
 - [x] **Test Filter Functionality**
   > TEST: Default Filters Working
   > Type: Integration Test
-  > Assert: Results from dev-taskflow/done are excluded
-  > Command: search "bin/tnid" | grep -c "dev-taskflow/done" | grep "^0$"
+  > Assert: Results from .ace/taskflow/done are excluded
+  > Command: search "bin/tnid" | grep -c ".ace/taskflow/done" | grep "^0$"
 
 - [x] **Test Path Display Format**
   > TEST: Clean Path Display
@@ -232,7 +232,7 @@ No new tools required. Using existing Ruby standard library and project componen
   > TEST: Search from Subdirectory
   > Type: Integration Test
   > Assert: Filters work when running from subdirectory
-  > Command: cd dev-handbook && search "bin/tnid" | grep -c "dev-taskflow/done" | grep "^0$"
+  > Command: cd .ace/handbook && search "bin/tnid" | grep -c ".ace/taskflow/done" | grep "^0$"
 
 ## Risk Assessment
 
@@ -260,7 +260,7 @@ No new tools required. Using existing Ruby standard library and project componen
 ## Acceptance Criteria
 
 ### Behavioral Requirement Fulfillment
-- [x] **Filter Functionality**: Default filters successfully exclude dev-taskflow/done/** paths
+- [x] **Filter Functionality**: Default filters successfully exclude .ace/taskflow/done/** paths
 - [x] **Path Display**: All results show relative paths from project root
 - [x] **Consistency**: Filtering works from any directory in project
 

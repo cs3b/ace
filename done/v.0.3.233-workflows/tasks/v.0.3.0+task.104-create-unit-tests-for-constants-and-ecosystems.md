@@ -13,14 +13,14 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/lib/coding_agent_tools -name "*constants*.rb" -o -name "ecosystems.rb" | sed 's/^/    /'
+find .ace/tools/lib/coding_agent_tools -name "*constants*.rb" -o -name "ecosystems.rb" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/constants/model_constants.rb
-    dev-tools/lib/coding_agent_tools/ecosystems.rb
+    .ace/tools/lib/coding_agent_tools/constants/model_constants.rb
+    .ace/tools/lib/coding_agent_tools/ecosystems.rb
 ```
 
 ## Objective
@@ -38,8 +38,8 @@ Create comprehensive unit tests for system-level configuration components (Const
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/constants/model_constants_spec.rb
-- dev-tools/spec/coding_agent_tools/ecosystems_spec.rb
+- .ace/tools/spec/coding_agent_tools/constants/model_constants_spec.rb
+- .ace/tools/spec/coding_agent_tools/ecosystems_spec.rb
 
 #### Modify
 
@@ -64,7 +64,7 @@ Create comprehensive unit tests for system-level configuration components (Const
   > TEST: Constants Understanding Check
   > Type: Pre-condition Check
   > Assert: All defined constants and their expected values are identified
-  > Command: cd dev-tools && grep -n "=" lib/coding_agent_tools/constants/model_constants.rb
+  > Command: cd .ace/tools && grep -n "=" lib/coding_agent_tools/constants/model_constants.rb
 - [x] Analyze Ecosystems implementation to understand system integration patterns
 - [x] Research testing patterns for system-level configuration and module loading
 
@@ -74,26 +74,26 @@ Create comprehensive unit tests for system-level configuration components (Const
   > TEST: Constant Definitions Validation
   > Type: Configuration Test
   > Assert: All constants are defined with expected values and types
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/constants/model_constants_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/constants/model_constants_spec.rb
 - [x] Test constant value validation and type checking
 - [x] Test edge cases with undefined or invalid constant access
 - [x] Create Ecosystems test file with system integration testing
   > TEST: System Integration Validation
   > Type: System Configuration Test
   > Assert: Ecosystems properly manages system-level integration
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/ecosystems_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/ecosystems_spec.rb
 - [x] Test module loading and initialization processes
 - [x] Test configuration management and system setup validation
 - [x] Test error handling for missing dependencies or invalid configuration
   > TEST: System Error Handling
   > Type: Error Recovery Test
   > Assert: System handles configuration errors gracefully
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/ -t system_error_handling
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/ -t system_error_handling
 - [x] Run complete constants and ecosystems test suite
   > TEST: System Configuration Test Suite
   > Type: Complete System Configuration Test
   > Assert: All system-level components are properly tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/constants/ spec/coding_agent_tools/ecosystems_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/constants/ spec/coding_agent_tools/ecosystems_spec.rb
 
 ## Acceptance Criteria
 
@@ -113,7 +113,7 @@ Create comprehensive unit tests for system-level configuration components (Const
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/constants/model_constants.rb
-- dev-tools/lib/coding_agent_tools/ecosystems.rb
+- .ace/tools/lib/coding_agent_tools/constants/model_constants.rb
+- .ace/tools/lib/coding_agent_tools/ecosystems.rb
 - docs/architecture-tools.md (ATOM architecture principles)
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/handbook/guides/testing/ruby-rspec.md

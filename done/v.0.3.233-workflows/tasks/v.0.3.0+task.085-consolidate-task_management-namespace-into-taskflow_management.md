@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools | grep -E "(task_management|taskflow_management)" | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools | grep -E "(task_management|taskflow_management)" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -43,27 +43,27 @@ Eliminate code duplication between the `task_management` and `taskflow_managemen
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/molecules/taskflow_management/file_synchronizer.rb
-- dev-tools/lib/coding_agent_tools/molecules/taskflow_management/xml_template_parser.rb
-- dev-tools/lib/coding_agent_tools/organisms/taskflow_management/template_synchronizer.rb
-- dev-tools/spec/coding_agent_tools/organisms/taskflow_management/template_synchronizer_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/taskflow_management/file_synchronizer_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/taskflow_management/xml_template_parser_spec.rb
+- .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/file_synchronizer.rb
+- .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/xml_template_parser.rb
+- .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/template_synchronizer.rb
+- .ace/tools/spec/coding_agent_tools/organisms/taskflow_management/template_synchronizer_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/file_synchronizer_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/xml_template_parser_spec.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/handbook/sync_templates.rb
-- dev-tools/lib/coding_agent_tools/organisms.rb
-- dev-tools/lib/coding_agent_tools/molecules.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/handbook/sync_templates.rb
+- .ace/tools/lib/coding_agent_tools/organisms.rb
+- .ace/tools/lib/coding_agent_tools/molecules.rb
 
 #### Delete
 
-- dev-tools/lib/coding_agent_tools/atoms/task_management/ (entire directory)
-- dev-tools/lib/coding_agent_tools/molecules/task_management/ (entire directory)
-- dev-tools/lib/coding_agent_tools/organisms/task_management/ (entire directory)
-- dev-tools/spec/coding_agent_tools/atoms/task_management/ (entire directory)
-- dev-tools/spec/coding_agent_tools/molecules/task_management/ (entire directory)
-- dev-tools/spec/coding_agent_tools/organisms/task_management/ (entire directory)
+- .ace/tools/lib/coding_agent_tools/atoms/task_management/ (entire directory)
+- .ace/tools/lib/coding_agent_tools/molecules/task_management/ (entire directory)
+- .ace/tools/lib/coding_agent_tools/organisms/task_management/ (entire directory)
+- .ace/tools/spec/coding_agent_tools/atoms/task_management/ (entire directory)
+- .ace/tools/spec/coding_agent_tools/molecules/task_management/ (entire directory)
+- .ace/tools/spec/coding_agent_tools/organisms/task_management/ (entire directory)
 
 ## Phases
 
@@ -81,7 +81,7 @@ Eliminate code duplication between the `task_management` and `taskflow_managemen
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All references to both namespaces are identified
-  > Command: cd dev-tools && grep -r "TaskManagement\|task_management" --include="*.rb" | grep -v spec
+  > Command: cd .ace/tools && grep -r "TaskManagement\|task_management" --include="*.rb" | grep -v spec
 - [x] Identify unique components in task_management namespace
 - [x] Create migration plan for unique components
 
@@ -98,7 +98,7 @@ Eliminate code duplication between the `task_management` and `taskflow_managemen
   > TEST: Verify CLI Command Update
   > Type: Action Validation
   > Assert: handbook sync-templates command uses TaskflowManagement
-  > Command: cd dev-tools && grep -A5 -B5 "TemplateSynchronizer" lib/coding_agent_tools/cli/commands/handbook/sync_templates.rb
+  > Command: cd .ace/tools && grep -A5 -B5 "TemplateSynchronizer" lib/coding_agent_tools/cli/commands/handbook/sync_templates.rb
 - [x] Step 4: Update autoload configuration
   - Add TemplateSynchronizer to TaskflowManagement in organisms.rb
   - Remove TaskManagement module references
@@ -114,13 +114,13 @@ Eliminate code duplication between the `task_management` and `taskflow_managemen
 - [x] Step 7: Run all tests to ensure nothing is broken
   > TEST: All Tests Pass
   > Type: Integration Test
-  > Assert: All tests in dev-tools pass after consolidation
-  > Command: cd dev-tools && bundle exec rspec
+  > Assert: All tests in .ace/tools pass after consolidation
+  > Command: cd .ace/tools && bundle exec rspec
 - [x] Step 8: Test handbook sync-templates command
   > TEST: Template Sync Works
   > Type: Functional Test
   > Assert: handbook sync-templates runs without errors
-  > Command: cd dev-tools && bundle exec exe/handbook sync-templates --dry-run
+  > Command: cd .ace/tools && bundle exec exe/handbook sync-templates --dry-run
 
 ## Acceptance Criteria
 
@@ -141,7 +141,7 @@ Eliminate code duplication between the `task_management` and `taskflow_managemen
 
 ## References
 
-- Code review report: dev-taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
 - ATOM architecture documentation
 - DRY principle violations identified in review
 

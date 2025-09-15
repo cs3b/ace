@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-handbook/workflow-instructions/
+ls -la .ace/handbook/workflow-instructions/
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions/
+.ace/handbook/workflow-instructions/
 ├── breakdown-notes-into-tasks.wf.md
 ├── draft-release.wf.md
 └── update-roadmap.wf.md
@@ -40,7 +40,7 @@ Research how Claude Code, Windsurf, Zed, and other coding agents consume workflo
 
 #### Create
 
-- dev-taskflow/backlog/v.0.3.0-workflows/researches/agent-integration-requirements.md
+- .ace/taskflow/backlog/v.0.3.0-workflows/researches/agent-integration-requirements.md
 
 #### Modify
 

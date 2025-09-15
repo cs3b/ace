@@ -20,10 +20,10 @@ Create a robust command verification and execution tool that validates prerequis
 
 ## Solution Direction
 
-### 1. New Executable: `dev-tools/exe/command-verify`
+### 1. New Executable: `.ace/tools/exe/command-verify`
 
 ```ruby
-# dev-tools/exe/command-verify
+# .ace/tools/exe/command-verify
 module CodingAgentTools::CLI::Commands
   class CommandVerify < Dry::CLI::Command
     desc "Verify and execute commands with comprehensive checks"
@@ -42,7 +42,7 @@ end
 
 **New Organism:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/organisms/command_verifier.rb
+# .ace/tools/lib/coding_agent_tools/organisms/command_verifier.rb
 module CodingAgentTools::Organisms
   class CommandVerifier
     def initialize(prerequisites_checker:, executor:, diagnostics:)
@@ -73,7 +73,7 @@ end
 
 **New Molecules:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/molecules/prerequisites_checker.rb
+# .ace/tools/lib/coding_agent_tools/molecules/prerequisites_checker.rb
 class PrerequisitesChecker
   COMMAND_PREREQUISITES = {
     'git' => { commands: ['git'], files: ['.git'] },
@@ -92,7 +92,7 @@ class PrerequisitesChecker
   end
 end
 
-# dev-tools/lib/coding_agent_tools/molecules/command_diagnostics.rb
+# .ace/tools/lib/coding_agent_tools/molecules/command_diagnostics.rb
 class CommandDiagnostics
   def analyze(command, result)
     diagnosis = {
@@ -128,7 +128,7 @@ end
 
 Update workflows to use verification:
 ```bash
-# dev-handbook/workflow-instructions/fix-tests.wf.md
+# .ace/handbook/workflow-instructions/fix-tests.wf.md
 
 # Before: Direct execution
 Bash bin/test

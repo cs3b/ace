@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-pattern.g.md
     ├── changelog.g.md
@@ -108,7 +108,7 @@ _Result excerpt:_
 
 ## Objective
 
-Fix the critical file-to-repository sorting bug in the git-commit tool that incorrectly assigns files to wrong repositories when given mixed file paths from main repo and submodules. Currently, the tool tries to add main repository files (like `.coding-agent/path.yml`) to submodule repositories (like dev-tools), causing commit failures.
+Fix the critical file-to-repository sorting bug in the git-commit tool that incorrectly assigns files to wrong repositories when given mixed file paths from main repo and submodules. Currently, the tool tries to add main repository files (like `.coding-agent/path.yml`) to submodule repositories (like .ace/tools), causing commit failures.
 
 This issue prevents reliable use of git-commit with mixed repository file lists, forcing users to commit files separately by repository or use workarounds like the `--intention` only approach.
 
@@ -118,7 +118,7 @@ This issue prevents reliable use of git-commit with mixed repository file lists,
 - Identify the root cause of incorrect file-to-repository mapping
 - Fix the repository detection algorithm to correctly handle:
   - Main repository files (files without submodule prefixes)
-  - Submodule files (files with `dev-tools/`, `dev-taskflow/`, `dev-handbook/` prefixes)
+  - Submodule files (files with `.ace/tools/`, `.ace/taskflow/`, `.ace/handbook/` prefixes)
   - Mixed file lists across multiple repositories
 - Add comprehensive tests to prevent regression
 - Ensure the fix maintains backward compatibility with existing workflows
@@ -156,12 +156,12 @@ This issue prevents reliable use of git-commit with mixed repository file lists,
   > TEST: Code Location Check
   > Type: Pre-condition Check
   > Assert: git-commit tool source files are identified and can be read
-  > Command: find dev-tools -name "*git*commit*" -type f | head -10
+  > Command: find .ace/tools -name "*git*commit*" -type f | head -10
 - [x] Analyze current file sorting and repository assignment logic
   > TEST: Logic Understanding Check
   > Type: Pre-condition Check  
   > Assert: Current file-to-repo mapping algorithm is documented and understood
-  > Command: grep -r "repository.*file\|file.*repository" dev-tools/lib --include="*git*" | head -5
+  > Command: grep -r "repository.*file\|file.*repository" .ace/tools/lib --include="*git*" | head -5
 - [x] Reproduce the bug with a minimal test case to understand failure mode
 - [x] Research the correct algorithm for mapping file paths to their respective repositories
 
@@ -171,20 +171,20 @@ This issue prevents reliable use of git-commit with mixed repository file lists,
   > TEST: Mapping Logic Validation
   > Type: Unit Validation
   > Assert: New algorithm correctly identifies file repositories for test cases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/path_resolver_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/path_resolver_spec.rb
 - [x] Add comprehensive test coverage for mixed repository file lists
 - [x] Update existing tests that may be affected by the algorithm change
 - [x] Test the fix end-to-end with the original failing command that triggered this issue
   > TEST: Original Issue Resolution
   > Type: Integration Validation
   > Assert: git-commit successfully handles mixed repo files like the original failing case
-  > Command: git-commit README.md dev-tools/CHANGELOG.md --intention "test fix"
+  > Command: git-commit README.md .ace/tools/CHANGELOG.md --intention "test fix"
 - [x] Validate that existing git-commit workflows continue to work correctly
 
 ## Acceptance Criteria
 
 - [x] AC 1: git-commit correctly identifies main repository files (without submodule prefixes)
-- [x] AC 2: git-commit correctly identifies submodule files (with dev-tools/, dev-taskflow/, dev-handbook/ prefixes)  
+- [x] AC 2: git-commit correctly identifies submodule files (with .ace/tools/, .ace/taskflow/, .ace/handbook/ prefixes)  
 - [x] AC 3: Mixed repository file lists are properly sorted and committed to their respective repositories
 - [x] AC 4: The original failing command now works without errors
 - [x] AC 5: All existing git-commit functionality remains unchanged (backward compatibility)
@@ -205,15 +205,15 @@ This issue prevents reliable use of git-commit with mixed repository file lists,
 
 **Original failing command:**
 ```bash
-git-commit .coding-agent/path.yml dev-tools/lib/coding_agent_tools/atoms/code/session_name_builder.rb dev-tools/spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.96-fix-code-review-session-directory-path-format.md --intention "implement timestamp-first directory format for code-review sessions with nav-path integration"
+git-commit .coding-agent/path.yml .ace/tools/lib/coding_agent_tools/atoms/code/session_name_builder.rb .ace/tools/spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.96-fix-code-review-session-directory-path-format.md --intention "implement timestamp-first directory format for code-review sessions with nav-path integration"
 ```
 
 **Error observed:**
 ```
-git -C /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools add .coding-agent/path.yml
+git -C /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools add .coding-agent/path.yml
 ```
 
-**Root cause:** The tool incorrectly assigned `.coding-agent/path.yml` (main repo file) to the dev-tools repository.
+**Root cause:** The tool incorrectly assigned `.coding-agent/path.yml` (main repo file) to the .ace/tools repository.
 
 ### Repository Structure Context
 
@@ -227,6 +227,6 @@ This project uses 4 repositories:
 
 Files should be grouped by repository:
 - `.coding-agent/path.yml` → main repo
-- `dev-tools/lib/example.rb` → dev-tools submodule
-- `dev-taskflow/tasks/example.md` → dev-taskflow submodule
-- `dev-handbook/guides/example.md` → dev-handbook submodule
+- `.ace/tools/lib/example.rb` → .ace/tools submodule
+- `.ace/taskflow/tasks/example.md` → .ace/taskflow submodule
+- `.ace/handbook/guides/example.md` → .ace/handbook submodule

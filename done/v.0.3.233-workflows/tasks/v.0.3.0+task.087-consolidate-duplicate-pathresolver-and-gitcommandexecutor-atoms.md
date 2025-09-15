@@ -13,17 +13,17 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/lib/coding_agent_tools/atoms -name "*path_resolver*" -o -name "*git_command_executor*" | sed 's/^/    /'
+find .ace/tools/lib/coding_agent_tools/atoms -name "*path_resolver*" -o -name "*git_command_executor*" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/code/git_command_executor.rb
-    dev-tools/lib/coding_agent_tools/atoms/code_quality/path_resolver.rb
-    dev-tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb
-    dev-tools/lib/coding_agent_tools/atoms/git/path_resolver.rb
-    dev-tools/lib/coding_agent_tools/atoms/path_resolver.rb
+    .ace/tools/lib/coding_agent_tools/atoms/code/git_command_executor.rb
+    .ace/tools/lib/coding_agent_tools/atoms/code_quality/path_resolver.rb
+    .ace/tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb
+    .ace/tools/lib/coding_agent_tools/atoms/git/path_resolver.rb
+    .ace/tools/lib/coding_agent_tools/atoms/path_resolver.rb
 ```
 
 ## Objective
@@ -47,13 +47,13 @@ Eliminate component duplication by consolidating multiple implementations of Pat
 #### Modify
 
 - All files that reference the duplicate atoms to use the consolidated versions
-- dev-tools/lib/coding_agent_tools/atoms.rb (autoload configuration)
+- .ace/tools/lib/coding_agent_tools/atoms.rb (autoload configuration)
 
 #### Delete
 
-- dev-tools/lib/coding_agent_tools/atoms/path_resolver.rb (if not the chosen one)
-- dev-tools/lib/coding_agent_tools/atoms/code_quality/path_resolver.rb (if not the chosen one)
-- dev-tools/lib/coding_agent_tools/atoms/code/git_command_executor.rb (likely candidate for removal based on review)
+- .ace/tools/lib/coding_agent_tools/atoms/path_resolver.rb (if not the chosen one)
+- .ace/tools/lib/coding_agent_tools/atoms/code_quality/path_resolver.rb (if not the chosen one)
+- .ace/tools/lib/coding_agent_tools/atoms/code/git_command_executor.rb (likely candidate for removal based on review)
 - Corresponding test files for deleted atoms
 
 ## Phases
@@ -73,12 +73,12 @@ Eliminate component duplication by consolidating multiple implementations of Pat
   > TEST: PathResolver Analysis
   > Type: Pre-condition Check
   > Assert: All PathResolver implementations are compared
-  > Command: cd dev-tools && for f in lib/coding_agent_tools/atoms/path_resolver.rb lib/coding_agent_tools/atoms/code_quality/path_resolver.rb lib/coding_agent_tools/atoms/git/path_resolver.rb; do echo "=== $f ==="; wc -l $f; grep "def self\." $f; done
+  > Command: cd .ace/tools && for f in lib/coding_agent_tools/atoms/path_resolver.rb lib/coding_agent_tools/atoms/code_quality/path_resolver.rb lib/coding_agent_tools/atoms/git/path_resolver.rb; do echo "=== $f ==="; wc -l $f; grep "def self\." $f; done
 - [x] Analyze both GitCommandExecutor implementations
   > TEST: GitCommandExecutor Analysis
   > Type: Pre-condition Check
   > Assert: Both implementations are compared for security and features
-  > Command: cd dev-tools && diff -u lib/coding_agent_tools/atoms/code/git_command_executor.rb lib/coding_agent_tools/atoms/git/git_command_executor.rb
+  > Command: cd .ace/tools && diff -u lib/coding_agent_tools/atoms/code/git_command_executor.rb lib/coding_agent_tools/atoms/git/git_command_executor.rb
 - [x] Identify which components are using each version
 - [x] Document unique features in each implementation
 
@@ -94,13 +94,13 @@ Eliminate component duplication by consolidating multiple implementations of Pat
   > TEST: Verify PathResolver References
   > Type: Action Validation
   > Assert: All references point to the chosen implementation
-  > Command: cd dev-tools && grep -r "PathResolver" --include="*.rb" | grep -v "spec/" | grep -v "atoms/git/path_resolver.rb"
+  > Command: cd .ace/tools && grep -r "PathResolver" --include="*.rb" | grep -v "spec/" | grep -v "atoms/git/path_resolver.rb"
   > NOTE: Analysis shows different PathResolvers serve different purposes - no consolidation needed
 - [x] Step 4: Update all references to use canonical GitCommandExecutor
   > TEST: Verify GitCommandExecutor References
   > Type: Action Validation
   > Assert: All references point to the secure implementation
-  > Command: cd dev-tools && grep -r "GitCommandExecutor" --include="*.rb" | grep -v "spec/" | grep -v "atoms/git/git_command_executor.rb"
+  > Command: cd .ace/tools && grep -r "GitCommandExecutor" --include="*.rb" | grep -v "spec/" | grep -v "atoms/git/git_command_executor.rb"
 - [x] Step 5: Update autoload configuration in atoms.rb
 - [x] Step 6: Skip deleting PathResolver files - they serve different purposes
 - [x] Step 7: Delete insecure GitCommandExecutor and its tests
@@ -108,12 +108,12 @@ Eliminate component duplication by consolidating multiple implementations of Pat
   > TEST: All Tests Pass
   > Type: Integration Test
   > Assert: All tests pass after consolidation
-  > Command: cd dev-tools && bundle exec rspec
+  > Command: cd .ace/tools && bundle exec rspec
 - [x] Step 9: Test git-related commands still work
   > TEST: Git Commands Work
   > Type: Functional Test
   > Assert: Git commands function correctly
-  > Command: cd dev-tools && bundle exec exe/git-status
+  > Command: cd .ace/tools && bundle exec exe/git-status
 
 ## Acceptance Criteria
 
@@ -133,6 +133,6 @@ Eliminate component duplication by consolidating multiple implementations of Pat
 
 ## References
 
-- Code review report: dev-taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 50-54, 128-132)
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 50-54, 128-132)
 - Security concern about command injection in atoms/code/git_command_executor.rb
 - Recommendation to use atoms/git/ versions as most feature-complete

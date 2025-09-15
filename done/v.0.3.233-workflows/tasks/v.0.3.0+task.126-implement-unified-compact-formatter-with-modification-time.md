@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -38,13 +38,13 @@ Standardize task display formatting across all task listing commands (next, all,
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/molecules/taskflow_management/unified_task_formatter.rb
+- .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/unified_task_formatter.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/task/recent.rb
-- dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb (update to use unified formatter)
-- dev-tools/lib/coding_agent_tools/cli/commands/task/all.rb (update to use unified formatter)
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/recent.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/next.rb (update to use unified formatter)
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/all.rb (update to use unified formatter)
 
 #### Delete
 
@@ -69,7 +69,7 @@ Standardize task display formatting across all task listing commands (next, all,
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All current formatting approaches are documented and understood
-  > Command: grep -r "display.*task" dev-tools/lib/coding_agent_tools/cli/commands/task/
+  > Command: grep -r "display.*task" .ace/tools/lib/coding_agent_tools/cli/commands/task/
 - [ ] Design unified formatter API with modification time support
 - [ ] Plan relative time formatting strategy (hours/days/date format)
 
@@ -81,7 +81,7 @@ Standardize task display formatting across all task listing commands (next, all,
   > TEST: Verify Formatter Creation
   > Type: Action Validation
   > Assert: Unified formatter handles time formatting correctly
-  > Command: grep -E "class.*UnifiedTaskFormatter" dev-tools/lib/coding_agent_tools/molecules/taskflow_management/unified_task_formatter.rb
+  > Command: grep -E "class.*UnifiedTaskFormatter" .ace/tools/lib/coding_agent_tools/molecules/taskflow_management/unified_task_formatter.rb
 - [ ] Implement modification time detection from file system
 - [ ] Update recent command to use unified compact formatter
   > TEST: Verify Recent Command Format
@@ -109,6 +109,6 @@ Standardize task display formatting across all task listing commands (next, all,
 
 ## References
 
-Based on feedback from: dev-taskflow/backlog/ideas/exe-task-manager-improvements.md
+Based on feedback from: .ace/taskflow/backlog/ideas/exe-task-manager-improvements.md
 - Item #2: Unified compact formatter with modification time
 - Target format: `v.0.3.0+task.115 * done * 18 hours ago * Add comprehensive error handling tests`

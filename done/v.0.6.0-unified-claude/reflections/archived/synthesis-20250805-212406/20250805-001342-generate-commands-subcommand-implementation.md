@@ -40,9 +40,9 @@ handbook claude integrate
 ```
 
 ### Key Files Modified
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Updated handbook command registration
-- `dev-tools/exe/handbook` - Updated direct command registration
-- `dev-tools/spec/integration/handbook_claude_cli_spec.rb` - Updated integration tests
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Updated handbook command registration
+- `.ace/tools/exe/handbook` - Updated direct command registration
+- `.ace/tools/spec/integration/handbook_claude_cli_spec.rb` - Updated integration tests
 
 ### Implementation Features Verified
 - Workflow scanning with glob pattern support

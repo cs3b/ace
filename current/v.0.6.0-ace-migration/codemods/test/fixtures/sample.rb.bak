@@ -1,0 +1,71 @@
+# Test fixture for Ruby files
+# This file contains various references to dev-* paths that should be updated
+
+require_relative '../dev-tools/lib/coding_agent_tools'
+require 'dev-handbook/lib/handbook'
+
+module TestModule
+  # Constants with path references
+  TOOLS_PATH = 'dev-tools/bin'
+  HANDBOOK_DIR = "dev-handbook/docs"
+  TASKFLOW_ROOT = File.join('dev-taskflow', 'current')
+  LOCAL_CONFIG = File.expand_path('dev-local/config')
+
+  class PathProcessor
+    def initialize
+      @base = 'dev-tools/'
+      @handbook = "dev-handbook/"
+      @taskflow = 'dev-taskflow/'
+      @local = "dev-local/"
+    end
+
+    def process
+      # Comments should also be updated
+      # Load from dev-tools/lib
+      # Save to dev-handbook/output
+      # Check dev-taskflow/backlog
+      # Use dev-local/cache
+
+      paths = [
+        'dev-tools/spec',
+        'dev-handbook/templates',
+        'dev-taskflow/done',
+        'dev-local/tmp'
+      ]
+
+      paths.map do |path|
+        File.join(path, 'data.yml')
+      end
+    end
+
+    def documentation
+      <<~DOC
+        This tool uses the following directories:
+        - dev-tools/ for executables
+        - dev-handbook/ for documentation
+        - dev-taskflow/ for task management
+        - dev-local/ for local configuration
+      DOC
+    end
+  end
+end
+
+# Configuration hash
+CONFIG = {
+  'tools_dir' => 'dev-tools/',
+  'handbook_dir' => 'dev-handbook/',
+  'taskflow_dir' => 'dev-taskflow/',
+  'local_dir' => 'dev-local/',
+  'paths' => {
+    'executable' => 'dev-tools/bin/tool',
+    'docs' => 'dev-handbook/docs/index.md',
+    'tasks' => 'dev-taskflow/current/task.md',
+    'config' => 'dev-local/settings.yml'
+  }
+}
+
+# Method calls with path arguments
+FileUtils.cp('dev-tools/template.rb', 'dev-local/output.rb')
+Dir.glob('dev-handbook/**/*.md')
+File.read('dev-taskflow/README.md')
+load 'dev-local/init.rb'

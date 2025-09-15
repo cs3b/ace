@@ -25,7 +25,7 @@
 - **Test-Driven Bug Discovery**: Skipped tests (marked with `xit`) are excellent indicators of known issues in the codebase
 - **Project Architecture Benefits**: The ATOM architecture makes it easy to isolate issues to specific layers (Atoms, Molecules, Organisms)
 - **Integration Test Strategy**: Integration tests are disabled when there are known bugs, making them valuable discovery points
-- **Coding Agent Tools Ecosystem**: Understanding the relationship between dev-tools CLI commands and the underlying Ruby architecture
+- **Coding Agent Tools Ecosystem**: Understanding the relationship between .ace/tools CLI commands and the underlying Ruby architecture
 
 ## Action Items
 
@@ -61,12 +61,12 @@ yaml_front_matter = metadata.to_yaml.chomp  # Remove trailing newline
 ```
 
 **Files Modified**:
-- `dev-tools/lib/coding_agent_tools/molecules/format_handlers.rb` (bug fix)
-- `dev-tools/spec/integration/llm_file_io_integration_spec.rb` (enable tests)
+- `.ace/tools/lib/coding_agent_tools/molecules/format_handlers.rb` (bug fix)
+- `.ace/tools/spec/integration/llm_file_io_integration_spec.rb` (enable tests)
 
 ## Additional Context
 
-- **Task**: dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.041-fix-llm-query-output-not-saving-to-markdown.md
-- **Issue Source**: dev-taskflow/backlog/ideas/20250821-2128-llm-query-bug-investigation.md
+- **Task**: .ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.041-fix-llm-query-output-not-saving-to-markdown.md
+- **Issue Source**: .ace/taskflow/backlog/ideas/20250821-2128-llm-query-bug-investigation.md
 - **Architecture**: ATOM pattern with Molecules handling format operations
 - **Estimated Effort**: 2 hours (simple bug fix with test enablement)

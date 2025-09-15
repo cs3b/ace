@@ -28,8 +28,8 @@
 ## Technical Details
 
 ### Root Cause
-- Task v.0.6.0+task.008 line 46-47 explicitly specified: `dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
-- Should have specified: `dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Task v.0.6.0+task.008 line 46-47 explicitly specified: `.ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Should have specified: `.ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
 - The AI agent executing the task followed the instructions exactly as written
 
 ### Directory Structure Understanding
@@ -66,7 +66,7 @@
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
-- Root cause task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
-- Affected file: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
-- Target location: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
+- Root cause task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
+- Affected file: .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Target location: .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md

@@ -59,10 +59,10 @@ The specification avoided implementation details like:
 - Specific Ruby modules or ATOM architecture components
 - YAML parsing library choices
 - Caching strategies or performance optimizations
-- File organization within the dev-tools gem
+- File organization within the .ace/tools gem
 
 ## Additional Context
 
-- Source idea: dev-taskflow/backlog/ideas/20250803-2145-git-config-filter.md (now at 020-20250803-2145-git-config-filter.md)
+- Source idea: .ace/taskflow/backlog/ideas/20250803-2145-git-config-filter.md (now at 020-20250803-2145-git-config-filter.md)
 - Created task: v.0.4.0+task.020-configuration-based-repository-filtering-for-git-commands.md
 - This feature addresses a real operational need identified in multi-repository git operations

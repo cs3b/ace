@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 3 dev-handbook/templates | sed 's/^/    /'
+tree -L 3 .ace/handbook/templates | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/templates
+    .ace/handbook/templates
     ├── adrs
     │   └── adr.template.md
     ├── guides
@@ -49,7 +49,7 @@ Resolve all template path references across 17+ workflows to restore system inte
 
 #### Modify
 
-* dev-handbook/workflow-instructions/*.wf.md - Fix template path references as needed
+* .ace/handbook/workflow-instructions/*.wf.md - Fix template path references as needed
 
 #### Delete
 
@@ -70,7 +70,7 @@ Resolve all template path references across 17+ workflows to restore system inte
   > TEST: Template Map Complete
   > Type: Pre-condition Check
   > Assert: All template references documented
-  > Command: rg "<template path=" dev-handbook/workflow-instructions/
+  > Command: rg "<template path=" .ace/handbook/workflow-instructions/
 * [x] Check each referenced template path for existence
 * [x] Identify patterns in path errors (relative vs absolute, wrong directories)
 * [x] Plan systematic fix approach
@@ -88,7 +88,7 @@ Resolve all template path references across 17+ workflows to restore system inte
   > TEST: Workflows Valid
   > Type: Syntax Validation
   > Assert: All workflow files pass linting
-  > Command: bin/lint dev-handbook/workflow-instructions/*.wf.md
+  > Command: bin/lint .ace/handbook/workflow-instructions/*.wf.md
 
 ## Acceptance Criteria
 
@@ -106,7 +106,7 @@ Resolve all template path references across 17+ workflows to restore system inte
 
 ## References
 
-* Review report: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md (Claude Opus finding)
-* Template directory: dev-handbook/templates/
-* Workflow files: dev-handbook/workflow-instructions/*.wf.md
-* Template embedding standard: dev-taskflow/current/v.0.3.0-workflows/docs/template-embedding-standard.md
+* Review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md (Claude Opus finding)
+* Template directory: .ace/handbook/templates/
+* Workflow files: .ace/handbook/workflow-instructions/*.wf.md
+* Template embedding standard: .ace/taskflow/current/v.0.3.0-workflows/docs/template-embedding-standard.md

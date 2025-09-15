@@ -94,7 +94,7 @@ Execute all created codemods in the correct sequence to perform the complete mig
   > TEST: Path Update Verification
   > Type: Search Test
   > Assert: No old paths remain
-  > Command: search "dev-tools/" --content --hidden
+  > Command: search ".ace/tools/" --content --hidden
 
 - [ ] Execute Phase 2 - File/directory renaming:
   - Run rename_files.sh

@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.18]
 _Command run:_
 
 ```bash
-ls -la dev-handbook/workflow-instructions/synthesize-reviews.wf.md 2>/dev/null | sed 's/^/    /'
+ls -la .ace/handbook/workflow-instructions/synthesize-reviews.wf.md 2>/dev/null | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/synthesize-reviews.wf.md
+    .ace/handbook/workflow-instructions/synthesize-reviews.wf.md
 ```
 
 ## Objective
@@ -40,7 +40,7 @@ Implement a Ruby-based `code-review-synthesize` command that orchestrates LLM ca
 
 #### Create
 
-* `dev-tools/exe/code-review-synthesize` - Executable wrapper
+* `.ace/tools/exe/code-review-synthesize` - Executable wrapper
 * `lib/coding_agent_tools/cli/commands/code/review_synthesize.rb` - CLI command implementation
 * `lib/coding_agent_tools/molecules/code/report_collector.rb` - Report collection and validation
 * `lib/coding_agent_tools/molecules/code/session_path_inferrer.rb` - Session directory inference
@@ -71,32 +71,32 @@ Implement a Ruby-based `code-review-synthesize` command that orchestrates LLM ca
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: CLI patterns understood
-  > Command: find dev-tools/lib/coding_agent_tools/cli/commands -name "*.rb" | wc -l
+  > Command: find .ace/tools/lib/coding_agent_tools/cli/commands -name "*.rb" | wc -l
 * [x] Study llm-query integration requirements
 * [x] Design CLI interface following established patterns
 * [x] Plan ATOM component architecture
 
 ### Execution Steps
 
-- [x] Create executable wrapper `dev-tools/exe/code-review-synthesize`
+- [x] Create executable wrapper `.ace/tools/exe/code-review-synthesize`
 - [x] Implement CLI command `cli/commands/code/review_synthesize.rb`
   > TEST: Command Registration
   > Type: CLI Test
   > Assert: Command properly registered
-  > Command: cd dev-tools && exe/code-review-synthesize --help
+  > Command: cd .ace/tools && exe/code-review-synthesize --help
 - [x] Create ReportCollector molecule for file input handling
 - [x] Implement SessionPathInferrer molecule for directory inference
 - [x] Create SynthesisOrchestrator molecule for llm-query integration
   > TEST: LLM Integration
   > Type: Integration Test
   > Assert: llm-query called with correct parameters
-  > Command: cd dev-tools && exe/code-review-synthesize --dry-run test-reports/*.md
+  > Command: cd .ace/tools && exe/code-review-synthesize --dry-run test-reports/*.md
 - [x] Add command registration to CLI module
 - [x] Implement intelligent output file sequencing
   > TEST: File Sequencing
   > Type: File Operation Test
   > Assert: Existing files preserved with sequence numbers
-  > Command: cd dev-tools && bin/test spec/cli/commands/code/review_synthesize_spec.rb
+  > Command: cd .ace/tools && bin/test spec/cli/commands/code/review_synthesize_spec.rb
 - [x] Test with existing review session data
 
 ## Acceptance Criteria
@@ -105,7 +105,7 @@ Implement a Ruby-based `code-review-synthesize` command that orchestrates LLM ca
 * [x] Session directory automatically inferred from first report path
 * [x] Default output follows pattern: `<prefix>-report.md` (e.g., `cr-report.md`)
 * [x] Existing output files preserved with sequence numbers (`.1.md`, `.2.md`, etc.)
-* [x] Default system prompt uses `dev-handbook/templates/review-synthesizer/system.prompt.md`
+* [x] Default system prompt uses `.ace/handbook/templates/review-synthesizer/system.prompt.md`
 * [x] LLM provider/model defaults to `google:gemini-2.5-pro`, supports all llm-query providers
 * [x] Integration with existing FileIoHandler and FormatHandlers molecules
 * [x] Command properly registered in CLI and accessible via executable
@@ -120,9 +120,9 @@ Implement a Ruby-based `code-review-synthesize` command that orchestrates LLM ca
 ## References
 
 * Dependency: v.0.3.0+task.18 (existing CLI infrastructure)
-* Source: dev-handbook/workflow-instructions/synthesize-reviews.wf.md (workflow requirements)
+* Source: .ace/handbook/workflow-instructions/synthesize-reviews.wf.md (workflow requirements)
 * Pattern references: `exe/llm-query`, `cli/commands/llm/query.rb`, `cli/commands/code/review.rb`
-* System prompt template: `dev-handbook/templates/review-synthesizer/system.prompt.md`
+* System prompt template: `.ace/handbook/templates/review-synthesizer/system.prompt.md`
 * Architecture: ATOM pattern with ExecutableWrapper molecule
 * Integration: Existing llm-query infrastructure and FileIoHandler
 

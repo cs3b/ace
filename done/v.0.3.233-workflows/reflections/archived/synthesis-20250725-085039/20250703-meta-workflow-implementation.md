@@ -6,7 +6,7 @@
 
 ## What Went Well
 
-- **Clear user requirements**: The user provided specific vision for meta-workflows with clear placement rationale (dev-handbook/.meta/wfi/)
+- **Clear user requirements**: The user provided specific vision for meta-workflows with clear placement rationale (.ace/handbook/.meta/wfi/)
 - **Effective pattern reuse**: Successfully leveraged existing workflow patterns from review-task.wf.md and draft-release.wf.md
 - **Self-contained design**: All workflows achieved complete self-containment with embedded content from .meta/gds/ definitions
 - **Comprehensive coverage**: Created workflows for both creation/management and batch review operations
@@ -61,7 +61,7 @@
 
 ### Implementation Approach
 
-- Created directory structure first (dev-handbook/.meta/wfi/)
+- Created directory structure first (.ace/handbook/.meta/wfi/)
 - Built workflows incrementally with immediate validation
 - Used embedded tests throughout for quality assurance
 - Applied multi-repo coordination for clean integration
@@ -87,13 +87,13 @@
 - ✅ Created review workflows for multiple workflow instructions
 - ✅ Created review guides for multiple guide documents
 - ✅ Achieved manageable approach without over-engineering
-- ✅ Properly placed meta-workflows in dev-handbook/.meta/wfi/
+- ✅ Properly placed meta-workflows in .ace/handbook/.meta/wfi/
 
 **Files Created:**
 
-- dev-handbook/.meta/wfi/manage-workflow-instructions.wf.md
-- dev-handbook/.meta/wfi/manage-guides.wf.md
-- dev-handbook/.meta/wfi/review-workflows.wf.md
-- dev-handbook/.meta/wfi/review-guides.wf.md
+- .ace/handbook/.meta/wfi/manage-workflow-instructions.wf.md
+- .ace/handbook/.meta/wfi/manage-guides.wf.md
+- .ace/handbook/.meta/wfi/review-workflows.wf.md
+- .ace/handbook/.meta/wfi/review-guides.wf.md
 
 This implementation successfully addressed the user's need for systematic handbook content management while maintaining the project's high standards for workflow instruction quality and self-containment.

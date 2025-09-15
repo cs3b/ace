@@ -13,7 +13,7 @@ dependencies: [v.0.4.0+task.3]
 *Command run:*
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | grep -E "(review-task|plan-task|draft-task)" | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | grep -E "(review-task|plan-task|draft-task)" | sed 's/^/    /'
 ```
 
 *Result excerpt:*
@@ -68,7 +68,7 @@ execute.
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Analyze current review-task.wf.md structure and content
   > TEST: Structure Analysis Check Type: Pre-condition Check Assert: Current workflow mixes behavioral validation with implementation planning Command: grep -E
-  > "(implementation\|planning\|tool\|file)" dev-handbook/workflow-instructions/review-task.wf.md \| wc -l
+  > "(implementation\|planning\|tool\|file)" .ace/handbook/workflow-instructions/review-task.wf.md \| wc -l
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Research implementation planning best practices from industry
   > TEST: Research Integration Check Type: Research Validation Assert: Key patterns documented for technical design workflow Command: test -f
@@ -80,12 +80,12 @@ execute.
 ### Execution Steps
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Search for all review-task references across the project
-  > TEST: Reference Discovery Type: Pre-execution Check Assert: All review-task references found and tracked Command: grep -r "review-task" dev-handbook/
-  > dev-taskflow/ docs/ --include="\*.md" \| grep -v "done/" > review-task-references.txt && wc -l review-task-references.txt
+  > TEST: Reference Discovery Type: Pre-execution Check Assert: All review-task references found and tracked Command: grep -r "review-task" .ace/handbook/
+  > .ace/taskflow/ docs/ --include="\*.md" \| grep -v "done/" > review-task-references.txt && wc -l review-task-references.txt
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Copy review-task.wf.md to plan-task.wf.md
   > TEST: File Creation Check Type: Action Validation Assert: New plan-task.wf.md file exists Command: test -f
-  > dev-handbook/workflow-instructions/plan-task.wf.md && echo "File exists"
+  > .ace/handbook/workflow-instructions/plan-task.wf.md && echo "File exists"
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Refocus plan-task.wf.md on implementation planning
   * Remove all behavioral validation sections
@@ -96,14 +96,14 @@ execute.
   * Add "Risk Analysis and Rollback" section
   * Add "Embedded Test Planning" requirements
 > TEST: Content Transformation Check Type: Content Validation Assert: plan-task focuses only on HOW, not WHAT Command: grep -E "(behavioral\|interface
-> contract\|success criteria)" dev-handbook/workflow-instructions/plan-task.wf.md \| wc -l
+> contract\|success criteria)" .ace/handbook/workflow-instructions/plan-task.wf.md \| wc -l
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add implementation planning templates
   * Technical approach template
   * Tool selection matrix
   * File modification checklist
   * Risk assessment template
 > TEST: Template Embedding Check Type: Content Validation Assert: Templates embedded in XML format Command: grep -A5 "<documents>"
-> dev-handbook/workflow-instructions/plan-task.wf.md</documents>
+> .ace/handbook/workflow-instructions/plan-task.wf.md</documents>
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update workflow invocation examples
   * For Claude Code: /plan-task <task-path />
   * For other agents: Read and follow plan-task.wf.md
@@ -111,7 +111,7 @@ execute.
   * Work through review-task-references.txt systematically
   * Update each file in tracking list
 > TEST: Reference Update Validation Type: Post-update Check Assert: No review-task references remain (except historical) Command: grep -r "review-task"
-> dev-handbook/ dev-taskflow/ docs/ --include="\*.md" \| grep -v "done/" \| grep -v "rename" \| wc -l
+> .ace/handbook/ .ace/taskflow/ docs/ --include="\*.md" \| grep -v "done/" \| grep -v "rename" \| wc -l
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Delete review-task.wf.md after all references updated
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update workflow README with plan-task entry
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add clear integration examples with draft-task workflow
@@ -122,16 +122,16 @@ execute.
 
 #### Create
 
-* dev-handbook/workflow-instructions/plan-task.wf.md
+* .ace/handbook/workflow-instructions/plan-task.wf.md
 
 #### Modify
 
-* dev-handbook/workflow-instructions/README.md (update workflow list)
+* .ace/handbook/workflow-instructions/README.md (update workflow list)
 * All files with review-task references (update to plan-task)
 
 #### Delete
 
-* dev-handbook/workflow-instructions/review-task.wf.md (after reference updates)
+* .ace/handbook/workflow-instructions/review-task.wf.md (after reference updates)
 
 ## Acceptance Criteria
 
@@ -151,14 +151,14 @@ execute.
 
 # Step 1: Capture initial idea
 ideas-manager capture "Add real-time collaboration features"
-# Output: dev-taskflow/backlog/ideas/20250131-0930-realtime-collaboration.md
+# Output: .ace/taskflow/backlog/ideas/20250131-0930-realtime-collaboration.md
 
 # Step 2: Draft behavioral specification
-# For Claude Code: /draft-task dev-taskflow/backlog/ideas/20250131-0930-realtime-collaboration.md
-# Creates: dev-taskflow/current/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md (draft status)
+# For Claude Code: /draft-task .ace/taskflow/backlog/ideas/20250131-0930-realtime-collaboration.md
+# Creates: .ace/taskflow/current/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md (draft status)
 
 # Step 3: Plan implementation details
-# For Claude Code: /plan-task dev-taskflow/current/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md
+# For Claude Code: /plan-task .ace/taskflow/current/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md
 # Updates task with implementation plan and promotes to pending status
 ```
 
@@ -168,7 +168,7 @@ Starting with a draft task that needs behavioral validation and implementation p
 
 ```bash
 # Initial task state: draft
-# Task: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
+# Task: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
 ```
 
 Starting with a draft task containing behavioral specification:
@@ -185,10 +185,10 @@ Starting with a draft task containing behavioral specification:
 
 ```bash
 # For Claude Code:
-/plan-task dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
+/plan-task .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
 
 # For other agents:
-# Read dev-handbook/workflow-instructions/plan-task.wf.md and follow steps
+# Read .ace/handbook/workflow-instructions/plan-task.wf.md and follow steps
 ```
 
 **plan-task.wf.md workflow performs:**
@@ -203,12 +203,12 @@ Starting with a draft task containing behavioral specification:
 * Choose Redis for search result caching
 * Decide on async/await pattern for performance
 3.  **File Modification Planning** \`\`\` Create:
-* dev-tools/lib/coding\_agent\_tools/organisms/search\_engine.rb
-* dev-tools/spec/organisms/search\_engine\_spec.rb
+* .ace/tools/lib/coding\_agent\_tools/organisms/search\_engine.rb
+* .ace/tools/spec/organisms/search\_engine\_spec.rb
 Modify:
 
-* dev-tools/exe/search-tool (add CLI interface)
-* dev-tools/lib/coding\_agent\_tools.rb (register component) \`\`\`
+* .ace/tools/exe/search-tool (add CLI interface)
+* .ace/tools/lib/coding\_agent\_tools.rb (register component) \`\`\`
 4.  **Implementation Steps with Tests**
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Install fuse.js dependency
   > TEST: Dependency Installation Command: bundle show fuse
@@ -234,15 +234,15 @@ Modify:
 # Creates draft task with behavioral specification
 
 # First planning attempt
-/plan-task dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
+/plan-task .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
 # Discovers need for performance requirements
 
 # Update behavioral specification
-/draft-task dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
+/draft-task .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
 # Adds performance criteria to behavioral spec
 
 # Re-plan with updated requirements
-/plan-task dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
+/plan-task .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.5-implement-search-feature.md
 # Creates implementation plan addressing performance
 
 # Task state transitions: draft → (plan) → draft → (plan) → pending
@@ -320,4 +320,4 @@ The following templates should be embedded in plan-task.wf.md:
 * Current review-task.wf.md workflow
 * v.0.4.0+task.3 (draft-task implementation)
 * Software implementation best practices
-* Guide: dev-handbook/guides/documents-embedding.g.md
+* Guide: .ace/handbook/guides/documents-embedding.g.md

@@ -5,11 +5,11 @@
 - Commands migrated in .claude: 32
 - Commands skipped (already migrated): 0
 
-## dev-handbook Migration
+## .ace/handbook Migration
 ### Custom Commands Moved
-The dev-handbook commands were already migrated to the new structure:
-- dev-handbook/.integrations/claude/commands/_custom/ (6 files)
-- dev-handbook/.integrations/claude/commands/_generated/ (24 files)
+The .ace/handbook commands were already migrated to the new structure:
+- .ace/handbook/.integrations/claude/commands/_custom/ (6 files)
+- .ace/handbook/.integrations/claude/commands/_generated/ (24 files)
 
 ## .claude Migration  
 ### Custom Commands

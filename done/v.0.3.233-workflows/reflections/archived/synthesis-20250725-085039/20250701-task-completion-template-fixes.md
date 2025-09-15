@@ -20,7 +20,7 @@
 
 ## Key Learnings
 
-- **Template architecture understanding**: Gained deeper insight into the XML-based template embedding system and how templates should be organized in dev-handbook/templates/ subdirectories
+- **Template architecture understanding**: Gained deeper insight into the XML-based template embedding system and how templates should be organized in .ace/handbook/templates/ subdirectories
 - **Roadmap structure requirements**: Learned the detailed roadmap format specifications from roadmap-definition.g.md including required sections and table formats
 - **Submodule workflow patterns**: Reinforced the process of committing changes in submodules first, then updating the main repository references
 - **Task validation importance**: Confirmed that the task metadata linter provides crucial validation for task file structure and completion tracking
@@ -47,12 +47,12 @@
 
 ## Technical Details
 
-**Task 36 Fix**: Updated `dev-handbook/workflow-instructions/create-adr.wf.md` line 80 from `docs/architecture-decisions/` to `docs/decisions/` to align with canonical ADR storage location.
+**Task 36 Fix**: Updated `.ace/handbook/workflow-instructions/create-adr.wf.md` line 80 from `docs/architecture-decisions/` to `docs/decisions/` to align with canonical ADR storage location.
 
 **Task 35 Fix**:
 
-- Created new template `dev-handbook/templates/project-docs/roadmap/roadmap.template.md` following roadmap-definition.g.md structure
-- Updated `dev-handbook/workflow-instructions/update-roadmap.wf.md` template reference from release-readme.template.md to roadmap.template.md
+- Created new template `.ace/handbook/templates/project-docs/roadmap/roadmap.template.md` following roadmap-definition.g.md structure
+- Updated `.ace/handbook/workflow-instructions/update-roadmap.wf.md` template reference from release-readme.template.md to roadmap.template.md
 - Removed irrelevant release template content from the workflow
 
 **Template Sync Verification**: Both workflows now pass `handbook sync-templates --dry-run` validation.

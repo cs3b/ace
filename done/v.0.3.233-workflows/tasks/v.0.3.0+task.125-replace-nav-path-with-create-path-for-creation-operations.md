@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -28,7 +28,7 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
 
 ## Scope of Work
 
-- Find all documentation references to `nav-path task-new` and related creation operations within current multi-repo (docs/, dev-handbook/, dev-tools/)
+- Find all documentation references to `nav-path task-new` and related creation operations within current multi-repo (docs/, .ace/handbook/, .ace/tools/)
 - Replace with appropriate `create-path` equivalents using direct replacement (no deprecation warnings needed)
 - Update workflow instructions to use `create-path task-new` instead of `nav-path task-new`
 - Update tools documentation to reflect the change
@@ -43,10 +43,10 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
 
 #### Modify
 
-- dev-handbook/workflow-instructions/create-task.wf.md
+- .ace/handbook/workflow-instructions/create-task.wf.md
 - docs/tools.md  
-- dev-tools/docs/tools.md
-- Any other files containing `nav-path task-new` references within docs/, dev-handbook/, dev-tools/
+- .ace/tools/docs/tools.md
+- Any other files containing `nav-path task-new` references within docs/, .ace/handbook/, .ace/tools/
 
 #### Delete
 
@@ -65,11 +65,11 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
 
 ### Planning Steps
 
-- [x] Comprehensive search for all `nav-path task-new` references within multi-repo scope (docs/, dev-handbook/, dev-tools/)
+- [x] Comprehensive search for all `nav-path task-new` references within multi-repo scope (docs/, .ace/handbook/, .ace/tools/)
   > TEST: Reference Search Complete
   > Type: Pre-condition Check
   > Assert: All instances of nav-path creation operations are identified within scope
-  > Command: grep -r "nav-path.*task-new" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
+  > Command: grep -r "nav-path.*task-new" docs/ .ace/handbook/ .ace/tools/ --include="*.md" | wc -l
   > Result: Found 22 instances across the multi-repo scope
 - [x] Identify command equivalencies between nav-path and create-path
   > Result: nav-path task-new -> create-path task-new (1:1 equivalency, same arguments and options)
@@ -80,29 +80,29 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
 
 ### Execution Steps
 
-- [x] Update dev-handbook/workflow-instructions/create-task.wf.md to use create-path task-new
+- [x] Update .ace/handbook/workflow-instructions/create-task.wf.md to use create-path task-new
   > TEST: Workflow Updated
   > Type: Content Validation
   > Assert: All nav-path task-new references replaced with create-path task-new
-  > Command: grep -c "create-path task-new" dev-handbook/workflow-instructions/create-task.wf.md
+  > Command: grep -c "create-path task-new" .ace/handbook/workflow-instructions/create-task.wf.md
   > Result: 2 instances of create-path task-new found, also updated workflow notes about improved ID sequencing
 - [x] Update docs/tools.md main cheat sheet and examples
-- [x] Update dev-tools/docs/tools.md and related tool documentation
+- [x] Update .ace/tools/docs/tools.md and related tool documentation
 - [x] Update any workflow instructions that reference nav-path for creation operations
 - [x] Search and replace nav-path creation examples in all markdown files within scope
   > TEST: No Remaining References
   > Type: Completeness Check  
   > Assert: No nav-path task-new references remain in multi-repo documentation
-  > Command: grep -r "nav-path.*task-new" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
+  > Command: grep -r "nav-path.*task-new" docs/ .ace/handbook/ .ace/tools/ --include="*.md" | wc -l
   > Result: 0 references found - all instances successfully replaced
 - [x] Verify create-path examples work as expected
-  > Result: create-path task-new examples are consistent with existing working command documented in dev-tools/docs/tools.md
+  > Result: create-path task-new examples are consistent with existing working command documented in .ace/tools/docs/tools.md
 - [x] Update any migration guides or help documentation within scope
-  > Result: Updated dev-tools/docs/migrations/migration-guide.md with all nav-path task-new references replaced
+  > Result: Updated .ace/tools/docs/migrations/migration-guide.md with all nav-path task-new references replaced
 
 ## Acceptance Criteria
 
-- [x] AC 1: All documentation references to `nav-path task-new` within multi-repo scope (docs/, dev-handbook/, dev-tools/) are replaced with `create-path task-new`
+- [x] AC 1: All documentation references to `nav-path task-new` within multi-repo scope (docs/, .ace/handbook/, .ace/tools/) are replaced with `create-path task-new`
 - [x] AC 2: All workflow instructions use `create-path` for file creation operations
 - [x] AC 3: Tools documentation accurately reflects create-path capabilities and usage
 - [x] AC 4: Examples in documentation work correctly with create-path command
@@ -115,15 +115,15 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
 - ❌ Modifying the actual nav-path or create-path command implementations
 - ❌ Removing nav-path command (still needed as underlying implementation for create-path)
 - ❌ Adding deprecation warnings (nav-path remains as lower-level implementation)
-- ❌ Updating external documentation outside current multi-repo (docs/, dev-handbook/, dev-tools/)
+- ❌ Updating external documentation outside current multi-repo (docs/, .ace/handbook/, .ace/tools/)
 - ❌ Changing any Ruby code or command interfaces
 - ❌ Modifying historical task files or completed work
 
 ## References
 
 - Task v.0.3.0+task.112: Add create-path command for file/directory creation with metadata
-- nav-path command: /dev-tools/exe/nav-path (path resolution without file creation)
-- create-path command: /dev-tools/exe/create-path (path resolution with file creation)
+- nav-path command: /.ace/tools/exe/nav-path (path resolution without file creation)
+- create-path command: /.ace/tools/exe/create-path (path resolution with file creation)
 - Configuration: /.coding-agent/create-path.yml (template mappings)
-- Main workflow affected: dev-handbook/workflow-instructions/create-task.wf.md
-- Tools documentation: docs/tools.md and dev-tools/docs/tools.md
+- Main workflow affected: .ace/handbook/workflow-instructions/create-task.wf.md
+- Tools documentation: docs/tools.md and .ace/tools/docs/tools.md

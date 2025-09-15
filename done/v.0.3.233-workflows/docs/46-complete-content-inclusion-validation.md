@@ -2,7 +2,7 @@
 
 ## Current Implementation Status
 
-The review prompt construction in `dev-handbook/workflow-instructions/review-code.wf.md` already implements complete content inclusion:
+The review prompt construction in `.ace/handbook/workflow-instructions/review-code.wf.md` already implements complete content inclusion:
 
 ```bash
 # Lines 262-268: Full content concatenation

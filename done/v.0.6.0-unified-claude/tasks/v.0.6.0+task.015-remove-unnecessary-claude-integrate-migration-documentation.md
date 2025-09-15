@@ -34,7 +34,7 @@ The documentation system should present a clean, current view of the Claude inte
 ```bash
 # Documentation Navigation Interface
 # Users access documentation through standard file paths:
-dev-handbook/.integrations/claude/README.md  # Main integration guide
+.ace/handbook/.integrations/claude/README.md  # Main integration guide
 # MIGRATION.md will no longer exist
 ```
 
@@ -102,7 +102,7 @@ Remove unnecessary documentation about migrating from a legacy system that was n
 ## References
 
 - User feedback requesting removal of unnecessary migration documentation
-- Current Claude integration documentation in dev-handbook/.integrations/claude/
+- Current Claude integration documentation in .ace/handbook/.integrations/claude/
 - Project decision that claude-integrate was developed and replaced same day
 
 ## Technical Approach
@@ -125,13 +125,13 @@ Remove unnecessary documentation about migrating from a legacy system that was n
 ## File Modifications
 
 ### Delete
-- dev-handbook/.integrations/claude/MIGRATION.md
+- .ace/handbook/.integrations/claude/MIGRATION.md
   - Reason: Unnecessary as no users ever needed migration (developed and replaced same day)
   - Dependencies: Referenced by README.md (will be cleaned up)
   - Migration strategy: Simply remove references from README.md
 
 ### Modify
-- dev-handbook/.integrations/claude/README.md
+- .ace/handbook/.integrations/claude/README.md
   - Changes: Remove 3 references to migration documentation
   - Impact: Cleaner documentation without confusing obsolete information
   - Integration points: Lines 18, 278, and 290 need updating
@@ -160,7 +160,7 @@ Remove unnecessary documentation about migrating from a legacy system that was n
   > TEST: Documentation State Check
   > Type: Pre-condition Check
   > Assert: MIGRATION.md exists and README.md contains migration references
-  > Command: ls -la dev-handbook/.integrations/claude/MIGRATION.md && grep -n "Migration\|migrat\|claude-integrate" dev-handbook/.integrations/claude/README.md
+  > Command: ls -la .ace/handbook/.integrations/claude/MIGRATION.md && grep -n "Migration\|migrat\|claude-integrate" .ace/handbook/.integrations/claude/README.md
 
 * [x] Analyze migration references in README.md
   - Line 18: Mentions replacing legacy `claude-integrate` script
@@ -171,7 +171,7 @@ Remove unnecessary documentation about migrating from a legacy system that was n
   > TEST: External References Check
   > Type: Pre-condition Check
   > Assert: Identify all files referencing MIGRATION.md
-  > Command: grep -r "MIGRATION\.md" dev-handbook/ --include="*.md" | grep -v "MIGRATION.md:" | head -20
+  > Command: grep -r "MIGRATION\.md" .ace/handbook/ --include="*.md" | grep -v "MIGRATION.md:" | head -20
 
 ### Execution Steps
 
@@ -181,7 +181,7 @@ Remove unnecessary documentation about migrating from a legacy system that was n
   > TEST: Verify Line 18 Update
   > Type: Action Validation
   > Assert: Line 18 no longer mentions legacy script
-  > Command: grep -n "^The handbook CLI" dev-handbook/.integrations/claude/README.md | grep -v "legacy"
+  > Command: grep -n "^The handbook CLI" .ace/handbook/.integrations/claude/README.md | grep -v "legacy"
 
 - [x] Step 2: Remove migration guide section from README.md (lines 277-279)
   - Delete entire section "## Migration from Legacy System"
@@ -189,31 +189,31 @@ Remove unnecessary documentation about migrating from a legacy system that was n
   > TEST: Verify Migration Section Removed
   > Type: Action Validation
   > Assert: No "Migration from Legacy System" section exists
-  > Command: ! grep -q "Migration from Legacy System" dev-handbook/.integrations/claude/README.md && echo "Section removed"
+  > Command: ! grep -q "Migration from Legacy System" .ace/handbook/.integrations/claude/README.md && echo "Section removed"
 
 - [x] Step 3: Remove migration guide from Related Documentation (line 290)
   - Remove the line "- [Migration Guide](MIGRATION.md) - Migrating from the legacy system"
   > TEST: Verify Related Docs Updated
   > Type: Action Validation
   > Assert: Related Documentation no longer lists Migration Guide
-  > Command: ! grep -q "Migration Guide.*MIGRATION.md" dev-handbook/.integrations/claude/README.md && echo "Reference removed"
+  > Command: ! grep -q "Migration Guide.*MIGRATION.md" .ace/handbook/.integrations/claude/README.md && echo "Reference removed"
 
 - [x] Step 4: Delete MIGRATION.md file
-  - Remove dev-handbook/.integrations/claude/MIGRATION.md
+  - Remove .ace/handbook/.integrations/claude/MIGRATION.md
   > TEST: Verify File Deletion
   > Type: Action Validation
   > Assert: MIGRATION.md no longer exists
-  > Command: ! test -f dev-handbook/.integrations/claude/MIGRATION.md && echo "File successfully deleted"
+  > Command: ! test -f .ace/handbook/.integrations/claude/MIGRATION.md && echo "File successfully deleted"
 
 - [x] Step 5: Final validation - ensure no broken references
   > TEST: No Broken References
   > Type: Integration Test
   > Assert: No references to MIGRATION.md remain in the Claude integration directory
-  > Command: ! grep -r "MIGRATION\.md" dev-handbook/.integrations/claude/ && echo "No broken references found"
+  > Command: ! grep -r "MIGRATION\.md" .ace/handbook/.integrations/claude/ && echo "No broken references found"
 
 ## Acceptance Criteria
 
-- [x] AC 1: MIGRATION.md file has been deleted from dev-handbook/.integrations/claude/
+- [x] AC 1: MIGRATION.md file has been deleted from .ace/handbook/.integrations/claude/
 - [x] AC 2: README.md contains no references to migration documentation or legacy claude-integrate script
 - [x] AC 3: All automated checks in the Implementation Plan pass
 - [x] AC 4: Documentation reads naturally without migration context

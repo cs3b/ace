@@ -102,8 +102,8 @@
 
 ## Technical Details
 
-- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md` (406 lines)
-- Reflection file created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-055243-conversation-analysis-and-tool-usage-review.md`
+- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md` (406 lines)
+- Reflection file created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-055243-conversation-analysis-and-tool-usage-review.md`
 - Recent work focus: Test coverage improvement across ATOM architecture components
 - Template system: Embedded template exists but integration gaps present
 

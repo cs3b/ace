@@ -2,7 +2,7 @@
 
 ## Intention
 
-Create a new `context` executable in dev-tools that combines file reading and command execution into a single, efficient operation, reducing token usage and improving workflow performance.
+Create a new `context` executable in .ace/tools that combines file reading and command execution into a single, efficient operation, reducing token usage and improving workflow performance.
 
 ## Problem It Solves
 
@@ -21,13 +21,13 @@ Create a new `context` executable in dev-tools that combines file reading and co
 
 ## Solution Direction
 
-### 1. New Executable: `dev-tools/exe/context`
+### 1. New Executable: `.ace/tools/exe/context`
 
 Create a new tool following the ATOM architecture:
 
 **Executable Structure:**
 ```ruby
-# dev-tools/exe/context
+# .ace/tools/exe/context
 #!/usr/bin/env ruby
 require_relative "../lib/coding_agent_tools"
 CodingAgentTools::CLI.start(ARGV)
@@ -35,7 +35,7 @@ CodingAgentTools::CLI.start(ARGV)
 
 **CLI Command Class:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/cli/context.rb
+# .ace/tools/lib/coding_agent_tools/cli/context.rb
 module CodingAgentTools::CLI::Commands
   class Context < Dry::CLI::Command
     desc "Load files and execute commands in a single operation"
@@ -73,7 +73,7 @@ end
 - Use `FileIOHandler` molecule for file operations
 
 **Workflow Integration:**
-Update `dev-handbook/workflow-instructions/load-project-context.wf.md`:
+Update `.ace/handbook/workflow-instructions/load-project-context.wf.md`:
 ```bash
 # Before: Multiple tool calls
 Read docs/what-do-we-build.md
@@ -88,7 +88,7 @@ context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md 
 ## Implementation Plan
 
 ### Phase 1: Basic Implementation (Day 1)
-1. Create `dev-tools/exe/context` executable
+1. Create `.ace/tools/exe/context` executable
 2. Implement CLI command class with basic options
 3. Create `ContextLoader` organism
 4. Add file reading and command execution

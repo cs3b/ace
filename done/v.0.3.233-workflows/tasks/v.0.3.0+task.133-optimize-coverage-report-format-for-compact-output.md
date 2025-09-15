@@ -11,13 +11,13 @@ dependencies: [v.0.3.0+task.131]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules
+.ace/tools/lib/coding_agent_tools/molecules
 ├── coverage_data_processor.rb
 ├── executable_wrapper.rb
 ├── file_analyzer.rb
@@ -119,6 +119,6 @@ Dramatically reduce coverage report file sizes (currently 3.1MB+ with 162K+ line
 
 ## References
 
-- Example format comparison in `dev-tools/coverage_analysis/example-a-vs-b.txt`
+- Example format comparison in `.ace/tools/coverage_analysis/example-a-vs-b.txt`
 - Current ReportFormatter implementation in `lib/coding_agent_tools/molecules/report_formatter.rb`
 - Related task v.0.3.0+task.131 which implemented the coverage analysis tool

@@ -121,9 +121,9 @@ The specification cycle introduces:
 
 ## Additional Context
 
-- Research document: dev-taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
-- Created release: dev-taskflow/backlog/v.0.4.0-replanning/
+- Research document: .ace/taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
+- Created release: .ace/taskflow/backlog/v.0.4.0-replanning/
 - Original ideas that influenced design:
-  - dev-taskflow/backlog/ideas/wf-create-review-tasks.md
-  - dev-taskflow/backlog/ideas/wf.create-task-improvements.md
-  - dev-taskflow/backlog/ideas/exe-capture-it-new.md
+  - .ace/taskflow/backlog/ideas/wf-create-review-tasks.md
+  - .ace/taskflow/backlog/ideas/wf.create-task-improvements.md
+  - .ace/taskflow/backlog/ideas/exe-capture-it-new.md

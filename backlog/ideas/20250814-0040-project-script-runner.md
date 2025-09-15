@@ -25,12 +25,12 @@
 
 ## Intention
 
-To create a new CLI tool named `prun` within the `dev-tools` gem that allows users to execute any script from the project root, relative to the current working directory, with support for multiple repository roots and configurable execution contexts.
+To create a new CLI tool named `prun` within the `.ace/tools` gem that allows users to execute any script from the project root, relative to the current working directory, with support for multiple repository roots and configurable execution contexts.
 
 ## Problem It Solves
 
 **Observed Issues:**
-- Users need to navigate to specific subdirectories (e.g., `dev-tools/`) to run scripts like `bin/test` or `bin/setup`.
+- Users need to navigate to specific subdirectories (e.g., `.ace/tools/`) to run scripts like `bin/test` or `bin/setup`.
 - Executing scripts from different sub-repositories requires understanding their specific directory structures and running them from their respective roots.
 - There is no standardized way to define and manage multiple project roots for tools that operate across a multi-repository setup.
 - Configuration for which directories to consider as "project roots" is not centralized or easily managed.
@@ -43,15 +43,15 @@ To create a new CLI tool named `prun` within the `dev-tools` gem that allows use
 
 ## Key Patterns from Reflections
 
-- **CLI Tool Patterns**: `prun` will follow the established pattern of providing executable commands via the `dev-tools` gem, leveraging `dry-cli` for command structure and standard argument parsing.
+- **CLI Tool Patterns**: `prun` will follow the established pattern of providing executable commands via the `.ace/tools` gem, leveraging `dry-cli` for command structure and standard argument parsing.
 - **Multi-Repository Coordination**: The tool needs to be aware of multiple potential project roots, aligning with the system's multi-repository architecture.
 - **Configuration Management**: The tool will use a YAML configuration file (`.coding-agent/prun.yml`) for defining project roots and execution contexts, similar to how other tools might manage settings.
-- **ATOM Architecture**: The core logic for `prun` will likely reside in an `Organism` or `Molecule` within `dev-tools/lib/coding_agent_tools/`, orchestrating file system operations and command execution.
+- **ATOM Architecture**: The core logic for `prun` will likely reside in an `Organism` or `Molecule` within `.ace/tools/lib/coding_agent_tools/`, orchestrating file system operations and command execution.
 - **Security-First Development**: Path validation and sanitization will be crucial to ensure `prun` only executes scripts in intended directories.
 
 ## Solution Direction
 
-1. **`prun` CLI Command**: Introduce a new executable in `dev-tools/exe/prun`.
+1. **`prun` CLI Command**: Introduce a new executable in `.ace/tools/exe/prun`.
     - This executable will parse arguments to identify the script to run and any additional options.
     - It will leverage a configuration file to determine the relevant project roots.
 2. **Configuration File (`.coding-agent/prun.yml`)**: Define a standard location and format for the `prun` configuration.
@@ -80,7 +80,7 @@ To create a new CLI tool named `prun` within the `dev-tools` gem that allows use
 **We assume that:**
 - Users will have a `.coding-agent/prun.yml` file in a discoverable location (e.g., the current working directory or a parent directory) that defines the project roots. - *Needs validation*
 - Scripts intended to be run via `prun` are executable and located relative to the identified project roots. - *Needs validation*
-- The `dev-tools` gem will be installed and available in the user's Ruby environment. - *Needs validation*
+- The `.ace/tools` gem will be installed and available in the user's Ruby environment. - *Needs validation*
 
 ## Expected Benefits
 
@@ -108,5 +108,5 @@ To create a new CLI tool named `prun` within the `dev-tools` gem that allows use
 > SOURCE
 
 ```text
-new tool in dev-tools -> prun that will run any script from the project root, at whatever level it was executed, it can operate on additional root (if project is multirepo) e.g.: prun bin/test will run bin/test on project root or dev-tools, confing should be in .coding-agetnt/prun.yml)
+new tool in .ace/tools -> prun that will run any script from the project root, at whatever level it was executed, it can operate on additional root (if project is multirepo) e.g.: prun bin/test will run bin/test on project root or dev-tools, confing should be in .coding-agetnt/prun.yml)
 ```

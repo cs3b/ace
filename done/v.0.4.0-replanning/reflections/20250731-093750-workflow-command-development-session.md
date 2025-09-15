@@ -12,7 +12,7 @@
 - **CLI Tool Enhancement**: Successfully added --commit flag to ideas-manager, streamlining the idea capture workflow with automatic git operations
 - **Workflow Pipeline Clarification**: Established clear pipeline progression: ideas → draft-task (WHAT) → plan-task (HOW) → work-on-task (EXECUTE)
 - **Template System Utilization**: Effectively used embedded templates in workflow instructions for consistent document structure
-- **Multi-Repository Coordination**: Maintained synchronization across all 4 repositories (main, dev-handbook, dev-taskflow, dev-tools) with coordinated commits
+- **Multi-Repository Coordination**: Maintained synchronization across all 4 repositories (main, dev-handbook, dev-taskflow, .ace/tools) with coordinated commits
 
 ## What Could Be Improved
 

@@ -20,8 +20,8 @@ Use the template: path (template_path)
 
 **Examples**:
 
-- `Use the ADR template: path (dev-handbook/templates/project-docs/decisions/adr.template.md)`
-- `Follow the task format: path (dev-handbook/templates/release-tasks/task.template.md)`
+- `Use the ADR template: path (.ace/handbook/templates/project-docs/decisions/adr.template.md)`
+- `Follow the task format: path (.ace/handbook/templates/release-tasks/task.template.md)`
 
 ### 2. Embedded Template Section
 
@@ -53,7 +53,7 @@ All embedded templates must use four backticks (`````) for proper markdown escap
 ### 4. Template Path Format
 
 Template paths must follow this structure:
-- **Absolute path format**: `dev-handbook/templates/category/template-name.template.md`
+- **Absolute path format**: `.ace/handbook/templates/category/template-name.template.md`
 - **Consistent naming**: All templates end with `.template.md`
 - **Category organization**: Templates grouped in logical directories
 
@@ -68,13 +68,13 @@ Template paths must follow this structure:
 
 ## Embedded Templates
 
-### Template 1: path (dev-handbook/templates/category/template1.template.md)
+### Template 1: path (.ace/handbook/templates/category/template1.template.md)
 
 ````markdown
 [template 1 content]
 ````
 
-### Template 2: path (dev-handbook/templates/category/template2.template.md)
+### Template 2: path (.ace/handbook/templates/category/template2.template.md)
 
 ````yaml
 [template 2 content if YAML]
@@ -181,12 +181,12 @@ Use appropriate language specifiers:
 # Create ADR Workflow
 
 1. Create a new file
-2. Use the ADR template: path (dev-handbook/templates/project-docs/decisions/adr.template.md)
+2. Use the ADR template: path (.ace/handbook/templates/project-docs/decisions/adr.template.md)
 3. Fill in the content
 
 ## Embedded Templates
 
-### ADR Template: path (dev-handbook/templates/project-docs/decisions/adr.template.md)
+### ADR Template: path (.ace/handbook/templates/project-docs/decisions/adr.template.md)
 
 ````markdown
 # ADR-XXX: Title

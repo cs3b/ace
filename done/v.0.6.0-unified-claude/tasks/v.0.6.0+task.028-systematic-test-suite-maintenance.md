@@ -257,7 +257,7 @@ Create and maintain a reliable test suite that provides consistent, fast feedbac
   > TEST: Documentation Completeness
   > Type: Action Validation
   > Assert: Workflow covers all maintenance scenarios
-  > Command: grep -c "test maintenance" dev-handbook/guides/testing/test-maintenance.md
+  > Command: grep -c "test maintenance" .ace/handbook/guides/testing/test-maintenance.md
 
 - [x] Run full test suite to verify improvements
   > TEST: Full Suite Validation

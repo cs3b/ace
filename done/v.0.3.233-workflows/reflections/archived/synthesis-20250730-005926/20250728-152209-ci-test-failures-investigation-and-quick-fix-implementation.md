@@ -103,7 +103,7 @@
 ```
 
 **Files Modified:**
-- `dev-tools/.github/workflows/ci.yml` - Added PATH configuration
+- `.ace/tools/.github/workflows/ci.yml` - Added PATH configuration
 - Created task documentation for future architectural cleanup
 
 ## Additional Context

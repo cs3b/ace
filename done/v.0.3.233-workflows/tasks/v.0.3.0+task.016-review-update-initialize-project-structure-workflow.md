@@ -13,30 +13,30 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── initialize-project-structure.wf.md
     └── [other workflow files]
 ```
 
 ## Objective
 
-Review and update `dev-handbook/workflow-instructions/initialize-project-structure.wf.md` to fix outdated references and requirements that no longer align with the current project structure and standards.
+Review and update `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md` to fix outdated references and requirements that no longer align with the current project structure and standards.
 
 **Original requirement**: The workflow contains several outdated references that need to be corrected to reflect the current project structure and eliminate references to deprecated directories and patterns.
 
 ## Scope of Work
 
-- Replace old naming convention `docs-dev` with current `dev-handbook`
-- Remove references to deprecated `dev-taskflow/decisions` directory (no longer used)
-- Update documentation paths to reflect current structure (`docs/` not `dev-taskflow/`)
-- Update submodule verification to only check for two modules (`dev-handbook` and `dev-tools`)
-- Update binstubs creation to reference correct source path (`dev-tools/exe-old/_binstubs`)
+- Replace old naming convention `docs-dev` with current `.ace/handbook`
+- Remove references to deprecated `.ace/taskflow/decisions` directory (no longer used)
+- Update documentation paths to reflect current structure (`docs/` not `.ace/taskflow/`)
+- Update submodule verification to only check for two modules (`.ace/handbook` and `.ace/tools`)
+- Update binstubs creation to reference correct source path (`.ace/tools/exe-old/_binstubs`)
 - Remove branch switching requirements for submodules
 - Update all embedded templates and examples to use correct paths
 - Review workflow against workflow instruction standards and embedding tests
@@ -49,7 +49,7 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 
 #### Modify
 
-- `dev-handbook/workflow-instructions/initialize-project-structure.wf.md`
+- `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md`
 
 #### Delete
 
@@ -70,107 +70,107 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All `docs-dev` references identified for replacement
-  > Command: grep -n "docs-dev" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -n "docs-dev" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [x] Identify all references to `dev-taskflow/decisions` directory
+- [x] Identify all references to `.ace/taskflow/decisions` directory
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All deprecated decision directory references identified
-  > Command: grep -n "dev-taskflow/decisions" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -n ".ace/taskflow/decisions" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
 - [x] Locate documentation path references that need updating
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Outdated documentation paths identified
-  > Command: grep -n "dev-taskflow/what-do-we-build\|dev-taskflow/architecture\|dev-taskflow/blueprint" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -n ".ace/taskflow/what-do-we-build\|.ace/taskflow/architecture\|.ace/taskflow/blueprint" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
 - [x] Find submodule verification references requiring updates
   > TEST: Pre-condition Check
   > Type: Pre-condition Check  
   > Assert: Submodule verification patterns identified
-  > Command: grep -n -A5 -B5 "submodule" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -n -A5 -B5 "submodule" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
 - [x] Locate binstubs path references needing correction
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Outdated binstubs paths identified  
-  > Command: grep -n "_binstubs\|tools/_binstubs" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -n "_binstubs\|tools/_binstubs" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
 - [x] Review workflow against workflow instruction standards
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Workflow standards guide available for reference
-  > Command: ls -la dev-handbook/guides/.meta/workflow-instructions-definition.g.md
+  > Command: ls -la .ace/handbook/guides/.meta/workflow-instructions-definition.g.md
 
 - [x] Review workflow against embedding tests guide
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Embedding tests guide available for reference
-  > Command: ls -la dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md
+  > Command: ls -la .ace/handbook/guides/.meta/workflow-instructions-embeding-tests.g.md
 
 ### Execution Steps
 
-- [x] Replace all `docs-dev` references with `dev-handbook`
+- [x] Replace all `docs-dev` references with `.ace/handbook`
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No `docs-dev` references remain in the workflow
-  > Command: grep "docs-dev" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
+  > Command: grep "docs-dev" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
 
-- [x] Remove all references to `dev-taskflow/decisions` directory creation
+- [x] Remove all references to `.ace/taskflow/decisions` directory creation
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: No `dev-taskflow/decisions` references remain
-  > Command: grep "dev-taskflow/decisions" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
+  > Assert: No `.ace/taskflow/decisions` references remain
+  > Command: grep ".ace/taskflow/decisions" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
 
-- [x] Update documentation paths from `dev-taskflow/` to `docs/` for core docs
+- [x] Update documentation paths from `.ace/taskflow/` to `docs/` for core docs
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Core documentation references use `docs/` paths
-  > Command: grep -E "docs/(what-do-we-build|architecture|blueprint)\.md" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -E "docs/(what-do-we-build|architecture|blueprint)\.md" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [x] Update submodule verification to only check two modules (dev-handbook, dev-tools)
+- [x] Update submodule verification to only check two modules (dev-handbook, .ace/tools)
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Submodule references updated to current structure
-  > Command: grep -C3 "submodule" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep -C3 "submodule" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [x] Update binstubs source path to `dev-tools/exe-old/_binstubs`
+- [x] Update binstubs source path to `.ace/tools/exe-old/_binstubs`
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Binstubs path references correct source location
-  > Command: grep "dev-tools/exe-old/_binstubs" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+  > Command: grep ".ace/tools/exe-old/_binstubs" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
 - [x] Remove branch switching requirements for submodules
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No branch switching instructions remain
-  > Command: grep -i "checkout.*branch\|switch.*branch" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
+  > Command: grep -i "checkout.*branch\|switch.*branch" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
 
 - [x] Update Project Context Loading section to use correct paths
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Project Context Loading uses `docs/` paths
-  > Command: grep -A5 "Project Context Loading" dev-handbook/workflow-instructions/initialize-project-structure.wf.md | grep "docs/"
+  > Command: grep -A5 "Project Context Loading" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md | grep "docs/"
 
 - [x] Apply workflow instruction standards from definition guide
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Workflow follows standard structure and format
-  > Command: diff -u <(grep "^##" dev-handbook/guides/.meta/workflow-instructions-definition.g.md) <(grep "^##" dev-handbook/workflow-instructions/initialize-project-structure.wf.md) || echo "Structure differences noted"
+  > Command: diff -u <(grep "^##" .ace/handbook/guides/.meta/workflow-instructions-definition.g.md) <(grep "^##" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md) || echo "Structure differences noted"
 
 - [x] Apply embedding tests standards from embedding tests guide
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Workflow follows embedding test patterns
-  > Command: grep -c "TEST:" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No embedded tests found"
+  > Command: grep -c "TEST:" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No embedded tests found"
 
 ## Acceptance Criteria
 
-- [x] All `docs-dev` references replaced with `dev-handbook`
-- [x] All `dev-taskflow/decisions` references removed (directory no longer used)
-- [x] Core documentation paths updated to use `docs/` instead of `dev-taskflow/`
-- [x] Submodule verification updated to only check two modules (dev-handbook and dev-tools)
-- [x] Binstubs creation references correct source path (`dev-tools/exe-old/_binstubs`)
+- [x] All `docs-dev` references replaced with `.ace/handbook`
+- [x] All `.ace/taskflow/decisions` references removed (directory no longer used)
+- [x] Core documentation paths updated to use `docs/` instead of `.ace/taskflow/`
+- [x] Submodule verification updated to only check two modules (.ace/handbook and .ace/tools)
+- [x] Binstubs creation references correct source path (`.ace/tools/exe-old/_binstubs`)
 - [x] Branch switching requirements for submodules removed
 - [x] Project Context Loading section uses correct `docs/` paths
 - [x] All embedded templates and examples use updated paths
@@ -189,10 +189,10 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 
 ## References
 
-- Current project structure: Root directory with dev-handbook/, dev-tools/, docs/ subdirectories
-- Binstubs location: dev-tools/exe-old/_binstubs/
+- Current project structure: Root directory with .ace/handbook/, .ace/tools/, docs/ subdirectories
+- Binstubs location: .ace/tools/exe-old/_binstubs/
 - Core documentation location: docs/ (what-do-we-build.md, architecture.md, blueprint.md)
-- Current submodules: dev-handbook, dev-tools (not dev-taskflow)
+- Current submodules: dev-handbook, .ace/tools (not .ace/taskflow)
 - Task creation standard: Zero-padded task IDs (v.0.3.0+task.16)
-- Workflow instruction standards: dev-handbook/guides/.meta/workflow-instructions-definition.g.md
-- Embedding tests guide: dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md
+- Workflow instruction standards: .ace/handbook/guides/.meta/workflow-instructions-definition.g.md
+- Embedding tests guide: .ace/handbook/guides/.meta/workflow-instructions-embeding-tests.g.md

@@ -33,7 +33,7 @@ All project documentation, workflow instructions, examples, and help text consis
 
 # Files requiring updates:
 # - docs/tools.md: Update CLI reference table and examples
-# - dev-handbook/workflow-instructions/*.wf.md: Update all workflow steps
+# - .ace/handbook/workflow-instructions/*.wf.md: Update all workflow steps
 # - All spec files: Update test expectations and command examples
 # - Help text and usage documentation: Consistent command references
 
@@ -129,17 +129,17 @@ Ensure users have a consistent, seamless experience when following any project d
   - Impact: Main CLI reference documentation reflects new command structure
   - Integration points: Central documentation hub for all tool references
 
-- dev-tools/docs/tools.md
+- .ace/tools/docs/tools.md
   - Changes: Update CLI tool examples and reference table
   - Impact: Tools-specific documentation consistency
-  - Integration points: Technical documentation for dev-tools submodule
+  - Integration points: Technical documentation for .ace/tools submodule
 
-- dev-handbook/workflow-instructions/*.wf.md (4 files)
+- .ace/handbook/workflow-instructions/*.wf.md (4 files)
   - Changes: Update all workflow steps to use task-manager create
   - Impact: AI agents and users follow updated command syntax
   - Integration points: Self-contained workflow instruction system
 
-- dev-tools/docs/migrations/migration-guide.md
+- .ace/tools/docs/migrations/migration-guide.md
   - Changes: Update migration examples and command references
   - Impact: Historical migration documentation remains current
   - Integration points: Developer reference documentation
@@ -147,7 +147,7 @@ Ensure users have a consistent, seamless experience when following any project d
 ### Comprehensive Update Scope
 Based on systematic analysis, 33+ files contain references to create-path task-new:
 - Documentation files: Main project docs, tools documentation
-- Workflow instructions: AI workflow files in dev-handbook
+- Workflow instructions: AI workflow files in .ace/handbook
 - Historical files: Task completion records, reflection notes
 - Migration guides: Developer reference materials
 - Template examples: Embedded command examples
@@ -178,7 +178,7 @@ Based on systematic analysis, 33+ files contain references to create-path task-n
 
 - ❌ **Command Implementation**: Task 017 handles actual task-manager create command
 - ❌ **Behavioral Changes**: No changes to task creation behavior or interface
-- ❌ **Code Modifications**: No Ruby code changes in dev-tools gem
+- ❌ **Code Modifications**: No Ruby code changes in .ace/tools gem
 - ❌ **Test Updates**: Test modifications handled by task 017
 - ❌ **Breaking Changes**: Documentation updates only, no functional changes
 
@@ -213,29 +213,29 @@ Based on systematic analysis, 33+ files contain references to create-path task-n
   > Assert: All create-path task-new references replaced with task-manager create
   > Command: ! grep -r "create-path.*task-new" docs/tools.md
 
-- [x] Update dev-tools specific documentation (dev-tools/docs/tools.md)
+- [x] Update .ace/tools specific documentation (.ace/tools/docs/tools.md)
   > TEST: Verify Tools Documentation Update
   > Type: Content Validation
   > Assert: All command examples use new syntax
-  > Command: ! grep -r "create-path.*task-new" dev-tools/docs/tools.md
+  > Command: ! grep -r "create-path.*task-new" .ace/tools/docs/tools.md
 
-- [x] Update workflow instruction files in dev-handbook
+- [x] Update workflow instruction files in .ace/handbook
   > TEST: Verify Workflow Instructions Update
   > Type: Content Validation
   > Assert: All workflow files use task-manager create syntax
-  > Command: ! grep -r "create-path.*task-new" dev-handbook/workflow-instructions/
+  > Command: ! grep -r "create-path.*task-new" .ace/handbook/workflow-instructions/
 
 - [x] Update migration guide documentation
   > TEST: Verify Migration Guide Update
   > Type: Content Validation
   > Assert: Migration examples reflect new command structure
-  > Command: ! grep -r "create-path.*task-new" dev-tools/docs/migrations/
+  > Command: ! grep -r "create-path.*task-new" .ace/tools/docs/migrations/
 
 - [x] Update historical task and reflection files for consistency
   > TEST: Verify Historical Files Update
   > Type: Content Validation
   > Assert: Historical references updated for consistency
-  > Command: ! grep -r "create-path.*task-new" dev-taskflow/ --include="*.md"
+  > Command: ! grep -r "create-path.*task-new" .ace/taskflow/ --include="*.md"
 
 - [x] Perform comprehensive verification scan
   > TEST: Verify Complete Migration
@@ -255,9 +255,9 @@ Based on systematic analysis, 33+ files contain references to create-path task-n
 
 ## References
 
-- Original idea file: dev-taskflow/current/v.0.4.0-replanning/docs/ideas/017-20250731-0828-task-create-migrate.md
+- Original idea file: .ace/taskflow/current/v.0.4.0-replanning/docs/ideas/017-20250731-0828-task-create-migrate.md
 - Task 017: Add task-manager create subcommand (dependency)
 - docs/tools.md - Main CLI reference documentation requiring updates
-- dev-handbook/workflow-instructions/ - All workflow files using task creation commands
+- .ace/handbook/workflow-instructions/ - All workflow files using task creation commands
 - Systematic search results: 33+ files containing create-path task-new references
 - Project-wide documentation consistency standards

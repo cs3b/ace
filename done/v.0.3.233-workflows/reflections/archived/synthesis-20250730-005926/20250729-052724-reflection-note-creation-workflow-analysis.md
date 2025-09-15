@@ -1,7 +1,7 @@
 # Reflection: Create Reflection Note Workflow Execution
 
 **Date**: 2025-07-29
-**Context**: Executing the create-reflection-note workflow instruction from dev-handbook/workflow-instructions/create-reflection-note.wf.md
+**Context**: Executing the create-reflection-note workflow instruction from .ace/handbook/workflow-instructions/create-reflection-note.wf.md
 **Author**: Claude Code
 **Type**: Conversation Analysis
 

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-house-rules.md
     ├── changelog.g.md
@@ -117,7 +117,7 @@ Create comprehensive documentation of all available llm-query tool parameters an
 
 #### Create
 
-* dev-handbook/guides/llm-query-tool-reference.g.md
+* .ace/handbook/guides/llm-query-tool-reference.g.md
 
 #### Modify
 
@@ -143,7 +143,7 @@ Create comprehensive documentation of all available llm-query tool parameters an
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All available parameters and their functions are identified
-  > Command: dev-tools/exe/llm-query --help || grep -r "option\|parameter" dev-tools/
+  > Command: .ace/tools/exe/llm-query --help || grep -r "option\|parameter" .ace/tools/
 * [x] Test various parameter combinations to understand interactions
 * [x] Research provider-specific capabilities and limitations
 
@@ -153,17 +153,17 @@ Create comprehensive documentation of all available llm-query tool parameters an
   > TEST: Verify Parameter Coverage
   > Type: Action Validation
   > Assert: All available parameters are documented with descriptions
-  > Command: grep -c "###.*--" dev-handbook/guides/llm-query-tool-reference.g.md
+  > Command: grep -c "###.*--" .ace/handbook/guides/llm-query-tool-reference.g.md
 * [x] Document usage patterns for common scenarios (system prompts, output files, timeouts)
   > TEST: Verify Usage Patterns
   > Type: Action Validation
   > Assert: Usage patterns section includes practical examples
-  > Command: grep -n "Usage Pattern\|Example" dev-handbook/guides/llm-query-tool-reference.g.md
+  > Command: grep -n "Usage Pattern\|Example" .ace/handbook/guides/llm-query-tool-reference.g.md
 * [x] Add provider-specific considerations and model availability
   > TEST: Verify Provider Documentation
   > Type: Action Validation
   > Assert: Provider-specific features and limitations are documented
-  > Command: grep -n "google\|anthropic\|provider" dev-handbook/guides/llm-query-tool-reference.g.md
+  > Command: grep -n "google\|anthropic\|provider" .ace/handbook/guides/llm-query-tool-reference.g.md
 * [x] Create best practices section based on reflection note learnings
 * [x] Add troubleshooting section for common parameter-related issues
 * [x] Include cross-references to workflow files that use llm-query
@@ -186,8 +186,8 @@ Create comprehensive documentation of all available llm-query tool parameters an
 
 ## References
 
-* Source issue: dev-taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md
-* Target file: dev-handbook/guides/llm-query-tool-reference.g.md (to be created)
+* Source issue: .ace/taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md
+* Target file: .ace/handbook/guides/llm-query-tool-reference.g.md (to be created)
 * Reflection note analysis: Tool Parameter Knowledge Gap (lines 18-21)
-* Tool location: dev-tools/exe/llm-query
-* Related usage: dev-handbook/workflow-instructions/review-code.wf.md (lines 312, 325)
+* Tool location: .ace/tools/exe/llm-query
+* Related usage: .ace/handbook/workflow-instructions/review-code.wf.md (lines 312, 325)

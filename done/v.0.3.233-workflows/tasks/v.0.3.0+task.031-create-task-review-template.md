@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/templates/ | grep -E "review|task" | sed 's/^/    /'
+tree -L 2 .ace/handbook/templates/ | grep -E "review|task" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -40,11 +40,11 @@ The review-task.wf.md workflow incorrectly embeds and references `release-docs/d
 
 #### Create
 
-* dev-handbook/templates/review-tasks/task-review-summary.template.md
+* .ace/handbook/templates/review-tasks/task-review-summary.template.md
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-task.wf.md
+* .ace/handbook/workflow-instructions/review-task.wf.md
 
 #### Delete
 
@@ -71,7 +71,7 @@ The review-task.wf.md workflow incorrectly embeds and references `release-docs/d
 
 ### Execution Steps
 
-* [ ] Create dev-handbook/templates/review-tasks/ directory if needed
+* [ ] Create .ace/handbook/templates/review-tasks/ directory if needed
 * [ ] Create task-review-summary.template.md with appropriate sections
   > TEST: Template Created
   > Type: File Check

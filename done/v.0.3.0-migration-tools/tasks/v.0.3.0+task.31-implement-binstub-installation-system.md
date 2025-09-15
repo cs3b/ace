@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.08]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools | sed 's/^/    /'
+tree -L 2 .ace/tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools
+    .ace/tools
     ├── bin
     │   ├── build
     │   ├── console
@@ -94,7 +94,7 @@ Create a modern, configuration-driven binstub installation system that allows ea
 
 #### Create
 
-* dev-tools/config/binstub-aliases.yml
+* .ace/tools/config/binstub-aliases.yml
 * lib/coding_agent_tools/cli/commands/install_binstubs.rb
 * lib/coding_agent_tools/atoms/yaml_reader.rb
 * lib/coding_agent_tools/molecules/binstub_generator.rb
@@ -125,11 +125,11 @@ Create a modern, configuration-driven binstub installation system that allows ea
 
 ### Planning Steps
 
-* [x] Analyze existing shell binstub patterns from dev-handbook guide
+* [x] Analyze existing shell binstub patterns from .ace/handbook guide
   > TEST: Pattern Understanding
   > Type: Pre-condition Check
   > Assert: Shell binstub template structure is understood
-  > Command: head -20 dev-handbook/.meta/gds/shell-binstub-patterns.g.md
+  > Command: head -20 .ace/handbook/.meta/gds/shell-binstub-patterns.g.md
 * [x] Design YAML configuration schema for binstub aliases
 * [x] Plan ATOM component architecture for binstub generation
 * [x] Review existing legacy binstubs to understand current behavior
@@ -140,7 +140,7 @@ Create a modern, configuration-driven binstub installation system that allows ea
   > TEST: Configuration File Creation
   > Type: File Validation
   > Assert: YAML file exists and is valid
-  > Command: ruby -e "require 'yaml'; puts YAML.load_file('dev-tools/config/binstub-aliases.yml')" 
+  > Command: ruby -e "require 'yaml'; puts YAML.load_file('.ace/tools/config/binstub-aliases.yml')" 
 - [x] Implement YamlReader atom for configuration loading
 - [x] Implement BinstubGenerator molecule for shell script generation
 - [x] Implement BinstubInstaller organism for orchestrating installation
@@ -175,6 +175,6 @@ Create a modern, configuration-driven binstub installation system that allows ea
 ## References
 
 * Dependency: v.0.3.0+task.08 (CLI commands implementation)
-* Shell binstub patterns: dev-handbook/.meta/gds/shell-binstub-patterns.g.md
+* Shell binstub patterns: .ace/handbook/.meta/gds/shell-binstub-patterns.g.md
 * Current legacy binstubs: bin/tn, bin/tr, bin/tal, bin/tnid
 * ATOM architecture: docs/architecture.md

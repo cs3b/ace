@@ -130,7 +130,7 @@ Transform the rigid, focus-based code-review command into a flexible, preset-dri
   presets:
     pr:
       description: "Pull request review"
-      system_prompt: "dev-handbook/templates/review/pr.prompt.md"
+      system_prompt: ".ace/handbook/templates/review/pr.prompt.md"
       context: "project"  # Background: project docs, architecture
       subject:            # What to review: the PR changes
         commands:
@@ -139,7 +139,7 @@ Transform the rigid, focus-based code-review command into a flexible, preset-dri
       
     code:
       description: "Code quality and architecture review"
-      system_prompt: "dev-handbook/templates/review/code.prompt.md"
+      system_prompt: ".ace/handbook/templates/review/code.prompt.md"
       context:            # Background: architecture and conventions
         files:
           - docs/architecture.md
@@ -151,7 +151,7 @@ Transform the rigid, focus-based code-review command into a flexible, preset-dri
     
     docs:
       description: "Documentation review"
-      system_prompt: "dev-handbook/templates/review/docs.prompt.md"
+      system_prompt: ".ace/handbook/templates/review/docs.prompt.md"
       context: "project"  # Background: existing docs
       subject:            # What to review: doc changes
         commands:
@@ -159,14 +159,14 @@ Transform the rigid, focus-based code-review command into a flexible, preset-dri
     
     agents:
       description: "Agent definition review"
-      system_prompt: "dev-handbook/templates/review/agents.prompt.md"
+      system_prompt: ".ace/handbook/templates/review/agents.prompt.md"
       context:            # Background: agent standards
         files:
-          - dev-handbook/.meta/gds/agents-definition.g.md
+          - .ace/handbook/.meta/gds/agents-definition.g.md
           - docs/architecture.md
       subject:            # What to review: agent files
         files:
-          - "dev-handbook/.integrations/claude/agents/*.ag.md"
+          - ".ace/handbook/.integrations/claude/agents/*.ag.md"
   
   # Default settings
   defaults:
@@ -387,7 +387,7 @@ This separation ensures the LLM has:
 
 #### Phase 1: Configuration System ✅
 - Created `code-review.yml` sample with 7 presets (PR, code, docs, agents, security, performance, test)
-- Added review prompt templates in `dev-handbook/templates/review/`
+- Added review prompt templates in `.ace/handbook/templates/review/`
 - Implemented `ReviewPresetManager` molecule with full test coverage
 
 #### Phase 2: Command Redesign ✅
@@ -421,7 +421,7 @@ This separation ensures the LLM has:
 
 #### Session Directory Restoration
 **Issue**: Initially removed session directory creation, breaking the workflow
-**Fix**: Restored session directory creation in `dev-taskflow/current/v.X.Y.Z/code-review/review-TIMESTAMP/`
+**Fix**: Restored session directory creation in `.ace/taskflow/current/v.X.Y.Z/code-review/review-TIMESTAMP/`
 **Rationale**: Session directories provide organization, audit trail, and history - removal was NOT part of the task requirements
 
 #### llm-query Command Syntax
@@ -474,4 +474,4 @@ The code review system successfully reviewed its own implementation and identifi
 - Context tool command structure
 - Existing preset patterns in context.yml
 - Discussion on context vs subject separation
-- Self-review session: `dev-taskflow/current/v.0.5.0-insights/code-review/review-20250821-183537/`
+- Self-review session: `.ace/taskflow/current/v.0.5.0-insights/code-review/review-20250821-183537/`

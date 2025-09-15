@@ -151,12 +151,12 @@ Content here
 ## File Modifications
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/molecules/format_handlers.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/format_handlers.rb`
   - **Changes**: Fix YAML frontmatter generation in Markdown class format method (line ~140)
   - **Impact**: Resolves markdown file output issue for all LLM providers
   - **Integration points**: Used by llm-query CLI command for file output
 
-- `dev-tools/spec/integration/llm_file_io_integration_spec.rb`
+- `.ace/tools/spec/integration/llm_file_io_integration_spec.rb`
   - **Changes**: Re-enable skipped markdown integration tests (remove `xit`, use `it`)
   - **Impact**: Provides test coverage for the bug fix
   - **Integration points**: Part of integration test suite
@@ -203,19 +203,19 @@ Content here
   > TEST: YAML Frontmatter Fix Validation
   > Type: Unit Test
   > Assert: Markdown format produces valid YAML frontmatter with content
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb -fd
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb -fd
 
 - [x] **Update Unit Tests**: Ensure existing unit tests pass with the YAML frontmatter fix
   > TEST: Unit Test Suite Validation
   > Type: Regression Test
   > Assert: All FormatHandlers unit tests pass after fix
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/format_handlers_spec.rb
 
 - [x] **Enable Integration Tests**: Remove `xit` markers from skipped markdown integration tests
   > TEST: Integration Test Enablement
   > Type: Test Configuration
   > Assert: Previously skipped markdown tests now run and pass
-  > Command: cd dev-tools && bundle exec rspec spec/integration/llm_file_io_integration_spec.rb -fd --tag integration
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/llm_file_io_integration_spec.rb -fd --tag integration
 
 - [x] **Cross-Provider Verification**: Test markdown output with multiple LLM providers
   > TEST: Multi-Provider Markdown Output
@@ -288,6 +288,6 @@ Content here
 
 ## References
 
-- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/041-20250821-2128-llm-query-bug-investigation.md
+- Original idea file: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/041-20250821-2128-llm-query-bug-investigation.md
 - Related ATOM architecture components: HTTPRequestBuilder, JSONFormatter, MetadataNormalizer
 - LLM integration patterns and provider-specific parsers

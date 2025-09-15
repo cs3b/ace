@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/atoms/code_quality | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/atoms/code_quality | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/code_quality
+    .ace/tools/lib/coding_agent_tools/atoms/code_quality
     ├── cassettes_validator.rb
     ├── error_distributor.rb
     ├── file_type_detector.rb
@@ -51,15 +51,15 @@ Create comprehensive unit tests for all 9 Code Quality Validator Atom classes to
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/cassettes_validator_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/file_type_detector_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/kramdown_formatter_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/standard_rb_validator_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/task_metadata_validator_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/cassettes_validator_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/file_type_detector_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/kramdown_formatter_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/standard_rb_validator_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/task_metadata_validator_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb
 
 #### Modify
 
@@ -85,7 +85,7 @@ Create comprehensive unit tests for all 9 Code Quality Validator Atom classes to
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All validator classes and their public methods are identified
-  > Command: cd dev-tools && find lib/coding_agent_tools/atoms/code_quality -name "*.rb" -exec grep -l "class.*Validator\|class.*Detector\|class.*Distributor\|class.*Formatter\|class.*Filter\|class.*Resolver" {} \;
+  > Command: cd .ace/tools && find lib/coding_agent_tools/atoms/code_quality -name "*.rb" -exec grep -l "class.*Validator\|class.*Detector\|class.*Distributor\|class.*Formatter\|class.*Filter\|class.*Resolver" {} \;
 - [x] Research testing patterns for file system operations, external tool integration, and validation logic
 - [x] Plan mocking strategies for external dependencies (StandardRB, file system, etc.)
 
@@ -96,27 +96,27 @@ Create comprehensive unit tests for all 9 Code Quality Validator Atom classes to
   > TEST: Verify Error Distribution Logic
   > Type: Unit Test Validation
   > Assert: Error categorization and distribution work correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb
 - [x] Create FileTypeDetector test file with various file type detection scenarios
 - [x] Create KramdownFormatter test file with Markdown formatting and element tests
 - [x] Create LanguageFileFilter test file with language filtering and pattern matching
   > TEST: Verify Language Filtering Logic
   > Type: File Filtering Validation
   > Assert: Language-based file filtering works with inclusion/exclusion patterns
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/language_file_filter_spec.rb
 - [x] Create PathResolver test file with path resolution and edge case handling
 - [x] Create StandardRbValidator test file with Ruby validation and external tool mocking
   > TEST: Verify Ruby Validation Integration
   > Type: External Tool Integration Test
   > Assert: StandardRB integration works correctly with proper error handling
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/standard_rb_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/standard_rb_validator_spec.rb
 - [x] Create TaskMetadataValidator test file with metadata format and field validation
 - [x] Create TemplateEmbeddingValidator test file with template format and embedding validation
 - [x] Run complete code quality validator test suite
   > TEST: Full Code Quality Test Suite
   > Type: Integration Check
   > Assert: All code quality validator tests pass
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/
 
 ## Acceptance Criteria
 
@@ -136,7 +136,7 @@ Create comprehensive unit tests for all 9 Code Quality Validator Atom classes to
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/atoms/code_quality/*.rb
-- dev-tools/spec/support/test_factories.rb
-- dev-tools/spec/support/mock_helpers.rb
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/tools/lib/coding_agent_tools/atoms/code_quality/*.rb
+- .ace/tools/spec/support/test_factories.rb
+- .ace/tools/spec/support/mock_helpers.rb
+- .ace/handbook/guides/testing/ruby-rspec.md

@@ -66,5 +66,5 @@
 
 - Task ID: v.0.6.0+task.022
 - Related ADR: ADR-011 (ATOM Architecture House Rules)
-- Original Implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Original Implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
 - Documentation Created: 022-method-to-atom-mapping.md, 022-dependency-injection-strategy.md, 022-incremental-refactoring-plan.md

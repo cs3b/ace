@@ -32,7 +32,7 @@ Fixed the template processing error in the integrate command by creating templat
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb
 
 ## Implementation Summary
 
@@ -102,5 +102,5 @@ cat docs/what-do-we-build.md
 ## References
 
 - Error message: "no implicit conversion of Symbol into Integer (TypeError)"
-- User feedback: "ok, the dev-taskflow issue is solved, but the second issue persist"
+- User feedback: "ok, the .ace/taskflow issue is solved, but the second issue persist"
 - Related to overall integrate command improvements in v.0.5.0

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/
+    .ace/handbook/workflow-instructions/
     ├── create-reflection-note.wf.md
     ├── review-synthesizer.wf.md (to be renamed)
     └── other workflow files...
@@ -43,7 +43,7 @@ Create a new workflow instruction file `synthesize-reflection-notes.wf.md` that 
 
 #### Create
 
-* dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+* .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 ## Phases
 
@@ -62,13 +62,13 @@ Create a new workflow instruction file `synthesize-reflection-notes.wf.md` that 
   > TEST: Requirements Understanding
   > Type: Pre-condition Check
   > Assert: Synthesis requirements are documented and understood
-  > Command: cat dev-taskflow/current/v.0.3.0-workflows/backlog/claude-commands/compact-self-reflection-note.md
+  > Command: cat .ace/taskflow/current/v.0.3.0-workflows/backlog/claude-commands/compact-self-reflection-note.md
 
 * [x] Review existing review-synthesizer.wf.md for patterns and structure
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Existing synthesizer patterns are analyzed for adaptation
-  > Command: grep -E "^##|^###" dev-handbook/workflow-instructions/review-synthesizer.wf.md
+  > Command: grep -E "^##|^###" .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 
 * [x] Design reflection scanning strategy for multiple releases and projects
   > TEST: Scanning Strategy Design
@@ -82,49 +82,49 @@ Create a new workflow instruction file `synthesize-reflection-notes.wf.md` that 
   > TEST: File Structure Creation
   > Type: Action Validation
   > Assert: File created with all required workflow sections
-  > Command: grep -E "^## (Goal|Prerequisites|Project Context Loading|Process Steps)" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -E "^## (Goal|Prerequisites|Project Context Loading|Process Steps)" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
-* [x] Implement systematic reflection note scanning across dev-taskflow structure
+* [x] Implement systematic reflection note scanning across .ace/taskflow structure
   > TEST: Scanning Implementation
   > Type: Action Validation
   > Assert: Workflow includes commands for scanning reflection notes
-  > Command: grep -A 10 "find.*reflections\|ls.*reflections" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -A 10 "find.*reflections\|ls.*reflections" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 * [x] Add cross-reference functionality with architecture and blueprint documentation
   > TEST: Cross-Reference Implementation
   > Type: Action Validation
   > Assert: Workflow includes architecture cross-referencing steps
-  > Command: grep -A 5 "docs/architecture\|docs/blueprint" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -A 5 "docs/architecture\|docs/blueprint" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 * [x] Create impact-based categorization system (Critical, High, Medium, Low)
   > TEST: Categorization System
   > Type: Action Validation
   > Assert: Impact-based categorization is implemented with clear criteria
-  > Command: grep -A 10 "Critical\|High.*Impact\|Medium.*Impact\|Low.*Impact" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -A 10 "Critical\|High.*Impact\|Medium.*Impact\|Low.*Impact" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 * [x] Implement solution proposal framework with concrete implementation paths
   > TEST: Solution Framework
   > Type: Action Validation
   > Assert: Solution proposals include implementation steps and examples
-  > Command: grep -A 5 "solution.*proposal\|implementation.*path" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -A 5 "solution.*proposal\|implementation.*path" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 * [x] Add archival and compaction functionality for processed reflections
   > TEST: Archival Implementation
   > Type: Action Validation
   > Assert: Workflow includes steps for archiving processed reflections
-  > Command: grep -A 5 "archiv\|compact\|processed.*reflection" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -A 5 "archiv\|compact\|processed.*reflection" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 * [x] Embed analysis report template for synthesis output
   > TEST: Template Embedding
   > Type: Action Validation
   > Assert: Embedded template follows proper format with all required sections
-  > Command: grep -A 20 "<template.*reflection.*analysis" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -A 20 "<template.*reflection.*analysis" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 * [x] Validate workflow follows self-containment principles
   > TEST: Self-Containment Validation
   > Type: Post-condition Check
   > Assert: Workflow contains all necessary context, examples, and templates
-  > Command: grep -c "## Project Context Loading\|<template\|```bash" dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+  > Command: grep -c "## Project Context Loading\|<template\|```bash" .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 
 ## Acceptance Criteria
 
@@ -142,13 +142,13 @@ Create a new workflow instruction file `synthesize-reflection-notes.wf.md` that 
 
 * ❌ Modifying existing reflection note files or templates
 * ❌ Creating external tools or scripts outside the workflow
-* ❌ Changing the structure of dev-taskflow directories
+* ❌ Changing the structure of .ace/taskflow directories
 * ❌ Implementing automatic reflection processing without user control
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/backlog/claude-commands/compact-self-reflection-note.md
-* dev-handbook/workflow-instructions/review-synthesizer.wf.md (pattern reference)
-* dev-handbook/.meta/gds/workflow-instructions-definition.g.md
+* .ace/taskflow/current/v.0.3.0-workflows/backlog/claude-commands/compact-self-reflection-note.md
+* .ace/handbook/workflow-instructions/review-synthesizer.wf.md (pattern reference)
+* .ace/handbook/.meta/gds/workflow-instructions-definition.g.md
 * docs/architecture.md
 * docs/blueprint.md

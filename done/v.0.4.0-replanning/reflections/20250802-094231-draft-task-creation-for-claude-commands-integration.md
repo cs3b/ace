@@ -1,7 +1,7 @@
 # Reflection: Draft Task Creation for Claude Commands Integration
 
 **Date**: 2025-08-02
-**Context**: Execution of draft-task workflow for idea file dev-taskflow/backlog/ideas/20250802-0934-claude-commands-prompts.md
+**Context**: Execution of draft-task workflow for idea file .ace/taskflow/backlog/ideas/20250802-0934-claude-commands-prompts.md
 **Author**: Claude Code Agent
 **Type**: Workflow Execution Analysis
 
@@ -76,6 +76,6 @@
 ## Additional Context
 
 - Source Idea: Integration of custom Claude commands into Claude Code integration script
-- Target: dev-handbook/.integrations/claude/install-prompts.md enhancement
+- Target: .ace/handbook/.integrations/claude/install-prompts.md enhancement
 - Next Phase: Implementation planning (replan workflow) to define HOW to achieve the behavioral specifications
 - Dependencies: Analysis of existing Claude Code integration architecture and command registration patterns

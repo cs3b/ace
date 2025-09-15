@@ -63,8 +63,8 @@ Enhance the search tool with path filtering capabilities and comprehensive searc
   - Helps users/AI agents verify search was executed as intended
 
 - **Default Exclusions**:
-  - Automatically excludes `dev-taskflow/current/*/tasks/x/*` (abandoned tasks)
-  - Automatically excludes `dev-taskflow/done/**/*` (completed/archived tasks)
+  - Automatically excludes `.ace/taskflow/current/*/tasks/x/*` (abandoned tasks)
+  - Automatically excludes `.ace/taskflow/done/**/*` (completed/archived tasks)
   - Added `--include-archived` flag to override defaults
   - Added `--exclude none` option to clear all exclusions
   - Additional exclusions append to defaults

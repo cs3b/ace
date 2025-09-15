@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.22, v.0.3.0+task.25]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -70,7 +70,7 @@ Link back to original requirement: Execute template sync and commit changes (imp
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All embedded templates follow XML <templates> format
-  > Command: grep -c "````._\.template\.md)lt;templates````._\.template\.md)gt;" dev-handbook/workflow-instructions/_.wf.md
+  > Command: grep -c "````._\.template\.md)lt;templates````._\.template\.md)gt;" .ace/handbook/workflow-instructions/_.wf.md
 
 ### Execution Steps
 
@@ -78,7 +78,7 @@ Link back to original requirement: Execute template sync and commit changes (imp
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Script executes successfully without errors
-  > Command: handbook sync-templates dev-handbook/workflow-instructions/*.wf.md
+  > Command: handbook sync-templates .ace/handbook/workflow-instructions/*.wf.md
 
 * [x] Review script output and changes summary
   > TEST: Action Validation

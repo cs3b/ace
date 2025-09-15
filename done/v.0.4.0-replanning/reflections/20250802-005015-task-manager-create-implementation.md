@@ -38,15 +38,15 @@
 ### File Structure Created
 
 ```
-dev-tools/lib/coding_agent_tools/cli/commands/task/create.rb
-dev-tools/spec/coding_agent_tools/cli/commands/task/create_spec.rb
+.ace/tools/lib/coding_agent_tools/cli/commands/task/create.rb
+.ace/tools/spec/coding_agent_tools/cli/commands/task/create_spec.rb
 ```
 
 ### Modified Files
 
-- `dev-tools/exe/task-manager`: Added require and registration for create command
-- `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`: Modified to return error for task-new
-- `dev-tools/lib/coding_agent_tools/cli/commands/nav/path.rb`: Modified to return error for task-new
+- `.ace/tools/exe/task-manager`: Added require and registration for create command
+- `.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb`: Modified to return error for task-new
+- `.ace/tools/lib/coding_agent_tools/cli/commands/nav/path.rb`: Modified to return error for task-new
 - Multiple documentation files updated to use task-manager create
 
 ## Action Items

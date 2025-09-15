@@ -65,17 +65,17 @@
 ### Testing Verified
 
 - ✅ Single preset: `--context "project"` (73KB context)
-- ✅ Multi-preset: `--context 'presets: [project, dev-tools]'` (133KB context)
+- ✅ Multi-preset: `--context 'presets: [project, .ace/tools]'` (133KB context)
 - ✅ Mixed: `--context 'presets: [project] files: [CLAUDE.md]'` (76KB context)
-- ✅ Three presets: `--context 'presets: [project, dev-tools, dev-handbook]'`
+- ✅ Three presets: `--context 'presets: [project, dev-tools, .ace/handbook]'`
 - ✅ All unit tests pass (14 examples, 0 failures)
 
 ## Additional Context
 
 - Task ID: v.0.5.0+task.033
 - Files Modified: 
-  - `/dev-tools/lib/coding_agent_tools/molecules/code/context_integrator.rb`
-  - `/dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb`
-  - `/dev-tools/spec/coding_agent_tools/molecules/code/context_integrator_spec.rb` (created)
+  - `/.ace/tools/lib/coding_agent_tools/molecules/code/context_integrator.rb`
+  - `/.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb`
+  - `/.ace/tools/spec/coding_agent_tools/molecules/code/context_integrator_spec.rb` (created)
 - Total Implementation Time: ~3 hours (as estimated)
 - Status: Completed successfully

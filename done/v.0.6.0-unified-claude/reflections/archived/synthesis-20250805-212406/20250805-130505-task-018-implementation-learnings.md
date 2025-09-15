@@ -99,7 +99,7 @@
 ## Technical Details
 
 The key technical insight was that the ClaudeCommandsInstaller already implements the desired flattening behavior:
-- Source: `dev-handbook/.integrations/claude/commands/_custom/` and `_generated/`
+- Source: `.ace/handbook/.integrations/claude/commands/_custom/` and `_generated/`
 - Target: `.claude/commands/` (flat structure)
 
 The installer's `copy_custom_commands` method correctly copies from subdirectories to a flat structure using `target_dir / file.basename`.
@@ -109,8 +109,8 @@ The installer's `copy_custom_commands` method correctly copies from subdirectori
 - Task: v.0.6.0+task.018
 - Related feedback: Item #5 about flattening Claude commands
 - Key files involved:
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
-  - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-  - dev-handbook/.integrations/claude/commands/
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+  - .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - .ace/handbook/.integrations/claude/commands/
 
 This experience reinforces the importance of understanding existing system behavior before implementing changes, especially when dealing with file organization and structure transformations.
