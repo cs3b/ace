@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-08-05
+last_reviewed: 2025-09-15
 status: active
 ---
 
@@ -35,7 +35,7 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| v.0.5.0 | "Insights"                | Q1 2025       | Address reflection-driven improvements for tool reliability, workflow refinement, and development efficiency | Tool Output Validation, Model Interface Discovery, Synthesis Quality, Error Pattern Library |
+| v.0.6.0 | "ACE Migration"           | Q1 2025       | Complete migration from dev-* to .ace/* structure and rename CodingAgentTools to AceTools | Path Migration, Module Renaming, Documentation Updates, Migration Guide |
 | v.0.7.0 | "Conductor"               | Q4 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
 | v.0.8.0 | "Pathfinder"              | Q1 2026       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
 | v.0.9.0 | "Scribe"                  | Q1 2026       | Markdown Document Quality theme features.                                                 | R-MD-1, R-MD-2, R-MD-3, R-MD-4                                                                       |
@@ -58,6 +58,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-09-15 | Removed completed v.0.5.0 "Insights" release from planned releases after successful publication. Added v.0.6.0 "ACE Migration" for path and module renaming | AI Assistant   |
 | 2025-08-05 | Removed completed v.0.6.0 "unified-claude" release from planned releases after successful publication with unified Claude Code integration | AI Assistant   |
 | 2025-08-04 | Removed completed v.0.4.0 "Replanning" release from planned releases after successful publication with 21 tasks completed | AI Assistant   |
 | 2025-01-31 | Added v.0.6.0 "unified-claude" release for unifying Claude commands under handbook CLI | AI Assistant   |
