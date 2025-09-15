@@ -48,7 +48,7 @@ To provide a comprehensive overview of all available tools and their subcommands
 
 ## Solution Direction
 
-1. **Comprehensive Tool Listing**: Compile a list of all executables found in `dev-tools/exe/`.
+1. **Comprehensive Tool Listing**: Compile a list of all executables found in `.ace/tools/exe/`.
 2. **Subcommand Exploration**: For tools with subcommands, identify and list them.
 3. **`--help` Output Capture**: Execute `--help` for each tool and subcommand, capturing and presenting the output.
 
@@ -67,7 +67,7 @@ To provide a comprehensive overview of all available tools and their subcommands
 ## Assumptions to Validate
 
 **We assume that:**
-- All executables in `dev-tools/exe/` are intended tools and will respond to `--help`. - *Needs validation*
+- All executables in `.ace/tools/exe/` are intended tools and will respond to `--help`. - *Needs validation*
 - The `--help` output for each tool provides sufficient detail to understand its functionality and flags. - *Needs validation*
 - Executing `--help` for all tools will not cause unintended side effects or consume excessive resources. - *Needs validation*
 
@@ -122,7 +122,7 @@ To provide a comprehensive overview of all available tools and their subcommands
 
 ## Solution Direction
 
-1. **Comprehensive Tool Listing**: Compile a list of all executables found in `dev-tools/exe/`.
+1. **Comprehensive Tool Listing**: Compile a list of all executables found in `.ace/tools/exe/`.
 2. **Subcommand Exploration**: For tools with subcommands, identify and list them.
 3. **`--help` Output Capture**: Execute `--help` for each tool and subcommand, capturing and presenting the output.
 
@@ -141,7 +141,7 @@ To provide a comprehensive overview of all available tools and their subcommands
 ## Assumptions to Validate
 
 **We assume that:**
-- All executables in `dev-tools/exe/` are intended tools and will respond to `--help`. - *Needs validation*
+- All executables in `.ace/tools/exe/` are intended tools and will respond to `--help`. - *Needs validation*
 - The `--help` output for each tool provides sufficient detail to understand its functionality and flags. - *Needs validation*
 - Executing `--help` for all tools will not cause unintended side effects or consume excessive resources. - *Needs validation*
 

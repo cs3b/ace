@@ -28,7 +28,7 @@ These templates provide additional utility but are not critical.
 
 #### 1.1 ADR Template
 
-**Target Location**: `dev-handbook/templates/project-docs/adr.template.md`  
+**Target Location**: `.ace/handbook/templates/project-docs/adr.template.md`  
 **Source**: `create-adr.wf.md` (lines 67-122)  
 **Effort**: 1 hour  
 **Dependencies**: None  
@@ -48,7 +48,7 @@ These templates provide additional utility but are not critical.
 
 #### 1.2 User Documentation Template
 
-**Target Location**: `dev-handbook/templates/user-docs/user-guide.template.md`  
+**Target Location**: `.ace/handbook/templates/user-docs/user-guide.template.md`  
 **Source**: `create-user-docs.wf.md` (lines 65-163)  
 **Effort**: 2 hours  
 **Dependencies**: Create `user-docs` directory  
@@ -70,7 +70,7 @@ These templates provide additional utility but are not critical.
 
 #### 1.3 Changelog Template
 
-**Target Location**: `dev-handbook/templates/release-management/changelog.template.md`  
+**Target Location**: `.ace/handbook/templates/release-management/changelog.template.md`  
 **Source**: `publish-release.wf.md` (lines 84-111)  
 **Effort**: 1 hour  
 **Dependencies**: Create `release-management` directory  
@@ -91,7 +91,7 @@ These templates provide additional utility but are not critical.
 
 #### 1.4 Test Case Template Enhancement
 
-**Target Location**: `dev-handbook/templates/release-testing/test-case.template.md` (replace existing)  
+**Target Location**: `.ace/handbook/templates/release-testing/test-case.template.md` (replace existing)  
 **Source**: `create-test-cases.wf.md` (lines 120-167)  
 **Effort**: 2 hours  
 **Dependencies**: None  
@@ -115,7 +115,7 @@ These templates provide additional utility but are not critical.
 
 #### 2.1 Code Documentation Templates (5 templates)
 
-**Target Directory**: `dev-handbook/templates/code-docs/`  
+**Target Directory**: `.ace/handbook/templates/code-docs/`  
 **Source**: `create-api-docs.wf.md` (various sections)  
 **Effort**: 3 hours total  
 **Dependencies**: Create `code-docs` directory  
@@ -137,7 +137,7 @@ These templates provide additional utility but are not critical.
 
 #### 2.2 Release Overview Template
 
-**Target Location**: `dev-handbook/templates/release-management/release-overview.template.md`  
+**Target Location**: `.ace/handbook/templates/release-management/release-overview.template.md`  
 **Source**: `draft-release.wf.md` (lines 52-126)  
 **Effort**: 1.5 hours  
 **Dependencies**: `release-management` directory (created in Phase 1)  
@@ -158,7 +158,7 @@ These templates provide additional utility but are not critical.
 
 #### 2.3 Reflection Template Enhancement
 
-**Target Location**: `dev-handbook/templates/release-reflections/retrospective.template.md` (replace existing)  
+**Target Location**: `.ace/handbook/templates/release-reflections/retrospective.template.md` (replace existing)  
 **Source**: `create-reflection-note.wf.md` (lines 69-118)  
 **Effort**: 1 hour  
 **Dependencies**: None  
@@ -181,7 +181,7 @@ These templates provide additional utility but are not critical.
 
 #### 3.1 Binstub Templates (7 templates)
 
-**Target Directory**: `dev-handbook/templates/project-setup/binstubs/`  
+**Target Directory**: `.ace/handbook/templates/project-setup/binstubs/`  
 **Source**: `initialize-project-structure.wf.md` (lines 519-614)  
 **Effort**: 2 hours  
 **Dependencies**: Create `project-setup/binstubs` directories  
@@ -205,7 +205,7 @@ These templates provide additional utility but are not critical.
 
 #### 3.2 Session Log Template
 
-**Target Location**: `dev-handbook/templates/development/session-log.template.md`  
+**Target Location**: `.ace/handbook/templates/development/session-log.template.md`  
 **Source**: `save-session-context.md` (lines 55-118)  
 **Effort**: 0.5 hours  
 **Dependencies**: Create `development` directory  
@@ -251,7 +251,7 @@ These templates provide additional utility but are not critical.
 ### New Directories to Create
 
 ```
-dev-handbook/templates/
+.ace/handbook/templates/
 ├── code-docs/          # New directory
 ├── development/        # New directory
 ├── project-setup/      # New directory
@@ -263,7 +263,7 @@ dev-handbook/templates/
 ### Enhanced Existing Directories
 
 ```
-dev-handbook/templates/
+.ace/handbook/templates/
 ├── project-docs/       # Add adr.template.md
 ├── release-reflections/ # Replace retrospective.template.md
 └── release-testing/    # Replace test-case.template.md

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.112]
 _Command run:_
 
 ```bash
-ls -la dev-tools/lib/coding_agent_tools/cli/create_path_command.rb | sed 's/^/    /'
+ls -la .ace/tools/lib/coding_agent_tools/cli/create_path_command.rb | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    -rw-r--r--  1 user  group  xxxx date dev-tools/lib/coding_agent_tools/cli/create_path_command.rb
+    -rw-r--r--  1 user  group  xxxx date .ace/tools/lib/coding_agent_tools/cli/create_path_command.rb
 ```
 
 ## Objective
@@ -37,12 +37,12 @@ Fix encapsulation violation where the create-path command directly accesses priv
 
 #### Create
 
-- Tests verifying proper encapsulation in `dev-tools/spec/cli/create_path_command_spec.rb`
+- Tests verifying proper encapsulation in `.ace/tools/spec/cli/create_path_command_spec.rb`
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb` (fix access violations)
-- `dev-tools/lib/coding_agent_tools/molecules/nav/path_resolver.rb` (add public methods if needed)
+- `.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb` (fix access violations)
+- `.ace/tools/lib/coding_agent_tools/molecules/nav/path_resolver.rb` (add public methods if needed)
 
 #### Delete
 
@@ -63,7 +63,7 @@ Fix encapsulation violation where the create-path command directly accesses priv
   > TEST: Encapsulation Violation Detection
   > Type: Code Analysis
   > Assert: Direct @instance_variable access to PathResolver is identified
-  > Command: cd dev-tools && grep -n '@.*' lib/coding_agent_tools/cli/create_path_command.rb | grep -v 'self\.'
+  > Command: cd .ace/tools && grep -n '@.*' lib/coding_agent_tools/cli/create_path_command.rb | grep -v 'self\.'
 - [x] Review PathResolver's public interface for available methods
 - [x] Determine what additional public methods are needed
 - [x] Plan the refactoring to use proper accessor methods
@@ -74,27 +74,27 @@ Fix encapsulation violation where the create-path command directly accesses priv
   > TEST: Public Interface Availability
   > Type: Interface Design
   > Assert: PathResolver provides public methods for all needed data
-  > Command: cd dev-tools && grep -n "def " lib/coding_agent_tools/molecules/nav/path_resolver.rb
+  > Command: cd .ace/tools && grep -n "def " lib/coding_agent_tools/molecules/nav/path_resolver.rb
 - [x] Step 2: Replace direct instance variable access with method calls
   > TEST: Encapsulation Compliance
   > Type: Refactoring Validation
   > Assert: No direct instance variable access to external objects remains
-  > Command: cd dev-tools && grep -n '@.*\.' lib/coding_agent_tools/cli/create_path_command.rb | grep -v 'self\.'
+  > Command: cd .ace/tools && grep -n '@.*\.' lib/coding_agent_tools/cli/create_path_command.rb | grep -v 'self\.'
 - [x] Step 3: Add tests to verify proper encapsulation
   > TEST: Encapsulation Testing
   > Type: Design Validation
   > Assert: Tests verify code uses public interface only
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "encapsulation"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "encapsulation"
 - [x] Step 4: Verify existing functionality is preserved
   > TEST: Functionality Preservation
   > Type: Regression Test
   > Assert: All existing tests continue to pass
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb
 - [x] Step 5: Run code quality checks
   > TEST: Code Quality Validation
   > Type: Quality Assurance
   > Assert: Code follows object-oriented design principles
-  > Command: cd dev-tools && bundle exec rubocop -c .rubocop.yml lib/coding_agent_tools/cli/create_path_command.rb
+  > Command: cd .ace/tools && bundle exec rubocop -c .rubocop.yml lib/coding_agent_tools/cli/create_path_command.rb
 
 ## Acceptance Criteria
 

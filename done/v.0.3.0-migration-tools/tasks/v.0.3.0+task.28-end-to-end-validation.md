@@ -40,7 +40,7 @@ Conduct comprehensive end-to-end validation of the migration, including user acc
 
 #### Create
 
-* dev-tools/spec/e2e/workflow_validation_spec.rb
+* .ace/tools/spec/e2e/workflow_validation_spec.rb
 * docs/validation-report.md
 * docs/rollback-procedures.md
 
@@ -68,7 +68,7 @@ Conduct comprehensive end-to-end validation of the migration, including user acc
   > TEST: Checklist Creation
   > Type: Pre-condition Check
   > Assert: All workflows identified
-  > Command: find dev-handbook/workflow-instructions -name "*.wf.md" | wc -l
+  > Command: find .ace/handbook/workflow-instructions -name "*.wf.md" | wc -l
 * [ ] Identify critical user journeys
 * [ ] Plan UAT scenarios
 

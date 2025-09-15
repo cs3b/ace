@@ -72,7 +72,7 @@
 ## Additional Context
 
 - Task ID: v.0.3.0+task.220
-- File Modified: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
-- Command Under Test: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/release/current.rb`
+- File Modified: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
+- Command Under Test: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/release/current.rb`
 - Test execution successfully validated all new test scenarios
 - Task status updated to completed with comprehensive summary documentation

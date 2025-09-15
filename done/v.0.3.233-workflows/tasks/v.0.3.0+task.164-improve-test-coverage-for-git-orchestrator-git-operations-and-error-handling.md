@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -82,7 +82,7 @@ Implement comprehensive test coverage for the Git Orchestrator component focusin
   > TEST: Git Orchestrator Coverage Verification
   > Type: Coverage Check
   > Assert: Git Orchestrator coverage improved significantly
-  > Command: cd dev-tools && bin/test spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb
+  > Command: cd .ace/tools && bin/test spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb
 
 ## Acceptance Criteria
 
@@ -130,6 +130,6 @@ Implement comprehensive test coverage for the Git Orchestrator component focusin
 
 ## References
 - Coverage analysis: coverage_analysis/coverage_analysis.json
-- Source file: dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb (9.83% coverage)
+- Source file: .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb (9.83% coverage)
 - ATOM architecture: docs/architecture-tools.md (organism-level patterns)
-- Testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md

@@ -40,7 +40,7 @@ Enable Claude commands to be directly accessible in the `.claude/commands` direc
 
 ## Key Patterns from Reflections
 
-- **`dev-handbook/.integrations/claude/commands`**: This is the source of all Claude-specific command definitions.
+- **`.ace/handbook/.integrations/claude/commands`**: This is the source of all Claude-specific command definitions.
 - **Symlinking**: The integration process uses symlinks to make these commands available in the project root's `.claude/commands` directory.
 - **Command Generation Workflow**: Commands are generated from `.wf.md` files and placed into `_generated` folder.
 - **Custom Commands**: Manually crafted commands are placed in `_custom` folder.
@@ -49,7 +49,7 @@ Enable Claude commands to be directly accessible in the `.claude/commands` direc
 
 ## Solution Direction
 
-1. **Refactor Integration Logic**: Modify the `handbook claude integrate` command and related workflows to directly symlink files from `dev-handbook/.integrations/claude/commands/_custom` and `dev-handbook/.integrations/claude/commands/_generated` into the `.claude/commands` directory, effectively flattening the structure.
+1. **Refactor Integration Logic**: Modify the `handbook claude integrate` command and related workflows to directly symlink files from `.ace/handbook/.integrations/claude/commands/_custom` and `.ace/handbook/.integrations/claude/commands/_generated` into the `.claude/commands` directory, effectively flattening the structure.
 2. **Update Symlinking Strategy**: Instead of symlinking the subfolders `_custom` and `_generated`, directly symlink the individual command files (e.g., `.ag.md` files for agents, `.md` files for workflows) from their source locations into the target `.claude/commands` directory.
 3. **Handle README.md**: Ensure the `README.md` for commands is also symlinked directly into `.claude/commands`, not into a `_custom` or `_generated` subfolder.
 
@@ -112,7 +112,7 @@ Enable Claude commands to be directly accessible in the `.claude/commands` direc
 
 ## Key Patterns from Reflections
 
-- **`dev-handbook/.integrations/claude/commands`**: This is the source of all Claude-specific command definitions.
+- **`.ace/handbook/.integrations/claude/commands`**: This is the source of all Claude-specific command definitions.
 - **Symlinking**: The integration process uses symlinks to make these commands available in the project root's `.claude/commands` directory.
 - **Command Generation Workflow**: Commands are generated from `.wf.md` files and placed into `_generated` folder.
 - **Custom Commands**: Manually crafted commands are placed in `_custom` folder.
@@ -121,7 +121,7 @@ Enable Claude commands to be directly accessible in the `.claude/commands` direc
 
 ## Solution Direction
 
-1. **Refactor Integration Logic**: Modify the `handbook claude integrate` command and related workflows to directly symlink files from `dev-handbook/.integrations/claude/commands/_custom` and `dev-handbook/.integrations/claude/commands/_generated` into the `.claude/commands` directory, effectively flattening the structure.
+1. **Refactor Integration Logic**: Modify the `handbook claude integrate` command and related workflows to directly symlink files from `.ace/handbook/.integrations/claude/commands/_custom` and `.ace/handbook/.integrations/claude/commands/_generated` into the `.claude/commands` directory, effectively flattening the structure.
 2. **Update Symlinking Strategy**: Instead of symlinking the subfolders `_custom` and `_generated`, directly symlink the individual command files (e.g., `.ag.md` files for agents, `.md` files for workflows) from their source locations into the target `.claude/commands` directory.
 3. **Handle README.md**: Ensure the `README.md` for commands is also symlinked directly into `.claude/commands`, not into a `_custom` or `_generated` subfolder.
 
@@ -172,7 +172,7 @@ when integrating claude commands we should flatten them (no _custom and _generat
 
 eza .claude/commands --tree
 .claude/commands
-├── _custom -> ../../dev-handbook/.integrations/claude/commands/_custom
-├── _generated -> ../../dev-handbook/.integrations/claude/commands/_generated
-└── README.md -> ../../dev-handbook/.integrations/claude/commands/README.md
+├── _custom -> ../../.ace/handbook/.integrations/claude/commands/_custom
+├── _generated -> ../../.ace/handbook/.integrations/claude/commands/_generated
+└── README.md -> ../../.ace/handbook/.integrations/claude/commands/README.md
 ```

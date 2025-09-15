@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── atom-house-rules.md
 ├── changelog.g.md
 ├── code-review
@@ -118,10 +118,10 @@ Create specialized meta workflow instructions for managing handbook content crea
 
 #### Create
 
-* dev-handbook/.meta/wfi/manage-workflow-instructions.wf.md
-* dev-handbook/.meta/wfi/manage-guides.wf.md
-* dev-handbook/.meta/wfi/review-workflows.wf.md
-* dev-handbook/.meta/wfi/review-guides.wf.md
+* .ace/handbook/.meta/wfi/manage-workflow-instructions.wf.md
+* .ace/handbook/.meta/wfi/manage-guides.wf.md
+* .ace/handbook/.meta/wfi/review-workflows.wf.md
+* .ace/handbook/.meta/wfi/review-guides.wf.md
 
 #### Modify
 
@@ -147,12 +147,12 @@ Create specialized meta workflow instructions for managing handbook content crea
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
   > Assert: Key workflow patterns and structures are identified for reuse
-  > Command: grep -l "## Process Steps\|## High-Level Execution Plan" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep -l "## Process Steps\|## High-Level Execution Plan" .ace/handbook/workflow-instructions/*.wf.md
 * [ ] Review meta content definitions in .meta/gds/
   > TEST: Meta Content Review Complete
   > Type: Pre-condition Check
   > Assert: Guide and workflow instruction standards are understood
-  > Command: ls -la dev-handbook/.meta/gds/
+  > Command: ls -la .ace/handbook/.meta/gds/
 * [ ] Plan workflow structure and embedded content strategy
 * [ ] Design batch processing approach for review workflows
 
@@ -162,27 +162,27 @@ Create specialized meta workflow instructions for managing handbook content crea
   > TEST: Workflow Instruction Management File Created
   > Type: Action Validation
   > Assert: The manage-workflow-instructions.wf.md file exists with proper structure
-  > Command: test -f dev-handbook/.meta/wfi/manage-workflow-instructions.wf.md && grep -q "## Goal" dev-handbook/.meta/wfi/manage-workflow-instructions.wf.md
+  > Command: test -f .ace/handbook/.meta/wfi/manage-workflow-instructions.wf.md && grep -q "## Goal" .ace/handbook/.meta/wfi/manage-workflow-instructions.wf.md
 * [x] Step 2: Create manage-guides.wf.md for guide creation/updates
   > TEST: Guide Management File Created
   > Type: Action Validation
   > Assert: The manage-guides.wf.md file exists with proper structure
-  > Command: test -f dev-handbook/.meta/wfi/manage-guides.wf.md && grep -q "## Goal" dev-handbook/.meta/wfi/manage-guides.wf.md
+  > Command: test -f .ace/handbook/.meta/wfi/manage-guides.wf.md && grep -q "## Goal" .ace/handbook/.meta/wfi/manage-guides.wf.md
 * [x] Step 3: Create review-workflows.wf.md for batch workflow reviews
   > TEST: Workflow Review File Created
   > Type: Action Validation
   > Assert: The review-workflows.wf.md file exists with proper structure
-  > Command: test -f dev-handbook/.meta/wfi/review-workflows.wf.md && grep -q "## Goal" dev-handbook/.meta/wfi/review-workflows.wf.md
+  > Command: test -f .ace/handbook/.meta/wfi/review-workflows.wf.md && grep -q "## Goal" .ace/handbook/.meta/wfi/review-workflows.wf.md
 * [x] Step 4: Create review-guides.wf.md for batch guide reviews
   > TEST: Guide Review File Created
   > Type: Action Validation
   > Assert: The review-guides.wf.md file exists with proper structure
-  > Command: test -f dev-handbook/.meta/wfi/review-guides.wf.md && grep -q "## Goal" dev-handbook/.meta/wfi/review-guides.wf.md
+  > Command: test -f .ace/handbook/.meta/wfi/review-guides.wf.md && grep -q "## Goal" .ace/handbook/.meta/wfi/review-guides.wf.md
 * [x] Step 5: Validate all workflows follow established standards
   > TEST: Workflow Standards Compliance
   > Type: Post-condition Check
   > Assert: All created workflows have required sections and proper structure
-  > Command: for file in dev-handbook/.meta/wfi/*.wf.md; do grep -q "## Goal\|## Prerequisites\|## Process Steps" "$file" || echo "Missing sections in $file"; done
+  > Command: for file in .ace/handbook/.meta/wfi/*.wf.md; do grep -q "## Goal\|## Prerequisites\|## Process Steps" "$file" || echo "Missing sections in $file"; done
 * [x] Step 6: Update any necessary cross-references or documentation
   > TEST: Cross-references Updated
   > Type: Post-condition Check
@@ -191,7 +191,7 @@ Create specialized meta workflow instructions for managing handbook content crea
 
 ## Acceptance Criteria
 
-* [x] AC 1: All 4 meta workflow instruction files created in dev-handbook/.meta/wfi/
+* [x] AC 1: All 4 meta workflow instruction files created in .ace/handbook/.meta/wfi/
 * [x] AC 2: Each workflow follows established workflow instruction standards
 * [x] AC 3: Workflows leverage existing patterns from successful examples
 * [x] AC 4: Embedded content from .meta/gds/ definitions is properly incorporated
@@ -207,8 +207,8 @@ Create specialized meta workflow instructions for managing handbook content crea
 
 ## References
 
-* User request: "creating workflow instruction for updating/creating workflow instruction, updating/creating guides, review workflows (more than one against, usually all), review guides (more than one against, usually all) - the goal is to make it more manageable (in past we have wfi for guides and workflows) how to attach is the best - without creating too much stuff, and getting results. because those are meta workflows -> we should put them in dev-handbook/.meta/wfi"
-* Existing patterns: dev-handbook/workflow-instructions/review-task.wf.md
-* Batch processing patterns: dev-handbook/workflow-instructions/draft-release.wf.md
-* Content standards: dev-handbook/.meta/gds/workflow-instructions-definition.g.md
-* Content standards: dev-handbook/.meta/gds/guides-definition.g.md
+* User request: "creating workflow instruction for updating/creating workflow instruction, updating/creating guides, review workflows (more than one against, usually all), review guides (more than one against, usually all) - the goal is to make it more manageable (in past we have wfi for guides and workflows) how to attach is the best - without creating too much stuff, and getting results. because those are meta workflows -> we should put them in .ace/handbook/.meta/wfi"
+* Existing patterns: .ace/handbook/workflow-instructions/review-task.wf.md
+* Batch processing patterns: .ace/handbook/workflow-instructions/draft-release.wf.md
+* Content standards: .ace/handbook/.meta/gds/workflow-instructions-definition.g.md
+* Content standards: .ace/handbook/.meta/gds/guides-definition.g.md

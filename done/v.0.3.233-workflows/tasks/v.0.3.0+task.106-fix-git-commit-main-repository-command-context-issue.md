@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules/git | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules/git | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/molecules/git
+    .ace/tools/lib/coding_agent_tools/molecules/git
     ├── commit_message_generator.rb
     ├── concurrent_executor.rb
     ├── multi_repo_coordinator.rb
@@ -53,8 +53,8 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb` - Unify command context building
-- `dev-tools/spec/coding_agent_tools/molecules/git/path_dispatcher_spec.rb` - Update tests for new behavior
+- `.ace/tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb` - Unify command context building
+- `.ace/tools/spec/coding_agent_tools/molecules/git/path_dispatcher_spec.rb` - Update tests for new behavior
 - Any other test files that depend on the old main repo command format
 
 #### Delete
@@ -76,7 +76,7 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current main repo vs submodule command differences are documented
-  > Command: cd dev-tools && grep -A 10 -B 5 "repository\[:name\].*main" lib/coding_agent_tools/molecules/git/path_dispatcher.rb
+  > Command: cd .ace/tools && grep -A 10 -B 5 "repository\[:name\].*main" lib/coding_agent_tools/molecules/git/path_dispatcher.rb
 - [x] Identify all locations that may be affected by changing main repo command format
 - [x] Research any potential side effects of always using `-C` flag for main repository
 
@@ -86,19 +86,19 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
   > TEST: Command Context Unification
   > Type: Unit Validation
   > Assert: All repositories now use git -C <full_path> format consistently
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/git/path_dispatcher_spec.rb -f documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/git/path_dispatcher_spec.rb -f documentation
 - [x] Update existing tests that expect old main repository command format
 - [x] Add comprehensive test cases for command execution from different working directories
 - [x] Test the original failing git-commit command that triggered this issue
   > TEST: Original Issue Resolution
   > Type: Integration Validation
   > Assert: Mixed repository file commits work without false errors
-  > Command: git-commit dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.106-fix-git-commit-main-repository-command-context-issue.md dev-tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb --intention "test unified command context"
+  > Command: git-commit .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.106-fix-git-commit-main-repository-command-context-issue.md .ace/tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb --intention "test unified command context"
 - [x] Verify all git-commit workflows continue to work from various execution contexts
 
 ## Acceptance Criteria
 
-- [x] AC 1: All repositories (main, dev-tools, dev-taskflow, dev-handbook) use consistent `git -C <full_path>` command format
+- [x] AC 1: All repositories (main, dev-tools, dev-taskflow, .ace/handbook) use consistent `git -C <full_path>` command format
 - [x] AC 2: git-commit commands work reliably regardless of current working directory
 - [x] AC 3: No more false "Partial success" error messages when commits actually succeed
 - [x] AC 4: The original failing command that triggered this investigation now works without errors
@@ -116,13 +116,13 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
 ## References
 
 ### Root Cause Location
-- **File**: `dev-tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb`
+- **File**: `.ace/tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb`
 - **Method**: `build_command_context(repository)`
 - **Problem**: Special case for main repository omits `-C` flag
 
 ### Original Error Context
 - **Error observed**: `[main] Error: Git command failed: git commit -m test(models): add comprehensive unit tests for all model classes`
-- **Symptom**: "Partial success: Committed in repositories: dev-taskflow, dev-tools" (false error)
+- **Symptom**: "Partial success: Committed in repositories: dev-taskflow, .ace/tools" (false error)
 - **Actual result**: Commits succeeded in all repositories including main
 
 ### Related Tasks

@@ -6,15 +6,15 @@ estimate: 1h
 dependencies: ["v.0.5.0+task.006"]
 ---
 
-# Fix Ruby linting issues in dev-tools codebase
+# Fix Ruby linting issues in .ace/tools codebase
 
 ## Summary
 
-Address the 2 linting issues detected in the dev-tools codebase. These issues were identified after completing the search tool simplification and need to be resolved to maintain code quality standards.
+Address the 2 linting issues detected in the .ace/tools codebase. These issues were identified after completing the search tool simplification and need to be resolved to maintain code quality standards.
 
 ## Context
 
-Following the completion of the search tool simplification work (task.006), the Ruby linter has detected 2 code style violations in the dev-tools codebase that need to be addressed to maintain consistent code quality.
+Following the completion of the search tool simplification work (task.006), the Ruby linter has detected 2 code style violations in the .ace/tools codebase that need to be addressed to maintain consistent code quality.
 
 The linting issues are likely minor style violations that can be automatically corrected using the built-in linting tools, but may require manual review for complex cases.
 
@@ -67,7 +67,7 @@ find lib -name "*.rb" -exec rubocop {} \;
 - 2 linting issues found in lib/**/*.rb files
 - Issues can likely be auto-fixed with bin/lint --fix
 - May require manual review for complex style violations
-- Location: Files in the dev-tools lib directory structure
+- Location: Files in the .ace/tools lib directory structure
 
 ### Linting Areas
 - Ruby style guidelines compliance
@@ -126,5 +126,5 @@ find lib -name "*.rb" -exec rubocop {} \;
 ## References
 
 - Task v.0.5.0+task.006: Search tool simplification that may have introduced the violations
-- Ruby style guide and linting configuration in the dev-tools codebase
+- Ruby style guide and linting configuration in the .ace/tools codebase
 - bin/lint command and StandardRB configuration

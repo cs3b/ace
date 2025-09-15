@@ -13,17 +13,17 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-handbook/workflow-instructions -name "*.wf.md" | head -10
+find .ace/handbook/workflow-instructions -name "*.wf.md" | head -10
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
-dev-handbook/workflow-instructions/commit.wf.md
-dev-handbook/workflow-instructions/create-adr.wf.md
-dev-handbook/workflow-instructions/create-api-docs.wf.md
-dev-handbook/workflow-instructions/create-reflection-note.wf.md
+.ace/handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+.ace/handbook/workflow-instructions/commit.wf.md
+.ace/handbook/workflow-instructions/create-adr.wf.md
+.ace/handbook/workflow-instructions/create-api-docs.wf.md
+.ace/handbook/workflow-instructions/create-reflection-note.wf.md
 ...
 ```
 
@@ -42,8 +42,8 @@ Update the directory audit section in the analyze-workflow-dependencies task to 
 
 #### Modify
 
-- dev-taskflow/backlog/v.0.3.0-workflows/tasks/analyze-workflow-dependencies.md (Directory Audit section)
-- dev-taskflow/backlog/v.0.3.0-workflows/v.0.3.0-workflows.md (update scope)
+- .ace/taskflow/backlog/v.0.3.0-workflows/tasks/analyze-workflow-dependencies.md (Directory Audit section)
+- .ace/taskflow/backlog/v.0.3.0-workflows/v.0.3.0-workflows.md (update scope)
 
 #### Create
 
@@ -68,7 +68,7 @@ Update the directory audit section in the analyze-workflow-dependencies task to 
   > TEST: Complete File List Generated
   > Type: Pre-condition Check
   > Assert: All workflow files listed with accurate count
-  > Command: bin/test --check-file-count dev-handbook/workflow-instructions "*.wf.md" 21
+  > Command: bin/test --check-file-count .ace/handbook/workflow-instructions "*.wf.md" 21
 - [ ] Categorize workflows by type for better organization
 - [ ] Plan documentation update strategy
 
@@ -98,6 +98,6 @@ Update the directory audit section in the analyze-workflow-dependencies task to 
 
 ## References
 
-- dev-handbook/workflow-instructions/ (complete directory)
-- dev-taskflow/backlog/v.0.3.0-workflows/tasks/analyze-workflow-dependencies.md
-- dev-taskflow/backlog/v.0.3.0-workflows/v.0.3.0-workflows.md
+- .ace/handbook/workflow-instructions/ (complete directory)
+- .ace/taskflow/backlog/v.0.3.0-workflows/tasks/analyze-workflow-dependencies.md
+- .ace/taskflow/backlog/v.0.3.0-workflows/v.0.3.0-workflows.md

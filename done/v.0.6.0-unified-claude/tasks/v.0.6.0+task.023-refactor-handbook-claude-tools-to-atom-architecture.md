@@ -129,65 +129,65 @@ Refactor the handbook claude tools implementation to follow the ATOM architectur
 ### Create
 
 #### Atoms (Indivisible Utilities)
-- dev-tools/lib/coding_agent_tools/atoms/claude/workflow_scanner.rb
+- .ace/tools/lib/coding_agent_tools/atoms/claude/workflow_scanner.rb
   - Purpose: Scan workflow directory for .wf.md files
   - Key components: Directory traversal, file filtering
   - Dependencies: None (pure utility)
 
-- dev-tools/lib/coding_agent_tools/atoms/claude/command_existence_checker.rb
+- .ace/tools/lib/coding_agent_tools/atoms/claude/command_existence_checker.rb
   - Purpose: Check if a command file exists in various locations
   - Key components: Path checking logic
   - Dependencies: None
 
-- dev-tools/lib/coding_agent_tools/atoms/claude/yaml_frontmatter_validator.rb
+- .ace/tools/lib/coding_agent_tools/atoms/claude/yaml_frontmatter_validator.rb
   - Purpose: Validate YAML frontmatter in generated commands
   - Key components: YAML parsing and validation
   - Dependencies: None
 
 #### Molecules (Behavior-Oriented Helpers)
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_metadata_inferrer.rb
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_metadata_inferrer.rb
   - Purpose: Infer metadata from workflow names (description, allowed-tools, etc.)
   - Key components: Pattern matching, metadata generation
   - Dependencies: None
 
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_template_renderer.rb
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_template_renderer.rb
   - Purpose: Render command templates with metadata
   - Key components: Template processing, YAML generation
   - Dependencies: command_metadata_inferrer
 
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_inventory_builder.rb
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_inventory_builder.rb
   - Purpose: Build unified inventory of commands from multiple sources
   - Key components: Directory scanning, command categorization
   - Dependencies: workflow_scanner, command_existence_checker
 
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_validator.rb
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_validator.rb
   - Purpose: Validate command coverage and consistency
   - Key components: Coverage checking, outdated detection
   - Dependencies: command_template_renderer, workflow_scanner
 
 #### Models (Data Carriers)
-- dev-tools/lib/coding_agent_tools/models/claude_command.rb
+- .ace/tools/lib/coding_agent_tools/models/claude_command.rb
   - Purpose: Represent a Claude command with all its attributes
   - Key components: name, type, path, installed status, validity
   - Dependencies: None
 
-- dev-tools/lib/coding_agent_tools/models/claude_validation_result.rb
+- .ace/tools/lib/coding_agent_tools/models/claude_validation_result.rb
   - Purpose: Carry validation results data
   - Key components: missing, outdated, duplicates, orphaned commands
   - Dependencies: None
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
   - Changes: Refactor to use new atoms/molecules, remove duplicated logic
   - Impact: Cleaner code, better testability
   - Integration points: Uses workflow_scanner, command_metadata_inferrer, command_template_renderer
 
-- dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
   - Changes: Refactor to use command_inventory_builder, remove scanning logic
   - Impact: Simplified orchestration, reusable inventory building
   - Integration points: Uses command_inventory_builder, existing TableRenderer
 
-- dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_validator.rb
   - Changes: Refactor to use command_validator molecule, simplify orchestration
   - Impact: Cleaner separation of validation logic
   - Integration points: Uses command_validator, validation result model
@@ -225,7 +225,7 @@ Refactor the handbook claude tools implementation to follow the ATOM architectur
   > TEST: Component Analysis Complete
   > Type: Pre-condition Check
   > Assert: All reusable logic identified and categorized by ATOM layer
-  > Command: grep -r "def" dev-tools/lib/coding_agent_tools/organisms/claude*.rb | wc -l
+  > Command: grep -r "def" .ace/tools/lib/coding_agent_tools/organisms/claude*.rb | wc -l
 
 * [x] Design atom interfaces for indivisible utilities
 * [x] Design molecule interfaces for behavior-oriented helpers
@@ -343,9 +343,9 @@ Refactor the handbook claude tools implementation to follow the ATOM architectur
 - Original feedback item: "Refactor handbook claude tools to ATOM - Check the whole implementation of handbook claude <tool> and check if anything should be refactored at lower level of the ATOM architecture, is there anything that can be reused between commands"
 - ADR-011: ATOM Architecture House Rules
 - Current implementation files:
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
-  - dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_validator.rb
 - Related test files:
-  - dev-tools/spec/integration/handbook_claude_list_spec.rb
-  - dev-tools/spec/integration/handbook_claude_cli_spec.rb
+  - .ace/tools/spec/integration/handbook_claude_list_spec.rb
+  - .ace/tools/spec/integration/handbook_claude_cli_spec.rb

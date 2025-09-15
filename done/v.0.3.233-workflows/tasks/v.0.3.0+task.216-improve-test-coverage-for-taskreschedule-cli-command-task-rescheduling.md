@@ -13,14 +13,14 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 Files identified:
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
 
 ## Objective
 
@@ -42,7 +42,7 @@ Improve test coverage for the TaskReschedule CLI command by fixing failing tests
 
 #### Modify
 
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
 
 #### Delete
 
@@ -131,5 +131,5 @@ Improve test coverage for the TaskReschedule CLI command by fixing failing tests
 
 ## References
 
-- TaskReschedule command: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
-- Current test file: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
+- TaskReschedule command: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
+- Current test file: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb

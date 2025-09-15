@@ -12,7 +12,7 @@ Synthesis of 33 reflection notes.
 ## Reflection 1: 20250103-universal-document-embedding-implementation.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250103-universal-document-embedding-implementation.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250103-universal-document-embedding-implementation.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Universal Document Embedding System Implementation
@@ -128,9 +128,9 @@ end
 
 Implemented path validation that differs by document type:
 
-* Templates: Must be in `dev-handbook/templates/` with `.template.md`
+* Templates: Must be in `.ace/handbook/templates/` with `.template.md`
   extension
-* Guides: Must be in `dev-handbook/guides/` with `.g.md` extension
+* Guides: Must be in `.ace/handbook/guides/` with `.g.md` extension
 
 ### Migration Results
 
@@ -149,7 +149,7 @@ codebase.
 * **ADR-005**:
   [docs/decisions/ADR-005-universal-document-embedding-system.md](../../../docs/decisions/ADR-005-universal-document-embedding-system.md)
 * **Enhanced Sync Script**:
-  [dev-tools/exe-old/markdown-sync-embedded-documents](../../../dev-tools/exe-old/markdown-sync-embedded-documents)
+  [.ace/tools/exe-old/markdown-sync-embedded-documents](../../../.ace/tools/exe-old/markdown-sync-embedded-documents)
 
 ### Commits
 
@@ -167,7 +167,7 @@ templates and guides.
 ## Reflection 2: 20250626-234656-workflow-independence-refactoring.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250626-234656-workflow-independence-refactoring.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250626-234656-workflow-independence-refactoring.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Workflow Independence Refactoring Session
@@ -199,7 +199,7 @@ to be self-contained and independent **Author**: AI Assistant
 * Looked for dependency analysis in `backlog/` directory
 * File was actually in `current/` directory
 * Required user correction:
-  "/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/researches/workflow-dependency-analysis.md"
+  "/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/researches/workflow-dependency-analysis.md"
 
 **Proposed Improvements**:
 
@@ -243,7 +243,7 @@ to be self-contained and independent **Author**: AI Assistant
 **Challenge**: Required user guidance on architectural decisions
 
 * User intervened: "we should get rid off all the
-  dev-handbook/workflow-instructions/breakdown-notes-into-tasks/\*"
+  .ace/handbook/workflow-instructions/breakdown-notes-into-tasks/\*"
 * User clarified approach: "always treat them in similar way"
 * Needed guidance on which workflows to remove
 
@@ -304,7 +304,7 @@ significantly improved workflow independence and usability.
 ## Reflection 3: 20250630-170857-template-embedding-standardization.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250630-170857-template-embedding-standardization.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250630-170857-template-embedding-standardization.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Template Embedding Standardization
@@ -390,7 +390,7 @@ XML format **Author**: Claude Code
 ## Additional Context
 
 * Task: v.0.3.0+task.21-standardize-template-embedding-format.md
-* Commits: Multiple commits across dev-handbook and dev-taskflow
+* Commits: Multiple commits across .ace/handbook and .ace/taskflow
   submodules
 * Next step: This standardization enables future automated template
   synchronization workflows
@@ -402,7 +402,7 @@ XML format **Author**: Claude Code
 ## Reflection 4: 20250630-documentation-and-template-refactoring-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250630-documentation-and-template-refactoring-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250630-documentation-and-template-refactoring-session.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Documentation and Template Refactoring Session
@@ -417,13 +417,13 @@ standardization **Author**: Claude Code AI Assistant
   17 four-tick markdown template blocks to standardized XML format
   without losing any content or functionality
 * **Clear path reference updates**: Updated all binstub references from
-  incorrect dev-handbook/templates paths to the actual
-  dev-tools/exe-old/\_binstubs location
+  incorrect .ace/handbook/templates paths to the actual
+  .ace/tools/exe-old/\_binstubs location
 * **Comprehensive validation**: Verified all templates have proper path
   attributes and maintained workflow functionality throughout the
   refactoring
 * **Documentation consistency**: Established clear distinction between
-  permanent documentation (docs/) and temporal content (dev-taskflow/)
+  permanent documentation (docs/) and temporal content (.ace/taskflow/)
   in the core project files
 * **Single source of truth**: Eliminated ambiguity about template source
   locations by pointing all references to actual existing files
@@ -448,12 +448,12 @@ standardization **Author**: Claude Code AI Assistant
   attribution and better tool compatibility than four-tick markdown
   blocks
 * **Binstub architecture**: Understanding that binstubs should be
-  sourced from dev-tools/exe-old/\_binstubs rather than handbook
+  sourced from .ace/tools/exe-old/\_binstubs rather than handbook
   templates clarifies the separation between workflow instructions and
   actual executable templates
 * **Documentation hierarchy**: Core permanent documentation (docs/)
   serves different purposes than temporal project management content
-  (dev-taskflow/) and should be clearly distinguished
+  (.ace/taskflow/) and should be clearly distinguished
 * **Template embedding standards**: Following consistent template
   embedding standards across all workflow files improves maintainability
   and tool compatibility
@@ -495,12 +495,12 @@ standardization **Author**: Claude Code AI Assistant
 
 **Path Updates:**
 
-* From: `dev-handbook/templates/project-build/`
-* To: `dev-tools/exe-old/_binstubs/`
+* From: `.ace/handbook/templates/project-build/`
+* To: `.ace/tools/exe-old/_binstubs/`
 
 **Files Modified:**
 
-* `dev-handbook/workflow-instructions/initialize-project-structure.wf.md`
+* `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md`
   (17 template conversions)
 * `docs/architecture.md` (directory structure documentation)
 * `docs/blueprint.md` (path organization and read-only definitions)
@@ -529,7 +529,7 @@ development.
 ## Reflection 5: 20250630-task-31-27-completion-and-template-workflow-improvements.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250630-task-31-27-completion-and-template-workflow-improvements.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250630-task-31-27-completion-and-template-workflow-improvements.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Task 31 & 27 Completion and Template Workflow Improvements
@@ -645,8 +645,8 @@ required .wf.md extension by:
 
 Demonstrated proper sequence:
 
-1.  Commit changes in dev-handbook submodule
-2.  Commit task status updates in dev-taskflow submodule
+1.  Commit changes in .ace/handbook submodule
+2.  Commit task status updates in .ace/taskflow submodule
 3.  Commit submodule pointer updates in main repository
 4.  Handle linter fixes separately as style commits
 5.  Maintain conventional commit format throughout
@@ -670,7 +670,7 @@ Demonstrated proper sequence:
 ## Reflection 6: 20250630-task-32-decision-directory-standardization.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250630-task-32-decision-directory-standardization.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250630-task-32-decision-directory-standardization.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Task 32 - Decision Directory Standardization
@@ -687,7 +687,7 @@ Assistant
   any references
 * Clear distinction established between permanent ADRs
   (`docs/decisions/`) and temporal decisions
-  (`dev-taskflow/current/*/decisions/`)
+  (`.ace/taskflow/current/*/decisions/`)
 * Workflow instructions were followed methodically, ensuring
   comprehensive coverage
 * User feedback about handbook\_review being historical snapshots was
@@ -712,7 +712,7 @@ Assistant
   historical snapshots that should not be modified unless explicitly
   requested
 * **Documentation Architecture**: Clear distinction between `docs/`
-  (permanent, canonical reference) and `dev-taskflow/` (point-in-time,
+  (permanent, canonical reference) and `.ace/taskflow/` (point-in-time,
   release-specific) is crucial for project organization
 * **Systematic Analysis**: Using search tools to find all references
   before making changes prevents incomplete standardization
@@ -754,24 +754,24 @@ Assistant
 
 **Standardization Pattern Applied:**
 
-* From: `dev-taskflow/decisions/` or `current/*/decisions/`
+* From: `.ace/taskflow/decisions/` or `current/*/decisions/`
 * To: `docs/decisions/` (for permanent ADRs)
-* Preserved: `dev-taskflow/current/*/decisions/` (for temporal
+* Preserved: `.ace/taskflow/current/*/decisions/` (for temporal
   decisions)
 
 **Files Successfully Updated:**
 
 * `docs/architecture.md` - Added documentation distinction section
 * `CHANGELOG.md` - Updated read-only paths
-* `dev-handbook/guides/code-review/README.md` - Updated ADR collection
+* `.ace/handbook/guides/code-review/README.md` - Updated ADR collection
   paths
-* `dev-handbook/workflow-instructions/update-blueprint.wf.md` - Updated
+* `.ace/handbook/workflow-instructions/update-blueprint.wf.md` - Updated
   template paths
-* `dev-handbook/templates/review-docs/diff.prompt.md` - Updated ADR
+* `.ace/handbook/templates/review-docs/diff.prompt.md` - Updated ADR
   locations
-* `dev-handbook/templates/review-code/diff.prompt.md` - Updated ADR
+* `.ace/handbook/templates/review-code/diff.prompt.md` - Updated ADR
   locations
-* `dev-handbook/templates/project-docs/blueprint.template.md` - Updated
+* `.ace/handbook/templates/project-docs/blueprint.template.md` - Updated
   read-only paths
 * `docs/blueprint.md` - Added handbook\_review to read-only paths
 
@@ -802,7 +802,7 @@ project organization and clearer AI agent guidance.
 ## Reflection 7: 20250630-template-cleanup-and-workflow-standardization.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250630-template-cleanup-and-workflow-standardization.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250630-template-cleanup-and-workflow-standardization.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Template Cleanup and Workflow Standardization
@@ -902,16 +902,16 @@ tasks focusing on template management and workflow structure compliance
 * Changes support the broader template synchronization initiative
 * Improvements align with workflow-instructions compliance standards
 * Work completed:
-  dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.29-fix-commit-workflow-structure.md
+  .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.29-fix-commit-workflow-structure.md
 * Work completed:
-  dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.30-clean-template-path-references.md
+  .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.30-clean-template-path-references.md
 
 * * *
 
 ## Reflection 8: 20250630-workflow-validation-and-documentation-organization.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250630-workflow-validation-and-documentation-organization.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250630-workflow-validation-and-documentation-organization.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Workflow Validation and Documentation Organization
@@ -1008,12 +1008,12 @@ organization standards **Author**: Claude Code
 * **Report generation**: Standardized compliance reporting with detailed
   analysis and action plans
 * **Template path validation**: Verified all paths follow
-  dev-handbook/templates/ structure with .template.md extension
+  .ace/handbook/templates/ structure with .template.md extension
 
 ### Documentation Organization Standards
 
 * **Location rule**: Task-specific docs in
-  dev-taskflow/current/v.X.Y.Z-release/docs/
+  .ace/taskflow/current/v.X.Y.Z-release/docs/
 * **Naming convention**: Task ID prefix (e.g.,
   25-validation-criteria-checklist.md)
 * **Document types**: Analysis reports, action plans, process guides,
@@ -1030,10 +1030,10 @@ organization standards **Author**: Claude Code
 
 ### Key Deliverables Created
 
-* dev-taskflow/current/v.0.3.0-workflows/docs/25-validation-criteria-checklist.md
-* dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-report.md
-* dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-fixes.md
-* dev-handbook/templates/session-management/session-context.template.md
+* .ace/taskflow/current/v.0.3.0-workflows/docs/25-validation-criteria-checklist.md
+* .ace/taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-report.md
+* .ace/taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-fixes.md
+* .ace/handbook/templates/session-management/session-context.template.md
 
 ### Remaining Work
 
@@ -1047,7 +1047,7 @@ organization standards **Author**: Claude Code
 ## Reflection 9: 20250701-task-34-adr-002-template-compliance.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250701-task-34-adr-002-template-compliance.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250701-task-34-adr-002-template-compliance.md`
 **Modified**: 2025-07-24 15:44:29
 
 # Reflection: Task v.0.3.0+task.34 ADR-002 Template Compliance Fix
@@ -1121,9 +1121,9 @@ Claude Code AI Assistant
 
 **Files Modified:**
 
-* `dev-handbook/workflow-instructions/commit.wf.md` - Converted from
+* `.ace/handbook/workflow-instructions/commit.wf.md` - Converted from
   inline markdown to XML template embedding
-* Created `dev-handbook/templates/commit/` directory structure
+* Created `.ace/handbook/templates/commit/` directory structure
 * Extracted 3 template files:
   * `feature-implementation.template.md`
   * `bug-fix.template.md`
@@ -1154,7 +1154,7 @@ refactoring
 ## Reflection 10: 20250701-task-completion-template-fixes.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250701-task-completion-template-fixes.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250701-task-completion-template-fixes.md`
 **Modified**: 2025-07-24 15:44:39
 
 # Reflection: Task 36 and 35 Completion - Template and Path Fixes
@@ -1192,7 +1192,7 @@ the workflow standardization release **Author**: Claude AI Assistant
 
 * **Template architecture understanding**: Gained deeper insight into
   the XML-based template embedding system and how templates should be
-  organized in dev-handbook/templates/ subdirectories
+  organized in .ace/handbook/templates/ subdirectories
 * **Roadmap structure requirements**: Learned the detailed roadmap
   format specifications from roadmap-definition.g.md including required
   sections and table formats
@@ -1233,16 +1233,16 @@ the workflow standardization release **Author**: Claude AI Assistant
 ## Technical Details
 
 **Task 36 Fix**: Updated
-`dev-handbook/workflow-instructions/create-adr.wf.md` line 80 from
+`.ace/handbook/workflow-instructions/create-adr.wf.md` line 80 from
 `docs/architecture-decisions/` to `docs/decisions/` to align with
 canonical ADR storage location.
 
 **Task 35 Fix**:
 
 * Created new template
-  `dev-handbook/templates/project-docs/roadmap/roadmap.template.md`
+  `.ace/handbook/templates/project-docs/roadmap/roadmap.template.md`
   following roadmap-definition.g.md structure
-* Updated `dev-handbook/workflow-instructions/update-roadmap.wf.md`
+* Updated `.ace/handbook/workflow-instructions/update-roadmap.wf.md`
   template reference from release-readme.template.md to
   roadmap.template.md
 * Removed irrelevant release template content from the workflow
@@ -1266,7 +1266,7 @@ sync-templates --dry-run` validation.
 ## Reflection 11: 20250703-232512-handbook-review-execution.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250703-232512-handbook-review-execution.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250703-232512-handbook-review-execution.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Handbook Review Execution Session
@@ -1354,7 +1354,7 @@ instruction files:
 * **Cost**: $0.095868 (Google Pro model)
 * **Time**: 52.984 seconds
 * **Files Analyzed**: All .wf.md files in
-  dev-handbook/workflow-instructions/
+  .ace/handbook/workflow-instructions/
 
 The review identified comprehensive workflow coverage but noted gaps in
 high-level guidance and process orchestration between workflows.
@@ -1362,7 +1362,7 @@ high-level guidance and process orchestration between workflows.
 ## Additional Context
 
 * **Session**:
-  `dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/`
+  `.ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/`
 * **Review Report**: `cr-report-gpro.md` - detailed analysis of workflow
   effectiveness
 * **Related Command**: `@handbook-review workflows` - part of unified
@@ -1375,7 +1375,7 @@ high-level guidance and process orchestration between workflows.
 ## Reflection 12: 20250703-handbook-review-process-fix.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250703-handbook-review-process-fix.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250703-handbook-review-process-fix.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Handbook Review Process Fix
@@ -1450,7 +1450,7 @@ Session
 
 **Files Modified:**
 
-* `dev-handbook/workflow-instructions/review-code.wf.md`: Added system
+* `.ace/handbook/workflow-instructions/review-code.wf.md`: Added system
   prompt parameter handling and --output flag usage
 * `.claude/commands/handbook-review.md`: Fixed prompt construction and
   updated llm-query calls
@@ -1473,7 +1473,7 @@ separation that will benefit all future review implementations.
 ## Reflection 13: 20250703-meta-workflow-implementation.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250703-meta-workflow-implementation.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250703-meta-workflow-implementation.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Meta Content Management Workflows Implementation
@@ -1486,7 +1486,7 @@ Agent (Claude)
 
 * **Clear user requirements**: The user provided specific vision for
   meta-workflows with clear placement rationale
-  (dev-handbook/.meta/wfi/)
+  (.ace/handbook/.meta/wfi/)
 * **Effective pattern reuse**: Successfully leveraged existing workflow
   patterns from review-task.wf.md and draft-release.wf.md
 * **Self-contained design**: All workflows achieved complete
@@ -1568,7 +1568,7 @@ consistent structure
 
 ### Implementation Approach
 
-* Created directory structure first (dev-handbook/.meta/wfi/)
+* Created directory structure first (.ace/handbook/.meta/wfi/)
 * Built workflows incrementally with immediate validation
 * Used embedded tests throughout for quality assurance
 * Applied multi-repo coordination for clean integration
@@ -1596,14 +1596,14 @@ consistent structure
 * ✅ Created review workflows for multiple workflow instructions
 * ✅ Created review guides for multiple guide documents
 * ✅ Achieved manageable approach without over-engineering
-* ✅ Properly placed meta-workflows in dev-handbook/.meta/wfi/
+* ✅ Properly placed meta-workflows in .ace/handbook/.meta/wfi/
 
 **Files Created:**
 
-* dev-handbook/.meta/wfi/manage-workflow-instructions.wf.md
-* dev-handbook/.meta/wfi/manage-guides.wf.md
-* dev-handbook/.meta/wfi/review-workflows.wf.md
-* dev-handbook/.meta/wfi/review-guides.wf.md
+* .ace/handbook/.meta/wfi/manage-workflow-instructions.wf.md
+* .ace/handbook/.meta/wfi/manage-guides.wf.md
+* .ace/handbook/.meta/wfi/review-workflows.wf.md
+* .ace/handbook/.meta/wfi/review-guides.wf.md
 
 This implementation successfully addressed the user's need for
 systematic handbook content management while maintaining the project's
@@ -1614,7 +1614,7 @@ high standards for workflow instruction quality and self-containment.
 ## Reflection 14: 20250703-review-synthesis-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250703-review-synthesis-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250703-review-synthesis-session.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Review Synthesis Session
@@ -1719,7 +1719,7 @@ Assistant
 ## Reflection 15: 20250704-review-system-architecture-fixes.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250704-review-system-architecture-fixes.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250704-review-system-architecture-fixes.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Review System Architecture Fixes
@@ -1836,7 +1836,7 @@ handbook-review command:
 ## Reflection 16: 20250704-workflow-enhancement-completion-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250704-workflow-enhancement-completion-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250704-workflow-enhancement-completion-session.md`
 **Modified**: 2025-07-23 23:58:26
 
 # Reflection: Workflow Enhancement Completion Session
@@ -1928,7 +1928,7 @@ Claude Code Assistant
   document-synchronization.md, document-sync-operations.md)
 * Created 2 focused guides (documents-embedding.g.md,
   documents-embedded-sync.g.md)
-* Updated cross-references in dev-handbook/guides/README.md
+* Updated cross-references in .ace/handbook/guides/README.md
 * Preserved 711 lines of content across consolidation
 3.  **Review Synthesizer Enhancement (Task 48)**:
 * Direct synthesis as default approach (user-requested priority)
@@ -1966,7 +1966,7 @@ productivity improvements.
 ## Reflection 17: 20250705-173751-handbook-review-system-prompt-improvements.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md`
 **Modified**: 2025-07-24 15:57:23
 
 # Reflection: Handbook Review Workflow - System Prompt Improvements
@@ -2131,7 +2131,7 @@ llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "
 **Key Files Modified:**
 
 * Session directory:
-  `dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/`
+  `.ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/`
 * Review output: `gpro-review.md` (12KB structured analysis)
 * Input content: `input.md` (309KB workflow content)
 
@@ -2139,7 +2139,7 @@ llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "
 
 * **Session Reference**: `docs-handbook-workflows-20250705-173751`
 * **Workflow Files Reviewed**: 20 files in
-  `dev-handbook/workflow-instructions/`
+  `.ace/handbook/workflow-instructions/`
 * **Review Focus**: Documentation quality and consistency
 * **Analysis Method**: GPRO only (no synthesis as requested)
 
@@ -2158,7 +2158,7 @@ tracking
 ## Reflection 18: 20250724-153633-session-analysis-tool-migration-and-documentation-updates.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-153633-session-analysis-tool-migration-and-documentation-updates.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-153633-session-analysis-tool-migration-and-documentation-updates.md`
 **Modified**: 2025-07-24 15:58:11
 
 # Reflection: Session Analysis - Tool Migration and Documentation Updates
@@ -2185,7 +2185,7 @@ Analysis
 
 ## What Could Be Improved
 
-* Initial command syntax confusion between `dev-tools/exe/git-commit`
+* Initial command syntax confusion between `.ace/tools/exe/git-commit`
   and `git-commit` required user correction
 * Task creation process had minor issues with nav-path commands
   returning paths but not actually creating files properly
@@ -2197,7 +2197,7 @@ Analysis
 ## Key Learnings
 
 * Direct command names (git-commit) are preferred over full executable
-  paths (dev-tools/exe/git-commit) for user experience
+  paths (.ace/tools/exe/git-commit) for user experience
 * Multi-repository coordination requires careful attention to command
   context and proper Git submodule handling
 * Systematic documentation updates need comprehensive scanning to catch
@@ -2276,7 +2276,7 @@ sequential numbering
 
 ### Stop Doing
 
-* Using full executable paths (dev-tools/exe/) when direct command names
+* Using full executable paths (.ace/tools/exe/) when direct command names
   are available
 * Creating multiple tasks in parallel without waiting for completion
   confirmation
@@ -2305,12 +2305,12 @@ sequential numbering
 Key files modified during this session:
 
 * docs/tools.md: Updated all command references to use direct names
-  instead of dev-tools/exe/ paths
+  instead of .ace/tools/exe/ paths
 * CLAUDE.md: Fixed git-commit command reference and updated project
   focus description
 * CHANGELOG.md: Added comprehensive v0.3.0 release documentation with
   25+ CLI tools
-* dev-taskflow/roadmap.md: Updated status, timestamps, and removed
+* .ace/taskflow/roadmap.md: Updated status, timestamps, and removed
   completed releases
 * Created 3 modernization tasks (IDs 73, 74, 75) for bin script
   replacement with CAT equivalents
@@ -2329,7 +2329,7 @@ in documentation consistency and user experience.
 ## Reflection 19: 20250724-165806-task-74-completion-and-blueprint-cleanup-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-165806-task-74-completion-and-blueprint-cleanup-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-165806-task-74-completion-and-blueprint-cleanup-session.md`
 **Modified**: 2025-07-24 16:58:43
 
 # Reflection: Task 74 Completion and Blueprint Cleanup Session
@@ -2414,7 +2414,7 @@ Self-Review
 1.  **Script Removal**: Deleted `bin/handbook-review-folder` (Ruby
 script for creating timestamped review folders)
 2.  **Blueprint Updates**: Replaced references to deprecated script with
-`code-review docs 'dev-handbook/**/*.md'`
+`code-review docs '.ace/handbook/**/*.md'`
 3.  **Documentation Cleanup**: Removed extensive tool usage sections
 from blueprint.md that duplicated docs/tools.md content
 4.  **Task Completion**: Updated task v.0.3.0+task.74 status from
@@ -2448,7 +2448,7 @@ quality beyond the original task scope.
 ## Reflection 20: 20250724-170634-task-75-implementation-code-lint-docs-dependencies-tool.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-170634-task-75-implementation-code-lint-docs-dependencies-tool.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-170634-task-75-implementation-code-lint-docs-dependencies-tool.md`
 **Modified**: 2025-07-24 17:07:10
 
 # Reflection: Task 75 Implementation - Code Lint Docs Dependencies Tool
@@ -2584,7 +2584,7 @@ obvious
 **Configuration Features:**
 
 * Configurable file patterns for different document types
-* Skip folders capability (e.g., dev-taskflow)
+* Skip folders capability (e.g., .ace/taskflow)
 * Exclude patterns for granular filtering
 * External/anchor link inclusion controls
 
@@ -2595,12 +2595,12 @@ obvious
 * **Lines Added**: 1,458 lines of new code
 * **Test Coverage**: 9/10 unit tests passing
 * **Configuration Impact**: File analysis reduced from 261 to 54 files
-  with dev-taskflow skipped
+  with .ace/taskflow skipped
 
 ## Additional Context
 
 * Task completed in single session with all acceptance criteria met
-* All commits made across 3 repositories (main, dev-taskflow, dev-tools)
+* All commits made across 3 repositories (main, dev-taskflow, .ace/tools)
 * New command fully replaces deprecated bin/analyze-doc-dependencies
 * Enhanced capabilities include better statistics and configurable
   analysis scope
@@ -2610,7 +2610,7 @@ obvious
 ## Reflection 21: 20250724-172852-review-code-workflow-simplification-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-172852-review-code-workflow-simplification-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-172852-review-code-workflow-simplification-session.md`
 **Modified**: 2025-07-24 17:29:29
 
 # Reflection: Review Code Workflow Simplification Session
@@ -2795,13 +2795,13 @@ and extensive documentation.
 ## Reflection 22: 20250724-174843-simplified-review-code-workflow-execution.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-174843-simplified-review-code-workflow-execution.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-174843-simplified-review-code-workflow-execution.md`
 **Modified**: 2025-07-24 17:49:32
 
 # Reflection: Simplified Review-Code Workflow Execution
 
 **Date**: 2025-07-24 **Context**: First execution of the simplified
-review-code workflow on dev-handbook repository using custom system
+review-code workflow on .ace/handbook repository using custom system
 prompt **Author**: Claude (AI Assistant) **Type**: Conversation Analysis
 
 ## What Went Well
@@ -2809,7 +2809,7 @@ prompt **Author**: Claude (AI Assistant) **Type**: Conversation Analysis
 * Successfully executed all 7 steps of the simplified review-code
   workflow in sequence
 * Proper parameter extraction from user request: focus="code",
-  target="dev-handbook/*\*/*", custom system prompt
+  target=".ace/handbook/*\*/*", custom system prompt
 * Effective use of TodoWrite tool to track progress through each
   workflow step
 * Handled user path correction gracefully (michalczyz vs michalczyk)
@@ -2825,7 +2825,7 @@ prompt **Author**: Claude (AI Assistant) **Type**: Conversation Analysis
 ## What Could Be Improved
 
 * Initial confusion with code-review target format - tried
-  "dev-handbook" before discovering glob pattern requirement
+  ".ace/handbook" before discovering glob pattern requirement
 * System prompt path accessibility was unclear initially
 * LLM query command syntax required adjustment - needed to use alias
   instead of full model name
@@ -2837,7 +2837,7 @@ prompt **Author**: Claude (AI Assistant) **Type**: Conversation Analysis
   the previous 1283-line version
 * TodoWrite tool is highly effective for tracking multi-step workflow
   progress
-* Glob patterns (`'dev-handbook/**/*'`) work better than directory names
+* Glob patterns (`'.ace/handbook/**/*'`) work better than directory names
   for code-review targets
 * Tool aliases like `gpro` are more user-friendly than full model
   identifiers
@@ -2938,7 +2938,7 @@ specific tools
 
 **Key Commands Used:**
 
-code-review code 'dev-handbook/**/*' --context auto
+code-review code '.ace/handbook/**/*' --context auto
 llm-query "gpro" "prompt.md" --system "system.prompt.md" --timeout 600 --output "report.md"
 ```
 
@@ -2952,7 +2952,7 @@ including parameter preparation, tool execution, and conditional
 synthesis logic.
 
 The workflow successfully generated a comprehensive code review report
-for the dev-handbook repository, confirming that the simplification
+for the .ace/handbook repository, confirming that the simplification
 achieved its goal of maintaining effectiveness while drastically
 reducing complexity.
 
@@ -2961,7 +2961,7 @@ reducing complexity.
 ## Reflection 23: 20250724-184335-code-review-workflow-documentation-fix.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-184335-code-review-workflow-documentation-fix.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-184335-code-review-workflow-documentation-fix.md`
 **Modified**: 2025-07-24 18:44:12
 
 # Reflection: Code Review Workflow Documentation Fix
@@ -3084,7 +3084,7 @@ to template-based system
 **Architecture Discovered:**
 
 * System prompts stored in
-  `dev-handbook/templates/review-{focus}/system.prompt.md`
+  `.ace/handbook/templates/review-{focus}/system.prompt.md`
 * Focus mapping: `code` → `review-code`, `docs` → `review-docs`, `tests`
   → `review-test`
 * `code-review` tool generates session content in `prompt.md`
@@ -3093,7 +3093,7 @@ to template-based system
 
 **Files Modified:**
 
-* `dev-handbook/workflow-instructions/review-code.wf.md`: Lines 147-148,
+* `.ace/handbook/workflow-instructions/review-code.wf.md`: Lines 147-148,
   167-171, 155, added focus mapping
 
 ## Additional Context
@@ -3108,7 +3108,7 @@ instructions to reference the correct file locations.
 ## Reflection 24: 20250724-204549-task-85-consolidation-and-test-output-cleanup.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-204549-task-85-consolidation-and-test-output-cleanup.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-204549-task-85-consolidation-and-test-output-cleanup.md`
 **Modified**: 2025-07-24 20:46:24
 
 # Reflection: Task 85 Consolidation and Test Output Cleanup
@@ -3275,7 +3275,7 @@ session
 ## Reflection 25: 20250724-211842-task-creation-from-code-review-process.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-211842-task-creation-from-code-review-process.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-211842-task-creation-from-code-review-process.md`
 **Modified**: 2025-07-24 21:19:18
 
 # Reflection: Task Creation from Code Review Process
@@ -3416,7 +3416,7 @@ security concerns and long-term maintainability.
 ## Additional Context
 
 * Original code review:
-  dev-taskflow/current/v.0.3.0-workflows/code\_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
+  .ace/taskflow/current/v.0.3.0-workflows/code\_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
 * Tasks created: v.0.3.0+task.85 through v.0.3.0+task.91
 * One task (85) was found to be already completed during the creation
   process
@@ -3426,12 +3426,12 @@ security concerns and long-term maintainability.
 ## Reflection 26: 20250724-222640-gem-to-library-conversion-attempt.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-222640-gem-to-library-conversion-attempt.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-222640-gem-to-library-conversion-attempt.md`
 **Modified**: 2025-07-24 22:27:12
 
 # Reflection: Gem to Library Conversion Attempt
 
-**Date**: 2025-07-24 **Context**: Attempted to convert dev-tools from a
+**Date**: 2025-07-24 **Context**: Attempted to convert .ace/tools from a
 Ruby gem to a plain library structure **Author**: AI Assistant **Type**:
 Conversation Analysis
 
@@ -3563,7 +3563,7 @@ exe/ commands.
 ## Reflection 27: 20250724-232531-commitmessagegenerator-refactoring-and-linting-fixes-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-232531-commitmessagegenerator-refactoring-and-linting-fixes-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-232531-commitmessagegenerator-refactoring-and-linting-fixes-session.md`
 **Modified**: 2025-07-24 23:26:29
 
 # Reflection: CommitMessageGenerator Refactoring and Linting Fixes Session
@@ -3703,7 +3703,7 @@ relocation to prevent Ruby parsing
 
 * **Task Reference**: v.0.3.0+task.88 - Refactor CommitMessageGenerator
   to use direct Ruby calls
-* **Files Modified**: 40+ files across dev-tools for linting
+* **Files Modified**: 40+ files across .ace/tools for linting
   improvements
 * **Configuration Changes**: Moved fallback\_models.yml to config/
   directory with updated path references
@@ -3716,7 +3716,7 @@ relocation to prevent Ruby parsing
 ## Reflection 28: 20250724-233013-task-creation-and-nav-path-tool-understanding.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250724-233013-task-creation-and-nav-path-tool-understanding.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250724-233013-task-creation-and-nav-path-tool-understanding.md`
 **Modified**: 2025-07-24 23:30:47
 
 # Reflection: Task Creation and nav-path Tool Understanding
@@ -3879,7 +3879,7 @@ actually created
 ## Reflection 29: 20250725-000833-multi-task-development-session-code-quality-architecture-refactoring.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-000833-multi-task-development-session-code-quality-architecture-refactoring.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-000833-multi-task-development-session-code-quality-architecture-refactoring.md`
 **Modified**: 2025-07-25 00:09:51
 
 # Reflection: Multi-Task Development Session - Code Quality Architecture Refactoring
@@ -4074,7 +4074,7 @@ performance through targeted file processing.
 ## Reflection 30: 20250725-003250-git-commit-error-formatting-and-multi-repo-workflow-fix.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-003250-git-commit-error-formatting-and-multi-repo-workflow-fix.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-003250-git-commit-error-formatting-and-multi-repo-workflow-fix.md`
 **Modified**: 2025-07-25 00:37:22
 
 # Reflection: Git Commit Error Formatting and Multi-Repo Workflow Fix
@@ -4255,9 +4255,9 @@ characters instead of formatted version
 * **Task Completed**: v.0.3.0+task.92 - Investigate git-commit Command
   Message Formatting Issues
 * **Files Modified**:
-  * `dev-tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb`
-  * `dev-tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb`
-  * `dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb`
+  * `.ace/tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb`
+  * `.ace/tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb`
+  * `.ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb`
 * **Test Results**: All 1744 tests pass, no regressions introduced
 * **Validation**: Successfully tested multi-repository commit with
   readable error messages# Test no errors in taskflow
@@ -4267,7 +4267,7 @@ characters instead of formatted version
 ## Reflection 31: 20250725-003849-user-correction-multi-repo-commit-logic-simplification.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-003849-user-correction-multi-repo-commit-logic-simplification.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-003849-user-correction-multi-repo-commit-logic-simplification.md`
 **Modified**: 2025-07-25 00:39:28
 
 # Reflection: User Correction - Multi-Repo Commit Logic Simplification
@@ -4440,8 +4440,8 @@ before implementing
 
 ### User-Specified Behavior
 
-# Path-specific: Only commits to dev-tools and dev-taskflow
-git-commit dev-tools/file.rb dev-taskflow/task.md --intention "fix X"
+# Path-specific: Only commits to .ace/tools and .ace/taskflow
+git-commit .ace/tools/file.rb .ace/taskflow/task.md --intention "fix X"
 
 # Cleanup: Commits submodule references to main repository  
 git-commit --intention "update submodule references"
@@ -4464,7 +4464,7 @@ git-commit --intention "update submodule references"
 ## Reflection 32: 20250725-005251-unit-testing-implementation-session.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-005251-unit-testing-implementation-session.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-005251-unit-testing-implementation-session.md`
 **Modified**: 2025-07-25 00:53:49
 
 # Reflection: Unit Testing Implementation Session
@@ -4712,7 +4712,7 @@ comprehensive testing foundation for critical system components.
 ## Reflection 33: 20250725-082111-code-review-session-implementation-and-git-commit-discovery.md
 
 **Source**:
-`dev-taskflow/current/v.0.3.0-workflows/reflections/20250725-082111-code-review-session-implementation-and-git-commit-discovery.md`
+`.ace/taskflow/current/v.0.3.0-workflows/reflections/20250725-082111-code-review-session-implementation-and-git-commit-discovery.md`
 **Modified**: 2025-07-25 08:22:02
 
 # Reflection: Code-Review Session Implementation and Git-Commit Discovery
@@ -4734,7 +4734,7 @@ Claude Code Assistant **Type**: Conversation Analysis
 * **Thorough testing approach**: Updated all 28 SessionNameBuilder tests
   to match new timestamp-first format, ensuring comprehensive coverage
 * **Multi-repository coordination**: Successfully committed changes
-  across multiple repositories (main, dev-tools, dev-taskflow) with
+  across multiple repositories (main, dev-tools, .ace/taskflow) with
   appropriate context
 * **Bug discovery through real usage**: The git-commit tool bug was
   discovered organically through actual usage, demonstrating the value
@@ -4769,7 +4769,7 @@ Claude Code Assistant **Type**: Conversation Analysis
   format, all related tests need systematic updates to match new
   expectations
 * **ATOM architecture navigation**: Better understanding of how Atoms,
-  Molecules, and Organisms interact in the dev-tools codebase structure
+  Molecules, and Organisms interact in the .ace/tools codebase structure
 
 ## Conversation Analysis
 
@@ -4907,11 +4907,11 @@ path generation
 The git-commit tool bug was discovered when attempting to commit files
 across repositories:
 
-git-commit .coding-agent/path.yml dev-tools/lib/... dev-taskflow/tasks/...
+git-commit .coding-agent/path.yml .ace/tools/lib/... .ace/taskflow/tasks/...
 ```
 
 The tool incorrectly tried to add the main repo file
-`.coding-agent/path.yml` to the dev-tools repository, revealing a
+`.coding-agent/path.yml` to the .ace/tools repository, revealing a
 fundamental flaw in the file sorting logic.
 
 ## Additional Context
@@ -4921,7 +4921,7 @@ fundamental flaw in the file sorting logic.
 * **Original Task**: Successfully completed v.0.3.0+task.96 for
   code-review session directory format
 * **Repository Impact**: Changes spanned 3 repositories (main,
-  dev-tools, dev-taskflow) and were successfully committed
+  dev-tools, .ace/taskflow) and were successfully committed
 * **Integration Success**: Nav-path integration working correctly,
   generating paths like `20250725-005852-docs-handbook-workflows`
 

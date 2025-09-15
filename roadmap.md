@@ -42,7 +42,7 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 | v.0.10.0| "Spark"                   | Q2 2026       | AI-Assisted Task Definition theme features.                                               | R-TCI-1, R-TCI-2, R-TCI-3, R-TCI-4, R-TCI-5                                                        |
 | v1.0.0  | "Keystone"                | Q3 2026       | Stable v1: All P1 features from all themes hardened, documented, published to RubyGems. | All P1 Req IDs (R-LLM\*, R-GIT\*, R-TASK\*, R-CTX\*, R-MD\*, R-TCI\*) integrated & stable.        |
 
-_Note: Release planning should align with project folder structure in `dev-taskflow/backlog/`, `dev-taskflow/current/`, and `dev-taskflow/done/` as per the Roadmap Definition Guide._
+_Note: Release planning should align with project folder structure in `.ace/taskflow/backlog/`, `.ace/taskflow/current/`, and `.ace/taskflow/done/` as per the Roadmap Definition Guide._
 
 ## 5. Cross-Release Dependencies
 

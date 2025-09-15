@@ -20,7 +20,7 @@
 
 ## Key Learnings
 
-- The dev-taskflow directory structure uses current/ for active work, not releases/
+- The .ace/taskflow directory structure uses current/ for active work, not releases/
 - Task specifications themselves can be the source of path errors
 - Git operations (like git mv) work seamlessly within submodules when executed from the correct directory
 - The releases/ directory is not used in the current project structure and should not be referenced
@@ -48,8 +48,8 @@
 ## Technical Details
 
 The issue was caused by task v.0.6.0+task.008 which explicitly specified the wrong path:
-- Incorrect: `dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
-- Correct: `dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Incorrect: `.ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Correct: `.ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
 
 The fix involved:
 1. Moving the file using git mv to preserve history
@@ -58,6 +58,6 @@ The fix involved:
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
 - Original issue: Feedback item #7 from user input
 - Related task: v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md

@@ -1,0 +1,174 @@
+#!/bin/bash
+
+# Verification script for ACE migration
+# Checks that all migrations have been applied successfully
+
+set -e  # Exit on error
+
+# Set paths - this script should be run from project root
+PROJECT_ROOT="${PROJECT_ROOT_PATH:-$(pwd)}"
+ACE_PATH="${ACE_PATH:-${PROJECT_ROOT}/.ace}"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+ERRORS=0
+WARNINGS=0
+
+echo "========================================="
+echo "ACE Migration Verification"
+echo "========================================="
+echo ""
+
+# Function to check for old patterns
+check_pattern() {
+    local pattern="$1"
+    local description="$2"
+    local path="${3:-.}"
+
+    echo -n "Checking for ${description}... "
+
+    # Use grep to search, but don't fail if nothing found
+    count=$(grep -r "${pattern}" "${path}" --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=backups --exclude-dir=coverage --exclude-dir=vendor --exclude-dir=tmp --exclude="*.log" 2>/dev/null | wc -l | tr -d ' ')
+
+    if [ "$count" -eq 0 ]; then
+        echo -e "${GREEN}✓ None found${NC}"
+        return 0
+    else
+        echo -e "${RED}✗ Found ${count} occurrences${NC}"
+        ERRORS=$((ERRORS + 1))
+        return 1
+    fi
+}
+
+# Function to check if directory exists
+check_directory() {
+    local dir="$1"
+    local should_exist="$2"
+
+    echo -n "Checking directory ${dir}... "
+
+    if [ -d "${dir}" ]; then
+        if [ "${should_exist}" = "true" ]; then
+            echo -e "${GREEN}✓ Exists${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ Should not exist${NC}"
+            ERRORS=$((ERRORS + 1))
+            return 1
+        fi
+    else
+        if [ "${should_exist}" = "false" ]; then
+            echo -e "${GREEN}✓ Does not exist${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ Should exist${NC}"
+            ERRORS=$((ERRORS + 1))
+            return 1
+        fi
+    fi
+}
+
+# Function to check if file exists
+check_file() {
+    local file="$1"
+    local should_exist="$2"
+
+    echo -n "Checking file ${file}... "
+
+    if [ -f "${file}" ]; then
+        if [ "${should_exist}" = "true" ]; then
+            echo -e "${GREEN}✓ Exists${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ Should not exist${NC}"
+            ERRORS=$((ERRORS + 1))
+            return 1
+        fi
+    else
+        if [ "${should_exist}" = "false" ]; then
+            echo -e "${GREEN}✓ Does not exist${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ Should exist${NC}"
+            ERRORS=$((ERRORS + 1))
+            return 1
+        fi
+    fi
+}
+
+echo "1. Checking for old path references..."
+echo "-----------------------------------------"
+check_pattern ".ace/tools/" ".ace/tools references" "${PROJECT_ROOT}"
+check_pattern ".ace/handbook/" ".ace/handbook references" "${PROJECT_ROOT}"
+check_pattern ".ace/taskflow/" ".ace/taskflow references" "${PROJECT_ROOT}"
+check_pattern ".ace/local/" ".ace/local references" "${PROJECT_ROOT}"
+echo ""
+
+echo "2. Checking for old module references..."
+echo "-----------------------------------------"
+check_pattern "CodingAgentTools" "CodingAgentTools module references" "${ACE_PATH}/tools"
+check_pattern "coding_agent_tools" "coding_agent_tools path references" "${ACE_PATH}/tools"
+check_pattern "coding-agent-tools" "coding-agent-tools gem references" "${ACE_PATH}/tools"
+echo ""
+
+echo "3. Checking directory structure..."
+echo "-----------------------------------------"
+# New structure should exist
+check_directory "${ACE_PATH}/tools/lib/ace_tools" true
+check_file "${ACE_PATH}/tools/lib/ace_tools.rb" true
+check_file "${ACE_PATH}/tools/ace_tools.gemspec" true
+
+# Old structure should not exist (after full migration)
+check_directory "${ACE_PATH}/tools/lib/coding_agent_tools" false
+check_file "${ACE_PATH}/tools/lib/coding_agent_tools.rb" false
+check_file "${ACE_PATH}/tools/coding_agent_tools.gemspec" false
+echo ""
+
+echo "4. Checking Ruby module loading..."
+echo "-----------------------------------------"
+echo -n "Testing Ruby module loading... "
+if ruby -e "require_relative '${ACE_PATH}/tools/lib/ace_tools'" 2>/dev/null; then
+    echo -e "${GREEN}✓ Module loads successfully${NC}"
+else
+    echo -e "${YELLOW}⚠ Module loading needs configuration${NC}"
+    WARNINGS=$((WARNINGS + 1))
+fi
+echo ""
+
+echo "5. Checking configuration files..."
+echo "-----------------------------------------"
+echo -n "Checking YAML validity... "
+yaml_valid=true
+for file in ${PROJECT_ROOT}/.coding-agent/*.yml; do
+    if ! ruby -ryaml -e "YAML.load_file('$file')" 2>/dev/null; then
+        yaml_valid=false
+        break
+    fi
+done
+if [ "$yaml_valid" = true ]; then
+    echo -e "${GREEN}✓ All YAML files valid${NC}"
+else
+    echo -e "${RED}✗ Some YAML files invalid${NC}"
+    ERRORS=$((ERRORS + 1))
+fi
+echo ""
+
+echo "========================================="
+echo "Verification Summary"
+echo "========================================="
+if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
+    echo -e "${GREEN}✓ All checks passed! Migration successful.${NC}"
+    exit 0
+elif [ $ERRORS -eq 0 ]; then
+    echo -e "${YELLOW}⚠ Migration complete with ${WARNINGS} warning(s)${NC}"
+    exit 0
+else
+    echo -e "${RED}✗ Migration incomplete: ${ERRORS} error(s), ${WARNINGS} warning(s)${NC}"
+    echo ""
+    echo "Please review the errors above and complete the migration steps."
+    exit 1
+fi

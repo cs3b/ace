@@ -20,17 +20,17 @@ release: v.0.6.0-unified-claude
 
 > no, just cleanup what we don't need anymore
 
-- [ ] Should the migration guide be created at `dev-handbook/.integrations/claude/MIGRATION.md` or elsewhere?
+- [ ] Should the migration guide be created at `.ace/handbook/.integrations/claude/MIGRATION.md` or elsewhere?
   - **Research conducted**: Directory exists with other Claude docs but no MIGRATION.md yet
-  - **Similar patterns**: `dev-tools/docs/migrations/migration-guide.md` exists for tools
-  - **Suggested default**: Create at `dev-handbook/.integrations/claude/MIGRATION.md`
+  - **Similar patterns**: `.ace/tools/docs/migrations/migration-guide.md` exists for tools
+  - **Suggested default**: Create at `.ace/handbook/.integrations/claude/MIGRATION.md`
   - **Why needs human input**: Documentation structure consistency
 
 > no, we don' need it
 
 ### [MEDIUM] Enhancement Questions
 - [ ] Should we keep the Ruby implementation or switch to bash for the deprecation wrapper?
-  - **Research conducted**: Current script is Ruby, requires dev-tools lib path
+  - **Research conducted**: Current script is Ruby, requires .ace/tools lib path
   - **Task specification**: Shows bash implementation in examples
   - **Suggested default**: Use bash for simpler deprecation logic
   - **Why needs human input**: Implementation language affects maintainability
@@ -81,7 +81,7 @@ The new command provides:
 ✓ Integration with other Claude commands
 
 To use the new command:
-1. Ensure dev-tools is up to date
+1. Ensure .ace/tools is up to date
 2. Run: handbook claude integrate
 
 Would you like to:
@@ -263,8 +263,8 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
       ;;
     3)
       echo "Opening migration guide..."
-      open "dev-handbook/.integrations/claude/MIGRATION.md" || \
-      cat "dev-handbook/.integrations/claude/MIGRATION.md"
+      open ".ace/handbook/.integrations/claude/MIGRATION.md" || \
+      cat ".ace/handbook/.integrations/claude/MIGRATION.md"
       ;;
     *)
       echo "Invalid choice. Exiting."
@@ -307,7 +307,7 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
 - SemVer guidelines for breaking changes
 - User communication strategies
 - Current script: `bin/claude-integrate` (Ruby implementation)
-- CI detection pattern: `dev-tools/lib/coding_agent_tools/molecules/file_operation_confirmer.rb`
+- CI detection pattern: `.ace/tools/lib/coding_agent_tools/molecules/file_operation_confirmer.rb`
 - Related tasks: v.0.6.0+task.006 (integrate command), v.0.6.0+task.011 (documentation)
 - Roadmap: v0.7.0 "Conductor" targeted for Q4 2025
 

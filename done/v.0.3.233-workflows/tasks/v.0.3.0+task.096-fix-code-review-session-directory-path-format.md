@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-pattern.g.md
     ├── changelog.g.md
@@ -128,17 +128,17 @@ Fix the code-review session directory path format to put timestamps at the begin
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/cli/commands/nav/code_review_new.rb (nav-path subcommand)
+- .ace/tools/lib/coding_agent_tools/cli/commands/nav/code_review_new.rb (nav-path subcommand)
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/atoms/code/session_name_builder.rb (timestamp-first format)
-- dev-tools/lib/coding_agent_tools/organisms/code/session_manager.rb (integrate nav-path Ruby classes)
-- dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb (add code_review_new path type)
-- dev-tools/lib/coding_agent_tools/cli/commands/nav/path.rb (register code-review-new command)
+- .ace/tools/lib/coding_agent_tools/atoms/code/session_name_builder.rb (timestamp-first format)
+- .ace/tools/lib/coding_agent_tools/organisms/code/session_manager.rb (integrate nav-path Ruby classes)
+- .ace/tools/lib/coding_agent_tools/molecules/path_resolver.rb (add code_review_new path type)
+- .ace/tools/lib/coding_agent_tools/cli/commands/nav/path.rb (register code-review-new command)
 - .coding-agent/path.yml (add code_review_new path pattern configuration)
-- dev-tools/spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb (update all tests)
-- dev-tools/spec/coding_agent_tools/atoms/code/session_timestamp_generator_spec.rb (if needed)
+- .ace/tools/spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb (update all tests)
+- .ace/tools/spec/coding_agent_tools/atoms/code/session_timestamp_generator_spec.rb (if needed)
 
 #### Delete
 
@@ -161,7 +161,7 @@ Fix the code-review session directory path format to put timestamps at the begin
   > TEST: Current Flow Understanding
   > Type: Pre-condition Check
   > Assert: Session creation components and their interactions are documented
-  > Command: find dev-tools/lib -name "*session*" -type f | head -10
+  > Command: find .ace/tools/lib -name "*session*" -type f | head -10
 - [x] Design new directory name format: {timestamp}-{focus}-{target} instead of {focus}-{target}-{timestamp}
 - [x] Plan nav-path integration approach using Ruby classes directly for SessionManager
 
@@ -174,13 +174,13 @@ Fix the code-review session directory path format to put timestamps at the begin
   > Type: Integration Validation
   > Assert: Configuration follows existing pattern structure for path generation
   > Command: grep -A 10 "code_review_new" .coding-agent/path.yml
-- [x] Create nav-path code-review-new subcommand in dev-tools/lib/coding_agent_tools/cli/commands/nav/code_review_new.rb
+- [x] Create nav-path code-review-new subcommand in .ace/tools/lib/coding_agent_tools/cli/commands/nav/code_review_new.rb
 - [x] Update PathResolver.resolve_path to handle code_review_new path type
 - [x] Update nav-path command registration to include code-review-new command
   > TEST: Nav-Path Command Available
   > Type: Integration Validation
   > Assert: nav-path code-review-new command is accessible and generates proper paths
-  > Command: cd dev-tools && bundle exec exe/nav-path code-review-new "test session name"
+  > Command: cd .ace/tools && bundle exec exe/nav-path code-review-new "test session name"
 
 **2. Update SessionNameBuilder for timestamp-first format:**
 
@@ -188,12 +188,12 @@ Fix the code-review session directory path format to put timestamps at the begin
   > TEST: Name Format Change
   > Type: Unit Validation
   > Assert: SessionNameBuilder generates names with timestamp first
-  > Command: cd dev-tools && ruby -r ./lib/coding_agent_tools -e "puts CodingAgentTools::Atoms::Code::SessionNameBuilder.new.build('docs', 'handbook', '20250705-173751')"
+  > Command: cd .ace/tools && ruby -r ./lib/coding_agent_tools -e "puts CodingAgentTools::Atoms::Code::SessionNameBuilder.new.build('docs', 'handbook', '20250705-173751')"
 - [x] Update all SessionNameBuilder specs to expect new timestamp-first format
   > TEST: Spec Updates Complete
   > Type: Unit Validation
   > Assert: All tests pass with new naming format
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb
 
 **3. Integrate SessionManager with nav-path Ruby classes:**
 
@@ -201,7 +201,7 @@ Fix the code-review session directory path format to put timestamps at the begin
   > TEST: Nav-Path Integration
   > Type: Integration Validation
   > Assert: SessionManager uses nav-path for session directory creation with proper format
-  > Command: cd dev-tools && ruby -r ./lib/coding_agent_tools -e "require 'pry'; binding.pry" # Test session creation flow
+  > Command: cd .ace/tools && ruby -r ./lib/coding_agent_tools -e "require 'pry'; binding.pry" # Test session creation flow
 - [x] Test new format with various focus and target combinations to ensure sanitization works correctly
 
 ## Acceptance Criteria
@@ -242,8 +242,8 @@ Fix the code-review session directory path format to put timestamps at the begin
 ```
 Current format: docs-handbook-workflows-20250705-173751
 Target format: 20250705-173751-docs-handbook-workflows
-Current path: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751
-Target path: dev-taskflow/current/v.0.3.0-workflows/code_review/20250705-173751-docs-handbook-workflows
+Current path: .ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751
+Target path: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250705-173751-docs-handbook-workflows
 ```
 
 ### Configuration Addition Required

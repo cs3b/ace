@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── breakdown-notes-into-tasks.wf.md
     ├── commit.wf.md
     ├── create-adr.wf.md
@@ -48,7 +48,7 @@ Rename the workflow instruction file `log-compact-session.wf.md` to `save-sessio
 
 ## Scope of Work
 
-* Rename the workflow instruction file in dev-handbook/workflow-instructions/
+* Rename the workflow instruction file in .ace/handbook/workflow-instructions/
 * Ensure the file maintains its current functionality and content
 * Update any references to the old filename if they exist in other documentation
 
@@ -56,7 +56,7 @@ Rename the workflow instruction file `log-compact-session.wf.md` to `save-sessio
 
 #### Create
 
-* dev-handbook/workflow-instructions/save-session-context.md
+* .ace/handbook/workflow-instructions/save-session-context.md
 
 #### Modify  
 
@@ -64,7 +64,7 @@ Rename the workflow instruction file `log-compact-session.wf.md` to `save-sessio
 
 #### Delete
 
-* dev-handbook/workflow-instructions/log-compact-session.wf.md
+* .ace/handbook/workflow-instructions/log-compact-session.wf.md
 
 ## Phases
 
@@ -88,7 +88,7 @@ Rename the workflow instruction file `log-compact-session.wf.md` to `save-sessio
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: File successfully renamed and git history preserved
-  > Command: ls -la dev-handbook/workflow-instructions/save-session-context.md
+  > Command: ls -la .ace/handbook/workflow-instructions/save-session-context.md
 
 * [x] Update any found references to use the new filename
   > TEST: Action Validation
@@ -112,5 +112,5 @@ Rename the workflow instruction file `log-compact-session.wf.md` to `save-sessio
 
 ## References
 
-* Original requirement: Rename dev-handbook/workflow-instructions/log-compact-session.wf.md -> sth better :-)
+* Original requirement: Rename .ace/handbook/workflow-instructions/log-compact-session.wf.md -> sth better :-)
 * Related workflow: This file contains instructions for preserving session context across work sessions

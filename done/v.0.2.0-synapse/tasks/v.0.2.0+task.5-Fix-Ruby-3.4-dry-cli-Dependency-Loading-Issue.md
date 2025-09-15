@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 3 lib/ dev-tools/exe/ spec/integration/ | head -20
+tree -L 3 lib/ .ace/tools/exe/ spec/integration/ | head -20
 ```
 
 _Result excerpt:_
@@ -24,7 +24,7 @@ lib/
 │   ├── cli.rb
 │   ├── commands/
 │   └── ...
-dev-tools/exe/
+.ace/tools/exe/
 ├── llm-gemini-query
 spec/integration/
 ├── llm_gemini_query_integration_spec.rb
@@ -86,7 +86,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
   > Assert: Integration tests show stderr/stdout output on failure instead of just boolean status
   > Command: grep -A10 -B5 "expect.*process.*success" spec/integration/llm_gemini_query_integration_spec.rb
 - [x] Add explicit bundler setup step to `.github/workflows/ci.yml` before running tests
-- [x] Add `require "bundler/setup"` to dev-tools/exe/llm-gemini-query to fix gem loading in CI
+- [x] Add `require "bundler/setup"` to .ace/tools/exe/llm-gemini-query to fix gem loading in CI
 - [x] Fix 8 integration tests missing VCR subprocess environment setup
   > TEST: CI Configuration Updated
   > Type: Action Validation
@@ -98,7 +98,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
   > TEST: CLI Startup Check in CI
   > Type: Action Validation
   > Assert: CLI command starts without LoadError in CI
-  > Command: dev-tools/exe/llm-gemini-query --help
+  > Command: .ace/tools/exe/llm-gemini-query --help
 - [x] Run full integration test suite to verify all 22 tests pass in CI
   > TEST: Integration Tests Pass in CI
   > Type: Action Validation
@@ -112,7 +112,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
   - [x] Failed tests display actual command output like: "Command failed with status 1. STDERR: <actual error>"
 - [x] No `LoadError: cannot load such file -- dry/cli` errors in Ruby 3.4
 - [x] All 22 integration tests pass in Ruby 3.4 (currently failing)
-- [x] CLI commands execute successfully: `dev-tools/exe/llm-gemini-query --help` works
+- [x] CLI commands execute successfully: `.ace/tools/exe/llm-gemini-query --help` works
 - [x] No regression in Ruby 3.1, 3.2, 3.3 test suites
 - [x] CI pipeline passes for Ruby 3.4 build
 
@@ -126,7 +126,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 
 ## References
 
-- CI logs showing specific failure: `dev-taskflow/current/v.0.2.0-synapse/docs/2_Ruby 3.4.txt`
+- CI logs showing specific failure: `.ace/taskflow/current/v.0.2.0-synapse/docs/2_Ruby 3.4.txt`
 - Failed tests: 22 integration tests in `spec/integration/llm_gemini_query_integration_spec.rb`
 - Error pattern: `<internal:/usr/lib/ruby/vendor_ruby/rubygems/core_ext/kernel_require.rb>:86:in 'require': cannot load such file -- dry/cli (LoadError)`
 - Affected file: `lib/coding_agent_tools/cli.rb:3`
@@ -134,7 +134,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 - Key insight: Tests work locally but fail in CI, indicating bundler setup issue in GitHub Actions environment
 - Status: RESOLVED - All 22 integration tests now pass in Ruby 3.4 CI
 - Error reporting improvement: Tests now show detailed error messages with STDOUT/STDERR on failure
-- Solution: Added `require "bundler/setup"` to dev-tools/exe/llm-gemini-query and fixed VCR setup for 8 tests
+- Solution: Added `require "bundler/setup"` to .ace/tools/exe/llm-gemini-query and fixed VCR setup for 8 tests
 ```
 
 Now I'll prepare the commit command as requested:

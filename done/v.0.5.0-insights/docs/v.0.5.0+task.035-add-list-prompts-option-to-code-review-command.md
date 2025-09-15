@@ -9,13 +9,13 @@ Implement a `--list-prompts` option for the code-review command that displays al
 The code-review command currently has a `--list-presets` option that lists available review presets from `.coding-agent/code-review.yml`. We need to add a similar `--list-prompts` option that lists all available prompt modules from the filesystem.
 
 ### Current Implementation
-- The `--list-presets` option is implemented in `dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb` (lines 57, 92, 192-209)
-- Prompt modules are stored in `dev-handbook/templates/review-modules/` directory
-- The PromptEnhancer class (`dev-tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb`) handles loading these modules
+- The `--list-presets` option is implemented in `.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb` (lines 57, 92, 192-209)
+- Prompt modules are stored in `.ace/handbook/templates/review-modules/` directory
+- The PromptEnhancer class (`.ace/tools/lib/coding_agent_tools/molecules/code/prompt_enhancer.rb`) handles loading these modules
 
 ### Module Structure Found
 ```
-dev-handbook/templates/review-modules/
+.ace/handbook/templates/review-modules/
 ├── base/
 │   ├── system.md
 │   └── sections.md
@@ -49,7 +49,7 @@ Add a new option `--list-prompts` to the code-review command (similar to `--list
 
 ### 2. Implement list_prompts Method
 Create a `list_prompts` method that:
-- Discovers all available prompt modules from `dev-handbook/templates/review-modules/`
+- Discovers all available prompt modules from `.ace/handbook/templates/review-modules/`
 - Groups modules by category (base, format, focus, guidelines)
 - For focus modules, shows subcategories (architecture, frameworks, languages, quality, scope)
 - Displays each module with its usage path
@@ -97,7 +97,7 @@ Guideline modules:
 
 ## Files to Modify
 
-1. **Primary**: `dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb`
+1. **Primary**: `.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb`
    - Add `--list-prompts` option
    - Implement `list_prompts` method
 

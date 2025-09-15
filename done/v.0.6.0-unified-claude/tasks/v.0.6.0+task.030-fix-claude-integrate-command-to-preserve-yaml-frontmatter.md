@@ -13,7 +13,7 @@ dependencies: [v.0.6.0+task.029]
 **Issue**: When running `handbook claude integrate --force`, command files in `.claude/commands/` were missing their YAML frontmatter (description, allowed-tools, model). Investigation revealed duplicate command generation was overwriting properly formatted files.
 
 **Key Behavioral Requirements**:
-- `handbook claude integrate` should copy commands from `dev-handbook/.integrations/claude/` to `.claude/`
+- `handbook claude integrate` should copy commands from `.ace/handbook/.integrations/claude/` to `.claude/`
 - YAML frontmatter must be preserved during installation
 - Template references must use correct paths for installed location
 - No duplicate template files should exist
@@ -37,12 +37,12 @@ Fix the Claude integrate command to properly copy command files without regenera
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb
-- dev-handbook/.integrations/claude/templates/command.md.tmpl
+- .ace/tools/lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb
+- .ace/handbook/.integrations/claude/templates/command.md.tmpl
 
 #### Delete
 
-- dev-handbook/.integrations/claude/command.template.md
+- .ace/handbook/.integrations/claude/command.template.md
 
 ## Phases
 
@@ -136,7 +136,7 @@ Fix the Claude integrate command to properly copy command files without regenera
   > Result: Commit reference works in installed location
 
 - [x] **Remove Duplicate Template**: Deleted `command.template.md`
-  > Command: rm dev-handbook/.integrations/claude/command.template.md
+  > Command: rm .ace/handbook/.integrations/claude/command.template.md
   > Result: Only one template file remains
 
 - [x] **Regenerate Commands**: Updated all commands with fixed template

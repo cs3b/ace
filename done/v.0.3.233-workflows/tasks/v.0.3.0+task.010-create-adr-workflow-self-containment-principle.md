@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-taskflow/current/v.0.3.0-workflows | sed 's/^/    /'
+tree -L 2 .ace/taskflow/current/v.0.3.0-workflows | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-taskflow/current/v.0.3.0-workflows/
+.ace/taskflow/current/v.0.3.0-workflows/
 ├── decisions/
 ├── tasks/
 └── [other directories...]
@@ -68,13 +68,13 @@ Create an Architecture Decision Record (ADR) to formally document the pivotal de
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: ADR template is available and understood
-  > Command: `find dev-handbook -name "*adr*" -o -name "*decision*" | head -5`
+  > Command: `find .ace/handbook -name "*adr*" -o -name "*decision*" | head -5`
 
 - [x] Analyze the complete workflow transformation to understand full scope
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All aspects of the workflow change are documented
-  > Command: `grep -r "self-contained\|reference-based" dev-handbook/workflow-instructions/ | wc -l`
+  > Command: `grep -r "self-contained\|reference-based" .ace/handbook/workflow-instructions/ | wc -l`
 
 ### Execution Steps
 

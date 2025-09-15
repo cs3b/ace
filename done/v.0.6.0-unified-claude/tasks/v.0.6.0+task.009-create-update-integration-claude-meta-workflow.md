@@ -126,7 +126,7 @@ Create a comprehensive meta workflow that guides developers through maintaining 
 
 - Existing workflow instruction patterns
 - New handbook claude commands
-- Current update workflows in dev-handbook
+- Current update workflows in .ace/handbook
 
 ## Technical Approach
 
@@ -151,13 +151,13 @@ Create a comprehensive meta workflow that guides developers through maintaining 
 ## File Modifications
 
 ### Create
-- `dev-handbook/.meta/wfi/update-integration-claude.wf.md` - Meta workflow file
+- `.ace/handbook/.meta/wfi/update-integration-claude.wf.md` - Meta workflow file
   - Note: Using .wf.md extension to match workflow instruction pattern (confirmed)
   - Location: .meta/wfi/ for meta workflow instructions (confirmed)
   - Behavior: Will handle creation of missing .claude/ directories
 
 ### Modify
-- `dev-handbook/workflow-instructions/README.md` - Add reference to new workflow
+- `.ace/handbook/workflow-instructions/README.md` - Add reference to new workflow
   - Add link in meta workflows section (create if doesn't exist)
   - Format: `- [Update Claude Integration](../.meta/wfi/update-integration-claude.wf.md)`
 
@@ -203,7 +203,7 @@ Create a comprehensive meta workflow that guides developers through maintaining 
 
 - [x] Create meta workflow directory structure
   ```bash
-  mkdir -p dev-handbook/.meta/wfi
+  mkdir -p .ace/handbook/.meta/wfi
   ```
   > Note: .meta/wfi directory for meta workflow instructions
 
@@ -216,7 +216,7 @@ Create a comprehensive meta workflow that guides developers through maintaining 
 
   ## Prerequisites
   - handbook CLI with Claude commands installed (v0.6.0+)
-  - Access to dev-handbook submodule
+  - Access to .ace/handbook submodule
   - Understanding of Claude command types (custom vs generated)
   - Write access to project root (for .claude/ directory creation)
   - Git repository for version control
@@ -319,7 +319,7 @@ Create a comprehensive meta workflow that guides developers through maintaining 
   ### Common Issues and Solutions
 
   **Missing commands after generation**
-  - Check file permissions in dev-handbook/.integrations/claude/
+  - Check file permissions in .ace/handbook/.integrations/claude/
   - Verify template exists at correct location
   - Ensure workflow files have .wf.md extension
   - Run with --verbose flag for detailed output
@@ -394,12 +394,12 @@ Create a comprehensive meta workflow that guides developers through maintaining 
   ```bash
   # Add reference in workflow README under meta workflows section
   # Note: May need to create "Meta Workflows" section if it doesn't exist
-  echo "- [Update Claude Integration](../.meta/wfi/update-integration-claude.wf.md) - Maintain Claude commands" >> dev-handbook/workflow-instructions/README.md
+  echo "- [Update Claude Integration](../.meta/wfi/update-integration-claude.wf.md) - Maintain Claude commands" >> .ace/handbook/workflow-instructions/README.md
   ```
   > TEST: Workflow Discovery
   > Type: Documentation Check
   > Assert: Workflow is referenced in index
-  > Command: grep "update-integration-claude.wf.md" dev-handbook/workflow-instructions/README.md
+  > Command: grep "update-integration-claude.wf.md" .ace/handbook/workflow-instructions/README.md
 
 ## Acceptance Criteria
 

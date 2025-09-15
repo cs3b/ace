@@ -2,13 +2,13 @@
 
 ## Executive Summary
 
-This roadmap outlines the implementation of 20 priority improvements for the Coding Agent Workflow Toolkit, organized by priority and technical dependencies. All improvements leverage the existing dev-tools Ruby gem architecture and dev-handbook workflow instructions.
+This roadmap outlines the implementation of 20 priority improvements for the Coding Agent Workflow Toolkit, organized by priority and technical dependencies. All improvements leverage the existing .ace/tools Ruby gem architecture and .ace/handbook workflow instructions.
 
 ## Top 10 Priority Improvements
 
 ### 001. Context Loading Optimization
 **Impact:** Critical | **Effort:** 1-2 days
-- New `dev-tools/exe/context` executable
+- New `.ace/tools/exe/context` executable
 - Combines file reading and command execution
 - 75% reduction in tool calls
 
@@ -32,7 +32,7 @@ This roadmap outlines the implementation of 20 priority improvements for the Cod
 
 ### 005. Command Verification & Execution
 **Impact:** High | **Effort:** 1 week
-- New `dev-tools/exe/command-verify` tool
+- New `.ace/tools/exe/command-verify` tool
 - Pre-execution validation
 - Standardized error handling
 
@@ -56,13 +56,13 @@ This roadmap outlines the implementation of 20 priority improvements for the Cod
 
 ### 009. Task Answer GPT Integration
 **Impact:** Medium | **Effort:** 2-4 hours
-- New `dev-tools/exe/task-answer` tool
+- New `.ace/tools/exe/task-answer` tool
 - GPT integration for clarifications
 - Streamlined Q&A process
 
 ### 010. Continuous Work Cycle
 **Impact:** High | **Effort:** 2-4 hours
-- New `dev-tools/exe/work-cycle` tool
+- New `.ace/tools/exe/work-cycle` tool
 - Automated plan → work → review cycle
 - Task status tracking
 
@@ -70,7 +70,7 @@ This roadmap outlines the implementation of 20 priority improvements for the Cod
 
 ### 011. Standardize Commit Workflow
 - Move git logic to workflow instructions
-- Create `commit.wf.md` in dev-handbook
+- Create `commit.wf.md` in .ace/handbook
 
 ### 012. Template-Based Task Creation
 - Enhance `create-path` with templates
@@ -155,7 +155,7 @@ This roadmap outlines the implementation of 20 priority improvements for the Cod
 
 ### ATOM Structure
 ```
-dev-tools/
+.ace/tools/
 ├── exe/                    # New executables
 │   ├── context
 │   ├── command-verify
@@ -177,7 +177,7 @@ dev-tools/
 
 ### Workflow Updates
 ```
-dev-handbook/workflow-instructions/
+.ace/handbook/workflow-instructions/
 ├── load-project-context.wf.md  # Use new context tool
 ├── fix-tests.wf.md             # Use test-runner agent
 ├── commit.wf.md                # New standardized workflow
@@ -216,8 +216,8 @@ dev-handbook/workflow-instructions/
 ## Dependencies
 
 ### Existing Infrastructure
-- dev-tools Ruby gem (ATOM architecture)
-- dev-handbook workflow instructions
+- .ace/tools Ruby gem (ATOM architecture)
+- .ace/handbook workflow instructions
 - Multiple LLM provider integrations
 - dry-cli framework
 - RSpec testing framework

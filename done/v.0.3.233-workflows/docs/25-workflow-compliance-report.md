@@ -57,7 +57,7 @@ Comprehensive validation of 18 workflow instruction files reveals **excellent ov
 1. Convert all `````markdown` blocks to XML `<template>` format
 2. Add `<templates>` section at document end
 3. Extract embedded templates to separate template files
-4. Update template paths to follow `dev-handbook/templates/` structure
+4. Update template paths to follow `.ace/handbook/templates/` structure
 
 ### ✅ Recently Fixed Issues
 
@@ -67,7 +67,7 @@ Comprehensive validation of 18 workflow instruction files reveals **excellent ov
 
 - ✅ **Deprecated Format**: Converted 1 instance of `````markdown` format to XML
 - ✅ **Missing XML Templates**: Added `<templates>` section at document end
-- ✅ **Template Extraction**: Created `dev-handbook/templates/session-management/session-context.template.md`
+- ✅ **Template Extraction**: Created `.ace/handbook/templates/session-management/session-context.template.md`
 
 **Actions Completed:**
 
@@ -81,22 +81,22 @@ Comprehensive validation of 18 workflow instruction files reveals **excellent ov
 
 All XML template paths follow proper format:
 
-1. `dev-handbook/templates/project-docs/decisions/adr.template.md`
-2. `dev-handbook/templates/code-docs/ruby-yard.template.md`
-3. `dev-handbook/templates/code-docs/javascript-jsdoc.template.md`
-4. `dev-handbook/templates/release-testing/test-case.template.md`
-5. `dev-handbook/templates/release-management/changelog.template.md`
-6. `dev-handbook/templates/release-management/release-overview.template.md`
-7. `dev-handbook/templates/release-tasks/task.template.md`
-8. `dev-handbook/templates/release-reflections/retrospective.template.md`
-9. `dev-handbook/templates/release-docs/documentation.template.md`
-10. `dev-handbook/templates/release-planning/release-readme.template.md`
-11. `dev-handbook/templates/project-docs/blueprint.template.md`
-12. `dev-handbook/templates/user-docs/user-guide.template.md`
+1. `.ace/handbook/templates/project-docs/decisions/adr.template.md`
+2. `.ace/handbook/templates/code-docs/ruby-yard.template.md`
+3. `.ace/handbook/templates/code-docs/javascript-jsdoc.template.md`
+4. `.ace/handbook/templates/release-testing/test-case.template.md`
+5. `.ace/handbook/templates/release-management/changelog.template.md`
+6. `.ace/handbook/templates/release-management/release-overview.template.md`
+7. `.ace/handbook/templates/release-tasks/task.template.md`
+8. `.ace/handbook/templates/release-reflections/retrospective.template.md`
+9. `.ace/handbook/templates/release-docs/documentation.template.md`
+10. `.ace/handbook/templates/release-planning/release-readme.template.md`
+11. `.ace/handbook/templates/project-docs/blueprint.template.md`
+12. `.ace/handbook/templates/user-docs/user-guide.template.md`
 
 **Path Compliance:** ✅ 100% compliant
 
-- All paths start with `dev-handbook/templates/`
+- All paths start with `.ace/handbook/templates/`
 - All paths end with `.template.md`
 - Proper directory categorization
 - No dual-attribute format found

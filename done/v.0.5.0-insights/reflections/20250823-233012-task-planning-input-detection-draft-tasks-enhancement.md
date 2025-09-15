@@ -21,14 +21,14 @@
 
 ## Key Learnings
 
-- **Workflow Self-Containment**: The dev-handbook workflow structure provides comprehensive guidance for technical planning, ensuring no critical aspects are missed
+- **Workflow Self-Containment**: The .ace/handbook workflow structure provides comprehensive guidance for technical planning, ensuring no critical aspects are missed
 - **File Structure Patterns**: The clear distinction between idea files and completed task files provides a reliable detection mechanism - idea files have LLM metadata while task files have structured YAML frontmatter
 - **Additive Enhancement Strategy**: For existing command enhancements, additive approaches that preserve existing functionality are much safer than replacement approaches
 - **Documentation-Driven Development**: The behavior-first approach in the original task specification made technical planning much more focused and effective
 
 ## Challenges Encountered
 
-- **Architecture Understanding**: Initially needed to understand the relationship between Claude commands (`.claude/commands/`), workflow instructions (`dev-handbook/workflow-instructions/`), and actual tool implementation (`dev-tools`)
+- **Architecture Understanding**: Initially needed to understand the relationship between Claude commands (`.claude/commands/`), workflow instructions (`.ace/handbook/workflow-instructions/`), and actual tool implementation (`.ace/tools`)
 - **File Type Analysis**: Required concrete examples to understand the structural differences between idea files and completed task files
 - **Scope Boundary Definition**: Needed to clearly distinguish between what should be implemented (command enhancement) vs what already exists (workflow infrastructure)
 

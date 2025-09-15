@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.19]
 _Command run:_
 
 ```bash
-tree -L 4 dev-handbook/templates | sed 's/^/    /'
+tree -L 4 .ace/handbook/templates | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/templates
+.ace/handbook/templates
 ├── project-docs
 │   ├── architecture.template.md
 │   ├── blueprint.template.md
@@ -68,14 +68,14 @@ dev-handbook/templates
 
 ## Objective
 
-Create template files for all embedded documents that currently lack corresponding template files in the dev-handbook/templates/ directory. This establishes the foundation for unified template management and synchronization across workflow instructions.
+Create template files for all embedded documents that currently lack corresponding template files in the .ace/handbook/templates/ directory. This establishes the foundation for unified template management and synchronization across workflow instructions.
 
 Link back to original requirement: Template unification workflow structure (improve-the-workflow-structure.md)
 
 ## Scope of Work
 
 * Create template files for all identified missing templates
-* Organize templates according to dev-handbook/templates/ directory structure
+* Organize templates according to .ace/handbook/templates/ directory structure
 * Extract and clean template content from embedded sources
 * Ensure templates follow project conventions and standards
 
@@ -83,7 +83,7 @@ Link back to original requirement: Template unification workflow structure (impr
 
 #### Create
 
-* Multiple template files in dev-handbook/templates/ (paths determined by comparison task)
+* Multiple template files in .ace/handbook/templates/ (paths determined by comparison task)
 * template-creation-summary.md - documentation of created templates
 
 #### Modify  
@@ -109,14 +109,14 @@ Link back to original requirement: Template unification workflow structure (impr
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Missing templates plan is complete and actionable
-  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/docs/missing-templates-plan.md
+  > Command: test -f .ace/taskflow/current/v.0.3.0-workflows/docs/missing-templates-plan.md
   > RESULT: ✅ Missing templates plan exists and accessible
 
 * [x] Examine existing template directory structure for organizational patterns
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Template directory structure is understood
-  > Command: tree dev-handbook/templates -d
+  > Command: tree .ace/handbook/templates -d
   > RESULT: ✅ 16 existing directories analyzed, patterns identified
 
 ### Execution Steps
@@ -139,7 +139,7 @@ Link back to original requirement: Template unification workflow structure (impr
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Template files follow naming patterns (*.template.md)
-  > Command: find dev-handbook/templates -name "*template.md" | grep new
+  > Command: find .ace/handbook/templates -name "*template.md" | grep new
   > RESULT: ✅ 5 new template files created, 2 existing enhanced, all follow *.template.md pattern
 
 * [x] Add template metadata and documentation headers
@@ -153,13 +153,13 @@ Link back to original requirement: Template unification workflow structure (impr
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: All new templates are findable and readable
-  > Command: find dev-handbook/templates -name "*.md" -newer [start-time]
+  > Command: find .ace/handbook/templates -name "*.md" -newer [start-time]
   > RESULT: ✅ All templates verified accessible and properly organized in directory structure
 
 ## Acceptance Criteria
 
 * [x] All missing templates identified in comparison task have been created
-* [x] Templates follow dev-handbook/templates/ organizational structure
+* [x] Templates follow .ace/handbook/templates/ organizational structure
 * [x] Template content is properly formatted and documented
 * [x] Template files use consistent naming conventions
 * [x] Created templates are accessible for workflow embedding
@@ -175,4 +175,4 @@ Link back to original requirement: Template unification workflow structure (impr
 
 * Original requirement: improve-the-workflow-structure.md
 * Dependencies: v.0.3.0+task.19 (template comparison analysis)
-* Related guides: dev-handbook/templates/ organization patterns
+* Related guides: .ace/handbook/templates/ organization patterns

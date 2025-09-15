@@ -52,7 +52,7 @@
 
 **Changes Made:**
 1. **Script Removal**: Deleted `bin/handbook-review-folder` (Ruby script for creating timestamped review folders)
-2. **Blueprint Updates**: Replaced references to deprecated script with `code-review docs 'dev-handbook/**/*.md'`
+2. **Blueprint Updates**: Replaced references to deprecated script with `code-review docs '.ace/handbook/**/*.md'`
 3. **Documentation Cleanup**: Removed extensive tool usage sections from blueprint.md that duplicated docs/tools.md content
 4. **Task Completion**: Updated task v.0.3.0+task.74 status from pending → in-progress → done
 

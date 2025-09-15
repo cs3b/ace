@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-grep -n "archived" dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb | head -5
+grep -n "archived" .ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb | head -5
 ```
 
 _Result excerpt:_
@@ -43,7 +43,7 @@ Change the default value of the `--archived` flag in reflection-synthesize from 
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
 
 #### Delete
 
@@ -92,6 +92,6 @@ Change the default value of the `--archived` flag in reflection-synthesize from 
 
 ## References
 
-- Reflection synthesize command: dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb:41
-- Workflow instruction: dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+- Reflection synthesize command: .ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb:41
+- Workflow instruction: .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
 - Original requirement: "by default the reflection-synthesize should have --archive flag as true"

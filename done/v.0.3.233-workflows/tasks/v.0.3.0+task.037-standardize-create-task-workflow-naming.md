@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-house-rules.md
     ├── changelog.g.md
     ├── code-review
@@ -110,7 +110,7 @@ Standardize the naming inconsistency in `create-task.wf.md` by updating the H1 t
 ## Scope of Work
 
 * Update the H1 title in `create-task.wf.md` from "Breakdown Notes into Tasks" to "Create Tasks"
-* Generalize the "Directory Audit" step to be less specific than just `dev-handbook/guides`
+* Generalize the "Directory Audit" step to be less specific than just `.ace/handbook/guides`
 * Make the directory audit step more contextually appropriate or optional
 * Ensure naming consistency between filename and workflow title
 
@@ -118,7 +118,7 @@ Standardize the naming inconsistency in `create-task.wf.md` by updating the H1 t
 
 #### Modify
 
-* dev-handbook/workflow-instructions/create-task.wf.md
+* .ace/handbook/workflow-instructions/create-task.wf.md
 
 ## Phases
 
@@ -144,22 +144,22 @@ Standardize the naming inconsistency in `create-task.wf.md` by updating the H1 t
   > TEST: Verify Title Update
   > Type: Action Validation
   > Assert: Workflow title matches filename convention
-  > Command: bin/test --check-workflow-title dev-handbook/workflow-instructions/create-task.wf.md
-* [x] Generalize directory audit step to be less specific than `dev-handbook/guides`
+  > Command: bin/test --check-workflow-title .ace/handbook/workflow-instructions/create-task.wf.md
+* [x] Generalize directory audit step to be less specific than `.ace/handbook/guides`
   > TEST: Verify Directory Audit Generalization
   > Type: Action Validation
   > Assert: Directory audit step is appropriately generalized
-  > Command: bin/test --check-audit-step-generalization dev-handbook/workflow-instructions/create-task.wf.md
+  > Command: bin/test --check-audit-step-generalization .ace/handbook/workflow-instructions/create-task.wf.md
 * [x] Update embedded template to reflect the generalized directory audit approach
   > TEST: Template Consistency Check
   > Type: Action Validation
   > Assert: Embedded template reflects generalized approach
-  > Command: bin/test --check-template-consistency dev-handbook/workflow-instructions/create-task.wf.md
+  > Command: bin/test --check-template-consistency .ace/handbook/workflow-instructions/create-task.wf.md
 
 ## Acceptance Criteria
 
 * [x] AC 1: Workflow H1 title is "Create Tasks" matching the filename convention
-* [x] AC 2: Directory audit step is generalized and not overly specific to `dev-handbook/guides`
+* [x] AC 2: Directory audit step is generalized and not overly specific to `.ace/handbook/guides`
 * [x] AC 3: Workflow maintains its functionality while being more broadly applicable
 * [x] AC 4: Embedded template reflects the updated approach
 
@@ -171,6 +171,6 @@ Standardize the naming inconsistency in `create-task.wf.md` by updating the H1 t
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying naming inconsistency
-* dev-handbook/workflow-instructions/create-task.wf.md - Target workflow file
-* dev-handbook/templates/release-tasks/task.template.md - Embedded template structure
+* .ace/taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying naming inconsistency
+* .ace/handbook/workflow-instructions/create-task.wf.md - Target workflow file
+* .ace/handbook/templates/release-tasks/task.template.md - Embedded template structure

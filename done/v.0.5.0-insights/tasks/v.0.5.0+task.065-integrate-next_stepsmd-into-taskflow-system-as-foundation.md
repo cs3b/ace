@@ -32,10 +32,10 @@ Transform the NEXT_STEPS.md concept from a standalone document into a proper fou
 ### Deliverables
 
 #### Created
-- `dev-handbook/templates/task-management/task.next-steps.template.md` - New template for next-steps task
+- `.ace/handbook/templates/task-management/task.next-steps.template.md` - New template for next-steps task
 
 #### Modified
-- `dev-handbook/.integrations/wfi/initialize-project-structure.wf.md` - Updated to create task instead of NEXT_STEPS.md
+- `.ace/handbook/.integrations/wfi/initialize-project-structure.wf.md` - Updated to create task instead of NEXT_STEPS.md
   - Step 8 now creates task `v.0.0.0+task.000-project-initialization-next-steps.md`
   - Step 6 updated to use `release-manager draft v.0.1.0 foundation`
   - Added proper release structure documentation
@@ -75,15 +75,15 @@ Transform the NEXT_STEPS.md concept from a standalone document into a proper fou
 
 ```bash
 # Verified template exists
-ls -la dev-handbook/templates/task-management/task.next-steps.template.md
+ls -la .ace/handbook/templates/task-management/task.next-steps.template.md
 # Result: File exists with 5589 bytes
 
 # Confirmed workflow references updated
-grep -n "Next Steps Task" dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
+grep -n "Next Steps Task" .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md
 # Result: Line 103 contains reference
 
 # Checked task ID references
-grep -c "v.0.0.0+task.000" dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
+grep -c "v.0.0.0+task.000" .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md
 # Result: 3 references found
 ```
 
@@ -91,8 +91,8 @@ grep -c "v.0.0.0+task.000" dev-handbook/.integrations/wfi/initialize-project-str
 
 ## References
 
-- Workflow modified: `dev-handbook/.integrations/wfi/initialize-project-structure.wf.md`
-- Template created: `dev-handbook/templates/task-management/task.next-steps.template.md`
+- Workflow modified: `.ace/handbook/.integrations/wfi/initialize-project-structure.wf.md`
+- Template created: `.ace/handbook/templates/task-management/task.next-steps.template.md`
 - User feedback discussion: Session context where NEXT_STEPS.md integration was suggested
 - Commits: To be created after this documentation
 - Follow-up needed: None - implementation complete and tested

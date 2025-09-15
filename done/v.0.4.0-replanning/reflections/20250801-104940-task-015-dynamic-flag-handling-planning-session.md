@@ -63,7 +63,7 @@
 
 ## Additional Context
 
-- Task file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.015-enable-dynamic-flag-handling-in-create-path-task-new.md`
+- Task file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.015-enable-dynamic-flag-handling-in-create-path-task-new.md`
 - Status changed from `draft` to `pending` with complete implementation plan
 - Estimated effort: 6 hours based on complexity analysis
 - Next step: Implementation execution following the detailed plan

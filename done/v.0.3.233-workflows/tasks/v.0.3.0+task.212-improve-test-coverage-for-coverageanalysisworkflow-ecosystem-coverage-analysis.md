@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── ai-agent-integration.g.md
 ├── atom-pattern.g.md
 ├── changelog.g.md
@@ -130,7 +130,7 @@ Improve test coverage for the CoverageAnalysisWorkflow ecosystem class by adding
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb
+- .ace/tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb
 
 #### Delete
 
@@ -229,7 +229,7 @@ Improve test coverage for the CoverageAnalysisWorkflow ecosystem class by adding
 
 ## References
 
-- Current test file: `dev-tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb`
-- Implementation file: `dev-tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb`
-- RSpec testing guidelines: `dev-handbook/guides/testing/ruby-rspec.md`
+- Current test file: `.ace/tools/spec/coding_agent_tools/ecosystems/coverage_analysis_workflow_spec.rb`
+- Implementation file: `.ace/tools/lib/coding_agent_tools/ecosystems/coverage_analysis_workflow.rb`
+- RSpec testing guidelines: `.ace/handbook/guides/testing/ruby-rspec.md`
 - Related tasks: v.0.3.0+task.131, v.0.3.0+task.134, v.0.3.0+task.137, v.0.3.0+task.144

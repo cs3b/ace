@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules/code_quality | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules/code_quality | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules/code_quality
+.ace/tools/lib/coding_agent_tools/molecules/code_quality
 ├── autofix_orchestrator.rb
 ├── diff_review_analyzer.rb
 ├── markdown_linting_pipeline.rb
@@ -42,7 +42,7 @@ Improve test coverage for the RubyLintingPipeline molecule by creating comprehen
 
 #### Create
 
-- `dev-tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb`
+- `.ace/tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb`
 
 #### Modify
 

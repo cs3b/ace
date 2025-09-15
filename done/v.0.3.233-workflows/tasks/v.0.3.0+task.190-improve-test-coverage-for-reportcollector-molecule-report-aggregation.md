@@ -28,8 +28,8 @@ Improve test coverage for the ReportCollector molecules (both Code and Reflectio
 
 #### Modify
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/molecules/code/report_collector_spec.rb`
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/molecules/code/report_collector_spec.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb`
 
 ## Implementation Plan
 

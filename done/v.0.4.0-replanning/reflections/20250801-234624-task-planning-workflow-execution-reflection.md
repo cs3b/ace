@@ -100,9 +100,9 @@
 
 **Architecture Insight**: The project uses a comprehensive documentation ecosystem spanning:
 - Main docs/ directory (system-level documentation)
-- dev-tools/docs/ (tools-specific documentation) 
-- dev-handbook/workflow-instructions/ (AI workflow files)
-- dev-taskflow/ files (task and reflection documentation)
+- .ace/tools/docs/ (tools-specific documentation) 
+- .ace/handbook/workflow-instructions/ (AI workflow files)
+- .ace/taskflow/ files (task and reflection documentation)
 
 **Command Pattern**: The migration from create-path task-new to task-manager create represents a logical consolidation of task management functions under the task-manager executable.
 

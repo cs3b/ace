@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.44]
 _Command run:_
 
 ```bash
-ls -lh dev-taskflow/current/v.0.3.0-workflows/code_review/*/input.xml dev-taskflow/current/v.0.3.0-workflows/code_review/*/prompt.md
+ls -lh .ace/taskflow/current/v.0.3.0-workflows/code_review/*/input.xml .ace/taskflow/current/v.0.3.0-workflows/code_review/*/prompt.md
 ```
 
 _Result excerpt:_
@@ -39,7 +39,7 @@ Fix truncated input content in review prompts by ensuring full input.xml content
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 
 ## Phases
 
@@ -56,7 +56,7 @@ Fix truncated input content in review prompts by ensuring full input.xml content
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current truncation patterns are identified
-  > Command: grep -n "truncated\|excerpt" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -n "truncated\|excerpt" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Review session feedback about missing complete content
 * [x] Plan file size handling and validation approach
 

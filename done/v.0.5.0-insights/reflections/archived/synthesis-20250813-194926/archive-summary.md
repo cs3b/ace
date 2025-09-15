@@ -2,7 +2,7 @@
 
 **Archive Date**: 2025-08-13 19:49:26
 **Reflections Archived**: 9
-**Archive Directory**: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/archived/synthesis-20250813-194926
+**Archive Directory**: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/archived/synthesis-20250813-194926
 
 ## Archived Reflections
 

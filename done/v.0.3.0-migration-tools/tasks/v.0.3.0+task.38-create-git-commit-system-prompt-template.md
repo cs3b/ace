@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/.meta | sed 's/^/    /'
+tree -L 2 .ace/handbook/.meta | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/.meta
+    .ace/handbook/.meta
     └── tpl
 ```
 
@@ -29,7 +29,7 @@ Create a proper system prompt template for git commit message generation that em
 
 ## Scope of Work
 
-- Create system prompt template in dev-handbook/.meta/tpl/
+- Create system prompt template in .ace/handbook/.meta/tpl/
 - Embed complete version control system message guide using XML documents format
 - Structure system prompt for LLM commit message generation
 - Update commit message generator to reference the new template file path
@@ -38,11 +38,11 @@ Create a proper system prompt template for git commit message generation that em
 
 #### Create
 
-- dev-handbook/.meta/tpl/git-commit.system.prompt.md
+- .ace/handbook/.meta/tpl/git-commit.system.prompt.md
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
+- .ace/tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
 
 ## Phases
 
@@ -65,12 +65,12 @@ Create a proper system prompt template for git commit message generation that em
   > TEST: Content Review
   > Type: Content Analysis
   > Assert: Guidelines and conventions from version-control-system-message.g.md are understood
-  > Command: Already reviewed the content in dev-handbook/guides/version-control-system-message.g.md
+  > Command: Already reviewed the content in .ace/handbook/guides/version-control-system-message.g.md
 
 - [x] Study documents embedding standards for proper XML format
   > TEST: Embedding Format Understanding
   > Type: Standards Review
-  > Assert: XML documents embedding format from dev-handbook/guides/documents-embedding.g.md is understood
+  > Assert: XML documents embedding format from .ace/handbook/guides/documents-embedding.g.md is understood
   > Command: Review and understand the universal <documents> container format requirements
 
 ### Execution Steps
@@ -99,7 +99,7 @@ Create a proper system prompt template for git commit message generation that em
 - [x] AC 2: CommitMessageGenerator uses template file path directly with llm-query --system parameter
 - [x] AC 3: Generator raises exception if template file is missing (no fallback behavior)
 - [x] AC 4: Generated commit messages follow conventional commits specification as defined in the embedded guide
-- [x] AC 5: Template follows dev-handbook/.meta/tpl/ structure and naming conventions
+- [x] AC 5: Template follows .ace/handbook/.meta/tpl/ structure and naming conventions
 
 ## Out of Scope
 
@@ -113,9 +113,9 @@ Create a proper system prompt template for git commit message generation that em
 ## References
 
 ```
-Source: dev-handbook/guides/version-control-system-message.g.md
-Target: dev-handbook/.meta/tpl/git-commit.system.prompt.md
-Integration: dev-tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
+Source: .ace/handbook/guides/version-control-system-message.g.md
+Target: .ace/handbook/.meta/tpl/git-commit.system.prompt.md
+Integration: .ace/tools/lib/coding_agent_tools/molecules/git/commit_message_generator.rb
 ```
 
 ## Implementation Summary
@@ -123,7 +123,7 @@ Integration: dev-tools/lib/coding_agent_tools/molecules/git/commit_message_gener
 **Completed:** All planning steps, execution steps, and acceptance criteria have been fulfilled.
 
 **Key Changes:**
-- Created comprehensive system prompt template at `dev-handbook/.meta/tpl/git-commit.system.prompt.md`
+- Created comprehensive system prompt template at `.ace/handbook/.meta/tpl/git-commit.system.prompt.md`
 - Embedded complete version control system message guide using XML documents format
 - Updated `CommitMessageGenerator` to use template file path directly with `llm-query --system` parameter
 - Implemented proper exception handling for missing template files
@@ -135,4 +135,4 @@ Integration: dev-tools/lib/coding_agent_tools/molecules/git/commit_message_gener
 - ✅ Template file path correctly resolved and used
 - ✅ Security requirements satisfied (template accessible from project root)
 
-**Template Location:** `dev-handbook/.meta/tpl/git-commit.system.prompt.md` (as originally planned)
+**Template Location:** `.ace/handbook/.meta/tpl/git-commit.system.prompt.md` (as originally planned)

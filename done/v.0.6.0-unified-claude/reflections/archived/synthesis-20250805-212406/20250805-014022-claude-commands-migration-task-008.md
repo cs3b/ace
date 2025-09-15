@@ -14,7 +14,7 @@
 
 ## What Could Be Improved
 
-- Initial confusion about dev-handbook commands already being migrated - the task could have noted this was already done
+- Initial confusion about .ace/handbook commands already being migrated - the task could have noted this was already done
 - Test failures were pre-existing but initially unclear if they were related to the migration
 - The task mentions updating ClaudeCommandsInstaller but notes it's a separate task - this dependency could be clearer
 
@@ -32,7 +32,7 @@
 - Moved 6 custom commands to _custom/: commit.md, draft-tasks.md, load-project-context.md, plan-tasks.md, review-tasks.md, work-on-tasks.md
 - Moved 26 generated commands to _generated/
 - All moves used git mv to preserve history
-- Migration report saved to dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Migration report saved to .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 ### Verification Steps
 - Checked directory structure with LS tool
@@ -61,6 +61,6 @@
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
-- Migration report: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
+- Migration report: .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 - Related task for ClaudeCommandsInstaller update will handle remaining codebase references

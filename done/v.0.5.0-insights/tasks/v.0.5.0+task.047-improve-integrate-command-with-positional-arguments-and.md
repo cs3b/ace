@@ -22,7 +22,7 @@ dependencies: [v.0.5.0+task.045]
   - **Research conducted**: Analyzed existing command structure patterns
   - **Similar implementations**: task-manager has subcommands, llm has models subcommand
   - **Suggested default**: Make it subcommand of integrate (integrate config)
-  - **Decision**: No config subcommand needed - use template from dev-handbook/.meta/tpl/dotfiles
+  - **Decision**: No config subcommand needed - use template from .ace/handbook/.meta/tpl/dotfiles
 
 - [x] What should happen when user has both project and user config with conflicting module defaults?
   - **Research conducted**: Standard precedence is CLI > Project > User > System
@@ -222,7 +222,7 @@ Improve the user experience of the integrate command by making it more intuitive
   > Assert: Config files loaded in correct order (CLI > Project > User > System)
   > Command: coding-agent-tools integrate --verbose --dry-run | grep "Loading config"
 
-- [x] **Create Config Template**: Add integrate.yml to dev-handbook/.meta/tpl/dotfiles
+- [x] **Create Config Template**: Add integrate.yml to .ace/handbook/.meta/tpl/dotfiles
   > TEST: Template Installation
   > Type: File Operation Test
   > Assert: Config template installed with dotfiles
@@ -304,7 +304,7 @@ Improve the user experience of the integrate command by making it more intuitive
 
 ### Decisions Made
 1. **--only flag**: Remove immediately, no backward compatibility needed
-2. **Config management**: Use template file from dev-handbook/.meta/tpl/dotfiles (no subcommand)
+2. **Config management**: Use template file from .ace/handbook/.meta/tpl/dotfiles (no subcommand)
 3. **Config precedence**: Project config takes precedence silently over user config
 
 ### Research Completed
@@ -315,7 +315,7 @@ Improve the user experience of the integrate command by making it more intuitive
 
 ### Recommended Next Steps
 1. Proceed with implementation immediately
-2. Create config template in dev-handbook/.meta/tpl/dotfiles/.coding-agent/integrate.yml
+2. Create config template in .ace/handbook/.meta/tpl/dotfiles/.coding-agent/integrate.yml
 3. Remove --only flag completely from integrate command
 
 The task is now fully ready for implementation with all decisions made.

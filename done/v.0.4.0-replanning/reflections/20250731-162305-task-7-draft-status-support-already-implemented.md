@@ -84,8 +84,8 @@
 ## Technical Details
 
 **Verified Working Components:**
-- `/dev-tools/lib/coding_agent_tools/cli/create_path_command.rb` - line 27: status validation includes "draft"
-- `/dev-tools/lib/coding_agent_tools/atoms/code_quality/task_metadata_validator.rb` - line 15: VALID_STATUSES includes "draft"
+- `/.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb` - line 27: status validation includes "draft"
+- `/.ace/tools/lib/coding_agent_tools/atoms/code_quality/task_metadata_validator.rb` - line 15: VALID_STATUSES includes "draft"
 - Task manager filtering and status reporting works correctly with draft tasks
 - Navigation and path resolution works with all task statuses
 

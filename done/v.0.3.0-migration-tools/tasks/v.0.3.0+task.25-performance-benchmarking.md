@@ -14,7 +14,7 @@ dependencies: [v.0.3.0+task.09, v.0.3.0+task.14]
 _Command run:_
 
 ```bash
-ls -la dev-tools/exe-old/get-* | wc -l | sed 's/^/    /'
+ls -la .ace/tools/exe-old/get-* | wc -l | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -40,9 +40,9 @@ Conduct comprehensive performance benchmarking of migrated tools against exe-old
 
 #### Create
 
-* dev-tools/spec/benchmarks/migration_performance_spec.rb
-* dev-tools/spec/benchmarks/performance_report.md
-* dev-tools/lib/coding_agent_tools/performance/profiler.rb
+* .ace/tools/spec/benchmarks/migration_performance_spec.rb
+* .ace/tools/spec/benchmarks/performance_report.md
+* .ace/tools/lib/coding_agent_tools/performance/profiler.rb
 
 #### Modify
 
@@ -79,14 +79,14 @@ Conduct comprehensive performance benchmarking of migrated tools against exe-old
   > TEST: Baseline Measurement
   > Type: Performance Test
   > Assert: Baseline times recorded
-  > Command: time dev-tools/exe-old/get-all-tasks >/dev/null 2>&1
+  > Command: time .ace/tools/exe-old/get-all-tasks >/dev/null 2>&1
 - [ ] Benchmark gem-based implementations
 - [ ] Create performance comparison report
 - [ ] Identify bottlenecks using profiler
   > TEST: Profiler Implementation
   > Type: Unit Test
   > Assert: Profiler captures data
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/performance/profiler_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/performance/profiler_spec.rb
 - [ ] Optimize critical paths
 - [ ] Re-benchmark after optimizations
 - [ ] Document final performance metrics

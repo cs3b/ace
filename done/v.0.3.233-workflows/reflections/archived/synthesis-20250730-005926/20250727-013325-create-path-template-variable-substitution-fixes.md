@@ -118,8 +118,8 @@
 - Fixed template path in create-path.yml configuration
 
 **Files Modified:**
-- `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
-- `dev-handbook/templates/release-tasks/task.template.md`
+- `.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb`
+- `.ace/handbook/templates/release-tasks/task.template.md`
 - `.coding-agent/create-path.yml`
 
 **Template Variable System:**

@@ -13,16 +13,16 @@ dependencies: []
 _Command run:_
 
 ```bash
-grep -l "path (" dev-handbook/workflow-instructions/*.wf.md | head -5 | sed 's/^/    /'
+grep -l "path (" .ace/handbook/workflow-instructions/*.wf.md | head -5 | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/create-adr.wf.md
-    dev-handbook/workflow-instructions/create-api-docs.wf.md
-    dev-handbook/workflow-instructions/create-reflection-note.wf.md
-    dev-handbook/workflow-instructions/create-task.wf.md
+    .ace/handbook/workflow-instructions/create-adr.wf.md
+    .ace/handbook/workflow-instructions/create-api-docs.wf.md
+    .ace/handbook/workflow-instructions/create-reflection-note.wf.md
+    .ace/handbook/workflow-instructions/create-task.wf.md
     (and others...)
 ```
 
@@ -45,10 +45,10 @@ Several workflow files correctly use the XML `<templates>` block but also contai
 
 #### Modify
 
-* dev-handbook/workflow-instructions/create-adr.wf.md
-* dev-handbook/workflow-instructions/create-api-docs.wf.md
-* dev-handbook/workflow-instructions/create-reflection-note.wf.md
-* dev-handbook/workflow-instructions/create-task.wf.md
+* .ace/handbook/workflow-instructions/create-adr.wf.md
+* .ace/handbook/workflow-instructions/create-api-docs.wf.md
+* .ace/handbook/workflow-instructions/create-reflection-note.wf.md
+* .ace/handbook/workflow-instructions/create-task.wf.md
 * Any other workflow files with stray path references
 
 #### Delete

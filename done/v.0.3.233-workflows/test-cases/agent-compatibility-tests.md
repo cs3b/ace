@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.4]
 _Command run:_
 
 ```bash
-ls -la dev-handbook/workflow-instructions/
+ls -la .ace/handbook/workflow-instructions/
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions/
+.ace/handbook/workflow-instructions/
 ├── breakdown-notes-into-tasks.wf.md
 ├── draft-release.wf.md
 └── update-roadmap.wf.md
@@ -40,7 +40,7 @@ Create comprehensive test cases to validate that refactored workflows work corre
 
 #### Create
 
-- dev-taskflow/backlog/v.0.3.0-workflows/test-cases/agent-compatibility-tests.md
+- .ace/taskflow/backlog/v.0.3.0-workflows/test-cases/agent-compatibility-tests.md
 
 #### Modify
 

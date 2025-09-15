@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/organisms/taskflow_management | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/organisms/taskflow_management | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/organisms/taskflow_management
+    .ace/tools/lib/coding_agent_tools/organisms/taskflow_management
     ├── release_manager.rb
     └── task_manager.rb
 ```
@@ -44,7 +44,7 @@ Enable ReleaseManager to resolve subdirectory paths within the current release, 
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb
+- .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb
 
 #### Delete
 
@@ -84,22 +84,22 @@ Enable ReleaseManager to resolve subdirectory paths within the current release, 
   > TEST: Method exists with proper signature
   > Type: Action Validation
   > Assert: resolve_path method exists and accepts subpath parameter
-  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; puts CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.instance_methods.include?(:resolve_path)"
+  > Command: cd .ace/tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; puts CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.instance_methods.include?(:resolve_path)"
 - [x] Implement core path resolution logic using existing directory navigator atoms
   > TEST: Path resolution works for basic subdirectories
   > Type: Action Validation
   > Assert: Method returns correct absolute paths for common subdirectories
-  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new; puts rm.resolve_path('tasks').class == String rescue puts 'false'"
+  > Command: cd .ace/tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new; puts rm.resolve_path('tasks').class == String rescue puts 'false'"
 - [x] Add directory creation capability with optional create_if_missing flag
   > TEST: Directory creation works when flag is true
   > Type: Action Validation
   > Assert: Method creates directories when create_if_missing is true
-  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new; result = rm.resolve_path('test-subdir', create_if_missing: true); puts File.directory?(result) rescue puts 'false'"
+  > Command: cd .ace/tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new; result = rm.resolve_path('test-subdir', create_if_missing: true); puts File.directory?(result) rescue puts 'false'"
 - [x] Implement error handling for cases when no current release exists
   > TEST: Error handling works correctly
   > Type: Action Validation
   > Assert: Method raises appropriate error when no current release exists
-  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: '/tmp/non-existent'); begin; rm.resolve_path('tasks'); puts 'false'; rescue => e; puts e.message.include?('release'); end"
+  > Command: cd .ace/tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: '/tmp/non-existent'); begin; rm.resolve_path('tasks'); puts 'false'; rescue => e; puts e.message.include?('release'); end"
 
 ## Acceptance Criteria
 
@@ -120,6 +120,6 @@ Enable ReleaseManager to resolve subdirectory paths within the current release, 
 
 ## References
 
-- Current ReleaseManager: dev-tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb
+- Current ReleaseManager: .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb
 - Example usage pattern: resolve_path("reflections/synthesis") → "/path/to/current/release/reflections/synthesis"
 - Related task: Enhance release-manager CLI with --path Option

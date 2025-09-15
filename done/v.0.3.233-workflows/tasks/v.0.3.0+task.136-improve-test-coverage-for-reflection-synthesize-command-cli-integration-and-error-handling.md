@@ -82,6 +82,6 @@ Implement comprehensive test coverage for the reflection synthesize CLI command 
 
 ## References
 - Coverage analysis: coverage_analysis/coverage_analysis.json
-- Testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md
 - ATOM architecture: docs/architecture-tools.md
 - Source file: lib/coding_agent_tools/cli/commands/reflection/synthesize.rb

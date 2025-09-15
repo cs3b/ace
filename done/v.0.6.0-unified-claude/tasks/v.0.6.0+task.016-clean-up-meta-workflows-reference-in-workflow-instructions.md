@@ -23,7 +23,7 @@ The workflow instructions README should present accurate information about avail
 # No CLI interface - this is a documentation update task
 
 # Expected file structure after update:
-dev-handbook/workflow-instructions/README.md
+.ace/handbook/workflow-instructions/README.md
 - Individual Workflow Reference section listing regular workflows
 - Meta Workflows section (if kept) clearly separated and explained
 - No mixing of meta workflows with regular workflow categories
@@ -96,7 +96,7 @@ Clean up the workflow instructions README to remove inappropriate references to 
 ## File Modifications
 
 ### Modify
-- dev-handbook/workflow-instructions/README.md
+- .ace/handbook/workflow-instructions/README.md
   - Changes: Remove Meta Workflows subsection (lines 773-777) from Individual Workflow Reference section
   - Impact: Clearer distinction between regular workflows and meta workflows
   - Integration points: No impact on actual workflow functionality
@@ -177,6 +177,6 @@ Clean up the workflow instructions README to remove inappropriate references to 
 
 ## References
 
-- Current issue: dev-handbook/workflow-instructions/README.md incorrectly mentions meta workflows in the Individual Workflow Reference section (lines 773-777)
+- Current issue: .ace/handbook/workflow-instructions/README.md incorrectly mentions meta workflows in the Individual Workflow Reference section (lines 773-777)
 - Context: Meta workflows are for handbook maintenance and live in .meta/wfi/ directory
 - Meta workflows should be clearly separated from regular development workflows

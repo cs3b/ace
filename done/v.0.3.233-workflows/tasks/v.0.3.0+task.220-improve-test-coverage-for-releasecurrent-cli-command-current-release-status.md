@@ -43,7 +43,7 @@ Improve test coverage for the ReleaseCurrent CLI command by adding comprehensive
 
 #### Modify
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
 
 #### Delete
 
@@ -108,8 +108,8 @@ Improve test coverage for the ReleaseCurrent CLI command by adding comprehensive
 
 ## References
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/release/current.rb`
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/commands/release/current.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/cli/commands/release_spec.rb`
 
 ## Summary
 

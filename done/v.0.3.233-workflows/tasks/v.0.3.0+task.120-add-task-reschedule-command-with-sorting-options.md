@@ -14,13 +14,13 @@ sort: 124
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools
+.ace/tools/lib/coding_agent_tools
 ├── atoms
 ├── cli
 ├── constants
@@ -53,8 +53,8 @@ Implement a new `task-manager reschedule` command that allows reordering tasks w
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/task_manager.rb (add reschedule command)
-- dev-tools/exe/task-manager (command routing)
+- .ace/tools/lib/coding_agent_tools/cli/task_manager.rb (add reschedule command)
+- .ace/tools/exe/task-manager (command routing)
 - Task sorting and ordering logic
 - Task metadata update mechanisms
 
@@ -78,7 +78,7 @@ Implement a new `task-manager reschedule` command that allows reordering tasks w
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current CLI structure and task management methods are identified
-  > Command: grep -r "class.*CLI\|def.*command" dev-tools/lib/coding_agent_tools/cli/
+  > Command: grep -r "class.*CLI\|def.*command" .ace/tools/lib/coding_agent_tools/cli/
 - [x] Study existing task sorting and prioritization logic
 - [x] Design reschedule command interface and flag behavior specifications
 - [x] Plan sort attribute schema and metadata updates
@@ -113,7 +113,7 @@ Implement a new `task-manager reschedule` command that allows reordering tasks w
 
 ## References
 
-Based on requirements from: dev-taskflow/backlog/ideas/exe-task-manager.md
+Based on requirements from: .ace/taskflow/backlog/ideas/exe-task-manager.md
 Item #3: "allow to overwrite sort"
 - Command: `task-manager reschedule <list-of-tasks-can-be-ids-or-paths>`
 - Flags: `--add-next` (move tasks to beginning of pending queue)

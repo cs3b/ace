@@ -10,7 +10,7 @@ dependencies: []
 
 ## Context
 
-The dev-tools test suite currently runs ~3,000 unit tests sequentially in 8 seconds (7s tests + 1s startup). We want to implement parallel execution using 4 runners to reduce runtime to ~2.5 seconds while maintaining SimpleCov coverage reporting.
+The .ace/tools test suite currently runs ~3,000 unit tests sequentially in 8 seconds (7s tests + 1s startup). We want to implement parallel execution using 4 runners to reduce runtime to ~2.5 seconds while maintaining SimpleCov coverage reporting.
 
 ## Objective
 

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/cli/
+.ace/tools/lib/coding_agent_tools/cli/
 ├── code_lint_command.rb
 ├── code_review_command.rb
 ├── git_commands/
@@ -37,7 +37,7 @@ Create a new `create-path` command that allows users to create files and directo
 
 ## Scope of Work
 
-- Add new `create-path` CLI command to the dev-tools gem
+- Add new `create-path` CLI command to the .ace/tools gem
 - Delegate path generation to nav-path Ruby classes (PathResolver) directly
 - Use template-based content from `.coding-agent/create-path.yml` configuration
 - Support metadata attributes via command-line parameters
@@ -49,16 +49,16 @@ Create a new `create-path` command that allows users to create files and directo
 
 #### Create
 
-- `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
-- `dev-tools/exe/create-path`
+- `.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb`
+- `.ace/tools/exe/create-path`
 - `.coding-agent/create-path.yml` - template configuration file
-- Unit tests for the new command in `dev-tools/spec/cli/create_path_command_spec.rb`
+- Unit tests for the new command in `.ace/tools/spec/cli/create_path_command_spec.rb`
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools/cli.rb` (register new command)
-- `dev-tools/coding_agent_tools.gemspec` (add new executable)
-- `dev-tools/docs/tools.md` (document new command)
+- `.ace/tools/lib/coding_agent_tools/cli.rb` (register new command)
+- `.ace/tools/coding_agent_tools.gemspec` (add new executable)
+- `.ace/tools/docs/tools.md` (document new command)
 
 ## Phases
 
@@ -76,7 +76,7 @@ Create a new `create-path` command that allows users to create files and directo
   > TEST: Understanding Check
   > Type: Pre-condition Check  
   > Assert: nav-path command structure and patterns are identified
-  > Command: Read dev-tools/lib/coding_agent_tools/cli/nav_commands/nav_path_command.rb
+  > Command: Read .ace/tools/lib/coding_agent_tools/cli/nav_commands/nav_path_command.rb
 - [x] Analyze task-new metadata integration to understand metadata system
 - [x] Research CLI patterns in existing commands for consistency
 - [x] Study security infrastructure (SecurePathValidator, FileIoHandler) for safe file operations
@@ -100,7 +100,7 @@ Create a new `create-path` command that allows users to create files and directo
 - [x] Implement file creation using FileIoHandler molecule
 - [x] Implement fail-by-default behavior with --force flag for overwrites
 - [x] Create `.coding-agent/create-path.yml` configuration loader
-- [x] Implement template resolution from dev-handbook/templates/ based on config
+- [x] Implement template resolution from .ace/handbook/templates/ based on config
 - [x] Add metadata injection - non-flag parameters become template variables
   > TEST: Content Injection
   > Type: Functionality Check
@@ -149,11 +149,11 @@ create-path task-new "implement-feature-x" priority:high estimate:4h
 
 ## References
 
-- Existing nav-path implementation: `dev-tools/lib/coding_agent_tools/cli/nav_commands/nav_path_command.rb`
+- Existing nav-path implementation: `.ace/tools/lib/coding_agent_tools/cli/nav_commands/nav_path_command.rb`
 - Task-new metadata system: Used by nav-path task-new functionality
-- CLI patterns: Other commands in `dev-tools/lib/coding_agent_tools/cli/`
+- CLI patterns: Other commands in `.ace/tools/lib/coding_agent_tools/cli/`
 - Security infrastructure: `SecurePathValidator`, `FileIoHandler`, `FileOperationConfirmer`
 - Multi-repo support: `RepositoryScanner`, `ProjectRootDetector`
 - Path resolution: `PathResolver` molecule with `.coding-agent/path.yml` config
 - Template configuration: `.coding-agent/create-path.yml` for template mappings
-- Template storage: `dev-handbook/templates/` directory
+- Template storage: `.ace/handbook/templates/` directory

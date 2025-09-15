@@ -11,7 +11,7 @@
 - Effectively transformed an enhanced idea into a behavior-first draft task specification
 - Properly populated the behavioral specification template with concrete user experience details
 - Implemented automated idea file organization with task number prefixing (016-)
-- Successfully executed multi-step workflow across different repositories (meta-repo and dev-taskflow submodule)
+- Successfully executed multi-step workflow across different repositories (meta-repo and .ace/taskflow submodule)
 - Created clear interface contracts that focus on user experience rather than implementation details
 - Properly used the create-path command to generate task files with correct sequencing and metadata
 
@@ -42,7 +42,7 @@ None identified - workflow executed smoothly overall.
 - **Git Context Confusion**: Initial attempt to use git mv from wrong repository context
   - Occurrences: 1 time during idea file organization
   - Impact: Minor delay requiring correction and re-execution
-  - Root Cause: Working from meta-repository instead of dev-taskflow submodule
+  - Root Cause: Working from meta-repository instead of .ace/taskflow submodule
 
 #### Low Impact Issues
 
@@ -104,7 +104,7 @@ None identified - workflow executed smoothly overall.
 
 ## Additional Context
 
-- Original idea file: dev-taskflow/backlog/ideas/20250731-1454-task-list-rename.md
+- Original idea file: .ace/taskflow/backlog/ideas/20250731-1454-task-list-rename.md
 - Created draft task: v.0.4.0+task.016-task-manager-cli-consistency-enhancement.md
 - Organized idea file: current/v.0.4.0-replanning/docs/ideas/016-20250731-1454-task-list-rename.md
-- Git commit hash: e37d486 (dev-taskflow submodule)
+- Git commit hash: e37d486 (.ace/taskflow submodule)

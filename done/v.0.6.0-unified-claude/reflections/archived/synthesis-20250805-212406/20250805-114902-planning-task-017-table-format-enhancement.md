@@ -63,6 +63,6 @@
 
 ## Additional Context
 
-- Task file: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.017-enhance-handbook-claude-list-readability-with-table-format.md
-- Related feedback: dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md (item #4)
-- Current implementation: dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- Task file: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.017-enhance-handbook-claude-list-readability-with-table-format.md
+- Related feedback: .ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md (item #4)
+- Current implementation: .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb

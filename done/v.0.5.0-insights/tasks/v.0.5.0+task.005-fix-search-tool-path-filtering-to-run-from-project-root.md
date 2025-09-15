@@ -12,7 +12,7 @@ dependencies: [v.0.5.0+task.004]
 
 ## Behavioral Context
 
-**Issue**: The search tool's --exclude filter wasn't working correctly. When searching with patterns like `--exclude "dev-taskflow/done/**/*"`, results from those directories were still appearing because searches were being executed from within each repository's directory rather than from the project root.
+**Issue**: The search tool's --exclude filter wasn't working correctly. When searching with patterns like `--exclude ".ace/taskflow/done/**/*"`, results from those directories were still appearing because searches were being executed from within each repository's directory rather than from the project root.
 
 **Key Behavioral Requirements**:
 - Search tool must execute from project root by default
@@ -45,7 +45,7 @@ Fix the search tool to execute searches from the project root directory, enablin
 
 ### What Was Done
 
-- **Problem Identification**: User reported that `--exclude "dev-taskflow/done/**/*"` wasn't filtering results
+- **Problem Identification**: User reported that `--exclude ".ace/taskflow/done/**/*"` wasn't filtering results
 - **Investigation**: Found that searches were executed using `Dir.chdir(repo[:path])` which changed to each repository directory
 - **Solution**: 
   - Modified `search_single_repository` to execute from project root
@@ -84,15 +84,15 @@ normalized_path = file_path.start_with?('./') ? file_path[2..-1] : file_path
 
 ```bash
 # Test exclude filter works
-./dev-tools/exe/search "task.64" --content --exclude "dev-taskflow/done/**/*"
+./.ace/tools/exe/search "task.64" --content --exclude ".ace/taskflow/done/**/*"
 # Result: No results (correctly filtered)
 
 # Test without exclude to verify results exist
-./dev-tools/exe/search "task.64" --content --exclude none
-# Result: Found 2 results in dev-taskflow/done/
+./.ace/tools/exe/search "task.64" --content --exclude none
+# Result: Found 2 results in .ace/taskflow/done/
 
 # Test original user case
-./dev-tools/exe/search "bin/tn" --exclude "dev-taskflow/done/**/*,dev-taskflow/current/*/tasks/*"
+./.ace/tools/exe/search "bin/tn" --exclude ".ace/taskflow/done/**/*,dev-taskflow/current/*/tasks/*"
 # Result: Correctly excludes specified paths
 ```
 
@@ -102,6 +102,6 @@ normalized_path = file_path.start_with?('./') ? file_path[2..-1] : file_path
 
 - Commits: 
   - `52de0af fix(search): run searches from project root with proper path filtering`
-  - `b379425 chore: update dev-tools submodule with search path filtering fix`
+  - `b379425 chore: update .ace/tools submodule with search path filtering fix`
 - Related issues: User-reported issue with --exclude not working
 - Follow-up needed: None - fix is complete and validated

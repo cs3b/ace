@@ -13,15 +13,15 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/spec/coding_agent_tools/organisms -name "*spec.rb" | grep -E "(review|code)" | head -10
+find .ace/tools/spec/coding_agent_tools/organisms -name "*spec.rb" | grep -E "(review|code)" | head -10
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
-dev-tools/spec/coding_agent_tools/organisms/code/context_loader_spec.rb 
-dev-tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
+.ace/tools/spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
+.ace/tools/spec/coding_agent_tools/organisms/code/context_loader_spec.rb 
+.ace/tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
 ```
 
 No existing unit tests found for ReviewManager organism specifically.
@@ -44,7 +44,7 @@ This task will create comprehensive unit tests for the ReviewManager organism to
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/organisms/code/review_manager_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/review_manager_spec.rb
 
 #### Modify
 
@@ -71,12 +71,12 @@ This task will create comprehensive unit tests for the ReviewManager organism to
   > TEST: Implementation Analysis
   > Type: Pre-condition Check
   > Assert: All public methods and their signatures are documented
-  > Command: grep -n "def " dev-tools/lib/coding_agent_tools/organisms/code/review_manager.rb
+  > Command: grep -n "def " .ace/tools/lib/coding_agent_tools/organisms/code/review_manager.rb
 * [x] Review existing organism test patterns to understand testing conventions
   > TEST: Pattern Analysis
   > Type: Pre-condition Check  
   > Assert: Testing patterns and mocking strategies are identified
-  > Command: head -50 dev-tools/spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
+  > Command: head -50 .ace/tools/spec/coding_agent_tools/organisms/code/content_extractor_spec.rb
 * [x] Identify all dependencies that need to be mocked in tests (SessionManager, ContentExtractor, ContextLoader, PromptBuilder)
 * [x] Plan test scenarios covering both success and failure paths for all public methods
 
@@ -86,12 +86,12 @@ This task will create comprehensive unit tests for the ReviewManager organism to
   > TEST: Test File Creation
   > Type: Action Validation
   > Assert: Test file exists and has proper RSpec setup
-  > Command: test -f dev-tools/spec/coding_agent_tools/organisms/code/review_manager_spec.rb
+  > Command: test -f .ace/tools/spec/coding_agent_tools/organisms/code/review_manager_spec.rb
 - [x] Implement test setup with mock organisms (SessionManager, ContentExtractor, ContextLoader, PromptBuilder)
   > TEST: Mock Setup Validation
   > Type: Action Validation
   > Assert: All required mocks are properly configured
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code/review_manager_spec.rb --dry-run
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code/review_manager_spec.rb --dry-run
 - [x] Write tests for #initialize method to verify proper organism instantiation
 - [x] Write comprehensive tests for #create_review_session covering success and failure scenarios
 - [x] Write tests for #execute_review method (currently placeholder implementation)
@@ -102,7 +102,7 @@ This task will create comprehensive unit tests for the ReviewManager organism to
   > TEST: Test Suite Execution
   > Type: Action Validation
   > Assert: All ReviewManager tests pass successfully
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code/review_manager_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code/review_manager_spec.rb
 
 ## Acceptance Criteria
 

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools | sed 's/^/    /'
+tree -L 2 .ace/tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools
+    .ace/tools
     ├── bin
     ├── exe
     ├── exe-old
@@ -29,7 +29,7 @@ _Result excerpt:_
 
 ## Objective
 
-Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-structure.wf.md workflow. Create a comprehensive migration plan to integrate task management tools (tn, tr, rc, etc.) from exe-old into the coding_agent_tools Ruby gem architecture, addressing the security/stability risk identified by Google Pro reviewer while supporting the architectural evolution toward a unified gem-based approach.
+Investigate and resolve the .ace/tools/exe-old/ dependency in initialize-project-structure.wf.md workflow. Create a comprehensive migration plan to integrate task management tools (tn, tr, rc, etc.) from exe-old into the coding_agent_tools Ruby gem architecture, addressing the security/stability risk identified by Google Pro reviewer while supporting the architectural evolution toward a unified gem-based approach.
 
 ## Scope of Work
 
@@ -37,7 +37,7 @@ Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-
 * Identify which tools are being used from exe-old and analyze their functionality
 * Design integration of task management tools into coding_agent_tools Ruby gem using ATOM architecture
 * Create migration plan for rewriting exe-old tools as gem CLI commands
-* Update workflows to use unified gem-based tool access (dev-tools/exe/coding_agent_tools <command>)
+* Update workflows to use unified gem-based tool access (.ace/tools/exe/coding_agent_tools <command>)
 * Plan binstub preservation strategy to maintain current bin/ entry points
 * Document the migration approach and architectural integration for future reference
 
@@ -45,12 +45,12 @@ Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-
 
 #### Create
 
-* dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md - Comprehensive migration strategy document
-* dev-taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md - ATOM architecture integration design
+* .ace/taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md - Comprehensive migration strategy document
+* .ace/taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md - ATOM architecture integration design
 
 #### Modify
 
-* dev-handbook/workflow-instructions/initialize-project-structure.wf.md - Update tool references
+* .ace/handbook/workflow-instructions/initialize-project-structure.wf.md - Update tool references
 * Any other workflows using exe-old tools
 
 #### Delete
@@ -79,12 +79,12 @@ Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-
   > TEST: Tool Inventory Complete
   > Type: Pre-condition Check
   > Assert: All exe-old tools documented with interfaces
-  > Command: ls -la dev-tools/exe-old/ && head -20 dev-tools/exe-old/*
+  > Command: ls -la .ace/tools/exe-old/ && head -20 .ace/tools/exe-old/*
 * [x] Analyze current coding_agent_tools gem architecture and CLI structure
   > TEST: Gem Architecture Analysis
   > Type: Pre-condition Check
   > Assert: Current gem CLI commands and ATOM structure understood
-  > Command: dev-tools/exe/coding_agent_tools --help && find dev-tools/lib -name "*.rb" | head -10
+  > Command: .ace/tools/exe/coding_agent_tools --help && find .ace/tools/lib -name "*.rb" | head -10
 * [x] Design ATOM architecture integration for task management commands
 * [x] Plan CLI command structure for unified tool access
 * [x] Design binstub preservation strategy for seamless migration
@@ -95,27 +95,27 @@ Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-
   > TEST: Migration Plan Created
   > Type: Action Validation
   > Assert: Migration plan exists with architectural integration details
-  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+  > Command: test -f .ace/taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
 * [x] Create gem architecture integration design document
   > TEST: Architecture Integration Designed
   > Type: Action Validation
   > Assert: ATOM integration plan exists
-  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md
+  > Command: test -f .ace/taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md
 * [x] Plan workflow update strategy for post-implementation phase
   > TEST: Workflow Update Strategy Documented
   > Type: Documentation Validation
   > Assert: Clear guidance exists on when to update workflows
-  > Command: grep -q "Workflow Update Timing" dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+  > Command: grep -q "Workflow Update Timing" .ace/taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
 * [x] Document which workflows need updating after gem implementation
   > TEST: Workflow Update List Complete
   > Type: Documentation Validation
   > Assert: All workflows requiring updates are identified
-  > Command: grep -q "initialize-project-structure.wf.md" dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+  > Command: grep -q "initialize-project-structure.wf.md" .ace/taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
 * [x] Document tool mapping and implementation roadmap
   > TEST: Implementation Roadmap Complete
   > Type: Documentation Validation
   > Assert: Complete roadmap exists for tool rewrite
-  > Command: grep -q "Implementation Timeline\|Development Phases" dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+  > Command: grep -q "Implementation Timeline\|Development Phases" .ace/taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
 
 ## Acceptance Criteria
 
@@ -136,7 +136,7 @@ Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-
 
 ## References
 
-* Review report: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
-* Deprecated tools: dev-tools/exe-old/
-* Current tools: dev-tools/exe/
-* Affected workflow: dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+* Review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
+* Deprecated tools: .ace/tools/exe-old/
+* Current tools: .ace/tools/exe/
+* Affected workflow: .ace/handbook/workflow-instructions/initialize-project-structure.wf.md

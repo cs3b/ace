@@ -26,7 +26,7 @@ Based on comprehensive analysis of development reflections from August 4-5, 2025
 **Problem**: Missing templates for common file types (reflection notes, draft tasks, etc.) forcing manual content creation.
 **Solution**: Expand create-path tool with comprehensive template library including reflection, task, ADR, and test file templates.
 **Impact**: High - Saves 5-10 minutes per document creation and ensures consistency.
-**Implementation**: Add templates to dev-tools and update create-path to support new types.
+**Implementation**: Add templates to .ace/tools and update create-path to support new types.
 
 ### 4. Task-Manager Draft Mode Enhancement
 **Problem**: task-manager creates tasks with "pending" status when draft-task workflow expects "draft" status.

@@ -185,7 +185,7 @@ module CodingAgentTools
         include CodingAgentTools::Atoms::TaskManagement
         
         # Find current release directory
-        def self.find_current_release(base_path = "dev-taskflow")
+        def self.find_current_release(base_path = ".ace/taskflow")
           current_path = File.join(base_path, "current")
           return nil unless File.directory?(current_path)
           
@@ -197,7 +197,7 @@ module CodingAgentTools
         end
         
         # Get current release version
-        def self.current_release_version(base_path = "dev-taskflow")
+        def self.current_release_version(base_path = ".ace/taskflow")
           current_release = find_current_release(base_path)
           return nil unless current_release
           
@@ -205,7 +205,7 @@ module CodingAgentTools
         end
         
         # Get appropriate directory for new tasks
-        def self.resolve_task_directory(base_path = "dev-taskflow")
+        def self.resolve_task_directory(base_path = ".ace/taskflow")
           current_release = find_current_release(base_path)
           
           if current_release
@@ -268,7 +268,7 @@ module CodingAgentTools
         include CodingAgentTools::Atoms::TaskManagement
         
         # Generate next available task ID for version
-        def self.next_task_id(version, base_path = "dev-taskflow")
+        def self.next_task_id(version, base_path = ".ace/taskflow")
           existing_tasks = collect_existing_task_ids(version, base_path)
           max_number = existing_tasks.map { |id| TaskIdParser.parse_sequential_number(id) }
                                    .select { |num| num != Float::INFINITY }
@@ -325,7 +325,7 @@ module CodingAgentTools
         
         attr_reader :base_path
         
-        def initialize(base_path = "dev-taskflow")
+        def initialize(base_path = ".ace/taskflow")
           @base_path = base_path
         end
         
@@ -428,7 +428,7 @@ module CodingAgentTools
         
         attr_reader :base_path
         
-        def initialize(base_path = "dev-taskflow")
+        def initialize(base_path = ".ace/taskflow")
           @base_path = base_path
         end
         
@@ -683,11 +683,11 @@ spec/
 
 ### Integration Test Approach
 
-Create test fixtures that mirror the `dev-taskflow` structure:
+Create test fixtures that mirror the `.ace/taskflow` structure:
 
 ```
 spec/fixtures/
-  dev-taskflow/
+  .ace/taskflow/
     current/
       v.0.1.0-test/
         tasks/

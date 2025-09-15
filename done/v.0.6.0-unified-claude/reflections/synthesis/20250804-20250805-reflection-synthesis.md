@@ -12,13 +12,13 @@ Synthesis of 50 reflection notes.
 
 ## Reflection 1: 20250804-232241-claude-command-directory-structure-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250804-232241-claude-command-directory-structure-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250804-232241-claude-command-directory-structure-implementation.md`
 **Modified**: 2025-08-04 23:23:12
 
 # Reflection: Claude Command Directory Structure Implementation
 
 **Date**: 2025-08-04
-**Context**: Implementation of task v.0.6.0+task.001 - Creating Claude command directory structure in dev-handbook
+**Context**: Implementation of task v.0.6.0+task.001 - Creating Claude command directory structure in .ace/handbook
 **Author**: Claude Code
 **Type**: Conversation Analysis
 
@@ -31,7 +31,7 @@ Synthesis of 50 reflection notes.
 
 ## What Could Be Improved
 
-- Initial task specification had conflicting information about directory locations (root `.claude/` vs `dev-handbook/.integrations/claude/`)
+- Initial task specification had conflicting information about directory locations (root `.claude/` vs `.ace/handbook/.integrations/claude/`)
 - Many planned execution steps became unnecessary due to human decisions (no subdirectories, no migration)
 - Test commands in the task were written for features that weren't being implemented
 
@@ -107,15 +107,15 @@ Synthesis of 50 reflection notes.
 ## Technical Details
 
 The implementation created a simple template structure:
-- `dev-handbook/.integrations/claude/templates/` directory
+- `.ace/handbook/.integrations/claude/templates/` directory
 - Two template files for workflow and agent command generation
 - Templates use ERB-style variables for dynamic content generation
 - No command reorganization needed - flat structure maintained
 
 ## Additional Context
 
-- Task: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.001-create-claude-command-directory-structure.md`
-- Primary decision: Use `dev-handbook/.integrations/claude/` as the main location
+- Task: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.001-create-claude-command-directory-structure.md`
+- Primary decision: Use `.ace/handbook/.integrations/claude/` as the main location
 - Key simplification: No distinction between custom/generated commands
 - Next steps: Task 003 will handle sync script for command installation
 
@@ -123,7 +123,7 @@ The implementation created a simple template structure:
 
 ## Reflection 2: 20250804-234947-claude-cli-namespace-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250804-234947-claude-cli-namespace-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250804-234947-claude-cli-namespace-implementation.md`
 **Modified**: 2025-08-04 23:50:48
 
 # Reflection: Claude CLI Namespace Implementation
@@ -238,19 +238,19 @@ This flat structure with hyphenated names provides clear command organization wh
 
 - Task: v.0.6.0+task.002-implement-claude-cli-namespace-in-handbook.md
 - Main files modified:
-  - /dev-tools/exe/handbook (completely rewritten)
-  - /dev-tools/lib/coding_agent_tools/cli.rb (simplified registration)
-  - /dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb (refactored for CLI)
+  - /.ace/tools/exe/handbook (completely rewritten)
+  - /.ace/tools/lib/coding_agent_tools/cli.rb (simplified registration)
+  - /.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb (refactored for CLI)
 - New files created:
-  - /dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/*.rb (5 subcommands)
-  - /dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb
-  - /dev-tools/spec/integration/handbook_claude_cli_spec.rb
+  - /.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/*.rb (5 subcommands)
+  - /.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb
+  - /.ace/tools/spec/integration/handbook_claude_cli_spec.rb
 
 ---
 
 ## Reflection 3: 20250805-001342-generate-commands-subcommand-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-001342-generate-commands-subcommand-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-001342-generate-commands-subcommand-implementation.md`
 **Modified**: 2025-08-05 00:14:08
 
 # Reflection: Generate Commands Subcommand Implementation
@@ -295,9 +295,9 @@ handbook claude integrate
 ```
 
 ### Key Files Modified
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Updated handbook command registration
-- `dev-tools/exe/handbook` - Updated direct command registration
-- `dev-tools/spec/integration/handbook_claude_cli_spec.rb` - Updated integration tests
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Updated handbook command registration
+- `.ace/tools/exe/handbook` - Updated direct command registration
+- `.ace/tools/spec/integration/handbook_claude_cli_spec.rb` - Updated integration tests
 
 ### Implementation Features Verified
 - Workflow scanning with glob pattern support
@@ -334,7 +334,7 @@ This task was part of the v.0.6.0-unified-claude release, focusing on improving 
 
 ## Reflection 4: 20250805-002658-yaml-frontmatter-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-002658-yaml-frontmatter-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-002658-yaml-frontmatter-implementation.md`
 **Modified**: 2025-08-05 00:27:29
 
 # Reflection: YAML Front-matter Implementation for Claude Commands
@@ -402,14 +402,14 @@ yaml_lines << "allowed-tools: #{metadata[:allowed_tools]}" if metadata[:allowed_
 
 - Task completed successfully with all acceptance criteria met
 - Generated commands tested and working with proper YAML front-matter
-- Documentation created at `dev-handbook/.integrations/claude/metadata-field-reference.md`
+- Documentation created at `.ace/handbook/.integrations/claude/metadata-field-reference.md`
 - All 25 workflow types have appropriate metadata inference rules
 
 ---
 
 ## Reflection 5: 20250805-005021-claude-validate-subcommand-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-005021-claude-validate-subcommand-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-005021-claude-validate-subcommand-implementation.md`
 **Modified**: 2025-08-05 00:51:08
 
 # Reflection: Claude Validate Subcommand Implementation
@@ -529,11 +529,11 @@ Key design decisions:
 
 - Task: v.0.6.0+task.005
 - Files created:
-  - `/dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb`
-  - `/dev-tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb`
-  - `/dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/validate_spec.rb`
+  - `/.ace/tools/lib/coding_agent_tools/organisms/claude_validator.rb`
+  - `/.ace/tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb`
+  - `/.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/validate_spec.rb`
 - Files modified:
-  - `/dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb`
+  - `/.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb`
 
 The validation revealed significant issues in the current codebase:
 - 25 outdated commands (content mismatch)
@@ -546,7 +546,7 @@ This tool will be valuable for maintaining command consistency and coverage goin
 
 ## Reflection 6: 20250805-010917-implement-integrate-subcommand.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-010917-implement-integrate-subcommand.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-010917-implement-integrate-subcommand.md`
 **Modified**: 2025-08-05 01:09:52
 
 # Reflection: Implement integrate subcommand for installation
@@ -629,17 +629,17 @@ This tool will be valuable for maintaining command consistency and coverage goin
 - Task: v.0.6.0+task.006
 - Related tasks: v.0.6.0+task.002, v.0.6.0+task.004
 - Files modified:
-  - `/dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb`
-  - `/dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb`
-  - `/dev-tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb`
-  - `/dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb`
-  - `/dev-tools/spec/integrations/claude_commands_installer_spec.rb`
+  - `/.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb`
+  - `/.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb`
+  - `/.ace/tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb`
+  - `/.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb`
+  - `/.ace/tools/spec/integrations/claude_commands_installer_spec.rb`
 
 ---
 
 ## Reflection 7: 20250805-014022-claude-commands-migration-task-008.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-014022-claude-commands-migration-task-008.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-014022-claude-commands-migration-task-008.md`
 **Modified**: 2025-08-05 14:25:05
 
 # Reflection: Claude Commands Migration to New Directory Structure
@@ -658,7 +658,7 @@ This tool will be valuable for maintaining command consistency and coverage goin
 
 ## What Could Be Improved
 
-- Initial confusion about dev-handbook commands already being migrated - the task could have noted this was already done
+- Initial confusion about .ace/handbook commands already being migrated - the task could have noted this was already done
 - Test failures were pre-existing but initially unclear if they were related to the migration
 - The task mentions updating ClaudeCommandsInstaller but notes it's a separate task - this dependency could be clearer
 
@@ -676,7 +676,7 @@ This tool will be valuable for maintaining command consistency and coverage goin
 - Moved 6 custom commands to _custom/: commit.md, draft-tasks.md, load-project-context.md, plan-tasks.md, review-tasks.md, work-on-tasks.md
 - Moved 26 generated commands to _generated/
 - All moves used git mv to preserve history
-- Migration report saved to dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Migration report saved to .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 ### Verification Steps
 - Checked directory structure with LS tool
@@ -705,15 +705,15 @@ This tool will be valuable for maintaining command consistency and coverage goin
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
-- Migration report: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
+- Migration report: .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 - Related task for ClaudeCommandsInstaller update will handle remaining codebase references
 
 ---
 
 ## Reflection 8: 20250805-015101-claude-integration-meta-workflow-creation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-015101-claude-integration-meta-workflow-creation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-015101-claude-integration-meta-workflow-creation.md`
 **Modified**: 2025-08-05 01:51:38
 
 # Reflection: Claude Integration Meta Workflow Creation
@@ -738,7 +738,7 @@ This tool will be valuable for maintaining command consistency and coverage goin
 
 ## Key Learnings
 
-- **Meta Workflow Structure**: Meta workflows live in dev-handbook/.meta/wfi/ and follow similar patterns to regular workflows
+- **Meta Workflow Structure**: Meta workflows live in .ace/handbook/.meta/wfi/ and follow similar patterns to regular workflows
 - **Decision Trees**: Effective way to guide users through complex choices (custom vs generated commands)
 - **Comprehensive Documentation**: Including troubleshooting, diagnostics, and verification checklists greatly improves workflow usability
 - **Workflow Organization**: Meta workflows need their own section in the workflow instructions README
@@ -781,15 +781,15 @@ Key design decisions:
 ## Additional Context
 
 - Task dependencies: v.0.6.0+task.003, v.0.6.0+task.004, v.0.6.0+task.005, v.0.6.0+task.006
-- Created file: dev-handbook/.meta/wfi/update-integration-claude.wf.md
-- Updated: dev-handbook/workflow-instructions/README.md (added Meta Workflows section)
+- Created file: .ace/handbook/.meta/wfi/update-integration-claude.wf.md
+- Updated: .ace/handbook/workflow-instructions/README.md (added Meta Workflows section)
 - Followed patterns from: manage-guides.wf.md and update-blueprint.wf.md
 
 ---
 
 ## Reflection 9: 20250805-022532-task-010-claude-cli-tests-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-022532-task-010-claude-cli-tests-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-022532-task-010-claude-cli-tests-implementation.md`
 **Modified**: 2025-08-05 02:26:24
 
 # Reflection: Task 010 Claude CLI Tests Implementation
@@ -801,7 +801,7 @@ Key design decisions:
 
 ## What Went Well
 
-- **Clear existing patterns**: The dev-tools project had well-established testing patterns (integrate_spec.rb, sync_templates_spec.rb) that provided excellent guidance
+- **Clear existing patterns**: The .ace/tools project had well-established testing patterns (integrate_spec.rb, sync_templates_spec.rb) that provided excellent guidance
 - **Helper infrastructure**: Existing CLI helpers and process helpers made test implementation straightforward
 - **Test organization**: Following RSpec conventions with describe/context/it structure made tests readable and maintainable
 - **Coverage configuration**: SimpleCov was already set up, making it easy to add Claude-specific coverage groups
@@ -901,7 +901,7 @@ Files created/modified:
 
 ## Reflection 10: 20250805-030133-task-012-deprecate-claude-integrate-script.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-030133-task-012-deprecate-claude-integrate-script.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-030133-task-012-deprecate-claude-integrate-script.md`
 **Modified**: 2025-08-05 03:02:06
 
 # Reflection: Task 012 - Deprecate Legacy claude-integrate Script
@@ -968,7 +968,7 @@ However, based on human input and the fact that task.011 already removed the scr
 
 ## Reflection 11: 20250805-085559-draft-task-remove-update-registry-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-085559-draft-task-remove-update-registry-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-085559-draft-task-remove-update-registry-reflection.md`
 **Modified**: 2025-08-05 08:57:05
 
 # Reflection: Draft Task Creation for Remove Update-Registry Command
@@ -1041,7 +1041,7 @@ The draft task creation process involved:
 
 ## Reflection 12: 20250805-090708-draft-task-workflow-for-template-organization.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-090708-draft-task-workflow-for-template-organization.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-090708-draft-task-workflow-for-template-organization.md`
 **Modified**: 2025-08-05 09:07:50
 
 # Reflection: draft-task workflow for template organization
@@ -1137,14 +1137,14 @@ The draft task workflow successfully created task v.0.6.0+task.014 with a compre
 
 ## Additional Context
 
-- Created task: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
+- Created task: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
 - Original feedback addressed: Template organization, potential duplication, and extension standardization
 
 ---
 
 ## Reflection 13: 20250805-091616-draft-task-creation-for-removing-migration-docs.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-091616-draft-task-creation-for-removing-migration-docs.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-091616-draft-task-creation-for-removing-migration-docs.md`
 **Modified**: 2025-08-05 09:16:55
 
 # Reflection: Draft Task Creation for Removing Migration Docs
@@ -1196,7 +1196,7 @@ The draft task workflow successfully created task v.0.6.0+task.014 with a compre
 ## Technical Details
 
 The draft task was created as:
-- Path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.015-remove-unnecessary-claude-integrate-migration-documentation.md`
+- Path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.015-remove-unnecessary-claude-integrate-migration-documentation.md`
 - ID: v.0.6.0+task.015
 - Status: draft
 - Priority: medium
@@ -1216,7 +1216,7 @@ This task originated from user feedback item #2 about removing unnecessary migra
 
 ## Reflection 14: 20250805-092523-draft-task-meta-workflows-cleanup.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-092523-draft-task-meta-workflows-cleanup.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-092523-draft-task-meta-workflows-cleanup.md`
 **Modified**: 2025-08-05 09:25:58
 
 # Reflection: Draft Task Creation for Meta Workflows Cleanup
@@ -1268,7 +1268,7 @@ This task originated from user feedback item #2 about removing unnecessary migra
 ## Technical Details
 
 - Task ID generated: v.0.6.0+task.016
-- File location: dev-taskflow/current/v.0.6.0-unified-claude/tasks/
+- File location: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/
 - Status set to: draft (as required by workflow)
 - Priority: high (based on feedback item importance)
 
@@ -1280,7 +1280,7 @@ This task originated from feedback item #3 about cleaning up meta workflows refe
 
 ## Reflection 15: 20250805-093449-draft-task-creation-for-claude-list-enhancement.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-093449-draft-task-creation-for-claude-list-enhancement.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-093449-draft-task-creation-for-claude-list-enhancement.md`
 **Modified**: 2025-08-05 09:35:27
 
 # Reflection: Draft Task Creation for Claude List Enhancement
@@ -1333,7 +1333,7 @@ This task originated from feedback item #3 about cleaning up meta workflows refe
 The task created focuses on transforming the current verbose, sectioned output of `handbook claude list` into a compact table format with four columns:
 1. Installed status (checkmark in .claude)
 2. Command type (custom/generated)
-3. Validation status (checkmark in dev-handbook)
+3. Validation status (checkmark in .ace/handbook)
 4. Command name
 
 This addresses feedback item #4 while being aware of feedback #5 about the flattened .claude/commands structure (no subfolders).
@@ -1341,14 +1341,14 @@ This addresses feedback item #4 while being aware of feedback #5 about the flatt
 ## Additional Context
 
 - Task created: v.0.6.0+task.017-enhance-handbook-claude-list-readability-with-table-format.md
-- Related feedback: dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
-- Current implementation: dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- Related feedback: .ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
+- Current implementation: .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
 
 ---
 
 ## Reflection 16: 20250805-094135-plan-task-remove-update-registry-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-094135-plan-task-remove-update-registry-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-094135-plan-task-remove-update-registry-reflection.md`
 **Modified**: 2025-08-05 09:42:03
 
 # Reflection: Plan Task for Removing update-registry Command
@@ -1367,7 +1367,7 @@ This addresses feedback item #4 while being aware of feedback #5 about the flatt
 
 ## What Could Be Improved
 
-- **Initial Context Loading**: The project context files (architecture.md, blueprint.md, etc.) were in the root docs/ folder, not in dev-tools/docs/ as initially attempted
+- **Initial Context Loading**: The project context files (architecture.md, blueprint.md, etc.) were in the root docs/ folder, not in .ace/tools/docs/ as initially attempted
 - **Understanding of Feature**: Initially assumed the command might be actively used, but research revealed it was just a placeholder
 - **Documentation Search**: Could have started with a broader search for commands.json to understand the full scope earlier
 
@@ -1428,7 +1428,7 @@ This addresses feedback item #4 while being aware of feedback #5 about the flatt
 
 ## Reflection 17: 20250805-094404-draft-task-flatten-commands-structure.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-094404-draft-task-flatten-commands-structure.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-094404-draft-task-flatten-commands-structure.md`
 **Modified**: 2025-08-05 09:44:40
 
 # Reflection: Draft Task Creation for Flattening Claude Commands
@@ -1485,7 +1485,7 @@ The target flat structure would move all 29 command files directly into `.claude
 
 ## Additional Context
 
-- Draft task created: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.018-flatten-claude-commands-structure.md`
+- Draft task created: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.018-flatten-claude-commands-structure.md`
 - Task status: draft (awaiting implementation planning)
 - Next step: Implementation planning phase (replan workflow)
 
@@ -1493,7 +1493,7 @@ The target flat structure would move all 29 command files directly into `.claude
 
 ## Reflection 18: 20250805-094745-plan-task-remove-migration-docs.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-094745-plan-task-remove-migration-docs.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-094745-plan-task-remove-migration-docs.md`
 **Modified**: 2025-08-05 09:48:07
 
 # Reflection: Task Planning for Removing Migration Documentation
@@ -1514,7 +1514,7 @@ The target flat structure would move all 29 command files directly into `.claude
 
 - Could have used a more targeted search pattern initially to find migration references
 - The task estimate (1h) might be overly conservative for such a simple cleanup task
-- Could have checked for references in other submodules (dev-tools, dev-taskflow)
+- Could have checked for references in other submodules (dev-tools, .ace/taskflow)
 
 ## Key Learnings
 
@@ -1525,8 +1525,8 @@ The target flat structure would move all 29 command files directly into `.claude
 ## Technical Details
 
 ### Files Analyzed
-- `dev-handbook/.integrations/claude/README.md` - Found 3 references to migration
-- `dev-handbook/.integrations/claude/MIGRATION.md` - 260 lines of unnecessary migration documentation
+- `.ace/handbook/.integrations/claude/README.md` - Found 3 references to migration
+- `.ace/handbook/.integrations/claude/MIGRATION.md` - 260 lines of unnecessary migration documentation
 - Multiple files across the codebase referencing the obsolete migration guide
 
 ### Implementation Approach
@@ -1570,7 +1570,7 @@ The target flat structure would move all 29 command files directly into `.claude
 
 ## Reflection 19: 20250805-095126-draft-task-workflow-for-claude-docs-update.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-095126-draft-task-workflow-for-claude-docs-update.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-095126-draft-task-workflow-for-claude-docs-update.md`
 **Modified**: 2025-08-05 09:52:03
 
 # Reflection: Draft Task Workflow for Claude Documentation Update
@@ -1624,7 +1624,7 @@ The target flat structure would move all 29 command files directly into `.claude
 
 The draft task was created with ID v.0.6.0+task.019, focusing on three main documentation improvements:
 1. Removing installation information from the Claude integration README (since it's a git submodule, not a gem)
-2. Creating detailed documentation for each handbook claude subcommand in dev-tools/docs/user/
+2. Creating detailed documentation for each handbook claude subcommand in .ace/tools/docs/user/
 3. Refocusing the Claude README as a quickstart guide with maintenance workflows
 
 The behavioral specification emphasized user journey and documentation navigation rather than specific file modifications, maintaining the behavior-first principle of the draft-task workflow.
@@ -1633,7 +1633,7 @@ The behavioral specification emphasized user journey and documentation navigatio
 
 ## Reflection 20: 20250805-095923-draft-task-fix-migration-report-location.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-095923-draft-task-fix-migration-report-location.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-095923-draft-task-fix-migration-report-location.md`
 **Modified**: 2025-08-05 10:00:01
 
 # Reflection: Draft Task Creation for Migration Report Location Fix
@@ -1660,7 +1660,7 @@ The behavioral specification emphasized user journey and documentation navigatio
 
 - The draft-task workflow effectively separates behavioral requirements from implementation details
 - Task files use a specific status progression: draft → pending → in_progress → done
-- The dev-taskflow structure clearly separates current work from completed releases
+- The .ace/taskflow structure clearly separates current work from completed releases
 - File location issues may indicate broader path resolution problems in the tooling
 
 ## Action Items
@@ -1685,22 +1685,22 @@ The behavioral specification emphasized user journey and documentation navigatio
 ## Technical Details
 
 The issue involves a MIGRATION_REPORT.md file created at:
-- **Incorrect**: `dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
-- **Correct**: `dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- **Incorrect**: `.ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- **Correct**: `.ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
 
 This suggests a path resolution issue where the system is using "releases" instead of "current" when determining the target directory for new files.
 
 ## Additional Context
 
 - Draft task created: v.0.6.0+task.020
-- File path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md`
+- File path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md`
 - Related to user feedback item #7
 
 ---
 
 ## Reflection 21: 20250805-101553-draft-task-creation-for-claude-installer-atom-refactoring.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-101553-draft-task-creation-for-claude-installer-atom-refactoring.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-101553-draft-task-creation-for-claude-installer-atom-refactoring.md`
 **Modified**: 2025-08-05 10:16:42
 
 # Reflection: Draft Task Creation for Claude Installer ATOM Refactoring
@@ -1806,16 +1806,16 @@ The refactoring will involve:
 
 ## Additional Context
 
-- Draft task created: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.021-refactor-claude-commands-installer-to-atom-architecture.md
-- Current implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-- Related tests: dev-tools/spec/integrations/claude_commands_installer_spec.rb
-- Claude integration docs: dev-tools/docs/development/claude-integration.md
+- Draft task created: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.021-refactor-claude-commands-installer-to-atom-architecture.md
+- Current implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Related tests: .ace/tools/spec/integrations/claude_commands_installer_spec.rb
+- Claude integration docs: .ace/tools/docs/development/claude-integration.md
 
 ---
 
 ## Reflection 22: 20250805-102507-draft-task-creation-for-atom-refactoring.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-102507-draft-task-creation-for-atom-refactoring.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-102507-draft-task-creation-for-atom-refactoring.md`
 **Modified**: 2025-08-05 10:25:37
 
 # Reflection: Draft task creation for ATOM refactoring
@@ -1884,7 +1884,7 @@ The claude_commands_installer refactoring will require:
 
 ## Reflection 23: 20250805-103347-draft-task-creation-for-atom-refactoring.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-103347-draft-task-creation-for-atom-refactoring.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-103347-draft-task-creation-for-atom-refactoring.md`
 **Modified**: 2025-08-05 10:34:16
 
 # Reflection: Draft Task Creation for ATOM Refactoring
@@ -1968,7 +1968,7 @@ The analysis revealed that the handbook claude tools could benefit from:
 
 ## Reflection 24: 20250805-111944-draft-tasks-feedback-workflow-execution.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-111944-draft-tasks-feedback-workflow-execution.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-111944-draft-tasks-feedback-workflow-execution.md`
 **Modified**: 2025-08-05 11:20:26
 
 # Reflection: Draft Tasks from Feedback Items Workflow Execution
@@ -2097,7 +2097,7 @@ The draft-tasks workflow successfully processed 10 feedback items:
 
 ## Additional Context
 
-- Original feedback source: `dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
+- Original feedback source: `.ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
 - Related to v.0.6.0 unified Claude integration milestone
 - All draft tasks ready for implementation planning phase
 
@@ -2105,7 +2105,7 @@ The draft-tasks workflow successfully processed 10 feedback items:
 
 ## Reflection 25: 20250805-114902-planning-task-017-table-format-enhancement.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-114902-planning-task-017-table-format-enhancement.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-114902-planning-task-017-table-format-enhancement.md`
 **Modified**: 2025-08-05 11:49:36
 
 # Reflection: Planning Task 017 Table Format Enhancement
@@ -2173,15 +2173,15 @@ The draft-tasks workflow successfully processed 10 feedback items:
 
 ## Additional Context
 
-- Task file: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.017-enhance-handbook-claude-list-readability-with-table-format.md
-- Related feedback: dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md (item #4)
-- Current implementation: dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- Task file: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.017-enhance-handbook-claude-list-readability-with-table-format.md
+- Related feedback: .ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md (item #4)
+- Current implementation: .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
 
 ---
 
 ## Reflection 26: 20250805-120001-plan-task-flatten-claude-commands-structure.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-120001-plan-task-flatten-claude-commands-structure.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-120001-plan-task-flatten-claude-commands-structure.md`
 **Modified**: 2025-08-05 12:00:32
 
 # Reflection: Plan Task - Flatten Claude Commands Structure
@@ -2201,20 +2201,20 @@ The draft-tasks workflow successfully processed 10 feedback items:
 ## What Could Be Improved
 
 - Initial uncertainty about where Claude commands were located required multiple directory searches
-- Could have started with the dev-tools exploration earlier since that's where the implementation lives
+- Could have started with the .ace/tools exploration earlier since that's where the implementation lives
 - Documentation about the Claude commands structure could be clearer in the project
 
 ## Key Learnings
 
 - The system already implements a hybrid approach: organized source structure with flat deployment
-- Ruby gem in dev-tools handles all Claude command generation and installation logic
+- Ruby gem in .ace/tools handles all Claude command generation and installation logic
 - The task is primarily about simplifying the source structure rather than changing end-user experience
 - Metadata injection is already implemented for tracking command properties
 
 ## Technical Details
 
 ### Current Architecture
-- Source commands organized in: `dev-handbook/.integrations/claude/commands/{_custom,_generated}/`
+- Source commands organized in: `.ace/handbook/.integrations/claude/commands/{_custom,_generated}/`
 - Target installation always flat: `.claude/commands/`
 - ClaudeCommandGenerator creates files in _generated/ subdirectory
 - ClaudeCommandsInstaller copies from subdirectories to flat structure
@@ -2248,15 +2248,15 @@ The draft-tasks workflow successfully processed 10 feedback items:
 
 - Related task: v.0.6.0+task.018-flatten-claude-commands-structure.md
 - Key files modified in plan:
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
-  - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-  - dev-handbook/.integrations/claude/commands/
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+  - .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - .ace/handbook/.integrations/claude/commands/
 
 ---
 
 ## Reflection 27: 20250805-120813-claude-documentation-planning.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-120813-claude-documentation-planning.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-120813-claude-documentation-planning.md`
 **Modified**: 2025-08-05 12:08:43
 
 # Reflection: Claude Integration Documentation Task Planning
@@ -2269,14 +2269,14 @@ The draft-tasks workflow successfully processed 10 feedback items:
 ## What Went Well
 
 - Clear behavioral specification in the draft task made it easy to understand the requirements
-- Existing documentation patterns in dev-tools/docs/user/ provided excellent reference examples
+- Existing documentation patterns in .ace/tools/docs/user/ provided excellent reference examples
 - The separation between quickstart and detailed reference documentation is a well-established pattern
 - Task structure with validation questions helped clarify the scope
 
 ## What Could Be Improved
 
 - The current Claude integration documentation mixes quickstart and detailed reference content
-- No existing handbook-claude-*.md documentation files in dev-tools/docs/user/
+- No existing handbook-claude-*.md documentation files in .ace/tools/docs/user/
 - Gem installation instructions in current documentation are incorrect (it's a git submodule)
 - Cross-repository references need careful planning to avoid broken links
 
@@ -2298,7 +2298,7 @@ The draft-tasks workflow successfully processed 10 feedback items:
 
 ### Continue Doing
 
-- Following existing documentation patterns from dev-tools/docs/user/
+- Following existing documentation patterns from .ace/tools/docs/user/
 - Using clear table of contents and section headers
 - Including troubleshooting sections in documentation
 - Providing realistic command examples
@@ -2313,22 +2313,22 @@ The draft-tasks workflow successfully processed 10 feedback items:
 ## Technical Details
 
 The implementation plan includes:
-- 5 new documentation files to be created in dev-tools/docs/user/
-- 1 existing file to be transformed (dev-handbook/.integrations/claude/README.md)
+- 5 new documentation files to be created in .ace/tools/docs/user/
+- 1 existing file to be transformed (.ace/handbook/.integrations/claude/README.md)
 - Consistent structure following the llm-query.md pattern
-- Clear separation between quickstart (in dev-handbook) and reference (in dev-tools)
+- Clear separation between quickstart (in .ace/handbook) and reference (in .ace/tools)
 
 ## Additional Context
 
-- Task file: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
-- Reference documentation pattern: dev-tools/docs/user/llm-query.md
-- Current Claude integration docs: dev-handbook/.integrations/claude/README.md
+- Task file: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
+- Reference documentation pattern: .ace/tools/docs/user/llm-query.md
+- Current Claude integration docs: .ace/handbook/.integrations/claude/README.md
 
 ---
 
 ## Reflection 28: 20250805-121628-plan-task-fix-migration-report-location.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-121628-plan-task-fix-migration-report-location.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-121628-plan-task-fix-migration-report-location.md`
 **Modified**: 2025-08-05 12:17:04
 
 # Reflection: Planning Task for Migration Report File Location Fix
@@ -2361,8 +2361,8 @@ The implementation plan includes:
 ## Technical Details
 
 ### Root Cause
-- Task v.0.6.0+task.008 line 46-47 explicitly specified: `dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
-- Should have specified: `dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Task v.0.6.0+task.008 line 46-47 explicitly specified: `.ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Should have specified: `.ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
 - The AI agent executing the task followed the instructions exactly as written
 
 ### Directory Structure Understanding
@@ -2399,16 +2399,16 @@ The implementation plan includes:
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
-- Root cause task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
-- Affected file: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
-- Target location: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
+- Root cause task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
+- Affected file: .ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Target location: .ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 ---
 
 ## Reflection 29: 20250805-122603-atom-architecture-planning-for-claude_commands_installer.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-122603-atom-architecture-planning-for-claude_commands_installer.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-122603-atom-architecture-planning-for-claude_commands_installer.md`
 **Modified**: 2025-08-05 12:26:44
 
 # Reflection: ATOM Architecture Planning for claude_commands_installer
@@ -2530,13 +2530,13 @@ Each of these can be cleanly separated into focused components.
 - Task: v.0.6.0+task.022
 - Related: claude_command_generator.rb (already an Organism, good reference)
 - Architecture docs: docs/architecture-tools.md, ADR-011
-- Current implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Current implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
 
 ---
 
 ## Reflection 30: 20250805-123812-atom-refactoring-planning-for-claude-tools.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-123812-atom-refactoring-planning-for-claude-tools.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-123812-atom-refactoring-planning-for-claude-tools.md`
 **Modified**: 2025-08-05 12:38:48
 
 # Reflection: ATOM Refactoring Planning for Claude Tools
@@ -2632,7 +2632,7 @@ Each of these can be cleanly separated into focused components.
 
 ## Reflection 31: 20250805-130505-task-018-implementation-learnings.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-130505-task-018-implementation-learnings.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-130505-task-018-implementation-learnings.md`
 **Modified**: 2025-08-05 13:05:44
 
 # Reflection: Task 018 Implementation Learnings
@@ -2736,7 +2736,7 @@ Each of these can be cleanly separated into focused components.
 ## Technical Details
 
 The key technical insight was that the ClaudeCommandsInstaller already implements the desired flattening behavior:
-- Source: `dev-handbook/.integrations/claude/commands/_custom/` and `_generated/`
+- Source: `.ace/handbook/.integrations/claude/commands/_custom/` and `_generated/`
 - Target: `.claude/commands/` (flat structure)
 
 The installer's `copy_custom_commands` method correctly copies from subdirectories to a flat structure using `target_dir / file.basename`.
@@ -2746,9 +2746,9 @@ The installer's `copy_custom_commands` method correctly copies from subdirectori
 - Task: v.0.6.0+task.018
 - Related feedback: Item #5 about flattening Claude commands
 - Key files involved:
-  - dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
-  - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-  - dev-handbook/.integrations/claude/commands/
+  - .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+  - .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - .ace/handbook/.integrations/claude/commands/
 
 This experience reinforces the importance of understanding existing system behavior before implementing changes, especially when dealing with file organization and structure transformations.
 
@@ -2756,7 +2756,7 @@ This experience reinforces the importance of understanding existing system behav
 
 ## Reflection 32: 20250805-131625-task-execution-strategy-single-vs-multiple.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-131625-task-execution-strategy-single-vs-multiple.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-131625-task-execution-strategy-single-vs-multiple.md`
 **Modified**: 2025-08-05 13:16:50
 
 # Reflection: Task Execution Strategy - Single vs Multiple Claude Task Calls
@@ -2869,7 +2869,7 @@ The /work-on-tasks command documentation explicitly mentions "For each task in s
 
 ## Reflection 33: 20250805-141913-claude-documentation-restructure.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-141913-claude-documentation-restructure.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-141913-claude-documentation-restructure.md`
 **Modified**: 2025-08-05 14:19:48
 
 # Reflection: Claude Integration Documentation Restructure
@@ -2881,7 +2881,7 @@ The /work-on-tasks command documentation explicitly mentions "For each task in s
 
 ## What Went Well
 
-- Discovered that comprehensive documentation for all handbook claude subcommands already existed in dev-tools/docs/user/
+- Discovered that comprehensive documentation for all handbook claude subcommands already existed in .ace/tools/docs/user/
 - The existing documentation follows a consistent, high-quality pattern similar to llm-query.md
 - Cross-references between quickstart guide and detailed documentation were already in place in tools.md
 - Successfully transformed the Claude README into a more focused quickstart guide with enhanced maintenance workflows
@@ -2896,7 +2896,7 @@ The /work-on-tasks command documentation explicitly mentions "For each task in s
 
 - Always verify the current state of the system before executing planned changes
 - Documentation work often involves discovering existing resources rather than creating from scratch
-- The dev-tools documentation structure is well-organized with consistent patterns across different tool guides
+- The .ace/tools documentation structure is well-organized with consistent patterns across different tool guides
 - Cross-repository documentation references work well when using relative paths
 
 ## Conversation Analysis
@@ -2962,8 +2962,8 @@ The /work-on-tasks command documentation explicitly mentions "For each task in s
 ## Technical Details
 
 The documentation structure follows a clear pattern:
-- User guides in `dev-tools/docs/user/` with consistent naming: `handbook-claude-{subcommand}.md`
-- Quickstart guide in `dev-handbook/.integrations/claude/README.md`
+- User guides in `.ace/tools/docs/user/` with consistent naming: `handbook-claude-{subcommand}.md`
+- Quickstart guide in `.ace/handbook/.integrations/claude/README.md`
 - Cross-references in `docs/tools.md` linking all components together
 
 The existing documentation quality is excellent, with comprehensive coverage including:
@@ -2976,7 +2976,7 @@ The existing documentation quality is excellent, with comprehensive coverage inc
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.019-update-claude-integration-documentation.md
 - All planned documentation files already existed from previous work
 - Successfully enhanced the quickstart guide with better maintenance workflows
 - The only real work needed was transforming the README to be more focused as a quickstart guide
@@ -2985,7 +2985,7 @@ The existing documentation quality is excellent, with comprehensive coverage inc
 
 ## Reflection 34: 20250805-142727-migration-report-file-location-fix.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-142727-migration-report-file-location-fix.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-142727-migration-report-file-location-fix.md`
 **Modified**: 2025-08-05 14:28:21
 
 # Reflection: Migration Report File Location Fix
@@ -3010,7 +3010,7 @@ The existing documentation quality is excellent, with comprehensive coverage inc
 
 ## Key Learnings
 
-- The dev-taskflow directory structure uses current/ for active work, not releases/
+- The .ace/taskflow directory structure uses current/ for active work, not releases/
 - Task specifications themselves can be the source of path errors
 - Git operations (like git mv) work seamlessly within submodules when executed from the correct directory
 - The releases/ directory is not used in the current project structure and should not be referenced
@@ -3038,8 +3038,8 @@ The existing documentation quality is excellent, with comprehensive coverage inc
 ## Technical Details
 
 The issue was caused by task v.0.6.0+task.008 which explicitly specified the wrong path:
-- Incorrect: `dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
-- Correct: `dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Incorrect: `.ace/taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
+- Correct: `.ace/taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md`
 
 The fix involved:
 1. Moving the file using git mv to preserve history
@@ -3048,7 +3048,7 @@ The fix involved:
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.020-fix-migration-report-file-location-and-investigate-path.md
 - Original issue: Feedback item #7 from user input
 - Related task: v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
 
@@ -3056,7 +3056,7 @@ The fix involved:
 
 ## Reflection 35: 20250805-150109-atom-refactoring-claude-commands-installer.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-150109-atom-refactoring-claude-commands-installer.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-150109-atom-refactoring-claude-commands-installer.md`
 **Modified**: 2025-08-05 15:02:01
 
 # Reflection: ATOM Refactoring of claude_commands_installer
@@ -3127,14 +3127,14 @@ The fix involved:
 
 - Task ID: v.0.6.0+task.022
 - Related ADR: ADR-011 (ATOM Architecture House Rules)
-- Original Implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Original Implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
 - Documentation Created: 022-method-to-atom-mapping.md, 022-dependency-injection-strategy.md, 022-incremental-refactoring-plan.md
 
 ---
 
 ## Reflection 36: 20250805-154014-task-024-planning-clihelpers-fix.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-154014-task-024-planning-clihelpers-fix.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-154014-task-024-planning-clihelpers-fix.md`
 **Modified**: 2025-08-05 15:40:36
 
 # Reflection: Task Planning for CliHelpers Test Fix
@@ -3202,7 +3202,7 @@ Wrap the Array response from execute_gem_executable in a CliResult object:
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.024-fix-handbook-claude-cli-command-tests.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.024-fix-handbook-claude-cli-command-tests.md
 - Related files: spec/support/cli_helpers.rb, spec/support/process_helpers.rb
 - Test file: spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb
 
@@ -3210,7 +3210,7 @@ Wrap the Array response from execute_gem_executable in a CliResult object:
 
 ## Reflection 37: 20250805-154342-uncommitted-files-and-task-description-improvements.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-154342-uncommitted-files-and-task-description-improvements.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-154342-uncommitted-files-and-task-description-improvements.md`
 **Modified**: 2025-08-05 15:44:24
 
 # Reflection: Uncommitted Files and Task Description Improvements
@@ -3357,7 +3357,7 @@ The draft-task workflow template now enforces this behavior-first approach from 
 
 ## Reflection 38: 20250805-154623-atom-refactoring-completion-planning.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-154623-atom-refactoring-completion-planning.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-154623-atom-refactoring-completion-planning.md`
 **Modified**: 2025-08-05 15:46:47
 
 # Reflection: ATOM Refactoring Completion Planning
@@ -3446,13 +3446,13 @@ The draft-task workflow template now enforces this behavior-first approach from 
 
 ## Reflection 39: 20250805-155213-task-planning-for-rubocop-style-violations.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-155213-task-planning-for-rubocop-style-violations.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-155213-task-planning-for-rubocop-style-violations.md`
 **Modified**: 2025-08-05 15:52:38
 
 # Reflection: Task Planning for RuboCop Style Violations
 
 **Date**: 2025-08-05
-**Context**: Planning implementation approach for addressing 48,890 RuboCop style violations in the dev-tools Ruby gem
+**Context**: Planning implementation approach for addressing 48,890 RuboCop style violations in the .ace/tools Ruby gem
 **Author**: Claude Code Assistant
 **Type**: Standard
 
@@ -3525,7 +3525,7 @@ The implementation plan focuses on:
 
 ## Reflection 40: 20250805-155722-task-027-test-coverage-planning.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-155722-task-027-test-coverage-planning.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-155722-task-027-test-coverage-planning.md`
 **Modified**: 2025-08-05 15:57:51
 
 # Reflection: Task 027 Test Coverage Planning
@@ -3546,7 +3546,7 @@ The implementation plan focuses on:
 
 - **Coverage Discrepancy**: The task mentioned 53.36% coverage but actual analysis showed 26.3% - this significant gap affects the scope
 - **Tool Understanding**: Initial confusion about coverage reporting - the HTML report showed 32.22% for a subset while full analysis showed 26.3% overall
-- **File Path Confusion**: Had to navigate between dev-taskflow and dev-tools directories to find the correct documentation
+- **File Path Confusion**: Had to navigate between .ace/taskflow and .ace/tools directories to find the correct documentation
 
 ## Key Learnings
 
@@ -3600,22 +3600,22 @@ The task planning revealed several key insights:
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md`
-- Coverage analysis: `dev-tools/coverage_analysis/coverage_analysis.text`
-- Testing conventions: `dev-tools/spec/support/TESTING_CONVENTIONS.md`
-- Architecture documentation: `dev-tools/docs/diagrams/architecture.md`
+- Task file: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md`
+- Coverage analysis: `.ace/tools/coverage_analysis/coverage_analysis.text`
+- Testing conventions: `.ace/tools/spec/support/TESTING_CONVENTIONS.md`
+- Architecture documentation: `.ace/tools/docs/diagrams/architecture.md`
 
 ---
 
 ## Reflection 41: 20250805-160250-fix-handbook-claude-cli-tests.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-160250-fix-handbook-claude-cli-tests.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-160250-fix-handbook-claude-cli-tests.md`
 **Modified**: 2025-08-05 16:03:17
 
 # Reflection: Fix Handbook Claude CLI Command Tests
 
 **Date**: 2025-08-05
-**Context**: Fixing failing handbook claude CLI command tests in the dev-tools test suite
+**Context**: Fixing failing handbook claude CLI command tests in the .ace/tools test suite
 **Author**: Development Assistant
 **Type**: Standard
 
@@ -3687,7 +3687,7 @@ The handbook claude tests were failing because:
 
 ## Reflection 42: 20250805-160916-systematic-test-suite-maintenance-planning.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-160916-systematic-test-suite-maintenance-planning.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-160916-systematic-test-suite-maintenance-planning.md`
 **Modified**: 2025-08-05 16:09:42
 
 # Reflection: Systematic Test Suite Maintenance Planning
@@ -3758,7 +3758,7 @@ The implementation plan addresses each of these systematically, prioritizing rel
 
 ## Reflection 43: 20250805-162451-atom-refactoring-for-handbook-claude-tools.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-162451-atom-refactoring-for-handbook-claude-tools.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-162451-atom-refactoring-for-handbook-claude-tools.md`
 **Modified**: 2025-08-05 16:25:36
 
 # Reflection: ATOM Refactoring for Handbook Claude Tools
@@ -3826,7 +3826,7 @@ The implementation plan addresses each of these systematically, prioritizing rel
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.025-complete-atom-refactoring-for-handbook-claude-tools.md
+- Task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.025-complete-atom-refactoring-for-handbook-claude-tools.md
 - Related ADR: docs/decisions/adr-011-atom-architecture-house-rules.t.md
 - Integration tests: All passing in spec/integration/handbook_claude*_spec.rb
 
@@ -3834,7 +3834,7 @@ The implementation plan addresses each of these systematically, prioritizing rel
 
 ## Reflection 44: 20250805-165321-rubocop-code-style-enforcement-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-165321-rubocop-code-style-enforcement-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-165321-rubocop-code-style-enforcement-implementation.md`
 **Modified**: 2025-08-05 16:54:06
 
 # Reflection: RuboCop Code Style Enforcement Implementation
@@ -3883,7 +3883,7 @@ The implementation plan addresses each of these systematically, prioritizing rel
 - Method Length: Increased to 20 (from 10) for CLI commands
 - Class Length: Increased to 250 for organisms and CLI commands
 - Disabled Cops: TernaryParentheses, SafeNavigation, HashExcept (newer Ruby features not always clearer)
-- Excluded: Dev-handbook and dev-taskflow directories (documentation repos)
+- Excluded: Dev-handbook and .ace/taskflow directories (documentation repos)
 
 ## Action Items
 
@@ -3904,22 +3904,22 @@ The implementation plan addresses each of these systematically, prioritizing rel
 
 ## Additional Context
 
-- Task file: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.026-address-code-style-violations-with-rubocop.md
-- Configuration: dev-tools/.rubocop.yml
-- Style Guide: dev-tools/STYLE_GUIDE.md
-- CI Integration: dev-tools/.github/workflows/ci.yml
+- Task file: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.026-address-code-style-violations-with-rubocop.md
+- Configuration: .ace/tools/.rubocop.yml
+- Style Guide: .ace/tools/STYLE_GUIDE.md
+- CI Integration: .ace/tools/.github/workflows/ci.yml
 
 ---
 
 ## Reflection 45: 20250805-175855-test-coverage-improvement-phase-2.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-175855-test-coverage-improvement-phase-2.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-175855-test-coverage-improvement-phase-2.md`
 **Modified**: 2025-08-05 18:01:23
 
 # Reflection: Test Coverage Improvement Phase 2
 
 **Date**: 2025-08-05
-**Context**: Working on v.0.6.0+task.027 to improve test coverage from 53% to 70% in the dev-tools Ruby gem
+**Context**: Working on v.0.6.0+task.027 to improve test coverage from 53% to 70% in the .ace/tools Ruby gem
 **Author**: Claude (AI Assistant)
 **Type**: Standard
 
@@ -3980,7 +3980,7 @@ The implementation plan addresses each of these systematically, prioritizing rel
 #### Process Improvements
 
 - Create a pre-test checklist: verify actual API, check method signatures, review struct definitions
-- Develop coverage analysis tools as part of the dev-tools gem itself
+- Develop coverage analysis tools as part of the .ace/tools gem itself
 - Document common testing patterns for ATOM architecture components
 
 #### Tool Enhancements
@@ -4046,7 +4046,7 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 
 ## Additional Context
 
-- Working on task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md
+- Working on task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md
 - Current coverage: 53.44% (9860/18452 lines)
 - Target coverage: 70%
 - Phases completed: 1.5 of 4 (CLI tests done, Taskflow Management in progress)
@@ -4055,13 +4055,13 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 
 ## Reflection 46: 20250805-184857-systematic-test-suite-maintenance.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-184857-systematic-test-suite-maintenance.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-184857-systematic-test-suite-maintenance.md`
 **Modified**: 2025-08-05 18:49:53
 
 # Reflection: Systematic Test Suite Maintenance
 
 **Date**: 2025-08-05
-**Context**: Implementation of test reliability tracking and optimization for the dev-tools test suite
+**Context**: Implementation of test reliability tracking and optimization for the .ace/tools test suite
 **Author**: AI Development Assistant
 **Type**: Standard
 
@@ -4081,7 +4081,7 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 
 ## Key Learnings
 
-- **Test Suite Health**: The dev-tools test suite is actually in good condition with minimal failures
+- **Test Suite Health**: The .ace/tools test suite is actually in good condition with minimal failures
 - **Performance vs Accuracy Trade-off**: Timeout tests need to balance speed with realistic timeout scenarios
 - **Nil-Safe Operations**: Always handle nil values in metrics collection to prevent runtime errors
 - **Test Isolation**: Global test helpers can interfere with specific test stubs and mocks
@@ -4106,7 +4106,7 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 4. **Flaky Test Retry Logic**: Added retry capability to spec_helper
 
 ### Documentation
-- Created comprehensive test maintenance guide at `dev-handbook/guides/testing/test-maintenance.md`
+- Created comprehensive test maintenance guide at `.ace/handbook/guides/testing/test-maintenance.md`
 - Covers flaky test identification, optimization strategies, and Ruby 3.4.2 compatibility
 - Includes troubleshooting section and migration guides
 
@@ -4144,7 +4144,7 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 
 ## Reflection 47: 20250805-plan-task-014-claude-template-organization.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-plan-task-014-claude-template-organization.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-plan-task-014-claude-template-organization.md`
 **Modified**: 2025-08-05 09:45:34
 
 # Reflection: Planning Task v.0.6.0+task.014 - Improve Claude Template Organization
@@ -4214,15 +4214,15 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 
 ## Additional Context
 
-- Task path: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
-- Related feedback: `dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
-- Primary affected component: `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
+- Task path: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.014-improve-claude-template-organization-and-standardization.md`
+- Related feedback: `.ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md`
+- Primary affected component: `.ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb`
 
 ---
 
 ## Reflection 48: 20250805-plan-task-016-meta-workflows-cleanup.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-plan-task-016-meta-workflows-cleanup.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-plan-task-016-meta-workflows-cleanup.md`
 **Modified**: 2025-08-05 09:51:54
 
 # Reflection: Planning Task v.0.6.0+task.016 - Clean up meta workflows reference
@@ -4295,7 +4295,7 @@ This section appears within the "Individual Workflow Reference" section, creatin
 
 ## Reflection 49: 20250805-task-007-claude-list-command-implementation.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-task-007-claude-list-command-implementation.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-task-007-claude-list-command-implementation.md`
 **Modified**: 2025-08-05 01:24:16
 
 # Reflection: Claude List Command Implementation
@@ -4320,7 +4320,7 @@ This section appears within the "Individual Workflow Reference" section, creatin
 
 ## Key Learnings
 
-- **Submodule Structure**: Commands are organized in separate subdirectories (_custom and _generated) within dev-handbook/.integrations/claude/commands/
+- **Submodule Structure**: Commands are organized in separate subdirectories (_custom and _generated) within .ace/handbook/.integrations/claude/commands/
 - **Command Categorization**: Custom commands are the multi-task orchestration commands, while generated commands correspond to individual workflows
 - **Missing Command Detection**: Missing commands are workflows without corresponding installed commands in .claude/commands/
 - **Colorization Pattern**: The existing colorize method from task list command provides consistent terminal output formatting
@@ -4376,7 +4376,7 @@ This section appears within the "Individual Workflow Reference" section, creatin
 
 ## Reflection 50: 20250805-task-011-claude-documentation-update.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-task-011-claude-documentation-update.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/reflections/20250805-task-011-claude-documentation-update.md`
 **Modified**: 2025-08-05 02:51:14
 
 # Reflection: Update Documentation for Claude Integration
@@ -4405,7 +4405,7 @@ This section appears within the "Individual Workflow Reference" section, creatin
 - **Documentation Structure Matters**: Having clear organization with separate directories for custom vs generated commands makes the system more maintainable
 - **Migration Guides Are Essential**: When deprecating old systems, a clear migration guide with command mapping is crucial for user adoption
 - **Comprehensive Examples Help**: Including 2-3 examples per command subcommand provides better user understanding than minimal documentation
-- **Cross-Module Documentation**: Documentation spanning multiple submodules (dev-handbook, dev-tools) requires careful cross-referencing
+- **Cross-Module Documentation**: Documentation spanning multiple submodules (dev-handbook, .ace/tools) requires careful cross-referencing
 
 ## Conversation Analysis
 
@@ -4475,11 +4475,11 @@ The new handbook claude commands provide a much cleaner interface than the old s
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.011-update-documentation-for-new-claude-integration.md`
+- Task file: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.011-update-documentation-for-new-claude-integration.md`
 - Related PRs: This work updates documentation for features implemented in tasks 002-007
 - Key documentation created:
-  - Main guide: `dev-handbook/.integrations/claude/README.md`
-  - Migration guide: `dev-handbook/.integrations/claude/MIGRATION.md`  
-  - Developer guide: `dev-tools/docs/development/claude-integration.md`
+  - Main guide: `.ace/handbook/.integrations/claude/README.md`
+  - Migration guide: `.ace/handbook/.integrations/claude/MIGRATION.md`  
+  - Developer guide: `.ace/tools/docs/development/claude-integration.md`
 
 ---

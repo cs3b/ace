@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- Successfully located and read the complete workflow instruction file at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
+- Successfully located and read the complete workflow instruction file at `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
 - The workflow instruction was comprehensive and well-structured with clear steps
 - The `create-path` command worked correctly to generate an appropriate file path and filename
 - The embedded template provides excellent structure for creating meaningful reflections
@@ -63,9 +63,9 @@
 
 ## Technical Details
 
-- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
-- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md`
-- Template path referenced in instruction: `dev-handbook/templates/release-reflections/retrospective.template.md`
+- Workflow instruction file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
+- Generated reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-021504-workflow-instruction-reading-and-reflection-creation-process.md`
+- Template path referenced in instruction: `.ace/handbook/templates/release-reflections/retrospective.template.md`
 
 ## Additional Context
 

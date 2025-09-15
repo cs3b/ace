@@ -12,7 +12,7 @@ Successfully transformed the existing `create-task.wf.md` workflow into a behavi
 ## Key Accomplishments
 
 ### 1. Behavior-First Workflow Creation
-- **Created**: `dev-handbook/workflow-instructions/draft-task.wf.md`
+- **Created**: `.ace/handbook/workflow-instructions/draft-task.wf.md`
 - **Focus**: Pure behavioral specification with interface contracts
 - **Key Features**:
   - User Experience (Input/Process/Output) definitions
@@ -30,8 +30,8 @@ Successfully transformed the existing `create-task.wf.md` workflow into a behavi
 ### 3. Project-Wide Reference Updates
 - **Updated Files**: 80+ references across project
 - **Key Updates**:
-  - `dev-handbook/workflow-instructions/README.md`: Comprehensive workflow descriptions
-  - `dev-handbook/guides/draft-release/README.md`: Process integration
+  - `.ace/handbook/workflow-instructions/README.md`: Comprehensive workflow descriptions
+  - `.ace/handbook/guides/draft-release/README.md`: Process integration
   - `.integrations/claude/install-prompts.md`: Command mappings
   - Various workflow and guide files
 - **Approach**: Systematic sed-based replacement with validation
@@ -143,19 +143,19 @@ Successfully transformed the existing `create-task.wf.md` workflow into a behavi
 ## Deliverables Summary
 
 ### Created
-- `dev-handbook/workflow-instructions/draft-task.wf.md`: Complete behavior-first workflow
+- `.ace/handbook/workflow-instructions/draft-task.wf.md`: Complete behavior-first workflow
 - Behavioral specification template (embedded)
 - Reflection note documenting implementation
 
 ### Modified
-- `dev-handbook/workflow-instructions/README.md`: Updated descriptions and flows
-- `dev-handbook/guides/draft-release/README.md`: Updated workflow references
+- `.ace/handbook/workflow-instructions/README.md`: Updated descriptions and flows
+- `.ace/handbook/guides/draft-release/README.md`: Updated workflow references
 - `.integrations/claude/install-prompts.md`: Updated command mappings
 - Multiple workflow and documentation files: Reference updates
 - Task status: Marked v.0.4.0+task.3 as done
 
 ### Deleted
-- `dev-handbook/workflow-instructions/create-task.wf.md`: Replaced by draft-task.wf.md
+- `.ace/handbook/workflow-instructions/create-task.wf.md`: Replaced by draft-task.wf.md
 
 ## Success Metrics
 

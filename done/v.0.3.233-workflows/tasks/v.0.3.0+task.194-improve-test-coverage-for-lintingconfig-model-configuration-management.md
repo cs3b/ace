@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/models | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/models | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/models
+    .ace/tools/lib/coding_agent_tools/models
     ├── autofix_operation.rb
     ├── code/
     ├── error_distribution.rb
@@ -48,7 +48,7 @@ Enhance test coverage for the LintingConfig model to include comprehensive confi
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/models/linting_config_spec.rb
+- .ace/tools/spec/coding_agent_tools/models/linting_config_spec.rb
 
 #### Delete
 
@@ -130,6 +130,6 @@ Enhance test coverage for the LintingConfig model to include comprehensive confi
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/models/linting_config.rb
-- dev-tools/spec/coding_agent_tools/models/linting_config_spec.rb  
-- dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.101-create-unit-tests-for-model-classes.md
+- .ace/tools/lib/coding_agent_tools/models/linting_config.rb
+- .ace/tools/spec/coding_agent_tools/models/linting_config_spec.rb  
+- .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.101-create-unit-tests-for-model-classes.md

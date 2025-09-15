@@ -12,7 +12,7 @@ create list where it knowst that
 
     read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.md
 
-    task to work on: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.007-add-draft-status-support.md
+    task to work on: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.007-add-draft-status-support.md
 
   - [ ] commit all the changes you have made
 

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.1]
 _Command run:_
 
 ```bash
-ls -la dev-handbook/workflow-instructions/work-on-task.wf.md
+ls -la .ace/handbook/workflow-instructions/work-on-task.wf.md
 ```
 
 _Result excerpt:_
 
 ```
--rw-r--r--@ 1 user staff 4532 Jun 26 21:15 dev-handbook/workflow-instructions/work-on-task.wf.md
+-rw-r--r--@ 1 user staff 4532 Jun 26 21:15 .ace/handbook/workflow-instructions/work-on-task.wf.md
 ```
 
 ## Objective
@@ -38,8 +38,8 @@ Create a standardized template for high-level execution plans that will be embed
 
 #### Create
 
-- dev-handbook/guides/.meta/workflow-execution-template.md
-- dev-handbook/guides/.meta/workflow-context-loading-template.md
+- .ace/handbook/guides/.meta/workflow-execution-template.md
+- .ace/handbook/guides/.meta/workflow-context-loading-template.md
 
 #### Modify
 
@@ -95,6 +95,6 @@ Create a standardized template for high-level execution plans that will be embed
 
 ## References
 
-- dev-handbook/workflow-instructions/work-on-task.wf.md (pattern source)
+- .ace/handbook/workflow-instructions/work-on-task.wf.md (pattern source)
 - User requirements with 7-step execution pattern
 - docs/what-do-we-build.md, docs/architecture.md, docs/blueprint.md (context files)

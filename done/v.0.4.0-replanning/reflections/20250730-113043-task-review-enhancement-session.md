@@ -104,7 +104,7 @@
 **XML Embedding Implementation:**
 ```xml
 <documents>
-    <template path="dev-handbook/templates/idea-manager/idea.template.md">
+    <template path=".ace/handbook/templates/idea-manager/idea.template.md">
         [Complete template content]
     </template>
 </documents>
@@ -112,7 +112,7 @@
 
 ## Additional Context
 
-- **Task Path**: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.1-create-ideas-manager-tool.md
+- **Task Path**: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.1-create-ideas-manager-tool.md
 - **Commits**: 2 commits made with template enhancements
 - **Implementation Status**: Template format approved ✅, 4 clarifications remaining
 - **Next Focus**: nav-path integration details (path patterns, directory creation)

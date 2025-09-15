@@ -42,7 +42,7 @@ Enhance the `nav-path` tool to use configurable skip patterns from `.coding-agen
 
 #### Modify
 
-- dev-tools nav-path implementation to read from .coding-agent/path.yml
+- .ace/tools nav-path implementation to read from .coding-agent/path.yml
 - Default .coding-agent/path.yml template to include skip patterns
 - Documentation for the new configuration option
 
@@ -54,7 +54,7 @@ Enhance the `nav-path` tool to use configurable skip patterns from `.coding-agen
   > TEST: Pattern Analysis Check
   > Type: Pre-condition Check
   > Assert: All current hardcoded patterns are identified
-  > Command: grep -r "forbidden\|skip\|ignore" dev-tools/lib --include="*nav*"
+  > Command: grep -r "forbidden\|skip\|ignore" .ace/tools/lib --include="*nav*"
   > RESULT: Found that nav-path uses ProjectSandbox's forbidden_patterns which are hardcoded in project_sandbox.rb:151-162
 - [x] Design configuration schema for skip patterns in path.yml
   > RESULT: Configuration already exists at security.forbidden_patterns - need to ensure consistency with hardcoded defaults
@@ -76,7 +76,7 @@ Enhance the `nav-path` tool to use configurable skip patterns from `.coding-agen
   > Command: nav-path file .git 2>&1 | grep -q "forbidden pattern"
   > RESULT: ✅ Test passed - .git correctly blocked with "Path matches forbidden pattern"
 - [x] Update documentation to describe new configuration option
-  > RESULT: Added configuration section to nav-path documentation in dev-tools/docs/tools.md
+  > RESULT: Added configuration section to nav-path documentation in .ace/tools/docs/tools.md
 - [x] Ensure backward compatibility for installations without the config
   > RESULT: ProjectSandbox already uses default_forbidden_patterns as fallback when config is missing
 
@@ -96,6 +96,6 @@ Enhance the `nav-path` tool to use configurable skip patterns from `.coding-agen
 
 ## References
 
-- Current nav-path implementation in dev-tools
+- Current nav-path implementation in .ace/tools
 - Existing .coding-agent/path.yml configuration structure
 - XDG configuration standards for the coding agent tools

@@ -27,7 +27,7 @@
 - **ExecutableWrapper Pattern**: The project's ExecutableWrapper molecule provides excellent abstraction for CLI command creation with consistent behavior
 - **ATOM Architecture Effectiveness**: The molecules/organisms/CLI structure scales well for complex features requiring multiple components
 - **Multi-Repo Benefits**: The `bin/gc` intention-based commit system handles cross-repository changes elegantly with contextual commit messages
-- **Template System Value**: Existing template infrastructure (`dev-handbook/templates/review-synthesizer/`) provides sophisticated prompting out of the box
+- **Template System Value**: Existing template infrastructure (`.ace/handbook/templates/review-synthesizer/`) provides sophisticated prompting out of the box
 - **User Experience Matters**: Even CLI tools benefit significantly from progress indicators and status feedback during long-running operations
 - **Documentation Simplification Impact**: Replacing complex manual processes with well-designed tools can reduce documentation by 70%+ while improving usability
 
@@ -146,6 +146,6 @@ This pattern could be extracted into a reusable `ProgressReporter` molecule for 
 - **User Feedback**: Quick response cycle for UX improvements
 
 **Related Files:**
-- Task definition: `dev-taskflow/current/v.0.3.0-migration/tasks/v.0.3.0+task.21-extract-report-generation-module.md`
-- Workflow doc: `dev-handbook/workflow-instructions/synthesize-reviews.wf.md`
-- System prompt: `dev-handbook/templates/review-synthesizer/system.prompt.md`
+- Task definition: `.ace/taskflow/current/v.0.3.0-migration/tasks/v.0.3.0+task.21-extract-report-generation-module.md`
+- Workflow doc: `.ace/handbook/workflow-instructions/synthesize-reviews.wf.md`
+- System prompt: `.ace/handbook/templates/review-synthesizer/system.prompt.md`

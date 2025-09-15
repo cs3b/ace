@@ -116,7 +116,7 @@ Update all task management binstubs to use the new gem commands while maintainin
 This task has been made obsolete by the implementation of v.0.3.0+task.31 (Implement Binstub Installation System), which took a superior architectural approach:
 
 **Task 31's Solution:**
-- Created configuration-driven binstub installation system (`dev-tools/config/binstub-aliases.yml`)
+- Created configuration-driven binstub installation system (`.ace/tools/config/binstub-aliases.yml`)
 - Implemented ATOM-based architecture for binstub generation
 - Used `task-manager` executable instead of direct `coding_agent_tools` CLI calls
 - Provided extensible system for future binstub additions

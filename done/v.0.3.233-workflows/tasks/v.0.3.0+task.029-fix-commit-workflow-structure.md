@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-grep -n "Let's\|checkbox\|\- \[ \]" dev-handbook/workflow-instructions/commit.wf.md | head -10 | sed 's/^/    /'
+grep -n "Let's\|checkbox\|\- \[ \]" .ace/handbook/workflow-instructions/commit.wf.md | head -10 | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -42,7 +42,7 @@ The commit.wf.md workflow violates multiple structural standards defined in work
 
 #### Modify
 
-* dev-handbook/workflow-instructions/commit.wf.md
+* .ace/handbook/workflow-instructions/commit.wf.md
 
 #### Delete
 

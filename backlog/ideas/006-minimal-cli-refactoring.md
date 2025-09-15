@@ -24,7 +24,7 @@
 
 ## Intention
 
-To refactor existing CLI tools in `dev-tools/exe/` to perform only essential minimum operations, delegating complex logic, template review, and final versioning to AI coding agents, thereby ensuring flexibility and reducing the need for tool modifications.
+To refactor existing CLI tools in `.ace/tools/exe/` to perform only essential minimum operations, delegating complex logic, template review, and final versioning to AI coding agents, thereby ensuring flexibility and reducing the need for tool modifications.
 
 ## Problem It Solves
 
@@ -35,7 +35,7 @@ To refactor existing CLI tools in `dev-tools/exe/` to perform only essential min
 - Maintaining flexibility and adaptability in the face of evolving AI capabilities and workflow requirements is challenging with tightly coupled CLI tools.
 
 **Impact:**
-- Increased maintenance burden on the `dev-tools` gem for business logic changes.
+- Increased maintenance burden on the `.ace/tools` gem for business logic changes.
 - Slower iteration cycles for workflow improvements, as tool modifications are required.
 - Underutilization of AI coding agents' strengths in complex reasoning, content generation, and nuanced decision-making.
 - Reduced agility in adapting to new LLM providers, model capabilities, or changing development best practices.
@@ -50,7 +50,7 @@ To refactor existing CLI tools in `dev-tools/exe/` to perform only essential min
 
 ## Solution Direction
 
-1. **Minimalist CLI Executables**: CLI executables in `dev-tools/exe/` will be refactored to perform only the essential tasks of:
+1. **Minimalist CLI Executables**: CLI executables in `.ace/tools/exe/` will be refactored to perform only the essential tasks of:
     - Parsing arguments and options.
     - Invoking the appropriate Ruby logic (Organisms/Molecules) to execute a command.
     - Handling basic input/output and error reporting (via `ErrorReporter`).
@@ -60,7 +60,7 @@ To refactor existing CLI tools in `dev-tools/exe/` to perform only essential min
     - Workflows will define the sequence of operations, including calling specific CLI tools and using LLM agents to perform the heavy lifting.
     - **Example**: A `review-code.wf.md` workflow might call `code-review-prepare` to get diff context, then pass that context to an AI agent for detailed review and recommendations, and finally call `code-review-synthesize` to format the agent's output.
 
-3. **Delegate Complex Logic to Organisms/Molecules**: Business logic, template parsing, model selection heuristics, and response interpretation will be moved from CLI executables to their corresponding Organism or Molecule components within `dev-tools/lib/coding_agent_tools/`.
+3. **Delegate Complex Logic to Organisms/Molecules**: Business logic, template parsing, model selection heuristics, and response interpretation will be moved from CLI executables to their corresponding Organism or Molecule components within `.ace/tools/lib/coding_agent_tools/`.
     - These components will be designed to be callable by both the CLI tools and directly by AI agents (if appropriate via workflow definition).
     - **Example**: The logic for generating a commit message based on `git diff` output and user intent will reside in an Organism, which the `git-commit` CLI tool will call. The `git-commit` CLI will not contain the LLM interaction logic itself.
 
@@ -85,10 +85,10 @@ To refactor existing CLI tools in `dev-tools/exe/` to perform only essential min
 
 ## Expected Benefits
 
-- **Increased Flexibility**: Workflows can be easily modified or enhanced without requiring changes to the `dev-tools` gem.
-- **Improved Maintainability**: The `dev-tools` gem focuses on core utilities, reducing the scope of changes needed for business logic evolution.
+- **Increased Flexibility**: Workflows can be easily modified or enhanced without requiring changes to the `.ace/tools` gem.
+- **Improved Maintainability**: The `.ace/tools` gem focuses on core utilities, reducing the scope of changes needed for business logic evolution.
 - **Better LLM Utilization**: AI agents will handle complex reasoning, content generation, and nuanced reviews, leveraging their strengths.
-- **Faster Iteration Cycles**: Workflow improvements can be implemented purely in the workflow definitions (e.g., `dev-handbook/workflow-instructions/`) without gem releases.
+- **Faster Iteration Cycles**: Workflow improvements can be implemented purely in the workflow definitions (e.g., `.ace/handbook/workflow-instructions/`) without gem releases.
 - **Clearer Separation of Concerns**: CLI tools become simple interfaces, business logic resides in Organisms/Molecules, and orchestration happens in Workflows.
 
 ## Big Unknowns
@@ -108,5 +108,5 @@ To refactor existing CLI tools in `dev-tools/exe/` to perform only essential min
 > SOURCE
 
 ```text
-all the tools in dev-tools/exe should do only the minimum, and the hardest part, all the template review, and final version should be done by the llm / coding agents e.g.: handbook claude commmands, so we stay flexible without the need to change tools
+all the tools in .ace/tools/exe should do only the minimum, and the hardest part, all the template review, and final version should be done by the llm / coding agents e.g.: handbook claude commmands, so we stay flexible without the need to change tools
 ```

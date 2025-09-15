@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides/
+.ace/handbook/guides/
 ├── README.md
 ├── api-development.g.md
 ├── documentation.g.md
@@ -58,20 +58,20 @@ Transform the current template-only embedding system into a universal `<document
 #### Modify
 
 * handbook sync-templates (extend to support <documents> format)
-* dev-handbook/workflow-instructions/create-task.wf.md (update to new format)
-* dev-handbook/workflow-instructions/update-blueprint.wf.md (update to new format)
-* dev-handbook/workflow-instructions/update-roadmap.wf.md (update to new format)
-* dev-handbook/workflow-instructions/review-task.wf.md (update to new format)
-* dev-handbook/workflow-instructions/create-reflection-note.wf.md (update to new format)
-* dev-handbook/workflow-instructions/initialize-project-structure.wf.md (update to new format)
-* dev-handbook/workflow-instructions/draft-release.wf.md (update to new format)
-* dev-handbook/workflow-instructions/publish-release.wf.md (update to new format)
-* dev-handbook/workflow-instructions/create-test-cases.wf.md (update to new format)
-* dev-handbook/workflow-instructions/commit.wf.md (update to new format)
-* dev-handbook/workflow-instructions/create-api-docs.wf.md (update to new format)
-* dev-handbook/workflow-instructions/create-adr.wf.md (update to new format)
-* dev-handbook/workflow-instructions/save-session-context.wf.md (update to new format)
-* dev-handbook/workflow-instructions/create-user-docs.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/create-task.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/update-blueprint.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/update-roadmap.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/review-task.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/create-reflection-note.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/initialize-project-structure.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/draft-release.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/publish-release.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/create-test-cases.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/commit.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/create-api-docs.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/create-adr.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/save-session-context.wf.md (update to new format)
+* .ace/handbook/workflow-instructions/create-user-docs.wf.md (update to new format)
 
 #### Delete
 
@@ -92,7 +92,7 @@ Transform the current template-only embedding system into a universal `<document
   > TEST: Template Analysis Complete
   > Type: Pre-condition Check
   > Assert: All template paths and duplications are documented
-  > Command: rg "template path=" dev-handbook/workflow-instructions/ | cut -d'"' -f2 | sort | uniq -c | sort -nr
+  > Command: rg "template path=" .ace/handbook/workflow-instructions/ | cut -d'"' -f2 | sort | uniq -c | sort -nr
 * [x] Research universal document embedding architecture patterns
 * [x] Design backward compatibility strategy for gradual migration
 
@@ -117,7 +117,7 @@ Transform the current template-only embedding system into a universal `<document
   > TEST: Migration Validation
   > Type: Action Validation
   > Assert: All workflow files use consistent document embedding format
-  > Command: rg -c "<documents>" dev-handbook/workflow-instructions/*.wf.md
+  > Command: rg -c "<documents>" .ace/handbook/workflow-instructions/*.wf.md
 * [x] Step 9: Validate all template paths are consistent (relative to project root)
 * [x] Step 10: Run full sync to ensure all embedded content is up-to-date
 
@@ -141,6 +141,6 @@ Transform the current template-only embedding system into a universal `<document
 
 * Current template embedding analysis showing 3× task.template.md, 2× blueprint.template.md duplication
 * Existing sync script: handbook sync-templates
-* 14 workflow files using template embedding: dev-handbook/workflow-instructions/*.wf.md
-* Template directory structure: dev-handbook/templates/
-* Guide directory structure: dev-handbook/guides/
+* 14 workflow files using template embedding: .ace/handbook/workflow-instructions/*.wf.md
+* Template directory structure: .ace/handbook/templates/
+* Guide directory structure: .ace/handbook/guides/

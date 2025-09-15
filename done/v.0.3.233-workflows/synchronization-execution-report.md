@@ -12,7 +12,7 @@ Successfully executed the markdown-sync-embedded-documents script to synchronize
 
 ### Script Execution
 
-**Command**: `handbook sync-templates --verbose dev-handbook/workflow-instructions/*.wf.md`
+**Command**: `handbook sync-templates --verbose .ace/handbook/workflow-instructions/*.wf.md`
 
 **Results**:
 
@@ -25,34 +25,34 @@ Successfully executed the markdown-sync-embedded-documents script to synchronize
 The following workflow instruction files were updated:
 
 1. **create-api-docs.wf.md**
-   - Updated template: `dev-handbook/templates/code-docs/ruby-yard.template.md`
+   - Updated template: `.ace/handbook/templates/code-docs/ruby-yard.template.md`
 
 2. **create-task.wf.md**
-   - Updated template: `dev-handbook/templates/release-tasks/task.template.md`
+   - Updated template: `.ace/handbook/templates/release-tasks/task.template.md`
 
 3. **draft-release.wf.md**
    - Updated templates:
-     - `dev-handbook/templates/release-management/release-overview.template.md`
-     - `dev-handbook/templates/release-tasks/task.template.md`
+     - `.ace/handbook/templates/release-management/release-overview.template.md`
+     - `.ace/handbook/templates/release-tasks/task.template.md`
 
 4. **review-task.wf.md**
-   - Updated template: `dev-handbook/templates/release-tasks/task.template.md`
+   - Updated template: `.ace/handbook/templates/release-tasks/task.template.md`
 
 5. **update-roadmap.wf.md**
-   - Updated template: `dev-handbook/templates/release-planning/release-readme.template.md`
+   - Updated template: `.ace/handbook/templates/release-planning/release-readme.template.md`
 
 ### Templates Already Up-to-Date
 
 The following templates were already synchronized and required no updates:
 
-- `dev-handbook/templates/project-docs/decisions/adr.template.md`
-- `dev-handbook/templates/code-docs/javascript-jsdoc.template.md`
-- `dev-handbook/templates/release-reflections/retrospective.template.md`
-- `dev-handbook/templates/release-testing/test-case.template.md`
-- `dev-handbook/templates/user-docs/user-guide.template.md`
-- `dev-handbook/templates/release-management/changelog.template.md`
-- `dev-handbook/templates/release-docs/documentation.template.md`
-- `dev-handbook/templates/project-docs/blueprint.template.md`
+- `.ace/handbook/templates/project-docs/decisions/adr.template.md`
+- `.ace/handbook/templates/code-docs/javascript-jsdoc.template.md`
+- `.ace/handbook/templates/release-reflections/retrospective.template.md`
+- `.ace/handbook/templates/release-testing/test-case.template.md`
+- `.ace/handbook/templates/user-docs/user-guide.template.md`
+- `.ace/handbook/templates/release-management/changelog.template.md`
+- `.ace/handbook/templates/release-docs/documentation.template.md`
+- `.ace/handbook/templates/project-docs/blueprint.template.md`
 
 ## Validation Results
 
@@ -69,7 +69,7 @@ The following templates were already synchronized and required no updates:
 
 ### Commit Details
 
-**Repository**: dev-handbook (submodule)  
+**Repository**: .ace/handbook (submodule)  
 **Branch**: workflows-improvements  
 **Commit Hash**: b68d1c9  
 **Commit Message**: "chore: sync embedded templates"

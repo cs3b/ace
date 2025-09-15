@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── README.md
 ├── ai-agent-integration.g.md
 ├── atom-house-rules.md
@@ -47,11 +47,11 @@ Create a dedicated guide for version control message standards, specifically doc
 
 #### Create
 
-* dev-handbook/guides/development/version-control-message.g.md
+* .ace/handbook/guides/development/version-control-message.g.md
 
 #### Modify
 
-* dev-handbook/guides/development/README.md (add reference to new guide)
+* .ace/handbook/guides/development/README.md (add reference to new guide)
 
 #### Delete
 
@@ -82,7 +82,7 @@ Create a dedicated guide for version control message standards, specifically doc
   > TEST: Verify Guide Creation
   > Type: Action Validation
   > Assert: Guide file created with complete Conventional Commits specification
-  > Command: bin/test --check-guide-completeness dev-handbook/guides/development/version-control-message.g.md
+  > Command: bin/test --check-guide-completeness .ace/handbook/guides/development/version-control-message.g.md
 * [x] Include comprehensive examples for all commit types (feat, fix, refactor, docs, etc.)
 * [x] Update development guides README to reference new guide
   > TEST: Verify README Reference
@@ -106,6 +106,6 @@ Create a dedicated guide for version control message standards, specifically doc
 ## References
 
 * Review finding: "The commit workflow requires this format but does not link to a definitive guide explaining the types, scopes, and formatting rules"
-* Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
+* Source: .ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Related workflow: commit.wf.md
-* User note: "the guide should go to dev-handbook/guides/version-control-system.g.md - we should split this guide to two parts: a) version-control-system-message.g.md b) version-control-system-git.g.md"
+* User note: "the guide should go to .ace/handbook/guides/version-control-system.g.md - we should split this guide to two parts: a) version-control-system-message.g.md b) version-control-system-git.g.md"

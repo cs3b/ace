@@ -93,61 +93,61 @@ Streamline idea capture workflow by automatically committing generated idea file
   > TEST: CLI Option Added
   > Type: Syntax Validation
   > Assert: --commit option properly registered with boolean type and description
-  > Command: cd dev-tools && ruby -c lib/coding_agent_tools/cli/commands/ideas/capture.rb && grep -n "commit.*boolean" lib/coding_agent_tools/cli/commands/ideas/capture.rb
+  > Command: cd .ace/tools && ruby -c lib/coding_agent_tools/cli/commands/ideas/capture.rb && grep -n "commit.*boolean" lib/coding_agent_tools/cli/commands/ideas/capture.rb
 
 - [x] Enhance CLI call method to pass commit_after_capture parameter to organism
   > TEST: Parameter Passing Implementation
   > Type: Code Integration
   > Assert: build_capture_options includes commit_after_capture based on --commit flag
-  > Command: grep -A 10 "commit_after_capture" dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
+  > Command: grep -A 10 "commit_after_capture" .ace/tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
 
 - [x] Add commit_after_capture initialization parameter to IdeaCapture organism
   > TEST: Organism Constructor Update
   > Type: Interface Extension
   > Assert: IdeaCapture accepts commit_after_capture parameter with default false
-  > Command: grep -B 5 -A 15 "def initialize" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+  > Command: grep -B 5 -A 15 "def initialize" .ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb
 
 - [x] Implement execute_git_commit private method in IdeaCapture organism
   > TEST: Git Commit Method Implementation
   > Type: Core Functionality
   > Assert: Method executes git-commit executable with proper intention and file path
-  > Command: grep -A 15 "execute_git_commit" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+  > Command: grep -A 15 "execute_git_commit" .ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb
 
 - [x] Add test_environment? private method for CI/test environment detection
   > TEST: Environment Detection Method
   > Type: Safety Feature
   > Assert: Method correctly identifies CI, TEST, and RSpec environments
-  > Command: grep -A 10 "test_environment" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+  > Command: grep -A 10 "test_environment" .ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb
 
 - [x] Integrate git-commit execution into main capture_idea workflow
   > TEST: Workflow Integration
   > Type: Business Logic
   > Assert: Git commit executes after successful idea creation when flag enabled
-  > Command: grep -B 5 -A 10 "@commit_after_capture" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+  > Command: grep -B 5 -A 10 "@commit_after_capture" .ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb
 
 - [x] Create comprehensive RSpec tests for CLI command --commit flag handling
   > TEST: CLI Command Test Coverage
   > Type: Unit Testing
   > Assert: All --commit flag scenarios covered with proper parameter passing tests
-  > Command: cd dev-tools && bundle exec rspec spec/cli/ideas_manager_spec.rb:369 -f documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/ideas_manager_spec.rb:369 -f documentation
 
 - [x] Create comprehensive RSpec tests for IdeaCapture organism commit functionality
   > TEST: Organism Test Coverage
   > Type: Unit Testing
   > Assert: commit_after_capture, git execution, and environment detection fully tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb | grep "examples\|failures"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb | grep "examples\|failures"
 
 - [x] Create integration tests for end-to-end --commit flag functionality
   > TEST: Integration Test Coverage
   > Type: End-to-End Testing
   > Assert: Real git operations work correctly with proper environment handling
-  > Command: cd dev-tools && bundle exec rspec spec/integration/ideas_manager_commit_spec.rb:85 -f documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/ideas_manager_commit_spec.rb:85 -f documentation
 
 - [x] Verify all existing tests continue to pass with new functionality
   > TEST: Regression Prevention
   > Type: Full Test Suite
   > Assert: No breaking changes to existing ideas-manager functionality
-  > Command: cd dev-tools && bundle exec rspec spec/cli/ideas_manager_spec.rb spec/coding_agent_tools/organisms/idea_capture_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/ideas_manager_spec.rb spec/coding_agent_tools/organisms/idea_capture_spec.rb --format progress
 
 ## Technical Approach
 
@@ -181,7 +181,7 @@ Streamline idea capture workflow by automatically committing generated idea file
 **Selection Rationale:** The git-commit executable provides the best integration with existing project patterns, handles multi-repo operations correctly, uses proper commit message generation, and maintains security standards already established in the codebase.
 
 ### Dependencies
-- [ ] git-commit executable: existing tool in dev-tools/exe/git-commit 
+- [ ] git-commit executable: existing tool in .ace/tools/exe/git-commit 
 - [ ] File.expand_path for git-commit path resolution: standard Ruby library
 - [ ] ENV variable access for test environment detection: standard Ruby library
 - [ ] Compatibility verification completed: No version conflicts expected
@@ -501,7 +501,7 @@ end
 
 ## References
 
-- Enhanced idea source: dev-taskflow/backlog/ideas/20250730-2327-auto-commit-ideas.md
-- git-commit executable: dev-tools/exe/git-commit
-- ideas-manager CLI: dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
-- IdeaCapture organism: dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+- Enhanced idea source: .ace/taskflow/backlog/ideas/20250730-2327-auto-commit-ideas.md
+- git-commit executable: .ace/tools/exe/git-commit
+- ideas-manager CLI: .ace/tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
+- IdeaCapture organism: .ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb

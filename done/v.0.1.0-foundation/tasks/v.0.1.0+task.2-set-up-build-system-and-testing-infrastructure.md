@@ -82,7 +82,7 @@ Establish a comprehensive build system and testing infrastructure for the Coding
   > TEST: RSpec Research Complete
   > Type: Pre-condition Check
   > Assert: Testing strategy documented with examples
-  > Command: test -f dev-taskflow/current/v.0.1.0-foundation/researches/rspec-strategy.md
+  > Command: test -f .ace/taskflow/current/v.0.1.0-foundation/researches/rspec-strategy.md
 * [x] Analyze existing bin/ scripts and RSpec structure to understand current patterns
 * [x] Plan StandardRB configuration aligned with project coding standards
 * [x] Design enhanced test structure and helper organization for comprehensive gem testing

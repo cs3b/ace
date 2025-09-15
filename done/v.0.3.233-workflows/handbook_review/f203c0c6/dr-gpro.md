@@ -16,23 +16,23 @@ The provided workflows represent a major step towards self-contained execution. 
 
 * **ADR-001 (Self-Containment)**: ✅ Most workflows comply, embedding necessary context and referencing only the three permitted core documents (`what-do-we-build.md`, `architecture.md`, `blueprint.md`).
 * **ADR-002 (XML Templates)**: ⚠️ Partial compliance. Most workflows correctly use the `<templates>` structure. However, `commit.wf.md` violates this rule by using raw markdown code blocks for templates.
-* **ADR-003 (Template Directory)**: ✅ Workflows embedding templates correctly reference the new `dev-handbook/templates/` directory structure.
+* **ADR-003 (Template Directory)**: ✅ Workflows embedding templates correctly reference the new `.ace/handbook/templates/` directory structure.
 
 ### Specific Workflow Analysis
 
-* ❌ **`initialize-project-structure.wf.md`**: Contains critical path contradictions. The "Project Context Loading" section references core documents in `dev-taskflow/`, while the "Process Steps" and "Generated Documentation" sections correctly reference `docs/`. This internal inconsistency will break the workflow.
-* ❌ **`update-blueprint.wf.md`**: Operates on the wrong file (`dev-taskflow/blueprint.md`). The canonical project blueprint is located at `docs/blueprint.md` as established by the project context and `initialize-project-structure` workflow. This workflow is functionally broken.
+* ❌ **`initialize-project-structure.wf.md`**: Contains critical path contradictions. The "Project Context Loading" section references core documents in `.ace/taskflow/`, while the "Process Steps" and "Generated Documentation" sections correctly reference `docs/`. This internal inconsistency will break the workflow.
+* ❌ **`update-blueprint.wf.md`**: Operates on the wrong file (`.ace/taskflow/blueprint.md`). The canonical project blueprint is located at `docs/blueprint.md` as established by the project context and `initialize-project-structure` workflow. This workflow is functionally broken.
 * ❌ **`update-roadmap.wf.md`**: Embeds an incorrect and irrelevant template (`release-readme.template.md`) instead of a roadmap-related template. The workflow is unusable in its current state.
 * ❌ **`commit.wf.md`**: Fails to use the gem's own `bin/git-commit-with-message` tool, instead instructing manual `git commit` commands. It also violates ADR-002 by not using XML-based templates.
 * ⚠️ **`create-adr.wf.md`**: Contains an incorrect path reference in Step 7 (`docs/architecture-decisions/`). The correct path is `docs/decisions/`.
-* ⚠️ **`create-task.wf.md`**: The workflow title is "Breakdown Notes into Tasks" while the filename is `create-task.wf.md`. This naming should be harmonized. The "Directory Audit" step is overly specific (`dev-handbook/guides`) and should be generalized or made optional.
+* ⚠️ **`create-task.wf.md`**: The workflow title is "Breakdown Notes into Tasks" while the filename is `create-task.wf.md`. This naming should be harmonized. The "Directory Audit" step is overly specific (`.ace/handbook/guides`) and should be generalized or made optional.
 
 ## 3. Template & Example Updates
 
 The move to XML-embedded templates is a major improvement. The embedded templates are largely correct, but key issues exist.
 
 * ❌ **`commit.wf.md`**: The "Commit Message Templates" section uses markdown code blocks instead of the required `<templates>` XML structure. This violates ADR-002 and requires immediate refactoring.
-* ❌ **`update-roadmap.wf.md`**: The embedded template (`dev-handbook/templates/release-planning/release-readme.template.md`) is incorrect for a roadmap update workflow. It appears to be a copy-paste error. This makes the workflow non-functional.
+* ❌ **`update-roadmap.wf.md`**: The embedded template (`.ace/handbook/templates/release-planning/release-readme.template.md`) is incorrect for a roadmap update workflow. It appears to be a copy-paste error. This makes the workflow non-functional.
 * ✅ **Other Workflows**: Workflows like `create-adr`, `create-api-docs`, `draft-release`, and `initialize-project-structure` correctly embed templates with valid paths according to ADR-002 and ADR-003.
 
 ## 4. Integration Guide Requirements
@@ -41,14 +41,14 @@ The project relies on external services and environment configuration, but lacks
 
 * **Missing Guide**: Environment Setup and Secrets Management.
 * **Required Workflow**: An `onboard-developer.wf.md` or similar workflow should orchestrate the setup process, referencing the new guide.
-* **File Path**: `dev-handbook/guides/setup/environment-setup.g.md`
+* **File Path**: `.ace/handbook/guides/setup/environment-setup.g.md`
 * **Priority**: 🟡 High. This is crucial for both human developers and AI agents to use tools that interact with Gemini and GitHub APIs.
 
 ## 5. AI Agent Instruction Updates
 
 The new ADRs are designed to improve the AI agent experience, but inconsistencies undermine this goal.
 
-* **Path Unreliability**: The path confusion between `docs/` and `dev-taskflow/` in `initialize-project-structure.wf.md` and `update-blueprint.wf.md` is the most severe issue. An agent cannot reliably load project context or update key documents.
+* **Path Unreliability**: The path confusion between `docs/` and `.ace/taskflow/` in `initialize-project-structure.wf.md` and `update-blueprint.wf.md` is the most severe issue. An agent cannot reliably load project context or update key documents.
 * **Inconsistent Tool Usage**: Workflows like `commit.wf.md` should instruct the agent to use the project's own tools (e.g., `bin/git-commit-with-message`) to promote adoption and test the gem's features. Instructing manual `git` commands defeats the purpose of the CAT gem.
 * **Parsing Inconsistency**: The non-compliant templates in `commit.wf.md` would require the agent to have special-case parsing logic, violating the principle of standardized, predictable workflow files established by ADR-002.
 
@@ -58,8 +58,8 @@ Significant cross-referencing issues exist that will break automated workflows.
 
 * 🔴 **Core Document Location**: There is a fundamental conflict regarding the location of core project documents.
   * **Canonical Source**: `architecture.md`, `blueprint.md`, and `what-do-we-build.md` state that core docs reside in `docs/`.
-  * **Conflict in `initialize-project-structure.wf.md`**: The "Project Context Loading" section incorrectly points to `dev-taskflow/` for these same files.
-  * **Conflict in `update-blueprint.wf.md`**: This workflow incorrectly targets `dev-taskflow/blueprint.md` for updates.
+  * **Conflict in `initialize-project-structure.wf.md`**: The "Project Context Loading" section incorrectly points to `.ace/taskflow/` for these same files.
+  * **Conflict in `update-blueprint.wf.md`**: This workflow incorrectly targets `.ace/taskflow/blueprint.md` for updates.
 * 🟡 **Incorrect Directory in `create-adr.wf.md`**: Step 7 refers to `docs/architecture-decisions/`, which is incorrect. The canonical path is `docs/decisions/`.
 
 These inconsistencies must be resolved to ensure agents can navigate the project correctly. All references should point to the single source of truth in the `docs/` directory.
@@ -84,7 +84,7 @@ These inconsistencies must be resolved to ensure agents can navigate the project
 🟡 **High**
 
 * **Task**: Create an environment setup guide.
-  * **Files**: `dev-handbook/guides/setup/environment-setup.g.md` (new).
+  * **Files**: `.ace/handbook/guides/setup/environment-setup.g.md` (new).
   * **Action**: Document how to set up `GEMINI_API_KEY`, `GITHUB_TOKEN`, and local LM Studio for using the CAT gem.
 * **Task**: Align workflows with the gem's own tools.
   * **Files**: `commit.wf.md`.
@@ -99,7 +99,7 @@ These inconsistencies must be resolved to ensure agents can navigate the project
 🔵 **Nice-to-have**
 
 * **Task**: Add a README for the templates directory.
-  * **Files**: `dev-handbook/templates/README.md` (new).
+  * **Files**: `.ace/handbook/templates/README.md` (new).
   * **Action**: Briefly explain the template categories and naming conventions defined in ADR-003.
 
 ## 8. Risk Assessment

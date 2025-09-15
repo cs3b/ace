@@ -49,8 +49,8 @@
 - Validated that Git tools correctly maintain multi-repository functionality while search tool was properly simplified
 
 **Key Files Examined:**
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe/search` - Properly updated with removal comments
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/docs/tools.md` - Contains correct unified search documentation
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/exe/search` - Properly updated with removal comments
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/docs/tools.md` - Contains correct unified search documentation
 - Git command implementations - Legitimately maintain `--repository` flags for valid multi-repo operations
 
 **Validation Results:**

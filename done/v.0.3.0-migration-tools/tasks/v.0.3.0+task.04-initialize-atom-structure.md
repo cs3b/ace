@@ -14,13 +14,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools
+    .ace/tools/lib/coding_agent_tools
     ├── atoms
     ├── cli
     ├── models
@@ -72,7 +72,7 @@ Create the foundational ATOM directory structure for task management components 
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Existing atom patterns are understood
-  > Command: find dev-tools/lib/coding_agent_tools/atoms -name "*.rb" | wc -l
+  > Command: find .ace/tools/lib/coding_agent_tools/atoms -name "*.rb" | wc -l
 * [x] Design atom interfaces following established patterns
 * [x] Plan error handling strategies for file system operations and YAML parsing
 * [x] Research security integration with existing SecurityLogger and SecurePathValidator components
@@ -83,7 +83,7 @@ Create the foundational ATOM directory structure for task management components 
   > TEST: Directory Structure Created
   > Type: File System Check
   > Assert: All task_management directories exist
-  > Command: ls -la dev-tools/lib/coding_agent_tools/{atoms,molecules,organisms}/task_management 2>/dev/null | wc -l
+  > Command: ls -la .ace/tools/lib/coding_agent_tools/{atoms,molecules,organisms}/task_management 2>/dev/null | wc -l
 - [x] Implement file_system_scanner.rb with directory scanning utilities
   - Include path validation using secure patterns
   - Implement glob pattern matching for flexible file filtering
@@ -96,7 +96,7 @@ Create the foundational ATOM directory structure for task management components 
   > TEST: YAML Parser Implementation
   > Type: Unit Test
   > Assert: Parser handles valid and invalid YAML with specific error types
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/task_management/yaml_frontmatter_parser_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/task_management/yaml_frontmatter_parser_spec.rb
 - [x] Create comprehensive unit tests for both atoms
   - Test file system scanner with various directory structures
   - Test YAML parser with valid, invalid, and malicious YAML content
@@ -106,7 +106,7 @@ Create the foundational ATOM directory structure for task management components 
   > TEST: Autoloading Verification
   > Type: Integration Test
   > Assert: Task management atoms are properly autoloaded
-  > Command: cd dev-tools && bundle exec ruby -e "require 'coding_agent_tools'; puts CodingAgentTools::Atoms::TaskManagement::FileSystemScanner"
+  > Command: cd .ace/tools && bundle exec ruby -e "require 'coding_agent_tools'; puts CodingAgentTools::Atoms::TaskManagement::FileSystemScanner"
 
 ## Acceptance Criteria
 
@@ -127,5 +127,5 @@ Create the foundational ATOM directory structure for task management components 
 ## References
 
 * ATOM architecture pattern: docs/architecture.md
-* Existing atoms: dev-tools/lib/coding_agent_tools/atoms/
-* Target directory: dev-tools/lib/coding_agent_tools/atoms/task_management/
+* Existing atoms: .ace/tools/lib/coding_agent_tools/atoms/
+* Target directory: .ace/tools/lib/coding_agent_tools/atoms/task_management/

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── commit.wf.md
     ├── create-adr.wf.md
     ├── create-api-docs.wf.md
@@ -57,7 +57,7 @@ Enhance the review-synthesizer workflow based on real-world usage learnings from
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-synthesizer.wf.md
+* .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 
 ## Phases
 
@@ -74,7 +74,7 @@ Enhance the review-synthesizer workflow based on real-world usage learnings from
   > TEST: Workflow Structure Analysis
   > Type: Pre-condition Check
   > Assert: Current workflow sections and dependencies are mapped
-  > Command: grep -n "^### [0-9]" dev-handbook/workflow-instructions/review-synthesizer.wf.md
+  > Command: grep -n "^### [0-9]" .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 * [x] Analyze reflection learnings to extract specific improvement requirements
 * [x] Design decision tree for synthesis method selection
 * [x] Plan integration points with existing workflow sections
@@ -85,7 +85,7 @@ Enhance the review-synthesizer workflow based on real-world usage learnings from
   > TEST: Section Added Correctly
   > Type: Action Validation
   > Assert: New section is properly positioned and formatted
-  > Command: grep -A 5 -B 5 "Direct Synthesis Option" dev-handbook/workflow-instructions/review-synthesizer.wf.md
+  > Command: grep -A 5 -B 5 "Direct Synthesis Option" .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 * [x] Insert decision framework at beginning of synthesis execution section
 * [x] Enhance error handling in existing synthesis execution steps
 * [x] Add cost-efficiency analysis section with multi-model strategy guidance
@@ -109,6 +109,6 @@ Enhance the review-synthesizer workflow based on real-world usage learnings from
 
 ## References
 
-* Session reflection: dev-taskflow/current/v.0.3.0-workflows/reflections/20250703-review-synthesis-session.md
-* Current workflow: dev-handbook/workflow-instructions/review-synthesizer.wf.md
-* Synthesis session results: dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md
+* Session reflection: .ace/taskflow/current/v.0.3.0-workflows/reflections/20250703-review-synthesis-session.md
+* Current workflow: .ace/handbook/workflow-instructions/review-synthesizer.wf.md
+* Synthesis session results: .ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/cr-report.md

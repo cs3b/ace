@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.01]
 _Command run:_
 
 ```bash
-tree -L 1 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 1 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── commit.wf.md
     ├── draft-release.wf.md
     └── (other workflows)
@@ -42,7 +42,7 @@ Create a comprehensive workflow instruction for updating tools documentation, pr
 
 #### Create
 
-* dev-handbook/.meta/wfi/update-tools-documentation.wf.md
+* .ace/handbook/.meta/wfi/update-tools-documentation.wf.md
 
 #### Modify
 
@@ -67,7 +67,7 @@ Create a comprehensive workflow instruction for updating tools documentation, pr
   > TEST: Pattern Review
   > Type: Pre-condition Check
   > Assert: Workflow patterns are understood
-  > Command: ls dev-handbook/workflow-instructions/*.wf.md | wc -l
+  > Command: ls .ace/handbook/workflow-instructions/*.wf.md | wc -l
 * [x] Analyze docs/tools.md structure (after task.01)
 * [x] Design comprehensive validation checklist
 
@@ -79,29 +79,29 @@ Create a comprehensive workflow instruction for updating tools documentation, pr
   > TEST: Template Section
   > Type: Content Validation
   > Assert: Template includes sections for name, description, usage, examples, and category
-  > Command: grep -c "## Template" dev-handbook/workflow-instructions/update-tools-documentation.wf.md
+  > Command: grep -c "## Template" .ace/handbook/workflow-instructions/update-tools-documentation.wf.md
 - [x] Add process steps for adding new tools
 - [x] Add process steps for updating existing tools
 - [x] Include comprehensive validation checklist for documentation completeness
   > TEST: Validation Checklist
   > Type: Content Validation
   > Assert: Checklist includes checks for description, usage examples, category, and integration
-  > Command: grep -c "validation checklist" dev-handbook/workflow-instructions/update-tools-documentation.wf.md
+  > Command: grep -c "validation checklist" .ace/handbook/workflow-instructions/update-tools-documentation.wf.md
 - [x] Add examples of well-documented tools
   > TEST: Examples Section
   > Type: Content Validation
   > Assert: Examples are provided
-  > Command: grep -c "## Examples" dev-handbook/workflow-instructions/update-tools-documentation.wf.md
+  > Command: grep -c "## Examples" .ace/handbook/workflow-instructions/update-tools-documentation.wf.md
 - [x] Define error handling for common documentation issues
   > TEST: Error Handling Section
   > Type: Content Validation
   > Assert: Error handling covers missing descriptions, incorrect categories, and validation failures
-  > Command: grep -c "error handling" dev-handbook/workflow-instructions/update-tools-documentation.wf.md
+  > Command: grep -c "error handling" .ace/handbook/workflow-instructions/update-tools-documentation.wf.md
 - [x] Add integration testing steps with existing tools.md structure
   > TEST: Integration Testing
   > Type: Workflow Validation
   > Assert: Integration steps validate workflow works with current tools.md structure
-  > Command: grep -c "integration.*test" dev-handbook/workflow-instructions/update-tools-documentation.wf.md
+  > Command: grep -c "integration.*test" .ace/handbook/workflow-instructions/update-tools-documentation.wf.md
 
 ## Acceptance Criteria
 
@@ -109,7 +109,7 @@ Create a comprehensive workflow instruction for updating tools documentation, pr
 * [x] Comprehensive template for tool documentation entries with required sections
 * [x] Detailed validation checklist ensures documentation quality and completeness
 * [x] Integration with docs/tools.md is well-defined and tested
-* [x] Examples demonstrate best practices for different tool types (bin/, dev-tools/exe/)
+* [x] Examples demonstrate best practices for different tool types (bin/, .ace/tools/exe/)
 * [x] Error handling addresses common documentation issues and validation failures
 
 ## Out of Scope
@@ -121,5 +121,5 @@ Create a comprehensive workflow instruction for updating tools documentation, pr
 ## References
 
 * Dependency: v.0.3.0+task.01 (tools documentation creation)
-* Target: dev-handbook/.meta/wfi/update-tools-documentation.wf.md
+* Target: .ace/handbook/.meta/wfi/update-tools-documentation.wf.md
 * Related task from original plan: task.55

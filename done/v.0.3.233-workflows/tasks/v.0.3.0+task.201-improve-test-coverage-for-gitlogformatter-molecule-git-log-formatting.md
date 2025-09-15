@@ -10,7 +10,7 @@ dependencies: []
 
 ## Objective
 
-The GitLogFormatter molecule (dev-tools/lib/coding_agent_tools/molecules/taskflow_management/git_log_formatter.rb) currently has minimal test coverage with only basic method existence checks. This task aims to implement comprehensive test coverage for all public methods, edge cases, and error conditions to ensure reliability and maintainability of the git log formatting functionality.
+The GitLogFormatter molecule (.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/git_log_formatter.rb) currently has minimal test coverage with only basic method existence checks. This task aims to implement comprehensive test coverage for all public methods, edge cases, and error conditions to ensure reliability and maintainability of the git log formatting functionality.
 
 ## Scope of Work
 
@@ -23,7 +23,7 @@ The GitLogFormatter molecule (dev-tools/lib/coding_agent_tools/molecules/taskflo
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/molecules/taskflow_management/git_log_formatter_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/git_log_formatter_spec.rb
 
 ## Implementation Plan
 
@@ -46,7 +46,7 @@ The GitLogFormatter molecule (dev-tools/lib/coding_agent_tools/molecules/taskflo
   > TEST: Verify Test Suite Completion
   > Type: Action Validation
   > Assert: All new tests pass and existing functionality is preserved
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/git_log_formatter_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/git_log_formatter_spec.rb
 
 ## Acceptance Criteria
 

@@ -19,7 +19,7 @@ dependencies: []
 
 ## Objective
 
-Relocated the initialize-project-structure workflow from dev-handbook/workflow-instructions/ to dev-handbook/.integrations/wfi/ to prevent automatic command generation while preserving its functionality.
+Relocated the initialize-project-structure workflow from .ace/handbook/workflow-instructions/ to .ace/handbook/.integrations/wfi/ to prevent automatic command generation while preserving its functionality.
 
 ## Scope of Work
 
@@ -31,11 +31,11 @@ Relocated the initialize-project-structure workflow from dev-handbook/workflow-i
 
 #### Create
 
-- dev-handbook/.integrations/wfi/initialize-project-structure.wf.md (moved from old location)
+- .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md (moved from old location)
 
 #### Delete
 
-- dev-handbook/workflow-instructions/initialize-project-structure.wf.md (old location)
+- .ace/handbook/workflow-instructions/initialize-project-structure.wf.md (old location)
 
 ## Implementation Summary
 
@@ -51,23 +51,23 @@ Relocated the initialize-project-structure workflow from dev-handbook/workflow-i
 Simple file relocation operation:
 
 ```bash
-mv dev-handbook/workflow-instructions/initialize-project-structure.wf.md \
-   dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
+mv .ace/handbook/workflow-instructions/initialize-project-structure.wf.md \
+   .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md
 ```
 
 ### Testing/Validation
 
 ```bash
 # Verified file exists at new location
-ls dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
+ls .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md
 
 # Confirmed old location no longer exists
-ls dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+ls .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 ```
 
 **Results**: File successfully relocated without content loss
 
 ## References
 
-- User request: "this dev-handbook/workflow-instructions/initialize-project-structure.wf.md should be in dev-handbook/.integrations/wfi/initialize-project-structure.wf.md we don't need to generate claude command for this workflow"
+- User request: "this .ace/handbook/workflow-instructions/initialize-project-structure.wf.md should be in .ace/handbook/.integrations/wfi/initialize-project-structure.wf.md we don't need to generate claude command for this workflow"
 - Related to overall integrate command improvements

@@ -111,7 +111,7 @@
 
 ## Additional Context
 
-- Task File: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.017-add-task-manager-create-subcommand.md`
+- Task File: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.017-add-task-manager-create-subcommand.md`
 - Status Change: draft → pending
 - Implementation Plan: Complete with technical approach, file modifications, risk assessment, and embedded tests
 - Next Steps: Implementation execution and testing validation

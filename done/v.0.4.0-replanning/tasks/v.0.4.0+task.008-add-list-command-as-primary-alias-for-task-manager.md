@@ -68,7 +68,7 @@ Provide a more intuitive and conventional command interface for task-manager by 
 
 #### Modify
 
-- dev-tools CLI command definition files
+- .ace/tools CLI command definition files
 - docs/tools.md documentation
 - Help text and command descriptions
 
@@ -87,7 +87,7 @@ Provide a more intuitive and conventional command interface for task-manager by 
 ### File Modifications
 
 #### Modify
-- dev-tools/exe/task-manager
+- .ace/tools/exe/task-manager
   - Changes: Add `register "list"` entry and reorder to make "list" primary
   - Impact: Provides both commands without breaking existing usage
   - Integration points: Uses existing CodingAgentTools::Cli::Commands::Task::All class
@@ -105,7 +105,7 @@ Provide a more intuitive and conventional command interface for task-manager by 
   > TEST: Architecture Understanding Check
   > Type: Pre-condition Check
   > Assert: exe/task-manager uses dry-cli registry with direct command registration
-  > Command: grep -n "register.*all" dev-tools/exe/task-manager
+  > Command: grep -n "register.*all" .ace/tools/exe/task-manager
 * [x] Verify dry-cli supports multiple command names for same class
   > TEST: Framework Capability Verification
   > Type: Research Validation
@@ -119,7 +119,7 @@ Provide a more intuitive and conventional command interface for task-manager by 
 
 ### Execution Steps
 
-- [ ] Update dev-tools/exe/task-manager to add "list" as primary command
+- [ ] Update .ace/tools/exe/task-manager to add "list" as primary command
   > TEST: Primary Command Registration
   > Type: Action Validation
   > Assert: "list" command is registered and points to Task::All class
@@ -178,6 +178,6 @@ Provide a more intuitive and conventional command interface for task-manager by 
 
 ## References
 
-- Enhanced idea: dev-taskflow/backlog/ideas/20250731-0747-list-all-alias.md
+- Enhanced idea: .ace/taskflow/backlog/ideas/20250731-0747-list-all-alias.md
 - Current tools documentation: docs/tools.md
 - CLI framework: dry-cli documentation

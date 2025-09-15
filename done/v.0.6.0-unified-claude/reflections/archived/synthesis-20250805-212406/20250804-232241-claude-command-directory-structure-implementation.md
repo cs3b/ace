@@ -1,7 +1,7 @@
 # Reflection: Claude Command Directory Structure Implementation
 
 **Date**: 2025-08-04
-**Context**: Implementation of task v.0.6.0+task.001 - Creating Claude command directory structure in dev-handbook
+**Context**: Implementation of task v.0.6.0+task.001 - Creating Claude command directory structure in .ace/handbook
 **Author**: Claude Code
 **Type**: Conversation Analysis
 
@@ -14,7 +14,7 @@
 
 ## What Could Be Improved
 
-- Initial task specification had conflicting information about directory locations (root `.claude/` vs `dev-handbook/.integrations/claude/`)
+- Initial task specification had conflicting information about directory locations (root `.claude/` vs `.ace/handbook/.integrations/claude/`)
 - Many planned execution steps became unnecessary due to human decisions (no subdirectories, no migration)
 - Test commands in the task were written for features that weren't being implemented
 
@@ -90,14 +90,14 @@
 ## Technical Details
 
 The implementation created a simple template structure:
-- `dev-handbook/.integrations/claude/templates/` directory
+- `.ace/handbook/.integrations/claude/templates/` directory
 - Two template files for workflow and agent command generation
 - Templates use ERB-style variables for dynamic content generation
 - No command reorganization needed - flat structure maintained
 
 ## Additional Context
 
-- Task: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.001-create-claude-command-directory-structure.md`
-- Primary decision: Use `dev-handbook/.integrations/claude/` as the main location
+- Task: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.001-create-claude-command-directory-structure.md`
+- Primary decision: Use `.ace/handbook/.integrations/claude/` as the main location
 - Key simplification: No distinction between custom/generated commands
 - Next steps: Task 003 will handle sync script for command installation

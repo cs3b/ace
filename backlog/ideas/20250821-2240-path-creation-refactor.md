@@ -88,11 +88,11 @@ To consolidate the functionality of `nav-path` into `create-path` for a unified 
 - Whether users (human or AI) have developed specific mental models or workflows around `nav-path` that might cause initial confusion during its removal.
 
 **Implementation Unknowns:**
-- The precise scope of changes required in `dev-tools/exe/` and `lib/coding_agent_tools/cli/commands/` to perform the merge and removal.
+- The precise scope of changes required in `.ace/tools/exe/` and `lib/coding_agent_tools/cli/commands/` to perform the merge and removal.
 - The effort required to update any relevant documentation, including CLI help texts, READMEs, and integration points (like Claude commands).
 
 > SOURCE
 
 ```text
-in context of dev-tools/exe/nav-path -> we should merge the any unique implementation into create-path, so it can create any dir /file ; next remove nav-path as is misleading
+in context of .ace/tools/exe/nav-path -> we should merge the any unique implementation into create-path, so it can create any dir /file ; next remove nav-path as is misleading
 ```

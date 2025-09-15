@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.07]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/cli/commands
+    .ace/tools/lib/coding_agent_tools/cli/commands
     ├── llm
     └── (other command directories)
 ```
@@ -74,12 +74,12 @@ Implement CLI commands for task management operations using dry-cli framework, p
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Existing command patterns understood
-  > Command: grep -r "dry-cli" dev-tools/lib/coding_agent_tools/cli/commands | wc -l
+  > Command: grep -r "dry-cli" .ace/tools/lib/coding_agent_tools/cli/commands | wc -l
 * [x] Analyze TaskManager organism API for CLI integration
   > TEST: TaskManager API Understanding
   > Type: Pre-condition Check
   > Assert: TaskManager methods and result structures understood
-  > Command: cd dev-tools && bundle exec ruby -e "require 'lib/coding_agent_tools'; puts CodingAgentTools::Organisms::TaskManagement::TaskManager.instance_methods(false)"
+  > Command: cd .ace/tools && bundle exec ruby -e "require 'lib/coding_agent_tools'; puts CodingAgentTools::Organisms::TaskManagement::TaskManager.instance_methods(false)"
 * [ ] Design command options with --limit support
 * [ ] Plan error handling for invalid limit values and CLI edge cases
 * [ ] Design CLI output formats consistent with existing tools
@@ -91,30 +91,30 @@ Implement CLI commands for task management operations using dry-cli framework, p
   > TEST: Next Command Basic
   > Type: CLI Test
   > Assert: Command executes and returns next task
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools task next --help
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools task next --help
 - [x] Add --limit option to task next command
   > TEST: Next Command Limit
   > Type: CLI Test
   > Assert: --limit option works correctly
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools task next --limit 3
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools task next --limit 3
 - [x] Implement task recent with --last and --limit option parsing
   > TEST: Recent Command Options
   > Type: CLI Test
   > Assert: Both --last and --limit options work
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools task recent --last 2.days --limit 5
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools task recent --last 2.days --limit 5
 - [x] Implement task all with color output support
 - [x] Implement task generate-id with VERSION argument and --limit option
   > TEST: Generate ID Limit
   > Type: CLI Test
   > Assert: --limit generates multiple IDs
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools task generate-id --limit 3
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools task generate-id --limit 3
 - [x] Add input validation for --limit option (positive integers only)
 - [x] Register all commands in CLI module
 - [x] Create comprehensive CLI tests using Aruba framework
   > TEST: CLI Integration Suite
   > Type: Integration Test
   > Assert: All commands work with TaskManager organism
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb
 
 ## Acceptance Criteria
 
@@ -141,7 +141,7 @@ Implement CLI commands for task management operations using dry-cli framework, p
 * Dependency: v.0.3.0+task.07 (TaskManager organism)
 * CLI framework: lib/coding_agent_tools/cli/
 * Command pattern: lib/coding_agent_tools/cli/commands/llm/
-* Original tools: dev-tools/exe-old/get-*
+* Original tools: .ace/tools/exe-old/get-*
 * Related task: v.0.3.0+task.12 (ReleaseManager organism - handles `release current` functionality)
 * TaskManager API: lib/coding_agent_tools/organisms/task_management/task_manager.rb
 * dry-cli documentation: https://dry-rb.org/gems/dry-cli/

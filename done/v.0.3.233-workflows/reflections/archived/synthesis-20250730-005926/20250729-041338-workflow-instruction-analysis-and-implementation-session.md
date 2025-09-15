@@ -26,7 +26,7 @@
 - The project has extensive recent activity focused on test coverage improvements across ATOM architecture components
 - Multiple reflection notes have already been created recently, showing active use of the workflow
 - The workflow instruction provides sophisticated conversation analysis capabilities including challenge pattern identification
-- Enhanced git commands operate across all 4 repositories (main, dev-tools, dev-taskflow, dev-handbook) automatically
+- Enhanced git commands operate across all 4 repositories (main, dev-tools, dev-taskflow, .ace/handbook) automatically
 - Template system needs refinement for reflection note creation workflow
 
 ## Conversation Analysis
@@ -107,4 +107,4 @@ Recent development activity shows active focus on test coverage improvements acr
 
 ## Additional Context
 
-This reflection was created following the /create-reflection-note command which specifically requested reading and following the workflow instruction at dev-handbook/workflow-instructions/create-reflection-note.wf.md. The session demonstrates successful workflow instruction execution despite minor tool limitations.
+This reflection was created following the /create-reflection-note command which specifically requested reading and following the workflow instruction at .ace/handbook/workflow-instructions/create-reflection-note.wf.md. The session demonstrates successful workflow instruction execution despite minor tool limitations.

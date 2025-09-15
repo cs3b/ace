@@ -111,7 +111,7 @@ When any test triggers CLI command registration before models_spec.rb runs, the 
 
 ## Additional Context
 
-- Related to dev-tools SimpleCov configuration
+- Related to .ace/tools SimpleCov configuration
 - The "fix" was to understand this is expected behavior, not a bug
 - Options for projects facing similar issues:
   1. Accept the coverage reflects actual usage

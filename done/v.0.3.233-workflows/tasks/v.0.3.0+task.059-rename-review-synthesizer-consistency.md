@@ -13,20 +13,20 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions/
+    .ace/handbook/workflow-instructions/
     ├── review-synthesizer.wf.md
     └── other workflow files...
 ```
 
 ## Objective
 
-Rename `dev-handbook/workflow-instructions/review-synthesizer.wf.md` to `dev-handbook/workflow-instructions/synthesize-reviews.wf.md` to follow the verb-first naming convention and ensure consistency with other workflow files.
+Rename `.ace/handbook/workflow-instructions/review-synthesizer.wf.md` to `.ace/handbook/workflow-instructions/synthesize-reviews.wf.md` to follow the verb-first naming convention and ensure consistency with other workflow files.
 
 ## Scope of Work
 
@@ -40,11 +40,11 @@ Rename `dev-handbook/workflow-instructions/review-synthesizer.wf.md` to `dev-han
 
 #### Create
 
-* dev-handbook/workflow-instructions/synthesize-reviews.wf.md
+* .ace/handbook/workflow-instructions/synthesize-reviews.wf.md
 
 #### Delete
 
-* dev-handbook/workflow-instructions/review-synthesizer.wf.md
+* .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 
 ## Phases
 
@@ -61,13 +61,13 @@ Rename `dev-handbook/workflow-instructions/review-synthesizer.wf.md` to `dev-han
   > TEST: External Reference Check
   > Type: Pre-condition Check
   > Assert: Any external references to the old filename are identified
-  > Command: grep -r "review-synthesizer" dev-handbook/ dev-taskflow/ --include="*.md" --exclude="review-synthesizer.wf.md"
+  > Command: grep -r "review-synthesizer" .ace/handbook/ .ace/taskflow/ --include="*.md" --exclude="review-synthesizer.wf.md"
 
 * [x] Verify current file structure and content
   > TEST: Current File Analysis
   > Type: Pre-condition Check
   > Assert: Current file structure is documented for comparison
-  > Command: wc -l dev-handbook/workflow-instructions/review-synthesizer.wf.md && head -20 dev-handbook/workflow-instructions/review-synthesizer.wf.md
+  > Command: wc -l .ace/handbook/workflow-instructions/review-synthesizer.wf.md && head -20 .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 
 ### Execution Steps
 
@@ -75,31 +75,31 @@ Rename `dev-handbook/workflow-instructions/review-synthesizer.wf.md` to `dev-han
   > TEST: New File Creation
   > Type: Action Validation
   > Assert: New file created with identical content to original
-  > Command: test -f dev-handbook/workflow-instructions/synthesize-reviews.wf.md
+  > Command: test -f .ace/handbook/workflow-instructions/synthesize-reviews.wf.md
 
 * [x] Copy content from review-synthesizer.wf.md to synthesize-reviews.wf.md
   > TEST: Content Copy Verification
   > Type: Action Validation
   > Assert: Content is identical between old and new files
-  > Command: diff dev-handbook/workflow-instructions/review-synthesizer.wf.md dev-handbook/workflow-instructions/synthesize-reviews.wf.md
+  > Command: diff .ace/handbook/workflow-instructions/review-synthesizer.wf.md .ace/handbook/workflow-instructions/synthesize-reviews.wf.md
 
 * [x] Update title in new file to match new filename
   > TEST: Title Update
   > Type: Action Validation
   > Assert: File title reflects new verb-first naming
-  > Command: grep -A 1 "^# " dev-handbook/workflow-instructions/synthesize-reviews.wf.md
+  > Command: grep -A 1 "^# " .ace/handbook/workflow-instructions/synthesize-reviews.wf.md
 
 * [x] Remove old review-synthesizer.wf.md file
   > TEST: Old File Removal
   > Type: Action Validation
   > Assert: Old file no longer exists
-  > Command: test ! -f dev-handbook/workflow-instructions/review-synthesizer.wf.md
+  > Command: test ! -f .ace/handbook/workflow-instructions/review-synthesizer.wf.md
 
 * [x] Update any external references found during audit
   > TEST: Reference Updates
   > Type: Action Validation
   > Assert: All external references updated to new filename
-  > Command: grep -r "synthesize-reviews" dev-handbook/ dev-taskflow/ --include="*.md" | grep -v "synthesize-reviews.wf.md:"
+  > Command: grep -r "synthesize-reviews" .ace/handbook/ .ace/taskflow/ --include="*.md" | grep -v "synthesize-reviews.wf.md:"
 
 ## Acceptance Criteria
 
@@ -120,5 +120,5 @@ Rename `dev-handbook/workflow-instructions/review-synthesizer.wf.md` to `dev-han
 
 ## References
 
-* dev-handbook/workflow-instructions/review-synthesizer.wf.md (current file)
-* dev-handbook/.meta/gds/workflow-instructions-definition.g.md (naming conventions)
+* .ace/handbook/workflow-instructions/review-synthesizer.wf.md (current file)
+* .ace/handbook/.meta/gds/workflow-instructions-definition.g.md (naming conventions)

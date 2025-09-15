@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.225]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli/commands/release | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli/commands/release | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/cli/commands/release
+    .ace/tools/lib/coding_agent_tools/cli/commands/release
     ├── all.rb
     ├── current.rb
     ├── generate_id.rb
@@ -47,7 +47,7 @@ Add a `--path` option to the `release-manager current` command that uses the new
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/release/current.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/release/current.rb
 
 #### Delete
 
@@ -100,6 +100,6 @@ Add a `--path` option to the `release-manager current` command that uses the new
 
 ## References
 
-- Release current command: dev-tools/lib/coding_agent_tools/cli/commands/release/current.rb
+- Release current command: .ace/tools/lib/coding_agent_tools/cli/commands/release/current.rb
 - Depends on: v.0.3.0+task.225 (Add Path Resolution to ReleaseManager)
 - Example usage: `release-manager current --path reflections/synthesis`

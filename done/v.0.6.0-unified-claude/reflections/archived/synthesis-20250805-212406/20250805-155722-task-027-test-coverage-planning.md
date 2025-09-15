@@ -16,7 +16,7 @@
 
 - **Coverage Discrepancy**: The task mentioned 53.36% coverage but actual analysis showed 26.3% - this significant gap affects the scope
 - **Tool Understanding**: Initial confusion about coverage reporting - the HTML report showed 32.22% for a subset while full analysis showed 26.3% overall
-- **File Path Confusion**: Had to navigate between dev-taskflow and dev-tools directories to find the correct documentation
+- **File Path Confusion**: Had to navigate between .ace/taskflow and .ace/tools directories to find the correct documentation
 
 ## Key Learnings
 
@@ -70,7 +70,7 @@ The task planning revealed several key insights:
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md`
-- Coverage analysis: `dev-tools/coverage_analysis/coverage_analysis.text`
-- Testing conventions: `dev-tools/spec/support/TESTING_CONVENTIONS.md`
-- Architecture documentation: `dev-tools/docs/diagrams/architecture.md`
+- Task file: `.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md`
+- Coverage analysis: `.ace/tools/coverage_analysis/coverage_analysis.text`
+- Testing conventions: `.ace/tools/spec/support/TESTING_CONVENTIONS.md`
+- Architecture documentation: `.ace/tools/docs/diagrams/architecture.md`

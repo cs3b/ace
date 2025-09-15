@@ -118,14 +118,14 @@
 - Increased time estimate from 6h to 8h based on scope analysis
 
 **Git Workflow Management:**
-- Successfully coordinated commits across dev-taskflow submodule and main repository
+- Successfully coordinated commits across .ace/taskflow submodule and main repository
 - Used descriptive commit messages explaining rationale for changes
 - Properly updated submodule references in main repository
 
 ## Additional Context
 
 - **Related Task**: v.0.4.0+task.6-create-cascade-review-workflow.md
-- **Workflow Used**: dev-handbook/workflow-instructions/review-task.wf.md
+- **Workflow Used**: .ace/handbook/workflow-instructions/review-task.wf.md
 - **Research Output**: Comprehensive dependency impact analysis patterns and best practices document
 - **Final Status**: Task approved with improvements and ready for implementation
 

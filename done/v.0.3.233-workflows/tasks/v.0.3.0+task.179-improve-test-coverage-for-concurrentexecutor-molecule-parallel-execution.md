@@ -23,7 +23,7 @@ Improve test coverage for the ConcurrentExecutor molecule class to ensure thorou
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/molecules/git/concurrent_executor_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/git/concurrent_executor_spec.rb
 
 ## Implementation Plan
 
@@ -38,7 +38,7 @@ Improve test coverage for the ConcurrentExecutor molecule class to ensure thorou
   > TEST: Verify test file creation
   > Type: Action Validation
   > Assert: Test file exists and follows RSpec conventions
-  > Command: cd dev-tools && ruby -c spec/coding_agent_tools/molecules/git/concurrent_executor_spec.rb
+  > Command: cd .ace/tools && ruby -c spec/coding_agent_tools/molecules/git/concurrent_executor_spec.rb
 - [x] Implement tests for basic concurrent execution scenarios
 - [x] Implement tests for error handling and timeout scenarios  
 - [x] Implement tests for thread pool management
@@ -46,7 +46,7 @@ Improve test coverage for the ConcurrentExecutor molecule class to ensure thorou
   > TEST: Verify test coverage
   > Type: Action Validation
   > Assert: All tests pass and coverage is comprehensive
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/git/concurrent_executor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/git/concurrent_executor_spec.rb
 
 ## Acceptance Criteria
 

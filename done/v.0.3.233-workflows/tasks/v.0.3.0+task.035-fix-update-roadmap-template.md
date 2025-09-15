@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-house-rules.md
     ├── changelog.g.md
     ├── code-review
@@ -118,11 +118,11 @@ Fix the critical template embedding error in `update-roadmap.wf.md` where it inc
 
 #### Create
 
-* dev-handbook/templates/roadmap/roadmap.template.md (if needed)
+* .ace/handbook/templates/roadmap/roadmap.template.md (if needed)
 
 #### Modify
 
-* dev-handbook/workflow-instructions/update-roadmap.wf.md
+* .ace/handbook/workflow-instructions/update-roadmap.wf.md
 
 ## Phases
 
@@ -140,21 +140,21 @@ Fix the critical template embedding error in `update-roadmap.wf.md` where it inc
   > Type: Pre-condition Check
   > Assert: Roadmap workflow purpose and template requirements are understood
   > Command: bin/test --check-roadmap-workflow-purpose
-* [x] Check if appropriate roadmap template exists in dev-handbook/templates/
+* [x] Check if appropriate roadmap template exists in .ace/handbook/templates/
 * [x] Review roadmap-definition.g.md guide to understand roadmap structure requirements
 
 ### Execution Steps
 
-* [x] Create roadmap template file if it doesn't exist in dev-handbook/templates/roadmap/
+* [x] Create roadmap template file if it doesn't exist in .ace/handbook/templates/roadmap/
   > TEST: Verify Roadmap Template Creation
   > Type: Action Validation
   > Assert: Roadmap template is created with proper structure
-  > Command: bin/test --check-template-file dev-handbook/templates/roadmap/roadmap.template.md
+  > Command: bin/test --check-template-file .ace/handbook/templates/roadmap/roadmap.template.md
 * [x] Update update-roadmap.wf.md to reference correct roadmap template instead of release-readme.template.md
   > TEST: Verify Template Reference Fix
   > Type: Action Validation
   > Assert: update-roadmap.wf.md references appropriate roadmap template
-  > Command: bin/test --check-template-reference dev-handbook/workflow-instructions/update-roadmap.wf.md
+  > Command: bin/test --check-template-reference .ace/handbook/workflow-instructions/update-roadmap.wf.md
 * [x] Verify template synchronization system can process the corrected workflow
   > TEST: Template Sync Verification
   > Type: Action Validation
@@ -176,7 +176,7 @@ Fix the critical template embedding error in `update-roadmap.wf.md` where it inc
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying incorrect template
-* dev-handbook/workflow-instructions/update-roadmap.wf.md - Target workflow file
-* dev-handbook/guides/roadmap-definition.g.md - Roadmap structure guidance
+* .ace/taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying incorrect template
+* .ace/handbook/workflow-instructions/update-roadmap.wf.md - Target workflow file
+* .ace/handbook/guides/roadmap-definition.g.md - Roadmap structure guidance
 * handbook sync-templates - Template synchronization tool

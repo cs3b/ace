@@ -48,8 +48,8 @@ To develop a GUI application with audio assistance that guides users through the
 - **Workflow Instructions**: The initial version will be a self-contained workflow (.wf.md) to guide the user.
 - **LLM Integration**: Utilizes LLM capabilities for voice-to-text, text-to-voice, and spawning sub-agents.
 - **CLI Tool Patterns**: The application will likely be structured with CLI tools for interaction.
-- **Project Context**: Leverages existing project structure for task management and potential integration with `dev-taskflow`.
-- **Multi-Repository Coordination**: The idea touches upon task management (`dev-taskflow`) and potentially requires interaction with other repositories for context.
+- **Project Context**: Leverages existing project structure for task management and potential integration with `.ace/taskflow`.
+- **Multi-Repository Coordination**: The idea touches upon task management (`.ace/taskflow`) and potentially requires interaction with other repositories for context.
 
 ## Solution Direction
 

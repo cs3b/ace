@@ -40,8 +40,8 @@ Refactor all filesystem references related to "ideas_manager" to either "capture
 
 ## Key Patterns from Reflections
 
-- **Multi-Repository Coordination**: The project structure involves multiple repositories (`handbook-meta`, `dev-handbook`, `dev-tools`, `dev-taskflow`) that need to be considered during refactoring.
-- **ATOM Architecture**: The `dev-tools` gem utilizes ATOM (Atoms, Molecules, Organisms, Ecosystems) for component organization. Renaming should be considered across these layers if `ideas_manager` is referenced within them.
+- **Multi-Repository Coordination**: The project structure involves multiple repositories (`handbook-meta`, `.ace/handbook`, `.ace/tools`, `.ace/taskflow`) that need to be considered during refactoring.
+- **ATOM Architecture**: The `.ace/tools` gem utilizes ATOM (Atoms, Molecules, Organisms, Ecosystems) for component organization. Renaming should be considered across these layers if `ideas_manager` is referenced within them.
 - **CLI Tool Patterns**: The project has a large number of CLI tools. Renaming must be applied consistently across all relevant executables and their internal logic.
 - **Security-First Development**: Path validation and sanitization are critical. Renaming should ensure that new paths are correctly handled by existing security mechanisms.
 - **Workflow Instructions**: AI workflows (`.wf.md` files) might reference filesystem paths. These need to be updated if they are impacted by the renaming.

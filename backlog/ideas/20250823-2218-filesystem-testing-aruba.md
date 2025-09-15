@@ -47,12 +47,12 @@ Establish a dedicated, isolated, and resettable project directory for integratio
 - **Test Project Directory**: The proposed solution aligns with the idea of having a separate, managed directory for tests that interact with the filesystem.
 - **Resettable State**: The need for a mechanism to reset the test environment before each test run is critical for reliability.
 - **Integration Tests**: The focus is on integration tests, which naturally involve interactions with external systems like the filesystem.
-- **`dev-tools/spec/`**: Existing test infrastructure is located here, suggesting the new test project directory should be managed within this scope.
+- **`.ace/tools/spec/`**: Existing test infrastructure is located here, suggesting the new test project directory should be managed within this scope.
 
 ## Solution Direction
 
 1. **Utilize Aruba for CLI Integration Tests**: Leverage Aruba's capabilities to create isolated, temporary directories for each test suite that touches the filesystem.
-2. **Create a Dedicated Test Project Directory**: Establish a standardized structure within `dev-tools/spec/integration/` or a similar location to house test projects. This directory will contain sample files, configurations, and potentially a `setup` or `reset` script.
+2. **Create a Dedicated Test Project Directory**: Establish a standardized structure within `.ace/tools/spec/integration/` or a similar location to house test projects. This directory will contain sample files, configurations, and potentially a `setup` or `reset` script.
 3. **Implement Test Environment Reset Mechanism**: Ensure that before each integration test suite runs, the dedicated test project directory is either recreated from a clean template or its state is reset to a known baseline.
 
 ## Critical Questions

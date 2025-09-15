@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib | sed 's/^/    /'
+tree -L 2 .ace/tools/lib | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib
+    .ace/tools/lib
     ├── coding_agent_tools
     │   ├── atoms
     │   ├── cli
@@ -46,8 +46,8 @@ Implement a complete code review module following the established ATOM architect
 
 #### Create (Executables)
 
-* dev-tools/exe/code-review
-* dev-tools/exe/code-review-prepare
+* .ace/tools/exe/code-review
+* .ace/tools/exe/code-review-prepare
 
 #### Create (CLI Commands)
 
@@ -87,10 +87,10 @@ Implement a complete code review module following the established ATOM architect
 
 #### Create (Bash Modules)
 
-* dev-tools/lib/bash/module-loader.sh
-* dev-tools/lib/bash/modules/code/session-management.sh
-* dev-tools/lib/bash/modules/code/content-extraction.sh
-* dev-tools/lib/bash/modules/code/context-loading.sh
+* .ace/tools/lib/bash/module-loader.sh
+* .ace/tools/lib/bash/modules/code/session-management.sh
+* .ace/tools/lib/bash/modules/code/content-extraction.sh
+* .ace/tools/lib/bash/modules/code/context-loading.sh
 
 #### Modify
 
@@ -119,7 +119,7 @@ Implement a complete code review module following the established ATOM architect
   > TEST: Shell Logic Analysis
   > Type: Pre-condition Check
   > Assert: 33 bash code blocks identified and categorized by function
-  > Command: rg -c '\`\`\`bash' dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: rg -c '\`\`\`bash' .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Design ATOM component hierarchy and data flow patterns
 * [x] Map workflow parameters to command-line interface design
 * [x] Plan bash module loading and organization structure
@@ -135,7 +135,7 @@ Implement a complete code review module following the established ATOM architect
   > TEST: Module Loader Functionality
   > Type: Shell Test
   > Assert: Module loader can source and validate bash modules
-  > Command: source dev-tools/lib/bash/module-loader.sh && load_module code session-management && type -t create_session_directory
+  > Command: source .ace/tools/lib/bash/module-loader.sh && load_module code session-management && type -t create_session_directory
 - [x] Implement Atoms layer for basic file, git, and directory operations
 - [x] Extract session management logic from review-code.wf.md lines 78-95
 - [x] Create Molecules layer for composed operations (diff extraction, context loading)
@@ -146,14 +146,14 @@ Implement a complete code review module following the established ATOM architect
   > TEST: Code Review Command Integration
   > Type: CLI Test
   > Assert: code-review command accepts parameters and creates session
-  > Command: dev-tools/exe/code-review --focus code --target HEAD~1..HEAD --dry-run
+  > Command: .ace/tools/exe/code-review --focus code --target HEAD~1..HEAD --dry-run
 - [x] Build code-review-prepare executable with sub-command structure
 - [x] Register commands in CLI autoloader and update module autoloaders
 - [x] Test complete workflow with session creation, content extraction, and prompt building
   > TEST: End-to-End Workflow
   > Type: Integration Test
   > Assert: Complete review session created with all components
-  > Command: dev-tools/exe/code-review-prepare session-dir --focus tests --target staged
+  > Command: .ace/tools/exe/code-review-prepare session-dir --focus tests --target staged
 
 ## Acceptance Criteria
 
@@ -179,7 +179,7 @@ Implement a complete code review module following the established ATOM architect
 
 ## References
 
-* Source workflow: dev-handbook/workflow-instructions/review-code.wf.md
+* Source workflow: .ace/handbook/workflow-instructions/review-code.wf.md
 * Architecture pattern: docs/architecture.md (ATOM hierarchy)
 * Command pattern: lib/coding_agent_tools/organisms/taskflow_management/
 * Shell logic: review-code.wf.md lines 78-95 (session), 134-200 (content)

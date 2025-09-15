@@ -100,7 +100,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
 
 #### Create
 
-- dev-handbook/workflow-instructions/commit.wf.md
+- .ace/handbook/workflow-instructions/commit.wf.md
 - .claude/agents/git-commit.ag.md (unified agent, replaces 3 existing agents)
 
 #### Modify
@@ -154,7 +154,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
 ## File Modifications
 
 ### Create
-- dev-handbook/workflow-instructions/commit.wf.md
+- .ace/handbook/workflow-instructions/commit.wf.md
   - Purpose: Self-contained workflow instruction covering all commit scenarios
   - Key components: Strategy detection logic, conventional commit templates, error handling
   - Dependencies: Embeds content from existing agents and commit workflow ideas
@@ -206,7 +206,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
 
 #### Phase 1: Create Unified Components
 
-- [x] **Create Unified Workflow**: Implement dev-handbook/workflow-instructions/commit.wf.md
+- [x] **Create Unified Workflow**: Implement .ace/handbook/workflow-instructions/commit.wf.md
   - Extract and consolidate logic from three existing agents
   - Implement strategy auto-detection based on context analysis
   - Add conventional commit message templates for all scenarios
@@ -215,7 +215,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
   > TEST: Workflow Completeness Check
   > Type: Content Validation
   > Assert: Workflow covers all commit scenarios from existing agents
-  > Command: grep -E "(all changes|specific files|review)" dev-handbook/workflow-instructions/commit.wf.md
+  > Command: grep -E "(all changes|specific files|review)" .ace/handbook/workflow-instructions/commit.wf.md
 
 - [x] **Create Unified Agent**: Implement .claude/agents/git-commit.ag.md
   - Create agent with strategy parameters (all|files|review)
@@ -271,7 +271,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
   > TEST: Reference Cleanup Check
   > Type: Reference Validation
   > Assert: No references to deleted agents remain
-  > Command: grep -r "git-all-commit\|git-files-commit\|git-review-commit" .claude/ dev-handbook/
+  > Command: grep -r "git-all-commit\|git-files-commit\|git-review-commit" .claude/ .ace/handbook/
 
 - [x] **Update Documentation**: Ensure all docs reflect new structure
   - Update any workflow instructions that reference old agents
@@ -280,7 +280,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
   > TEST: Documentation Consistency
   > Type: Documentation Validation
   > Assert: All documentation uses new git-commit agent
-  > Command: grep -r "git-commit" dev-handbook/workflow-instructions/ .claude/commands/
+  > Command: grep -r "git-commit" .ace/handbook/workflow-instructions/ .claude/commands/
 
 ## Risk Assessment
 
@@ -350,7 +350,7 @@ Consolidate and standardize the git commit workflow by creating a single source 
 - Existing git-files-commit agent: .claude/agents/git-files-commit.ag.md
 - Existing git-review-commit agent: .claude/agents/git-review-commit.ag.md
 - Current /commit command: .claude/commands/commit.md
-- Commit workflow ideas: dev-taskflow/backlog/ideas/commit.wf.md
+- Commit workflow ideas: .ace/taskflow/backlog/ideas/commit.wf.md
 - ADR-002 XML Template Embedding: docs/decisions/ADR-002-xml-template-embedding-architecture.md
 - Workflow Self-Containment Principle: docs/decisions/ADR-001-workflow-self-containment-principle.md
 

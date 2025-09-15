@@ -22,8 +22,8 @@ The integration command should create a flat command structure where all Claude 
 **Current problematic behavior:**
 ```
 .claude/commands/
-├── _custom -> ../../dev-handbook/.integrations/claude/commands/_custom
-├── _generated -> ../../dev-handbook/.integrations/claude/commands/_generated
+├── _custom -> ../../.ace/handbook/.integrations/claude/commands/_custom
+├── _generated -> ../../.ace/handbook/.integrations/claude/commands/_generated
 └── *.md (actual command files)
 ```
 
@@ -177,7 +177,7 @@ Simplify Claude command access for AI agents by eliminating unnecessary director
 
 ## References
 
-- Original idea: dev-taskflow/current/v.0.5.0-insights/docs/ideas/056-20250824-2300-claude-command-flattening.md
-- Current integration implementation: dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb
-- Command orchestrator: dev-tools/lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb
+- Original idea: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/056-20250824-2300-claude-command-flattening.md
+- Current integration implementation: .ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb
+- Command orchestrator: .ace/tools/lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb
 - Recent integration enhancements: v.0.5.0+task.055

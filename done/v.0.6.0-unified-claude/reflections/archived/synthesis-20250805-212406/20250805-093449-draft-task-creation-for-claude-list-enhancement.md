@@ -48,7 +48,7 @@
 The task created focuses on transforming the current verbose, sectioned output of `handbook claude list` into a compact table format with four columns:
 1. Installed status (checkmark in .claude)
 2. Command type (custom/generated)
-3. Validation status (checkmark in dev-handbook)
+3. Validation status (checkmark in .ace/handbook)
 4. Command name
 
 This addresses feedback item #4 while being aware of feedback #5 about the flattened .claude/commands structure (no subfolders).
@@ -56,5 +56,5 @@ This addresses feedback item #4 while being aware of feedback #5 about the flatt
 ## Additional Context
 
 - Task created: v.0.6.0+task.017-enhance-handbook-claude-list-readability-with-table-format.md
-- Related feedback: dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
-- Current implementation: dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- Related feedback: .ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
+- Current implementation: .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb

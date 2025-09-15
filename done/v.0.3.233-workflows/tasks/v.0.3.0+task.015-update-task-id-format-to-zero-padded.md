@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/workflow-instructions
+    .ace/handbook/workflow-instructions
     ├── breakdown-notes-into-tasks.wf.md
     ├── commit.wf.md
     ├── create-adr.wf.md
@@ -62,7 +62,7 @@ Update the task creation workflow (breakdown-notes-into-tasks.wf.md, which will 
 
 #### Modify  
 
-* dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md (or create-task.md if already renamed)
+* .ace/handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md (or create-task.md if already renamed)
 * bin/tnid
 
 #### Delete
@@ -84,13 +84,13 @@ Update the task creation workflow (breakdown-notes-into-tasks.wf.md, which will 
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Current format identified and inconsistencies documented
-  > Command: grep -n "task\." dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+  > Command: grep -n "task\." .ace/handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
 
 * [ ] Check existing task files to understand current naming conventions
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Existing task naming patterns identified
-  > Command: ls dev-taskflow/current/v.0.3.0-workflows/tasks/ | grep -E "task\.[0-9]+"
+  > Command: ls .ace/taskflow/current/v.0.3.0-workflows/tasks/ | grep -E "task\.[0-9]+"
 
 * [ ] Examine the current bin/tnid implementation
   > TEST: Pre-condition Check
@@ -104,19 +104,19 @@ Update the task creation workflow (breakdown-notes-into-tasks.wf.md, which will 
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Template shows zero-padded format (e.g., task.01, task.02)
-  > Command: grep -n "task\." dev-handbook/workflow-instructions/create-task.md
+  > Command: grep -n "task\." .ace/handbook/workflow-instructions/create-task.md
 
 * [x] Update the task ID generation section to specify zero-padding requirement
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Instructions specify zero-padded format for task IDs
-  > Command: grep -A5 -B5 "bin/tnid" dev-handbook/workflow-instructions/create-task.md
+  > Command: grep -A5 -B5 "bin/tnid" .ace/handbook/workflow-instructions/create-task.md
 
 * [x] Update filename creation instructions to use zero-padded format
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Filename examples show zero-padded task IDs
-  > Command: grep -n "kebab-case-title" dev-handbook/workflow-instructions/create-task.md
+  > Command: grep -n "kebab-case-title" .ace/handbook/workflow-instructions/create-task.md
 
 * [x] Modify bin/tnid to generate zero-padded task IDs
   > TEST: Action Validation
@@ -137,7 +137,7 @@ Update the task creation workflow (breakdown-notes-into-tasks.wf.md, which will 
 
 * ❌ Renaming existing task files to use zero-padded format (separate task)
 * ❌ Updating other workflow instruction files beyond the create-task workflow
-* ❌ Modifying completed task files in dev-taskflow/done/
+* ❌ Modifying completed task files in .ace/taskflow/done/
 * ❌ Changing the underlying task numbering sequence (still incremental, just zero-padded)
 
 ## References

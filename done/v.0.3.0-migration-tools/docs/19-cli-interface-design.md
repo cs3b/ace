@@ -36,7 +36,7 @@ option :debug, type: :boolean, default: false, aliases: ["d"],
   desc: "Enable debug output for verbose error information"
 
 option :repository, type: :string, aliases: ["C"],
-  desc: "Specify explicit repository context (e.g., 'dev-tools')"
+  desc: "Specify explicit repository context (e.g., '.ace/tools')"
 
 option :help, type: :boolean, default: false, aliases: ["h"],
   desc: "Show help for this command"
@@ -90,7 +90,7 @@ module CodingAgentTools
             "--local --no-edit",
             "--message 'fix typo in documentation'",
             "--all --intention 'refactor database layer'",
-            "dev-handbook/guide.md lib/auth.rb"
+            ".ace/handbook/guide.md lib/auth.rb"
           ]
 
           def call(files: [], **options)
@@ -126,7 +126,7 @@ class Status < Dry::CLI::Command
     "--short",
     "--verbose",
     "--porcelain",
-    "--repository dev-tools"
+    "--repository .ace/tools"
   ]
 
   def call(**options)
@@ -278,7 +278,7 @@ class Add < Dry::CLI::Command
     "file1.rb file2.rb",
     "--all",
     "--update",
-    "dev-handbook/guide.md lib/auth.rb",
+    ".ace/handbook/guide.md lib/auth.rb",
     "--patch lib/core.rb"
   ]
 
@@ -375,7 +375,7 @@ EXAMPLES
   coding_agent_tools git commit
   coding_agent_tools git commit --intention 'implement user authentication'
   coding_agent_tools git commit --local --no-edit
-  coding_agent_tools git commit dev-handbook/guide.md lib/auth.rb
+  coding_agent_tools git commit .ace/handbook/guide.md lib/auth.rb
 ```
 
 ## Output Formatting
@@ -383,11 +383,11 @@ EXAMPLES
 ### Multi-Repository Output Format
 ```
 [main] Status: clean working directory
-[dev-tools] Status: modified files
+[.ace/tools] Status: modified files
   M lib/coding_agent_tools/cli/commands/git/commit.rb
   ?? spec/new_test.rb
-[dev-handbook] Status: clean working directory
-[dev-taskflow] Status: modified files
+[.ace/handbook] Status: clean working directory
+[.ace/taskflow] Status: modified files
   M current/v.0.3.0-migration/tasks/task.md
 ```
 

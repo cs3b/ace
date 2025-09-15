@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.108]
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/atoms
+.ace/tools/lib/coding_agent_tools/atoms
 ├── docs_dependencies_config_loader.rb
 ├── git
 │   └── git_command_executor.rb
@@ -29,7 +29,7 @@ dev-tools/lib/coding_agent_tools/atoms
 
 ## Objective
 
-Increase test coverage from moderate levels (38-45%) to at least 80% for 3 medium-priority atom files in the dev-tools Ruby gem. This phase targets files with moderate coverage that handle core Git operations, configuration loading, and navigation functionality.
+Increase test coverage from moderate levels (38-45%) to at least 80% for 3 medium-priority atom files in the .ace/tools Ruby gem. This phase targets files with moderate coverage that handle core Git operations, configuration loading, and navigation functionality.
 
 ## Scope of Work
 
@@ -42,9 +42,9 @@ Increase test coverage from moderate levels (38-45%) to at least 80% for 3 mediu
 
 #### Create
 
-- `dev-tools/spec/coding_agent_tools/atoms/git/git_command_executor_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/docs_dependencies_config_loader_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/taskflow_management/directory_navigator_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/git/git_command_executor_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/docs_dependencies_config_loader_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/taskflow_management/directory_navigator_spec.rb` (comprehensive tests)
 
 #### Modify
 
@@ -66,19 +66,19 @@ Increase test coverage from moderate levels (38-45%) to at least 80% for 3 mediu
   > TEST: Git Command Analysis
   > Type: Pre-condition Check
   > Assert: All command execution paths and security validations are identified
-  > Command: cd dev-tools && grep -n "execute\|command\|shell\|system" lib/coding_agent_tools/atoms/git/git_command_executor.rb
+  > Command: cd .ace/tools && grep -n "execute\|command\|shell\|system" lib/coding_agent_tools/atoms/git/git_command_executor.rb
 
 - [x] Review configuration loading patterns and validation logic in docs_dependencies_config_loader.rb
   > TEST: Configuration Loading Analysis
   > Type: Pre-condition Check
   > Assert: All configuration paths and validation scenarios are documented
-  > Command: cd dev-tools && grep -n "load\|config\|yaml\|validate" lib/coding_agent_tools/atoms/docs_dependencies_config_loader.rb
+  > Command: cd .ace/tools && grep -n "load\|config\|yaml\|validate" lib/coding_agent_tools/atoms/docs_dependencies_config_loader.rb
 
 - [x] Examine directory navigation logic and path handling in directory_navigator.rb
   > TEST: Directory Navigation Analysis
   > Type: Pre-condition Check
   > Assert: All navigation paths and directory operations are understood
-  > Command: cd dev-tools && grep -n "navigate\|directory\|path\|find" lib/coding_agent_tools/atoms/taskflow_management/directory_navigator.rb
+  > Command: cd .ace/tools && grep -n "navigate\|directory\|path\|find" lib/coding_agent_tools/atoms/taskflow_management/directory_navigator.rb
 
 ### Execution Steps
 
@@ -90,7 +90,7 @@ Increase test coverage from moderate levels (38-45%) to at least 80% for 3 mediu
   > TEST: Git Command Executor Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 38.18% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/git_command_executor_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/git_command_executor.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/git_command_executor_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/git_command_executor.rb,80]
 
 - [x] Implement tests for docs_dependencies_config_loader.rb (44.44% → 80%+)
   - Cover configuration file loading and parsing
@@ -100,7 +100,7 @@ Increase test coverage from moderate levels (38-45%) to at least 80% for 3 mediu
   > TEST: Docs Dependencies Config Loader Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 44.44% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/docs_dependencies_config_loader_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/docs_dependencies_config_loader.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/docs_dependencies_config_loader_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/docs_dependencies_config_loader.rb,80]
 
 - [x] Implement tests for directory_navigator.rb (45.45% → 80%+)
   - Cover directory navigation, path resolution, and directory traversal
@@ -110,13 +110,13 @@ Increase test coverage from moderate levels (38-45%) to at least 80% for 3 mediu
   > TEST: Directory Navigator Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 45.45% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/directory_navigator_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/directory_navigator.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/directory_navigator_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/directory_navigator.rb,80]
 
 - [x] Run comprehensive test suite and verify Phase 3 coverage improvements
   > TEST: Phase 3 Overall Coverage
   > Type: Final Validation
   > Assert: All 3 target files achieve 80%+ coverage
-  > Command: cd dev-tools && bundle exec rake coverage:report | grep -E "(git_command_executor|docs_dependencies_config_loader|directory_navigator)" | awk '$3 >= 80'
+  > Command: cd .ace/tools && bundle exec rake coverage:report | grep -E "(git_command_executor|docs_dependencies_config_loader|directory_navigator)" | awk '$3 >= 80'
 
 ## Acceptance Criteria
 

@@ -1,6 +1,6 @@
 every task definition should have an example section
 
-it should be part of drafting tasks (dev-handbook/workflow-instructions/draft-release.wf.md)
+it should be part of drafting tasks (.ace/handbook/workflow-instructions/draft-release.wf.md)
 
 analyze the current draft task workflow instructions and ensure we have this section as part of this workflow
 
@@ -9,7 +9,7 @@ example should focus on the
 
 ## Example
 
-how it example could look like ;-) can look like in context of: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.001-create-ideas-manager-tool.md
+how it example could look like ;-) can look like in context of: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.001-create-ideas-manager-tool.md
 
 ### How we run it:
 
@@ -22,20 +22,20 @@ ideas-manager capture "in context of task-manager - lets print a status on top (
 ##### producing output
 
 ```bash
-# => Created: dev-taskflow/backlog/ideas/20250730-1430-add-status-to-task-manager.md
+# => Created: .ace/taskflow/backlog/ideas/20250730-1430-add-status-to-task-manager.md
 ```
 
 
 #### from file
 
 ```bash
-ideas-manager capture --file dev-taskflow/backlog/ideas/wf-create-reflection-note-feedback.md --commit
+ideas-manager capture --file .ace/taskflow/backlog/ideas/wf-create-reflection-note-feedback.md --commit
 ```
 
 ##### producing output
 
 ```bash
-# => Created: dev-taskflow/backlog/ideas/20250730-1430-improve-reflection-note.md
+# => Created: .ace/taskflow/backlog/ideas/20250730-1430-improve-reflection-note.md
 ```
 
 #### from clipboad
@@ -46,14 +46,14 @@ ideas-manager capture -clipboard
 ##### producing output
 
 ```bash
-# => Created: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
+# => Created: .ace/taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
 
 
 ### Example Ouput file cotent
 
 
-<template path="dev-taskflow/backlog/ideas/20250730-1301-every-task-definition-should-have-an-example-section.md">
+<template path=".ace/taskflow/backlog/ideas/20250730-1301-every-task-definition-should-have-an-example-section.md">
 # Add --commit Flag to Git Commit Tool
 
 ## Intention
@@ -76,7 +76,7 @@ To automatically commit generated files by default when using the `git-commit` C
 ## Key Patterns from Reflections
 
 - **CLI Tool Patterns**: The project has over 25 existing executables with consistent interfaces, suggesting that adding flags like `--commit` is a standard pattern. (docs/architecture-tools.md)
-- **Git Operations**: The `dev-tools` gem already provides enhanced Git operations, including `git-commit`, indicating a focus on improving Git workflows. (docs/architecture-tools.md, docs/tools.md)
+- **Git Operations**: The `.ace/tools` gem already provides enhanced Git operations, including `git-commit`, indicating a focus on improving Git workflows. (docs/architecture-tools.md, docs/tools.md)
 - **Testability**: The need to disable features like `--commit` during testing (e.g., by not committing files) aligns with the project's emphasis on robust testing and CI-aware configurations. (ADR-006)
 - **Workflow Self-Containment**: Embedding functionality like automatic committing aligns with the principle of making workflows self-contained and reducing manual steps for AI agents. (ADR-001)
 

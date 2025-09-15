@@ -49,7 +49,7 @@
   - Impact: Failed initial attempts at code review, needed to read help
   - Root Cause: Didn't read help documentation before attempting to use
 
-- **Directory Navigation**: Running commands from wrong directory (dev-tools vs root)
+- **Directory Navigation**: Running commands from wrong directory (.ace/tools vs root)
   - Occurrences: 1
   - Impact: File pattern matching failed, had to adjust paths
   - Root Cause: Lost track of current working directory

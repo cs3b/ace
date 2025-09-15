@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── atom-house-rules.md
 ├── changelog.g.md
 ├── code-review
@@ -104,7 +104,7 @@ dev-handbook/guides
 
 ## Objective
 
-Clean up the meta content structure by properly organizing template files, guide definition files, and the embedded testing guide. This addresses the mixed content types currently in `dev-handbook/guides/.meta/` and establishes a clear, logical organization.
+Clean up the meta content structure by properly organizing template files, guide definition files, and the embedded testing guide. This addresses the mixed content types currently in `.ace/handbook/guides/.meta/` and establishes a clear, logical organization.
 
 ## Scope of Work
 
@@ -117,17 +117,17 @@ Clean up the meta content structure by properly organizing template files, guide
 
 #### Create
 
-* dev-handbook/.meta/tpl/ (templates directory)
-* dev-handbook/guides/embedded-testing-guide.g.md (renamed and relocated)
+* .ace/handbook/.meta/tpl/ (templates directory)
+* .ace/handbook/guides/embedded-testing-guide.g.md (renamed and relocated)
 
 #### Modify
 
-* dev-handbook/.meta/gds/ (add moved guide definition files)
-* dev-handbook/.meta/tpl/ (add moved template files)
+* .ace/handbook/.meta/gds/ (add moved guide definition files)
+* .ace/handbook/.meta/tpl/ (add moved template files)
 
 #### Delete
 
-* dev-handbook/guides/.meta/ (empty directory after reorganization)
+* .ace/handbook/guides/.meta/ (empty directory after reorganization)
 
 ## Phases
 
@@ -145,33 +145,33 @@ Clean up the meta content structure by properly organizing template files, guide
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Key components and their relationships are identified
-  > Command: ls -la dev-handbook/guides/.meta/ && ls -la dev-handbook/.meta/
+  > Command: ls -la .ace/handbook/guides/.meta/ && ls -la .ace/handbook/.meta/
 * [x] Research best practices and design approach
 * [x] Plan detailed implementation strategy
 
 ### Execution Steps
 
-* [x] Step 1: Create dev-handbook/.meta/tpl/ directory for templates
+* [x] Step 1: Create .ace/handbook/.meta/tpl/ directory for templates
 * [x] Step 2: Move template files from guides/.meta/ to .meta/tpl/
   > TEST: Verify Template Files Moved
   > Type: Action Validation
   > Assert: Template files are in the new tpl directory
-  > Command: ls -la dev-handbook/.meta/tpl/
+  > Command: ls -la .ace/handbook/.meta/tpl/
 * [x] Step 3: Move guide definition files from guides/.meta/ to .meta/gds/
   > TEST: Verify Guide Files Moved
   > Type: Action Validation
   > Assert: Guide definition files are in the gds directory
-  > Command: ls -la dev-handbook/.meta/gds/
-* [x] Step 4: Move and rename embedded testing guide to dev-handbook/guides/
+  > Command: ls -la .ace/handbook/.meta/gds/
+* [x] Step 4: Move and rename embedded testing guide to .ace/handbook/guides/
   > TEST: Verify Embedded Testing Guide Relocated
   > Type: Action Validation
   > Assert: Embedded testing guide is properly renamed and located
-  > Command: ls -la dev-handbook/guides/embedded-testing-guide.g.md
+  > Command: ls -la .ace/handbook/guides/embedded-testing-guide.g.md
 * [ ] Step 5: Remove empty guides/.meta/ directory
   > TEST: Verify Directory Cleanup
   > Type: Action Validation
   > Assert: The empty guides/.meta/ directory is removed
-  > Command: test ! -d dev-handbook/guides/.meta/
+  > Command: test ! -d .ace/handbook/guides/.meta/
 * [ ] Step 6: Commit changes with intention-based message
   > TEST: Verify Commit Success
   > Type: Action Validation
@@ -180,9 +180,9 @@ Clean up the meta content structure by properly organizing template files, guide
 
 ## Acceptance Criteria
 
-* [x] AC 1: All template files moved to dev-handbook/.meta/tpl/
-* [x] AC 2: All guide definition files moved to dev-handbook/.meta/gds/
-* [x] AC 3: Embedded testing guide renamed and relocated to dev-handbook/guides/
+* [x] AC 1: All template files moved to .ace/handbook/.meta/tpl/
+* [x] AC 2: All guide definition files moved to .ace/handbook/.meta/gds/
+* [x] AC 3: Embedded testing guide renamed and relocated to .ace/handbook/guides/
 * [ ] AC 4: Empty guides/.meta/ directory removed
 * [ ] AC 5: Changes committed with appropriate message
 
@@ -194,4 +194,4 @@ Clean up the meta content structure by properly organizing template files, guide
 
 ## References
 
-* User analysis: "analyze dev-handbook/guides/.meta and identified templates -> dev-handbook/.meta/tpl/ (templates) guides -> dev-handbook/.meta/gds/ one guide is more the for guides / workflow instructions (handbook meta) dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md this guide is about using embeded tests (e.g.: we use it also in tasks) -> this should be move to dev-handbook/guides and rename more approprierate (it's not related to workflows only)"
+* User analysis: "analyze .ace/handbook/guides/.meta and identified templates -> .ace/handbook/.meta/tpl/ (templates) guides -> .ace/handbook/.meta/gds/ one guide is more the for guides / workflow instructions (handbook meta) .ace/handbook/guides/.meta/workflow-instructions-embeding-tests.g.md this guide is about using embeded tests (e.g.: we use it also in tasks) -> this should be move to .ace/handbook/guides and rename more approprierate (it's not related to workflows only)"

@@ -16,7 +16,7 @@
 
 - Could have used a more targeted search pattern initially to find migration references
 - The task estimate (1h) might be overly conservative for such a simple cleanup task
-- Could have checked for references in other submodules (dev-tools, dev-taskflow)
+- Could have checked for references in other submodules (dev-tools, .ace/taskflow)
 
 ## Key Learnings
 
@@ -27,8 +27,8 @@
 ## Technical Details
 
 ### Files Analyzed
-- `dev-handbook/.integrations/claude/README.md` - Found 3 references to migration
-- `dev-handbook/.integrations/claude/MIGRATION.md` - 260 lines of unnecessary migration documentation
+- `.ace/handbook/.integrations/claude/README.md` - Found 3 references to migration
+- `.ace/handbook/.integrations/claude/MIGRATION.md` - 260 lines of unnecessary migration documentation
 - Multiple files across the codebase referencing the obsolete migration guide
 
 ### Implementation Approach

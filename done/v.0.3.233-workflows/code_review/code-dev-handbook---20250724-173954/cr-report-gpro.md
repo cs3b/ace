@@ -25,8 +25,8 @@
 
 ## 1. Executive Summary
 
-This diff introduces a foundational refactoring of the `dev-handbook`. The core changes involve:
-1.  **Centralizing all document templates** into a new, well-organized `dev-handbook/templates/` directory.
+This diff introduces a foundational refactoring of the `.ace/handbook`. The core changes involve:
+1.  **Centralizing all document templates** into a new, well-organized `.ace/handbook/templates/` directory.
 2.  **Standardizing template embedding** within workflow instructions using a new, machine-readable XML `<documents>` format, which replaces the previous markdown-based system.
 3.  **Introducing new guides and tools** (`markdown-sync-embedded-documents`) to support and automate this new template system.
 4.  **Significantly simplifying complex workflows** (e.g., `synthesize-reviews`, `synthesize-reflection-notes`, `create-task`) into single, powerful commands, which greatly enhances the AI agent experience.
@@ -42,7 +42,7 @@ Overall, this is a 🟢 **highly positive and strategic update**. It dramaticall
 
 ⚠️ **Modified Workflows:**
 *   **Nearly all `.wf.md` files have been modified** to adopt the new XML embedding format. This is a fundamental change to how workflows are structured.
-*   The `initialize-project-structure` workflow is heavily updated, moving core documentation to a root `docs/` directory and relying more on `dev-tools` for binstubs, indicating tighter system integration.
+*   The `initialize-project-structure` workflow is heavily updated, moving core documentation to a root `docs/` directory and relying more on `.ace/tools` for binstubs, indicating tighter system integration.
 *   The main `workflow-instructions/README.md` has been transformed into a comprehensive "Workflow Integration Guide", complete with scenarios and a decision tree for agents. This is a major usability improvement.
 
 ❌ **Breaking Workflow Changes:**
@@ -51,7 +51,7 @@ Overall, this is a 🟢 **highly positive and strategic update**. It dramaticall
 ## 3. Template & Example Updates
 
 ✅ **Massive Template Refactoring:**
-*   All templates have been moved from disparate locations (e.g., `guides/draft-release/`, `guides/initialize-project-templates/`) into a new, centralized, and logically categorized `dev-handbook/templates/` directory. This greatly improves organization and discoverability.
+*   All templates have been moved from disparate locations (e.g., `guides/draft-release/`, `guides/initialize-project-templates/`) into a new, centralized, and logically categorized `.ace/handbook/templates/` directory. This greatly improves organization and discoverability.
 *   Many new, more granular templates have been added (e.g., for commit messages, review summaries, session context), providing better structure for common development artifacts.
 *   The content and structure of most templates have been refined and standardized.
 
@@ -65,12 +65,12 @@ Overall, this is a 🟢 **highly positive and strategic update**. It dramaticall
 
 *   **Missing Guide Update:** The core `guides/ai-agent-integration.g.md` was not updated in this diff. It is now critically out of date and provides incorrect guidance.
     *   **Required Workflow:** Update this guide to reflect the new XML embedding standard, the new single-command workflows (`code-review-synthesize`, etc.), and the use of `nav-path` for task creation.
-    *   **File Path:** `dev-handbook/guides/ai-agent-integration.g.md`
+    *   **File Path:** `.ace/handbook/guides/ai-agent-integration.g.md`
     *   **Priority:** 🔴 Critical
 
 *   **Missing Guide:** A migration guide is needed for AI agents to transition from the old template format to the new XML format.
     *   **Required Workflow:** Create a new guide explaining the breaking change, how to detect the format, and the new parsing logic required.
-    *   **File Path:** `dev-handbook/guides/migration/agent-template-embedding-migration.g.md` (suggested)
+    *   **File Path:** `.ace/handbook/guides/migration/agent-template-embedding-migration.g.md` (suggested)
     *   **Priority:** 🟡 High
 
 *   **New Guides:** New guides for the `markdown-sync-embedded-documents` tool have been added (`template-synchronization.md` and `template-sync-operations.md`), which is excellent coverage for the new system.
@@ -90,8 +90,8 @@ Overall, this is a 🟢 **highly positive and strategic update**. It dramaticall
 ✅ The diff shows a concerted effort to update links to reflect the new `templates/` structure and renamed workflows. Key index files like `guides/README.md` have been updated correctly.
 
 ⚠️ **High Potential for Missed Links:**
-*   The scale of this refactoring is immense. A full, automated link-check across the entire `dev-handbook` is strongly recommended to catch any missed references.
-*   The structural change moving ADRs from `dev-taskflow/decisions/` to a root `docs/decisions/` is significant. All documents must be scrubbed for old paths to ADRs.
+*   The scale of this refactoring is immense. A full, automated link-check across the entire `.ace/handbook` is strongly recommended to catch any missed references.
+*   The structural change moving ADRs from `.ace/taskflow/decisions/` to a root `docs/decisions/` is significant. All documents must be scrubbed for old paths to ADRs.
 
 ## 7. Prioritised Handbook Tasks
 
@@ -100,8 +100,8 @@ Overall, this is a 🟢 **highly positive and strategic update**. It dramaticall
 
 🟡 **High:**
 *   **Create Agent Migration Guide:** Document the breaking change in template embedding and provide a clear migration path for AI agents. This is crucial for backward compatibility and smooth transitions.
-*   **Full Link Integrity Check:** Perform an automated link-check across the entire `dev-handbook` submodule to ensure no broken references remain after the massive template refactoring.
-*   **Verify ADR Path References:** Audit all guides for hardcoded paths to `dev-taskflow/decisions/` and update them to the new `docs/decisions/` location.
+*   **Full Link Integrity Check:** Perform an automated link-check across the entire `.ace/handbook` submodule to ensure no broken references remain after the massive template refactoring.
+*   **Verify ADR Path References:** Audit all guides for hardcoded paths to `.ace/taskflow/decisions/` and update them to the new `docs/decisions/` location.
 
 🟢 **Medium:**
 *   **Consolidate Template Sync Guides:** The new `template-synchronization.md` and `template-sync-operations.md` guides have significant overlap. Consider merging them into a single, comprehensive guide with a "Quick Reference" section.

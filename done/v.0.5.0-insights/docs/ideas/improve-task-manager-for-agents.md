@@ -42,14 +42,14 @@ task-manager list --release all      # All releases
 # List all task files with metadata
 task-manager files
 # Output:
-# dev-taskflow/current/v.0.5.0-insights/tasks/
+# .ace/taskflow/current/v.0.5.0-insights/tasks/
 #   v.0.5.0+task.001 [DONE] Remove Obsolete Binstub References
 #   v.0.5.0+task.002 [DONE] Task Manager Release Command
 #   ...
 
 # Find task file by ID (partial match)
 task-manager find 013
-# Output: dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.013-context-loading-tool.md
+# Output: .ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.013-context-loading-tool.md
 ```
 
 ### 3. Summary and Overview Commands
@@ -156,4 +156,4 @@ Based on actual usage patterns, these improvements are also needed:
 - Task manager agent improvements
 - Context loading enhancements
 - MCP proxy integration for task management
-- Usage research: dev-taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md
+- Usage research: .ace/taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md

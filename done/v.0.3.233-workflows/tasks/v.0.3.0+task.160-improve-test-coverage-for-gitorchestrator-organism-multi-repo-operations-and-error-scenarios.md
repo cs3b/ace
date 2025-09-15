@@ -14,7 +14,7 @@ Implement comprehensive test coverage for the GitOrchestrator organism focusing 
 
 ## Prerequisites
 
-* Read the dev-tools technical architecture guide: `dev-tools/docs/architecture-tools.md`
+* Read the .ace/tools technical architecture guide: `.ace/tools/docs/architecture-tools.md`
 * Understanding of ATOM architecture pattern (Atoms, Molecules, Organisms, Ecosystems)
 * Familiarity with Ruby/RSpec testing patterns and VCR cassette management
 * Understanding of Git operations and multi-repository coordination
@@ -105,7 +105,7 @@ Implement comprehensive test coverage for the GitOrchestrator organism focusing 
 
 ## References
 - Coverage analysis: coverage_analysis/coverage_analysis.json
-- Testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md
 - ATOM architecture: docs/architecture-tools.md
 - Source file: lib/coding_agent_tools/organisms/git/git_orchestrator.rb
 - Related Atom/Molecule components for mocking/stubbing

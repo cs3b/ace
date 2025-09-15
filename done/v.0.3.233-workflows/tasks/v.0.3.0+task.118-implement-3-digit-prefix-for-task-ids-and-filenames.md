@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools
+.ace/tools/lib/coding_agent_tools
 ├── atoms
 ├── cli
 ├── constants
@@ -50,8 +50,8 @@ Standardize task ID format across the project to use 3-digit zero-padded prefixe
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/taskflow_management/task_id_generator.rb (or equivalent)
-- dev-tools/exe/task-manager (ID generation logic)
+- .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/task_id_generator.rb (or equivalent)
+- .ace/tools/exe/task-manager (ID generation logic)
 - Any nav-path task creation logic
 
 #### Delete
@@ -73,7 +73,7 @@ Standardize task ID format across the project to use 3-digit zero-padded prefixe
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current ID generation mechanism is identified and understood
-  > Command: grep -r "task\." dev-tools/lib/ --include="*.rb"
+  > Command: grep -r "task\." .ace/tools/lib/ --include="*.rb"
 - [x] Review existing task files to understand current naming patterns
 - [x] Plan migration strategy for maintaining compatibility
 
@@ -103,5 +103,5 @@ Standardize task ID format across the project to use 3-digit zero-padded prefixe
 
 ## References
 
-Based on requirements from: dev-taskflow/backlog/ideas/exe-task-manager.md
+Based on requirements from: .ace/taskflow/backlog/ideas/exe-task-manager.md
 Item #1: "ensure we are using prefixed ids for tasks and filenames (not v.0.3.0+task.1 instead not v.0.3.0+task.001) - lets use 3 digits prefix"

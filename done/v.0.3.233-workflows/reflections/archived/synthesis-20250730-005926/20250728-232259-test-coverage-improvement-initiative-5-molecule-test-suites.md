@@ -41,7 +41,7 @@
 - **Working Directory Context**: Inconsistent working directory caused multiple file access failures
   - Occurrences: 8-10 times across different tasks
   - Impact: Required multiple attempts to locate and access files correctly
-  - Root Cause: Working directory was set to dev-tools but needed to access parent directories
+  - Root Cause: Working directory was set to .ace/tools but needed to access parent directories
 
 - **Test Failures from Algorithm Misunderstanding**: Initial test expectations didn't match actual algorithm behavior
   - Occurrences: 3-4 instances (particularly with dependency level calculations)
@@ -149,8 +149,8 @@
 - v.0.3.0+task.173: TaskSortEngine (41 tests)
 
 **Repository Impact:**
-- All test files created and committed to dev-tools repository
-- Task documentation updated and committed to dev-taskflow repository
+- All test files created and committed to .ace/tools repository
+- Task documentation updated and committed to .ace/taskflow repository
 - No regressions introduced to existing test suites
 - Significantly improved test coverage for critical workflow molecules
 

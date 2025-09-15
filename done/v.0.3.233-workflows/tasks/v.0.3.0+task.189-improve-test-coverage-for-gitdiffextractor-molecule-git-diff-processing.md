@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -24,7 +24,7 @@ _Result excerpt:_
 
 ## Objective
 
-Improve test coverage for the GitDiffExtractor molecule in the dev-tools Ruby gem to ensure comprehensive testing of git diff processing functionality. This molecule is responsible for extracting and processing git diffs with various target specifications and needs thorough test coverage for reliability.
+Improve test coverage for the GitDiffExtractor molecule in the .ace/tools Ruby gem to ensure comprehensive testing of git diff processing functionality. This molecule is responsible for extracting and processing git diffs with various target specifications and needs thorough test coverage for reliability.
 
 ## Scope of Work
 
@@ -42,7 +42,7 @@ Improve test coverage for the GitDiffExtractor molecule in the dev-tools Ruby ge
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb
 
 #### Delete
 
@@ -66,7 +66,7 @@ Improve test coverage for the GitDiffExtractor molecule in the dev-tools Ruby ge
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All public methods and edge cases are identified for testing
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb --format documentation
 
 ### Execution Steps
 
@@ -76,27 +76,27 @@ Improve test coverage for the GitDiffExtractor molecule in the dev-tools Ruby ge
   > TEST: Verify Edge Case Coverage
   > Type: Action Validation
   > Assert: New test cases cover previously untested edge scenarios
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t new_edge_cases
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t new_edge_cases
 - [x] Add tests for complex diff parsing scenarios (multiple files, binary files, large diffs)
   > TEST: Verify Complex Parsing Tests
   > Type: Action Validation
   > Assert: Complex diff scenarios are properly tested and handled
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t complex_parsing
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t complex_parsing
 - [x] Add tests for metadata extraction edge cases (empty files, no changes, edge counting)
   > TEST: Verify Metadata Tests
   > Type: Action Validation
   > Assert: Metadata extraction handles all edge cases correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t metadata_edge_cases
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t metadata_edge_cases
 - [x] Add comprehensive file operation error tests (permissions, disk space, path issues)
   > TEST: Verify File Operation Tests
   > Type: Action Validation
   > Assert: File operations are tested for various error conditions
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t file_operations
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb -t file_operations
 - [x] Run complete test suite to ensure no regressions and improved coverage
   > TEST: Verify No Regressions
   > Type: Action Validation
   > Assert: All existing tests pass and new tests increase coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb
 
 ## Acceptance Criteria
 

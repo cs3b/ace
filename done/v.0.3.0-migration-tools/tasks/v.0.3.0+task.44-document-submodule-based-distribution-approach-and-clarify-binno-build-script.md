@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-tools/bin/ | grep -E "(build|no-build)" | sed 's/^/    /'
+ls -la .ace/tools/bin/ | grep -E "(build|no-build)" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -46,7 +46,7 @@ Address code review feedback regarding the confusing rename of `bin/build` to `b
 - docs/blueprint.md (add reference to distribution documentation)
 - docs/what-do-we-build.md (clarify distribution approach in project vision)
 - README.md (update installation/usage section to reflect submodule approach)
-- dev-tools/bin/no-build (add clear header comments explaining the script's purpose)
+- .ace/tools/bin/no-build (add clear header comments explaining the script's purpose)
 
 #### Delete
 
@@ -98,7 +98,7 @@ Address code review feedback regarding the confusing rename of `bin/build` to `b
   > TEST: Script Clarification
   > Type: Action Validation
   > Assert: bin/no-build has clear comments explaining why it's named this way
-  > Command: head -15 dev-tools/bin/no-build | grep -i "submodule\|distribution\|naming"
+  > Command: head -15 .ace/tools/bin/no-build | grep -i "submodule\|distribution\|naming"
 - [x] Update blueprint.md to reference new distribution documentation
   > TEST: Blueprint Update
   > Type: Action Validation
@@ -135,7 +135,7 @@ Address code review feedback regarding the confusing rename of `bin/build` to `b
 - Need to document this architectural decision and clarify the script's purpose
 
 **Related Files:**
-- dev-tools/bin/no-build (build script that needs clarification)
+- .ace/tools/bin/no-build (build script that needs clarification)
 - docs/what-do-we-build.md (project vision document)
 - docs/blueprint.md (project structure documentation)
 - README.md (installation instructions)

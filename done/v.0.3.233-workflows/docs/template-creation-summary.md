@@ -13,35 +13,35 @@ Successfully created 5 new template files and enhanced 2 existing templates base
 
 ### 1. User Documentation Template
 
-**Location**: `dev-handbook/templates/user-docs/user-guide.template.md`  
+**Location**: `.ace/handbook/templates/user-docs/user-guide.template.md`  
 **Source**: `create-user-docs.wf.md` (lines 65-163)  
 **Status**: ✅ Created  
 **Content**: Comprehensive user guide structure with Overview, Quick Start, Installation, Usage, Configuration, Advanced Usage, Troubleshooting, Examples, API Reference, FAQ, Migration Guide
 
 ### 2. Changelog Template  
 
-**Location**: `dev-handbook/templates/release-management/changelog.template.md`  
+**Location**: `.ace/handbook/templates/release-management/changelog.template.md`  
 **Source**: `publish-release.wf.md` (lines 84-111)  
 **Status**: ✅ Created  
 **Content**: Keep a Changelog 1.0.0 compliant format with Added, Changed, Deprecated, Removed, Fixed, Security sections
 
 ### 3. Release Overview Template
 
-**Location**: `dev-handbook/templates/release-management/release-overview.template.md`  
+**Location**: `.ace/handbook/templates/release-management/release-overview.template.md`  
 **Source**: `draft-release.wf.md` (lines 52-126)  
 **Status**: ✅ Created  
 **Content**: Comprehensive release planning template with goals, implementation plan, quality assurance checklist, release information
 
 ### 4. Ruby YARD Documentation Template
 
-**Location**: `dev-handbook/templates/code-docs/ruby-yard.template.md`  
+**Location**: `.ace/handbook/templates/code-docs/ruby-yard.template.md`  
 **Source**: `create-api-docs.wf.md` (lines 64-110)  
 **Status**: ✅ Created  
 **Content**: Complete Ruby YARD documentation format with parameters, examples, exceptions, cross-references, and metadata
 
 ### 5. JavaScript JSDoc Documentation Template
 
-**Location**: `dev-handbook/templates/code-docs/javascript-jsdoc.template.md`  
+**Location**: `.ace/handbook/templates/code-docs/javascript-jsdoc.template.md`  
 **Source**: `create-api-docs.wf.md` (lines 112-157)  
 **Status**: ✅ Created  
 **Content**: Comprehensive JSDoc format with TypeScript-style annotations, examples, error handling, and advanced tags
@@ -50,7 +50,7 @@ Successfully created 5 new template files and enhanced 2 existing templates base
 
 ### 1. Test Case Template (Enhanced)
 
-**Location**: `dev-handbook/templates/release-testing/test-case.template.md`  
+**Location**: `.ace/handbook/templates/release-testing/test-case.template.md`  
 **Source**: `create-test-cases.wf.md` (lines 120-167)  
 **Status**: ✅ Enhanced  
 **Previous**: Minimal 37-line Ruby-specific checklist  
@@ -58,7 +58,7 @@ Successfully created 5 new template files and enhanced 2 existing templates base
 
 ### 2. Reflection Template (Enhanced)
 
-**Location**: `dev-handbook/templates/release-reflections/retrospective.template.md`  
+**Location**: `.ace/handbook/templates/release-reflections/retrospective.template.md`  
 **Source**: `create-reflection-note.wf.md` (lines 69-118)  
 **Status**: ✅ Enhanced  
 **Previous**: Minimal 9-line Stop/Continue/Start format  
@@ -69,7 +69,7 @@ Successfully created 5 new template files and enhanced 2 existing templates base
 ### New Directories Created
 
 ```
-dev-handbook/templates/
+.ace/handbook/templates/
 ├── code-docs/              # New directory
 │   ├── javascript-jsdoc.template.md
 │   └── ruby-yard.template.md
@@ -83,7 +83,7 @@ dev-handbook/templates/
 ### Enhanced Existing Files
 
 ```
-dev-handbook/templates/
+.ace/handbook/templates/
 ├── release-reflections/
 │   └── retrospective.template.md    # Enhanced
 └── release-testing/

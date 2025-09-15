@@ -170,7 +170,7 @@ end
 
 # Main execution
 if __FILE__ == $0
-  commands_dir = ARGV[0] || File.expand_path('../../../dev-handbook/.integrations/claude/commands', __dir__)
+  commands_dir = ARGV[0] || File.expand_path('../../../.ace/handbook/.integrations/claude/commands', __dir__)
   
   unless File.directory?(commands_dir)
     puts "Error: Commands directory not found: #{commands_dir}"

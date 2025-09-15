@@ -63,10 +63,10 @@ The planned approach focuses on making the pattern more context-aware to disting
 
 ## Additional Context
 
-- **Task File**: `/dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.042-fix-yaml-include-pattern-security-validation.md`
+- **Task File**: `/.ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.042-fix-yaml-include-pattern-security-validation.md`
 - **Status Change**: Successfully transformed from `draft` to `pending` with complete implementation plan
 - **Related Task**: `v.0.5.0+task.023` which addressed broader security pattern issues
-- **Key File**: `/dev-tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb`
+- **Key File**: `/.ace/tools/lib/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb`
 - **Integration Point**: `handbook claude integrate` command workflow
 
 ## Planning Quality Assessment

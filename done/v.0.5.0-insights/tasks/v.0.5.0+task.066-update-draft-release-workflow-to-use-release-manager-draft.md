@@ -33,7 +33,7 @@ Update the draft-release workflow to leverage the `release-manager draft` comman
 ### Deliverables
 
 #### Modified
-- `dev-handbook/workflow-instructions/draft-release.wf.md`
+- `.ace/handbook/workflow-instructions/draft-release.wf.md`
   - Step 2: Now uses `release-manager draft v.X.Y.Z codename`
   - Step 3: Renames `release-overview.md` to `README.md`
   - Step 4: References `README.md` instead of `v.X.Y.Z-codename.md`
@@ -65,8 +65,8 @@ Update the draft-release workflow to leverage the `release-manager draft` comman
 
 **New Step 3:**
 ```bash
-mv dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
-   dev-taskflow/backlog/v.X.Y.Z-codename/README.md
+mv .ace/taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
+   .ace/taskflow/backlog/v.X.Y.Z-codename/README.md
 ```
 
 **Updated validations:**
@@ -82,15 +82,15 @@ mv dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
 
 ```bash
 # Verified release-manager draft references
-grep -n "release-manager draft" dev-handbook/workflow-instructions/draft-release.wf.md
+grep -n "release-manager draft" .ace/handbook/workflow-instructions/draft-release.wf.md
 # Result: 5 references found in appropriate locations
 
 # Confirmed README.md references
-grep -n "README.md" dev-handbook/workflow-instructions/draft-release.wf.md  
+grep -n "README.md" .ace/handbook/workflow-instructions/draft-release.wf.md  
 # Result: All overview references updated to README.md
 
 # Checked success criteria updates
-grep "README.md created and populated" dev-handbook/workflow-instructions/draft-release.wf.md
+grep "README.md created and populated" .ace/handbook/workflow-instructions/draft-release.wf.md
 # Result: Success criteria properly updated
 ```
 

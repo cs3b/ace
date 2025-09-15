@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -70,7 +70,7 @@ Replace nav-path creation operations with create-path equivalents using delegati
   > TEST: Creation Operations Found
   > Type: Data Collection Check
   > Assert: All creation nav-path operations identified
-  > Command: grep -r "nav-path.*\(docs-new\|reflection-new\|code-review-new\)" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
+  > Command: grep -r "nav-path.*\(docs-new\|reflection-new\|code-review-new\)" docs/ .ace/handbook/ .ace/tools/ --include="*.md" | wc -l
 - [x] Verify create-path current types: task-new, file, directory, docs-new, template
 - [x] Determine if delegation format (file:type, directory:type) needs implementation or if direct types suffice
 - [x] Test delegation pattern examples to ensure functionality
@@ -82,7 +82,7 @@ Replace nav-path creation operations with create-path equivalents using delegati
   > TEST: docs-new Replacements Complete
   > Type: Content Validation
   > Assert: All docs-new references updated to create-path delegation
-  > Command: grep -r "create-path file:docs-new" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
+  > Command: grep -r "create-path file:docs-new" docs/ .ace/handbook/ .ace/tools/ --include="*.md" | wc -l
 - [x] Replace nav-path reflection-new references with create-path file:reflection-new
 - [x] Replace nav-path code-review-new references with create-path directory:code-review-new
 - [x] Verify nav-path file and nav-path task references remain unchanged
@@ -121,4 +121,4 @@ Replace nav-path creation operations with create-path equivalents using delegati
 - nav-path command help: `nav-path --help`
 - Configuration: /.coding-agent/create-path.yml
 - Current create-path TYPE options: file, directory, docs-new, template
-- Nav-path usage patterns in docs/, dev-handbook/, dev-tools/
+- Nav-path usage patterns in docs/, .ace/handbook/, .ace/tools/

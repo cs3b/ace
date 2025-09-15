@@ -6,7 +6,7 @@ require "yaml"
 # --- Configuration ---
 # Assumes the script is run from the project root.
 PROJECT_ROOT_DEFAULT = Pathname.new(".")
-DOCS_PROJECT_REL_PATH = "dev-taskflow"
+DOCS_PROJECT_REL_PATH = ".ace/taskflow"
 CURRENT_DIR_NAME = "current"
 BACKLOG_DIR_NAME = "backlog"
 TASKS_SUBDIR_NAME = "tasks"
@@ -127,9 +127,9 @@ end
 errors_found = []
 files_processed_count = 0
 
-# Determine base path for dev-taskflow
+# Determine base path for .ace/taskflow
 # This allows running the script from project root or potentially other locations
-# if the script itself is moved, as long as dev-taskflow is findable.
+# if the script itself is moved, as long as .ace/taskflow is findable.
 project_root = PROJECT_ROOT_DEFAULT
 docs_project_base = project_root / DOCS_PROJECT_REL_PATH
 

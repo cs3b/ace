@@ -35,7 +35,7 @@ def process_file(file_path)
 end
 
 # Get workflow files that contain template-path
-workflow_files = `grep -l "template-path" #{ARGV[0] || '/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions'}/*.wf.md`.strip.split("\n")
+workflow_files = `grep -l "template-path" #{ARGV[0] || '/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions'}/*.wf.md`.strip.split("\n")
 
 if workflow_files.empty?
   puts "No workflow files with template-path found"

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.112, v.0.3.0+task.113, v.0.3.0+task.114]
 _Command run:_
 
 ```bash
-ls -la dev-tools/spec/cli/create_path_command_spec.rb | sed 's/^/    /'
+ls -la .ace/tools/spec/cli/create_path_command_spec.rb | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    -rw-r--r--  1 user  group  xxxx date dev-tools/spec/cli/create_path_command_spec.rb
+    -rw-r--r--  1 user  group  xxxx date .ace/tools/spec/cli/create_path_command_spec.rb
 ```
 
 ## Objective
@@ -43,7 +43,7 @@ Address test coverage gaps identified in the code review by adding comprehensive
 
 #### Modify
 
-- `dev-tools/spec/cli/create_path_command_spec.rb` (add missing test coverage)
+- `.ace/tools/spec/cli/create_path_command_spec.rb` (add missing test coverage)
 
 #### Delete
 
@@ -64,7 +64,7 @@ Address test coverage gaps identified in the code review by adding comprehensive
   > TEST: Coverage Analysis
   > Type: Coverage Assessment
   > Assert: Current coverage percentage and missing scenarios identified
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb --format documentation
 - [x] Review create_path_command.rb for all error handling paths
 - [x] Identify edge cases from the command interface
 - [x] Plan test scenarios for each identified gap
@@ -75,37 +75,37 @@ Address test coverage gaps identified in the code review by adding comprehensive
   > TEST: File System Error Handling
   > Type: Error Scenario Testing
   > Assert: Tests cover permission errors, disk full, readonly filesystem
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "file system errors"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "file system errors"
 - [x] Step 2: Add invalid input validation tests
   > TEST: Input Validation Testing
   > Type: Edge Case Testing
   > Assert: Tests cover invalid paths, malformed arguments, missing parameters
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "input validation"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "input validation"
 - [x] Step 3: Add configuration error tests
   > TEST: Configuration Error Testing
   > Type: Configuration Validation
   > Assert: Tests cover missing config, invalid config, malformed YAML
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "configuration errors"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "configuration errors"
 - [x] Step 4: Add template resolution error tests
   > TEST: Template Error Testing
   > Type: Template Validation
   > Assert: Tests cover missing templates, invalid templates, variable substitution errors
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "template errors"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "template errors"
 - [x] Step 5: Add PathResolver integration error tests
   > TEST: Integration Error Testing
   > Type: Integration Validation
   > Assert: Tests cover PathResolver failures, invalid repository context
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "path resolution errors"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "path resolution errors"
 - [x] Step 6: Add concurrent access and race condition tests
   > TEST: Concurrency Error Testing
   > Type: Race Condition Validation
   > Assert: Tests cover file creation conflicts, concurrent modifications
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "concurrency"
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb -e "concurrency"
 - [x] Step 7: Verify comprehensive coverage
   > TEST: Coverage Verification
   > Type: Coverage Analysis
   > Assert: Test coverage significantly improved, all error paths tested
-  > Command: cd dev-tools && bundle exec rspec spec/cli/create_path_command_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/cli/create_path_command_spec.rb --format progress
 
 ## Acceptance Criteria
 

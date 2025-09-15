@@ -40,9 +40,9 @@ Enhance workflow instructions by embedding information about recommended agents 
 
 ## Key Patterns from Reflections
 
-- **Self-Contained AI Workflows**: Workflows in `dev-handbook/workflow-instructions/` are designed to be self-contained, meaning any necessary guidance should ideally be embedded within them.
-- **ATOM Architecture**: The project is structured using ATOM, with distinct layers (Atoms, Molecules, Organisms, Ecosystems) for tools in `dev-tools/lib/coding_agent_tools/`. This structure implies specialized components (Organisms) that act as agents or tools.
-- **Specialized Development Agents**: The project has specialized agents (e.g., for Git, task management) documented in `dev-handbook/.integrations/claude/agents/`.
+- **Self-Contained AI Workflows**: Workflows in `.ace/handbook/workflow-instructions/` are designed to be self-contained, meaning any necessary guidance should ideally be embedded within them.
+- **ATOM Architecture**: The project is structured using ATOM, with distinct layers (Atoms, Molecules, Organisms, Ecosystems) for tools in `.ace/tools/lib/coding_agent_tools/`. This structure implies specialized components (Organisms) that act as agents or tools.
+- **Specialized Development Agents**: The project has specialized agents (e.g., for Git, task management) documented in `.ace/handbook/.integrations/claude/agents/`.
 - **CLI Tool Reference**: `docs/tools.md` provides a comprehensive cheat-sheet of available CLI tools.
 - **Workflow Instructions**: Workflows themselves define sequences of actions, and could benefit from explicit recommendations for sub-tasks.
 

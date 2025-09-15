@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides/
+.ace/handbook/guides/
 ├── README.md
 ├── .meta/
 ├── migration/
@@ -43,8 +43,8 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
 
 #### Create
 
-- dev-handbook/guides/migration/migrating-to-self-contained-workflows.g.md
-- dev-handbook/guides/migration/ (directory if it doesn't exist)
+- .ace/handbook/guides/migration/migrating-to-self-contained-workflows.g.md
+- .ace/handbook/guides/migration/ (directory if it doesn't exist)
 
 #### Modify
 
@@ -69,13 +69,13 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All workflow changes are documented and categorized
-  > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | wc -l`
+  > Command: `find .ace/handbook/workflow-instructions -name "*.wf.md" | wc -l`
 
 - [x] Identify all deprecated workflows and map to new replacements
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Complete mapping of old to new workflow patterns exists
-  > Command: `ls dev-handbook/workflow-instructions/*.wf.md`
+  > Command: `ls .ace/handbook/workflow-instructions/*.wf.md`
 
 ### Execution Steps
 
@@ -83,7 +83,7 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Migration directory exists and is properly structured
-  > Command: `ls -la dev-handbook/guides/migration/`
+  > Command: `ls -la .ace/handbook/guides/migration/`
 
 - [x] Write comprehensive migration guide with all required sections:
   - Introduction explaining the paradigm shift rationale
@@ -94,13 +94,13 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Migration guide exists and contains all required sections
-  > Command: `grep -E "^## |^### " dev-handbook/guides/migration/migrating-to-self-contained-workflows.g.md`
+  > Command: `grep -E "^## |^### " .ace/handbook/guides/migration/migrating-to-self-contained-workflows.g.md`
 
 - [x] Include specific examples from actual workflow transformations
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Guide contains practical examples and checklists
-  > Command: `grep -c "checklist\|example" dev-handbook/guides/migration/migrating-to-self-contained-workflows.g.md`
+  > Command: `grep -c "checklist\|example" .ace/handbook/guides/migration/migrating-to-self-contained-workflows.g.md`
 
 ## Acceptance Criteria
 
@@ -124,4 +124,4 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
 
 - Original requirement: Handbook review report section "CRITICAL UPDATES"
 - Related workflow changes: All workflow instructions in current diff
-- New principles: dev-handbook/guides/.meta/workflow-instructions-definition.g.md
+- New principles: .ace/handbook/guides/.meta/workflow-instructions-definition.g.md

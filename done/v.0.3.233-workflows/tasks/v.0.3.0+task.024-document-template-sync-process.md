@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.23]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -39,12 +39,12 @@ Link back to original requirement: Document the template sync script and process
 
 #### Create
 
-* dev-handbook/guides/template-synchronization.md - comprehensive guide
-* dev-handbook/guides/template-sync-operations.md - operational guide
+* .ace/handbook/guides/template-synchronization.md - comprehensive guide
+* .ace/handbook/guides/template-sync-operations.md - operational guide
 
 #### Modify  
 
-* dev-handbook/guides/README.md - add references to new guides
+* .ace/handbook/guides/README.md - add references to new guides
 * CLAUDE.md - add template sync command reference
 
 #### Delete
@@ -132,4 +132,4 @@ Link back to original requirement: Document the template sync script and process
 
 * Original requirement: improve-the-workflow-structure.md
 * Dependencies: v.0.3.0+task.23 (template synchronization execution)
-* Related guides: dev-handbook/guides/ documentation standards
+* Related guides: .ace/handbook/guides/ documentation standards

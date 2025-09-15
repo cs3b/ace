@@ -13,7 +13,7 @@ dependencies: [v.0.3.0+task.226]
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/spec/coding_agent_tools/cli/commands | grep -E "(release|current)" || echo "No release command tests found"
+tree -L 3 .ace/tools/spec/coding_agent_tools/cli/commands | grep -E "(release|current)" || echo "No release command tests found"
 ```
 
 _Result excerpt:_
@@ -39,7 +39,7 @@ Create comprehensive test coverage for the `release-manager current` command, pa
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/cli/commands/release/current_spec.rb
+- .ace/tools/spec/coding_agent_tools/cli/commands/release/current_spec.rb
 
 #### Modify
 
@@ -128,6 +128,6 @@ Create comprehensive test coverage for the `release-manager current` command, pa
 
 ## References
 
-- Command implementation: dev-tools/lib/coding_agent_tools/cli/commands/release/current.rb
-- CLI test patterns: Look at other command specs in dev-tools/spec/coding_agent_tools/cli/commands/
+- Command implementation: .ace/tools/lib/coding_agent_tools/cli/commands/release/current.rb
+- CLI test patterns: Look at other command specs in .ace/tools/spec/coding_agent_tools/cli/commands/
 - Depends on: v.0.3.0+task.226 (CLI implementation)

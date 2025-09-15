@@ -30,7 +30,7 @@
 
 ### Implementation Approach
 
-The fix was implemented by modifying a single line in `/dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb`:
+The fix was implemented by modifying a single line in `/.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb`:
 
 ```ruby
 # Before (line 322):
@@ -77,6 +77,6 @@ output_file = config[:output] || "cr-#{model_name}.md"
 
 ## Additional Context
 
-- Task file: `dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.031-fix-code-review-default-output-file-naming.md`
-- Modified file: `dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb`
+- Task file: `.ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.031-fix-code-review-default-output-file-naming.md`
+- Modified file: `.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb`
 - Related to broader code-review command redesign in v.0.5.0 release

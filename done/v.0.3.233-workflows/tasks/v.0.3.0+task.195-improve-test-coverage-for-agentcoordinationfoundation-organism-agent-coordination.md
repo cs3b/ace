@@ -14,7 +14,7 @@ Complete comprehensive test coverage for the `AgentCoordinationFoundation` organ
 
 ## Prerequisites
 
-* Read the dev-tools technical architecture guide: `dev-tools/docs/architecture-tools.md`
+* Read the .ace/tools technical architecture guide: `.ace/tools/docs/architecture-tools.md`
 * Understanding of ATOM architecture pattern (Atoms, Molecules, Organisms, Ecosystems)
 * Familiarity with Ruby/RSpec testing patterns and VCR cassette management
 * Knowledge of previous test coverage improvements from tasks 153 and 154
@@ -49,7 +49,7 @@ Complete comprehensive test coverage for the `AgentCoordinationFoundation` organ
   > TEST: Coverage Analysis
   > Type: Pre-condition Check
   > Assert: Current test coverage gaps are identified and documented
-  > Command: cd dev-tools && bin/test spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
+  > Command: cd .ace/tools && bin/test spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
 * [x] Review existing test scenarios against source code functionality
 * [x] Plan any additional test scenarios needed for complete coverage
 
@@ -59,13 +59,13 @@ Complete comprehensive test coverage for the `AgentCoordinationFoundation` organ
   > TEST: Coverage Check
   > Type: Analysis
   > Assert: Coverage report shows comprehensive testing of all methods
-  > Command: cd dev-tools && bin/test spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
+  > Command: cd .ace/tools && bin/test spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
 - [x] Add any missing test scenarios for complete agent coordination coverage
 - [x] Verify all tests pass after any additions
   > TEST: Test Suite Verification
   > Type: Regression Check
   > Assert: All tests pass without errors after changes
-  > Command: cd dev-tools && bin/test
+  > Command: cd .ace/tools && bin/test
 
 ## Acceptance Criteria
 
@@ -87,6 +87,6 @@ Complete comprehensive test coverage for the `AgentCoordinationFoundation` organ
 
 - Source file: lib/coding_agent_tools/organisms/code_quality/agent_coordination_foundation.rb
 - Current test file: spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
-- Testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md
 - ATOM architecture: docs/architecture-tools.md
 - Previous tasks: v.0.3.0+task.153, v.0.3.0+task.154

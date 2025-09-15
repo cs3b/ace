@@ -13,18 +13,18 @@ dependencies: []
 _Command run:_
 
 ```bash
-find dev-tools/lib -name "*statistics*" -type f
+find .ace/tools/lib -name "*statistics*" -type f
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules/statistics_calculator.rb
+.ace/tools/lib/coding_agent_tools/molecules/statistics_calculator.rb
 ```
 
 ## Objective
 
-The StatisticsCalculator molecule in dev-tools is currently completely untested, contributing to low test coverage (61.08% overall). This molecule provides critical functionality for analyzing documentation dependencies and calculating various statistics, but has zero test coverage. We need comprehensive test coverage to ensure reliability and maintainability.
+The StatisticsCalculator molecule in .ace/tools is currently completely untested, contributing to low test coverage (61.08% overall). This molecule provides critical functionality for analyzing documentation dependencies and calculating various statistics, but has zero test coverage. We need comprehensive test coverage to ensure reliability and maintainability.
 
 ## Scope of Work
 
@@ -38,7 +38,7 @@ The StatisticsCalculator molecule in dev-tools is currently completely untested,
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/molecules/statistics_calculator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/statistics_calculator_spec.rb
 
 #### Modify
 
@@ -118,7 +118,7 @@ The StatisticsCalculator molecule in dev-tools is currently completely untested,
 
 ### Test Coverage Achieved
 
-Created comprehensive test file: `dev-tools/spec/coding_agent_tools/molecules/statistics_calculator_spec.rb` with 49 test cases covering:
+Created comprehensive test file: `.ace/tools/spec/coding_agent_tools/molecules/statistics_calculator_spec.rb` with 49 test cases covering:
 
 #### Public Methods Tested (9 methods)
 1. `calculate_basic_stats` - 4 test cases covering basic statistics, empty dependencies, minimal dependencies, and average calculation precision

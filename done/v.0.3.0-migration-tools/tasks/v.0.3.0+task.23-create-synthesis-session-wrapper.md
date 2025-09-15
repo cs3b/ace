@@ -14,13 +14,13 @@ dependencies: [v.0.3.0+task.18, v.0.3.0+task.21]
 _Command run:_
 
 ```bash
-ls -la dev-tools/exe/reflection-synthesize 2>/dev/null || echo "Executable created" | sed 's/^/    /'
+ls -la .ace/tools/exe/reflection-synthesize 2>/dev/null || echo "Executable created" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    -rwxr-xr-x  1 user  staff  1847 Dec  7 15:30 dev-tools/exe/reflection-synthesize
+    -rwxr-xr-x  1 user  staff  1847 Dec  7 15:30 .ace/tools/exe/reflection-synthesize
 ```
 
 ## Objective
@@ -29,7 +29,7 @@ Create a reflection synthesize command similar to code-review-synthesize that pr
 
 ## Scope of Work
 
-* Create dev-tools/exe/reflection-synthesize executable
+* Create .ace/tools/exe/reflection-synthesize executable
 * Implement CLI command for reflection synthesis
 * Support synthesis of multiple reflection notes
 * Provide formatted output options with timestamp-based naming
@@ -39,12 +39,12 @@ Create a reflection synthesize command similar to code-review-synthesize that pr
 
 #### Create
 
-* dev-tools/exe/reflection-synthesize ✅
+* .ace/tools/exe/reflection-synthesize ✅
 * lib/coding_agent_tools/cli/commands/reflection/synthesize.rb ✅
 * lib/coding_agent_tools/molecules/reflection/report_collector.rb ✅
 * lib/coding_agent_tools/molecules/reflection/timestamp_inferrer.rb ✅
 * lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb ✅
-* dev-handbook/templates/reflection-note-synthesizer/system.prompt.md ✅
+* .ace/handbook/templates/reflection-note-synthesizer/system.prompt.md ✅
 
 #### Modify
 
@@ -70,7 +70,7 @@ Create a reflection synthesize command similar to code-review-synthesize that pr
   > TEST: Pattern Understanding
   > Type: Analysis Check
   > Assert: Command structure understood
-  > Command: ls dev-tools/lib/coding_agent_tools/cli/commands/code/review_synthesize.rb
+  > Command: ls .ace/tools/lib/coding_agent_tools/cli/commands/code/review_synthesize.rb
 * [x] ✅ Design reflection synthesis workflow interface
 * [x] ✅ Plan timestamp-based output naming format
 
@@ -89,7 +89,7 @@ Create a reflection synthesize command similar to code-review-synthesize that pr
   > TEST: CLI Registration
   > Type: Integration Test
   > Assert: Command is registered and accessible
-  > Command: dev-tools/exe/reflection-synthesize --help 2>&1 | grep -c "Synthesize multiple reflection notes"
+  > Command: .ace/tools/exe/reflection-synthesize --help 2>&1 | grep -c "Synthesize multiple reflection notes"
 - [x] ✅ Create specialized system prompt for reflection analysis
 - [x] ✅ Add comprehensive error handling and debug support
 
@@ -112,9 +112,9 @@ Create a reflection synthesize command similar to code-review-synthesize that pr
 ## References
 
 * Dependencies: v.0.3.0+task.18, task.21 (CLI infrastructure tasks)
-* Target: dev-tools/exe/reflection-synthesize ✅
-* Pattern source: dev-tools/exe/code-review-synthesize
-* System prompt: dev-handbook/templates/reflection-note-synthesizer/system.prompt.md ✅
+* Target: .ace/tools/exe/reflection-synthesize ✅
+* Pattern source: .ace/tools/exe/code-review-synthesize
+* System prompt: .ace/handbook/templates/reflection-note-synthesizer/system.prompt.md ✅
 
 ## Command Usage
 
@@ -130,7 +130,7 @@ Options:
   --model=VALUE                     # LLM model to use (default: google:gemini-2.5-pro)
   --output=VALUE                    # Output file path (default: timestampfrom-timestampto-reflection-synthesis.md)
   --format=VALUE                    # Output format (default: markdown): (text/json/markdown)
-  --system-prompt=VALUE             # Custom system prompt file path (default: dev-handbook/templates/reflection-note-synthesizer/system.prompt.md)
+  --system-prompt=VALUE             # Custom system prompt file path (default: .ace/handbook/templates/reflection-note-synthesizer/system.prompt.md)
   --[no-]force                      # Force overwrite existing files without confirmation
   --[no-]dry-run                    # Show what would be done without executing synthesis
   --[no-]debug                      # Enable debug output for verbose error information

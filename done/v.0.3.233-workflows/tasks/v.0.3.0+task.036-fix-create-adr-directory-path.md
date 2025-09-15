@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── atom-house-rules.md
     ├── changelog.g.md
     ├── code-review
@@ -117,7 +117,7 @@ Fix the incorrect directory path reference in `create-adr.wf.md` Step 7, which c
 
 #### Modify
 
-* dev-handbook/workflow-instructions/create-adr.wf.md
+* .ace/handbook/workflow-instructions/create-adr.wf.md
 
 ## Phases
 
@@ -143,12 +143,12 @@ Fix the incorrect directory path reference in `create-adr.wf.md` Step 7, which c
   > TEST: Verify Path Update
   > Type: Action Validation
   > Assert: create-adr.wf.md Step 7 references correct docs/decisions/ path
-  > Command: bin/test --check-corrected-adr-path dev-handbook/workflow-instructions/create-adr.wf.md
+  > Command: bin/test --check-corrected-adr-path .ace/handbook/workflow-instructions/create-adr.wf.md
 * [x] Verify no other incorrect path references exist in the workflow
   > TEST: Complete Path Consistency Check
   > Type: Action Validation
   > Assert: All path references in create-adr.wf.md are correct
-  > Command: bin/test --check-all-paths dev-handbook/workflow-instructions/create-adr.wf.md
+  > Command: bin/test --check-all-paths .ace/handbook/workflow-instructions/create-adr.wf.md
 
 ## Acceptance Criteria
 
@@ -165,7 +165,7 @@ Fix the incorrect directory path reference in `create-adr.wf.md` Step 7, which c
 
 ## References
 
-* dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying incorrect path
+* .ace/taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying incorrect path
 * docs/decisions/ - Canonical ADR directory location
 * docs/architecture.md - Documentation of directory structure
-* dev-handbook/workflow-instructions/create-adr.wf.md - Target workflow file
+* .ace/handbook/workflow-instructions/create-adr.wf.md - Target workflow file

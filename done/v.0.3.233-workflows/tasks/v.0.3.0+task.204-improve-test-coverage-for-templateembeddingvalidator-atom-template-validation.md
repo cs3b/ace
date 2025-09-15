@@ -13,15 +13,15 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools/atoms/code_quality dev-tools/spec/coding_agent_tools/atoms/code_quality | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools/atoms/code_quality .ace/tools/spec/coding_agent_tools/atoms/code_quality | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/code_quality
+    .ace/tools/lib/coding_agent_tools/atoms/code_quality
     └── template_embedding_validator.rb
-    dev-tools/spec/coding_agent_tools/atoms/code_quality
+    .ace/tools/spec/coding_agent_tools/atoms/code_quality
     └── template_embedding_validator_spec.rb
 ```
 
@@ -44,7 +44,7 @@ Improve test coverage for the TemplateEmbeddingValidator atom by adding addition
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb
 
 #### Delete
 
@@ -107,6 +107,6 @@ Improve test coverage for the TemplateEmbeddingValidator atom by adding addition
 
 ## References
 
-- `dev-tools/lib/coding_agent_tools/atoms/code_quality/template_embedding_validator.rb` - Main implementation
-- `dev-tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb` - Existing test suite
+- `.ace/tools/lib/coding_agent_tools/atoms/code_quality/template_embedding_validator.rb` - Main implementation
+- `.ace/tools/spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb` - Existing test suite
 - ATOM architecture pattern documentation

@@ -2,7 +2,7 @@
 
 **Archive Date**: 2025-07-25 16:54:12
 **Reflections Archived**: 6
-**Archive Directory**: ./dev-taskflow/current/v.0.3.0-workflows/reflections/archived/synthesis-20250725-165412
+**Archive Directory**: ./.ace/taskflow/current/v.0.3.0-workflows/reflections/archived/synthesis-20250725-165412
 
 ## Archived Reflections
 

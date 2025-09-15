@@ -2,14 +2,14 @@
 synthesis_timestamp: 2025-07-03T23:24:15Z
 synthesis_model: claude-sonnet-4-20250514
 reports_synthesized: 2
-session_dir: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows
+session_dir: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows
 ---
 
 # Handbook Workflow System Review Synthesis
 
 ## 1. Methodology
 
-This synthesis analyzes two comprehensive reviews of the dev-handbook workflow system implementation: one from Google Gemini 2.5 Pro and one from Anthropic Claude Opus. Both reviews evaluated the same comprehensive diff introducing 18 workflow instructions and associated templates. The analysis focuses on identifying consensus issues, unique insights, and creating a unified improvement plan for the AI-assisted development workflow system.
+This synthesis analyzes two comprehensive reviews of the .ace/handbook workflow system implementation: one from Google Gemini 2.5 Pro and one from Anthropic Claude Opus. Both reviews evaluated the same comprehensive diff introducing 18 workflow instructions and associated templates. The analysis focuses on identifying consensus issues, unique insights, and creating a unified improvement plan for the AI-assisted development workflow system.
 
 ## 2. Consensus Analysis
 
@@ -67,21 +67,21 @@ Both reviews identified systematic issues around:
 
 ### 🔴 Critical Issues (Must fix before system is usable)
 
-- [ ] **Missing Integration Guide**: Create `dev-handbook/guides/core-development-lifecycle.g.md` - Documents end-to-end workflow orchestration from project init to release - Found by both reviewers
+- [ ] **Missing Integration Guide**: Create `.ace/handbook/guides/core-development-lifecycle.g.md` - Documents end-to-end workflow orchestration from project init to release - Found by both reviewers
 - [ ] **Broken Template Link**: Fix `create-user-docs.wf.md` template embedding/reference - Workflow currently unusable - Found by Google Pro
-- [ ] **Deprecated Tool Dependency**: Investigate and resolve `dev-tools/exe-old/` dependency in `initialize-project-structure.wf.md` - Security/stability risk - Found by Google Pro
+- [ ] **Deprecated Tool Dependency**: Investigate and resolve `.ace/tools/exe-old/` dependency in `initialize-project-structure.wf.md` - Security/stability risk - Found by Google Pro
 - [ ] **Template Path References**: Audit and resolve all template path references across 17+ workflows - System integrity issue - Found by Claude Opus
 
 ### 🟡 High Priority (Should fix before production use)
 
-- [ ] **AI Agent Integration Guide**: Create `dev-handbook/guides/ai-agent-integration.g.md` - Documents command wrapper patterns and AI-specific guidance - Found by both reviewers
+- [ ] **AI Agent Integration Guide**: Create `.ace/handbook/guides/ai-agent-integration.g.md` - Documents command wrapper patterns and AI-specific guidance - Found by both reviewers
 - [ ] **Template Management Strategy**: Extract embedded templates to central location and standardize referencing - Maintenance scalability issue - Found by Claude Opus
-- [ ] **Tool Dependencies Documentation**: Document all `bin/` commands and `dev-tools` requirements with setup guide - Deployment/onboarding blocker - Found by both reviewers
+- [ ] **Tool Dependencies Documentation**: Document all `bin/` commands and `.ace/tools` requirements with setup guide - Deployment/onboarding blocker - Found by both reviewers
 - [ ] **Cross-Reference Enhancement**: Add missing workflow cross-references (work-on-task → commit, etc.) - Navigation and discoverability - Found by both reviewers
 
 ### 🟢 Medium Priority (Consider fixing)
 
-- [ ] **Workflow Orchestration Guide**: Create `dev-handbook/guides/workflow-orchestration.g.md` with decision trees - Enhanced AI agent autonomy - Found by Claude Opus
+- [ ] **Workflow Orchestration Guide**: Create `.ace/handbook/guides/workflow-orchestration.g.md` with decision trees - Enhanced AI agent autonomy - Found by Claude Opus
 - [ ] **Template Standardization**: Standardize template referencing language across all workflows - Consistency improvement - Found by Google Pro
 - [ ] **Error Recovery Procedures**: Add workflow failure handling and recovery guidance - Robustness improvement - Found by Claude Opus
 - [ ] **Quick Reference Guide**: Create workflow summary and troubleshooting checklist - Usability enhancement - Found by Claude Opus

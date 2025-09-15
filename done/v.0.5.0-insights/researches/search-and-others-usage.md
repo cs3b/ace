@@ -1,4 +1,4 @@
-history | grep task-manager > dev-taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md
+history | grep task-manager > .ace/taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md
 search "bin/gc" --hidden
 search --hidden "model: claude"cd
 search --hidden "model: claude"
@@ -23,7 +23,7 @@ search "bin/tnid"
 search "bin/tnid" --search-root /Users/michalczyz/Projects/CodingAgent/handbook-meta
 search "bin/tnid" --search-root
 search "bin/tnid" --search-root ../../
-search "bin/tn" --exclude "dev-taskflow/done/**/*,dev-taskflow/current/*/tasks/*"
+search "bin/tn" --exclude ".ace/taskflow/done/**/*,dev-taskflow/current/*/tasks/*"
 search "bin/tn" -t auto
 search "bin/tn" --file --content
 search "bin/tn" --hybrid
@@ -31,14 +31,14 @@ search "bin/tn" --file
 search "bin/tn" --fole
 search "bin/tn" --content
 capture-it "agent - that will perform research about features we should implement"
-git-commit dev-taskflow/backlog/ideas/20250803-1342-research-best-practices-repository.md dev-taskflow/backlog/ideas/20250803-1419-backlog-audio-assistant.md
+git-commit .ace/taskflow/backlog/ideas/20250803-1342-research-best-practices-repository.md .ace/taskflow/backlog/ideas/20250803-1419-backlog-audio-assistant.md
 capture-it "in context of capture-it draft-task plan-task review-task - how to make them more enganging, talk on the better layer of abstraction - also improve cascade (or even reverse review) on anything new, decisions and research, to keeep the whole task in sync. Also important tho think thourougly the default propositions"
 capture-it "in context of draft-task.wf plan-task.wf review.task.wf - we should improve the way we research the repository, and research the best practice (including our own guides)"
 capture-it "in context of capture-it cmd - we stil lhave in filestystem: ideas_manager - we need to make deep search for filenames and content and upated it all to capture-it or capture_it" --debug
 capture-it "in context of capture-it cmd - we stil lhave in filestystem: ideas_manager - we need to make deep search for filenames and content and upated it all to capture-it or capture_it" --commit
 capture-it "in context of capture-it cmd - we stil lhave in filestystem: ideas_manager - we need to make deep search for filenames and content and upated it all to capture-it or capture_it"
-git-commit dev-taskflow/backlog/ideas/monorepo-for-all-the-vue-apps-research.md
-cp /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md ./
+git-commit .ace/taskflow/backlog/ideas/monorepo-for-all-the-vue-apps-research.md
+cp /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md ./
 brew search openjdk
 gcam current/v.0.1.0-foundation/researches/pwa-cache.md
 exe/llm-query lmstudio "What are the strategies to compress rules, prompts for llm" --output docs-project/backlog/researches/compressiong-prompt.md
@@ -111,12 +111,12 @@ find $d -type f -exec wc -w {} + | tail -n1
 find . -type f -exec wc -w {} + | tail -n1
 for file in (find docs-dev -depth)
 find /opt/homebrew -name "asdf.sh" 2>/dev/null
-history | grep find >> dev-taskflow/current/v.0.5.0-insights/researches/search-and-others-usage.md
-history | grep search > dev-taskflow/current/v.0.5.0-insights/researches/search-and-others-usage.md
-history | grep task-manager > dev-taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md
-git -C dev-tools  ls-files | grep lib/
-tree dev-tools/**/* | grep ideas
-grep -r 'status:' dev-taskflow/current/v.0.4.0-replanning/tasks/**/*.md
+history | grep find >> .ace/taskflow/current/v.0.5.0-insights/researches/search-and-others-usage.md
+history | grep search > .ace/taskflow/current/v.0.5.0-insights/researches/search-and-others-usage.md
+history | grep task-manager > .ace/taskflow/current/v.0.5.0-insights/researches/task-manager-usage.md
+git -C .ace/tools  ls-files | grep lib/
+tree .ace/tools/**/* | grep ideas
+grep -r 'status:' .ace/taskflow/current/v.0.4.0-replanning/tasks/**/*.md
 git status | grep current | rm
 git status | grep current
 rspec --help | grep fast
@@ -124,13 +124,13 @@ grep -C 5 "Error: undefined"  ../tmp/test.output.txt
 bin/test --format documentation | grep -C 7 "Error: undefined method"
 bin/test --format documentation | grep -C "Error: undefined method"
 bin/test | grep atoms
-cat dev-taskflow/current/v.0.3.0-workflows/code_review/code-dev-handbook---20250724-173954/prompt.md | grep "document path='"
-cat dev-taskflow/current/v.0.3.0-workflows/code_review/code-dev-handbook---20250724-173954/input.xml | grep "document path='"
+cat .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-handbook---20250724-173954/prompt.md | grep "document path='"
+cat .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-handbook---20250724-173954/input.xml | grep "document path='"
 ps aux | grep firebase
 ps aux | grep 9323
 history | grep worktree
 echo $PATH | grep exe
-echo $PATH | grep dev-tools
+echo $PATH | grep .ace/tools
 echo $PATH | grep tools-meta
 bin/tal | grep pending | sort
 bin/tal | grep pending

@@ -6,7 +6,7 @@ estimate: 4h
 dependencies: []
 ---
 
-# Fix integrate command flexible dev-taskflow setup and template errors
+# Fix integrate command flexible .ace/taskflow setup and template errors
 
 ## Behavioral Specification
 
@@ -16,7 +16,7 @@ dependencies: []
 - Users can run `coding-agent-tools integrate claude --init-project` successfully regardless of project structure
 - The command gracefully handles missing GitHub repositories without failing the entire integration
 - Project initialization completes without Ruby template processing errors
-- Clear feedback about what's being created (submodule vs directory) for dev-taskflow
+- Clear feedback about what's being created (submodule vs directory) for .ace/taskflow
 
 ### Interface Contract
 
@@ -26,7 +26,7 @@ coding-agent-tools integrate claude --init-project
 ```
 
 **Expected Behavior:**
-- Creates project structure with dev-taskflow as either:
+- Creates project structure with .ace/taskflow as either:
   - Git submodule (when repository exists and is accessible)
   - Regular directory (when repository doesn't exist or can't be cloned)
 - Continues integration even if submodule setup fails
@@ -36,8 +36,8 @@ coding-agent-tools integrate claude --init-project
 ```
 🚀 Starting Claude integration with project initialization...
 ✓ Checking submodules...
-  → dev-taskflow missing or not initialized, setting up...
-  → Could not setup dev-taskflow as submodule, creating as directory
+  → .ace/taskflow missing or not initialized, setting up...
+  → Could not setup .ace/taskflow as submodule, creating as directory
 ✓ Integrating agents...
 ✓ Integrating commands...
 ✓ Creating project structure...
@@ -52,16 +52,16 @@ coding-agent-tools integrate claude --init-project
 
 ### Success Criteria
 
-- [ ] Integration command completes successfully when dev-taskflow repository doesn't exist
+- [ ] Integration command completes successfully when .ace/taskflow repository doesn't exist
 - [ ] No "no implicit conversion of Symbol into Integer" errors during template processing
-- [ ] dev-taskflow is always available (as submodule OR directory) after command runs
+- [ ] .ace/taskflow is always available (as submodule OR directory) after command runs
 - [ ] All project documentation files (what-do-we-build.md, architecture.md, blueprint.md) are generated
-- [ ] Command provides clear feedback about what type of setup was used for dev-taskflow
+- [ ] Command provides clear feedback about what type of setup was used for .ace/taskflow
 - [ ] Integration continues and completes even if individual components fail
 
 ## Objective
 
-Implement flexible dev-taskflow setup that works as either a Git submodule or regular directory, and fix ERB template processing errors to ensure successful project initialization regardless of repository availability.
+Implement flexible .ace/taskflow setup that works as either a Git submodule or regular directory, and fix ERB template processing errors to ensure successful project initialization regardless of repository availability.
 
 ## Scope of Work
 
@@ -69,13 +69,13 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 - Add fallback to directory creation when submodule setup fails
 - Initialize all required template variables with safe defaults
 - Improve error handling and user feedback throughout the process
-- Ensure dev-taskflow is always available after integration
+- Ensure .ace/taskflow is always available after integration
 
 ### Deliverables
 
 #### Modify
 
-- `dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb`
   - Update `check_and_setup_submodules` method for flexible handling
   - Enhance `setup_submodule` method with proper error recovery
   - Fix `detect_project_info` to initialize all template variables
@@ -103,16 +103,16 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 ## File Modifications
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb`
   - **Changes to `check_and_setup_submodules` (lines 189-211):**
-    - Add special handling for dev-taskflow
+    - Add special handling for .ace/taskflow
     - Check if directory exists with content before attempting submodule
-    - Continue integration if dev-taskflow setup fails
+    - Continue integration if .ace/taskflow setup fails
   
   - **Changes to `setup_submodule` (lines 213-316):**
     - Return success/failure status
     - Improve error handling and recovery
-    - Add fallback to directory creation for dev-taskflow
+    - Add fallback to directory creation for .ace/taskflow
   
   - **Changes to `detect_project_info` (lines 971-1016):**
     - Initialize `info[:key_features] = []`
@@ -122,7 +122,7 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
     - Initialize `info[:project_directories] = []`
   
   - **Changes to `create_project_structure` (lines 915-926):**
-    - Check if dev-taskflow exists AND is writable
+    - Check if .ace/taskflow exists AND is writable
     - Create structure only if needed
 
 ## Implementation Plan
@@ -140,8 +140,8 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 
 - [x] **Update check_and_setup_submodules method**:
   ```ruby
-  # Around line 194, add special handling for dev-taskflow
-  if name == "dev-taskflow"
+  # Around line 194, add special handling for .ace/taskflow
+  if name == ".ace/taskflow"
     if submodule_path.exist? && !Dir.empty?(submodule_path.to_s)
       log "  ✓ #{name} exists as directory"
       next
@@ -164,7 +164,7 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
       FileUtils.mkdir_p(submodule_path + "done") unless @dry_run
     end
   else
-    # Regular submodule handling for dev-handbook and dev-tools
+    # Regular submodule handling for .ace/handbook and .ace/tools
     if submodule_path.exist? && (submodule_path + ".git").exist? && !Dir.empty?(submodule_path.to_s)
       log "  ✓ #{name} present"
     else
@@ -216,16 +216,16 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 - [x] **Update create_project_structure for flexibility**:
   ```ruby
   def create_project_structure
-    taskflow_dir = @project_root + "dev-taskflow"
+    taskflow_dir = @project_root + ".ace/taskflow"
     
     # Create structure if it doesn't exist OR if it exists but is empty
     if !taskflow_dir.exist? || (taskflow_dir.exist? && Dir.empty?(taskflow_dir.to_s))
-      log "  → Creating dev-taskflow directory structure"
+      log "  → Creating .ace/taskflow directory structure"
       FileUtils.mkdir_p(taskflow_dir + "backlog")
       FileUtils.mkdir_p(taskflow_dir + "current")
       FileUtils.mkdir_p(taskflow_dir + "done")
     else
-      log "  → dev-taskflow structure already exists"
+      log "  → .ace/taskflow structure already exists"
     end
     
     docs_dir = @project_root + "docs"
@@ -254,7 +254,7 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 ### Behavioral Requirement Fulfillment
 - [x] Command handles missing repositories gracefully
 - [x] Templates process without Ruby errors
-- [x] dev-taskflow is always available after integration
+- [x] .ace/taskflow is always available after integration
 - [x] Clear feedback about setup method used
 
 ### Implementation Quality Assurance
@@ -265,7 +265,7 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 
 ### Testing Validation
 - [ ] Test with non-existent GitHub repository
-- [ ] Test with existing dev-taskflow directory
+- [ ] Test with existing .ace/taskflow directory
 - [ ] Test with partial submodule state
 - [ ] Test template generation with minimal project info
 - [ ] Verify all documentation files are created
@@ -273,13 +273,13 @@ Implement flexible dev-taskflow setup that works as either a Git submodule or re
 ## Out of Scope
 
 - ❌ Changing the overall integration architecture
-- ❌ Modifying other submodules (dev-handbook, dev-tools) handling
+- ❌ Modifying other submodules (dev-handbook, .ace/tools) handling
 - ❌ Creating new command-line options
 - ❌ Changing template content or structure
 
 ## References
 
 - Error report from user attempting `coding-agent-tools integrate claude --init-project`
-- Current implementation: `dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb`
-- Template files: `dev-handbook/.meta/tpl/project-structure/docs/*.md.erb`
-- Configuration: `dev-tools/config/integration.yml`
+- Current implementation: `.ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb`
+- Template files: `.ace/handbook/.meta/tpl/project-structure/docs/*.md.erb`
+- Configuration: `.ace/tools/config/integration.yml`

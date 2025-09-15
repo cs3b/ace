@@ -320,5 +320,5 @@ Enable developers to use SST's OpenCode CLI through the unified llm-query interf
 - OpenCode CLI documentation: `opencode --help` output
 - SST OpenCode repository: https://github.com/sst/opencode
 - Claude Code integration pattern: v.0.5.0+task.046
-- Existing provider implementations in dev-tools
+- Existing provider implementations in .ace/tools
 - User request for OpenCode integration with llm-query

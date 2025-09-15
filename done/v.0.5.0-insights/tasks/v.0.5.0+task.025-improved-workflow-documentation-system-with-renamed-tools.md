@@ -14,7 +14,7 @@ dependencies: []
 **Issue**: Need for better organization and context loading in documentation workflows, with clear separation of concerns between tools documentation and handbook documentation.
 
 **Key Behavioral Requirements**:
-- Tools documentation workflow should load dev-tools context preset
+- Tools documentation workflow should load .ace/tools context preset
 - Handbook documentation workflow should focus on README maintenance
 - Both workflows need proper Claude integration
 
@@ -32,15 +32,15 @@ Restructured documentation workflows with proper context loading and created com
 ### Deliverables
 
 #### Create
-- `dev-handbook/.meta/wfi/update-handbook-docs.wf.md` - New handbook documentation workflow
+- `.ace/handbook/.meta/wfi/update-handbook-docs.wf.md` - New handbook documentation workflow
 - `.claude/commands/update-handbook-docs.md` - Claude command for handbook docs
 - `.claude/commands/update-tools-docs.md` - Claude command for tools docs
-- `dev-handbook/.integrations/claude/commands/_generated/update-handbook-docs.md` - Generated command
-- `dev-handbook/.integrations/claude/commands/_generated/update-tools-docs.md` - Generated command
+- `.ace/handbook/.integrations/claude/commands/_generated/update-handbook-docs.md` - Generated command
+- `.ace/handbook/.integrations/claude/commands/_generated/update-tools-docs.md` - Generated command
 
 #### Modify
-- Renamed `dev-handbook/.meta/wfi/update-tools-documentation.wf.md` to `update-tools-docs.wf.md`
-- Added `context --preset dev-tools` to the renamed workflow
+- Renamed `.ace/handbook/.meta/wfi/update-tools-documentation.wf.md` to `update-tools-docs.wf.md`
+- Added `context --preset .ace/tools` to the renamed workflow
 
 #### Delete
 - Original `update-tools-documentation.wf.md` (renamed)
@@ -59,8 +59,8 @@ Restructured documentation workflows with proper context loading and created com
 Updates made:
 1. **Tools Documentation Workflow**:
    - Renamed to `update-tools-docs.wf.md` for brevity
-   - Added `context --preset dev-tools` for proper context loading
-   - Maintains focus on `dev-tools/docs/tools.md`
+   - Added `context --preset .ace/tools` for proper context loading
+   - Maintains focus on `.ace/tools/docs/tools.md`
 
 2. **Handbook Documentation Workflow**:
    - Comprehensive workflow for maintaining README files
@@ -72,7 +72,7 @@ Updates made:
 
 ```bash
 # Verified workflow files
-ls -la dev-handbook/.meta/wfi/update-*.wf.md
+ls -la .ace/handbook/.meta/wfi/update-*.wf.md
 
 # Confirmed Claude integration
 handbook claude integrate
@@ -85,7 +85,7 @@ ls -la .claude/commands/update-*.md
 
 - Commits:
   - `975990f` - refactor(workflows): rename and document workflow commands (main)
-  - `541fdc9` - refactor(workflows): rename and improve documentation workflows (dev-handbook)
+  - `541fdc9` - refactor(workflows): rename and improve documentation workflows (.ace/handbook)
   - `e94552f` - chore: update submodule references
-- Related workflows: All meta workflows in `dev-handbook/.meta/wfi/`
+- Related workflows: All meta workflows in `.ace/handbook/.meta/wfi/`
 - Follow-up needed: None

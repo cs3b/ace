@@ -158,7 +158,7 @@ Improve the reliability and maintainability of the code-review command by adding
   - Remove: register_code_review_prepare_commands method call
 - docs/tools.md
   - Remove: All references to code-review-prepare
-- dev-handbook/workflow-instructions/review-code.wf.md
+- .ace/handbook/workflow-instructions/review-code.wf.md
   - Remove: References to code-review-prepare if any remain
 
 ## Risk Assessment
@@ -190,7 +190,7 @@ Improve the reliability and maintainability of the code-review command by adding
   > TEST: Coverage Analysis
   > Type: Pre-condition Check
   > Assert: Current coverage baseline documented
-  > Command: cd dev-tools && bundle exec rspec --format documentation 2>/dev/null | grep -E "examples?, .* failures?"
+  > Command: cd .ace/tools && bundle exec rspec --format documentation 2>/dev/null | grep -E "examples?, .* failures?"
 
 * [ ] Research VCR compatibility issues with Ruby 3.4.2
 * [ ] Identify all references to code-review-prepare command
@@ -204,7 +204,7 @@ Improve the reliability and maintainability of the code-review command by adding
   > TEST: Command Tests Pass
   > Type: Action Validation
   > Assert: All new tests pass with >80% coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/code/review_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/code/review_spec.rb
 
 - [ ] Write unit tests for ReviewPresetManager molecule
 - [ ] Write unit tests for ContextIntegrator molecule
@@ -232,7 +232,7 @@ Improve the reliability and maintainability of the code-review command by adding
   > TEST: Absolute Paths Used
   > Type: Action Validation
   > Assert: LLM queries use absolute paths
-  > Command: grep -r "llm-query" dev-tools/lib --include="*.rb" | grep -v "File.expand_path\|absolute"
+  > Command: grep -r "llm-query" .ace/tools/lib --include="*.rb" | grep -v "File.expand_path\|absolute"
 
 #### Phase 4: Cleanup (1h)
 - [ ] Delete all debug_*.rb files from project root
@@ -257,7 +257,7 @@ Improve the reliability and maintainability of the code-review command by adding
 
 ## References
 
-- Code review report: dev-taskflow/current/v.0.5.0-insights/code-review/review-20250822-015517/cr-google-gemini-2.0-flash-exp.md
-- Code review report: dev-taskflow/current/v.0.5.0-insights/code-review/review-20250822-015517/cr-gpro.md
+- Code review report: .ace/taskflow/current/v.0.5.0-insights/code-review/review-20250822-015517/cr-google-gemini-2.0-flash-exp.md
+- Code review report: .ace/taskflow/current/v.0.5.0-insights/code-review/review-20250822-015517/cr-gpro.md
 - Original implementation: v.0.5.0+task.028-redesign-code-review-command-with-preset-based-configuration.md
 - Multi-preset fix: v.0.5.0+task.033-fix-multi-preset-context-loading-in-code-review.md

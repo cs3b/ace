@@ -145,7 +145,7 @@ After thorough review of the existing codebase, significant reusable components 
 ## Technical Approach
 
 ### Architecture Pattern
-The search tool will follow the ATOM architecture pattern established in the dev-tools codebase:
+The search tool will follow the ATOM architecture pattern established in the .ace/tools codebase:
 - **Atoms**: Low-level search executors (ripgrep wrapper, fd wrapper, git wrapper), pattern matchers, result parsers
 - **Molecules**: DWIM heuristics engine, scope enumerator, result formatter, fzf integrator
 - **Organisms**: Search orchestrator coordinating all search operations across repositories
@@ -214,14 +214,14 @@ Based on review of existing codebase:
 ## File Modifications
 
 ### Create (New Components Only - All in Search Namespace)
-- dev-tools/lib/coding_agent_tools/atoms/search/
+- .ace/tools/lib/coding_agent_tools/atoms/search/
   - ripgrep_executor.rb - Wrapper for ripgrep using ShellCommandExecutor
   - fd_executor.rb - Wrapper for fd using ShellCommandExecutor
   - pattern_analyzer.rb - Analyze patterns for DWIM mode selection
   - result_parser.rb - Parse ripgrep/fd output into structured format
   - tool_availability_checker.rb - Check for ripgrep/fd/fzf availability
 
-- dev-tools/lib/coding_agent_tools/molecules/search/
+- .ace/tools/lib/coding_agent_tools/molecules/search/
   - dwim_heuristics_engine.rb - Intelligent mode selection based on pattern
   - git_scope_enumerator.rb - Enumerate files based on git scopes (staged, tracked, changed)
   - search_result_formatter.rb - Format search results for different output modes
@@ -231,41 +231,41 @@ Based on review of existing codebase:
   - result_aggregator.rb - Aggregate results across multiple repositories
   - stream_processor.rb - Process streaming output from external tools
 
-- dev-tools/lib/coding_agent_tools/organisms/search/
+- .ace/tools/lib/coding_agent_tools/organisms/search/
   - search_orchestrator.rb - Main search coordination logic
   - unified_searcher.rb - Coordinate searches across repos using MultiRepoCoordinator
 
-- dev-tools/lib/coding_agent_tools/models/search/
+- .ace/tools/lib/coding_agent_tools/models/search/
   - search_result.rb - Data model for search results
   - search_options.rb - Data model for search configuration
   - search_preset.rb - Data model for search presets
 
-- dev-tools/lib/coding_agent_tools/cli/commands/search.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/search.rb
   - Main CLI command implementation
 
-- dev-tools/exe/search
+- .ace/tools/exe/search
   - Executable wrapper script
 
-- dev-tools/spec/coding_agent_tools/atoms/search/*_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/search/*_spec.rb
   - Unit tests for all search atoms
 
-- dev-tools/spec/coding_agent_tools/molecules/search/*_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/search/*_spec.rb
   - Unit tests for all search molecules
 
-- dev-tools/spec/coding_agent_tools/organisms/search/*_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/search/*_spec.rb
   - Integration tests for search orchestrator
 
-- dev-tools/spec/coding_agent_tools/models/search/*_spec.rb
+- .ace/tools/spec/coding_agent_tools/models/search/*_spec.rb
   - Unit tests for search models
 
-- dev-tools/spec/coding_agent_tools/cli/commands/search_spec.rb
+- .ace/tools/spec/coding_agent_tools/cli/commands/search_spec.rb
   - CLI command tests
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/cli.rb
+- .ace/tools/lib/coding_agent_tools/cli.rb
   - Register new search command
 
-- dev-tools/lib/coding_agent_tools/organisms/tool_lister.rb
+- .ace/tools/lib/coding_agent_tools/organisms/tool_lister.rb
   - Add search tool to categorization
 
 ## Test Case Planning
@@ -351,7 +351,7 @@ Based on review of existing codebase:
 ### Functionality Verification (Tested 2025-01-30)
 - ✅ **Project Root Detection**: `search --list-repos` shows all repositories
 - ✅ **DWIM Mode Selection**: Automatically chooses appropriate tools based on pattern
-- ✅ **Multi-Repository Support**: Searches across main, dev-handbook, dev-taskflow, dev-tools
+- ✅ **Multi-Repository Support**: Searches across main, dev-handbook, dev-taskflow, .ace/tools
 - ✅ **Performance**: Startup <300ms, search results appear immediately
 - ✅ **Git Integration**: Repository detection and multi-repo coordination working
 - ✅ **JSON Output**: `--json` flag produces structured output
@@ -482,7 +482,7 @@ Based on review of existing codebase:
 - [ ] Create user documentation with examples ⚠️ PARTIAL
   > TEST: Documentation ⚠️ BASIC EXISTS
   > Type: Documentation Enhancement
-  > Command: User docs in dev-tools/docs/tools.md but could be enhanced
+  > Command: User docs in .ace/tools/docs/tools.md but could be enhanced
 
 - [x] Validate performance benchmarks ✅ COMPLETED
   > TEST: Performance ✅ PASSED
@@ -506,7 +506,7 @@ Based on review of existing codebase:
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/20250809-1022-unified-project-aware-search-spec.md
+- Source idea: .ace/taskflow/backlog/ideas/20250809-1022-unified-project-aware-search-spec.md
 - Similar tools: ripgrep, fd, git grep, ack, ag
 - Integration examples: fzf.vim, telescope.nvim
 - ATOM Architecture: docs/architecture-tools.md

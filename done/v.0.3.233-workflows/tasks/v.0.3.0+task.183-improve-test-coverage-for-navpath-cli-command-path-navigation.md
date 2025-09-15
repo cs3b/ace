@@ -23,7 +23,7 @@ Analyze and improve test coverage for the NavPath CLI command to ensure comprehe
 
 #### Status
 
-- dev-tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb (already exists with comprehensive coverage)
+- .ace/tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb (already exists with comprehensive coverage)
 
 ## Implementation Plan
 
@@ -38,7 +38,7 @@ Analyze and improve test coverage for the NavPath CLI command to ensure comprehe
   > TEST: Verify existing tests
   > Type: Pre-condition Check
   > Assert: Tests exist and run successfully
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/nav/path_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/nav/path_spec.rb
 - [x] Analyze test coverage completeness
 - [x] Determine if additional test scenarios are needed
 

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── README.md
 ├── ai-agent-integration.g.md
 ├── atom-house-rules.md
@@ -77,11 +77,11 @@ Create a guide documenting the philosophy and approach for release codenames men
 
 #### Create
 
-* dev-handbook/guides/project-management/release-codenames.g.md
+* .ace/handbook/guides/project-management/release-codenames.g.md
 
 #### Modify
 
-* dev-handbook/guides/project-management/README.md (add reference to new guide)
+* .ace/handbook/guides/project-management/README.md (add reference to new guide)
 
 #### Delete
 
@@ -112,7 +112,7 @@ Create a guide documenting the philosophy and approach for release codenames men
   > TEST: Verify Guide Creation
   > Type: Action Validation
   > Assert: Guide file created with comprehensive codename philosophy
-  > Command: bin/test --check-guide-completeness dev-handbook/guides/project-management/release-codenames.g.md
+  > Command: bin/test --check-guide-completeness .ace/handbook/guides/project-management/release-codenames.g.md
 * [x] Include examples of good codename practices and selection criteria
 * [x] Update project management guides README to reference new guide
   > TEST: Verify README Reference
@@ -136,6 +136,6 @@ Create a guide documenting the philosophy and approach for release codenames men
 ## References
 
 * Review finding: "Create Release Codenames Guide: The draft-release workflow mentions codenames; a guide on the naming philosophy would be helpful"
-* Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
+* Source: .ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Related workflow: draft-release.wf.md
 * Priority: Nice-to-have (not blocking any workflows)

@@ -22,7 +22,7 @@ Enhance the existing `ErrorReporter` molecule to provide intelligent, self-heali
 
 ### 1. Enhance Existing ErrorReporter
 
-**Update `dev-tools/lib/coding_agent_tools/error_reporter.rb`:**
+**Update `.ace/tools/lib/coding_agent_tools/error_reporter.rb`:**
 ```ruby
 module CodingAgentTools
   class ErrorReporter
@@ -54,7 +54,7 @@ end
 
 **New Molecules:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/molecules/model_suggester.rb
+# .ace/tools/lib/coding_agent_tools/molecules/model_suggester.rb
 class ModelSuggester
   def suggest_models(requested)
     available = fetch_available_models
@@ -68,7 +68,7 @@ class ModelSuggester
   end
 end
 
-# dev-tools/lib/coding_agent_tools/molecules/path_suggester.rb
+# .ace/tools/lib/coding_agent_tools/molecules/path_suggester.rb
 class PathSuggester
   def suggest_paths(invalid_path)
     dirname = File.dirname(invalid_path)
@@ -89,7 +89,7 @@ end
 
 **Update all executables to use enhanced error reporting:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/cli/base.rb
+# .ace/tools/lib/coding_agent_tools/cli/base.rb
 module CodingAgentTools::CLI
   class Base < Dry::CLI::Command
     def call(**options)

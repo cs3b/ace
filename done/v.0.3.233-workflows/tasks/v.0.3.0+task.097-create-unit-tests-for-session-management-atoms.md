@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/atoms/code | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/atoms/code | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms/code
+    .ace/tools/lib/coding_agent_tools/atoms/code
     ├── directory_creator.rb
     ├── file_content_reader.rb
     ├── session_name_builder.rb
@@ -42,8 +42,8 @@ Create comprehensive unit tests for the Session Management Atom classes (Session
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb
-- dev-tools/spec/coding_agent_tools/atoms/code/session_timestamp_generator_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb
+- .ace/tools/spec/coding_agent_tools/atoms/code/session_timestamp_generator_spec.rb
 
 #### Modify
 
@@ -68,7 +68,7 @@ Create comprehensive unit tests for the Session Management Atom classes (Session
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All public and private methods are identified with their expected behaviors
-  > Command: cd dev-tools && bundle exec rspec --dry-run spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec --dry-run spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb
 - [x] Analyze SessionTimestampGenerator implementation to understand timestamp formatting requirements
 - [x] Research RSpec testing patterns for time-based functionality and mocking strategies
 
@@ -79,13 +79,13 @@ Create comprehensive unit tests for the Session Management Atom classes (Session
   > TEST: Verify Build Method Functionality
   > Type: Unit Test Validation
   > Assert: All build() method scenarios pass including edge cases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb -t build
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb -t build
 - [x] Test build_prefix() method without timestamp scenarios
 - [x] Test sanitize_target() private method with edge cases (slashes, spaces, special chars, length limits)
   > TEST: Verify Sanitization Logic
   > Type: Edge Case Validation  
   > Assert: All sanitization scenarios handle edge cases correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb -t sanitize
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_name_builder_spec.rb -t sanitize
 - [x] Create SessionTimestampGenerator test file with time mocking
 - [x] Test generate() method returns correct YYYYMMDD-HHMMSS format
 - [x] Test generate_iso8601() returns proper ISO8601 format
@@ -93,12 +93,12 @@ Create comprehensive unit tests for the Session Management Atom classes (Session
   > TEST: Verify Timestamp Generation
   > Type: Time-based Test Validation
   > Assert: All timestamp methods generate expected formats
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_timestamp_generator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code/session_timestamp_generator_spec.rb
 - [x] Run complete test suite to ensure no regressions
   > TEST: Full Test Suite Validation
   > Type: Regression Check
   > Assert: All existing tests continue to pass with new test additions
-  > Command: cd dev-tools && bundle exec rspec
+  > Command: cd .ace/tools && bundle exec rspec
 
 ## Acceptance Criteria
 
@@ -116,7 +116,7 @@ Create comprehensive unit tests for the Session Management Atom classes (Session
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/atoms/code/session_name_builder.rb
-- dev-tools/lib/coding_agent_tools/atoms/code/session_timestamp_generator.rb
-- dev-tools/spec/spec_helper.rb
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/tools/lib/coding_agent_tools/atoms/code/session_name_builder.rb
+- .ace/tools/lib/coding_agent_tools/atoms/code/session_timestamp_generator.rb
+- .ace/tools/spec/spec_helper.rb
+- .ace/handbook/guides/testing/ruby-rspec.md

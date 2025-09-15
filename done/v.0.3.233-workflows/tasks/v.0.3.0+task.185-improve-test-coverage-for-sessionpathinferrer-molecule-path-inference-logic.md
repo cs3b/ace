@@ -23,7 +23,7 @@ Create comprehensive test coverage for the SessionPathInferrer molecule to ensur
 
 #### Status
 
-- dev-tools/spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb (created with comprehensive coverage)
+- .ace/tools/spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb (created with comprehensive coverage)
 
 ## Implementation Plan
 
@@ -38,7 +38,7 @@ Create comprehensive test coverage for the SessionPathInferrer molecule to ensur
   > TEST: Create new test file
   > Type: File Creation
   > Assert: Test file created with comprehensive coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb
 - [x] Test InferenceResult inner class functionality
 - [x] Test main public methods (#infer_session_path, #infer_output_path)
 - [x] Test all private detection methods
@@ -46,7 +46,7 @@ Create comprehensive test coverage for the SessionPathInferrer molecule to ensur
   > TEST: Complete test suite validation
   > Type: Comprehensive Validation
   > Assert: All 38 test examples pass successfully
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb
 
 ## Acceptance Criteria
 
@@ -92,7 +92,7 @@ Create comprehensive test coverage for the SessionPathInferrer molecule to ensur
 
 ### Detection Strategy Coverage:
 - **Explicit Session Detection**: session.meta file presence and parsing
-- **Taskflow Session Detection**: dev-taskflow/current/code_review pattern recognition
+- **Taskflow Session Detection**: .ace/taskflow/current/code_review pattern recognition
 - **Generic Session Detection**: Indicator-based scoring system (files, patterns, names)
 - **Error Handling**: File permission issues, parsing errors, non-existent paths
 

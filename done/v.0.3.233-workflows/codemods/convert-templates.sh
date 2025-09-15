@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to convert all workflow files from four-tick to XML template format
 
-cd dev-handbook
+cd .ace/handbook
 
 # List of workflow files with templates
 files=(

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools | sed 's/^/    /'
+tree -L 2 .ace/tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/
+.ace/tools/
 ├── bin/
 ├── config/
 ├── docs/
@@ -30,7 +30,7 @@ dev-tools/
 
 ## Objective
 
-Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This functionality was designed to generate shell wrapper scripts but is no longer used in the current project architecture. The feature includes CLI commands, business logic, configuration, and comprehensive test coverage that needs to be cleanly removed.
+Remove the legacy `install_binstubs` feature from the .ace/tools Ruby gem. This functionality was designed to generate shell wrapper scripts but is no longer used in the current project architecture. The feature includes CLI commands, business logic, configuration, and comprehensive test coverage that needs to be cleanly removed.
 
 ## Scope of Work
 
@@ -44,18 +44,18 @@ Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This f
 
 #### Delete
 
-- dev-tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
-- dev-tools/lib/coding_agent_tools/organisms/binstub_installer.rb
-- dev-tools/lib/coding_agent_tools/molecules/binstub_generator.rb
-- dev-tools/config/binstub-aliases.yml
-- dev-tools/spec/coding_agent_tools/cli/commands/install_binstubs_spec.rb
-- dev-tools/spec/coding_agent_tools/organisms/binstub_installer_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/binstub_generator_spec.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
+- .ace/tools/lib/coding_agent_tools/organisms/binstub_installer.rb
+- .ace/tools/lib/coding_agent_tools/molecules/binstub_generator.rb
+- .ace/tools/config/binstub-aliases.yml
+- .ace/tools/spec/coding_agent_tools/cli/commands/install_binstubs_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/binstub_installer_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/binstub_generator_spec.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli.rb (remove CLI registration)
-- dev-tools/docs/user/task-manager.md (remove binstub references if any)
+- .ace/tools/lib/coding_agent_tools/cli.rb (remove CLI registration)
+- .ace/tools/docs/user/task-manager.md (remove binstub references if any)
 
 ## Phases
 
@@ -75,7 +75,7 @@ Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This f
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All binstub-related files and their relationships are identified
-  > Command: grep -r "install_binstubs\|binstubs" dev-tools/
+  > Command: grep -r "install_binstubs\|binstubs" .ace/tools/
 - [x] Research binstub feature usage and dependencies
 - [x] Plan systematic removal approach following ATOM architecture
 
@@ -86,21 +86,21 @@ Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This f
   > TEST: Verify CLI Command Removed
   > Type: Action Validation
   > Assert: install_binstubs command is no longer available and file is deleted
-  > Command: ls dev-tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
+  > Command: ls .ace/tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
 - [x] Delete organism layer implementation (BinstubInstaller)
 - [x] Delete molecule layer implementation (BinstubGenerator)  
 - [x] Delete configuration file with binstub aliases
   > TEST: Verify Configuration Removed
   > Type: Action Validation
   > Assert: Configuration file is deleted and no references remain
-  > Command: ls dev-tools/config/binstub-aliases.yml
+  > Command: ls .ace/tools/config/binstub-aliases.yml
 - [x] Delete all test files for binstub functionality
 - [x] Clean up any documentation references to binstub installation
 - [x] Run tests to ensure no broken dependencies
   > TEST: Verify No Broken Dependencies
   > Type: Integration Test
   > Assert: All tests pass and no references to removed binstub functionality remain
-  > Command: cd dev-tools && bin/test
+  > Command: cd .ace/tools && bin/test
 
 ## Acceptance Criteria
 
@@ -119,8 +119,8 @@ Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This f
 ## References
 
 Based on analysis of:
-- dev-tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
-- dev-tools/lib/coding_agent_tools/organisms/binstub_installer.rb  
-- dev-tools/lib/coding_agent_tools/molecules/binstub_generator.rb
-- dev-tools/config/binstub-aliases.yml
+- .ace/tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
+- .ace/tools/lib/coding_agent_tools/organisms/binstub_installer.rb  
+- .ace/tools/lib/coding_agent_tools/molecules/binstub_generator.rb
+- .ace/tools/config/binstub-aliases.yml
 - Associated test files and CLI registration

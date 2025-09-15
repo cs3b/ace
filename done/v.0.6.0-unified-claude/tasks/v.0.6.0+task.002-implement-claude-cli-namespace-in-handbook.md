@@ -160,21 +160,21 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/` - Subcommand directory
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb` - Generate commands subcommand
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb` - Update registry subcommand
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Integrate subcommand (wraps existing installer)
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Validate subcommand
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/list.rb` - List subcommand
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/` - Test directory
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb` - Integration tests
-- `dev-tools/spec/integration/handbook_claude_cli_spec.rb` - CLI integration tests
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/` - Subcommand directory
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb` - Generate commands subcommand
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb` - Update registry subcommand
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Integrate subcommand (wraps existing installer)
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Validate subcommand
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/list.rb` - List subcommand
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/` - Test directory
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb` - Integration tests
+- `.ace/tools/spec/integration/handbook_claude_cli_spec.rb` - CLI integration tests
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Update `register_handbook_commands` method to include Claude namespace
-- `dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Refactor for better CLI integration
-- `dev-tools/spec/integrations/claude_commands_installer_spec.rb` - Update tests for refactored installer
-- `dev-tools/docs/tools.md` - Add Claude commands documentation (file confirmed to exist)
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Update `register_handbook_commands` method to include Claude namespace
+- `.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Refactor for better CLI integration
+- `.ace/tools/spec/integrations/claude_commands_installer_spec.rb` - Update tests for refactored installer
+- `.ace/tools/docs/tools.md` - Add Claude commands documentation (file confirmed to exist)
 
 ### Delete
 - None required
@@ -197,7 +197,7 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 
 ### Planning Steps
 
-* [x] Study existing handbook command structure in dev-tools
+* [x] Study existing handbook command structure in .ace/tools
   - Found: handbook namespace exists with sync-templates subcommand
   - Pattern: Uses `register_handbook_commands` lazy loading method
 * [x] Review dry-cli documentation for namespace patterns
@@ -381,10 +381,10 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 
 ## References
 
-- Existing handbook CLI structure in dev-tools/lib/coding_agent_tools/cli.rb
+- Existing handbook CLI structure in .ace/tools/lib/coding_agent_tools/cli.rb
 - dry-cli documentation for subcommand patterns (nested registration with blocks)
 - Current handbook command implementations (sync-templates)
-- Existing ClaudeCommandsInstaller class in dev-tools/lib/coding_agent_tools/integrations/
+- Existing ClaudeCommandsInstaller class in .ace/tools/lib/coding_agent_tools/integrations/
 
 ## Review Summary
 

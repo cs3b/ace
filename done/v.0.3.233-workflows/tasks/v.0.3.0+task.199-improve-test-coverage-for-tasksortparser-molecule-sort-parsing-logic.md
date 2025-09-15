@@ -24,7 +24,7 @@ Create comprehensive test coverage for the TaskSortParser molecule's sort parsin
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb
 
 #### Modify
 
@@ -42,13 +42,13 @@ Create comprehensive test coverage for the TaskSortParser molecule's sort parsin
   > TEST: Analysis Verification
   > Type: Pre-condition Check
   > Assert: TaskSortParser implementation understood and test coverage gaps identified
-  > Command: rspec dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_engine_spec.rb --format doc | grep -i "TaskSortParser"
+  > Command: rspec .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_engine_spec.rb --format doc | grep -i "TaskSortParser"
 
 * [x] Review existing test patterns in other molecule test files for consistency
   > TEST: Pattern Analysis
   > Type: Pre-condition Check  
   > Assert: Test patterns and conventions understood from similar molecule tests
-  > Command: ls dev-tools/spec/coding_agent_tools/molecules/taskflow_management/
+  > Command: ls .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/
 
 * [x] Plan comprehensive test cases covering all public methods and edge cases
   > TEST: Test Plan Validation
@@ -62,55 +62,55 @@ Create comprehensive test coverage for the TaskSortParser molecule's sort parsin
   > TEST: Test File Creation
   > Type: Action Validation
   > Assert: Test file created with proper RSpec structure and module namespacing
-  > Command: ruby -c dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb
+  > Command: ruby -c .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb
 
 - [x] Implement tests for SortCriteria struct methods (ascending?, descending?, implementation_order?)
   > TEST: SortCriteria Struct Tests
   > Type: Action Validation
   > Assert: SortCriteria struct methods have comprehensive test coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t struct_methods
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t struct_methods
 
 - [x] Implement tests for SortCriteria.get_sort_value method with various attribute types
   > TEST: Sort Value Extraction Tests
   > Type: Action Validation
   > Assert: get_sort_value method properly handles all attribute types and edge cases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t get_sort_value
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t get_sort_value
 
 - [x] Implement tests for parse_sort method with valid and invalid inputs
   > TEST: Parse Sort Method Tests
   > Type: Action Validation
   > Assert: parse_sort method properly parses sort strings and handles errors
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t parse_sort
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t parse_sort
 
 - [x] Implement tests for parse_sorts method with comma-separated inputs
   > TEST: Parse Multiple Sorts Tests
   > Type: Action Validation
   > Assert: parse_sorts method properly handles multiple sort criteria
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t parse_sorts
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t parse_sorts
 
 - [x] Implement tests for validate_sorts method with known and unknown attributes
   > TEST: Sort Validation Tests
   > Type: Action Validation
   > Assert: validate_sorts method properly validates sort criteria
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t validate_sorts
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t validate_sorts
 
 - [x] Add edge case tests for nil, empty, and malformed inputs
   > TEST: Edge Case Coverage
   > Type: Action Validation
   > Assert: All edge cases and error conditions are properly tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t edge_cases
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb -t edge_cases
 
 - [x] Verify test coverage meets project standards
   > TEST: Coverage Verification
   > Type: Action Validation
   > Assert: Test coverage for TaskSortParser is above 95%
-  > Command: cd dev-tools && bundle exec rspec --coverage spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec --coverage spec/coding_agent_tools/molecules/taskflow_management/task_sort_parser_spec.rb
 
 - [x] Run all tests to ensure no regressions
   > TEST: Integration Test
   > Type: Action Validation
   > Assert: All existing tests still pass with new test file added
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/
 
 ## Acceptance Criteria
 
@@ -128,6 +128,6 @@ Create comprehensive test coverage for the TaskSortParser molecule's sort parsin
 
 ## References
 
-- TaskSortParser implementation: `dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_sort_parser.rb`
-- Existing TaskSortEngine tests: `dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_engine_spec.rb`
-- Other molecule test files for pattern reference: `dev-tools/spec/coding_agent_tools/molecules/taskflow_management/`
+- TaskSortParser implementation: `.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_sort_parser.rb`
+- Existing TaskSortEngine tests: `.ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_sort_engine_spec.rb`
+- Other molecule test files for pattern reference: `.ace/tools/spec/coding_agent_tools/molecules/taskflow_management/`

@@ -1,8 +1,10 @@
 ---
 id: v.0.6.0+task.003
-status: pending
+status: completed
 priority: high
 estimate: 3h
+actual: 1h
+completed_at: 2025-09-16
 dependencies: [v.0.6.0+task.001, v.0.6.0+task.002]
 ---
 
@@ -43,13 +45,13 @@ Update all configuration files to reflect the new `.ace/*` structure and `AceToo
 
 ### Planning Steps
 
-* [ ] List all configuration files requiring updates
-* [ ] Document current gem version for proper versioning
-* [ ] Plan backward compatibility strategy
+* [x] List all configuration files requiring updates
+* [x] Document current gem version for proper versioning
+* [x] Plan backward compatibility strategy
 
 ### Execution Steps
 
-- [ ] Rename and update gemspec file:
+- [x] Rename and update gemspec file:
   - Rename file to `ace_tools.gemspec`
   - Update gem name to "ace-tools"
   - Update module references
@@ -60,16 +62,16 @@ Update all configuration files to reflect the new `.ace/*` structure and `AceToo
   > Assert: Gemspec loads without errors
   > Command: cd .ace/tools && ruby -e "require './ace_tools.gemspec'"
 
-- [ ] Update .rubocop.yml:
+- [x] Update .rubocop.yml:
   - Update module namespaces
   - Update file patterns
   - Update exclusion patterns
 
-- [ ] Update .standard.yml:
+- [x] Update .standard.yml:
   - Update project paths
   - Update ignore patterns
 
-- [ ] Update shell setup scripts:
+- [x] Update shell setup scripts:
   - setup.fish: Update PATH additions and function definitions
   - setup.sh: Update PATH exports and aliases
   > TEST: Shell Setup
@@ -77,7 +79,7 @@ Update all configuration files to reflect the new `.ace/*` structure and `AceToo
   > Assert: Setup scripts execute without errors
   > Command: bash -n .ace/tools/config/bin-setup-env/setup.sh
 
-- [ ] Update .coding-agent/*.yml configurations:
+- [x] Update .coding-agent/*.yml configurations:
   - context.yml: Update template paths
   - task-manager.yml: Update taskflow paths
   - path.yml: Update all path references
@@ -87,17 +89,17 @@ Update all configuration files to reflect the new `.ace/*` structure and `AceToo
   > Assert: All YAML files parse correctly
   > Command: ruby -ryaml -e "Dir['.coding-agent/*.yml'].each {|f| YAML.load_file(f)}"
 
-- [ ] Update .gitmodules:
+- [x] Update .gitmodules:
   - Update submodule paths from dev-* to .ace/*
   - Ensure submodule URLs remain correct
 
 ## Acceptance Criteria
 
-- [ ] Gemspec loads and builds successfully
-- [ ] Linting tools recognize new structure
-- [ ] Shell setup scripts work correctly
-- [ ] All YAML configurations are valid
-- [ ] Git submodules properly configured
+- [x] Gemspec loads and builds successfully
+- [x] Linting tools recognize new structure
+- [x] Shell setup scripts work correctly
+- [x] All YAML configurations are valid
+- [x] Git submodules properly configured
 
 ## Out of Scope
 

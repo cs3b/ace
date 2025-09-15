@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.06, v.0.3.0+task.34]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/cli/commands
+    .ace/tools/lib/coding_agent_tools/cli/commands
     ├── code
     │   ├── review_prepare
     │   └── review.rb
@@ -84,7 +84,7 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
 └── markdown (run in configured order)
     ├── styleguide (kramdown-based)
     ├── link-validation (existing lint-md-links.rb)
-    ├── template-embedding (new, based on dev-handbook/guides/documents-embedding.g.md)
+    ├── template-embedding (new, based on .ace/handbook/guides/documents-embedding.g.md)
     └── task-metadata (existing lint-task-metadata)
 ```
 
@@ -99,13 +99,13 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
 ### Existing Tools Integration
 
 **Ruby Linters:**
-- **lint-security** (dev-tools/bin/lint-security) → SecurityValidator atom
-- **lint-cassettes** (dev-tools/bin/lint-cassettes) → CassettesValidator atom
+- **lint-security** (.ace/tools/bin/lint-security) → SecurityValidator atom
+- **lint-cassettes** (.ace/tools/bin/lint-cassettes) → CassettesValidator atom
 - **standardrb** (external) → StandardRbValidator atom
 
 **Markdown Linters:**
-- **lint-task-metadata** (dev-taskflow/.../lint-task-metadata) → TaskMetadataValidator atom
-- **lint-md-links.rb** (dev-taskflow/.../lint-md-links.rb) → MarkdownLinkValidator atom
+- **lint-task-metadata** (.ace/taskflow/.../lint-task-metadata) → TaskMetadataValidator atom
+- **lint-md-links.rb** (.ace/taskflow/.../lint-md-links.rb) → MarkdownLinkValidator atom
 - **template-embedding** (new) → TemplateEmbeddingValidator atom
 - **kramdown formatter** (new) → KramdownFormatter atom
 
@@ -145,7 +145,7 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
 
 **Configuration & Workflow**
 - .coding-agent/lint.yml (default configuration template)
-- dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md
+- .ace/handbook/workflow-instructions/fix-linting-issue-from.wf.md
 
 **Comprehensive Test Suite**
 - Corresponding spec files for all ATOM components
@@ -159,10 +159,10 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
 
 #### Extract & Integrate
 
-- dev-tools/bin/lint-security → SecurityValidator atom
-- dev-tools/bin/lint-cassettes → CassettesValidator atom
-- dev-taskflow/.../lint-task-metadata → TaskMetadataValidator atom
-- dev-taskflow/.../lint-md-links.rb → MarkdownLinkValidator atom
+- .ace/tools/bin/lint-security → SecurityValidator atom
+- .ace/tools/bin/lint-cassettes → CassettesValidator atom
+- .ace/taskflow/.../lint-task-metadata → TaskMetadataValidator atom
+- .ace/taskflow/.../lint-md-links.rb → MarkdownLinkValidator atom
 
 #### Delete
 
@@ -199,7 +199,7 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
   > TEST: Tool Analysis
   > Type: Pre-condition Check
   > Assert: All existing tools analyzed and extraction patterns identified
-  > Command: wc -l dev-tools/bin/lint-security dev-tools/bin/lint-cassettes dev-taskflow/.../lint-task-metadata dev-taskflow/.../lint-md-links.rb
+  > Command: wc -l .ace/tools/bin/lint-security .ace/tools/bin/lint-cassettes .ace/taskflow/.../lint-task-metadata .ace/taskflow/.../lint-md-links.rb
 * [x] Design 3-phase pipeline architecture with ATOM hierarchy
   > TEST: Architecture Design
   > Type: Pre-condition Check
@@ -214,7 +214,7 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
   > TEST: Template Embedding Study
   > Type: Pre-condition Check
   > Assert: Template embedding requirements understood and validator designed
-  > Command: test -f dev-handbook/guides/documents-embedding.g.md && wc -l dev-handbook/guides/documents-embedding.g.md
+  > Command: test -f .ace/handbook/guides/documents-embedding.g.md && wc -l .ace/handbook/guides/documents-embedding.g.md
 * [x] Plan moderate autofix safety levels and error distribution strategy
   > TEST: Autofix Planning
   > Type: Pre-condition Check
@@ -234,62 +234,62 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
   > TEST: Security Validator
   > Type: Unit Test
   > Assert: SecurityValidator maintains original functionality
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/security_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/security_validator_spec.rb
 - [x] Extract CassettesValidator atom from lint-cassettes
   > TEST: Cassettes Validator
   > Type: Unit Test
   > Assert: CassettesValidator maintains original functionality
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/cassettes_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/cassettes_validator_spec.rb
 - [x] Extract TaskMetadataValidator atom from lint-task-metadata
   > TEST: Task Metadata Validator
   > Type: Unit Test
   > Assert: TaskMetadataValidator maintains original functionality
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/task_metadata_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/task_metadata_validator_spec.rb
 - [x] Extract MarkdownLinkValidator atom from lint-md-links.rb
   > TEST: Markdown Link Validator
   > Type: Unit Test
   > Assert: MarkdownLinkValidator maintains original functionality
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/markdown_link_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/markdown_link_validator_spec.rb
 - [x] Create StandardRbValidator atom for external StandardRB integration
   > TEST: StandardRB Validator
   > Type: Unit Test
   > Assert: StandardRbValidator integrates correctly with StandardRB
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/standard_rb_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/standard_rb_validator_spec.rb
 - [x] Create TemplateEmbeddingValidator atom based on documents-embedding.g.md
   > TEST: Template Embedding Validator
   > Type: Unit Test
   > Assert: TemplateEmbeddingValidator validates template embedding correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/template_embedding_validator_spec.rb
 - [x] Create KramdownFormatter atom to replace Node.js dependency
   > TEST: Kramdown Formatter
   > Type: Unit Test
   > Assert: KramdownFormatter provides markdown formatting functionality
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/kramdown_formatter_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/kramdown_formatter_spec.rb
 - [x] Create ConfigurationLoader atom for .coding-agent/lint.yml handling
   > TEST: Configuration Loader
   > Type: Unit Test
   > Assert: ConfigurationLoader loads and overrides configuration correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/configuration_loader_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/configuration_loader_spec.rb
 - [x] Create PathResolver atom for project-aware path handling
   > TEST: Path Resolver
   > Type: Unit Test
   > Assert: PathResolver handles relative/absolute paths correctly from any directory
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/path_resolver_spec.rb
 - [x] Build RubyLintingPipeline molecule for Ruby linter coordination
   > TEST: Ruby Linting Pipeline
   > Type: Integration Test
   > Assert: RubyLintingPipeline coordinates all Ruby linters correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb
 - [x] Build MarkdownLintingPipeline molecule for Markdown linter coordination
   > TEST: Markdown Linting Pipeline
   > Type: Integration Test
   > Assert: MarkdownLintingPipeline coordinates all Markdown linters correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/markdown_linting_pipeline_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/markdown_linting_pipeline_spec.rb
 - [x] Create MultiPhaseQualityManager organism for pipeline orchestration
   > TEST: Multi-Phase Quality Manager
   > Type: Integration Test
   > Assert: MultiPhaseQualityManager orchestrates all phases correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/multi_phase_quality_manager_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/multi_phase_quality_manager_spec.rb
 
 **Phase 2: Moderate Autofix & Error Distribution (Hours 9-14)**
 
@@ -297,27 +297,27 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
   > TEST: Error Distributor
   > Type: Unit Test
   > Assert: ErrorDistributor distributes errors evenly with one issue per file
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/code_quality/error_distributor_spec.rb
 - [x] Build AutofixOrchestrator molecule for moderate autofix coordination
   > TEST: Autofix Orchestrator
   > Type: Integration Test
   > Assert: AutofixOrchestrator applies moderate fixes safely with re-validation
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
 - [x] Create ErrorFileGenerator molecule for .lint-errors-{1-4}.md creation
   > TEST: Error File Generator
   > Type: Unit Test
   > Assert: ErrorFileGenerator creates properly formatted error files
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/error_file_generator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/error_file_generator_spec.rb
 - [x] Build DiffReviewAnalyzer molecule for comprehensive change review
   > TEST: Diff Review Analyzer
   > Type: Integration Test
   > Assert: DiffReviewAnalyzer provides comprehensive change analysis
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/diff_review_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/diff_review_analyzer_spec.rb
 - [x] Implement ValidationWorkflowManager organism for Phase 2 coordination
   > TEST: Validation Workflow Manager
   > Type: Integration Test
   > Assert: ValidationWorkflowManager coordinates autofix and error distribution
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/validation_workflow_manager_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/validation_workflow_manager_spec.rb
 - [x] Add CLI support for --autofix flag with moderate safety level
   > TEST: CLI Autofix Integration
   > Type: CLI Test
@@ -340,17 +340,17 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
   > TEST: Agent Coordination Foundation
   > Type: Unit Test
   > Assert: AgentCoordinationFoundation provides proper integration points
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb
 - [x] Create fix-linting-issue-from.wf.md workflow instruction
   > TEST: Workflow Instruction
   > Type: File Test
   > Assert: Workflow instruction is properly formatted and actionable
-  > Command: test -f dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md && wc -l dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md
+  > Command: test -f .ace/handbook/workflow-instructions/fix-linting-issue-from.wf.md && wc -l .ace/handbook/workflow-instructions/fix-linting-issue-from.wf.md
 - [x] Implement foundation for 4-agent parallel processing
   > TEST: Parallel Processing Foundation
   > Type: Integration Test
   > Assert: Foundation supports 4-agent parallel processing preparation
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb -e "parallel"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/code_quality/agent_coordination_foundation_spec.rb -e "parallel"
 - [x] Add comprehensive diff review system for final validation
   > TEST: Comprehensive Diff Review
   > Type: Integration Test
@@ -360,12 +360,12 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
   > TEST: CLI Registration
   > Type: Integration Test
   > Assert: Code lint integrates properly with existing CLI framework
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools code lint --help
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools code lint --help
 - [ ] Create comprehensive end-to-end integration tests
   > TEST: End-to-End Integration
   > Type: Integration Test
   > Assert: Complete 3-phase pipeline works correctly
-  > Command: cd dev-tools && bundle exec rspec spec/integration/multi_phase_quality_pipeline_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/multi_phase_quality_pipeline_spec.rb
 
 ## Acceptance Criteria
 
@@ -425,17 +425,17 @@ code-lint (orchestrator with .coding-agent/lint.yml config)
 * **v.0.3.0+task.34**: ✅ Code review module patterns and ATOM architecture
 
 ### Existing Tool Sources
-* **lint-security**: dev-tools/bin/lint-security → SecurityValidator atom
-* **lint-cassettes**: dev-tools/bin/lint-cassettes → CassettesValidator atom
-* **lint-task-metadata**: dev-taskflow/.../lint-task-metadata → TaskMetadataValidator atom
-* **lint-md-links.rb**: dev-taskflow/.../lint-md-links.rb → MarkdownLinkValidator atom
+* **lint-security**: .ace/tools/bin/lint-security → SecurityValidator atom
+* **lint-cassettes**: .ace/tools/bin/lint-cassettes → CassettesValidator atom
+* **lint-task-metadata**: .ace/taskflow/.../lint-task-metadata → TaskMetadataValidator atom
+* **lint-md-links.rb**: .ace/taskflow/.../lint-md-links.rb → MarkdownLinkValidator atom
 
 ### Technical References
-* **Template Embedding**: dev-handbook/guides/documents-embedding.g.md
+* **Template Embedding**: .ace/handbook/guides/documents-embedding.g.md
 * **Kramdown Documentation**: For markdown formatting capabilities
 * **ExecutableWrapper Pattern**: From existing code-review implementation
 * **ATOM Architecture**: Established patterns from taskflow_management
-* **ProjectRootDetector**: dev-tools/lib/coding_agent_tools/atoms/project_root_detector.rb
+* **ProjectRootDetector**: .ace/tools/lib/coding_agent_tools/atoms/project_root_detector.rb
 
 ### Configuration & Workflow
 * **Configuration Override**: .coding-agent/lint.yml in project root

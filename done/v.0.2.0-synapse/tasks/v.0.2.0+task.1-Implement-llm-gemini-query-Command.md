@@ -62,7 +62,7 @@ Implement the `llm-gemini-query` command (R-LLM-1) that accepts a prompt string 
 - lib/coding_agent_tools/organisms/gemini_client.rb
 - lib/coding_agent_tools/organisms/prompt_processor.rb
 - lib/coding_agent_tools/cli/commands/llm/query.rb
-- dev-tools/exe/llm-gemini-query (executable CLI script)
+- .ace/tools/exe/llm-gemini-query (executable CLI script)
 
 **Test Files:**
 - spec/coding_agent_tools/atoms/http_client_spec.rb
@@ -152,11 +152,11 @@ Implement the `llm-gemini-query` command (R-LLM-1) that accepts a prompt string 
   > Type: Action Validation
   > Assert: CLI command class handles arguments correctly
   > Command: ruby -e "require './lib/coding_agent_tools/cli/commands/llm/query'; puts 'CLI command loaded'"
-- [x] Create executable script in dev-tools/exe/ directory
+- [x] Create executable script in .ace/tools/exe/ directory
   > TEST: Verify CLI Executable
   > Type: Action Validation
   > Assert: llm-gemini-query command is executable and shows help
-  > Command: dev-tools/exe/llm-gemini-query --help
+  > Command: .ace/tools/exe/llm-gemini-query --help
 - [x] Register LLM commands in CLI registry
   > TEST: Verify Command Registration
   > Type: Action Validation
@@ -200,10 +200,10 @@ Implement the `llm-gemini-query` command (R-LLM-1) that accepts a prompt string 
 
 ## References
 
-- Fish implementation: dev-taskflow/current/v.0.2.0-synapse/docs/gemini-query.fish
+- Fish implementation: .ace/taskflow/current/v.0.2.0-synapse/docs/gemini-query.fish
 - Gemini API documentation: https://ai.google.dev/api/rest
 - Default model: gemini-2.0-flash-lite
-- ATOM Architecture: dev-taskflow/architecture.md
+- ATOM Architecture: .ace/taskflow/architecture.md
 - Faraday HTTP client: https://lostisland.github.io/faraday/
 - Dry-CLI framework: https://dry-rb.org/gems/dry-cli/
 

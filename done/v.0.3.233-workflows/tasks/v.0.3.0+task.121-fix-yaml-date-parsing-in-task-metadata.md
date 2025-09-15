@@ -14,13 +14,13 @@ sort: 125
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools
+.ace/tools/lib/coding_agent_tools
 ├── atoms
 ├── cli
 ├── constants
@@ -51,7 +51,7 @@ Resolve the "Tried to load unspecified class: Date" error that occurs when task-
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/atoms/yaml_reader.rb (or equivalent YAML processing)
+- .ace/tools/lib/coding_agent_tools/atoms/yaml_reader.rb (or equivalent YAML processing)
 - Any YAML loading/parsing logic in task management
 - Error handling for date parsing failures
 
@@ -105,7 +105,7 @@ Resolve the "Tried to load unspecified class: Date" error that occurs when task-
 
 ## References
 
-Based on error from: dev-taskflow/backlog/ideas/exe-task-manager.md
+Based on error from: .ace/taskflow/backlog/ideas/exe-task-manager.md
 Item #4: Error message and context:
 ```
 task-manager next --limit 5

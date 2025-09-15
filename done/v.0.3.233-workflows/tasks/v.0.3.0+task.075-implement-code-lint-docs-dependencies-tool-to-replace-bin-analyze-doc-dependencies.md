@@ -13,14 +13,14 @@ dependencies: []
 _Command run:_
 
 ```bash
-wc -l bin/analyze-doc-dependencies && ls -la dev-tools/lib/coding_agent_tools/cli/commands/ | grep lint
+wc -l bin/analyze-doc-dependencies && ls -la .ace/tools/lib/coding_agent_tools/cli/commands/ | grep lint
 ```
 
 _Result excerpt:_
 
 ```
 bin/analyze-doc-dependencies: 217 lines of Ruby code for doc dependency analysis
-dev-tools has code-lint infrastructure but no docs-dependencies command yet
+.ace/tools has code-lint infrastructure but no docs-dependencies command yet
 ```
 
 ## Objective
@@ -40,16 +40,16 @@ Migrate the documentation dependency analysis functionality from `bin/analyze-do
 
 #### Create
 
-- dev-tools/lib/coding_agent_tools/cli/commands/code_lint/docs_dependencies.rb
-- dev-tools/lib/coding_agent_tools/organisms/doc_dependency_analyzer.rb
-- dev-tools/lib/coding_agent_tools/molecules/doc_link_parser.rb
-- dev-tools/lib/coding_agent_tools/atoms/file_reference_extractor.rb
-- dev-tools/spec/unit/cli/commands/code_lint/docs_dependencies_spec.rb
-- dev-tools/spec/unit/organisms/doc_dependency_analyzer_spec.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/code_lint/docs_dependencies.rb
+- .ace/tools/lib/coding_agent_tools/organisms/doc_dependency_analyzer.rb
+- .ace/tools/lib/coding_agent_tools/molecules/doc_link_parser.rb
+- .ace/tools/lib/coding_agent_tools/atoms/file_reference_extractor.rb
+- .ace/tools/spec/unit/cli/commands/code_lint/docs_dependencies_spec.rb
+- .ace/tools/spec/unit/organisms/doc_dependency_analyzer_spec.rb
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/code_lint.rb (add subcommand)
+- .ace/tools/lib/coding_agent_tools/cli/commands/code_lint.rb (add subcommand)
 - All documentation referencing bin/analyze-doc-dependencies
 - Blueprint.md and other architectural documentation
 
@@ -105,5 +105,5 @@ Migrate the documentation dependency analysis functionality from `bin/analyze-do
 
 - Current bin/analyze-doc-dependencies implementation (217 lines)
 - CAT gem ATOM architecture documentation
-- Existing code-lint command structure in dev-tools
+- Existing code-lint command structure in .ace/tools
 - Blueprint documentation referencing the analysis tool

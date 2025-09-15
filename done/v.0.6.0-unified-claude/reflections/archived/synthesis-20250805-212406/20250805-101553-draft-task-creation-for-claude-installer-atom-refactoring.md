@@ -101,7 +101,7 @@ The refactoring will involve:
 
 ## Additional Context
 
-- Draft task created: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.021-refactor-claude-commands-installer-to-atom-architecture.md
-- Current implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
-- Related tests: dev-tools/spec/integrations/claude_commands_installer_spec.rb
-- Claude integration docs: dev-tools/docs/development/claude-integration.md
+- Draft task created: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.021-refactor-claude-commands-installer-to-atom-architecture.md
+- Current implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Related tests: .ace/tools/spec/integrations/claude_commands_installer_spec.rb
+- Claude integration docs: .ace/tools/docs/development/claude-integration.md

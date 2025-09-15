@@ -925,8 +925,8 @@ index 44462d1..18a10ed 100644
    - "*.gemspec"
 -  - "docs-dev/**/*"
 -  - "docs-project/**/*"
-+  - "dev-handbook/**/*"
-+  - "dev-taskflow/**/*"
++  - ".ace/handbook/**/*"
++  - ".ace/taskflow/**/*"
 diff --git a/.tool-versions b/.tool-versions
 deleted file mode 100644
 index d6d708a..0000000
@@ -1293,7 +1293,7 @@ index b4e1d9f..ba28ecf 100644
  - [Project Vision](docs/what-do-we-build.md) - Goals and use cases
  - [Architecture](docs/architecture.md) - System design and patterns
 -- [Documentation Structure Guide](docs-dev/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
-+- [Documentation Structure Guide](dev-handbook/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
++- [Documentation Structure Guide](.ace/handbook/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
  
  ## 🤝 Contributing
  
@@ -1302,7 +1302,7 @@ index b4e1d9f..ba28ecf 100644
  - Commit message conventions
  
 -This project follows documentation-driven development with structured task management in `docs-project/`. See the [project blueprint](docs/blueprint.md) for navigation guidance.
-+This project follows documentation-driven development with structured task management in `dev-taskflow/`. See the [project blueprint](docs/blueprint.md) for navigation guidance.
++This project follows documentation-driven development with structured task management in `.ace/taskflow/`. See the [project blueprint](docs/blueprint.md) for navigation guidance.
  
  ### Quick Contribution Workflow
  
@@ -1323,7 +1323,7 @@ index e561447..74cb3f9 100755
  
 -# You can add fixtures and/or initialization code here to make experimenting
 -# with your gem easier. You can also use a different console, if you like.
-+echo "INFO: Starting Ruby console from dev-tools directory: $(pwd)"
++echo "INFO: Starting Ruby console from .ace/tools directory: $(pwd)"
  
 -require "irb"
 -IRB.start(__FILE__)
@@ -1618,7 +1618,7 @@ index 05d1db9..c8d3be6 100755
 -cd "$(dirname "$0")"/.. # Ensure execution from project root
  
 -echo "INFO: Running linters from project root: $(pwd)"
-+echo "INFO: Running linters from dev-tools directory: $(pwd)"
++echo "INFO: Running linters from .ace/tools directory: $(pwd)"
  echo "INFO: Configuration loaded from .standard.yml"
  
  # Run StandardRB with project configuration
@@ -1680,7 +1680,7 @@ index 5b423c5..fd2ae65 100755
  fi
  
 -echo "INFO: Running Gitleaks secrets scanner from project root: $(pwd)"
-+echo "INFO: Running Gitleaks secrets scanner from dev-tools directory: $(pwd)"
++echo "INFO: Running Gitleaks secrets scanner from .ace/tools directory: $(pwd)"
  
  # Build gitleaks command
  GITLEAKS_CMD="gitleaks detect"
@@ -1712,7 +1712,7 @@ index f8f98e6..eef76b0 100755
 -cd "$(dirname "$0")"/.. # Ensure execution from project root
  
 -echo "INFO: Building Coding Agent Tools gem from project root: $(pwd)"
-+echo "INFO: Building Coding Agent Tools gem from dev-tools directory: $(pwd)"
++echo "INFO: Building Coding Agent Tools gem from .ace/tools directory: $(pwd)"
  
  # Clean up any existing gem files
  echo "INFO: Cleaning up old gem files..."
@@ -1809,7 +1809,7 @@ index dce67d8..05b7c8b 100755
  
 +set -e
 +
-+echo "INFO: Setting up development environment from dev-tools directory: $(pwd)"
++echo "INFO: Setting up development environment from .ace/tools directory: $(pwd)"
 +
 +# Install gem dependencies
 +echo "INFO: Installing bundle dependencies..."
@@ -1849,7 +1849,7 @@ index 2f0216a..d844d6b 100755
 -cd "$(dirname "$0")"/.. # Ensure execution from project root
  
 -echo "INFO: Running RSpec test suite with coverage from project root: $(pwd)"
-+echo "INFO: Running RSpec test suite with coverage from dev-tools directory: $(pwd)"
++echo "INFO: Running RSpec test suite with coverage from .ace/tools directory: $(pwd)"
  echo "INFO: Coverage reports will be generated in coverage/ directory"
  
  # Run RSpec with coverage reporting
@@ -2083,8 +2083,8 @@ index 0000000..16a40c3
 +    echo ""
 +    echo "Alternative: Use absolute paths to executables:"
 +    local project_root="$(dirname "$(dirname "$(dirname "$script_dir")")")"
-+    echo "  $project_root/dev-tools/exe/task-manager next"
-+    echo "  $project_root/dev-tools/exe/llm-query \"your prompt\""
++    echo "  $project_root/.ace/tools/exe/task-manager next"
++    echo "  $project_root/.ace/tools/exe/llm-query \"your prompt\""
 +}
 +
 +# Check if being sourced or executed
@@ -2116,7 +2116,7 @@ index 0000000..c892d4e
 +#!/usr/bin/env fish
 +
 +# Fish shell PATH Setup for tools-meta project
-+# This script adds the dev-tools/exe directory to your PATH for the current session
++# This script adds the .ace/tools/exe directory to your PATH for the current session
 +# Usage: source setup.fish
 +
 +function detect_project_root
@@ -2125,7 +2125,7 @@ index 0000000..c892d4e
 +    
 +    # If this script is in the original location (config/bin-setup-env), use relative path
 +    if string match -q "*config/bin-setup-env" $script_dir
-+        # Go up 3 levels: config/bin-setup-env -> config -> dev-tools -> project-root
++        # Go up 3 levels: config/bin-setup-env -> config -> .ace/tools -> project-root
 +        set project_root (dirname (dirname (dirname $script_dir)))
 +        if test -d "$project_root/.git"; or test -f "$project_root/coding_agent_tools.gemspec"; or test -f "$project_root/Gemfile"
 +            echo $project_root
@@ -2142,7 +2142,7 @@ index 0000000..c892d4e
 +        end
 +        # Also check for dev-* directories indicating multi-repo structure
 +        set dev_dirs 0
-+        for dev_dir in "dev-tools" "dev-handbook" "dev-taskflow"
++        for dev_dir in ".ace/tools" ".ace/handbook" ".ace/taskflow"
 +            if test -d "$search_path/$dev_dir"
 +                set dev_dirs (math $dev_dirs + 1)
 +            end
@@ -2170,7 +2170,7 @@ index 0000000..c892d4e
 +    end
 +end
 +
-+set TOOLS_EXE_DIR "$TOOLS_PROJECT_ROOT/dev-tools/exe"
++set TOOLS_EXE_DIR "$TOOLS_PROJECT_ROOT/.ace/tools/exe"
 +
 +# Check if the exe directory exists
 +if not test -d "$TOOLS_EXE_DIR"
@@ -2222,7 +2222,7 @@ index 0000000..8d6dc55
 +#!/bin/bash
 +
 +# Bash/Zsh PATH Setup for tools-meta project
-+# This script adds the dev-tools/exe directory to your PATH for the current session
++# This script adds the .ace/tools/exe directory to your PATH for the current session
 +# Usage: source setup.sh  OR  . setup.sh
 +
 +# Determine the project root directory using ProjectRootDetector logic
@@ -2231,7 +2231,7 @@ index 0000000..8d6dc55
 +    
 +    # If this script is in the original location (config/bin-setup-env), use relative path
 +    if [[ "$current_path" == *"/config/bin-setup-env" ]]; then
-+        # Go up 3 levels: config/bin-setup-env -> config -> dev-tools -> project-root
++        # Go up 3 levels: config/bin-setup-env -> config -> .ace/tools -> project-root
 +        local project_root="$(dirname "$(dirname "$(dirname "$current_path")")")"
 +        if [[ -d "$project_root/.git" ]] || [[ -f "$project_root/coding_agent_tools.gemspec" ]] || [[ -f "$project_root/Gemfile" ]]; then
 +            echo "$project_root"
@@ -2248,7 +2248,7 @@ index 0000000..8d6dc55
 +        fi
 +        # Also check for dev-* directories indicating multi-repo structure
 +        local dev_dirs=0
-+        for dev_dir in "dev-tools" "dev-handbook" "dev-taskflow"; do
++        for dev_dir in ".ace/tools" ".ace/handbook" ".ace/taskflow"; do
 +            [[ -d "$search_path/$dev_dir" ]] && ((dev_dirs++))
 +        done
 +        if [[ $dev_dirs -ge 2 ]]; then
@@ -2274,7 +2274,7 @@ index 0000000..8d6dc55
 +    fi
 +fi
 +
-+TOOLS_EXE_DIR="$TOOLS_PROJECT_ROOT/dev-tools/exe"
++TOOLS_EXE_DIR="$TOOLS_PROJECT_ROOT/.ace/tools/exe"
 +
 +# Check if the exe directory exists
 +if [[ ! -d "$TOOLS_EXE_DIR" ]]; then
@@ -2528,8 +2528,8 @@ index 0000000..1aedc35
 +
 +# Test paths that demonstrate the issue
 +test_paths = [
-+  "dev-tools/exe/git-log",
-+  "dev-taskflow/current/v.0.3.0-migration/docs/19-cli-interface-design.md"
++  ".ace/tools/exe/git-log",
++  ".ace/taskflow/current/v.0.3.0-migration/docs/19-cli-interface-design.md"
 +]
 +
 +path_resolver = CodingAgentTools::Atoms::Git::PathResolver.new(repositories, project_root)
@@ -31219,11 +31219,11 @@ index 0000000..aab1a20
 +
 +### Environment Setup   {#environment-setup}
 +
-+    # Initial setup (run from dev-tools/ directory)
-+    cd dev-tools && bundle install
++    # Initial setup (run from .ace/tools/ directory)
++    cd .ace/tools && bundle install
 +    
-+    # Load Ruby console with gem loaded (run from dev-tools/ directory)
-+    cd dev-tools && bundle exec irb -r ./lib/coding_agent_tools
++    # Load Ruby console with gem loaded (run from .ace/tools/ directory)
++    cd .ace/tools && bundle exec irb -r ./lib/coding_agent_tools
 +{: .language-bash}
 +
 +## Gem Executables   {#gem-executables}
@@ -31373,7 +31373,7 @@ index 0000000..aab1a20
 +**Examples**
 +```bash
 +git-add --patch
-+git-add --all --repository dev-tools
++git-add --all --repository .ace/tools
 +```
 +</details>
 +
@@ -31419,7 +31419,7 @@ index 0000000..aab1a20
 +```bash
 +git-diff --staged
 +git-diff --stat
-+git-diff --repository dev-tools
++git-diff --repository .ace/tools
 +```
 +</details>
 +
@@ -31441,7 +31441,7 @@ index 0000000..aab1a20
 +**Examples**
 +```bash
 +git-fetch --all --prune
-+git-fetch --tags --repository dev-tools
++git-fetch --tags --repository .ace/tools
 +```
 +</details>
 +
@@ -31485,7 +31485,7 @@ index 0000000..aab1a20
 +**Examples**
 +```bash
 +git-pull --rebase
-+git-pull --ff-only --repository dev-tools
++git-pull --ff-only --repository .ace/tools
 +```
 +</details>
 +
@@ -31507,7 +31507,7 @@ index 0000000..aab1a20
 +**Examples**
 +```bash
 +git-push --dry-run
-+git-push --set-upstream --repository dev-tools
++git-push --set-upstream --repository .ace/tools
 +```
 +</details>
 +
@@ -31529,7 +31529,7 @@ index 0000000..aab1a20
 +**Examples**
 +```bash
 +git-status --verbose
-+git-status --short --repository dev-tools
++git-status --short --repository .ace/tools
 +```
 +</details>
 +
@@ -32261,7 +32261,7 @@ index 0000000..f930a00
 +
 +        Options:
 +          --[no-]debug, -d                  # Enable debug output for verbose error information, default: false
-+          --repository=VALUE, -C VALUE      # Specify explicit repository context (e.g., 'dev-tools')
++          --repository=VALUE, -C VALUE      # Specify explicit repository context (e.g., '.ace/tools')
 +          --intention=VALUE, -i VALUE       # Intention context for commit message generation
 +          --[no-]local, -l                  # Use local LM Studio model (lmstudio:mistral-small-3.1-24b-instruct-2503), default: false
 +          --[no-]no-edit, -n                # Skip editor and commit directly with generated message, default: false
@@ -32279,9 +32279,9 @@ index 0000000..f930a00
 +          git-commit --intention 'implement user authentication'
 +          git-commit --message 'fix typo in documentation'
 +          git-commit --intention 'refactor database layer'
-+          git-commit dev-handbook/guide.md lib/auth.rb
++          git-commit .ace/handbook/guide.md lib/auth.rb
 +          git-commit --concurrent --intention 'update across all repos'
-+          git-commit --repository dev-tools --message 'update gem version'
++          git-commit --repository .ace/tools --message 'update gem version'
 +          git-commit --repo-only --intention 'local change only'
 +          git-commit --model 'anthropic:claude-3.5-sonnet' --intention 'complex refactoring'
 +          git-commit --model 'google:gemini-2.5-flash' --intention 'simple fix'
@@ -32520,7 +32520,7 @@ index 0000000..f89317b
 +
 +      Options:
 +        --[no-]debug, -d                  # Enable debug output for verbose error information, default: false
-+        --repository=VALUE, -C VALUE      # Specify explicit repository context (e.g., 'dev-tools')
++        --repository=VALUE, -C VALUE      # Specify explicit repository context (e.g., '.ace/tools')
 +        --[no-]porcelain                  # Give the output in porcelain format, default: false
 +        --[no-]short, -s                  # Give the output in short format, default: false
 +        --[no-]verbose, -v                # Show detailed status information, default: false
@@ -32536,7 +32536,7 @@ index 0000000..f89317b
 +        git-status --short
 +        git-status --verbose
 +        git-status --porcelain
-+        git-status --repository dev-tools
++        git-status --repository .ace/tools
 +        git-status --main-only
 +        git-status --submodules-only
 +        git-status --no-color
@@ -34194,7 +34194,7 @@ index 0000000..0308cf8
 +  module Atoms
 +    module CodeQuality
 +      # Atom for validating VCR cassettes size
-+      # Extracted from dev-tools/bin/lint-cassettes
++      # Extracted from .ace/tools/bin/lint-cassettes
 +      class CassettesValidator
 +        DEFAULT_THRESHOLD = 50 * 1024 # 50KB in bytes
 +        CASSETTES_DIR = "spec/cassettes"
@@ -34631,7 +34631,7 @@ index 0000000..fe19457
 +  module Atoms
 +    module CodeQuality
 +      # Atom for validating markdown links
-+      # Extracted from dev-taskflow/.../lint-md-links.rb
++      # Extracted from .ace/taskflow/.../lint-md-links.rb
 +      class MarkdownLinkValidator
 +        LINK_REGEX = /\[[^\]]+\]\(([^)]+)\)/
 +        SCHEME_SKIP = %r{^(?:[a-z][a-z0-9+\-.]*://|mailto:)}i
@@ -34834,7 +34834,7 @@ index 0000000..c8d36c0
 +  module Atoms
 +    module CodeQuality
 +      # Atom for running security validation using Gitleaks
-+      # Extracted from dev-tools/bin/lint-security
++      # Extracted from .ace/tools/bin/lint-security
 +      class SecurityValidator
 +        attr_reader :options
 +
@@ -34983,9 +34983,9 @@ index 0000000..8754a46
 +        end
 +
 +        def execute_command(command)
-+          # Find the dev-tools directory
++          # Find the .ace/tools directory
 +          current_file = File.expand_path(__FILE__)
-+          dev_tools_dir = current_file.split("/dev-tools/").first + "/dev-tools"
++          dev_tools_dir = current_file.split("/.ace/tools/").first + "/.ace/tools"
 +
 +          Dir.chdir(dev_tools_dir) do
 +            stdout, stderr, status = Open3.capture3(*command)
@@ -35024,9 +35024,9 @@ index 0000000..8754a46
 +          data["files"]&.each do |file_data|
 +            file_path = file_data["path"]
 +
-+            # Adjust path to be relative to project root (not dev-tools)
-+            # Since we're running from dev-tools, prepend "dev-tools/" to make it project-relative
-+            adjusted_path = File.join("dev-tools", file_path)
++            # Adjust path to be relative to project root (not .ace/tools)
++            # Since we're running from dev-tools, prepend ".ace/tools/" to make it project-relative
++            adjusted_path = File.join(".ace/tools", file_path)
 +
 +            file_data["offenses"].each do |offense|
 +              offenses << {
@@ -35082,7 +35082,7 @@ index 0000000..2358e08
 +  module Atoms
 +    module CodeQuality
 +      # Atom for validating task metadata in markdown files
-+      # Extracted from dev-taskflow/.../lint-task-metadata
++      # Extracted from .ace/taskflow/.../lint-task-metadata
 +      class TaskMetadataValidator
 +        # Metadata Validation Rules
 +        VALID_ID_REGEX = /^v.\d+\.\d+\.\d+\+task\.\d+$/
@@ -35139,8 +35139,8 @@ index 0000000..2358e08
 +
 +        def default_task_dirs
 +          [
-+            "dev-taskflow/current",
-+            "dev-taskflow/backlog"
++            ".ace/taskflow/current",
++            ".ace/taskflow/backlog"
 +          ]
 +        end
 +
@@ -35309,7 +35309,7 @@ index 0000000..0a619a7
 +
 +        def default_template_dirs
 +          [
-+            "dev-handbook/.meta/tpl",
++            ".ace/handbook/.meta/tpl",
 +            "templates",
 +            "_includes"
 +          ]
@@ -35725,11 +35725,11 @@ index 0000000..33148c0
 +        def normalize_path(path)
 +          if Pathname.new(path).relative?
 +            # For relative paths, we need to determine the context:
-+            # 1. If path contains repo prefix (e.g., "dev-tools/file"), expand from project root
++            # 1. If path contains repo prefix (e.g., ".ace/tools/file"), expand from project root
 +            # 2. If path is local (e.g., "file"), expand from current working directory to nearest git repo
 +
 +            if path_contains_repository_prefix?(path)
-+              # Path like "dev-tools/exe/git-log" - expand from project root
++              # Path like ".ace/tools/exe/git-log" - expand from project root
 +              File.expand_path(path, @project_root)
 +            else
 +              # Path like "exe/git-log" - expand from current directory (should be within a repo)
@@ -36476,7 +36476,7 @@ index 0000000..4895a64
 +        PRIMARY_MARKERS = [".git"].freeze
 +        SECONDARY_MARKERS = ["Gemfile"].freeze
 +        TERTIARY_MARKERS = [".ruby-version", ".tools-meta"].freeze
-+        DEV_DIRECTORIES = ["dev-handbook", "dev-tools", "dev-taskflow"].freeze
++        DEV_DIRECTORIES = [".ace/handbook", ".ace/tools", ".ace/taskflow"].freeze
 +      end
 +    end
 +  end
@@ -36529,9 +36529,9 @@ index 0000000..3a4daa5
 +      # This is an atom - it has no dependencies on other parts of this gem
 +      class DirectoryNavigator
 +        # Default paths for task management
-+        DEFAULT_BASE_PATH = "dev-taskflow"
-+        DEFAULT_CURRENT_PATH = "dev-taskflow/current"
-+        DEFAULT_BACKLOG_PATH = "dev-taskflow/backlog"
++        DEFAULT_BASE_PATH = ".ace/taskflow"
++        DEFAULT_CURRENT_PATH = ".ace/taskflow/current"
++        DEFAULT_BACKLOG_PATH = ".ace/taskflow/backlog"
 +        DEFAULT_TASKS_SUBDIR = "tasks"
 +
 +        # Release directory pattern: v.X.Y.Z-codename
@@ -37840,9 +37840,9 @@ index 0000000..f92c8c4
 +      # This is an atom - it has no dependencies on other parts of this gem
 +      class DirectoryNavigator
 +        # Default paths for task management
-+        DEFAULT_BASE_PATH = "dev-taskflow"
-+        DEFAULT_CURRENT_PATH = "dev-taskflow/current"
-+        DEFAULT_BACKLOG_PATH = "dev-taskflow/backlog"
++        DEFAULT_BASE_PATH = ".ace/taskflow"
++        DEFAULT_CURRENT_PATH = ".ace/taskflow/current"
++        DEFAULT_BACKLOG_PATH = ".ace/taskflow/backlog"
 +        DEFAULT_TASKS_SUBDIR = "tasks"
 +
 +        # Release directory pattern: v.X.Y.Z-codename
@@ -40207,7 +40207,7 @@ index 0000000..1f1f4b7
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :all, type: :boolean, default: false, aliases: ["A"],
 +            desc: "Add all changes (new, modified, deleted)"
@@ -40237,9 +40237,9 @@ index 0000000..1f1f4b7
 +            "file1.rb file2.rb",
 +            "--all",
 +            "--update",
-+            "dev-handbook/guide.md lib/auth.rb",
++            ".ace/handbook/guide.md lib/auth.rb",
 +            "--patch lib/core.rb",
-+            "--concurrent dev-handbook/file.md dev-tools/lib/file.rb"
++            "--concurrent .ace/handbook/file.md .ace/tools/lib/file.rb"
 +          ]
 +
 +          def call(files:, **options)
@@ -40401,7 +40401,7 @@ index 0000000..4a7e8a0
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :quiet, type: :boolean, default: false, aliases: ["q"],
 +            desc: "Quiet operation, suppress feedback messages"
@@ -40619,7 +40619,7 @@ index 0000000..c80688b
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :intention, type: :string, aliases: ["i"],
 +            desc: "Intention context for commit message generation"
@@ -40659,9 +40659,9 @@ index 0000000..c80688b
 +            "--intention 'implement user authentication'",
 +            "--message 'fix typo in documentation'",
 +            "--intention 'refactor database layer'",
-+            "dev-handbook/guide.md lib/auth.rb",
++            ".ace/handbook/guide.md lib/auth.rb",
 +            "--concurrent --intention 'update across all repos'",
-+            "--repository dev-tools --message 'update gem version'",
++            "--repository .ace/tools --message 'update gem version'",
 +            "--repo-only --intention 'local change only'",
 +            "--model 'anthropic:claude-3.5-sonnet' --intention 'complex refactoring'",
 +            "--model 'google:gemini-2.5-flash' --intention 'simple fix'"
@@ -40840,7 +40840,7 @@ index 0000000..967a963
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :staged, type: :boolean, default: false,
 +            desc: "Show staged changes only"
@@ -40862,7 +40862,7 @@ index 0000000..967a963
 +            "--staged",
 +            "--name-only",
 +            "--stat",
-+            "--repository dev-tools",
++            "--repository .ace/tools",
 +            "--main-only"
 +          ]
 +
@@ -41010,7 +41010,7 @@ index 0000000..a64143c
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :all, type: :boolean, default: false,
 +            desc: "Fetch all remotes"
@@ -41036,7 +41036,7 @@ index 0000000..a64143c
 +            "--prune",
 +            "--tags",
 +            "origin",
-+            "--repository dev-tools"
++            "--repository .ace/tools"
 +          ]
 +
 +          def call(remote: nil, **options)
@@ -41174,7 +41174,7 @@ index 0000000..a0c64be
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :oneline, type: :boolean, default: false,
 +            desc: "Show commits in oneline format"
@@ -41219,7 +41219,7 @@ index 0000000..a0c64be
 +            "--author 'John Doe'",
 +            "--grep 'fix bug'",
 +            "--separated",
-+            "--repository dev-tools",
++            "--repository .ace/tools",
 +            "--no-color",
 +            "--force-color"
 +          ]
@@ -41396,7 +41396,7 @@ index 0000000..4d56ee8
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :force, type: :boolean, default: false, aliases: ["f"],
 +            desc: "Force move even if target exists"
@@ -41422,10 +41422,10 @@ index 0000000..4d56ee8
 +          example [
 +            "old_file.rb new_file.rb",
 +            "src/old_dir/ src/new_dir/",
-+            "dev-handbook/guide.md dev-handbook/tutorial.md",
++            ".ace/handbook/guide.md .ace/handbook/tutorial.md",
 +            "--force old_file.rb existing_file.rb",
 +            "--dry-run lib/old_module.rb lib/new_module.rb",
-+            "--concurrent dev-handbook/old.md dev-tools/lib/new.rb"
++            "--concurrent .ace/handbook/old.md .ace/tools/lib/new.rb"
 +          ]
 +
 +          def call(source_and_destination:, **options)
@@ -41595,7 +41595,7 @@ index 0000000..c456b6b
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :rebase, type: :boolean, default: false, aliases: ["r"],
 +            desc: "Rebase instead of merge"
@@ -41797,7 +41797,7 @@ index 0000000..f1e164a
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :force, type: :boolean, default: false, aliases: ["f"],
 +            desc: "Force push (use with caution)"
@@ -42013,7 +42013,7 @@ index 0000000..0f1ba7a
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :source, type: :string, aliases: ["s"],
 +            desc: "Restore from a specific source tree (commit, branch, etc.)"
@@ -42064,7 +42064,7 @@ index 0000000..0f1ba7a
 +            "--worktree --staged both_areas.rb",
 +            "--patch interactive_file.rb",
 +            "--ours conflicted_file.rb",
-+            "dev-handbook/guide.md dev-tools/lib/module.rb",
++            ".ace/handbook/guide.md .ace/tools/lib/module.rb",
 +            "--concurrent --staged ."
 +          ]
 +
@@ -42237,7 +42237,7 @@ index 0000000..ba0564a
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :force, type: :boolean, default: false, aliases: ["f"],
 +            desc: "Override the up-to-date check"
@@ -42275,7 +42275,7 @@ index 0000000..ba0564a
 +            "--cached staged_file.rb",
 +            "--force modified_file.rb",
 +            "--dry-run lib/old_module.rb",
-+            "dev-handbook/obsolete.md dev-tools/lib/deprecated.rb",
++            ".ace/handbook/obsolete.md .ace/tools/lib/deprecated.rb",
 +            "--concurrent --recursive test_dirs/"
 +          ]
 +
@@ -42444,7 +42444,7 @@ index 0000000..fa597e4
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :porcelain, type: :boolean, default: false,
 +            desc: "Give the output in porcelain format"
@@ -42475,7 +42475,7 @@ index 0000000..fa597e4
 +            "--short",
 +            "--verbose",
 +            "--porcelain",
-+            "--repository dev-tools",
++            "--repository .ace/tools",
 +            "--main-only",
 +            "--submodules-only",
 +            "--no-color",
@@ -42626,7 +42626,7 @@ index 0000000..0620434
 +            desc: "Enable debug output for verbose error information"
 +
 +          option :repository, type: :string, aliases: ["C"],
-+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
++            desc: "Specify explicit repository context (e.g., '.ace/tools')"
 +
 +          option :quiet, type: :boolean, default: false, aliases: ["q"],
 +            desc: "Quiet operation, suppress feedback messages"
@@ -42848,7 +42848,7 @@ index 0000000..6f06ae6
 +        class SyncTemplates < Dry::CLI::Command
 +          desc "Synchronize XML-embedded template content with their corresponding template files"
 +
-+          option :path, type: :string, default: "dev-handbook/workflow-instructions",
++          option :path, type: :string, default: ".ace/handbook/workflow-instructions",
 +            desc: "Directory to scan for workflow files"
 +          option :dry_run, type: :boolean, default: false,
 +            desc: "Show what would be changed without modifying files"
@@ -42864,7 +42864,7 @@ index 0000000..6f06ae6
 +            "--dry-run                          # Preview changes without modifying files",
 +            "--path custom/path --verbose       # Sync templates in custom directory with detailed output",
 +            "--commit                           # Sync and automatically commit changes",
-+            "--path dev-handbook --dry-run --verbose  # Preview with full details for dev-handbook"
++            "--path .ace/handbook --dry-run --verbose  # Preview with full details for .ace/handbook"
 +          ]
 +
 +          # Execute the template synchronization command
@@ -42927,7 +42927,7 @@ index 0000000..6f06ae6
 +
 +              OPTIONS:
 +                --path PATH        Directory to scan for workflow files 
-+                                  (default: dev-handbook/workflow-instructions)
++                                  (default: .ace/handbook/workflow-instructions)
 +                --dry-run          Show what would be changed without modifying files
 +                --verbose          Show detailed processing information
 +                --commit           Automatically commit changes after synchronization
@@ -42946,8 +42946,8 @@ index 0000000..6f06ae6
 +                handbook sync-templates --commit
 +                  Sync and automatically commit changes
 +
-+                handbook sync-templates --path dev-handbook --dry-run --verbose
-+                  Preview with full details for dev-handbook
++                handbook sync-templates --path .ace/handbook --dry-run --verbose
++                  Preview with full details for .ace/handbook
 +
 +              EXIT CODES:
 +                0  Success (no errors, changes may or may not have been made)
@@ -42956,17 +42956,17 @@ index 0000000..6f06ae6
 +              XML FORMATS SUPPORTED:
 +                Modern format:
 +                  <documents>
-+                  <template path="dev-handbook/templates/example.template.md">
++                  <template path=".ace/handbook/templates/example.template.md">
 +                  Template content here
 +                  </template>
-+                  <guide path="dev-handbook/guides/example.g.md">
++                  <guide path=".ace/handbook/guides/example.g.md">
 +                  Guide content here
 +                  </guide>
 +                  </documents>
 +
 +                Legacy format:
 +                  <templates>
-+                  <template path="dev-handbook/templates/example.template.md">
++                  <template path=".ace/handbook/templates/example.template.md">
 +                  Template content here
 +                  </template>
 +                  </templates>
@@ -43751,7 +43751,7 @@ index 0000000..21156c9
 +            desc: "Output format (default: markdown)"
 +
 +          option :system_prompt, type: :string,
-+            desc: "Custom system prompt file path (default: dev-handbook/templates/release-reflections/synthsize.system.prompt.md)"
++            desc: "Custom system prompt file path (default: .ace/handbook/templates/release-reflections/synthsize.system.prompt.md)"
 +
 +          option :force, type: :boolean, default: false,
 +            desc: "Force overwrite existing files without confirmation"
@@ -43895,7 +43895,7 @@ index 0000000..21156c9
 +            return explicit_prompt if explicit_prompt
 +
 +            # Default system prompt path
-+            "dev-handbook/templates/release-reflections/synthsize.system.prompt.md"
++            ".ace/handbook/templates/release-reflections/synthsize.system.prompt.md"
 +          end
 +
 +          def show_dry_run_info(collection_result, timestamp_result, output_path, system_prompt_path, options)
@@ -45010,7 +45010,7 @@ index 0000000..b24f1a3
 +          def find_current_release_directory
 +            # Look for current release directory
 +            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-+            current_dir = File.join(project_root, "dev-taskflow", "current")
++            current_dir = File.join(project_root, ".ace/taskflow", "current")
 +            return nil unless File.exist?(current_dir)
 +
 +            # Find the first directory that looks like a release
@@ -45046,8 +45046,8 @@ index 0000000..b24f1a3
 +            # Look in both current and done directories
 +            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
 +            search_dirs = [
-+              File.join(project_root, "dev-taskflow", "current"),
-+              File.join(project_root, "dev-taskflow", "done")
++              File.join(project_root, ".ace/taskflow", "current"),
++              File.join(project_root, ".ace/taskflow", "done")
 +            ]
 +
 +            search_dirs.each do |base_dir|
@@ -46014,7 +46014,7 @@ index 0000000..285e497
 +    # - Generate shell binstub content following project patterns
 +    # - Handle different binstub types (shell, ruby)
 +    # - Create proper argument passing and directory context
-+    # - Follow shell binstub patterns from dev-handbook
++    # - Follow shell binstub patterns from .ace/handbook
 +    class BinstubGenerator
 +      # Generates shell binstub content for a given alias configuration
 +      #
@@ -46062,12 +46062,12 @@ index 0000000..285e497
 +
 +          echo "INFO: #{description} from project root directory: $(pwd)"
 +
-+          # Execute the command from dev-tools subdirectory
-+          cd dev-tools && #{target_command} "$@"
++          # Execute the command from .ace/tools subdirectory
++          cd .ace/tools && #{target_command} "$@"
 +        SHELL_SCRIPT
 +      end
 +
-+      # Generates binstub that runs from dev-tools directory
++      # Generates binstub that runs from .ace/tools directory
 +      def self.generate_dev_tools_binstub(description, target_command)
 +        <<~SHELL_SCRIPT
 +          #!/bin/sh
@@ -46081,10 +46081,10 @@ index 0000000..285e497
 +          # Trap to ensure we always return to original directory
 +          trap 'cd "$ORIGINAL_DIR"' EXIT
 +
-+          # Change to dev-tools directory where the gem files are located
-+          cd "$(dirname "$0")/../dev-tools"
++          # Change to .ace/tools directory where the gem files are located
++          cd "$(dirname "$0")/../.ace/tools"
 +
-+          echo "INFO: #{description} from dev-tools directory: $(pwd)"
++          echo "INFO: #{description} from .ace/tools directory: $(pwd)"
 +
 +          # Execute the main command with all arguments passed through
 +          #{target_command} "$@"
@@ -46682,14 +46682,14 @@ index 0000000..ec6148e
 +
 +          case primary_focus
 +          when "code"
-+            "dev-handbook/templates/review-code/system.prompt.md"
++            ".ace/handbook/templates/review-code/system.prompt.md"
 +          when "tests"
-+            "dev-handbook/templates/review-test/system.prompt.md"
++            ".ace/handbook/templates/review-test/system.prompt.md"
 +          when "docs"
-+            "dev-handbook/templates/review-docs/system.prompt.md"
++            ".ace/handbook/templates/review-docs/system.prompt.md"
 +          else
 +            # Default to code review template
-+            "dev-handbook/templates/review-code/system.prompt.md"
++            ".ace/handbook/templates/review-code/system.prompt.md"
 +          end
 +        end
 +
@@ -47153,7 +47153,7 @@ index 0000000..289661c
 +        # @param directory [String] Directory to check
 +        # @return [InferenceResult, nil] Session information if found
 +        def detect_taskflow_session(directory)
-+          # Look for taskflow patterns: dev-taskflow/current/*/code_review/*
++          # Look for taskflow patterns: .ace/taskflow/current/*/code_review/*
 +          path_parts = directory.split(File::SEPARATOR)
 +
 +          # Find code_review index
@@ -47162,7 +47162,7 @@ index 0000000..289661c
 +
 +          # Check if it's in a taskflow structure
 +          if code_review_index >= 2 &&
-+              path_parts[code_review_index - 2] == "dev-taskflow" &&
++              path_parts[code_review_index - 2] == ".ace/taskflow" &&
 +              path_parts[code_review_index - 1] == "current"
 +
 +            session_id = path_parts[code_review_index + 1] if path_parts[code_review_index + 1]
@@ -47328,7 +47328,7 @@ index 0000000..3817a12
 +        end
 +
 +        # Default system prompt template location
-+        DEFAULT_SYSTEM_PROMPT = "dev-handbook/templates/review-synthesizer/system.prompt.md"
++        DEFAULT_SYSTEM_PROMPT = ".ace/handbook/templates/review-synthesizer/system.prompt.md"
 +
 +        # Initialize the synthesis orchestrator
 +        # @param options [Hash] Configuration options
@@ -47609,7 +47609,7 @@ index 0000000..3817a12
 +        # Find llm-query executable
 +        # @return [String] Path to llm-query executable
 +        def find_llm_query_executable
-+          # Try relative path first (from dev-tools)
++          # Try relative path first (from .ace/tools)
 +          relative_path = File.expand_path("../../../../../exe/llm-query", __FILE__)
 +          return relative_path if File.executable?(relative_path)
 +
@@ -48760,7 +48760,7 @@ index 0000000..7e2fd09
 +        def find_llm_query_executable
 +          # Try to find llm-query in the local exe directory first (for development)
 +          project_root = find_project_root
-+          local_exe = File.join(project_root, "dev-tools", "exe", "llm-query")
++          local_exe = File.join(project_root, ".ace/tools", "exe", "llm-query")
 +
 +          if File.executable?(local_exe)
 +            return local_exe
@@ -48775,8 +48775,8 @@ index 0000000..7e2fd09
 +          current_dir = Dir.pwd
 +
 +          loop do
-+            if File.exist?(File.join(current_dir, "dev-tools")) &&
-+                File.exist?(File.join(current_dir, "dev-taskflow")) &&
++            if File.exist?(File.join(current_dir, ".ace/tools")) &&
++                File.exist?(File.join(current_dir, ".ace/taskflow")) &&
 +                File.exist?(File.join(current_dir, "CLAUDE.md"))
 +              return current_dir
 +            end
@@ -48792,7 +48792,7 @@ index 0000000..7e2fd09
 +
 +        def find_system_prompt_template_path
 +          project_root = find_project_root
-+          File.join(project_root, "dev-handbook", ".meta", "tpl", "git-commit.system.prompt.md")
++          File.join(project_root, ".ace/handbook", ".meta", "tpl", "git-commit.system.prompt.md")
 +        end
 +
 +        def clean_response(response)
@@ -49593,7 +49593,7 @@ index 0000000..17c431a
 +        },
 +        "path_patterns" => {
 +          "task_new" => {
-+            "template" => "dev-taskflow/current/{release}/tasks/{release}+task.{id}-{slug}.md",
++            "template" => ".ace/taskflow/current/{release}/tasks/{release}+task.{id}-{slug}.md",
 +            "variables" => {
 +              "release" => "release-manager current",
 +              "id" => "task-manager generate-id",
@@ -50091,13 +50091,13 @@ index 0000000..090e6c2
 +            match_found = true
 +          end
 +
-+          # 2. Fuzzy prefix matching (e.g., "dev" matches "dev-tools")
++          # 2. Fuzzy prefix matching (e.g., "dev" matches ".ace/tools")
 +          if basename.downcase.start_with?(pattern.downcase) ||
 +              dirname.split("/").any? { |part| part.downcase.start_with?(pattern.downcase) }
 +            match_found = true
 +          end
 +
-+          # 3. Word boundary matching (e.g., "tools" matches "dev-tools")
++          # 3. Word boundary matching (e.g., "tools" matches ".ace/tools")
 +          if basename.downcase.split(/[-_]/).any? { |part| part.start_with?(pattern.downcase) } ||
 +              relative_path.downcase.split(/[\/\-_]/).any? { |part| part.start_with?(pattern.downcase) }
 +            match_found = true
@@ -50229,7 +50229,7 @@ index 0000000..090e6c2
 +
 +        # If path starts with a known repository name
 +        first_part = path_parts.first
-+        if %w[dev-tools dev-handbook dev-taskflow].include?(first_part)
++        if %w[.ace/tools .ace/handbook .ace/taskflow].include?(first_part)
 +          return first_part
 +        end
 +
@@ -50351,8 +50351,8 @@ index 0000000..090e6c2
 +      end
 +
 +      def find_current_release_path
-+        # Look for current release in dev-taskflow/current
-+        current_base = File.join(@sandbox.project_root, "dev-taskflow/current")
++        # Look for current release in .ace/taskflow/current
++        current_base = File.join(@sandbox.project_root, ".ace/taskflow/current")
 +        return nil unless Dir.exist?(current_base)
 +
 +        # Find the first directory in current (should be the current release)
@@ -50509,9 +50509,9 @@ index 0000000..e2b1a51
 +          "**/*.yaml",
 +          "**/*.sh",
 +          "bin/*",
-+          "dev-tools/**/*",
-+          "dev-taskflow/**/*",
-+          "dev-handbook/**/*",
++          ".ace/tools/**/*",
++          ".ace/taskflow/**/*",
++          ".ace/handbook/**/*",
 +          ".coding-agent/**/*"
 +        ]
 +      end
@@ -51081,12 +51081,12 @@ index 0000000..5b5e812
 +          # Additional document-type specific validation
 +          case document.type
 +          when :template
-+            unless document.path.start_with?("dev-handbook/templates/") && document.path.end_with?(".template.md")
-+              return {error: "Invalid template path: #{document.path} (must be in dev-handbook/templates/ and end with .template.md)"}
++            unless document.path.start_with?(".ace/handbook/templates/") && document.path.end_with?(".template.md")
++              return {error: "Invalid template path: #{document.path} (must be in .ace/handbook/templates/ and end with .template.md)"}
 +            end
 +          when :guide
-+            unless document.path.start_with?("dev-handbook/guides/") && document.path.end_with?(".g.md")
-+              return {error: "Invalid guide path: #{document.path} (must be in dev-handbook/guides/ and end with .g.md)"}
++            unless document.path.start_with?(".ace/handbook/guides/") && document.path.end_with?(".g.md")
++              return {error: "Invalid guide path: #{document.path} (must be in .ace/handbook/guides/ and end with .g.md)"}
 +            end
 +          else
 +            return {error: "Unknown document type: #{document.type}"}
@@ -51396,8 +51396,8 @@ index 0000000..44a3d8a
 +        # Find release by version
 +        def self.find_release_by_version(version, base_path: ".", search_current: true, search_backlog: true)
 +          search_paths = []
-+          search_paths << File.join(base_path, "dev-taskflow/current") if search_current
-+          search_paths << File.join(base_path, "dev-taskflow/backlog") if search_backlog
++          search_paths << File.join(base_path, ".ace/taskflow/current") if search_current
++          search_paths << File.join(base_path, ".ace/taskflow/backlog") if search_backlog
 +
 +          result = Atoms::TaskManagement::DirectoryNavigator.find_release_directory(
 +            version, search_paths: search_paths, base_path: base_path
@@ -52147,8 +52147,8 @@ index 0000000..b38cd1c
 +        # Find release by version
 +        def self.find_release_by_version(version, base_path: ".", search_current: true, search_backlog: true)
 +          search_paths = []
-+          search_paths << File.join(base_path, "dev-taskflow/current") if search_current
-+          search_paths << File.join(base_path, "dev-taskflow/backlog") if search_backlog
++          search_paths << File.join(base_path, ".ace/taskflow/current") if search_current
++          search_paths << File.join(base_path, ".ace/taskflow/backlog") if search_backlog
 +
 +          result = Atoms::TaskflowManagement::DirectoryNavigator.find_release_directory(
 +            version, search_paths: search_paths, base_path: base_path
@@ -54255,7 +54255,7 @@ index 0000000..c8e6e08
 +        # @return [String] current release path
 +        def find_current_release
 +          # Look for current release in taskflow
-+          current_dir = "dev-taskflow/current"
++          current_dir = ".ace/taskflow/current"
 +          if File.exist?(current_dir) && File.directory?(current_dir)
 +            # Find the release directory
 +            release_dirs = Dir.glob(File.join(current_dir, "v.*"))
@@ -54431,7 +54431,7 @@ index 0000000..d0fdfa5
 +            recommended_agents: calculate_optimal_agents(error_files.size),
 +            estimated_time: estimate_processing_time(error_files),
 +            parallelization_strategy: determine_strategy(error_files),
-+            workflow_instruction: "dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md"
++            workflow_instruction: ".ace/handbook/workflow-instructions/fix-linting-issue-from.wf.md"
 +          }
 +        end
 +
@@ -54713,7 +54713,7 @@ index 0000000..2f24230
 +            results[:agent_metadata] = {
 +              total_errors: phase2_results.dig(:error_distribution, :total_errors),
 +              error_files: results[:error_files].size,
-+              workflow_instruction: "dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md",
++              workflow_instruction: ".ace/handbook/workflow-instructions/fix-linting-issue-from.wf.md",
 +              parallel_agents: @config.dig("error_distribution", "max_files") || 4
 +            }
 +          end
@@ -56255,8 +56255,8 @@ index 0000000..68b7ffe
 +
 +          # Search in both current and done directories
 +          search_paths = [
-+            File.join(@base_path, "dev-taskflow/current"),
-+            File.join(@base_path, "dev-taskflow/done")
++            File.join(@base_path, ".ace/taskflow/current"),
++            File.join(@base_path, ".ace/taskflow/done")
 +          ]
 +
 +          search_paths.each do |base_dir|
@@ -56526,7 +56526,7 @@ index 0000000..61c1a16
 +        # Configuration options for the synchronizer
 +        SyncConfig = Struct.new(:path, :dry_run, :verbose, :commit, :file_patterns) do
 +          def initialize(
-+            path: "dev-handbook/workflow-instructions",
++            path: ".ace/handbook/workflow-instructions",
 +            dry_run: false,
 +            verbose: false,
 +            commit: false,
@@ -56855,7 +56855,7 @@ index 0000000..c3bca77
 +        def next
 +          # Since backlog doesn't contain versioned releases based on our analysis,
 +          # we'll implement a placeholder that can be enhanced when backlog structure changes
-+          backlog_path = File.join(@base_path, "dev-taskflow/backlog")
++          backlog_path = File.join(@base_path, ".ace/taskflow/backlog")
 +
 +          unless File.exist?(backlog_path) && File.directory?(backlog_path)
 +            return ManagerResult.new(nil, false, "Backlog directory not found: #{backlog_path}")
@@ -56913,7 +56913,7 @@ index 0000000..c3bca77
 +
 +          # Create release directory path
 +          release_name = "#{next_version}-#{final_codename}"
-+          release_path = File.join(@base_path, "dev-taskflow", "backlog", release_name)
++          release_path = File.join(@base_path, ".ace/taskflow", "backlog", release_name)
 +
 +          # Create directory structure
 +          Dir.mkdir(release_path) unless File.exist?(release_path)
@@ -57027,7 +57027,7 @@ index 0000000..c3bca77
 +        # Scan releases in a specific directory
 +        def scan_releases_in_directory(directory_name, type)
 +          releases = []
-+          base_dir = File.join(@base_path, "dev-taskflow", directory_name)
++          base_dir = File.join(@base_path, ".ace/taskflow", directory_name)
 +
 +          return releases unless File.exist?(base_dir) && File.directory?(base_dir)
 +
@@ -57284,8 +57284,8 @@ index 0000000..e763fa8
 +
 +          # Search in both current and done directories
 +          search_paths = [
-+            File.join(@base_path, "dev-taskflow/current"),
-+            File.join(@base_path, "dev-taskflow/done")
++            File.join(@base_path, ".ace/taskflow/current"),
++            File.join(@base_path, ".ace/taskflow/done")
 +          ]
 +
 +          search_paths.each do |base_dir|
@@ -57685,8 +57685,8 @@ index 0000000..f394e7b
 +
 +      it "accepts PROJECT_ROOT with dev-* subdirectories as markers" do
 +        # Create multiple dev-* subdirectories to simulate multi-repo structure
-+        dev_tools_dir = File.join(temp_dir, "dev-tools")
-+        dev_handbook_dir = File.join(temp_dir, "dev-handbook")
++        dev_tools_dir = File.join(temp_dir, ".ace/tools")
++        dev_handbook_dir = File.join(temp_dir, ".ace/handbook")
 +        FileUtils.mkdir_p(dev_tools_dir)
 +        FileUtils.mkdir_p(dev_handbook_dir)
 +
@@ -57699,12 +57699,12 @@ index 0000000..f394e7b
 +
 +    context "with special dev-* directories" do
 +      let(:temp_project_root) { Dir.mktmpdir }
-+      let(:dev_tools_dir) { File.join(temp_project_root, "dev-tools") }
++      let(:dev_tools_dir) { File.join(temp_project_root, ".ace/tools") }
 +      let(:deep_subdir) { File.join(dev_tools_dir, "lib", "deep", "nested") }
 +
 +      after { FileUtils.rm_rf(temp_project_root) }
 +
-+      it "detects project root from dev-tools subdirectory" do
++      it "detects project root from .ace/tools subdirectory" do
 +        # Create project structure with .git marker
 +        git_dir = File.join(temp_project_root, ".git")
 +        FileUtils.mkdir_p(git_dir)
@@ -57714,8 +57714,8 @@ index 0000000..f394e7b
 +        expect(result).to eq(temp_project_root)
 +      end
 +
-+      it "detects project root from dev-handbook subdirectory" do
-+        dev_handbook_dir = File.join(temp_project_root, "dev-handbook")
++      it "detects project root from .ace/handbook subdirectory" do
++        dev_handbook_dir = File.join(temp_project_root, ".ace/handbook")
 +        handbook_subdir = File.join(dev_handbook_dir, "guides")
 +
 +        # Create project structure with .git marker
@@ -57727,8 +57727,8 @@ index 0000000..f394e7b
 +        expect(result).to eq(temp_project_root)
 +      end
 +
-+      it "detects project root from dev-taskflow subdirectory" do
-+        dev_taskflow_dir = File.join(temp_project_root, "dev-taskflow")
++      it "detects project root from .ace/taskflow subdirectory" do
++        dev_taskflow_dir = File.join(temp_project_root, ".ace/taskflow")
 +        taskflow_subdir = File.join(dev_taskflow_dir, "current", "tasks")
 +
 +        # Create project structure with Gemfile marker
@@ -57743,7 +57743,7 @@ index 0000000..f394e7b
 +      it "requires valid project markers in parent directory" do
 +        # Create a completely isolated temporary structure
 +        isolated_root = Dir.mktmpdir
-+        isolated_dev_tools = File.join(isolated_root, "dev-tools", "lib", "deep")
++        isolated_dev_tools = File.join(isolated_root, ".ace/tools", "lib", "deep")
 +        FileUtils.mkdir_p(isolated_dev_tools)
 +
 +        # Should not find the parent as project root (no markers)
@@ -57781,8 +57781,8 @@ index 0000000..f394e7b
 +
 +    context "when starting from a subdirectory" do
 +      it "traverses up to find project root" do
-+        # Start from dev-tools subdirectory
-+        dev_tools_path = File.join(Dir.pwd, "dev-tools")
++        # Start from .ace/tools subdirectory
++        dev_tools_path = File.join(Dir.pwd, ".ace/tools")
 +        if File.directory?(dev_tools_path)
 +          result = detector.find_project_root(dev_tools_path)
 +          expect(result).to eq(Dir.pwd)
@@ -57971,8 +57971,8 @@ index 0000000..234d4f4
 +
 +RSpec.describe CodingAgentTools::Atoms::TaskManagement::DirectoryNavigator do
 +  let(:temp_dir) { Dir.mktmpdir }
-+  let(:current_path) { File.join(temp_dir, "dev-taskflow", "current") }
-+  let(:backlog_path) { File.join(temp_dir, "dev-taskflow", "backlog") }
++  let(:current_path) { File.join(temp_dir, ".ace/taskflow", "current") }
++  let(:backlog_path) { File.join(temp_dir, ".ace/taskflow", "backlog") }
 +
 +  before do
 +    FileUtils.mkdir_p(current_path)
@@ -59608,9 +59608,9 @@ index 0000000..5b371eb
 +
 +  before do
 +    # Create test directory structure
-+    FileUtils.mkdir_p("#{base_path}/dev-taskflow/current")
-+    FileUtils.mkdir_p("#{base_path}/dev-taskflow/done")
-+    FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog")
++    FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current")
++    FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done")
++    FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog")
 +
 +    # Mock ProjectRootDetector to return our test path
 +    allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(base_path)
@@ -59626,8 +59626,8 @@ index 0000000..5b371eb
 +
 +    context "when current release exists" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks")
-+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks/task1.md", "# Task 1")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current/v.0.3.0-test/tasks")
++        File.write("#{base_path}/.ace/taskflow/current/v.0.3.0-test/tasks/task1.md", "# Task 1")
 +      end
 +
 +      it "returns current release information in text format" do
@@ -59651,7 +59651,7 @@ index 0000000..5b371eb
 +
 +    context "when backlog has versioned releases" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog/v.0.4.0-future")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog/v.0.4.0-future")
 +      end
 +
 +      it "returns next release information in text format" do
@@ -59699,10 +59699,10 @@ index 0000000..5b371eb
 +
 +    context "when releases exist" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.1.0-test/tasks")
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.2.0-test/tasks")
-+        File.write("#{base_path}/dev-taskflow/done/v.0.1.0-test/tasks/task1.md", "# Task 1")
-+        File.write("#{base_path}/dev-taskflow/current/v.0.2.0-test/tasks/task1.md", "# Task 1")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.1.0-test/tasks")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current/v.0.2.0-test/tasks")
++        File.write("#{base_path}/.ace/taskflow/done/v.0.1.0-test/tasks/task1.md", "# Task 1")
++        File.write("#{base_path}/.ace/taskflow/current/v.0.2.0-test/tasks/task1.md", "# Task 1")
 +      end
 +
 +      it "returns all releases in text format" do
@@ -60032,9 +60032,9 @@ index 0000000..d36e75c
 +        expect(result).to include("set -e")
 +        expect(result).to include('ORIGINAL_DIR="$(pwd)"')
 +        expect(result).to include("trap 'cd \"$ORIGINAL_DIR\"' EXIT")
-+        expect(result).to include('cd "$(dirname "$0")/../dev-tools"')
++        expect(result).to include('cd "$(dirname "$0")/../.ace/tools"')
 +        expect(result).to include("./exe/task-manager next \"$@\"")
-+        expect(result).to include("echo \"INFO: Get next task from dev-tools directory: $(pwd)\"")
++        expect(result).to include("echo \"INFO: Get next task from .ace/tools directory: $(pwd)\"")
 +      end
 +    end
 +
@@ -60542,7 +60542,7 @@ index 0000000..ee44db4
 +        expect(config["project"]["root"]).to eq("..")
 +        expect(config["project"]["name"]).to eq("tools-meta")
 +        expect(config["repositories"]["scan_order"]).to be_an(Array)
-+        expect(config["path_patterns"]["task_new"]["template"]).to include("dev-taskflow")
++        expect(config["path_patterns"]["task_new"]["template"]).to include(".ace/taskflow")
 +        expect(config["security"]["enforce_sandbox"]).to be true
 +      end
 +    end
@@ -60727,12 +60727,12 @@ index 0000000..2e09026
 +      "repositories" => {
 +        "scan_order" => [
 +          {"name" => "tools-meta", "path" => ".", "priority" => 1},
-+          {"name" => "dev-tools", "path" => "dev-tools", "priority" => 2}
++          {"name" => ".ace/tools", "path" => ".ace/tools", "priority" => 2}
 +        ]
 +      },
 +      "path_patterns" => {
 +        "task_new" => {
-+          "template" => "dev-taskflow/current/{release}/tasks/{release}+task.{id}-{slug}.md",
++          "template" => ".ace/taskflow/current/{release}/tasks/{release}+task.{id}-{slug}.md",
 +          "variables" => {
 +            "release" => "release-manager current",
 +            "id" => "task-manager generate-id",
@@ -60750,13 +60750,13 @@ index 0000000..2e09026
 +
 +  before do
 +    # Setup test directory structure
-+    FileUtils.mkdir_p(File.join(temp_dir, "dev-tools", "lib"))
-+    FileUtils.mkdir_p(File.join(temp_dir, "dev-taskflow", "current", "v.0.3.0"))
++    FileUtils.mkdir_p(File.join(temp_dir, ".ace/tools", "lib"))
++    FileUtils.mkdir_p(File.join(temp_dir, ".ace/taskflow", "current", "v.0.3.0"))
 +
 +    # Create test files
 +    FileUtils.touch(File.join(temp_dir, "README.md"))
-+    FileUtils.touch(File.join(temp_dir, "dev-tools", "lib", "test.rb"))
-+    FileUtils.touch(File.join(temp_dir, "dev-taskflow", "current", "v.0.3.0", "task.1.md"))
++    FileUtils.touch(File.join(temp_dir, ".ace/tools", "lib", "test.rb"))
++    FileUtils.touch(File.join(temp_dir, ".ace/taskflow", "current", "v.0.3.0", "task.1.md"))
 +
 +    # Setup mocks
 +    allow(config_loader).to receive(:load).and_return(config)
@@ -60817,7 +60817,7 @@ index 0000000..2e09026
 +        allow(resolver).to receive(:execute_command).with("release-manager current").and_return("v.0.3.0-migration")
 +        allow(resolver).to receive(:execute_command).with("task-manager generate-id").and_return("42")
 +
-+        expected_path = File.join(temp_dir, "dev-taskflow/current/v.0.3.0-migration/tasks/v.0.3.0-migration+task.42-test-task.md")
++        expected_path = File.join(temp_dir, ".ace/taskflow/current/v.0.3.0-migration/tasks/v.0.3.0-migration+task.42-test-task.md")
 +        allow(sandbox).to receive(:validate_path).with(expected_path).and_return({success: true, path: expected_path})
 +
 +        result = resolver.resolve_path("Test Task", type: :task_new)
@@ -60866,7 +60866,7 @@ index 0000000..2e09026
 +
 +    context "when task exists" do
 +      it "returns task path" do
-+        task_path = File.join(temp_dir, "dev-taskflow", "current", "v.0.3.0", "task.1.md")
++        task_path = File.join(temp_dir, ".ace/taskflow", "current", "v.0.3.0", "task.1.md")
 +        allow(resolver).to receive(:find_matching_paths).and_return([task_path])
 +
 +        result = resolver.resolve_existing_task("1")
@@ -61028,14 +61028,14 @@ index 0000000..77c9738
 +  before do
 +    # Create a basic project structure
 +    FileUtils.mkdir_p(File.join(temp_dir, ".git"))
-+    FileUtils.mkdir_p(File.join(temp_dir, "dev-tools", "lib"))
-+    FileUtils.mkdir_p(File.join(temp_dir, "dev-taskflow", "current"))
++    FileUtils.mkdir_p(File.join(temp_dir, ".ace/tools", "lib"))
++    FileUtils.mkdir_p(File.join(temp_dir, ".ace/taskflow", "current"))
 +    FileUtils.mkdir_p(File.join(temp_dir, "bin"))
 +    FileUtils.mkdir_p(File.join(temp_dir, ".coding-agent"))
 +
 +    # Create some test files
 +    FileUtils.touch(File.join(temp_dir, "README.md"))
-+    FileUtils.touch(File.join(temp_dir, "dev-tools", "lib", "test.rb"))
++    FileUtils.touch(File.join(temp_dir, ".ace/tools", "lib", "test.rb"))
 +    FileUtils.touch(File.join(temp_dir, "bin", "script"))
 +  end
 +
@@ -61089,8 +61089,8 @@ index 0000000..77c9738
 +        end
 +      end
 +
-+      it "accepts ruby files in dev-tools" do
-+        path = File.join(temp_dir, "dev-tools", "lib", "test.rb")
++      it "accepts ruby files in .ace/tools" do
++        path = File.join(temp_dir, ".ace/tools", "lib", "test.rb")
 +        result = sandbox.validate_path(path)
 +        expect(result[:success]).to be true
 +      end
@@ -61184,9 +61184,9 @@ index 0000000..77c9738
 +    let(:sandbox) { described_class.new(project_root) }
 +
 +    it "returns relative path from project root" do
-+      path = File.join(temp_dir, "dev-tools", "lib", "test.rb")
++      path = File.join(temp_dir, ".ace/tools", "lib", "test.rb")
 +      relative = sandbox.relative_to_project(path)
-+      expect(relative).to eq("dev-tools/lib/test.rb")
++      expect(relative).to eq(".ace/tools/lib/test.rb")
 +    end
 +
 +    it "raises error for paths outside sandbox" do
@@ -61287,8 +61287,8 @@ index 0000000..77c9738
 +        expect(sandbox.within_sandbox?(bin_path)).to be true
 +      end
 +
-+      it "allows dev-tools directory structure" do
-+        dev_path = File.join(temp_dir, "dev-tools", "spec", "test_spec.rb")
++      it "allows .ace/tools directory structure" do
++        dev_path = File.join(temp_dir, ".ace/tools", "spec", "test_spec.rb")
 +        FileUtils.mkdir_p(File.dirname(dev_path))
 +        FileUtils.touch(dev_path)
 +        expect(sandbox.within_sandbox?(dev_path)).to be true
@@ -61390,7 +61390,7 @@ index 0000000..c170830
 +
 +  let(:template_document) do
 +    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
-+      "dev-handbook/templates/test.template.md",
++      ".ace/handbook/templates/test.template.md",
 +      "# Embedded Content\n\nThis is embedded content.",
 +      :template,
 +      :documents,
@@ -61401,7 +61401,7 @@ index 0000000..c170830
 +
 +  let(:guide_document) do
 +    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
-+      "dev-handbook/guides/test.g.md",
++      ".ace/handbook/guides/test.g.md",
 +      "# Embedded Guide\n\nThis is embedded guide content.",
 +      :guide,
 +      :documents,
@@ -61415,13 +61415,13 @@ index 0000000..c170830
 +      # Workflow File
 +
 +      <documents>
-+      <template path="dev-handbook/templates/test.template.md">
++      <template path=".ace/handbook/templates/test.template.md">
 +      # Embedded Content
 +
 +      This is embedded content.
 +      </template>
 +
-+      <guide path="dev-handbook/guides/test.g.md">
++      <guide path=".ace/handbook/guides/test.g.md">
 +      # Embedded Guide
 +
 +      This is embedded guide content.
@@ -61543,7 +61543,7 @@ index 0000000..c170830
 +
 +      let(:invalid_guide) do
 +        CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
-+          "dev-handbook/templates/guide.md",
++          ".ace/handbook/templates/guide.md",
 +          "content",
 +          :guide,
 +          :documents,
@@ -61601,7 +61601,7 @@ index 0000000..c170830
 +
 +        expect(updated).to include("# New Content")
 +        expect(updated).to include("This is new content.")
-+        expect(updated).to include("<template path=\"dev-handbook/templates/test.template.md\">")
++        expect(updated).to include("<template path=\".ace/handbook/templates/test.template.md\">")
 +      end
 +
 +      it "updates guide content" do
@@ -61609,14 +61609,14 @@ index 0000000..c170830
 +
 +        expect(updated).to include("# New Content")
 +        expect(updated).to include("This is new content.")
-+        expect(updated).to include("<guide path=\"dev-handbook/guides/test.g.md\">")
++        expect(updated).to include("<guide path=\".ace/handbook/guides/test.g.md\">")
 +      end
 +    end
 +
 +    context "with legacy templates format" do
 +      let(:legacy_document) do
 +        CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
-+          "dev-handbook/templates/legacy.template.md",
++          ".ace/handbook/templates/legacy.template.md",
 +          "Legacy content",
 +          :template,
 +          :templates,
@@ -61628,7 +61628,7 @@ index 0000000..c170830
 +      let(:legacy_workflow_content) do
 +        <<~MARKDOWN
 +          <templates>
-+          <template path="dev-handbook/templates/legacy.template.md">
++          <template path=".ace/handbook/templates/legacy.template.md">
 +          Legacy content
 +          </template>
 +          </templates>
@@ -61640,12 +61640,12 @@ index 0000000..c170830
 +
 +        expect(updated).to include("# New Content")
 +        expect(updated).to include("This is new content.")
-+        expect(updated).to include("<template path=\"dev-handbook/templates/legacy.template.md\">")
++        expect(updated).to include("<template path=\".ace/handbook/templates/legacy.template.md\">")
 +      end
 +
 +      it "raises error for non-template types in legacy format" do
 +        legacy_guide = CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
-+          "dev-handbook/guides/test.g.md",
++          ".ace/handbook/guides/test.g.md",
 +          "content",
 +          :guide,
 +          :templates,
@@ -61810,13 +61810,13 @@ index 0000000..b212fb7
 +          # Some markdown
 +
 +          <documents>
-+          <template path="dev-handbook/templates/example.template.md">
++          <template path=".ace/handbook/templates/example.template.md">
 +          # Example Template
 +          
 +          This is template content.
 +          </template>
 +
-+          <guide path="dev-handbook/guides/example.g.md">
++          <guide path=".ace/handbook/guides/example.g.md">
 +          # Example Guide
 +
 +          This is guide content.
@@ -61834,12 +61834,12 @@ index 0000000..b212fb7
 +        expect(result.documents.size).to eq 2
 +
 +        template = result.documents.find(&:template?)
-+        expect(template.path).to eq "dev-handbook/templates/example.template.md"
++        expect(template.path).to eq ".ace/handbook/templates/example.template.md"
 +        expect(template.content).to include "# Example Template"
 +        expect(template.source_format).to eq :documents
 +
 +        guide = result.documents.find(&:guide?)
-+        expect(guide.path).to eq "dev-handbook/guides/example.g.md"
++        expect(guide.path).to eq ".ace/handbook/guides/example.g.md"
 +        expect(guide.content).to include "# Example Guide"
 +        expect(guide.source_format).to eq :documents
 +      end
@@ -61861,7 +61861,7 @@ index 0000000..b212fb7
 +          # Some markdown
 +
 +          <templates>
-+          <template path="dev-handbook/templates/legacy.template.md">
++          <template path=".ace/handbook/templates/legacy.template.md">
 +          # Legacy Template
 +          
 +          This is legacy template content.
@@ -61879,7 +61879,7 @@ index 0000000..b212fb7
 +        expect(result.warnings).to include(/Legacy.*templates.*format/)
 +
 +        template = result.documents.first
-+        expect(template.path).to eq "dev-handbook/templates/legacy.template.md"
++        expect(template.path).to eq ".ace/handbook/templates/legacy.template.md"
 +        expect(template.type).to eq :template
 +        expect(template.source_format).to eq :templates
 +      end
@@ -61889,11 +61889,11 @@ index 0000000..b212fb7
 +      let(:content) do
 +        <<~MARKDOWN
 +          <documents>
-+          <template path="dev-handbook/templates/new.template.md">New format</template>
++          <template path=".ace/handbook/templates/new.template.md">New format</template>
 +          </documents>
 +
 +          <templates>
-+          <template path="dev-handbook/templates/old.template.md">Old format</template>
++          <template path=".ace/handbook/templates/old.template.md">Old format</template>
 +          </templates>
 +        MARKDOWN
 +      end
@@ -61908,8 +61908,8 @@ index 0000000..b212fb7
 +        new_format = result.documents.find { |d| d.source_format == :documents }
 +        legacy_format = result.documents.find { |d| d.source_format == :templates }
 +
-+        expect(new_format.path).to eq "dev-handbook/templates/new.template.md"
-+        expect(legacy_format.path).to eq "dev-handbook/templates/old.template.md"
++        expect(new_format.path).to eq ".ace/handbook/templates/new.template.md"
++        expect(legacy_format.path).to eq ".ace/handbook/templates/old.template.md"
 +      end
 +    end
 +
@@ -61964,7 +61964,7 @@ index 0000000..b212fb7
 +      it "handles whitespace in paths" do
 +        whitespace_content = <<~MARKDOWN
 +          <documents>
-+          <template path="  dev-handbook/templates/test.template.md  ">Content</template>
++          <template path="  .ace/handbook/templates/test.template.md  ">Content</template>
 +          </documents>
 +        MARKDOWN
 +
@@ -61972,7 +61972,7 @@ index 0000000..b212fb7
 +
 +        expect(result.success?).to be true
 +        expect(result.documents.size).to eq 1
-+        expect(result.documents.first.path).to eq "dev-handbook/templates/test.template.md"
++        expect(result.documents.first.path).to eq ".ace/handbook/templates/test.template.md"
 +      end
 +    end
 +  end
@@ -62545,7 +62545,7 @@ index 0000000..3601202
 +
 +  # Helper to create a release directory structure
 +  def create_release_structure(release_name = "v.0.1.0-test")
-+    release_dir = File.join(temp_dir, "dev-taskflow", "current", release_name)
++    release_dir = File.join(temp_dir, ".ace/taskflow", "current", release_name)
 +    tasks_dir = File.join(release_dir, "tasks")
 +    FileUtils.mkdir_p(tasks_dir)
 +
@@ -63046,7 +63046,7 @@ index 0000000..11786bf
 +
 +  let(:sample_document) do
 +    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
-+      "dev-handbook/templates/test.template.md",
++      ".ace/handbook/templates/test.template.md",
 +      "Sample content",
 +      :template,
 +      :documents,
@@ -63264,7 +63264,7 @@ index 0000000..11786bf
 +      it "provides default configuration" do
 +        default_config = described_class::SyncConfig.new
 +
-+        expect(default_config.path).to eq "dev-handbook/workflow-instructions"
++        expect(default_config.path).to eq ".ace/handbook/workflow-instructions"
 +        expect(default_config.dry_run).to be false
 +        expect(default_config.verbose).to be false
 +        expect(default_config.commit).to be false
@@ -63332,9 +63332,9 @@ index 0000000..e2640e9
 +
 +  before do
 +    # Create test directory structure
-+    FileUtils.mkdir_p("#{base_path}/dev-taskflow/current")
-+    FileUtils.mkdir_p("#{base_path}/dev-taskflow/done")
-+    FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog")
++    FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current")
++    FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done")
++    FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog")
 +  end
 +
 +  after do
@@ -63345,9 +63345,9 @@ index 0000000..e2640e9
 +  describe "#current" do
 +    context "when current release exists" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks")
-+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks/task1.md", "# Task 1")
-+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks/task2.md", "# Task 2")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current/v.0.3.0-migration/tasks")
++        File.write("#{base_path}/.ace/taskflow/current/v.0.3.0-migration/tasks/task1.md", "# Task 1")
++        File.write("#{base_path}/.ace/taskflow/current/v.0.3.0-migration/tasks/task2.md", "# Task 2")
 +      end
 +
 +      it "returns current release information" do
@@ -63373,8 +63373,8 @@ index 0000000..e2640e9
 +  describe "#next" do
 +    context "when backlog has versioned releases" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog/v.0.4.0-future")
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog/v.0.5.0-later")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog/v.0.4.0-future")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog/v.0.5.0-later")
 +      end
 +
 +      it "returns the lowest version release" do
@@ -63389,8 +63389,8 @@ index 0000000..e2640e9
 +
 +    context "when backlog has no versioned releases" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog/ideas")
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog/future-considerations")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog/ideas")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog/future-considerations")
 +      end
 +
 +      it "returns success with no releases message" do
@@ -63403,7 +63403,7 @@ index 0000000..e2640e9
 +
 +    context "when backlog directory doesn't exist" do
 +      before do
-+        FileUtils.rm_rf("#{base_path}/dev-taskflow/backlog")
++        FileUtils.rm_rf("#{base_path}/.ace/taskflow/backlog")
 +      end
 +
 +      it "returns an error" do
@@ -63418,9 +63418,9 @@ index 0000000..e2640e9
 +  describe "#generate_id" do
 +    context "when releases exist" do
 +      before do
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.1.0-foundation")
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.2.0-synapse")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current/v.0.3.0-migration")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.1.0-foundation")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.2.0-synapse")
 +      end
 +
 +      it "generates next task ID with minor version bump" do
@@ -63445,18 +63445,18 @@ index 0000000..e2640e9
 +    context "when multiple releases exist across directories" do
 +      before do
 +        # Create done releases
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.1.0-foundation/tasks")
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.2.0-synapse/tasks")
-+        File.write("#{base_path}/dev-taskflow/done/v.0.1.0-foundation/tasks/task1.md", "# Task 1")
-+        File.write("#{base_path}/dev-taskflow/done/v.0.2.0-synapse/tasks/task1.md", "# Task 1")
-+        File.write("#{base_path}/dev-taskflow/done/v.0.2.0-synapse/tasks/task2.md", "# Task 2")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.1.0-foundation/tasks")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.2.0-synapse/tasks")
++        File.write("#{base_path}/.ace/taskflow/done/v.0.1.0-foundation/tasks/task1.md", "# Task 1")
++        File.write("#{base_path}/.ace/taskflow/done/v.0.2.0-synapse/tasks/task1.md", "# Task 1")
++        File.write("#{base_path}/.ace/taskflow/done/v.0.2.0-synapse/tasks/task2.md", "# Task 2")
 +
 +        # Create current release
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks")
-+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks/task1.md", "# Task 1")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current/v.0.3.0-migration/tasks")
++        File.write("#{base_path}/.ace/taskflow/current/v.0.3.0-migration/tasks/task1.md", "# Task 1")
 +
 +        # Create backlog release
-+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog/v.0.4.0-future/tasks")
++        FileUtils.mkdir_p("#{base_path}/.ace/taskflow/backlog/v.0.4.0-future/tasks")
 +      end
 +
 +      it "returns all releases sorted by version" do
@@ -63588,10 +63588,10 @@ index 0000000..e2640e9
 +
 +  describe "version parsing and sorting" do
 +    before do
-+      FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.1.0-foundation")
-+      FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.10.0-major")
-+      FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.2.0-synapse")
-+      FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
++      FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.1.0-foundation")
++      FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.10.0-major")
++      FileUtils.mkdir_p("#{base_path}/.ace/taskflow/done/v.0.2.0-synapse")
++      FileUtils.mkdir_p("#{base_path}/.ace/taskflow/current/v.0.3.0-migration")
 +    end
 +
 +    it "sorts versions correctly using semantic versioning" do
@@ -64606,8 +64606,8 @@ index 0000000..6d5b1be
 +
 +# Test paths that demonstrate the issue
 +test_paths = [
-+  "dev-tools/exe/git-log",
-+  "dev-taskflow/current/v.0.3.0-migration/docs/19-cli-interface-design.md"
++  ".ace/tools/exe/git-log",
++  ".ace/taskflow/current/v.0.3.0-migration/docs/19-cli-interface-design.md"
 +]
 +
 +path_resolver = CodingAgentTools::Atoms::Git::PathResolver.new(repositories, project_root)
@@ -64643,8 +64643,8 @@ index 0000000..6d5b1be
 +end
 +
 +puts "\nCorrect behavior should generate:"
-+puts "git -C dev-tools add exe/git-log"
-+puts "git -C dev-taskflow add current/v.0.3.0-migration/docs/19-cli-interface-design.md"
++puts "git -C .ace/tools add exe/git-log"
++puts "git -C .ace/taskflow add current/v.0.3.0-migration/docs/19-cli-interface-design.md"
     ]]>
   </review-target>
 

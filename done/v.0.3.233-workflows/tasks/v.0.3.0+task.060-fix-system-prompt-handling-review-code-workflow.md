@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-house-rules.md
     ├── changelog.g.md
@@ -107,7 +107,7 @@ Fix the critical system prompt handling flaw in the review-code workflow where s
 
 ## Scope of Work
 
-* Update the LLM execution section in `dev-handbook/workflow-instructions/review-code.wf.md` to use proper `--system` flag
+* Update the LLM execution section in `.ace/handbook/workflow-instructions/review-code.wf.md` to use proper `--system` flag
 * Remove system prompt embedding from combined prompt construction
 * Ensure proper separation of system and user prompts in all LLM query examples
 * Update template usage patterns to reflect correct system prompt handling
@@ -121,7 +121,7 @@ Fix the critical system prompt handling flaw in the review-code workflow where s
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 
 #### Delete
 
@@ -143,7 +143,7 @@ Fix the critical system prompt handling flaw in the review-code workflow where s
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All problematic system prompt handling patterns are identified
-  > Command: grep -n "system.prompt" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -n "system.prompt" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Research proper `--system` flag usage patterns in llm-query tool
 * [x] Plan detailed refactoring approach for multi-model execution sections
 
@@ -153,17 +153,17 @@ Fix the critical system prompt handling flaw in the review-code workflow where s
   > TEST: Verify System Flag Usage
   > Type: Action Validation
   > Assert: All llm-query commands use `--system` flag with proper template paths
-  > Command: grep -A 3 -B 3 "llm-query.*--system" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A 3 -B 3 "llm-query.*--system" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Remove system prompt embedding from Combined Prompt Construction section (lines 217-295)
   > TEST: Verify System Prompt Removal
   > Type: Action Validation
   > Assert: System prompt content is not embedded in combined prompt construction
-  > Command: grep -n "system.prompt" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -n "system.prompt" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Update all usage examples to demonstrate proper `--system` flag usage
   > TEST: Verify Example Consistency
   > Type: Action Validation
   > Assert: All examples show correct system prompt parameter usage
-  > Command: grep -n "dev-tools/exe/llm-query" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -n ".ace/tools/exe/llm-query" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Update template selection documentation to clarify system prompt file usage
 * [x] Validate that corrected implementation matches reflection note recommendations
 
@@ -184,7 +184,7 @@ Fix the critical system prompt handling flaw in the review-code workflow where s
 
 ## References
 
-* Source issue: dev-taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md
-* Target file: dev-handbook/workflow-instructions/review-code.wf.md
+* Source issue: .ace/taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md
+* Target file: .ace/handbook/workflow-instructions/review-code.wf.md
 * Reflection note analysis: System Prompt Architecture Flaw (lines 36-39)
 * Corrected implementation pattern: lines 120-123 in reflection note

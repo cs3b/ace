@@ -78,8 +78,8 @@
 - Task: v.0.6.0+task.006
 - Related tasks: v.0.6.0+task.002, v.0.6.0+task.004
 - Files modified:
-  - `/dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb`
-  - `/dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb`
-  - `/dev-tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb`
-  - `/dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb`
-  - `/dev-tools/spec/integrations/claude_commands_installer_spec.rb`
+  - `/.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb`
+  - `/.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb`
+  - `/.ace/tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb`
+  - `/.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb`
+  - `/.ace/tools/spec/integrations/claude_commands_installer_spec.rb`

@@ -136,7 +136,7 @@ Excellent! This is a well-defined and powerful agent definition. It follows best
 
 -   **Clarity & Specificity**: Excellent. The prompt is unambiguous, with clear sections, roles, and examples.
 -   **Token Efficiency**: Good. The prompt is verbose but highly structured. This front-loading of instructions should prevent wasted tokens on clarification or error correction. The recommended context bootstrapping would further improve efficiency.
--   **Architecture Alignment**: Excellent. The agent's function and output location (`dev-taskflow/backlog/`) are perfectly aligned with the project's documented architecture and "Documentation-Driven Development" principles.
+-   **Architecture Alignment**: Excellent. The agent's function and output location (`.ace/taskflow/backlog/`) are perfectly aligned with the project's documented architecture and "Documentation-Driven Development" principles.
 -   **Documentation Completeness**: Excellent. The agent definition itself is a prime example of good documentation.
 -   **User Experience**: Excellent. The agent's purpose is clear, and its expected output is well-defined, leading to a predictable and valuable experience for the user invoking it.
 

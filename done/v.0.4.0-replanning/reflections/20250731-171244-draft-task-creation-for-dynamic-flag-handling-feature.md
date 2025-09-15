@@ -1,7 +1,7 @@
 # Reflection: Draft Task Creation for Dynamic Flag Handling Feature
 
 **Date**: 2025-07-31
-**Context**: Draft task creation workflow executed for idea dev-taskflow/backlog/ideas/20250731-0800-flag-attribute-yaml.md, focusing on behavior-first specification for create-path task-new enhancement
+**Context**: Draft task creation workflow executed for idea .ace/taskflow/backlog/ideas/20250731-0800-flag-attribute-yaml.md, focusing on behavior-first specification for create-path task-new enhancement
 **Author**: Claude Code Assistant  
 **Type**: Conversation Analysis
 
@@ -101,7 +101,7 @@ The draft task (v.0.4.0+task.015) successfully captures the behavioral requireme
 
 ## Additional Context
 
-- Enhanced idea source: dev-taskflow/backlog/ideas/20250731-0800-flag-attribute-yaml.md
-- Created draft task: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.015-enable-dynamic-flag-handling-in-create-path-task-new.md
-- Workflow reference: dev-handbook/workflow-instructions/draft-task.wf.md
+- Enhanced idea source: .ace/taskflow/backlog/ideas/20250731-0800-flag-attribute-yaml.md
+- Created draft task: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.015-enable-dynamic-flag-handling-in-create-path-task-new.md
+- Workflow reference: .ace/handbook/workflow-instructions/draft-task.wf.md
 - Next phase: Implementation planning and technical design

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules/reflection/
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules/reflection/
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/molecules/reflection/
+.ace/tools/lib/coding_agent_tools/molecules/reflection/
 └── report_collector.rb
 ```
 
@@ -29,7 +29,7 @@ Improve test coverage for the `ReflectionReportCollector` molecule from 4.4% to 
 
 ## Scope of Work
 
-- Analyze existing test coverage gaps in `dev-tools/lib/coding_agent_tools/molecules/reflection/report_collector.rb`
+- Analyze existing test coverage gaps in `.ace/tools/lib/coding_agent_tools/molecules/reflection/report_collector.rb`
 - Write comprehensive test cases to cover missing edge cases and error scenarios
 - Ensure all public and critical private methods have adequate test coverage
 - Maintain test quality and adherence to RSpec best practices
@@ -42,7 +42,7 @@ Improve test coverage for the `ReflectionReportCollector` molecule from 4.4% to 
 
 #### Modify
 
-- `dev-tools/spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb` - enhance with missing test coverage
+- `.ace/tools/spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb` - enhance with missing test coverage
 
 #### Delete
 
@@ -67,7 +67,7 @@ Improve test coverage for the `ReflectionReportCollector` molecule from 4.4% to 
   > TEST: Coverage Analysis Understanding
   > Type: Pre-condition Check  
   > Assert: Understand which specific code paths need test coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb --format progress
 * [x] Review existing test structure to understand current test patterns and identify gaps
 * [x] Map uncovered lines to specific test scenarios needed (error handling, edge cases, etc.)
 
@@ -80,13 +80,13 @@ Improve test coverage for the `ReflectionReportCollector` molecule from 4.4% to 
   > TEST: Error Path Coverage
   > Type: Action Validation
   > Assert: New test cases cover error handling paths for invalid files
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb::ReportCollector --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb::ReportCollector --format documentation
 - [x] Add test cases for success/failure result creation paths (lines 31-38)
 - [x] Run full test suite to ensure no regressions and verify coverage improvement
   > TEST: Coverage Improvement Verification
   > Type: Action Validation
   > Assert: Test coverage for ReflectionReportCollector improves significantly  
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb --format progress
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/report_collector_spec.rb --format progress
 
 ## Acceptance Criteria
 

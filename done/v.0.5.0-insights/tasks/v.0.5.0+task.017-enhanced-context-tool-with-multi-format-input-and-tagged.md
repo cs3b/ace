@@ -100,12 +100,12 @@ Enable the context tool to seamlessly work with multiple input formats using una
 - `lib/coding_agent_tools/cli/commands/context.rb` - Add positional argument support
 - `lib/coding_agent_tools/atoms/context/template_parser.rb` - Support new extraction patterns
 - `lib/coding_agent_tools/organisms/context_loader.rb` - Integrate new format support
-- `dev-handbook/.integrations/claude/agents/task-finder.ag.md` - Add `<context-tool-config>` tags
-- `dev-handbook/.integrations/claude/agents/task-creator.ag.md` - Add `<context-tool-config>` tags
-- `dev-handbook/.integrations/claude/agents/create-path.ag.md` - Add `<context-tool-config>` tags
-- `dev-handbook/.integrations/claude/agents/lint-files.ag.md` - Add `<context-tool-config>` tags
-- `dev-handbook/.integrations/claude/agents/search.ag.md` - Add `<context-tool-config>` tags
-- `dev-handbook/.integrations/claude/agents/release-navigator.ag.md` - Add `<context-tool-config>` tags
+- `.ace/handbook/.integrations/claude/agents/task-finder.ag.md` - Add `<context-tool-config>` tags
+- `.ace/handbook/.integrations/claude/agents/task-creator.ag.md` - Add `<context-tool-config>` tags
+- `.ace/handbook/.integrations/claude/agents/create-path.ag.md` - Add `<context-tool-config>` tags
+- `.ace/handbook/.integrations/claude/agents/lint-files.ag.md` - Add `<context-tool-config>` tags
+- `.ace/handbook/.integrations/claude/agents/search.ag.md` - Add `<context-tool-config>` tags
+- `.ace/handbook/.integrations/claude/agents/release-navigator.ag.md` - Add `<context-tool-config>` tags
 
 #### Delete
 
@@ -182,7 +182,7 @@ Not applicable - using existing tools and libraries already in the codebase.
   - Impact: Supports both old `## Context Definition` and new `<context-tool-config>` formats
   - Integration points: Called by ContextLoader and new extractors
 
-- Agent files (6 files in `dev-handbook/.integrations/claude/agents/`)
+- Agent files (6 files in `.ace/handbook/.integrations/claude/agents/`)
   - Changes: Wrap existing YAML blocks with `<context-tool-config>` tags
   - Impact: Makes YAML extraction unambiguous, prevents conflicts
   - Integration points: Used by context tool when processing agent files
@@ -216,7 +216,7 @@ Not applicable - using existing tools and libraries already in the codebase.
   > TEST: Agent File Validation
   > Type: Format Check
   > Assert: All agent files have properly formatted `<context-tool-config>` blocks
-  > Command: grep -l "<context-tool-config>" dev-handbook/.integrations/claude/agents/*.ag.md | wc -l
+  > Command: grep -l "<context-tool-config>" .ace/handbook/.integrations/claude/agents/*.ag.md | wc -l
   
 - [ ] **Create InputFormatDetector**: Implement format detection molecule
   > TEST: Format Detection Test
@@ -311,7 +311,7 @@ Not applicable - using existing tools and libraries already in the codebase.
 
 ## References
 
-- Current context tool implementation: `dev-tools/lib/coding_agent_tools/cli/commands/context.rb`
-- Existing agent files: `dev-handbook/.integrations/claude/agents/*.ag.md`
+- Current context tool implementation: `.ace/tools/lib/coding_agent_tools/cli/commands/context.rb`
+- Existing agent files: `.ace/handbook/.integrations/claude/agents/*.ag.md`
 - ATOM architecture documentation: `docs/architecture-tools.md`
 - dry-cli documentation for argument support

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions
+.ace/handbook/workflow-instructions
 ├── README.md
 ├── commit.wf.md
 ├── create-adr.wf.md
@@ -62,7 +62,7 @@ Remove the confusing "Legacy Process Steps" section from `fix-tests.wf.md` and s
 
 #### Modify
 
-* dev-handbook/workflow-instructions/fix-tests.wf.md (remove legacy section)
+* .ace/handbook/workflow-instructions/fix-tests.wf.md (remove legacy section)
 
 #### Delete
 
@@ -117,6 +117,6 @@ Remove the confusing "Legacy Process Steps" section from `fix-tests.wf.md` and s
 ## References
 
 * Review finding: "yes we should remove legacy process step and keep one iterative way"
-* Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
+* Source: .ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Problem: "This workflow contains a 'Legacy Process Steps' section which is confusing. The modern 'Iterative Fix Process' is superior and should be the sole recommended approach"
 * User note: Keep only the iterative approach for clarity

@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -28,7 +28,7 @@ Implement comprehensive test coverage for LLM::Models CLI command focusing on pr
 
 ## Prerequisites
 
-* Read the dev-tools technical architecture guide: `dev-tools/docs/architecture-tools.md`
+* Read the .ace/tools technical architecture guide: `.ace/tools/docs/architecture-tools.md`
 * Understanding of ATOM architecture pattern (Atoms, Molecules, Organisms, Ecosystems)
 * Familiarity with Ruby/RSpec testing patterns and VCR cassette management
 * Understanding of LLM provider APIs and model discovery patterns
@@ -78,7 +78,7 @@ Implement comprehensive test coverage for LLM::Models CLI command focusing on pr
   > TEST: Verify test suite passes
   > Type: Regression Check
   > Assert: All existing tests continue to pass after adding new tests
-  > Command: cd dev-tools && bin/test
+  > Command: cd .ace/tools && bin/test
 
 ## Acceptance Criteria
 
@@ -133,7 +133,7 @@ Implement comprehensive test coverage for LLM::Models CLI command focusing on pr
 
 ## References
 - Coverage analysis: coverage_analysis/coverage_analysis.json
-- Testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md
 - ATOM architecture: docs/architecture-tools.md
 - Source file: lib/coding_agent_tools/cli/commands/llm/models.rb
 - CLI testing patterns: existing spec/coding_agent_tools/cli/ files

@@ -64,13 +64,13 @@ The handbook review process successfully analyzed 19 workflow instruction files:
 - **Processing**: 56,142 input tokens, 2,569 output tokens
 - **Cost**: $0.095868 (Google Pro model)
 - **Time**: 52.984 seconds
-- **Files Analyzed**: All .wf.md files in dev-handbook/workflow-instructions/
+- **Files Analyzed**: All .wf.md files in .ace/handbook/workflow-instructions/
 
 The review identified comprehensive workflow coverage but noted gaps in high-level guidance and process orchestration between workflows.
 
 ## Additional Context
 
-- **Session**: `dev-taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/`
+- **Session**: `.ace/taskflow/current/v.0.3.0-workflows/code_review/20250703-232338-handbook-workflows/`
 - **Review Report**: `cr-report-gpro.md` - detailed analysis of workflow effectiveness
 - **Related Command**: `@handbook-review workflows` - part of unified review system
 - **Next Steps**: Consider synthesis of single report or retry with alternative models for comparison

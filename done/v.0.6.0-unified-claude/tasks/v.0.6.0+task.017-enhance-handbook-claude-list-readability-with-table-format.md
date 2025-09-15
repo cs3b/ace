@@ -19,7 +19,7 @@ dependencies: []
 The system should display Claude commands in a compact, readable table format instead of the current verbose sectioned output. Users should be able to quickly scan and understand:
 - Which commands are installed in .claude/commands
 - Whether commands are custom or generated
-- Command validation status (everything OK in dev-handbook)
+- Command validation status (everything OK in .ace/handbook)
 - Command names
 
 The table should be shorter and easier to read than the current multi-section output, allowing users to see all command statuses at once without scrolling.
@@ -79,7 +79,7 @@ Summary: 4 commands installed, 1 missing
 
 ### Validation Questions
 - [ ] **Requirement Clarity**: Should the table include file size and modification time, or just the essential columns?
-- [ ] **Edge Case Handling**: How should we handle commands that exist in .claude but not in dev-handbook (orphaned commands)?
+- [ ] **Edge Case Handling**: How should we handle commands that exist in .claude but not in .ace/handbook (orphaned commands)?
 - [ ] **User Experience**: Should we support sorting the table by different columns (name, type, status)?
 - [ ] **Success Definition**: What constitutes a "valid" command - just file existence or content validation too?
 
@@ -113,9 +113,9 @@ Improve the readability and usability of the `handbook claude list` command by i
 
 ## References
 
-- Feedback item #4 from dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
+- Feedback item #4 from .ace/taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
 - Related to feedback #5 about .claude/commands location (flattened structure)
-- Current implementation in dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- Current implementation in .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
 
 ## Technical Approach
 
@@ -240,8 +240,8 @@ Improve the readability and usability of the `handbook claude list` command by i
 
 - [x] Refactor ClaudeCommandLister to detect installed vs source commands
   - Check if command exists in .claude/commands (installed)
-  - Cross-reference with dev-handbook source locations
-  - Determine validation status (exists in dev-handbook)
+  - Cross-reference with .ace/handbook source locations
+  - Determine validation status (exists in .ace/handbook)
 
 - [x] Update ClaudeCommandLister#output_text to use table format
   > TEST: Table Format Output

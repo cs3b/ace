@@ -96,9 +96,9 @@
 - Included error handling guidance and integration patterns
 
 ### Files Modified
-- **Created**: `dev-handbook/workflow-instructions/capture-idea.wf.md` (207 lines)
-- **Updated**: `dev-handbook/workflow-instructions/README.md` (5 sections updated)
-- **Updated**: `dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.2-create-capture-idea-workflow.md` (status, implementation notes)
+- **Created**: `.ace/handbook/workflow-instructions/capture-idea.wf.md` (207 lines)
+- **Updated**: `.ace/handbook/workflow-instructions/README.md` (5 sections updated)
+- **Updated**: `.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.2-create-capture-idea-workflow.md` (status, implementation notes)
 
 ## Additional Context
 

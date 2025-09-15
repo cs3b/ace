@@ -78,7 +78,7 @@
 ## Additional Context
 
 - Task: v.0.3.0+task.211-improve-test-coverage-for-rubylintingpipeline-molecule-ruby-linting-workflow.md
-- Test file: `/dev-tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb`
+- Test file: `/.ace/tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb`
 - Reference pattern: MarkdownLintingPipeline test implementation
 - All tests passing: 29 examples, 0 failures
 - Coverage improvement achieved for previously untested molecule

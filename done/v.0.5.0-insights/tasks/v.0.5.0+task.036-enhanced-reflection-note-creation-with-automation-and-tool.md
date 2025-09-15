@@ -32,12 +32,12 @@ The enhanced workflow guides users through analyzing their just-completed work t
 # Prompts for workflow context and generates reflection with sections:
 # - Standard reflection content (what worked, challenges, etc.)
 # - Automation Insights (opportunities for automation)
-# - Tool Proposals (new dev-tools executables needed)
+# - Tool Proposals (new .ace/tools executables needed)
 # - Workflow Proposals (new workflows to create)
 # - Cookbook Opportunities (patterns worth documenting)
 # - Pattern Identification (reusable elements)
 
-# Output: Reflection note in dev-taskflow/current/[release]/reflections/
+# Output: Reflection note in .ace/taskflow/current/[release]/reflections/
 # Format: [timestamp]-[workflow-name].reflection.md
 ```
 
@@ -116,18 +116,18 @@ Enhance the reflection note creation process to systematically capture improveme
 ## File Modifications
 
 ### Modify
-- dev-handbook/templates/release-reflections/retrospective.template.md
+- .ace/handbook/templates/release-reflections/retrospective.template.md
   - **Changes**: Add new sections for automation insights, tool proposals, workflow suggestions, and cookbook opportunities
   - **Impact**: Enhanced reflection template with structured improvement capture
   - **Integration points**: Works with existing create-reflection-note.wf.md workflow
 
-- dev-handbook/workflow-instructions/create-reflection-note.wf.md
+- .ace/handbook/workflow-instructions/create-reflection-note.wf.md
   - **Changes**: Add prompting guidelines for new template sections and specific question sets
   - **Impact**: Guides users through enhanced reflection process with structured improvement identification
   - **Integration points**: Uses enhanced template and feeds into synthesis workflow
 
 ### Create
-- dev-handbook/templates/release-reflections/enhanced-prompts.template.md
+- .ace/handbook/templates/release-reflections/enhanced-prompts.template.md
   - **Purpose**: Standalone prompt template for automation and improvement insights
   - **Key components**: Question sets for automation opportunities, tool gaps, workflow improvements, and pattern identification
   - **Dependencies**: Used by enhanced create-reflection-note.wf.md workflow
@@ -155,7 +155,7 @@ Enhance the reflection note creation process to systematically capture improveme
 
 - [x] **Enhance Reflection Template**
   - Add "Automation Insights" section with structured prompts for identifying automation opportunities
-  - Add "Tool Proposals" section for capturing missing dev-tools executable suggestions
+  - Add "Tool Proposals" section for capturing missing .ace/tools executable suggestions
   - Add "Workflow Proposals" section for new workflow creation opportunities
   - Add "Cookbook Opportunities" section for pattern documentation suggestions
   - Add "Pattern Identification" section for reusable elements discovery
@@ -241,9 +241,9 @@ Enhance the reflection note creation process to systematically capture improveme
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/008-reflection-cookbook-automation.md
-- Related workflow: dev-handbook/workflow-instructions/create-reflection-note.wf.md
-- Integration target: dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
-- Template reference: dev-handbook/templates/release-reflections/retrospective.template.md
+- Source idea: .ace/taskflow/backlog/ideas/008-reflection-cookbook-automation.md
+- Related workflow: .ace/handbook/workflow-instructions/create-reflection-note.wf.md
+- Integration target: .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+- Template reference: .ace/handbook/templates/release-reflections/retrospective.template.md
 - ADR-002: XML Template Embedding
 - ADR-005: Universal Document Embedding System

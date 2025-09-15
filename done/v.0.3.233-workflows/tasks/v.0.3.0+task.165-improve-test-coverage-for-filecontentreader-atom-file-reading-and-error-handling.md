@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -78,7 +78,7 @@ Why are we doing this?
   > TEST: FileContentReader Coverage Verification
   > Type: Coverage Check
   > Assert: FileContentReader coverage improved significantly from 0%
-  > Command: cd dev-tools && bin/test spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb
+  > Command: cd .ace/tools && bin/test spec/coding_agent_tools/atoms/code/file_content_reader_spec.rb
 
 ## Acceptance Criteria
 

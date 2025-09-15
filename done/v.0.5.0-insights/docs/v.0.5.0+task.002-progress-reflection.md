@@ -115,7 +115,7 @@
 
 ## Additional Context
 
-- **Task File**: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.002-unified-project-aware-search-tool.md
+- **Task File**: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.002-unified-project-aware-search-tool.md
 - **Implementation Progress**: ~33% complete (2 of 6 phases)
 - **Code Quality**: Following established project patterns and conventions
 - **Next Steps**: Continue with Phase 3 (Advanced Features) in follow-up conversation or hand off to team member

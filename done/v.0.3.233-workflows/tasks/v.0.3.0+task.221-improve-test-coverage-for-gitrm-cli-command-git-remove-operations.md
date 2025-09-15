@@ -29,8 +29,8 @@ Enhance test coverage for the GitRm CLI command and related git remove operation
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb (enhance existing tests)
-- dev-tools/spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb (add rm method tests)
+- .ace/tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb (enhance existing tests)
+- .ace/tools/spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb (add rm method tests)
 
 #### Delete
 
@@ -102,6 +102,6 @@ Enhance test coverage for the GitRm CLI command and related git remove operation
 
 ## References
 
-- Current GitRm CLI implementation: `dev-tools/lib/coding_agent_tools/cli/commands/git/rm.rb`
-- GitOrchestrator rm method: `dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb:180`
-- Existing test suite: `dev-tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb`
+- Current GitRm CLI implementation: `.ace/tools/lib/coding_agent_tools/cli/commands/git/rm.rb`
+- GitOrchestrator rm method: `.ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb:180`
+- Existing test suite: `.ace/tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb`

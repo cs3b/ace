@@ -59,9 +59,9 @@ and actual implementation work.*
 
 *Research, analysis, and design activities that help clarify the approach before implementation begins.*
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Analyze current task dependency patterns in dev-taskflow structure
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Analyze current task dependency patterns in .ace/taskflow structure
   > TEST: Dependency Pattern Analysis Type: Pre-condition Check
-  > Assert: All dependency patterns and formats are documented Command: find dev-taskflow/current -name "\*.md" -exec grep -l "dependencies:" \{} \\; \| head -5
+  > Assert: All dependency patterns and formats are documented Command: find .ace/taskflow/current -name "\*.md" -exec grep -l "dependencies:" \{} \\; \| head -5
   > **COMPLETED**: Dependencies use YAML format `dependencies: [v.X.Y.Z+task.N, ...]` in front matter
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Research topological sorting algorithms for dependency graph traversal
@@ -76,7 +76,7 @@ and actual implementation work.*
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Design impact note template format for draft task integration
   > **[Added on review]** Must follow XML embedding pattern: `<documents><template path="...">` per project standards
   > **COMPLETED**: Designed XML-embedded template format for impact notes following project standards:
-  > - Container: `<documents>` with `<template path="dev-handbook/templates/tasks/impact-note.template.md">`
+  > - Container: `<documents>` with `<template path=".ace/handbook/templates/tasks/impact-note.template.md">`
   > - Structure: Markdown content with placeholders for source task, impact summary, and action items
   > - Integration: Prepended after YAML metadata in draft tasks
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Plan rollback strategy with git-based recovery mechanisms
@@ -103,41 +103,41 @@ and actual implementation work.*
 *Concrete implementation actions that modify code, create files, or change the system state.*
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create replan-cascade-task.wf.md workflow file in
-  dev-handbook/workflow-instructions/
+  .ace/handbook/workflow-instructions/
   > TEST: Workflow File Creation Type: Action Validation Assert: Workflow file exists with proper structure and embedded templates Command: test -f
-  > dev-handbook/workflow-instructions/replan-cascade-task.wf.md && grep -q "## Process Steps" dev-handbook/workflow-instructions/replan-cascade-task.wf.md
+  > .ace/handbook/workflow-instructions/replan-cascade-task.wf.md && grep -q "## Process Steps" .ace/handbook/workflow-instructions/replan-cascade-task.wf.md
   > **COMPLETED**: Created comprehensive workflow with all required sections and embedded impact note template
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Implement dependency identification algorithm with cycle detection
   > TEST: Dependency Detection Logic Type: Algorithm Validation Assert: Cycle detection and topological sort logic is documented and testable Command: grep -q
-  > "cycle detection" dev-handbook/workflow-instructions/replan-cascade-task.wf.md
+  > "cycle detection" .ace/handbook/workflow-instructions/replan-cascade-task.wf.md
   > **COMPLETED**: Documented DFS-based algorithm with visited-set tracking for cycle detection
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create impact-note.template.md in dev-handbook/templates/tasks/ with XML
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create impact-note.template.md in .ace/handbook/templates/tasks/ with XML
   embedding
   > TEST: Template Creation Type: File Validation Assert: Impact note template uses XML embedding like other project templates Command: test -f
-  > dev-handbook/templates/tasks/impact-note.template.md && grep -q "<template" dev-handbook/templates/tasks/impact-note.template.md
+  > .ace/handbook/templates/tasks/impact-note.template.md && grep -q "<template" .ace/handbook/templates/tasks/impact-note.template.md
   > **COMPLETED**: Created template file and embedded it in workflow using proper XML format
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Document git-based rollback procedures with commit-per-file strategy
   > TEST: Rollback Documentation Type: Documentation Validation Assert: Rollback procedures specify individual file commits with descriptive messages Command:
-  > grep -q "commit-per-file\|individual commit" dev-handbook/workflow-instructions/replan-cascade-task.wf.md
+  > grep -q "commit-per-file\|individual commit" .ace/handbook/workflow-instructions/replan-cascade-task.wf.md
   > **COMPLETED**: Documented commit strategy with individual commits per task and rollback instructions
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add cascade execution examples with real task scenarios from current release
   > **COMPLETED**: Added comprehensive examples section with task 4 cascade scenario and detailed command usage
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Integrate direct task-manager and nav-path command invocations
   > TEST: Tool Integration Type: Command Integration Assert: Workflow includes direct command invocations for task-manager and nav-path Command: grep -E
-  > "(task-manager|nav-path)" dev-handbook/workflow-instructions/replan-cascade-task.wf.md
+  > "(task-manager|nav-path)" .ace/handbook/workflow-instructions/replan-cascade-task.wf.md
   > **COMPLETED**: Integrated nav-path commands in examples section
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />**[Added after review]** Implement needs_review counter display in task-manager list command
   > TEST: Needs Review Counter Type: Feature Validation Assert: task-manager list shows needs_review count prominently Command: task-manager list | grep -q "Needs review:"
-  > **COMPLETED**: Documented needs_review display requirement in workflow (actual implementation requires dev-tools modification)
+  > **COMPLETED**: Documented needs_review display requirement in workflow (actual implementation requires .ace/tools modification)
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update dev-handbook/workflow-instructions/README.md with new workflow
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update .ace/handbook/workflow-instructions/README.md with new workflow
   > TEST: Documentation Integration Type: Integration Validation
-  > Assert: New workflow is properly documented in README Command: grep -q "replan-cascade-task" dev-handbook/workflow-instructions/README.md
+  > Assert: New workflow is properly documented in README Command: grep -q "replan-cascade-task" .ace/handbook/workflow-instructions/README.md
   > **COMPLETED**: Added workflow to task management section, individual reference, decision tree, and updated count to 21
 
 ## Scope of Work
@@ -146,12 +146,12 @@ and actual implementation work.*
 
 #### Create
 
-* dev-handbook/workflow-instructions/replan-cascade-task.wf.md - Complete workflow with embedded templates
-* dev-handbook/templates/tasks/impact-note.template.md - Standardized impact documentation format
+* .ace/handbook/workflow-instructions/replan-cascade-task.wf.md - Complete workflow with embedded templates
+* .ace/handbook/templates/tasks/impact-note.template.md - Standardized impact documentation format
 
 #### Modify
 
-* dev-handbook/workflow-instructions/README.md - Add documentation for new workflow
+* .ace/handbook/workflow-instructions/README.md - Add documentation for new workflow
 
 ### Key Features
 
@@ -214,7 +214,7 @@ needs_review: true
 ## Impact Notes from v.0.4.0+task.4 Completion
 
 - New template system available: use standardized XML embedding format
-- Template location: dev-handbook/templates/tasks/impact-note.template.md
+- Template location: .ace/handbook/templates/tasks/impact-note.template.md
 - Integration point: impact note template should follow XML embedding pattern
 - **Action needed**: Review and update cascade workflow design to use new templates
 
@@ -280,7 +280,7 @@ task-manager deps v.0.4.0+task.4
 nav-path file impact-note.template.md
 
 # Check cascade scope
-find dev-taskflow/current -name "*.md" -exec grep -l "dependencies.*v.0.4.0+task.4" {} \;
+find .ace/taskflow/current -name "*.md" -exec grep -l "dependencies.*v.0.4.0+task.4" {} \;
 ```
 
 ## Out of Scope
@@ -297,12 +297,12 @@ find dev-taskflow/current -name "*.md" -exec grep -l "dependencies.*v.0.4.0+task
 
 * Research findings on dependency impact analysis patterns (from task research)
 * Joiner function architecture from planning agent design
-* Current project's ATOM architecture principles (dev-tools/)
-* Existing workflow instruction patterns (dev-handbook/workflow-instructions/)
+* Current project's ATOM architecture principles (.ace/tools/)
+* Existing workflow instruction patterns (.ace/handbook/workflow-instructions/)
 * Git-based multi-repository coordination strategies (CLAUDE.md)
-* dev-handbook/workflow-instructions/capture-idea.wf.md
-* dev-handbook/workflow-instructions/draft-task.wf.md
-* dev-handbook/workflow-instructions/plan-task.wf.md
-* **[Added on review]** dev-handbook/guides/documents-embedding.g.md - XML template embedding format
+* .ace/handbook/workflow-instructions/capture-idea.wf.md
+* .ace/handbook/workflow-instructions/draft-task.wf.md
+* .ace/handbook/workflow-instructions/plan-task.wf.md
+* **[Added on review]** .ace/handbook/guides/documents-embedding.g.md - XML template embedding format
 * **[Added on review]** Industry best practices for transitive dependency management (2024)
 * **[Added on review]** Topological sorting algorithms: Kahn's algorithm and DFS-based approaches

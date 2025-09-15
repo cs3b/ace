@@ -24,13 +24,13 @@
 
 ## Intention
 
-To integrate custom Claude commands for planning, working on, and drafting tasks into the Claude code integration script, ensuring these commands are discoverable and usable within the `dev-handbook/.integrations/claude/install-prompts.md` system.
+To integrate custom Claude commands for planning, working on, and drafting tasks into the Claude code integration script, ensuring these commands are discoverable and usable within the `.ace/handbook/.integrations/claude/install-prompts.md` system.
 
 ## Problem It Solves
 
 **Observed Issues:**
 - Custom Claude commands for task management (`plan-tasks`, `work-on-tasks`, `draft-tasks`) are not currently recognized or integrated into the Claude Code integration script.
-- These commands are not discoverable or executable within the `dev-handbook/.integrations/claude/install-prompts.md` framework, limiting their usability for AI agents interacting with Claude.
+- These commands are not discoverable or executable within the `.ace/handbook/.integrations/claude/install-prompts.md` framework, limiting their usability for AI agents interacting with Claude.
 - Lack of standardization for adding new custom commands to the Claude integration script.
 
 **Impact:**
@@ -49,16 +49,16 @@ To integrate custom Claude commands for planning, working on, and drafting tasks
 
 ## Solution Direction
 
-1. **Analyze `install-prompts.md` Structure**: Examine the existing `dev-handbook/.integrations/claude/install-prompts.md` file to understand how prompts/commands are currently defined, registered, or structured.
+1. **Analyze `install-prompts.md` Structure**: Examine the existing `.ace/handbook/.integrations/claude/install-prompts.md` file to understand how prompts/commands are currently defined, registered, or structured.
 2. **Define Command Integration Strategy**: Determine the best method to register and expose the custom commands (`plan-tasks`, `work-on-tasks`, `draft-tasks`) within the Claude integration script. This could involve:
-    - Adding custome commands to dev-handbook/.integrations/claude/commands (each in seperate files)
+    - Adding custome commands to .ace/handbook/.integrations/claude/commands (each in seperate files)
     - Modifying the script to copy this custom commands from this directory
 3. **Implement Command Logic**: Ensure the actual logic for `plan-tasks`, `work-on-tasks`, and `draft-tasks` is either already present in a callable format or needs to be developed and placed in an accessible location.
 
 ## Critical Questions
 
 **Before proceeding, we need to answer:**
-1. What is the exact structure and format of `dev-handbook/.integrations/claude/install-prompts.md` and how are commands typically added?
+1. What is the exact structure and format of `.ace/handbook/.integrations/claude/install-prompts.md` and how are commands typically added?
 
 > you need to figure out it by analyzing this script, where to add copying the custom commands
 
@@ -78,7 +78,7 @@ To integrate custom Claude commands for planning, working on, and drafting tasks
 ## Assumptions to Validate
 
 **We assume that:**
-- The `dev-handbook/.integrations/claude/install-prompts.md` file is the correct place to register or define these commands for Claude Code integration. - *Needs validation*
+- The `.ace/handbook/.integrations/claude/install-prompts.md` file is the correct place to register or define these commands for Claude Code integration. - *Needs validation*
 - The underlying logic for `plan-tasks`, `work-on-tasks`, and `draft-tasks` is either available or can be easily made available to the Claude integration script. - *Needs validation*
 - The integration will involve adding new entries or files that the existing script can parse and execute. - *Needs validation*
 
@@ -100,5 +100,5 @@ To integrate custom Claude commands for planning, working on, and drafting tasks
 - The precise user experience for interacting with these commands via Claude.
 
 **Implementation Unknowns:**
-- The effort required to modify `dev-handbook/.integrations/claude/install-prompts.md` and potentially other parts of the Claude integration system.
+- The effort required to modify `.ace/handbook/.integrations/claude/install-prompts.md` and potentially other parts of the Claude integration system.
 - The testing strategy needed to ensure these new commands integrate correctly and function as expected.

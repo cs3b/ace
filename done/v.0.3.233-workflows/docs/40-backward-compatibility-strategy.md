@@ -89,11 +89,11 @@ def process_template(template_info, workflow_file_path)
 end
 
 def validate_template_path(path)
-  path.start_with?("dev-handbook/templates/") && path.end_with?(".template.md")
+  path.start_with?(".ace/handbook/templates/") && path.end_with?(".template.md")
 end
 
 def validate_guide_path(path)
-  path.start_with?("dev-handbook/guides/") && path.end_with?(".g.md")
+  path.start_with?(".ace/handbook/guides/") && path.end_with?(".g.md")
 end
 ```
 

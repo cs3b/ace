@@ -24,7 +24,7 @@ Create comprehensive test coverage for the Reflection::SynthesisOrchestrator mol
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb
 
 ## Implementation Plan
 
@@ -39,7 +39,7 @@ Create comprehensive test coverage for the Reflection::SynthesisOrchestrator mol
   > TEST: Verify test file creation
   > Type: Action Validation
   > Assert: Test file exists and follows RSpec conventions
-  > Command: cd dev-tools && ruby -c spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb
+  > Command: cd .ace/tools && ruby -c spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb
 - [x] Implement tests for synthesis workflow functionality
 - [x] Implement tests for file handling and error scenarios
 - [x] Implement tests for private methods and content preparation
@@ -47,7 +47,7 @@ Create comprehensive test coverage for the Reflection::SynthesisOrchestrator mol
   > TEST: Verify test coverage
   > Type: Action Validation
   > Assert: All tests pass and coverage is comprehensive
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/reflection/synthesis_orchestrator_spec.rb
 
 ## Acceptance Criteria
 

@@ -184,19 +184,19 @@ Ensure the handbook claude CLI commands have reliable test coverage that validat
   > TEST: Wrapper Implementation
   > Type: Action Validation
   > Assert: execute_gem_executable Array is properly wrapped in CliResult
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb --format documentation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb --format documentation
 
 - [x] Run handbook claude tests to verify fix
   > TEST: Test Suite Validation
   > Type: Action Validation
   > Assert: All 12 handbook claude tests pass
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb
 
 - [x] Run full test suite to check for regressions
   > TEST: Regression Check
   > Type: Action Validation
   > Assert: No new test failures introduced
-  > Command: cd dev-tools && bundle exec rspec --exclude-pattern "spec/**/*vcr*" --format progress
+  > Command: cd .ace/tools && bundle exec rspec --exclude-pattern "spec/**/*vcr*" --format progress
 
 - [x] Document the fix for future reference
   > TEST: Documentation Check

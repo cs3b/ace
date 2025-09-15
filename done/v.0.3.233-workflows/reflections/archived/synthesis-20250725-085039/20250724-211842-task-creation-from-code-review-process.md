@@ -105,6 +105,6 @@ Total estimated work: 13 hours across 6 tasks, addressing both immediate securit
 
 ## Additional Context
 
-- Original code review: dev-taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
+- Original code review: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
 - Tasks created: v.0.3.0+task.85 through v.0.3.0+task.91
 - One task (85) was found to be already completed during the creation process

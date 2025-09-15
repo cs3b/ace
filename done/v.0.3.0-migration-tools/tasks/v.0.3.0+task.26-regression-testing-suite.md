@@ -14,7 +14,7 @@ dependencies: [v.0.3.0+task.09, v.0.3.0+task.14]
 _Command run:_
 
 ```bash
-find dev-tools/spec -name "*_spec.rb" | wc -l | sed 's/^/    /'
+find .ace/tools/spec -name "*_spec.rb" | wc -l | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -40,11 +40,11 @@ Create a comprehensive regression testing suite that validates migrated tools pr
 
 #### Create
 
-* dev-tools/spec/regression/regression_helper.rb
-* dev-tools/spec/regression/task_tools_regression_spec.rb
-* dev-tools/spec/regression/project_tools_regression_spec.rb
-* dev-tools/spec/regression/fixtures/ (captured outputs)
-* dev-tools/spec/regression/regression_report.md
+* .ace/tools/spec/regression/regression_helper.rb
+* .ace/tools/spec/regression/task_tools_regression_spec.rb
+* .ace/tools/spec/regression/project_tools_regression_spec.rb
+* .ace/tools/spec/regression/fixtures/ (captured outputs)
+* .ace/tools/spec/regression/regression_report.md
 
 #### Modify
 
@@ -70,7 +70,7 @@ Create a comprehensive regression testing suite that validates migrated tools pr
   > TEST: Framework Design
   > Type: Pre-condition Check
   > Assert: Test structure planned
-  > Command: ls dev-tools/spec/regression 2>/dev/null || echo "To be created"
+  > Command: ls .ace/tools/spec/regression 2>/dev/null || echo "To be created"
 * [ ] Identify all test scenarios
 * [ ] Plan output capture strategy
 
@@ -81,14 +81,14 @@ Create a comprehensive regression testing suite that validates migrated tools pr
   > TEST: Output Capture
   > Type: Data Collection
   > Assert: Fixtures created
-  > Command: find dev-tools/spec/regression/fixtures -name "*.txt" 2>/dev/null | wc -l
+  > Command: find .ace/tools/spec/regression/fixtures -name "*.txt" 2>/dev/null | wc -l
 - [ ] Implement task tool regression tests
 - [ ] Implement project tool regression tests
 - [ ] Add edge case scenarios
   > TEST: Edge Cases
   > Type: Regression Test
   > Assert: Edge cases handled identically
-  > Command: cd dev-tools && bundle exec rspec spec/regression --tag edge_case
+  > Command: cd .ace/tools && bundle exec rspec spec/regression --tag edge_case
 - [ ] Test error handling compatibility
 - [ ] Validate argument parsing
 - [ ] Generate regression report

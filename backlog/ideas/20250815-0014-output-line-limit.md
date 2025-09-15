@@ -45,7 +45,7 @@ Globally configure a default output line limit of 100 for all CLI commands, with
 - **Global Configuration**: The idea of a global configuration file (`.coding-agent/config.yml`) aligns with ADR-005 (Universal Document Embedding System) and ADR-004 (Consistent Path Standards) which emphasize centralized, consistent configuration.
 - **Environment Variable Overrides**: This pattern is common in CLI tools and software configuration, providing flexibility for CI/CD environments or specific user preferences, similar to how `DEBUG=true` might override default logging levels.
 - **Temporary File Storage**: The concept of saving truncated output to a temporary file aligns with the XDG Base Directory Specification (ADR-014) and the general principle of managing temporary data. The project already uses XDG compliant caching (`$XDG_CACHE_HOME/coding-agent-tools/temp/`).
-- **CLI Tooling**: The project has a strong emphasis on CLI tools (dev-tools gem, 25+ executables) and the need for consistent behavior across them is paramount.
+- **CLI Tooling**: The project has a strong emphasis on CLI tools (.ace/tools gem, 25+ executables) and the need for consistent behavior across them is paramount.
 - **ATOM Architecture**: This feature should be implemented as a Molecule or a cross-cutting concern managed by a higher-level component that wraps CLI command execution.
 
 ## Solution Direction

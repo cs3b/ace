@@ -91,12 +91,12 @@
 ## Technical Details
 
 **Files Created:**
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.017-add-task-manager-create-subcommand.md
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.018-update-documentation-and-workflow-references.md
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.017-add-task-manager-create-subcommand.md
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.018-update-documentation-and-workflow-references.md
 
 **File Organized:**
-- Original: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/backlog/ideas/20250731-0828-task-create-migrate.md
-- Moved to: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/docs/ideas/017-20250731-0828-task-create-migrate.md
+- Original: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/backlog/ideas/20250731-0828-task-create-migrate.md
+- Moved to: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/docs/ideas/017-20250731-0828-task-create-migrate.md
 
 **Git Operations:**
 - Successful git mv and commit for idea file organization

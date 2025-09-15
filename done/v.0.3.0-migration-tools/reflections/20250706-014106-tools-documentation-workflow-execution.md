@@ -8,7 +8,7 @@
 ## What Went Well
 
 - **Systematic workflow execution**: Successfully followed the work-on-task.wf.md workflow with proper task status tracking
-- **Comprehensive audit**: Methodically inventoried all 22 bin/ scripts and 5 dev-tools/exe/ executables
+- **Comprehensive audit**: Methodically inventoried all 22 bin/ scripts and 5 .ace/tools/exe/ executables
 - **Elimination of duplication**: Identified and removed ~65 lines of duplicated tools information from blueprint.md
 - **Multi-repository commit**: Successfully used bin/gc with intention-based messaging for clean version control
 - **Proactive improvements**: Enhanced workflow instructions to prevent future duplication issues
@@ -93,13 +93,13 @@ None identified - the workflow executed smoothly without significant obstacles.
 ## Technical Details
 
 **Files Created:**
-- `dev-tools/docs/tools.md` - Comprehensive tools documentation (primary)
-- `dev-local/wfi/update-docs-tools.wf.md` - Workflow instruction for future updates
+- `.ace/tools/docs/tools.md` - Comprehensive tools documentation (primary)
+- `.ace/local/wfi/update-docs-tools.wf.md` - Workflow instruction for future updates
 - `docs/tools.md` - Tools reference (content accessible)
 
 **Files Modified:**
 - `docs/blueprint.md` - Removed duplication, added reference to tools.md
-- `dev-handbook/workflow-instructions/update-blueprint.wf.md` - Added anti-duplication guidance
+- `.ace/handbook/workflow-instructions/update-blueprint.wf.md` - Added anti-duplication guidance
 - Task file - Updated status from pending → in-progress → done
 
 **Commit:** `e96d783` - "docs: Create tools documentation and remove duplication"

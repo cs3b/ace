@@ -13,13 +13,13 @@ needs_review: false
 ## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [x] Should generated commands go into .claude/commands/ or dev-handbook/.integrations/claude/commands/_generated/?
+- [x] Should generated commands go into .claude/commands/ or .ace/handbook/.integrations/claude/commands/_generated/?
   - **Research conducted**: Found existing ClaudeCommandsInstaller puts commands in .claude/commands/
-  - **Current pattern**: Custom commands in dev-handbook/.integrations/claude/commands/, installed to .claude/commands/
-  - **Suggested default**: Create in dev-handbook/.integrations/claude/commands/_generated/ for version control
+  - **Current pattern**: Custom commands in .ace/handbook/.integrations/claude/commands/, installed to .claude/commands/
+  - **Suggested default**: Create in .ace/handbook/.integrations/claude/commands/_generated/ for version control
   - **Why needs human input**: Architecture decision about where generated files should live
-  - **Human answer**: dev-handbook (only integrate sub cmd will be working in .claude)
-  - **Decision**: Generated commands will be created in `dev-handbook/.integrations/claude/commands/_generated/`
+  - **Human answer**: .ace/handbook (only integrate sub cmd will be working in .claude)
+  - **Decision**: Generated commands will be created in `.ace/handbook/.integrations/claude/commands/_generated/`
 
 - [x] Should the subcommand modify ClaudeCommandsInstaller or create a new generator class?
   - **Research conducted**: ClaudeCommandsInstaller currently handles both custom and workflow commands
@@ -58,8 +58,8 @@ needs_review: false
   - **Research conducted**: No ERB usage found in codebase, ClaudeCommandsInstaller uses heredocs
   - **Suggested default**: Simple heredocs matching existing pattern (no ERB dependency)
   - **Why needs human input**: Extensibility vs simplicity trade-off
-  - **Human answer**: string interpolation - template should be defined in proper folder in dev-handbook/.integrations/claude/command.template.md
-  - **Decision**: Use string interpolation with template stored in `dev-handbook/.integrations/claude/command.template.md`
+  - **Human answer**: string interpolation - template should be defined in proper folder in .ace/handbook/.integrations/claude/command.template.md
+  - **Decision**: Use string interpolation with template stored in `.ace/handbook/.integrations/claude/command.template.md`
 
 ## Behavioral Specification
 
@@ -69,7 +69,7 @@ needs_review: false
 - **Output**: Report of generated commands and their locations
 
 ### Expected Behavior
-The system should scan all workflow instruction files (.wf.md) in dev-handbook and identify which ones lack corresponding Claude commands. For missing commands, it should generate appropriate command files using predefined templates. The generation should be smart enough to skip custom commands and only generate for truly missing workflows. Users should see clear progress and results.
+The system should scan all workflow instruction files (.wf.md) in .ace/handbook and identify which ones lack corresponding Claude commands. For missing commands, it should generate appropriate command files using predefined templates. The generation should be smart enough to skip custom commands and only generate for truly missing workflows. Users should see clear progress and results.
 
 ### Interface Contract
 ```bash
@@ -134,7 +134,7 @@ handbook claude generate-commands --workflow capture-idea
 ### Validation Questions
 - [ ] **Custom Detection**: How to identify if a command is custom vs should be generated?
   - **[Resolved through research]**: Check for files in both _custom/ and _generated/ directories
-  - **Pattern found**: Custom commands in dev-handbook/.integrations/claude/commands/, generated in _generated/
+  - **Pattern found**: Custom commands in .ace/handbook/.integrations/claude/commands/, generated in _generated/
 - [ ] **Template Variables**: What variables should templates support?
   - **[Resolved through research]**: Minimal - just workflow_name based on current simple template pattern
   - **Current template**: Uses workflow basename directly in path reference
@@ -197,14 +197,14 @@ Enable automatic generation of Claude commands for workflow instructions that la
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb` - Command implementation
-- `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb` - Business logic
-- `dev-tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb` - Unit tests
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/generate_commands_spec.rb` - Command tests
-- `dev-handbook/.integrations/claude/commands/_generated/` - Directory for generated commands (if not exists)
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb` - Command implementation
+- `.ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb` - Business logic
+- `.ace/tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb` - Unit tests
+- `.ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/generate_commands_spec.rb` - Command tests
+- `.ace/handbook/.integrations/claude/commands/_generated/` - Directory for generated commands (if not exists)
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Register generate-commands in claude namespace (handled by task.002)
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Register generate-commands in claude namespace (handled by task.002)
 
 ### Delete
 - None required
@@ -227,7 +227,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 
 ### Planning Steps
 
-* [x] Analyze workflow naming patterns in dev-handbook
+* [x] Analyze workflow naming patterns in .ace/handbook
   - **Completed**: All workflows use .wf.md extension, names are kebab-case
 * [x] Define template variable requirements
   - **Completed**: Only workflow_name needed based on current template
@@ -272,9 +272,9 @@ Enable automatic generation of Claude commands for workflow instructions that la
     module Organisms
       class ClaudeCommandGenerator
         def initialize
-          @workflow_dir = "dev-handbook/workflow-instructions"
-          @custom_dir = "dev-handbook/.integrations/claude/commands"  # Existing custom commands location
-          @generated_dir = "dev-handbook/.integrations/claude/commands/_generated"
+          @workflow_dir = ".ace/handbook/workflow-instructions"
+          @custom_dir = ".ace/handbook/.integrations/claude/commands"  # Existing custom commands location
+          @generated_dir = ".ace/handbook/.integrations/claude/commands/_generated"
           # No template path needed - using heredocs
         end
 
@@ -399,7 +399,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 - Current workflow instruction format
 - Existing Claude command patterns  
 - Template processing best practices
-- ClaudeCommandsInstaller implementation in dev-tools/lib/coding_agent_tools/integrations/
+- ClaudeCommandsInstaller implementation in .ace/tools/lib/coding_agent_tools/integrations/
 
 ## Review Summary
 
@@ -413,7 +413,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 **Research Conducted:**
 - ✅ Verified ClaudeCommandsInstaller exists and analyzed its implementation patterns
 - ✅ Confirmed handbook CLI structure with nested claude namespace (from task.002)
-- ✅ Analyzed existing custom commands in dev-handbook/.integrations/claude/commands/
+- ✅ Analyzed existing custom commands in .ace/handbook/.integrations/claude/commands/
 - ✅ Verified workflow naming patterns (all use .wf.md extension, kebab-case names)
 - ✅ Confirmed dry-cli command patterns and option handling
 - ✅ Checked for existing template files (none found, will need to create)
@@ -422,7 +422,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 - Moved all Review Questions to "Resolved" section with human answers and decisions
 - Updated Technical Approach based on human decisions:
   - Use separate _custom/ and _generated/ subdirectories
-  - Create external template file at dev-handbook/.integrations/claude/command.template.md
+  - Create external template file at .ace/handbook/.integrations/claude/command.template.md
   - Support glob patterns for batch operations
   - Include commit.md reference in all generated commands
 - Enhanced Implementation Plan with:

@@ -8,7 +8,7 @@
 
 - Successfully identified and catalogued all 38+ files with decision directory references
 - Systematic approach using search tools and analysis prevented missing any references
-- Clear distinction established between permanent ADRs (`docs/decisions/`) and temporal decisions (`dev-taskflow/current/*/decisions/`)
+- Clear distinction established between permanent ADRs (`docs/decisions/`) and temporal decisions (`.ace/taskflow/current/*/decisions/`)
 - Workflow instructions were followed methodically, ensuring comprehensive coverage
 - User feedback about handbook_review being historical snapshots was incorporated immediately
 - All acceptance criteria were met and verified
@@ -24,7 +24,7 @@
 ## Key Learnings
 
 - **Historical Data Preservation**: handbook_review directories contain historical snapshots that should not be modified unless explicitly requested
-- **Documentation Architecture**: Clear distinction between `docs/` (permanent, canonical reference) and `dev-taskflow/` (point-in-time, release-specific) is crucial for project organization
+- **Documentation Architecture**: Clear distinction between `docs/` (permanent, canonical reference) and `.ace/taskflow/` (point-in-time, release-specific) is crucial for project organization
 - **Systematic Analysis**: Using search tools to find all references before making changes prevents incomplete standardization
 - **Template Management**: Decision references appear in many template files that propagate the patterns across the project
 - **Submodule Workflow**: Proper order is critical - commit submodules first, then main repository to maintain consistency
@@ -56,19 +56,19 @@
 
 **Standardization Pattern Applied:**
 
-- From: `dev-taskflow/decisions/` or `current/*/decisions/`
+- From: `.ace/taskflow/decisions/` or `current/*/decisions/`
 - To: `docs/decisions/` (for permanent ADRs)
-- Preserved: `dev-taskflow/current/*/decisions/` (for temporal decisions)
+- Preserved: `.ace/taskflow/current/*/decisions/` (for temporal decisions)
 
 **Files Successfully Updated:**
 
 - `docs/architecture.md` - Added documentation distinction section
 - `CHANGELOG.md` - Updated read-only paths
-- `dev-handbook/guides/code-review/README.md` - Updated ADR collection paths
-- `dev-handbook/workflow-instructions/update-blueprint.wf.md` - Updated template paths
-- `dev-handbook/templates/review-docs/diff.prompt.md` - Updated ADR locations
-- `dev-handbook/templates/review-code/diff.prompt.md` - Updated ADR locations  
-- `dev-handbook/templates/project-docs/blueprint.template.md` - Updated read-only paths
+- `.ace/handbook/guides/code-review/README.md` - Updated ADR collection paths
+- `.ace/handbook/workflow-instructions/update-blueprint.wf.md` - Updated template paths
+- `.ace/handbook/templates/review-docs/diff.prompt.md` - Updated ADR locations
+- `.ace/handbook/templates/review-code/diff.prompt.md` - Updated ADR locations  
+- `.ace/handbook/templates/project-docs/blueprint.template.md` - Updated read-only paths
 - `docs/blueprint.md` - Added handbook_review to read-only paths
 
 **Verification Results:**

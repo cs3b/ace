@@ -52,6 +52,6 @@ The target flat structure would move all 29 command files directly into `.claude
 
 ## Additional Context
 
-- Draft task created: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.018-flatten-claude-commands-structure.md`
+- Draft task created: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.018-flatten-claude-commands-structure.md`
 - Task status: draft (awaiting implementation planning)
 - Next step: Implementation planning phase (replan workflow)

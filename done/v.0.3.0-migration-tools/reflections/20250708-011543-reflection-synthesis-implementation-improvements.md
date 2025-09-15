@@ -111,8 +111,8 @@
 - `lib/coding_agent_tools/cli/commands/nav/path.rb` - Added reflection-list support
 - `lib/coding_agent_tools/molecules/path_resolver.rb` - Added reflection discovery method
 - `lib/coding_agent_tools/cli/commands/reflection/synthesize.rb` - Enhanced with auto-discovery and archival
-- `dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md` - Dramatically simplified
-- `dev-handbook/templates/release-reflections/synthsize.system.prompt.md` - Enhanced and relocated
+- `.ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md` - Dramatically simplified
+- `.ace/handbook/templates/release-reflections/synthsize.system.prompt.md` - Enhanced and relocated
 
 ## Additional Context
 

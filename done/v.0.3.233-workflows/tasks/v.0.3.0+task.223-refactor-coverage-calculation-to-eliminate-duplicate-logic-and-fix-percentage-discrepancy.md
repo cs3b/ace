@@ -14,7 +14,7 @@ completed_at: 2025-07-29T06:59:00Z
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools | grep -E "(coverage|analyzer)" | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools | grep -E "(coverage|analyzer)" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -74,13 +74,13 @@ The duplicate logic in `extract_coverage_data()` creates inconsistency and maint
   > TEST: Code Analysis Check
   > Type: Pre-condition Check  
   > Assert: Duplicate coverage calculation identified at lines 230-234
-  > Command: grep -n "executable_lines.*count.*nil" dev-tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
+  > Command: grep -n "executable_lines.*count.*nil" .ace/tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
 
 - [ ] Verify `CoverageCalculator` dependency is available in `CoverageAnalyzer`
   > TEST: Dependency Check
   > Type: Architecture Validation
   > Assert: CoverageAnalyzer has access to CoverageCalculator instance
-  > Command: grep -n "calculator.*CoverageCalculator" dev-tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
+  > Command: grep -n "calculator.*CoverageCalculator" .ace/tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
 
 ### Execution Steps
 
@@ -95,7 +95,7 @@ The duplicate logic in `extract_coverage_data()` creates inconsistency and maint
   > TEST: Dependency Injection Check
   > Type: Architecture Validation
   > Assert: CoverageAnalyzer constructor accepts and uses CoverageCalculator
-  > Command: grep -A 10 "def initialize" dev-tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
+  > Command: grep -A 10 "def initialize" .ace/tools/lib/coding_agent_tools/organisms/coverage_analyzer.rb
 
 - [ ] Test unified calculation with real SimpleCov data
   > TEST: Coverage Calculation Accuracy

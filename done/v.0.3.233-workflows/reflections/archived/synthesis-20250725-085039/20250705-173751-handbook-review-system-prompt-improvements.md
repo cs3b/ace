@@ -132,14 +132,14 @@ llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "
 
 **Key Files Modified:**
 
-- Session directory: `dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/`
+- Session directory: `.ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/`
 - Review output: `gpro-review.md` (12KB structured analysis)
 - Input content: `input.md` (309KB workflow content)
 
 ## Additional Context
 
 - **Session Reference**: `docs-handbook-workflows-20250705-173751`
-- **Workflow Files Reviewed**: 20 files in `dev-handbook/workflow-instructions/`
+- **Workflow Files Reviewed**: 20 files in `.ace/handbook/workflow-instructions/`
 - **Review Focus**: Documentation quality and consistency
 - **Analysis Method**: GPRO only (no synthesis as requested)
 

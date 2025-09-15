@@ -48,7 +48,7 @@ orchestrates the existing tool and focuses on when and how to use it effectively
 ### Execution Steps
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create capture-idea.wf.md in
-  dev-handbook/workflow-instructions/
+  .ace/handbook/workflow-instructions/
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Document `ideas-manager` command usage patterns
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add decision guidance for release targeting
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Include error handling and troubleshooting
@@ -62,11 +62,11 @@ orchestrates the existing tool and focuses on when and how to use it effectively
 
 #### Create
 
-* dev-handbook/workflow-instructions/capture-idea.wf.md
+* .ace/handbook/workflow-instructions/capture-idea.wf.md
 
 #### Modify
 
-* dev-handbook/workflow-instructions/README.md (add new workflow reference)
+* .ace/handbook/workflow-instructions/README.md (add new workflow reference)
 
 ## Acceptance Criteria
 
@@ -89,7 +89,7 @@ orchestrates the existing tool and focuses on when and how to use it effectively
 # Step 2: Tool automatically loads project context and enhances the idea
 capture-it "I want better error handling in the task manager"
 
-# Output: Created: dev-taskflow/backlog/ideas/20250730-1430-better-error-handling-task-manager.md
+# Output: Created: .ace/taskflow/backlog/ideas/20250730-1430-better-error-handling-task-manager.md
 ```
 
 **Result**: The `ideas-manager` tool automatically:
@@ -105,14 +105,14 @@ capture-it "I want better error handling in the task manager"
 
 ### Completed Deliverables
 
-* ✅ **Created**: `dev-handbook/workflow-instructions/capture-idea.wf.md` - Self-contained workflow instruction following ADR-001 principles
-* ✅ **Updated**: `dev-handbook/workflow-instructions/README.md` - Integrated new workflow into ecosystem (updated workflow count to 20, added to decision tree,
+* ✅ **Created**: `.ace/handbook/workflow-instructions/capture-idea.wf.md` - Self-contained workflow instruction following ADR-001 principles
+* ✅ **Updated**: `.ace/handbook/workflow-instructions/README.md` - Integrated new workflow into ecosystem (updated workflow count to 20, added to decision tree,
   common sequences, and reference sections)
 
 ### Key Implementation Decisions
 
 1.  **No --commit flag**: Per user clarification, did not include auto-commit functionality in workflow
-2.  **Default to backlog**: Workflow assumes `dev-taskflow/backlog/ideas/` as default target (no release parameter needed)
+2.  **Default to backlog**: Workflow assumes `.ace/taskflow/backlog/ideas/` as default target (no release parameter needed)
 3.  **Self-contained design**: Embedded all necessary context, examples, and guidance within the workflow file
 4.  **Comprehensive coverage**: Included all ideas-manager command options, error handling, and integration patterns
 5.  **AI-agent focused**: Structured for autonomous execution by AI agents
@@ -134,5 +134,5 @@ capture-it "I want better error handling in the task manager"
 
 ## References
 
-* Planning agent research: dev-taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
-* Existing draft-task workflow: dev-handbook/workflow-instructions/draft-task.wf.md
+* Planning agent research: .ace/taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
+* Existing draft-task workflow: .ace/handbook/workflow-instructions/draft-task.wf.md

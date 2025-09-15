@@ -114,7 +114,7 @@
 
 ## Additional Context
 
-- **Source Enhanced Idea**: dev-taskflow/backlog/ideas/20250730-2327-auto-commit-ideas.md
+- **Source Enhanced Idea**: .ace/taskflow/backlog/ideas/20250730-2327-auto-commit-ideas.md
 - **Target Task**: v.0.4.0+task.009-add-commit-flag-to-ideas-manager.md (draft → pending)
 - **Workflow Instructions Used**: draft-task.wf.md, plan-task.wf.md, create-reflection-note.wf.md
 - **Key Files Modified**: Task file with complete implementation plan and RSpec test specifications

@@ -56,13 +56,13 @@ git-tag-all [git-tag-options] <tag-name>
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/exe | head -20
+tree -L 2 .ace/tools/exe | head -20
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/exe
+.ace/tools/exe
 ├── git-add
 ├── git-commit
 ├── git-status
@@ -71,7 +71,7 @@ dev-tools/exe
 
 ## Objective
 
-Enable synchronized version control tagging across the entire toolkit ecosystem (main repository plus dev-handbook, dev-tools, and dev-taskflow submodules) through a single command interface that ensures consistent versioning and reduces manual coordination errors.
+Enable synchronized version control tagging across the entire toolkit ecosystem (main repository plus dev-handbook, dev-tools, and .ace/taskflow submodules) through a single command interface that ensures consistent versioning and reduces manual coordination errors.
 
 ## Scope of Work
 
@@ -138,23 +138,23 @@ Enable synchronized version control tagging across the entire toolkit ecosystem 
 ## File Modifications
 
 ### Create
-- dev-tools/exe/git-tag-all
+- .ace/tools/exe/git-tag-all
   - Purpose: Executable wrapper following existing pattern
   - Key components: ExecutableWrapper configuration
   - Dependencies: coding_agent_tools/molecules/executable_wrapper
 
-- dev-tools/lib/coding_agent_tools/cli/commands/git/tag.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/git/tag.rb
   - Purpose: Main command implementation with argument parsing
   - Key components: Dry::CLI::Command subclass, option definitions, GitOrchestrator integration
   - Dependencies: dry/cli, git_orchestrator, project_root_detector
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/cli.rb
+- .ace/tools/lib/coding_agent_tools/cli.rb
   - Changes: Add require for git/tag command in register_git_commands method
   - Impact: Registers new tag command in CLI system
   - Integration points: Follows existing pattern of other git command registrations
 
-- dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
   - Changes: Add tag method for multi-repository tag operations
   - Impact: Extends GitOrchestrator with tagging capabilities
   - Integration points: Uses existing MultiRepoCoordinator infrastructure
@@ -204,7 +204,7 @@ Enable synchronized version control tagging across the entire toolkit ecosystem 
   > TEST: Pattern Analysis
   > Type: Architecture Validation
   > Assert: Implementation approach aligns with existing git command patterns
-  > Command: rg "def (status|commit|push)" dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+  > Command: rg "def (status|commit|push)" .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
 
 * [ ] Design tag operation flow with clean state validation
 
@@ -214,25 +214,25 @@ Enable synchronized version control tagging across the entire toolkit ecosystem 
   > TEST: Executable Creation
   > Type: Action Validation
   > Assert: Executable exists and follows existing pattern
-  > Command: test -x dev-tools/exe/git-tag-all && head -15 dev-tools/exe/git-tag-all
+  > Command: test -x .ace/tools/exe/git-tag-all && head -15 .ace/tools/exe/git-tag-all
 
 - [ ] Implement TagCommand class with argument parsing
   > TEST: Command Class Implementation
   > Type: Action Validation
   > Assert: TagCommand class exists and inherits from Dry::CLI::Command
-  > Command: rg "class Tag.*Dry::CLI::Command" dev-tools/lib/coding_agent_tools/cli/commands/git/tag.rb
+  > Command: rg "class Tag.*Dry::CLI::Command" .ace/tools/lib/coding_agent_tools/cli/commands/git/tag.rb
 
 - [ ] Add tag method to GitOrchestrator with multi-repo coordination
   > TEST: GitOrchestrator Extension
   > Type: Action Validation
   > Assert: tag method exists in GitOrchestrator
-  > Command: rg "def tag" dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+  > Command: rg "def tag" .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
 
 - [ ] Register tag command in CLI system
   > TEST: Command Registration
   > Type: Action Validation
   > Assert: Tag command is registered in git commands
-  > Command: rg "git/tag" dev-tools/lib/coding_agent_tools/cli.rb
+  > Command: rg "git/tag" .ace/tools/lib/coding_agent_tools/cli.rb
 
 - [ ] Test tag creation across all repositories
   > TEST: Multi-Repository Tagging
@@ -263,7 +263,7 @@ Enable synchronized version control tagging across the entire toolkit ecosystem 
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/20250731-0942-multi-repo-tag.md
-- Existing git wrapper tools in dev-tools/exe/
+- Source idea: .ace/taskflow/backlog/ideas/20250731-0942-multi-repo-tag.md
+- Existing git wrapper tools in .ace/tools/exe/
 - Multi-repository coordination patterns from docs/architecture.md
-- GitOrchestrator: dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+- GitOrchestrator: .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb

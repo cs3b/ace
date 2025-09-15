@@ -59,15 +59,15 @@ Update all *.md files across the project to use `handbook sync-templates` instea
   > Result: Found 91 references across multiple files
 - [x] Analyze each reference to understand the context and determine appropriate replacement
   - **Root project files** (CLAUDE.md, docs/blueprint.md): Need updating - these are current usage docs
-  - **Guide files** (dev-handbook/guides/): Need comprehensive updates - user-facing documentation
+  - **Guide files** (.ace/handbook/guides/): Need comprehensive updates - user-facing documentation
   - **Current task files**: Some need updating (ongoing tasks), some are historical context
-  - **Completed task files** (dev-taskflow/done/): Leave as-is - historical record
+  - **Completed task files** (.ace/taskflow/done/): Leave as-is - historical record
   - **ADR files**: Leave as-is - historical architectural decisions
   - **Current workflow documentation**: Update where it's current usage guidance
 - [x] Plan systematic replacement strategy to avoid breaking any workflows
   **Strategy**: 
   1. **Priority 1**: Root project files (CLAUDE.md, docs/blueprint.md) - immediate impact
-  2. **Priority 2**: User-facing guides (dev-handbook/guides/) - documentation users rely on
+  2. **Priority 2**: User-facing guides (.ace/handbook/guides/) - documentation users rely on
   3. **Priority 3**: Current workflow docs that show usage examples
   4. **Skip**: Historical records (done/ tasks, ADR files) to preserve historical accuracy
   5. **Use pattern**: Replace `bin/markdown-sync-embedded-documents` with `handbook sync-templates`
@@ -77,16 +77,16 @@ Update all *.md files across the project to use `handbook sync-templates` instea
 - [x] Create comprehensive list of all files needing updates
   **Files to update (18 total)**:
   - **Root project files (2)**: CLAUDE.md, docs/blueprint.md
-  - **User guides (4)**: dev-handbook/guides/ai-agent-integration.g.md, dev-handbook/guides/documents-embedded-sync.g.md, dev-handbook/guides/documents-embedding.g.md, dev-handbook/guides/README.md
-  - **Current workflow docs (12)**: All files in dev-taskflow/current/ that show usage examples
-  **Files to skip (3)**: dev-taskflow/done/ tasks, docs/decisions/ADR-002 (historical records)
+  - **User guides (4)**: .ace/handbook/guides/ai-agent-integration.g.md, .ace/handbook/guides/documents-embedded-sync.g.md, .ace/handbook/guides/documents-embedding.g.md, .ace/handbook/guides/README.md
+  - **Current workflow docs (12)**: All files in .ace/taskflow/current/ that show usage examples
+  **Files to skip (3)**: .ace/taskflow/done/ tasks, docs/decisions/ADR-002 (historical records)
 - [x] Update CLAUDE.md to reference `handbook sync-templates` instead of bin wrapper
 - [x] Update all workflow instructions (.wf.md files) with corrected command references
   > No .wf.md files contain the deprecated command - verified clean
 - [x] Update all guides (.g.md files) with corrected command references
   > Updated 4 guide files: ai-agent-integration.g.md, documents-embedded-sync.g.md, documents-embedding.g.md, README.md  
 - [x] Update task files and other documentation with corrected references
-  > Updated 10 files in dev-taskflow/current/ including reflections, docs, researches, and key task files
+  > Updated 10 files in .ace/taskflow/current/ including reflections, docs, researches, and key task files
 - [x] Verify all command examples use correct syntax and options
   > TEST: Verify Command Syntax
   > Type: Action Validation

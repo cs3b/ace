@@ -353,7 +353,7 @@ Enable developers to use OpenAI's Codex CLI through the unified llm-query interf
 
 - Codex CLI documentation: `codex --help` output (needed)
 - Claude Code integration pattern: v.0.5.0+task.046 (analyzed)
-- Existing provider implementations in dev-tools (analyzed)
+- Existing provider implementations in .ace/tools (analyzed)
 - User request for Codex CLI integration with llm-query
 - OpenAI Codex CLI overview: https://help.openai.com/en/articles/11096431-openai-codex-cli-getting-started
 - GitHub repository: https://github.com/openai/codex

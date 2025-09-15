@@ -22,11 +22,11 @@ needs_review: false
   - **Decision**: Create separate ClaudeValidator organism following ATOM architecture
 
 - [x] How should we handle the directory structure difference between custom and generated commands?
-  - **Research conducted**: Custom commands in dev-handbook/.integrations/claude/commands/, installed to .claude/commands/
+  - **Research conducted**: Custom commands in .ace/handbook/.integrations/claude/commands/, installed to .claude/commands/
   - **Current pattern**: ClaudeCommandsInstaller copies from both custom and generates from workflows
   - **Suggested default**: Check both _custom/ and _generated/ subdirectories if they exist
   - **Why needs human input**: Directory structure is evolving with task.003 adding _generated/
-  - **Human answer**: we should work on command / agent names (in dev-handbook they structure is different, but the names should be the same)
+  - **Human answer**: we should work on command / agent names (in .ace/handbook they structure is different, but the names should be the same)
   - **Decision**: Check both _custom/ and _generated/ subdirectories, focus on matching command names
 
 ### [MEDIUM] Enhancement Questions
@@ -203,15 +203,15 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Command implementation
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude.rb` - Namespace registration (if not exists)
-- `dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb` - Validation organism
-- `dev-tools/lib/coding_agent_tools/molecules/claude_command_content_generator.rb` - Content generation molecule (shared with installer)
-- `dev-tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb` - Organism tests
-- `dev-tools/spec/coding_agent_tools/molecules/claude_command_content_generator_spec.rb` - Molecule tests
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Command implementation
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude.rb` - Namespace registration (if not exists)
+- `.ace/tools/lib/coding_agent_tools/organisms/claude_validator.rb` - Validation organism
+- `.ace/tools/lib/coding_agent_tools/molecules/claude_command_content_generator.rb` - Content generation molecule (shared with installer)
+- `.ace/tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb` - Organism tests
+- `.ace/tools/spec/coding_agent_tools/molecules/claude_command_content_generator_spec.rb` - Molecule tests
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Add claude subcommand registration to handbook namespace:
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Add claude subcommand registration to handbook namespace:
   ```ruby
   def self.register_handbook_commands
     return if @handbook_commands_registered
@@ -231,7 +231,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
     @handbook_commands_registered = true
   end
   ```
-- `dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Extract content generation to shared molecule (optional refactor)
+- `.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Extract content generation to shared molecule (optional refactor)
 
 ### Delete
 - None required
@@ -319,8 +319,8 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 
         def initialize(project_root = nil)
           @project_root = Pathname.new(project_root || find_project_root)
-          @workflow_dir = @project_root / "dev-handbook" / "workflow-instructions"
-          @custom_dir = @project_root / "dev-handbook" / ".integrations" / "claude" / "commands"
+          @workflow_dir = @project_root / ".ace/handbook" / "workflow-instructions"
+          @custom_dir = @project_root / ".ace/handbook" / ".integrations" / "claude" / "commands"
           @generated_dir = @custom_dir / "_generated"
           @claude_dir = @project_root / ".claude" / "commands"
           @validation_results = {

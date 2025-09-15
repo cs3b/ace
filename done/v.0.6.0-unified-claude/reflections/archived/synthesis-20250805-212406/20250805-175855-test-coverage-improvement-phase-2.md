@@ -1,7 +1,7 @@
 # Reflection: Test Coverage Improvement Phase 2
 
 **Date**: 2025-08-05
-**Context**: Working on v.0.6.0+task.027 to improve test coverage from 53% to 70% in the dev-tools Ruby gem
+**Context**: Working on v.0.6.0+task.027 to improve test coverage from 53% to 70% in the .ace/tools Ruby gem
 **Author**: Claude (AI Assistant)
 **Type**: Standard
 
@@ -62,7 +62,7 @@
 #### Process Improvements
 
 - Create a pre-test checklist: verify actual API, check method signatures, review struct definitions
-- Develop coverage analysis tools as part of the dev-tools gem itself
+- Develop coverage analysis tools as part of the .ace/tools gem itself
 - Document common testing patterns for ATOM architecture components
 
 #### Tool Enhancements
@@ -128,7 +128,7 @@ lib_files = file_stats.select { |f| f[:file].include?('/lib/') }
 
 ## Additional Context
 
-- Working on task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md
+- Working on task: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.027-improve-test-coverage-to-70.md
 - Current coverage: 53.44% (9860/18452 lines)
 - Target coverage: 70%
 - Phases completed: 1.5 of 4 (CLI tests done, Taskflow Management in progress)

@@ -281,7 +281,7 @@ However, the submission is blocked by critical issues in the testing suite. The 
 *   **Issue**: Reusable logic is coupled to the command.
 *   **Severity**: 🟢 Medium
 *   **Location**: `lib/coding_agent_tools/cli/commands/code/review.rb:400-415` (`find_current_release_dir`)
-*   **Suggestion**: This method contains logic specific to the project's `dev-taskflow` directory structure. This should be extracted into a `Molecule` to be reusable by other commands that might need to interact with the current release context.
+*   **Suggestion**: This method contains logic specific to the project's `.ace/taskflow` directory structure. This should be extracted into a `Molecule` to be reusable by other commands that might need to interact with the current release context.
 
 ## 8. Prioritised Action Items
 

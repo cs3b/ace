@@ -40,11 +40,11 @@ formal tasks.
 ```bash
 # Basic usage
 capture-it "Add dark mode support"
-# => Created: dev-taskflow/backlog/ideas/20250130-1430-dark-mode-support.md
+# => Created: .ace/taskflow/backlog/ideas/20250130-1430-dark-mode-support.md
 
 # From clipboard
 capture-it --clipboard
-# => Created: dev-taskflow/backlog/ideas/20250130-1432-clipboard-idea.md
+# => Created: .ace/taskflow/backlog/ideas/20250130-1432-clipboard-idea.md
 ```
 
 ## How: Implementation Plan
@@ -52,13 +52,13 @@ capture-it --clipboard
 ### Planning Steps
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Audit current ideas/ directory structure across releases
-  > TEST: Directory Structure Check Type: Pre-condition Check Assert: Ideas directories exist or creation logic is defined Command: find dev-taskflow -name
+  > TEST: Directory Structure Check Type: Pre-condition Check Assert: Ideas directories exist or creation logic is defined Command: find .ace/taskflow -name
   > "ideas" -type d
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Research existing tool patterns in dev-tools for ATOM
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Research existing tool patterns in .ace/tools for ATOM
   architecture consistency
-  > TEST: Pattern Analysis Check Type: Research Validation Assert: CLI tool patterns and LLM integration patterns are documented Command: ls dev-tools/exe/ \|
-  > wc -l && ls dev-tools/lib/coding\_agent\_tools/organisms/ \| wc -l
+  > TEST: Pattern Analysis Check Type: Research Validation Assert: CLI tool patterns and LLM integration patterns are documented Command: ls .ace/tools/exe/ \|
+  > wc -l && ls .ace/tools/lib/coding\_agent\_tools/organisms/ \| wc -l
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Design idea enhancement prompt for LLM integration with project
   context
@@ -75,13 +75,13 @@ capture-it --clipboard
 
 ### Execution Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create ideas-manager executable in dev-tools/exe/
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create ideas-manager executable in .ace/tools/exe/
   > TEST: Executable Creation Check Type: File Creation Validation Assert: Executable is created with proper permissions and CLI structure Command: test -x
-  > dev-tools/exe/ideas-manager && ideas-manager --help
+  > .ace/tools/exe/ideas-manager && ideas-manager --help
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Implement IdeaCapture organism in
-  dev-tools/lib/coding\_agent\_tools/organisms/
-  > TEST: Organism Unit Test Type: Unit Test Validation Assert: IdeaCapture class loads and has required methods Command: cd dev-tools && bundle exec rspec
+  .ace/tools/lib/coding\_agent\_tools/organisms/
+  > TEST: Organism Unit Test Type: Unit Test Validation Assert: IdeaCapture class loads and has required methods Command: cd .ace/tools && bundle exec rspec
   > spec/organisms/idea\_capture\_spec.rb
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add clipboard reading molecule if not exists
@@ -89,17 +89,17 @@ capture-it --clipboard
   three paths with directory creation:
   * ./tmp/\{timestamp}-\{slug}.md (temp input file)
   * ./tmp/\{timestamp}-\{slug}.system.prompt.md (temp system prompt)
-  * dev-taskflow/backlog/ideas/\{timestamp}-\{slug}.md (final output path)
+  * .ace/taskflow/backlog/ideas/\{timestamp}-\{slug}.md (final output path)
 ```xml
 > TEST: Path Generation and Directory Creation Type: Integration Validation Assert: All three paths returned and directories created from project root
-> Command: nav-path capture-idea-new --context "example idea" && test -d ./tmp && test -d dev-taskflow/backlog/ideas
+> Command: nav-path capture-idea-new --context "example idea" && test -d ./tmp && test -d .ace/taskflow/backlog/ideas
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Create idea enhancement prompt templates (system.prompt.md and
   idea.template.md)
   > TEST: Template Creation Check Type: Template Validation Assert: Templates are created with proper format and embedded context Command: test -f
-  > dev-handbook/templates/idea-manager/system.prompt.md && test -f dev-handbook/templates/idea-manager/idea.template.md
+  > .ace/handbook/templates/idea-manager/system.prompt.md && test -f .ace/handbook/templates/idea-manager/idea.template.md
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Implement dynamic context loading for all docs/\*.md files
-  > TEST: Context Loading Unit Test Type: Unit Test Validation Assert: Context loading molecule discovers and reads all docs/\*.md files Command: cd dev-tools
+  > TEST: Context Loading Unit Test Type: Unit Test Validation Assert: Context loading molecule discovers and reads all docs/\*.md files Command: cd .ace/tools
   > && bundle exec rspec spec/molecules/context\_loader\_spec.rb
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Implement timestamped file creation logic with proper error
@@ -107,22 +107,22 @@ capture-it --clipboard
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add validation for release parameter and directory creation
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Implement LLM integration with retry logic and fallback
   handling
-  > TEST: LLM Integration Unit Test Type: Unit Test Validation Assert: LLM client handles retries and fallbacks correctly Command: cd dev-tools && bundle exec
+  > TEST: LLM Integration Unit Test Type: Unit Test Validation Assert: LLM client handles retries and fallbacks correctly Command: cd .ace/tools && bundle exec
   > rspec spec/molecules/llm\_client\_spec.rb
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Implement error handling with degraded functionality guarantees
-  > TEST: Error Handling Unit Test Type: Unit Test Validation Assert: Error handling preserves minimum functionality (save raw idea) Command: cd dev-tools &&
+  > TEST: Error Handling Unit Test Type: Unit Test Validation Assert: Error handling preserves minimum functionality (save raw idea) Command: cd .ace/tools &&
   > bundle exec rspec spec/organisms/idea\_capture\_spec.rb --tag error\_handling
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />**WRITE ACTUAL RSPEC TESTS** - Create comprehensive unit tests implementing all edge cases above
-  > TEST: Unit Test Suite Type: Test Coverage Validation Assert: All 6 test files exist AND all tests pass with 90%+ coverage Command: cd dev-tools && bundle exec rspec spec/ --format documentation && bundle exec rspec --require simplecov
+  > TEST: Unit Test Suite Type: Test Coverage Validation Assert: All 6 test files exist AND all tests pass with 90%+ coverage Command: cd .ace/tools && bundle exec rspec spec/ --format documentation && bundle exec rspec --require simplecov
   > **CRITICAL**: Must write actual RSpec test files with comprehensive edge case coverage per specification above
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />**WRITE ACTUAL RSPEC TESTS** - Create integration tests implementing end-to-end workflow testing  
-  > TEST: Integration Test Suite Type: End-to-End Validation Assert: Integration test file exists AND tests pass with real project data and proper cleanup Command: cd dev-tools && bundle exec rspec spec/integration/ideas\_manager\_integration\_spec.rb --format documentation
+  > TEST: Integration Test Suite Type: End-to-End Validation Assert: Integration test file exists AND tests pass with real project data and proper cleanup Command: cd .ace/tools && bundle exec rspec spec/integration/ideas\_manager\_integration\_spec.rb --format documentation
   > **CRITICAL**: Must write actual RSpec test file with comprehensive end-to-end testing per specification above
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update dev-tools documentation and tools.md reference
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update .ace/tools documentation and tools.md reference
 
 ## Scope of Work
 
@@ -130,25 +130,25 @@ capture-it --clipboard
 
 #### Create
 
-* dev-tools/exe/ideas-manager
-* dev-tools/lib/coding\_agent\_tools/organisms/idea\_capture.rb
-* dev-tools/lib/coding\_agent\_tools/molecules/idea\_enhancer.rb
-* dev-tools/lib/coding\_agent\_tools/molecules/context\_loader.rb
-* dev-tools/lib/coding\_agent\_tools/molecules/llm\_client.rb
-* dev-handbook/templates/idea-manager/system.prompt.md (LLM system prompt with project context)
-* dev-handbook/templates/idea-manager/idea.template.md (structured idea format template)
+* .ace/tools/exe/ideas-manager
+* .ace/tools/lib/coding\_agent\_tools/organisms/idea\_capture.rb
+* .ace/tools/lib/coding\_agent\_tools/molecules/idea\_enhancer.rb
+* .ace/tools/lib/coding\_agent\_tools/molecules/context\_loader.rb
+* .ace/tools/lib/coding\_agent\_tools/molecules/llm\_client.rb
+* .ace/handbook/templates/idea-manager/system.prompt.md (LLM system prompt with project context)
+* .ace/handbook/templates/idea-manager/idea.template.md (structured idea format template)
 
 **Unit Tests (MUST BE WRITTEN):**
 
-* dev-tools/spec/organisms/idea\_capture\_spec.rb
-* dev-tools/spec/molecules/context\_loader\_spec.rb
-* dev-tools/spec/molecules/llm\_client\_spec.rb
-* dev-tools/spec/molecules/idea\_enhancer\_spec.rb
-* dev-tools/spec/cli/ideas\_manager\_spec.rb
+* .ace/tools/spec/organisms/idea\_capture\_spec.rb
+* .ace/tools/spec/molecules/context\_loader\_spec.rb
+* .ace/tools/spec/molecules/llm\_client\_spec.rb
+* .ace/tools/spec/molecules/idea\_enhancer\_spec.rb
+* .ace/tools/spec/cli/ideas\_manager\_spec.rb
 
 **Integration Tests (MUST BE WRITTEN):**
 
-* dev-tools/spec/integration/ideas\_manager\_integration\_spec.rb
+* .ace/tools/spec/integration/ideas\_manager\_integration\_spec.rb
 
 **IMPORTANT**: These test files do not currently exist and must be created with actual RSpec test implementations before task can be marked complete.
 
@@ -433,21 +433,21 @@ capture-it --clipboard
 **Required Commands:**
 ```bash
 # All tests must pass
-cd dev-tools && bundle exec rspec
+cd .ace/tools && bundle exec rspec
 
 # Individual test files must be runnable
-cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb
-cd dev-tools && bundle exec rspec spec/molecules/context_loader_spec.rb
-cd dev-tools && bundle exec rspec spec/molecules/llm_client_spec.rb
-cd dev-tools && bundle exec rspec spec/molecules/idea_enhancer_spec.rb
-cd dev-tools && bundle exec rspec spec/cli/ideas_manager_spec.rb
-cd dev-tools && bundle exec rspec spec/integration/ideas_manager_integration_spec.rb
+cd .ace/tools && bundle exec rspec spec/organisms/idea_capture_spec.rb
+cd .ace/tools && bundle exec rspec spec/molecules/context_loader_spec.rb
+cd .ace/tools && bundle exec rspec spec/molecules/llm_client_spec.rb
+cd .ace/tools && bundle exec rspec spec/molecules/idea_enhancer_spec.rb
+cd .ace/tools && bundle exec rspec spec/cli/ideas_manager_spec.rb
+cd .ace/tools && bundle exec rspec spec/integration/ideas_manager_integration_spec.rb
 
 # Test output format must be documentation style
-cd dev-tools && bundle exec rspec --format documentation
+cd .ace/tools && bundle exec rspec --format documentation
 
 # Coverage reporting
-cd dev-tools && bundle exec rspec --require simplecov
+cd .ace/tools && bundle exec rspec --require simplecov
 ```
 
 **Performance Requirements:**
@@ -466,8 +466,8 @@ Tests must properly detect test environments and:
 
 #### Modify
 
-* dev-tools/lib/coding\_agent\_tools.rb (register new components)
-* dev-tools/lib/coding\_agent\_tools/cli/commands/nav/path.rb (add capture-idea-new subcommand)
+* .ace/tools/lib/coding\_agent\_tools.rb (register new components)
+* .ace/tools/lib/coding\_agent\_tools/cli/commands/nav/path.rb (add capture-idea-new subcommand)
 * docs/tools.md (add ideas-manager documentation)
 
 ## Acceptance Criteria
@@ -483,7 +483,7 @@ Tests must properly detect test environments and:
 ## Template Specifications
 
 <documents>
-<template path="dev-handbook/templates/idea-manager/idea.template.md"># {title}
+<template path=".ace/handbook/templates/idea-manager/idea.template.md"># {title}
 
 ## Intention
 
@@ -633,7 +633,7 @@ nav-path capture-idea-new --context "every task definition should have an exampl
 ```bash
 input: tmp/20250730-1430-task-example-section.md
 system: tmp/20250730-1430-task-example-section.system.prompt.md  
-output: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
+output: .ace/taskflow/backlog/ideas/20250730-1430-task-example-section.md
 
 ### 2. **Save Raw Idea**
 
@@ -651,13 +651,13 @@ Creates temp system prompt with:
 
 llm-query gflash tmp/20250730-1430-task-example-section.md \
 --system-prompt tmp/20250730-1430-task-example-section.system.prompt.md \
---output dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
+--output .ace/taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
 
 ### 5. **Return Output Path**
 
 ```bash
-# => Created: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
+# => Created: .ace/taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
 
 ## Error Handling Strategy
@@ -721,7 +721,7 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 
 **Tool will always:**
 
-1.  Save user input to `dev-taskflow/backlog/ideas/{timestamp}-{slug}.md`
+1.  Save user input to `.ace/taskflow/backlog/ideas/{timestamp}-{slug}.md`
 2.  Use project tmp directory (`tmp/`) not system temp
 3.  Provide meaningful file names even if slug generation fails
 4.  Return path to created file regardless of enhancement status
@@ -759,7 +759,7 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 
 #### 2. Test Organization
 
-    dev-tools/spec/
+    .ace/tools/spec/
     ├── atoms/                    # Basic utility tests
     ├── molecules/                # Behavior component tests
     │   ├── context_loader_spec.rb
@@ -801,7 +801,7 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 * **Assume Tool Exists**: Test commands expect components to be implemented
 * **Fail Fast**: Commands should fail immediately if prerequisites missing
 * **Clear Assertions**: Each test has specific, testable assertions
-* **Path Independence**: Tests work from project root or dev-tools directory
+* **Path Independence**: Tests work from project root or .ace/tools directory
 
 ## Remaining Work to Complete Task
 
@@ -809,27 +809,27 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 
 **The following RSpec test files must be written before task completion:**
 
-1.  **`dev-tools/spec/organisms/idea_capture_spec.rb`**
+1.  **`.ace/tools/spec/organisms/idea_capture_spec.rb`**
     * Test IdeaCapture organism functionality
     * Test error handling and degraded functionality
     * Test file creation and naming logic
-2.  **`dev-tools/spec/molecules/context_loader_spec.rb`**
+2.  **`.ace/tools/spec/molecules/context_loader_spec.rb`**
     * Test dynamic loading of all docs/\*.md files
     * Test XML embedding format generation
     * Test error handling for missing/unreadable files
-3.  **`dev-tools/spec/molecules/llm_client_spec.rb`**
+3.  **`.ace/tools/spec/molecules/llm_client_spec.rb`**
     * Test LLM integration with retry logic
     * Test fallback behavior on API failures
     * Test different model providers
-4.  **`dev-tools/spec/molecules/idea_enhancer_spec.rb`**
+4.  **`.ace/tools/spec/molecules/idea_enhancer_spec.rb`**
     * Test idea enhancement workflow
     * Test template application
     * Test system prompt generation
-5.  **`dev-tools/spec/cli/ideas_manager_spec.rb`**
+5.  **`.ace/tools/spec/cli/ideas_manager_spec.rb`**
     * Test CLI interface and option parsing
     * Test command execution and output
     * Test error message formatting
-6.  **`dev-tools/spec/integration/ideas_manager_integration_spec.rb`**
+6.  **`.ace/tools/spec/integration/ideas_manager_integration_spec.rb`**
     * Test end-to-end idea capture workflow
     * Test real project data handling with cleanup
     * Test integration between all components
@@ -849,5 +849,5 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 
 ## References
 
-* Research document: dev-taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
-* Existing idea: dev-taskflow/backlog/ideas/exe-capture-it-new.md
+* Research document: .ace/taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
+* Existing idea: .ace/taskflow/backlog/ideas/exe-capture-it-new.md

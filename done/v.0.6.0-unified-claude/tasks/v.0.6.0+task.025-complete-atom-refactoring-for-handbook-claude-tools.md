@@ -140,29 +140,29 @@ Complete the ATOM architecture refactoring started in task 023, eliminating code
 ### Create
 
 #### Molecules (Behavior-Oriented Helpers)
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_inventory_builder.rb
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_inventory_builder.rb
   - Purpose: Build unified inventory of commands from multiple sources
   - Key components: Directory scanning, command categorization, installation status
   - Dependencies: WorkflowScanner, CommandExistenceChecker atoms
 
-- dev-tools/lib/coding_agent_tools/molecules/claude/command_validator.rb
+- .ace/tools/lib/coding_agent_tools/molecules/claude/command_validator.rb
   - Purpose: Validate command coverage and consistency
   - Key components: Coverage checking, outdated detection, duplicate finding
   - Dependencies: CommandTemplateRenderer, WorkflowScanner, CommandInventoryBuilder
 
 ### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_command_generator.rb
   - Changes: Remove infer_metadata (use CommandMetadataInferrer), remove workflow scanning (use WorkflowScanner), remove template rendering (use CommandTemplateRenderer)
   - Impact: Cleaner orchestration-only code
   - Integration points: WorkflowScanner, CommandMetadataInferrer, CommandTemplateRenderer, YamlFrontmatterValidator
 
-- dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
   - Changes: Remove all inventory building logic (use CommandInventoryBuilder)
   - Impact: Simplified to orchestration only
   - Integration points: CommandInventoryBuilder, TableRenderer
 
-- dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/claude_validator.rb
   - Changes: Remove validation logic (use CommandValidator molecule)
   - Impact: Focus on orchestration and reporting
   - Integration points: CommandValidator, CommandInventoryBuilder
@@ -200,7 +200,7 @@ Complete the ATOM architecture refactoring started in task 023, eliminating code
   > TEST: Duplication Analysis Complete
   > Type: Pre-condition Check
   > Assert: All duplicated code segments identified and categorized
-  > Command: grep -n "def" dev-tools/lib/coding_agent_tools/organisms/claude*.rb | sort
+  > Command: grep -n "def" .ace/tools/lib/coding_agent_tools/organisms/claude*.rb | sort
 
 * [x] Review existing atoms/molecules to understand integration patterns
 
@@ -260,7 +260,7 @@ Complete the ATOM architecture refactoring started in task 023, eliminating code
   > TEST: No Direct Scanning
   > Type: Code Analysis
   > Assert: No direct file scanning in organism
-  > Command: grep -n "Dir.glob" dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb || echo "✓ No direct scanning"
+  > Command: grep -n "Dir.glob" .ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb || echo "✓ No direct scanning"
 
 - [x] Simplify to pure orchestration logic
   > TEST: Orchestration Focus
@@ -312,7 +312,7 @@ Complete the ATOM architecture refactoring started in task 023, eliminating code
   > TEST: Duplication Metrics
   > Type: Code Analysis
   > Assert: 60%+ reduction in duplicated code
-  > Command: flay dev-tools/lib/coding_agent_tools/organisms/claude*.rb
+  > Command: flay .ace/tools/lib/coding_agent_tools/organisms/claude*.rb
 
 ## Acceptance Criteria
 

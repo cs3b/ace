@@ -68,6 +68,6 @@
 This reflection documents the first complete execution of the enhanced draft-task workflow with behavior-first methodology. The process successfully transformed a mixed behavioral/implementation idea into a pure behavioral specification ready for implementation planning.
 
 **Related Files**:
-- Source: `dev-taskflow/backlog/ideas/20250731-0753-draft-task-move.md`
-- Created: `dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.014-automated-idea-file-management-for-task-creation.md`
-- Workflow: `dev-handbook/workflow-instructions/draft-task.wf.md`
+- Source: `.ace/taskflow/backlog/ideas/20250731-0753-draft-task-move.md`
+- Created: `.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.014-automated-idea-file-management-for-task-creation.md`
+- Workflow: `.ace/handbook/workflow-instructions/draft-task.wf.md`

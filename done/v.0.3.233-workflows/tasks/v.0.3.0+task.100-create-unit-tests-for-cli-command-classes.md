@@ -30,7 +30,7 @@ remaining_work: none
 5. ✅ `git/switch_spec.rb` - Branch switching (alternative to checkout) (19 tests)
 
 ### 📋 Next Session Instructions
-1. **Navigate to dev-tools**: `cd dev-tools`
+1. **Navigate to dev-tools**: `cd .ace/tools`
 2. **Follow established patterns**: Use existing git tests as templates (add_spec.rb, commit_spec.rb, etc.)
 3. **Create tests for**: checkout, mv, restore, rm, switch commands
 4. **Test command**: `bundle exec rspec spec/coding_agent_tools/cli/commands/git/ --fail-fast`
@@ -47,13 +47,13 @@ remaining_work: none
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools/cli/commands | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/cli/commands
+    .ace/tools/lib/coding_agent_tools/cli/commands
     ├── all.rb
     ├── code/
     │   ├── lint.rb
@@ -96,48 +96,48 @@ Create comprehensive unit tests for all 25+ CLI command classes to validate comm
 #### Create
 
 **Code Commands (6/6 Complete):**
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/lint_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/review_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/review_prepare/project_context_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/review_prepare/project_target_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/review_prepare/prompt_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/review_prepare/session_dir_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code/review_synthesize_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/lint_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/review_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/review_prepare/project_context_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/review_prepare/project_target_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/review_prepare/prompt_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/review_prepare/session_dir_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code/review_synthesize_spec.rb
 
 **CodeLint Commands (4/4 Complete):**
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code_lint/all_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code_lint/docs_dependencies_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code_lint/markdown_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/code_lint/ruby_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code_lint/all_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code_lint/docs_dependencies_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code_lint/markdown_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/code_lint/ruby_spec.rb
 **Git Commands (13/13 Complete):**
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/add_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/checkout_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/commit_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/diff_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/fetch_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/log_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/mv_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/pull_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/push_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/restore_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/status_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/git/switch_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/add_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/checkout_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/commit_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/diff_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/fetch_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/log_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/mv_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/pull_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/push_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/restore_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/status_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/git/switch_spec.rb
 
 **Navigation Commands (3/3 Complete):**
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/nav/ls_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/nav/tree_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/nav/ls_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/nav/tree_spec.rb
 
 **Utility Commands (8/8 Complete):**
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/all_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/handbook/sync_templates_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/install_binstubs_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/install_dotfiles_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/llm/models_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/llm/query_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/release_spec.rb
-- ✅ dev-tools/spec/coding_agent_tools/cli/commands/task_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/all_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/handbook/sync_templates_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/install_binstubs_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/install_dotfiles_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/llm/models_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/llm/query_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/release_spec.rb
+- ✅ .ace/tools/spec/coding_agent_tools/cli/commands/task_spec.rb
 
 #### Modify
 
@@ -228,7 +228,7 @@ Create comprehensive unit tests for all 25+ CLI command classes to validate comm
   > TEST: CLI Architecture Understanding
   > Type: Pre-condition Check
   > Assert: Common CLI patterns and inheritance structure are identified
-  > Command: cd dev-tools && find lib/coding_agent_tools/cli/commands -name "*.rb" | xargs grep -l "class.*Command\|< .*Command" | head -5
+  > Command: cd .ace/tools && find lib/coding_agent_tools/cli/commands -name "*.rb" | xargs grep -l "class.*Command\|< .*Command" | head -5
 - [x] Research Aruba testing patterns and CLI testing best practices used in the project
 - [x] Plan mocking strategies for external dependencies (git, file system, LLM APIs)
 - [x] Design test data and fixtures for various command scenarios
@@ -240,19 +240,19 @@ Create comprehensive unit tests for all 25+ CLI command classes to validate comm
   > TEST: Code Commands Functionality
   > Type: Command Group Validation
   > Assert: All code-related commands handle arguments and execute correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/code/ --fail-fast
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/code/ --fail-fast
 - [x] Implement tests for CodeLint command group (all, docs_dependencies, markdown, ruby)
 - [x] Implement tests for Git command group (25+ git operation wrappers) - MAJOR PROGRESS (8/13 completed: add, commit, diff, fetch, log, pull, push, status)
   > TEST: Git Commands Integration
   > Type: Multi-Command Validation
   > Assert: Git command wrappers handle git operations correctly with proper error handling
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/git/ --fail-fast
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/git/ --fail-fast
 - [x] Implement tests for Navigation command group (ls, path, tree) - COMPLETE (3/3 completed: all commands)
 - [x] Implement tests for remaining commands (handbook, install_*, llm, release) - COMPLETE (8/8 completed: all utility commands)
   > TEST: Utility Commands Functionality
   > Type: Specialized Command Validation
   > Assert: Utility and specialized commands work correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ -t utility
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ -t utility
 - [x] **COMPLETED WORK**: All 5 remaining Git commands now have comprehensive test coverage (checkout, mv, restore, rm, switch)
   > COMPLETED: Created test files following established patterns from existing git command tests
   > TEMPLATES: Used add_spec.rb, commit_spec.rb as reference for mocking and structure
@@ -262,12 +262,12 @@ Create comprehensive unit tests for all 25+ CLI command classes to validate comm
   > TEST: Command Argument Validation
   > Type: Input Validation Test
   > Assert: All commands properly validate and handle arguments
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ -t argument_validation
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ -t argument_validation
 - [x] Run complete CLI command test suite (30/30 commands passing)
   > TEST: Full CLI Command Test Suite
   > Type: Complete Integration Test
   > Assert: All CLI commands are thoroughly tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/
   > STATUS: 100% complete - all git commands now have comprehensive test coverage
 
 ## ✅ Acceptance Criteria
@@ -290,8 +290,8 @@ Create comprehensive unit tests for all 25+ CLI command classes to validate comm
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/cli/commands/**/*.rb
-- dev-tools/spec/support/cli_helpers.rb
-- dev-tools/spec/support/mock_helpers.rb
-- dev-tools/spec/integration/ (for CLI testing patterns)
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/tools/lib/coding_agent_tools/cli/commands/**/*.rb
+- .ace/tools/spec/support/cli_helpers.rb
+- .ace/tools/spec/support/mock_helpers.rb
+- .ace/tools/spec/integration/ (for CLI testing patterns)
+- .ace/handbook/guides/testing/ruby-rspec.md

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.65]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides
+.ace/handbook/guides
 ├── README.md
 ├── ai-agent-integration.g.md
 ├── atom-house-rules.md
@@ -47,11 +47,11 @@ Create a dedicated guide for Git-specific version control operations and workflo
 
 #### Create
 
-* dev-handbook/guides/development/version-control-git.g.md
+* .ace/handbook/guides/development/version-control-git.g.md
 
 #### Modify
 
-* dev-handbook/guides/development/README.md (add reference to new guide)
+* .ace/handbook/guides/development/README.md (add reference to new guide)
 
 #### Delete
 
@@ -82,7 +82,7 @@ Create a dedicated guide for Git-specific version control operations and workflo
   > TEST: Verify Guide Creation
   > Type: Action Validation
   > Assert: Guide file created with complete Git workflow procedures
-  > Command: bin/test --check-guide-completeness dev-handbook/guides/development/version-control-git.g.md
+  > Command: bin/test --check-guide-completeness .ace/handbook/guides/development/version-control-git.g.md
 * [x] Include cross-reference to version control message guide for commit formatting
 * [x] Add troubleshooting section for common Git workflow issues
   > TEST: Verify Cross-Reference
@@ -107,6 +107,6 @@ Create a dedicated guide for Git-specific version control operations and workflo
 ## References
 
 * Review finding: "we should split this guide to two parts: a) version-control-system-message.g.md b) version-control-system-git.g.md"
-* Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
+* Source: .ace/taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Related workflow: commit.wf.md
 * Dependency: version-control-message.g.md guide must be completed first

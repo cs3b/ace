@@ -65,7 +65,7 @@ The solution integrates with the existing ATOM architecture by extending the Cre
 ## File Modifications
 
 ### Modify
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/cli/create_path_command.rb`
   - **Changes**: Add parse_undefined_flags method, extend build_metadata_hash to merge dynamic flags, add type conversion logic
   - **Impact**: Enhanced task creation flexibility, backward compatible
   - **Integration points**: Existing metadata system, template substitution engine
@@ -106,7 +106,7 @@ The solution integrates with the existing ATOM architecture by extending the Cre
   > TEST: Template Analysis Complete
   > Type: Pre-condition Check
   > Assert: All task template metadata keys are catalogued for conflict detection
-  > Command: grep -r "^[a-z_-]*:" dev-handbook/templates/task-management/
+  > Command: grep -r "^[a-z_-]*:" .ace/handbook/templates/task-management/
 
 * [x] Analyze dry-cli option processing flow to identify integration points
   > TEST: Integration Point Identification
@@ -290,7 +290,7 @@ Enable flexible and dynamic task creation by allowing users to add arbitrary met
 
 ## References
 
-- Enhanced idea: dev-taskflow/backlog/ideas/20250731-0800-flag-attribute-yaml.md
+- Enhanced idea: .ace/taskflow/backlog/ideas/20250731-0800-flag-attribute-yaml.md
 - Existing create-path command documentation in docs/tools.md
-- YAML frontmatter examples in dev-taskflow/current/v.0.4.0-replanning/tasks/
-- Task template structure at dev-handbook/templates/task-management/task.draft.template.md
+- YAML frontmatter examples in .ace/taskflow/current/v.0.4.0-replanning/tasks/
+- Task template structure at .ace/handbook/templates/task-management/task.draft.template.md

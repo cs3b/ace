@@ -32,8 +32,8 @@ Implemented a new `release-manager draft` command that creates release directory
 ### Deliverables
 
 #### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/release/draft.rb` - New command implementation
-- `dev-handbook/.meta/tpl/project-structure/release-dir-structure/` - Template directory structure with:
+- `.ace/tools/lib/coding_agent_tools/cli/commands/release/draft.rb` - New command implementation
+- `.ace/handbook/.meta/tpl/project-structure/release-dir-structure/` - Template directory structure with:
   - tasks/
   - ideas/
   - docs/ideas/
@@ -46,12 +46,12 @@ Implemented a new `release-manager draft` command that creates release directory
   - All with .keep files
 
 #### Modify
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Added draft command registration
-- `dev-tools/exe/release-manager` - Added draft command to release-manager
-- `dev-handbook/.integrations/wfi/initialize-project-structure.wf.md` - Updated to use Claude command instead
+- `.ace/tools/lib/coding_agent_tools/cli.rb` - Added draft command registration
+- `.ace/tools/exe/release-manager` - Added draft command to release-manager
+- `.ace/handbook/.integrations/wfi/initialize-project-structure.wf.md` - Updated to use Claude command instead
 
 #### Delete
-- `dev-handbook/templates/release-v.0.0.0/` - Removed duplicate templates
+- `.ace/handbook/templates/release-v.0.0.0/` - Removed duplicate templates
 
 ## Implementation Summary
 
@@ -71,7 +71,7 @@ Implemented a new `release-manager draft` command that creates release directory
 Command features:
 - Validates semantic version format (v.X.Y.Z)
 - Always operates from project root using ProjectRootDetector
-- Copies template structure from dev-handbook/.meta/tpl/
+- Copies template structure from .ace/handbook/.meta/tpl/
 - Generates release-overview.md with metadata
 - Provides helpful next steps
 
@@ -86,10 +86,10 @@ Key implementation decisions:
 ```bash
 # Test from different directories
 release-manager draft v.0.2.0 testing
-cd dev-handbook && ../dev-tools/exe/release-manager draft v.0.3.0 another-test
+cd .ace/handbook && ../.ace/tools/exe/release-manager draft v.0.3.0 another-test
 
 # Verify structure
-tree dev-taskflow/backlog/v.0.2.0-testing/
+tree .ace/taskflow/backlog/v.0.2.0-testing/
 ```
 
 **Results**: 
@@ -102,4 +102,4 @@ tree dev-taskflow/backlog/v.0.2.0-testing/
 
 - User feedback: "release-manager draft v.0.1.0 foundation => should work"
 - Related workflow: initialize-project-structure.wf.md
-- Template location: dev-handbook/.meta/tpl/project-structure/release-dir-structure/
+- Template location: .ace/handbook/.meta/tpl/project-structure/release-dir-structure/

@@ -70,5 +70,5 @@
 - Both tasks were part of the v.0.3.0-workflows release focused on workflow instruction quality
 - Changes support the broader template synchronization initiative  
 - Improvements align with workflow-instructions compliance standards
-- Work completed: dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.29-fix-commit-workflow-structure.md
-- Work completed: dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.30-clean-template-path-references.md
+- Work completed: .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.29-fix-commit-workflow-structure.md
+- Work completed: .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.30-clean-template-path-references.md

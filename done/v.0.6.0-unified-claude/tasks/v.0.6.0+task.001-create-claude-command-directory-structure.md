@@ -16,18 +16,18 @@ needs_review: true
 - [ ] Which location should be the primary directory for Claude commands?
   - **Research conducted**: Found two existing locations with Claude commands:
     - `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.claude/commands/` (33 commands)
-    - `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/.integrations/claude/commands/` (6 commands)
+    - `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/.integrations/claude/commands/` (6 commands)
   - **Suggested default**: Use `.claude/commands/` at project root as primary location
   - **Why needs human input**: Two existing structures conflict - need decision on consolidation strategy
 
-  > the primary is dev-handbook/.integrations/claude/commands/, .claude/commands/ its just duplication from shared project dev-handbook
+  > the primary is .ace/handbook/.integrations/claude/commands/, .claude/commands/ its just duplication from shared project .ace/handbook
 
 - [ ] Should we consolidate commands from both locations or maintain dual structure?
-  - **Research conducted**: Root `.claude/commands/` has more complete set; dev-handbook location has subset
+  - **Research conducted**: Root `.claude/commands/` has more complete set; .ace/handbook location has subset
   - **Suggested default**: Consolidate all commands into root `.claude/commands/` with new subdirectory structure
   - **Why needs human input**: Architectural decision affecting all future Claude integration
 
-  > we are maintaining dev-handbook (installation script will allow to duplicate them for the project purpose)
+  > we are maintaining .ace/handbook (installation script will allow to duplicate them for the project purpose)
 
 - [ ] How should existing commands.json be migrated to support the new structure?
   - **Research conducted**: Current commands.json uses flat structure with path-based keys
@@ -43,7 +43,7 @@ needs_review: true
   - **Suggested default**: Add `.claude/commands/_generated/` to .gitignore
   - **Why needs human input**: Version control strategy affects collaboration
 
-> we do not create folder .claude/commands/_generated/ - we only modify dev-handbook (and yes all the files are tracked there by github)
+> we do not create folder .claude/commands/_generated/ - we only modify .ace/handbook (and yes all the files are tracked there by github)
 
 - [ ] What naming convention should distinguish custom vs generated commands in commands.json?
   - **Research conducted**: Current commands use simple slash-prefixed names
@@ -53,7 +53,7 @@ needs_review: true
 > no (command is command, sync script that is responsibility of task-003 will take care about it)
 
 ### [LOW] Implementation Details
-- [ ] Should we preserve the dev-handbook/.integrations/claude structure for backward compatibility?
+- [ ] Should we preserve the .ace/handbook/.integrations/claude structure for backward compatibility?
   - **Research conducted**: Only 6 commands in this location vs 33 in root
   - **Suggested default**: Deprecate but preserve with symlinks to new location
   - **Why needs human input**: Migration timeline and compatibility requirements
@@ -63,17 +63,17 @@ needs_review: true
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Developer initiates organization of Claude commands within dev-handbook
+- **Input**: Developer initiates organization of Claude commands within .ace/handbook
 - **Process**: System creates organized directory structure distinguishing custom vs generated commands
 - **Output**: Clear, version-controlled directory structure ready for Claude commands
 
 ### Expected Behavior
-The system should create a well-organized directory structure within dev-handbook that clearly separates custom hand-crafted commands from auto-generated ones. Developers should be able to easily locate, modify, and add new commands. The structure should support version control and make the distinction between command types immediately apparent.
+The system should create a well-organized directory structure within .ace/handbook that clearly separates custom hand-crafted commands from auto-generated ones. Developers should be able to easily locate, modify, and add new commands. The structure should support version control and make the distinction between command types immediately apparent.
 
 ### Interface Contract
 ```bash
 # Directory structure to be created
-dev-handbook/.integrations/claude/
+.ace/handbook/.integrations/claude/
 ├── agents/                       # Specialized agents (existing)
 ├── commands/                     # All Claude commands
 │   ├── _custom/                  # Hand-crafted commands
@@ -160,9 +160,9 @@ Create a clear, maintainable directory structure for Claude commands that separa
 ## File Modifications
 
 ### Create
-- `dev-handbook/.integrations/claude/templates/` - Directory for command generation templates
-- `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl` - Template for workflow commands
-- `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl` - Template for agent commands
+- `.ace/handbook/.integrations/claude/templates/` - Directory for command generation templates
+- `.ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl` - Template for workflow commands
+- `.ace/handbook/.integrations/claude/templates/agent-command.md.tmpl` - Template for agent commands
 
 ### Modify
 - None - Commands remain in flat structure per human decision
@@ -188,8 +188,8 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 ### Planning Steps
 
-* [x] Analyze current command structure in dev-handbook/.integrations/claude/
-  - **Completed Research**: Found 6 commands in dev-handbook location
+* [x] Analyze current command structure in .ace/handbook/.integrations/claude/
+  - **Completed Research**: Found 6 commands in .ace/handbook location
   - Commands: commit.md, draft-tasks.md, load-project-context.md, plan-tasks.md, review-tasks.md, work-on-tasks.md
   - All appear to be custom hand-crafted commands
 * [x] Document existing commands for migration planning
@@ -209,19 +209,19 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 - [x] Create base directory structure
   ```bash
-  # Using dev-handbook location per human decision
-  mkdir -p dev-handbook/.integrations/claude/templates
+  # Using .ace/handbook location per human decision
+  mkdir -p .ace/handbook/.integrations/claude/templates
   # Note: No _custom/_generated subdirectories per human input
   ```
   > TEST: Directory Creation Validation
   > Type: File System Check
   > Assert: Templates directory exists
-  > Command: test -d dev-handbook/.integrations/claude/templates && echo "SUCCESS"
+  > Command: test -d .ace/handbook/.integrations/claude/templates && echo "SUCCESS"
 
 - [x] Update existing commands.json registry format
   ```bash
   # Per human input: commands.json should only be in .claude directory
-  # No commands.json needed in dev-handbook location
+  # No commands.json needed in .ace/handbook location
   # Skip this step
   ```
   > TEST: Skipped per human decision
@@ -236,7 +236,7 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 - [x] Create workflow command template
   ```bash
-  cat > dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl << 'EOF'
+  cat > .ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl << 'EOF'
 read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
 
 read and run @dev-handbook/.integrations/claude/commands/commit.md
@@ -245,11 +245,11 @@ EOF
   > TEST: Workflow Template Creation
   > Type: File Content Check
   > Assert: Template contains ERB variables
-  > Command: grep -q "<%=" dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl
+  > Command: grep -q "<%=" .ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl
 
 - [x] Create agent command template
   ```bash
-  cat > dev-handbook/.integrations/claude/templates/agent-command.md.tmpl << 'EOF'
+  cat > .ace/handbook/.integrations/claude/templates/agent-command.md.tmpl << 'EOF'
 Use the <%= agent_name %> agent to <%= agent_purpose %>.
 Context: <%= context_description %>
 <%= additional_parameters %>
@@ -258,7 +258,7 @@ EOF
   > TEST: Agent Template Creation
   > Type: File Content Check
   > Assert: Template contains all required variables
-  > Command: grep -c "<%=" dev-handbook/.integrations/claude/templates/agent-command.md.tmpl | grep -q "3"
+  > Command: grep -c "<%=" .ace/handbook/.integrations/claude/templates/agent-command.md.tmpl | grep -q "3"
 
 - [x] Create migration documentation
   ```bash
@@ -270,13 +270,13 @@ EOF
 
 - [x] Set proper file permissions
   ```bash
-  chmod 755 dev-handbook/.integrations/claude/templates
-  chmod 644 dev-handbook/.integrations/claude/templates/*.tmpl
+  chmod 755 .ace/handbook/.integrations/claude/templates
+  chmod 644 .ace/handbook/.integrations/claude/templates/*.tmpl
   ```
   > TEST: Permission Validation
   > Type: Permission Check
   > Assert: Directories have 755, files have 644
-  > Command: stat -f "%Lp" dev-handbook/.integrations/claude/templates 2>/dev/null || stat -c "%a" dev-handbook/.integrations/claude/templates
+  > Command: stat -f "%Lp" .ace/handbook/.integrations/claude/templates 2>/dev/null || stat -c "%a" .ace/handbook/.integrations/claude/templates
 
 - [x] Update .gitignore for generated content (if needed)
   ```bash
@@ -288,13 +288,13 @@ EOF
 
 - [x] Verify git tracking for new structure
   ```bash
-  git add dev-handbook/.integrations/claude/templates/
-  git status --porcelain dev-handbook/.integrations/claude/
+  git add .ace/handbook/.integrations/claude/templates/
+  git status --porcelain .ace/handbook/.integrations/claude/
   ```
   > TEST: Version Control Validation
   > Type: Git Status Check
   > Assert: All directories are tracked, no unintended files
-  > Command: git ls-files dev-handbook/.integrations/claude/templates/ | wc -l
+  > Command: git ls-files .ace/handbook/.integrations/claude/templates/ | wc -l
 
 ## Acceptance Criteria
 
@@ -309,13 +309,13 @@ EOF
 ### Current State Analysis
 - **Two Claude command locations discovered**:
   1. Root: `.claude/commands/` with 33 command files and commands.json registry
-  2. Dev-handbook: `dev-handbook/.integrations/claude/commands/` with 6 command files
+  2. Dev-handbook: `.ace/handbook/.integrations/claude/commands/` with 6 command files
 - **No existing generated commands** - all current commands are custom/hand-crafted
 - **Existing agents location**: Both locations have `agents/` directory
 - **No current .gitignore patterns** for Claude directories
 
 ### Implementation Readiness
-- **Blocked on location decision**: Need to choose between root `.claude/` or `dev-handbook/.integrations/claude/`
+- **Blocked on location decision**: Need to choose between root `.claude/` or `.ace/handbook/.integrations/claude/`
 - **Migration complexity**: 33 files to reorganize plus registry format update
 - **Backward compatibility concern**: Some tools may reference old paths
 

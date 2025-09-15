@@ -120,43 +120,43 @@ Remove the unnecessary update-registry command functionality from the handbook t
 ## File Modifications
 
 ### Delete
-- dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb
   - Reason: Command implementation no longer needed
   - Dependencies: Registered in cli.rb
   - Migration strategy: Clean removal, no user data affected
 
-- dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/update_registry_spec.rb
+- .ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/update_registry_spec.rb
   - Reason: Tests for removed command
   - Dependencies: None
   - Migration strategy: Clean deletion
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/cli.rb
+- .ace/tools/lib/coding_agent_tools/cli.rb
   - Changes: Remove update-registry command registration from register_handbook_commands method
   - Impact: Command will no longer be available in CLI
   - Integration points: handbook claude subcommands
 
-- dev-tools/exe/handbook
+- .ace/tools/exe/handbook
   - Changes: Remove update-registry command registration
   - Impact: Command removed from handbook executable
   - Integration points: Handbook CLI interface
 
-- dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
   - Changes: Remove commands.json update functionality
   - Impact: Installer will no longer create/update commands.json
   - Integration points: integrate command workflow
 
-- dev-tools/spec/integrations/claude_commands_installer_spec.rb
+- .ace/tools/spec/integrations/claude_commands_installer_spec.rb
   - Changes: Remove tests related to commands.json functionality
   - Impact: Test suite simplified
   - Integration points: ClaudeCommandsInstaller testing
 
-- dev-tools/spec/support/claude_test_helpers.rb
+- .ace/tools/spec/support/claude_test_helpers.rb
   - Changes: Remove create_command_registry helper method
   - Impact: Test helpers simplified
   - Integration points: Test support utilities
 
-- dev-tools/spec/integration/handbook_claude_cli_spec.rb
+- .ace/tools/spec/integration/handbook_claude_cli_spec.rb
   - Changes: Remove update-registry from command list test
   - Impact: CLI integration tests updated
   - Integration points: CLI testing
@@ -208,17 +208,17 @@ Remove the unnecessary update-registry command functionality from the handbook t
 
 ### Execution Steps
 
-- [x] Remove update-registry command registration from dev-tools/lib/coding_agent_tools/cli.rb
+- [x] Remove update-registry command registration from .ace/tools/lib/coding_agent_tools/cli.rb
   > TEST: Command Registration Removed
   > Type: Action Validation
   > Assert: update-registry not registered in CLI
-  > Command: cd dev-tools && bundle exec rspec spec/integration/handbook_claude_cli_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/handbook_claude_cli_spec.rb
 
-- [x] Remove update-registry registration from dev-tools/exe/handbook
+- [x] Remove update-registry registration from .ace/tools/exe/handbook
 
-- [x] Delete dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb
+- [x] Delete .ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb
 
-- [x] Delete dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/update_registry_spec.rb
+- [x] Delete .ace/tools/spec/coding_agent_tools/cli/commands/handbook/claude/update_registry_spec.rb
 
 - [x] Remove commands.json functionality from ClaudeCommandsInstaller
   - Remove update_commands_json method
@@ -245,7 +245,7 @@ Remove the unnecessary update-registry command functionality from the handbook t
   > TEST: Full Test Suite
   > Type: Integration Test
   > Assert: All tests pass
-  > Command: cd dev-tools && bundle exec rspec
+  > Command: cd .ace/tools && bundle exec rspec
   > Note: Some unrelated test failures in claude_spec.rb exist but core functionality works
 
 ## Acceptance Criteria

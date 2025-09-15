@@ -41,7 +41,7 @@ Refactor all existing filesystem references to "ideas_manager" to use the new "c
 ## Key Patterns from Reflections
 
 - **Refactoring Existing Tools**: The project has a history of refactoring and evolving CLI tools (e.g., the LLM integration architecture, the ATOM structure). This task fits within the pattern of maintaining and updating core functionalities.
-- **CLI Tool Patterns**: Existing CLI tools often involve file system operations, content searching, and command invocation. The `dev-tools` gem provides a foundation for such operations.
+- **CLI Tool Patterns**: Existing CLI tools often involve file system operations, content searching, and command invocation. The `.ace/tools` gem provides a foundation for such operations.
 - **`grep` and `find` usage**: Common development practice for deep searches across files and content.
 - **`sed` or similar for bulk replacement**: Standard tools for performing automated find-and-replace operations across a codebase.
 - **Workflow Instructions**: The process might be captured in a workflow instruction file (`.wf.md`) for AI agents to execute.
@@ -57,7 +57,7 @@ Refactor all existing filesystem references to "ideas_manager" to use the new "c
 
 **Before proceeding, we need to answer:**
 1. What is the exact, correct name and casing for the new CLI command and its associated paths ("capture-it" or "capture_it")?
-2. What is the scope of the search? Should it include all repositories (e.g., `dev-handbook`, `dev-tools`, `dev-taskflow`) or specific ones?
+2. What is the scope of the search? Should it include all repositories (e.g., `.ace/handbook`, `.ace/tools`, `.ace/taskflow`) or specific ones?
 3. What is the expected output or behavior after the refactoring is complete? Are there any specific tests that need to be run to validate the changes?
 
 **Open Questions:**

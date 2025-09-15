@@ -138,7 +138,7 @@ To ensure complete traceability and auditability by preserving the exact origina
 - [x] Data Flow: Raw input → LLM enhancement → Append SOURCE section → Save file - Traced through implementation
 
 ### Technology Stack
-- [x] Ruby for implementation (existing dev-tools gem) - Confirmed
+- [x] Ruby for implementation (existing .ace/tools gem) - Confirmed
 - [x] File I/O operations for appending content - Using standard Ruby File class
 - [x] Character limit handling from llm-query patterns - BIG_INPUT_THRESHOLD = 7000 found
 - [x] No new dependencies required - Verified, uses existing infrastructure
@@ -152,23 +152,23 @@ To ensure complete traceability and auditability by preserving the exact origina
 ## File Modifications
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb`
+- `.ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb`
   - Changes: Add SOURCE section appending logic after LLM enhancement
   - Impact: All generated idea files will include raw input preservation
   - Integration points: After enhance_idea_with_llm, before final file write
 
-- `dev-tools/lib/coding_agent_tools/molecules/llm_client.rb`
+- `.ace/tools/lib/coding_agent_tools/molecules/llm_client.rb`
   - Changes: No changes needed - LLM client only handles query execution
   - Impact: SOURCE section appending happens in IdeaCapture after LLM completes
   - Integration points: None - maintain separation of concerns
 
 ### Test Files to Update
-- `dev-tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb` (path corrected)
+- `.ace/tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb` (path corrected)
   - Changes: Add tests for SOURCE section presence and format
   - Impact: Ensures feature works correctly
   - Integration points: New test cases for SOURCE section validation
 
-- `dev-tools/spec/integration/ideas_manager_integration_spec.rb`
+- `.ace/tools/spec/integration/ideas_manager_integration_spec.rb`
   - Changes: Add integration test for end-to-end SOURCE section
   - Impact: Validates complete workflow
   - Integration points: Test actual file output contains SOURCE
@@ -214,7 +214,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > TEST: SOURCE Section Method
   > Type: Unit Test
   > Assert: Method correctly formats and appends SOURCE section
-  > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "appends SOURCE"
+  > Command: cd .ace/tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "appends SOURCE"
 
 - [x] Step 2: Integrate SOURCE appending into capture_idea flow
   - Modify enhance_idea_with_llm result handling (lines 76-86)
@@ -224,7 +224,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > TEST: Integration Flow
   > Type: Integration Test  
   > Assert: Generated idea files contain SOURCE section at end
-  > Command: cd dev-tools && bundle exec rspec spec/integration/idea_capture_integration_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/integration/idea_capture_integration_spec.rb
 
 - [x] Step 3: Handle edge cases and special characters
   - Escape markdown code blocks in raw input if present
@@ -233,7 +233,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > TEST: Edge Case Handling
   > Type: Unit Test
   > Assert: Special characters and markdown preserved correctly
-  > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "handles special"
+  > Command: cd .ace/tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "handles special"
 
 - [x] Step 4: Add character limit enforcement
   - Use @max_input_size from instance (already set based on big_user_input_allowed)
@@ -242,7 +242,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > TEST: Character Limit
   > Type: Unit Test
   > Assert: Large inputs truncated with indicator
-  > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "truncates large"
+  > Command: cd .ace/tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "truncates large"
 
 - [x] Step 5: Update tests for SOURCE section validation
   - Add test cases for SOURCE section presence
@@ -252,7 +252,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > TEST: Test Coverage
   > Type: Test Suite
   > Assert: All new tests pass
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb
 
 - [x] Step 6: Manual testing with various input types
   - Test with simple one-line ideas
@@ -262,7 +262,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > TEST: Manual Validation
   > Type: Manual Test
   > Assert: SOURCE section appears correctly in all cases
-  > Command: capture-it "test idea" && tail -20 dev-taskflow/backlog/ideas/*.md
+  > Command: capture-it "test idea" && tail -20 .ace/taskflow/backlog/ideas/*.md
 
 ## Acceptance Criteria
 
@@ -283,13 +283,13 @@ To ensure complete traceability and auditability by preserving the exact origina
 
 ## References
 
-- Source idea file: dev-taskflow/current/v.0.4.0-replanning/docs/ideas/021-20250803-1644-raw-input-capture.md
+- Source idea file: .ace/taskflow/current/v.0.4.0-replanning/docs/ideas/021-20250803-1644-raw-input-capture.md
 - Related tool: capture-it (formerly ideas-manager) workflow
 - Character limit reference: BIG_INPUT_THRESHOLD constant (7000 chars)
 - Implementation files:
-  - Main: dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
-  - Tests: dev-tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb
-  - Integration: dev-tools/spec/integration/ideas_manager_integration_spec.rb
+  - Main: .ace/tools/lib/coding_agent_tools/organisms/idea_capture.rb
+  - Tests: .ace/tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb
+  - Integration: .ace/tools/spec/integration/ideas_manager_integration_spec.rb
 - Template files:
-  - dev-handbook/templates/idea-manager/idea.template.md
-  - dev-handbook/templates/idea-manager/system.prompt.md
+  - .ace/handbook/templates/idea-manager/idea.template.md
+  - .ace/handbook/templates/idea-manager/system.prompt.md

@@ -42,23 +42,23 @@ search "TODO"
 # Output format:
 # Found 45 results
 #   ./README.md:10:0: TODO: Update installation
-#   ./dev-taskflow/current/...:23:0: TODO: Review this
-#   ./dev-tools/lib/...:45:0: TODO: Implement feature
+#   ./.ace/taskflow/current/...:23:0: TODO: Review this
+#   ./.ace/tools/lib/...:45:0: TODO: Implement feature
 
 # Search only in specific directory
-search "TODO" --include dev-taskflow
-# Output: Results only from paths matching dev-taskflow
+search "TODO" --include .ace/taskflow
+# Output: Results only from paths matching .ace/taskflow
 
 # Search with multiple includes
 search "TODO" --include "dev-tools,dev-handbook"
-# Output: Results from both dev-tools and dev-handbook
+# Output: Results from both .ace/tools and .ace/handbook
 
 # Exclude specific paths
-search "TODO" --exclude "dev-taskflow/done/**/*"
+search "TODO" --exclude ".ace/taskflow/done/**/*"
 # Output: All results except from excluded paths
 
 # Combine include and exclude
-search "TODO" --include dev-taskflow --exclude "*/done/**"
+search "TODO" --include .ace/taskflow --exclude "*/done/**"
 # Output: Results from dev-taskflow, excluding done directories
 ```
 
@@ -81,9 +81,9 @@ search "TODO" --include dev-taskflow --exclude "*/done/**"
 - [ ] **Clear Output**: Results show full paths relative to project root
 
 ### Validation Questions
-- [ ] **Repository Context**: Should we optionally show which repository owns each file (e.g., prefix with [dev-tools])?
+- [ ] **Repository Context**: Should we optionally show which repository owns each file (e.g., prefix with [.ace/tools])?
 - [ ] **Backward Compatibility**: Should we keep --repository flag for compatibility or deprecate it?
-- [ ] **Default Excludes**: Should default exclusions (like dev-taskflow/done) remain active?
+- [ ] **Default Excludes**: Should default exclusions (like .ace/taskflow/done) remain active?
 - [ ] **Output Grouping**: Should we offer optional grouping by directory/repository?
 
 ## Objective
@@ -251,7 +251,7 @@ Simplify the search tool implementation and user experience by eliminating dupli
   > TEST: Path correctness
   > Type: Integration test
   > Assert: Results show correct relative paths from project root
-  > Command: `./exe/search "task" --include dev-taskflow | head -5`
+  > Command: `./exe/search "task" --include .ace/taskflow | head -5`
 
 - [ ] **Step 4: Simplify executor interfaces**
   - Remove `search_path` parameter from both executors
@@ -290,7 +290,7 @@ Simplify the search tool implementation and user experience by eliminating dupli
   > TEST: Path filtering
   > Type: Integration test
   > Assert: Filters work correctly
-  > Command: `./exe/search "task" --include dev-tools --exclude "*/spec/*"`
+  > Command: `./exe/search "task" --include .ace/tools --exclude "*/spec/*"`
 
 - [ ] **Step 8: Performance validation**
   - Benchmark before/after implementation
@@ -334,7 +334,7 @@ Simplify the search tool implementation and user experience by eliminating dupli
   - Test deprecated --repository flag behavior
   - Verify existing scripts continue to work with warnings
   - Test result format parsing in downstream tools
-  > Command: `./exe/search "test" --repository dev-tools 2>&1 | grep -i "deprecat"`
+  > Command: `./exe/search "test" --repository .ace/tools 2>&1 | grep -i "deprecat"`
 
 - [ ] **Performance Comparison Test**
   - Time searches before and after simplification
@@ -346,7 +346,7 @@ Simplify the search tool implementation and user experience by eliminating dupli
   - Verify all results show full project-relative paths
   - Test that include/exclude patterns work with new path format
   - Ensure consistent path format across file and content searches
-  > Command: `./exe/search "task" --include dev-taskflow | head -5 | grep "dev-taskflow"`
+  > Command: `./exe/search "task" --include .ace/taskflow | head -5 | grep ".ace/taskflow"`
 
 ## Acceptance Criteria
 

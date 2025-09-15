@@ -13,7 +13,7 @@ dependencies: [v.0.5.0+task.036]
 ### User Experience
 - **Input**: User invokes `/create-cookbook` workflow with source material (reflection note or direct pattern)
 - **Process**: Workflow guides through cookbook type selection, content structuring, and documentation generation
-- **Output**: Well-structured cookbook file in `dev-handbook/cookbooks/` with consistent naming
+- **Output**: Well-structured cookbook file in `.ace/handbook/cookbooks/` with consistent naming
 
 ### Expected Behavior
 The system provides a guided workflow for transforming identified patterns and insights into reusable cookbooks. Users can create cookbooks from:
@@ -33,7 +33,7 @@ The workflow ensures consistent structure, proper categorization, and comprehens
 # - Target audience (beginner, intermediate, advanced)
 # - Pattern description and context
 
-# Output: Cookbook file in dev-handbook/cookbooks/
+# Output: Cookbook file in .ace/handbook/cookbooks/
 # Naming: [category]-[descriptive-name].cookbook.md
 # Examples:
 #   integration-oauth-provider.cookbook.md
@@ -55,7 +55,7 @@ The workflow ensures consistent structure, proper categorization, and comprehens
 - [ ] **Cookbook Structure Complete**: Generated cookbooks follow standard template
 - [ ] **Naming Convention Applied**: Files use consistent `[category]-[name].cookbook.md` format
 - [ ] **Content Quality**: Step-by-step instructions with embedded templates
-- [ ] **Storage Location Correct**: All cookbooks in `dev-handbook/cookbooks/`
+- [ ] **Storage Location Correct**: All cookbooks in `.ace/handbook/cookbooks/`
 - [ ] **Reusability Validated**: Cookbooks are self-contained and actionable
 
 ### Validation Questions
@@ -111,41 +111,41 @@ Create a systematic workflow for transforming identified patterns into high-qual
 
 *Concrete implementation actions that modify code, create files, or change the system state.*
 
-- [ ] Create cookbooks directory structure in `dev-handbook/cookbooks/`
+- [ ] Create cookbooks directory structure in `.ace/handbook/cookbooks/`
   > TEST: Directory Creation Validation
   > Type: Pre-condition Check
   > Assert: Directory exists and is accessible
-  > Command: # ls -la dev-handbook/ | grep cookbooks
+  > Command: # ls -la .ace/handbook/ | grep cookbooks
 
-- [ ] Create cookbook template at `dev-handbook/templates/cookbooks/cookbook.template.md`
+- [ ] Create cookbook template at `.ace/handbook/templates/cookbooks/cookbook.template.md`
   > TEST: Template Structure Validation
   > Type: Content Validation
   > Assert: Template contains all required sections and follows XML embedding pattern
-  > Command: # grep -E "(Purpose|Prerequisites|Steps|Examples)" dev-handbook/templates/cookbooks/cookbook.template.md
+  > Command: # grep -E "(Purpose|Prerequisites|Steps|Examples)" .ace/handbook/templates/cookbooks/cookbook.template.md
 
-- [ ] Create main workflow file at `dev-handbook/workflow-instructions/create-cookbook.wf.md`
+- [ ] Create main workflow file at `.ace/handbook/workflow-instructions/create-cookbook.wf.md`
   > TEST: Workflow Structure Validation
   > Type: Content Validation
   > Assert: Workflow follows established patterns and includes all required sections
-  > Command: # grep -E "(Goal|Prerequisites|Process Steps|Success Criteria)" dev-handbook/workflow-instructions/create-cookbook.wf.md
+  > Command: # grep -E "(Goal|Prerequisites|Process Steps|Success Criteria)" .ace/handbook/workflow-instructions/create-cookbook.wf.md
 
 - [ ] Embed cookbook template within workflow file using XML document system
   > TEST: Template Embedding Validation
   > Type: Integration Validation
   > Assert: Template is properly embedded and accessible within workflow
-  > Command: # grep -A 10 -B 2 "<template" dev-handbook/workflow-instructions/create-cookbook.wf.md
+  > Command: # grep -A 10 -B 2 "<template" .ace/handbook/workflow-instructions/create-cookbook.wf.md
 
 - [ ] Validate workflow integrates with existing `create-path` tool patterns
   > TEST: Tool Integration Validation
   > Type: Integration Validation
   > Assert: Workflow references and uses create-path tool correctly
-  > Command: # grep "create-path" dev-handbook/workflow-instructions/create-cookbook.wf.md
+  > Command: # grep "create-path" .ace/handbook/workflow-instructions/create-cookbook.wf.md
 
 - [ ] Create sample cookbook files for each category to validate structure
   > TEST: Sample Generation Validation
   > Type: End-to-End Validation
   > Assert: Sample cookbooks generate correctly and follow naming convention
-  > Command: # ls dev-handbook/cookbooks/ | grep ".cookbook.md$"
+  > Command: # ls .ace/handbook/cookbooks/ | grep ".cookbook.md$"
 
 ## Technical Approach
 
@@ -169,17 +169,17 @@ Create a systematic workflow for transforming identified patterns into high-qual
 ## File Modifications
 
 ### Create
-- dev-handbook/workflow-instructions/create-cookbook.wf.md
+- .ace/handbook/workflow-instructions/create-cookbook.wf.md
   - Purpose: Main workflow for guided cookbook creation
   - Key components: Category selection, content structuring, file generation
   - Dependencies: Existing workflow patterns, template system
 
-- dev-handbook/templates/cookbooks/cookbook.template.md
+- .ace/handbook/templates/cookbooks/cookbook.template.md
   - Purpose: Standard template for cookbook structure
   - Key components: Purpose, prerequisites, steps, examples, validation
   - Dependencies: XML document embedding system (ADR-005)
 
-- dev-handbook/cookbooks/ (directory)
+- .ace/handbook/cookbooks/ (directory)
   - Purpose: Storage location for generated cookbook files
   - Key components: Organized directory structure for cookbooks
   - Dependencies: File system organization patterns
@@ -219,7 +219,7 @@ Create a systematic workflow for transforming identified patterns into high-qual
 - [ ] **Cookbook Structure Complete**: Generated cookbooks follow standard template with all required sections
 - [ ] **Naming Convention Applied**: Files use consistent `[category]-[descriptive-name].cookbook.md` format
 - [ ] **Content Quality**: Cookbooks contain step-by-step instructions with embedded examples
-- [ ] **Storage Location Correct**: All cookbooks created in `dev-handbook/cookbooks/` directory
+- [ ] **Storage Location Correct**: All cookbooks created in `.ace/handbook/cookbooks/` directory
 - [ ] **Reusability Validated**: Cookbooks are self-contained and actionable for future use
 - [ ] **Workflow Integration**: Create-cookbook workflow integrates with existing tool ecosystem
 - [ ] **Template Embedding**: Cookbook template properly embedded using XML document system
@@ -233,7 +233,7 @@ Create a systematic workflow for transforming identified patterns into high-qual
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/008-reflection-cookbook-automation.md
-- Related workflow: dev-handbook/workflow-instructions/create-reflection-note.wf.md
-- Storage location: dev-handbook/cookbooks/
+- Source idea: .ace/taskflow/backlog/ideas/008-reflection-cookbook-automation.md
+- Related workflow: .ace/handbook/workflow-instructions/create-reflection-note.wf.md
+- Storage location: .ace/handbook/cookbooks/
 - Naming convention: [category]-[descriptive-name].cookbook.md

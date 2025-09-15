@@ -152,11 +152,11 @@ Provide users and automation systems with flexibility to retrieve either a singl
 - No new files required
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/task/next.rb
   - Changes: Add `--all` boolean option, modify limit validation to accept `-1`, add flag handling logic
   - Impact: Extends command capability without breaking existing functionality
   - Integration points: Works with existing TaskManager, filtering, sorting, and formatting systems
-- dev-tools/spec/coding_agent_tools/cli/commands/task_spec.rb
+- .ace/tools/spec/coding_agent_tools/cli/commands/task_spec.rb
   - Changes: Update tests that expect `limit: -1` to fail, add comprehensive test coverage for `--all` flag
   - Impact: Ensures reliability and prevents regressions
   - Integration points: Uses existing test infrastructure and mocking patterns
@@ -178,7 +178,7 @@ Provide users and automation systems with flexibility to retrieve either a singl
   > TEST: Understanding Check
   > Type: Pre-condition Analysis
   > Assert: Current dry-cli option patterns and validation logic are understood
-  > Command: # Review dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb structure
+  > Command: # Review .ace/tools/lib/coding_agent_tools/cli/commands/task/next.rb structure
 * [x] **Dry-CLI Option Research**: Research dry-cli boolean option syntax and interaction with existing integer options
   > TEST: Framework Knowledge Check
   > Type: Documentation Review
@@ -209,7 +209,7 @@ Provide users and automation systems with flexibility to retrieve either a singl
   > TEST: Limit Validation Update
   > Type: Method Behavior Validation
   > Assert: validate_limit(-1) returns appropriate unlimited value, positive integers still work
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "limit validation"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "limit validation"
 - [x] **Implement --all Flag Logic**: Add logic in `call` method to detect `--all` flag and set unlimited limit
   > TEST: Flag Processing Logic
   > Type: Command Logic Validation
@@ -229,12 +229,12 @@ Provide users and automation systems with flexibility to retrieve either a singl
   > TEST: Test Compatibility
   > Type: Regression Prevention
   > Assert: Existing test suite passes with updated validation logic
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb
 - [x] **Add Comprehensive New Tests**: Create test cases for --all flag functionality, edge cases, and integration scenarios
   > TEST: New Feature Coverage
   > Type: Feature Validation
   > Assert: All --all flag scenarios are covered by tests (happy path, edge cases, integration)
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "--all"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task_spec.rb -k "--all"
 
 ## Risk Assessment
 
@@ -306,6 +306,6 @@ Provide users and automation systems with flexibility to retrieve either a singl
 
 ## References
 
-- Original idea file: dev-taskflow/current/v.0.5.0-insights/docs/ideas/044-20250814-0024-task-manager-limit-0.md
+- Original idea file: .ace/taskflow/current/v.0.5.0-insights/docs/ideas/044-20250814-0024-task-manager-limit-0.md
 - Task management system architecture
 - Existing `task-manager next` command patterns

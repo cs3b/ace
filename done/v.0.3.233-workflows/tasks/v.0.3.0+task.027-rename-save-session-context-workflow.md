@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 1 dev-handbook/workflow-instructions/ | grep -E "(save|session)" | sed 's/^/    /'
+tree -L 1 .ace/handbook/workflow-instructions/ | grep -E "(save|session)" | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -36,7 +36,7 @@ Fix the file extension violation for the save-session-context workflow file. Acc
 
 #### Create
 
-* dev-handbook/workflow-instructions/save-session-context.wf.md (renamed from .md)
+* .ace/handbook/workflow-instructions/save-session-context.wf.md (renamed from .md)
 
 #### Modify
 
@@ -44,7 +44,7 @@ Fix the file extension violation for the save-session-context workflow file. Acc
 
 #### Delete
 
-* dev-handbook/workflow-instructions/save-session-context.md (after renaming)
+* .ace/handbook/workflow-instructions/save-session-context.md (after renaming)
 
 ## Phases
 

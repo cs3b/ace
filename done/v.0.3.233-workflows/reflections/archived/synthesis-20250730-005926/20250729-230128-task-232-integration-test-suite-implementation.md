@@ -47,9 +47,9 @@
 ## Technical Notes
 
 ### Files Created/Modified
-- **New**: `dev-tools/spec/integration/release_path_resolution_integration_spec.rb` - Complete integration test suite
-- **Enhanced**: `dev-tools/spec/integration/reflection_synthesize_integration_spec.rb` - Added path resolution tests
-- **Extended**: `dev-tools/spec/support/cli_helpers.rb` - Added release-manager command support
+- **New**: `.ace/tools/spec/integration/release_path_resolution_integration_spec.rb` - Complete integration test suite
+- **Enhanced**: `.ace/tools/spec/integration/reflection_synthesize_integration_spec.rb` - Added path resolution tests
+- **Extended**: `.ace/tools/spec/support/cli_helpers.rb` - Added release-manager command support
 
 ### Test Coverage Achieved
 - CLI to ReleaseManager communication (text and JSON formats)

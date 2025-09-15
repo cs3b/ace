@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-tools/lib/coding_agent_tools/organisms/taskflow_management/
+ls -la .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/
 ```
 
 _Result excerpt:_
@@ -84,21 +84,21 @@ Implement comprehensive test coverage for the TaskManager organism that currentl
   > TEST: Result Struct Tests
   > Type: Unit Test
   > Assert: All struct methods work correctly (success?, found?, count, etc.)
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/taskflow_management/task_manager_spec.rb -e "Result structs"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/taskflow_management/task_manager_spec.rb -e "Result structs"
 - [x] Test find_next_task method with various scenarios (actionable tasks, no tasks, dependencies)
 - [x] Test find_recent_tasks with time filtering and status filtering
 - [x] Test get_all_tasks with topological sorting and cycle detection
   > TEST: Topological Sort
   > Type: Integration Test
   > Assert: Tasks sorted correctly and cycles detected when present
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/taskflow_management/task_manager_spec.rb -e "topological"
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/taskflow_management/task_manager_spec.rb -e "topological"
 - [x] Add edge case tests for error conditions and malformed data
 - [x] Test private methods through public interfaces where appropriate
 - [x] Run complete test suite to ensure no regressions
   > TEST: Full Test Suite
   > Type: Regression Check
   > Assert: All tests pass including new TaskManager tests
-  > Command: cd dev-tools && bin/test
+  > Command: cd .ace/tools && bin/test
 
 ## Acceptance Criteria
 
@@ -120,10 +120,10 @@ Implement comprehensive test coverage for the TaskManager organism that currentl
 
 ## References
 
-- TaskManager implementation: dev-tools/lib/coding_agent_tools/organisms/taskflow_management/task_manager.rb
+- TaskManager implementation: .ace/tools/lib/coding_agent_tools/organisms/taskflow_management/task_manager.rb
 - Related molecule tests: spec/coding_agent_tools/molecules/taskflow_management/
 - ATOM architecture: docs/architecture-tools.md
-- Previous TaskManager task: dev-taskflow/done/v.0.3.0-migration-tools/tasks/v.0.3.0+task.07-implement-task-manager-organism.md
-- Ruby/RSpec testing standards: dev-tools/docs/development/guides/testing-with-vcr.md
+- Previous TaskManager task: .ace/taskflow/done/v.0.3.0-migration-tools/tasks/v.0.3.0+task.07-implement-task-manager-organism.md
+- Ruby/RSpec testing standards: .ace/tools/docs/development/guides/testing-with-vcr.md
 
 ```

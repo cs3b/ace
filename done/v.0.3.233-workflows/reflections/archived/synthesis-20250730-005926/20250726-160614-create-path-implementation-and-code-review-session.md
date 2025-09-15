@@ -138,7 +138,7 @@
 - v.0.3.0+task.116: Refactor executable to use dry library pattern (Medium)
 - v.0.3.0+task.117: Audit and standardize dry library usage (Medium)
 
-**Code Review Report:** `/dev-taskflow/current/v.0.3.0-workflows/code_review/20250726-155346-code-head1head/cr-report-gpro.md`
+**Code Review Report:** `/.ace/taskflow/current/v.0.3.0-workflows/code_review/20250726-155346-code-head1head/cr-report-gpro.md`
 
 **Session Accomplishments:**
 - Fully functional create-path command implementation

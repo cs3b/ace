@@ -55,9 +55,9 @@
 - ADR-005: Universal document embedding system - Leveraged for template inclusion within workflow
 
 **File Structure Planning:**
-- `dev-handbook/workflow-instructions/create-cookbook.wf.md` - Main workflow
-- `dev-handbook/templates/cookbooks/cookbook.template.md` - Template definition
-- `dev-handbook/cookbooks/` - Storage directory for generated cookbooks
+- `.ace/handbook/workflow-instructions/create-cookbook.wf.md` - Main workflow
+- `.ace/handbook/templates/cookbooks/cookbook.template.md` - Template definition
+- `.ace/handbook/cookbooks/` - Storage directory for generated cookbooks
 
 **Implementation Approach:**
 - File system + Markdown approach selected for optimal integration
@@ -73,5 +73,5 @@
 - All planning workflow steps completed successfully
 
 **Related Work:**
-- Source idea: dev-taskflow/backlog/ideas/008-reflection-cookbook-automation.md
+- Source idea: .ace/taskflow/backlog/ideas/008-reflection-cookbook-automation.md
 - Integration potential with create-reflection-note workflow for future enhancement

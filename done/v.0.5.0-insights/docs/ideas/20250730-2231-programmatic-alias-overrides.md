@@ -66,7 +66,7 @@ To simplify the programmatic use of LLM model aliases and default overwrites acr
 **Open Questions:**
 - What level of abstraction is needed for "overwriting defaults" programmatically versus setting specific aliases?
 - How will this system integrate with the existing `ProviderModelParser` and `LlmModelInfo` structures?
-- Should alias definitions be part of the `dev-handbook` or managed purely through code/configuration?
+- Should alias definitions be part of the `.ace/handbook` or managed purely through code/configuration?
 
 ## Assumptions to Validate
 

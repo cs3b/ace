@@ -24,8 +24,8 @@ Update the template synchronization guides to reflect the new universal document
 
 #### Create
 
-* dev-handbook/guides/document-synchronization.md (replacement for template-synchronization.md)
-* dev-handbook/guides/document-sync-operations.md (replacement for template-sync-operations.md)
+* .ace/handbook/guides/document-synchronization.md (replacement for template-synchronization.md)
+* .ace/handbook/guides/document-sync-operations.md (replacement for template-sync-operations.md)
 
 #### Modify
 
@@ -33,8 +33,8 @@ Update the template synchronization guides to reflect the new universal document
 
 #### Delete
 
-* dev-handbook/guides/template-synchronization.md
-* dev-handbook/guides/template-sync-operations.md
+* .ace/handbook/guides/template-synchronization.md
+* .ace/handbook/guides/template-sync-operations.md
 
 ## Implementation Plan
 
@@ -50,7 +50,7 @@ Update the template synchronization guides to reflect the new universal document
   > TEST: Guide Content Validation
   > Type: Action Validation
   > Assert: All XML examples use <documents> format
-  > Command: rg "<templates>" dev-handbook/guides/document-synchronization.md
+  > Command: rg "<templates>" .ace/handbook/guides/document-synchronization.md
 * [x] Step 2: Add guide embedding documentation and examples
 * [x] Step 3: Update directory structure section to include guides
 * [x] Step 4: Reference ADR-004 and ADR-005 in architecture decisions
@@ -62,7 +62,7 @@ Update the template synchronization guides to reflect the new universal document
   > TEST: Reference Update Validation
   > Type: Action Validation
   > Assert: No references to old guide names remain
-  > Command: rg -i "template-synchronization\.md|template-sync-operations\.md" dev-handbook/
+  > Command: rg -i "template-synchronization\.md|template-sync-operations\.md" .ace/handbook/
 
 ## Acceptance Criteria
 
@@ -85,6 +85,6 @@ Update the template synchronization guides to reflect the new universal document
 * Task 40: Implement Universal Document Embedding System
 * docs/decisions/ADR-004-consistent-path-standards.md
 * docs/decisions/ADR-005-universal-document-embedding-system.md
-* Current guides: dev-handbook/guides/template-synchronization.md
-* Current guides: dev-handbook/guides/template-sync-operations.md
-* Enhanced sync script: dev-tools/exe-old/markdown-sync-embedded-documents
+* Current guides: .ace/handbook/guides/template-synchronization.md
+* Current guides: .ace/handbook/guides/template-sync-operations.md
+* Enhanced sync script: .ace/tools/exe-old/markdown-sync-embedded-documents

@@ -13,7 +13,7 @@ Successfully enhanced the `coding-agent-tools integrate claude` command with a n
 
 ### ✅ Implementation Completed
 
-1. **Template System**: Created ERB-based templates in `dev-handbook/.meta/tpl/project-structure/` for dynamic project initialization
+1. **Template System**: Created ERB-based templates in `.ace/handbook/.meta/tpl/project-structure/` for dynamic project initialization
 2. **CLI Enhancement**: Added `--init-project` flag to the integrate command
 3. **Smart Detection**: Implemented project detection logic that automatically extracts information from package.json, Gemfile, Cargo.toml, etc.
 4. **Idempotent Operations**: All operations are safe to run multiple times without overwriting existing content
@@ -50,7 +50,7 @@ Successfully enhanced the `coding-agent-tools integrate claude` command with a n
 ### ⚡ Bootstrap Creation Logic
 
 **Challenge**: Determining when to create v.0.0.0 bootstrap release  
-**Solution**: Simple check for `dev-taskflow` directory existence - if missing, it's a new project needing bootstrap
+**Solution**: Simple check for `.ace/taskflow` directory existence - if missing, it's a new project needing bootstrap
 
 ### 🔗 Symlink Management
 
@@ -105,7 +105,7 @@ Successfully enhanced the `coding-agent-tools integrate claude` command with a n
 
 ### 📁 Files Created
 
-- `dev-handbook/.meta/tpl/project-structure/` - Template directory structure
+- `.ace/handbook/.meta/tpl/project-structure/` - Template directory structure
 - ERB templates for what-do-we-build, architecture, blueprint
 - Bootstrap release templates with dynamic content
 - Enhanced integrate.rb with 400+ lines of new functionality

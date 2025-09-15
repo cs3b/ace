@@ -12,13 +12,13 @@ dependencies: []
 
 ### User Experience
 - **Input**: Developers run `claude-commands-installer` CLI tool with options for dry-run, verbose output, backup creation, and force overwrite
-- **Process**: Tool discovers and installs Claude commands from dev-handbook workflows, copying custom commands, generating workflow commands, and installing agents with clear progress feedback
+- **Process**: Tool discovers and installs Claude commands from .ace/handbook workflows, copying custom commands, generating workflow commands, and installing agents with clear progress feedback
 - **Output**: Installed .claude/ directory with commands and agents, detailed summary of operations (created/skipped/updated counts), and clear error reporting
 
 ### Expected Behavior
 The installer should provide a clear, predictable experience for setting up Claude Code commands:
 
-1. **Discovery Phase**: Automatically find workflow instructions and command templates in the dev-handbook structure
+1. **Discovery Phase**: Automatically find workflow instructions and command templates in the .ace/handbook structure
 2. **Validation Phase**: Check source directories exist and validate the project structure
 3. **Installation Phase**: Copy commands and agents to the .claude/ directory with appropriate metadata injection
 4. **Reporting Phase**: Provide detailed summary of what was installed, skipped, or failed
@@ -40,7 +40,7 @@ claude-commands-installer [OPTIONS]
 --verbose              # Show detailed progress information
 --backup               # Create timestamped backup of existing .claude/ directory
 --force                # Overwrite existing files without prompting
---source PATH          # Custom source directory (default: dev-handbook/.integrations/claude)
+--source PATH          # Custom source directory (default: .ace/handbook/.integrations/claude)
 
 # Expected outputs:
 # Success: Exit code 0, summary statistics printed
@@ -105,7 +105,7 @@ Refactor the existing `claude_commands_installer.rb` to follow ATOM architecture
 ## References
 
 - ADR-011: ATOM Architecture House Rules (.t.md)
-- Current implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+- Current implementation: .ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
 - ATOM architecture documentation: docs/architecture-tools.md
 - Feedback source: Development feedback item #8
 

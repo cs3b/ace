@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la dev-handbook/workflow-instructions/review-code.wf.md .claude/commands/handbook-review.md
+ls -la .ace/handbook/workflow-instructions/review-code.wf.md .claude/commands/handbook-review.md
 ```
 
 _Result excerpt:_
 
 ```
--rw-r--r--@ 1 michalczyz  staff  20401 Jul  3 23:11 dev-handbook/workflow-instructions/review-code.wf.md
+-rw-r--r--@ 1 michalczyz  staff  20401 Jul  3 23:11 .ace/handbook/workflow-instructions/review-code.wf.md
 -rw-r--r--@ 1 michalczyz  staff  13420 Jul  4 00:04 .claude/commands/handbook-review.md
 ```
 
@@ -38,7 +38,7 @@ Resolve critical system prompt duplication in review workflows where system prom
 
 #### Modify
 
-* dev-handbook/workflow-instructions/review-code.wf.md
+* .ace/handbook/workflow-instructions/review-code.wf.md
 * .claude/commands/handbook-review.md
 
 ## Phases
@@ -56,7 +56,7 @@ Resolve critical system prompt duplication in review workflows where system prom
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: System prompt duplication patterns are identified
-  > Command: grep -n "System Prompt" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -n "System Prompt" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Review handbook-review command for consistent separation patterns
 * [x] Identify all locations where system prompts are incorrectly embedded
 
@@ -67,7 +67,7 @@ Resolve critical system prompt duplication in review workflows where system prom
   > TEST: Verify System Prompt Removal
   > Type: Action Validation
   > Assert: prompt.md construction no longer includes system prompt content
-  > Command: grep -A 10 "## System Prompt" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -A 10 "## System Prompt" .ace/handbook/workflow-instructions/review-code.wf.md
 * [x] Verify LLM command patterns maintain --system flag (line 293)
 * [x] Test handbook-review command end-to-end with proper separation
   > TEST: Verify Handbook Review Function

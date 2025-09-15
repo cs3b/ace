@@ -10,7 +10,7 @@
 - **Rapid pivoting from migration to deletion**: Quickly recognized when existing functionality superseded the need for migration
 - **Comprehensive discovery process**: Thorough analysis of existing code-review system revealed superior architecture and features
 - **Systematic cleanup approach**: Methodical removal of all references to deleted script across documentation and codebase
-- **Multi-repository coordination**: Successfully managed changes across submodules (dev-tools, dev-handbook, dev-taskflow)
+- **Multi-repository coordination**: Successfully managed changes across submodules (dev-tools, dev-handbook, .ace/taskflow)
 - **Clear decision documentation**: Well-documented rationale for choosing deletion over migration in task file
 - **Efficient task completion**: Reduced 8-hour migration estimate to 1-hour cleanup through smart analysis
 
@@ -99,8 +99,8 @@
 ## Technical Details
 
 **Migration Result**: 
-- Deleted 457-line script: `dev-tools/exe/generate-review-prompt`
-- Updated documentation: `dev-tools/docs/tools.md`, `dev-handbook/workflow-instructions/review-code.wf.md`
+- Deleted 457-line script: `.ace/tools/exe/generate-review-prompt`
+- Updated documentation: `.ace/tools/docs/tools.md`, `.ace/handbook/workflow-instructions/review-code.wf.md`
 - Task status: Changed from `pending` (8h estimate) to `done` (1h actual)
 
 **Existing Alternative**: 
@@ -109,7 +109,7 @@
 - Modern CLI interface with comprehensive options
 
 **Commit Structure**:
-- Submodule commits: dev-tools (script deletion), dev-handbook (workflow update), dev-taskflow (task completion)
+- Submodule commits: .ace/tools (script deletion), .ace/handbook (workflow update), .ace/taskflow (task completion)
 - Main repo commit: Submodule reference updates
 
 ## Additional Context

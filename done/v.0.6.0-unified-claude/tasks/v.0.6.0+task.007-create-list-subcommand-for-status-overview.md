@@ -13,17 +13,17 @@ release: v.0.6.0-unified-claude
 
 ### [HIGH] Critical Implementation Questions
 - [x] How should the command distinguish between "custom" and "generated" commands?
-  - **Research conducted**: Found ClaudeCommandsInstaller copies from dev-handbook/.integrations/claude/commands/ (6 custom multi-task commands)
+  - **Research conducted**: Found ClaudeCommandsInstaller copies from .ace/handbook/.integrations/claude/commands/ (6 custom multi-task commands)
   - **Current structure**: All commands end up in .claude/commands/ directory
-  - **Suggested approach**: Custom = matches files in dev-handbook/.integrations/claude/commands/, Generated = others
+  - **Suggested approach**: Custom = matches files in .ace/handbook/.integrations/claude/commands/, Generated = others
   - **Alternative approach**: Add metadata to commands.json to track source
   - **Why needs human input**: Architecture decision affecting data structure and future extensibility
-  - **Human answer**: "in dev-handbook/.integrations/claude/commands/{_custom,_generated} - separate folders"
+  - **Human answer**: "in .ace/handbook/.integrations/claude/commands/{_custom,_generated} - separate folders"
   - **Human clarification**: "as mention in task.004 we don't need and we should not update commands.json"
-  - **Decision**: Use separate subdirectories _custom/ and _generated/ within dev-handbook/.integrations/claude/commands/
+  - **Decision**: Use separate subdirectories _custom/ and _generated/ within .ace/handbook/.integrations/claude/commands/
 
 - [x] What exactly are "Missing Commands" and how should they be detected?
-  - **Research conducted**: Found 25 workflow files in dev-handbook/workflow-instructions/
+  - **Research conducted**: Found 25 workflow files in .ace/handbook/workflow-instructions/
   - **Commands exist for**: Most workflows have corresponding commands (32 total commands found)
   - **Unclear**: Should "missing" mean workflows without commands, or commands without workflows?
   - **Suggested default**: Missing = workflows in workflow-instructions/ without corresponding .claude/commands/*.md file
@@ -224,9 +224,9 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/list.rb` - Command implementation
-- `dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb` - Listing logic
-- `dev-tools/spec/coding_agent_tools/organisms/claude_command_lister_spec.rb` - Tests
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/list.rb` - Command implementation
+- `.ace/tools/lib/coding_agent_tools/organisms/claude_command_lister.rb` - Listing logic
+- `.ace/tools/spec/coding_agent_tools/organisms/claude_command_lister_spec.rb` - Tests
 
 ### Modify
 - None required
@@ -254,7 +254,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 
 * [x] Design output format variations
 * [x] Define status determination logic
-  - Custom: Files matching those in dev-handbook/.integrations/claude/commands/
+  - Custom: Files matching those in .ace/handbook/.integrations/claude/commands/
   - Generated: All other .md files in .claude/commands/
   - Missing: Workflows without corresponding commands
 * [x] Plan JSON schema for structured output
@@ -323,7 +323,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   end
   
   def scan_custom_commands
-    dir = File.join(project_root, 'dev-handbook', '.integrations', 'claude', 'commands', '_custom')
+    dir = File.join(project_root, '.ace/handbook', '.integrations', 'claude', 'commands', '_custom')
     return [] unless Dir.exist?(dir)
     
     Dir.glob(File.join(dir, '*.md')).map do |path|
@@ -332,7 +332,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   end
   
   def scan_generated_commands
-    dir = File.join(project_root, 'dev-handbook', '.integrations', 'claude', 'commands', '_generated')
+    dir = File.join(project_root, '.ace/handbook', '.integrations', 'claude', 'commands', '_generated')
     return [] unless Dir.exist?(dir)
     
     Dir.glob(File.join(dir, '*.md')).map do |path|
@@ -382,9 +382,9 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 - Current command organization structure
 - Standard CLI list command patterns
 - JSON output format standards
-- ClaudeCommandsInstaller implementation (dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb)
-- Task list command pattern (dev-tools/lib/coding_agent_tools/cli/commands/task/list.rb)
-- Handbook namespace structure (dev-tools/lib/coding_agent_tools/cli/commands/handbook/)
+- ClaudeCommandsInstaller implementation (.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb)
+- Task list command pattern (.ace/tools/lib/coding_agent_tools/cli/commands/task/list.rb)
+- Handbook namespace structure (.ace/tools/lib/coding_agent_tools/cli/commands/handbook/)
 
 ## Review Summary
 

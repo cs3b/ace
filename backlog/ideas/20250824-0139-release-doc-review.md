@@ -92,7 +92,7 @@ To ensure the quality and consistency of release documentation and plans by inte
 - The potential for review feedback to become a bottleneck if not managed efficiently.
 
 **Implementation Unknowns:**
-- The specific Ruby code modifications required within the `dev-tools` gem to integrate the review step.
+- The specific Ruby code modifications required within the `.ace/tools` gem to integrate the review step.
 - How to handle scenarios where the review tool finds issues but the workflow needs to proceed (e.g., manual override, explicit acknowledgement).
 ```
 

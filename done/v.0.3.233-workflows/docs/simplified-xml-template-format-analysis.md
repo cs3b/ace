@@ -10,11 +10,11 @@ Analysis of the simplified XML template embedding format used in workflow instru
 
 ```xml
 <templates>
-    <template path="dev-handbook/templates/category/file.template.md">
+    <template path=".ace/handbook/templates/category/file.template.md">
 [Template content embedded directly here]
     </template>
     
-    <template path="dev-handbook/templates/another/file.template.md">
+    <template path=".ace/handbook/templates/another/file.template.md">
 [Another template content]
     </template>
 </templates>
@@ -52,10 +52,10 @@ Analysis of the simplified XML template embedding format used in workflow instru
 
 ### Standard Paths
 
-- `dev-handbook/templates/project-docs/decisions/adr.template.md` - ADR templates
-- `dev-handbook/templates/release-tasks/task.template.md` - Task templates  
-- `dev-handbook/templates/user-docs/user-guide.template.md` - User documentation
-- `dev-handbook/templates/code-docs/ruby-yard.template.md` - API documentation
+- `.ace/handbook/templates/project-docs/decisions/adr.template.md` - ADR templates
+- `.ace/handbook/templates/release-tasks/task.template.md` - Task templates  
+- `.ace/handbook/templates/user-docs/user-guide.template.md` - User documentation
+- `.ace/handbook/templates/code-docs/ruby-yard.template.md` - API documentation
 
 ### Variable Support
 
@@ -86,7 +86,7 @@ Analysis of the simplified XML template embedding format used in workflow instru
 **Validate template format:**
 
 ```regex
-<template\s+path="dev-handbook/templates/[^"]+\.template\.md">
+<template\s+path=".ace/handbook/templates/[^"]+\.template\.md">
 ```
 
 ### XML Structure Requirements
@@ -94,7 +94,7 @@ Analysis of the simplified XML template embedding format used in workflow instru
 1. **Well-formed XML**: Must parse as valid XML
 2. **Single path attribute**: Exactly one `path` attribute per template
 3. **Template file extension**: Path must end with `.template.md`
-4. **Template directory**: Path must start with `dev-handbook/templates/`
+4. **Template directory**: Path must start with `.ace/handbook/templates/`
 
 ## Content Synchronization Algorithm
 
@@ -126,7 +126,7 @@ Analysis of the simplified XML template embedding format used in workflow instru
 
 ```xml
 <templates>
-    <template path="dev-handbook/templates/project-docs/decisions/adr.template.md">
+    <template path=".ace/handbook/templates/project-docs/decisions/adr.template.md">
 # ADR-XXX: Title of the Decision
 
 ## Status
@@ -143,7 +143,7 @@ Date: YYYY-MM-DD
 
 ```xml
 <templates>
-    <template path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path=".ace/handbook/templates/release-tasks/task.template.md">
 ---
 id: v.X.Y.Z+task.NN
 status: pending

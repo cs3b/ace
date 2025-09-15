@@ -52,9 +52,9 @@
 ## Technical Details
 
 **Files Created:**
-- `/dev-tools/lib/coding_agent_tools/organisms/codex_client.rb` - Main Codex CLI provider
-- `/dev-tools/lib/coding_agent_tools/organisms/codex_oss_client.rb` - Codex OSS provider for local models
-- `/dev-tools/spec/coding_agent_tools/organisms/codex_client_spec.rb` - Comprehensive unit tests
+- `/.ace/tools/lib/coding_agent_tools/organisms/codex_client.rb` - Main Codex CLI provider
+- `/.ace/tools/lib/coding_agent_tools/organisms/codex_oss_client.rb` - Codex OSS provider for local models
+- `/.ace/tools/spec/coding_agent_tools/organisms/codex_client_spec.rb` - Comprehensive unit tests
 - Integration tests added to `llm_query_integration_spec.rb`
 - Mock VCR cassettes for future integration testing
 

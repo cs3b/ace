@@ -47,7 +47,7 @@
 ## Technical Details
 
 - Task ID generated: v.0.6.0+task.016
-- File location: dev-taskflow/current/v.0.6.0-unified-claude/tasks/
+- File location: .ace/taskflow/current/v.0.6.0-unified-claude/tasks/
 - Status set to: draft (as required by workflow)
 - Priority: high (based on feedback item importance)
 

@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/atoms
+    .ace/tools/lib/coding_agent_tools/atoms
     ├── env_reader.rb
     ├── git
     │   ├── git_command_executor.rb
@@ -50,7 +50,7 @@ Fix git commands to work from any nested directory within the project, not just 
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/atoms/project_root_detector.rb
+- .ace/tools/lib/coding_agent_tools/atoms/project_root_detector.rb
 
 ## Phases
 
@@ -79,8 +79,8 @@ Fix git commands to work from any nested directory within the project, not just 
 - [x] Test git commands from nested directories to ensure they work correctly
   > TEST: Nested Directory Test
   > Type: Functional Validation
-  > Assert: git-status works from dev-tools/ and other subdirectories
-  > Command: cd /Users/michalczyz/Projects/CodingAgent/tools-meta/dev-tools/lib && git-status
+  > Assert: git-status works from .ace/tools/ and other subdirectories
+  > Command: cd /Users/michalczyz/Projects/CodingAgent/tools-meta/.ace/tools/lib && git-status
   > RESULT: ✅ PASSED - All git commands (status, log, diff, fetch, add, pull, push) work from nested directories
   > FIX APPLIED: Enhanced GitCommandExecutor with smart path resolution
 
@@ -88,7 +88,7 @@ Fix git commands to work from any nested directory within the project, not just 
   > TEST: Regression Check
   > Type: Full System Test
   > Assert: All existing git command functionality still works
-  > Command: cd /Users/michalczyz/Projects/CodingAgent/tools-meta/dev-tools && bin/test
+  > Command: cd /Users/michalczyz/Projects/CodingAgent/tools-meta/.ace/tools && bin/test
   > RESULT: ✅ PASSED - 1689 examples, 0 failures, 2 pending (expected skips)
 
 ## Acceptance Criteria
@@ -110,7 +110,7 @@ Fix git commands to work from any nested directory within the project, not just 
 
 ```
 Issue reported: git commands work only from project root
-Current behavior: Commands fail with "git -C dev-handbook status" errors when run from subdirectories
+Current behavior: Commands fail with "git -C .ace/handbook status" errors when run from subdirectories
 Expected behavior: Commands should work from any directory within the project
 ```
 
@@ -121,8 +121,8 @@ Expected behavior: Commands should work from any directory within the project
 - **Multi-repository coordination functions properly**
 - **Path resolution works as expected**
 
-### Testing from Nested Directory (dev-tools/lib) ❌  
-- **All git commands fail**: Error executing `git -C dev-handbook`, `git -C dev-tools`, `git -C dev-taskflow`
+### Testing from Nested Directory (.ace/tools/lib) ❌  
+- **All git commands fail**: Error executing `git -C .ace/handbook`, `git -C .ace/tools`, `git -C .ace/taskflow`
 - **Root cause**: Git commands use relative paths from current directory instead of absolute paths from project root
 - **Error pattern**: `Git command failed: git -C <relative-path> <command>`
 
@@ -136,7 +136,7 @@ Expected behavior: Commands should work from any directory within the project
 The issue is NOT with ProjectRootDetector using wrong starting directory. The issue is that:
 
 1. **ProjectRootDetector correctly finds project root** (using Dir.pwd)
-2. **Git system uses relative paths** like "dev-tools", "dev-handbook" in commands
+2. **Git system uses relative paths** like ".ace/tools", ".ace/handbook" in commands
 3. **Relative paths don't work from subdirectories** - they must be absolute paths
 
 **Fix needed**: Update git command execution to use absolute paths to repositories, not relative paths.
@@ -145,7 +145,7 @@ The issue is NOT with ProjectRootDetector using wrong starting directory. The is
 
 ### Smart Path Resolution Enhancement
 
-**File Modified**: `dev-tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb`
+**File Modified**: `.ace/tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb`
 
 **Solution Implemented**: Enhanced GitCommandExecutor with intelligent path resolution that:
 

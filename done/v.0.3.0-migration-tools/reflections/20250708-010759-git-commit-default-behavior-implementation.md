@@ -110,8 +110,8 @@
 - Reverse behavior: `--repo-only` flag skips `add_all` and commits only staged changes
 
 **Architecture Components:**
-- CLI command: `/dev-tools/lib/coding_agent_tools/cli/commands/git/commit.rb:47-48,103`
-- Orchestrator logic: `/dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb:71-80`
+- CLI command: `/.ace/tools/lib/coding_agent_tools/cli/commands/git/commit.rb:47-48,103`
+- Orchestrator logic: `/.ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb:71-80`
 - Multi-repository coordination through existing ATOM structure
 
 ## Additional Context

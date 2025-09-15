@@ -29,12 +29,12 @@ create-path task-new --title "Task Title" --status draft   # Uses behavioral spe
 create-path task-new --title "Task Title" --status pending # Uses implementation template
 
 # Template Structure
-dev-handbook/templates/task-management/task.draft.template.md           # Behavioral spec
-dev-handbook/templates/task-management/task.pending.template.md         # Implementation
-dev-handbook/templates/task-management/task.technical-approach.template.md
-dev-handbook/templates/task-management/task.tool-selection-matrix.template.md
-dev-handbook/templates/task-management/task.file-modification-checklist.template.md
-dev-handbook/templates/task-management/task.risk-assessment.template.md
+.ace/handbook/templates/task-management/task.draft.template.md           # Behavioral spec
+.ace/handbook/templates/task-management/task.pending.template.md         # Implementation
+.ace/handbook/templates/task-management/task.technical-approach.template.md
+.ace/handbook/templates/task-management/task.tool-selection-matrix.template.md
+.ace/handbook/templates/task-management/task.file-modification-checklist.template.md
+.ace/handbook/templates/task-management/task.risk-assessment.template.md
 ```
 
 ### Success Criteria
@@ -58,13 +58,13 @@ dev-handbook/templates/task-management/task.risk-assessment.template.md
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/templates | sed 's/^/    /'
+tree -L 2 .ace/handbook/templates | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/templates
+    .ace/handbook/templates
     ├── binstubs
     ├── code-docs
     ├── commit
@@ -149,28 +149,28 @@ Reorganize task templates to support the new draft-task → plan-task workflow s
 ## File Modifications
 
 ### Create
-- dev-handbook/templates/task-management/ (directory)
-- dev-handbook/templates/task-management/task.draft.template.md
+- .ace/handbook/templates/task-management/ (directory)
+- .ace/handbook/templates/task-management/task.draft.template.md
   - Purpose: Behavioral specification template for draft tasks
   - Key components: User Experience, Interface Contract, Success Criteria, Validation Questions
   - Dependencies: None
-- dev-handbook/templates/task-management/task.pending.template.md
+- .ace/handbook/templates/task-management/task.pending.template.md
   - Purpose: Implementation planning template for pending tasks  
   - Key components: Technical Approach, File Modifications, Implementation Plan, Risk Assessment
   - Dependencies: References to sub-templates
-- dev-handbook/templates/task-management/task.technical-approach.template.md
+- .ace/handbook/templates/task-management/task.technical-approach.template.md
   - Purpose: Technical approach planning sub-template
   - Key components: Architecture Pattern, Technology Stack, Implementation Strategy
   - Dependencies: None
-- dev-handbook/templates/task-management/task.tool-selection-matrix.template.md
+- .ace/handbook/templates/task-management/task.tool-selection-matrix.template.md
   - Purpose: Tool selection criteria and comparison matrix
   - Key components: Evaluation criteria table, selection rationale
   - Dependencies: None
-- dev-handbook/templates/task-management/task.file-modification-checklist.template.md
+- .ace/handbook/templates/task-management/task.file-modification-checklist.template.md
   - Purpose: File operation planning template
   - Key components: Create/Modify/Delete sections with purpose and impact
   - Dependencies: None
-- dev-handbook/templates/task-management/task.risk-assessment.template.md
+- .ace/handbook/templates/task-management/task.risk-assessment.template.md
   - Purpose: Risk analysis and mitigation planning
   - Key components: Technical risks, integration risks, performance risks
   - Dependencies: None
@@ -180,17 +180,17 @@ Reorganize task templates to support the new draft-task → plan-task workflow s
   - Changes: Update task-new template path from release-tasks to task-management
   - Impact: create-path task-new will use new template structure
   - Integration points: Template variable substitution system
-- dev-handbook/workflow-instructions/draft-task.wf.md
+- .ace/handbook/workflow-instructions/draft-task.wf.md
   - Changes: Update embedded template path to task.draft.template.md
   - Impact: Workflow will embed correct behavioral specification template
   - Integration points: XML template embedding system
-- dev-handbook/workflow-instructions/plan-task.wf.md
+- .ace/handbook/workflow-instructions/plan-task.wf.md
   - Changes: Update embedded template paths to task.pending.template.md and sub-templates
   - Impact: Workflow will embed correct implementation planning templates
   - Integration points: XML template embedding system with multiple templates
 
 ### Delete
-- dev-handbook/templates/release-tasks/task.template.md
+- .ace/handbook/templates/release-tasks/task.template.md
   - Reason: Replaced by split templates for behavioral vs implementation concerns
   - Dependencies: Verify no other references exist before deletion
 
@@ -202,13 +202,13 @@ Reorganize task templates to support the new draft-task → plan-task workflow s
   > TEST: Content Analysis Complete
   > Type: Pre-condition Check
   > Assert: Template sections clearly categorized as behavioral or implementation
-  > Command: grep -E "(User Experience|Interface|Success|Technical|Implementation|Risk)" dev-handbook/templates/release-tasks/task.template.md
+  > Command: grep -E "(User Experience|Interface|Success|Technical|Implementation|Risk)" .ace/handbook/templates/release-tasks/task.template.md
 
 * [ ] Research embedded template paths in workflow instructions
   > TEST: Template References Found
   > Type: Pre-condition Check  
   > Assert: All template path references identified
-  > Command: grep -r "template.*path.*task.template" dev-handbook/workflow-instructions/
+  > Command: grep -r "template.*path.*task.template" .ace/handbook/workflow-instructions/
 
 * [ ] Plan template content split based on draft-task vs plan-task workflow purposes
 * [ ] Design consistent task. prefixed naming convention for sub-templates
@@ -219,25 +219,25 @@ Reorganize task templates to support the new draft-task → plan-task workflow s
   > TEST: Directory Created
   > Type: Action Validation
   > Assert: task-management directory exists and is empty
-  > Command: test -d dev-handbook/templates/task-management && ls -la dev-handbook/templates/task-management
+  > Command: test -d .ace/handbook/templates/task-management && ls -la .ace/handbook/templates/task-management
 
 - [ ] Create task.draft.template.md with behavioral specification content
   > TEST: Draft Template Created
   > Type: Action Validation
   > Assert: Draft template contains behavioral specification sections
-  > Command: grep -E "(User Experience|Interface Contract|Success Criteria)" dev-handbook/templates/task-management/task.draft.template.md
+  > Command: grep -E "(User Experience|Interface Contract|Success Criteria)" .ace/handbook/templates/task-management/task.draft.template.md
 
 - [ ] Create task.pending.template.md with implementation planning content
   > TEST: Pending Template Created
   > Type: Action Validation
   > Assert: Pending template contains implementation planning sections
-  > Command: grep -E "(Technical Approach|File Modifications|Implementation Plan)" dev-handbook/templates/task-management/task.pending.template.md
+  > Command: grep -E "(Technical Approach|File Modifications|Implementation Plan)" .ace/handbook/templates/task-management/task.pending.template.md
 
 - [ ] Create sub-templates with task. prefixes for implementation planning components
   > TEST: Sub-templates Created
   > Type: Action Validation
   > Assert: All sub-templates exist with correct prefixes
-  > Command: ls dev-handbook/templates/task-management/task.*.template.md | wc -l | grep -q "6"
+  > Command: ls .ace/handbook/templates/task-management/task.*.template.md | wc -l | grep -q "6"
 
 - [ ] Update .coding-agent/create-path.yml to use task.draft.template.md for task-new
   > TEST: Configuration Updated
@@ -249,25 +249,25 @@ Reorganize task templates to support the new draft-task → plan-task workflow s
   > TEST: Draft Workflow Updated
   > Type: Action Validation
   > Assert: draft-task workflow embeds correct template
-  > Command: grep -q "task-management/task.draft.template.md" dev-handbook/workflow-instructions/draft-task.wf.md
+  > Command: grep -q "task-management/task.draft.template.md" .ace/handbook/workflow-instructions/draft-task.wf.md
 
 - [ ] Update plan-task.wf.md embedded template paths for all sub-templates
   > TEST: Plan Workflow Updated
   > Type: Action Validation
   > Assert: plan-task workflow embeds all correct templates
-  > Command: grep -c "task-management/task\." dev-handbook/workflow-instructions/plan-task.wf.md | grep -q "5"
+  > Command: grep -c "task-management/task\." .ace/handbook/workflow-instructions/plan-task.wf.md | grep -q "5"
 
 - [ ] Verify no other references to old template path exist
   > TEST: Old References Removed
   > Type: Action Validation
   > Assert: No references to old template path remain
-  > Command: ! grep -r "release-tasks/task.template.md" dev-handbook/ dev-taskflow/ docs/ .coding-agent/
+  > Command: ! grep -r "release-tasks/task.template.md" .ace/handbook/ .ace/taskflow/ docs/ .coding-agent/
 
-- [ ] Remove old dev-handbook/templates/release-tasks/task.template.md
+- [ ] Remove old .ace/handbook/templates/release-tasks/task.template.md
   > TEST: Old Template Removed
   > Type: Action Validation
   > Assert: Old template file no longer exists
-  > Command: ! test -f dev-handbook/templates/release-tasks/task.template.md
+  > Command: ! test -f .ace/handbook/templates/release-tasks/task.template.md
 
 - [ ] Test create-path task-new with both draft and pending statuses
   > TEST: Template Selection Works

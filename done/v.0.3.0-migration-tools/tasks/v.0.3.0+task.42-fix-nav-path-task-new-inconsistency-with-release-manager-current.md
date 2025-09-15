@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-taskflow | sed 's/^/    /'
+tree -L 2 .ace/taskflow | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-taskflow/
+.ace/taskflow/
 ├── backlog
 ├── current
 │   ├── v.0.1.0-aurora
@@ -67,7 +67,7 @@ Fix the inconsistency where `release-manager current` reports `v.0.1.0-aurora` a
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Identify how release-manager and nav-path determine current release
-  > Command: grep -r "current" dev-tools/ dev-handbook/tools/ --include="*.rb" --include="*.sh"
+  > Command: grep -r "current" .ace/tools/ .ace/handbook/tools/ --include="*.rb" --include="*.sh"
 - [x] Research the intended behavior from project documentation
 - [x] Plan detailed implementation strategy for unified approach
 
@@ -104,4 +104,4 @@ Fix the inconsistency where `release-manager current` reports `v.0.1.0-aurora` a
 ## References
 
 - User reported inconsistency: release-manager shows v.0.1.0-aurora, nav-path creates in v.0.3.0-migration
-- Project workflow documentation in dev-handbook/workflow-instructions/
+- Project workflow documentation in .ace/handbook/workflow-instructions/

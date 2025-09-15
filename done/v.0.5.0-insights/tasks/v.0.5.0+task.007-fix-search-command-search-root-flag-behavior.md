@@ -33,12 +33,12 @@ Fixed the search command to properly handle the `--search-root` flag, ensuring i
 
 #### Modify
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe/search`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/exe/search`
   - Added mapping from `search_root` to `search_path` for executor compatibility
   - Special handling for `--search-root .` to use current directory
   - Updated help text to clarify behavior
 
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/organisms/search/unified_searcher.rb`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/lib/coding_agent_tools/organisms/search/unified_searcher.rb`
   - Modified `search_files` and `search_content_direct` methods
   - Added logic to use project root as default search path
   - Ensured search_path option is properly passed to executors
@@ -80,7 +80,7 @@ end
 
 ```bash
 # Test 1: Default search from subdirectory (should search project root)
-cd dev-handbook/workflow-instructions
+cd .ace/handbook/workflow-instructions
 search "bin/tnid"
 # Result: Found 70 results from project root ✓
 
@@ -97,7 +97,7 @@ search "bin/tnid" --search-root /Users/michalczyz/Projects/CodingAgent/handbook-
 
 ## References
 
-- Commit: `3e94438` in dev-tools submodule - "feat(search): default to project root, allow current dir"
+- Commit: `3e94438` in .ace/tools submodule - "feat(search): default to project root, allow current dir"
 - Related issue: Discovered during user testing of search simplification (v.0.5.0+task.006)
 - Documentation: Updated help text in search command to clarify behavior
 - Follow-up needed: None - issue fully resolved

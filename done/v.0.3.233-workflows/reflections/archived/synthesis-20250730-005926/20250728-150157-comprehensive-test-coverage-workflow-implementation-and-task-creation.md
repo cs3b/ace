@@ -113,7 +113,7 @@
 ### Command Execution
 ```bash
 # Key commands used successfully
-cd dev-tools && bin/test spec/                    # Test execution
+cd .ace/tools && bin/test spec/                    # Test execution
 coverage-analyze coverage/.resultset.json --threshold 20  # Analysis
 create-path task-new --title "..." --priority medium --estimate "2h"  # Task creation
 git-status && git-add && git-commit -i "..."     # Multi-repo operations
@@ -121,7 +121,7 @@ git-status && git-add && git-commit -i "..."     # Multi-repo operations
 
 ### File Operations
 - **Coverage Reports**: Generated in `coverage_analysis/` directory
-- **Tasks Created**: In `dev-taskflow/current/v.0.3.0-workflows/tasks/`
+- **Tasks Created**: In `.ace/taskflow/current/v.0.3.0-workflows/tasks/`
 - **Commits**: Applied across all 4 repositories with contextual messages
 
 ## Additional Context
@@ -137,5 +137,5 @@ The resulting 59 tasks provide a comprehensive roadmap for achieving meaningful 
 **Related Files**:
 - Coverage analysis: `coverage_analysis/coverage_analysis.json`
 - Text report: `coverage_analysis/coverage_analysis.text`
-- Tasks: `dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.163-221.md`
-- Workflow: `dev-handbook/workflow-instructions/improve-code-coverage.wf.md`
+- Tasks: `.ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.163-221.md`
+- Workflow: `.ace/handbook/workflow-instructions/improve-code-coverage.wf.md`

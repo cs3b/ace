@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/report_formatter_spec.rb
+cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/report_formatter_spec.rb
 ```
 
 _Result excerpt:_
@@ -43,7 +43,7 @@ Improve test coverage for the ReportFormatter molecule to identify and fix gaps 
 
 #### Modify
 
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/molecules/report_formatter_spec.rb
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/molecules/report_formatter_spec.rb
 
 #### Delete
 

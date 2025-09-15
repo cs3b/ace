@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.229, v.0.3.0+task.230, v.0.3.0+task.231]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/spec/integration | sed 's/^/    /'
+tree -L 2 .ace/tools/spec/integration | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/spec/integration
+    .ace/tools/spec/integration
     ├── cli_integration_spec.rb
     ├── code_review_integration_spec.rb
     ├── llm_integration_spec.rb
@@ -42,11 +42,11 @@ Create end-to-end integration tests that verify the complete path resolution fea
 
 #### Create
 
-- dev-tools/spec/integration/release_path_resolution_integration_spec.rb (new file)
+- .ace/tools/spec/integration/release_path_resolution_integration_spec.rb (new file)
 
 #### Modify
 
-- dev-tools/spec/integration/reflection_synthesize_integration_spec.rb (enhance existing)
+- .ace/tools/spec/integration/reflection_synthesize_integration_spec.rb (enhance existing)
 
 #### Delete
 
@@ -124,6 +124,6 @@ Create end-to-end integration tests that verify the complete path resolution fea
 
 ## References
 
-- Integration test examples: dev-tools/spec/integration/
+- Integration test examples: .ace/tools/spec/integration/
 - All implementation tasks: v.0.3.0+task.225 through v.0.3.0+task.231
 - Focus on real-world usage scenarios

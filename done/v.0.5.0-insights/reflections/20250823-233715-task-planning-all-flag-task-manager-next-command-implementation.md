@@ -55,8 +55,8 @@
 - Additive approach preserving full backward compatibility
 
 **Key Files Identified:**
-- `dev-tools/lib/coding_agent_tools/cli/commands/task/next.rb` - Primary implementation
-- `dev-tools/spec/coding_agent_tools/cli/commands/task_spec.rb` - Test updates required
+- `.ace/tools/lib/coding_agent_tools/cli/commands/task/next.rb` - Primary implementation
+- `.ace/tools/spec/coding_agent_tools/cli/commands/task_spec.rb` - Test updates required
 
 **Risk Mitigation Strategy:**
 - Update existing tests that expect limit -1 to fail
@@ -65,7 +65,7 @@
 
 ## Additional Context
 
-- Task: dev-taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.044-add-all-flag-to-task-manager-next-command.md
+- Task: .ace/taskflow/current/v.0.5.0-insights/tasks/v.0.5.0+task.044-add-all-flag-to-task-manager-next-command.md
 - Status: Successfully promoted from draft to pending with complete implementation plan
 - Workflow: plan-task.wf.md executed successfully
 - Estimate: 3 hours for implementation based on technical analysis

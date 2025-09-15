@@ -106,14 +106,14 @@ Improve user experience by providing a simpler, more intuitive command name for 
 
 ### Architecture Pattern
 - **Pattern Selection**: Command-line executable separation following Unix philosophy of focused tools
-- **Integration**: Maintains existing ATOM architecture pattern within dev-tools Ruby gem
+- **Integration**: Maintains existing ATOM architecture pattern within .ace/tools Ruby gem
 - **Impact**: Minimal system impact - splits functionality into dedicated executables
 
 ### Technology Stack
 - **Platform**: Ruby executable script with dry-cli command structure
 - **Compatibility**: Cross-platform support (macOS, Linux, Windows with WSL)
 - **Dependencies**: No new dependencies required - uses existing Ruby gem infrastructure
-- **Distribution**: Follows existing gem executable pattern in dev-tools/exe/ directory
+- **Distribution**: Follows existing gem executable pattern in .ace/tools/exe/ directory
 
 ### Implementation Strategy
 - **Approach**: Copy-Modify-Delete pattern for safe migration
@@ -146,45 +146,45 @@ Improve user experience by providing a simpler, more intuitive command name for 
 ## File Modifications
 
 ### Create
-- `dev-tools/exe/capture-it`
+- `.ace/tools/exe/capture-it`
   - Purpose: New focused executable for idea capture functionality only
   - Key components: Simplified CLI structure with only capture functionality
   - Dependencies: Existing CodingAgentTools::Cli::Commands::Ideas::Capture class
   - Implementation: Copy from ideas-manager, remove version command, update module name from IdeasManagerCli to CaptureItCli
 
 ### Modify  
-- `dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb`
+- `.ace/tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb`
   - Changes: Update usage message strings to reference `capture-it` instead of `ideas-manager capture`
   - Impact: User-facing help and error messages use new command name
   - Integration points: Maintains existing interface with IdeaCapture organism
 
-- `dev-tools/spec/cli/ideas_manager_spec.rb`
+- `.ace/tools/spec/cli/ideas_manager_spec.rb`
   - Changes: Add test cases for new `capture-it` command while maintaining existing tests
   - Impact: Ensures both command names work during transition period
   - Integration points: Uses existing CLI testing framework
 
-- `dev-tools/spec/integration/ideas_manager_integration_spec.rb`
+- `.ace/tools/spec/integration/ideas_manager_integration_spec.rb`
   - Changes: Add integration tests for `capture-it` executable
   - Impact: Validates end-to-end functionality with new command name
   - Integration points: Existing integration test infrastructure
 
-- `dev-tools/spec/integration/ideas_manager_commit_spec.rb`
+- `.ace/tools/spec/integration/ideas_manager_commit_spec.rb`
   - Changes: Update test coverage to use `capture-it` command instead of `ideas-manager capture`
   - Impact: Ensures commit integration works with new command
   - Integration points: Git integration testing framework
 
-- `dev-handbook/workflow-instructions/capture-idea.wf.md`
+- `.ace/handbook/workflow-instructions/capture-idea.wf.md`
   - Changes: Update all command examples from `ideas-manager capture` to `capture-it`
   - Impact: User-facing workflow documentation remains accurate
   - Integration points: 17 command examples need updating
 
-- `dev-handbook/**/*.md` (all markdown files)
+- `.ace/handbook/**/*.md` (all markdown files)
   - Changes: Search and replace all instances of `ideas-manager capture` with `capture-it`
   - Impact: Comprehensive documentation update across all workflow instructions
   - Integration points: Found in multiple workflow files and reflections
 
 ### Delete
-- `dev-tools/exe/ideas-manager` (remove entire file after creating capture-it)
+- `.ace/tools/exe/ideas-manager` (remove entire file after creating capture-it)
   - Note: Complete removal since project is in alpha
   - Migration strategy: Direct cut-over with no transition
 
@@ -244,28 +244,28 @@ Improve user experience by providing a simpler, more intuitive command name for 
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All executable components and their relationships are identified
-  > Command: ls -la dev-tools/exe/ideas-manager && head -20 dev-tools/exe/ideas-manager
+  > Command: ls -la .ace/tools/exe/ideas-manager && head -20 .ace/tools/exe/ideas-manager
   > **Review Note**: Analyzed structure - uses dry-cli registry pattern with Ideas::Capture command
 
 * [x] **[Completed during review]** Review all test files that reference `ideas-manager` for update requirements
   > TEST: Test Coverage Analysis
   > Type: Pre-condition Check
   > Assert: All test files requiring updates are identified
-  > Command: grep -r "ideas-manager" dev-tools/spec/ --files-with-matches
+  > Command: grep -r "ideas-manager" .ace/tools/spec/ --files-with-matches
   > **Review Note**: Found 3 test files: cli/ideas_manager_spec.rb, integration/ideas_manager_integration_spec.rb, integration/ideas_manager_commit_spec.rb
 
 * [x] **[Completed during review]** Identify all documentation and code references that need updating
   > TEST: Reference Analysis
   > Type: Pre-condition Check
   > Assert: All string references to old command name are catalogued
-  > Command: grep -r "ideas-manager" dev-tools/lib/ dev-tools/spec/ --exclude-dir=cassettes
+  > Command: grep -r "ideas-manager" .ace/tools/lib/ .ace/tools/spec/ --exclude-dir=cassettes
   > **Review Note**: Found usage strings in capture.rb (lines 65-67) and numerous test references
 
 * [ ] Identify all directory and file renamings needed
   > TEST: Directory Structure Analysis
   > Type: Pre-condition Check
   > Assert: All ideas-related directories and files identified for renaming
-  > Command: find dev-tools -type d -name "*ideas*" -o -type f -name "*ideas_manager*"
+  > Command: find .ace/tools -type d -name "*ideas*" -o -type f -name "*ideas_manager*"
 
 ### Execution Steps
 
@@ -275,85 +275,85 @@ Improve user experience by providing a simpler, more intuitive command name for 
   > TEST: Verify Executable Copy
   > Type: Action Validation
   > Assert: New executable exists with correct permissions
-  > Command: cp dev-tools/exe/ideas-manager dev-tools/exe/capture-it && test -x dev-tools/exe/capture-it
+  > Command: cp .ace/tools/exe/ideas-manager .ace/tools/exe/capture-it && test -x .ace/tools/exe/capture-it
 
 - [ ] Modify `capture-it` to be capture-focused
   > TEST: Verify Modifications
   > Type: Action Validation
   > Assert: capture-it works without version command and with updated module name
-  > Command: grep -q "CaptureItCli" dev-tools/exe/capture-it && ! grep -q "version" dev-tools/exe/capture-it
+  > Command: grep -q "CaptureItCli" .ace/tools/exe/capture-it && ! grep -q "version" .ace/tools/exe/capture-it
 
 - [ ] Test `capture-it` functionality before removing ideas-manager
   > TEST: Verify Capture Works
   > Type: Action Validation
   > Assert: capture-it successfully captures ideas
-  > Command: dev-tools/exe/capture-it "test idea" --help
+  > Command: .ace/tools/exe/capture-it "test idea" --help
 
 - [ ] Delete `ideas-manager` executable
   > TEST: Verify Deletion
   > Type: Action Validation
   > Assert: ideas-manager no longer exists
-  > Command: rm dev-tools/exe/ideas-manager && ! test -f dev-tools/exe/ideas-manager
+  > Command: rm .ace/tools/exe/ideas-manager && ! test -f .ace/tools/exe/ideas-manager
 
 - [ ] Update usage messages in Ideas::Capture class to reference new command name
   > TEST: Verify Usage Message Updates
   > Type: Action Validation
   > Assert: All help text references use "capture-it" instead of "ideas-manager capture"
-  > Command: grep -n "capture-it" dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
+  > Command: grep -n "capture-it" .ace/tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
 
 - [ ] Add test cases for `capture-it` command in CLI test suite
   > TEST: Verify New Test Coverage
   > Type: Action Validation
   > Assert: Tests exist for capture-it command functionality
-  > Command: grep -n "capture-it" dev-tools/spec/cli/ideas_manager_spec.rb
+  > Command: grep -n "capture-it" .ace/tools/spec/cli/ideas_manager_spec.rb
 
 - [ ] Rename library directory from ideas/ to capture/
   > TEST: Verify Directory Renaming
   > Type: Action Validation
   > Assert: Library directory renamed to capture
-  > Command: git mv dev-tools/lib/coding_agent_tools/cli/commands/ideas dev-tools/lib/coding_agent_tools/cli/commands/capture
+  > Command: git mv .ace/tools/lib/coding_agent_tools/cli/commands/ideas .ace/tools/lib/coding_agent_tools/cli/commands/capture
 
 - [ ] Rename test files from ideas_manager_* to capture_it_*
   > TEST: Verify Test File Renaming
   > Type: Action Validation
   > Assert: All test files renamed to capture_it pattern
-  > Command: for f in dev-tools/spec/**/*ideas_manager*; do git mv "$f" "${f//ideas_manager/capture_it}"; done
+  > Command: for f in .ace/tools/spec/**/*ideas_manager*; do git mv "$f" "${f//ideas_manager/capture_it}"; done
 
 - [ ] Rename test cassette directory
   > TEST: Verify Cassette Renaming
   > Type: Action Validation
   > Assert: VCR cassettes directory renamed
-  > Command: git mv dev-tools/spec/cassettes/ideas_manager_integration dev-tools/spec/cassettes/capture_it_integration
+  > Command: git mv .ace/tools/spec/cassettes/ideas_manager_integration .ace/tools/spec/cassettes/capture_it_integration
 
 - [ ] Update all require/import statements to use new paths
   > TEST: Verify Import Updates
   > Type: Action Validation
   > Assert: All imports use new directory structure
-  > Command: grep -r "require.*ideas" dev-tools/lib dev-tools/spec
+  > Command: grep -r "require.*ideas" .ace/tools/lib .ace/tools/spec
 
 - [ ] Update integration tests to use only `capture-it` command
   > TEST: Verify Integration Test Coverage
   > Type: Action Validation
   > Assert: Integration tests use capture-it command throughout
-  > Command: grep -n "capture-it" dev-tools/spec/integration/*_spec.rb
+  > Command: grep -n "capture-it" .ace/tools/spec/integration/*_spec.rb
 
 - [ ] Run complete test suite to ensure no regressions introduced
   > TEST: Verify No Regressions
   > Type: Action Validation
   > Assert: All existing tests pass with new implementation
-  > Command: cd dev-tools && bundle exec rspec --format progress
+  > Command: cd .ace/tools && bundle exec rspec --format progress
 
 - [ ] Update all documentation references across all repositories
   > TEST: Verify Documentation Updates
   > Type: Action Validation
   > Assert: All markdown files use capture-it instead of ideas-manager capture
-  > Command: grep -r "ideas-manager capture" . --include="*.md" | grep -v "dev-taskflow/done"
+  > Command: grep -r "ideas-manager capture" . --include="*.md" | grep -v ".ace/taskflow/done"
 
 - [ ] Test capture-it executable works with all flag combinations
   > TEST: Verify Command Functionality
   > Type: Action Validation
   > Assert: `capture-it` command works with all expected options
-  > Command: dev-tools/exe/capture-it --help && dev-tools/exe/capture-it --version
+  > Command: .ace/tools/exe/capture-it --help && .ace/tools/exe/capture-it --version
 
 ## Acceptance Criteria
 
@@ -375,7 +375,7 @@ Improve user experience by providing a simpler, more intuitive command name for 
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/20250731-0748-capture-it-rename.md
-- Current implementation: dev-tools/exe/ideas-manager
-- Command class: dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
-- Test suites: dev-tools/spec/cli/ideas_manager_spec.rb, dev-tools/spec/integration/ideas_manager_*_spec.rb
+- Source idea: .ace/taskflow/backlog/ideas/20250731-0748-capture-it-rename.md
+- Current implementation: .ace/tools/exe/ideas-manager
+- Command class: .ace/tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
+- Test suites: .ace/tools/spec/cli/ideas_manager_spec.rb, .ace/tools/spec/integration/ideas_manager_*_spec.rb

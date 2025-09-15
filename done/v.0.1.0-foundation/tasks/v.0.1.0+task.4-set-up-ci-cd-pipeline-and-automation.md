@@ -69,7 +69,7 @@ Establish a robust CI/CD pipeline using GitHub Actions to automate testing, lint
   > TEST: CI/CD Research Complete
   > Type: Pre-condition Check
   > Assert: CI/CD strategy documented with workflow examples
-  > Command: test -f dev-taskflow/backlog/v.0.1.0-foundation/researches/github-actions.md
+  > Command: test -f .ace/taskflow/backlog/v.0.1.0-foundation/researches/github-actions.md
 * [x] Analyze existing .github/workflows/main.yml and bin/ scripts for integration points
 * [x] Plan multi-Ruby version testing strategy and matrix (3.2, 3.3, 3.4)
 * [x] Review current build system integration with bin/test and bin/lint

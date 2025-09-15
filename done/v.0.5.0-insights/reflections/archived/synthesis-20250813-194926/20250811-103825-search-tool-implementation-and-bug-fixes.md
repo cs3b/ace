@@ -126,5 +126,5 @@ Key fixes implemented:
 ## Additional Context
 
 - Related tasks: v.0.5.0+task.002, v.0.5.0+task.003, v.0.5.0+task.004
-- Commits: Multiple fixes and features across dev-tools submodule
-- Documentation: Updated dev-tools/docs/tools.md with search tool usage
+- Commits: Multiple fixes and features across .ace/tools submodule
+- Documentation: Updated .ace/tools/docs/tools.md with search tool usage

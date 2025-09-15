@@ -9,9 +9,9 @@ This document outlines the multi-repository detection and intelligent path resol
 Based on `git submodule status`:
 - **Main Repository**: `tools-meta-f-git` (root)
 - **Submodules**:
-  - `dev-handbook` (heads/main)
-  - `dev-taskflow` (heads/main)
-  - `dev-tools` (v0.2.71-43-g944e187)
+  - `.ace/handbook` (heads/main)
+  - `.ace/taskflow` (heads/main)
+  - `.ace/tools` (v0.2.71-43-g944e187)
 
 ## Multi-Repository Detection Strategy
 
@@ -21,7 +21,7 @@ Based on `git submodule status`:
 ```ruby
 # Get submodules from git
 submodules = `git submodule status`.lines.map do |line|
-  # Parse: " 2d7a31b769e93e9031e6c7561c2da6fc8845c87f dev-handbook (heads/main)"
+  # Parse: " 2d7a31b769e93e9031e6c7561c2da6fc8845c87f .ace/handbook (heads/main)"
   path = line.strip.split(' ')[1]
   {
     name: File.basename(path),
@@ -52,14 +52,14 @@ repositories = [
 
 ### 2. Path Resolution Algorithm
 
-**Input**: Array of file paths (e.g., `["dev-handbook/file.md", "lib/file.rb", "dev-taskflow/task.md"]`)
+**Input**: Array of file paths (e.g., `[".ace/handbook/file.md", "lib/file.rb", ".ace/taskflow/task.md"]`)
 
 **Output**: Grouped commands by repository
 ```ruby
 {
   "main" => ["lib/file.rb"],
-  "dev-handbook" => ["file.md"],
-  "dev-taskflow" => ["task.md"]
+  ".ace/handbook" => ["file.md"],
+  ".ace/taskflow" => ["task.md"]
 }
 ```
 
@@ -125,44 +125,44 @@ end
 ## Path Resolution Examples
 
 ### Example 1: Mixed Repository Files
-**Input**: `["dev-handbook/guide.md", "dev-taskflow/task.md", "lib/file.rb"]`
+**Input**: `[".ace/handbook/guide.md", ".ace/taskflow/task.md", "lib/file.rb"]`
 
 **Resolution**:
-1. `dev-handbook/guide.md` → `dev-handbook` repo, `guide.md` (relative)
-2. `dev-taskflow/task.md` → `dev-taskflow` repo, `task.md` (relative)
+1. `.ace/handbook/guide.md` → `.ace/handbook` repo, `guide.md` (relative)
+2. `.ace/taskflow/task.md` → `.ace/taskflow` repo, `task.md` (relative)
 3. `lib/file.rb` → `main` repo, `lib/file.rb` (relative)
 
 **Generated Commands**:
 ```bash
-git -C dev-handbook add guide.md
-git -C dev-taskflow add task.md
+git -C .ace/handbook add guide.md
+git -C .ace/taskflow add task.md
 git add lib/file.rb
 ```
 
 ### Example 2: Absolute Paths
-**Input**: `["/Users/user/tools-meta/dev-tools/lib/file.rb"]`
+**Input**: `["/Users/user/tools-meta/.ace/tools/lib/file.rb"]`
 
 **Resolution**:
-1. Resolve to `dev-tools` repository
+1. Resolve to `.ace/tools` repository
 2. Convert to relative path: `lib/file.rb`
 
 **Generated Command**:
 ```bash
-git -C dev-tools add lib/file.rb
+git -C .ace/tools add lib/file.rb
 ```
 
 ### Example 3: Directory-Agnostic Operation
-**Current Directory**: `/Users/user/tools-meta/dev-taskflow/current`
+**Current Directory**: `/Users/user/tools-meta/.ace/taskflow/current`
 **Input**: `["../../../lib/file.rb", "task.md"]`
 
 **Resolution**:
 1. `../../../lib/file.rb` → Resolves to main repo, `lib/file.rb`
-2. `task.md` → Resolves to dev-taskflow repo, `current/task.md`
+2. `task.md` → Resolves to .ace/taskflow repo, `current/task.md`
 
 **Generated Commands**:
 ```bash
 git add lib/file.rb
-git -C dev-taskflow add current/task.md
+git -C .ace/taskflow add current/task.md
 ```
 
 ## Concurrent Execution Strategy

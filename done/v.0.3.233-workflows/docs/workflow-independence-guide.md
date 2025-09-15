@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.3, v.0.3.0+task.4]
 _Command run:_
 
 ```bash
-ls -la dev-handbook/guides/
+ls -la .ace/handbook/guides/
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/guides/
+.ace/handbook/guides/
 ├── draft-release/
 ├── project-management.g.md
 ├── release-codenames.g.md
@@ -42,7 +42,7 @@ Create comprehensive documentation explaining the workflow independence approach
 
 #### Create
 
-- dev-handbook/guides/workflow-independence.g.md
+- .ace/handbook/guides/workflow-independence.g.md
 
 #### Modify
 
@@ -99,6 +99,6 @@ Create comprehensive documentation explaining the workflow independence approach
 
 ## References
 
-- Refactored workflow files in dev-handbook/workflow-instructions/
+- Refactored workflow files in .ace/handbook/workflow-instructions/
 - Agent integration research results
 - Project workflow patterns and conventions

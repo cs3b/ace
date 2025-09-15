@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/atoms | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-tools/lib/coding_agent_tools/atoms
+.ace/tools/lib/coding_agent_tools/atoms
 ├── code
 ├── code_quality
 ├── directory_scanner.rb
@@ -31,7 +31,7 @@ dev-tools/lib/coding_agent_tools/atoms
 
 ## Objective
 
-Increase test coverage from critically low levels (16-27%) to at least 80% for the 5 most under-tested atom files in the dev-tools Ruby gem. This phase targets the files with the lowest coverage that pose the highest risk to code quality and maintainability.
+Increase test coverage from critically low levels (16-27%) to at least 80% for the 5 most under-tested atom files in the .ace/tools Ruby gem. This phase targets the files with the lowest coverage that pose the highest risk to code quality and maintainability.
 
 ## Scope of Work
 
@@ -44,11 +44,11 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
 
 #### Create
 
-- `dev-tools/spec/coding_agent_tools/atoms/taskflow_management/file_system_scanner_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/git/status_color_formatter_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb` (comprehensive tests)
-- `dev-tools/spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/taskflow_management/file_system_scanner_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/git/status_color_formatter_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb` (comprehensive tests)
+- `.ace/tools/spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb` (comprehensive tests)
 
 #### Modify
 
@@ -70,13 +70,13 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All methods and code paths are documented for testing
-  > Command: cd dev-tools && bundle exec rspec --dry-run --format json | jq '.examples | length'
+  > Command: cd .ace/tools && bundle exec rspec --dry-run --format json | jq '.examples | length'
 
 - [x] Review existing test patterns in the codebase to maintain consistency
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Testing patterns and conventions are understood
-  > Command: cd dev-tools && find spec -name "*_spec.rb" | head -5 | xargs grep -l "describe\|context\|it"
+  > Command: cd .ace/tools && find spec -name "*_spec.rb" | head -5 | xargs grep -l "describe\|context\|it"
 
 - [x] Design comprehensive test scenarios covering normal flows, edge cases, and error conditions
 
@@ -89,7 +89,7 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
   > TEST: File System Scanner Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 16.79% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/file_system_scanner_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/file_system_scanner.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/file_system_scanner_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/file_system_scanner.rb,80]
 
 - [x] Implement tests for yaml_frontmatter_parser.rb (21.30% → 80%+)
   - Cover YAML parsing, frontmatter extraction
@@ -98,7 +98,7 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
   > TEST: YAML Parser Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 21.30% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/yaml_frontmatter_parser.rb,80]
 
 - [x] Implement tests for status_color_formatter.rb (22.62% → 80%+)
   - Cover Git status color formatting for different states
@@ -107,7 +107,7 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
   > TEST: Status Color Formatter Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 22.62% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/status_color_formatter_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/status_color_formatter.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/status_color_formatter_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/status_color_formatter.rb,80]
 
 - [x] Implement tests for shell_command_executor.rb (23.01% → 80%+)
   - Cover command execution, output capture, and error handling
@@ -116,7 +116,7 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
   > TEST: Shell Command Executor Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 23.01% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/taskflow_management/shell_command_executor_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/taskflow_management/shell_command_executor.rb,80]
 
 - [x] Implement tests for submodule_detector.rb (27.16% → 80%+)
   - Cover Git submodule detection and validation
@@ -125,13 +125,13 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
   > TEST: Submodule Detector Coverage
   > Type: Coverage Validation
   > Assert: Coverage increased from 27.16% to at least 80%
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/submodule_detector.rb,80]
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/atoms/git/submodule_detector_spec.rb && bundle exec rake coverage:check[coding_agent_tools/atoms/git/submodule_detector.rb,80]
 
 - [x] Run comprehensive test suite and verify overall coverage improvements
   > TEST: Phase 1 Overall Coverage
   > Type: Final Validation
   > Assert: All 5 target files achieve 80%+ coverage
-  > Command: cd dev-tools && bundle exec rake coverage:report | grep -E "(file_system_scanner|yaml_frontmatter_parser|status_color_formatter|shell_command_executor|submodule_detector)" | awk '$3 >= 80'
+  > Command: cd .ace/tools && bundle exec rake coverage:report | grep -E "(file_system_scanner|yaml_frontmatter_parser|status_color_formatter|shell_command_executor|submodule_detector)" | awk '$3 >= 80'
 
 ## Acceptance Criteria
 
@@ -151,6 +151,6 @@ Increase test coverage from critically low levels (16-27%) to at least 80% for t
 ## References
 
 - Current coverage baseline: SimpleCov report showing 16-27% coverage
-- ATOM architecture testing guidelines in dev-tools documentation
-- Existing RSpec test patterns in dev-tools/spec directory
+- ATOM architecture testing guidelines in .ace/tools documentation
+- Existing RSpec test patterns in .ace/tools/spec directory
 - Ruby gem testing best practices for security-sensitive components

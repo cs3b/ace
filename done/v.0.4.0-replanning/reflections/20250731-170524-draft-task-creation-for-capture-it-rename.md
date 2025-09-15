@@ -79,7 +79,7 @@
 
 ## Additional Context
 
-- **Source Idea**: dev-taskflow/backlog/ideas/20250731-0748-capture-it-rename.md
-- **Created Draft Task**: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.013-rename-ideas-manager-capture-command-to-capture-it.md
+- **Source Idea**: .ace/taskflow/backlog/ideas/20250731-0748-capture-it-rename.md
+- **Created Draft Task**: /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.013-rename-ideas-manager-capture-command-to-capture-it.md
 - **Behavioral Specifications**: Complete with user experience, interface contracts, success criteria, and validation questions
 - **Next Phase**: Implementation planning to determine specific file changes and testing approach

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.225, v.0.3.0+task.226]
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/cli/commands/reflection | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/cli/commands/reflection | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/cli/commands/reflection
+    .ace/tools/lib/coding_agent_tools/cli/commands/reflection
     └── synthesize.rb
 ```
 
@@ -43,8 +43,8 @@ Update reflection-synthesize tool to save synthesis output to `{current_release}
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
-- dev-tools/lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb
+- .ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
+- .ace/tools/lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb
 
 #### Delete
 
@@ -99,7 +99,7 @@ Update reflection-synthesize tool to save synthesis output to `{current_release}
 
 ## References
 
-- Reflection synthesize command: dev-tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
-- Synthesis orchestrator: dev-tools/lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb
+- Reflection synthesize command: .ace/tools/lib/coding_agent_tools/cli/commands/reflection/synthesize.rb
+- Synthesis orchestrator: .ace/tools/lib/coding_agent_tools/molecules/reflection/synthesis_orchestrator.rb
 - Depends on: v.0.3.0+task.225 (ReleaseManager path resolution)
-- Related workflow: dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md
+- Related workflow: .ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md

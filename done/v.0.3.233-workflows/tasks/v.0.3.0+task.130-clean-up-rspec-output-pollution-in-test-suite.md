@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/spec | sed 's/^/    /'
+tree -L 2 .ace/tools/spec | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/spec
+    .ace/tools/spec
     ├── cassettes
     ├── coding_agent_tools
     ├── integration

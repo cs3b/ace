@@ -13,13 +13,13 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-tools/lib/coding_agent_tools/molecules | sed 's/^/    /'
+tree -L 2 .ace/tools/lib/coding_agent_tools/molecules | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/molecules
+    .ace/tools/lib/coding_agent_tools/molecules
     ├── code/
     │   ├── file_pattern_extractor.rb
     │   ├── git_diff_extractor.rb
@@ -55,20 +55,20 @@ Create comprehensive unit tests for all 13+ Molecule classes to validate data pr
 
 #### Create
 
-- dev-tools/spec/coding_agent_tools/molecules/code/file_pattern_extractor_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/project_context_loader_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/prompt_combiner_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/report_collector_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/session_directory_builder_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code/synthesis_orchestrator_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/diff_review_analyzer_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/error_file_generator_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/markdown_linting_pipeline_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb
-- dev-tools/spec/coding_agent_tools/molecules/taskflow_management/task_id_generator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/file_pattern_extractor_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/git_diff_extractor_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/project_context_loader_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/prompt_combiner_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/report_collector_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/session_directory_builder_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/session_path_inferrer_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code/synthesis_orchestrator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/diff_review_analyzer_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/error_file_generator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/markdown_linting_pipeline_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/ruby_linting_pipeline_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/taskflow_management/task_id_generator_spec.rb
 
 #### Modify
 
@@ -95,7 +95,7 @@ Create comprehensive unit tests for all 13+ Molecule classes to validate data pr
   > TEST: Molecule Dependency Analysis
   > Type: Pre-condition Check
   > Assert: All molecule classes and their atom dependencies are identified
-  > Command: cd dev-tools && find lib/coding_agent_tools/molecules -name "*.rb" -exec grep -l "Atoms::" {} \; | wc -l
+  > Command: cd .ace/tools && find lib/coding_agent_tools/molecules -name "*.rb" -exec grep -l "Atoms::" {} \; | wc -l
 - [x] Research mocking strategies for atom dependencies in molecule tests
 - [x] Plan test scenarios for workflow coordination and error propagation
 
@@ -106,14 +106,14 @@ Create comprehensive unit tests for all 13+ Molecule classes to validate data pr
   > TEST: File Pattern Extraction
   > Type: Pattern Matching Validation
   > Assert: File pattern extraction works correctly with various patterns
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/file_pattern_extractor_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/file_pattern_extractor_spec.rb
 - [x] Implement GitDiffExtractor tests with git operation mocking
 - [x] Implement ProjectContextLoader tests with context aggregation validation
 - [ ] Implement PromptCombiner tests with template and data combination logic
   > TEST: Code Processing Workflows
   > Type: Workflow Integration Test
   > Assert: Code processing molecules coordinate atoms correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/ --tag workflow
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/ --tag workflow
 - [ ] Implement ReportCollector tests with data aggregation and formatting
 - [ ] Implement SessionDirectoryBuilder tests with directory structure creation
 - [ ] Implement SessionPathInferrer tests with path resolution logic
@@ -121,7 +121,7 @@ Create comprehensive unit tests for all 13+ Molecule classes to validate data pr
   > TEST: Complex Orchestration
   > Type: Multi-Step Workflow Test
   > Assert: Complex orchestration workflows handle multiple steps correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code/synthesis_orchestrator_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code/synthesis_orchestrator_spec.rb
 - [ ] Implement AutofixOrchestrator tests with fix workflow coordination
 - [ ] Implement DiffReviewAnalyzer tests with code analysis and review logic
 - [ ] Implement ErrorFileGenerator tests with error reporting and file generation
@@ -130,18 +130,18 @@ Create comprehensive unit tests for all 13+ Molecule classes to validate data pr
   > TEST: Quality Assurance Workflows
   > Type: Quality Pipeline Validation
   > Assert: Code quality molecules execute linting workflows correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/code_quality/
 - [ ] Implement TaskIdGenerator tests with ID generation logic and validation
 - [ ] Test error propagation across molecule workflows
   > TEST: Error Propagation
   > Type: Error Handling Validation
   > Assert: Errors propagate correctly through molecule workflows
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/ --tag error_handling
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/ --tag error_handling
 - [x] Run complete molecule test suite
   > TEST: Full Molecule Test Suite
   > Type: Complete Integration Test
   > Assert: All molecule classes are thoroughly tested
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/molecules/
 
 ## Acceptance Criteria
 
@@ -162,8 +162,8 @@ Create comprehensive unit tests for all 13+ Molecule classes to validate data pr
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/molecules/**/*.rb
-- dev-tools/lib/coding_agent_tools/atoms/**/*.rb (for dependency understanding)
-- dev-tools/spec/support/mock_helpers.rb
+- .ace/tools/lib/coding_agent_tools/molecules/**/*.rb
+- .ace/tools/lib/coding_agent_tools/atoms/**/*.rb (for dependency understanding)
+- .ace/tools/spec/support/mock_helpers.rb
 - docs/architecture-tools.md (ATOM architecture principles)
-- dev-handbook/guides/testing/ruby-rspec.md
+- .ace/handbook/guides/testing/ruby-rspec.md

@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -43,7 +43,7 @@ Improve test coverage for the GoogleClient organism to ensure comprehensive test
 
 #### Modify
 
-- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/organisms/google_client_spec.rb
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/spec/coding_agent_tools/organisms/google_client_spec.rb
 
 #### Delete
 

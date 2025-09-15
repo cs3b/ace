@@ -33,14 +33,14 @@
 ## Technical Implementation
 
 ### Files Created
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/plan-task.wf.md`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/plan-task.wf.md`
   - Complete rewrite focusing on implementation planning (HOW)
   - Embedded technical approach, tool selection, file modification, and risk assessment templates
   - Clear prerequisites requiring draft status with validated behavioral specification
   - Process steps covering technical research, tool selection, implementation planning
 
 ### Files Modified
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/README.md`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/README.md`
   - Updated workflow descriptions and pipeline diagrams
   - Changed workflow name from review-task to plan-task throughout
 - Multiple workflow instruction files with reference updates
@@ -48,7 +48,7 @@
 - Integration documentation updated
 
 ### Files Deleted
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/review-task.wf.md`
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/review-task.wf.md`
 
 ### Content Transformation Summary
 

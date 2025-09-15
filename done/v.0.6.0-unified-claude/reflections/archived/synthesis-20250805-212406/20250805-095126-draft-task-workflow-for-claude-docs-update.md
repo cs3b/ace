@@ -49,7 +49,7 @@
 
 The draft task was created with ID v.0.6.0+task.019, focusing on three main documentation improvements:
 1. Removing installation information from the Claude integration README (since it's a git submodule, not a gem)
-2. Creating detailed documentation for each handbook claude subcommand in dev-tools/docs/user/
+2. Creating detailed documentation for each handbook claude subcommand in .ace/tools/docs/user/
 3. Refocusing the Claude README as a quickstart guide with maintenance workflows
 
 The behavioral specification emphasized user journey and documentation navigation rather than specific file modifications, maintaining the behavior-first principle of the draft-task workflow.

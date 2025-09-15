@@ -33,7 +33,7 @@ Clarify and improve the next steps task creation logic in the initialize-project
 
 #### Modify
 
-- `dev-handbook/.integrations/wfi/initialize-project-structure.wf.md`:
+- `.ace/handbook/.integrations/wfi/initialize-project-structure.wf.md`:
   - Enhanced Step 8 with clear location determination logic
   - Added explicit fallback to v.0.1.0 if no bootstrap exists
   - Added verification steps to confirm task creation
@@ -76,4 +76,4 @@ Updated Step 8 to include:
 - Commits:
   - dev-handbook: `25068e0` - feat(wfi): add next steps task creation guidance
 - Related feedback: User reported lost next steps task in recent testing
-- Template: `dev-handbook/templates/task-management/task.next-steps.template.md`
+- Template: `.ace/handbook/templates/task-management/task.next-steps.template.md`

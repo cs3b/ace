@@ -20,7 +20,7 @@
 
 ## Key Learnings
 
-- **Submodule Structure**: Commands are organized in separate subdirectories (_custom and _generated) within dev-handbook/.integrations/claude/commands/
+- **Submodule Structure**: Commands are organized in separate subdirectories (_custom and _generated) within .ace/handbook/.integrations/claude/commands/
 - **Command Categorization**: Custom commands are the multi-task orchestration commands, while generated commands correspond to individual workflows
 - **Missing Command Detection**: Missing commands are workflows without corresponding installed commands in .claude/commands/
 - **Colorization Pattern**: The existing colorize method from task list command provides consistent terminal output formatting

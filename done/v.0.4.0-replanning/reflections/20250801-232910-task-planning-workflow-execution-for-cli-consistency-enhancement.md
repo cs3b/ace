@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- **Comprehensive Scope Analysis**: Successfully identified all internal references needing renaming through systematic grep searches across the dev-tools codebase
+- **Comprehensive Scope Analysis**: Successfully identified all internal references needing renaming through systematic grep searches across the .ace/tools codebase
 - **Structured Planning Approach**: Applied the plan-task workflow methodology effectively, covering all required sections (Technical Approach, Tool Selection, File Modifications, Risk Assessment)
 - **Risk Mitigation Focus**: Identified key risks early (breaking public interface, missing references) and developed specific mitigation strategies
 - **Backwards Compatibility Preservation**: Planned approach maintains both "list" and "all" command aliases to prevent breaking changes
@@ -17,7 +17,7 @@
 
 - **Method Renaming Scope**: Initial analysis showed potential complexity with renaming `get_all_tasks` method which is used by multiple other commands (next, recent, reschedule) - this will require careful backwards compatibility handling
 - **Test Coverage Validation**: While planning comprehensive test updates, the actual impact on test cassettes and integration tests needs more detailed analysis
-- **Documentation Dependencies**: Some documentation files in other repositories (dev-handbook, dev-taskflow) may have references that weren't fully catalogued
+- **Documentation Dependencies**: Some documentation files in other repositories (dev-handbook, .ace/taskflow) may have references that weren't fully catalogued
 
 ## Key Learnings
 

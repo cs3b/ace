@@ -110,6 +110,6 @@ The `create-path file:reflection-new` command successfully created the target fi
 
 ## Additional Context
 
-- Workflow instruction location: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/workflow-instructions/create-reflection-note.wf.md`
-- Created reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/reflections/20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md`
+- Workflow instruction location: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/handbook/workflow-instructions/create-reflection-note.wf.md`
+- Created reflection file: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.3.0-workflows/reflections/20250729-041331-workflow-instruction-execution-and-understanding-enhancement.md`
 - Command executed: `create-reflection-note` with `/commit` directive

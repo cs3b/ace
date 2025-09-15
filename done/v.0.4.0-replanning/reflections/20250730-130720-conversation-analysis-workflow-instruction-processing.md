@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- Successfully identified and read the correct workflow instruction file (`dev-handbook/workflow-instructions/create-reflection-note.wf.md`)
+- Successfully identified and read the correct workflow instruction file (`.ace/handbook/workflow-instructions/create-reflection-note.wf.md`)
 - Properly understood the multi-step process for creating reflection notes
 - Correctly used the `create-path` tool to generate an appropriate file location and timestamp
 - Applied the conversation analysis methodology as specified in the workflow instructions
@@ -106,7 +106,7 @@ The conversation demonstrated effective use of:
 - Template-based reflection note creation
 - Structured analysis methodology from workflow instructions
 
-File created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.4.0-replanning/reflections/20250730-130720-conversation-analysis-workflow-instruction-processing.md`
+File created at: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.4.0-replanning/reflections/20250730-130720-conversation-analysis-workflow-instruction-processing.md`
 
 ## Additional Context
 

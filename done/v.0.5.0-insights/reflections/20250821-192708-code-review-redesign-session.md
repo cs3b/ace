@@ -126,7 +126,7 @@
 ### Critical Fixes Applied
 
 1. **llm-query Syntax**: Changed from `--file <path>` to direct path argument with `--system` flag
-2. **Session Directory**: Restored creation in `dev-taskflow/current/v.X.Y.Z/code-review/review-TIMESTAMP/`
+2. **Session Directory**: Restored creation in `.ace/taskflow/current/v.X.Y.Z/code-review/review-TIMESTAMP/`
 3. **File Naming**: Adopted `in-*.md` convention for inputs, `report-*.md` for outputs
 4. **Open3 Direct Usage**: Bypassed CommandExecutor issues for llm-query execution
 
@@ -140,6 +140,6 @@
 ## Additional Context
 
 - Task: v.0.5.0+task.028 - Redesign code-review command with preset-based configuration
-- Self-review session: `dev-taskflow/current/v.0.5.0-insights/code-review/review-20250821-183537/`
+- Self-review session: `.ace/taskflow/current/v.0.5.0-insights/code-review/review-20250821-183537/`
 - Test coverage: 44 new examples across ReviewPresetManager, PromptEnhancer, and ReviewAssembler
 - Final implementation successfully reviewed its own code changes

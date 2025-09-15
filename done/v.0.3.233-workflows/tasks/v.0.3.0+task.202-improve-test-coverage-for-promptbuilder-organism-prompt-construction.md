@@ -32,7 +32,7 @@ Improve test coverage for the PromptBuilder organism by adding comprehensive tes
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
 
 #### Delete
 

@@ -71,12 +71,12 @@ git-commit --intention "Move idea file to current release after task $TASK_NUM c
 - All planning steps completed successfully with embedded tests
 - All execution steps implemented and tested
 - End-to-end workflow test moved idea file correctly with proper naming (014-20250801-test-idea-file-management.md)
-- Multi-repository commit worked seamlessly across dev-handbook and dev-taskflow
+- Multi-repository commit worked seamlessly across .ace/handbook and .ace/taskflow
 
 ## Additional Context
 
 - Task ID: v.0.4.0+task.014
-- Files Modified: dev-handbook/workflow-instructions/draft-task.wf.md
+- Files Modified: .ace/handbook/workflow-instructions/draft-task.wf.md
 - Test Files: Created and successfully moved test idea file
-- Repository Impact: Enhanced workflow in dev-handbook, organized idea file in dev-taskflow
+- Repository Impact: Enhanced workflow in dev-handbook, organized idea file in .ace/taskflow
 - Integration Pattern: Workflow-level enhancement pattern can be reused for other cross-tool features

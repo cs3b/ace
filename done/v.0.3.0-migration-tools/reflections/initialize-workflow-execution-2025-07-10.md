@@ -11,9 +11,9 @@
 - Generated high-quality, project-specific documentation (what-do-we-build.md, architecture.md, blueprint.md)
 - Properly structured v.0.0.0 bootstrap release with organized task hierarchy in tasks/ subdirectory
 - Effective use of existing templates while customizing for Vue 3 + OpenAI technology stack
-- Clean git commit workflow using dev-tools git-commit command
+- Clean git commit workflow using .ace/tools git-commit command
 - User provided timely correction about task organization structure (tasks should be in tasks/ folder)
-- Successfully linked dev-tools documentation with symbolic link
+- Successfully linked .ace/tools documentation with symbolic link
 
 ## What Could Be Improved
 
@@ -28,7 +28,7 @@
 - **PRD as Rich Source**: Existing comprehensive PRDs can provide excellent foundation material for documentation generation
 - **Technology Stack Clarity**: Vue 3 + Vite + OpenAI APIs provided clear architectural direction for documentation
 - **User Corrections Are Valuable**: User input about tasks/ directory structure improved the final organization
-- **Symbolic Links for Documentation**: Linking dev-tools/docs/tools.md to docs/tools.md provides excellent centralized access
+- **Symbolic Links for Documentation**: Linking .ace/tools/docs/tools.md to docs/tools.md provides excellent centralized access
 - **Bootstrap Release Value**: v.0.0.0 structure effectively organizes initialization work into trackable tasks
 
 ## Conversation Analysis
@@ -63,7 +63,7 @@
 #### Process Improvements
 
 - **Update initialize-project-structure.wf.md** to explicitly specify:
-  - Tasks should be created in `dev-taskflow/current/v.X.X.X-name/tasks/` directory
+  - Tasks should be created in `.ace/taskflow/current/v.X.X.X-name/tasks/` directory
   - Example directory structure showing the tasks/ subdirectory
   - Clear guidance on when bin/ script setup can be skipped
 
@@ -130,7 +130,7 @@
 
 ### File Organization Achieved
 ```
-dev-taskflow/current/v.0.0.0-bootstrap/
+.ace/taskflow/current/v.0.0.0-bootstrap/
 ├── release-overview.md
 ├── tasks/
 │   ├── v000-001-setup-structure.task.md
@@ -142,7 +142,7 @@ dev-taskflow/current/v.0.0.0-bootstrap/
 ```
 
 ### Documentation Links Created
-- `docs/tools.md` → `../dev-tools/docs/tools.md` (symbolic link)
+- `docs/tools.md` → `../.ace/tools/docs/tools.md` (symbolic link)
 - Updated blueprint.md to reference tools documentation
 
 ## Additional Context
@@ -150,7 +150,7 @@ dev-taskflow/current/v.0.0.0-bootstrap/
 - **Source PRD**: Comprehensive Polish PRD.md with 7 sprint development plan
 - **Target Application**: Live Transcribe & Translate - browser-based Spanish→Polish transcription
 - **Git Commits**: 5 commits created during initialization process
-- **Workflow File**: `dev-handbook/workflow-instructions/initialize-project-structure.wf.md`
+- **Workflow File**: `.ace/handbook/workflow-instructions/initialize-project-structure.wf.md`
 - **Templates Used**: project-docs templates, release-v.0.0.0 templates
 
 ## Recommendations for Workflow Improvement

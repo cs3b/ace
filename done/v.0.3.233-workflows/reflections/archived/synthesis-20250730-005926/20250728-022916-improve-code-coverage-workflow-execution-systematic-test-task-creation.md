@@ -27,7 +27,7 @@
 - **Coverage Analysis Tool Effectiveness**: The coverage-analyze tool provided excellent structured data for systematic task creation, with clear priority identification
 - **ATOM Architecture Benefits**: The structured architecture made it easy to categorize and prioritize test tasks across different component types
 - **Quality Over Quantity Principle**: The workflow's emphasis on meaningful test scenarios rather than coverage percentages aligns well with software quality best practices
-- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across dev-handbook, dev-taskflow, and dev-tools repositories
+- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across dev-handbook, dev-taskflow, and .ace/tools repositories
 - **Test Task Template Structure**: Learned effective patterns for documenting test improvement tasks with specific line ranges, edge cases, and integration requirements
 
 ## Conversation Analysis
@@ -117,14 +117,14 @@
 - CLI Commands: 6 tasks (Coverage::Analyze, LLM::UsageReport, LLM::Models, Task::Reschedule, Release::Validate, CodeReviewNew)
 
 **Repository Coordination:**
-- 3 commits created across dev-taskflow and dev-tools submodules
+- 3 commits created across .ace/taskflow and .ace/tools submodules
 - All priority files from coverage analysis addressed (100% coverage)
 - Quality-focused approach with comprehensive edge case documentation
 
 ## Additional Context
 
-- **Workflow Source**: dev-handbook/workflow-instructions/improve-code-coverage.wf.md
-- **Coverage Analysis Report**: dev-tools/coverage_analysis/coverage_analysis.json
-- **Tasks Created**: dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.143 through v.0.3.0+task.153
+- **Workflow Source**: .ace/handbook/workflow-instructions/improve-code-coverage.wf.md
+- **Coverage Analysis Report**: .ace/tools/coverage_analysis/coverage_analysis.json
+- **Tasks Created**: .ace/taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.143 through v.0.3.0+task.153
 - **Commit References**: Three feature commits documenting systematic test task creation process
 - **Success Metrics**: All workflow success criteria met - comprehensive test tasks created for every priority file identified in coverage analysis

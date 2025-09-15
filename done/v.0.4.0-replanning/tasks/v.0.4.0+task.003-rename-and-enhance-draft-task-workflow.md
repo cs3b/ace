@@ -13,7 +13,7 @@ dependencies: [v.0.4.0+task.2]
 *Command run:*
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | grep -E "(draft-task|draft-task|plan-task)" | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | grep -E "(draft-task|draft-task|plan-task)" | sed 's/^/    /'
 ```
 
 *Result excerpt:*
@@ -55,7 +55,7 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Analyze current draft-task.wf.md structure and pain points
   > TEST: Structure Analysis Check Type: Pre-condition Check Assert: Current workflow mixes WHAT and HOW concerns Command: grep -E
-  > "(implementation\|file\|code\|function)" dev-handbook/workflow-instructions/draft-task.wf.md \| wc -l
+  > "(implementation\|file\|code\|function)" .ace/handbook/workflow-instructions/draft-task.wf.md \| wc -l
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Research best practices for behavioral specification from reflections
   > TEST: Learning Integration Check Type: Research Validation Assert: Key patterns from task 1 and reflections are documented Command: grep -E
@@ -69,11 +69,11 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Search for all draft-task references across the project and maintain tracking
   list
   > TEST: Reference Discovery Type: Pre-execution Check Assert: All draft-task references found and documented in a list Command: grep -r "draft-task"
-  > dev-handbook/ dev-taskflow/ docs/ --include="\*.md" \| grep -v "done/" > draft-task-references.txt && wc -l draft-task-references.txt
+  > .ace/handbook/ .ace/taskflow/ docs/ --include="\*.md" \| grep -v "done/" > draft-task-references.txt && wc -l draft-task-references.txt
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Copy draft-task.wf.md to draft-task.wf.md
   > TEST: File Creation Check Type: Action Validation Assert: New draft-task.wf.md file exists with correct content Command: test -f
-  > dev-handbook/workflow-instructions/draft-task.wf.md && echo "File exists"
+  > .ace/handbook/workflow-instructions/draft-task.wf.md && echo "File exists"
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Rewrite workflow goals to emphasize behavior-first approach
   * Focus on WHAT the system should do (UX/DX/AX)
@@ -81,10 +81,10 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
   * Emphasize validation questions and unknowns
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "Behavioral Specification" mandatory section with embedded template
   * Use XML documents container per documents-embedding.g.md
-  * Update task template in dev-handbook/templates/release-tasks/task.template.md
+  * Update task template in .ace/handbook/templates/release-tasks/task.template.md
   * Embed updated template in draft-task.wf.md
 > TEST: Template Section Check Type: Content Validation Assert: Behavioral specification template is embedded in XML format Command: grep -A5 "<documents>"
-> dev-handbook/workflow-instructions/draft-task.wf.md</documents>
+> .ace/handbook/workflow-instructions/draft-task.wf.md</documents>
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "Interface Contract" definition requirements with examples
   * CLI interface examples (from ideas-manager pattern)
   * API endpoint contracts
@@ -92,7 +92,7 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "Success Criteria" as mandatory first step
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "Integration with ideas-manager" section showing optional input
   > TEST: Integration Documentation Type: Content Validation Assert: ideas-manager integration example exists Command: grep -A10 "ideas-manager"
-  > dev-handbook/workflow-instructions/draft-task.wf.md
+  > .ace/handbook/workflow-instructions/draft-task.wf.md
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Remove all implementation-focused sections (file lists, code details)
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update task template to always use draft status
@@ -102,7 +102,7 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
   * Update each file in the list
   * Mark off completed updates
 > TEST: Reference Update Validation Type: Post-update Check Assert: No draft-task references remain (except historical) Command: grep -r "draft-task"
-> dev-handbook/ dev-taskflow/ docs/ --include="\*.md" \| grep -v "done/" \| grep -v "deprecat" \| wc -l
+> .ace/handbook/ .ace/taskflow/ docs/ --include="\*.md" \| grep -v "done/" \| grep -v "deprecat" \| wc -l
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Delete draft-task.wf.md after all references updated
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update workflow README with new draft-task entry
 
@@ -112,16 +112,16 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
 
 #### Create
 
-* dev-handbook/workflow-instructions/draft-task.wf.md
+* .ace/handbook/workflow-instructions/draft-task.wf.md
 
 #### Modify
 
-* dev-handbook/workflow-instructions/README.md (update workflow list)
+* .ace/handbook/workflow-instructions/README.md (update workflow list)
 * All files with draft-task references (update to draft-task)
 
 #### Delete
 
-* dev-handbook/workflow-instructions/draft-task.wf.md (after reference updates)
+* .ace/handbook/workflow-instructions/draft-task.wf.md (after reference updates)
 
 ## Acceptance Criteria
 
@@ -143,11 +143,11 @@ Blueprint Generator phase, focusing on WHAT the system should do (UX/DX/AX) rath
 
 # Step 1: Capture idea with ideas-manager
 ideas-manager capture "Add user authentication with OAuth support"
-# Output: dev-taskflow/backlog/ideas/20250130-1445-oauth-authentication.md
+# Output: .ace/taskflow/backlog/ideas/20250130-1445-oauth-authentication.md
 
 # Step 2: Use enhanced idea as input for draft-task workflow
-# For Claude Code: /draft-task dev-taskflow/backlog/ideas/20250130-1445-oauth-authentication.md
-# For other agents: Read dev-handbook/workflow-instructions/draft-task.wf.md and follow steps
+# For Claude Code: /draft-task .ace/taskflow/backlog/ideas/20250130-1445-oauth-authentication.md
+# For other agents: Read .ace/handbook/workflow-instructions/draft-task.wf.md and follow steps
 ```
 
 The draft-task workflow reads the enhanced idea which already contains:
@@ -256,7 +256,7 @@ This provides structured input for creating a behavior-first task specification.
 
 ## Behavioral Specification Template Update
 
-The task template in `dev-handbook/templates/release-tasks/task.template.md` should be enhanced with:
+The task template in `.ace/handbook/templates/release-tasks/task.template.md` should be enhanced with:
 
 ## Behavioral Specification
 
@@ -296,4 +296,4 @@ GET/POST/PUT/DELETE /endpoint
 * v.0.4.0+task.1 patterns for behavioral specification
 * Reflection: 20250730-113043-task-review-enhancement-session.md
 * Reflection: 20250730-180723-task-reopening-and-test-integrity-session.md
-* Guide: dev-handbook/guides/documents-embedding.g.md
+* Guide: .ace/handbook/guides/documents-embedding.g.md

@@ -5,7 +5,7 @@ Generated: 2025-07-04
 ## Executive Summary
 
 This comprehensive analysis maps template usage across all workflow
-files in `dev-handbook/workflow-instructions/` and identifies broken
+files in `.ace/handbook/workflow-instructions/` and identifies broken
 template references.
 
 ### Key Metrics
@@ -18,7 +18,7 @@ template references.
 
 ## 🚨 Critical Issues (Missing Templates)
 
-### 1. dev-handbook/templates/project-docs/README.template.md
+### 1. .ace/handbook/templates/project-docs/README.template.md
 
 * **Status**: ❌ MISSING
 * **Referenced by**: `initialize-project-structure.wf.md`
@@ -28,13 +28,13 @@ template references.
   setup
 * **Fix Required**: Create the missing template file
 
-### 2. dev-handbook/templates/release-v.0.0.0/release-overview.template.md
+### 2. .ace/handbook/templates/release-v.0.0.0/release-overview.template.md
 
 * **Status**: ❌ MISSING
 * **Referenced by**: `draft-release.wf.md`
 * **Impact**: **MEDIUM** - Blocks v.0.0.0 bootstrap release creation
 * **Note**: Similar template exists at
-  `dev-handbook/templates/release-management/release-overview.template.md`
+  `.ace/handbook/templates/release-management/release-overview.template.md`
 * **Fix Options**:
   * **Option A**: Create missing file as v.0.0.0-specific variant
   * **Option B**: Update `draft-release.wf.md` to use existing template
@@ -43,42 +43,42 @@ template references.
 
 ### Code Documentation (2/2 - 100% ✅)
 
-* `dev-handbook/templates/code-docs/javascript-jsdoc.template.md` ✅
-* `dev-handbook/templates/code-docs/ruby-yard.template.md` ✅
+* `.ace/handbook/templates/code-docs/javascript-jsdoc.template.md` ✅
+* `.ace/handbook/templates/code-docs/ruby-yard.template.md` ✅
 
 ### Commit Messages (3/3 - 100% ✅)
 
-* `dev-handbook/templates/commit/bug-fix.template.md` ✅
-* `dev-handbook/templates/commit/feature-implementation.template.md` ✅
-* `dev-handbook/templates/commit/refactoring.template.md` ✅
+* `.ace/handbook/templates/commit/bug-fix.template.md` ✅
+* `.ace/handbook/templates/commit/feature-implementation.template.md` ✅
+* `.ace/handbook/templates/commit/refactoring.template.md` ✅
 
 ### Project Documentation (6/7 - 85.7% ⚠️)   {#project-documentation-67---857-️}
 
-* `dev-handbook/templates/project-docs/architecture.template.md` ✅
-* `dev-handbook/templates/project-docs/blueprint.template.md` ✅
-* `dev-handbook/templates/project-docs/decisions/adr.template.md` ✅
-* `dev-handbook/templates/project-docs/prd.template.md` ✅
-* `dev-handbook/templates/project-docs/README.template.md` ❌
-* `dev-handbook/templates/project-docs/roadmap/roadmap.template.md` ✅
-* `dev-handbook/templates/project-docs/vision.template.md` ✅
+* `.ace/handbook/templates/project-docs/architecture.template.md` ✅
+* `.ace/handbook/templates/project-docs/blueprint.template.md` ✅
+* `.ace/handbook/templates/project-docs/decisions/adr.template.md` ✅
+* `.ace/handbook/templates/project-docs/prd.template.md` ✅
+* `.ace/handbook/templates/project-docs/README.template.md` ❌
+* `.ace/handbook/templates/project-docs/roadmap/roadmap.template.md` ✅
+* `.ace/handbook/templates/project-docs/vision.template.md` ✅
 
 ### Release Management (2/2 - 100% ✅)
 
-* `dev-handbook/templates/release-management/changelog.template.md` ✅
-* `dev-handbook/templates/release-management/release-overview.template.md`
+* `.ace/handbook/templates/release-management/changelog.template.md` ✅
+* `.ace/handbook/templates/release-management/release-overview.template.md`
   ✅
 
 ### Release v.0.0.0 Bootstrap (4/5 - 80% ⚠️)   {#release-v000-bootstrap-45---80-️}
 
-* `dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
+* `.ace/handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
   ✅
-* `dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
+* `.ace/handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
   ✅
-* `dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
+* `.ace/handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
   ✅
-* `dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
+* `.ace/handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
   ✅
-* `dev-handbook/templates/release-v.0.0.0/release-overview.template.md`
+* `.ace/handbook/templates/release-v.0.0.0/release-overview.template.md`
   ❌
 
 ### Other Categories (All 100% ✅)
@@ -97,77 +97,77 @@ template references.
 
 #### initialize-project-structure.wf.md (16 templates)
 
-* ✅ `dev-handbook/templates/project-docs/prd.template.md`
-* ❌ `dev-handbook/templates/project-docs/README.template.md` **MISSING**
-* ✅ `dev-handbook/templates/project-docs/vision.template.md`
-* ✅ `dev-handbook/templates/project-docs/architecture.template.md`
-* ✅ `dev-handbook/templates/project-docs/blueprint.template.md`
-* ✅ `dev-tools/exe-old/_binstubs/test`
-* ✅ `dev-tools/exe-old/_binstubs/lint`
-* ✅ `dev-tools/exe-old/_binstubs/build`
-* ✅ `dev-tools/exe-old/_binstubs/run`
-* ✅ `dev-tools/exe-old/_binstubs/tn`
-* ✅ `dev-tools/exe-old/_binstubs/tr`
-* ✅ `dev-tools/exe-old/_binstubs/tree`
+* ✅ `.ace/handbook/templates/project-docs/prd.template.md`
+* ❌ `.ace/handbook/templates/project-docs/README.template.md` **MISSING**
+* ✅ `.ace/handbook/templates/project-docs/vision.template.md`
+* ✅ `.ace/handbook/templates/project-docs/architecture.template.md`
+* ✅ `.ace/handbook/templates/project-docs/blueprint.template.md`
+* ✅ `.ace/tools/exe-old/_binstubs/test`
+* ✅ `.ace/tools/exe-old/_binstubs/lint`
+* ✅ `.ace/tools/exe-old/_binstubs/build`
+* ✅ `.ace/tools/exe-old/_binstubs/run`
+* ✅ `.ace/tools/exe-old/_binstubs/tn`
+* ✅ `.ace/tools/exe-old/_binstubs/tr`
+* ✅ `.ace/tools/exe-old/_binstubs/tree`
 * ✅
-  `dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
+  `.ace/handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
 * ✅
-  `dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
+  `.ace/handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
 * ✅
-  `dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
+  `.ace/handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
 * ✅
-  `dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
+  `.ace/handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
 
 #### draft-release.wf.md (3 templates)
 
 * ✅
-  `dev-handbook/templates/release-management/release-overview.template.md`
-* ✅ `dev-handbook/templates/release-tasks/task.template.md`
+  `.ace/handbook/templates/release-management/release-overview.template.md`
+* ✅ `.ace/handbook/templates/release-tasks/task.template.md`
 * ❌
-  `dev-handbook/templates/release-v.0.0.0/release-overview.template.md`
+  `.ace/handbook/templates/release-v.0.0.0/release-overview.template.md`
   **MISSING**
 
 ### Medium-Template Usage Workflows
 
 #### commit.wf.md (3 templates)
 
-* ✅ `dev-handbook/templates/commit/bug-fix.template.md`
-* ✅ `dev-handbook/templates/commit/feature-implementation.template.md`
-* ✅ `dev-handbook/templates/commit/refactoring.template.md`
+* ✅ `.ace/handbook/templates/commit/bug-fix.template.md`
+* ✅ `.ace/handbook/templates/commit/feature-implementation.template.md`
+* ✅ `.ace/handbook/templates/commit/refactoring.template.md`
 
 #### create-api-docs.wf.md (2 templates)
 
-* ✅ `dev-handbook/templates/code-docs/javascript-jsdoc.template.md`
-* ✅ `dev-handbook/templates/code-docs/ruby-yard.template.md`
+* ✅ `.ace/handbook/templates/code-docs/javascript-jsdoc.template.md`
+* ✅ `.ace/handbook/templates/code-docs/ruby-yard.template.md`
 
 #### review-task.wf.md (2 templates)
 
-* ✅ `dev-handbook/templates/release-tasks/task.template.md`
+* ✅ `.ace/handbook/templates/release-tasks/task.template.md`
 * ✅
-  `dev-handbook/templates/review-tasks/task-review-summary.template.md`
+  `.ace/handbook/templates/review-tasks/task-review-summary.template.md`
 
 ### Single-Template Workflows
 
 * **create-adr.wf.md**:
-  `dev-handbook/templates/project-docs/decisions/adr.template.md` ✅
+  `.ace/handbook/templates/project-docs/decisions/adr.template.md` ✅
 * **create-reflection-note.wf.md**:
-  `dev-handbook/templates/release-reflections/retrospective.template.md`
+  `.ace/handbook/templates/release-reflections/retrospective.template.md`
   ✅
 * **create-task.wf.md**:
-  `dev-handbook/templates/release-tasks/task.template.md` ✅
+  `.ace/handbook/templates/release-tasks/task.template.md` ✅
 * **create-test-cases.wf.md**:
-  `dev-handbook/templates/release-testing/test-case.template.md` ✅
+  `.ace/handbook/templates/release-testing/test-case.template.md` ✅
 * **create-user-docs.wf.md**:
-  `dev-handbook/templates/user-docs/user-guide.template.md` ✅
+  `.ace/handbook/templates/user-docs/user-guide.template.md` ✅
 * **publish-release.wf.md**:
-  `dev-handbook/templates/release-management/changelog.template.md` ✅
+  `.ace/handbook/templates/release-management/changelog.template.md` ✅
 * **save-session-context.wf.md**:
-  `dev-handbook/templates/session-management/session-context.template.md`
+  `.ace/handbook/templates/session-management/session-context.template.md`
   ✅
 * **update-blueprint.wf.md**:
-  `dev-handbook/templates/project-docs/blueprint.template.md` ✅
+  `.ace/handbook/templates/project-docs/blueprint.template.md` ✅
 * **update-roadmap.wf.md**:
-  `dev-handbook/templates/project-docs/roadmap/roadmap.template.md` ✅
+  `.ace/handbook/templates/project-docs/roadmap/roadmap.template.md` ✅
 
 ### Workflows Without Templates
 
@@ -181,12 +181,12 @@ template references.
 
 These templates exist but are not referenced by any workflow:
 
-* `dev-handbook/templates/release-codemods/transformation.template.md`
-* `dev-handbook/templates/release-docs/documentation.template.md`
-* `dev-handbook/templates/release-planning/release-readme.template.md`
-* `dev-handbook/templates/release-v.0.0.0/05-archive-release.task.template.md`
-* `dev-handbook/templates/release-research/investigation.template.md`
-* `dev-handbook/templates/release-ux/user-experience.template.md`
+* `.ace/handbook/templates/release-codemods/transformation.template.md`
+* `.ace/handbook/templates/release-docs/documentation.template.md`
+* `.ace/handbook/templates/release-planning/release-readme.template.md`
+* `.ace/handbook/templates/release-v.0.0.0/05-archive-release.task.template.md`
+* `.ace/handbook/templates/release-research/investigation.template.md`
+* `.ace/handbook/templates/release-ux/user-experience.template.md`
 
 ## 💡 Recommendations
 
@@ -194,14 +194,14 @@ These templates exist but are not referenced by any workflow:
 
 1.  **Create Missing README Template**
     
-        File: dev-handbook/templates/project-docs/README.template.md
+        File: .ace/handbook/templates/project-docs/README.template.md
         Priority: HIGH
         Reason: Breaks initialize-project-structure workflow
 
 2.  **Resolve Release Overview Template Conflict**
     
         Options:
-        a) Create: dev-handbook/templates/release-v.0.0.0/release-overview.template.md
+        a) Create: .ace/handbook/templates/release-v.0.0.0/release-overview.template.md
         b) Update draft-release.wf.md to use existing release-management template
         Priority: MEDIUM
 

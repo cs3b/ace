@@ -60,8 +60,8 @@
 - 150+ lines of comprehensive inline guidance and examples
 
 **Files Created:**
-- `/dev-handbook/templates/task-management/task.template.md` - Main new template
-- `/dev-handbook/templates/task-management/sample-auth-task.md` - Usage example
+- `/.ace/handbook/templates/task-management/task.template.md` - Main new template
+- `/.ace/handbook/templates/task-management/sample-auth-task.md` - Usage example
 
 **Template Features:**
 - Behavior-first structure with Expected Behavior, Interface Contract, Success Criteria

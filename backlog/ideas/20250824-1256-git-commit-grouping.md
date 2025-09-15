@@ -98,5 +98,5 @@ To enhance the `git-commit` tool to group files by commit message intention when
 > SOURCE
 
 ```text
-in dev-tools/exe/git-commit - improve handling of large changes - allow to tool return a groups of commits - this files with this message, and this files with this message ...
+in .ace/tools/exe/git-commit - improve handling of large changes - allow to tool return a groups of commits - this files with this message, and this files with this message ...
 ```

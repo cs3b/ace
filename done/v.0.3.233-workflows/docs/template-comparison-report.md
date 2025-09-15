@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This report compares 27+ embedded templates found in workflow instruction files with existing template files in `dev-handbook/templates/`. The analysis reveals significant gaps and opportunities for template enhancement, with embedded templates generally being more comprehensive and detailed than their corresponding template files.
+This report compares 27+ embedded templates found in workflow instruction files with existing template files in `.ace/handbook/templates/`. The analysis reveals significant gaps and opportunities for template enhancement, with embedded templates generally being more comprehensive and detailed than their corresponding template files.
 
 **Generated**: 2024-12-30  
 **Analysis Scope**: 27 embedded templates vs 27 existing template files  
@@ -35,7 +35,7 @@ No embedded templates are identical to existing template files, indicating diver
 #### 2.1 Task Template
 
 **Embedded**: `create-task.wf.md` (lines 74-167, 169 lines)  
-**Template File**: `dev-handbook/templates/release-tasks/task.template.md` (97 lines)  
+**Template File**: `.ace/handbook/templates/release-tasks/task.template.md` (97 lines)  
 **Match Quality**: 70% - Same basic structure, different implementation
 
 **Key Differences**:
@@ -50,7 +50,7 @@ No embedded templates are identical to existing template files, indicating diver
 #### 2.2 Test Case Template
 
 **Embedded**: `create-test-cases.wf.md` (lines 120-167, 400+ total lines)  
-**Template File**: `dev-handbook/templates/release-testing/test-case.template.md` (37 lines)  
+**Template File**: `.ace/handbook/templates/release-testing/test-case.template.md` (37 lines)  
 **Match Quality**: 30% - Different approaches to testing
 
 **Key Differences**:
@@ -65,7 +65,7 @@ No embedded templates are identical to existing template files, indicating diver
 #### 2.3 PRD Template
 
 **Embedded**: `initialize-project-structure.wf.md` (lines 210-246, 37 lines)  
-**Template File**: `dev-handbook/templates/project-docs/prd.template.md` (136 lines)  
+**Template File**: `.ace/handbook/templates/project-docs/prd.template.md` (136 lines)  
 **Match Quality**: 60% - Template file is more comprehensive
 
 **Key Differences**:
@@ -80,7 +80,7 @@ No embedded templates are identical to existing template files, indicating diver
 #### 2.4 Architecture Template
 
 **Embedded**: `initialize-project-structure.wf.md` (lines 362-441, 80 lines)  
-**Template File**: `dev-handbook/templates/project-docs/architecture.template.md` (292 lines)  
+**Template File**: `.ace/handbook/templates/project-docs/architecture.template.md` (292 lines)  
 **Match Quality**: 65% - Template file is more comprehensive
 
 **Key Differences**:
@@ -95,7 +95,7 @@ No embedded templates are identical to existing template files, indicating diver
 #### 2.5 Blueprint Template
 
 **Embedded**: `initialize-project-structure.wf.md` (lines 445-513, 69 lines)  
-**Template File**: `dev-handbook/templates/project-docs/blueprint.template.md` (157 lines)  
+**Template File**: `.ace/handbook/templates/project-docs/blueprint.template.md` (157 lines)  
 **Match Quality**: 75% - Similar structure, template file more detailed
 
 **Key Differences**:
@@ -110,7 +110,7 @@ No embedded templates are identical to existing template files, indicating diver
 #### 2.6 Reflection Template
 
 **Embedded**: `create-reflection-note.wf.md` (lines 69-118, 50 lines)  
-**Template File**: `dev-handbook/templates/release-reflections/retrospective.template.md` (9 lines)  
+**Template File**: `.ace/handbook/templates/release-reflections/retrospective.template.md` (9 lines)  
 **Match Quality**: 25% - Significantly different approaches
 
 **Key Differences**:
@@ -127,35 +127,35 @@ No embedded templates are identical to existing template files, indicating diver
 #### 3.1 ADR Template
 
 **Embedded Location**: `create-adr.wf.md` (lines 67-122)  
-**Missing File**: `dev-handbook/templates/project-docs/adr.template.md`  
+**Missing File**: `.ace/handbook/templates/project-docs/adr.template.md`  
 **Content**: Complete Architecture Decision Record format with Status, Context, Decision, Consequences, Alternatives, Related Decisions, References  
 **Priority**: High - Foundational document template
 
 #### 3.2 User Documentation Template
 
 **Embedded Location**: `create-user-docs.wf.md` (lines 65-163)  
-**Missing File**: `dev-handbook/templates/user-docs/user-guide.template.md`  
+**Missing File**: `.ace/handbook/templates/user-docs/user-guide.template.md`  
 **Content**: Comprehensive user guide with Overview, Quick Start, Installation, Usage, Configuration, API Reference, FAQ  
 **Priority**: High - Essential for user-facing documentation
 
 #### 3.3 Changelog Template
 
 **Embedded Location**: `publish-release.wf.md` (lines 84-111)  
-**Missing File**: `dev-handbook/templates/release-management/changelog.template.md`  
+**Missing File**: `.ace/handbook/templates/release-management/changelog.template.md`  
 **Content**: Standard changelog format following Keep a Changelog specification  
 **Priority**: High - Critical for release management
 
 #### 3.4 Release Overview Template
 
 **Embedded Location**: `draft-release.wf.md` (lines 52-126)  
-**Missing File**: `dev-handbook/templates/release-management/release-overview.template.md`  
+**Missing File**: `.ace/handbook/templates/release-management/release-overview.template.md`  
 **Content**: Structured release planning template with goals, implementation plan, quality assurance checklist  
 **Priority**: Medium - Important for release coordination
 
 #### 3.5 Binstub Templates (7 templates)
 
 **Embedded Location**: `initialize-project-structure.wf.md` (lines 519-614)  
-**Missing Directory**: `dev-handbook/templates/project-setup/binstubs/`  
+**Missing Directory**: `.ace/handbook/templates/project-setup/binstubs/`  
 **Content**: Templates for test, lint, build, run, tn, tr, tree scripts  
 **Priority**: Medium - Useful for project initialization
 
@@ -164,17 +164,17 @@ No embedded templates are identical to existing template files, indicating diver
 **Embedded Locations**: `create-api-docs.wf.md` (various lines)  
 **Missing Files**:
 
-- `dev-handbook/templates/code-docs/ruby-yard.template.md`
-- `dev-handbook/templates/code-docs/javascript-jsdoc.template.md`
-- `dev-handbook/templates/code-docs/class-module.template.md`
-- `dev-handbook/templates/code-docs/configuration.template.md`
-- `dev-handbook/templates/code-docs/callback.template.md`  
+- `.ace/handbook/templates/code-docs/ruby-yard.template.md`
+- `.ace/handbook/templates/code-docs/javascript-jsdoc.template.md`
+- `.ace/handbook/templates/code-docs/class-module.template.md`
+- `.ace/handbook/templates/code-docs/configuration.template.md`
+- `.ace/handbook/templates/code-docs/callback.template.md`  
 **Priority**: Medium - Important for API documentation consistency
 
 #### 3.7 Session Log Template
 
 **Embedded Location**: `save-session-context.md` (lines 55-118)  
-**Missing File**: `dev-handbook/templates/development/session-log.template.md`  
+**Missing File**: `.ace/handbook/templates/development/session-log.template.md`  
 **Content**: Session context capture with Request Summary, Work Completed, Current State, Next Steps  
 **Priority**: Low - Development utility template
 

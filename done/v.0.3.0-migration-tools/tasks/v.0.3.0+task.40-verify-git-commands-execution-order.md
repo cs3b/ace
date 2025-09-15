@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.37]
 _Command run:_
 
 ```bash
-tree -L 3 dev-tools/lib/coding_agent_tools/organisms/git | sed 's/^/    /'
+tree -L 3 .ace/tools/lib/coding_agent_tools/organisms/git | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/lib/coding_agent_tools/organisms/git
+    .ace/tools/lib/coding_agent_tools/organisms/git
     └── git_orchestrator.rb
 ```
 
@@ -40,13 +40,13 @@ Ensure all git-* commands execute in the proper order (submodules first, then ma
 
 #### Create
 
-- dev-tools/spec/integration/git_execution_order_spec.rb
+- .ace/tools/spec/integration/git_execution_order_spec.rb
 - docs/development/git-commands-execution-order.md
 
 #### Modify
 
-- dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
-- dev-tools/lib/coding_agent_tools/molecules/git/multi_repo_coordinator.rb
+- .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+- .ace/tools/lib/coding_agent_tools/molecules/git/multi_repo_coordinator.rb
 
 ## Phases
 
@@ -135,8 +135,8 @@ Ensure all git-* commands execute in the proper order (submodules first, then ma
 ## References
 
 ```
-Current implementation: dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
-Multi-repo coordination: dev-tools/lib/coding_agent_tools/molecules/git/multi_repo_coordinator.rb
+Current implementation: .ace/tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb
+Multi-repo coordination: .ace/tools/lib/coding_agent_tools/molecules/git/multi_repo_coordinator.rb
 Execution patterns: Push (submodules first), Pull (dependency order), Status/Log (concurrent safe)
 Test coverage needed: Integration tests for multi-repository execution scenarios
 ```

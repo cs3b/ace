@@ -25,7 +25,7 @@ needs_review: false
   - **Research conducted**: Target `.claude/commands/` is flat (no subdirectories)
   - **Current behavior**: ClaudeCommandsInstaller copies from single custom dir
   - **Suggested default**: Flatten both _custom and _generated into single commands/ dir
-  - **Human answer**: "in claude commands and agents we have use flat structure - so the names in the dev-handbook part needs to be unique"
+  - **Human answer**: "in claude commands and agents we have use flat structure - so the names in the .ace/handbook part needs to be unique"
   - **Decision**: Flatten _custom and _generated directories into single .claude/commands/ directory
 
 ### [MEDIUM] Enhancement Questions (Resolved)
@@ -40,11 +40,11 @@ needs_review: false
   - **Research conducted**: Current installer checks for workflow-instructions but not all dirs
   - **Current behavior**: ClaudeCommandsInstaller returns empty array if dir missing
   - **Suggested default**: Warn for missing dirs but continue with available files
-  - **Human answer**: "if source is missing (from dev-handbook), then we should print error"
+  - **Human answer**: "if source is missing (from .ace/handbook), then we should print error"
   - **Decision**: Print error and exit if source directories are missing
 
 - [x] How should agent files be handled differently from commands?
-  - **Research conducted**: Agents dir exists at `dev-handbook/.integrations/claude/agents/`
+  - **Research conducted**: Agents dir exists at `.ace/handbook/.integrations/claude/agents/`
   - **Current implementation**: ClaudeCommandsInstaller doesn't handle agents at all
   - **Suggested default**: Copy agents to `.claude/agents/` with same flattening logic
   - **Human answer**: "they should also be copied (same flattening logic)"
@@ -72,7 +72,7 @@ needs_review: false
 - **Output**: Confirmation of successful installation with statistics
 
 ### Expected Behavior
-The system should copy all Claude commands from the dev-handbook structure to the project's .claude/ directory, flattening the _custom and _generated structure. It should also copy agents and update the commands.json registry. The process should be idempotent, handle existing files gracefully, and provide clear feedback about what was installed.
+The system should copy all Claude commands from the .ace/handbook structure to the project's .claude/ directory, flattening the _custom and _generated structure. It should also copy agents and update the commands.json registry. The process should be idempotent, handle existing files gracefully, and provide clear feedback about what was installed.
 
 ### Interface Contract
 ```bash
@@ -122,9 +122,9 @@ handbook claude integrate --force
 [Normal installation output]
 
 # Integration from custom path
-handbook claude integrate --source dev-handbook/.integrations/claude
+handbook claude integrate --source .ace/handbook/.integrations/claude
 # Output:
-Installing from custom source: dev-handbook/.integrations/claude
+Installing from custom source: .ace/handbook/.integrations/claude
 [Normal installation output]
 ```
 
@@ -155,7 +155,7 @@ Installing from custom source: dev-handbook/.integrations/claude
 
 ## Objective
 
-Provide a seamless installation experience that copies all Claude integration files from dev-handbook to the project's .claude/ directory, making commands immediately available in Claude Code.
+Provide a seamless installation experience that copies all Claude integration files from .ace/handbook to the project's .claude/ directory, making commands immediately available in Claude Code.
 
 ## Scope of Work
 
@@ -216,13 +216,13 @@ Provide a seamless installation experience that copies all Claude integration fi
 ## File Modifications
 
 ### Create
-- `dev-handbook/.integrations/claude/commands/_custom/` - Directory for custom commands (if not exists)
-- `dev-handbook/.integrations/claude/commands/_generated/` - Directory for generated commands (if not exists)
-- `dev-tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb` - New tests for enhanced functionality
+- `.ace/handbook/.integrations/claude/commands/_custom/` - Directory for custom commands (if not exists)
+- `.ace/handbook/.integrations/claude/commands/_generated/` - Directory for generated commands (if not exists)
+- `.ace/tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb` - New tests for enhanced functionality
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Update command to support new options
-- `dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Refactor to support agents, subdirectories, metadata
+- `.ace/tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Update command to support new options
+- `.ace/tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Refactor to support agents, subdirectories, metadata
 - `.claude/commands/` - Destination directory (populated with flattened structure)
 - `.claude/agents/` - Destination directory for agents (created and populated)
 - `.claude/commands/commands.json` - Updated registry (maintained for backward compatibility)
@@ -302,8 +302,8 @@ Provide a seamless installation experience that copies all Claude integration fi
   # Refactor existing class to add:
   def copy_custom_commands
     # Update to handle both _custom and _generated subdirectories
-    custom_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
-    generated_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
+    custom_dir = project_root / '.ace/handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
+    generated_dir = project_root / '.ace/handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
     
     # Copy from both directories, flattening structure
     [custom_dir, generated_dir].each do |dir|
@@ -317,7 +317,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   end
 
   def copy_agents
-    agents_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'agents'
+    agents_dir = project_root / '.ace/handbook' / '.integrations' / 'claude' / 'agents'
     target_dir = project_root / '.claude' / 'agents'
     
     return unless agents_dir.exist?
@@ -375,7 +375,7 @@ Provide a seamless installation experience that copies all Claude integration fi
 - [x] Implement enhanced source validation
   ```ruby
   def validate_source!
-    source_base = project_root / 'dev-handbook' / '.integrations' / 'claude'
+    source_base = project_root / '.ace/handbook' / '.integrations' / 'claude'
     
     # Check for new structure with subdirectories
     commands_exist = (source_base / 'commands').exist?

@@ -2,7 +2,7 @@
 
 ## Intention
 
-Create focused sub-agent executables in dev-tools that handle specific development tasks (test running, code analysis, formatting) with appropriate model tiers and reduced cognitive load on the main AI agent.
+Create focused sub-agent executables in .ace/tools that handle specific development tasks (test running, code analysis, formatting) with appropriate model tiers and reduced cognitive load on the main AI agent.
 
 ## Problem It Solves
 
@@ -22,7 +22,7 @@ Create focused sub-agent executables in dev-tools that handle specific developme
 
 ### 1. New Sub-Agent Executables
 
-**Test Runner Agent (`dev-tools/exe/agent-test-runner`):**
+**Test Runner Agent (`.ace/tools/exe/agent-test-runner`):**
 ```ruby
 # Specialized for test execution and result parsing
 module CodingAgentTools::CLI::Commands
@@ -37,7 +37,7 @@ module CodingAgentTools::CLI::Commands
 end
 ```
 
-**Code Analyzer Agent (`dev-tools/exe/agent-code-analyzer`):**
+**Code Analyzer Agent (`.ace/tools/exe/agent-code-analyzer`):**
 ```ruby
 # Specialized for code quality and architecture analysis
 module CodingAgentTools::CLI::Commands
@@ -52,7 +52,7 @@ module CodingAgentTools::CLI::Commands
 end
 ```
 
-**Formatter Agent (`dev-tools/exe/agent-formatter`):**
+**Formatter Agent (`.ace/tools/exe/agent-formatter`):**
 ```ruby
 # Specialized for code formatting and style fixes
 module CodingAgentTools::CLI::Commands
@@ -70,7 +70,7 @@ end
 
 **New Organisms:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/organisms/
+# .ace/tools/lib/coding_agent_tools/organisms/
 test_runner_agent.rb      # Orchestrates test execution
 code_analyzer_agent.rb     # Performs code analysis
 formatter_agent.rb         # Handles formatting
@@ -79,7 +79,7 @@ agent_coordinator.rb       # Coordinates multiple agents
 
 **New Molecules:**
 ```ruby
-# dev-tools/lib/coding_agent_tools/molecules/
+# .ace/tools/lib/coding_agent_tools/molecules/
 test_result_parser.rb      # Parse test outputs
 code_metrics_calculator.rb # Calculate code metrics
 format_rule_applier.rb     # Apply formatting rules
@@ -89,7 +89,7 @@ agent_communicator.rb      # Inter-agent communication
 ### 3. Agent Communication Protocol
 
 ```ruby
-# dev-tools/lib/coding_agent_tools/models/agent_message.rb
+# .ace/tools/lib/coding_agent_tools/models/agent_message.rb
 class AgentMessage
   attr_accessor :from_agent, :to_agent, :task_type, :payload, :status
   
@@ -111,7 +111,7 @@ end
 
 **Update workflows to use sub-agents:**
 ```bash
-# dev-handbook/workflow-instructions/fix-tests.wf.md
+# .ace/handbook/workflow-instructions/fix-tests.wf.md
 
 # Before: Main agent runs everything
 Bash bin/test

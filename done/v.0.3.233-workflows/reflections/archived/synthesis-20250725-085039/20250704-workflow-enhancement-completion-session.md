@@ -61,7 +61,7 @@
 2. **Document Consolidation (Task 47)**:
    - Merged 3 guides (template-embedding.g.md, document-synchronization.md, document-sync-operations.md)
    - Created 2 focused guides (documents-embedding.g.md, documents-embedded-sync.g.md)
-   - Updated cross-references in dev-handbook/guides/README.md
+   - Updated cross-references in .ace/handbook/guides/README.md
    - Preserved 711 lines of content across consolidation
 
 3. **Review Synthesizer Enhancement (Task 48)**:

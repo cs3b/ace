@@ -24,7 +24,7 @@ Improve test coverage for the DocDependencyAnalyzer organism class from ~55% to 
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
+- .ace/tools/spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
 
 ## Implementation Plan
 
@@ -39,7 +39,7 @@ Improve test coverage for the DocDependencyAnalyzer organism class from ~55% to 
   > TEST: Verify enhanced test coverage
   > Type: Action Validation
   > Assert: New edge case tests work correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
 - [x] Add tests for complex dependency scenarios
 - [x] Add tests for different output formats and serialization
 - [x] Add tests for initialization with custom config
@@ -47,7 +47,7 @@ Improve test coverage for the DocDependencyAnalyzer organism class from ~55% to 
   > TEST: Verify comprehensive test coverage
   > Type: Action Validation
   > Assert: All tests pass and coverage is significantly improved
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
 
 ## Acceptance Criteria
 

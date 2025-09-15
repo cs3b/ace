@@ -125,8 +125,8 @@
 
 ### User-Specified Behavior
 ```bash
-# Path-specific: Only commits to dev-tools and dev-taskflow
-git-commit dev-tools/file.rb dev-taskflow/task.md --intention "fix X"
+# Path-specific: Only commits to .ace/tools and .ace/taskflow
+git-commit .ace/tools/file.rb .ace/taskflow/task.md --intention "fix X"
 
 # Cleanup: Commits submodule references to main repository  
 git-commit --intention "update submodule references"

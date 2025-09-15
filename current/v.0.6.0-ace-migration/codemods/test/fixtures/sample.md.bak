@@ -1,0 +1,75 @@
+# Test Fixture for Markdown Files
+
+This document contains various references to dev-* paths that should be updated.
+
+## Documentation Links
+
+- See [Tools Documentation](dev-tools/docs/README.md)
+- Check out the [Handbook](dev-handbook/index.md)
+- Review [Current Tasks](dev-taskflow/current/)
+- Local configuration in [dev-local/config.yml](dev-local/config.yml)
+
+## Inline References
+
+The `dev-tools/` directory contains all executable tools. You can find templates in `dev-handbook/templates/` and manage tasks in `dev-taskflow/`.
+
+Local overrides are stored in "dev-local/" directory.
+
+## Code Blocks
+
+```bash
+cd dev-tools/
+./bin/tool --help
+
+# Navigate to handbook
+cd ../dev-handbook/
+ls -la
+
+# Check taskflow
+cd ../dev-taskflow/current/
+cat README.md
+
+# Local config
+cp template.yml ../dev-local/config.yml
+```
+
+```ruby
+require 'dev-tools/lib/tool'
+load 'dev-handbook/lib/helper.rb'
+Dir.glob('dev-taskflow/**/*.md')
+File.read('dev-local/settings.yml')
+```
+
+## Reference Links
+
+[tools]: dev-tools/README.md "Tools Documentation"
+[handbook]: dev-handbook/README.md "Handbook Documentation"
+[taskflow]: dev-taskflow/README.md "Taskflow Documentation"
+[local]: dev-local/README.md "Local Configuration"
+
+## Table with Paths
+
+| Component | Path | Description |
+|-----------|------|-------------|
+| Tools | `dev-tools/` | Executable tools and utilities |
+| Handbook | `dev-handbook/` | Documentation and guides |
+| Taskflow | `dev-taskflow/` | Task management |
+| Local | `dev-local/` | Local configuration |
+
+## URLs and Full Paths
+
+- Full path: /Users/project/dev-tools/bin/executable
+- Relative: ./dev-handbook/docs/guide.md
+- Parent: ../dev-taskflow/backlog/task.md
+- URL style: file://dev-local/cache/data.json
+
+## Mixed Contexts
+
+The project structure includes "dev-tools/" for tools, 'dev-handbook/' for documentation, `dev-taskflow/` for tasks, and dev-local/ for local settings.
+
+### Nested Paths
+
+- Main: dev-tools/lib/dev-tools/core.rb
+- Docs: dev-handbook/docs/dev-handbook/overview.md
+- Tasks: dev-taskflow/current/dev-taskflow/structure.md
+- Local: dev-local/cache/dev-local/temp.txt

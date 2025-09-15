@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.1]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
+tree -L 2 .ace/handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions/
+.ace/handbook/workflow-instructions/
 ├── breakdown-notes-into-tasks.wf.md
 ├── draft-release.wf.md
 └── update-roadmap.wf.md
@@ -42,7 +42,7 @@ Refactor all 21 workflow instruction files to be self-contained and independent,
 
 #### Modify
 
-- All 21 workflow files in dev-handbook/workflow-instructions/
+- All 21 workflow files in .ace/handbook/workflow-instructions/
   - breakdown-notes-into-tasks.wf.md
   - commit.wf.md
   - create-adr.wf.md
@@ -119,10 +119,10 @@ Refactor all 21 workflow instruction files to be self-contained and independent,
 
 - ❌ Adding agent-specific integration sections (separate task)
 - ❌ Creating new workflows
-- ❌ Modifying workflow templates in dev-handbook/guides/
+- ❌ Modifying workflow templates in .ace/handbook/guides/
 
 ## References
 
-- dev-taskflow/backlog/v.0.3.0-workflows/researches/workflow-dependency-analysis.md (dependency analysis results)
-- dev-handbook/guides/draft-release/ (template references to embed)
-- dev-handbook/workflow-instructions/ (source files to refactor)
+- .ace/taskflow/backlog/v.0.3.0-workflows/researches/workflow-dependency-analysis.md (dependency analysis results)
+- .ace/handbook/guides/draft-release/ (template references to embed)
+- .ace/handbook/workflow-instructions/ (source files to refactor)

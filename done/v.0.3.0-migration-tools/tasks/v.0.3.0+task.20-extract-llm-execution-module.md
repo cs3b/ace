@@ -14,7 +14,7 @@ dependencies: [v.0.3.0+task.18]
 _Command run:_
 
 ```bash
-grep -n "llm-query" dev-handbook/workflow-instructions/review-code.wf.md | head -5 | sed 's/^/    /'
+grep -n "llm-query" .ace/handbook/workflow-instructions/review-code.wf.md | head -5 | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -40,12 +40,12 @@ Extract LLM execution logic from review-code.wf.md into a reusable module, provi
 
 #### Create
 
-* dev-tools/lib/bash/llm-execution.sh
+* .ace/tools/lib/bash/llm-execution.sh
 
 #### Modify
 
-* dev-tools/lib/bash/review-utils.sh (add source statement)
-* dev-handbook/workflow-instructions/review-code.wf.md (update references)
+* .ace/tools/lib/bash/review-utils.sh (add source statement)
+* .ace/handbook/workflow-instructions/review-code.wf.md (update references)
 
 #### Delete
 
@@ -67,7 +67,7 @@ Extract LLM execution logic from review-code.wf.md into a reusable module, provi
   > TEST: LLM Pattern Analysis
   > Type: Pre-condition Check
   > Assert: LLM patterns identified
-  > Command: grep -c "llm-query" dev-handbook/workflow-instructions/review-code.wf.md
+  > Command: grep -c "llm-query" .ace/handbook/workflow-instructions/review-code.wf.md
 * [ ] Study prompt construction methods
 * [ ] Design provider-agnostic interface
 
@@ -78,7 +78,7 @@ Extract LLM execution logic from review-code.wf.md into a reusable module, provi
   > TEST: Prompt Functions
   > Type: Shell Test
   > Assert: Prompt helpers available
-  > Command: source dev-tools/lib/bash/llm-execution.sh && type -t construct_prompt
+  > Command: source .ace/tools/lib/bash/llm-execution.sh && type -t construct_prompt
 - [ ] Add LLM query execution functions
 - [ ] Implement response parsing utilities
 - [ ] Add provider selection logic
@@ -86,7 +86,7 @@ Extract LLM execution logic from review-code.wf.md into a reusable module, provi
   > TEST: Error Handling
   > Type: Shell Test
   > Assert: Error functions exist
-  > Command: source dev-tools/lib/bash/llm-execution.sh && type -t handle_llm_error
+  > Command: source .ace/tools/lib/bash/llm-execution.sh && type -t handle_llm_error
 - [ ] Document all functions with examples
 - [ ] Update review-utils.sh integration
 
@@ -107,7 +107,7 @@ Extract LLM execution logic from review-code.wf.md into a reusable module, provi
 ## References
 
 * Dependency: v.0.3.0+task.18 (bash library structure)
-* Source: dev-handbook/workflow-instructions/review-code.wf.md
-* Target: dev-tools/lib/bash/llm-execution.sh
+* Source: .ace/handbook/workflow-instructions/review-code.wf.md
+* Target: .ace/tools/lib/bash/llm-execution.sh
 * Estimated extraction: ~200 lines
 * LLM tools: llm-query usage patterns

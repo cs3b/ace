@@ -47,7 +47,7 @@
 ## Technical Details
 
 The draft task was created as:
-- Path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.015-remove-unnecessary-claude-integrate-migration-documentation.md`
+- Path: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.015-remove-unnecessary-claude-integrate-migration-documentation.md`
 - ID: v.0.6.0+task.015
 - Status: draft
 - Priority: medium

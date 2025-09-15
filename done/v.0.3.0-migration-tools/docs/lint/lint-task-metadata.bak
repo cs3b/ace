@@ -1,0 +1,189 @@
+#!/usr/bin/env ruby
+
+require "pathname"
+require "yaml"
+
+# --- Configuration ---
+# Assumes the script is run from the project root.
+PROJECT_ROOT_DEFAULT = Pathname.new(".")
+DOCS_PROJECT_REL_PATH = "dev-taskflow"
+CURRENT_DIR_NAME = "current"
+BACKLOG_DIR_NAME = "backlog"
+TASKS_SUBDIR_NAME = "tasks"
+
+# Metadata Validation Rules
+VALID_ID_REGEX = /^v.\d+\.\d+\.\d+\+task\.\d+$/
+REQUIRED_FIELDS = ["id", "status", "priority"]
+VALID_STATUSES = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold"] # Added on-hold
+VALID_PRIORITIES = ["low", "medium", "high", "critical"]
+ESTIMATE_REGEX = /^\d+(\.\d+)?(h|d|w|sp|pt|wk|mo)$/i # e.g., 1h, 2.5d, 3w, 5sp, 1wk, 1mo (story points, person-time)
+
+# --- Helper Functions ---
+
+# Parses frontmatter and body from task file content
+def parse_task_file_content(content, file_path, errors)
+  parts = content.split(/^---\s*$/m, 3)
+  unless parts.length > 2 && (parts[0].nil? || parts[0].strip.empty?)
+    errors << "#{file_path}: ERROR: Malformed frontmatter. Ensure it starts with '---' and has a closing '---'."
+    return nil, nil
+  end
+
+  frontmatter_text = parts[1]
+  body_text = parts[2] || ""
+
+  begin
+    frontmatter = YAML.safe_load(frontmatter_text)
+    # If frontmatter is empty (e.g., "--- \n ---") YAML.safe_load returns nil or false depending on content.
+    # We want it to be an empty hash if it's logically empty but parsable.
+    frontmatter = {} if frontmatter.nil? || frontmatter == false
+    unless frontmatter.is_a?(Hash)
+      errors << "#{file_path}: ERROR: Frontmatter did not parse as a Hash (key-value pairs)."
+      return nil, body_text # Return body so H1 could theoretically still be checked if needed later
+    end
+  rescue Psych::SyntaxError => e
+    errors << "#{file_path}: ERROR: Invalid YAML in frontmatter: #{e.message}"
+    return nil, body_text
+  end
+
+  [frontmatter, body_text]
+end
+
+# Validates a single task's frontmatter
+def validate_frontmatter(fm, file_path, errors)
+  # Check for required fields
+  REQUIRED_FIELDS.each do |field|
+    unless fm.key?(field)
+      errors << "#{file_path}: ERROR: Missing required frontmatter field: '#{field}'."
+    end
+  end
+
+  # Validate 'id'
+  if fm.key?("id")
+    id_val = fm["id"]
+    if id_val.is_a?(String)
+      unless id_val.match?(VALID_ID_REGEX)
+        errors << "#{file_path}: ERROR: Invalid 'id' format: '#{id_val}'. Expected format like 'v.X.Y.Z+task.N'."
+      end
+    elsif !(id_val.integer? && file_path.to_s.include?("backlog"))
+      errors << "#{file_path}: ERROR: 'id' field must be a string. Found: #{id_val.class} ('#{id_val}')."
+    end
+  end
+
+  # Validate 'status'
+  if fm.key?("status")
+    status_val = fm["status"]
+    if status_val.is_a?(String)
+      unless VALID_STATUSES.include?(status_val.downcase)
+        errors << "#{file_path}: ERROR: Invalid 'status' value: '#{status_val}'. Valid statuses are: #{VALID_STATUSES.join(", ")}."
+      end
+    else
+      errors << "#{file_path}: ERROR: 'status' field must be a string. Found: #{status_val.class} ('#{status_val}')."
+    end
+  end
+
+  # Validate 'priority'
+  if fm.key?("priority")
+    priority_val = fm["priority"]
+    if priority_val.is_a?(String)
+      unless VALID_PRIORITIES.include?(priority_val.downcase)
+        errors << "#{file_path}: ERROR: Invalid 'priority' value: '#{priority_val}'. Valid priorities are: #{VALID_PRIORITIES.join(", ")}."
+      end
+    else
+      errors << "#{file_path}: ERROR: 'priority' field must be a string. Found: #{priority_val.class} ('#{priority_val}')."
+    end
+  end
+
+  # Validate 'estimate' (optional)
+  if fm.key?("estimate") && !fm["estimate"].nil? # Allow estimate to be explicitly nil
+    estimate_val = fm["estimate"]
+    if estimate_val.is_a?(String)
+      unless estimate_val.match?(ESTIMATE_REGEX)
+        errors << "#{file_path}: WARNING: 'estimate' format may be unconventional: '#{estimate_val}'. Expected e.g. '2h', '3d', '1.5w', '5sp'."
+      end
+    else
+      errors << "#{file_path}: ERROR: 'estimate' field, if present, must be a string. Found: #{estimate_val.class} ('#{estimate_val}')."
+    end
+  end
+
+  # Validate 'dependencies' (optional)
+  if fm.key?("dependencies") && !fm["dependencies"].nil? # Allow dependencies to be explicitly nil
+    deps_val = fm["dependencies"]
+    if deps_val.is_a?(Array)
+      valid_deps = deps_val.all? { |dep| dep.is_a?(String) }
+      unless valid_deps
+        errors << "#{file_path}: ERROR: 'dependencies' array elements must all be strings."
+      end
+    elsif deps_val.is_a?(String)
+      # Allow empty string for no dependencies, or comma-separated string.
+      # No specific format validation on the string content itself here, just type.
+      true
+    else
+      errors << "#{file_path}: ERROR: 'dependencies' field, if present, must be an array of strings or a single string. Found: #{deps_val.class} ('#{deps_val}')."
+    end
+  end
+end
+
+# --- Main Script ---
+errors_found = []
+files_processed_count = 0
+
+# Determine base path for dev-taskflow
+# This allows running the script from project root or potentially other locations
+# if the script itself is moved, as long as dev-taskflow is findable.
+project_root = PROJECT_ROOT_DEFAULT
+docs_project_base = project_root / DOCS_PROJECT_REL_PATH
+
+unless docs_project_base.directory?
+  puts "Error: Docs project directory not found at #{docs_project_base}. Ensure script is run from project root or adjust DOCS_PROJECT_REL_PATH."
+  exit 1
+end
+
+target_dirs = [
+  docs_project_base / CURRENT_DIR_NAME,
+  docs_project_base / BACKLOG_DIR_NAME
+]
+
+target_dirs.each do |base_dir_path|
+  unless base_dir_path.directory?
+    # It's not an error if e.g. 'backlog' doesn't exist.
+    # puts "Info: Directory not found, skipping: #{base_dir_path}"
+    next
+  end
+
+  # Find release directories within base_dir_path (e.g., current/v0.1.0-myrelease)
+  Dir.glob(base_dir_path / "*").each do |release_dir_path_str|
+    release_dir_path = Pathname.new(release_dir_path_str)
+    next unless release_dir_path.directory? # Ensure it's a directory
+
+    tasks_path = release_dir_path / TASKS_SUBDIR_NAME
+    next unless tasks_path.directory? # Ensure tasks subdir exists
+
+    Dir.glob(tasks_path / "*.md").each do |task_file_path_str|
+      files_processed_count += 1
+      task_file_path = Pathname.new(task_file_path_str)
+      # puts "Linting: #{task_file_path}" # For verbose output
+
+      begin
+        content = File.read(task_file_path, encoding: "UTF-8")
+      rescue => e
+        errors_found << "#{task_file_path}: ERROR: Could not read file: #{e.message}"
+        next
+      end
+
+      frontmatter, _body = parse_task_file_content(content, task_file_path, errors_found)
+
+      validate_frontmatter(frontmatter, task_file_path, errors_found) if frontmatter
+    end
+  end
+end
+
+if errors_found.empty?
+  puts "Linting complete. #{files_processed_count} task file(s) processed."
+  puts "No errors found."
+  exit 0
+else
+  puts "Linting complete. #{files_processed_count} task file(s) processed."
+  puts "Errors found:"
+  errors_found.each { |err| puts "- #{err}" }
+  exit 1
+end

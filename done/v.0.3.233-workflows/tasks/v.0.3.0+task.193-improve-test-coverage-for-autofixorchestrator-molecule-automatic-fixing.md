@@ -10,7 +10,7 @@ dependencies: []
 
 ## Objective
 
-Improve test coverage for the AutofixOrchestrator molecule in the dev-tools submodule. The current tests cover basic functionality but are missing edge cases, error conditions, and comprehensive validation scenarios that would improve reliability and maintainability.
+Improve test coverage for the AutofixOrchestrator molecule in the .ace/tools submodule. The current tests cover basic functionality but are missing edge cases, error conditions, and comprehensive validation scenarios that would improve reliability and maintainability.
 
 ## Scope of Work
 
@@ -24,7 +24,7 @@ Improve test coverage for the AutofixOrchestrator molecule in the dev-tools subm
 
 #### Modify
 
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
 
 ## Phases
 
@@ -112,6 +112,6 @@ Improve test coverage for the AutofixOrchestrator molecule in the dev-tools subm
 
 ## References
 
-- dev-tools/lib/coding_agent_tools/molecules/code_quality/autofix_orchestrator.rb
-- dev-tools/spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
-- dev-tools/lib/coding_agent_tools/models/autofix_operation.rb
+- .ace/tools/lib/coding_agent_tools/molecules/code_quality/autofix_orchestrator.rb
+- .ace/tools/spec/coding_agent_tools/molecules/code_quality/autofix_orchestrator_spec.rb
+- .ace/tools/lib/coding_agent_tools/models/autofix_operation.rb

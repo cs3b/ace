@@ -11,7 +11,7 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: AI agents or developers execute draft-task workflow with an idea file path (e.g., `dev-taskflow/backlog/ideas/20250730-2327-auto-commit-ideas.md`)
+- **Input**: AI agents or developers execute draft-task workflow with an idea file path (e.g., `.ace/taskflow/backlog/ideas/20250730-2327-auto-commit-ideas.md`)
 - **Process**: System creates new task file and automatically moves/renames original idea file to organized location with task-numbered prefix
 - **Output**: New draft task created, original idea file moved to `../docs/ideas/` with task number prefix for clear traceability
 
@@ -30,12 +30,12 @@ Users experience seamless task creation without manual file management overhead,
 
 ```bash
 # Enhanced draft-task workflow integration
-# When executing: draft-task dev-taskflow/backlog/ideas/YYYY-MMDD-HHMM-idea-name.md
+# When executing: draft-task .ace/taskflow/backlog/ideas/YYYY-MMDD-HHMM-idea-name.md
 # System behavior:
-# 1. Creates task: dev-taskflow/current/vX.Y.Z-release/tasks/vX.Y.Z+task.NNN-task-title.md
+# 1. Creates task: .ace/taskflow/current/vX.Y.Z-release/tasks/vX.Y.Z+task.NNN-task-title.md
 # 2. Gets current release path: release-manager current
 # 3. Moves idea: git-commit old-path new-path --intention "Move idea file to current release after task creation"
-#    Destination: dev-taskflow/current/vX.Y.Z-release/docs/ideas/NNN-YYYY-MMDD-HHMM-idea-name.md
+#    Destination: .ace/taskflow/current/vX.Y.Z-release/docs/ideas/NNN-YYYY-MMDD-HHMM-idea-name.md
 
 # Expected outputs:
 # - "Draft task created: [task-path]"
@@ -152,7 +152,7 @@ Establish clear traceability and organization for idea files throughout their li
 - None: No new files needed, using existing tools
 
 ### Modify
-- dev-handbook/workflow-instructions/draft-task.wf.md
+- .ace/handbook/workflow-instructions/draft-task.wf.md
   - Changes: Add step 7.5 for idea file movement after task creation
   - Impact: Automated idea file organization during task drafting
   - Integration points: Between task creation (step 7) and completion verification (step 8)
@@ -212,7 +212,7 @@ Establish clear traceability and organization for idea files throughout their li
   > TEST: Workflow Understanding
   > Type: Pre-condition Check
   > Assert: Identify point after task creation but before completion
-  > Command: grep -n "create-path task-new" dev-handbook/workflow-instructions/draft-task.wf.md
+  > Command: grep -n "create-path task-new" .ace/handbook/workflow-instructions/draft-task.wf.md
 
 * [x] Study git-commit command's file movement capabilities
   > TEST: Tool Capability Check
@@ -234,7 +234,7 @@ Establish clear traceability and organization for idea files throughout their li
   > TEST: Workflow Enhancement
   > Type: Implementation Validation
   > Assert: New step 7.5 added with proper file movement logic
-  > Command: grep -A10 "Create Draft Task Files" dev-handbook/workflow-instructions/draft-task.wf.md
+  > Command: grep -A10 "Create Draft Task Files" .ace/handbook/workflow-instructions/draft-task.wf.md
 
 - [x] Implement task number extraction from created task path
   > TEST: Pattern Extraction
@@ -258,7 +258,7 @@ Establish clear traceability and organization for idea files throughout their li
   > TEST: Conflict Resolution
   > Type: Edge Case Validation
   > Assert: Properly handles 009-010-012-filename.md pattern
-  > Command: ls dev-taskflow/current/*/docs/ideas/ | grep -E "[0-9]{3}(-[0-9]{3})*-.*\.md"
+  > Command: ls .ace/taskflow/current/*/docs/ideas/ | grep -E "[0-9]{3}(-[0-9]{3})*-.*\.md"
 
 - [x] Implement error handling for missing release or failed moves
   > TEST: Error Handling
@@ -276,7 +276,7 @@ Establish clear traceability and organization for idea files throughout their li
   > TEST: Documentation Update
   > Type: Usability Validation
   > Assert: Workflow documentation includes file movement behavior
-  > Command: grep -A5 "idea file movement" dev-handbook/workflow-instructions/draft-task.wf.md
+  > Command: grep -A5 "idea file movement" .ace/handbook/workflow-instructions/draft-task.wf.md
 
 ## Acceptance Criteria
 
@@ -301,13 +301,13 @@ Establish clear traceability and organization for idea files throughout their li
 
 ## References
 
-- Source idea file: `dev-taskflow/backlog/ideas/20250731-0753-draft-task-move.md`
-- Draft-task workflow: `dev-handbook/workflow-instructions/draft-task.wf.md`
-- ATOM Architecture patterns: `dev-tools/lib/coding_agent_tools/molecules/`
-- Existing security framework: `dev-tools/lib/coding_agent_tools/molecules/secure_path_validator.rb`
-- CLI command patterns: `dev-tools/lib/coding_agent_tools/cli/`
-- FileIoHandler implementation: `dev-tools/lib/coding_agent_tools/molecules/file_io_handler.rb`
-- **[REVIEW FINDING]** Existing moved idea files: `dev-taskflow/current/v.0.4.0-replanning/docs/ideas/`
-- **[REVIEW FINDING]** TaskIdGenerator: `dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_id_generator.rb`
-- **[REVIEW FINDING]** ReleaseManager: `dev-tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb`
+- Source idea file: `.ace/taskflow/backlog/ideas/20250731-0753-draft-task-move.md`
+- Draft-task workflow: `.ace/handbook/workflow-instructions/draft-task.wf.md`
+- ATOM Architecture patterns: `.ace/tools/lib/coding_agent_tools/molecules/`
+- Existing security framework: `.ace/tools/lib/coding_agent_tools/molecules/secure_path_validator.rb`
+- CLI command patterns: `.ace/tools/lib/coding_agent_tools/cli/`
+- FileIoHandler implementation: `.ace/tools/lib/coding_agent_tools/molecules/file_io_handler.rb`
+- **[REVIEW FINDING]** Existing moved idea files: `.ace/taskflow/current/v.0.4.0-replanning/docs/ideas/`
+- **[REVIEW FINDING]** TaskIdGenerator: `.ace/tools/lib/coding_agent_tools/molecules/taskflow_management/task_id_generator.rb`
+- **[REVIEW FINDING]** ReleaseManager: `.ace/tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb`
 

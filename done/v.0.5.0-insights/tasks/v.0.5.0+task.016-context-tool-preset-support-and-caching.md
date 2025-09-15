@@ -39,8 +39,8 @@ Saving to: docs/context/cached/project.md
 $ context --list-presets
 Available presets:
   project      - Main project context (docs/context/cached/project.md)
-  dev-tools    - Dev-tools submodule context (docs/context/cached/dev-tools.md)
-  dev-handbook - Dev-handbook submodule context (docs/context/cached/dev-handbook.md)
+  .ace/tools    - Dev-tools submodule context (docs/context/cached/dev-tools.md)
+  .ace/handbook - Dev-handbook submodule context (docs/context/cached/dev-handbook.md)
 
 # Large file handling (automatic)
 $ context --preset large-project
@@ -229,7 +229,7 @@ Integration with existing patterns:
   - Integration points: Organism testing
 
 ### Configuration
-- `.coding-agent/context.yml` (in project root, not dev-tools)
+- `.coding-agent/context.yml` (in project root, not .ace/tools)
   - Purpose: Define presets for context loading
   - Format: YAML with preset definitions
   - Example content provided in implementation
@@ -265,7 +265,7 @@ Integration with existing patterns:
 
 ### Planning Steps
 
-* [x] Research existing configuration patterns in dev-tools
+* [x] Research existing configuration patterns in .ace/tools
   - PathConfigLoader implementation
   - TreeConfigLoader patterns
   - Security validation approaches
@@ -340,7 +340,7 @@ Integration with existing patterns:
 
 - [x] Step 7: Create example configuration
   - Add .coding-agent/context.yml to project root
-  - Define presets for project, dev-tools, dev-handbook
+  - Define presets for project, dev-tools, .ace/handbook
   - Document configuration format
   > TEST: Example Configuration
   > Type: Manual Test
@@ -404,8 +404,8 @@ Integration with existing patterns:
 
 ## References
 
-- User feedback: dev-taskflow/current/v.0.5.0-insights/docs/feedback-to-bin/load-context.md
+- User feedback: .ace/taskflow/current/v.0.5.0-insights/docs/feedback-to-bin/load-context.md
 - Current context tool documentation
 - Claude Code file size limitations research
-- Existing .coding-agent configuration patterns in dev-tools
+- Existing .coding-agent configuration patterns in .ace/tools
 - ATOM architecture documentation: docs/architecture-tools.md

@@ -13,13 +13,13 @@ dependencies: [v.0.3.0+task.60]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+tree -L 2 .ace/handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-handbook/guides
+    .ace/handbook/guides
     ├── ai-agent-integration.g.md
     ├── atom-house-rules.md
     ├── changelog.g.md
@@ -180,7 +180,7 @@ Update the handbook review command wrapper to correctly specify system prompt pa
 
 ## References
 
-* Source issue: dev-taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md
+* Source issue: .ace/taskflow/current/v.0.3.0-workflows/reflections/20250705-173751-handbook-review-system-prompt-improvements.md
 * Target file: .claude/commands/handbook-review.md
 * Dependent task: v.0.3.0+task.60 (Fix System Prompt Handling in Review Code Workflow)
-* Current system prompt reference: `dev-local/handbook/tpl/review/system.prompt.md` (line 24)
+* Current system prompt reference: `.ace/local/handbook/tpl/review/system.prompt.md` (line 24)

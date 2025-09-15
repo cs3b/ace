@@ -12,7 +12,7 @@ Synthesis of 9 reflection notes.
 
 ## Reflection 1: 2025-08-11-task-002-completion-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/2025-08-11-task-002-completion-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/2025-08-11-task-002-completion-reflection.md`
 **Modified**: 2025-08-11 20:17:53
 
 # Reflection: Task 002 - Unified Project-Aware Search Tool Completion
@@ -105,7 +105,7 @@ end
 
 ## Reflection 2: 20250811-103825-search-tool-implementation-and-bug-fixes.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-103825-search-tool-implementation-and-bug-fixes.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-103825-search-tool-implementation-and-bug-fixes.md`
 **Modified**: 2025-08-11 10:39:00
 
 # Reflection: Search Tool Implementation and Bug Fixes
@@ -236,14 +236,14 @@ Key fixes implemented:
 ## Additional Context
 
 - Related tasks: v.0.5.0+task.002, v.0.5.0+task.003, v.0.5.0+task.004
-- Commits: Multiple fixes and features across dev-tools submodule
-- Documentation: Updated dev-tools/docs/tools.md with search tool usage
+- Commits: Multiple fixes and features across .ace/tools submodule
+- Documentation: Updated .ace/tools/docs/tools.md with search tool usage
 
 ---
 
 ## Reflection 3: 20250811-194907-circular-dependency-detection-in-task-management.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-194907-circular-dependency-detection-in-task-management.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-194907-circular-dependency-detection-in-task-management.md`
 **Modified**: 2025-08-11 19:49:33
 
 # Reflection: Circular Dependency Detection in Task Management
@@ -359,7 +359,7 @@ Resolution: Removed task 006's dependency on task 005 since intermediate tasks w
 
 ## Reflection 4: 20250811-200702-search-tool-simplification-unified-search.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-200702-search-tool-simplification-unified-search.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-200702-search-tool-simplification-unified-search.md`
 **Modified**: 2025-08-11 20:07:34
 
 # Reflection: Search Tool Simplification to Unified Search
@@ -465,7 +465,7 @@ The path filtering improvements and flat result structure make the tool much mor
 
 ## Reflection 5: 20250811-221013-task-creation-workflow-issues.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-221013-task-creation-workflow-issues.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-221013-task-creation-workflow-issues.md`
 **Modified**: 2025-08-11 22:10:54
 
 # Reflection: Task Creation Workflow Issues
@@ -595,13 +595,13 @@ The tasks are now ready for implementation with proper tracking and organization
 
 ## Reflection 6: 20250811-222450-fix-ruby-linting-issues-task-completion-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-222450-fix-ruby-linting-issues-task-completion-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-222450-fix-ruby-linting-issues-task-completion-reflection.md`
 **Modified**: 2025-08-11 22:25:13
 
 # Reflection: Fix Ruby linting issues task completion
 
 **Date**: 2025-08-11
-**Context**: Completed task v.0.5.0+task.009 - Fix Ruby linting issues in dev-tools codebase
+**Context**: Completed task v.0.5.0+task.009 - Fix Ruby linting issues in .ace/tools codebase
 **Author**: Claude Code
 **Type**: Self-Review
 
@@ -622,7 +622,7 @@ The tasks are now ready for implementation with proper tracking and organization
 
 ## Key Learnings
 
-- The dev-tools codebase has a sophisticated bin/lint wrapper around code-lint ruby command
+- The .ace/tools codebase has a sophisticated bin/lint wrapper around code-lint ruby command
 - StandardRB can automatically fix many style issues with --fix and --fix-unsafely flags
 - Critical issues (syntax errors, duplicate methods) must be fixed manually while style issues can often be auto-fixed
 - The search tool implementation in task.006 introduced several duplicate method definitions and syntax errors
@@ -677,7 +677,7 @@ This task was dependent on v.0.5.0+task.006 (search tool simplification) which i
 
 ## Reflection 7: 20250811-222913-glob-pattern-documentation-clarification.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-222913-glob-pattern-documentation-clarification.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-222913-glob-pattern-documentation-clarification.md`
 **Modified**: 2025-08-11 22:29:36
 
 # Reflection: Glob Pattern Documentation Clarification
@@ -715,7 +715,7 @@ This task was dependent on v.0.5.0+task.006 (search tool simplification) which i
 
 ### Documentation Structure Added
 
-Added comprehensive "Glob Pattern Guide" section to `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/docs/tools.md` including:
+Added comprehensive "Glob Pattern Guide" section to `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/docs/tools.md` including:
 
 1. **Basic Pattern Syntax Table** - Clear mapping of patterns to meanings with examples
 2. **Directory vs File Matching Behavior** - Critical distinction between `**` and `**/*`
@@ -760,7 +760,7 @@ All success criteria met:
 
 - Task completed following the standard work-on-task workflow
 - Documentation follows existing tools.md structure and formatting conventions
-- Changes integrated into dev-tools submodule documentation
+- Changes integrated into .ace/tools submodule documentation
 - Task status updated from pending → in-progress → done
 - All success criteria marked as completed
 
@@ -768,7 +768,7 @@ All success criteria met:
 
 ## Reflection 8: 20250811-task-011-multi-repository-references-audit.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-task-011-multi-repository-references-audit.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-task-011-multi-repository-references-audit.md`
 **Modified**: 2025-08-11 22:34:14
 
 # Reflection: Task v.0.5.0+task.011 - Multi-Repository References Audit
@@ -822,8 +822,8 @@ All success criteria met:
 - Validated that Git tools correctly maintain multi-repository functionality while search tool was properly simplified
 
 **Key Files Examined:**
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe/search` - Properly updated with removal comments
-- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/docs/tools.md` - Contains correct unified search documentation
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/exe/search` - Properly updated with removal comments
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools/docs/tools.md` - Contains correct unified search documentation
 - Git command implementations - Legitimately maintain `--repository` flags for valid multi-repo operations
 
 **Validation Results:**
@@ -841,7 +841,7 @@ Task completion validates the effectiveness of the development workflow where co
 
 ## Reflection 9: 20250811-task-012-editor-integration-implementation-reflection.md
 
-**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.5.0-insights/reflections/20250811-task-012-editor-integration-implementation-reflection.md`
+**Source**: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/current/v.0.5.0-insights/reflections/20250811-task-012-editor-integration-implementation-reflection.md`
 **Modified**: 2025-08-11 22:43:00
 
 # Reflection: Task v.0.5.0+task.012 - Editor Integration Implementation

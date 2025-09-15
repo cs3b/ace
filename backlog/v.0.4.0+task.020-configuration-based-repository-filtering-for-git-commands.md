@@ -111,7 +111,7 @@ The system should provide configuration-driven control over git command executio
 repositories:
   dev-tools:
     blacklist:
-      - "git-tag"      # Block git-tag on dev-tools repo
+      - "git-tag"      # Block git-tag on .ace/tools repo
       - "git-*"        # Block all git commands (glob pattern)
   dev-handbook:
     whitelist:
@@ -124,16 +124,16 @@ repositories:
 ```bash
 # CLI Interface - commands respect configuration automatically
 git-tag --version v1.0.0
-# Skips: dev-tools (blacklisted)
-# Executes: dev-handbook, dev-taskflow
+# Skips: .ace/tools (blacklisted)
+# Executes: dev-handbook, .ace/taskflow
 
 git-commit --intention "update docs"
-# Executes: dev-handbook (whitelisted), dev-taskflow (no restrictions)
-# Skips: dev-tools (not in whitelist if whitelist exists)
+# Executes: .ace/handbook (whitelisted), .ace/taskflow (no restrictions)
+# Skips: .ace/tools (not in whitelist if whitelist exists)
 
 # Explicit path overrides configuration
-git-tag dev-tools --version v1.0.0
-# Executes on dev-tools despite blacklist
+git-tag .ace/tools --version v1.0.0
+# Executes on .ace/tools despite blacklist
 ```
 
 **Error Handling:**
@@ -453,7 +453,7 @@ Provide users with centralized, configuration-driven control over git command ex
 
 ## References
 
-- Source idea: dev-taskflow/backlog/ideas/20250803-2145-git-config-filter.md
+- Source idea: .ace/taskflow/backlog/ideas/20250803-2145-git-config-filter.md
 - Related patterns: Multi-Repository Coordination, CLI Tool Patterns, Configuration Management
-- Existing tools: dev-tools/exe/git-* commands
+- Existing tools: .ace/tools/exe/git-* commands
 - Similar implementations: ConfigurationLoader, PathConfigLoader, TreeConfigLoader

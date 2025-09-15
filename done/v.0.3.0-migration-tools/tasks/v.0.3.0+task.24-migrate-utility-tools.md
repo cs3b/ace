@@ -14,14 +14,14 @@ dependencies: [v.0.3.0+task.06]
 _Command run:_
 
 ```bash
-ls -la dev-tools/exe-old/{diff-list-modified-files.rb,fetch-github-pr-data.rb} 2>/dev/null | sed 's/^/    /'
+ls -la .ace/tools/exe-old/{diff-list-modified-files.rb,fetch-github-pr-data.rb} 2>/dev/null | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-    dev-tools/exe-old/diff-list-modified-files.rb
-    dev-tools/exe-old/fetch-github-pr-data.rb
+    .ace/tools/exe-old/diff-list-modified-files.rb
+    .ace/tools/exe-old/fetch-github-pr-data.rb
 ```
 
 ## Objective
@@ -70,7 +70,7 @@ Migrate the remaining utility tools (diff-list-modified-files.rb and fetch-githu
   > TEST: Diff Tool Analysis
   > Type: Pre-condition Check
   > Assert: Tool logic understood
-  > Command: wc -l dev-tools/exe-old/diff-list-modified-files.rb
+  > Command: wc -l .ace/tools/exe-old/diff-list-modified-files.rb
 * [ ] Study fetch-github-pr-data.rb implementation
 * [ ] Design organism interfaces
 
@@ -81,7 +81,7 @@ Migrate the remaining utility tools (diff-list-modified-files.rb and fetch-githu
   > TEST: Diff Analyzer
   > Type: Unit Test
   > Assert: Analyzes diffs correctly
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/utilities/diff_analyzer_spec.rb
+  > Command: cd .ace/tools && bundle exec rspec spec/coding_agent_tools/organisms/utilities/diff_analyzer_spec.rb
 - [ ] Implement GitHubPRFetcher organism
 - [ ] Add GitHub API integration
 - [ ] Create CLI command for diff-files
@@ -89,7 +89,7 @@ Migrate the remaining utility tools (diff-list-modified-files.rb and fetch-githu
   > TEST: CLI Commands
   > Type: Integration Test
   > Assert: Commands are available
-  > Command: cd dev-tools && bundle exec exe/coding_agent_tools project --help | grep -E "diff-files|fetch-pr"
+  > Command: cd .ace/tools && bundle exec exe/coding_agent_tools project --help | grep -E "diff-files|fetch-pr"
 - [ ] Update any dependent workflows
 
 ## Acceptance Criteria
@@ -109,6 +109,6 @@ Migrate the remaining utility tools (diff-list-modified-files.rb and fetch-githu
 ## References
 
 * Dependency: v.0.3.0+task.06 (molecules implementation)
-* Source tools: dev-tools/exe-old/diff-list-modified-files.rb
-* Source tools: dev-tools/exe-old/fetch-github-pr-data.rb
+* Source tools: .ace/tools/exe-old/diff-list-modified-files.rb
+* Source tools: .ace/tools/exe-old/fetch-github-pr-data.rb
 * Final tools from migration plan

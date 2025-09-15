@@ -39,7 +39,7 @@ Update the core project documentation files to properly embrace and reference th
 * Update docs/blueprint.md to reference subdirectories correctly
 * Update docs/what-do-we-build.md with proper internal links
 * Find and fix any places that incorrectly suggest not linking to docs/
-* Ensure consistency between permanent context (docs/) vs point-in-time (dev-taskflow/)
+* Ensure consistency between permanent context (docs/) vs point-in-time (.ace/taskflow/)
 
 ### Deliverables
 
@@ -91,13 +91,13 @@ Update the core project documentation files to properly embrace and reference th
   > Type: Content Search
   > Assert: No files contain guidance against linking to docs/
   > Command: bin/test --check-no-anti-docs-patterns
-* [x] Ensure all files distinguish between permanent (docs/) and temporal (dev-taskflow/) content
+* [x] Ensure all files distinguish between permanent (docs/) and temporal (.ace/taskflow/) content
 
 ## Acceptance Criteria
 
 * [x] All three core docs accurately describe the docs/ directory structure
 * [x] No conflicting guidance about linking to docs/ exists in the codebase
-* [x] Clear distinction documented between docs/ (permanent) and dev-taskflow/ (point-in-time)
+* [x] Clear distinction documented between docs/ (permanent) and .ace/taskflow/ (point-in-time)
 * [x] All internal references use correct paths
 
 ## Out of Scope
