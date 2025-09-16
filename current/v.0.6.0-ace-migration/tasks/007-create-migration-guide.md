@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.007
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: [v.0.6.0+task.006]
@@ -138,11 +138,11 @@ Create a comprehensive migration guide to help existing users transition from th
 
 ## Acceptance Criteria
 
-- [ ] Migration guide covers all breaking changes
-- [ ] Step-by-step instructions are clear
-- [ ] Automation script works for common cases
-- [ ] Troubleshooting covers known issues
-- [ ] README prominently displays migration notice
+- [x] Migration guide covers all breaking changes
+- [x] Step-by-step instructions are clear
+- [x] Automation script works for common cases
+- [x] Troubleshooting covers known issues
+- [x] README prominently displays migration notice
 
 ## Out of Scope
 
