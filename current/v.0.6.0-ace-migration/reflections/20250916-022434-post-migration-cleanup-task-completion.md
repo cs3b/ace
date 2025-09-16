@@ -49,7 +49,7 @@
 ## Technical Details
 
 ### Files Archived
-- Migration scripts from `/Users/mc/Ps/ace-meta/.ace/taskflow/current/v.0.6.0-ace-migration/codemods/` to `/Users/mc/Ps/ace-meta/docs/archive/v0.6.0-migration/`
+- Migration scripts preserved in `.ace/taskflow/current/v.0.6.0-ace-migration/codemods/`
 - Includes: backup.sh, migration.log, module mappings, path mappings, Ruby renaming scripts, test results
 
 ### Files Removed

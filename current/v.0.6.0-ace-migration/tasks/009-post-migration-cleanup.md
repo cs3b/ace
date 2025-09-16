@@ -24,7 +24,7 @@ Clean up temporary files, remove old references, archive migration scripts, and 
 
 #### Create
 
-- `docs/archive/v0.6.0-migration/` - Archived migration scripts
+- `.ace/taskflow/current/v.0.6.0-ace-migration/codemods/` - Archived migration scripts
 
 #### Modify
 
@@ -49,14 +49,14 @@ Clean up temporary files, remove old references, archive migration scripts, and 
 
 - [x] Archive migration scripts:
   ```bash
-  mkdir -p docs/archive/v0.6.0-migration
-  cp -r codemods/* docs/archive/v0.6.0-migration/
-  echo "Migration scripts archived for future reference"
+  mkdir -p .ace/taskflow/current/v.0.6.0-ace-migration/codemods
+  # Migration scripts were moved from docs/archive/ to proper location
+  echo "Migration scripts archived in release codemods directory"
   ```
   > TEST: Archive Creation
   > Type: File Check
-  > Assert: Archive directory contains scripts
-  > Command: ls -la docs/archive/v0.6.0-migration/
+  > Assert: Codemods directory contains scripts
+  > Command: ls -la .ace/taskflow/current/v.0.6.0-ace-migration/codemods/
 
 - [x] Clean up temporary files:
   ```bash
