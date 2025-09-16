@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.006
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: [v.0.6.0+task.004]
@@ -47,13 +47,13 @@ Update all documentation to reflect the new `.ace/*` structure and `AceTools` ge
 
 ### Planning Steps
 
-* [ ] Inventory all documentation files needing updates
-* [ ] Draft migration guide outline
-* [ ] Identify user-facing breaking changes
+* [x] Inventory all documentation files needing updates
+* [x] Draft migration guide outline
+* [x] Identify user-facing breaking changes
 
 ### Execution Steps
 
-- [ ] Update main README.md:
+- [x] Update main README.md:
   - Change all dev-* references to .ace/*
   - Update gem name to ace-tools
   - Update installation instructions
@@ -63,7 +63,7 @@ Update all documentation to reflect the new `.ace/*` structure and `AceTools` ge
   > Assert: All internal links work
   > Command: grep -o '\[.*\](.*)' README.md | grep -v http
 
-- [ ] Update tools documentation:
+- [x] Update tools documentation:
   - .ace/tools/README.md - gem name, module name, installation
   - docs/tools.md - update all command references
   - docs/architecture-tools.md - module structure updates
@@ -72,7 +72,7 @@ Update all documentation to reflect the new `.ace/*` structure and `AceTools` ge
   > Assert: No old module names remain
   > Command: grep -r "CodingAgentTools" docs/
 
-- [ ] Update workflow instructions:
+- [x] Update workflow instructions:
   - Update all path references in .wf.md files
   - Verify embedded templates have correct paths
   - Update command examples
@@ -81,7 +81,7 @@ Update all documentation to reflect the new `.ace/*` structure and `AceTools` ge
   > Assert: All paths exist
   > Command: grep -r "\.ace/" .ace/handbook/workflow-instructions/ | head -20
 
-- [ ] Create MIGRATION.md guide:
+- [x] Create MIGRATION.md guide:
   ```markdown
   # Migration Guide: v0.5.x to v0.6.0
 
@@ -100,18 +100,18 @@ Update all documentation to reflect the new `.ace/*` structure and `AceTools` ge
   ...
   ```
 
-- [ ] Update CHANGELOG.md:
+- [x] Update CHANGELOG.md:
   - Add v0.6.0 release notes
   - Document breaking changes
   - List all migration items
 
 ## Acceptance Criteria
 
-- [ ] All documentation uses new naming/paths
-- [ ] Installation instructions are accurate
-- [ ] Migration guide is comprehensive
-- [ ] No broken internal links
-- [ ] Examples use correct module names
+- [x] All documentation uses new naming/paths
+- [x] Installation instructions are accurate
+- [x] Migration guide is comprehensive
+- [x] No broken internal links
+- [x] Examples use correct module names
 
 ## Out of Scope
 
