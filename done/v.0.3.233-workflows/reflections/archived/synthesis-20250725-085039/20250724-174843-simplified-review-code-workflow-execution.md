@@ -105,7 +105,7 @@
 ## Technical Details
 
 **Workflow Execution Summary:**
-- **Session ID**: `code-dev-handbook---20250724-173954`
+- **Session ID**: `code-.ace/handbook---20250724-173954`
 - **Files Reviewed**: 137 files, 31,927 lines
 - **Model Used**: `google:gemini-2.5-pro` (via `gpro` alias)
 - **Execution Time**: 87.5 seconds

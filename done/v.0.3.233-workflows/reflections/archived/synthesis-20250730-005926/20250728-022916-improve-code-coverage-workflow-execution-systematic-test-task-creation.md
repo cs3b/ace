@@ -27,7 +27,7 @@
 - **Coverage Analysis Tool Effectiveness**: The coverage-analyze tool provided excellent structured data for systematic task creation, with clear priority identification
 - **ATOM Architecture Benefits**: The structured architecture made it easy to categorize and prioritize test tasks across different component types
 - **Quality Over Quantity Principle**: The workflow's emphasis on meaningful test scenarios rather than coverage percentages aligns well with software quality best practices
-- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across dev-handbook, dev-taskflow, and .ace/tools repositories
+- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across .ace/handbook, .ace/taskflow, and .ace/tools repositories
 - **Test Task Template Structure**: Learned effective patterns for documenting test improvement tasks with specific line ranges, edge cases, and integration requirements
 
 ## Conversation Analysis

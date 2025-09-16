@@ -15,7 +15,7 @@
 
 ## What Could Be Improved
 
-- **Initial Path Navigation**: Multiple directory navigation attempts when working across submodules (dev-handbook, dev-tools, .ace/taskflow)
+- **Initial Path Navigation**: Multiple directory navigation attempts when working across submodules (.ace/handbook, .ace/tools, .ace/taskflow)
 - **Test Execution**: Build command failed initially, had to fall back to running tests directly
 - **File Reading Before Writing**: Attempted to edit synthesis_orchestrator.rb before reading it first
 - **Directory Context**: Lost track of current directory when switching between submodules
@@ -33,7 +33,7 @@
 
 #### High Impact Issues
 
-- **Cross-Submodule Coordination**: Working across three submodules (dev-handbook, dev-tools, .ace/taskflow)
+- **Cross-Submodule Coordination**: Working across three submodules (.ace/handbook, .ace/tools, .ace/taskflow)
   - Occurrences: 5+ times during implementation
   - Impact: Required careful path management and multiple directory switches
   - Root Cause: Complex project structure with integrated submodules

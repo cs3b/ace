@@ -16,7 +16,7 @@ dependencies: [013]
 - **Output**: MCP-compliant responses with tool results, resources, and prompts
 
 ### Expected Behavior
-The MCP proxy acts as an intelligent gateway between MCP clients and our dev-tools, providing security, cost optimization, and context enhancement. It selectively exposes tools, automatically injects project context, routes requests to appropriate models, and maintains compatibility with all MCP clients.
+The MCP proxy acts as an intelligent gateway between MCP clients and our .ace/tools, providing security, cost optimization, and context enhancement. It selectively exposes tools, automatically injects project context, routes requests to appropriate models, and maintains compatibility with all MCP clients.
 
 ### Interface Contract
 

@@ -8,7 +8,7 @@ subject: diff from sha till HEAD on following repos (commads for context: git -C
 
 context:
 
-- presets: project, dev-handbook, .ace/tools
+- presets: project, .ace/handbook, .ace/tools
 
 - context for system prompt:
     .ace/handbook/templates/review-modules/focus/architecture/atom.md

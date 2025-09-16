@@ -1,7 +1,7 @@
 # Reflection: Code Review Workflow Implementation and Directory Structure Correction
 
 **Date**: 2025-07-09
-**Context**: Implementing code review workflow for .ace/tools ef03d04..HEAD using Google Pro reviewer, following @dev-handbook/workflow-instructions/review-code.wf.md, with significant directory structure corrections
+**Context**: Implementing code review workflow for .ace/tools ef03d04..HEAD using Google Pro reviewer, following @.ace/handbook/workflow-instructions/review-code.wf.md, with significant directory structure corrections
 **Author**: Claude Code Assistant
 **Type**: Conversation Analysis
 
@@ -27,7 +27,7 @@
 ## Key Learnings
 
 - Code review workflow requires precise directory structure understanding
-- .ace/taskflow should be at same level as dev-tools, not nested within it
+- .ace/taskflow should be at same level as .ace/tools, not nested within it
 - Session directory naming follows specific timestamp patterns
 - Large prompts (307K words) require explicit timeout configuration
 - Google Gemini 2.5 Pro can handle substantial code review tasks effectively

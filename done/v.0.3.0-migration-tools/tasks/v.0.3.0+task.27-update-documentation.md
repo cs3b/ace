@@ -79,7 +79,7 @@ Update all project documentation to remove old tool references (bin/tn, bin/tr, 
   > Type: Pre-condition Check
   > Assert: All old tool references found and categorized by priority
   > Command: grep -r "bin/tn\|bin/tr\|bin/tal\|bin/tnid\|bin/rc" .ace/handbook --include="*.md" | wc -l
-  > RESULT: 80 references in dev-handbook, 3 in CLAUDE.md
+  > RESULT: 80 references in .ace/handbook, 3 in CLAUDE.md
 * [x] Create comprehensive tool mapping prioritizing higher-order tools over primitive commands
   > TEST: Higher-Order Tool Mapping
   > Type: Pre-condition Check

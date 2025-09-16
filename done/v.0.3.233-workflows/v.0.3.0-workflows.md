@@ -36,7 +36,7 @@ Raw user input:
 > We will be improving the workflows, make then independent, so it will be much easier to integrate them into coding agents like: claude code / windsurf / zed / ...
 
 Updated requirements:
-> To update all workflow instructions @dev-handbook/workflow-instructions/ (21 files total)
+> To update all workflow instructions @.ace/handbook/workflow-instructions/ (21 files total)
 >
 > - ensure they never call / reference other workflow instruction from itself
 > - every workflow instruction have high level plan (7-step execution pattern)

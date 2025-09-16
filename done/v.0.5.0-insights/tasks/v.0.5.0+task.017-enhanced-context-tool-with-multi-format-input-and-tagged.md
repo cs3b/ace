@@ -91,8 +91,8 @@ Enable the context tool to seamlessly work with multiple input formats using una
 - `lib/coding_agent_tools/molecules/context/markdown_yaml_extractor.rb` - Enhanced YAML extraction
 - `lib/coding_agent_tools/molecules/context/document_embedder.rb` - Document embedding functionality
 - `docs/context/project.md` - Project context with `<context-tool-config>` block
-- `docs/context/dev-tools.md` - Dev-tools context with tagged YAML
-- `docs/context/dev-handbook.md` - Handbook context with tagged YAML
+- `docs/context/.ace/tools.md` - Dev-tools context with tagged YAML
+- `docs/context/.ace/handbook.md` - Handbook context with tagged YAML
 - Test files for new molecules
 
 #### Modify

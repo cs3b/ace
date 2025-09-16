@@ -31,9 +31,9 @@ class TestPathUpdateCodemod < Minitest::Test
     content_after = File.read(ruby_file)
 
     # Check that paths were replaced
-    refute_match(/dev-tools\//, content_after, ".ace/tools/ should be replaced")
-    refute_match(/dev-handbook\//, content_after, ".ace/handbook/ should be replaced")
-    refute_match(/dev-taskflow\//, content_after, ".ace/taskflow/ should be replaced")
+    refute_match(/.ace/tools\//, content_after, ".ace/tools/ should be replaced")
+    refute_match(/.ace/handbook\//, content_after, ".ace/handbook/ should be replaced")
+    refute_match(/.ace/taskflow\//, content_after, ".ace/taskflow/ should be replaced")
     refute_match(/dev-local\//, content_after, ".ace/local/ should be replaced")
 
     # Check that replacements are correct
@@ -130,7 +130,7 @@ class TestPathUpdateCodemod < Minitest::Test
 
     # Backup should contain original content
     backup_content = File.read(backup_file)
-    assert_match(/dev-tools\//, backup_content, "Backup should contain original paths")
+    assert_match(/.ace/tools\//, backup_content, "Backup should contain original paths")
   end
 
   def test_statistics
@@ -155,8 +155,8 @@ class TestPathUpdateCodemod < Minitest::Test
       ".ace/handbook/"
       '.ace/taskflow/'
       .ace/local/
-      somedev-tools/shouldnotchange
-      dev-toolsuffix/shouldnotchange
+      some.ace/tools/shouldnotchange
+      .ace/toolsuffix/shouldnotchange
       https://example.com/.ace/tools/
       /absolute/.ace/handbook/path
       ./relative/.ace/taskflow/path
@@ -176,8 +176,8 @@ class TestPathUpdateCodemod < Minitest::Test
     assert_match(/^'\.ace\/taskflow\/'$/, content, "Single quoted path")
 
     # Should not replace these
-    assert_match(/somedev-tools\/shouldnotchange/, content, "Should not replace partial matches")
-    assert_match(/dev-toolsuffix\/shouldnotchange/, content, "Should not replace suffixed matches")
+    assert_match(/some.ace/tools\/shouldnotchange/, content, "Should not replace partial matches")
+    assert_match(/.ace/toolsuffix\/shouldnotchange/, content, "Should not replace suffixed matches")
   end
 end
 

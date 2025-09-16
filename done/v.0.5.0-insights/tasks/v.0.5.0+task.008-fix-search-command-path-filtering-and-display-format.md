@@ -27,7 +27,7 @@ The search command should provide consistent, predictable filtering behavior tha
 # Current broken behavior
 $ cd .ace/handbook/workflow-instructions
 $ search "bin/tnid"
-Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: .ace/taskflow/current/*/tasks/x/*,dev-taskflow/done/**/*]
+Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: .ace/taskflow/current/*/tasks/x/*,.ace/taskflow/done/**/*]
 Found 73 results
   /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/taskflow/done/v.0.2.0-synapse/tasks/v.0.2.0+task.3:2:0: ...
   # ^^ Shows results from excluded paths (filters not working)
@@ -36,7 +36,7 @@ Found 73 results
 # Expected behavior after fix
 $ cd .ace/handbook/workflow-instructions  
 $ search "bin/tnid"
-Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: .ace/taskflow/current/*/tasks/x/*,dev-taskflow/done/**/*]
+Search context: mode: content | pattern: "bin/tnid" | filters: [exclude: .ace/taskflow/current/*/tasks/x/*,.ace/taskflow/done/**/*]
 Found 11 results
   ./CHANGELOG.md:663:0: ...
   ./.ace/taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md:5:0: ...

@@ -9,7 +9,7 @@
 
 - **Systematic Test Coverage Approach**: Successfully completed multiple test coverage improvement tasks (Tasks 206-210) with comprehensive test scenarios
 - **Automated Workflow Integration**: Effective use of create-reflection-note workflow instruction following proper project patterns
-- **Multi-Repository Coordination**: Clean handling of changes across dev-tools, dev-taskflow, and main repositories with appropriate git operations
+- **Multi-Repository Coordination**: Clean handling of changes across .ace/tools, .ace/taskflow, and main repositories with appropriate git operations
 - **Template-Based Development**: Proper use of embedded templates and workflow instructions for consistent output
 
 ## What Could Be Improved
@@ -22,7 +22,7 @@
 
 - **Test Coverage Strategy**: Systematic approach to improving test coverage across CLI commands and organisms yields consistent results
 - **Workflow Instruction Value**: Following structured workflow instructions ensures comprehensive coverage of reflection process
-- **Multi-Repository Development**: The project's 4-repository structure (main, dev-handbook, dev-taskflow, .ace/tools) requires careful coordination
+- **Multi-Repository Development**: The project's 4-repository structure (main, .ace/handbook, .ace/taskflow, .ace/tools) requires careful coordination
 - **Template System**: Project uses embedded templates in workflow instructions for consistency
 
 ## Conversation Analysis
@@ -108,8 +108,8 @@
 - create-path: File creation with timestamp
 
 **Repositories Affected:**
-- dev-taskflow: New reflection file created
-- dev-tools: Ongoing test coverage work (coverage_analyzer.rb, related specs)
+- .ace/taskflow: New reflection file created
+- .ace/tools: Ongoing test coverage work (coverage_analyzer.rb, related specs)
 
 ## Additional Context
 

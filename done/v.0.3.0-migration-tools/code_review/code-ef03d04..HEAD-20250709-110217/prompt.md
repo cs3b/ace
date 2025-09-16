@@ -31215,7 +31215,7 @@ index 0000000..aab1a20
 +* **Ruby** >= 3.2.0
 +* **Bundler** for dependency management
 +* **Git** CLI for repository operations
-+* **dev-handbook** submodule for task management utilities
++* **.ace/handbook** submodule for task management utilities
 +
 +### Environment Setup   {#environment-setup}
 +
@@ -35025,7 +35025,7 @@ index 0000000..8754a46
 +            file_path = file_data["path"]
 +
 +            # Adjust path to be relative to project root (not .ace/tools)
-+            # Since we're running from dev-tools, prepend ".ace/tools/" to make it project-relative
++            # Since we're running from .ace/tools, prepend ".ace/tools/" to make it project-relative
 +            adjusted_path = File.join(".ace/tools", file_path)
 +
 +            file_data["offenses"].each do |offense|

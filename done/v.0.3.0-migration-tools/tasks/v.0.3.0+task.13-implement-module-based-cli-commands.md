@@ -237,5 +237,5 @@ Implement intelligent navigation CLI commands that provide sophisticated path re
 * Security considerations: Project root sandboxing prevents path traversal outside project
 * Performance optimization: fzf integration for fast fuzzy search with graceful fallback
 * Configuration approach: Repository-specific .coding-agent/ configs (tree.yml, path.yml)
-* Multi-repository scanning: All 4 repos (tools-meta, dev-tools, dev-taskflow, .ace/handbook)
+* Multi-repository scanning: All 4 repos (tools-meta, .ace/tools, .ace/taskflow, .ace/handbook)
 * XDG compliance: Follow existing patterns from XDGDirectoryResolver atom

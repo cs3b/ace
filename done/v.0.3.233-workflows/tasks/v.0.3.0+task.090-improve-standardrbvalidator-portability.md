@@ -67,7 +67,7 @@ Remove hardcoded context dependencies from StandardRbValidator to make it a trul
   > Command: cd .ace/tools && grep -n "Dir.chdir\|.ace/tools" lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb
 - [x] Understand why the path manipulation was needed
   - Dir.chdir was used to change to .ace/tools directory to run standardrb from the correct location with proper bundler context
-  - Path manipulation was needed to adjust paths from dev-tools-relative back to project-relative for reporting
+  - Path manipulation was needed to adjust paths from .ace/tools-relative back to project-relative for reporting
 - [x] Plan the refactoring approach
   - Use Open3.capture3 with :chdir option instead of Dir.chdir
   - Add optional project_root parameter with ProjectRootDetector fallback
@@ -133,6 +133,6 @@ Remove hardcoded context dependencies from StandardRbValidator to make it a trul
 
 ## References
 
-- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 115-120)
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-.ace/tools-lib-20250724-184702/cr-report-gpro.md (lines 115-120)
 - Ruby Open3 documentation for :chdir option
 - Best practices for stateless, reusable components

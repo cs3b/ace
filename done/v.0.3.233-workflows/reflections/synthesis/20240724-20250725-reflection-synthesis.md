@@ -1142,9 +1142,9 @@ Claude Code AI Assistant
 * **ADR Reference**: ADR-002 XML Template Embedding Architecture
 * **Verification Command**: `handbook sync-templates --dry-run`
 * **Commits**:
-  * dev-handbook: feat(task-34): refactor commit workflow templates to
+  * .ace/handbook: feat(task-34): refactor commit workflow templates to
 comply with ADR-002
-  * dev-taskflow: feat(task-34): complete commit workflow ADR-002
+  * .ace/taskflow: feat(task-34): complete commit workflow ADR-002
 compliance refactoring
   * meta: feat(task-34): complete ADR-002 commit workflow template
 refactoring
@@ -2600,7 +2600,7 @@ obvious
 ## Additional Context
 
 * Task completed in single session with all acceptance criteria met
-* All commits made across 3 repositories (main, dev-taskflow, .ace/tools)
+* All commits made across 3 repositories (main, .ace/taskflow, .ace/tools)
 * New command fully replaces deprecated bin/analyze-doc-dependencies
 * Enhanced capabilities include better statistics and configurable
   analysis scope
@@ -2929,7 +2929,7 @@ specific tools
 
 **Workflow Execution Summary:**
 
-* **Session ID**: `code-dev-handbook---20250724-173954`
+* **Session ID**: `code-.ace/handbook---20250724-173954`
 * **Files Reviewed**: 137 files, 31,927 lines
 * **Model Used**: `google:gemini-2.5-pro` (via `gpro` alias)
 * **Execution Time**: 87.5 seconds
@@ -3416,7 +3416,7 @@ security concerns and long-term maintainability.
 ## Additional Context
 
 * Original code review:
-  .ace/taskflow/current/v.0.3.0-workflows/code\_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
+  .ace/taskflow/current/v.0.3.0-workflows/code\_review/code-.ace/tools-lib-20250724-184702/cr-report-gpro.md
 * Tasks created: v.0.3.0+task.85 through v.0.3.0+task.91
 * One task (85) was found to be already completed during the creation
   process
@@ -4734,7 +4734,7 @@ Claude Code Assistant **Type**: Conversation Analysis
 * **Thorough testing approach**: Updated all 28 SessionNameBuilder tests
   to match new timestamp-first format, ensuring comprehensive coverage
 * **Multi-repository coordination**: Successfully committed changes
-  across multiple repositories (main, dev-tools, .ace/taskflow) with
+  across multiple repositories (main, .ace/tools, .ace/taskflow) with
   appropriate context
 * **Bug discovery through real usage**: The git-commit tool bug was
   discovered organically through actual usage, demonstrating the value
@@ -4921,7 +4921,7 @@ fundamental flaw in the file sorting logic.
 * **Original Task**: Successfully completed v.0.3.0+task.96 for
   code-review session directory format
 * **Repository Impact**: Changes spanned 3 repositories (main,
-  dev-tools, .ace/taskflow) and were successfully committed
+  .ace/tools, .ace/taskflow) and were successfully committed
 * **Integration Success**: Nav-path integration working correctly,
   generating paths like `20250725-005852-docs-handbook-workflows`
 

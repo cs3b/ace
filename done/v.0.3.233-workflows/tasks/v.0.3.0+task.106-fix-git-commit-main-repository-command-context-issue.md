@@ -98,7 +98,7 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
 
 ## Acceptance Criteria
 
-- [x] AC 1: All repositories (main, dev-tools, dev-taskflow, .ace/handbook) use consistent `git -C <full_path>` command format
+- [x] AC 1: All repositories (main, .ace/tools, .ace/taskflow, .ace/handbook) use consistent `git -C <full_path>` command format
 - [x] AC 2: git-commit commands work reliably regardless of current working directory
 - [x] AC 3: No more false "Partial success" error messages when commits actually succeed
 - [x] AC 4: The original failing command that triggered this investigation now works without errors
@@ -122,7 +122,7 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
 
 ### Original Error Context
 - **Error observed**: `[main] Error: Git command failed: git commit -m test(models): add comprehensive unit tests for all model classes`
-- **Symptom**: "Partial success: Committed in repositories: dev-taskflow, .ace/tools" (false error)
+- **Symptom**: "Partial success: Committed in repositories: .ace/taskflow, .ace/tools" (false error)
 - **Actual result**: Commits succeeded in all repositories including main
 
 ### Related Tasks

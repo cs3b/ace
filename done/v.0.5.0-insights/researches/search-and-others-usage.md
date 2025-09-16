@@ -23,7 +23,7 @@ search "bin/tnid"
 search "bin/tnid" --search-root /Users/michalczyz/Projects/CodingAgent/handbook-meta
 search "bin/tnid" --search-root
 search "bin/tnid" --search-root ../../
-search "bin/tn" --exclude ".ace/taskflow/done/**/*,dev-taskflow/current/*/tasks/*"
+search "bin/tn" --exclude ".ace/taskflow/done/**/*,.ace/taskflow/current/*/tasks/*"
 search "bin/tn" -t auto
 search "bin/tn" --file --content
 search "bin/tn" --hybrid
@@ -124,8 +124,8 @@ grep -C 5 "Error: undefined"  ../tmp/test.output.txt
 bin/test --format documentation | grep -C 7 "Error: undefined method"
 bin/test --format documentation | grep -C "Error: undefined method"
 bin/test | grep atoms
-cat .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-handbook---20250724-173954/prompt.md | grep "document path='"
-cat .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-handbook---20250724-173954/input.xml | grep "document path='"
+cat .ace/taskflow/current/v.0.3.0-workflows/code_review/code-.ace/handbook---20250724-173954/prompt.md | grep "document path='"
+cat .ace/taskflow/current/v.0.3.0-workflows/code_review/code-.ace/handbook---20250724-173954/input.xml | grep "document path='"
 ps aux | grep firebase
 ps aux | grep 9323
 history | grep worktree

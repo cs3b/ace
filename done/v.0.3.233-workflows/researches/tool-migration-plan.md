@@ -485,7 +485,7 @@ exec(File.expand_path('../.ace/tools/exe/coding_agent_tools', __dir__), 'task', 
 | tnid | `version` | `version` | ✅ Identical |
 | rc | No arguments | No arguments | ✅ Identical |
 | tree | tree options | tree options | ✅ Identical |
-| gl | `--include-dev-handbook` etc | same options | ✅ Identical |
+| gl | `--include-.ace/handbook` etc | same options | ✅ Identical |
 | lint | No arguments | No arguments | ✅ Enhanced |
 | markdown-sync-embedded-documents | `--dry-run --verbose` etc | same options | ✅ Identical |
 

@@ -91,7 +91,7 @@ Update all task management binstubs to use the new gem commands while maintainin
   > TEST: RC Compatibility
   > Type: Integration Test
   > Assert: bin/rc returns release path
-  > Command: bin/rc | grep -E "dev-taskflow|backlog"
+  > Command: bin/rc | grep -E ".ace/taskflow|backlog"
 - [ ] Test all binstubs with various arguments
 - [ ] Verify output format remains identical
 

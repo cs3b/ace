@@ -69,6 +69,6 @@ ls -la /tmp/test-project/.ace/taskflow/backlog/v.0.1.0-test-foundation/
 ## References
 
 - Commits: 
-  - dev-tools: `a516787` - feat(release): update release overview to README and improve content
+  - .ace/tools: `a516787` - feat(release): update release overview to README and improve content
 - Related feedback: User reported missing README.md in v.0.1.0-foundation release directories
 - Template source: `.ace/handbook/templates/release-management/release-overview.template.md`

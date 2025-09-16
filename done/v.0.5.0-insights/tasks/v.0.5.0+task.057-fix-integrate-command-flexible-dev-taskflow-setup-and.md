@@ -273,7 +273,7 @@ Implement flexible .ace/taskflow setup that works as either a Git submodule or r
 ## Out of Scope
 
 - ❌ Changing the overall integration architecture
-- ❌ Modifying other submodules (dev-handbook, .ace/tools) handling
+- ❌ Modifying other submodules (.ace/handbook, .ace/tools) handling
 - ❌ Creating new command-line options
 - ❌ Changing template content or structure
 

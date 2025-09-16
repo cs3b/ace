@@ -11,7 +11,7 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: User specifies multiple presets in context YAML: `'presets: [project, dev-tools, .ace/handbook]'`
+- **Input**: User specifies multiple presets in context YAML: `'presets: [project, .ace/tools, .ace/handbook]'`
 - **Process**: System loads and combines context from all specified presets
 - **Output**: Complete context includes files from all three presets, plus any additional files specified
 
@@ -22,7 +22,7 @@ When users specify multiple context presets in YAML format, the system should lo
 ```bash
 # CLI Interface - Multiple presets
 code-review \
-  --context 'presets: [project, dev-tools, .ace/handbook]' \
+  --context 'presets: [project, .ace/tools, .ace/handbook]' \
   --subject '...' \
   --auto-execute
 # Expected: Context includes files from all three presets
@@ -112,7 +112,7 @@ Ensure comprehensive context loading from multiple sources, enabling thorough co
 
 ### Root Cause Analysis
 
-The context CLI command already supports multiple presets via comma-separated values (e.g., `--preset project,dev-tools`). The issue is in the ContextIntegrator class which doesn't recognize the `presets` key in YAML format and doesn't know how to convert it to the proper CLI format.
+The context CLI command already supports multiple presets via comma-separated values (e.g., `--preset project,.ace/tools`). The issue is in the ContextIntegrator class which doesn't recognize the `presets` key in YAML format and doesn't know how to convert it to the proper CLI format.
 
 ### Technical Approach
 

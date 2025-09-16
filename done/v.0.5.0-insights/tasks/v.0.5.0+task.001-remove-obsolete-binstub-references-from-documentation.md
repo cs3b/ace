@@ -79,10 +79,10 @@ Remove all obsolete binstub references from documentation to ensure users have a
 ### Audit Results (CORRECTED)
 
 Comprehensive search using ripgrep reveals **extensive binstub references still present**:
-- **dev-handbook/**: **200+ references found** requiring updates
-- **dev-tools/**: No binstub references found (already clean)
+- **.ace/handbook/**: **200+ references found** requiring updates
+- **.ace/tools/**: No binstub references found (already clean)
 - **docs/**: No binstub references found (already clean)
-- **dev-taskflow/**: Only historical references in done/ folders and idea files
+- **.ace/taskflow/**: Only historical references in done/ folders and idea files
 
 ### Current State Analysis
 
@@ -246,7 +246,7 @@ See `.ace/taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md`
 
 ### What Was Done
 1. **Used new search tool** to comprehensively find all binstub references
-2. **Updated 40+ files** across dev-handbook:
+2. **Updated 40+ files** across .ace/handbook:
    - AI Agent Integration Guide
    - Project Management Guide  
    - Task Definition Guide

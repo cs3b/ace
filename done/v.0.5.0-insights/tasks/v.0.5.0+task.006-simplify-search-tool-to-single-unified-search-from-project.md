@@ -50,7 +50,7 @@ search "TODO" --include .ace/taskflow
 # Output: Results only from paths matching .ace/taskflow
 
 # Search with multiple includes
-search "TODO" --include "dev-tools,dev-handbook"
+search "TODO" --include ".ace/tools,.ace/handbook"
 # Output: Results from both .ace/tools and .ace/handbook
 
 # Exclude specific paths
@@ -59,7 +59,7 @@ search "TODO" --exclude ".ace/taskflow/done/**/*"
 
 # Combine include and exclude
 search "TODO" --include .ace/taskflow --exclude "*/done/**"
-# Output: Results from dev-taskflow, excluding done directories
+# Output: Results from .ace/taskflow, excluding done directories
 ```
 
 **Error Handling:**
@@ -280,7 +280,7 @@ Simplify the search tool implementation and user experience by eliminating dupli
   > TEST: CLI output format
   > Type: Integration test
   > Assert: No repository grouping in output
-  > Command: `./exe/search "test" | grep -c "dev-tools:"`
+  > Command: `./exe/search "test" | grep -c ".ace/tools:"`
 
 - [ ] **Step 7: Verify path filtering**
   - Test --include with directory patterns

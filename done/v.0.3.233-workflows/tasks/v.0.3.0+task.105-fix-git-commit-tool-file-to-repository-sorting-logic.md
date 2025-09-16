@@ -219,9 +219,9 @@ git -C /Users/michalczyz/Projects/CodingAgent/handbook-meta/.ace/tools add .codi
 
 This project uses 4 repositories:
 - **Main repo**: Files without prefixes (like `.coding-agent/path.yml`)
-- **dev-tools/**: Ruby gem submodule  
-- **dev-taskflow/**: Task management submodule
-- **dev-handbook/**: Documentation submodule
+- **.ace/tools/**: Ruby gem submodule  
+- **.ace/taskflow/**: Task management submodule
+- **.ace/handbook/**: Documentation submodule
 
 ### Expected Behavior
 

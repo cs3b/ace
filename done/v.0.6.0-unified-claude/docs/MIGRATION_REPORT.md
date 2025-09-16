@@ -1,7 +1,7 @@
 # Command Migration Report - 2025-08-05
 
 ## Summary
-- Commands migrated in dev-handbook: 0 (already migrated)
+- Commands migrated in .ace/handbook: 0 (already migrated)
 - Commands migrated in .claude: 32
 - Commands skipped (already migrated): 0
 

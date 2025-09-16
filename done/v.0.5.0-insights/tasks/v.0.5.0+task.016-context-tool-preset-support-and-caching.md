@@ -39,8 +39,8 @@ Saving to: docs/context/cached/project.md
 $ context --list-presets
 Available presets:
   project      - Main project context (docs/context/cached/project.md)
-  .ace/tools    - Dev-tools submodule context (docs/context/cached/dev-tools.md)
-  .ace/handbook - Dev-handbook submodule context (docs/context/cached/dev-handbook.md)
+  .ace/tools    - Dev-tools submodule context (docs/context/cached/.ace/tools.md)
+  .ace/handbook - Dev-handbook submodule context (docs/context/cached/.ace/handbook.md)
 
 # Large file handling (automatic)
 $ context --preset large-project
@@ -135,7 +135,7 @@ Enable efficient project context loading through named presets that eliminate re
 ## Technical Approach
 
 ### Architecture Pattern
-Following the ATOM architecture pattern in dev-tools:
+Following the ATOM architecture pattern in .ace/tools:
 - **Atoms**: Configuration loader for `.coding-agent/context.yml`
 - **Molecules**: Preset manager, file writer with chunking support
 - **Organism**: Enhanced ContextLoader with preset capabilities
@@ -340,7 +340,7 @@ Integration with existing patterns:
 
 - [x] Step 7: Create example configuration
   - Add .coding-agent/context.yml to project root
-  - Define presets for project, dev-tools, .ace/handbook
+  - Define presets for project, .ace/tools, .ace/handbook
   - Document configuration format
   > TEST: Example Configuration
   > Type: Manual Test

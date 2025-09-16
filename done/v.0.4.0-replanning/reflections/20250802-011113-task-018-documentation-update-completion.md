@@ -28,11 +28,11 @@
 
 ### Files Updated
 1. **docs/tools.md**: Removed `task-new` flag from nav-path documentation
-2. **dev-tools/docs/tools.md**: 
+2. **.ace/tools/docs/tools.md**: 
    - Updated AI Agent persona table to show task-manager instead of create-path
    - Removed `task-new` type from create-path documentation
    - Removed `task-new` flag from nav-path documentation
-3. **dev-handbook/.meta/wfi/install-dotfiles.wf.md**: Updated validation example from `create-path task-new` to `task-manager create`
+3. **.ace/handbook/.meta/wfi/install-dotfiles.wf.md**: Updated validation example from `create-path task-new` to `task-manager create`
 
 ### Verification Results
 - Final grep searches confirmed zero references to `create-path task-new` in active documentation

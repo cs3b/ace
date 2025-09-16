@@ -116,6 +116,6 @@ Replace the current implementation of CommitMessageGenerator that shells out to 
 
 ## References
 
-- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 121-125)
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-.ace/tools-lib-20250724-184702/cr-report-gpro.md (lines 121-125)
 - Ruby gem best practices regarding internal method calls vs shelling out
 - Performance considerations for subprocess creation

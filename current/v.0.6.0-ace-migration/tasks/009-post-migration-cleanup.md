@@ -88,7 +88,7 @@ Clean up temporary files, remove old references, archive migration scripts, and 
   ! grep -r "CodingAgentTools" . --exclude-dir=.git --exclude-dir=backups
 
   # No old paths
-  ! grep -r "dev-tools\|dev-handbook\|.ace/taskflow" . --exclude-dir=.git
+  ! grep -r ".ace/tools\|.ace/handbook\|.ace/taskflow" . --exclude-dir=.git
 
   # New structure exists
   [ -d ".ace/tools/lib/ace_tools" ] && echo "✓ New structure verified"

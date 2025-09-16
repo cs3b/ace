@@ -145,7 +145,7 @@ class PathUpdateCodemod
     escaped_old = Regexp.escape(old_path)
 
     # Pattern 1: Simple path reference with word boundaries or common delimiters
-    # This prevents matching "somedev-tools/" when looking for ".ace/tools/"
+    # This prevents matching "some.ace/tools/" when looking for ".ace/tools/"
     # Use both lookbehind and lookahead to ensure proper word boundaries
     if old_path.end_with?('/')
       # For paths with trailing slash, ensure the slash is followed by appropriate characters

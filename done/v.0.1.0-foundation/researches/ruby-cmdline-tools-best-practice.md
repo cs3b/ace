@@ -6,7 +6,7 @@ Creating a Ruby command-line (CLI) tool involves several steps, from structuring
 
 Use Bundler to generate a gem scaffold:
 
-bundle gem my_cli_tool --dev-tools/exe
+bundle gem my_cli_tool --.ace/tools/exe
 cd my_cli_tool
 
 This creates a directory structure like:
@@ -20,7 +20,7 @@ my_cli_tool/
 │       └── version.rb
 ├── my_cli_tool.gemspec
 
-✅ The --dev-tools/exe flag creates an executable in bin/.
+✅ The --.ace/tools/exe flag creates an executable in bin/.
 
 ⸻
 

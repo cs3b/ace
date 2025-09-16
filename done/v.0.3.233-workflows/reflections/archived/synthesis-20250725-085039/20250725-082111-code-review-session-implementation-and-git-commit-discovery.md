@@ -10,7 +10,7 @@
 - **Comprehensive task execution**: Successfully followed the work-on-task workflow systematically, completing all planned steps including reading project context, selecting task, validating structure, and executing the implementation plan
 - **Effective nav-path integration**: Successfully added new `code_review_new` path type to the configuration and PathResolver with proper CLI command support
 - **Thorough testing approach**: Updated all 28 SessionNameBuilder tests to match new timestamp-first format, ensuring comprehensive coverage
-- **Multi-repository coordination**: Successfully committed changes across multiple repositories (main, dev-tools, .ace/taskflow) with appropriate context
+- **Multi-repository coordination**: Successfully committed changes across multiple repositories (main, .ace/tools, .ace/taskflow) with appropriate context
 - **Bug discovery through real usage**: The git-commit tool bug was discovered organically through actual usage, demonstrating the value of end-to-end testing
 
 ## What Could Be Improved
@@ -136,5 +136,5 @@ The tool incorrectly tried to add the main repo file `.coding-agent/path.yml` to
 
 - **Related Task**: Created task v.0.3.0+task.105 to fix the git-commit tool file sorting issue
 - **Original Task**: Successfully completed v.0.3.0+task.96 for code-review session directory format
-- **Repository Impact**: Changes spanned 3 repositories (main, dev-tools, .ace/taskflow) and were successfully committed
+- **Repository Impact**: Changes spanned 3 repositories (main, .ace/tools, .ace/taskflow) and were successfully committed
 - **Integration Success**: Nav-path integration working correctly, generating paths like `20250725-005852-docs-handbook-workflows`

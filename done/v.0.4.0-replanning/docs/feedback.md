@@ -10,7 +10,7 @@ create list where it knowst that
   ```
   - [ ] work on task v.0.4.0+task.7 - Add Draft Status Support to Existing Tools
 
-    read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.md
+    read whole file and follow @.ace/handbook/workflow-instructions/work-on-task.wf.md
 
     task to work on: .ace/taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.007-add-draft-status-support.md
 
@@ -20,7 +20,7 @@ create list where it knowst that
 
   - [ ] create reflection note for current session
 
-    read whole file and follow @dev-handbook/workflow-instructions/create-reflection-note.wf.md
+    read whole file and follow @.ace/handbook/workflow-instructions/create-reflection-note.wf.md
 
     run shell cmd: git-commmit $path-to-created-reflection-file
 

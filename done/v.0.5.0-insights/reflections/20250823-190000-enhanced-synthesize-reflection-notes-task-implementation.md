@@ -49,12 +49,12 @@
 ## Technical Details
 
 ### Files Modified
-1. **dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md**
+1. **.ace/handbook/workflow-instructions/synthesize-reflection-notes.wf.md**
    - Enhanced workflow description with analytics capabilities
    - Updated success criteria and benefits documentation
    - Maintained existing command structure while highlighting new features
 
-2. **dev-handbook/templates/release-reflections/synthsize.system.prompt.md**
+2. **.ace/handbook/templates/release-reflections/synthsize.system.prompt.md**
    - Added 8 analytical tasks beyond basic synthesis
    - Introduced automation opportunity ranking methodology
    - Added tool proposal consolidation and cookbook pattern identification
@@ -62,13 +62,13 @@
    - Enhanced quality assurance checklist with analytical requirements
 
 ### Files Created
-1. **dev-handbook/templates/release-reflections/synthesis-analytics.template.md**
+1. **.ace/handbook/templates/release-reflections/synthesis-analytics.template.md**
    - Comprehensive analytics framework with ROI scoring methodology
    - Tool proposal consolidation templates with priority ranking
    - Cookbook pattern evaluation criteria and documentation structures
    - Impact vs effort assessment frameworks
 
-2. **dev-handbook/templates/release-reflections/priority-matrix.template.md**
+2. **.ace/handbook/templates/release-reflections/priority-matrix.template.md**
    - Structured priority assessment framework with scoring system
    - Impact vs effort matrix with clear quadrant definitions
    - Implementation timeline templates organized by priority bands

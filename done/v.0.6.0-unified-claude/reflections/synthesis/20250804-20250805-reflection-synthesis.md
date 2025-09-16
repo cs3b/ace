@@ -1514,7 +1514,7 @@ The target flat structure would move all 29 command files directly into `.claude
 
 - Could have used a more targeted search pattern initially to find migration references
 - The task estimate (1h) might be overly conservative for such a simple cleanup task
-- Could have checked for references in other submodules (dev-tools, .ace/taskflow)
+- Could have checked for references in other submodules (.ace/tools, .ace/taskflow)
 
 ## Key Learnings
 
@@ -4405,7 +4405,7 @@ This section appears within the "Individual Workflow Reference" section, creatin
 - **Documentation Structure Matters**: Having clear organization with separate directories for custom vs generated commands makes the system more maintainable
 - **Migration Guides Are Essential**: When deprecating old systems, a clear migration guide with command mapping is crucial for user adoption
 - **Comprehensive Examples Help**: Including 2-3 examples per command subcommand provides better user understanding than minimal documentation
-- **Cross-Module Documentation**: Documentation spanning multiple submodules (dev-handbook, .ace/tools) requires careful cross-referencing
+- **Cross-Module Documentation**: Documentation spanning multiple submodules (.ace/handbook, .ace/tools) requires careful cross-referencing
 
 ## Conversation Analysis
 

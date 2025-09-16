@@ -111,6 +111,6 @@ Replace the custom `escape_argument` method in ShellCommandExecutor with the mor
 
 ## References
 
-- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md (lines 133-138)
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-.ace/tools-lib-20250724-184702/cr-report-gpro.md (lines 133-138)
 - Ruby Shellwords documentation
 - Shell command injection prevention best practices

@@ -63,7 +63,7 @@ coding-agent-tools integrate claude [OPTIONS]
 
 📝 Next steps:
   1. Complete PRD.md with project requirements
-  2. Ask Claude: "Read and follow @dev-handbook/workflow-instructions/initialize-project-structure.wf.md"
+  2. Ask Claude: "Read and follow @.ace/handbook/workflow-instructions/initialize-project-structure.wf.md"
   3. Or run: task-manager next
 
 # Note: initialize-project-structure remains a workflow, NOT a Claude command

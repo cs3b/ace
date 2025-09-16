@@ -67,7 +67,7 @@
 - ✅ Single preset: `--context "project"` (73KB context)
 - ✅ Multi-preset: `--context 'presets: [project, .ace/tools]'` (133KB context)
 - ✅ Mixed: `--context 'presets: [project] files: [CLAUDE.md]'` (76KB context)
-- ✅ Three presets: `--context 'presets: [project, dev-tools, .ace/handbook]'`
+- ✅ Three presets: `--context 'presets: [project, .ace/tools, .ace/handbook]'`
 - ✅ All unit tests pass (14 examples, 0 failures)
 
 ## Additional Context

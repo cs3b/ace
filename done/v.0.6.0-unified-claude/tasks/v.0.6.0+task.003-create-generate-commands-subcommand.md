@@ -341,7 +341,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 
       # Match existing ClaudeCommandsInstaller template pattern
       content = <<~CONTENT
-        read whole file and follow @dev-handbook/workflow-instructions/#{workflow}.wf.md
+        read whole file and follow @.ace/handbook/workflow-instructions/#{workflow}.wf.md
 
         read and run @.claude/commands/commit.md
       CONTENT

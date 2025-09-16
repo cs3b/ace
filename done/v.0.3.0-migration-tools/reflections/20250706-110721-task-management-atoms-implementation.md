@@ -127,6 +127,6 @@
 ## Additional Context
 
 - Task: v.0.3.0+task.05 "Implement Core Task Management Atoms"
-- Repository: Multi-repo structure (tools-meta, dev-tools, .ace/taskflow)
+- Repository: Multi-repo structure (tools-meta, .ace/tools, .ace/taskflow)
 - Dependencies: Built on previously implemented ATOM structure (task.04)
 - Integration: Ready for molecule-level composition in future tasks

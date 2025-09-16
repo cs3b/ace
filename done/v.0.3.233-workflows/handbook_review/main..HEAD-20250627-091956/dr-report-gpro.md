@@ -27,7 +27,7 @@
 
 ## Executive Summary
 
-This comprehensive review analyzes a major refactoring of the dev-handbook. The core change is a strategic shift towards **Workflow Independence and Standardization**. The previous model of inter-dependent, chained workflows is being replaced by self-contained, template-driven workflow instructions. This enhances reliability for AI agent execution by ensuring each workflow has all necessary context embedded within it.
+This comprehensive review analyzes a major refactoring of the .ace/handbook. The core change is a strategic shift towards **Workflow Independence and Standardization**. The previous model of inter-dependent, chained workflows is being replaced by self-contained, template-driven workflow instructions. This enhances reliability for AI agent execution by ensuring each workflow has all necessary context embedded within it.
 
 Key impacts include:
 

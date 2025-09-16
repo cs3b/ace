@@ -50,7 +50,7 @@ Report format:
 # Command Migration Report - [Date]
 
 ## Summary
-- Commands migrated in dev-handbook: X
+- Commands migrated in .ace/handbook: X
 - Commands migrated in .claude: Y  
 - Commands skipped (already migrated): Z
 

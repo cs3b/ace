@@ -30,7 +30,7 @@ remaining_work: none
 5. ✅ `git/switch_spec.rb` - Branch switching (alternative to checkout) (19 tests)
 
 ### 📋 Next Session Instructions
-1. **Navigate to dev-tools**: `cd .ace/tools`
+1. **Navigate to .ace/tools**: `cd .ace/tools`
 2. **Follow established patterns**: Use existing git tests as templates (add_spec.rb, commit_spec.rb, etc.)
 3. **Create tests for**: checkout, mv, restore, rm, switch commands
 4. **Test command**: `bundle exec rspec spec/coding_agent_tools/cli/commands/git/ --fail-fast`

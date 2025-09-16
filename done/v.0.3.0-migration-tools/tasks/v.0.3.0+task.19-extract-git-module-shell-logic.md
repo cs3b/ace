@@ -217,7 +217,7 @@ Implement a comprehensive Git module with full CLI command suite that provides m
 * [ ] Each command supports multi-repository operations by default (all repos processed)
 
 **Multi-Repository Concurrent Operations:**
-* [ ] All commands work across submodules automatically (dev-tools, dev-taskflow, .ace/handbook)
+* [ ] All commands work across submodules automatically (.ace/tools, .ace/taskflow, .ace/handbook)
 * [ ] Submodule operations execute concurrently using threads/fibers for performance
 * [ ] Main repository operations wait for submodule synchronization
 * [ ] `git-status` shows unified status for all repositories with clear prefixes by default

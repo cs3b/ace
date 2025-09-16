@@ -141,7 +141,7 @@ Eliminate code duplication between the `task_management` and `taskflow_managemen
 
 ## References
 
-- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-dev-tools-lib-20250724-184702/cr-report-gpro.md
+- Code review report: .ace/taskflow/current/v.0.3.0-workflows/code_review/code-.ace/tools-lib-20250724-184702/cr-report-gpro.md
 - ATOM architecture documentation
 - DRY principle violations identified in review
 

@@ -226,15 +226,15 @@ Consolidate fragmented project integration approach into single unified command 
   - Key components: Component selection, smart merge logic, backup handling
   - Options: --claude, --opencode, --force, --no-backup, --only, --dry-run
 
-- **dev-tools/config/integration.yml**
+- **.ace/tools/config/integration.yml**
   - Purpose: Configuration for submodules and integration types
   - Content: Submodule URLs, integration status, component definitions
   ```yaml
   submodules:
-    dev-handbook:
-      url: https://github.com/org/dev-handbook.git
+    .ace/handbook:
+      url: https://github.com/org/.ace/handbook.git
       branch: main
-    dev-taskflow:
+    .ace/taskflow:
       url: auto  # Uses current repo URL
       branch: main
   integrations:
@@ -251,7 +251,7 @@ Consolidate fragmented project integration approach into single unified command 
   - Changes: Register new integrate command, remove old command registrations
   - Impact: CLI command routing and help system
 
-- **dev-handbook/workflow-instructions/initialize-project-structure.wf.md**
+- **.ace/handbook/workflow-instructions/initialize-project-structure.wf.md**
   - Changes: Update to use new `coding-agent-tools integrate --claude` command
   - Impact: Workflow simplification
 

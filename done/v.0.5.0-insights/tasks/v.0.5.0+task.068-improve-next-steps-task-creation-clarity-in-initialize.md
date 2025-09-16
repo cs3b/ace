@@ -74,6 +74,6 @@ Updated Step 8 to include:
 ## References
 
 - Commits:
-  - dev-handbook: `25068e0` - feat(wfi): add next steps task creation guidance
+  - .ace/handbook: `25068e0` - feat(wfi): add next steps task creation guidance
 - Related feedback: User reported lost next steps task in recent testing
 - Template: `.ace/handbook/templates/task-management/task.next-steps.template.md`
