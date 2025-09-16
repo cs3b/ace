@@ -70,6 +70,6 @@
 - **ADR Reference**: ADR-002 XML Template Embedding Architecture
 - **Verification Command**: `handbook sync-templates --dry-run`
 - **Commits**:
-  - dev-handbook: feat(task-34): refactor commit workflow templates to comply with ADR-002
-  - dev-taskflow: feat(task-34): complete commit workflow ADR-002 compliance refactoring
+  - .ace/handbook: feat(task-34): refactor commit workflow templates to comply with ADR-002
+  - .ace/taskflow: feat(task-34): complete commit workflow ADR-002 compliance refactoring
   - meta: feat(task-34): complete ADR-002 commit workflow template refactoring

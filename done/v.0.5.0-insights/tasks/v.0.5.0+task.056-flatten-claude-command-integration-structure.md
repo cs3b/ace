@@ -127,15 +127,15 @@ Simplify Claude command access for AI agents by eliminating unnecessary director
 ### File Modifications
 
 #### Files to Modify
-1. **dev-tools/lib/coding_agent_tools/cli/commands/integrate.rb**
+1. **.ace/tools/lib/coding_agent_tools/cli/commands/integrate.rb**
    - Remove code that creates symlinks to `_custom` and `_generated` directories
    - Ensure only individual command files are handled
 
-2. **dev-tools/lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb**
+2. **.ace/tools/lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb**
    - Verify flat installation is working correctly
    - Add conflict reporting when custom overrides generated
 
-3. **dev-tools/lib/coding_agent_tools/organisms/command_installer.rb**
+3. **.ace/tools/lib/coding_agent_tools/organisms/command_installer.rb**
    - Add logic to detect and report conflicts
    - Ensure custom commands take precedence
 

@@ -10,7 +10,7 @@
 - **Successful API Compatibility**: Implemented complete argument support (`tagname` and `commit`) to keep git-tag in sync with native git tag API
 - **Comprehensive Test Coverage**: Added 19 test cases covering all argument combinations and error scenarios
 - **Documentation Updates**: Updated tools.md with clear argument documentation and examples
-- **Multi-Repository Functionality**: Verified command works across all 4 repositories (main, dev-handbook, dev-taskflow, .ace/tools)
+- **Multi-Repository Functionality**: Verified command works across all 4 repositories (main, .ace/handbook, .ace/taskflow, .ace/tools)
 - **Clean Architecture**: Followed existing patterns from git-status and other commands for consistency
 - **Systematic Problem Solving**: Methodically identified and fixed fundamental architectural issues
 

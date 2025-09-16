@@ -78,5 +78,5 @@ git-commit --intention "Move idea file to current release after task $TASK_NUM c
 - Task ID: v.0.4.0+task.014
 - Files Modified: .ace/handbook/workflow-instructions/draft-task.wf.md
 - Test Files: Created and successfully moved test idea file
-- Repository Impact: Enhanced workflow in dev-handbook, organized idea file in .ace/taskflow
+- Repository Impact: Enhanced workflow in .ace/handbook, organized idea file in .ace/taskflow
 - Integration Pattern: Workflow-level enhancement pattern can be reused for other cross-tool features

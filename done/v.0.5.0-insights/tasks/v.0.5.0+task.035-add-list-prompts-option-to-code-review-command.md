@@ -161,7 +161,7 @@ Enable users to discover and understand available prompt modules for code review
 ## File Modifications
 
 ### Modify
-- **dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb**
+- **.ace/tools/lib/coding_agent_tools/cli/commands/code/review.rb**
   - **Changes**: Add --list-prompts option and list_prompts method
   - **Impact**: New command capability without affecting existing functionality
   - **Integration points**: Early return logic in call method, new private method

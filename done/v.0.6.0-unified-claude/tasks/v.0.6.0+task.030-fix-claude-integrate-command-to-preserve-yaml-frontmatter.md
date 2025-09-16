@@ -120,7 +120,7 @@ Fix the Claude integrate command to properly copy command files without regenera
   2. Then calls `generate_workflow_commands` which regenerates WITHOUT frontmatter
 - [x] **Template Investigation**: Found two template files with different paths:
   - `command.template.md` with correct path `@.claude/commands/commit.md`
-  - `templates/command.md.tmpl` with incorrect path `@dev-handbook/.integrations/claude/commands/_custom/commit.md`
+  - `templates/command.md.tmpl` with incorrect path `@.ace/handbook/.integrations/claude/commands/_custom/commit.md`
 - [x] **Code Analysis**: Confirmed `generate_workflow_commands` is redundant since commands already exist in `_generated/`
 
 ### Execution Steps
@@ -131,7 +131,7 @@ Fix the Claude integrate command to properly copy command files without regenera
   > Result: Commands are now only copied, not regenerated
 
 - [x] **Fix Template Path**: Updated command.md.tmpl line 10:
-  - From: `read and run @dev-handbook/.integrations/claude/commands/_custom/commit.md`
+  - From: `read and run @.ace/handbook/.integrations/claude/commands/_custom/commit.md`
   - To: `read and run @.claude/commands/commit.md`
   > Result: Commit reference works in installed location
 
@@ -200,5 +200,5 @@ Fix the Claude integrate command to properly copy command files without regenera
 - Root cause: `generate_workflow_commands` overwrites properly formatted files
 - Related task: v.0.6.0+task.014 (template organization)
 - Commits: 
-  - dev-handbook: b31f44b "fix(claude): preserve frontmatter and fix commit path"
-  - dev-tools: 94b8169 "fix(claude): preserve YAML frontmatter and use correct commit path"
+  - .ace/handbook: b31f44b "fix(claude): preserve frontmatter and fix commit path"
+  - .ace/tools: 94b8169 "fix(claude): preserve YAML frontmatter and use correct commit path"

@@ -109,15 +109,15 @@ The system should provide configuration-driven control over git command executio
 ```yaml
 # .coding-agent/git.yml configuration format
 repositories:
-  dev-tools:
+  .ace/tools:
     blacklist:
       - "git-tag"      # Block git-tag on .ace/tools repo
       - "git-*"        # Block all git commands (glob pattern)
-  dev-handbook:
+  .ace/handbook:
     whitelist:
       - "git-commit"   # Only allow git-commit
       - "git-status"   # And git-status
-  dev-taskflow:
+  .ace/taskflow:
     # No restrictions - all commands allowed
 ```
 
@@ -125,7 +125,7 @@ repositories:
 # CLI Interface - commands respect configuration automatically
 git-tag --version v1.0.0
 # Skips: .ace/tools (blacklisted)
-# Executes: dev-handbook, .ace/taskflow
+# Executes: .ace/handbook, .ace/taskflow
 
 git-commit --intention "update docs"
 # Executes: .ace/handbook (whitelisted), .ace/taskflow (no restrictions)

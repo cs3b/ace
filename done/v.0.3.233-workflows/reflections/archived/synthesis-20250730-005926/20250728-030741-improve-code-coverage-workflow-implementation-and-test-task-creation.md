@@ -1,7 +1,7 @@
 # Reflection: Improve Code Coverage Workflow Implementation and Test Task Creation
 
 **Date**: 2025-07-28
-**Context**: Implementation of improve-code-coverage.wf.md workflow from dev-handbook, analyzing Ruby gem test coverage and creating focused test improvement tasks
+**Context**: Implementation of improve-code-coverage.wf.md workflow from .ace/handbook, analyzing Ruby gem test coverage and creating focused test improvement tasks
 **Author**: Claude Code AI Assistant
 **Type**: Conversation Analysis
 

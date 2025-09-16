@@ -11,7 +11,7 @@ dependencies: []
 ## Behavioral Context
 
 **Key Behavioral Requirements**:
-- Users can specify multiple presets with comma-separated syntax: `--preset project,dev-tools`
+- Users can specify multiple presets with comma-separated syntax: `--preset project,.ace/tools`
 - Users can pass multiple input files as arguments: `context file1.md file2.md`
 - Contexts from multiple sources are intelligently merged with deduplication
 - Output path is resolved intelligently based on conflict rules
@@ -155,7 +155,7 @@ Enable the context tool to combine multiple presets and/or multiple input files 
 - [x] **Multiple Presets Support**: Update context command to handle comma-separated presets
   > TEST: Multiple Presets Validation
   > Type: Integration Test
-  > Assert: `context --preset project,dev-tools` works with intelligent output resolution
+  > Assert: `context --preset project,.ace/tools` works with intelligent output resolution
   > Command: bundle exec rspec spec/integration/context_multiple_sources_spec.rb --tag presets
 - [x] **Multiple Files Support**: Update context command to handle multiple file arguments
   > TEST: Multiple Files Validation
@@ -202,7 +202,7 @@ Enable the context tool to combine multiple presets and/or multiple input files 
 <!-- Focus on verifying that behavioral requirements are met, not just implementation completed -->
 
 ### Behavioral Requirement Fulfillment
-- [x] **Multiple Presets Support**: `context --preset project,dev-tools` works with comma-separated syntax
+- [x] **Multiple Presets Support**: `context --preset project,.ace/tools` works with comma-separated syntax
 - [x] **Multiple Files Support**: `context file1.md file2.md` accepts and processes multiple file arguments  
 - [x] **Context Merging**: Multiple contexts merge intelligently with file deduplication by path
 - [x] **Output Resolution**: Smart output path handling based on conflict resolution rules
@@ -215,9 +215,9 @@ Enable the context tool to combine multiple presets and/or multiple input files 
 - [x] **Performance Requirements**: Context merging completes within 5 seconds for reasonable sizes
 
 ### Example Usage Validation
-- [x] **Multiple Presets**: `context --preset project,dev-tools` generates merged context
-- [x] **Multiple Files**: `context docs/project.md docs/dev-tools.md` outputs to stdout
-- [x] **Output Override**: `context --preset project,dev-tools --output combined.md` respects explicit output
+- [x] **Multiple Presets**: `context --preset project,.ace/tools` generates merged context
+- [x] **Multiple Files**: `context docs/project.md docs/.ace/tools.md` outputs to stdout
+- [x] **Output Override**: `context --preset project,.ace/tools --output combined.md` respects explicit output
 - [x] **Conflict Resolution**: Different preset outputs default to stdout automatically
 - [x] **Error Handling**: Missing presets/files report errors with source attribution
 

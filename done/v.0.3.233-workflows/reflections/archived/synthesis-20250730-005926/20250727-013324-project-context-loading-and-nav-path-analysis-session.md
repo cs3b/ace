@@ -90,5 +90,5 @@
 ## Additional Context
 
 - Task created: v.0.3.0+task.122-replace-nav-path-with-create-path-for-creation-operations.md
-- All changes committed across 4 repositories (main, dev-handbook, dev-taskflow, .ace/tools)
+- All changes committed across 4 repositories (main, .ace/handbook, .ace/taskflow, .ace/tools)
 - Project context successfully loaded providing comprehensive understanding of the toolkit architecture

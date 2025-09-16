@@ -17,7 +17,7 @@
 
 - **Method Renaming Scope**: Initial analysis showed potential complexity with renaming `get_all_tasks` method which is used by multiple other commands (next, recent, reschedule) - this will require careful backwards compatibility handling
 - **Test Coverage Validation**: While planning comprehensive test updates, the actual impact on test cassettes and integration tests needs more detailed analysis
-- **Documentation Dependencies**: Some documentation files in other repositories (dev-handbook, .ace/taskflow) may have references that weren't fully catalogued
+- **Documentation Dependencies**: Some documentation files in other repositories (.ace/handbook, .ace/taskflow) may have references that weren't fully catalogued
 
 ## Key Learnings
 

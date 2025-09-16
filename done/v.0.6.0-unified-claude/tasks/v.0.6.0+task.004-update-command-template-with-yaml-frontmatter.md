@@ -69,7 +69,7 @@ allowed-tools: Read, Write, TodoWrite
 argument-hint: "[idea-description]"
 ---
 
-read whole file and follow @dev-handbook/workflow-instructions/capture-idea.wf.md
+read whole file and follow @.ace/handbook/workflow-instructions/capture-idea.wf.md
 
 read and run @.claude/commands/commit.md
 ```
@@ -133,7 +133,7 @@ description: #{description}
 #{model ? "model: #{model}" : ""}
 ---
 
-read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md
+read whole file and follow @.ace/handbook/workflow-instructions/#{workflow_name}.wf.md
 
 read and run @.claude/commands/commit.md
 ```
@@ -202,7 +202,7 @@ read and run @.claude/commands/commit.md
   #{model ? "model: #{model}" : ""}
   ---
 
-  read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md
+  read whole file and follow @.ace/handbook/workflow-instructions/#{workflow_name}.wf.md
 
   read and run @.claude/commands/commit.md
   ```
@@ -228,7 +228,7 @@ read and run @.claude/commands/commit.md
     yaml_lines << ""
     
     # Add the workflow reference lines
-    yaml_lines << "read whole file and follow @dev-handbook/workflow-instructions/#{workflow}.wf.md"
+    yaml_lines << "read whole file and follow @.ace/handbook/workflow-instructions/#{workflow}.wf.md"
     yaml_lines << ""
     yaml_lines << "read and run @.claude/commands/commit.md"
     

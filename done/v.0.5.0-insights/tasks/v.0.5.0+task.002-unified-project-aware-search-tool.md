@@ -351,7 +351,7 @@ Based on review of existing codebase:
 ### Functionality Verification (Tested 2025-01-30)
 - ✅ **Project Root Detection**: `search --list-repos` shows all repositories
 - ✅ **DWIM Mode Selection**: Automatically chooses appropriate tools based on pattern
-- ✅ **Multi-Repository Support**: Searches across main, dev-handbook, dev-taskflow, .ace/tools
+- ✅ **Multi-Repository Support**: Searches across main, .ace/handbook, .ace/taskflow, .ace/tools
 - ✅ **Performance**: Startup <300ms, search results appear immediately
 - ✅ **Git Integration**: Repository detection and multi-repo coordination working
 - ✅ **JSON Output**: `--json` flag produces structured output

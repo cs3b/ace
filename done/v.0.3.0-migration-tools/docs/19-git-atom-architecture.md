@@ -9,13 +9,13 @@ This document outlines the comprehensive git module architecture following the A
 ### Existing Shell Script Patterns
 
 **Multi-Repository Operations:**
-- `bin/gc` - Fish script with intention-based commits across all repos (dev-tools, dev-taskflow, dev-handbook, main)
+- `bin/gc` - Fish script with intention-based commits across all repos (.ace/tools, .ace/taskflow, .ace/handbook, main)
 - `bin/gp` - Fish script for pushing all repositories sequentially
 - `bin/gpull` - Fish script for pulling all repositories using `git -C <dir>`
 - `bin/gl` - Ruby wrapper executing `get-recent-git-log` with multi-repo flags
 
 **Key Patterns Identified:**
-1. **Repository List**: `[main, dev-tools, dev-taskflow, .ace/handbook]`
+1. **Repository List**: `[main, .ace/tools, .ace/taskflow, .ace/handbook]`
 2. **Intention-Based Commits**: `-i/--intention` flag for LLM-generated messages
 3. **Sequential Execution**: Scripts process repos one by one with output prefixes
 4. **Fish Function Integration**: `gcama` (git add all + commit all + message all) patterns
@@ -91,7 +91,7 @@ Git Command Executor + Repository Scanner + Submodule Detector (atoms)
 ### Repository Detection
 1. Use `ProjectRootDetector` for base path resolution
 2. Scan for submodules using `git submodule status`
-3. Hardcoded fallback: `[main, dev-tools, dev-taskflow, .ace/handbook]`
+3. Hardcoded fallback: `[main, .ace/tools, .ace/taskflow, .ace/handbook]`
 
 ### Path Resolution
 - `git add .ace/handbook/file.md lib/file.rb` → 

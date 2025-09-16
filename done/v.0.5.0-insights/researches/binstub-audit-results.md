@@ -2,7 +2,7 @@
 
 ## Summary
 
-Comprehensive audit of binstub references (bin/tn, bin/gc, bin/tnid, etc.) across the project reveals that **documentation cleanup is still needed** in dev-handbook, contrary to initial assessment.
+Comprehensive audit of binstub references (bin/tn, bin/gc, bin/tnid, etc.) across the project reveals that **documentation cleanup is still needed** in .ace/handbook, contrary to initial assessment.
 
 ## Findings by Repository
 
@@ -97,7 +97,7 @@ All binstub references should be replaced with .ace/tools executable paths:
 
 ## Task Status Update
 
-The original task assessment was incorrect. The documentation is **NOT clean** and requires significant updates across dev-handbook. The task should be changed from "verification complete" to "implementation required".
+The original task assessment was incorrect. The documentation is **NOT clean** and requires significant updates across .ace/handbook. The task should be changed from "verification complete" to "implementation required".
 
 ## Audit Command Used
 

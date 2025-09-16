@@ -123,5 +123,5 @@ Working example:
 ```
 michalczyz  …/handbook-meta   master ✘!⇡   v24.3.0
  ♥ 18:14 ➜ code-review code .ace/tools/lib/**/*.rb
-✅ Created review session: code-dev-tools-lib-coding_agent_tools.rb-20250724-181435
+✅ Created review session: code-.ace/tools-lib-coding_agent_tools.rb-20250724-181435
 ```

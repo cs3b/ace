@@ -93,7 +93,7 @@ Installation complete: 2 created, 1 skipped
 ### Validation Questions
 
 - [x] **Script Analysis**: What is the exact structure and copying mechanism of `.ace/handbook/.integrations/claude/install-prompts.md`?
-  - **Answer found through research**: The install-prompts.md file provides a template-based approach for creating commands. Each workflow file (*.wf.md) maps to a command file in .claude/commands/. The script uses a simple template: "read whole file and follow @dev-handbook/workflow-instructions/[workflow-name].wf.md" followed by "/commit".
+  - **Answer found through research**: The install-prompts.md file provides a template-based approach for creating commands. Each workflow file (*.wf.md) maps to a command file in .claude/commands/. The script uses a simple template: "read whole file and follow @.ace/handbook/workflow-instructions/[workflow-name].wf.md" followed by "/commit".
 
 - [x] **Command Location**: Where should custom command markdown files be placed for script discovery?
   - **Answer found through research**: Commands should be placed in `.claude/commands/` directory at the project root, with corresponding entries in `.claude/commands/commands.json`.
@@ -375,4 +375,4 @@ To create an automated script that generates Claude Code commands from workflow 
 - Integration script: .ace/handbook/.integrations/claude/install-prompts.md
 - Task management workflow documentation in .ace/handbook
 - Existing commands: .claude/commands/
-- Ruby dev-tools: .ace/tools/lib/coding_agent_tools/
+- Ruby .ace/tools: .ace/tools/lib/coding_agent_tools/

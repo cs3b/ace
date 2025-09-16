@@ -443,7 +443,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
     # Generate the expected command content for comparison
     workflow_name = File.basename(workflow_path)
     <<~CONTENT
-      read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}
+      read whole file and follow @.ace/handbook/workflow-instructions/#{workflow_name}
 
       read and run @.claude/commands/commit.md
     CONTENT

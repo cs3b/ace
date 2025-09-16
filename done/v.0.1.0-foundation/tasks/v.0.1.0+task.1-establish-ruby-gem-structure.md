@@ -48,7 +48,7 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
 
 ### Deliverables
 
-#### Create (via bundle gem --dev-tools/exe)
+#### Create (via bundle gem --.ace/tools/exe)
 
 - coding_agent_tools.gemspec (generated, then customized)
 - lib/coding_agent_tools.rb (generated, then enhanced)
@@ -79,7 +79,7 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
 ## Phases
 
 1. Review researched Ruby gem conventions and ATOM architecture principles
-2. Generate initial gem structure with bundle gem --dev-tools/exe and customize
+2. Generate initial gem structure with bundle gem --.ace/tools/exe and customize
 3. Implement core module and version management (0.1.0)
 4. Set up CLI framework using dry-rb and executable
 5. Configure development and production dependencies
@@ -106,7 +106,7 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
   > TEST: Gem Scaffold Created
   > Type: Action Validation
   > Assert: Basic gem structure exists with executable
-  > Command: bundle gem coding_agent_tools --dev-tools/exe && test -f coding_agent_tools.gemspec && test -f .ace/tools/exe/coding_agent_tools
+  > Command: bundle gem coding_agent_tools --.ace/tools/exe && test -f coding_agent_tools.gemspec && test -f .ace/tools/exe/coding_agent_tools
 - [x] Update coding_agent_tools.gemspec with proper metadata and specified dependencies
   > TEST: Gemspec Validation
   > Type: Action Validation

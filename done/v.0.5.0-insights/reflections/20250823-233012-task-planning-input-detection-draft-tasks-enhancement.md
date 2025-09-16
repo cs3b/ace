@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- **Systematic Workflow Execution**: Successfully followed the complete plan-task workflow from the dev-handbook, including all required steps from project context loading through technical implementation planning
+- **Systematic Workflow Execution**: Successfully followed the complete plan-task workflow from the .ace/handbook, including all required steps from project context loading through technical implementation planning
 - **Clear Problem Understanding**: Effectively analyzed the difference between idea files (LLM metadata headers) and completed task files (YAML frontmatter) through concrete examples
 - **Comprehensive Technical Research**: Thoroughly analyzed the existing `/draft-tasks` command implementation, `draft-task.wf.md` workflow, and `task-manager create` integration
 - **Practical Implementation Plan**: Developed a concrete, low-risk additive enhancement approach that preserves existing functionality while adding new capabilities

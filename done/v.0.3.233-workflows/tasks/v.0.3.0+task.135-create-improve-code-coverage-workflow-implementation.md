@@ -144,4 +144,4 @@ Implement a comprehensive workflow instruction that systematically analyzes code
 - Architecture reference: `docs/architecture-tools.md` (ATOM pattern, Ruby best practices)
 - Testing approach: Edge case focus with coverage as attention indicator, not percentage target
 - Ruby testing stack: RSpec, VCR, ATOM architecture components
-- Submodule requirements: dev-handbook, dev-tools, .ace/taskflow (all must be initialized)
+- Submodule requirements: .ace/handbook, .ace/tools, .ace/taskflow (all must be initialized)

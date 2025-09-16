@@ -869,7 +869,7 @@ The custom git toolbox provides enhanced multi-repository management:
 
 - Custom tools are defined in `.claude/commands/commit.md`
 - nav-path tool used for automatic reflection file location determination
-- Multi-repository project structure with dev-handbook, dev-taskflow, .ace/tools submodules
+- Multi-repository project structure with .ace/handbook, .ace/taskflow, .ace/tools submodules
 - Enhanced git workflow designed for complex project management
 
 ---

@@ -24,7 +24,7 @@
 - **Documentation Structure Matters**: Having clear organization with separate directories for custom vs generated commands makes the system more maintainable
 - **Migration Guides Are Essential**: When deprecating old systems, a clear migration guide with command mapping is crucial for user adoption
 - **Comprehensive Examples Help**: Including 2-3 examples per command subcommand provides better user understanding than minimal documentation
-- **Cross-Module Documentation**: Documentation spanning multiple submodules (dev-handbook, .ace/tools) requires careful cross-referencing
+- **Cross-Module Documentation**: Documentation spanning multiple submodules (.ace/handbook, .ace/tools) requires careful cross-referencing
 
 ## Conversation Analysis
 

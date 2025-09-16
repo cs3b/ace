@@ -10,7 +10,7 @@
 - **Rapid pivoting from migration to deletion**: Quickly recognized when existing functionality superseded the need for migration
 - **Comprehensive discovery process**: Thorough analysis of existing code-review system revealed superior architecture and features
 - **Systematic cleanup approach**: Methodical removal of all references to deleted script across documentation and codebase
-- **Multi-repository coordination**: Successfully managed changes across submodules (dev-tools, dev-handbook, .ace/taskflow)
+- **Multi-repository coordination**: Successfully managed changes across submodules (.ace/tools, .ace/handbook, .ace/taskflow)
 - **Clear decision documentation**: Well-documented rationale for choosing deletion over migration in task file
 - **Efficient task completion**: Reduced 8-hour migration estimate to 1-hour cleanup through smart analysis
 

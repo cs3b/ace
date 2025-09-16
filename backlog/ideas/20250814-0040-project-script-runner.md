@@ -108,5 +108,5 @@ To create a new CLI tool named `prun` within the `.ace/tools` gem that allows us
 > SOURCE
 
 ```text
-new tool in .ace/tools -> prun that will run any script from the project root, at whatever level it was executed, it can operate on additional root (if project is multirepo) e.g.: prun bin/test will run bin/test on project root or dev-tools, confing should be in .coding-agetnt/prun.yml)
+new tool in .ace/tools -> prun that will run any script from the project root, at whatever level it was executed, it can operate on additional root (if project is multirepo) e.g.: prun bin/test will run bin/test on project root or .ace/tools, confing should be in .coding-agetnt/prun.yml)
 ```

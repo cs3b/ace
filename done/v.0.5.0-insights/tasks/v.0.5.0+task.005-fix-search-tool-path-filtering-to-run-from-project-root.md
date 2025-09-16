@@ -92,7 +92,7 @@ normalized_path = file_path.start_with?('./') ? file_path[2..-1] : file_path
 # Result: Found 2 results in .ace/taskflow/done/
 
 # Test original user case
-./.ace/tools/exe/search "bin/tn" --exclude ".ace/taskflow/done/**/*,dev-taskflow/current/*/tasks/*"
+./.ace/tools/exe/search "bin/tn" --exclude ".ace/taskflow/done/**/*,.ace/taskflow/current/*/tasks/*"
 # Result: Correctly excludes specified paths
 ```
 

@@ -395,9 +395,9 @@ EXAMPLES
 ```
 Pushing repositories...
 [1/4] main: Pushing to origin/main... ✓
-[2/4] dev-tools: Pushing to origin/main... ✓
-[3/4] dev-handbook: Pushing to origin/main... ✓
-[4/4] dev-taskflow: Pushing to origin/main... ✓
+[2/4] .ace/tools: Pushing to origin/main... ✓
+[3/4] .ace/handbook: Pushing to origin/main... ✓
+[4/4] .ace/taskflow: Pushing to origin/main... ✓
 All repositories pushed successfully.
 ```
 

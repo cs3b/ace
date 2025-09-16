@@ -71,7 +71,7 @@ _Result excerpt:_
 
 ## Objective
 
-Enable synchronized version control tagging across the entire toolkit ecosystem (main repository plus dev-handbook, dev-tools, and .ace/taskflow submodules) through a single command interface that ensures consistent versioning and reduces manual coordination errors.
+Enable synchronized version control tagging across the entire toolkit ecosystem (main repository plus .ace/handbook, .ace/tools, and .ace/taskflow submodules) through a single command interface that ensures consistent versioning and reduces manual coordination errors.
 
 ## Scope of Work
 

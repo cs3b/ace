@@ -339,7 +339,7 @@ This session demonstrates the value of thorough implementation followed by rigor
 ## Additional Context
 
 - Task created: v.0.3.0+task.122-replace-nav-path-with-create-path-for-creation-operations.md
-- All changes committed across 4 repositories (main, dev-handbook, dev-taskflow, .ace/tools)
+- All changes committed across 4 repositories (main, .ace/handbook, .ace/taskflow, .ace/tools)
 - Project context successfully loaded providing comprehensive understanding of the toolkit architecture
 
 ---
@@ -1859,7 +1859,7 @@ This implementation represents a complete, production-ready coverage analysis to
 - **Coverage Analysis Tool Effectiveness**: The coverage-analyze tool provided excellent structured data for systematic task creation, with clear priority identification
 - **ATOM Architecture Benefits**: The structured architecture made it easy to categorize and prioritize test tasks across different component types
 - **Quality Over Quantity Principle**: The workflow's emphasis on meaningful test scenarios rather than coverage percentages aligns well with software quality best practices
-- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across dev-handbook, dev-taskflow, and .ace/tools repositories
+- **Multi-Repository Coordination**: Git submodule management worked smoothly for coordinating changes across .ace/handbook, .ace/taskflow, and .ace/tools repositories
 - **Test Task Template Structure**: Learned effective patterns for documenting test improvement tasks with specific line ranges, edge cases, and integration requirements
 
 ## Conversation Analysis
@@ -2223,7 +2223,7 @@ This implementation represents a complete, production-ready coverage analysis to
 # Reflection: Improve Code Coverage Workflow Implementation and Test Task Creation
 
 **Date**: 2025-07-28
-**Context**: Implementation of improve-code-coverage.wf.md workflow from dev-handbook, analyzing Ruby gem test coverage and creating focused test improvement tasks
+**Context**: Implementation of improve-code-coverage.wf.md workflow from .ace/handbook, analyzing Ruby gem test coverage and creating focused test improvement tasks
 **Author**: Claude Code AI Assistant
 **Type**: Conversation Analysis
 
@@ -4127,9 +4127,9 @@ This reflection was created as part of following the create-reflection-note work
 ## What Could Be Improved
 
 - Could have better initial analysis of untracked test files before starting reflection process
-- Git status shows 16 commits ahead on main repo and dev-tools, indicating need for more frequent pushes
+- Git status shows 16 commits ahead on main repo and .ace/tools, indicating need for more frequent pushes
 - Some inconsistency in using enhanced git commands vs standard git commands (caught git-log vs git log issue)
-- Task 196 shows modified status in dev-taskflow, suggesting incomplete cleanup
+- Task 196 shows modified status in .ace/taskflow, suggesting incomplete cleanup
 
 ## Key Learnings
 
@@ -4172,7 +4172,7 @@ This reflection was created as part of following the create-reflection-note work
 - Current release context: v.0.3.0-workflows
 - Recent completed tasks: 190, 192, 193, 194, 196 (all test coverage related)
 - Untracked test file present indicating recent test creation work
-- Multi-repo status shows active development across main, dev-taskflow, and .ace/tools repositories
+- Multi-repo status shows active development across main, .ace/taskflow, and .ace/tools repositories
 
 ---
 
@@ -4273,7 +4273,7 @@ This reflection was created as part of following the create-reflection-note work
 The reflection process successfully utilized:
 - Git commit history analysis showing systematic test coverage work
 - Task manager recent activity showing completed test coverage tasks
-- Multi-repository status checking across dev-tools, dev-taskflow, and .ace/handbook
+- Multi-repository status checking across .ace/tools, .ace/taskflow, and .ace/handbook
 - Template-based reflection structure for consistent documentation
 
 Recent work patterns show a focused effort on improving test coverage across various components including molecules (TimestampInferrer, ReportCollector, AutofixOrchestrator), organisms (TaskManager, ReviewManager), and CLI commands.
@@ -4820,7 +4820,7 @@ The `create-path file:reflection-new` command successfully created the target fi
 - The project has extensive recent activity focused on test coverage improvements across ATOM architecture components
 - Multiple reflection notes have already been created recently, showing active use of the workflow
 - The workflow instruction provides sophisticated conversation analysis capabilities including challenge pattern identification
-- Enhanced git commands operate across all 4 repositories (main, dev-tools, dev-taskflow, .ace/handbook) automatically
+- Enhanced git commands operate across all 4 repositories (main, .ace/tools, .ace/taskflow, .ace/handbook) automatically
 - Template system needs refinement for reflection note creation workflow
 
 ## Conversation Analysis
@@ -5675,7 +5675,7 @@ The work demonstrates a mature approach to technical debt reduction through syst
 
 - **Systematic Test Coverage Approach**: Successfully completed multiple test coverage improvement tasks (Tasks 206-210) with comprehensive test scenarios
 - **Automated Workflow Integration**: Effective use of create-reflection-note workflow instruction following proper project patterns
-- **Multi-Repository Coordination**: Clean handling of changes across dev-tools, dev-taskflow, and main repositories with appropriate git operations
+- **Multi-Repository Coordination**: Clean handling of changes across .ace/tools, .ace/taskflow, and main repositories with appropriate git operations
 - **Template-Based Development**: Proper use of embedded templates and workflow instructions for consistent output
 
 ## What Could Be Improved
@@ -5688,7 +5688,7 @@ The work demonstrates a mature approach to technical debt reduction through syst
 
 - **Test Coverage Strategy**: Systematic approach to improving test coverage across CLI commands and organisms yields consistent results
 - **Workflow Instruction Value**: Following structured workflow instructions ensures comprehensive coverage of reflection process
-- **Multi-Repository Development**: The project's 4-repository structure (main, dev-handbook, dev-taskflow, .ace/tools) requires careful coordination
+- **Multi-Repository Development**: The project's 4-repository structure (main, .ace/handbook, .ace/taskflow, .ace/tools) requires careful coordination
 - **Template System**: Project uses embedded templates in workflow instructions for consistency
 
 ## Conversation Analysis
@@ -5774,8 +5774,8 @@ The work demonstrates a mature approach to technical debt reduction through syst
 - create-path: File creation with timestamp
 
 **Repositories Affected:**
-- dev-taskflow: New reflection file created
-- dev-tools: Ongoing test coverage work (coverage_analyzer.rb, related specs)
+- .ace/taskflow: New reflection file created
+- .ace/tools: Ongoing test coverage work (coverage_analyzer.rb, related specs)
 
 ## Additional Context
 

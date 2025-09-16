@@ -19,7 +19,7 @@ The context tool currently fails when run from subdirectories because it resolve
    - Example: Running from `.ace/tools/`: "No files found matching pattern: docs/what-do-we-build.md"
    
 2. **Command Execution Failures**: Commands that reference project paths fail
-   - Example: "cd: dev-tools: No such file or directory" when not at project root
+   - Example: "cd: .ace/tools: No such file or directory" when not at project root
 
 3. **Inconsistent Behavior**: Tool works from project root but fails from subdirectories
 
@@ -164,7 +164,7 @@ context --preset basic
 # Current behavior (fails from project root when command references relative paths):
 context --preset full
 # Command: "cd .ace/tools && bundle list"
-# Error: "cd: dev-tools: No such file or directory" (when not in project root)
+# Error: "cd: .ace/tools: No such file or directory" (when not in project root)
 
 # Expected behavior (should work from anywhere):
 cd any-directory/

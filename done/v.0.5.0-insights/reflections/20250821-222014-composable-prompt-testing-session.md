@@ -61,7 +61,7 @@
 
 - **Single-Command Workflow**: Combine context and subject preparation into review command
   ```bash
-  code-review --preset pr --context-presets project,dev-tools,dev-handbook
+  code-review --preset pr --context-presets project,.ace/tools,.ace/handbook
   # Should automatically:
   # 1. Generate context from presets
   # 2. Collect subject from git diffs
@@ -71,7 +71,7 @@
 
 - **Pipeline Architecture**: Allow chaining of operations
   ```bash
-  context generate --preset project,dev-tools | \
+  context generate --preset project,.ace/tools | \
   code-review --preset pr --context-from-stdin
   ```
 

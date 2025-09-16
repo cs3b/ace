@@ -126,8 +126,8 @@ The implementation successfully fulfills the user's requirement: "the -all flag 
 
 **Final Test Results:**
 - Main repository: Updated submodules and test file
-- dev-handbook: Added test file for default commit behavior  
-- dev-taskflow: Removed deprecated files and added test file
-- dev-tools: Renamed option to --repo-only
+- .ace/handbook: Added test file for default commit behavior  
+- .ace/taskflow: Removed deprecated files and added test file
+- .ace/tools: Renamed option to --repo-only
 
 Task 19 implementation is now complete with robust multi-repository git-commit functionality.

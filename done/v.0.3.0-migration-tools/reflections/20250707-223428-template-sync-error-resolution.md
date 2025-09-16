@@ -135,6 +135,6 @@
 ## Additional Context
 
 - **Related Task**: v.0.3.0+task.16-implement-template-synchronizer-organism.md (completed)
-- **Multi-Repository Structure**: Changes affected dev-tools, dev-handbook, dev-taskflow, and main repositories
+- **Multi-Repository Structure**: Changes affected .ace/tools, .ace/handbook, .ace/taskflow, and main repositories
 - **Template System**: Supports both `<documents>` and legacy `<templates>` XML formats
 - **Security Integration**: Path validation ensures templates are in approved locations

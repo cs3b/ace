@@ -16,9 +16,9 @@
 ## What Could Be Improved
 
 - Could have better initial analysis of untracked test files before starting reflection process
-- Git status shows 16 commits ahead on main repo and dev-tools, indicating need for more frequent pushes
+- Git status shows 16 commits ahead on main repo and .ace/tools, indicating need for more frequent pushes
 - Some inconsistency in using enhanced git commands vs standard git commands (caught git-log vs git log issue)
-- Task 196 shows modified status in dev-taskflow, suggesting incomplete cleanup
+- Task 196 shows modified status in .ace/taskflow, suggesting incomplete cleanup
 
 ## Key Learnings
 
@@ -61,4 +61,4 @@
 - Current release context: v.0.3.0-workflows
 - Recent completed tasks: 190, 192, 193, 194, 196 (all test coverage related)
 - Untracked test file present indicating recent test creation work
-- Multi-repo status shows active development across main, dev-taskflow, and .ace/tools repositories
+- Multi-repo status shows active development across main, .ace/taskflow, and .ace/tools repositories

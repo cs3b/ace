@@ -194,7 +194,7 @@ Create a clear, maintainable directory structure for Claude commands that separa
   - All appear to be custom hand-crafted commands
 * [x] Document existing commands for migration planning
   - **Root .claude/commands/**: 33 command files plus commands.json registry
-  - **dev-handbook location**: 6 command files (subset of root)
+  - **.ace/handbook location**: 6 command files (subset of root)
   - All current commands appear to be custom (no generated commands yet)
 * [x] Design template variables and structure for command generation
   - Define workflow command template variables: workflow_name, workflow_path
@@ -237,9 +237,9 @@ Create a clear, maintainable directory structure for Claude commands that separa
 - [x] Create workflow command template
   ```bash
   cat > .ace/handbook/.integrations/claude/templates/workflow-command.md.tmpl << 'EOF'
-read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
+read whole file and follow @.ace/handbook/workflow-instructions/<%= workflow_name %>.wf.md
 
-read and run @dev-handbook/.integrations/claude/commands/commit.md
+read and run @.ace/handbook/.integrations/claude/commands/commit.md
 EOF
   ```
   > TEST: Workflow Template Creation

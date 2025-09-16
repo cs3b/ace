@@ -109,6 +109,6 @@
 ## Additional Context
 
 - Task completed in single session with all acceptance criteria met
-- All commits made across 3 repositories (main, dev-taskflow, .ace/tools)
+- All commits made across 3 repositories (main, .ace/taskflow, .ace/tools)
 - New command fully replaces deprecated bin/analyze-doc-dependencies
 - Enhanced capabilities include better statistics and configurable analysis scope

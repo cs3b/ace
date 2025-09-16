@@ -16,7 +16,7 @@
 
 - Could have used a more targeted search pattern initially to find migration references
 - The task estimate (1h) might be overly conservative for such a simple cleanup task
-- Could have checked for references in other submodules (dev-tools, .ace/taskflow)
+- Could have checked for references in other submodules (.ace/tools, .ace/taskflow)
 
 ## Key Learnings
 

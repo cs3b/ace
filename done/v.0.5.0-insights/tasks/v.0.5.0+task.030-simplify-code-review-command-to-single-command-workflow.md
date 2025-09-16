@@ -26,7 +26,7 @@ code-review --preset pr --auto-execute
 # Full parameters  
 code-review \
   --preset ruby-atom-modular \
-  --context 'presets: [project, dev-tools, .ace/handbook]' \
+  --context 'presets: [project, .ace/tools, .ace/handbook]' \
   --subject 'commands: ["git diff HEAD~1"]' \
   --model "google:gemini-2.0-flash-exp" \
   --auto-execute

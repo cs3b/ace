@@ -177,7 +177,7 @@ Improve the user experience of the integrate command by making it more intuitive
 ## File Modifications
 
 ### Create
-- **dev-handbook/.meta/tpl/dotfiles/.coding-agent/integrate.yml**
+- **.ace/handbook/.meta/tpl/dotfiles/.coding-agent/integrate.yml**
   - Purpose: Default configuration template for projects
   - Key components: Module defaults, preferences, integration overrides
   - Note: Gets copied during --dotfiles integration, not a subcommand
@@ -187,7 +187,7 @@ Improve the user experience of the integrate command by making it more intuitive
   - Changes: Add positional argument, update option definitions, implement new logic
   - Impact: Core command behavior and user interface
   
-- **dev-tools/config/integration.yml**
+- **.ace/tools/config/integration.yml**
   - Changes: Add hooks and config module definitions
   - Impact: System default configuration
 

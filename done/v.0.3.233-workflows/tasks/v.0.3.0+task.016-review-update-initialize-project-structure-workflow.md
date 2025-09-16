@@ -128,7 +128,7 @@ Review and update `.ace/handbook/workflow-instructions/initialize-project-struct
   > Assert: Core documentation references use `docs/` paths
   > Command: grep -E "docs/(what-do-we-build|architecture|blueprint)\.md" .ace/handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [x] Update submodule verification to only check two modules (dev-handbook, .ace/tools)
+- [x] Update submodule verification to only check two modules (.ace/handbook, .ace/tools)
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Submodule references updated to current structure
@@ -192,7 +192,7 @@ Review and update `.ace/handbook/workflow-instructions/initialize-project-struct
 - Current project structure: Root directory with .ace/handbook/, .ace/tools/, docs/ subdirectories
 - Binstubs location: .ace/tools/exe-old/_binstubs/
 - Core documentation location: docs/ (what-do-we-build.md, architecture.md, blueprint.md)
-- Current submodules: dev-handbook, .ace/tools (not .ace/taskflow)
+- Current submodules: .ace/handbook, .ace/tools (not .ace/taskflow)
 - Task creation standard: Zero-padded task IDs (v.0.3.0+task.16)
 - Workflow instruction standards: .ace/handbook/guides/.meta/workflow-instructions-definition.g.md
 - Embedding tests guide: .ace/handbook/guides/.meta/workflow-instructions-embeding-tests.g.md
