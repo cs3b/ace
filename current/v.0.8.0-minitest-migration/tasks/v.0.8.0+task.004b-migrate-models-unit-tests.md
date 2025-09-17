@@ -156,6 +156,7 @@ end
 
 ## References
 
+- **Testing Guide**: `docs/development/testing.g.md` - Essential testing patterns and setup
 - Test helper: `test/test_helper.rb`
 - Model base class: `ModelTest`
 - Example model test: `test/unit/models/example_model_test.rb`

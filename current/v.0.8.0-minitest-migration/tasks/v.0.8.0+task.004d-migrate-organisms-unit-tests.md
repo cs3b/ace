@@ -226,6 +226,7 @@ end
 
 ## References
 
+- **Testing Guide**: `docs/development/testing.g.md` - Essential testing patterns and setup
 - Test helper: `test/test_helper.rb`
 - Organism base class: `OrganismTest`
 - Example organism test: `test/unit/organisms/example_organism_test.rb`
