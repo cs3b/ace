@@ -192,6 +192,7 @@ end
 
 ## References
 
+- **Testing Guide**: `docs/development/testing.g.md` - Essential testing patterns and setup
 - Test helper: `test/test_helper.rb`
 - Atom base class: `AtomTest`
 - Example atom test: `test/unit/atoms/path_resolver_test.rb`
