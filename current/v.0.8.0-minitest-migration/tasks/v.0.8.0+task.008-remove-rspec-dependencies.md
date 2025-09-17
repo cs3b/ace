@@ -1,9 +1,10 @@
 ---
 id: v.0.8.0+task.008
-status: pending
+status: skipped
 priority: low
 estimate: 3h
 dependencies: {dependencies}
+skip_reason: "No RSpec dependencies present - already using Minitest"
 ---
 
 # Remove RSpec Dependencies
