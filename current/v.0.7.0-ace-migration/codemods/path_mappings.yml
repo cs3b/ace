@@ -1,0 +1,50 @@
+# Path mappings for migrating from dev-* to .ace/* structure
+# These mappings will be applied in order (longest paths first to avoid partial replacements)
+
+mappings:
+  # Main directory migrations
+  ".ace/tools/": ".ace/tools/"
+  ".ace/handbook/": ".ace/handbook/"
+  ".ace/taskflow/": ".ace/taskflow/"
+  ".ace/local/": ".ace/local/"
+
+  # Without trailing slashes (for end of path references)
+  ".ace/tools": ".ace/tools"
+  ".ace/handbook": ".ace/handbook"
+  ".ace/taskflow": ".ace/taskflow"
+  ".ace/local": ".ace/local"
+
+# Configuration options
+config:
+  # File extensions to process
+  include_extensions:
+    - .rb
+    - .md
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+    - .fish
+    - .sh
+    - .bash
+    - .zsh
+    - .txt
+    - .rake
+    - Gemfile
+    - Rakefile
+    - .gemspec
+    - .ru
+    - .env
+    - .example
+
+  # Patterns to exclude
+  exclude_patterns:
+    - "*/vendor/*"
+    - "*/node_modules/*"
+    - "*/.git/*"
+    - "*/tmp/*"
+    - "*/log/*"
+    - "*.log"
+    - "*~"
+    - "*.swp"
+    - ".DS_Store"
