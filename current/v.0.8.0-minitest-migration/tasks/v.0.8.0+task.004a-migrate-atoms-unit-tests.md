@@ -1,6 +1,6 @@
 ---
 id: v.0.8.0+task.004a
-status: pending
+status: in-progress
 priority: high
 estimate: 4h
 dependencies: []
@@ -28,7 +28,7 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 - [ ] `claude/yaml_frontmatter_validator.rb` - Validates YAML frontmatter format
 
 ### CLI Atoms (1 component)
-- [ ] `cli/cli_constants.rb` - Defines CLI constant values
+- [x] ~~`cli/cli_constants.rb`~~ - REMOVED (unused dead code)
 
 ### Code Quality Atoms (11 components)
 - [ ] `code_quality/cassettes_validator.rb` - Validates VCR cassette files
@@ -124,9 +124,9 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 
 ## Progress Tracking
 
-- **Components completed:** 0/61
+- **Components completed:** 1/61 (1 removed as dead code)
 - **Estimated time per component:** ~4 minutes
-- **Current focus:** [Not started]
+- **Current focus:** Removed unused cli_constants module
 
 ## Implementation Plan
 

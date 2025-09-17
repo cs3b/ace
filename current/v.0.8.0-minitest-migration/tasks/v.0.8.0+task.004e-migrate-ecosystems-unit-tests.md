@@ -230,6 +230,7 @@ Despite having only 2 components, these tests are critical because ecosystems:
 
 ## References
 
+- **Testing Guide**: `docs/development/testing.g.md` - Essential testing patterns and setup
 - Test helper: `test/test_helper.rb`
 - Ecosystem base class: `EcosystemTest`
 - Example ecosystem test: `test/unit/ecosystems/example_ecosystem_test.rb`

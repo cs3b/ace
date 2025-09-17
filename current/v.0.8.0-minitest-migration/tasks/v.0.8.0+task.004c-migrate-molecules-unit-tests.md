@@ -289,6 +289,7 @@ end
 
 ## References
 
+- **Testing Guide**: `docs/development/testing.g.md` - Essential testing patterns and setup
 - Test helper: `test/test_helper.rb`
 - Molecule base class: `MoleculeTest`
 - Example molecule test: `test/unit/molecules/example_molecule_test.rb`
