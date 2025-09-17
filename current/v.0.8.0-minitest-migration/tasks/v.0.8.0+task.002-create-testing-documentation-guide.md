@@ -1,6 +1,6 @@
 ---
 id: v.0.8.0+task.002
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: {dependencies}
@@ -9,38 +9,35 @@ dependencies: {dependencies}
 # Create Testing Documentation Guide
 
 ## Behavioral Context
-<!-- Reference the completed behavioral specification from the draft phase -->
-<!-- This section assumes behavioral requirements are already defined -->
-
-**Behavioral Specification Reference**: [Link to completed draft task or behavioral requirements]
 
 **Key Behavioral Requirements**:
-- [Summary of key user experience requirements]
-- [Summary of key system behavior requirements]  
-- [Summary of key interface contract requirements]
+- Developers need clear guidance on how to write and run tests with Minitest
+- Documentation must explain test organization and ATOM architecture patterns
+- Guide should cover unit, integration, and CLI testing approaches
+- Instructions for using ace-test runner and various test modes
 
 ## Objective
 
-Why are we implementing this? Focus on technical objectives that support the defined behavioral requirements.
+Create comprehensive testing documentation that enables developers to effectively write and run tests using the new Minitest framework, following ATOM architecture patterns and project conventions.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Create TESTING.md with comprehensive testing guide
+- Document test organization and base classes
+- Explain ace-test runner usage and options
+- Provide examples for different test types
+- Document VCR and Aruba integration
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- TESTING.md - Main testing documentation
+- test/README.md - Quick reference for test directory structure
 
 #### Modify
 
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
+- README.md - Add testing section with link to TESTING.md
 
 ## Phases
 
