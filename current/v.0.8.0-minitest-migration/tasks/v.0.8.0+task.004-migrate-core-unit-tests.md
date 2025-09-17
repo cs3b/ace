@@ -1,9 +1,11 @@
 ---
 id: v.0.8.0+task.004
-status: pending
+status: superseded
 priority: high
 estimate: 10h
 dependencies: {dependencies}
+superseded_by: "task.004a, task.004b, task.004c, task.004d, task.004e"
+superseded_reason: "Split into ATOM-level tasks for better organization and parallel execution"
 ---
 
 # Migrate Core Unit Tests
