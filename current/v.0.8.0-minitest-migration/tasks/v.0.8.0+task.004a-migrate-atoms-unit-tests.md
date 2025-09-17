@@ -23,7 +23,7 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 ## Component Checklist (61 total)
 
 ### Claude Atoms (3 components)
-- [ ] `claude/command_existence_checker.rb` - Validates Claude command files exist
+- [x] `claude/command_existence_checker.rb` - Validates Claude command files exist
 - [ ] `claude/workflow_scanner.rb` - Scans for workflow instruction files
 - [ ] `claude/yaml_frontmatter_validator.rb` - Validates YAML frontmatter format
 
@@ -124,9 +124,9 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 
 ## Progress Tracking
 
-- **Components completed:** 1/61 (1 removed as dead code)
+- **Components completed:** 2/61 (1 removed as dead code)
 - **Estimated time per component:** ~4 minutes
-- **Current focus:** Removed unused cli_constants module
+- **Current focus:** Testing Claude atoms - command_existence_checker complete
 
 ## Implementation Plan
 
