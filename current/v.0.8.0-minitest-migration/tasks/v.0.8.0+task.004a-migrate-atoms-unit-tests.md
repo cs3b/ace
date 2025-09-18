@@ -35,13 +35,13 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 - [x] `code_quality/configuration_loader.rb` - Loads configuration files
 - [x] `code_quality/error_distributor.rb` - Distributes errors by category
 - [x] `code_quality/file_type_detector.rb` - Detects file types for linting
-- [ ] `code_quality/kramdown_formatter.rb` - Formats markdown with kramdown
-- [ ] `code_quality/language_file_filter.rb` - Filters files by language
-- [ ] `code_quality/markdown_link_validator.rb` - Validates markdown links
-- [ ] `code_quality/security_validator.rb` - Validates security rules
-- [ ] `code_quality/standard_rb_validator.rb` - Validates Ruby with StandardRB
-- [ ] `code_quality/task_metadata_validator.rb` - Validates task metadata
-- [ ] `code_quality/template_embedding_validator.rb` - Validates embedded templates
+- [x] `code_quality/kramdown_formatter.rb` - Formats markdown with kramdown
+- [x] `code_quality/language_file_filter.rb` - Filters files by language
+- [x] `code_quality/markdown_link_validator.rb` - Validates markdown links
+- [x] `code_quality/security_validator.rb` - Validates security rules
+- [x] `code_quality/standard_rb_validator.rb` - Validates Ruby with StandardRB
+- [x] `code_quality/task_metadata_validator.rb` - Validates task metadata
+- [x] `code_quality/template_embedding_validator.rb` - Validates embedded templates
 
 ### Code Atoms (4 components)
 - [x] `code/directory_creator.rb` - Creates directories safely
@@ -50,11 +50,11 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 - [x] `code/session_timestamp_generator.rb` - Generates session timestamps
 
 ### Context Atoms (2 components)
-- [ ] `context/context_config_loader.rb` - Loads context configuration
-- [ ] `context/template_parser.rb` - Parses context templates
+- [x] `context/context_config_loader.rb` - Loads context configuration
+- [x] `context/template_parser.rb` - Parses context templates
 
 ### Coverage Atoms (2 components)
-- [ ] `coverage_calculator.rb` - Calculates test coverage percentages
+- [x] `coverage_calculator.rb` - Calculates test coverage percentages
 - [ ] `coverage_file_reader.rb` - Reads coverage data files
 
 ### Directory/File Atoms (3 components)
@@ -90,7 +90,7 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 ### Path Atoms (3 components)
 - [x] `path_resolver.rb` - Resolves file paths
 - [ ] `path_sanitizer.rb` - Sanitizes file paths for security
-- [ ] `project_root_detector.rb` - Detects project root directory
+- [x] `project_root_detector.rb` - Detects project root directory
 
 ### Ruby Atoms (1 component)
 - [ ] `ruby_method_parser.rb` - Parses Ruby method definitions
@@ -124,24 +124,90 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 
 ## Progress Tracking
 
-- **Components completed:** 13/61 (1 removed as dead code, 12 tested)
+- **Components completed:** 24/61 (1 removed as dead code, 23 tested)
 - **Estimated time per component:** ~4 minutes
-- **Current focus:** Completed parallel testing of 10 atoms with 322 comprehensive tests total
+- **Latest batch results:** 10 atoms tested with 364 total tests created
+- **Current focus:** Batch 2 completed successfully
+
+### Completed Batch 2 Summary (10 atoms, 364 tests)
+
+1. ✅ `kramdown_formatter.rb` - 35 tests
+2. ✅ `language_file_filter.rb` - 35 tests
+3. ✅ `markdown_link_validator.rb` - 35 tests
+4. ✅ `security_validator.rb` - 30 tests
+5. ✅ `standard_rb_validator.rb` - 36 tests
+6. ✅ `task_metadata_validator.rb` - 51 tests
+7. ✅ `template_embedding_validator.rb` - 33 tests
+8. ✅ `context_config_loader.rb` - 30 tests (found bug: undefined Error constant)
+9. ✅ `template_parser.rb` - 40 tests
+10. ✅ `coverage_calculator.rb` - 38 tests
+
+### Next Batch Queue (10 atoms)
+
+1. `coverage_file_reader.rb` - Reads coverage data files
+2. `directory_scanner.rb` - Scans directories for files
+3. `docs_dependencies_config_loader.rb` - Loads docs dependency config
+4. `dot_graph_writer.rb` - Writes DOT graph format
+5. `editor/editor_detector.rb` - Detects available editors
+6. `editor/editor_launcher.rb` - Launches editor commands
+7. `env_reader.rb` - Reads environment variables
+8. `file_reference_extractor.rb` - Extracts file references from text
+9. `git/git_command_executor.rb` - Executes git commands
+10. `git/log_color_formatter.rb` - Formats git log with colors
 
 ## Implementation Plan
 
+### Parallel Test Creation Process
+
+Each batch of 10 atoms should be tested using parallel sub-tasks with the following structure:
+
+#### Sub-Task Instructions Template
+
+```
+1. LOAD CONTEXT FILES:
+   - Read testing guide: /Users/mc/Ps/ace/.ace/tools/docs/development/testing.g.md
+   - Read test helper: /Users/mc/Ps/ace/.ace/tools/test/test_helper.rb
+   - Read example test: /Users/mc/Ps/ace/.ace/tools/test/unit/atoms/claude/command_existence_checker_test.rb
+   - Read target atom: /Users/mc/Ps/ace/.ace/tools/lib/ace_tools/atoms/[category]/[atom_name].rb
+
+2. VERIFY ATOM USAGE:
+   - Run: search "[AtomClassName]" --content --hidden --include .ace/tools
+   - Confirm atom is actually used in production code
+   - Skip test creation if dead code found (no usage)
+
+3. CREATE COMPREHENSIVE TEST FILE:
+   - Location: test/unit/atoms/[category]/[atom_name]_test.rb
+   - Use AtomTest base class (inherits parallelize_me!)
+   - Test ALL public methods comprehensively
+   - Include edge cases and error conditions
+   - Use descriptive test method names (test_action_condition)
+   - No external dependencies or network calls
+   - Use temporary directories/files as needed
+
+4. VERIFY TEST EXECUTION:
+   - Run: ace-test test/unit/atoms/[category]/[atom_name]_test.rb
+   - Ensure all tests pass (0 failures, 0 errors)
+   - Fix any failures before marking complete
+   - Verify test can run independently
+
+5. REPORT RESULTS:
+   - Number of tests created
+   - Coverage of public methods
+   - Any special considerations discovered
+```
+
 ### Execution Steps
 
-1. **Setup Test Infrastructure**
-   - [ ] Create test/unit/atoms/ subdirectories matching lib structure
-   - [ ] Set up shared test helpers for atoms
+1. **Setup Test Infrastructure** ✅
+   - [x] Create test/unit/atoms/ subdirectories matching lib structure
+   - [x] Set up shared test helpers for atoms
 
 2. **Test Pure Functions First** (Priority: High)
-   - [ ] Test path/file atoms (no external dependencies)
-   - [ ] Test formatters and renderers (deterministic output)
-   - [ ] Test parsers and validators (clear input/output)
+   - [x] Test path/file atoms (path_resolver, file_content_reader, directory_creator)
+   - [x] Test formatters and renderers (error_distributor, file_type_detector)
+   - [x] Test parsers and validators (yaml_frontmatter_validator, cassettes_validator)
 
-3. **Test System Interaction Atoms** (Priority: Medium)
+3. **Test System Interaction Atoms** (Priority: Medium) - IN PROGRESS
    - [ ] Test command executors with mocked system calls
    - [ ] Test file readers/scanners with fixture files
    - [ ] Test environment readers with controlled ENV
