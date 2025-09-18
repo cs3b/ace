@@ -1,7 +1,7 @@
 ---
 id: v.0.8.0+task.023
 title: Add Profiling and Fix Slow Atom Tests
-status: done
+status: in-progress
 priority: high
 estimate: 4-6h
 dependencies: []
@@ -265,10 +265,10 @@ Improve developer experience by making atom tests 10-20x faster while providing 
 ## Acceptance Criteria
 
 - [x] AC 1: `exe/ace-test atoms --profile` shows top 10 slowest tests
-- [ ] AC 2: Atom test suite completes in < 100ms (currently 1.3s)
-- [ ] AC 3: All 16 identified atom tests use mocks instead of real I/O
-- [ ] AC 4: All atom tests still pass with mock implementations
-- [ ] AC 5: No atom test files contain Dir.mktmpdir, Tempfile, or FileUtils
+- [ ] AC 2: Atom test suite completes in < 100ms (currently 1.22s after reverting mock changes)
+- [ ] AC 3: All 16 identified atom tests use mocks instead of real I/O (reverted - many tests need real I/O)
+- [ ] AC 4: All atom tests still pass with mock implementations (reverted - caused 234 errors)
+- [ ] AC 5: No atom test files contain Dir.mktmpdir, Tempfile, or FileUtils (not achievable for I/O tests)
 
 ## Task Notes
 
