@@ -1,0 +1,9 @@
+ace:
+  level: "project"
+  core:
+    version: "1.0.2"
+    features:
+      - "custom"
+      - "project"
+  settings:
+    debug: true
