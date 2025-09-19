@@ -25,6 +25,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
 
 #### Create
 
+- ace-git/.bundle/config (BUNDLE_GEMFILE pointing to parent)
 - ace-git/ace-git.gemspec
 - ace-git/lib/ace/git.rb
 - ace-git/lib/ace/git/version.rb
@@ -58,8 +59,17 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
 
 - [ ] Create gem skeleton
   ```bash
-  mkdir -p ace-git/{lib/ace/git,test,config,exe}
+  mkdir -p ace-git/{lib/ace/git,test,config,exe,.bundle}
   ```
+
+- [ ] Create .bundle/config for ace-git
+  ```yaml
+  # ace-git/.bundle/config
+  ---
+  BUNDLE_GEMFILE: "../Gemfile"
+  ```
+  > NOTE: This follows the Option C pattern established with ace-core
+  > Allows ace-git to use shared root Gemfile for all dependencies
 
 - [ ] Create ace-git.gemspec
   ```ruby
@@ -70,8 +80,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
 
     spec.add_dependency "ace-core", "~> 0.9.0"
 
-    spec.add_development_dependency "minitest"
-    spec.add_development_dependency "rake"
+    # No development dependencies - managed in root Gemfile
   end
   ```
 
@@ -220,6 +229,15 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
       enabled: false  # No AI signature for now
   ```
 
+- [ ] Set up test helper
+  ```ruby
+  # test/test_helper.rb
+  require 'minitest/autorun'
+  require 'minitest/reporters' # Available from root Gemfile
+  require 'ace/git'
+  # Reuse test utilities from ace-core which already has 29 passing tests
+  ```
+
 - [ ] Write commit builder tests
   ```ruby
   class CommitBuilderTest < Minitest::Test
@@ -233,6 +251,14 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   end
   ```
 
+- [ ] Run bundle install from root
+  > TEST: Gem integration
+  > Type: Integration
+  > Assert: ace-git loads with ace-core
+  > Command: bundle install && bundle exec ace-gc --help
+  > NOTE: Run from project root, not ace-git directory
+  > The .bundle/config will ensure proper Gemfile resolution
+
 - [ ] Write integration test
   > TEST: ace-gc command
   > Type: Integration
@@ -243,6 +269,10 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```ruby
   gem "ace-git", path: "ace-git"
   ```
+  > NOTE: Root Gemfile configuration:
+  > - No vendor/bundle (gems install to mise Ruby location)
+  > - Shared dev dependencies (minitest ~> 5.20, rake ~> 13.0, minitest-reporters ~> 1.6)
+  > - All gems use .bundle/config to reference parent Gemfile
 
 - [ ] Create README
   ```markdown
