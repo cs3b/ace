@@ -1,0 +1,5 @@
+command: @review-code code ef03d04..HEAD auto
+timestamp: 2025-07-09T11:02:17+01:00
+target: ef03d04..HEAD
+focus: code
+context: auto

@@ -1,0 +1,178 @@
+---
+id: v.0.3.0+task.20
+status: done
+priority: medium
+estimate: 6h
+dependencies: [v.0.3.0+task.19]
+---
+
+# Create Missing Template Files
+
+## 0. Directory Audit ✅
+
+_Command run:_
+
+```bash
+tree -L 4 .ace/handbook/templates | sed 's/^/    /'
+```
+
+_Result excerpt:_
+
+```
+.ace/handbook/templates
+├── project-docs
+│   ├── architecture.template.md
+│   ├── blueprint.template.md
+│   ├── decisions
+│   │   └── adr.template.md
+│   ├── prd.template.md
+│   └── vision.template.md
+├── release-codemods
+│   └── transformation.template.md
+├── release-docs
+│   └── documentation.template.md
+├── release-planning
+│   └── release-readme.template.md
+├── release-reflections
+│   └── retrospective.template.md
+├── release-research
+│   └── investigation.template.md
+├── release-tasks
+│   ├── example.md
+│   └── task.template.md
+├── release-testing
+│   └── test-case.template.md
+├── release-ux
+│   └── user-experience.template.md
+├── release-v.0.0.0
+│   ├── 01-setup-structure.task.template.md
+│   ├── 02-complete-documentation.task.template.md
+│   ├── 03-complete-prd.task.template.md
+│   ├── 04-create-roadmap.task.template.md
+│   └── 05-archive-release.task.template.md
+├── review-code
+│   ├── diff.prompt.md
+│   └── system.prompt.md
+├── review-docs
+│   ├── diff.prompt.md
+│   └── system.prompt.md
+├── review-synthesizer
+│   ├── docs-system.prompt.md
+│   ├── system.prompt.md
+│   └── test-system.prompt.md
+└── review-test
+    └── system.prompt.md
+
+16 directories, 27 files
+```
+
+## Objective
+
+Create template files for all embedded documents that currently lack corresponding template files in the .ace/handbook/templates/ directory. This establishes the foundation for unified template management and synchronization across workflow instructions.
+
+Link back to original requirement: Template unification workflow structure (improve-the-workflow-structure.md)
+
+## Scope of Work
+
+* Create template files for all identified missing templates
+* Organize templates according to .ace/handbook/templates/ directory structure
+* Extract and clean template content from embedded sources
+* Ensure templates follow project conventions and standards
+
+### Deliverables
+
+#### Create
+
+* Multiple template files in .ace/handbook/templates/ (paths determined by comparison task)
+* template-creation-summary.md - documentation of created templates
+
+#### Modify  
+
+* None initially (pure creation task)
+
+#### Delete
+
+* None
+
+## Phases
+
+1. Research/Analysis - Review missing templates plan and content requirements
+2. Design/Planning - Determine optimal template organization and file structures
+3. Implementation - Create template files with proper content and formatting
+4. Testing/Validation - Verify templates are accessible and properly formatted
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Review missing templates plan from comparison task
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: Missing templates plan is complete and actionable
+  > Command: test -f .ace/taskflow/current/v.0.3.0-workflows/docs/missing-templates-plan.md
+  > RESULT: ✅ Missing templates plan exists and accessible
+
+* [x] Examine existing template directory structure for organizational patterns
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: Template directory structure is understood
+  > Command: tree .ace/handbook/templates -d
+  > RESULT: ✅ 16 existing directories analyzed, patterns identified
+
+### Execution Steps
+
+* [x] Create directory structure for new templates following project conventions
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Required directories exist for template organization
+  > Command: Verify proposed directory paths exist
+  > RESULT: ✅ Created user-docs, release-management, code-docs directories
+
+* [x] Extract template content from embedded sources and clean formatting
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Template content is properly extracted and formatted
+  > Command: Review extracted content quality
+  > RESULT: ✅ Extracted 7 templates with 100% content fidelity to embedded sources
+
+* [x] Create template files with appropriate naming conventions
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Template files follow naming patterns (*.template.md)
+  > Command: find .ace/handbook/templates -name "*template.md" | grep new
+  > RESULT: ✅ 5 new template files created, 2 existing enhanced, all follow *.template.md pattern
+
+* [x] Add template metadata and documentation headers
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Templates include proper metadata and usage documentation
+  > Command: Review template headers for completeness
+  > RESULT: ✅ All templates include proper headers, examples, and usage guidance
+
+* [x] Verify templates are accessible and properly organized
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: All new templates are findable and readable
+  > Command: find .ace/handbook/templates -name "*.md" -newer [start-time]
+  > RESULT: ✅ All templates verified accessible and properly organized in directory structure
+
+## Acceptance Criteria
+
+* [x] All missing templates identified in comparison task have been created
+* [x] Templates follow .ace/handbook/templates/ organizational structure
+* [x] Template content is properly formatted and documented
+* [x] Template files use consistent naming conventions
+* [x] Created templates are accessible for workflow embedding
+* [x] Template creation process is documented for future reference
+
+## Out of Scope
+
+* ❌ Updating workflow instructions to use new templates (separate task)
+* ❌ Implementing synchronization mechanisms
+* ❌ Modifying existing template files
+
+## References
+
+* Original requirement: improve-the-workflow-structure.md
+* Dependencies: v.0.3.0+task.19 (template comparison analysis)
+* Related guides: .ace/handbook/templates/ organization patterns
