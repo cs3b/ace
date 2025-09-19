@@ -8,12 +8,8 @@ The goal is to create a consistent, efficient, and AI-friendly development envir
 
 ## Core Components
 
-1.  **`dev-handbook` Toolkit**: A specialized toolkit, ideally consumed from its own repository: `https://github.com/cs3b/coding-agent-workflow-toolkit`. It
-```text
-provides standardized development guides, workflow instructions, templates, and utilities.
-* You integrate `dev-handbook` into your project, typically as a Git submodule, into a local `dev-handbook/` directory. The `dev-handbook/` folder within
-  *this* meta-repository contains an *example* of such a toolkit\'s README and structure, primarily for illustrative purposes here. For actual use and the
-  latest version, always refer to the dedicated `dev-handbook` toolkit repository.
+1.  **`dev-handbook` Toolkit**: A specialized toolkit providing standardized development guides, workflow instructions, templates, and utilities.
+   * The `dev-handbook/` directory is part of this integrated meta-repository and contains the complete toolkit ready for use.
 2.  **`dev-taskflow` Structure**: A standardized directory structure for all your project-specific documentation (e.g., `what-do-we-build.md`,
 `architecture.md`, `blueprint.md`), task management (`backlog/`, `current/`, `done/`), and decision logs.
 * This structure is typically initialized and managed by workflows found in the `dev-handbook` toolkit. The `dev-taskflow/` folder within *this*
@@ -27,46 +23,21 @@ To establish this workflow in your project:
 
 * Git installed on your system.
 
-**Step 1: Integrate the `dev-handbook` Toolkit**
+**Step 1: Using the `dev-handbook` Toolkit**
 
-The `dev-handbook` toolkit contains all the standard guides, workflow instructions, and templates. It is highly recommended to add it to your project as a Git
-submodule from its dedicated repository.
+The `dev-handbook` toolkit contains all the standard guides, workflow instructions, and templates, and is already integrated into this repository in the `dev-handbook/` directory.
 
-* **Canonical `dev-handbook` repository**: `https://github.com/cs3b/coding-agent-workflow-toolkit`
+**Customization**
 
-In your project's root directory, run:
+To customize the `dev-handbook` toolkit for your specific needs:
 
-git submodule add https://github.com/cs3b/coding-agent-workflow-toolkit.git dev-handbook
-git submodule update --init --recursive
-```
-
-This will clone the `dev-handbook` toolkit into a `dev-handbook/` directory in your project, ready for use.
-
-**Advanced: Forking `dev-handbook` for Customization**
-
-If you need to customize the `dev-handbook` toolkit (e.g., tailor guides/workflows, create technology-specific branches for your projects):
-
-Fork the canonical `dev-handbook` repository (i.e., `https://github.com/cs3b/coding-agent-workflow-toolkit`) on GitHub.
-
-1.  **Add Your Fork as Submodule**: In your project\'s root, add your personal fork as the submodule:
-^
-
-```sh
-git submodule add <URL_OF_YOUR_FORKED_DOCS_DEV_REPO> dev-handbook
-git submodule update --init --recursive
-```
-
-(Replace `<URL_OF_YOUR_FORKED_DOCS_DEV_REPO>` with the URL of your fork).
-
-1.  **Customize**: Navigate into your local `dev-handbook` submodule (`cd dev-handbook`), create a new branch (e.g., `git checkout -b
-```text
-my-project-specific-branch`), and make your modifications.
-2.  **Stay Updated**: To incorporate updates from the original `dev-handbook` toolkit, periodically fetch and merge changes from the upstream repository into
-your fork's main branch, and then merge those updates into your custom branches.
+1. **Make Direct Modifications**: Navigate to the `dev-handbook/` directory and make your modifications directly.
+2. **Create Custom Branches**: Create technology-specific or project-specific branches for different use cases.
+3. **Track Changes**: Use Git to track your customizations and merge updates as needed.
 
 **Step 2: Initialize Your `dev-taskflow` Structure**
 
-Once the `dev-handbook` toolkit is integrated (i.e., you have a `dev-handbook/` directory in your project containing the toolkit), use its
+With the `dev-handbook` toolkit available in the `dev-handbook/` directory, use its
 `initialize-project-structure.md` workflow to set up your project-specific `dev-taskflow/` directory.
 
 This is typically done by instructing an AI coding assistant. See the "Using Workflow Instructions with a Chat Interface" section below for how to do this.
@@ -88,7 +59,7 @@ For a detailed explanation of the `dev-taskflow` specification and structure, re
 Most interactions with the `dev-handbook` workflows are designed to be performed via an AI-powered chat interface or coding assistant that can read files and
 execute commands. To run a workflow:
 
-1.  Ensure the `dev-handbook` toolkit is present in your project at the `dev-handbook/` path (see Step 1 in "Getting Started / Setup").
+1.  Ensure the `dev-handbook` toolkit is present in your project at the `dev-handbook/` path.
 2.  Instruct your AI assistant to read and execute the desired workflow instruction file, providing any necessary inputs like file paths.
 
 ### Claude Code Integration
@@ -194,8 +165,7 @@ examples of README files and directory structures for both `dev-handbook` and `d
 should be sourced from its own repository. Offer a centralized place for high-level discussions, issues, and examples related to the entire AI-assisted
 development workflow ecosystem.
 
-For the actual `dev-handbook` toolkit, its most current version, and its own issue tracking, please refer to its dedicated repository:
-`https://github.com/cs3b/coding-agent-workflow-toolkit`.
+The `dev-handbook` toolkit is fully integrated into this repository and ready for immediate use.
 
 
 
