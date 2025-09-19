@@ -1,0 +1,36 @@
+# Sample project-level ace-core configuration
+# This file overrides gem defaults and can be customized per project
+
+ace:
+  # Project-specific settings
+  project:
+    name: "ace-meta"
+    type: "monorepo"
+
+  # Override default config cascade
+  config_cascade:
+    merge_strategy: deep
+    array_strategy: union  # Combine arrays instead of replacing
+
+  # Environment configuration
+  environment:
+    load_dotenv: true
+    dotenv_files:
+      - ".env.local"
+      - ".env.development"
+      - ".env"
+
+  # Project-specific settings
+  settings:
+    verbose_logging: true  # Enable for debugging
+    cache_ttl: 600  # 10 minutes for development
+
+  # Custom paths or patterns can be added here
+  paths:
+    gems:
+      - "ace-core"
+      - "ace-*"  # Future gems
+    submodules:
+      - "dev-tools"
+      - "dev-handbook"
+      - "dev-taskflow"
