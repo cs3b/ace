@@ -1,0 +1,45 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/coverage_analysis
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+
+# rspec failure tracking
+.rspec_status
+
+# Ignore built gem files
+*.gem
+
+# VCR debug logs
+vcr.log
+vcr_debug.log
+
+# Environment files with API keys
+.env
+.env.*
+!.env.example
+
+# Keep VCR cassettes in repository but ignore sensitive ones
+spec/cassettes/**/*_with_real_api_key_*
+
+# Debug files
+debug_error.rb
+*.DS_Store
+
+# Git diff files
+*.diff
+
+# docs-project specific files
+docs-project/**/*_review/**/*.diff
+docs-project/**/*_review/**/*prompt*.md
+docs-project/**/*_review/**/*prompt*.md
+
+# Code quality reports
+.lint-report.md
+.lint-diff-review.md
+.lint-issue-*.md
+.lint-errors-*.md

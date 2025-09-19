@@ -1,0 +1,224 @@
+# RuboCop configuration for Coding Agent Tools
+# Inherits from StandardRB for sensible defaults
+
+# Inherit from StandardRB
+inherit_gem:
+  standard: config/base.yml
+
+# Extend the StandardRB exclusions
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable
+  Exclude:
+    - "vendor/**/*"
+    - "tmp/**/*"
+    - "coverage/**/*"
+    - "pkg/**/*"
+    - "*.gemspec"
+    - "dev-handbook/**/*"
+    - "dev-taskflow/**/*"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "bin/stubs/*"
+    - "spec/fixtures/**/*"
+    - "spec/cassettes/**/*"
+
+# Project-specific exceptions to preserve existing style conventions
+
+# Allow longer methods in certain contexts
+Metrics/MethodLength:
+  Max: 20  # StandardRB default is 10
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+  Exclude:
+    - "spec/**/*"
+    - "lib/coding_agent_tools/cli/**/*"  # CLI commands can be longer
+
+# Allow longer blocks in specs and CLI
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "lib/coding_agent_tools/cli/**/*"
+    - "Rakefile"
+    - "**/*.gemspec"
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+
+# Allow longer classes for CLI commands and organisms
+Metrics/ClassLength:
+  Max: 250  # StandardRB default is 100
+  Exclude:
+    - "lib/coding_agent_tools/cli/**/*"
+    - "lib/coding_agent_tools/organisms/**/*"
+
+# Allow higher complexity for certain business logic
+Metrics/AbcSize:
+  Max: 25  # StandardRB default is 15
+  Exclude:
+    - "lib/coding_agent_tools/organisms/**/*"
+    - "lib/coding_agent_tools/cli/**/*"
+
+Metrics/CyclomaticComplexity:
+  Max: 10  # StandardRB default is 6
+  Exclude:
+    - "lib/coding_agent_tools/organisms/**/*"
+    - "lib/coding_agent_tools/cli/**/*"
+
+Metrics/PerceivedComplexity:
+  Max: 10  # StandardRB default is 7
+  Exclude:
+    - "lib/coding_agent_tools/organisms/**/*"
+    - "lib/coding_agent_tools/cli/**/*"
+
+# Allow longer lines in certain contexts  
+Layout/LineLength:
+  Max: 120  # StandardRB default is 120
+  AllowedPatterns:
+    - '^\s*#'  # Allow longer comment lines
+    - 'describe\s.+\sdo'  # Allow longer RSpec descriptions
+    - 'context\s.+\sdo'   # Allow longer RSpec contexts
+    - 'it\s.+\sdo'        # Allow longer RSpec examples
+
+# Project uses frozen string literals
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+
+# Preserve project's string literal style (will auto-correct to single quotes)
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: single_quotes
+
+# Preserve hash brace spacing style
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: true
+  EnforcedStyle: space
+
+# Allow trailing whitespace to be auto-corrected
+Layout/TrailingWhitespace:
+  Enabled: true
+
+# Allow certain file patterns to have different rules
+Style/Documentation:
+  Exclude:
+    - "spec/**/*"
+    - "lib/coding_agent_tools/cli/**/*"  # CLI commands are self-documenting
+
+# StandardRB disables this but we want it for consistency
+Style/NumericLiterals:
+  Enabled: true
+  MinDigits: 5
+
+# Allow both styles of word arrays depending on context
+Style/WordArray:
+  Enabled: true
+  MinSize: 3
+  EnforcedStyle: brackets
+
+# Preserve the project's block delimiter preferences
+Style/BlockDelimiters:
+  Enabled: true
+  EnforcedStyle: line_count_based
+
+# Allow rescue in modifiers for simple cases
+Style/RescueModifier:
+  Enabled: false
+
+# Allow class vars in certain contexts (used in configuration)
+Style/ClassVars:
+  Enabled: false
+
+# Allow empty methods for interface definitions
+Style/EmptyMethod:
+  Enabled: false
+
+# Lint checks should all be enabled
+Lint/UnusedBlockArgument:
+  Enabled: true
+
+# Security checks should be enabled
+Security:
+  Enabled: true
+
+# Additional configurations for remaining offenses
+
+# Case statement indentation - StandardRB and our preferences differ
+Layout/CaseIndentation:
+  Enabled: true
+  EnforcedStyle: end
+
+# Allow complex indentation patterns in certain files
+Layout/IndentationWidth:
+  Enabled: true
+  Exclude:
+    - "lib/coding_agent_tools/atoms/security_logger.rb"
+    - "lib/coding_agent_tools/cli/commands/**/*"
+
+# Multi-line method call indentation
+Layout/MultilineMethodCallIndentation:
+  Enabled: true
+  EnforcedStyle: indented
+
+# Multi-line operation indentation
+Layout/MultilineOperationIndentation:
+  Enabled: true
+  EnforcedStyle: indented
+
+# Allow ternary parentheses for clarity
+Style/TernaryParentheses:
+  Enabled: false
+
+# Float comparison is sometimes necessary
+Lint/FloatComparison:
+  Enabled: false
+
+# Empty else can be clearer in some contexts
+Style/EmptyElse:
+  Enabled: false
+
+# Quoted symbols are fine
+Style/QuotedSymbols:
+  Enabled: false
+
+# Redundant begin is sometimes clearer
+Style/RedundantBegin:
+  Enabled: false
+
+# Conditional assignment can hurt readability
+Style/ConditionalAssignment:
+  Enabled: false
+
+# Allow various numeric literal formats
+Style/NumericLiteralPrefix:
+  Enabled: false
+
+# These newer Ruby features are not always clearer
+Style/SafeNavigation:
+  Enabled: false
+
+Style/HashExcept:
+  Enabled: false
+
+Style/SlicingWithRange:
+  Enabled: false
+
+Style/ComparableBetween:
+  Enabled: false
+
+# Sometimes identical branches are intentional for clarity
+Style/IdenticalConditionalBranches:
+  Enabled: false
+
+# Lint checks that may have false positives
+Lint/UselessAssignment:
+  Enabled: true
+  Exclude:
+    - "spec/**/*"  # Test setup may have intentional unused assignments
+
+# Handle duplicate methods case-by-case
+Lint/DuplicateMethods:
+  Enabled: true

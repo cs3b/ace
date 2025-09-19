@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Coding Agent Tools - Reflection Synthesis Command
+#
+# This executable provides a reflection synthesis workflow that orchestrates
+# LLM calls to synthesize multiple reflection notes into a unified analysis.
+# It follows the project's established ATOM architecture and CLI patterns.
+#
+# Usage: reflection-synthesize <reflection1> <reflection2> [reflection3...] [options]
+#
+# Examples:
+#   reflection-synthesize reflection-2024-01-15.md reflection-2024-01-20.md
+#   reflection-synthesize reflection-*.md --model anthropic:claude-sonnet-4-20250514
+#   reflection-synthesize reflection-*.md --output team-learning-synthesis.md
+#   reflection-synthesize reflection-*.md --force
+#
+# Features:
+#   - Automatic timestamp range inference from reflection note dates
+#   - Intelligent output file naming using timestamp ranges
+#   - Default integration with reflection synthesis system prompt template
+#   - Support for all llm-query providers and models
+#   - Unified analysis with learning consolidation and improvement recommendations
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["reflection", "synthesize"],
+  registration_method: :register_reflection_commands,
+  executable_name: "reflection-synthesize"
+).call

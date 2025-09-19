@@ -1,0 +1,74 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"What does 'Hello, World!' mean in programming?\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 15:47:04 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=3599"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"\\\"Hello, World!\\\" is a traditional and simple program used in the world of programming. It serves as a beginner's introduction to a new programming language or environment. Here's what it means:\\n\\n*   **The Program's Purpose:** The core function of a \\\"Hello, World!\\\" program is to display the text \\\"Hello, World!\\\" (or a similar greeting) on the screen or output device. It's a way to verify that the basic setup of a programming environment is working correctly.\\n\\n*   **A Test of Basic Functionality:** When you run a \\\"Hello, World!\\\" program, you're essentially testing the following:\\n    *   **Compiler/Interpreter:** If the program needs to be compiled or interpreted, this confirms that the necessary tools are correctly installed and configured.\\n    *   **Syntax:** It validates that the code adheres to the fundamental syntax rules of the programming language.\\n    *   **Output Mechanism:** It checks that the program can successfully send output to the designated device (usually the console or terminal).\\n\\n*   **Simplicity and Universality:** The \\\"Hello, World!\\\" program is deliberately kept extremely simple. This means that it's easy to understand, regardless of the programming language. It's a universal starting point that almost every programmer encounters when learning a new language.\\n\\n*   **Historical Context:** The tradition of using \\\"Hello, World!\\\" dates back to the 1970s, with the book \\\"The C Programming Language\\\" by Brian Kernighan and Dennis Ritchie popularizing it. The example program in the book printed \\\"hello, world\\\" (lowercase). Since then, it has become a standard, and many programmers create a \\\"Hello, World!\\\" program as their first step when learning a new language.\\n\\n**In summary:** \\\"Hello, World!\\\" is a simple program that serves as a beginner's test to ensure that a programming environment is set up correctly and that the programmer can successfully output text. It's a cornerstone of programming education and a rite of passage for new programmers.\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.44459667476997555\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 11,\n    \"candidatesTokenCount\": 422,\n    \"totalTokenCount\": 433,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 11\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 422\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"dchaaN-UGd6jmecPmZ3cyAs\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 15:47:04 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

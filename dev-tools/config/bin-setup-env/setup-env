@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# Smart Shell Detection and PATH Setup for tools-meta project
+# This script detects the current shell and provides appropriate setup instructions
+# Usage: source setup-env  OR  bash setup-env
+
+detect_shell() {
+    # Method 1: Check the parent process name
+    local parent_process=$(ps -p $PPID -o comm= 2>/dev/null | tr -d ' ')
+    
+    # Method 2: Check SHELL environment variable
+    local shell_env=$(basename "$SHELL" 2>/dev/null)
+    
+    # Method 3: Check current process
+    local current_process=$(ps -p $$ -o comm= 2>/dev/null | tr -d ' ')
+    
+    # Determine shell with priority: current process > parent process > SHELL env
+    if [[ "$current_process" == *"fish"* ]]; then
+        echo "fish"
+    elif [[ "$current_process" == *"zsh"* ]]; then
+        echo "zsh"
+    elif [[ "$current_process" == *"bash"* ]]; then
+        echo "bash"
+    elif [[ "$parent_process" == *"fish"* ]]; then
+        echo "fish"
+    elif [[ "$parent_process" == *"zsh"* ]]; then
+        echo "zsh"
+    elif [[ "$parent_process" == *"bash"* ]]; then
+        echo "bash"
+    elif [[ "$shell_env" == "fish" ]]; then
+        echo "fish"
+    elif [[ "$shell_env" == "zsh" ]]; then
+        echo "zsh"
+    elif [[ "$shell_env" == "bash" ]]; then
+        echo "bash"
+    else
+        echo "unknown"
+    fi
+}
+
+get_script_dir() {
+    local script_path
+    if [[ -n "${BASH_SOURCE[0]}" ]]; then
+        script_path="${BASH_SOURCE[0]}"
+    else
+        script_path="$0"
+    fi
+    echo "$(cd "$(dirname "$script_path")" && pwd)"
+}
+
+main() {
+    local script_dir=$(get_script_dir)
+    local detected_shell=$(detect_shell)
+    
+    echo "tools-meta PATH Setup"
+    echo "===================="
+    echo "Detected shell: $detected_shell"
+    echo ""
+    
+    case "$detected_shell" in
+        "fish")
+            echo "For Fish shell, run:"
+            echo "  source $script_dir/setup.fish"
+            echo ""
+            echo "To make permanent, add to ~/.config/fish/config.fish:"
+            echo "  source $script_dir/setup.fish"
+            ;;
+        "zsh")
+            echo "For Zsh shell, run:"
+            echo "  source $script_dir/setup.sh"
+            echo ""
+            echo "To make permanent, add to ~/.zshrc:"
+            echo "  source $script_dir/setup.sh"
+            ;;
+        "bash")
+            echo "For Bash shell, run:"
+            echo "  source $script_dir/setup.sh"
+            echo ""
+            echo "To make permanent, add to ~/.bashrc:"
+            echo "  source $script_dir/setup.sh"
+            ;;
+        *)
+            echo "Unknown shell detected. Try one of these:"
+            echo "  For Bash/Zsh: source $script_dir/setup.sh"
+            echo "  For Fish:     source $script_dir/setup.fish"
+            ;;
+    esac
+    
+    echo ""
+    echo "Alternative: Use absolute paths to executables:"
+    local project_root="$(dirname "$(dirname "$(dirname "$script_dir")")")"
+    echo "  $project_root/dev-tools/exe/task-manager next"
+    echo "  $project_root/dev-tools/exe/llm-query \"your prompt\""
+}
+
+# Check if being sourced or executed
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Being executed directly - show instructions
+    main
+else
+    # Being sourced - try to auto-setup for current shell
+    detected_shell=$(detect_shell)
+    script_dir=$(get_script_dir)
+    
+    case "$detected_shell" in
+        "fish")
+            echo "Error: Cannot source Fish script from Bash/Zsh"
+            echo "Run: source $script_dir/setup.fish"
+            ;;
+        "bash"|"zsh"|"unknown")
+            source "$script_dir/setup.sh"
+            ;;
+    esac
+fi

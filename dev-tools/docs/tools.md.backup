@@ -1,0 +1,319 @@
+# Coding Agent Tools - Development Tools Reference
+
+## Main Cheat-sheet
+
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|  
+| **`search`** | **Search files and content** | **`--files`, `--preset`** |
+| `agent-lint` | Lint agent files | `--fix` |
+| `capture-it` | Capture ideas/notes | `--type` |
+| `code-lint` | Lint code files | `--fix` |
+| `code-review` | Code review | `--preset` |
+| `context` | Load context presets | `--preset` |
+| `coverage-analyze` | Coverage analysis | `--format` |
+| `create-path` | Create files/dirs | `--force` |
+| `git-add` | Enhanced git add | `--patch` |
+| `git-commit` | Enhanced git commit | `--intention` |
+| `git-status` | Enhanced git status | `--verbose` |
+| `git-tag` | Enhanced git tag | `--annotate` |
+| `handbook` | Handbook access | `sync-templates` |
+| `llm-query` | LLM query interface | `--model` |
+| `nav-path` | Path navigation | `file` |
+| `nav-tree` | Project tree | `--context` |
+| `mcp-proxy` | MCP server proxy | `--port` |
+| `release-manager` | Release management | `current` |
+| `task-manager` | Task management | `--filter` |
+
+**💡 Tip**: Use `search` for all searching and `nav-path file <filename>` instead of `find`.
+
+## Persona Cheat-sheets
+
+### AI Agent
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|  
+| `task-manager` | Manage tasks | `--filter` |
+| `llm-query` | Query AI | `--model` |
+| `nav-path` | Navigate | `file` |
+| `release-manager` | Releases | `current` |
+
+### Human Developer
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|  
+| `code-review` | Review code | `--preset` |
+| `handbook` | Access guides | `sync-templates` |
+| `code-lint` | Lint files | `--fix` |
+
+### Git Power-User
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|  
+| `git-add` | Enhanced staging | `--patch` |
+| `git-commit` | Smart commits | `--intention` |
+| `git-status` | Multi-repo status | `--verbose` |
+| `git-tag` | Multi-repo tagging | `--annotate` |
+
+### Release Manager
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|  
+| `release-manager` | Release coordination | `current` |
+| `task-manager` | Track deliverables | `--filter` |
+
+## Setup Requirements
+
+**Dependencies:** Ruby >= 3.2.0, Bundler, Git CLI, dev-handbook submodule
+
+**Setup:** `cd dev-tools && bundle install`
+
+## Gem Executables
+
+### `search` – Fast unified search for files and content
+<details><summary>Details</summary>
+
+```bash
+search [PATTERN] [OPTIONS]
+```
+
+**Key flags:** `--files` (file search), `--preset NAME` (use preset), `--fzf` (interactive)
+
+**Example:**
+```bash
+search "TODO" --preset todo  # Find all TODO comments
+```
+</details>
+
+### `agent-lint` – Lint agent definition files
+<details><summary>Details</summary>
+
+**Key flags:** `--fix` (auto-fix), `--strict` (strict mode)  
+**Example:** `agent-lint agents/*.ag.md --fix`
+</details>
+
+### `capture-it` – Capture project ideas and notes
+<details><summary>Details</summary>
+
+**Key flags:** `--type TYPE` (note type), `--priority LEVEL` (priority)  
+**Example:** `capture-it "Feature idea" --type idea`
+</details>
+
+### `code-lint` – Lint code files with autofix
+<details><summary>Details</summary>
+
+**Key flags:** `--fix` (auto-fix), `--type LANG` (language)  
+**Example:** `code-lint lib/**/*.rb --fix`
+</details>
+
+### `code-review` – Preset-based code review
+<details><summary>Details</summary>
+
+**Key flags:** `--preset NAME` (preset), `--model NAME` (model)  
+**Example:** `code-review --preset pr --model google:gemini-2.0-flash-exp`
+</details>
+
+### `code-review-synthesize` – Review synthesis tool
+<details><summary>Details</summary>
+
+**Key flags:** `--format TYPE` (format), `--include-recommendations` (recommendations)  
+**Example:** `code-review-synthesize --format report --include-recommendations`
+</details>
+
+### `context` – Load project context presets
+<details><summary>Details</summary>
+
+**Key flags:** `--preset NAME` (context preset), `--list` (list presets)  
+**Example:** `context --preset dev-tools`
+</details>
+
+### `coverage-analyze` – Code coverage analysis
+<details><summary>Details</summary>
+
+**Key flags:** `--format TYPE` (report format), `--threshold NUM` (threshold)  
+**Example:** `coverage-analyze --format html --threshold 90`
+</details>
+
+### `create-path` – Create files/directories with templates
+<details><summary>Details</summary>
+
+**Key flags:** `--force` (overwrite), `--template PATH` (template)  
+**Example:** `create-path file README.md --content "# My Project"`
+</details>
+
+### `git-add` – Enhanced git add
+<details><summary>Details</summary>
+**Key flags:** `--patch` (interactive), `--all` (add all)  
+**Example:** `git-add --patch`
+</details>
+
+### `git-checkout` – Enhanced git checkout
+<details><summary>Details</summary>
+**Key flags:** `--create` (create branch), `--force` (force)  
+**Example:** `git-checkout feature-branch --create`
+</details>
+
+### `git-commit` – Enhanced git commit
+<details><summary>Details</summary>
+**Key flags:** `--intention TEXT` (intention), `--no-edit` (skip editor)  
+**Example:** `git-commit --intention "fix typo" --no-edit`
+</details>
+
+### `git-fetch` – Enhanced git fetch
+<details><summary>Details</summary>
+**Key flags:** `--all` (all remotes), `--prune` (cleanup)  
+**Example:** `git-fetch --all --prune`
+</details>
+
+### `git-log` – Enhanced git log
+<details><summary>Details</summary>
+**Key flags:** `--oneline` (compact), `--graph` (show graph)  
+**Example:** `git-log --oneline --graph`
+</details>
+
+### `git-mv` – Enhanced git move
+<details><summary>Details</summary>
+**Key flags:** `--force` (force), `--dry-run` (preview)  
+**Example:** `git-mv old-file.rb new-file.rb`
+</details>
+
+### `git-pull` – Enhanced git pull
+<details><summary>Details</summary>
+**Key flags:** `--rebase` (rebase), `--ff-only` (fast-forward)  
+**Example:** `git-pull --rebase`
+</details>
+
+### `git-push` – Enhanced git push
+<details><summary>Details</summary>
+**Key flags:** `--force` (force), `--set-upstream` (set tracking)  
+**Example:** `git-push --set-upstream origin feature-branch`
+</details>
+
+### `git-restore` – Enhanced git restore
+<details><summary>Details</summary>
+**Key flags:** `--staged` (from index), `--worktree` (working tree)  
+**Example:** `git-restore --staged file.rb`
+</details>
+
+### `git-rm` – Enhanced git remove
+<details><summary>Details</summary>
+**Key flags:** `--cached` (index only), `--force` (force)  
+**Example:** `git-rm --cached unwanted-file.log`
+</details>
+
+### `git-status` – Enhanced git status
+<details><summary>Details</summary>
+**Key flags:** `--verbose` (detailed), `--short` (compact)  
+**Example:** `git-status --verbose`
+</details>
+
+### `git-switch` – Enhanced git switch
+<details><summary>Details</summary>
+**Key flags:** `--create` (create), `--force-create` (force create)  
+**Example:** `git-switch main`
+</details>
+
+### `git-tag` – Enhanced git tag
+<details><summary>Details</summary>
+**Key flags:** `--annotate` (annotated), `--delete` (delete)  
+**Example:** `git-tag v1.2.3 --annotate`
+</details>
+
+### `handbook` – Development handbook access
+<details><summary>Details</summary>
+**Key flags:** `sync-templates` (sync), `claude` (integration)  
+**Example:** `handbook sync-templates`
+</details>
+
+### `llm-query` – Unified LLM query interface
+<details><summary>Details</summary>
+**Key flags:** `--model NAME` (model), `--output FILE` (save output)  
+**Example:** `llm-query google:gemini-2.5-flash "What is Ruby?"`
+</details>
+
+### `mcp-proxy` – MCP server proxy
+<details><summary>Details</summary>
+**Key flags:** `--port NUM` (port), `--config FILE` (config)  
+**Example:** `mcp-proxy --port 3000 --config mcp.yml`
+</details>
+
+### `nav-ls` – Enhanced directory listing
+<details><summary>Details</summary>
+**Key flags:** `--long` (detailed), `--all` (show hidden)  
+**Example:** `nav-ls --long --all docs/`
+</details>
+
+### `nav-path` – Intelligent path navigation
+<details><summary>Details</summary>
+**Key flags:** `task` (resolve task ID), `file` (find file)  
+**Example:** `nav-path file blueprint`
+</details>
+
+### `nav-tree` – Enhanced project tree
+<details><summary>Details</summary>
+**Key flags:** `--context TYPE` (context), `--depth NUM` (depth)  
+**Example:** `nav-tree --context dev --depth 3`
+</details>
+
+### `reflection-synthesize` – Reflection report generator
+<details><summary>Details</summary>
+**Key flags:** `--session ID` (session), `--focus AREAS` (focus areas)  
+**Example:** `reflection-synthesize --session current --focus architecture`
+</details>
+
+### `release-manager` – Release management tool
+<details><summary>Details</summary>
+**Key flags:** `current` (show current), `report` (generate report)  
+**Example:** `release-manager current`
+</details>
+
+### `task-manager` – Project task management
+<details><summary>Details</summary>
+**Key flags:** `--filter EXPR` (filter), `--limit NUM` (max results)  
+**Example:** `task-manager next --filter priority:high --limit 3`
+</details>
+
+## Tool Categories
+
+### By Function
+* **Code Review**: `code-review`, `code-review-synthesize`
+* **Code Quality**: `agent-lint`, `code-lint`, `coverage-analyze`
+* **Git Operations**: `git-add`, `git-commit`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`, `git-tag`
+* **LLM Integration**: `llm-query`, `mcp-proxy`
+* **Navigation**: `nav-ls`, `nav-path`, `nav-tree`
+* **Project Management**: `release-manager`, `task-manager`, `capture-it`
+* **Development Tools**: `context`, `create-path`, `handbook`
+
+### By Persona
+* **AI Agent**: `llm-query`, `nav-path`, `release-manager`, `task-manager`
+* **Human Developer**: `code-review`, `handbook`, `code-lint`, `coverage-analyze`
+* **Git Power-User**: `git-add`, `git-commit`, `git-status`, `git-tag`
+* **Release Manager**: `release-manager`, `task-manager`
+
+## Common Workflows
+
+### AI Agent Workflow
+```bash
+task-manager next
+nav-path task 42
+nav-path file blueprint
+llm-query google "How to implement feature X?"
+```
+
+### Human Developer Workflow
+```bash
+handbook sync-templates
+code-review --preset pr
+task-manager recent
+reflection-synthesize --session current
+```
+
+### Git Power-User Workflow
+```bash
+git-status --verbose
+git-commit --intention "update features"
+git-push
+```
+
+## Notes
+
+* All tools available directly by name via fish integration
+* Use `tool-name --help` for detailed usage information
+* Git wrappers provide enhanced functionality over standard git commands
+
+*For the most up-to-date information, run individual tools with `--help` flag.*

@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Nav Path - Intelligent path resolution and generation
+#
+# This executable provides focused entry point for path operations including
+# task path generation, file resolution, and documentation navigation.
+#
+# Usage: nav-path TYPE [INPUT] [OPTIONS]
+#
+# Examples:
+#   nav-path task-new "Implement feature X"
+#   nav-path task-new --title "Implement feature X"
+#   nav-path task 42
+#   nav-path file README
+#   nav-path docs-new "Architecture guide"
+#   nav-path reflection-list
+#
+# Types:
+#   task-new        Generate new task path
+#   task            Resolve existing task by ID
+#   docs-new        Generate new docs path
+#   reflection-new  Generate new reflection path
+#   reflection-list List available reflections
+#   code-review-new Generate new code review path
+#   file            Resolve file path
+#
+# Options:
+#   --title         Title for new path generation (alternative to input argument)
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["nav", "path"],
+  registration_method: :register_nav_commands,
+  executable_name: "nav-path"
+).call
