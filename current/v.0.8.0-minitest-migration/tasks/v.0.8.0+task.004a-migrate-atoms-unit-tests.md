@@ -55,24 +55,24 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 
 ### Coverage Atoms (2 components)
 - [x] `coverage_calculator.rb` - Calculates test coverage percentages
-- [ ] `coverage_file_reader.rb` - Reads coverage data files
+- [x] `coverage_file_reader.rb` - Reads coverage data files
 
 ### Directory/File Atoms (3 components)
-- [ ] `directory_scanner.rb` - Scans directories for files
-- [ ] `docs_dependencies_config_loader.rb` - Loads docs dependency config
-- [ ] `dot_graph_writer.rb` - Writes DOT graph format
+- [x] `directory_scanner.rb` - Scans directories for files (integration test)
+- [x] `docs_dependencies_config_loader.rb` - Loads docs dependency config
+- [x] `dot_graph_writer.rb` - Writes DOT graph format
 
 ### Editor Atoms (2 components)
-- [ ] `editor/editor_detector.rb` - Detects available editors
-- [ ] `editor/editor_launcher.rb` - Launches editor commands
+- [x] `editor/editor_detector.rb` - Detects available editors
+- [x] `editor/editor_launcher.rb` - Launches editor commands
 
 ### Environment Atoms (2 components)
-- [ ] `env_reader.rb` - Reads environment variables
-- [ ] `file_reference_extractor.rb` - Extracts file references from text
+- [x] `env_reader.rb` - Reads environment variables
+- [x] `file_reference_extractor.rb` - Extracts file references from text
 
 ### Git Atoms (5 components)
-- [ ] `git/git_command_executor.rb` - Executes git commands
-- [ ] `git/log_color_formatter.rb` - Formats git log with colors
+- [x] `git/git_command_executor.rb` - Executes git commands
+- [x] `git/log_color_formatter.rb` - Formats git log with colors
 - [ ] `git/repository_scanner.rb` - Scans git repositories
 - [ ] `git/status_color_formatter.rb` - Formats git status with colors
 - [ ] `git/submodule_detector.rb` - Detects git submodules
@@ -124,10 +124,10 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 
 ## Progress Tracking
 
-- **Components completed:** 24/61 (1 removed as dead code, 23 tested)
+- **Components completed:** 34/61 (1 removed as dead code, 33 tested)
 - **Estimated time per component:** ~4 minutes
-- **Latest batch results:** 10 atoms tested with 364 total tests created
-- **Current focus:** Batch 2 completed successfully
+- **Latest batch results:** 10 atoms tested with 354 total tests created
+- **Current focus:** Batch 3 completed successfully
 
 ### Completed Batch 2 Summary (10 atoms, 364 tests)
 
@@ -142,18 +142,31 @@ Migrate all unit tests for Atom components to Minitest. Atoms are pure functions
 9. ✅ `template_parser.rb` - 40 tests
 10. ✅ `coverage_calculator.rb` - 38 tests
 
+### Completed Batch 3 Summary (10 atoms, 354 tests)
+
+1. ✅ `coverage_file_reader.rb` - 32 tests
+2. ✅ `directory_scanner.rb` - 22 tests (moved to integration/atoms/)
+3. ✅ `docs_dependencies_config_loader.rb` - 43 tests
+4. ✅ `dot_graph_writer.rb` - 30 tests
+5. ✅ `editor/editor_detector.rb` - 30 tests
+6. ✅ `editor/editor_launcher.rb` - 47 tests
+7. ✅ `env_reader.rb` - 43 tests
+8. ✅ `file_reference_extractor.rb` - 46 tests
+9. ✅ `git/git_command_executor.rb` - 21 tests
+10. ✅ `git/log_color_formatter.rb` - 40 tests
+
 ### Next Batch Queue (10 atoms)
 
-1. `coverage_file_reader.rb` - Reads coverage data files
-2. `directory_scanner.rb` - Scans directories for files
-3. `docs_dependencies_config_loader.rb` - Loads docs dependency config
-4. `dot_graph_writer.rb` - Writes DOT graph format
-5. `editor/editor_detector.rb` - Detects available editors
-6. `editor/editor_launcher.rb` - Launches editor commands
-7. `env_reader.rb` - Reads environment variables
-8. `file_reference_extractor.rb` - Extracts file references from text
-9. `git/git_command_executor.rb` - Executes git commands
-10. `git/log_color_formatter.rb` - Formats git log with colors
+1. `git/repository_scanner.rb` - Scans git repositories
+2. `git/status_color_formatter.rb` - Formats git status with colors
+3. `git/submodule_detector.rb` - Detects git submodules
+4. `json_exporter.rb` - Exports data as JSON
+5. `json_formatter.rb` - Formats JSON output
+6. `llm/model_constants.rb` - Defines LLM model constants
+7. `mcp/protocol_validator.rb` - Validates MCP protocol messages
+8. `path_sanitizer.rb` - Sanitizes file paths for security
+9. `ruby_method_parser.rb` - Parses Ruby method definitions
+10. `search/fd_executor.rb` - Executes fd (find) commands
 
 ## Implementation Plan
 
