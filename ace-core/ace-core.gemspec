@@ -35,7 +35,5 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # No runtime dependencies - using only Ruby stdlib
-  # Only development dependencies
-  spec.add_development_dependency 'minitest', '~> 5.0'
-  spec.add_development_dependency 'rake', '~> 13.0'
+  # Development dependencies are managed in the root Gemfile
 end
