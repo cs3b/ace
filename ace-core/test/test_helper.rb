@@ -4,9 +4,20 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ace/core"
 
 require "minitest/autorun"
+require "minitest/reporters"
 require "tempfile"
 require "tmpdir"
 require "fileutils"
+
+# Use spec reporter for better output
+Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
+
+# Base test case class with common utilities
+class AceTestCase < Minitest::Test
+  def fixture_path(path)
+    File.expand_path("fixtures/#{path}", __dir__)
+  end
+end
 
 # Test helper methods
 module TestHelper
@@ -34,4 +45,6 @@ module TestHelper
   end
 end
 
+# Include helper methods in both base classes
 Minitest::Test.include TestHelper
+AceTestCase.include TestHelper

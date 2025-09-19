@@ -1,0 +1,20 @@
+# Test fixture for project-level config
+ace:
+  project: "test-project"
+  environment: "test"
+  override: "project"
+
+  settings:
+    verbose: true
+    debug: false
+    log_level: "info"
+
+  paths:
+    data: "data/"
+    cache: "tmp/cache"
+    logs: "logs/"
+
+  nested:
+    deep:
+      value: "from_project"
+    additional: "project_only"
