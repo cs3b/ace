@@ -1,0 +1,87 @@
+# Tools Configuration for Coding Agent Workflow Toolkit
+# This file configures the behavior of the coding_agent_tools all command
+# 
+# XDG Configuration Standards Compliance:
+# This file should be placed in one of the following locations:
+# 1. Project-specific: <project_root>/.coding-agent/tools.yml (recommended)
+# 2. User-specific: $XDG_CONFIG_HOME/coding-agent-tools/tools.yml
+# 3. Default user: ~/.config/coding-agent-tools/tools.yml
+
+# Blacklist: Tools to exclude from the listing
+# These tools will not appear in coding_agent_tools all output
+blacklist:
+  - "coding_agent_tools"     # Main wrapper command (default)
+  - "*-dev"                  # Development tools (default)
+  - "*-debug"                # Debug utilities (default)
+  - "test-*"                 # Test utilities (default)
+  # Add project-specific exclusions here:
+  # - "internal-*"           # Example: exclude internal tools
+
+# Optional: Tool categories configuration
+# You can customize how tools are categorized
+categories:
+  "LLM Integration":
+    description: "Tools for interacting with language models and AI providers"
+    patterns: ["llm-*"]
+    
+  "Git Operations":
+    description: "Enhanced git commands with multi-repo support"
+    patterns: ["git-*"]
+    
+  "Task Management":
+    description: "Project task management and navigation tools"
+    patterns: ["task-*", "release-*"]
+    
+  "Navigation":
+    description: "File system navigation and project exploration tools"
+    patterns: ["nav-*"]
+    
+  "Code Review":
+    description: "Code review and analysis tools"
+    patterns: ["code-review*"]
+    
+  "Code Quality":
+    description: "Code linting, formatting, and quality tools"
+    patterns: ["code-lint*"]
+    
+  "Documentation":
+    description: "Documentation management and handbook tools"
+    patterns: ["handbook*"]
+    
+  "Reflection":
+    description: "Session reflection and synthesis tools"
+    patterns: ["reflection-*"]
+    
+  "Search":
+    description: "Code and file search utilities"
+    patterns: ["search*"]
+
+  "Context":
+    description: "Project context loading and management"
+    patterns: ["context*"]
+
+  # Add custom categories for your project:
+  # "Custom Tools":
+  #   description: "Project-specific custom tools"
+  #   patterns: ["custom-*"]
+
+# Optional: Tool aliases (not yet implemented)
+# Define shorter names for frequently used tools
+# aliases:
+#   "tm": "task-manager"
+#   "rm": "release-manager"
+#   "lr": "llm-query"
+
+# Optional: Default options for specific tools (not yet implemented)
+# Set default flags for tools when run without arguments
+# defaults:
+#   "git-status":
+#     flags: ["--short", "--verbose"]
+#   "task-manager":
+#     flags: ["--limit", "10"]
+
+# Notes:
+# - Patterns support standard glob syntax: *, ?, [abc], [!abc]
+# - Categories are displayed in the order defined here
+# - Tools matching multiple categories appear in the first match
+# - Uncategorized tools appear in an "Other" category at the end

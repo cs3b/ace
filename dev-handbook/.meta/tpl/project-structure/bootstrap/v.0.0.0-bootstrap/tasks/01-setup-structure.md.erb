@@ -1,0 +1,74 @@
+---
+id: v.0.0.0+task.001
+status: done
+priority: high
+estimate: 1h
+dependencies: []
+---
+
+# Setup dev-taskflow Structure
+
+## Objective
+
+Initialize the foundational documentation structure for <%= @project_name || "the project" %> using the coding agent workflow toolkit. This establishes the directory structure, core documentation files, and integration necessary for AI-assisted development workflow.
+
+## Scope of Work
+
+### Deliverables
+
+#### Create
+
+- dev-taskflow/ directory structure (backlog/, current/, done/, decisions/)
+- docs/what-do-we-build.md
+- docs/architecture.md
+- docs/blueprint.md
+- .claude/ integration files
+
+#### Modify
+
+- .gitignore (if exists) to include dev-taskflow patterns
+- Project README.md (if enhancement needed)
+
+#### Delete
+
+- None
+
+## Phases
+
+1. Structure Creation - Set up directory hierarchy
+2. Core Documentation - Generate foundational docs  
+3. Tool Setup - Install integration files
+4. Validation - Verify structure completeness
+
+## Implementation Plan
+
+### Planning Steps
+
+- [x] Verify dev-handbook submodule is available and accessible
+- [x] Review existing project files (README.md, PRD.md) for content extraction
+
+### Execution Steps
+
+- [x] Run project initialization workflow
+- [x] Verify core documentation files generated
+- [x] Confirm integration files are functional
+
+## Acceptance Criteria
+
+- [x] AC 1: Complete dev-taskflow directory structure exists
+- [x] AC 2: Core documentation files generated with project-specific content
+- [x] AC 3: Integration files functional and accessible
+- [x] AC 4: Structure ready for release planning and task management
+
+## Out of Scope
+
+- ❌ Creating specific project releases (covered by separate tasks)
+- ❌ Detailed PRD completion (covered by separate task)
+- ❌ Roadmap creation (covered by separate task)
+- ❌ Project-specific customization beyond initial setup
+
+## References
+
+- dev-handbook/.integrations/wfi/initialize-project-structure.wf.md
+- dev-handbook/templates/project-docs/ (various templates)
+- dev-handbook/guides/project-management.g.md

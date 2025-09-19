@@ -1,0 +1,196 @@
+# <%= @project_name || "[Project Name]" %>
+
+## What We Build 🔍
+
+<%= @project_description || "[Brief description of the project's core purpose and value proposition]" %>
+
+## ✨ Key Features
+
+<% if @key_features && @key_features.any? %>
+<% @key_features.each do |feature| %>
+- **<%= feature[:name] %>**: <%= feature[:description] %>
+<% end %>
+<% else %>
+- **Feature 1**: [Description of what this feature does and why it's valuable]
+- **Feature 2**: [Description of what this feature does and why it's valuable]
+- **Feature 3**: [Description of what this feature does and why it's valuable]
+- **Feature 4**: [Description of what this feature does and why it's valuable]
+<% end %>
+
+## Core Design Principles
+
+<% if @design_principles && @design_principles.any? %>
+<% @design_principles.each do |principle| %>
+- **<%= principle[:name] %>**: <%= principle[:description] %>
+<% end %>
+<% else %>
+- **[Principle 1]**: [Description of this principle and how it influences the project]
+- **[Principle 2]**: [Description of this principle and how it influences the project]
+- **[Principle 3]**: [Description of this principle and how it influences the project]
+- **[Principle 4]**: [Description of this principle and how it influences the project]
+<% end %>
+
+## Target Use Cases
+
+### Primary Use Cases
+
+<% if @primary_use_cases && @primary_use_cases.any? %>
+<% @primary_use_cases.each do |use_case| %>
+- **<%= use_case[:name] %>**: <%= use_case[:description] %>
+<% end %>
+<% else %>
+- **[Use Case 1]**: [Description of who uses this and how]
+- **[Use Case 2]**: [Description of who uses this and how]
+- **[Use Case 3]**: [Description of who uses this and how]
+<% end %>
+
+### Secondary Use Cases
+
+<% if @secondary_use_cases && @secondary_use_cases.any? %>
+<% @secondary_use_cases.each do |use_case| %>
+- **<%= use_case[:name] %>**: <%= use_case[:description] %>
+<% end %>
+<% else %>
+- **[Use Case 4]**: [Description of additional scenarios this project supports]
+- **[Use Case 5]**: [Description of additional scenarios this project supports]
+<% end %>
+
+## User Personas
+
+### Primary Users
+
+<% if @primary_users && @primary_users.any? %>
+<% @primary_users.each do |user| %>
+**<%= user[:type] %>**: <%= user[:description] %>
+
+- Needs: <%= user[:needs] || "[What they need from the project]" %>
+- Goals: <%= user[:goals] || "[What they want to achieve]" %>
+- Pain Points: <%= user[:pain_points] || "[Problems this project solves for them]" %>
+
+<% end %>
+<% else %>
+**[User Type 1]**: [Description of this user group, their needs, and goals]
+
+- Needs: [What they need from the project]
+- Goals: [What they want to achieve]
+- Pain Points: [Problems this project solves for them]
+
+**[User Type 2]**: [Description of this user group, their needs, and goals]
+
+- Needs: [What they need from the project]
+- Goals: [What they want to achieve]
+- Pain Points: [Problems this project solves for them]
+<% end %>
+
+### Secondary Users
+
+<% if @secondary_users && @secondary_users.any? %>
+<% @secondary_users.each do |user| %>
+**<%= user[:type] %>**: <%= user[:description] %>
+
+- Context: <%= user[:context] || "[When and why they interact with the project]" %>
+
+<% end %>
+<% else %>
+**[User Type 3]**: [Description of additional user groups]
+
+- Context: [When and why they interact with the project]
+<% end %>
+
+## Technology Philosophy
+
+### Core Technology Choices
+
+<% if @tech_stack && @tech_stack.any? %>
+<% @tech_stack.each do |tech| %>
+- **<%= tech[:name] %>**: <%= tech[:rationale] || "Core technology choice" %>
+<% end %>
+<% else %>
+- **[Technology 1]**: [Why this was chosen and its benefits]
+- **[Technology 2]**: [Why this was chosen and its benefits]
+- **[Technology 3]**: [Why this was chosen and its benefits]
+<% end %>
+
+### Technical Principles
+
+- **[Technical Principle 1]**: [How this guides technical decisions]
+- **[Technical Principle 2]**: [How this guides technical decisions]
+
+## Project Boundaries
+
+### What We Build
+
+<% if @project_scope && @project_scope[:in_scope] && @project_scope[:in_scope].any? %>
+<% @project_scope[:in_scope].each do |item| %>
+- <%= item %>
+<% end %>
+<% else %>
+- [Specific capability or feature in scope]
+- [Specific capability or feature in scope]
+- [Specific capability or feature in scope]
+<% end %>
+
+### What We Don't Build
+
+<% if @project_scope && @project_scope[:out_of_scope] && @project_scope[:out_of_scope].any? %>
+<% @project_scope[:out_of_scope].each do |item| %>
+- <%= item %>
+<% end %>
+<% else %>
+- [Capability or feature explicitly excluded]
+- [Capability or feature explicitly excluded]
+- [Capability or feature explicitly excluded]
+<% end %>
+
+## Value Proposition
+
+### Problems We Solve
+
+1. **Problem 1**: [Description of the problem and how the project solves it]
+2. **Problem 2**: [Description of the problem and how the project solves it]
+3. **Problem 3**: [Description of the problem and how the project solves it]
+
+### Unique Advantages
+
+- **[Advantage 1]**: [What makes this unique and valuable]
+- **[Advantage 2]**: [What makes this unique and valuable]
+- **[Advantage 3]**: [What makes this unique and valuable]
+
+## Future Vision
+
+### Short-term Goals (3-6 months)
+
+- [Goal 1]: [Description and success criteria]
+- [Goal 2]: [Description and success criteria]
+
+### Medium-term Goals (6-12 months)
+
+- [Goal 1]: [Description and success criteria]
+- [Goal 2]: [Description and success criteria]
+
+### Long-term Vision (1+ years)
+
+- [Vision element 1]: [Long-term aspiration]
+- [Vision element 2]: [Long-term aspiration]
+
+## Dependencies and Ecosystem
+
+### Key Dependencies
+
+<% if @dependencies && @dependencies.any? %>
+<% @dependencies.each do |dep| %>
+- **<%= dep[:name] %>**: <%= dep[:purpose] %>
+<% end %>
+<% else %>
+- **[Dependency 1]**: [Why it's needed and how it's used]
+- **[Dependency 2]**: [Why it's needed and how it's used]
+<% end %>
+
+### Ecosystem Integration
+
+- **[Integration 1]**: [How the project connects with other tools/systems]
+- **[Integration 2]**: [How the project connects with other tools/systems]
+
+---
+
+*This document should be updated as the project evolves and new insights are gained about user needs and project direction.*
