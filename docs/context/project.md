@@ -14,10 +14,9 @@ files:
   - docs/tools.md
 
 commands:
-  - git-status --short --no-color
-  - task-manager recent --limit 5
-  - task-manager next --limit 5
+  - git status --short --no-color
+  - task-manager recent --limit 3
+  - task-manager next --limit 3
   - release-manager current
-  - git ls-files
-  - git -C dev-handbook ls-files -- workflow-instructions
+  - eza -R -1 -L 2 --git-ignore --absolutes
 </context-tool-config>
