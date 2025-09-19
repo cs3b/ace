@@ -29,13 +29,18 @@ Create the ace-context gem that provides context loading functionality, migratin
 - ace-context/ace-context.gemspec
 - ace-context/lib/ace/context.rb
 - ace-context/lib/ace/context/version.rb
-- ace-context/lib/ace/context/loader.rb
-- ace-context/lib/ace/context/preset_manager.rb
+- ace-context/lib/ace/context/organisms/context_loader.rb
+- ace-context/lib/ace/context/molecules/preset_manager.rb
+- ace-context/lib/ace/context/atoms/ (utilities as needed)
+- ace-context/lib/ace/context/models/ (data structures)
 - ace-context/exe/context
 - ace-context/config/context.yml (gem defaults)
 - ace-context/test/test_helper.rb
-- ace-context/test/context_loader_test.rb
-- ace-context/test/preset_manager_test.rb
+- ace-context/test/support/test_environment.rb
+- ace-context/test/support/config_helpers.rb
+- ace-context/test/organisms/context_loader_test.rb
+- ace-context/test/molecules/preset_manager_test.rb
+- ace-context/test/integration/context_integration_test.rb
 - ace-context/Rakefile
 - ace-context/README.md
 - .ace/context/config/context.yml (project sample)
@@ -55,9 +60,9 @@ Create the ace-context gem that provides context loading functionality, migratin
 
 ### Execution Steps
 
-- [ ] Create gem skeleton
+- [ ] Create gem skeleton following ATOM architecture
   ```bash
-  mkdir -p ace-context/{lib/ace/context,test,config,exe,.bundle}
+  mkdir -p ace-context/{lib/ace/context/{atoms,molecules,organisms,models},test/{atoms,molecules,organisms,integration,support},config,exe,.bundle}
   ```
 
 - [ ] Create .bundle/config for ace-context
@@ -150,20 +155,54 @@ Create the ace-context gem that provides context loading functionality, migratin
   require 'minitest/autorun'
   require 'minitest/reporters' # Available from root Gemfile
   require 'ace/context'
-  # Reuse test utilities from ace-core which already has 29 passing tests
-  # Note: Tasks 003 and 004 for test infrastructure are pending,
-  # but ace-core already has working test setup to build upon
+  # Reuse test utilities from ace-core which now has 80 passing tests
+  # Task 003 established Minitest infrastructure with:
+  #   - AceTestCase base class with fixtures support
+  #   - TestHelper module with temp dir/file utilities
+  #   - Minitest::Reporters for better output
+  # Task 004 added integration test infrastructure with:
+  #   - TestEnvironment for isolated test environments
+  #   - ConfigHelpers for config testing utilities
+  #   - Integration test patterns for config cascade testing
   ```
+
+- [ ] Copy test support utilities from ace-core
+  ```bash
+  cp -r ../ace-core/test/support ace-context/test/
+  ```
+  > NOTE: Reuse TestEnvironment and ConfigHelpers for integration testing
 
 - [ ] Write context loader tests
   ```ruby
-  class ContextLoaderTest < Minitest::Test
+  # test/organisms/context_loader_test.rb
+  class ContextLoaderTest < AceTestCase
     def test_loads_default_preset
       # Test default preset loading
     end
 
     def test_loads_custom_preset
       # Test custom preset from config
+    end
+  end
+  ```
+
+- [ ] Write integration tests
+  ```ruby
+  # test/integration/context_integration_test.rb
+  class ContextIntegrationTest < AceTestCase
+    include Ace::Core::TestSupport::ConfigHelpers
+
+    def setup
+      @env = Ace::Core::TestSupport::TestEnvironment.new
+      @env.setup
+    end
+
+    def teardown
+      @env.teardown
+    end
+
+    def test_full_context_loading_with_config_cascade
+      # Test context loading with ace-core config cascade
     end
   end
   ```

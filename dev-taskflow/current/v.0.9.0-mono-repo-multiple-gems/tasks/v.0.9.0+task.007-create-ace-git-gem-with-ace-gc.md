@@ -29,15 +29,18 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
 - ace-git/ace-git.gemspec
 - ace-git/lib/ace/git.rb
 - ace-git/lib/ace/git/version.rb
-- ace-git/lib/ace/git/commit_builder.rb
-- ace-git/lib/ace/git/intention_parser.rb
-- ace-git/lib/ace/git/message_formatter.rb
+- ace-git/lib/ace/git/organisms/commit_builder.rb
+- ace-git/lib/ace/git/molecules/intention_parser.rb
+- ace-git/lib/ace/git/molecules/message_formatter.rb
+- ace-git/lib/ace/git/models/ (data structures)
 - ace-git/exe/ace-gc
 - ace-git/config/git.yml (gem defaults)
 - ace-git/test/test_helper.rb
-- ace-git/test/commit_builder_test.rb
-- ace-git/test/intention_parser_test.rb
-- ace-git/test/message_formatter_test.rb
+- ace-git/test/support/ (copy from ace-core)
+- ace-git/test/organisms/commit_builder_test.rb
+- ace-git/test/molecules/intention_parser_test.rb
+- ace-git/test/molecules/message_formatter_test.rb
+- ace-git/test/integration/git_commit_integration_test.rb
 - ace-git/Rakefile
 - ace-git/README.md
 - .ace/git/config/git.yml (project sample)
@@ -57,9 +60,9 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
 
 ### Execution Steps
 
-- [ ] Create gem skeleton
+- [ ] Create gem skeleton following ATOM architecture
   ```bash
-  mkdir -p ace-git/{lib/ace/git,test,config,exe,.bundle}
+  mkdir -p ace-git/{lib/ace/git/{atoms,molecules,organisms,models},test/{atoms,molecules,organisms,integration,support},config,exe,.bundle}
   ```
 
 - [ ] Create .bundle/config for ace-git
@@ -84,9 +87,15 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   end
   ```
 
+- [ ] Copy test support from ace-core
+  ```bash
+  cp -r ../ace-core/test/support ace-git/test/
+  ```
+  > NOTE: Reuse TestEnvironment and ConfigHelpers for integration testing
+
 - [ ] Implement commit builder (simplified)
   ```ruby
-  # lib/ace/git/commit_builder.rb
+  # lib/ace/git/organisms/commit_builder.rb
   module Ace
     module Git
       class CommitBuilder
