@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Simple Test Runner for Coding Agent Tools
+# Runs tests sequentially with RSpec
+
+set -euo pipefail
+
+# Default to running unit tests (excluding integration and slow tests)
+if [ $# -eq 0 ]; then
+    echo "Running unit tests..."
+    bundle exec rspec spec/ --exclude-pattern 'spec/integration/**/*_spec.rb' --tag ~slow --fail-fast=3
+else
+    # Pass all arguments directly to rspec
+    bundle exec rspec "$@"
+fi

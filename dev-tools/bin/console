@@ -1,0 +1,10 @@
+#!/bin/sh
+# Console script for Coding Agent Tools gem
+# Starts Ruby console with gem loaded
+
+set -e
+
+echo "INFO: Starting Ruby console from dev-tools directory: $(pwd)"
+
+# Start Ruby console with bundler setup and gem loaded
+bundle exec ruby -r bundler/setup -r coding_agent_tools -r irb -e 'IRB.start(__FILE__)'

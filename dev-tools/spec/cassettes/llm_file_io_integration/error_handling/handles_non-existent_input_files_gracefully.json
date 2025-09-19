@@ -1,0 +1,143 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"/tmp/does_not_exist_test_file.txt\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 17:39:06 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=1553"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"This is the path to a file named `does_not_exist_test_file.txt` located in the `/tmp` directory.  \\n\\n*   **`/`**: Represents the root directory of the file system.\\n*   **`tmp`**:  A standard directory used for temporary files.  Files in `/tmp` are often deleted when the system is rebooted or after a certain period.\\n*   **`does_not_exist_test_file.txt`**:  The name of the file.  The `.txt` extension suggests it's a plain text file.\\n\\n**Important Note:** The name suggests that the file *does not* currently exist.  It's a hypothetical file, or perhaps a file that was intended to be created but hasn't been.  If you try to access this path on your system, you'll likely get an error (e.g., \\\"file not found\\\") unless you or a program have created the file.\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.36949524370212\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 14,\n    \"candidatesTokenCount\": 206,\n    \"totalTokenCount\": 220,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 14\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 206\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"ueJaaIfLEOrthMIPlef-8A4\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 17:39:06 GMT"
+    },
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"/tmp/does_not_exist_test_file.txt\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.4"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Sun, 27 Jul 2025 13:23:39 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=1813"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"This is a file path. It specifies a location on a computer's file system. Let's break it down:\\n\\n*   `/`: This is the root directory of the file system. It's the starting point.\\n*   `tmp`: This is a common directory name, typically used for storing temporary files. Files in this directory are often deleted automatically by the system.\\n*   `does_not_exist_test_file.txt`: This is the name of the file. The `.txt` extension suggests it's a plain text file.\\n\\n**In summary:**\\n\\nThe path `/tmp/does_not_exist_test_file.txt` points to a file named `does_not_exist_test_file.txt` which is expected to be located in the `/tmp` directory. **The name `does_not_exist` suggests the file does not currently exist.**\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.32410125732421874\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 14,\n    \"candidatesTokenCount\": 190,\n    \"totalTokenCount\": 204,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 14\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 190\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"WSiGaLCUJv3sqsMPiLnviQw\"\n}\n"
+        }
+      },
+      "recorded_at": "Sun, 27 Jul 2025 13:23:38 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

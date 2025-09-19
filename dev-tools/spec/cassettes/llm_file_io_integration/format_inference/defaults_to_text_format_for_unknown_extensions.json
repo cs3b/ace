@@ -1,0 +1,143 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Test\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 17:39:09 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=637"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Okay, I'm ready. This is a test. How can I help you? What do you want me to do?\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.28748351556283458\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 1,\n    \"candidatesTokenCount\": 27,\n    \"totalTokenCount\": 28,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 1\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 27\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"veJaaMOPHfOVsbQPxaKksAc\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 17:39:09 GMT"
+    },
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Test\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.4"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Sun, 27 Jul 2025 13:23:01 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=638"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Okay, I'm ready. This is a test. How can I help you? What do you want me to do or respond to?\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.36224610010782876\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 1,\n    \"candidatesTokenCount\": 30,\n    \"totalTokenCount\": 31,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 1\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 30\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"NCiGaNvxJtOVhMIPkuG6iA8\"\n}\n"
+        }
+      },
+      "recorded_at": "Sun, 27 Jul 2025 13:23:01 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

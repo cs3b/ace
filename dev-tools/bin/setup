@@ -1,0 +1,13 @@
+#!/bin/sh
+# Setup script for Coding Agent Tools gem
+# Installs dependencies and sets up development environment
+
+set -e
+
+echo "INFO: Setting up development environment from dev-tools directory: $(pwd)"
+
+# Install gem dependencies
+echo "INFO: Installing bundle dependencies..."
+bundle install
+
+echo "SUCCESS: Development environment setup completed"

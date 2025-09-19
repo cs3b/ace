@@ -1,0 +1,23 @@
+# For available configuration options, see:
+#   https://github.com/standardrb/standard
+ruby_version: 3.1
+
+# Project-specific configuration for Coding Agent Tools gem
+ignore:
+  - "vendor/**/*"
+  - "tmp/**/*"
+  - "coverage/**/*"
+  - "pkg/**/*"
+  - "*.gemspec"
+  - "dev-handbook/**/*"
+  - "dev-taskflow/**/*"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "config/fallback_models.yaml"
+
+# Explicit RuboCop configuration to exclude YAML files
+AllCops:
+  Exclude:
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "lib/coding_agent_tools/config/**/*.yml"

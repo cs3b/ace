@@ -1,0 +1,694 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require "json"
+require "set"
+require_relative "../lib/coding_agent_tools"
+
+module CodingAgentTools
+  module CLI
+    class SearchCommand
+      def initialize
+        # Default exclusions for archived/done tasks
+        default_excludes = [
+          "dev-taskflow/current/*/tasks/x/*",
+          "dev-taskflow/done/**/*"
+        ]
+
+        @options = {
+          type: nil,
+          format: :text,
+          max_results: nil,
+          case_insensitive: false,
+          whole_word: false,
+          multi_line: false,
+          show_context: 0,
+          interactive: false,
+          preset: nil,
+          since: nil,
+          before: nil,
+          scope: nil,
+          glob: nil,
+          include_paths: [],
+          exclude_paths: default_excludes,
+          # Editor integration options
+          open_in_editor: false,
+          editor: nil,
+          open_strategy: :auto,
+          line_numbers: true,
+          open_limit: 10
+        }
+
+        @unified_searcher = Organisms::Search::UnifiedSearcher.new
+        @preset_manager = Molecules::Search::PresetManager.new
+        @editor_integration = Organisms::Editor::EditorIntegration.new
+      end
+
+      def run(args)
+        # Handle config subcommand
+        if args.first == "config"
+          handle_config_command(args[1..-1])
+          return
+        end
+
+        pattern = parse_arguments(args)
+
+        if pattern.nil? || pattern.empty?
+          if @options[:list_presets]
+            list_presets
+          else
+            puts "Error: No search pattern provided"
+            puts "Usage: search [options] PATTERN"
+            puts "       search config [--editor EDITOR]"
+            exit 1
+          end
+        else
+          execute_search(pattern)
+        end
+      rescue => e
+        puts "Error: #{e.message}"
+        puts e.backtrace if ENV["DEBUG"]
+        exit 1
+      end
+
+      private
+
+      def parse_arguments(args)
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: search [options] PATTERN"
+          opts.separator "       search config [--editor EDITOR]"
+          opts.separator ""
+          opts.separator "Search across the codebase with intelligent pattern matching"
+          opts.separator ""
+          opts.separator "Options:"
+
+          # Search type options
+          opts.on("-t", "--type TYPE", %w[file content hybrid auto],
+            "Search type (file, content, hybrid, auto)") do |t|
+            @options[:type] = t.to_sym
+          end
+
+          opts.on("-f", "--files", "Search for files only") do
+            @options[:type] = :file
+          end
+
+          opts.on("-c", "--content", "Search in file content only") do
+            @options[:type] = :content
+          end
+
+          # Pattern matching options
+          opts.on("-i", "--case-insensitive", "Case insensitive search") do
+            @options[:case_insensitive] = true
+          end
+
+          opts.on("-w", "--whole-word", "Match whole words only") do
+            @options[:whole_word] = true
+          end
+
+          opts.on("-U", "--multiline", "Enable multiline matching") do
+            @options[:multi_line] = true
+          end
+
+          opts.on("--hidden", "Include hidden files and directories in search") do
+            @options[:hidden] = true
+          end
+
+          # Context options
+          opts.on("-A", "--after NUM", Integer, "Show NUM lines after match") do |n|
+            @options[:after_context] = n
+          end
+
+          opts.on("-B", "--before NUM", Integer, "Show NUM lines before match") do |n|
+            @options[:before_context] = n
+          end
+
+          opts.on("-C", "--context NUM", Integer, "Show NUM lines of context") do |n|
+            @options[:show_context] = n
+          end
+
+          # Note: --repository and --main-only flags removed in unified search
+
+          # File filtering options
+          opts.on("-g", "--glob PATTERN", "File glob pattern to include") do |glob|
+            @options[:glob] = glob
+          end
+
+          opts.on("--include PATHS", "Include only these paths/globs (comma-separated)") do |paths|
+            @options[:include_paths] ||= []
+            @options[:include_paths].concat(paths.split(",").map(&:strip))
+          end
+
+          opts.on("-e", "--exclude PATHS", "Exclude paths/globs (comma-separated, use 'none' to clear defaults)") do |paths|
+            if paths.downcase == "none"
+              # Clear all exclusions including defaults
+              @options[:exclude_paths] = []
+            else
+              # Add to existing exclusions
+              @options[:exclude_paths] ||= []
+              @options[:exclude_paths].concat(paths.split(",").map(&:strip))
+            end
+          end
+
+          opts.on("--include-archived", "Include archived/done tasks (overrides default exclusions)") do
+            @options[:exclude_paths] = []
+          end
+
+          # Search root option
+          opts.on("--search-root PATH", "Override search root (default: auto-detected project root, use '.' for current dir)") do |path|
+            @options[:search_root] = File.expand_path(path)
+          end
+
+          opts.on("--since TIME", "Files modified since TIME") do |time|
+            @options[:since] = time
+          end
+
+          opts.on("--before TIME", "Files modified before TIME") do |time|
+            @options[:before] = time
+          end
+
+          # Git scope options
+          opts.on("--staged", "Search staged files only") do
+            @options[:scope] = :staged
+          end
+
+          opts.on("--tracked", "Search tracked files only") do
+            @options[:scope] = :tracked
+          end
+
+          opts.on("--changed", "Search changed files only") do
+            @options[:scope] = :changed
+          end
+
+          # Output options
+          opts.on("--json", "Output in JSON format") do
+            @options[:format] = :json
+          end
+
+          opts.on("--yaml", "Output in YAML format") do
+            @options[:format] = :yaml
+          end
+
+          opts.on("-l", "--files-with-matches", "Only print filenames") do
+            @options[:files_only] = true
+          end
+
+          opts.on("--max-results NUM", Integer, "Limit number of results") do |n|
+            @options[:max_results] = n
+          end
+
+          # Interactive options
+          opts.on("--fzf", "Use fzf for interactive selection") do
+            @options[:interactive] = true
+          end
+
+          # Editor integration options
+          opts.on("--open", "Open search results in configured editor") do
+            @options[:open_in_editor] = true
+          end
+
+          opts.on("--editor EDITOR", "Specify editor to use (overrides configuration)") do |editor|
+            @options[:editor] = editor
+            @options[:open_in_editor] = true  # Implicit --open when --editor is used
+          end
+
+          opts.on("--multiple STRATEGY", %w[all interactive limit],
+            "Strategy for multiple results (all, interactive, limit)") do |strategy|
+            @options[:open_strategy] = strategy.to_sym
+          end
+
+          opts.on("--no-line", "Don't use line number positioning when opening files") do
+            @options[:line_numbers] = false
+          end
+
+          opts.on("--limit N", Integer, "Maximum number of files to open (default: 10)") do |n|
+            @options[:open_limit] = n
+          end
+
+          # Preset options
+          opts.on("-p", "--preset NAME", "Use search preset") do |name|
+            @options[:preset] = name
+          end
+
+          opts.on("--list-presets", "List available presets") do
+            @options[:list_presets] = true
+          end
+
+          # Information options (--list-repos removed in unified search)
+
+          opts.on("-h", "--help", "Show this help message") do
+            puts opts
+            puts ""
+            puts "Editor Integration Examples:"
+            puts "  search 'TODO' --open                    # Open results in configured editor"
+            puts "  search 'function.*test' --editor vim    # Open in specific editor"
+            puts "  search 'bug' --open --multiple limit    # Limit number of files opened"
+            puts "  search config --editor code             # Set VS Code as default"
+            puts "  search config                           # Show current configuration"
+            exit
+          end
+
+          opts.on("-v", "--version", "Show version") do
+            puts "search v1.0.0 (with editor integration)"
+            exit
+          end
+        end
+
+        parser.parse!(args)
+        args.join(" ")
+      end
+
+      def execute_search(pattern)
+        # Apply preset if specified
+        if @options[:preset]
+          apply_preset(@options[:preset])
+        end
+
+        # Perform search (don't pass format to the searcher)
+        search_options = @options.dup
+        search_options.delete(:format)  # Remove format, handle it in CLI
+
+        # Map search_root to search_path for executor compatibility
+        # Special case: --search-root . means use current directory
+        if search_options[:search_root]
+          root = search_options.delete(:search_root)
+          # If user explicitly passes ".", use current working directory
+          # Otherwise use the provided path
+          search_options[:search_path] = (root == ".") ? Dir.pwd : root
+        end
+        # If no search_root specified, UnifiedSearcher will use project root by default
+
+        results = @unified_searcher.search(pattern, search_options)
+
+        # Handle editor integration
+        if @options[:open_in_editor]
+          handle_editor_integration(results)
+        elsif @options[:interactive]
+          handle_interactive_results(results)
+        else
+          output_results(results)
+        end
+      end
+
+      def handle_editor_integration(results)
+        # Always show the search results first
+        output_results(results)
+        
+        # Skip editor integration if no results
+        if results[:total_results] == 0
+          puts "\nNo files to open."
+          return
+        end
+
+        puts # Add spacing
+
+        # Prepare editor options
+        editor_options = {
+          editor: @options[:editor],
+          strategy: @options[:open_strategy] == :auto ? nil : @options[:open_strategy],
+          line_numbers: @options[:line_numbers],
+          limit: @options[:open_limit]
+        }
+
+        # Open results in editor
+        result = @editor_integration.open_search_results(results, editor_options)
+        
+        if result[:success]
+          puts "✓ #{result[:message]}"
+        else
+          puts "✗ #{result[:error]}"
+          if result[:suggestion]
+            puts "  #{result[:suggestion]}"
+          end
+          exit 1
+        end
+      end
+
+      def handle_config_command(args)
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: search config [options]"
+          opts.separator ""
+          opts.separator "Configure editor integration settings"
+          opts.separator ""
+          opts.separator "Options:"
+
+          opts.on("--editor EDITOR", "Set default editor") do |editor|
+            @options[:config_editor] = editor
+          end
+
+          opts.on("--list-editors", "List available editors") do
+            @options[:list_editors] = true
+          end
+
+          opts.on("-h", "--help", "Show this help message") do
+            puts opts
+            exit
+          end
+        end
+
+        begin
+          parser.parse!(args)
+        rescue OptionParser::InvalidOption => e
+          puts "Error: #{e.message}"
+          puts parser
+          exit 1
+        end
+
+        if @options[:list_editors]
+          list_available_editors
+        elsif @options[:config_editor]
+          configure_default_editor(@options[:config_editor])
+        else
+          show_current_config
+        end
+      end
+
+      def list_available_editors
+        puts "Available editors:"
+        
+        editors = @editor_integration.available_editors
+        if editors.empty?
+          puts "  No supported editors found on this system"
+          puts ""
+          puts "Supported editors: code, vim, nvim, emacs, subl, mate, atom, nano"
+        else
+          editors.each do |editor|
+            status = editor[:command] == editor[:name] ? "" : " (#{editor[:command]})"
+            puts "  #{editor[:name]}#{status}"
+          end
+        end
+      end
+
+      def configure_default_editor(editor_command)
+        result = @editor_integration.configure_editor(editor_command)
+        
+        if result[:success]
+          puts "✓ #{result[:message]}"
+        else
+          puts "✗ #{result[:error]}"
+          exit 1
+        end
+      end
+
+      def show_current_config
+        result = @editor_integration.configure_editor
+        
+        puts "Current editor configuration:"
+        puts ""
+        
+        if result[:current_editor]
+          editor = result[:current_editor]
+          puts "  Default editor: #{editor[:name]} (#{editor[:command]})"
+          puts "  Line support: #{editor[:line_support] ? 'Yes' : 'No'}"
+          
+          if editor[:auto_detected]
+            puts "  Status: Auto-detected"
+          elsif editor[:fallback]
+            puts "  Status: Fallback"
+          else
+            puts "  Status: Configured"
+          end
+        else
+          puts "  No editor configured"
+        end
+
+        puts ""
+        puts "Available editors:"
+        result[:available_editors].each do |editor|
+          puts "  - #{editor[:name]} (#{editor[:command]})"
+        end
+        
+        puts ""
+        puts "To set a default editor:"
+        puts "  search config --editor <editor_name>"
+      end
+
+      def apply_preset(preset_name)
+        unless @preset_manager.exists?(preset_name)
+          puts "Error: Preset '#{preset_name}' not found"
+          exit 1
+        end
+
+        preset = @preset_manager.get(preset_name)
+        @options.merge!(preset.transform_keys(&:to_sym))
+      end
+
+      def list_presets
+        puts "Available search presets:"
+        @preset_manager.list.each do |name|
+          preset = @preset_manager.get(name)
+          puts "  #{name}: #{preset["description"] || "No description"}"
+        end
+      end
+
+      def handle_interactive_results(results)
+        require_relative "../lib/coding_agent_tools/molecules/search/fzf_integrator"
+
+        fzf = Molecules::Search::FzfIntegrator.new(multi: true)
+
+        unless fzf.available?
+          puts "Error: fzf is not installed. Install with: brew install fzf"
+          exit 1
+        end
+
+        # Format results for fzf - handle both flat and repository structures
+        items = []
+        if results[:results]
+          # New flat structure
+          results[:results].each do |result|
+            items << if result[:line]
+              "#{result[:file]}:#{result[:line]}: #{result[:text]}"
+            else
+              (result[:file] || result[:path] || result).to_s
+            end
+          end
+        elsif results[:repositories]
+          # Legacy repository structure
+          results[:repositories].each do |repo_name, repo_data|
+            repo_data[:results].each do |result|
+              items << if result[:line]
+                "#{repo_name}:#{result[:file]}:#{result[:line]}: #{result[:text]}"
+              else
+                "#{repo_name}:#{result}"
+              end
+            end
+          end
+        end
+
+        selection = fzf.select_interactive(items, prompt: "Select results")
+
+        if selection[:success]
+          puts "Selected:"
+          selection[:selected].each { |item| puts "  #{item}" }
+        end
+      end
+
+      def output_results(results)
+        case @options[:format]
+        when :json
+          puts JSON.pretty_generate(results)
+        when :yaml
+          require "yaml"
+          puts YAML.dump(results)
+        else
+          output_text_results(results)
+        end
+      end
+
+      def output_text_results(results)
+        # Get search mode from metadata or determine from results
+        search_mode = results.dig(:metadata, :search_mode) || determine_search_mode(results)
+
+        # Build search context information
+        context_parts = []
+
+        # Search mode
+        case search_mode
+        when :files, :file
+          context_parts << "mode: files"
+        when :content
+          context_parts << "mode: content"
+        when :hybrid, :both
+          context_parts << "mode: files+content"
+        end
+
+        # Pattern (from metadata if available)
+        if results.dig(:metadata, :pattern)
+          context_parts << "pattern: \"#{results[:metadata][:pattern]}\""
+        end
+
+        # Active filters
+        filters = []
+        opts = results.dig(:metadata, :options) || @options
+
+        filters << "glob: #{opts[:glob]}" if opts[:glob]
+        filters << "since: #{opts[:since]}" if opts[:since]
+        filters << "before: #{opts[:before]}" if opts[:before]
+        filters << "scope: #{opts[:scope]}" if opts[:scope]
+        filters << "case-insensitive" if opts[:case_insensitive]
+        filters << "whole-word" if opts[:whole_word]
+
+        if opts[:include_paths] && !opts[:include_paths].empty?
+          filters << "include: #{opts[:include_paths].join(",")}"
+        end
+
+        if opts[:exclude_paths] && !opts[:exclude_paths].empty?
+          filters << "exclude: #{opts[:exclude_paths].join(",")}"
+        end
+
+        context_parts << "filters: [#{filters.join(", ")}]" if filters.any?
+
+        context_line = "Search context: #{context_parts.join(" | ")}"
+
+        if results[:total_results] == 0
+          puts context_line
+          puts "No results found"
+          return
+        end
+
+        puts context_line
+
+        # Handle flat structure (unified search) vs legacy repository structure
+        if results[:results]
+          # New flat structure
+          puts "Found #{results[:total_results]} results"
+          puts
+
+          results[:results].each do |result|
+            output_single_result(result)
+          end
+        elsif results[:repositories]
+          # Legacy repository structure
+          puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories"
+          puts
+
+          results[:repositories].each do |repo_name, repo_data|
+            next if repo_data[:count] == 0
+
+            puts "#{repo_name}: (#{repo_data[:count]} results)"
+
+            if repo_data[:results].is_a?(Array)
+              repo_data[:results].each do |result|
+                output_single_result(result)
+              end
+            elsif repo_data[:results].is_a?(Hash)
+              # Check if it's the search result format {success: bool, results: array}
+              if repo_data[:results][:results].is_a?(Array)
+                repo_data[:results][:results].each do |result|
+                  output_single_result(result)
+                end
+              # Or if it's the hybrid format {files: array, content: array}
+              elsif repo_data[:results][:files] || repo_data[:results][:content]
+                if repo_data[:results][:files]
+                  puts "  Files:"
+                  if repo_data[:results][:files].empty?
+                    puts "    (no matching files found)"
+                  else
+                    repo_data[:results][:files].each { |f| puts "    #{f}" }
+                  end
+                end
+                if repo_data[:results][:content]
+                  puts "  Content:"
+                  if repo_data[:results][:content].empty?
+                    puts "    (no matching content found)"
+                  else
+                    repo_data[:results][:content].each { |r| output_single_result(r) }
+                  end
+                end
+              end
+            end
+
+            puts
+          end
+        end
+      end
+
+      def determine_search_mode(results)
+        # Handle flat structure (unified search)
+        if results[:results]
+          # For flat structure, determine based on result content
+          return :content # Default assumption for flat results
+        end
+
+        # Handle legacy repository structure
+        return :unknown if results[:repositories].nil? || results[:repositories].empty?
+
+        has_files = false
+        has_content = false
+
+        results[:repositories].each do |_, repo_data|
+          next unless repo_data[:results].is_a?(Hash)
+
+          if repo_data[:results][:files]
+            has_files = true
+          end
+          if repo_data[:results][:content] || repo_data[:results][:results]
+            has_content = true
+          end
+        end
+
+        if has_files && has_content
+          :hybrid
+        elsif has_files
+          :files
+        elsif has_content
+          :content
+        else
+          :unknown
+        end
+      end
+
+      def output_single_result(result)
+        # Handle when result is a plain string (file path)
+        if result.is_a?(String)
+          display_path = if result.start_with?("/")
+            require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            if result.start_with?(project_root)
+              "./" + result.sub(project_root + "/", "")
+            else
+              result
+            end
+          else
+            result
+          end
+        # Handle when result is a hash with file/path keys
+        elsif result.is_a?(Hash)
+          display_path = if result[:file]&.start_with?("/")
+            require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            if result[:file].start_with?(project_root)
+              "./" + result[:file].sub(project_root + "/", "")
+            else
+              result[:file]
+            end
+          elsif result[:path]&.start_with?("/")
+            require_relative "../lib/coding_agent_tools/atoms/project_root_detector"
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            if result[:path].start_with?(project_root)
+              "./" + result[:path].sub(project_root + "/", "")
+            else
+              result[:path]
+            end
+          else
+            result[:file] || result[:path] || result.to_s
+          end
+        else
+          # Fallback for any other type
+          display_path = result.to_s
+        end
+
+        if @options[:files_only]
+          puts "  #{display_path}"
+        elsif result.is_a?(Hash) && result[:line]
+          puts "  #{display_path}:#{result[:line]}:#{result[:column] || 0}: #{result[:text]}"
+        else
+          puts "  #{display_path}"
+        end
+      end
+    end
+  end
+end
+
+# Run the command
+CodingAgentTools::CLI::SearchCommand.new.run(ARGV) if __FILE__ == $PROGRAM_NAME

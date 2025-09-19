@@ -1,0 +1,62 @@
+# Integration Configuration for coding-agent-tools
+# This file defines submodule URLs and integration settings
+
+submodules:
+  dev-handbook:
+    url: auto  # Will detect from existing submodule or use sensible default
+    branch: main
+    description: "Development handbook with workflows and guides"
+  dev-taskflow:
+    url: auto  # Uses current repository URL with -taskflow suffix
+    branch: main
+    description: "Task management and release planning"
+  dev-tools:
+    url: auto  # Will detect from existing submodule or use sensible default
+    branch: main
+    description: "CLI tools for development automation"
+
+integrations:
+  claude:
+    status: implemented
+    components:
+      agents:
+        source: dev-handbook/.integrations/claude/agents
+        target: .claude/agents
+        method: symlink
+      commands:
+        source: dev-handbook/.integrations/claude/commands
+        target: .claude/commands
+        method: symlink
+      dotfiles:
+        source: dev-handbook/.integrations/claude/dotfiles
+        target: .
+        method: copy
+      docs:
+        source: CLAUDE.md
+        target: CLAUDE.md
+        method: update
+      config:
+        source: dev-handbook/.integrations/claude/config
+        target: .claude
+        method: copy
+      hooks:
+        source: dev-handbook/.integrations/claude/hooks
+        target: .claude/hooks
+        method: copy
+  opencode:
+    status: planned
+    message: "OpenCode integration coming soon! Follow updates at https://github.com/CodingAgentDev"
+    components: []
+
+settings:
+  backup:
+    enabled: true
+    directory_pattern: ".claude.backup.%Y%m%d-%H%M%S"
+    max_backups: 5
+  symlinks:
+    relative: true
+    follow_existing: false
+  validation:
+    check_submodules: true
+    verify_sources: true
+    warn_on_missing: true

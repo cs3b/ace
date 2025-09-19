@@ -1,0 +1,65 @@
+{
+  "RSpec": {
+    "coverage": {
+      "/test/project/lib/example_class.rb": {
+        "lines": [
+          null,
+          null,
+          1,
+          null,
+          1,
+          1,
+          null,
+          null,
+          1,
+          0,
+          0,
+          null,
+          null,
+          1,
+          5,
+          3,
+          0,
+          null,
+          null,
+          null
+        ],
+        "branches": {}
+      },
+      "/test/project/lib/calculator.rb": {
+        "lines": [
+          null,
+          null,
+          1,
+          null,
+          1,
+          1,
+          2,
+          2,
+          null,
+          null,
+          1,
+          0,
+          null,
+          null,
+          null
+        ],
+        "branches": {}
+      },
+      "/test/project/spec/example_spec.rb": {
+        "lines": [
+          null,
+          1,
+          null,
+          1,
+          1,
+          1,
+          null,
+          null
+        ],
+        "branches": {}
+      }
+    },
+    "timestamp": 1753640000
+  }
+}

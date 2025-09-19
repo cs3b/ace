@@ -1,0 +1,172 @@
+# frozen_string_literal: true
+
+require_relative "../../atoms/code_quality/task_metadata_validator"
+require_relative "../../atoms/code_quality/markdown_link_validator"
+require_relative "../../atoms/code_quality/template_embedding_validator"
+require_relative "../../atoms/code_quality/kramdown_formatter"
+
+module CodingAgentTools
+  module Molecules
+    module CodeQuality
+      # Molecule for coordinating Markdown linting operations
+      class MarkdownLintingPipeline
+        attr_reader :config, :path_resolver
+
+        def initialize(config:, path_resolver:)
+          @config = config
+          @path_resolver = path_resolver
+        end
+
+        def run(paths: ["."], autofix: false)
+          results = {
+            success: true,
+            linters: {},
+            total_issues: 0
+          }
+
+          markdown_config = config["markdown"] || {}
+          return results unless markdown_config["enabled"]
+
+          linters = markdown_config["linters"] || {}
+          order = markdown_config["order"] || linters.keys
+
+          # Run linters in specified order
+          order.each do |linter_name|
+            next unless linters.dig(linter_name, "enabled")
+
+            case linter_name
+            when "task_metadata"
+              run_task_metadata(paths, results)
+            when "link_validation"
+              run_link_validation(paths, results)
+            when "template_embedding"
+              run_template_embedding(paths, results)
+            when "styleguide"
+              run_styleguide(paths, autofix, results)
+            end
+          end
+
+          results
+        end
+
+        private
+
+        def run_task_metadata(paths, results)
+          validator = Atoms::CodeQuality::TaskMetadataValidator.new(
+            project_root: path_resolver.project_root
+          )
+
+          resolved_paths = paths.map { |p| path_resolver.resolve(p) }
+          result = validator.validate(resolved_paths)
+
+          results[:linters][:task_metadata] = result
+          results[:success] &&= result[:success]
+          results[:total_issues] += (result[:errors] || []).size
+        rescue => e
+          results[:linters][:task_metadata] = {
+            success: false,
+            error: e.message
+          }
+          results[:success] = false
+        end
+
+        def run_link_validation(paths, results)
+          validator = Atoms::CodeQuality::MarkdownLinkValidator.new(
+            root: path_resolver.project_root
+          )
+
+          resolved_paths = paths.map { |p| path_resolver.resolve(p) }
+          result = validator.validate(resolved_paths)
+
+          results[:linters][:link_validation] = result
+          results[:success] &&= result[:success]
+          results[:total_issues] += result[:findings].size
+        rescue => e
+          results[:linters][:link_validation] = {
+            success: false,
+            error: e.message
+          }
+          results[:success] = false
+        end
+
+        def run_template_embedding(paths, results)
+          validator = Atoms::CodeQuality::TemplateEmbeddingValidator.new
+
+          resolved_paths = paths.map { |p| path_resolver.resolve(p) }
+          result = validator.validate(resolved_paths)
+
+          results[:linters][:template_embedding] = result
+          results[:success] &&= result[:success]
+          results[:total_issues] += result[:findings].size
+        rescue => e
+          results[:linters][:template_embedding] = {
+            success: false,
+            error: e.message
+          }
+          results[:success] = false
+        end
+
+        def run_styleguide(paths, autofix, results)
+          # Get styleguide configuration
+          styleguide_config = config.dig("markdown", "linters", "styleguide") || {}
+
+          # Prepare options for KramdownFormatter
+          formatter_options = {dry_run: !autofix}
+
+          # Pass through supported Kramdown options
+          ["line_width", "hard_wrap", "auto_ids", "entity_output", "toc_levels", "smart_quotes", "gfm_quirks", "syntax_highlighter"].each do |option|
+            formatter_options[option.to_sym] = styleguide_config[option] if styleguide_config.key?(option)
+          end
+
+          formatter = Atoms::CodeQuality::KramdownFormatter.new(formatter_options)
+
+          findings = []
+          resolved_paths = paths.map { |p| path_resolver.resolve(p) }
+
+          # Find all markdown files
+          md_files = resolved_paths.flat_map do |path|
+            if File.directory?(path)
+              Dir.glob(File.join(path, "**", "*.md"))
+            elsif path.end_with?(".md")
+              [path]
+            else
+              []
+            end
+          end
+
+          md_files.each do |file|
+            result = formatter.format_file(file)
+            next unless result[:changed]
+
+            # Make path relative to project root
+            relative_path = if file.start_with?(path_resolver.project_root)
+              file.sub("#{path_resolver.project_root}/", "")
+            else
+              file
+            end
+            findings << {
+              file: relative_path,
+              message: "Formatting changes needed",
+              fixed: result[:file_updated]
+            }
+          end
+
+          results[:linters][:styleguide] = {
+            success: true,
+            findings: findings,
+            total_files: md_files.size,
+            files_changed: findings.size
+          }
+
+          results[:total_issues] += findings.size
+        rescue => e
+          results[:linters][:styleguide] = {
+            success: false,
+            error: e.message
+          }
+          results[:success] = false
+        end
+      end
+    end
+  end
+end

@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Coding Agent Tools - Code Review Command
+#
+# This executable provides a code review workflow with configurable focus areas.
+# It creates structured session directories with extracted content, project context,
+# and combined prompts ready for LLM processing.
+#
+# Usage: code-review <focus> <target> [options]
+#
+# Examples:
+#   code-review code HEAD~1..HEAD
+#   code-review tests 'spec/**/*.rb' --context none
+#   code-review docs staged --context docs/overview.md
+#   code-review 'code tests' v0.2.0..v0.3.0
+#
+# Focus areas:
+#   - code: Code quality, architecture, security, performance
+#   - tests: Test coverage, quality, maintainability
+#   - docs: Documentation gaps, updates, cross-references
+#
+# Targets:
+#   - Git ranges: v1.0..HEAD, HEAD~5..HEAD
+#   - File patterns: lib/**/*.rb, *.md
+#   - Special keywords: staged, unstaged, working
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["code", "review"],
+  registration_method: :register_code_commands,
+  executable_name: "code-review"
+).call

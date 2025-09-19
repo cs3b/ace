@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    env:
+      RACK_ENV: test
+    runs-on: ubuntu-latest
+    name: Ruby ${{ matrix.ruby-version }}
+    strategy:
+      matrix:
+        ruby-version: ["3.2", "3.3", "3.4"]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+        # Required by test cases that verify .env file exists (even with non-valid keys)
+        # Tests use VCR cassettes and EnvHelper for actual API credentials
+
+      - name: Setup the dependencies
+        run: bin/setup
+
+      - name: Add executables to PATH
+        run: echo "${{ github.workspace }}/exe" >> $GITHUB_PATH
+
+      - name: Run tests
+        run: bin/test spec/
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --parallel
+        # Run style checks to ensure code quality
+
+      - name: Upload coverage reports
+        if: matrix.ruby-version == '3.4'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30

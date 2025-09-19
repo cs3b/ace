@@ -1,0 +1,74 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"../../../etc/passwd\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Wed, 25 Jun 2025 15:06:54 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=3945"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"The path `../../../etc/passwd` is a relative path that, when interpreted by a system, will likely resolve to the system's password file.  Here's a breakdown:\\n\\n*   **`etc`**: This is a standard directory in Unix-like operating systems (Linux, macOS, etc.) that typically contains system configuration files.\\n*   **`passwd`**: This is a crucial file within the `etc` directory. It stores user account information, including usernames, user IDs (UIDs), group IDs (GIDs), home directories, and shell information.  **Crucially, the password itself is NOT stored directly in this file, but rather, a placeholder or \\\"X\\\" is used.  The actual encrypted passwords are stored in `/etc/shadow`.**\\n*   **`../../../`**: This part is a sequence of \\\"parent directory\\\" navigations. Each `../` moves the path up one directory level.  So, if the current working directory is `/home/user/documents/`, then:\\n    *   `../` would be `/home/user/`\\n    *   `../../` would be `/home/`\\n    *   `../../../` would be `/` (the root directory)\\n\\n**Therefore, `../../../etc/passwd` effectively means \\\"go up three levels from the current directory and then go into the `etc` directory and access the `passwd` file.\\\"**\\n\\n**Security Implications**\\n\\n*   **Sensitive Information:** The `/etc/passwd` file contains sensitive information, including user account details.  Unauthorized access to this file can potentially allow an attacker to:\\n    *   Gather usernames for password-guessing attacks.\\n    *   Determine the user IDs and home directories of users.\\n    *   Identify the shell used by a user, which could be exploited.\\n*   **Important Note:** The `/etc/passwd` file *itself* doesn't contain the actual passwords (they are in `/etc/shadow`). However, it's still a critical system file. Access to it should be restricted to the `root` user and specific system administrators.\\n\\n**In Summary**\\n\\nThe path `../../../etc/passwd` is a way to locate the system's `passwd` file, which contains user account information.  Access to this file is typically restricted to authorized users due to its sensitive nature.  It's a critical system file used for user account management.\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.45098414383535312\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 4,\n    \"candidatesTokenCount\": 508,\n    \"totalTokenCount\": 512,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 4\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 508\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"ixBcaJfgBfH_2PgPh_z--AY\"\n}\n"
+        }
+      },
+      "recorded_at": "Wed, 25 Jun 2025 15:06:54 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

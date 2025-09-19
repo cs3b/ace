@@ -1,0 +1,112 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://api.mistral.ai/v1/chat/completions",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"model\":\"mistral-small-latest\",\"messages\":[{\"role\":\"user\",\"content\":\"Count from 1 to 3\"}],\"temperature\":0.7,\"max_tokens\":4096}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Authorization": [
+            "<AUTHORIZATION>"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Date": [
+            "Tue, 24 Jun 2025 15:53:43 GMT"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ],
+          "Connection": [
+            "keep-alive"
+          ],
+          "X-Envoy-Upstream-Service-Time": [
+            "304"
+          ],
+          "X-Ratelimit-Limit-Tokens-Minute": [
+            "500000"
+          ],
+          "X-Ratelimit-Remaining-Tokens-Minute": [
+            "499971"
+          ],
+          "X-Ratelimit-Limit-Tokens-Month": [
+            "1000000000"
+          ],
+          "X-Ratelimit-Remaining-Tokens-Month": [
+            "999929013"
+          ],
+          "X-Ratelimit-Tokens-Query-Cost": [
+            "29"
+          ],
+          "X-Ratelimit-Limit-Req-Minute": [
+            "60"
+          ],
+          "X-Ratelimit-Remaining-Req-Minute": [
+            "59"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "X-Kong-Upstream-Latency": [
+            "305"
+          ],
+          "X-Kong-Proxy-Latency": [
+            "10"
+          ],
+          "X-Kong-Request-Id": [
+            "cd66974313052119fe8a383f08069554"
+          ],
+          "Cf-Cache-Status": [
+            "DYNAMIC"
+          ],
+          "Set-Cookie": [
+            "__cf_bm=RmzB9MwmximVNSbZOxd7dAAQX0UoxAFZVVfFcP2IuDk-1750780423-1.0.1.1-3eHqEphgYkQz.z.CTzDmNzhw821bpXt5jT7cKZf20P.jinoFYIW9IAiSo13wtjVEKvVIfX1iUK4z.KqT.wwwKtEqKa8QdG4XILZctt_fOhw; path=/; expires=Tue, 24-Jun-25 16:23:43 GMT; domain=.mistral.ai; HttpOnly; Secure; SameSite=None",
+            "_cfuvid=883u28sZlS_sulxu8diW1o.cxk1LC6UP2dh7gE38VFM-1750780423059-0.0.1.1-604800000; path=/; domain=.mistral.ai; HttpOnly; Secure; SameSite=None"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=15552000; includeSubDomains"
+          ],
+          "Server": [
+            "cloudflare"
+          ],
+          "Cf-Ray": [
+            "954d6649cbcb0311-MAD"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=86400"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\"id\": \"test-id\",\"object\":\"chat.completion\",\"created\":1750780422,\"model\":\"mistral-small-latest\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"tool_calls\":null,\"content\":\"Here's the count from 1 to 3:\\n\\n1, 2, 3\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"total_tokens\":29,\"completion_tokens\":19}}"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 15:53:42 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

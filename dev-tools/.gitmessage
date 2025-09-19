@@ -1,0 +1,40 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Type should be one of:
+#   feat:     New features
+#   fix:      Bug fixes
+#   docs:     Documentation
+#   style:    Code style/formatting
+#   refactor: Code improvements
+#   test:     Testing
+#   chore:    Maintenance
+#
+# Scope examples: ui, api, core, auth, parser, agent, tool, cli
+#
+# Subject line:
+#   - Use imperative mood ("Add feature" not "Added feature")
+#   - Don't capitalize first letter
+#   - No dot (.) at the end
+#   - Limit to 50 characters
+#
+# Body (optional):
+#   - Wrap at 72 characters
+#   - Explain what and why, not how
+#   - Use bullet points with - or *
+#
+# Footer (optional):
+#   - Reference issues: "Fixes #123", "References #456"
+#   - Breaking changes: "Breaking: API endpoint changed"
+#
+# Examples:
+#   feat(cli): add support for JSON output format
+#   fix(agent): handle timeout errors gracefully
+#   docs(readme): update installation instructions
+#   refactor(core): simplify configuration loading
