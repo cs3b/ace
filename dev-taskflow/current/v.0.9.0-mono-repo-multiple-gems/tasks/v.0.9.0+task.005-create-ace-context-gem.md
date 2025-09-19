@@ -25,6 +25,7 @@ Create the ace-context gem that provides context loading functionality, migratin
 
 #### Create
 
+- ace-context/.bundle/config (BUNDLE_GEMFILE pointing to parent)
 - ace-context/ace-context.gemspec
 - ace-context/lib/ace/context.rb
 - ace-context/lib/ace/context/version.rb
@@ -56,8 +57,17 @@ Create the ace-context gem that provides context loading functionality, migratin
 
 - [ ] Create gem skeleton
   ```bash
-  mkdir -p ace-context/{lib/ace/context,test,config,exe}
+  mkdir -p ace-context/{lib/ace/context,test,config,exe,.bundle}
   ```
+
+- [ ] Create .bundle/config for ace-context
+  ```yaml
+  # ace-context/.bundle/config
+  ---
+  BUNDLE_GEMFILE: "../Gemfile"
+  ```
+  > NOTE: This follows the Option C pattern established with ace-core
+  > Allows ace-context to use shared root Gemfile for all dependencies
 
 - [ ] Create ace-context.gemspec
   ```ruby
@@ -68,8 +78,7 @@ Create the ace-context gem that provides context loading functionality, migratin
 
     spec.add_dependency "ace-core", "~> 0.9.0"
 
-    spec.add_development_dependency "minitest"
-    spec.add_development_dependency "rake"
+    # No development dependencies - managed in root Gemfile
   end
   ```
 
@@ -139,8 +148,11 @@ Create the ace-context gem that provides context loading functionality, migratin
   ```ruby
   # test/test_helper.rb
   require 'minitest/autorun'
+  require 'minitest/reporters' # Available from root Gemfile
   require 'ace/context'
-  # Reuse test utilities from ace-core
+  # Reuse test utilities from ace-core which already has 29 passing tests
+  # Note: Tasks 003 and 004 for test infrastructure are pending,
+  # but ace-core already has working test setup to build upon
   ```
 
 - [ ] Write context loader tests
@@ -166,12 +178,18 @@ Create the ace-context gem that provides context loading functionality, migratin
   ```ruby
   gem "ace-context", path: "ace-context"
   ```
+  > NOTE: Root Gemfile configuration:
+  > - No vendor/bundle (gems install to mise Ruby location)
+  > - Shared dev dependencies (minitest ~> 5.20, rake ~> 13.0, minitest-reporters ~> 1.6)
+  > - All gems use .bundle/config to reference parent Gemfile
 
-- [ ] Run bundle install
+- [ ] Run bundle install from root
   > TEST: Gem integration
   > Type: Integration
   > Assert: ace-context loads with ace-core
   > Command: bundle install && bundle exec context --help
+  > NOTE: Run from project root, not ace-context directory
+  > The .bundle/config will ensure proper Gemfile resolution
 
 - [ ] Create README with usage
   ```markdown
