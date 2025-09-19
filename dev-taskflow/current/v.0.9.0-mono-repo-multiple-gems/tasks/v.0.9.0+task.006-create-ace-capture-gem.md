@@ -29,13 +29,16 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 - ace-capture/ace-capture.gemspec
 - ace-capture/lib/ace/capture.rb
 - ace-capture/lib/ace/capture/version.rb
-- ace-capture/lib/ace/capture/idea_writer.rb
-- ace-capture/lib/ace/capture/file_namer.rb
+- ace-capture/lib/ace/capture/organisms/idea_writer.rb
+- ace-capture/lib/ace/capture/molecules/file_namer.rb
+- ace-capture/lib/ace/capture/models/ (data structures)
 - ace-capture/exe/capture
 - ace-capture/config/capture.yml (gem defaults)
 - ace-capture/test/test_helper.rb
-- ace-capture/test/idea_writer_test.rb
-- ace-capture/test/file_namer_test.rb
+- ace-capture/test/support/ (copy from ace-core)
+- ace-capture/test/organisms/idea_writer_test.rb
+- ace-capture/test/molecules/file_namer_test.rb
+- ace-capture/test/integration/capture_integration_test.rb
 - ace-capture/Rakefile
 - ace-capture/README.md
 - .ace/capture/config/capture.yml (project sample)
@@ -55,9 +58,9 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 
 ### Execution Steps
 
-- [ ] Create gem skeleton
+- [ ] Create gem skeleton following ATOM architecture
   ```bash
-  mkdir -p ace-capture/{lib/ace/capture,test,config,exe,.bundle}
+  mkdir -p ace-capture/{lib/ace/capture/{atoms,molecules,organisms,models},test/{atoms,molecules,organisms,integration,support},config,exe,.bundle}
   ```
 
 - [ ] Create .bundle/config for ace-capture
@@ -82,9 +85,15 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
   end
   ```
 
+- [ ] Copy test support from ace-core
+  ```bash
+  cp -r ../ace-core/test/support ace-capture/test/
+  ```
+  > NOTE: Reuse TestEnvironment and ConfigHelpers for integration testing
+
 - [ ] Implement idea writer
   ```ruby
-  # lib/ace/capture/idea_writer.rb
+  # lib/ace/capture/organisms/idea_writer.rb
   module Ace
     module Capture
       class IdeaWriter
