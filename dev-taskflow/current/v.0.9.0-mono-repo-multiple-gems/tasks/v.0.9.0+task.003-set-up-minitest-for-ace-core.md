@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.003
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002]
@@ -38,14 +38,14 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
 
 ### Planning Steps
 
-* [ ] Design test directory structure
-* [ ] Plan fixture organization
-* [ ] Determine test coverage goals
-* [ ] Review minitest best practices
+* [x] Design test directory structure
+* [x] Plan fixture organization
+* [x] Determine test coverage goals
+* [x] Review minitest best practices
 
 ### Execution Steps
 
-- [ ] Create test_helper.rb with common setup
+- [x] Create test_helper.rb with common setup
   ```ruby
   require 'minitest/autorun'
   require 'minitest/reporters'
@@ -60,7 +60,7 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
   end
   ```
 
-- [ ] Create config_resolver_test.rb
+- [x] Create config_resolver_test.rb
   ```ruby
   class ConfigResolverTest < AceTestCase
     def test_cascade_precedence
@@ -77,7 +77,7 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
   > Assert: All precedence rules work correctly
   > Command: cd ace-core && rake test TEST=test/config_resolver_test.rb
 
-- [ ] Create yaml_loader_test.rb
+- [x] Create yaml_loader_test.rb
   ```ruby
   class YamlLoaderTest < AceTestCase
     def test_loads_valid_yaml
@@ -94,7 +94,7 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
   > Assert: YAML operations work correctly
   > Command: cd ace-core && rake test TEST=test/yaml_loader_test.rb
 
-- [ ] Create env_handler_test.rb
+- [x] Create env_handler_test.rb
   ```ruby
   class EnvHandlerTest < AceTestCase
     def test_loads_env_file
@@ -111,13 +111,13 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
   > Assert: Environment handling works
   > Command: cd ace-core && rake test TEST=test/env_handler_test.rb
 
-- [ ] Create test fixtures
+- [x] Create test fixtures
   ```bash
   mkdir -p test/fixtures/.ace/core/config
   mkdir -p test/fixtures/config
   ```
 
-- [ ] Add fixture config files
+- [x] Add fixture config files
   ```yaml
   # test/fixtures/.ace/core/config/core.yml
   ace:
@@ -125,7 +125,7 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
     override: "local"
   ```
 
-- [ ] Set up Rake test task
+- [x] Set up Rake test task
   ```ruby
   # Rakefile
   require 'rake/testtask'
@@ -140,7 +140,7 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
   task default: :test
   ```
 
-- [ ] Run full test suite
+- [x] Run full test suite
   > TEST: All tests pass
   > Type: Test Suite
   > Assert: 100% pass rate
@@ -148,14 +148,14 @@ Establish comprehensive Minitest infrastructure for ace-core that can be reused 
 
 ## Acceptance Criteria
 
-- [ ] Test helper provides reusable utilities
-- [ ] Config cascade tests cover all precedence rules
-- [ ] YAML merge tests verify deep merge behavior
-- [ ] Env handler tests confirm .env loading
-- [ ] Fixtures organized and maintainable
-- [ ] Rake test task runs all tests
-- [ ] Tests can be run individually or as suite
-- [ ] Minitest reporters provide clear output
+- [x] Test helper provides reusable utilities
+- [x] Config cascade tests cover all precedence rules
+- [x] YAML merge tests verify deep merge behavior
+- [x] Env handler tests confirm .env loading
+- [x] Fixtures organized and maintainable
+- [x] Rake test task runs all tests
+- [x] Tests can be run individually or as suite
+- [x] Minitest reporters provide clear output
 
 ## Out of Scope
 
