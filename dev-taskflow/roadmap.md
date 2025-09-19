@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-09-17
+last_reviewed: 2025-09-19
 status: active
 ---
 
@@ -37,7 +37,7 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | v.0.6.0 | "ACE Migration"           | Q1 2025       | Complete migration from dev-* to .ace/* structure and rename CodingAgentTools to AceTools | Path Migration, Module Renaming, Documentation Updates, Migration Guide |
 | v.0.8.0 | "Minitest Migration"      | Q4 2025       | Migrate test suite from RSpec to Minitest with focus on behavior testing and best practices | Test Framework Setup, Test Migration, Documentation Guide, Performance Optimization |
-| v.0.9.0 | "Scribe"                  | Q1 2026       | Markdown Document Quality theme features.                                                 | R-MD-1, R-MD-2, R-MD-3, R-MD-4                                                                       |
+| v.0.9.0 | "Mono-Repo Multiple Gems" | Oct 2025      | Transform ACE to monorepo with modular Ruby gems (Phase 1: core, context, git, capture)   | Gem Extraction, Config Cascade, Minitest Setup, Migration Documentation |
 | v.0.10.0| "Spark"                   | Q2 2026       | AI-Assisted Task Definition theme features.                                               | R-TCI-1, R-TCI-2, R-TCI-3, R-TCI-4, R-TCI-5                                                        |
 | v1.0.0  | "Keystone"                | Q3 2026       | Stable v1: All P1 features from all themes hardened, documented, published to RubyGems. | All P1 Req IDs (R-LLM\*, R-GIT\*, R-TASK\*, R-CTX\*, R-MD\*, R-TCI\*) integrated & stable.        |
 
@@ -57,6 +57,7 @@ _Note: Release planning should align with project folder structure in `.ace/task
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-09-19 | Added v.0.9.0 "Mono-Repo Multiple Gems" release for Phase 1 monorepo transformation with 4 initial gems (core, context, git, capture) | AI Assistant   |
 | 2025-09-17 | Added v.0.8.0 "Minitest Migration" release for migrating test suite from RSpec to Minitest with focus on behavior testing | AI Assistant   |
 | 2025-01-17 | Removed completed v.0.7.0 "Conductor" release from planned releases after successful publication focusing on test suite improvements | AI Assistant   |
 | 2025-09-15 | Removed completed v.0.5.0 "Insights" release from planned releases after successful publication. Added v.0.6.0 "ACE Migration" for path and module renaming | AI Assistant   |
