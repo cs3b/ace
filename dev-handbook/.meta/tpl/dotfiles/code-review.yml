@@ -1,0 +1,228 @@
+# Code Review Configuration
+# Copy this file to .coding-agent/code-review.yml and customize as needed
+
+presets:
+  pr:
+    description: "Pull request review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"  # Background: project docs, architecture
+    subject:            # What to review: the PR changes
+      commands:
+        - git diff origin/main...HEAD
+        - git log origin/main..HEAD --oneline
+    
+  code:
+    description: "Code quality and architecture review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines:
+        - "tone"
+        - "icons"
+    context:            # Background: architecture and conventions
+      files:
+        - docs/architecture.md
+        - docs/conventions.md
+        - CONTRIBUTING.md
+    subject:            # What to review: staged changes
+      commands:
+        - git diff --cached
+  
+  docs:
+    description: "Documentation review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "scope/docs"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"  # Background: existing docs
+    subject:            # What to review: doc changes
+      commands:
+        - git diff HEAD -- '*.md'
+  
+  agents:
+    description: "Agent definition review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      guidelines:
+        - "tone"
+        - "icons"
+    context:            # Background: agent standards
+      files:
+        - dev-handbook/.meta/gds/agents-definition.g.md
+        - docs/architecture.md
+    subject:            # What to review: agent files
+      files:
+        - "dev-handbook/.integrations/claude/agents/*.ag.md"
+
+  security:
+    description: "Security and vulnerability review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "quality/security"
+      guidelines:
+        - "tone"
+        - "icons"
+    context:            # Background: security standards
+      files:
+        - docs/security.md
+        - docs/api.md
+    subject:            # What to review: recent changes
+      commands:
+        - git diff HEAD~5..HEAD
+
+  performance:
+    description: "Performance and optimization review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "quality/performance"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD -- '*.rb' '*.rs' '*.ts'
+
+  test:
+    description: "Test coverage and quality review"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "scope/tests"
+      guidelines:
+        - "tone"
+        - "icons"
+    context:
+      files:
+        - docs/testing.md
+        - docs/architecture.md
+    subject:
+      commands:
+        - git diff HEAD -- 'spec/**/*.rb' 'tests/**/*.rs' 'test/**/*.ts'
+
+  # New composable prompt presets
+  ruby-atom-modular:
+    description: "Ruby ATOM architecture review using modular prompts"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "architecture/atom"
+        - "languages/ruby"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+  vue-firebase-modular:
+    description: "Vue.js Firebase PWA review using modular prompts"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "frameworks/vue-firebase"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+  rails-modular:
+    description: "Rails application review using modular prompts"
+    prompt_composition:
+      base: "system"
+      format: "standard"
+      focus:
+        - "frameworks/rails"
+        - "languages/ruby"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+  security-focused:
+    description: "Security-focused review with detailed format"
+    prompt_composition:
+      base: "system"
+      format: "detailed"
+      focus:
+        - "quality/security"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~5..HEAD
+
+  performance-focused:
+    description: "Performance optimization review"
+    prompt_composition:
+      base: "system"
+      format: "detailed"
+      focus:
+        - "quality/performance"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD -- '*.rb' '*.rs' '*.ts'
+
+  quick-review:
+    description: "Quick compact review for small changes"
+    prompt_composition:
+      base: "system"
+      format: "compact"
+      guidelines:
+        - "tone"
+    context: null
+    subject:
+      commands:
+        - git diff --cached
+
+  full-stack:
+    description: "Full stack review with tests and docs"
+    prompt_composition:
+      base: "system"
+      format: "detailed"
+      focus:
+        - "scope/tests"
+        - "scope/docs"
+      guidelines:
+        - "tone"
+        - "icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~1..HEAD
+
+# Default settings
+defaults:
+  model: "google:gemini-2.5-flash"
+  output_format: "markdown"
+  context: "project"  # Default context if not specified

@@ -1,0 +1,271 @@
+# Path scanning and generation configuration for nav-path command
+# This file controls path resolution, generation, and autocorrection behavior
+
+# Project root settings
+project:
+  # Project root directory (relative to this config file)
+  root: ".."
+  # Project name for path generation
+  name: "tools-meta"
+
+# Repository scanning configuration
+repositories:
+  # Scan order for path resolution across all 4 repositories
+  scan_order:
+    - name: "tools-meta"
+      path: "."
+      priority: 1
+      description: "Main coordination and scripts"
+    - name: "dev-tools"
+      path: "dev-tools"
+      priority: 2
+      description: "Primary development focus (CAT Ruby Gem)"
+    - name: "dev-taskflow"
+      path: "dev-taskflow"
+      priority: 3
+      description: "Task management and project planning"
+    - name: "dev-handbook"
+      path: "dev-handbook"
+      priority: 4
+      description: "Development resources and guides"
+
+# Path generation patterns
+path_patterns:
+  # Task path generation
+  task_new:
+    template: "{release_path}/tasks/{id}-{slug}.md"
+    variables:
+      release_path: "release-manager current --format json | jq -r '.data.path'" # Command to get current release path
+      id: "task-manager generate-id" # Command to get next task ID
+      slug: "user_input" # Derived from --title parameter
+
+  # Documentation path generation
+  docs_new:
+    template: "{release_path}/docs/{timestamp}-{slug}.md"
+    variables:
+      release_path: "release-manager current --format json | jq -r '.data.path'" # Command to get current release path
+      timestamp: "datetime:%Y%m%d-%H%M%S" # YYYYMMDD-HHMMSS format
+      slug: "user_input"
+
+  # Reflection path generation
+  reflection_new:
+    template: "{release_path}/reflections/{timestamp}-{slug}.md"
+    variables:
+      release_path: "release-manager current --format json | jq -r '.data.path'" # Command to get current release path
+      timestamp: "datetime:%Y%m%d-%H%M%S"
+      slug: "user_input"
+
+# Path resolution settings
+resolution:
+  # Fuzzy matching settings
+  fuzzy:
+    enabled: true
+    # Minimum similarity score for fuzzy matches (0.0 to 1.0)
+    min_similarity: 0.5
+    # Maximum number of suggestions to return
+    max_suggestions: 10
+    # Whether to use fzf for interactive selection when available
+    use_fzf: true
+    # Fallback to basic string matching when fzf not available
+    fallback_enabled: true
+
+  # File type preferences for path resolution
+  file_preferences:
+    # Prefer these extensions when multiple matches exist
+    preferred_extensions:
+      - ".md"
+      - ".rb"
+      - ".yml"
+      - ".yaml"
+      - ".sh"
+      - "" # Files without extensions (like bin scripts)
+    # Always include these directories in scans
+    important_directories:
+      - "bin"
+      - "dev-tools/lib"
+      - "dev-tools/exe"
+      - "dev-taskflow/current"
+      - "dev-handbook/workflow-instructions"
+
+# Security and sandboxing
+security:
+  # Project root sandboxing - all paths must be within project root
+  enforce_sandbox: true
+  # Simple approach: block dangerous/noisy areas, allow everything else
+  forbidden_patterns:
+    - "**/.git/**" # Git internals
+    - "**/node_modules/**" # NPM dependencies
+    - "**/coverage/**" # Test coverage files
+    - "**/tmp/**" # Temporary files
+    - "**/*.log" # Log files
+    - "**/.*" # All dot files and dot directories
+    - ".*" # Top-level dot files
+  # No allowed_patterns - everything within project root is allowed except forbidden
+
+# Custom autocorrect mappings for common path errors
+autocorrect_mappings:
+  # Common username typos
+  "michalczyk": "michalczyz"
+  # Common directory name typos
+  "developement": "development"
+  "docuemnts": "documents"
+  "tempaltes": "templates"
+  "worklfow": "workflow"
+  "insturctions": "instructions"
+  # Common project structure typos
+  "dev-tool": "dev-tools"
+  "dev-taks": "dev-taskflow"
+  "dev-hanbook": "dev-handbook"
+
+# Scoped autocorrect configuration for scope:pattern syntax
+scoped_autocorrect:
+  # Scope mappings define where to search for each scope
+  scope_mappings:
+    # Architecture layers (ATOM pattern)
+    "atoms": 
+      - "dev-tools/lib/coding_agent_tools/atoms"
+      - "dev-tools/spec/coding_agent_tools/atoms"
+    "molecules": 
+      - "dev-tools/lib/coding_agent_tools/molecules"
+      - "dev-tools/spec/coding_agent_tools/molecules"
+    "organisms": 
+      - "dev-tools/lib/coding_agent_tools/organisms"
+      - "dev-tools/spec/coding_agent_tools/organisms"
+    
+    # Directory scopes
+    "lib": 
+      - "dev-tools/lib"
+      - "*/lib"
+    "spec": 
+      - "dev-tools/spec"
+      - "*/spec"
+    "exe": 
+      - "dev-tools/exe"
+      - "*/exe"
+      - "bin"
+    "bin":
+      - "bin"
+      - "dev-tools/exe"
+    
+    # Repository scopes
+    "tools": ["dev-tools"]
+    "taskflow": ["dev-taskflow"]
+    "handbook": ["dev-handbook"]
+    "meta": ["."]
+    
+    # File type scopes
+    "rb": ["**/*.rb"]
+    "md": ["**/*.md"]
+    "yml": ["**/*.yml", "**/*.yaml"]
+    "yaml": ["**/*.yml", "**/*.yaml"]
+    "sh": ["**/*.sh"]
+    
+    # Functional scopes
+    "cli": 
+      - "dev-tools/lib/coding_agent_tools/cli"
+      - "dev-tools/spec/coding_agent_tools/cli"
+    "models":
+      - "dev-tools/lib/coding_agent_tools/models"
+      - "dev-tools/spec/coding_agent_tools/models"
+    "config": 
+      - ".coding-agent"
+      - "dev-tools/config"
+    "tasks":
+      - "dev-taskflow/current/*/tasks"
+      - "dev-taskflow/*/tasks"
+    "docs":
+      - "dev-taskflow/current/*/docs"
+      - "dev-taskflow/*/docs"
+      - "dev-handbook"
+    "workflow":
+      - "dev-handbook/workflow-instructions"
+      - "dev-handbook/guides"
+
+  # Scope autocorrection mappings
+  scope_autocorrect:
+    # Architecture typos
+    "atom": "atoms"
+    "atmos": "atoms"
+    "atms": "atoms"
+    "molec": "molecules"
+    "molecule": "molecules"
+    "mols": "molecules"
+    "organism": "organisms"
+    "orgs": "organisms"
+    
+    # Directory typos
+    "liib": "lib"
+    "libb": "lib"
+    "sepec": "spec"
+    "specs": "spec"
+    "specc": "spec"
+    "binn": "bin"
+    "bins": "bin"
+    
+    # Repository typos
+    "tool": "tools"
+    "dev-tool": "tools"
+    "dev-tools": "tools"
+    "taskfow": "taskflow"
+    "task-flow": "taskflow"
+    "hanbook": "handbook"
+    "hand-book": "handbook"
+    "dev-handbook": "handbook"
+    
+    # File type typos
+    "ruby": "rb"
+    "markdown": "md"
+    "shell": "sh"
+    "bash": "sh"
+    
+    # Functional typos
+    "command": "cli"
+    "commands": "cli"
+    "model": "models"
+    "configuration": "config"
+    "configurations": "config"
+    "task": "tasks"
+    "doc": "docs"
+    "documentation": "docs"
+    "guide": "workflow"
+    "guides": "workflow"
+
+# Integration settings
+integration:
+  # External tools integration
+  tools:
+    fzf:
+      enabled: true
+      command: "fzf"
+      options: "--height 40% --reverse --border"
+
+    tree:
+      enabled: true
+      command: "tree"
+      fallback_command: "find"
+
+  # Multi-repository operations
+  multi_repo:
+    # Whether to scan all repositories by default
+    scan_all_by_default: true
+    # How to handle conflicting paths across repositories
+    conflict_resolution: "priority_order" # Options: priority_order, show_all, interactive
+
+# Performance settings
+performance:
+  # Caching settings for path resolution
+  cache:
+    enabled: true
+    # Cache duration in seconds
+    ttl: 300
+    # Maximum cache size (number of entries)
+    max_entries: 1000
+
+  # Limits to prevent performance issues
+  limits:
+    # Maximum number of files to scan in a single operation
+    max_files_scan: 10000
+    # Maximum depth for recursive directory scanning
+    max_scan_depth: 10
+    # Timeout for path resolution operations (seconds)
+    operation_timeout: 30

@@ -1,0 +1,86 @@
+# Context Tool Configuration
+# This file configures presets for the context tool (coding-agent-tools context)
+#
+# Usage: context --preset <preset-name>
+# Example: context --preset project
+#
+# Each preset defines:
+# - description: Brief description of what this preset includes
+# - template: Path to the context template file (relative to project root)
+# - output: Path where the generated context will be saved (optional)
+# - chunk_limit: Maximum characters per chunk if output needs splitting
+
+presets:
+    # Main project context - overview of the entire repository
+    project:
+        description: "Complete project context including documentation and structure"
+        template: "docs/context/project.md"
+        output: "docs/context/cached/project.md"
+        chunk_limit: 150000
+
+    # Development-specific contexts (add as needed)
+    # Example:
+    # dev:
+    #     description: "Development environment and tools context"
+    #     template: "docs/context/dev.md"
+    #     output: "docs/context/cached/dev.md"
+    #     chunk_limit: 100000
+
+    # Minimal context for quick reference
+    essentials:
+        description: "Minimal context with just README and key documentation"
+        template: "docs/context/essentials.md"
+        output: "docs/context/cached/essentials.md"
+        chunk_limit: 50000
+
+settings:
+    # Default chunk size limit for all presets (can be overridden per preset)
+    default_chunk_limit: 150000
+    
+    # Where to store cached context files
+    cache_directory: "docs/context/cached"
+    
+    # Fallback directory if cache directory doesn't exist
+    fallback_directory: "docs/context"
+    
+    # Automatically create directories if they don't exist
+    auto_create_directories: true
+
+security:
+    # Restrict template file paths to these directories for security
+    allowed_template_paths:
+        - "docs/**"
+        - "src/**"
+        - "lib/**"
+        - ".github/**"
+    
+    # Restrict output paths to these directories
+    allowed_output_paths:
+        - "docs/**"
+        - "tmp/**"
+        - ".cache/**"
+
+# Template Format Documentation:
+# ================================
+# Context templates support the following features:
+#
+# 1. File Embedding:
+#    {% embed file="path/to/file.md" %}
+#    {% embed file="README.md" lines="1-50" %}
+#
+# 2. Command Output:
+#    {% exec command="git status --short" %}
+#    {% exec command="ls -la src/" %}
+#
+# 3. Conditional Includes:
+#    {% if exists="path/to/file.md" %}
+#    Content to include if file exists
+#    {% endif %}
+#
+# 4. File Globbing:
+#    {% embed glob="src/**/*.md" %}
+#    {% embed glob="docs/*.md" exclude="**/draft-*" %}
+#
+# For more information, see:
+# - Documentation: docs/exe/context.md
+# - Workflow: dev-handbook/workflow-instructions/load-project-context.wf.md

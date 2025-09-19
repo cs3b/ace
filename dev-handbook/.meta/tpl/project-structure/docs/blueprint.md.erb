@@ -1,0 +1,209 @@
+# Project Blueprint: <%= @project_name || "[Project Name]" %>
+
+## What is a Blueprint?
+
+This document provides a concise overview of the project's structure and organization, highlighting key directories and files to help developers (especially AI assistants) quickly understand how to navigate the codebase. It should be updated periodically using the `update-blueprint` workflow.
+
+## Core Project Documents
+
+- [What We Build](docs/what-do-we-build.md) - Project vision and goals
+- [Architecture](docs/architecture.md) - System design and implementation principles
+- [Blueprint](docs/blueprint.md) - Project structure and organization
+
+## Project Organization
+
+<% if @is_meta_project %>
+This is a **meta-repository** using Git submodules to organize different aspects of the workflow toolkit:
+
+- **dev-handbook/** - Development resources and workflows (Git submodule)
+  - **guides/** - Best practices and standards for development
+  - **workflow-instructions/** - Structured commands for AI agents
+  - **templates/** - Project templates and document templates
+
+- **dev-taskflow/** - Project-specific documentation and task management (Git submodule)
+  - **backlog/** - Pending tasks for future releases
+  - **current/** - Active release cycle work
+  - **done/** - Completed releases and tasks
+
+- **dev-tools/** - CLI tools submodule for development automation (Git submodule)
+  - **lib/** - Source code organized by architecture pattern
+  - **exe/** - Executable CLI tools
+  - **spec/** - Test files
+
+- **docs/** - Core project documentation
+  - **decisions/** - Architecture Decision Records (ADRs)
+<% else %>
+This project follows a documentation-first approach with these primary directories:
+
+<% if @has_dev_taskflow %>
+- **dev-taskflow/** - Project-specific documentation
+  - **current/** - Active release cycle work
+  - **backlog/** - Pending tasks for future releases
+  - **done/** - Completed releases and tasks
+  - **decisions/** - Architecture Decision Records (ADRs)
+<% end %>
+
+<% if @project_directories && @project_directories.any? %>
+<% @project_directories.each do |dir| %>
+- **<%= dir[:path] %>** - <%= dir[:description] %>
+<% if dir[:subdirs] && dir[:subdirs].any? %>
+<% dir[:subdirs].each do |subdir| %>
+  - **<%= subdir[:path] %>** - <%= subdir[:description] %>
+<% end %>
+<% end %>
+<% end %>
+<% else %>
+- **src/** - Source code (adjust directory names as needed)
+  - **[component1]/** - Core functionality
+  - **[component2]/** - Additional features
+  - **utils/** - Shared utilities
+
+- **tests/** - Test files and test utilities
+
+- **config/** - Configuration files
+<% end %>
+
+<!-- Add your project-specific directories here -->
+<% end %>
+
+## View Complete Directory Structure
+
+To see the complete filtered directory structure, run:
+
+```bash
+<%= @tree_command || "nav-tree" %>
+```
+
+This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
+
+## Key Project-Specific Files
+
+<% if @key_files && @key_files.any? %>
+<% @key_files.each do |file| %>
+- [<%= file[:name] %>](<%= file[:path] %>) - <%= file[:description] %>
+<% end %>
+<% else %>
+- [README.md](README.md) - Project overview and setup instructions
+- [Configuration](.coding-agent/) - Tool configurations (if applicable)
+<% end %>
+
+## Technology Stack
+
+- **Primary Language**: <%= @tech_stack&.dig(:primary_language) || "[e.g., JavaScript, Python, Rust]" %>
+<% if @tech_stack&.dig(:framework) %>- **Framework**: <%= @tech_stack[:framework] %><% end %>
+<% if @tech_stack&.dig(:database) %>- **Database**: <%= @tech_stack[:database] %><% end %>
+<% if @key_libraries && @key_libraries.any? %>- **Key Libraries**: <%= @key_libraries.join(", ") %><% end %>
+<% if @dev_tools && @dev_tools.any? %>- **Development Tools**: <%= @dev_tools.join(", ") %><% end %>
+
+## Read-Only Paths
+
+This section lists files and directories that the agent should treat as read-only. Attempts to modify these paths should be flagged or prevented.
+
+<% if @readonly_paths && @readonly_paths.any? %>
+<% @readonly_paths.each do |path| %>
+- `<%= path %>`<%= @readonly_descriptions && @readonly_descriptions[path] ? " # #{@readonly_descriptions[path]}" : "" %>
+<% end %>
+<% else %>
+<!-- Add project-specific read-only paths -->
+- `docs/decisions/**/*`
+- `dev-taskflow/done/**/*`
+- `*.lock` # Dependency lock files
+- `dist/**/*` # Built artifacts
+- `build/**/*` # Build output
+<% end %>
+
+## Ignored Paths
+
+This section lists files, directories, or glob patterns that the agent should ignore entirely during its operations (e.g., when searching, reading, or editing files).
+
+<% if @ignored_paths && @ignored_paths.any? %>
+<% @ignored_paths.each do |path| %>
+- `<%= path %>`<%= @ignored_descriptions && @ignored_descriptions[path] ? " # #{@ignored_descriptions[path]}" : "" %>
+<% end %>
+<% else %>
+- `dev-taskflow/done/**/*` # Default: Protects completed tasks and releases
+- `**/node_modules/**`
+- `**/.git/**`
+- `**/__pycache__/**`
+- `**/target/**` # Rust build artifacts
+- `**/dist/**` # Built distributions
+- `**/build/**` # Build artifacts
+- `**/.env` # Environment files
+- `**/.env.*` # Environment variants
+- `*.session.log`
+- `*.lock`
+- `*.tmp`
+- `*~` # Backup files
+- `**/.DS_Store` # macOS system files
+- `**/Thumbs.db` # Windows system files
+<% end %>
+
+## Entry Points
+
+### Development
+
+<% if @entry_points && @entry_points.any? %>
+<% @entry_points.each do |entry| %>
+```bash
+# <%= entry[:description] %>
+<%= entry[:command] %>
+```
+
+<% end %>
+<% else %>
+```bash
+# Start development server
+<%= @dev_server_command || "npm start" %>
+
+# Run tests
+<%= @test_command || "npm test" %>
+
+# Build for production
+<%= @build_command || "npm run build" %>
+```
+<% end %>
+
+### Common Workflows
+
+- **New Feature**: Use `task-manager next` to find next task, follow task workflow
+- **Bug Fix**: Create task in backlog, prioritize, implement
+- **Documentation**: Update relevant files in `<%= @task_flow_dir || "docs/" %>`
+
+## Dependencies
+
+### Runtime Dependencies
+
+<% if @runtime_dependencies && @runtime_dependencies.any? %>
+<% @runtime_dependencies.each do |dep| %>
+- <%= dep[:name] %>: <%= dep[:purpose] %><%= dep[:version] ? " (#{dep[:version]})" : "" %>
+<% end %>
+<% else %>
+- [Library 1]: Purpose and version constraints
+- [Library 2]: Purpose and version constraints
+<% end %>
+
+### Development Dependencies
+
+<% if @dev_dependencies && @dev_dependencies.any? %>
+<% @dev_dependencies.each do |dep| %>
+- <%= dep[:name] %>: <%= dep[:purpose] %><%= dep[:version] ? " (#{dep[:version]})" : "" %>
+<% end %>
+<% end %>
+
+<% if @submodules && @submodules.any? %>
+## Submodules
+
+<% @submodules.each do |submodule| %>
+### <%= submodule[:name] %>
+
+- Path: `<%= submodule[:path] %>`
+- Repository: <%= submodule[:repo] %>
+- Purpose: <%= submodule[:purpose] %>
+<% if submodule[:important_note] %>- **Important**: <%= submodule[:important_note] %><% end %>
+
+<% end %>
+<% end %>
+
+---
+
+*This blueprint should be updated when significant structural changes are made to the project. Use the `update-blueprint` workflow to keep it current.*

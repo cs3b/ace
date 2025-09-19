@@ -1,0 +1,131 @@
+{
+    "description": "Configuration for enforcing wrapper tools and suggesting semantic commit workflows",
+    "debug": {
+        "enabled": false,
+        "log_file": "/tmp/wrapper-tools-hook.log",
+        "save_individual_files": false,
+        "file_pattern": "/tmp/hook-debug-{timestamp}.json"
+    },
+    "commit_workflow": {
+        "enabled": true,
+        "description": "Suggest semantic commits with git-commit instead of separate add/commit",
+        "suggestions": {
+            "show_tips": true,
+            "show_examples": true,
+            "show_benefits": true
+        },
+        "semantic_types": [
+            "feat: A new feature",
+            "fix: A bug fix",
+            "docs: Documentation changes",
+            "style: Code style changes (formatting, etc)",
+            "refactor: Code refactoring",
+            "test: Adding or updating tests",
+            "chore: Maintenance tasks"
+        ]
+    },
+    "enforcements": [
+        {
+            "name": "git",
+            "description": "Enforce git wrapper tools for multi-repository operations",
+            "enabled": true,
+            "pattern": "\\bgit\\s+(\\w+)",
+            "wrapper_tools": {
+                "git-add": "Stage files for commit",
+                "git-checkout": "Switch branches",
+                "git-commit": "Commit with intelligent messages",
+                "git-fetch": "Fetch from remotes",
+                "git-log": "View commit history",
+                "git-mv": "Move/rename files",
+                "git-pull": "Pull from remotes",
+                "git-push": "Push to remotes",
+                "git-restore": "Restore files",
+                "git-rm": "Remove files",
+                "git-status": "Check repository status",
+                "git-switch": "Switch branches",
+                "git-tag": "Manage tags"
+            },
+            "command_mappings": {
+                "git status": "git-status",
+                "git commit": "git-commit",
+                "git add": "git-add or git-commit --intention",
+                "git log": "git-log",
+                "git push": "git-push",
+                "git pull": "git-pull",
+                "git fetch": "git-fetch",
+                "git checkout": "git-checkout",
+                "git switch": "git-switch",
+                "git restore": "git-restore",
+                "git tag": "git-tag",
+                "git mv": "git-mv",
+                "git rm": "git-rm"
+            },
+            "no_wrapper_available": [
+                "git diff",
+                "git branch",
+                "git merge",
+                "git rebase",
+                "git reset",
+                "git stash",
+                "git remote",
+                "git clone",
+                "git init",
+                "git filter-branch",
+                "git filter",
+                "git for-each-ref",
+                "git for",
+                "git update-ref",
+                "git update",
+                "git reflog",
+                "git gc",
+                "git submodule",
+                "git config",
+                "git show",
+                "git describe",
+                "git rev-parse",
+                "git rev",
+                "git ls-files",
+                "git ls",
+                "git cherry-pick",
+                "git cherry",
+                "git bisect",
+                "git blame",
+                "git archive",
+                "git am",
+                "git apply",
+                "git format-patch",
+                "git format",
+                "git send-email",
+                "git send",
+                "git request-pull",
+                "git request",
+                "git shortlog",
+                "git whatchanged",
+                "git fsck",
+                "git prune",
+                "git pack-refs",
+                "git pack",
+                "git verify-pack",
+                "git verify",
+                "git count-objects",
+                "git count",
+                "git help",
+                "git version"
+            ]
+        }
+    ],
+    "future_enforcements": {
+        "docker": {
+            "description": "Could enforce docker wrapper tools for multi-container operations",
+            "enabled": false,
+            "pattern": "\\bdocker\\s+(\\w+)",
+            "note": "Placeholder for future docker wrapper enforcement"
+        },
+        "npm": {
+            "description": "Could enforce npm wrapper tools for workspace operations",
+            "enabled": false,
+            "pattern": "\\bnpm\\s+(\\w+)",
+            "note": "Placeholder for future npm wrapper enforcement"
+        }
+    }
+}
