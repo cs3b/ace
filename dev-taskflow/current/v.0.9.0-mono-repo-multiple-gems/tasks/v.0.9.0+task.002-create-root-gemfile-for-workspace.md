@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.002
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: [v.0.9.0+task.001]
@@ -31,13 +31,13 @@ Set up the root Gemfile that manages all workspace gems and provides shared deve
 
 ### Planning Steps
 
-* [ ] Determine shared test/development dependencies
-* [ ] Review bundler workspace patterns
-* [ ] Plan for incremental gem addition
+* [x] Determine shared test/development dependencies
+* [x] Review bundler workspace patterns
+* [x] Plan for incremental gem addition
 
 ### Execution Steps
 
-- [ ] Create initial Gemfile with ace-core
+- [x] Create initial Gemfile with ace-core
   ```ruby
   source "https://rubygems.org"
 
@@ -53,19 +53,19 @@ Set up the root Gemfile that manages all workspace gems and provides shared deve
   end
   ```
 
-- [ ] Run bundle install to verify setup
+- [x] Run bundle install to verify setup
   > TEST: Bundle install succeeds
   > Type: Manual verification
   > Assert: No dependency conflicts, Gemfile.lock created
   > Command: bundle install
 
-- [ ] Test that ace-core is accessible
+- [x] Test that ace-core is accessible
   > TEST: Workspace gem loading
   > Type: Manual verification
   > Assert: Can require ace-core from root
   > Command: bundle exec ruby -e "require 'ace/core'; puts Ace::Core::VERSION"
 
-- [ ] Document update process for adding new gems
+- [x] Document update process for adding new gems
   ```ruby
   # To add new gem:
   # 1. Add to Gemfile: gem "ace-context", path: "ace-context"
@@ -73,7 +73,7 @@ Set up the root Gemfile that manages all workspace gems and provides shared deve
   # 3. Commit both Gemfile and Gemfile.lock
   ```
 
-- [ ] Create bundle config for consistent settings
+- [x] Create bundle config for consistent settings
   ```bash
   bundle config set --local path 'vendor/bundle'
   bundle config set --local with 'development test'
@@ -81,12 +81,12 @@ Set up the root Gemfile that manages all workspace gems and provides shared deve
 
 ## Acceptance Criteria
 
-- [ ] Gemfile exists in repository root
-- [ ] ace-core is referenced with path directive
-- [ ] Shared test/dev dependencies are in groups
-- [ ] Bundle install completes successfully
-- [ ] Gemfile structure supports adding more gems
-- [ ] Documentation for gem addition process
+- [x] Gemfile exists in repository root
+- [x] ace-core is referenced with path directive
+- [x] Shared test/dev dependencies are in groups
+- [x] Bundle install completes successfully
+- [x] Gemfile structure supports adding more gems
+- [x] Documentation for gem addition process
 
 ## Out of Scope
 
