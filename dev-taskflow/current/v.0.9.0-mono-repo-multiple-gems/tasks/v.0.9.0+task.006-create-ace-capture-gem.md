@@ -25,6 +25,7 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 
 #### Create
 
+- ace-capture/.bundle/config (BUNDLE_GEMFILE pointing to parent)
 - ace-capture/ace-capture.gemspec
 - ace-capture/lib/ace/capture.rb
 - ace-capture/lib/ace/capture/version.rb
@@ -56,8 +57,17 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 
 - [ ] Create gem skeleton
   ```bash
-  mkdir -p ace-capture/{lib/ace/capture,test,config,exe}
+  mkdir -p ace-capture/{lib/ace/capture,test,config,exe,.bundle}
   ```
+
+- [ ] Create .bundle/config for ace-capture
+  ```yaml
+  # ace-capture/.bundle/config
+  ---
+  BUNDLE_GEMFILE: "../Gemfile"
+  ```
+  > NOTE: This follows the Option C pattern established with ace-core
+  > Allows ace-capture to use shared root Gemfile for all dependencies
 
 - [ ] Create ace-capture.gemspec
   ```ruby
@@ -68,8 +78,7 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 
     spec.add_dependency "ace-core", "~> 0.9.0"
 
-    spec.add_development_dependency "minitest"
-    spec.add_development_dependency "rake"
+    # No development dependencies - managed in root Gemfile
   end
   ```
 
@@ -174,8 +183,10 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
   ```ruby
   # test/test_helper.rb
   require 'minitest/autorun'
+  require 'minitest/reporters' # Available from root Gemfile
   require 'ace/capture'
   require 'tmpdir'
+  # Reuse test utilities from ace-core which already has 29 passing tests
   ```
 
 - [ ] Write idea writer tests
@@ -209,12 +220,18 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
   ```ruby
   gem "ace-capture", path: "ace-capture"
   ```
+  > NOTE: Root Gemfile configuration:
+  > - No vendor/bundle (gems install to mise Ruby location)
+  > - Shared dev dependencies (minitest ~> 5.20, rake ~> 13.0, minitest-reporters ~> 1.6)
+  > - All gems use .bundle/config to reference parent Gemfile
 
-- [ ] Run bundle install and test
+- [ ] Run bundle install from root and test
   > TEST: Capture command works
   > Type: Integration
   > Assert: Ideas captured to files
   > Command: bundle install && bundle exec capture "Test idea"
+  > NOTE: Run from project root, not ace-capture directory
+  > The .bundle/config will ensure proper Gemfile resolution
 
 - [ ] Create README
   ```markdown
