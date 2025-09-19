@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.001
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -42,44 +42,44 @@ Create the foundational ace-core gem that provides config cascade resolution and
 
 ### Planning Steps
 
-* [ ] Review existing config loading code in dev-tools
-* [ ] Identify minimal set of shared functionality needed
-* [ ] Design config cascade resolution algorithm
-* [ ] Plan directory search order (./ → ~/ → gem defaults)
+* [x] Review existing config loading code in dev-tools
+* [x] Identify minimal set of shared functionality needed
+* [x] Design config cascade resolution algorithm
+* [x] Plan directory search order (./ → ~/ → gem defaults)
 
 ### Execution Steps
 
-- [ ] Create gem skeleton using bundle gem or manual structure
+- [x] Create gem skeleton using bundle gem or manual structure
   ```bash
   mkdir -p ace-core/{lib/ace/core,test,config}
   ```
 
-- [ ] Create ace-core.gemspec with minimal dependencies
+- [x] Create ace-core.gemspec with minimal dependencies
   ```ruby
   # Only standard library and essential gems
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "rake"
   ```
 
-- [ ] Implement ConfigResolver class for cascade search
+- [x] Implement ConfigResolver class for cascade search
   > TEST: Config cascade resolution
   > Type: Unit Test
   > Assert: Local config overrides home, home overrides gem defaults
   > Command: cd ace-core && rake test TEST=test/config_resolver_test.rb
 
-- [ ] Implement YAML loader with deep-merge
+- [x] Implement YAML loader with deep-merge
   > TEST: YAML deep merge
   > Type: Unit Test
   > Assert: Nested hashes merge correctly, arrays handled per config
   > Command: cd ace-core && rake test TEST=test/yaml_loader_test.rb
 
-- [ ] Add .env file handling
+- [x] Add .env file handling
   > TEST: Environment variable loading
   > Type: Unit Test
   > Assert: .env files load and override system env vars
   > Command: cd ace-core && rake test TEST=test/env_handler_test.rb
 
-- [ ] Create default config/core.yml with structure
+- [x] Create default config/core.yml with structure
   ```yaml
   ace:
     version: "0.9.0"
@@ -90,21 +90,21 @@ Create the foundational ace-core gem that provides config cascade resolution and
       merge_strategy: deep
   ```
 
-- [ ] Create sample .ace/core/config/core.yml for project
+- [x] Create sample .ace/core/config/core.yml for project
 
-- [ ] Set up test helper with shared utilities
+- [x] Set up test helper with shared utilities
 
-- [ ] Write README.md with usage examples
+- [x] Write README.md with usage examples
 
 ## Acceptance Criteria
 
-- [ ] Gem structure follows Ruby conventions
-- [ ] Config cascade works: ./.ace → ~/.ace → gem defaults
-- [ ] YAML files load and merge correctly
-- [ ] .env files are processed
-- [ ] All tests pass with minitest
-- [ ] No dependencies on other ace-* gems
-- [ ] README documents usage and config structure
+- [x] Gem structure follows Ruby conventions
+- [x] Config cascade works: ./.ace → ~/.ace → gem defaults
+- [x] YAML files load and merge correctly
+- [x] .env files are processed
+- [x] All tests pass with minitest
+- [x] No dependencies on other ace-* gems
+- [x] README documents usage and config structure
 
 ## Out of Scope
 
