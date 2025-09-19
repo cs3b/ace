@@ -1,0 +1,12 @@
+ace:
+  level: "default"
+  shared: "from_default"
+  core:
+    version: "1.0.0"
+    environment: "production"
+    features:
+      - "basic"
+      - "default"
+  settings:
+    timeout: 30
+    retries: 3

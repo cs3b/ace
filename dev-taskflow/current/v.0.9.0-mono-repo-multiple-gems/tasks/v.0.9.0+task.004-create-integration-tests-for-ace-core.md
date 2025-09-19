@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.004
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: [v.0.9.0+task.003]
@@ -34,14 +34,14 @@ Build integration tests that verify ace-core's config cascade system works end-t
 
 ### Planning Steps
 
-* [ ] Design integration test scenarios
-* [ ] Plan test environment isolation
-* [ ] Identify reusable patterns for other gems
-* [ ] Review integration testing best practices
+* [x] Design integration test scenarios
+* [x] Plan test environment isolation
+* [x] Identify reusable patterns for other gems
+* [x] Review integration testing best practices
 
 ### Execution Steps
 
-- [ ] Create test environment helper
+- [x] Create test environment helper
   ```ruby
   # test/support/test_environment.rb
   class TestEnvironment
@@ -60,7 +60,7 @@ Build integration tests that verify ace-core's config cascade system works end-t
   end
   ```
 
-- [ ] Create config helpers
+- [x] Create config helpers
   ```ruby
   # test/support/config_helpers.rb
   module ConfigHelpers
@@ -82,7 +82,7 @@ Build integration tests that verify ace-core's config cascade system works end-t
   end
   ```
 
-- [ ] Create config cascade integration test
+- [x] Create config cascade integration test
   ```ruby
   # test/integration/config_cascade_test.rb
   class ConfigCascadeTest < AceTestCase
@@ -108,7 +108,7 @@ Build integration tests that verify ace-core's config cascade system works end-t
   > Assert: All config sources resolve correctly
   > Command: cd ace-core && rake test TEST=test/integration/config_cascade_test.rb
 
-- [ ] Create multi-source integration test
+- [x] Create multi-source integration test
   ```ruby
   # test/integration/multi_source_test.rb
   class MultiSourceTest < AceTestCase
@@ -126,12 +126,12 @@ Build integration tests that verify ace-core's config cascade system works end-t
   > Assert: Different config sources combine correctly
   > Command: cd ace-core && rake test TEST=test/integration/multi_source_test.rb
 
-- [ ] Set up integration test fixtures
+- [x] Set up integration test fixtures
   ```bash
   mkdir -p test/integration/fixtures/{project,home,defaults}
   ```
 
-- [ ] Create sample configs at each level
+- [x] Create sample configs at each level
   ```yaml
   # test/integration/fixtures/defaults/core.yml
   ace:
@@ -139,7 +139,7 @@ Build integration tests that verify ace-core's config cascade system works end-t
     shared: "from_default"
   ```
 
-- [ ] Test error handling scenarios
+- [x] Test error handling scenarios
   ```ruby
   def test_handles_malformed_yaml
     # Verify graceful error handling
@@ -150,7 +150,7 @@ Build integration tests that verify ace-core's config cascade system works end-t
   end
   ```
 
-- [ ] Document integration patterns in README
+- [x] Document integration patterns in README
   ```markdown
   ## Integration Testing
 
@@ -160,7 +160,7 @@ Build integration tests that verify ace-core's config cascade system works end-t
   - Fixture helpers: Sample config generation
   ```
 
-- [ ] Run full integration suite
+- [x] Run full integration suite
   > TEST: All integration tests pass
   > Type: Test Suite
   > Assert: End-to-end scenarios work
@@ -168,13 +168,13 @@ Build integration tests that verify ace-core's config cascade system works end-t
 
 ## Acceptance Criteria
 
-- [ ] Integration tests cover full cascade resolution
-- [ ] Multi-source scenarios tested
-- [ ] Error conditions handled gracefully
-- [ ] Test utilities are reusable by other gems
-- [ ] Test environment properly isolated
-- [ ] Documentation explains testing patterns
-- [ ] All integration tests pass
+- [x] Integration tests cover full cascade resolution
+- [x] Multi-source scenarios tested
+- [x] Error conditions handled gracefully
+- [x] Test utilities are reusable by other gems
+- [x] Test environment properly isolated
+- [x] Documentation explains testing patterns
+- [x] All integration tests pass
 
 ## Out of Scope
 
