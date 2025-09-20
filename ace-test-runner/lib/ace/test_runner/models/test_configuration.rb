@@ -10,7 +10,7 @@ module Ace
                       :timeout, :parallel, :color, :per_file
 
         def initialize(attributes = {})
-          @format = attributes[:format] || "compact"  # Changed default to compact for performance
+          @format = attributes[:format] || "progress"  # Default to per-test progress
           @report_dir = attributes[:report_dir] || "test-reports"
           @save_reports = attributes.fetch(:save_reports, true)
           @fail_fast = attributes[:fail_fast] || false
@@ -25,12 +25,12 @@ module Ace
         end
 
         def valid_format?
-          %w[ai compact json markdown].include?(format)
+          %w[ai compact json markdown progress progress-file].include?(format)
         end
 
         def validate!
           unless valid_format?
-            raise ArgumentError, "Unknown format '#{format}'. Valid formats: ai, compact, json, markdown"
+            raise ArgumentError, "Unknown format '#{format}'. Valid formats: progress, progress-file, compact, ai, json, markdown"
           end
 
           if save_reports && !writable_directory?(report_dir)
@@ -50,6 +50,10 @@ module Ace
             Formatters::JsonFormatter
           when "markdown"
             Formatters::MarkdownFormatter
+          when "progress"
+            Formatters::ProgressFormatter
+          when "progress-file"
+            Formatters::ProgressFileFormatter
           else
             raise ArgumentError, "Unknown format: #{format}"
           end

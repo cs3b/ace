@@ -5,6 +5,8 @@ module Ace
     module Formatters
       # Compact formatter for CI environments (dots/F/E/S output)
       class CompactFormatter < BaseFormatter
+        MAX_FAILURES_TO_DISPLAY = 7
+
         def initialize(options = {})
           super
           @test_count = 0
@@ -40,8 +42,21 @@ module Ace
           # Add failure details if there are any
           if result.has_failures?
             lines << ""
-            lines << "FAILURES (#{result.failed + result.errors}):"
-            result.failures_detail.each_with_index do |failure, idx|
+            total_failures = result.failed + result.errors
+            lines << "FAILURES (#{total_failures}):"
+
+            # Get report path if available
+            report_path = if @configuration && @configuration[:save_reports]
+              timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
+              "#{@configuration[:report_dir] || 'test-reports'}/#{timestamp}"
+            else
+              "test-reports/latest"
+            end
+
+            # Display up to MAX_FAILURES_TO_DISPLAY failures
+            failures_to_show = result.failures_detail.take(MAX_FAILURES_TO_DISPLAY)
+
+            failures_to_show.each_with_index do |failure, idx|
               # Extract file and line from location (e.g., "/path/file.rb:42:in `test_method'")
               location_match = failure.location.match(/^([^:]+):(\d+)/)
               if location_match
@@ -52,9 +67,17 @@ module Ace
                 location = failure.location
               end
 
-              # 2-line format: location - short message
+              # 2-line format: location - short message + report path
               message = truncate_message(failure.message, 60)
               lines << "  #{location} - #{message}"
+              lines << "  → Details: #{report_path}/failures.json"
+              lines << ""  # Add blank line between failures for readability
+            end
+
+            # If there are more failures than displayed
+            if result.failures_detail.size > MAX_FAILURES_TO_DISPLAY
+              remaining = result.failures_detail.size - MAX_FAILURES_TO_DISPLAY
+              lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report for details."
             end
           end
 

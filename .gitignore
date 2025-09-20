@@ -11,3 +11,5 @@ node_modules
 
 # Cached context files
 docs/context/cached/
+
+**/test-reports/**
