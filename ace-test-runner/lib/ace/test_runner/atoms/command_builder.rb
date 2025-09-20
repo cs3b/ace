@@ -35,9 +35,9 @@ module Ace
               path = f.start_with?('/') || f.start_with?('./') ? f : "./#{f}"
               cmd_parts << "-r#{path}"
             end
-            # Run Minitest after requiring all files
+            # Run Minitest after requiring all files, then exit to prevent double run
             cmd_parts << "-e"
-            cmd_parts << "'Minitest.autorun'"
+            cmd_parts << "'exit_code = Minitest.autorun; exit(exit_code)'"
           else
             # Single file - just pass it as argument (Minitest autoruns)
             cmd_parts << files
@@ -52,6 +52,7 @@ module Ace
         end
 
         def build_single_file_command(file, options = {})
+          # Single file uses the same logic as multiple files
           build_test_command(file, options)
         end
 

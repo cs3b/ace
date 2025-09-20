@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require "ace/core"
-require "ace/test_support"
+# Don't require ace/test_support here - it loads minitest/autorun which causes double runs
+# Test files will require it themselves
 
 # Only require minitest when actually running tests
 # require "minitest" is done by test files or CommandBuilder
