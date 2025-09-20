@@ -1,18 +1,16 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require_relative "../support/test_environment"
-require_relative "../support/config_helpers"
 require "ace/core/organisms/config_resolver"
 require "ace/core/organisms/environment_manager"
 require "ace/core/molecules/yaml_loader"
 require "yaml"
 
 class MultiSourceTest < AceTestCase
-  include Ace::Core::TestSupport::ConfigHelpers
+  include Ace::TestSupport::ConfigHelpers
 
   def setup
-    @env = Ace::Core::TestSupport::TestEnvironment.new
+    @env = Ace::TestSupport::TestEnvironment.new("core")
     @env.setup
   end
 

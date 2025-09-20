@@ -1,15 +1,13 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require_relative "../support/test_environment"
-require_relative "../support/config_helpers"
 require "ace/core/organisms/config_resolver"
 
 class ConfigCascadeTest < AceTestCase
-  include Ace::Core::TestSupport::ConfigHelpers
+  include Ace::TestSupport::ConfigHelpers
 
   def setup
-    @env = Ace::Core::TestSupport::TestEnvironment.new
+    @env = Ace::TestSupport::TestEnvironment.new("core")
     @env.setup
   end
 

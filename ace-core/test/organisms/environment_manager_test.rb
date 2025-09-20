@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "../test_helper"
 require "ace/core/organisms/environment_manager"
 
-class EnvironmentManagerTest < Minitest::Test
+class EnvironmentManagerTest < AceTestCase
   def setup
     @original_env = ENV.to_h.dup
   end

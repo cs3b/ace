@@ -1,7 +1,20 @@
 PATH
+  remote: ace-context
+  specs:
+    ace-context (0.9.0)
+      ace-core (~> 0.9.0)
+
+PATH
   remote: ace-core
   specs:
     ace-core (0.9.0)
+
+PATH
+  remote: ace-test-support
+  specs:
+    ace-test-support (0.9.0)
+      minitest (~> 5.20)
+      minitest-reporters (~> 1.6)
 
 GEM
   remote: https://rubygems.org/
@@ -22,7 +35,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  ace-context!
   ace-core!
+  ace-test-support!
   bundler (~> 2.4)
   minitest (~> 5.20)
   minitest-reporters (~> 1.6)

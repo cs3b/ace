@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'ace/context'
+require 'optparse'
+
+options = {
+  format: 'markdown'
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: context [options] [preset]"
+
+  opts.on("-p", "--preset PRESET", "Load context from preset") do |p|
+    options[:preset] = p
+  end
+
+  opts.on("-f", "--file FILE", "Load context from file") do |f|
+    options[:file] = f
+  end
+
+  opts.on("-l", "--list", "List available presets") do
+    options[:list] = true
+  end
+
+  opts.on("--format FORMAT", %w[markdown yaml], "Output format (markdown, yaml)") do |f|
+    options[:format] = f
+  end
+
+  opts.on("-h", "--help", "Show this help message") do
+    puts opts
+    exit
+  end
+end
+
+parser.parse!
+
+# Handle list presets
+if options[:list]
+  presets = Ace::Context.list_presets
+  if presets.empty?
+    puts "No presets configured"
+  else
+    puts "Available presets:"
+    presets.each do |preset|
+      puts "  #{preset[:name]}"
+      puts "    Description: #{preset[:description]}" if preset[:description]
+      puts "    Files: #{preset[:include].join(', ')}" if preset[:include].any?
+    end
+  end
+  exit
+end
+
+# Get preset from argument or option
+preset = options[:preset] || ARGV[0] || 'default'
+
+# Load context
+if options[:file]
+  context = Ace::Context.load_file(options[:file], options)
+else
+  context = Ace::Context.load_preset(preset, options)
+end
+
+# Output context
+if context.metadata[:error]
+  $stderr.puts "Error: #{context.metadata[:error]}"
+  exit 1
+else
+  puts context.content
+end
