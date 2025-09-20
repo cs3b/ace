@@ -42,7 +42,7 @@ module Ace
           config = if config_path && File.exist?(config_path)
             load_from_file(config_path)
           else
-            find_and_load_config || DEFAULT_CONFIG
+            find_and_load_config || deep_copy(DEFAULT_CONFIG)
           end
 
           validate_config(config)
@@ -50,7 +50,7 @@ module Ace
         end
 
         def merge_with_options(config, options)
-          merged = config.dup
+          merged = deep_copy(config)
 
           # Override defaults with command-line options
           if options[:format]
@@ -92,7 +92,7 @@ module Ace
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           warn "Using default configuration"
-          DEFAULT_CONFIG
+          deep_copy(DEFAULT_CONFIG)
         end
 
         def validate_config(config)
@@ -110,16 +110,20 @@ module Ace
 
         def normalize_config(config)
           # Ensure all sections exist
-          config[:patterns] ||= DEFAULT_CONFIG[:patterns]
-          config[:groups] ||= DEFAULT_CONFIG[:groups]
-          config[:defaults] ||= DEFAULT_CONFIG[:defaults]
+          config[:patterns] ||= deep_copy(DEFAULT_CONFIG[:patterns])
+          config[:groups] ||= deep_copy(DEFAULT_CONFIG[:groups])
+          config[:defaults] ||= deep_copy(DEFAULT_CONFIG[:defaults])
 
           # Merge with defaults for missing values
-          config[:patterns] = DEFAULT_CONFIG[:patterns].merge(config[:patterns])
-          config[:groups] = DEFAULT_CONFIG[:groups].merge(config[:groups])
-          config[:defaults] = DEFAULT_CONFIG[:defaults].merge(config[:defaults])
+          config[:patterns] = deep_copy(DEFAULT_CONFIG[:patterns]).merge(config[:patterns])
+          config[:groups] = deep_copy(DEFAULT_CONFIG[:groups]).merge(config[:groups])
+          config[:defaults] = deep_copy(DEFAULT_CONFIG[:defaults]).merge(config[:defaults])
 
           config
+        end
+
+        def deep_copy(obj)
+          Marshal.load(Marshal.dump(obj))
         end
       end
     end
