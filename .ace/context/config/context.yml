@@ -1,0 +1,32 @@
+# Project-specific context configuration
+context:
+  presets:
+    ace-meta:
+      description: "ace-meta project context"
+      include:
+        - "README.md"
+        - "docs/architecture.md"
+        - "docs/what-do-we-build.md"
+        - "docs/blueprint.md"
+        - "dev-taskflow/current/*/roadmap.md"
+      exclude:
+        - "**/node_modules/**"
+        - "**/vendor/**"
+      format: markdown
+
+    release:
+      description: "Current release context"
+      include:
+        - "dev-taskflow/current/*/roadmap.md"
+        - "dev-taskflow/current/*/tasks/*.md"
+      exclude:
+        - "**/done/**"
+      format: markdown
+
+    gems:
+      description: "All ace-* gems documentation"
+      include:
+        - "ace-*/README.md"
+        - "ace-*/*.gemspec"
+        - "Gemfile"
+      format: markdown

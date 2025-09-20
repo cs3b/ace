@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "../test_helper"
 require "ace/core/organisms/config_resolver"
 
-class ConfigResolverTest < Minitest::Test
+class ConfigResolverTest < AceTestCase
   def test_resolve_with_cascade
     with_temp_dir do |dir|
       # Create local config
