@@ -39,7 +39,15 @@ module Ace
             )
           end
 
-          load_from_config(preset)
+          context = load_from_config(preset)
+          context.metadata[:preset_name] = preset_name unless context.metadata[:preset_name]
+
+          # Re-format if format was specified and preset_name was added
+          if preset[:format] && context.metadata[:preset_name]
+            format_context(context, preset[:format])
+          end
+
+          context
         end
 
         def load_file(path)
@@ -323,8 +331,13 @@ module Ace
             # Use OutputFormatter for all formats
             data = {
               files: context.files,
-              metadata: context.metadata
+              metadata: context.metadata.dup
             }
+
+            # Include preset_name at the top level for YAML format
+            if context.metadata[:preset_name]
+              data[:preset_name] = context.metadata[:preset_name]
+            end
 
             formatter = Ace::Core::Molecules::OutputFormatter.new(format)
             context.content = formatter.format(data)
