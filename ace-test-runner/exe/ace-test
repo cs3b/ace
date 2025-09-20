@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# Prevent Minitest from autorunning when ace-test exits
+ENV["MT_NO_AUTORUN"] = "1"
+
 require "optparse"
 require_relative "../lib/ace/test_runner"
 
@@ -61,12 +64,12 @@ parser = OptionParser.new do |opts|
 
   opts.on("-h", "--help", "Display this help") do
     puts opts
-    exit
+    exit 0
   end
 
   opts.on("--version", "Display version") do
     puts "ace-test-runner #{Ace::TestRunner::VERSION}"
-    exit
+    exit 0
   end
 
   opts.separator ""

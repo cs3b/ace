@@ -5,6 +5,16 @@ module Ace
     module Formatters
       # AI-optimized formatter with dual output (stdout summary + detailed reports)
       class AiFormatter < BaseFormatter
+        def on_start(total_files)
+          puts "🚀 Starting test execution..."
+          puts "Testing #{total_files} files\n"
+        end
+
+        def on_test_complete(file, success, duration)
+          status = success ? colorize("✓", :green) : colorize("✗", :red)
+          filename = File.basename(file)
+          puts "  #{status} #{filename} (#{format_duration(duration)})"
+        end
         def format_stdout(result)
           lines = []
 

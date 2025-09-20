@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class Ace::TestCore < Minitest::Test
+class Ace::CoreTest < Minitest::Test
   def test_that_it_has_a_version_number
     refute_nil ::Ace::Core::VERSION
   end

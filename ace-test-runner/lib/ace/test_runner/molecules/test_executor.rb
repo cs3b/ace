@@ -32,6 +32,7 @@ module Ace
           stderr = ""
           status = nil
 
+
           begin
             if @timeout
               Timeout.timeout(@timeout) do
@@ -46,6 +47,7 @@ module Ace
           end
 
           end_time = Time.now
+
 
           {
             stdout: stdout,
