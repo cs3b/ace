@@ -10,11 +10,12 @@ module Ace
       class TemplateDiscoverer
         DEFAULT_TEMPLATE_PATHS = [
           'docs/context/*.md',
+          '../docs/context/*.md',  # For when running from subdirectory
           '.ace/context/templates/*.md',
           '.coding-agent/templates/*.md'
         ].freeze
 
-        DEFAULT_CACHE_DIR = 'docs/context/.cache'
+        DEFAULT_CACHE_DIR = '.cache/ace-context'
         DEFAULT_FORMAT = 'markdown-xml'
         DEFAULT_CHUNK_LIMIT = 60_000
 
@@ -136,9 +137,8 @@ module Ace
         # @param basename [String] Base name of the template
         # @return [String] Output path
         def build_output_path(basename)
-          # Use .cache subdirectory for auto-discovered templates
-          cache_dir = @cache_dir.sub('/cached', '/.cache')
-          "#{cache_dir}/#{basename}.md"
+          # Use .cache/ace-context directory for auto-discovered templates
+          "#{@cache_dir}/#{basename}.md"
         end
       end
     end

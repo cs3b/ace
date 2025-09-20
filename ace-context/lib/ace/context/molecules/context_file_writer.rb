@@ -9,7 +9,7 @@ module Ace
     module Molecules
       # ContextFileWriter handles writing context to files with caching and chunking
       class ContextFileWriter
-        DEFAULT_CACHE_DIR = 'docs/context/cached'
+        DEFAULT_CACHE_DIR = '.cache/ace-context'
         DEFAULT_CHUNK_LIMIT = 150_000
 
         def initialize(cache_dir: nil, chunk_limit: nil)
@@ -79,15 +79,8 @@ module Ace
 
         # Resolve output path with cache directory
         def resolve_output_path(output_path)
-          path = Pathname.new(output_path)
-
-          # If path is relative and doesn't start with a known directory
-          if path.relative? && !output_path.start_with?('docs/', 'tmp/', './')
-            # Assume it should go in the cache directory
-            File.join(@cache_dir, output_path)
-          else
-            output_path
-          end
+          # If output path is explicitly provided, use it as-is
+          output_path
         end
 
         # Write content in chunks
