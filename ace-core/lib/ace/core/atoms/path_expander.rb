@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "pathname"
+require 'pathname'
 
 module Ace
   module Core
@@ -23,9 +23,7 @@ module Ace
           end
 
           # Expand tilde
-          expanded = File.expand_path(expanded)
-
-          expanded
+          File.expand_path(expanded)
         end
 
         # Join path components safely
@@ -33,7 +31,7 @@ module Ace
         # @return [String] Joined path
         def join(*parts)
           parts = parts.flatten.compact.map(&:to_s)
-          return "" if parts.empty?
+          return '' if parts.empty?
 
           File.join(*parts)
         end
@@ -97,3 +95,4 @@ module Ace
     end
   end
 end
+
