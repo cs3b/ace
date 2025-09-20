@@ -32,14 +32,19 @@ module Ace
           stderr = ""
           status = nil
 
+          # Set environment to prevent Minitest autorun at_exit hook
+          env = { "MT_NO_AUTORUN" => "1" }
+
+          # Remove MT_NO_AUTORUN=1 from command if it's there
+          command = command.sub(/^MT_NO_AUTORUN=1\s+/, '')
 
           begin
             if @timeout
               Timeout.timeout(@timeout) do
-                stdout, stderr, status = Open3.capture3(command)
+                stdout, stderr, status = Open3.capture3(env, command)
               end
             else
-              stdout, stderr, status = Open3.capture3(command)
+              stdout, stderr, status = Open3.capture3(env, command)
             end
           rescue Timeout::Error
             stderr = "Test execution timed out after #{@timeout} seconds"
