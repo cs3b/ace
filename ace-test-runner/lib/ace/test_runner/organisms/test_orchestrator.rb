@@ -122,12 +122,18 @@ module Ace
           # Always use execute_with_progress for consistent interface
           # The method internally decides whether to run per-file or grouped
           @test_executor.execute_with_progress(test_files, options) do |event|
-            if event[:type] == :complete && @formatter.respond_to?(:on_test_complete)
-              @formatter.on_test_complete(
-                event[:file],
-                event[:success],
-                event[:duration]
-              )
+            case event[:type]
+            when :stdout
+              # Pass stdout to formatter for per-test progress
+              @formatter.on_test_stdout(event[:content]) if @formatter.respond_to?(:on_test_stdout)
+            when :complete
+              if @formatter.respond_to?(:on_test_complete)
+                @formatter.on_test_complete(
+                  event[:file],
+                  event[:success],
+                  event[:duration]
+                )
+              end
             end
           end
         end

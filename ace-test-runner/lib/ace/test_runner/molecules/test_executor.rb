@@ -74,6 +74,11 @@ module Ace
             # Execute all files in a single Ruby process for performance
             result = execute_tests(files, options)
 
+            # Send stdout event for per-test progress parsing
+            if block_given? && result[:stdout]
+              yield({ type: :stdout, content: result[:stdout] })
+            end
+
             # Simulate progress callbacks for compatibility
             if block_given?
               files.each { |file| yield({ type: :start, file: file }) }

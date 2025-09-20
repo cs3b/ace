@@ -9,6 +9,8 @@ module Ace
         PATTERNS = {
           summary: /(\d+) (?:tests?|runs?), (\d+) assertions?, (\d+) failures?, (\d+) errors?, (\d+) skips?/,
           failure: /^\s+\d+\) (Failure|Error):\n(.+?)(?=^\s+\d+\) |^Finished in|\z)/m,
+          # Pattern for inline verbose failures
+          inline_failure: /^\s*(test_[\w_]+).*\s+FAIL.*?\n(.*?)(?=^\s*test_|\n\n|\z)/m,
           location: /\[(.*?):(\d+)\]/,
           duration: /Finished in ([\d.]+)s/,
           deprecation: /DEPRECATION WARNING: (.+)/
@@ -46,9 +48,18 @@ module Ace
           failures = []
           clean_output = output.gsub(/\e\[[0-9;]*m/, '')
 
+          # First try to parse standard format failures
           clean_output.scan(PATTERNS[:failure]) do |type, content|
             failure = parse_single_failure(type, content)
             failures << failure if failure
+          end
+
+          # If no failures found, try inline verbose format
+          if failures.empty?
+            clean_output.scan(PATTERNS[:inline_failure]) do |test_name, failure_content|
+              failure = parse_inline_failure(test_name, failure_content)
+              failures << failure if failure
+            end
           end
 
           failures
@@ -112,6 +123,44 @@ module Ace
             message: message_lines.join.strip,
             location: location,
             full_content: content.strip
+          }
+        end
+
+        def parse_inline_failure(test_name, content)
+          # Parse inline verbose format failures
+          # Example:
+          # test_handles_special_characters                                FAIL (0.00s)
+          #         Expected: "path\\to\\file"
+          #           Actual: nil
+          #         /Users/mc/Ps/ace-meta/ace-core/test/atoms/env_parser_test.rb:50:in 'EnvParserTest#test_handles_special_characters'
+
+          lines = content.strip.lines
+
+          # Extract location from the last line that looks like a file path
+          location = nil
+          lines.reverse.each do |line|
+            if line =~ /^\s*(.+\.rb):(\d+)/
+              location = {
+                file: $1.strip,
+                line: $2.to_i
+              }
+              break
+            end
+          end
+
+          # Extract message (Expected/Actual lines)
+          message_lines = []
+          lines.each do |line|
+            next if line =~ /^\s*$/ || line =~ /\.rb:\d+/
+            message_lines << line.strip
+          end
+
+          {
+            type: :failure,
+            test_name: test_name,
+            message: message_lines.join("\n"),
+            location: location,
+            full_content: "#{test_name}\n#{content}".strip
           }
         end
       end
