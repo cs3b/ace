@@ -2,8 +2,10 @@
 
 require "ace/core"
 require "ace/test_support"
-require "minitest"
-require "minitest/reporters"
+
+# Only require minitest when actually running tests
+# require "minitest" is done by test files or CommandBuilder
+# require "minitest/reporters" is done when needed
 require "open3"
 require "json"
 require "yaml"

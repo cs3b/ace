@@ -1,0 +1,147 @@
+Started with run options --seed 24032
+
+DeepMergerTest
+  test_merge_simple_hashes                                       [32m PASS[0m (0.00s)
+  test_merge_arrays_union_strategy                               [32m PASS[0m (0.00s)
+  test_merge_arrays_concat_strategy                              [32m PASS[0m (0.00s)
+  test_merge_all                                                 [32m PASS[0m (0.00s)
+  test_merge_arrays_replace_strategy                             [32m PASS[0m (0.00s)
+  test_merge_nested_hashes                                       [32m PASS[0m (0.00s)
+  test_mergeable_check                                           [32m PASS[0m (0.00s)
+  test_merge_with_nil                                            [32m PASS[0m (0.00s)
+
+Finished in 0.00040s
+8 tests, 14 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 2801
+
+EnvParserTest
+  test_handles_quoted_values                                     [32m PASS[0m (0.00s)
+  test_valid_key_validation                                      [32m PASS[0m (0.00s)
+  test_roundtrip_parse_and_format                                [32m PASS[0m (0.00s)
+  test_formats_hash_to_env_content                               [32m PASS[0m (0.00s)
+  test_unquote_handles_various_formats                           [32m PASS[0m (0.00s)
+  test_parses_basic_env_content                                  [32m PASS[0m (0.00s)
+  test_handles_empty_and_nil_content                             [32m PASS[0m (0.00s)
+  test_ignores_invalid_lines                                     [32m PASS[0m (0.00s)
+  test_handles_special_characters                                [32m PASS[0m (0.00s)
+  test_formats_empty_hash                                        [32m PASS[0m (0.00s)
+  test_skips_comments_and_empty_lines                            [32m PASS[0m (0.00s)
+
+Finished in 0.00072s
+11 tests, 55 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 31665
+
+YamlParserTest
+  test_parse_invalid_yaml                                        [32m PASS[0m (0.00s)
+  test_dump_hash_to_yaml                                         [32m PASS[0m (0.00s)
+  test_dump_empty_hash                                           [32m PASS[0m (0.00s)
+  test_parse_empty_yaml                                          [32m PASS[0m (0.00s)
+  test_valid_check                                               [32m PASS[0m (0.00s)
+  test_parse_valid_yaml                                          [32m PASS[0m (0.00s)
+
+Finished in 0.00173s
+6 tests, 12 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 32762
+
+Ace::Core::ConfigCascadeCustomPathsTest
+  test_config_resolver_finds_configs_in_custom_paths             [32m PASS[0m (0.00s)
+  test_config_cascade_priority_with_custom_paths                 [32m PASS[0m (0.00s)
+  test_config_resolver_with_custom_search_paths                  [32m PASS[0m (0.00s)
+
+Finished in 0.00749s
+3 tests, 11 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 59485
+
+ConfigCascadeTest
+  test_partial_cascade_missing_project                           [32m PASS[0m (0.00s)
+  test_resolve_by_type                                           [32m PASS[0m (0.00s)
+  test_cascade_with_no_configs                                   [32m PASS[0m (0.00s)
+  test_full_cascade_resolution                                   [32m PASS[0m (0.00s)
+  test_cascade_with_array_merging                                [32m PASS[0m (0.00s)
+  test_get_method_shortcut                                       [32m PASS[0m (0.00s)
+  test_find_configs_method                                       [32m PASS[0m (0.00s)
+  test_cascade_with_empty_configs                                [32m PASS[0m (0.00s)
+
+Finished in 0.01534s
+8 tests, 31 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 33367
+
+MultiSourceTest
+  test_env_files_with_different_names                            [32m PASS[0m (0.00s)
+  test_multiple_config_files_per_directory                       [32m PASS[0m (0.00s)
+  test_config_source_tracking                                    [32m PASS[0m (0.00s)
+  test_complex_nested_merging                                    [32m PASS[0m (0.00s)
+  test_handles_missing_directories                               [32m PASS[0m (0.00s)
+  test_handles_partial_configs                                   [32m PASS[0m (0.00s)
+  test_config_with_symbols_and_special_types                     [32m PASS[0m (0.00s)
+  test_handles_malformed_yaml                                    [32m PASS[0m (0.00s)
+  test_combines_env_and_config                                   [32m PASS[0m (0.00s)
+
+Finished in 0.01501s
+9 tests, 34 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 50019
+
+EnvLoaderTest
+  test_handles_malformed_env_content                             [32m PASS[0m (0.00s)
+  test_auto_load_with_no_env_files                               [32m PASS[0m (0.00s)
+  test_load_multiple_files                                       [32m PASS[0m (0.00s)
+  test_save_creates_directory                                    [32m PASS[0m (0.00s)
+  test_save_env_file                                             [32m PASS[0m (0.00s)
+  test_returns_empty_hash_for_missing_file                       [32m PASS[0m (0.00s)
+  test_load_and_set_environment                                  [32m PASS[0m (0.00s)
+  test_env_override_precedence                                   [32m PASS[0m (0.00s)
+  test_set_environment_from_hash                                 [32m PASS[0m (0.00s)
+  test_auto_load_standard_locations                              [32m PASS[0m (0.00s)
+  test_loads_env_file                                            [32m PASS[0m (0.00s)
+  test_expands_paths                                             [32m PASS[0m (0.00s)
+
+Finished in 0.00630s
+12 tests, 29 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 30058
+
+YamlLoaderTest
+  test_saves_hash_to_file                                        [32m PASS[0m (0.00s)
+  test_handles_io_errors_on_save                                 [32m PASS[0m (0.00s)
+  test_load_and_merge_multiple_files                             [32m PASS[0m (0.00s)
+  test_loads_valid_yaml                                          [32m PASS[0m (0.00s)
+  test_load_and_merge_empty_list                                 [32m PASS[0m (0.00s)
+  test_creates_directory_when_saving                             [32m PASS[0m (0.00s)
+  test_load_and_merge_with_missing_files                         [32m PASS[0m (0.00s)
+  test_handles_missing_file                                      [32m PASS[0m (0.00s)
+  test_handles_invalid_yaml_gracefully                           [32m PASS[0m (0.00s)
+  test_handles_missing_file_safe                                 [32m PASS[0m (0.00s)
+  test_saves_config_to_file                                      [32m PASS[0m (0.00s)
+
+Finished in 0.00749s
+11 tests, 25 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 44190
+
+ConfigResolverTest
+  test_resolve_with_cascade                                      [32m PASS[0m (0.00s)
+  test_create_default                                            [32m PASS[0m (0.00s)
+  test_resolve_type_local                                        [32m PASS[0m (0.00s)
+  test_get_value_by_path                                         [32m PASS[0m (0.00s)
+  test_resolve_empty_when_no_configs                             [32m PASS[0m (0.00s)
+
+Finished in 0.00772s
+5 tests, 10 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m
+
+Started with run options --seed 57633
+
+EnvironmentManagerTest
+  test_get_and_set_variables                                     [32m PASS[0m (0.00s)
+  test_list_dotenv_files                                         [32m PASS[0m (0.00s)
+  test_load_dotenv_files                                         [32m PASS[0m (0.00s)
+  test_save_environment_variables                                [32m PASS[0m (0.00s)
+  test_dotenv_disabled                                           [32m PASS[0m (0.00s)
+
+Finished in 0.00729s
+5 tests, 14 assertions, [32m0 failures, 0 errors, [0m[33m0 skips[0m

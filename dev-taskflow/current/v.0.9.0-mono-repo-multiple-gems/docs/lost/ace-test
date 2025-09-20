@@ -1,0 +1,417 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'yaml'
+require 'optparse'
+require 'pathname'
+
+module AceTools
+  class TestRunner
+    CONFIG_FILE = '.coding-agent/ace-test.yml'
+
+    attr_reader :config, :options, :targets
+
+    def initialize(argv)
+      @config = load_config
+      @options = parse_options(argv)
+      @targets = resolve_targets(argv)
+    end
+
+    def run
+      setup_environment
+      setup_working_directory
+      files = collect_test_files
+
+      if files.empty?
+        puts "No test files found for: #{targets.join(', ')}"
+        exit 1
+      end
+
+      if options[:verbose]
+        puts "Working directory: #{Dir.pwd}"
+        puts "Running #{files.size} test file(s):"
+        files.each { |f| puts "  - #{f}" }
+      end
+
+      run_tests(files)
+    end
+
+    private
+
+    def load_config
+      # Use ConfigLoader for unified, XDG-compliant config discovery
+      begin
+        require_relative '../lib/ace_tools/molecules/config_loader'
+        config_data = AceTools::Molecules::ConfigLoader.load_and_parse(:ace_test)
+        return config_data if config_data
+      rescue LoadError => e
+        # ConfigLoader not available, fall back to manual loading for compatibility
+      end
+
+      # Fallback to default config if no file found or ConfigLoader unavailable
+      default_config
+    end
+
+
+    def default_config
+      {
+        'version' => 1,
+        'patterns' => {
+          'atoms' => 'test/unit/atoms/**/*_test.rb',
+          'molecules' => 'test/unit/molecules/**/*_test.rb',
+          'organisms' => 'test/unit/organisms/**/*_test.rb',
+          'ecosystems' => 'test/unit/ecosystems/**/*_test.rb',
+          'models' => 'test/unit/models/**/*_test.rb',
+          'cli_integration' => 'test/integration/cli/**/*_test.rb',
+          'vcr_integration' => 'test/integration/vcr/**/*_test.rb',
+          'cli_e2e' => 'test/e2e/cli/**/*_test.rb',
+          'workflows_e2e' => 'test/e2e/workflows/**/*_test.rb',
+          'external_auto' => 'test/external/auto/**/*_test.rb',
+          'external_manual' => 'test/external/manual/**/*_test.rb'
+        },
+        'groups' => {
+          'unit' => %w[atoms molecules organisms ecosystems models],
+          'integration' => %w[cli_integration vcr_integration],
+          'e2e' => %w[cli_e2e workflows_e2e],
+          'external' => %w[external_auto external_manual],
+          'quick' => %w[atoms molecules],
+          'all' => %w[unit integration e2e],
+          'complete' => %w[unit integration e2e external]
+        },
+        'defaults' => {
+          'reporter' => 'agent',
+          'parallel' => true,
+          'color' => 'auto',
+          'fail_fast' => false
+        }
+      }
+    end
+
+    def parse_options(argv)
+      options = {
+        reporter: config.dig('defaults', 'reporter') || 'agent',
+        coverage: false,
+        profile: false,
+        name_filter: nil,
+        parallel: config.dig('defaults', 'parallel'),
+        color: config.dig('defaults', 'color') || 'auto',
+        fail_fast: config.dig('defaults', 'fail_fast'),
+        verbose: false
+      }
+
+      parser = OptionParser.new do |opts|
+        opts.banner = "Usage: ace-test [target] [options]"
+
+        opts.on("-n", "--name PATTERN", "Run tests matching name/pattern") do |n|
+          options[:name_filter] = n
+        end
+
+        opts.on("-r", "--reporter TYPE", "Test reporter (agent|standard|dots|json)") do |r|
+          options[:reporter] = r
+        end
+
+        opts.on("-c", "--coverage", "Enable coverage reporting") do
+          options[:coverage] = true
+        end
+
+        opts.on("-p", "--profile", "Enable test profiling (show slowest tests)") do
+          options[:profile] = true
+        end
+
+        opts.on("--[no-]parallel", "Run tests in parallel") do |p|
+          options[:parallel] = p
+        end
+
+        opts.on("--[no-]color", "Colorize output (auto|always|never)") do |c|
+          options[:color] = c ? 'always' : 'never'
+        end
+
+        opts.on("-f", "--fail-fast", "Stop on first failure") do
+          options[:fail_fast] = true
+        end
+
+        opts.on("-v", "--verbose", "Verbose output") do
+          options[:verbose] = true
+        end
+
+        opts.on("-h", "--help", "Show this help") do
+          puts opts
+          puts "\nAvailable targets:"
+          puts "  Groups: #{config['groups'].keys.join(', ')}"
+          puts "  Patterns: #{config['patterns'].keys.join(', ')}"
+          puts "\nExamples:"
+          puts "  ace-test                      # Run 'all' group (unit + integration + e2e)"
+          puts "  ace-test unit                 # Run unit tests"
+          puts "  ace-test atoms                # Run atoms tests"
+          puts "  ace-test external             # Run external tests (must be explicit)"
+          puts "  ace-test example_test.rb      # Run specific file"
+          puts "  ace-test test.rb -n test_foo  # Run specific test"
+          puts "  ace-test --coverage           # Run with coverage"
+          exit
+        end
+      end
+
+      parser.parse!(argv)
+      options
+    end
+
+    def resolve_targets(argv)
+      # Filter out option flags that weren't consumed
+      remaining = argv.reject { |arg| arg.start_with?('-') }
+      remaining.empty? ? ['all'] : remaining
+    end
+
+    def collect_test_files
+      files = []
+
+      targets.each do |target|
+        # Check if it's a direct file
+        if target.end_with?('.rb') || File.exist?("#{target}.rb")
+          file = resolve_file_path(target)
+          files << file if file && File.exist?(file)
+        elsif config['groups'] && config['groups'].key?(target)
+          # Group reference - expand recursively
+          files.concat(expand_group(target))
+        elsif config['patterns'] && config['patterns'].key?(target)
+          # Pattern reference
+          files.concat(Dir.glob(config['patterns'][target]))
+        else
+          # Try to find the file intelligently
+          found = find_test_file(target)
+          if found
+            files << found
+          else
+            puts "Warning: Could not find target '#{target}'"
+          end
+        end
+      end
+
+      files.uniq
+    end
+
+    def resolve_file_path(path)
+      # Handle various path formats
+      path = "#{path}.rb" unless path.end_with?('.rb')
+
+      # Try exact path first
+      return path if File.exist?(path)
+
+      # Try with test/ prefix
+      test_path = "test/#{path}"
+      return test_path if File.exist?(test_path)
+
+      # Try to find it anywhere in test/
+      matches = Dir.glob("test/**/#{File.basename(path)}")
+      return matches.first if matches.any?
+
+      nil
+    end
+
+    def expand_group(group_name)
+      files = []
+      group = config['groups'][group_name]
+
+      return files unless group
+
+      group.each do |item|
+        if config['groups'] && config['groups'].key?(item)
+          # Nested group
+          files.concat(expand_group(item))
+        elsif config['patterns'] && config['patterns'].key?(item)
+          # Pattern reference
+          pattern = config['patterns'][item]
+          matched_files = Dir.glob(pattern)
+          # Sort files to ensure consistent order within each pattern
+          files.concat(matched_files.sort)
+        end
+      end
+
+      files
+    end
+
+    def find_test_file(name)
+      # Smart file resolution
+      base = File.basename(name, '.rb')
+      candidates = [
+        "test/#{base}.rb",
+        "test/#{base}_test.rb",
+        "test/**/#{base}.rb",
+        "test/**/#{base}_test.rb",
+        "test/unit/**/#{base}.rb",
+        "test/unit/**/#{base}_test.rb"
+      ]
+
+      candidates.each do |pattern|
+        matches = Dir.glob(pattern)
+        return matches.first if matches.any?
+      end
+
+      nil
+    end
+
+    def setup_environment
+      # Set up load paths
+      $LOAD_PATH.unshift(File.expand_path('lib'))
+      $LOAD_PATH.unshift(File.expand_path('test'))
+
+      # Set environment variables based on options
+      ENV['WITH_COVERAGE'] = '1' if options[:coverage]
+      ENV['TEST_PROFILE'] = '1' if options[:profile]
+
+      # Set reporter environment variable
+      if options[:reporter] == 'standard'
+        ENV['TEST_REPORTER'] = 'standard'
+      else
+        ENV.delete('TEST_REPORTER') # Use default (agent reporter)
+      end
+
+      # Set color environment variables
+      case options[:color]
+      when 'always'
+        ENV['FORCE_COLOR'] = '1'
+        ENV.delete('NO_COLOR')
+      when 'never'
+        ENV['NO_COLOR'] = '1'
+        ENV.delete('FORCE_COLOR')
+      when 'auto'
+        ENV.delete('FORCE_COLOR')
+        ENV.delete('NO_COLOR')
+      end
+
+      # Set parallel test execution
+      # Disable parallel when profiling for accurate timing
+      if options[:profile]
+        ENV['NO_PARALLEL'] = '1'
+      else
+        ENV['NO_PARALLEL'] = '1' unless options[:parallel]
+      end
+    end
+
+    def setup_working_directory
+      # Check if config specifies a test working directory
+      test_dir = config['test_working_directory']
+      return unless test_dir
+
+      # Expand environment variables
+      expanded_dir = test_dir.gsub(/\$([A-Z_][A-Z0-9_]*)\b|\$\{([A-Z_][A-Z0-9_]*)\}/) do
+        ENV[$1 || $2]
+      end
+
+      # Expand path and change to directory if it exists
+      if expanded_dir && !expanded_dir.empty?
+        full_path = File.expand_path(expanded_dir)
+        if Dir.exist?(full_path)
+          Dir.chdir(full_path)
+        else
+          puts "Warning: Test working directory does not exist: #{full_path}"
+        end
+      end
+    end
+
+    def run_tests(files)
+      # Check if we should run tests sequentially by pattern groups
+      if should_run_sequentially?
+        run_tests_sequentially(files)
+      else
+        run_tests_together(files)
+      end
+    end
+
+    def should_run_sequentially?
+      # Run sequentially if running a group with multiple patterns
+      targets.any? { |target| config['groups'] && config['groups'][target] }
+    end
+
+    def run_tests_sequentially(files)
+      exit_code = 0
+
+      # Get patterns in YAML order by expanding groups
+      expanded_patterns = []
+      targets.each do |target|
+        expand_patterns(target, expanded_patterns)
+      end
+
+      if ENV['DEBUG_ACE_TEST']
+        puts "Expanded patterns: #{expanded_patterns.inspect}"
+        puts "Input files: #{files.inspect}"
+      end
+
+      # Process each pattern in the exact order from YAML
+      expanded_patterns.each do |pattern_name|
+        # Get files for this specific pattern
+        next unless config['patterns'] && config['patterns'][pattern_name]
+
+        pattern_glob = config['patterns'][pattern_name]
+        pattern_files = files.select { |f| File.fnmatch(pattern_glob, f, File::FNM_PATHNAME) }
+
+        if ENV['DEBUG_ACE_TEST']
+          puts "Pattern #{pattern_name}: glob=#{pattern_glob}, matches=#{pattern_files.size}"
+        end
+        next if pattern_files.empty?
+
+        # Run this pattern group as a separate subprocess
+        result = run_pattern_group(pattern_name, pattern_files)
+
+        # ALWAYS stop on ANY failure when running groups sequentially
+        if result != 0
+          exit_code = result
+          break  # Stop processing remaining groups
+        end
+      end
+
+      exit(exit_code)
+    end
+
+    def run_tests_together(files)
+      # For single patterns or direct files, run all together
+      exit_code = run_pattern_group(nil, files)
+      exit(exit_code)
+    end
+
+    def run_pattern_group(pattern_name, files)
+      # Build command to run tests
+      cmd_parts = ['ruby', '-Ilib:test']
+
+      # Add requires - first test_helper, then test files
+      cmd_parts << '-e'
+      requires = "require 'test_helper'; "
+      requires += files.sort.map { |f| "require '#{File.expand_path(f)}'" }.join('; ')
+      cmd_parts << requires
+
+      # Add minitest options
+      cmd_parts << '--'
+      cmd_parts << '--name' << options[:name_filter] if options[:name_filter]
+      cmd_parts << '--fail-fast' if options[:fail_fast]
+      cmd_parts << '--verbose' if options[:verbose] && options[:reporter] == 'standard'
+      cmd_parts << '--profile' if options[:profile]
+
+      # Debug output
+      if ENV['DEBUG_ACE_TEST']
+        puts "Running pattern: #{pattern_name}"
+        puts "Files: #{files.inspect}"
+        puts "Command: #{cmd_parts.inspect}"
+      end
+
+      # Execute the command
+      system(*cmd_parts)
+      $?.exitstatus || 1
+    end
+
+    def expand_patterns(item, result)
+      if config['groups'] && config['groups'][item]
+        # Recursively expand nested group
+        config['groups'][item].each do |sub_item|
+          expand_patterns(sub_item, result)
+        end
+      elsif config['patterns'] && config['patterns'][item]
+        # Add pattern if not already present
+        result << item unless result.include?(item)
+      end
+    end
+  end
+end
+
+# Run if executed directly
+if __FILE__ == $0
+  AceTools::TestRunner.new(ARGV).run
+end

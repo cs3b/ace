@@ -7,7 +7,7 @@ module Ace
       class ResultParser
         # Patterns for parsing minitest output
         PATTERNS = {
-          summary: /(\d+) runs?, (\d+) assertions?, (\d+) failures?, (\d+) errors?, (\d+) skips?/,
+          summary: /(\d+) (?:tests?|runs?), (\d+) assertions?, (\d+) failures?, (\d+) errors?, (\d+) skips?/,
           failure: /^\s+\d+\) (Failure|Error):\n(.+?)(?=^\s+\d+\) |^Finished in|\z)/m,
           location: /\[(.*?):(\d+)\]/,
           duration: /Finished in ([\d.]+)s/,
@@ -25,7 +25,11 @@ module Ace
         end
 
         def parse_summary(output)
-          match = output.match(PATTERNS[:summary])
+          # Remove ANSI color codes before parsing
+          clean_output = output.gsub(/\e\[[0-9;]*m/, '')
+          match = clean_output.match(PATTERNS[:summary])
+
+
           return default_summary unless match
 
           {
@@ -40,8 +44,9 @@ module Ace
 
         def parse_failures(output)
           failures = []
+          clean_output = output.gsub(/\e\[[0-9;]*m/, '')
 
-          output.scan(PATTERNS[:failure]) do |type, content|
+          clean_output.scan(PATTERNS[:failure]) do |type, content|
             failure = parse_single_failure(type, content)
             failures << failure if failure
           end
@@ -50,7 +55,8 @@ module Ace
         end
 
         def parse_duration(output)
-          match = output.match(PATTERNS[:duration])
+          clean_output = output.gsub(/\e\[[0-9;]*m/, '')
+          match = clean_output.match(PATTERNS[:duration])
           match ? match[1].to_f : 0.0
         end
 

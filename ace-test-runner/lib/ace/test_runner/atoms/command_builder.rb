@@ -29,9 +29,17 @@ module Ace
 
           # Add the test files
           if files.is_a?(Array)
-            files.each { |f| cmd_parts << "-r#{f}" }
-            cmd_parts << "-e ''"  # Run all loaded tests
+            # Require each file with proper path handling
+            files.each do |f|
+              # Add ./ prefix if it's a relative path without one
+              path = f.start_with?('/') || f.start_with?('./') ? f : "./#{f}"
+              cmd_parts << "-r#{path}"
+            end
+            # Run Minitest after requiring all files
+            cmd_parts << "-e"
+            cmd_parts << "'Minitest.autorun'"
           else
+            # Single file - just pass it as argument (Minitest autoruns)
             cmd_parts << files
           end
 

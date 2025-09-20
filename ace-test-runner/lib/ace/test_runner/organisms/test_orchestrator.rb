@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../formatters/base_formatter"
+
 module Ace
   module TestRunner
     module Organisms
@@ -35,7 +37,14 @@ module Ace
           execution_result = execute_tests(test_files)
 
           # Parse results
-          parsed_result = @result_parser.parse_output(execution_result[:stdout])
+          # When executing with progress (multiple commands), we need to aggregate individual results
+          if execution_result[:commands]
+            # Each file was executed separately, parse and sum them all
+            parsed_result = aggregate_individual_results(execution_result[:stdout])
+          else
+            # Single command execution
+            parsed_result = @result_parser.parse_output(execution_result[:stdout])
+          end
 
           # Build result object
           @result = build_result(parsed_result, execution_result, start_time)
@@ -109,7 +118,11 @@ module Ace
             verbose: @configuration.verbose
           }
 
-          if @configuration.verbose || @formatter.respond_to?(:on_test_complete)
+          # Check if formatter actually wants progress (not just base implementation)
+          wants_progress = @configuration.verbose ||
+                          (@formatter.class.instance_method(:on_test_complete).owner != Formatters::BaseFormatter)
+
+          if wants_progress
             # Execute with progress reporting
             @test_executor.execute_with_progress(test_files, options) do |event|
               if event[:type] == :complete
@@ -139,6 +152,47 @@ module Ace
             deprecations: parsed_result[:deprecations],
             raw_output: execution_result[:stdout]
           )
+        end
+
+        def aggregate_individual_results(combined_output)
+          # Split output by test file executions
+          individual_outputs = combined_output.split(/^Started with run options/)
+          individual_outputs.shift if individual_outputs.first&.empty?
+
+          aggregated = {
+            raw_output: combined_output,
+            summary: {
+              runs: 0,
+              assertions: 0,
+              failures: 0,
+              errors: 0,
+              skips: 0,
+              passed: 0
+            },
+            failures: [],
+            duration: 0.0,
+            deprecations: []
+          }
+
+          individual_outputs.each do |output|
+            output = "Started with run options" + output  # Restore the split text
+            parsed = @result_parser.parse_output(output)
+
+            # Sum up the counts
+            aggregated[:summary][:runs] += parsed[:summary][:runs]
+            aggregated[:summary][:assertions] += parsed[:summary][:assertions]
+            aggregated[:summary][:failures] += parsed[:summary][:failures]
+            aggregated[:summary][:errors] += parsed[:summary][:errors]
+            aggregated[:summary][:skips] += parsed[:summary][:skips]
+            aggregated[:summary][:passed] += parsed[:summary][:passed]
+
+            # Collect failures and deprecations
+            aggregated[:failures].concat(parsed[:failures])
+            aggregated[:deprecations].concat(parsed[:deprecations])
+            aggregated[:duration] += parsed[:duration]
+          end
+
+          aggregated
         end
 
         def save_reports(report)
