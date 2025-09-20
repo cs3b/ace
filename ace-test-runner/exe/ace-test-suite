@@ -1,0 +1,151 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Add the lib directory to the load path
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+require "optparse"
+require "ace/test_runner"
+require "ace/test_runner/suite"
+
+options = {
+  config: ".ace/test-suite.yml",
+  parallel: nil,
+  group: nil,
+  verbose: false
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: ace-test-suite [options]"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-c", "--config FILE", "Configuration file (default: .ace/test-suite.yml)") do |config|
+    options[:config] = config
+  end
+
+  opts.on("-p", "--parallel N", Integer, "Maximum parallel processes") do |n|
+    options[:parallel] = n
+  end
+
+  opts.on("-g", "--group GROUP", "Run only packages in specified group") do |group|
+    options[:group] = group
+  end
+
+  opts.on("-v", "--verbose", "Show detailed output from tests") do
+    options[:verbose] = true
+  end
+
+  opts.on("--no-color", "Disable colored output") do
+    options[:no_color] = true
+  end
+
+  opts.on("-h", "--help", "Display this help") do
+    puts opts
+    exit 0
+  end
+
+  opts.on("--version", "Display version") do
+    puts "ace-test-suite #{Ace::TestRunner::VERSION}"
+    exit 0
+  end
+
+  opts.separator ""
+  opts.separator "Examples:"
+  opts.separator "  ace-test-suite                    # Run all configured packages"
+  opts.separator "  ace-test-suite --parallel 16      # Run with 16 parallel processes"
+  opts.separator "  ace-test-suite --group foundation # Run only foundation group"
+  opts.separator "  ace-test-suite --verbose          # Show detailed test output"
+  opts.separator ""
+end
+
+begin
+  parser.parse!(ARGV)
+rescue OptionParser::InvalidArgument => e
+  puts "Error: #{e.message}"
+  puts
+  puts parser
+  exit 1
+end
+
+# Check if config file exists
+unless File.exist?(options[:config])
+  puts "Error: Configuration file not found: #{options[:config]}"
+  puts
+  puts "Create a test suite configuration at .ace/test-suite.yml"
+  puts
+  puts "Example configuration:"
+  puts <<~YAML
+    test_suite:
+      max_parallel: 10
+      packages:
+        - name: ace-core
+          path: ./ace-core
+          group: foundation
+          priority: 1
+        - name: ace-test-runner
+          path: ./ace-test-runner
+          group: foundation
+          priority: 1
+      test_options:
+        format: compact
+        save_reports: true
+  YAML
+  exit 1
+end
+
+# Override config with command line options if provided
+if options[:parallel] || options[:group] || options[:no_color] || options[:verbose]
+  require "yaml"
+  config = YAML.load_file(options[:config])
+
+  # Override max_parallel if specified
+  config["test_suite"]["max_parallel"] = options[:parallel] if options[:parallel]
+
+  # Filter by group if specified
+  if options[:group]
+    config["test_suite"]["packages"].select! { |p| p["group"] == options[:group] }
+    if config["test_suite"]["packages"].empty?
+      puts "Error: No packages found in group '#{options[:group]}'"
+      exit 1
+    end
+  end
+
+  # Override color setting
+  config["test_suite"]["display"] ||= {}
+  config["test_suite"]["display"]["color"] = false if options[:no_color]
+
+  # Set verbose mode
+  if options[:verbose]
+    config["test_suite"]["test_options"] ||= {}
+    config["test_suite"]["test_options"]["verbose"] = true
+  end
+
+  # Save modified config to temporary file and use it
+  require "tempfile"
+  temp_config = Tempfile.new(["test-suite", ".yml"])
+  temp_config.write(YAML.dump(config))
+  temp_config.close
+  options[:config] = temp_config.path
+end
+
+# Run the test suite
+begin
+  exit_code = Ace::TestRunner::Suite.run(options[:config])
+  exit exit_code
+rescue Ace::TestRunner::Suite::Error => e
+  puts "Error: #{e.message}"
+  exit 1
+rescue Interrupt
+  puts "\n\nTest suite execution interrupted"
+  exit 130
+rescue => e
+  puts "Unexpected error: #{e.message}"
+  puts e.backtrace if options[:verbose]
+  exit 1
+ensure
+  # Clean up temp config if we created one
+  if defined?(temp_config) && temp_config
+    temp_config.unlink rescue nil
+  end
+end

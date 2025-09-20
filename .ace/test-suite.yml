@@ -1,0 +1,38 @@
+test_suite:
+  # Maximum parallel processes
+  max_parallel: 10
+
+  # Packages to test in order of priority
+  packages:
+    - name: ace-test-support
+      path: ./ace-test-support
+      group: foundation
+      priority: 2
+
+    - name: ace-core
+      path: ./ace-core
+      group: foundation
+      priority: 1
+
+    - name: ace-test-runner
+      path: ./ace-test-runner
+      group: foundation
+      priority: 1
+
+    - name: ace-context
+      path: ./ace-context
+      group: tools
+      priority: 3
+
+  # Test command options
+  test_options:
+    format: compact
+    save_reports: true
+    fail_fast: false
+
+  # Display options
+  display:
+    show_progress: true
+    update_interval: 0.1  # seconds
+    color: true
+    clear_screen: false  # Don't clear entire screen, just update lines
