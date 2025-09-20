@@ -112,7 +112,7 @@ module Ace
         # Create default config structure
         # @param path [String] Where to create config
         # @return [Models::Config] Created configuration
-        def self.create_default(path = "./.ace/core/config.yml")
+        def self.create_default(path = "./.ace/settings.yml")
           default_config = {
             "ace" => {
               "version" => VERSION,

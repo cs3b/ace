@@ -13,8 +13,8 @@ class ContextLoaderTest < AceTestCase
       File.write("docs/blueprint.md", "# Blueprint")
 
       # Create config
-      FileUtils.mkdir_p(".ace/context/config")
-      File.write(".ace/context/config/context.yml", {
+      FileUtils.mkdir_p(".ace")
+      File.write(".ace/context.yml", {
         "context" => {
           "presets" => {
             "default" => {
@@ -60,8 +60,8 @@ class ContextLoaderTest < AceTestCase
       File.write("exclude/skip.md", "Skip this")
 
       # Create config with exclusions
-      FileUtils.mkdir_p(".ace/context/config")
-      File.write(".ace/context/config/context.yml", {
+      FileUtils.mkdir_p(".ace")
+      File.write(".ace/context.yml", {
         "context" => {
           "presets" => {
             "test" => {
@@ -86,8 +86,8 @@ class ContextLoaderTest < AceTestCase
     with_temp_dir do
       File.write("test.txt", "Content")
 
-      FileUtils.mkdir_p(".ace/context/config")
-      File.write(".ace/context/config/context.yml", {
+      FileUtils.mkdir_p(".ace")
+      File.write(".ace/context.yml", {
         "context" => {
           "presets" => {
             "yaml_test" => {
