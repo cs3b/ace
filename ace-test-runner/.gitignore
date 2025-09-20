@@ -1,0 +1,42 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+/test-reports/
+
+# rspec failure tracking
+.rspec_status
+
+# Bundler
+Gemfile.lock
+.bundle
+vendor/bundle
+
+# Development files
+*.gem
+*.rbc
+.config
+.yardoc
+InstalledFiles
+_yardoc
+coverage
+doc/
+lib/bundler/man
+pkg
+rdoc
+spec/reports
+test/tmp
+test/version_tmp
+tmp
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store

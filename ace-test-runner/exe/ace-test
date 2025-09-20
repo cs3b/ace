@@ -1,0 +1,131 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/ace/test_runner"
+
+options = {
+  format: "ai",
+  save_reports: true,
+  verbose: false,
+  fail_fast: false,
+  fix_deprecations: false,
+  color: true
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: ace-test [options]"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-f", "--format FORMAT", %w[ai compact json markdown],
+          "Output format: ai (default), compact, json, markdown") do |format|
+    options[:format] = format
+  end
+
+  opts.on("-d", "--report-dir DIR", "Report storage directory (default: test-reports/)") do |dir|
+    options[:report_dir] = dir
+  end
+
+  opts.on("--no-save", "Skip saving detailed reports") do
+    options[:save_reports] = false
+  end
+
+  opts.on("--fail-fast", "Stop execution on first failure") do
+    options[:fail_fast] = true
+  end
+
+  opts.on("--fix-deprecations", "Auto-fix deprecated test patterns") do
+    options[:fix_deprecations] = true
+  end
+
+  opts.on("--filter PATTERN", "Run only tests matching pattern") do |pattern|
+    options[:filter] = pattern
+  end
+
+  opts.on("-v", "--verbose", "Show detailed test execution") do
+    options[:verbose] = true
+  end
+
+  opts.on("--[no-]color", "Enable/disable colored output (default: enabled)") do |color|
+    options[:color] = color
+  end
+
+  opts.on("--timeout SECONDS", Integer, "Timeout for test execution in seconds") do |timeout|
+    options[:timeout] = timeout
+  end
+
+  opts.on("--parallel", "Run tests in parallel (experimental)") do
+    options[:parallel] = true
+  end
+
+  opts.on("-h", "--help", "Display this help") do
+    puts opts
+    exit
+  end
+
+  opts.on("--version", "Display version") do
+    puts "ace-test-runner #{Ace::TestRunner::VERSION}"
+    exit
+  end
+
+  opts.separator ""
+  opts.separator "Examples:"
+  opts.separator "  ace-test                         # Run all tests with AI format"
+  opts.separator "  ace-test --format compact        # CI-friendly compact output"
+  opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
+  opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
+  opts.separator ""
+end
+
+begin
+  parser.parse!(ARGV)
+rescue OptionParser::InvalidArgument => e
+  puts "Error: #{e.message}"
+  puts
+  puts parser
+  exit 1
+end
+
+# Handle deprecation fixing mode
+if options[:fix_deprecations]
+  puts "Scanning for deprecated test patterns..."
+
+  detector = Ace::TestRunner::Atoms::TestDetector.new
+  fixer = Ace::TestRunner::Molecules::DeprecationFixer.new
+
+  test_files = detector.find_test_files
+  fixed_count = 0
+
+  test_files.each do |file|
+    result = fixer.fix_file(file, dry_run: false)
+    if result[:success] && result[:changes] > 0
+      puts "  Fixed #{result[:changes]} deprecations in #{file}"
+      fixed_count += result[:changes]
+    end
+  end
+
+  if fixed_count == 0
+    puts "No deprecations found to fix."
+  else
+    puts "Fixed #{fixed_count} deprecations total."
+  end
+
+  exit 0
+end
+
+# Run tests
+begin
+  exit_code = Ace::TestRunner.run(options)
+  exit exit_code
+rescue Ace::TestRunner::Error => e
+  puts "Error: #{e.message}"
+  exit 1
+rescue Interrupt
+  puts "\nTest execution interrupted"
+  exit 130
+rescue => e
+  puts "Unexpected error: #{e.message}"
+  puts e.backtrace if options[:verbose]
+  exit 1
+end
