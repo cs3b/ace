@@ -69,20 +69,29 @@ module Ace
         end
 
         def resolve_all_files
+          # Always start by finding ALL test files that exist
+          all_test_files = expand_pattern("test/**/*_test.rb")
+
           # First check if "all" group is defined
           if @groups.key?(:all) || @groups.key?("all")
-            resolve_group(:all) || resolve_group("all")
-          elsif @patterns && !@patterns.empty?
-            # If no "all" group but patterns exist, use all patterns
-            all_files = []
-            @patterns.each_value do |pattern|
-              all_files.concat(expand_pattern(pattern))
-            end
-            all_files.uniq
-          else
-            # Default fallback: all Ruby test files in test directory
-            expand_pattern("test/**/*_test.rb")
+            pattern_files = resolve_group(:all) || resolve_group("all")
+            # If patterns miss any files, use the complete scan
+            return pattern_files.size >= all_test_files.size ? pattern_files : all_test_files
           end
+
+          # If no "all" group, try all defined patterns
+          if @patterns && !@patterns.empty?
+            pattern_files = []
+            @patterns.each_value do |pattern|
+              pattern_files.concat(expand_pattern(pattern))
+            end
+            pattern_files = pattern_files.uniq
+            # If patterns miss any files, use the complete scan
+            return pattern_files.size >= all_test_files.size ? pattern_files : all_test_files
+          end
+
+          # Return all test files found
+          all_test_files
         end
       end
     end

@@ -17,10 +17,11 @@ module Ace
         DEFAULT_CONFIG = {
           version: 1,
           patterns: {
-            atoms: "test/unit/atoms/**/*_test.rb",
-            molecules: "test/unit/molecules/**/*_test.rb",
-            organisms: "test/unit/organisms/**/*_test.rb",
-            models: "test/unit/models/**/*_test.rb",
+            # Support both test/unit/atoms and test/atoms structures
+            atoms: "test/{unit/,}atoms/**/*_test.rb",
+            molecules: "test/{unit/,}molecules/**/*_test.rb",
+            organisms: "test/{unit/,}organisms/**/*_test.rb",
+            models: "test/{unit/,}models/**/*_test.rb",
             integration: "test/integration/**/*_test.rb",
             system: "test/system/**/*_test.rb"
           },
