@@ -17,6 +17,7 @@ PATH
       ace-test-support (~> 0.1)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)
+      ostruct
 
 PATH
   remote: ace-test-support
@@ -36,6 +37,7 @@ GEM
       builder
       minitest (>= 5.0)
       ruby-progressbar
+    ostruct (0.6.3)
     rake (13.3.0)
     ruby-progressbar (1.13.0)
 
