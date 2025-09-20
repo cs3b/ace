@@ -101,6 +101,21 @@ parser = OptionParser.new do |opts|
     options[:check_rake_status] = true
   end
 
+  opts.separator ""
+  opts.separator "Report Management:"
+
+  opts.on("--cleanup-reports", "Clean up old test reports (keeps last 10)") do
+    options[:cleanup_reports] = true
+  end
+
+  opts.on("--cleanup-keep N", Integer, "Number of reports to keep when cleaning (default: 10)") do |n|
+    options[:cleanup_keep] = n
+  end
+
+  opts.on("--cleanup-age DAYS", Integer, "Delete reports older than DAYS (default: 30)") do |days|
+    options[:cleanup_age] = days
+  end
+
   opts.on("-h", "--help", "Display this help") do
     puts opts
     exit 0
@@ -167,6 +182,33 @@ end
 # Set target and files in options
 options[:target] = target if target
 options[:files] = test_files unless test_files.empty?
+
+# Handle Report cleanup commands
+if options[:cleanup_reports]
+  require_relative "../lib/ace/test_runner/molecules/report_storage"
+
+  storage = Ace::TestRunner::Molecules::ReportStorage.new(
+    base_dir: options[:report_dir] || "test-reports"
+  )
+
+  keep = options[:cleanup_keep] || 10
+  age = options[:cleanup_age] || 30
+
+  puts "Cleaning up test reports..."
+  puts "  Keeping last #{keep} reports"
+  puts "  Deleting reports older than #{age} days"
+
+  deleted = storage.cleanup_old_reports(keep: keep, max_age_days: age)
+
+  if deleted.empty?
+    puts "No reports to clean up."
+  else
+    puts "Deleted #{deleted.size} old reports:"
+    deleted.each { |path| puts "  - #{File.basename(path)}" }
+  end
+
+  exit 0
+end
 
 # Handle Rake integration commands
 if options[:set_default_rake] || options[:unset_default_rake] || options[:check_rake_status]

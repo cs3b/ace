@@ -63,7 +63,7 @@ module Ace
             # Display up to MAX_FAILURES_TO_DISPLAY failures
             failures_to_show = result.failures_detail.take(MAX_FAILURES_TO_DISPLAY)
 
-            failures_to_show.each do |failure|
+            failures_to_show.each_with_index do |failure, idx|
               # Extract file and line from location (e.g., "/path/file.rb:42:in `test_method'")
               location_match = failure.location.match(/^([^:]+):(\d+)/)
               if location_match
@@ -77,7 +77,12 @@ module Ace
               # 2-line format: location - short message + report path
               message = truncate_message(failure.message, 60)
               lines << "  #{location} - #{message}"
-              lines << "  → Details: #{report_path}/failures.json"
+
+              # Generate the individual failure report filename
+              test_name = failure.full_test_name.gsub(/\W+/, "_").downcase
+              test_name = test_name[0...50] if test_name.length > 50
+              failure_file = format("%03d-%s.md", idx + 1, test_name)
+              lines << "  → Details: #{report_path}/failures/#{failure_file}"
               lines << ""  # Add blank line between failures for readability
             end
 
