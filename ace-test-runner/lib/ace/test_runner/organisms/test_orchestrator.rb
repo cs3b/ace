@@ -265,6 +265,12 @@ module Ace
           # Always save raw output
           storage.save_raw_output(@result.raw_output, report_path)
 
+          # Save individual failure reports if there are failures
+          if @result.has_failures? && @configuration.format != "json"
+            markdown_formatter = Formatters::MarkdownFormatter.new(@configuration.to_h)
+            storage.save_individual_failure_reports(@result.failures_detail, report_path, markdown_formatter)
+          end
+
           report.report_path = report_path
           report_path
         end

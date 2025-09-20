@@ -67,6 +67,28 @@ module Ace
           failures_file
         end
 
+        def save_individual_failure_reports(failures, report_dir, formatter)
+          return [] if failures.empty?
+
+          failures_dir = File.join(report_dir, "failures")
+          ensure_directory(failures_dir)
+
+          report_files = []
+          failures.each_with_index do |failure, index|
+            filename = generate_failure_filename(failure, index + 1)
+            filepath = File.join(failures_dir, filename)
+
+            content = formatter.generate_failure_report(failure, index + 1)
+            File.write(filepath, content)
+            report_files << filepath
+          end
+
+          # Create an index file
+          create_failure_index(failures, failures_dir)
+
+          report_files
+        end
+
         def list_reports(limit: 10)
           ensure_base_directory
 
@@ -140,6 +162,35 @@ module Ace
         end
 
         private
+
+        def generate_failure_filename(failure, index)
+          # Create a safe filename from the test name
+          test_name = failure.full_test_name.gsub(/\W+/, "_").downcase
+          test_name = test_name[0...50] if test_name.length > 50
+          format("%03d-%s.md", index, test_name)
+        end
+
+        def create_failure_index(failures, failures_dir)
+          index_file = File.join(failures_dir, "index.md")
+
+          lines = []
+          lines << "# Test Failures Index"
+          lines << ""
+          lines << "Total failures: #{failures.size}"
+          lines << ""
+          lines << "## Failures"
+          lines << ""
+
+          failures.each_with_index do |failure, index|
+            filename = generate_failure_filename(failure, index + 1)
+            lines << "#{index + 1}. [#{failure.full_test_name}](./#{filename})"
+            lines << "   - **Type:** #{failure.type}"
+            lines << "   - **Location:** `#{failure.location}`"
+            lines << ""
+          end
+
+          File.write(index_file, lines.join("\n"))
+        end
 
         def ensure_base_directory
           FileUtils.mkdir_p(@base_dir) unless Dir.exist?(@base_dir)

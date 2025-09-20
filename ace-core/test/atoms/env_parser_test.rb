@@ -47,7 +47,7 @@ class EnvParserTest < AceTestCase
     result = Ace::Core::Atoms::EnvParser.parse(content)
 
     assert_equal "line1\nline2", result['WITH_NEWLINE']
-    assert_equal 'path\\to\\file', result['WITH_BAKSLASH']
+    assert_equal 'path\\to\\file', result['WITH_BACKSLASH']
     assert_equal 'key=value', result['WITH_EQUALS']
     assert_equal 'trimmed', result['WITH_SPACES']
   end
@@ -173,4 +173,3 @@ class EnvParserTest < AceTestCase
     assert_equal original['NUMBER'], parsed['NUMBER']
   end
 end
-
