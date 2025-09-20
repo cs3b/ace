@@ -64,7 +64,7 @@ module Ace
           # Save reports if configured
           if @configuration.save_reports
             report_path = save_reports(report)
-            puts "\nDetailed reports: #{report_path}/" unless @configuration.format == "json"
+            # Don't print report path here - formatter already shows it
           end
 
           # Return exit code

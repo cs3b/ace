@@ -18,20 +18,26 @@ module Ace
           # Progress dots are printed during execution, ensure newline
           lines << "" if @test_count > 0
 
-          # Compact summary with emoji indicators
-          summary_parts = []
-          summary_parts << "✅ #{result.passed} passed" if result.passed > 0
-          summary_parts << "❌ #{result.failed} failed" if result.failed > 0
-          summary_parts << "💥 #{result.errors} errors" if result.errors > 0
-          summary_parts << "⚠️  #{result.skipped} skipped" if result.skipped > 0
-
-          if summary_parts.empty?
-            lines << "No tests executed"
-          else
-            lines << summary_parts.join(", ") + " (#{format_duration(result.duration)})"
+          # Report directory with timestamp
+          if @configuration && @configuration[:save_reports]
+            timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
+            lines << "Details: #{@configuration[:report_dir] || 'test-reports'}/#{timestamp}/"
           end
 
-          # 2-line failure summaries as specified
+          # Compact single-line summary with emoji status
+          status = if result.success?
+            "✅"
+          elsif result.errors > 0
+            "💥"
+          else
+            "❌"
+          end
+
+          summary = "#{status} #{result.total_tests} tests, #{result.assertions} assertions, " +
+                   "#{result.failed} failures, #{result.errors} errors (#{format_duration(result.duration)})"
+          lines << summary
+
+          # Add failure details if there are any
           if result.has_failures?
             lines << ""
             lines << "FAILURES (#{result.failed + result.errors}):"
@@ -51,17 +57,6 @@ module Ace
               lines << "  #{location} - #{message}"
             end
           end
-
-          # Report directory hint
-          if @configuration && @configuration[:save_reports]
-            timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
-            lines << ""
-            lines << "Details: #{@configuration[:report_dir] || 'test-reports'}/#{timestamp}/"
-          end
-
-          # Final summary
-          lines << "#{result.total_tests} tests, #{result.assertions} assertions, " +
-                  "#{result.failed} failures, #{result.errors} errors (#{format_duration(result.duration)})"
 
           lines.join("\n")
         end
