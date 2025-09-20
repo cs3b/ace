@@ -1,0 +1,41 @@
+# Default configuration for ace-test-runner
+test:
+  # Output format: ai, compact, json, markdown
+  format: ai
+
+  # Directory to save test reports
+  report_dir: test-reports
+
+  # Whether to save detailed reports to disk
+  save_reports: true
+
+  # Stop execution on first failure
+  fail_fast: false
+
+  # Show detailed test execution output
+  verbose: false
+
+  # Auto-fix deprecated test patterns
+  fix_deprecations: false
+
+  # Test file patterns to search for
+  patterns:
+    - test/**/*_test.rb
+    - spec/**/*_spec.rb
+
+  # Timeout for test execution (in seconds, nil = no timeout)
+  timeout: ~
+
+  # Run tests in parallel (experimental)
+  parallel: false
+
+  # Enable colored output
+  color: true
+
+  # Report retention settings
+  report_retention:
+    # Number of reports to keep
+    keep_count: 10
+
+    # Maximum age of reports in days
+    max_age_days: 30
