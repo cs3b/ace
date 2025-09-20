@@ -1,0 +1,39 @@
+# Default configuration for ace-context gem
+context:
+  presets:
+    default:
+      description: "Default preset - includes README and docs"
+      include:
+        - "README.md"
+        - "docs/blueprint.md"
+      exclude:
+        - "**/node_modules/**"
+        - "**/vendor/**"
+      format: markdown
+      cache: true
+
+    project:
+      description: "Full project documentation"
+      include:
+        - "README.md"
+        - "docs/**/*.md"
+        - "CLAUDE.md"
+        - "*.gemspec"
+      exclude:
+        - "**/node_modules/**"
+        - "**/vendor/**"
+        - "**/.git/**"
+      format: markdown
+      cache: true
+
+    minimal:
+      description: "Minimal context - just README"
+      include:
+        - "README.md"
+      format: markdown
+      cache: false
+
+  output:
+    format: markdown
+    cache: true
+    max_file_size: 10485760  # 10MB
