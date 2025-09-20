@@ -39,6 +39,8 @@ require_relative "test_runner/formatters/ai_formatter"
 require_relative "test_runner/formatters/compact_formatter"
 require_relative "test_runner/formatters/json_formatter"
 require_relative "test_runner/formatters/markdown_formatter"
+require_relative "test_runner/formatters/progress_formatter"
+require_relative "test_runner/formatters/progress_file_formatter"
 
 # Organisms - Business logic
 require_relative "test_runner/organisms/test_orchestrator"
