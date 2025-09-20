@@ -138,6 +138,21 @@ module Ace
           # Read template file
           template_content = File.read(path)
 
+          # Extract and strip frontmatter if present
+          frontmatter = {}
+          if template_content =~ /\A---\s*\n(.*?)\n---\s*\n/m
+            frontmatter_text = $1
+            begin
+              require 'yaml'
+              frontmatter = YAML.safe_load(frontmatter_text) || {}
+              frontmatter = {} unless frontmatter.is_a?(Hash)
+              # Remove frontmatter from content for processing
+              template_content = template_content.sub(/\A---\s*\n.*?\n---\s*\n/m, '')
+            rescue Psych::SyntaxError
+              # Invalid YAML, ignore frontmatter
+            end
+          end
+
           # Parse template configuration
           parse_result = Ace::Core::Atoms::TemplateParser.parse(template_content)
 
@@ -149,11 +164,24 @@ module Ace
 
           config = parse_result[:config]
 
+          # Merge frontmatter into config (frontmatter has lower priority)
+          config = frontmatter.merge(config) if frontmatter.any?
+
           # Process files and commands from template
-          process_template_config(config)
+          context = process_template_config(config)
+
+          # Add frontmatter to metadata for reference
+          context.metadata[:frontmatter] = frontmatter if frontmatter.any?
+
+          context
         end
 
         def load_from_config(config)
+          # If config has a template path, load from template instead
+          if config[:template] && File.exist?(config[:template])
+            return load_template(config[:template])
+          end
+
           context = Models::ContextData.new(
             preset_name: config[:name],
             metadata: config[:metadata] || {}

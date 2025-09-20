@@ -207,6 +207,7 @@ module Ace
         # Convert all keys to strings recursively
         # @param hash [Hash] Hash with potentially mixed keys
         # @return [Hash] Hash with string keys
+        module_function
         def stringify_keys(hash)
           return hash unless hash.is_a?(Hash)
 

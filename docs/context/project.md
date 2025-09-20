@@ -1,3 +1,7 @@
+--- 
+description: project wide context
+--- 
+
 # Project Context
 
 You are working on the Coding Agent Workflow Toolkit (Meta) - a comprehensive meta-repository that provides documentation and guidance for setting up AI-assisted development workflow systems.
@@ -14,9 +18,10 @@ files:
   - docs/tools.md
 
 commands:
-  - git status --short --no-color
-  - task-manager recent --limit 3
-  - task-manager next --limit 3
-  - release-manager current
-  - eza -R -1 -L 2 --git-ignore --absolutes
+
+- git status --short --no-color
+- task-manager recent --limit 3
+- task-manager next --limit 3
+- release-manager current
+- eza -R -1 -L 2 --git-ignore --absolutes
 </context-tool-config>
