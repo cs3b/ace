@@ -15,6 +15,9 @@ module Ace
           @line_width = options[:line_width] || 80
           @configuration = options
           @test_results = []
+          @current_group = nil
+          @group_counts = Hash.new(0)
+          @files_by_group = Hash.new { |h, k| h[k] = [] }
         end
 
         def format_stdout(result)
@@ -108,6 +111,8 @@ module Ace
           # No verbose output in progress mode
           @test_count = 0
           @test_results = []
+          @current_group = nil
+          @group_counts = Hash.new(0)
         end
 
         def on_test_stdout(stdout)
@@ -146,6 +151,18 @@ module Ace
         end
 
         def on_test_complete(file, success, duration)
+          # Detect group from file path
+          group = detect_group(file)
+
+          # Print group header if it's a new group
+          if group != @current_group
+            puts unless @test_count == 0
+            puts ""
+            puts colorize("═══ #{group.to_s.capitalize} Tests ═══", :cyan)
+            @current_group = group
+            @test_count = 0  # Reset count for new line
+          end
+
           # For per-test progress, we handle output in on_test_stdout if available
           # Otherwise fall back to per-file dots
           if @test_results.empty?
@@ -155,11 +172,43 @@ module Ace
             @test_count += 1
             puts if @test_count % @line_width == 0
           end
+
+          # Track group counts
+          @group_counts[group] += 1
+        end
+
+        def detect_group(file_path)
+          case file_path
+          when /test\/unit\/atoms\//
+            :atoms
+          when /test\/unit\/molecules\//
+            :molecules
+          when /test\/unit\/organisms\//
+            :organisms
+          when /test\/unit\/models\//
+            :models
+          when /test\/integration\//
+            :integration
+          when /test\/system\//
+            :system
+          else
+            :other
+          end
         end
 
         def on_finish(result)
           # Ensure we're on a new line
           puts unless @test_count == 0 || @test_count % @line_width == 0
+
+          # Print group summary if we have groups
+          if @group_counts.any?
+            puts ""
+            puts colorize("═══ Group Summary ═══", :cyan)
+            @group_counts.each do |group, count|
+              puts "  #{group.to_s.capitalize}: #{count} #{count == 1 ? 'file' : 'files'}"
+            end
+          end
+
           puts format_stdout(result)
         end
 

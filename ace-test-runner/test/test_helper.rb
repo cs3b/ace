@@ -3,10 +3,14 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ace/test_runner"
 require "minitest/autorun"
-require "minitest/reporters"
 
-# Use spec reporter for better output
-Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
+# Try to use spec reporter for better output if available
+begin
+  require "minitest/reporters"
+  Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
+rescue LoadError
+  # Fall back to default reporter
+end
 
 # Test helpers
 module TestHelper

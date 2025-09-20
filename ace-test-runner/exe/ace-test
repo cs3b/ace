@@ -18,7 +18,18 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: ace-test [options]"
+  opts.banner = "Usage: ace-test [target] [options] [files...]"
+  opts.separator ""
+  opts.separator "Targets:"
+  opts.separator "  atoms       Run atom tests only"
+  opts.separator "  molecules   Run molecule tests only"
+  opts.separator "  organisms   Run organism tests only"
+  opts.separator "  models      Run model tests only"
+  opts.separator "  unit        Run all unit tests (atoms + molecules + organisms + models)"
+  opts.separator "  integration Run integration tests"
+  opts.separator "  system      Run system tests"
+  opts.separator "  all         Run all tests (default)"
+  opts.separator "  quick       Run quick tests (atoms + molecules)"
   opts.separator ""
   opts.separator "Options:"
 
@@ -57,6 +68,10 @@ parser = OptionParser.new do |opts|
 
   opts.on("--[no-]color", "Enable/disable colored output (default: enabled)") do |color|
     options[:color] = color
+  end
+
+  opts.on("-c", "--config FILE", "Configuration file path (default: .ace/test-runner.yml)") do |config|
+    options[:config_path] = config
   end
 
   opts.on("--timeout SECONDS", Integer, "Timeout for test execution in seconds") do |timeout|
@@ -98,15 +113,16 @@ parser = OptionParser.new do |opts|
 
   opts.separator ""
   opts.separator "Examples:"
-  opts.separator "  ace-test                         # Run all tests with per-test progress (default)"
-  opts.separator "  ace-test --format progress-file  # Run with per-file progress (faster)"
-  opts.separator "  ace-test --format compact        # Compact output (CI-friendly)"
-  opts.separator "  ace-test --format ai             # AI-optimized output with analysis"
-  opts.separator "  ace-test --group unit            # Run only unit tests"
+  opts.separator "  ace-test                         # Run all tests (default)"
+  opts.separator "  ace-test atoms                   # Run only atom tests"
+  opts.separator "  ace-test unit                    # Run all unit tests"
+  opts.separator "  ace-test unit --format progress  # Run unit tests with progress display"
+  opts.separator "  ace-test quick                   # Run quick tests (atoms + molecules)"
+  opts.separator "  ace-test --format compact        # CI-friendly compact output"
+  opts.separator "  ace-test test/foo_test.rb        # Run specific file"
   opts.separator "  ace-test test/foo_test.rb:42    # Run test at specific line"
   opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
-  opts.separator "  ace-test --per-file              # Debug mode: run each file separately"
   opts.separator ""
   opts.separator "Rake Integration Examples:"
   opts.separator "  ace-test --set-default-rake-test   # Set ace-test as default for 'rake test'"
@@ -124,7 +140,9 @@ rescue OptionParser::InvalidArgument => e
   exit 1
 end
 
-# Handle line number support (e.g., ace-test test/foo_test.rb:42)
+# Parse target argument (first non-option argument)
+known_targets = %w[atoms molecules organisms models unit integration system all quick]
+target = nil
 test_files = []
 line_number = nil
 
@@ -137,10 +155,17 @@ ARGV.each do |arg|
   elsif File.exist?(arg) && arg.end_with?(".rb")
     # Specific test file
     test_files << arg
+  elsif known_targets.include?(arg)
+    # Test target (atoms, molecules, unit, etc.)
+    target = arg
+  elsif !arg.start_with?("-") && target.nil? && !File.exist?(arg)
+    # Unrecognized target - will be handled by PatternResolver
+    target = arg
   end
 end
 
-# Set specific files if provided
+# Set target and files in options
+options[:target] = target if target
 options[:files] = test_files unless test_files.empty?
 
 # Handle Rake integration commands
