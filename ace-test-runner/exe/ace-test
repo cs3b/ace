@@ -8,7 +8,7 @@ require "optparse"
 require_relative "../lib/ace/test_runner"
 
 options = {
-  format: "compact",  # Changed default to compact for performance
+  format: "progress",  # Default to per-test progress
   save_reports: true,
   verbose: false,
   fail_fast: false,
@@ -22,8 +22,8 @@ parser = OptionParser.new do |opts|
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-f", "--format FORMAT", %w[ai compact json markdown],
-          "Output format: compact (default), ai, json, markdown") do |format|
+  opts.on("-f", "--format FORMAT", %w[ai compact json markdown progress progress-file],
+          "Output format: progress (default), progress-file, compact, ai, json, markdown") do |format|
     options[:format] = format
   end
 
@@ -71,6 +71,21 @@ parser = OptionParser.new do |opts|
     options[:per_file] = true
   end
 
+  opts.separator ""
+  opts.separator "Rake Integration:"
+
+  opts.on("--set-default-rake-test", "Set ace-test as default rake test runner") do
+    options[:set_default_rake] = true
+  end
+
+  opts.on("--unset-default-rake-test", "Remove ace-test as default rake test runner") do
+    options[:unset_default_rake] = true
+  end
+
+  opts.on("--check-rake-test", "Check if ace-test is set as default rake test runner") do
+    options[:check_rake_status] = true
+  end
+
   opts.on("-h", "--help", "Display this help") do
     puts opts
     exit 0
@@ -83,13 +98,20 @@ parser = OptionParser.new do |opts|
 
   opts.separator ""
   opts.separator "Examples:"
-  opts.separator "  ace-test                         # Run all tests with compact format (fast)"
+  opts.separator "  ace-test                         # Run all tests with per-test progress (default)"
+  opts.separator "  ace-test --format progress-file  # Run with per-file progress (faster)"
+  opts.separator "  ace-test --format compact        # Compact output (CI-friendly)"
   opts.separator "  ace-test --format ai             # AI-optimized output with analysis"
   opts.separator "  ace-test --group unit            # Run only unit tests"
   opts.separator "  ace-test test/foo_test.rb:42    # Run test at specific line"
   opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
   opts.separator "  ace-test --per-file              # Debug mode: run each file separately"
+  opts.separator ""
+  opts.separator "Rake Integration Examples:"
+  opts.separator "  ace-test --set-default-rake-test   # Set ace-test as default for 'rake test'"
+  opts.separator "  ace-test --check-rake-test         # Check current rake test configuration"
+  opts.separator "  ace-test --unset-default-rake-test # Restore original rake test runner"
   opts.separator ""
 end
 
@@ -120,6 +142,32 @@ end
 
 # Set specific files if provided
 options[:files] = test_files unless test_files.empty?
+
+# Handle Rake integration commands
+if options[:set_default_rake] || options[:unset_default_rake] || options[:check_rake_status]
+  require_relative "../lib/ace/test_runner/molecules/rake_integration"
+
+  integration = Ace::TestRunner::Molecules::RakeIntegration.new
+
+  if options[:set_default_rake]
+    result = integration.set_default
+    puts result[:message]
+    exit(result[:success] ? 0 : 1)
+  elsif options[:unset_default_rake]
+    result = integration.unset_default
+    puts result[:message]
+    exit(result[:success] ? 0 : 1)
+  elsif options[:check_rake_status]
+    status = integration.check_status
+    puts "Rake Test Integration Status:"
+    puts "  Rakefile exists: #{status[:rakefile_exists]}"
+    puts "  ace-test integrated: #{status[:integrated]}"
+    puts "  Message: #{status[:message]}"
+    puts "  Backup exists: #{status[:backup_exists]}" if status[:backup_exists]
+    puts "  Has test task: #{status[:has_test_task]}" if status.key?(:has_test_task)
+    exit 0
+  end
+end
 
 # Handle deprecation fixing mode
 if options[:fix_deprecations]
