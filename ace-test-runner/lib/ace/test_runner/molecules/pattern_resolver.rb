@@ -69,10 +69,18 @@ module Ace
         end
 
         def resolve_all_files
-          if @groups.key?("all")
-            resolve_group("all")
+          # First check if "all" group is defined
+          if @groups.key?(:all) || @groups.key?("all")
+            resolve_group(:all) || resolve_group("all")
+          elsif @patterns && !@patterns.empty?
+            # If no "all" group but patterns exist, use all patterns
+            all_files = []
+            @patterns.each_value do |pattern|
+              all_files.concat(expand_pattern(pattern))
+            end
+            all_files.uniq
           else
-            # Default: all Ruby test files
+            # Default fallback: all Ruby test files in test directory
             expand_pattern("test/**/*_test.rb")
           end
         end
