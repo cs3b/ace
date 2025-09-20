@@ -4,10 +4,13 @@ module Ace
   module TestRunner
     module Molecules
       class PatternResolver
+        attr_reader :using_catch_all
+
         def initialize(config)
           @config = config
           @patterns = config.patterns || {}
           @groups = config.groups || {}
+          @using_catch_all = false
         end
 
         def resolve_target(target)
@@ -71,12 +74,17 @@ module Ace
         def resolve_all_files
           # Always start by finding ALL test files that exist
           all_test_files = expand_pattern("test/**/*_test.rb")
+          @using_catch_all = false
 
           # First check if "all" group is defined
           if @groups.key?(:all) || @groups.key?("all")
             pattern_files = resolve_group(:all) || resolve_group("all")
             # If patterns miss any files, use the complete scan
-            return pattern_files.size >= all_test_files.size ? pattern_files : all_test_files
+            if pattern_files.size < all_test_files.size
+              @using_catch_all = true
+              return all_test_files
+            end
+            return pattern_files
           end
 
           # If no "all" group, try all defined patterns
@@ -87,10 +95,15 @@ module Ace
             end
             pattern_files = pattern_files.uniq
             # If patterns miss any files, use the complete scan
-            return pattern_files.size >= all_test_files.size ? pattern_files : all_test_files
+            if pattern_files.size < all_test_files.size
+              @using_catch_all = true
+              return all_test_files
+            end
+            return pattern_files
           end
 
-          # Return all test files found
+          # No configuration - using catch-all pattern
+          @using_catch_all = true
           all_test_files
         end
       end

@@ -19,6 +19,8 @@ module Ace
           @result_parser = Atoms::ResultParser.new
           @failure_analyzer = Molecules::FailureAnalyzer.new
           @report_generator = ReportGenerator.new(@configuration)
+
+          # Initialize formatter - will be updated after pattern resolution
           @formatter = @configuration.formatter_class.new(@configuration.to_h)
         end
 
@@ -131,6 +133,12 @@ module Ace
             puts "Error: #{e.message}"
             puts "Available targets: #{@pattern_resolver.available_targets.join(', ')}"
             exit 1
+          end
+
+          # If using catch-all pattern, reinitialize formatter without groups
+          if @pattern_resolver.using_catch_all
+            formatter_options = @configuration.to_h.merge(show_groups: false)
+            @formatter = @configuration.formatter_class.new(formatter_options)
           end
 
           # Apply filter if provided
