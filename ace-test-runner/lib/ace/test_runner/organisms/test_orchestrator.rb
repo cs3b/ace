@@ -33,8 +33,15 @@ module Ace
             return handle_no_tests
           end
 
-          # Notify start
-          @formatter.on_start(test_files.size)
+          # Count total available test files (before filtering)
+          total_available = count_total_test_files
+
+          # Notify start with both counts
+          if @formatter.respond_to?(:on_start_with_totals)
+            @formatter.on_start_with_totals(test_files.size, total_available)
+          else
+            @formatter.on_start(test_files.size)
+          end
 
           # Execute tests
           execution_result = execute_tests(test_files)
@@ -145,6 +152,11 @@ module Ace
 
           puts message
           0
+        end
+
+        def count_total_test_files
+          # Count all test files in test directory regardless of configuration
+          Dir.glob("test/**/*_test.rb").select { |f| File.file?(f) }.size
         end
 
         def execute_tests(test_files)

@@ -113,6 +113,19 @@ module Ace
           @test_results = []
           @current_group = nil
           @group_counts = Hash.new(0)
+          @total_files = total_files
+          @total_available = nil
+        end
+
+        def on_start_with_totals(files_to_run, total_available)
+          on_start(files_to_run)
+          @total_available = total_available
+
+          # Show file count if different from total available
+          if total_available && total_available > files_to_run
+            puts "Running #{files_to_run}/#{total_available} test files"
+            puts ""
+          end
         end
 
         def on_test_stdout(stdout)
