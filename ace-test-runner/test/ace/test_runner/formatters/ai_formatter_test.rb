@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ace/test_runner/formatters/ai_formatter"
 
 class AiFormatterTest < Minitest::Test
   def setup
