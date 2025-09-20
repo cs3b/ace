@@ -7,7 +7,8 @@ module Ace
       class TestConfiguration
         attr_accessor :format, :report_dir, :save_reports, :fail_fast,
                       :verbose, :filter, :fix_deprecations, :patterns,
-                      :timeout, :parallel, :color, :per_file
+                      :timeout, :parallel, :color, :per_file, :groups,
+                      :target, :config_path
 
         def initialize(attributes = {})
           @format = attributes[:format] || "progress"  # Default to per-test progress
@@ -18,6 +19,9 @@ module Ace
           @filter = attributes[:filter]
           @fix_deprecations = attributes[:fix_deprecations] || false
           @patterns = attributes[:patterns] || default_patterns
+          @groups = attributes[:groups] || default_groups
+          @target = attributes[:target]
+          @config_path = attributes[:config_path]
           @timeout = attributes[:timeout]  # In seconds, nil = no timeout
           @parallel = attributes[:parallel] || false
           @color = attributes.fetch(:color, true)
@@ -69,6 +73,9 @@ module Ace
             filter: filter,
             fix_deprecations: fix_deprecations,
             patterns: patterns,
+            groups: groups,
+            target: target,
+            config_path: config_path,
             timeout: timeout,
             parallel: parallel,
             color: color,
@@ -102,10 +109,23 @@ module Ace
         private
 
         def default_patterns
-          [
-            "test/**/*_test.rb",
-            "spec/**/*_spec.rb"
-          ]
+          {
+            atoms: "test/unit/atoms/**/*_test.rb",
+            molecules: "test/unit/molecules/**/*_test.rb",
+            organisms: "test/unit/organisms/**/*_test.rb",
+            models: "test/unit/models/**/*_test.rb",
+            integration: "test/integration/**/*_test.rb",
+            system: "test/system/**/*_test.rb",
+            all: "test/**/*_test.rb"
+          }
+        end
+
+        def default_groups
+          {
+            unit: %w[atoms molecules organisms models],
+            all: %w[unit integration system],
+            quick: %w[atoms molecules]
+          }
         end
 
         def writable_directory?(dir)

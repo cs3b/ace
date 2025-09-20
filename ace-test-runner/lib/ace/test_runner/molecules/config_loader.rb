@@ -1,0 +1,127 @@
+# frozen_string_literal: true
+
+require "yaml"
+require "ostruct"
+
+module Ace
+  module TestRunner
+    module Molecules
+      class ConfigLoader
+        DEFAULT_CONFIG_PATHS = [
+          ".ace/test-runner.yml",
+          ".ace/test-runner.yaml",
+          "test-runner.yml",
+          "test-runner.yaml"
+        ].freeze
+
+        DEFAULT_CONFIG = {
+          version: 1,
+          patterns: {
+            atoms: "test/unit/atoms/**/*_test.rb",
+            molecules: "test/unit/molecules/**/*_test.rb",
+            organisms: "test/unit/organisms/**/*_test.rb",
+            models: "test/unit/models/**/*_test.rb",
+            integration: "test/integration/**/*_test.rb",
+            system: "test/system/**/*_test.rb"
+          },
+          groups: {
+            unit: %w[atoms molecules organisms models],
+            all: %w[unit integration system],
+            quick: %w[atoms molecules]
+          },
+          defaults: {
+            reporter: "progress",
+            color: "auto",
+            fail_fast: false,
+            save_reports: true,
+            report_dir: "test-reports"
+          }
+        }.freeze
+
+        def load(config_path = nil)
+          config = if config_path && File.exist?(config_path)
+            load_from_file(config_path)
+          else
+            find_and_load_config || DEFAULT_CONFIG
+          end
+
+          validate_config(config)
+          normalize_config(config)
+        end
+
+        def merge_with_options(config, options)
+          merged = config.dup
+
+          # Override defaults with command-line options
+          if options[:format]
+            merged[:defaults] ||= {}
+            merged[:defaults][:reporter] = options[:format]
+          end
+
+          if options.key?(:color)
+            merged[:defaults] ||= {}
+            merged[:defaults][:color] = options[:color]
+          end
+
+          if options.key?(:fail_fast)
+            merged[:defaults] ||= {}
+            merged[:defaults][:fail_fast] = options[:fail_fast]
+          end
+
+          if options[:report_dir]
+            merged[:defaults] ||= {}
+            merged[:defaults][:report_dir] = options[:report_dir]
+          end
+
+          OpenStruct.new(merged)
+        end
+
+        private
+
+        def find_and_load_config
+          config_file = DEFAULT_CONFIG_PATHS.find { |path| File.exist?(path) }
+          return nil unless config_file
+
+          puts "Loading configuration from: #{config_file}" if ENV["DEBUG"]
+          load_from_file(config_file)
+        end
+
+        def load_from_file(path)
+          content = File.read(path)
+          YAML.safe_load(content, permitted_classes: [Symbol], symbolize_names: true)
+        rescue StandardError => e
+          warn "Warning: Failed to load config from #{path}: #{e.message}"
+          warn "Using default configuration"
+          DEFAULT_CONFIG
+        end
+
+        def validate_config(config)
+          unless config[:version]
+            warn "Warning: Configuration missing version field, assuming version 1"
+            config[:version] = 1
+          end
+
+          if config[:version] > 1
+            warn "Warning: Configuration version #{config[:version]} is newer than supported version 1"
+          end
+
+          config
+        end
+
+        def normalize_config(config)
+          # Ensure all sections exist
+          config[:patterns] ||= DEFAULT_CONFIG[:patterns]
+          config[:groups] ||= DEFAULT_CONFIG[:groups]
+          config[:defaults] ||= DEFAULT_CONFIG[:defaults]
+
+          # Merge with defaults for missing values
+          config[:patterns] = DEFAULT_CONFIG[:patterns].merge(config[:patterns])
+          config[:groups] = DEFAULT_CONFIG[:groups].merge(config[:groups])
+          config[:defaults] = DEFAULT_CONFIG[:defaults].merge(config[:defaults])
+
+          config
+        end
+      end
+    end
+  end
+end

@@ -48,6 +48,52 @@ module Ace
               File.fnmatch?(pattern, path.sub(@root_dir + "/", ""))
           end
         end
+
+        def classify_file(file_path)
+          case file_path
+          when /test\/unit\/atoms\//
+            :atoms
+          when /test\/unit\/molecules\//
+            :molecules
+          when /test\/unit\/organisms\//
+            :organisms
+          when /test\/unit\/models\//
+            :models
+          when /test\/integration\//
+            :integration
+          when /test\/system\//
+            :system
+          when /test\/unit\//
+            :unit
+          when /spec\/unit\/atoms\//
+            :atoms
+          when /spec\/unit\/molecules\//
+            :molecules
+          when /spec\/unit\/organisms\//
+            :organisms
+          when /spec\/unit\/models\//
+            :models
+          when /spec\/integration\//
+            :integration
+          when /spec\/system\//
+            :system
+          when /spec\/unit\//
+            :unit
+          else
+            :other
+          end
+        end
+
+        def group_test_files(files)
+          grouped = Hash.new { |h, k| h[k] = [] }
+
+          files.each do |file|
+            group = classify_file(file)
+            grouped[group] << file
+          end
+
+          grouped
+        end
       end
     end
   end

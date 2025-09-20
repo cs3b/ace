@@ -58,6 +58,19 @@ module Ace
             failure_data[:line_number] = failure_data[:location][:line]
           end
 
+          # Extract code context if file and line are available
+          if failure_data[:file_path] && failure_data[:line_number] && File.exist?(failure_data[:file_path])
+            failure_data[:code_context] = extract_code_context(
+              failure_data[:file_path],
+              failure_data[:line_number]
+            )
+          end
+
+          # Clean and format backtrace
+          if failure_data[:backtrace]
+            failure_data[:formatted_backtrace] = format_backtrace(failure_data[:backtrace])
+          end
+
           Models::TestFailure.new(failure_data)
         end
 
@@ -104,6 +117,76 @@ module Ace
           end
 
           fixes.compact
+        end
+
+        def extract_code_context(file_path, line_number, radius = 5)
+          return nil unless File.exist?(file_path)
+
+          lines = File.readlines(file_path)
+          total_lines = lines.size
+          center_line = line_number.to_i
+
+          # Calculate the range of lines to include
+          start_line = [center_line - radius, 1].max
+          end_line = [center_line + radius, total_lines].min
+
+          context = {
+            file: file_path,
+            center_line: center_line,
+            lines: {}
+          }
+
+          (start_line..end_line).each do |line_num|
+            line_content = lines[line_num - 1]
+            context[:lines][line_num] = {
+              content: line_content.chomp,
+              highlighted: line_num == center_line
+            }
+          end
+
+          context
+        end
+
+        def format_backtrace(backtrace)
+          return [] unless backtrace
+
+          # Convert to array if it's a string
+          trace_lines = backtrace.is_a?(String) ? backtrace.split("\n") : backtrace
+
+          formatted = []
+          project_root = Dir.pwd
+
+          trace_lines.each do |line|
+            # Clean up the line
+            clean_line = line.strip
+
+            # Skip minitest internal frames unless in verbose mode
+            next if clean_line.include?("/minitest/") && !@verbose
+            next if clean_line.include?("/bundler/") && !@verbose
+
+            # Parse the backtrace line
+            if clean_line =~ /^(.+):(\d+):in `(.+)'$/
+              file = $1
+              line_num = $2
+              method = $3
+
+              # Make paths relative to project root
+              relative_file = file.start_with?(project_root) ?
+                file.sub(project_root + "/", "") : file
+
+              formatted << {
+                file: relative_file,
+                line: line_num.to_i,
+                method: method,
+                in_project: file.start_with?(project_root)
+              }
+            else
+              # Keep unparseable lines as-is
+              formatted << { raw: clean_line }
+            end
+          end
+
+          formatted
         end
 
         private

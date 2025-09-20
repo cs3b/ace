@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/core"
+# require "ace/core"  # TODO: Enable when ace-core is available
 # Don't require ace/test_support here - it loads minitest/autorun which causes double runs
 # Test files will require it themselves
 

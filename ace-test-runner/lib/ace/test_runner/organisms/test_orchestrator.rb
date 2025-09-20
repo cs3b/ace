@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../formatters/base_formatter"
+require_relative "../molecules/config_loader"
+require_relative "../molecules/pattern_resolver"
 
 module Ace
   module TestRunner
@@ -11,6 +13,7 @@ module Ace
 
         def initialize(options = {})
           @configuration = build_configuration(options)
+          @pattern_resolver = Molecules::PatternResolver.new(@configuration)
           @test_detector = Atoms::TestDetector.new(patterns: @configuration.patterns)
           @test_executor = Molecules::TestExecutor.new(timeout: @configuration.timeout)
           @result_parser = Atoms::ResultParser.new
@@ -74,11 +77,31 @@ module Ace
         private
 
         def build_configuration(options)
-          # Start with cascade configuration if available
-          config = Models::TestConfiguration.from_cascade
+          # Load configuration from file
+          config_loader = Molecules::ConfigLoader.new
+          config_data = config_loader.load(options[:config_path])
 
-          # Override with provided options
-          config.merge(options)
+          # Merge with command-line options
+          config_with_options = config_loader.merge_with_options(config_data, options)
+
+          # Create TestConfiguration with merged data
+          Models::TestConfiguration.new(
+            format: config_with_options.defaults[:reporter] || options[:format],
+            report_dir: config_with_options.defaults[:report_dir] || options[:report_dir],
+            save_reports: config_with_options.defaults[:save_reports] != false && options[:save_reports] != false,
+            fail_fast: config_with_options.defaults[:fail_fast] || options[:fail_fast],
+            verbose: options[:verbose],
+            filter: options[:filter],
+            fix_deprecations: options[:fix_deprecations],
+            patterns: config_with_options.patterns,
+            groups: config_with_options.groups,
+            target: options[:target],
+            config_path: options[:config_path],
+            timeout: options[:timeout],
+            parallel: options[:parallel],
+            color: config_with_options.defaults[:color] == "auto" ? true : config_with_options.defaults[:color],
+            per_file: options[:per_file]
+          )
         end
 
         def validate_configuration!
@@ -89,7 +112,19 @@ module Ace
         end
 
         def find_test_files
-          files = @test_detector.find_test_files
+          # Use PatternResolver if target is specified
+          if @configuration.target
+            begin
+              files = @pattern_resolver.resolve_target(@configuration.target)
+            rescue ArgumentError => e
+              puts "Error: #{e.message}"
+              puts "Available targets: #{@pattern_resolver.available_targets.join(', ')}"
+              exit 1
+            end
+          else
+            # Fall back to detector for default behavior
+            files = @test_detector.find_test_files
+          end
 
           # Apply filter if provided
           if @configuration.filter
