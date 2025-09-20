@@ -238,6 +238,8 @@ end
 
 # Handle deprecation fixing mode
 if options[:fix_deprecations]
+  require_relative "../lib/ace/test_runner/molecules/deprecation_fixer"
+
   puts "Scanning for deprecated test patterns..."
 
   detector = Ace::TestRunner::Atoms::TestDetector.new
