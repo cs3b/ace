@@ -267,7 +267,8 @@ module Ace
 
           # Save individual failure reports if there are failures
           if @result.has_failures? && @configuration.format != "json"
-            markdown_formatter = Formatters::MarkdownFormatter.new(@configuration.to_h)
+            markdown_formatter_class = Atoms::LazyLoader.load_formatter("markdown")
+            markdown_formatter = markdown_formatter_class.new(@configuration.to_h)
             storage.save_individual_failure_reports(@result.failures_detail, report_path, markdown_formatter)
           end
 

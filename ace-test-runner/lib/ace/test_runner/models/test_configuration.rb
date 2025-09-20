@@ -45,22 +45,8 @@ module Ace
         end
 
         def formatter_class
-          case format
-          when "ai"
-            Formatters::AiFormatter
-          when "compact"
-            Formatters::CompactFormatter
-          when "json"
-            Formatters::JsonFormatter
-          when "markdown"
-            Formatters::MarkdownFormatter
-          when "progress"
-            Formatters::ProgressFormatter
-          when "progress-file"
-            Formatters::ProgressFileFormatter
-          else
-            raise ArgumentError, "Unknown format: #{format}"
-          end
+          # Use lazy loader to load formatter on demand
+          Atoms::LazyLoader.load_formatter(format)
         end
 
         def to_h

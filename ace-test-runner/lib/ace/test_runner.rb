@@ -21,31 +21,29 @@ require_relative "test_runner/models/test_failure"
 require_relative "test_runner/models/test_configuration"
 require_relative "test_runner/models/test_report"
 
-# Atoms - Basic utilities
+# Atoms - Basic utilities (always needed)
 require_relative "test_runner/atoms/test_detector"
 require_relative "test_runner/atoms/command_builder"
 require_relative "test_runner/atoms/result_parser"
 require_relative "test_runner/atoms/timestamp_generator"
+require_relative "test_runner/atoms/lazy_loader"
 
-# Molecules - Composed operations
+# Molecules - Core operations (always needed for basic test running)
 require_relative "test_runner/molecules/test_executor"
 require_relative "test_runner/molecules/failure_analyzer"
-require_relative "test_runner/molecules/deprecation_fixer"
 require_relative "test_runner/molecules/report_storage"
+require_relative "test_runner/molecules/config_loader"
+require_relative "test_runner/molecules/pattern_resolver"
+# Other molecules loaded lazily (deprecation_fixer, rake_integration)
 
-# Formatters
+# Formatters - Load only base formatter, others loaded on demand
 require_relative "test_runner/formatters/base_formatter"
-require_relative "test_runner/formatters/ai_formatter"
-require_relative "test_runner/formatters/compact_formatter"
-require_relative "test_runner/formatters/json_formatter"
-require_relative "test_runner/formatters/markdown_formatter"
-require_relative "test_runner/formatters/progress_formatter"
-require_relative "test_runner/formatters/progress_file_formatter"
+# Other formatters loaded lazily via LazyLoader
 
-# Organisms - Business logic
+# Organisms - Core orchestrators always needed for test execution
 require_relative "test_runner/organisms/test_orchestrator"
 require_relative "test_runner/organisms/report_generator"
-require_relative "test_runner/organisms/agent_reporter"
+# Agent reporter loaded lazily when needed
 
 module Ace
   module TestRunner
