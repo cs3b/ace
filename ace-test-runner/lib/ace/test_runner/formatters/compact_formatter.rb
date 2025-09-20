@@ -9,41 +9,59 @@ module Ace
           super
           @test_count = 0
           @line_width = options[:line_width] || 80
+          @configuration = options
         end
 
         def format_stdout(result)
-          # The dots are printed during execution
-          # This is the final summary
           lines = []
-          lines << ""  # New line after dots
-          lines << ""
 
-          if result.success?
-            lines << colorize("OK", :green)
+          # Progress dots are printed during execution, ensure newline
+          lines << "" if @test_count > 0
+
+          # Compact summary with emoji indicators
+          summary_parts = []
+          summary_parts << "✅ #{result.passed} passed" if result.passed > 0
+          summary_parts << "❌ #{result.failed} failed" if result.failed > 0
+          summary_parts << "💥 #{result.errors} errors" if result.errors > 0
+          summary_parts << "⚠️  #{result.skipped} skipped" if result.skipped > 0
+
+          if summary_parts.empty?
+            lines << "No tests executed"
           else
-            lines << colorize("FAILED", :red)
+            lines << summary_parts.join(", ") + " (#{format_duration(result.duration)})"
           end
 
-          # Compact summary line
-          summary_parts = []
-          summary_parts << pluralize(result.total_tests, "test")
-          summary_parts << pluralize(result.assertions, "assertion")
-          summary_parts << pluralize(result.failed, "failure") if result.failed > 0
-          summary_parts << pluralize(result.errors, "error") if result.errors > 0
-          summary_parts << pluralize(result.skipped, "skip") if result.skipped > 0
-
-          lines << summary_parts.join(", ")
-          lines << "Finished in #{format_duration(result.duration)}"
-
-          # Add failure details in compact form
+          # 2-line failure summaries as specified
           if result.has_failures?
             lines << ""
+            lines << "FAILURES (#{result.failed + result.errors}):"
             result.failures_detail.each_with_index do |failure, idx|
-              lines << "#{idx + 1}) #{failure.full_test_name}"
-              lines << "   #{failure.location}"
-              lines << "   #{truncate_message(failure.message)}"
+              # Extract file and line from location (e.g., "/path/file.rb:42:in `test_method'")
+              location_match = failure.location.match(/^([^:]+):(\d+)/)
+              if location_match
+                file = location_match[1].gsub(/^.*\/test\//, "test/")  # Shorten path
+                line = location_match[2]
+                location = "#{file}:#{line}"
+              else
+                location = failure.location
+              end
+
+              # 2-line format: location - short message
+              message = truncate_message(failure.message, 60)
+              lines << "  #{location} - #{message}"
             end
           end
+
+          # Report directory hint
+          if @configuration && @configuration[:save_reports]
+            timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
+            lines << ""
+            lines << "Details: #{@configuration[:report_dir] || 'test-reports'}/#{timestamp}/"
+          end
+
+          # Final summary
+          lines << "#{result.total_tests} tests, #{result.assertions} assertions, " +
+                  "#{result.failed} failures, #{result.errors} errors (#{format_duration(result.duration)})"
 
           lines.join("\n")
         end

@@ -7,10 +7,10 @@ module Ace
       class TestConfiguration
         attr_accessor :format, :report_dir, :save_reports, :fail_fast,
                       :verbose, :filter, :fix_deprecations, :patterns,
-                      :timeout, :parallel, :color
+                      :timeout, :parallel, :color, :per_file
 
         def initialize(attributes = {})
-          @format = attributes[:format] || "ai"
+          @format = attributes[:format] || "compact"  # Changed default to compact for performance
           @report_dir = attributes[:report_dir] || "test-reports"
           @save_reports = attributes.fetch(:save_reports, true)
           @fail_fast = attributes[:fail_fast] || false
@@ -21,6 +21,7 @@ module Ace
           @timeout = attributes[:timeout]  # In seconds, nil = no timeout
           @parallel = attributes[:parallel] || false
           @color = attributes.fetch(:color, true)
+          @per_file = attributes[:per_file] || false  # Default to grouped execution for performance
         end
 
         def valid_format?
@@ -66,7 +67,8 @@ module Ace
             patterns: patterns,
             timeout: timeout,
             parallel: parallel,
-            color: color
+            color: color,
+            per_file: per_file
           }
         end
 
