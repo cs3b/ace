@@ -41,24 +41,34 @@ module Ace
 
                 # Read output with size limits
                 stdout_reader = Thread.new do
-                  stdout.each_char do |char|
-                    if stdout_data.bytesize < max_output
-                      stdout_data << char
-                    else
-                      truncated = true
-                      break
+                  Thread.current.report_on_exception = false
+                  begin
+                    stdout.each_char do |char|
+                      if stdout_data.bytesize < max_output
+                        stdout_data << char
+                      else
+                        truncated = true
+                        break
+                      end
                     end
+                  rescue IOError
+                    # Stream was closed, this is expected on timeout
                   end
                 end
 
                 stderr_reader = Thread.new do
-                  stderr.each_char do |char|
-                    if stderr_data.bytesize < max_output
-                      stderr_data << char
-                    else
-                      truncated = true
-                      break
+                  Thread.current.report_on_exception = false
+                  begin
+                    stderr.each_char do |char|
+                      if stderr_data.bytesize < max_output
+                        stderr_data << char
+                      else
+                        truncated = true
+                        break
+                      end
                     end
+                  rescue IOError
+                    # Stream was closed, this is expected on timeout
                   end
                 end
 

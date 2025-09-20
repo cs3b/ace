@@ -2,6 +2,7 @@
 
 require_relative '../test_helper'
 require 'ace/core/atoms/command_executor'
+require 'timeout'
 
 class CommandExecutorTest < Minitest::Test
   def setup
@@ -40,11 +41,13 @@ class CommandExecutorTest < Minitest::Test
   end
 
   def test_execute_with_timeout
-    # Command that sleeps for 2 seconds
-    result = @executor.execute('sleep 2', timeout: 1)
+    # Mock Timeout to raise immediately instead of waiting
+    Timeout.stub :timeout, ->(_seconds, &block) { raise Timeout::Error } do
+      result = @executor.execute('echo "test"', timeout: 1)
 
-    refute result[:success]
-    assert_match(/Command timed out after 1 seconds/, result[:error])
+      refute result[:success]
+      assert_match(/Command timed out after 1 seconds/, result[:error])
+    end
   end
 
   def test_execute_with_working_directory
@@ -149,10 +152,13 @@ class CommandExecutorTest < Minitest::Test
   end
 
   def test_stream_with_timeout
-    result = @executor.stream('sleep 2', timeout: 1)
+    # Mock Timeout to raise immediately instead of waiting
+    Timeout.stub :timeout, ->(_seconds, &block) { raise Timeout::Error } do
+      result = @executor.stream('echo "test"', timeout: 1)
 
-    refute result[:success]
-    assert_match(/Command timed out/, result[:error])
+      refute result[:success]
+      assert_match(/Command timed out/, result[:error])
+    end
   end
 
   def test_execute_with_large_output
@@ -164,5 +170,24 @@ class CommandExecutorTest < Minitest::Test
     assert result[:stdout].bytesize <= 1000
     assert result[:warning]
     assert_match(/Output truncated/, result[:warning])
+  end
+
+  # Integration tests - run with INTEGRATION_TESTS=1 environment variable
+  if ENV['INTEGRATION_TESTS']
+    def test_execute_with_real_timeout
+      # This test uses real sleep and timeout - only run in integration mode
+      result = @executor.execute('sleep 0.5', timeout: 0.2)
+
+      refute result[:success]
+      assert_match(/Command timed out/, result[:error])
+    end
+
+    def test_stream_with_real_timeout
+      # This test uses real sleep and timeout - only run in integration mode
+      result = @executor.stream('sleep 0.5', timeout: 0.2)
+
+      refute result[:success]
+      assert_match(/Command timed out/, result[:error])
+    end
   end
 end
