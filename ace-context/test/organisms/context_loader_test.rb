@@ -3,9 +3,7 @@
 require_relative "../test_helper"
 
 class ContextLoaderTest < AceTestCase
-  def setup
-    @loader = Ace::Context::Organisms::ContextLoader.new
-  end
+  # Setup removed - loader created in each test after config
 
   def test_loads_default_preset
     with_temp_dir do
@@ -27,7 +25,8 @@ class ContextLoaderTest < AceTestCase
         }
       }.to_yaml)
 
-      context = @loader.load_preset("default")
+      loader = Ace::Context::Organisms::ContextLoader.new
+      context = loader.load_preset("default")
 
       assert_equal 2, context.file_count
       assert context.content.include?("Test Project")
@@ -37,7 +36,8 @@ class ContextLoaderTest < AceTestCase
 
   def test_loads_file_directly
     with_temp_file("Test content") do |path|
-      context = @loader.load_file(path)
+      loader = Ace::Context::Organisms::ContextLoader.new
+      context = loader.load_file(path)
 
       assert_equal 1, context.file_count
       assert_equal "Test content", context.files.first[:content]
@@ -45,7 +45,8 @@ class ContextLoaderTest < AceTestCase
   end
 
   def test_handles_missing_preset
-    context = @loader.load_preset("nonexistent")
+    loader = Ace::Context::Organisms::ContextLoader.new
+    context = loader.load_preset("nonexistent")
 
     assert_equal "nonexistent", context.preset_name
     assert_equal "Preset 'nonexistent' not found", context.metadata[:error]
@@ -72,7 +73,8 @@ class ContextLoaderTest < AceTestCase
         }
       }.to_yaml)
 
-      context = @loader.load_preset("test")
+      loader = Ace::Context::Organisms::ContextLoader.new
+      context = loader.load_preset("test")
 
       assert_equal 1, context.file_count
       assert context.content.include?("Include this")
@@ -96,7 +98,8 @@ class ContextLoaderTest < AceTestCase
         }
       }.to_yaml)
 
-      context = @loader.load_preset("yaml_test")
+      loader = Ace::Context::Organisms::ContextLoader.new
+      context = loader.load_preset("yaml_test")
 
       assert context.content.include?("preset_name: yaml_test")
       assert context.content.include?("files:")
