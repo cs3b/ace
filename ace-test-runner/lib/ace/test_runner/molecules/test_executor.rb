@@ -62,6 +62,24 @@ module Ace
         end
 
         def execute_with_progress(files, options = {}, &block)
+          # For performance, execute all files together unless explicitly disabled
+          if options[:per_file] == true
+            execute_per_file_with_progress(files, options, &block)
+          else
+            # Execute all files in a single Ruby process for performance
+            result = execute_tests(files, options)
+
+            # Simulate progress callbacks for compatibility
+            if block_given?
+              files.each { |file| yield({ type: :start, file: file }) }
+              files.each { |file| yield({ type: :complete, file: file, success: result[:success], duration: result[:duration] / files.size }) }
+            end
+
+            result
+          end
+        end
+
+        def execute_per_file_with_progress(files, options = {}, &block)
           results = []
 
           files.each do |file|

@@ -8,12 +8,13 @@ require "optparse"
 require_relative "../lib/ace/test_runner"
 
 options = {
-  format: "ai",
+  format: "compact",  # Changed default to compact for performance
   save_reports: true,
   verbose: false,
   fail_fast: false,
   fix_deprecations: false,
-  color: true
+  color: true,
+  per_file: false  # Default to grouped execution for performance
 }
 
 parser = OptionParser.new do |opts|
@@ -22,7 +23,7 @@ parser = OptionParser.new do |opts|
   opts.separator "Options:"
 
   opts.on("-f", "--format FORMAT", %w[ai compact json markdown],
-          "Output format: ai (default), compact, json, markdown") do |format|
+          "Output format: compact (default), ai, json, markdown") do |format|
     options[:format] = format
   end
 
@@ -46,6 +47,10 @@ parser = OptionParser.new do |opts|
     options[:filter] = pattern
   end
 
+  opts.on("-g", "--group GROUP", "Run specific test group (unit, integration, system, all)") do |group|
+    options[:group] = group
+  end
+
   opts.on("-v", "--verbose", "Show detailed test execution") do
     options[:verbose] = true
   end
@@ -62,6 +67,10 @@ parser = OptionParser.new do |opts|
     options[:parallel] = true
   end
 
+  opts.on("--per-file", "Execute each test file separately (slower, for debugging)") do
+    options[:per_file] = true
+  end
+
   opts.on("-h", "--help", "Display this help") do
     puts opts
     exit 0
@@ -74,10 +83,13 @@ parser = OptionParser.new do |opts|
 
   opts.separator ""
   opts.separator "Examples:"
-  opts.separator "  ace-test                         # Run all tests with AI format"
-  opts.separator "  ace-test --format compact        # CI-friendly compact output"
+  opts.separator "  ace-test                         # Run all tests with compact format (fast)"
+  opts.separator "  ace-test --format ai             # AI-optimized output with analysis"
+  opts.separator "  ace-test --group unit            # Run only unit tests"
+  opts.separator "  ace-test test/foo_test.rb:42    # Run test at specific line"
   opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
+  opts.separator "  ace-test --per-file              # Debug mode: run each file separately"
   opts.separator ""
 end
 
@@ -89,6 +101,25 @@ rescue OptionParser::InvalidArgument => e
   puts parser
   exit 1
 end
+
+# Handle line number support (e.g., ace-test test/foo_test.rb:42)
+test_files = []
+line_number = nil
+
+ARGV.each do |arg|
+  if arg =~ /^(.+):(\d+)$/
+    # File with line number
+    test_files << $1
+    line_number = $2.to_i
+    options[:filter] = "line:#{line_number}"
+  elsif File.exist?(arg) && arg.end_with?(".rb")
+    # Specific test file
+    test_files << arg
+  end
+end
+
+# Set specific files if provided
+options[:files] = test_files unless test_files.empty?
 
 # Handle deprecation fixing mode
 if options[:fix_deprecations]

@@ -37,12 +37,12 @@ module Ace
           execution_result = execute_tests(test_files)
 
           # Parse results
-          # When executing with progress (multiple commands), we need to aggregate individual results
-          if execution_result[:commands]
+          # Check if we executed multiple commands (per-file) or single command (grouped)
+          if execution_result[:commands] && execution_result[:commands].is_a?(Array)
             # Each file was executed separately, parse and sum them all
             parsed_result = aggregate_individual_results(execution_result[:stdout])
           else
-            # Single command execution
+            # Single command execution (grouped)
             parsed_result = @result_parser.parse_output(execution_result[:stdout])
           end
 
@@ -115,27 +115,20 @@ module Ace
         def execute_tests(test_files)
           options = {
             fail_fast: @configuration.fail_fast,
-            verbose: @configuration.verbose
+            verbose: @configuration.verbose,
+            per_file: @configuration.per_file  # Allow per-file execution if needed for debugging
           }
 
-          # Check if formatter actually wants progress (not just base implementation)
-          wants_progress = @configuration.verbose ||
-                          (@formatter.class.instance_method(:on_test_complete).owner != Formatters::BaseFormatter)
-
-          if wants_progress
-            # Execute with progress reporting
-            @test_executor.execute_with_progress(test_files, options) do |event|
-              if event[:type] == :complete
-                @formatter.on_test_complete(
-                  event[:file],
-                  event[:success],
-                  event[:duration]
-                )
-              end
+          # Always use execute_with_progress for consistent interface
+          # The method internally decides whether to run per-file or grouped
+          @test_executor.execute_with_progress(test_files, options) do |event|
+            if event[:type] == :complete && @formatter.respond_to?(:on_test_complete)
+              @formatter.on_test_complete(
+                event[:file],
+                event[:success],
+                event[:duration]
+              )
             end
-          else
-            # Execute all at once
-            @test_executor.execute_tests(test_files, options)
           end
         end
 
