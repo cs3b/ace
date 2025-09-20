@@ -14,3 +14,8 @@ group :development, :test do
   gem "minitest", "~> 5.0"
   gem "minitest-reporters", "~> 1.6"
 end
+
+# NOTE: This Gemfile is only for standalone development with `bundle exec`.
+# For monorepo development without `bundle exec`, this gem uses .bundle/config
+# pointing to the parent Gemfile (like other ace-* gems).
+# Having this local Gemfile prevents `rake test` from working without `bundle exec`.
