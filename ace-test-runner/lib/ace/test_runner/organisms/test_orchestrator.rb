@@ -112,18 +112,18 @@ module Ace
         end
 
         def find_test_files
-          # Use PatternResolver if target is specified
-          if @configuration.target
-            begin
+          # Always use PatternResolver for consistency
+          begin
+            if @configuration.target
               files = @pattern_resolver.resolve_target(@configuration.target)
-            rescue ArgumentError => e
-              puts "Error: #{e.message}"
-              puts "Available targets: #{@pattern_resolver.available_targets.join(', ')}"
-              exit 1
+            else
+              # When no target specified, resolve all files
+              files = @pattern_resolver.resolve_target(nil)
             end
-          else
-            # Fall back to detector for default behavior
-            files = @test_detector.find_test_files
+          rescue ArgumentError => e
+            puts "Error: #{e.message}"
+            puts "Available targets: #{@pattern_resolver.available_targets.join(', ')}"
+            exit 1
           end
 
           # Apply filter if provided
