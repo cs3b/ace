@@ -2,6 +2,7 @@
 
 require "open3"
 require "timeout"
+require "ostruct"
 
 module Ace
   module TestRunner

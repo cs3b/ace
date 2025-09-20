@@ -1,0 +1,6 @@
+# mise configuration for ace-meta monorepo
+# This file configures the development environment for the ace-meta project
+
+[env]
+# Add the bin directory to PATH for executable commands
+_.path = ["./bin"]
