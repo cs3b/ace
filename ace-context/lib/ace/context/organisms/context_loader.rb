@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'pathname'
 require_relative '../atoms/file_reader'
 require_relative '../molecules/preset_manager'
 require_relative '../models/context_data'
@@ -54,13 +55,18 @@ module Ace
             if config[:exclude].any?
               exclude_patterns = config[:exclude]
               files = files.reject do |file|
-                exclude_patterns.any? { |ex| File.fnmatch(ex, file) }
+                # Convert absolute path to relative for matching
+                relative_path = file.start_with?('/') ?
+                  Pathname.new(file).relative_path_from(Pathname.pwd).to_s :
+                  file
+                exclude_patterns.any? { |ex| File.fnmatch(ex, relative_path, File::FNM_PATHNAME) }
               end
             end
 
             # Read each file
             files.each do |file|
-              result = Atoms::FileReader.read_file(file)
+              max_size = @options[:max_size] || Atoms::FileReader::MAX_FILE_SIZE
+              result = Atoms::FileReader.read_file(file, max_size: max_size)
               if result[:success]
                 context.add_file(file, result[:content])
               end
