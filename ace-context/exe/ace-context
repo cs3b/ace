@@ -5,13 +5,16 @@ require 'ace/context'
 require 'optparse'
 
 options = {
-  format: 'markdown'
+  format: 'markdown-xml',
+  max_size: 1_048_576,
+  timeout: 30,
+  debug: false
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: context [options] [preset]"
+  opts.banner = "Usage: context [INPUTS...] [options]"
 
-  opts.on("-p", "--preset PRESET", "Load context from preset") do |p|
+  opts.on("-p", "--preset NAME1,NAME2", Array, "Load context from preset(s) (comma-separated)") do |p|
     options[:preset] = p
   end
 
@@ -19,16 +22,42 @@ parser = OptionParser.new do |opts|
     options[:file] = f
   end
 
-  opts.on("-l", "--list", "List available presets") do
+  opts.on("-l", "--list", "--list-presets", "List available presets") do
     options[:list] = true
   end
 
-  opts.on("--format FORMAT", %w[markdown yaml], "Output format (markdown, yaml)") do |f|
+  opts.on("-o", "--output FILE", "Output file path (use '-' or 'stdout' for stdout)") do |o|
+    options[:output] = o
+  end
+
+  opts.on("--format FORMAT", %w[markdown yaml xml markdown-xml json],
+          "Output format (default: markdown-xml)") do |f|
     options[:format] = f
+  end
+
+  opts.on("--max-size BYTES", Integer, "Maximum file size in bytes (default: 1MB)") do |size|
+    options[:max_size] = size
+  end
+
+  opts.on("--timeout SECONDS", Integer, "Command timeout in seconds (default: 30)") do |t|
+    options[:timeout] = t
+  end
+
+  opts.on("-d", "--debug", "Enable debug output") do
+    options[:debug] = true
   end
 
   opts.on("-h", "--help", "Show this help message") do
     puts opts
+    puts
+    puts "Examples:"
+    puts "  context templates/project-essentials.yaml"
+    puts "  context .claude/agents/task-manager.ag.md"
+    puts "  context 'files: [docs/*.md]'"
+    puts "  context templates/project.yaml --format xml"
+    puts "  context --preset project"
+    puts "  context --preset project,dev-tools --output merged.md"
+    puts "  context --list-presets"
     exit
   end
 end
@@ -39,32 +68,91 @@ parser.parse!
 if options[:list]
   presets = Ace::Context.list_presets
   if presets.empty?
-    puts "No presets configured"
+    puts "No presets configured in .ace/context.yml"
+    puts "Looking for .coding-agent/context.yml for backward compatibility..."
+
+    # Check for backward compatible config
+    presets = Ace::Context.list_presets(config_path: '.coding-agent/context.yml')
+    if presets.empty?
+      puts "No presets found in either location"
+    else
+      puts "Found presets in .coding-agent/context.yml:"
+    end
   else
     puts "Available presets:"
-    presets.each do |preset|
-      puts "  #{preset[:name]}"
-      puts "    Description: #{preset[:description]}" if preset[:description]
-      puts "    Files: #{preset[:include].join(', ')}" if preset[:include].any?
-    end
+  end
+
+  presets.each do |preset|
+    puts "  #{preset[:name]}"
+    puts "    Description: #{preset[:description]}" if preset[:description]
+    puts "    Template:    #{preset[:template]}" if preset[:template]
+    puts "    Output:      #{preset[:output]}" if preset[:output]
+    puts "    Chunk limit: #{preset[:chunk_limit]} lines" if preset[:chunk_limit]
+    puts
   end
   exit
 end
 
-# Get preset from argument or option
-preset = options[:preset] || ARGV[0] || 'default'
+# Determine inputs
+inputs = ARGV.dup
 
-# Load context
-if options[:file]
+# Handle different loading scenarios
+if options[:preset]
+  # Multiple preset support
+  if options[:preset].is_a?(Array) && options[:preset].size > 1
+    context = Ace::Context.load_multiple_presets(options[:preset], options)
+  else
+    preset_name = options[:preset].is_a?(Array) ? options[:preset].first : options[:preset]
+    context = Ace::Context.load_preset(preset_name, options)
+  end
+elsif options[:file]
   context = Ace::Context.load_file(options[:file], options)
+elsif inputs.any?
+  # Handle multiple inputs
+  if inputs.size == 1
+    # Auto-detect single input
+    context = Ace::Context.load_auto(inputs.first, options)
+  else
+    context = Ace::Context.load_multiple(inputs, options)
+  end
 else
-  context = Ace::Context.load_preset(preset, options)
+  # Default to 'default' or 'project' preset
+  context = Ace::Context.load_preset('project', options) ||
+            Ace::Context.load_preset('default', options)
+
+  unless context
+    $stderr.puts "Error: No inputs specified and no default preset found"
+    $stderr.puts "Use --help for usage information"
+    exit 1
+  end
 end
 
-# Output context
+# Handle output
 if context.metadata[:error]
   $stderr.puts "Error: #{context.metadata[:error]}"
+  $stderr.puts context.metadata[:errors].join("\n") if context.metadata[:errors] && options[:debug]
   exit 1
 else
-  puts context.content
+  output_path = options[:output]
+
+  # Check if output should go to stdout
+  if output_path.nil? || output_path == '-' || output_path.downcase == 'stdout'
+    puts context.content
+  else
+    # Write to file
+    result = Ace::Context.write_output(context, output_path, options)
+
+    if result[:success]
+      if result[:chunked]
+        puts "Context saved (#{result[:total_chunks]} chunks, #{result[:files_written]} files)"
+        puts "Index file: #{result[:index_file]}"
+      else
+        puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]})"
+        puts "Output file: #{output_path}"
+      end
+    else
+      $stderr.puts "Error writing output: #{result[:error]}"
+      exit 1
+    end
+  end
 end

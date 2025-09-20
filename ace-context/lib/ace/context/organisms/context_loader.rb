@@ -2,6 +2,12 @@
 
 require 'pathname'
 require 'ace/core'
+require 'ace/core/molecules/context_merger'
+require 'ace/core/molecules/file_aggregator'
+require 'ace/core/molecules/output_formatter'
+require 'ace/core/atoms/command_executor'
+require 'ace/core/atoms/template_parser'
+require 'ace/core/atoms/file_reader'
 require_relative '../molecules/preset_manager'
 require_relative '../models/context_data'
 
@@ -13,6 +19,7 @@ module Ace
         def initialize(options = {})
           @options = options
           @preset_manager = Molecules::PresetManager.new
+          @merger = Ace::Core::Molecules::ContextMerger.new
           @file_aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size],
             base_dir: options[:base_dir] || Dir.pwd
@@ -54,6 +61,75 @@ module Ace
               context.metadata[:error] = result[:error]
             end
 
+            context
+          end
+        end
+
+        def load_multiple_presets(preset_names)
+          contexts = []
+
+          preset_names.each do |preset_name|
+            preset = @preset_manager.get_preset(preset_name)
+            if preset
+              context = load_from_config(preset)
+              context.metadata[:preset_name] = preset_name
+              contexts << context
+            else
+              # Add error but continue
+              error_context = Models::ContextData.new(
+                preset_name: preset_name,
+                metadata: { error: "Preset '#{preset_name}' not found" }
+              )
+              contexts << error_context
+            end
+          end
+
+          # Merge all contexts
+          merge_contexts(contexts)
+        end
+
+        def load_multiple(inputs)
+          contexts = []
+
+          inputs.each do |input|
+            context = load_auto(input)
+            context.metadata[:source_input] = input
+            contexts << context
+          end
+
+          # Merge all contexts
+          merge_contexts(contexts)
+        end
+
+        def load_auto(input)
+          # Auto-detect input type
+          if File.exist?(input)
+            # It's a file
+            load_file(input)
+          elsif input.match?(/^[\w-]+$/)
+            # Looks like a preset name
+            load_preset(input)
+          elsif input.include?('files:') || input.include?('commands:')
+            # Looks like inline YAML
+            load_inline_yaml(input)
+          else
+            # Try as file first, then preset
+            if File.exist?(input)
+              load_file(input)
+            else
+              load_preset(input)
+            end
+          end
+        end
+
+        def load_inline_yaml(yaml_string)
+          begin
+            require 'yaml'
+            config = YAML.safe_load(yaml_string)
+            process_template_config(config)
+          rescue => e
+            context = Models::ContextData.new
+            context.metadata[:error] = "Failed to parse inline YAML: #{e.message}"
             context
           end
         end
@@ -110,6 +186,41 @@ module Ace
         end
 
         private
+
+        def merge_contexts(contexts)
+          # Convert ContextData objects to hashes for merging
+          context_hashes = contexts.map do |context|
+            {
+              files: context.files,
+              metadata: context.metadata,
+              preset_name: context.metadata[:preset_name],
+              source_input: context.metadata[:source_input],
+              errors: context.metadata[:errors] || []
+            }
+          end
+
+          # Use the merger to combine contexts
+          merged = @merger.merge_contexts(context_hashes)
+
+          # Create new ContextData from merged result
+          result = Models::ContextData.new(
+            metadata: merged[:metadata] || {}
+          )
+
+          # Add all merged files
+          merged[:files]&.each do |file|
+            result.add_file(file[:path], file[:content])
+          end
+
+          # Add merged metadata
+          result.metadata[:merged] = true
+          result.metadata[:total_contexts] = merged[:total_contexts]
+          result.metadata[:sources] = merged[:sources]
+          result.metadata[:errors] = merged[:errors] if merged[:errors]&.any?
+
+          # Format the merged content
+          format_context(result, @options[:format] || 'markdown-xml')
+        end
 
         def process_template_config(config)
           data = {
