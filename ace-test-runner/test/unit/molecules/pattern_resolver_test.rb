@@ -24,9 +24,11 @@ class PatternResolverTest < Minitest::Test
   def test_resolve_target_with_known_pattern
     # Mock Dir.glob to return test files
     Dir.stub :glob, ["test/unit/atoms/foo_test.rb", "test/unit/atoms/bar_test.rb"] do
-      files = @resolver.resolve_target("atoms")
-      assert_equal 2, files.size
-      assert_includes files, "test/unit/atoms/foo_test.rb"
+      File.stub :file?, true do
+        files = @resolver.resolve_target("atoms")
+        assert_equal 2, files.size
+        assert_includes files, "test/unit/atoms/foo_test.rb"
+      end
     end
   end
 
@@ -38,10 +40,12 @@ class PatternResolverTest < Minitest::Test
     }
 
     Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
-      files = @resolver.resolve_target("quick")
-      assert_equal 2, files.size
-      assert_includes files, "test/unit/atoms/foo_test.rb"
-      assert_includes files, "test/unit/molecules/bar_test.rb"
+      File.stub :file?, true do
+        files = @resolver.resolve_target("quick")
+        assert_equal 2, files.size
+        assert_includes files, "test/unit/atoms/foo_test.rb"
+        assert_includes files, "test/unit/molecules/bar_test.rb"
+      end
     end
   end
 
@@ -60,8 +64,10 @@ class PatternResolverTest < Minitest::Test
 
   def test_resolve_target_with_all
     Dir.stub :glob, ["test/foo_test.rb", "test/bar_test.rb"] do
-      files = @resolver.resolve_target("all")
-      assert files.size > 0
+      File.stub :file?, true do
+        files = @resolver.resolve_target("all")
+        assert files.size > 0
+      end
     end
   end
 
@@ -72,10 +78,12 @@ class PatternResolverTest < Minitest::Test
     }
 
     Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
-      files = @resolver.resolve_multiple_targets(["atoms", "molecules"])
-      assert_equal 2, files.size
-      assert_includes files, "test/unit/atoms/foo_test.rb"
-      assert_includes files, "test/unit/molecules/bar_test.rb"
+      File.stub :file?, true do
+        files = @resolver.resolve_multiple_targets(["atoms", "molecules"])
+        assert_equal 2, files.size
+        assert_includes files, "test/unit/atoms/foo_test.rb"
+        assert_includes files, "test/unit/molecules/bar_test.rb"
+      end
     end
   end
 
@@ -113,10 +121,12 @@ class PatternResolverTest < Minitest::Test
     }
 
     Dir.stub :glob, ->(pattern) { glob_returns[pattern] || [] } do
-      files = resolver.resolve_target("all")
-      assert_equal 2, files.size
-      assert_includes files, "test/atoms.rb"
-      assert_includes files, "test/molecules.rb"
+      File.stub :file?, true do
+        files = resolver.resolve_target("all")
+        assert_equal 2, files.size
+        assert_includes files, "test/atoms.rb"
+        assert_includes files, "test/molecules.rb"
+      end
     end
   end
 end

@@ -8,8 +8,8 @@ module Ace
 
         def initialize(config)
           @config = config
-          @patterns = config.patterns || {}
-          @groups = config.groups || {}
+          @patterns = normalize_keys(config.patterns || {})
+          @groups = normalize_keys(config.groups || {})
           @using_catch_all = false
         end
 
@@ -17,13 +17,13 @@ module Ace
           return resolve_all_files if target.nil? || target == "all"
           return [target] if File.exist?(target)
 
-          # Convert to symbol to match hash keys
-          target_sym = target.to_sym if target.is_a?(String)
+          # Normalize target to string for consistent lookup
+          target_key = target.to_s
 
-          if @groups.key?(target_sym) || @groups.key?(target)
-            resolve_group(target_sym || target)
-          elsif @patterns.key?(target_sym) || @patterns.key?(target)
-            expand_pattern(@patterns[target_sym] || @patterns[target])
+          if @groups.key?(target_key)
+            resolve_group(target_key)
+          elsif @patterns.key?(target_key)
+            expand_pattern(@patterns[target_key])
           else
             raise ArgumentError, "Unknown target: #{target}. Available targets: #{available_targets.join(', ')}"
           end
@@ -39,27 +39,31 @@ module Ace
 
         def classify_file(file_path)
           @patterns.each do |name, pattern|
-            return name.to_s if File.fnmatch?(pattern, file_path)
+            # Use File::FNM_PATHNAME to handle ** correctly
+            return name.to_s if File.fnmatch?(pattern, file_path, File::FNM_PATHNAME)
           end
           "other"
         end
 
         private
 
+        def normalize_keys(hash)
+          hash.transform_keys(&:to_s)
+        end
+
         def resolve_group(group_name)
-          # Handle both symbol and string keys
-          group_name_sym = group_name.is_a?(String) ? group_name.to_sym : group_name
-          group_members = @groups[group_name_sym] || @groups[group_name]
+          # Normalize to string
+          group_key = group_name.to_s
+          group_members = @groups[group_key]
           return [] unless group_members
 
           group_members.flat_map do |member|
-            # Convert member to symbol for lookups
-            member_sym = member.is_a?(String) ? member.to_sym : member
+            member_key = member.to_s
 
-            if @groups.key?(member_sym) || @groups.key?(member)
-              resolve_group(member_sym || member) # Recursive expansion
-            elsif @patterns.key?(member_sym) || @patterns.key?(member)
-              expand_pattern(@patterns[member_sym] || @patterns[member])
+            if @groups.key?(member_key)
+              resolve_group(member_key) # Recursive expansion
+            elsif @patterns.key?(member_key)
+              expand_pattern(@patterns[member_key])
             else
               # Direct pattern or file
               expand_pattern(member)
@@ -77,8 +81,8 @@ module Ace
           @using_catch_all = false
 
           # First check if "all" group is defined
-          if @groups.key?(:all) || @groups.key?("all")
-            pattern_files = resolve_group(:all) || resolve_group("all")
+          if @groups.key?("all")
+            pattern_files = resolve_group("all")
             # If patterns miss any files, use the complete scan
             if pattern_files.size < all_test_files.size
               @using_catch_all = true
