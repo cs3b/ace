@@ -130,7 +130,7 @@ module Ace
           # Try new locations first
           resolver = Ace::Core::Organisms::ConfigResolver.new(
             search_paths: ['.ace', '.ace/context', '~/.ace/context'],
-            file_patterns: ['context.yml', 'context.yaml']
+            file_patterns: ['context.yml', 'context.yaml', 'config.yml', 'config.yaml']
           )
           config = resolver.resolve
 
