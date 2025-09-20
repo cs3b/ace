@@ -25,10 +25,10 @@ Create project-specific .ace/ directory structure with configurations for all fo
 
 #### Create
 
-- .ace/core/config/core.yml
-- .ace/git/config/git.yml
-- .ace/context/config/context.yml
-- .ace/capture/config/capture.yml
+- .ace/settings.yml
+- .ace/git.yml
+- .ace/context.yml
+- .ace/capture.yml
 - .ace/README.md (explaining structure and precedence)
 
 ## Implementation Plan
@@ -44,10 +44,10 @@ Create project-specific .ace/ directory structure with configurations for all fo
 
 - [ ] Create .ace directory structure
   ```bash
-  mkdir -p .ace/{core,git,context,capture}/config
+  mkdir -p .ace
   ```
 
-- [ ] Configure .ace/core/config/core.yml
+- [ ] Configure .ace/settings.yml
   ```yaml
   # Project-specific core configuration for ace-meta
   ace:
@@ -67,7 +67,7 @@ Create project-specific .ace/ directory structure with configurations for all fo
       directory: "./.ace/cache"
   ```
 
-- [ ] Configure .ace/git/config/git.yml
+- [ ] Configure .ace/git.yml
   ```yaml
   # Git conventions for ace-meta project
   git:
@@ -105,7 +105,7 @@ Create project-specific .ace/ directory structure with configurations for all fo
   > Assert: ace-gc uses project conventions
   > Command: ace-gc feat "test message" --dry-run
 
-- [ ] Configure .ace/context/config/context.yml
+- [ ] Configure .ace/context.yml
   ```yaml
   # Context presets for ace-meta project
   context:
@@ -143,7 +143,7 @@ Create project-specific .ace/ directory structure with configurations for all fo
       cache_dir: "./.ace/cache/context"
   ```
 
-- [ ] Configure .ace/capture/config/capture.yml
+- [ ] Configure .ace/capture.yml
   ```yaml
   # Capture configuration for ace-meta project
   capture:
@@ -178,10 +178,10 @@ Create project-specific .ace/ directory structure with configurations for all fo
 
   ```
   .ace/
-  ├── core/config/core.yml      # Core gem configuration
-  ├── context/config/context.yml # Context presets
-  ├── git/config/git.yml        # Git conventions
-  ├── capture/config/capture.yml # Idea capture settings
+  ├── settings.yml    # Core gem configuration
+  ├── context.yml     # Context presets
+  ├── git.yml         # Git conventions
+  ├── capture.yml     # Idea capture settings
   └── README.md                  # This file
   ```
 
@@ -189,8 +189,8 @@ Create project-specific .ace/ directory structure with configurations for all fo
 
   Configurations are loaded in this order (last wins):
   1. Gem defaults (in each gem's config/ directory)
-  2. User home (~/.ace/*/config/*.yml)
-  3. Project local (./.ace/*/config/*.yml)
+  2. User home (~/.ace/*.yml)
+  3. Project local (./.ace/*.yml)
 
   ## Merge Strategy
 

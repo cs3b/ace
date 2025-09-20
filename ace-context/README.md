@@ -60,8 +60,8 @@ context = Ace::Context.load_file('README.md')
 ## Configuration
 
 Configuration files are loaded from (in order of precedence):
-1. `.ace/context/config/context.yml` (project)
-2. `~/.ace/context/config/context.yml` (home)
+1. `.ace/context.yml` (project)
+2. `~/.ace/context.yml` (home)
 3. Gem's `config/context.yml` (defaults)
 
 ### Example Configuration

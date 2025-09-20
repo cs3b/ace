@@ -26,8 +26,8 @@ class PresetManagerTest < AceTestCase
         }
       }
 
-      FileUtils.mkdir_p(".ace/context/config")
-      File.write(".ace/context/config/context.yml", config.to_yaml)
+      FileUtils.mkdir_p(".ace")
+      File.write(".ace/context.yml", config.to_yaml)
 
       manager = Ace::Context::Molecules::PresetManager.new
       presets = manager.list_presets
@@ -72,8 +72,8 @@ class PresetManagerTest < AceTestCase
         }
       }
 
-      FileUtils.mkdir_p(".ace/context/config")
-      File.write(".ace/context/config/context.yml", config.to_yaml)
+      FileUtils.mkdir_p(".ace")
+      File.write(".ace/context.yml", config.to_yaml)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("meta_test")

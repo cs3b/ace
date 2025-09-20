@@ -17,7 +17,7 @@ Create the ace-context gem that provides context loading functionality, migratin
 - Set up gem skeleton with proper structure
 - Add dependency on ace-core in gemspec
 - Port minimal context command functionality
-- Use ace-core for config loading from .ace/context/
+- Use ace-core for config loading from .ace/
 - Include default config with basic presets
 - Write tests using shared infrastructure from ace-core
 
@@ -43,7 +43,7 @@ Create the ace-context gem that provides context loading functionality, migratin
 - ace-context/test/integration/context_integration_test.rb
 - ace-context/Rakefile
 - ace-context/README.md
-- .ace/context/config/context.yml (project sample)
+- .ace/context.yml (project sample)
 
 #### Modify
 
@@ -138,7 +138,7 @@ Create the ace-context gem that provides context loading functionality, migratin
       cache: true
   ```
 
-- [x] Create sample .ace/context/config/context.yml
+- [x] Create sample .ace/context.yml
   ```yaml
   context:
     presets:
@@ -247,7 +247,7 @@ Create the ace-context gem that provides context loading functionality, migratin
 - [x] Gem structure follows conventions
 - [x] Depends on ace-core for config loading
 - [x] Context command works with presets
-- [x] Config loads from .ace/context/
+- [x] Config loads from .ace/
 - [x] Tests pass using minitest (partial - 7 tests passing)
 - [x] README documents usage
 - [x] Integrates with root Gemfile

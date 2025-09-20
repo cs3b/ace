@@ -39,7 +39,8 @@ module Ace
       # @return [Hash] Context configuration
       def config
         @config ||= Ace::Core::Organisms::ConfigResolver.new(
-          search_paths: ['.ace/context']
+          search_paths: ['.ace'],
+          file_patterns: ['context.yml', 'context.yaml']
         ).resolve
       end
     end

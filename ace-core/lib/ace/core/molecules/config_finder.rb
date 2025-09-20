@@ -16,12 +16,10 @@ module Ace
 
         # Common config file patterns
         DEFAULT_FILE_PATTERNS = [
-          "config.yml",
-          "config.yaml",
-          "*/config.yml",
-          "*/config.yaml",
-          "core/config.yml",
-          "core/config.yaml"
+          "settings.yml",
+          "settings.yaml",
+          "config.yml",      # backward compatibility
+          "config.yaml"      # backward compatibility
         ].freeze
 
         # Initialize finder with search paths
