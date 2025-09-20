@@ -18,6 +18,7 @@ module Ace
           @current_group = nil
           @group_counts = Hash.new(0)
           @files_by_group = Hash.new { |h, k| h[k] = [] }
+          @show_groups = options[:show_groups] != false
         end
 
         def format_stdout(result)
@@ -167,8 +168,8 @@ module Ace
           # Detect group from file path
           group = detect_group(file)
 
-          # Print group header if it's a new group
-          if group != @current_group
+          # Print group header if it's a new group and groups are enabled
+          if @show_groups && group != @current_group
             puts unless @test_count == 0
             puts ""
             puts colorize("═══ #{group.to_s.capitalize} Tests ═══", :cyan)
@@ -187,7 +188,7 @@ module Ace
           end
 
           # Track group counts
-          @group_counts[group] += 1
+          @group_counts[group] += 1 if @show_groups
         end
 
         def detect_group(file_path)
@@ -213,8 +214,8 @@ module Ace
           # Ensure we're on a new line
           puts unless @test_count == 0 || @test_count % @line_width == 0
 
-          # Print group summary if we have groups
-          if @group_counts.any?
+          # Print group summary if we have groups and groups are enabled
+          if @show_groups && @group_counts.any?
             puts ""
             puts colorize("═══ Group Summary ═══", :cyan)
             @group_counts.each do |group, count|
