@@ -17,7 +17,7 @@ module Ace
         # @param search_paths [Array<String>] Paths to search for configs
         # @param file_patterns [Array<String>] Patterns for config files
         # @param merge_strategy [Symbol] How to merge arrays
-        def initialize(search_paths: nil, file_patterns: nil, merge_strategy: :deep)
+        def initialize(search_paths: nil, file_patterns: nil, merge_strategy: :replace)
           @search_paths = search_paths || Molecules::ConfigFinder::DEFAULT_SEARCH_PATHS
           @file_patterns = file_patterns || Molecules::ConfigFinder::DEFAULT_FILE_PATTERNS
           @merge_strategy = merge_strategy

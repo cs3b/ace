@@ -51,7 +51,8 @@ module Ace
           # Use ace-core's config resolver for the context namespace
           # First try to get config from cascade
           resolver = Ace::Core::Organisms::ConfigResolver.new(
-            search_paths: ['.ace/context']
+            search_paths: ['.ace/context', '~/.ace/context'],
+            file_patterns: ['config.yml', 'config.yaml', 'config/context.yml', 'config/context.yaml']
           )
           config = resolver.resolve
 
