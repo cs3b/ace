@@ -19,9 +19,10 @@ files:
 
 commands:
 
-- git status --short --no-color
+- git status --short
 - task-manager recent --limit 3
 - task-manager next --limit 3
 - release-manager current
-- eza -R -1 -L 2 --git-ignore --absolutes
+- eza -R -1 -L 2 --git-ignore $PROJECT_ROOT_PATH
+- dateitme
 </context-tool-config>
