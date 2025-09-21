@@ -5,6 +5,7 @@ require "ace/core/organisms/config_resolver"
 require "ace/core/organisms/environment_manager"
 require "ace/core/molecules/yaml_loader"
 require "yaml"
+require "date"
 
 class MultiSourceTest < AceTestCase
   include Ace::TestSupport::ConfigHelpers
