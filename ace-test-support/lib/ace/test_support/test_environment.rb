@@ -41,7 +41,7 @@ module Ace
       # Tear down test environment
       def teardown
         # Restore original environment
-        Dir.chdir(@original_pwd) if @original_pwd
+        Dir.chdir(@original_pwd) if @original_pwd && Dir.exist?(@original_pwd)
         @original_env.each { |k, v| ENV[k] = v }
 
         # Clean up temp directory
@@ -133,10 +133,10 @@ module Ace
       # Verify directory structure
       def verify_structure
         {
-          temp: Dir.exist?(@temp_dir),
-          home: Dir.exist?(@home_dir),
-          project: Dir.exist?(@project_dir),
-          gem: Dir.exist?(@gem_dir)
+          temp: @temp_dir && Dir.exist?(@temp_dir),
+          home: @home_dir && Dir.exist?(@home_dir),
+          project: @project_dir && Dir.exist?(@project_dir),
+          gem: @gem_dir && Dir.exist?(@gem_dir)
         }
       end
 

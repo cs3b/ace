@@ -3,4 +3,5 @@
 
 [env]
 # Add the bin directory to PATH for executable commands
-_.path = ["./bin"]
+PROJECT_ROOT_PATH = "/Users/mc/Ps/ace-meta"
+_.path = ["./bin", "./dev-tools/exe"]

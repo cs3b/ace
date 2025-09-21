@@ -16,13 +16,11 @@ files:
   - docs/decisions.md
   - docs/blueprint.md
   - docs/tools.md
-
 commands:
-
-- git status --short
-- task-manager recent --limit 3
-- task-manager next --limit 3
-- release-manager current
-- eza -R -1 -L 2 --git-ignore $PROJECT_ROOT_PATH
-- date
+  - git status --short
+  - task-manager recent --limit 3
+  - task-manager next --limit 3
+  - release-manager current
+  - eza -R -1 -L 2 --git-ignore --absolute $PROJECT_ROOT_PATH
+  - date
 </context-tool-config>
