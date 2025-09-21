@@ -24,5 +24,5 @@ commands:
 - task-manager next --limit 3
 - release-manager current
 - eza -R -1 -L 2 --git-ignore $PROJECT_ROOT_PATH
-- dateitme
+- date
 </context-tool-config>
