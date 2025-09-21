@@ -18,8 +18,8 @@ module Ace
         end
 
         def initialize_display
-          # Always clear screen and position cursor at top
-          print "\033[2J\033[H"
+          # Clear screen like Ctrl+L (preserves scrollback)
+          print "\033[H\033[J"
 
           # Print header
           puts separator
@@ -77,14 +77,21 @@ module Ace
             if status[:success]
               icon = color("✅", :green)
               tests = results[:tests] || 0
+              assertions = results[:assertions] || 0
               failures = results[:failures] || 0
               duration = results[:duration] || status[:elapsed] || 0
 
-              puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{failures} failures".ljust(40) +
-                   sprintf("%6.2fs", duration)
+              if assertions > 0
+                puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{assertions.to_s.rjust(3)} assertions, #{failures} failures".ljust(50) +
+                     sprintf("%6.2fs", duration)
+              else
+                puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{failures} failures".ljust(50) +
+                     sprintf("%6.2fs", duration)
+              end
             else
               icon = color("❌", :red)
               tests = results[:tests] || 0
+              assertions = results[:assertions] || 0
               failures = results[:failures] || 0
               errors = results[:errors] || 0
               duration = results[:duration] || status[:elapsed] || 0
@@ -93,8 +100,13 @@ module Ace
               failure_text << "#{failures} failures" if failures > 0
               failure_text << "#{errors} errors" if errors > 0
 
-              puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{failure_text.join(', ')}".ljust(40) +
-                   sprintf("%6.2fs", duration)
+              if assertions > 0
+                puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{assertions.to_s.rjust(3)} assertions, #{failure_text.join(', ')}".ljust(50) +
+                     sprintf("%6.2fs", duration)
+              else
+                puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{failure_text.join(', ')}".ljust(50) +
+                     sprintf("%6.2fs", duration)
+              end
             end
           end
         end
@@ -113,10 +125,21 @@ module Ace
           end
 
           puts
-          puts "Packages:  #{color("✅", :green)} #{summary[:packages_passed]} passed, " +
-               "#{color("❌", :red)} #{summary[:packages_failed]} failed"
-          puts "Tests:     #{summary[:total_tests]} total, #{summary[:total_passed]} passed, " +
-               "#{summary[:total_failed]} failed"
+          total_packages = summary[:packages_passed] + summary[:packages_failed]
+          puts "Packages:  #{summary[:packages_passed]}/#{total_packages} passed, #{summary[:packages_failed]} failed"
+
+          # Tests line
+          if summary[:total_tests] > 0
+            puts "Tests:     #{summary[:total_passed]}/#{summary[:total_tests]} passed, #{summary[:total_failed]} failed"
+          end
+
+          # Assertions line if available
+          if summary[:total_assertions] && summary[:total_assertions] > 0
+            assertions_failed = summary[:assertions_failed] || 0
+            assertions_passed = summary[:total_assertions] - assertions_failed
+            puts "Assertions: #{assertions_passed}/#{summary[:total_assertions]} passed, #{assertions_failed} failed"
+          end
+
           puts "Duration:  #{sprintf('%.2f', total_duration)}s (wall time)"
 
           # Show failed packages
@@ -165,14 +188,25 @@ module Ace
 
             if status[:success]
               tests = results[:tests] || 0
-              print "#{pkg_name} #{color('✅', :green)} #{tests} tests, 0 failures".ljust(50) + "#{elapsed}s"
+              assertions = results[:assertions] || 0
+              if assertions > 0
+                print "#{pkg_name} #{color('✅', :green)} #{tests} tests, #{assertions} assertions, 0 failures".ljust(60) + "#{elapsed}s"
+              else
+                print "#{pkg_name} #{color('✅', :green)} #{tests} tests, 0 failures".ljust(60) + "#{elapsed}s"
+              end
             else
               tests = results[:tests] || 0
+              assertions = results[:assertions] || 0
               failures = results[:failures] || 0
               errors = results[:errors] || 0
               failure_count = failures + errors
-              print "#{pkg_name} #{color('❌', :red)} #{tests} tests, #{failure_count} failures".ljust(50) +
-                    "#{elapsed}s"
+              if assertions > 0
+                print "#{pkg_name} #{color('❌', :red)} #{tests} tests, #{assertions} assertions, #{failure_count} failures".ljust(60) +
+                      "#{elapsed}s"
+              else
+                print "#{pkg_name} #{color('❌', :red)} #{tests} tests, #{failure_count} failures".ljust(60) +
+                      "#{elapsed}s"
+              end
             end
           end
         end

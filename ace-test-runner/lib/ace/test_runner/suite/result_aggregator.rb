@@ -15,10 +15,25 @@ module Ace
         def aggregate
           results = collect_results
 
+          # Calculate assertion totals
+          total_assertions = 0
+          assertions_failed = 0
+
+          results.each do |r|
+            # Get assertions from either summary or report data
+            if r[:assertions]
+              total_assertions += r[:assertions]
+            elsif r[:report_data]
+              total_assertions += r[:report_data].dig(:result, :assertions) || 0
+            end
+          end
+
           {
             total_tests: results.sum { |r| r[:total] || 0 },
             total_passed: results.sum { |r| r[:passed] || 0 },
             total_failed: results.sum { |r| (r[:failed] || 0) + (r[:errors] || 0) },
+            total_assertions: total_assertions,
+            assertions_failed: assertions_failed,
             total_duration: results.map { |r| r[:duration] || 0 }.max,
             packages_passed: results.count { |r| r[:success] },
             packages_failed: results.count { |r| !r[:success] },
@@ -36,6 +51,21 @@ module Ace
                 data = JSON.parse(File.read(summary_path), symbolize_names: true)
                 data[:package] = package["name"]
                 data[:path] = package["path"]
+
+                # Try to get assertions from report.json if not in summary
+                if !data[:assertions] || data[:assertions] == 0
+                  report_path = File.join(package["path"], "test-reports", "latest", "report.json")
+                  if File.exist?(report_path)
+                    begin
+                      report_data = JSON.parse(File.read(report_path), symbolize_names: true)
+                      data[:assertions] = report_data.dig(:result, :assertions) || 0
+                      data[:report_data] = report_data
+                    rescue JSON::ParserError
+                      # Ignore if report.json can't be parsed
+                    end
+                  end
+                end
+
                 data
               rescue JSON::ParserError => e
                 # If we can't parse the summary, create a failure result

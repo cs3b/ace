@@ -89,8 +89,36 @@ module Ace
               remaining_output = process_info[:stdout].read rescue ""
               process_info[:output] << remaining_output
 
-              # Parse final results from output
-              results = parse_results(process_info[:output])
+              # Try to get accurate results from summary.json first
+              results = nil
+              summary_file = File.join(package["path"], "test-reports", "latest", "summary.json")
+              if File.exist?(summary_file)
+                begin
+                  json_data = JSON.parse(File.read(summary_file))
+                  results = {
+                    tests: json_data["total"] || 0,
+                    assertions: json_data["assertions"] || 0,
+                    failures: json_data["failed"] || 0,
+                    errors: json_data["errors"] || 0,
+                    duration: json_data["duration"] || elapsed,
+                    success: json_data["success"] || false
+                  }
+
+                  # Also try to get assertions from report.json if not in summary
+                  if results[:assertions] == 0
+                    report_file = File.join(package["path"], "test-reports", "latest", "report.json")
+                    if File.exist?(report_file)
+                      report_data = JSON.parse(File.read(report_file))
+                      results[:assertions] = report_data.dig("result", "assertions") || 0
+                    end
+                  end
+                rescue JSON::ParserError
+                  # Fall back to parsing output
+                end
+              end
+
+              # Fall back to parsing output if no JSON data
+              results ||= parse_results(process_info[:output])
 
               # Close streams
               process_info[:stdout].close rescue nil

@@ -29,17 +29,55 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
     ansi (1.5.0)
     builder (3.3.0)
+    concurrent-ruby (1.3.5)
+    csv (3.3.5)
+    dotenv (2.8.1)
+    dry-cli (1.3.0)
+    dry-configurable (1.3.0)
+      dry-core (~> 1.1)
+      zeitwerk (~> 2.6)
+    dry-core (1.1.0)
+      concurrent-ruby (~> 1.0)
+      logger
+      zeitwerk (~> 2.6)
+    dry-events (1.1.0)
+      concurrent-ruby (~> 1.0)
+      dry-core (~> 1.1)
+    dry-monitor (1.0.1)
+      dry-configurable (~> 1.0, < 2)
+      dry-core (~> 1.0, < 2)
+      dry-events (~> 1.0, < 2)
+    faraday (2.13.4)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-net_http (3.4.1)
+      net-http (>= 0.5.0)
+    json (2.14.1)
+    kramdown (2.5.1)
+      rexml (>= 3.3.9)
+    kramdown-parser-gfm (1.1.0)
+      kramdown (~> 2.0)
+    logger (1.7.0)
     minitest (5.25.5)
     minitest-reporters (1.7.1)
       ansi
       builder
       minitest (>= 5.0)
       ruby-progressbar
+    net-http (0.6.0)
+      uri
     ostruct (0.6.3)
+    public_suffix (6.0.2)
     rake (13.3.0)
+    rexml (3.4.4)
     ruby-progressbar (1.13.0)
+    uri (1.0.3)
+    zeitwerk (2.7.3)
 
 PLATFORMS
   arm64-darwin-24
@@ -50,10 +88,21 @@ DEPENDENCIES
   ace-core!
   ace-test-runner!
   ace-test-support!
+  addressable (~> 2.8)
   bundler (~> 2.4)
+  csv (~> 3.0)
+  dotenv (~> 2.0)
+  dry-cli
+  dry-configurable (~> 1.0)
+  dry-monitor (~> 1.0)
+  faraday (~> 2.0)
+  kramdown (~> 2.0)
+  kramdown-parser-gfm (~> 1.0)
   minitest (~> 5.20)
   minitest-reporters (~> 1.6)
+  ostruct (~> 0.6.1)
   rake (~> 13.0)
+  zeitwerk (~> 2.6)
 
 BUNDLED WITH
    2.6.9
