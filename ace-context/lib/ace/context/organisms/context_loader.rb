@@ -273,7 +273,8 @@ module Ace
               base_dir: @options[:base_dir] || Dir.pwd
             )
 
-            result = aggregator.aggregate(config['files'])
+            # Use aggregate_files to preserve order for explicit file lists
+            result = aggregator.aggregate_files(config['files'])
             data[:files] = result[:files]
             data[:errors].concat(result[:errors])
           end
@@ -314,6 +315,7 @@ module Ace
           # Create context with formatted content
           context = Models::ContextData.new(metadata: data[:metadata])
           context.content = formatted_content
+          context.commands = data[:commands]
 
           # Store individual files if embed_document_source is true
           if config['embed_document_source']
@@ -331,7 +333,8 @@ module Ace
             # Use OutputFormatter for all formats
             data = {
               files: context.files,
-              metadata: context.metadata.dup
+              metadata: context.metadata.dup,
+              commands: context.commands
             }
 
             # Include preset_name at the top level for YAML format

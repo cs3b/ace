@@ -5,13 +5,14 @@ module Ace
     module Models
       # Data model for context information
       class ContextData
-        attr_accessor :preset_name, :files, :metadata, :content
+        attr_accessor :preset_name, :files, :metadata, :content, :commands
 
-        def initialize(preset_name: nil, files: nil, metadata: nil, content: "")
+        def initialize(preset_name: nil, files: nil, metadata: nil, content: "", commands: nil)
           @preset_name = preset_name
           @files = files || []
           @metadata = metadata || {}
           @content = content
+          @commands = commands || []
         end
 
         def to_h
@@ -19,7 +20,8 @@ module Ace
             preset_name: preset_name,
             files: files,
             metadata: metadata,
-            content: content
+            content: content,
+            commands: commands
           }
         end
 
