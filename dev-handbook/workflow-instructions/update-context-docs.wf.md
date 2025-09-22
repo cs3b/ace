@@ -14,61 +14,74 @@
 
 ## Core Context Documents
 
-This workflow maintains four essential project documents, each with a distinct purpose:
+This workflow maintains five essential project documents, each with a distinct purpose.
 
-1. **`docs/what-do-we-build.md`** - Vision & Goals
-   - Project vision and mission
-   - High-level features and capabilities (without implementation details)
-   - User personas and use cases
-   - Value proposition and unique advantages
-   - Future vision (high-level, without specific dates)
-   
+**IMPORTANT: Update documents in this exact order to prevent duplication:**
+
+1. **`docs/what-do-we-build.md`** - Vision & Goals (UPDATE FIRST)
+   - Brief project overview (1 paragraph)
+   - Current capabilities (one line each)
+   - Coming soon features (one line each)
+   - Vision statement
+   **Target**: ~30 lines maximum
+
    **MUST NOT CONTAIN:**
    - Technical implementation details
-   - Specific version numbers or counts (e.g., "19+ workflows", "25+ tools")
    - Architecture or design principles
-   - Technology stack details
-   - Dependencies or integration specifics
-   - Success metrics with specific numbers
-
-2. **`docs/architecture.md`** - Technical Design
-   - Core design principles (system-level and implementation)
-   - Technology stack choices and rationale
-   - Multi-repository architecture (simple list format)
-   - Integration and data flow with concrete examples
-   - Agent architecture and compatibility
-   - Developer environment setup
-   - Reference to decisions.md for actionable decisions
-   
-   **MUST NOT CONTAIN:**
-   - Project vision or business goals
-   - User personas or use cases
-   - Value propositions
-   - Future plans or roadmap items
-   - Production deployment (this is developer tooling only)
-   - Complex diagrams when simple lists suffice
-
-3. **`docs/blueprint.md`** - File Structure
-   - Directory organization and structure
-   - Key file locations and purposes
-   - Read-only and ignored paths
-   - Navigation guidance for developers
-   
-   **MUST NOT CONTAIN:**
-   - Project vision or goals
-   - Technical architecture decisions
-   - Design principles
+   - Directory structures or file paths
    - Tool usage instructions
+   - User personas or use cases
+   - Verbose descriptions
 
-4. **`docs/decisions.md`** - Actionable Decisions
+2. **`docs/blueprint.md`** - Navigation Guide (UPDATE SECOND)
+   - Simple top-level directory list
+   - Read-only paths for AI agents
+   - Ignored paths for normal operations
+   **Target**: ~50 lines
+
+   **MUST NOT CONTAIN:**
+   - Project vision or goals (in what-do-we-build.md)
+   - Architecture patterns or decisions
+   - Tool usage instructions
+   - References to `git ls-files` or `eza`
+   - Detailed file listings
+
+3. **`docs/architecture.md`** - Technical Design (UPDATE THIRD)
+   - ATOM architecture pattern
+   - Component types (tools, workflows, agents, guides)
+   - Key architectural decisions with ADR references
+   - AI integration architecture
+   - Reference to blueprint.md for file structure
+   **Target**: ~150 lines
+
+   **MUST NOT CONTAIN:**
+   - Project vision (in what-do-we-build.md)
+   - Directory trees (in blueprint.md)
+   - Setup instructions (move to mise tasks)
+   - Tool usage examples
+   - Performance metrics or implementation details
+
+4. **`docs/tools.md`** - Command Reference (UPDATE FOURTH)
+   - Current tools only with practical examples
+   - Brief usage examples (2-4 per tool)
+   - Table of available commands
+   **Target**: ~30 lines
+
+   **MUST NOT CONTAIN:**
+   - Future/planned tools (in what-do-we-build.md)
+   - Architecture explanations (in architecture.md)
+   - Setup instructions
+   - Configuration details
+
+5. **`docs/decisions.md`** - Actionable Decisions (UPDATE LAST)
    - Condensed, actionable decisions from ADRs
    - Behavioral impacts for AI agents and developers
    - Links to full ADR documents
-   
+
    **MUST NOT CONTAIN:**
+   - Content from any previous document
    - Full ADR content
    - Implementation details
-   - Historical context or alternatives
 
 ## Process Steps
 
@@ -107,8 +120,9 @@ git diff HEAD~5..HEAD -- <path>
 
 Read each document to understand current state:
 - `docs/what-do-we-build.md`
-- `docs/architecture.md`
 - `docs/blueprint.md`
+- `docs/architecture.md`
+- `docs/tools.md`
 - `docs/decisions.md` (if exists)
 
 ### 3. Identify Required Updates
@@ -118,56 +132,64 @@ Based on repository analysis, determine updates needed for each document:
 | Change Type | Affected Documents |
 |------------|-------------------|
 | New features/capabilities | what-do-we-build.md |
-| Architecture/design changes | architecture.md |
 | Directory/file reorganization | blueprint.md |
+| Architecture/design changes | architecture.md |
+| New tools or commands | tools.md |
 | New ADRs or decisions | decisions.md |
 | Technology stack updates | architecture.md |
-| User persona changes | what-do-we-build.md |
-| Build/setup changes | architecture.md, blueprint.md |
+| Build/setup changes | Remove from docs, create mise task |
 
-### 4. Update what-do-we-build.md
+### 4. Update what-do-we-build.md (FIRST)
 
-Focus on vision and goals:
-- Update feature list if new capabilities added
-- Revise user personas if target audience changed
-- Adjust success metrics if goals evolved
-- Update future vision section with completed items
-
-**Remove if present:**
-- Implementation details
-- File paths or directory structures
-- Technical architecture decisions
-- Tool commands or usage instructions
-
-### 5. Update architecture.md
-
-Focus on technical design:
-- Update technology stack if new dependencies added
-- Revise architecture patterns if design changed
-- Update integration points for new external systems
-- Document new security or performance considerations
+Keep ultra-compact:
+- One paragraph overview
+- Current capabilities (one line each)
+- Coming soon features (one line each)
+- Vision statement
 
 **Remove if present:**
-- Project vision or business goals
-- Directory listings or file structures
-- Tool usage instructions
-- Duplicate feature lists
+- User personas and use cases
+- Verbose descriptions
+- Any content that will appear in subsequent documents
+- Keep under 30 lines total
 
-### 6. Update blueprint.md
+### 5. Update blueprint.md (SECOND)
 
-Focus on file structure:
-- Update directory organization if restructured
-- Add new key directories or files
-- Update read-only paths if protection changed
-- Revise ignored paths if .gitignore modified
+Navigation guidance only:
+- Simple top-level directory list
+- Read-only paths
+- Ignored paths
 
-**Remove if present:**
-- Project purpose or vision
-- Technical design decisions
-- Tool commands or usage
-- Architecture explanations
+**Check against what-do-we-build.md:**
+- Remove any duplicated content
+- Keep under 50 lines total
 
-### 7. Generate/Update decisions.md
+### 6. Update architecture.md (THIRD)
+
+Focus on patterns and decisions:
+- ATOM architecture explanation
+- Component types
+- Key architectural decisions
+- AI integration patterns
+
+**Check against previous documents:**
+- Remove any content from what-do-we-build.md
+- Remove any content from blueprint.md
+- Reference blueprint.md for structure
+- Keep under 150 lines total
+
+### 7. Update tools.md (FOURTH)
+
+Current tools only:
+- Table of available commands
+- 2-4 practical examples per tool
+- No future/planned tools
+
+**Check against previous documents:**
+- Remove any content covered in previous docs
+- Keep under 30 lines total
+
+### 8. Generate/Update decisions.md (LAST)
 
 Extract actionable decisions from ADRs:
 
@@ -189,25 +211,26 @@ Format each decision as:
 **Details**: [ADR-XXX](decisions/ADR-XXX-title.md)
 ```
 
-### 8. Eliminate Duplication
+### 9. Eliminate Duplication
 
-Check for and remove any duplicated content:
-- Ensure submodule descriptions appear in only one place
-- Remove repeated feature lists or capabilities
-- Consolidate technology stack mentions to architecture.md
-- Keep each document focused on its specific purpose
+**Critical: Check each document against all previous ones:**
+- No content should appear in multiple documents
+- Use cross-references instead of repeating
+- Later documents must not duplicate earlier ones
+- Each document must serve its distinct purpose
 
-### 9. Validate Updates
+### 10. Validate Updates
 
 Verify each document:
-- [ ] what-do-we-build.md contains only vision/goals
-- [ ] architecture.md contains only technical design
-- [ ] blueprint.md contains only file structure
-- [ ] decisions.md contains actionable decisions from ADRs
-- [ ] No content is duplicated across documents
-- [ ] All documents reflect current repository state
+- [ ] what-do-we-build.md is ultra-compact (~30 lines)
+- [ ] blueprint.md has navigation guidance only (~50 lines)
+- [ ] architecture.md focuses on patterns/decisions (~150 lines)
+- [ ] tools.md has current tools only (~30 lines)
+- [ ] decisions.md contains actionable ADR summaries
+- [ ] NO content is duplicated across documents
+- [ ] Update order was followed: vision → blueprint → architecture → tools → decisions
 
-### 10. Run Ownership Validation
+### 11. Run Ownership Validation
 
 If ownership model exists, validate all documents:
 ```bash
@@ -222,18 +245,21 @@ if [[ -f "$ownership_file" ]]; then
 fi
 ```
 
-### 11. Commit Changes
+### 12. Commit Changes
 
-Create atomic commits for each document:
+Create atomic commits for each document (in update order):
 ```bash
 git add docs/what-do-we-build.md
 git commit -m "docs: update project vision and features"
 
+git add docs/blueprint.md
+git commit -m "docs: update navigation and restrictions"
+
 git add docs/architecture.md
 git commit -m "docs: update technical architecture"
 
-git add docs/blueprint.md
-git commit -m "docs: update file structure documentation"
+git add docs/tools.md
+git commit -m "docs: update command reference"
 
 git add docs/decisions.md
 git commit -m "docs: update actionable decisions from ADRs"
@@ -241,10 +267,11 @@ git commit -m "docs: update actionable decisions from ADRs"
 
 ## Success Criteria
 
-- All four context documents are current and accurate
-- Each document maintains its specific focus without overlap
-- No duplication exists between documents
-- decisions.md accurately summarizes all ADRs with actionable guidance
+- All five context documents are current and accurate
+- Documents are compact: what-do-we-build (~30), blueprint (~50), architecture (~150), tools (~30)
+- Update order was followed: vision → blueprint → architecture → tools → decisions
+- NO duplication exists between documents
+- Each document maintains its specific focus
 - Changes are committed with clear messages
 
 ## Common Patterns
