@@ -15,7 +15,9 @@ module Ace
           inline_error: /^\s*(test_[\w_]+).*?\s+ERROR\s+.*?\n((?:.*?\n)*?)(?=^\s*test_|^[A-Z]|\z)/m,
           location: /\[(.*?):(\d+)\]/,
           duration: /Finished in ([\d.]+)s/,
-          deprecation: /DEPRECATION WARNING: (.+)/
+          deprecation: /DEPRECATION WARNING: (.+)/,
+          # Pattern to capture individual test times from verbose output
+          test_time: /^\s+(test_[\w_]+).*?\s+(PASS|FAIL|ERROR|SKIP)\s+\(([\d.]+)s\)/
         }.freeze
 
         def parse_output(output)
@@ -24,7 +26,8 @@ module Ace
             summary: parse_summary(output),
             failures: parse_failures(output),
             duration: parse_duration(output),
-            deprecations: parse_deprecations(output)
+            deprecations: parse_deprecations(output),
+            test_times: parse_test_times(output)
           }
         end
 
@@ -88,6 +91,26 @@ module Ace
           end
 
           deprecations.uniq
+        end
+
+        def parse_test_times(output)
+          test_times = []
+          clean_output = output.gsub(/\e\[[0-9;]*m/, '')
+
+          clean_output.scan(PATTERNS[:test_time]) do |test_name, status, time|
+            # Extract file location from the test class name if available
+            location_match = output.match(/#{Regexp.escape(test_name)}.*?\[(.*?):(\d+)\]/)
+            location = location_match ? "#{location_match[1]}:#{location_match[2]}" : nil
+
+            test_times << {
+              name: test_name,
+              status: status,
+              duration: time.to_f,
+              location: location
+            }
+          end
+
+          test_times.sort_by { |t| -t[:duration] }
         end
 
         private

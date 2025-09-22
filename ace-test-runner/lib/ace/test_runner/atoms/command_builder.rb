@@ -27,6 +27,11 @@ module Ace
             cmd_parts << "-rminitest/fail_fast"
           end
 
+          # Add verbose mode if profile is requested
+          if options[:profile]
+            cmd_parts << "--verbose"
+          end
+
           # Add the test files
           if files.is_a?(Array)
             # Require each file with proper path handling
