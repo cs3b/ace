@@ -1,47 +1,47 @@
-# Coding Agent Workflow Toolkit
+# ACE (Agent Coding Environment)
 
 ## What We Build 🔍
 
-The **Coding Agent Workflow Toolkit** is a comprehensive meta-system that provides both **development handbook workflows** and **executable tools** to enable seamless AI-assisted software development. It combines structured workflow instructions for autonomous AI agents with a robust CLI toolkit (Coding Agent Tools - CAT) that provides tools for LLM integration, Git automation, and project management.
+The **ACE (Agent Coding Environment)** is a mono-repo ecosystem of modular Ruby gems that enable seamless AI-assisted software development. It provides a unified environment where AI agents and human developers interact through the same deterministic CLI surface, combining workflow automation with powerful development tools.
 
-The system bridges the gap between human developers and AI coding agents by offering:
-- **Standardized workflow instructions** that AI agents can execute independently
-- **Predictable CLI tools** for common development operations
-- **Documentation-driven task management** integrated with executable tooling
-- **Multi-provider LLM integration** with cost tracking and caching
+The system bridges the gap between human developers and AI coding agents through:
+- **Modular ace-* gems** providing focused, testable functionality
+- **Unified CLI tools** accessible to both humans and AI agents
+- **ATOM architecture** ensuring clean separation of concerns
+- **Configuration cascade** enabling flexible, context-aware settings
+- **Documentation-driven development** with integrated task management
 
-By providing both the "what to do" (workflows) and "how to do it" (tools), the toolkit enables developers and AI agents to collaborate effectively on higher-value design and coding activities.
+By organizing capabilities into specialized gems (ace-core, ace-context, ace-test-runner, etc.), ACE provides a scalable foundation for AI-assisted development that grows with your needs.
 
 ## ✨ Key Features
 
-### Workflow Instructions & Agents
-- **Self-Contained AI Workflows**: Structured workflow instructions that AI agents can execute independently
-- **Specialized Development Agents**: Task-focused agents for Git operations, task management, code review, and more
-- **Development Handbook**: Comprehensive guides, templates, and best practices for consistent development
-- **Documentation-Driven Task Management**: Organized approach to tracking and managing development work
-- **Template Synchronization**: Automated management of embedded templates across workflows
+### Core Gems & Capabilities
+- **ace-core**: Zero-dependency configuration management with cascade resolution
+- **ace-context**: Intelligent context loading with caching and multi-format output
+- **ace-test-runner**: Comprehensive test execution with parallel processing
+- **ace-test-support**: Shared testing infrastructure and utilities
 
-### Executable Tools & Automation
-- **Multi-Provider LLM Communication**: Unified interface for interacting with various language models
-- **Enhanced Git Workflow Automation**: Tools for intelligent commit messages and repository management
-- **Task Management Utilities**: Commands for navigating and tracking development tasks
-- **Code Review Automation**: Tools for systematic code quality improvement
-- **Offline Support**: Full capability to work with local language models for privacy and speed
+### Development Features (In Migration)
+- **Workflow Automation**: Self-contained AI workflows for autonomous execution (migrating from dev-handbook)
+- **Multi-Provider LLM Integration**: Unified interface for various language models (planned: ace-llm)
+- **Git Enhancement Tools**: Intelligent commit messages and repository management (planned: ace-git)
+- **Task Management System**: Documentation-driven development tracking (migrating from dev-taskflow)
+- **Template Management**: Automated synchronization of embedded templates
 
 
 ## Target Use Cases
 
 ### Primary Use Cases
 
-- **Automated Development Workflows**: AI coding agents using CAT commands to perform tasks like committing code, querying models, or finding the next work item within CI/CD pipelines or local development environments.
-- **Accelerated Project Setup**: Developers quickly initializing Git repositories and setting up remotes with standardized commands.
-- **Streamlined Commit Process**: Developers generating informative and consistent commit messages automatically based on their code changes and intent.
-- **Efficient Task Navigation**: Developers and agents easily identifying and tracking development tasks within a structured documentation system.
+- **Automated Development Workflows**: AI coding agents using ace-* commands to perform tasks like loading context, running tests, or managing configuration within CI/CD pipelines or local development environments.
+- **Context-Aware Development**: Developers and agents loading project-specific context with ace-context for better understanding and decision-making.
+- **Comprehensive Test Execution**: Running tests across multiple gems with ace-test-runner, supporting parallel execution and detailed reporting.
+- **Configuration Management**: Using ace-core's cascade resolution to manage settings across project hierarchies.
 
 ### Secondary Use Cases
 
-- **Offline AI Interaction**: Developers and agents interacting with local language models via LM Studio for rapid iteration or sensitive tasks.
-- **Integrating with Documentation**: Utilizing CAT commands to manage task backlogs defined within documentation files.
+- **Modular Gem Integration**: Developers extending ACE by creating new ace-* gems following the established ATOM architecture.
+- **CI/CD Pipeline Integration**: Automated testing across multiple Ruby versions using the integrated GitHub Actions workflow.
 
 ## User Personas
 
@@ -63,24 +63,24 @@ By providing both the "what to do" (workflows) and "how to do it" (tools), the t
 
 **Priya – DX Engineer**: An engineer focused on improving the developer experience.
 
-- Context: Priya uses CAT as a foundation for building standardized, testable, and extendable developer tools and workflows within their organization. They need a framework that follows Ruby best practices and is easy to integrate and extend.
+- Context: Priya uses ACE gems as a foundation for building standardized, testable, and extendable developer tools. The ATOM architecture and mono-repo structure make it easy to add new gems and integrate with existing systems.
 
 
 ## Project Boundaries
 
 ### Distribution Model
 
-The Coding Agent Workflow Toolkit uses a **multi-repository architecture** coordinated through Git submodules, enabling both comprehensive development environment setup and flexible library integration when needed.
+ACE uses a **mono-repo architecture** with modular Ruby gems, providing clear separation of concerns while maintaining simple dependency management. This replaces the previous multi-repository submodule approach, offering better integration and easier maintenance.
 
 ### What We Build
 
-- **Comprehensive workflow instruction system** with self-contained AI workflows that agents can execute independently
-- **Specialized AI agents** designed for focused development tasks, compatible with multiple AI platforms
-- **Development handbook** providing guides, templates, and best practices for consistent development
-- **CLI toolkit** (Coding Agent Tools) with executables for development automation and LLM integration
-- **Multi-provider LLM integrations** supporting both online and offline language models
-- **Documentation-driven task management** system for organizing and tracking development work
-- **Multi-repository coordination** enabling seamless work across interconnected components
+- **Modular Ruby gems** (ace-*) providing focused, testable functionality with ATOM architecture
+- **Unified CLI surface** where agents and humans use the same deterministic tools
+- **Configuration cascade system** (.ace/) enabling context-aware settings management
+- **Comprehensive test infrastructure** with parallel execution and CI/CD integration
+- **Development automation tools** for context loading, testing, and configuration
+- **Migration path** from legacy dev-* structure to modern ace-* gem ecosystem
+- **Extensible foundation** for adding new ace-* gems as capabilities grow
 
 
 ## Value Proposition
@@ -100,7 +100,7 @@ The Coding Agent Workflow Toolkit uses a **multi-repository architecture** coord
 
 ## Future Vision
 
-The Coding Agent Workflow Toolkit aims to become the standard foundation for AI-assisted software development, enabling seamless collaboration between human developers and AI agents. We envision a future where development teams leverage intelligent automation for routine tasks while focusing their expertise on creative problem-solving and system design.
+ACE aims to become the standard foundation for AI-assisted software development through its modular gem ecosystem. We envision expanding the ace-* gem family to cover all aspects of development automation, with each gem providing focused functionality that integrates seamlessly. Future additions will include ace-git for enhanced version control, ace-llm for multi-provider AI integration, and ace-handbook for workflow management, creating a comprehensive environment where human creativity and AI capabilities complement each other perfectly.
 
 
 ---
