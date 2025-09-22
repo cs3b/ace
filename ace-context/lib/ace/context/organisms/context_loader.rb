@@ -39,13 +39,17 @@ module Ace
             )
           end
 
-          context = load_from_config(preset)
-          context.metadata[:preset_name] = preset_name unless context.metadata[:preset_name]
+          # Merge params into options for processing
+          merged_options = @options.merge(preset[:params] || {})
 
-          # Re-format if format was specified and preset_name was added
-          if preset[:format] && context.metadata[:preset_name]
-            format_context(context, preset[:format])
-          end
+          # Process the preset context configuration
+          context = load_from_preset_config(preset, merged_options)
+          context.metadata[:preset_name] = preset_name
+          context.metadata[:output] = preset[:output]  # Store default output mode
+
+          # Re-format if format was specified
+          format = preset.dig(:params, :format) || merged_options[:format] || 'markdown'
+          format_context(context, format)
 
           context
         end
@@ -219,6 +223,62 @@ module Ace
 
           # Format output
           format_context(context, config[:format])
+        end
+
+        def load_from_preset_config(preset, options)
+          context_config = preset[:context] || {}
+
+          context = Models::ContextData.new(
+            preset_name: preset[:name],
+            metadata: preset[:metadata] || {}
+          )
+
+          # Process files from context configuration
+          if context_config['files'] && context_config['files'].any?
+            aggregator = Ace::Core::Molecules::FileAggregator.new(
+              max_size: options[:max_size] || options['max_size'],
+              base_dir: options[:base_dir] || Dir.pwd,
+              exclude: context_config['exclude'] || []
+            )
+
+            # Use aggregate to handle glob patterns
+            result = aggregator.aggregate(context_config['files'])
+
+            # Add files to context if embed_itself is true
+            if options[:embed_itself] || options['embed_itself']
+              result[:files].each do |file_info|
+                context.add_file(file_info[:path], file_info[:content])
+              end
+            end
+
+            # Add errors if any
+            result[:errors].each do |error|
+              context.metadata[:errors] ||= []
+              context.metadata[:errors] << error
+            end
+          end
+
+          # Process commands
+          if context_config['commands'] && context_config['commands'].any?
+            timeout = options[:timeout] || options['timeout'] || 30
+            context_config['commands'].each do |command|
+              cmd_result = @command_executor.execute(command, timeout: timeout)
+              context.commands ||= []
+              context.commands << {
+                command: command,
+                output: cmd_result[:stdout],
+                success: cmd_result[:success],
+                error: cmd_result[:error]
+              }
+            end
+          end
+
+          # Add preset body content if it exists
+          if preset[:body] && !preset[:body].empty?
+            context.metadata[:preset_content] = preset[:body]
+          end
+
+          context
         end
 
         private

@@ -30,10 +30,9 @@ module Ace
       end
 
       # List available presets
-      # @param config_path [String] Optional config path for backward compatibility
       # @return [Array<Hash>] List of available presets
-      def list_presets(config_path: nil)
-        manager = Molecules::PresetManager.new(config_path: config_path)
+      def list_presets
+        manager = Molecules::PresetManager.new
         manager.list_presets
       end
 
@@ -72,19 +71,6 @@ module Ace
       def write_output(context, output_path, options = {})
         writer = Molecules::ContextFileWriter.new
         writer.write_with_chunking(context, output_path, options)
-      end
-
-      # Get configuration
-      # @return [Hash] Context configuration
-      def config
-        # Try .ace first, then fall back to .coding-agent for backward compatibility
-        @config ||= begin
-          resolver = Ace::Core::Organisms::ConfigResolver.new(
-            search_paths: ['.ace', '.coding-agent'],
-            file_patterns: ['context.yml', 'context.yaml']
-          )
-          resolver.resolve
-        end
       end
     end
   end
