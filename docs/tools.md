@@ -15,8 +15,11 @@
 ### ace-context
 
 ```sh
-ace-context --preset project           # Load project context
-ace-context --preset project --no-cache # Output to stdout (for piping)
+ace-context project                    # Load project preset
+ace-context project --output stdio     # Output to stdout (for piping)
+ace-context project --output cache     # Save to cache directory
+ace-context project --output file.md   # Save to specific file
+ace-context --list                     # List available presets
 ```
 
 ### ace-test

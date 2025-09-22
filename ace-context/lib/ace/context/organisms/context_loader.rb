@@ -48,7 +48,7 @@ module Ace
           context.metadata[:output] = preset[:output]  # Store default output mode
 
           # Re-format if format was specified
-          format = preset.dig(:params, :format) || merged_options[:format] || 'markdown'
+          format = preset[:format] || preset.dig(:params, 'format') || merged_options[:format] || 'markdown'
           format_context(context, format)
 
           context
@@ -83,7 +83,8 @@ module Ace
           preset_names.each do |preset_name|
             preset = @preset_manager.get_preset(preset_name)
             if preset
-              context = load_from_config(preset)
+              merged_options = @options.merge(preset[:params] || {})
+              context = load_from_preset_config(preset, merged_options)
               context.metadata[:preset_name] = preset_name
               contexts << context
             else
