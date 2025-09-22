@@ -1,5 +1,4 @@
 node_modules
-tmp
 doc-dependencies*
 # Environment configuration
 .env
@@ -7,9 +6,9 @@ doc-dependencies*
 .coding-agent/.env.sample
 node_modules
 .lint*.md
+
+# Cache, tmp and backup files
+.cache
 *.bak
-
-# Cached context files
-docs/context/cached/
-
-**/test-reports/**
+tmp
+ace-*/test-reports
