@@ -25,23 +25,30 @@ module Ace
         private
 
         def load_config
-          require "ace/core"
+          require "yaml"
 
-          # Use Ace::Core.config to load configuration
-          config = Ace::Core.config
+          # Try to load taskflow.yml directly from .ace directory
+          config_paths = [
+            File.join(Dir.pwd, ".ace", "taskflow.yml"),
+            File.join(Dir.home, ".ace", "taskflow.yml")
+          ]
 
-          # Get taskflow configuration
-          taskflow_config = config.get("taskflow") || {}
-
-          # For now, return the taskflow config if it has idea section
-          # Otherwise return default config
-          if taskflow_config.is_a?(Hash) && taskflow_config["idea"]
-            taskflow_config["idea"]
-          else
-            default_config
+          config_paths.each do |path|
+            if File.exist?(path)
+              config = YAML.load_file(path)
+              if config && config["taskflow"] && config["taskflow"]["idea"]
+                # Merge settings with idea config
+                settings = config["taskflow"]["settings"] || {}
+                idea_config = config["taskflow"]["idea"] || {}
+                return settings.merge(idea_config)
+              end
+            end
           end
-        rescue LoadError, StandardError
-          # Return default config if ace-core is not available
+
+          # Fall back to default if no config found
+          default_config
+        rescue StandardError
+          # Return default config if there's any error
           default_config
         end
 
@@ -85,7 +92,7 @@ module Ace
 
           # Get author from settings or environment
           author = metadata[:author] ||
-                   @config.dig("..", "settings", "author", "name") ||
+                   @config.dig("author", "name") ||
                    ENV["USER"] ||
                    "unknown"
 
@@ -111,7 +118,7 @@ module Ace
 
         def timestamp_format
           @config.dig("file_naming", "timestamp_format") ||
-            @config.dig("..", "settings", "formatting", "timestamp_format") ||
+            @config.dig("formatting", "timestamp_format") ||
             "%Y-%m-%d %H:%M:%S"
         end
       end
