@@ -4,9 +4,57 @@ status: pending
 priority: medium
 estimate: 4h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002, v.0.9.0+task.003, v.0.9.0+task.004]
+needs_review: true
 ---
 
 # Create ace-capture Gem
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Implementation Scope Questions
+- [ ] Should ace-capture be simple file writing only or include LLM enhancement?
+  - **Research conducted**: Current capture-it is complex with LLM integration, templates, git commits
+  - **Found implementation**: 314-line organism with context loading, idea enhancement, git integration
+  - **Task specification**: "simple file writing" and "simple idea capture"
+  - **Conflict**: Task scope vs existing capture-it complexity
+  - **Suggested default**: Start with simple file writing, plan LLM features for future version
+  - **Why needs human input**: This fundamentally changes the gem's purpose and implementation
+
+- [ ] What is the relationship between ace-capture and existing capture-it command?
+  - **Research conducted**: capture-it is sophisticated tool in dev-tools
+  - **Current features**: LLM enhancement, clipboard input, file input, git integration, context loading
+  - **Migration scope unclear**: Should ace-capture replace capture-it or complement it?
+  - **Why needs human input**: Migration strategy affects feature scope and timeline
+
+### [HIGH] Architecture Alignment Questions
+- [ ] Should executable be named "capture" or "ace-capture" for consistency?
+  - **Research conducted**: All other ace-* gems use "ace-" prefix in executables
+  - **Pattern found**: ace-context uses "ace-context", ace-test uses "ace-test"
+  - **Task specification**: "exe/capture"
+  - **Suggested default**: Use "ace-capture" for consistency with other gems
+  - **Why needs human input**: Naming affects user experience and CLI conventions
+
+- [ ] Should configuration use .ace/capture/ or integrate with .ace/context/?
+  - **Research conducted**: ace-context uses .ace/context/ for preset-based loading
+  - **Pattern found**: Configuration cascade with nearest-wins resolution
+  - **Task specification**: ".ace/capture/config/capture.yml"
+  - **Integration consideration**: Should capture presets work with context system?
+  - **Why needs human input**: Configuration strategy affects user workflow
+
+### [MEDIUM] Missing ATOM Components
+- [ ] What atoms/ components are needed for the simple implementation?
+  - **Research conducted**: ace-context has clear atom/molecule/organism separation
+  - **Task gap**: No atoms/ specified despite ATOM architecture requirement
+  - **Suggested atoms**: timestamp_generator, content_formatter, path_validator
+  - **Why needs human input**: ATOM compliance requires proper component design
+
+### [MEDIUM] API Design Questions
+- [ ] Should ace-capture follow class method API pattern like ace-context?
+  - **Research conducted**: ace-context provides Ace::Context.load_preset() class methods
+  - **Pattern found**: Main module with class methods for primary operations
+  - **Task specification**: Only shows instance-based API
+  - **Suggested API**: Ace::Capture.write_idea(content, options = {})
+  - **Why needs human input**: API design affects gem usage patterns
 
 ## Objective
 
@@ -29,10 +77,11 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 - ace-capture/ace-capture.gemspec
 - ace-capture/lib/ace/capture.rb
 - ace-capture/lib/ace/capture/version.rb
-- ace-capture/lib/ace/capture/organisms/idea_writer.rb
+- ace-capture/lib/ace/capture/atoms/ (pure functions - pending review answers)
 - ace-capture/lib/ace/capture/molecules/file_namer.rb
+- ace-capture/lib/ace/capture/organisms/idea_writer.rb
 - ace-capture/lib/ace/capture/models/ (data structures)
-- ace-capture/exe/capture
+- ace-capture/exe/ace-capture
 - ace-capture/config/capture.yml (gem defaults)
 - ace-capture/test/test_helper.rb
 - ace-capture/test/support/ (copy from ace-core)
@@ -51,10 +100,14 @@ Create the ace-capture gem that provides simple idea capture functionality, migr
 
 ### Planning Steps
 
-* [ ] Review current capture-it implementation
+* [x] Review current capture-it implementation
+  - **Found**: Complex 314-line organism with LLM enhancement, git integration, clipboard support
+  - **Location**: `/dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb`
+  - **Dependencies**: context_loader, idea_enhancer, path_resolver, llm_client molecules
+  - **Features**: Raw input capture, LLM enhancement, git commits, SOURCE section appending
 * [ ] Design simple file naming scheme
 * [ ] Plan directory structure for captured ideas
-* [ ] Determine minimal feature set
+* [ ] Determine minimal feature set based on review questions answers
 
 ### Execution Steps
 
