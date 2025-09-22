@@ -8,7 +8,8 @@ require "yaml"
 
 module Ace
   module Core
-    class ConfigDiscoveryPathResolutionTest < Minitest::Test
+    class ConfigDiscoveryPathResolutionTest < AceTestCase
+      include Ace::TestSupport::SubprocessRunner
       def setup
         @test_dir = Dir.mktmpdir("ace-test-")
         @original_pwd = Dir.pwd
@@ -24,32 +25,51 @@ module Ace
         project_dir = File.join(@test_dir, "project")
         ace_dir = File.join(project_dir, ".ace")
         FileUtils.mkdir_p(ace_dir)
+        # Add project root marker so ProjectRootFinder works correctly
+        FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
         # Create directories that paths will reference
-        FileUtils.mkdir_p(File.join(project_dir, "subdir1"))
-        FileUtils.mkdir_p(File.join(project_dir, "subdir2"))
+        FileUtils.mkdir_p(File.join(project_dir, "lib"))
+        FileUtils.mkdir_p(File.join(project_dir, "src"))
+        FileUtils.mkdir_p(File.join(project_dir, "config"))
+        FileUtils.touch(File.join(project_dir, "config", "settings.yml"))
 
-        # Create config with relative paths
+        # Create config with project-relative paths (no ./ prefix)
+        # Using 'lib' and 'src' which are recognized as project paths
         config = {
           "test_suite" => {
             "packages" => [
-              { "name" => "pkg1", "path" => "./subdir1" },
-              { "name" => "pkg2", "path" => "./subdir2" }
+              { "name" => "pkg1", "path" => "lib" },
+              { "name" => "pkg2", "path" => "src" }
             ],
-            "some_file" => "./config.yml"
+            "some_file" => "config/settings.yml"
           }
         }
 
         config_file = File.join(ace_dir, "test.yml")
         File.write(config_file, YAML.dump(config))
 
-        Dir.chdir(project_dir)
-        discovery = ConfigDiscovery.new
-        loaded = discovery.load_config("test.yml")
+        code = <<~RUBY
+          require 'ace/core/config_discovery'
+          Dir.chdir("#{project_dir}")
+          discovery = Ace::Core::ConfigDiscovery.new
+          loaded = discovery.load_config("test.yml")
 
-        assert_equal File.join(project_dir, "subdir1"), loaded["test_suite"]["packages"][0]["path"]
-        assert_equal File.join(project_dir, "subdir2"), loaded["test_suite"]["packages"][1]["path"]
-        assert_equal File.join(project_dir, "config.yml"), loaded["test_suite"]["some_file"]
+          puts loaded["test_suite"]["packages"][0]["path"]
+          puts loaded["test_suite"]["packages"][1]["path"]
+          puts loaded["test_suite"]["some_file"]
+        RUBY
+
+        output, status = run_in_clean_env(code: code, requires: [])
+        assert status.success?, "Subprocess failed: #{output}"
+
+        lines = output.strip.split("\n")
+        # Plain paths (without ./) should resolve relative to project root
+        # Use realpath to handle /private/var symlink on macOS
+        assert_equal File.realpath(File.join(project_dir, "lib")), File.realpath(lines[0])
+        assert_equal File.realpath(File.join(project_dir, "src")), File.realpath(lines[1])
+        # config/settings.yml has 'config' which is recognized as project path
+        assert_equal File.realpath(File.join(project_dir, "config/settings.yml")), File.realpath(lines[2])
       end
 
       def test_resolves_paths_in_nested_ace_directory
@@ -57,6 +77,8 @@ module Ace
         project_dir = File.join(@test_dir, "project")
         ace_dir = File.join(project_dir, ".ace", "configs")
         FileUtils.mkdir_p(ace_dir)
+        # Add project root marker
+        FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
         # Create directories that paths will reference
         FileUtils.mkdir_p(File.join(project_dir, "lib"))
@@ -72,16 +94,26 @@ module Ace
         config_file = File.join(ace_dir, "settings.yml")
         File.write(config_file, YAML.dump(config))
 
+        # For this test, we need to run it in the main process with stubbing
+        # since stubbing doesn't work well in subprocess
         Dir.chdir(project_dir)
 
-        # Mock the find_config_file to return our nested config
-        discovery = ConfigDiscovery.new
-        discovery.instance_variable_get(:@finder).stub :find_file, config_file do
-          loaded = discovery.load_config("settings.yml")
+        # Temporarily unset PROJECT_ROOT_PATH
+        original_env = ENV["PROJECT_ROOT_PATH"]
+        ENV.delete("PROJECT_ROOT_PATH")
 
-          # Paths should be relative to project root (parent of .ace)
-          assert_equal File.join(project_dir, "lib"), loaded["settings"]["source_dir"]
-          assert_equal File.expand_path(File.join(project_dir, "..", "output")), loaded["settings"]["output"]
+        begin
+          discovery = ConfigDiscovery.new
+          # Mock the find_config_file to return our nested config
+          discovery.instance_variable_get(:@finder).stub :find_file, config_file do
+            loaded = discovery.load_config("settings.yml")
+
+            # Paths should be relative to project root (parent of .ace)
+            assert_equal File.join(project_dir, "lib"), loaded["settings"]["source_dir"]
+            assert_equal File.expand_path(File.join(project_dir, "..", "output")), loaded["settings"]["output"]
+          end
+        ensure
+          ENV["PROJECT_ROOT_PATH"] = original_env if original_env
         end
       end
 
@@ -90,6 +122,10 @@ module Ace
         project_dir = File.join(@test_dir, "project")
         ace_dir = File.join(project_dir, ".ace")
         FileUtils.mkdir_p(ace_dir)
+        # Add project root marker
+        FileUtils.mkdir_p(File.join(project_dir, ".git"))
+        # Create the relative directory so File.realpath works
+        FileUtils.mkdir_p(File.join(ace_dir, "relative"))
 
         # Create config with various path types
         config = {
@@ -104,15 +140,29 @@ module Ace
         config_file = File.join(ace_dir, "paths.yml")
         File.write(config_file, YAML.dump(config))
 
-        Dir.chdir(project_dir)
-        discovery = ConfigDiscovery.new
-        loaded = discovery.load_config("paths.yml")
+        code = <<~RUBY
+          require 'ace/core/config_discovery'
+          Dir.chdir("#{project_dir}")
+          discovery = Ace::Core::ConfigDiscovery.new
+          loaded = discovery.load_config("paths.yml")
 
-        # Only relative paths starting with ./ should be resolved
-        assert_equal File.join(project_dir, "relative"), loaded["paths"]["relative"]
-        assert_equal "/usr/local/bin", loaded["paths"]["absolute"]
-        assert_equal "~/Documents", loaded["paths"]["home"]
-        assert_equal "some_file.txt", loaded["paths"]["plain"]
+          # Output paths for validation
+          puts loaded["paths"]["relative"]
+          puts loaded["paths"]["absolute"]
+          puts loaded["paths"]["home"]
+          puts loaded["paths"]["plain"]
+        RUBY
+
+        output, status = run_in_clean_env(code: code, requires: [])
+        assert status.success?, "Subprocess failed: #{output}"
+
+        lines = output.strip.split("\n")
+        # ./relative should resolve relative to .ace/ directory (where config file is)
+        # Use realpath to handle /private/var symlink on macOS
+        assert_equal File.realpath(File.join(project_dir, ".ace", "relative")), File.realpath(lines[0])
+        assert_equal "/usr/local/bin", lines[1]
+        assert_equal "~/Documents", lines[2]
+        assert_equal "some_file.txt", lines[3]
       end
 
       def test_resolves_paths_in_arrays
@@ -120,26 +170,42 @@ module Ace
         project_dir = File.join(@test_dir, "project")
         ace_dir = File.join(project_dir, ".ace")
         FileUtils.mkdir_p(ace_dir)
+        # Add project root marker
+        FileUtils.mkdir_p(File.join(project_dir, ".git"))
+        # Create directories so File.realpath works
+        FileUtils.mkdir_p(File.join(project_dir, "lib"))
+        FileUtils.mkdir_p(File.join(project_dir, "test"))
 
-        # Create config with paths in arrays
+        # Create config with paths in arrays (using plain paths for project-relative)
         config = {
           "include_dirs" => [
-            "./include1",
-            "./include2",
-            "/absolute/path"
+            "lib",           # Recognized project path - resolves to project root
+            "test",          # Recognized project path - resolves to project root
+            "/absolute/path" # Absolute path - unchanged
           ]
         }
 
         config_file = File.join(ace_dir, "build.yml")
         File.write(config_file, YAML.dump(config))
 
-        Dir.chdir(project_dir)
-        discovery = ConfigDiscovery.new
-        loaded = discovery.load_config("build.yml")
+        code = <<~RUBY
+          require 'ace/core/config_discovery'
+          Dir.chdir("#{project_dir}")
+          discovery = Ace::Core::ConfigDiscovery.new
+          loaded = discovery.load_config("build.yml")
 
-        assert_equal File.join(project_dir, "include1"), loaded["include_dirs"][0]
-        assert_equal File.join(project_dir, "include2"), loaded["include_dirs"][1]
-        assert_equal "/absolute/path", loaded["include_dirs"][2]
+          loaded["include_dirs"].each { |dir| puts dir }
+        RUBY
+
+        output, status = run_in_clean_env(code: code, requires: [])
+        assert status.success?, "Subprocess failed: #{output}"
+
+        lines = output.strip.split("\n")
+        # Plain paths should resolve relative to project root
+        # Use realpath to handle /private/var symlink on macOS
+        assert_equal File.realpath(File.join(project_dir, "lib")), File.realpath(lines[0])
+        assert_equal File.realpath(File.join(project_dir, "test")), File.realpath(lines[1])
+        assert_equal "/absolute/path", lines[2]
       end
 
       def test_disable_path_resolution
@@ -147,6 +213,8 @@ module Ace
         project_dir = File.join(@test_dir, "project")
         ace_dir = File.join(project_dir, ".ace")
         FileUtils.mkdir_p(ace_dir)
+        # Add project root marker
+        FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
         # Create config with relative paths
         config = {
