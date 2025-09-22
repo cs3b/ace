@@ -2,7 +2,7 @@
 
 ## What is a Blueprint?
 
-This document provides navigation guidance for the ACE codebase, highlighting what to modify and what to avoid. For actual directory structure, use `git ls-files` or `eza -T -L 2` to see the current state.
+This document provides navigation guidance for the ACE codebase, highlighting what to modify and what to avoid.
 
 ## Repository Structure
 
