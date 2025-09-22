@@ -4,9 +4,70 @@ status: pending
 priority: medium
 estimate: 6h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002, v.0.9.0+task.003, v.0.9.0+task.004]
+needs_review: true
 ---
 
 # Create ace-git Gem with ace-gc Only
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+
+- [ ] **LLM Integration Migration Strategy**: The existing dev-tools git commit implementation includes sophisticated LLM integration (314-line GitOrchestrator, CommitMessageGenerator with multi-provider support, system prompts). Should this be:
+  - **Research conducted**: Analyzed dev-tools implementation - full LLM integration with provider factory, multiple models (Google/Anthropic/OpenAI/etc), system prompt templates, intention-based generation
+  - **Current complexity**: GitOrchestrator handles multi-repo operations, concurrent execution, LLM message generation, template loading, provider management
+  - **Task specification**: Claims "simplified" and "Remove submodule-specific code" but unclear if this includes removing LLM features entirely
+  - **Option A**: Migrate full LLM functionality to ace-git (complex, ~300+ lines)
+  - **Option B**: Create simplified ace-gc without LLM (task examples show only basic intentions like 'feat', 'fix')
+  - **Option C**: Hybrid approach - basic intentions with optional LLM enhancement
+  - **Why needs human input**: Business decision on feature scope vs simplicity
+
+- [ ] **Multi-Repository vs Mono-Repository Scope**: The current implementation handles complex multi-repository operations (submodules, cross-repo coordination, execution ordering). The task states "monorepo use" and "Remove all submodule and multi-repo complexity":
+  - **Research conducted**: GitOrchestrator includes submodule detection, repository scanning, path dispatching, concurrent/sequential execution across repos
+  - **Current features**: Multi-repo coordinator, path dispatcher, submodule-first execution ordering, cross-repository operations
+  - **Task requirement**: "simplified git-commit (ace-gc) designed for monorepo use"
+  - **Question**: Does "monorepo" mean single git repository operations only, or does it still need to handle the ace-meta monorepo structure with multiple ace-* gems?
+  - **Why needs human input**: Scope clarification affects architecture significantly
+
+- [ ] **Configuration and Intention System Design**: The task shows basic intention parsing (feat/fix/docs) but current implementation has rich configuration:
+  - **Research conducted**: Current system loads configuration from multiple sources, supports complex intention contexts, has sophisticated message formatting
+  - **Current features**: Configuration cascade (.ace/), intention-based prompting, commit message templates, multi-provider LLM selection
+  - **Task examples**: Simple intentions ('feat', 'fix') with basic scope detection
+  - **Design question**: Should ace-git configuration follow ace-core pattern with .ace/git/config/ cascade, or use simpler embedded defaults?
+  - **Why needs human input**: Configuration complexity vs simplicity trade-off decision
+
+### [MEDIUM] Implementation Approach Questions
+
+- [ ] **ATOM Architecture Mapping**: How should the complex git operations map to ATOM layers?
+  - **Research conducted**: Current GitOrchestrator is a large organism (~936 lines) handling multiple concerns
+  - **ATOM pattern**: atoms/ (pure functions), molecules/ (operations), organisms/ (orchestration), models/ (data)
+  - **Current mixing**: GitOrchestrator handles command building, execution, formatting, LLM integration, multi-repo coordination
+  - **Suggested breakdown**:
+    - Atoms: git command builders, message cleaners, intention parsers
+    - Molecules: commit message formatter, config loader
+    - Organisms: commit builder (simplified orchestration)
+    - Models: commit options, commit result
+  - **Why needs human input**: Architecture decisions affect maintainability and testing
+
+- [ ] **Dependencies and Integration**: Should ace-git depend on any dev-tools components for LLM functionality?
+  - **Research conducted**: dev-tools has extensive LLM infrastructure (ClientFactory, ProviderModelParser, multiple provider clients)
+  - **Current approach**: Task specifies "ace-core dependency (~> 0.9.0)" only
+  - **Integration options**: Pure ace-git implementation vs leveraging existing dev-tools LLM infrastructure
+  - **Why needs human input**: Dependency strategy affects gem isolation and maintenance
+
+### [LOW] Enhancement Questions
+
+- [ ] **Test Strategy Alignment**: The task mentions "reuse TestEnvironment and ConfigHelpers" from ace-core:
+  - **Research conducted**: ace-context uses ace-test-support via test_helper.rb, ace-core has established test patterns
+  - **Current test infrastructure**: 29 passing tests in ace-core, shared test support infrastructure
+  - **Suggested approach**: Follow ace-context pattern with test/test_helper.rb requiring ace/test_support
+  - **Default assumption**: Use ace-test-support for consistency with other ace-* gems
+
+- [ ] **Git Command Interface Design**: Should ace-gc follow git's interface patterns or create a more semantic interface?
+  - **Research conducted**: Current implementation supports extensive git options (force, dry-run, concurrent, etc.)
+  - **Task examples**: Simple `ace-gc feat` vs `git commit -m "feat: message"`
+  - **Suggested default**: Keep simple semantic interface as shown in task examples
+  - **Why low priority**: Implementation detail that can be refined during development
 
 ## Objective
 
