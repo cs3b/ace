@@ -1,0 +1,283 @@
+Started with run options --seed 8882
+
+DeepMergerTest
+  test_mergeable_check                                           [32m PASS[0m (0.00s)
+  test_merge_arrays_concat_strategy                              [32m PASS[0m (0.00s)
+  test_merge_arrays_union_strategy                               [32m PASS[0m (0.00s)
+  test_merge_nested_hashes                                       [32m PASS[0m (0.00s)
+  test_merge_simple_hashes                                       [32m PASS[0m (0.00s)
+  test_merge_arrays_replace_strategy                             [32m PASS[0m (0.00s)
+  test_merge_all                                                 [32m PASS[0m (0.00s)
+  test_merge_with_nil                                            [32m PASS[0m (0.00s)
+
+YamlParserTest
+  test_dump_hash_to_yaml                                         [32m PASS[0m (0.00s)
+  test_valid_check                                               [32m PASS[0m (0.00s)
+  test_parse_invalid_yaml                                        [32m PASS[0m (0.00s)
+  test_parse_valid_yaml                                          [32m PASS[0m (0.00s)
+  test_parse_empty_yaml                                          [32m PASS[0m (0.00s)
+  test_dump_empty_hash                                           [32m PASS[0m (0.00s)
+
+Ace::CoreTest
+  test_environment_method_exists                                 [32m PASS[0m (0.00s)
+  test_version_is_correct                                        [32m PASS[0m (0.00s)
+  test_get_method_exists                                         [32m PASS[0m (0.00s)
+  test_that_it_has_a_version_number                              [32m PASS[0m (0.00s)
+  test_config_method_exists                                      [32m PASS[0m (0.00s)
+
+EnvLoaderTest
+  test_save_env_file                                             [32m PASS[0m (0.00s)
+  test_set_environment_from_hash                                 [32m PASS[0m (0.00s)
+  test_handles_malformed_env_content                             [32m PASS[0m (0.00s)
+  test_auto_load_with_no_env_files                               [32m PASS[0m (0.00s)
+  test_load_and_set_environment                                  [32m PASS[0m (0.00s)
+  test_expands_paths                                             [32m PASS[0m (0.00s)
+  test_save_creates_directory                                    [32m PASS[0m (0.00s)
+  test_returns_empty_hash_for_missing_file                       [32m PASS[0m (0.00s)
+  test_env_override_precedence                                   [32m PASS[0m (0.00s)
+  test_loads_env_file                                            [32m PASS[0m (0.00s)
+  test_auto_load_standard_locations                              [32m PASS[0m (0.00s)
+  test_load_multiple_files                                       [32m PASS[0m (0.00s)
+
+MultiSourceTest
+  test_handles_partial_configs                                   [32m PASS[0m (0.00s)
+  test_config_with_symbols_and_special_types                     [32m PASS[0m (0.00s)
+  test_complex_nested_merging                                    [32m PASS[0m (0.00s)
+  test_env_files_with_different_names                            [32m PASS[0m (0.00s)
+  test_handles_malformed_yaml                                    [32m PASS[0m (0.00s)
+  test_multiple_config_files_per_directory                       [32m PASS[0m (0.00s)
+  test_config_source_tracking                                    [32m PASS[0m (0.00s)
+  test_combines_env_and_config                                   [32m PASS[0m (0.00s)
+  test_handles_missing_directories                               [32m PASS[0m (0.00s)
+
+ConfigResolverTest
+  test_get_value_by_path                                         [32m PASS[0m (0.00s)
+  test_resolve_with_cascade                                      [32m PASS[0m (0.00s)
+  test_resolve_empty_when_no_configs                             [32m PASS[0m (0.00s)
+  test_resolve_type_local                                        [32m PASS[0m (0.00s)
+  test_create_default                                            [32m PASS[0m (0.00s)
+
+Ace::Core::Molecules::DirectoryTraverserTest
+  test_traverse_without_project_root                             [32m PASS[0m (0.00s)
+  test_custom_config_dir_name                                    [32m PASS[0m (0.00s)
+  test_find_config_directories_returns_full_paths                [32m PASS[0m (0.00s)
+  test_no_config_directories                                     [32m PASS[0m (0.00s)
+  test_start_path_option                                         [32m PASS[0m (0.00s)
+  test_directory_hierarchy                                       [31m FAIL[0m (0.00s)
+        Expected: 3
+          Actual: 11
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/directory_traverser_test.rb:92:in 'Ace::Core::Molecules::DirectoryTraverserTest#test_directory_hierarchy'
+
+  test_build_cascade_priorities                                  [32m PASS[0m (0.00s)
+  test_traverse_finds_config_dirs_up_to_project_root             [32m PASS[0m (0.00s)
+
+CommandExecutorTest
+  test_execute_batch_with_failures                               [32m PASS[0m (0.01s)
+  test_execute_batch                                             [32m PASS[0m (0.01s)
+  test_stream_with_callback                                      [32m PASS[0m (0.00s)
+  test_execute_non_existent_command                              [32m PASS[0m (0.00s)
+  test_execute_with_large_output                                 [32m PASS[0m (0.00s)
+  test_capture_returns_stdout_on_success                         [32m PASS[0m (0.00s)
+  test_execute_nil_command                                       [32m PASS[0m (0.00s)
+  test_execute_with_working_directory                            [32m PASS[0m (0.00s)
+  test_build_command_with_escaping                               [32m PASS[0m (0.00s)
+  test_stream_with_timeout                                       [32m PASS[0m (0.00s)
+  test_execute_simple_command                                    [32m PASS[0m (0.00s)
+  test_execute_with_timeout                                      [32m PASS[0m (0.00s)
+  test_capture_returns_nil_on_failure                            [32m PASS[0m (0.00s)
+  test_execute_empty_command                                     [32m PASS[0m (0.00s)
+  test_available_checks_command_existence                        [32m PASS[0m (0.00s)
+  test_execute_command_with_error                                [32m PASS[0m (0.00s)
+
+EnvironmentManagerTest
+  test_get_and_set_variables                                     [32m PASS[0m (0.00s)
+  test_save_environment_variables                                [32m PASS[0m (0.00s)
+  test_list_dotenv_files                                         [32m PASS[0m (0.00s)
+  test_load_dotenv_files                                         [32m PASS[0m (0.00s)
+  test_dotenv_disabled                                           [32m PASS[0m (0.00s)
+
+Ace::Core::Molecules::ProjectRootFinderTest
+  test_finds_gemfile_root                                        [31m FAIL[0m (0.01s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-qn478/ruby_project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:60:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_finds_gemfile_root'
+
+  test_find_or_current_returns_current_when_not_found            [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-vm4hjz/no_project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:82:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_find_or_current_returns_current_when_not_found'
+
+  test_returns_nil_when_no_markers_found                         [31m FAIL[0m (0.00s)
+        Expected "/Users/mc/Ps/ace-meta" to be nil.
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:71:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_returns_nil_when_no_markers_found'
+
+  test_in_project_returns_true_when_found                        [32m PASS[0m (0.00s)
+  test_prefers_markers_in_order                                  [31m FAIL[0m (0.01s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-tgxw8n/outer/inner"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:189:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_prefers_markers_in_order'
+
+  test_custom_markers                                            [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-xir5x1/custom_project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:138:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_custom_markers'
+
+  test_in_project_returns_false_when_not_found                   [31m FAIL[0m (0.00s)
+        Expected true to not be truthy.
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:103:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_in_project_returns_false_when_not_found'
+
+  test_relative_path_returns_nil_when_not_in_project             [32m PASS[0m (0.00s)
+  test_class_method_find                                         [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-lniupx/project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:148:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_class_method_find'
+
+  test_start_path_option                                         [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-1r21hm/project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:170:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_start_path_option'
+
+  test_relative_path_from_project_root                           [31m FAIL[0m (0.00s)
+        Expected: "lib/nested/file.rb"
+          Actual: nil
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:116:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_relative_path_from_project_root'
+
+  test_class_method_find_or_current                              [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-man93w/no_project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:157:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_class_method_find_or_current'
+
+  test_finds_rakefile_root                                       [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-u1dj45/project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:47:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_finds_rakefile_root'
+
+  test_caching                                                   [31m FAIL[0m (0.00s)
+        Expected "/Users/mc/Ps/ace-meta" to be nil.
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:214:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_caching'
+
+  test_finds_git_root                                            [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-awh4he/project"
+        +"/Users/mc/Ps/ace-meta"
+        /Users/mc/Ps/ace-meta/ace-core/test/molecules/project_root_finder_test.rb:34:in 'Ace::Core::Molecules::ProjectRootFinderTest#test_finds_git_root'
+
+
+Ace::Core::ConfigDiscoveryPathResolutionTest
+  test_preserves_non_relative_paths                              [31m FAIL[0m (0.00s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-om50s8/project/relative"
+        +"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-om50s8/project/.ace/relative"
+        /Users/mc/Ps/ace-meta/ace-core/test/config_discovery_path_resolution_test.rb:112:in 'Ace::Core::ConfigDiscoveryPathResolutionTest#test_preserves_non_relative_paths'
+
+  test_resolves_paths_in_nested_ace_directory                    [31mERROR[0m (0.00s)
+Minitest::UnexpectedError:         NoMethodError: undefined method '[]' for nil
+            test/config_discovery_path_resolution_test.rb:83:in 'block in Ace::Core::ConfigDiscoveryPathResolutionTest#test_resolves_paths_in_nested_ace_directory'
+
+  test_resolves_paths_in_ace_directory                           [31m FAIL[0m (0.01s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-t6e7cr/project/subdir1"
+        +"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-t6e7cr/project/.ace/subdir1"
+        /Users/mc/Ps/ace-meta/ace-core/test/config_discovery_path_resolution_test.rb:50:in 'Ace::Core::ConfigDiscoveryPathResolutionTest#test_resolves_paths_in_ace_directory'
+
+  test_resolves_paths_in_arrays                                  [31m FAIL[0m (0.01s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -"/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-5r2q3f/project/include1"
+        +"/private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-test-20250922-6295-5r2q3f/project/.ace/include1"
+        /Users/mc/Ps/ace-meta/ace-core/test/config_discovery_path_resolution_test.rb:140:in 'Ace::Core::ConfigDiscoveryPathResolutionTest#test_resolves_paths_in_arrays'
+
+  test_disable_path_resolution                                   [32m PASS[0m (0.00s)
+
+FileReaderTest
+  test_read_existing_file                                        [32m PASS[0m (0.00s)
+  test_read_directory                                            [32m PASS[0m (0.00s)
+  test_readable_returns_false_for_non_existent_file              [32m PASS[0m (0.00s)
+  test_read_lines_with_limit                                     [32m PASS[0m (0.00s)
+  test_read_nil_path                                             [32m PASS[0m (0.00s)
+  test_metadata_for_non_existent_file                            [32m PASS[0m (0.00s)
+  test_read_lines_binary_file                                    [32m PASS[0m (0.00s)
+  test_readable_returns_false_for_nil                            [32m PASS[0m (0.00s)
+  test_binary_detection_by_extension                             [32m PASS[0m (0.00s)
+  test_readable_returns_true_for_readable_file                   [32m PASS[0m (0.00s)
+  test_read_lines_with_offset                                    [32m PASS[0m (0.00s)
+  test_read_non_existent_file                                    [32m PASS[0m (0.00s)
+  test_metadata_for_existing_file                                [32m PASS[0m (0.00s)
+  test_read_invalid_utf8                                         [32m PASS[0m (0.00s)
+  test_binary_detection_by_content                               [32m PASS[0m (0.00s)
+  test_read_file_with_size_limit                                 [32m PASS[0m (0.00s)
+
+YamlLoaderTest
+  test_saves_config_to_file                                      [32m PASS[0m (0.00s)
+  test_load_and_merge_empty_list                                 [32m PASS[0m (0.00s)
+  test_handles_invalid_yaml_gracefully                           [32m PASS[0m (0.00s)
+  test_handles_missing_file_safe                                 [32m PASS[0m (0.00s)
+  test_handles_missing_file                                      [32m PASS[0m (0.00s)
+  test_saves_hash_to_file                                        [32m PASS[0m (0.00s)
+  test_loads_valid_yaml                                          [32m PASS[0m (0.00s)
+  test_handles_io_errors_on_save                                 [32m PASS[0m (0.00s)
+  test_load_and_merge_with_missing_files                         [32m PASS[0m (0.00s)
+  test_creates_directory_when_saving                             [32m PASS[0m (0.00s)
+  test_load_and_merge_multiple_files                             [32m PASS[0m (0.00s)
+
+ConfigCascadeTest
+  test_resolve_by_type                                           [32m PASS[0m (0.00s)
+  test_cascade_with_empty_configs                                [32m PASS[0m (0.00s)
+  test_find_configs_method                                       [32m PASS[0m (0.00s)
+  test_full_cascade_resolution                                   [32m PASS[0m (0.00s)
+  test_get_method_shortcut                                       [32m PASS[0m (0.00s)
+  test_cascade_with_no_configs                                   [32m PASS[0m (0.00s)
+  test_cascade_with_array_merging                                [32m PASS[0m (0.00s)
+  test_partial_cascade_missing_project                           [32m PASS[0m (0.00s)
+
+EnvParserTest
+  test_unquote_handles_various_formats                           [32m PASS[0m (0.00s)
+  test_ignores_invalid_lines                                     [32m PASS[0m (0.00s)
+  test_formats_hash_to_env_content                               [32m PASS[0m (0.00s)
+  test_handles_special_characters                                [32m PASS[0m (0.00s)
+  test_handles_quoted_values                                     [32m PASS[0m (0.00s)
+  test_valid_key_validation                                      [32m PASS[0m (0.00s)
+  test_skips_comments_and_empty_lines                            [32m PASS[0m (0.00s)
+  test_handles_empty_and_nil_content                             [32m PASS[0m (0.00s)
+  test_roundtrip_parse_and_format                                [32m PASS[0m (0.00s)
+  test_formats_empty_hash                                        [32m PASS[0m (0.00s)
+  test_parses_basic_env_content                                  [32m PASS[0m (0.00s)
+
+Ace::Core::ConfigCascadeCustomPathsTest
+  test_config_resolver_finds_configs_in_custom_paths             [32m PASS[0m (0.00s)
+  test_config_cascade_priority_with_custom_paths                 [32m PASS[0m (0.00s)
+  test_config_resolver_with_custom_search_paths                  [32m PASS[0m (0.00s)
+
+Finished in 0.20412s
+143 tests, 378 assertions, [31m17 failures, 1 errors, [0m[33m0 skips[0m
