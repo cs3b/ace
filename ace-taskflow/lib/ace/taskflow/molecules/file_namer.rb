@@ -11,7 +11,8 @@ module Ace
         end
 
         def generate(metadata = {})
-          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+          timestamp_format = @config.dig("file_naming", "timestamp_format") || "%Y%m%d-%H%M%S"
+          timestamp = Time.now.strftime(timestamp_format)
           title = sanitize_title(metadata[:title])
           directory = idea_directory
 
@@ -29,6 +30,8 @@ module Ace
         def sanitize_title(title)
           return nil if title.nil? || title.empty?
 
+          max_length = @config.dig("file_naming", "title_max_length") || 50
+
           # Convert to string, downcase, and replace non-alphanumeric chars with hyphens
           sanitized = title.to_s.downcase
                           .gsub(/[^\w\s-]/, "") # Remove non-word chars except spaces and hyphens
@@ -36,12 +39,12 @@ module Ace
                           .gsub(/-+/, "-")      # Collapse multiple hyphens
                           .gsub(/^-|-$/, "")    # Remove leading/trailing hyphens
 
-          # Truncate to reasonable length (50 chars)
-          sanitized[0..49]
+          # Truncate to configured max length
+          sanitized[0..(max_length - 1)]
         end
 
         def idea_directory
-          @config.dig("taskflow", "idea", "directory") || "./ideas"
+          @config["directory"] || "./ideas"
         end
       end
     end

@@ -1,0 +1,67 @@
+# ace-taskflow configuration for this project
+
+taskflow:
+  # Global settings
+  settings:
+    author:
+      name: "ACE Developer"
+      email: "dev@ace-meta.com"
+    formatting:
+      timestamp_format: "%Y-%m-%d %H:%M:%S"
+      timezone: "UTC"
+    git:
+      auto_commit: false
+      commit_prefix: "idea:"
+    output:
+      verbose: true
+      color: true
+
+  # Idea subcommand configuration
+  idea:
+    directory: "./dev-taskflow/backlog/ideas"
+    template: |
+      # %{title}
+
+      ## Idea Description
+
+      %{content}
+
+      ## Metadata
+
+      - **Captured**: %{timestamp}
+      - **Author**: %{author}
+      - **Tags**: %{tags}
+      - **Status**: unprocessed
+
+      ## Next Steps
+
+      - [ ] Review and categorize
+      - [ ] Convert to task if actionable
+      - [ ] Archive if not relevant
+    file_naming:
+      pattern: "%{timestamp}-%{title}"
+      title_max_length: 50
+      timestamp_format: "%Y%m%d-%H%M%S"
+    categories:
+      enabled: true
+      default: "general"
+      allowed:
+        - general
+        - feature
+        - bugfix
+        - refactor
+        - documentation
+        - performance
+        - testing
+        - workflow
+
+  # Task subcommand configuration (future)
+  task:
+    directory: "./dev-taskflow/current"
+    use_release_dirs: true
+    tasks_subdir: "tasks"
+
+  # Release subcommand configuration (future)
+  release:
+    current: "./dev-taskflow/current"
+    completed: "./dev-taskflow/done"

@@ -7,12 +7,10 @@ class IdeaWriterTest < AceTestCase
   def setup
     @temp_dir = Dir.mktmpdir
     @config = {
-      "taskflow" => {
-        "idea" => {
-          "directory" => @temp_dir,
-          "template" => "# %{title}\n\n%{content}\n\n---\nCaptured: %{timestamp}",
-          "timestamp_format" => "%Y-%m-%d %H:%M:%S"
-        }
+      "directory" => @temp_dir,
+      "template" => "# %{title}\n\n%{content}\n\n---\nCaptured: %{timestamp}",
+      "formatting" => {
+        "timestamp_format" => "%Y-%m-%d %H:%M:%S"
       }
     }
     @writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
@@ -36,7 +34,7 @@ class IdeaWriterTest < AceTestCase
 
   def test_uses_configured_directory
     custom_dir = File.join(@temp_dir, "custom", "ideas")
-    @config["taskflow"]["idea"]["directory"] = custom_dir
+    @config["directory"] = custom_dir
     writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
 
     content = "Test idea in custom directory"
@@ -49,7 +47,7 @@ class IdeaWriterTest < AceTestCase
 
   def test_creates_directory_if_not_exists
     nested_dir = File.join(@temp_dir, "deep", "nested", "ideas")
-    @config["taskflow"]["idea"]["directory"] = nested_dir
+    @config["directory"] = nested_dir
     writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
 
     content = "Test idea in nested directory"

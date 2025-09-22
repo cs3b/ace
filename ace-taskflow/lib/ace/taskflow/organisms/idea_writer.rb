@@ -26,7 +26,20 @@ module Ace
 
         def load_config
           require "ace/core"
-          Ace::Core::ConfigResolver.load("taskflow")
+
+          # Use Ace::Core.config to load configuration
+          config = Ace::Core.config
+
+          # Get taskflow configuration
+          taskflow_config = config.get("taskflow") || {}
+
+          # For now, return the taskflow config if it has idea section
+          # Otherwise return default config
+          if taskflow_config.is_a?(Hash) && taskflow_config["idea"]
+            taskflow_config["idea"]
+          else
+            default_config
+          end
         rescue LoadError, StandardError
           # Return default config if ace-core is not available
           default_config
@@ -34,12 +47,10 @@ module Ace
 
         def default_config
           {
-            "taskflow" => {
-              "idea" => {
-                "directory" => "./ideas",
-                "template" => "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}",
-                "timestamp_format" => "%Y-%m-%d %H:%M:%S"
-              }
+            "directory" => "./ideas",
+            "template" => "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}",
+            "formatting" => {
+              "timestamp_format" => "%Y-%m-%d %H:%M:%S"
             }
           }
         end
@@ -69,8 +80,14 @@ module Ace
         end
 
         def format_idea(content, metadata)
-          template = @config.dig("taskflow", "idea", "template") ||
+          template = @config["template"] ||
                      "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}"
+
+          # Get author from settings or environment
+          author = metadata[:author] ||
+                   @config.dig("..", "settings", "author", "name") ||
+                   ENV["USER"] ||
+                   "unknown"
 
           # Support both %{var} and #{var} syntax for compatibility
           template.gsub(/%{(\w+)}|#\{(\w+)\}/) do |match|
@@ -84,6 +101,8 @@ module Ace
               metadata[:title]
             when :tags
               metadata[:tags] || ""
+            when :author
+              author
             else
               match
             end
@@ -91,7 +110,9 @@ module Ace
         end
 
         def timestamp_format
-          @config.dig("taskflow", "idea", "timestamp_format") || "%Y-%m-%d %H:%M:%S"
+          @config.dig("file_naming", "timestamp_format") ||
+            @config.dig("..", "settings", "formatting", "timestamp_format") ||
+            "%Y-%m-%d %H:%M:%S"
         end
       end
     end

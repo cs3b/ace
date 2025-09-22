@@ -422,7 +422,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Mon Sep 22 22:53:48 WEST 2025
+Mon Sep 22 23:02:12 WEST 2025
 
 ```
 
@@ -430,11 +430,12 @@ Mon Sep 22 22:53:48 WEST 2025
 
 **Output:**
 ```
- D .ace/test-cache/test_files.json
- M ace-test-runner/lib/ace/test_runner/atoms/command_builder.rb
- M ace-test-runner/lib/ace/test_runner/atoms/result_parser.rb
- M ace-test-runner/lib/ace/test_runner/models/test_configuration.rb
- M ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb
+ M Gemfile
+ M Gemfile.lock
+ M ace-core/test-reports/latest
+ M dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
+?? .ace/taskflow/
+?? ace-taskflow/
 
 ```
 
@@ -442,10 +443,10 @@ Mon Sep 22 22:53:48 WEST 2025
 
 **Output:**
 ```
-Status: 13 done, 4 pending (17 total)
+Status: 14 done, 3 pending (17 total)
 Recent Tasks (3/502 shown):
 ==================================================
-v.0.9.0+task.006 * PENDING * 1 hour ago * Create ace-taskflow Gem
+v.0.9.0+task.006 * DONE * 1 hour ago * Create ace-taskflow Gem
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
 v.0.9.0+task.007 * PENDING * 1 hours ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
@@ -458,15 +459,15 @@ v.0.9.0+task.017 * DONE * 5 hours ago * Refactor ace-context to markdown-only pr
 
 **Output:**
 ```
-Status: 13 done, 4 pending (17 total)
+Status: 14 done, 3 pending (17 total)
 Next Tasks (3 shown):
 ==================================================
-v.0.9.0+task.006 * PENDING * 1 hour ago * Create ace-taskflow Gem
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
 v.0.9.0+task.007 * PENDING * 1 hours ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
 v.0.9.0+task.008 * PENDING * 2 days ago * Configure .ace for This Project
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
+v.0.9.0+task.009 * PENDING * 3 days ago * Create Migration Documentation
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.009-create-migration-documentation.md
 
 ```
 
@@ -492,6 +493,7 @@ Current Release Information:
 ```
 /Users/mc/Ps/ace-meta/ace-context
 /Users/mc/Ps/ace-meta/ace-core
+/Users/mc/Ps/ace-meta/ace-taskflow
 /Users/mc/Ps/ace-meta/ace-test-runner
 /Users/mc/Ps/ace-meta/ace-test-support
 /Users/mc/Ps/ace-meta/bin

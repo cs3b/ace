@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 # Local workspace gems - flat in root (ace-* prefix)
 gem 'ace-context', path: 'ace-context'
 gem 'ace-core', path: 'ace-core'
+# gem 'ace-git', path: 'ace-git'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
@@ -29,4 +30,3 @@ group :development, :test do
   gem 'ostruct', '~> 0.6.1'
   gem 'zeitwerk', '~> 2.6'
 end
-
