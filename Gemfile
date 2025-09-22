@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 # Local workspace gems - flat in root (ace-* prefix)
 gem 'ace-context', path: 'ace-context'
 gem 'ace-core', path: 'ace-core'
+gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
 # Shared dev/test tools for all gems

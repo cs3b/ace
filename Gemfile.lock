@@ -10,6 +10,12 @@ PATH
     ace-core (0.9.0)
 
 PATH
+  remote: ace-taskflow
+  specs:
+    ace-taskflow (0.9.0)
+      ace-core (~> 0.9.0)
+
+PATH
   remote: ace-test-runner
   specs:
     ace-test-runner (0.1.0)
@@ -86,6 +92,7 @@ PLATFORMS
 DEPENDENCIES
   ace-context!
   ace-core!
+  ace-taskflow!
   ace-test-runner!
   ace-test-support!
   addressable (~> 2.8)
