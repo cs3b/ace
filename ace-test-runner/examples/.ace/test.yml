@@ -1,0 +1,34 @@
+# Example configuration for ace-test
+# Place this file in your project's .ace/ directory
+
+version: 1
+
+# Failure limits configuration
+failure_limits:
+  max_display: 7      # Maximum failures to show in output (default: 7)
+  stop_threshold: 21  # Stop running tests after N failures (default: 21)
+                     # Set to nil or remove to run all tests regardless of failures
+
+# Test file patterns by category
+patterns:
+  atoms: 'test/{unit/,}atoms/**/*_test.rb'
+  molecules: 'test/{unit/,}molecules/**/*_test.rb'
+  organisms: 'test/{unit/,}organisms/**/*_test.rb'
+  models: 'test/{unit/,}models/**/*_test.rb'
+  integration: 'test/integration/**/*_test.rb'
+  system: 'test/system/**/*_test.rb'
+
+# Test groups for quick execution
+groups:
+  unit: [atoms, molecules, organisms, models]
+  all: [unit, integration, system]
+  quick: [atoms, molecules]
+  core: [atoms, molecules, models]
+
+# Default settings
+defaults:
+  reporter: progress       # Output format: progress, progress-file, json
+  color: auto             # Color output: true, false, auto
+  fail_fast: false        # Stop on first failure
+  save_reports: true      # Save detailed test reports
+  report_dir: test-reports # Directory for test reports

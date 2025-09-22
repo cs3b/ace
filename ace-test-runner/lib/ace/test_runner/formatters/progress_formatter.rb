@@ -7,13 +7,12 @@ module Ace
     module Formatters
       # Progress formatter that shows one dot per test (not per file)
       class ProgressFormatter < BaseFormatter
-        MAX_FAILURES_TO_DISPLAY = 7
-
         def initialize(options = {})
           super
           @test_count = 0
           @line_width = options[:line_width] || 80
           @configuration = options
+          @max_failures_to_display = options[:max_failures_to_display] || 7
           @test_results = []
           @current_group = nil
           @group_counts = Hash.new(0)
@@ -53,11 +52,11 @@ module Ace
             lines << ""
             total_failures = result.failed + result.errors
 
-            # Display up to MAX_FAILURES_TO_DISPLAY failures
-            failures_to_show = result.failures_detail.take(MAX_FAILURES_TO_DISPLAY)
+            # Display up to max_failures_to_display failures
+            failures_to_show = result.failures_detail.take(@max_failures_to_display)
 
             # Show failure count header with reference to full report if needed
-            if total_failures > MAX_FAILURES_TO_DISPLAY
+            if total_failures > @max_failures_to_display
               report_path = @report_path || "test-reports/latest"
               lines << "FAILURES (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
             else
@@ -66,13 +65,17 @@ module Ace
 
             failures_to_show.each_with_index do |failure, idx|
               # Extract file and line from location (e.g., "/path/file.rb:42:in `test_method'")
-              location_match = failure.location.match(/^([^:]+):(\d+)/)
-              if location_match
-                file = location_match[1].gsub(/^.*\/test\//, "test/")  # Shorten path
-                line = location_match[2]
-                location = "#{file}:#{line}"
+              if failure.location
+                location_match = failure.location.match(/^([^:]+):(\d+)/)
+                if location_match
+                  file = location_match[1].gsub(/^.*\/test\//, "test/")  # Shorten path
+                  line = location_match[2]
+                  location = "#{file}:#{line}"
+                else
+                  location = failure.location
+                end
               else
-                location = failure.location
+                location = failure.test_name || "unknown"
               end
 
               # Format: location - short message with individual failure report path
@@ -88,8 +91,8 @@ module Ace
             end
 
             # If there are more failures than displayed
-            if result.failures_detail.size > MAX_FAILURES_TO_DISPLAY
-              remaining = result.failures_detail.size - MAX_FAILURES_TO_DISPLAY
+            if result.failures_detail.size > @max_failures_to_display
+              remaining = result.failures_detail.size - @max_failures_to_display
               report_path = @report_path || "test-reports/latest"
               lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report: #{report_path}/failures.json"
             end
