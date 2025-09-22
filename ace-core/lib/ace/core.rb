@@ -6,6 +6,7 @@ require_relative "core/errors"
 # Main API
 require_relative "core/organisms/config_resolver"
 require_relative "core/organisms/environment_manager"
+require_relative "core/config_discovery"
 
 module Ace
   module Core
