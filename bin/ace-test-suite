@@ -1,1 +1,17 @@
-../ace-test-runner/exe/ace-test-suite
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Wrapper script to run ace-test-suite with proper bundler context
+require "pathname"
+
+# Find the ace-meta root directory
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+
+# Set the Gemfile location
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+# Load bundler
+require "bundler/setup"
+
+# Now require and run the actual ace-test-suite executable
+load ace_meta_root.join("ace-test-runner/exe/ace-test-suite").to_s

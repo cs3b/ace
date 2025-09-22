@@ -3,8 +3,10 @@
 
 # Add the lib directory to the load path
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path("../ace-core/lib", __dir__)
 
 require "optparse"
+require "ace/core"
 require "ace/test_runner"
 require "ace/test_runner/suite"
 
@@ -68,11 +70,27 @@ rescue OptionParser::InvalidArgument => e
   exit 1
 end
 
-# Check if config file exists
-unless File.exist?(options[:config])
+# Use ConfigDiscovery to find the config file
+config_discovery = Ace::Core::ConfigDiscovery.new
+config_file = if options[:config] == ".ace/test-suite.yml"
+  # Default config - use discovery
+  config_discovery.find_config_file("test-suite.yml") || options[:config]
+else
+  # User specified config - use as is if exists, otherwise try discovery
+  if File.exist?(options[:config])
+    options[:config]
+  else
+    # Try to find the file using discovery
+    config_discovery.find_config_file(File.basename(options[:config]))
+  end
+end
+
+unless config_file && File.exist?(config_file)
   puts "Error: Configuration file not found: #{options[:config]}"
   puts
-  puts "Create a test suite configuration at .ace/test-suite.yml"
+  puts "Searched in: #{config_discovery.config_search_paths.join(', ')}"
+  puts
+  puts "Create a test suite configuration at .ace/test-suite.yml in your project root"
   puts
   puts "Example configuration:"
   puts <<~YAML
@@ -93,6 +111,9 @@ unless File.exist?(options[:config])
   YAML
   exit 1
 end
+
+# Update options with the found config file
+options[:config] = config_file
 
 # Override config with command line options if provided
 if options[:parallel] || options[:group] || options[:no_color] || options[:verbose]
