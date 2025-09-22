@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.006
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002, v.0.9.0+task.003, v.0.9.0+task.004]
@@ -71,18 +71,18 @@ Create the ace-taskflow gem that provides task and idea management functionality
   - **Dependencies**: context_loader, idea_enhancer, path_resolver, llm_client molecules
   - **Features**: Raw input capture, LLM enhancement, git commits, SOURCE section appending
 * [x] Clarified package structure: ace-taskflow with ace-tf command
-* [ ] Design subcommand architecture for ace-tf (idea, task, release)
-* [ ] Plan migration path for capture-it to ace-tf idea
-* [ ] Design extensible structure for future subcommands
+* [x] Design subcommand architecture for ace-tf (idea, task, release)
+* [x] Plan migration path for capture-it to ace-tf idea
+* [x] Design extensible structure for future subcommands
 
 ### Execution Steps
 
-- [ ] Create gem skeleton following ATOM architecture
+- [x] Create gem skeleton following ATOM architecture
   ```bash
   mkdir -p ace-taskflow/{lib/ace/taskflow/{atoms,molecules,organisms,models,commands},test/{atoms,molecules,organisms,integration,commands,support},config,exe,.bundle}
   ```
 
-- [ ] Create .bundle/config for ace-taskflow
+- [x] Create .bundle/config for ace-taskflow
   ```yaml
   # ace-taskflow/.bundle/config
   ---
@@ -91,7 +91,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   > NOTE: This follows the Option C pattern established with ace-core
   > Allows ace-taskflow to use shared root Gemfile for all dependencies
 
-- [ ] Create ace-taskflow.gemspec
+- [x] Create ace-taskflow.gemspec
   ```ruby
   Gem::Specification.new do |spec|
     spec.name = "ace-taskflow"
@@ -105,13 +105,13 @@ Create the ace-taskflow gem that provides task and idea management functionality
   end
   ```
 
-- [ ] Copy test support from ace-core
+- [x] Copy test support from ace-core
   ```bash
   cp -r ../ace-core/test/support ace-taskflow/test/
   ```
   > NOTE: Reuse TestEnvironment and ConfigHelpers for integration testing
 
-- [ ] Implement CLI with subcommands
+- [x] Implement CLI with subcommands
   ```ruby
   # lib/ace/taskflow/cli.rb
   require 'optparse'
@@ -146,7 +146,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   end
   ```
 
-- [ ] Implement idea command
+- [x] Implement idea command
   ```ruby
   # lib/ace/taskflow/commands/idea_command.rb
   module Ace
@@ -170,7 +170,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   end
   ```
 
-- [ ] Implement idea writer
+- [x] Implement idea writer
   ```ruby
   # lib/ace/taskflow/organisms/idea_writer.rb
   module Ace
@@ -208,7 +208,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   > Assert: Ideas written to correct location
   > Command: cd ace-taskflow && rake test TEST=test/organisms/idea_writer_test.rb
 
-- [ ] Implement file namer
+- [x] Implement file namer
   ```ruby
   # lib/ace/taskflow/molecules/file_namer.rb
   module Ace
@@ -232,7 +232,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   end
   ```
 
-- [ ] Create ace-tf executable
+- [x] Create ace-tf executable
   ```ruby
   #!/usr/bin/env ruby
   # exe/ace-tf
@@ -241,7 +241,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   Ace::Taskflow::CLI.start(ARGV)
   ```
 
-- [ ] Create default config/taskflow.yml
+- [x] Create default config/taskflow.yml
   ```yaml
   taskflow:
     idea:
@@ -260,7 +260,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
       directory: "./releases"
   ```
 
-- [ ] Create sample .ace/taskflow/config/taskflow.yml
+- [x] Create sample .ace/taskflow/config/taskflow.yml
   ```yaml
   taskflow:
     idea:
@@ -279,7 +279,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
       directory: "./dev-taskflow/done"
   ```
 
-- [ ] Set up test helper
+- [x] Set up test helper
   ```ruby
   # test/test_helper.rb
   require 'minitest/autorun'
@@ -289,7 +289,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   # Reuse test utilities from ace-core which already has 29 passing tests
   ```
 
-- [ ] Write idea writer tests
+- [x] Write idea writer tests
   ```ruby
   class IdeaWriterTest < Minitest::Test
     def setup
@@ -310,13 +310,13 @@ Create the ace-taskflow gem that provides task and idea management functionality
   end
   ```
 
-- [ ] Write file namer tests
+- [x] Write file namer tests
   > TEST: File naming
   > Type: Unit Test
   > Assert: Files named with timestamp and title
   > Command: cd ace-capture && rake test TEST=test/file_namer_test.rb
 
-- [ ] Update root Gemfile
+- [x] Update root Gemfile
   ```ruby
   gem "ace-taskflow", path: "ace-taskflow"
   ```
@@ -325,7 +325,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   > - Shared dev dependencies (minitest ~> 5.20, rake ~> 13.0, minitest-reporters ~> 1.6)
   > - All gems use .bundle/config to reference parent Gemfile
 
-- [ ] Run bundle install from root and test
+- [x] Run bundle install from root and test
   > TEST: ace-tf idea command works
   > Type: Integration
   > Assert: Ideas captured to files
@@ -333,7 +333,7 @@ Create the ace-taskflow gem that provides task and idea management functionality
   > NOTE: Run from project root, not ace-taskflow directory
   > The .bundle/config will ensure proper Gemfile resolution
 
-- [ ] Create README
+- [x] Create README
   ```markdown
   # ace-taskflow
 
@@ -364,15 +364,15 @@ Create the ace-taskflow gem that provides task and idea management functionality
 
 ## Acceptance Criteria
 
-- [ ] Gem structure follows conventions
-- [ ] Depends on ace-core for config
-- [ ] ace-tf idea command writes ideas to files
-- [ ] Subcommand architecture supports future extensions
-- [ ] File names include timestamp
-- [ ] Config loads from .ace/taskflow/
-- [ ] Tests pass using minitest
-- [ ] README documents usage
-- [ ] Integrates with root Gemfile
+- [x] Gem structure follows conventions
+- [x] Depends on ace-core for config
+- [x] ace-tf idea command writes ideas to files
+- [x] Subcommand architecture supports future extensions
+- [x] File names include timestamp
+- [x] Config loads from .ace/taskflow/
+- [x] Tests pass using minitest
+- [x] README documents usage
+- [x] Integrates with root Gemfile
 
 ## Out of Scope (for initial release)
 
