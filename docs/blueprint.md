@@ -39,16 +39,13 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 AI agents should ignore these during normal operations:
 
 - `dev-taskflow/done/**/*` # Completed tasks and releases
+- `.cache/ace-*/**/*` # Cached output from ace tools
 - `ace-*/coverage/**/*` # Test coverage reports
-- `vendor/bundle/**/*` # Bundled dependencies
+- `**/test-reports/**/*` # Test report files
 - `tmp/**/*` # Temporary files
-- `log/**/*` # Log files
 - `.git/**/*` # Git internals
 - `.bundle/**/*` # Bundle cache
-- `.idea/**/*`, `.vscode/**/*` # Editor configurations
-- `**/.*.swp`, `**/.*.swo` # Swap files
-- `**/.DS_Store` # macOS system files
-- `**/.env`, `**/.env.*` # Environment files
-- `*.session.log` # Session logs
-- `*.tmp` # Temporary files
-- `docs/context/cached/**/*` # Cached context files (generated)
+- `node_modules/**/*` # Node.js dependencies
+- `*.bak` # Backup files
+- `docs/context/cached/**/*` # Legacy cached context files
+
