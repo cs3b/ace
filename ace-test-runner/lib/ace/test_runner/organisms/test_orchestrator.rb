@@ -70,14 +70,15 @@ module Ace
           # Generate and save report
           report = @report_generator.generate(@result, test_files)
 
-          # Output to stdout
-          @formatter.on_finish(@result)
-
           # Save reports if configured
           if @configuration.save_reports
             report_path = save_reports(report)
-            # Don't print report path here - formatter already shows it
+            # Pass report path to formatter before outputting
+            @formatter.report_path = report_path if @formatter.respond_to?(:report_path=)
           end
+
+          # Output to stdout
+          @formatter.on_finish(@result)
 
           # Return exit code
           @result.success? ? 0 : 1
@@ -256,8 +257,6 @@ module Ace
           report_path = case @configuration.format
           when "json"
             storage.save_report(report, format: :json)
-          when "markdown"
-            storage.save_report(report, format: :markdown)
           else
             storage.save_report(report, format: :all)
           end

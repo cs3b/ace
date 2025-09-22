@@ -29,12 +29,12 @@ module Ace
         end
 
         def valid_format?
-          %w[ai compact json markdown progress progress-file].include?(format)
+          %w[json progress progress-file].include?(format)
         end
 
         def validate!
           unless valid_format?
-            raise ArgumentError, "Unknown format '#{format}'. Valid formats: progress, progress-file, compact, ai, json, markdown"
+            raise ArgumentError, "Unknown format '#{format}'. Valid formats: progress, progress-file, json"
           end
 
           if save_reports && !writable_directory?(report_dir)

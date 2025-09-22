@@ -9,8 +9,10 @@ module Ace
         PATTERNS = {
           summary: /(\d+) (?:tests?|runs?), (\d+) assertions?, (\d+) failures?, (\d+) errors?, (\d+) skips?/,
           failure: /^\s+\d+\) (Failure|Error):\n(.+?)(?=^\s+\d+\) |^Finished in|\z)/m,
-          # Pattern for inline verbose failures
-          inline_failure: /^\s*(test_[\w_]+).*\s+FAIL.*?\n(.*?)(?=^\s*test_|\n\n|\z)/m,
+          # Pattern for inline verbose failures - match each failure individually
+          inline_failure: /^\s*(test_[\w_]+).*?\s+FAIL\s+.*?\n((?:.*?\n)*?)(?=^\s*test_|^[A-Z]|\z)/m,
+          # Pattern for inline errors
+          inline_error: /^\s*(test_[\w_]+).*?\s+ERROR\s+.*?\n((?:.*?\n)*?)(?=^\s*test_|^[A-Z]|\z)/m,
           location: /\[(.*?):(\d+)\]/,
           duration: /Finished in ([\d.]+)s/,
           deprecation: /DEPRECATION WARNING: (.+)/
@@ -56,8 +58,15 @@ module Ace
 
           # If no failures found, try inline verbose format
           if failures.empty?
+            # Parse FAIL lines
             clean_output.scan(PATTERNS[:inline_failure]) do |test_name, failure_content|
-              failure = parse_inline_failure(test_name, failure_content)
+              failure = parse_inline_failure(test_name, failure_content, :failure)
+              failures << failure if failure
+            end
+
+            # Parse ERROR lines
+            clean_output.scan(PATTERNS[:inline_error]) do |test_name, error_content|
+              failure = parse_inline_failure(test_name, error_content, :error)
               failures << failure if failure
             end
           end
@@ -126,7 +135,7 @@ module Ace
           }
         end
 
-        def parse_inline_failure(test_name, content)
+        def parse_inline_failure(test_name, content, type = :failure)
           # Parse inline verbose format failures
           # Example:
           # test_handles_special_characters                                FAIL (0.00s)
@@ -156,7 +165,7 @@ module Ace
           end
 
           {
-            type: :failure,
+            type: type,
             test_name: test_name,
             message: message_lines.join("\n"),
             location: location,

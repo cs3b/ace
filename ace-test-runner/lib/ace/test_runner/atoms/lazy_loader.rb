@@ -7,12 +7,6 @@ module Ace
         class << self
           def load_formatter(format)
             case format
-            when "ai"
-              require_relative "../formatters/ai_formatter"
-              Formatters::AiFormatter
-            when "compact"
-              require_relative "../formatters/compact_formatter"
-              Formatters::CompactFormatter
             when "json"
               require_relative "../formatters/json_formatter"
               Formatters::JsonFormatter

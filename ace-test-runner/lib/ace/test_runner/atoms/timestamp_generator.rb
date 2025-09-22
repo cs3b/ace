@@ -5,7 +5,7 @@ module Ace
     module Atoms
       # Generates consistent timestamps for reports
       class TimestampGenerator
-        DEFAULT_FORMAT = "%Y-%m-%d-%H-%M-%S"
+        DEFAULT_FORMAT = "%Y%m%d-%H%M%S"
         ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
         def initialize(format: DEFAULT_FORMAT)
