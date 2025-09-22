@@ -422,7 +422,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Mon Sep 22 18:24:59 WEST 2025
+Mon Sep 22 20:30:55 WEST 2025
 
 ```
 
@@ -430,6 +430,8 @@ Mon Sep 22 18:24:59 WEST 2025
 
 **Output:**
 ```
+ M .cache/ace-context/project.md
+ M ace-core/test-reports/latest
 
 ```
 
@@ -440,7 +442,7 @@ Mon Sep 22 18:24:59 WEST 2025
 Status: 13 done, 4 pending (17 total)
 Recent Tasks (3/502 shown):
 ==================================================
-v.0.9.0+task.017 * DONE * 1 hour ago * Refactor ace-context to markdown-only preset configuration
+v.0.9.0+task.017 * DONE * 2 hours ago * Refactor ace-context to markdown-only preset configuration
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.017-refactor-ace-context-to-markdown-only-preset-configuration.md
 v.0.9.0+task.016 * DONE * 2 days ago * Implement Smart Caching for ace-context
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.016-implement-smart-caching-for-ace-context.md

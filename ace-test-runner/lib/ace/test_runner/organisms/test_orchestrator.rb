@@ -21,7 +21,11 @@ module Ace
           @report_generator = ReportGenerator.new(@configuration)
 
           # Initialize formatter - will be updated after pattern resolution
-          @formatter = @configuration.formatter_class.new(@configuration.to_h)
+          formatter_options = @configuration.to_h
+          if @configuration.failure_limits
+            formatter_options[:max_failures_to_display] = @configuration.failure_limits[:max_display]
+          end
+          @formatter = @configuration.formatter_class.new(formatter_options)
         end
 
         def run
@@ -110,7 +114,8 @@ module Ace
             timeout: options[:timeout],
             parallel: options[:parallel],
             color: config_with_options.defaults[:color] == "auto" ? true : config_with_options.defaults[:color],
-            per_file: options[:per_file]
+            per_file: options[:per_file],
+            failure_limits: config_with_options.failure_limits
           )
         end
 
@@ -139,6 +144,9 @@ module Ace
           # If using catch-all pattern, reinitialize formatter without groups
           if @pattern_resolver.using_catch_all
             formatter_options = @configuration.to_h.merge(show_groups: false)
+            if @configuration.failure_limits
+              formatter_options[:max_failures_to_display] = @configuration.failure_limits[:max_display]
+            end
             @formatter = @configuration.formatter_class.new(formatter_options)
           end
 
@@ -174,6 +182,11 @@ module Ace
             verbose: @configuration.verbose,
             per_file: @configuration.per_file  # Allow per-file execution if needed for debugging
           }
+
+          # Add stop threshold if configured
+          if @configuration.failure_limits && @configuration.failure_limits[:stop_threshold]
+            options[:stop_threshold] = @configuration.failure_limits[:stop_threshold]
+          end
 
           # Always use execute_with_progress for consistent interface
           # The method internally decides whether to run per-file or grouped

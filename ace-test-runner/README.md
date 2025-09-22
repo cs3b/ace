@@ -41,28 +41,73 @@ ace-test
 
 ```bash
 ace-test [options]
-  --format FORMAT        # Output format: ai (default), compact, json, markdown
+  --format FORMAT        # Output format: progress (default), progress-file, json
   --report-dir DIR      # Report storage directory (default: test-reports/)
   --no-save             # Skip saving detailed reports
   --fail-fast           # Stop execution on first failure
+  --stop-threshold N    # Stop tests after N failures (default: 21)
+  --max-display N       # Maximum failures to display (default: 7)
   --fix-deprecations    # Auto-fix deprecated test patterns
   --filter PATTERN      # Run only tests matching pattern
   --verbose             # Show detailed test execution
+  --per-file           # Execute each test file separately (slower, for debugging)
   --help                # Display help information
 ```
 
+### Configuration
+
+Ace-test looks for configuration in `.ace/test.yml` in your project root. Example:
+
+```yaml
+version: 1
+
+# Failure limits
+failure_limits:
+  max_display: 7      # Show first 7 failures in output
+  stop_threshold: 21  # Stop tests after 21 failures
+
+# Test patterns
+patterns:
+  atoms: 'test/{unit/,}atoms/**/*_test.rb'
+  molecules: 'test/{unit/,}molecules/**/*_test.rb'
+  organisms: 'test/{unit/,}organisms/**/*_test.rb'
+  models: 'test/{unit/,}models/**/*_test.rb'
+  integration: 'test/integration/**/*_test.rb'
+  system: 'test/system/**/*_test.rb'
+
+# Test groups
+groups:
+  unit: [atoms, molecules, organisms, models]
+  all: [unit, integration, system]
+  quick: [atoms, molecules]
+
+# Defaults
+defaults:
+  reporter: progress
+  color: auto
+  fail_fast: false
+  save_reports: true
+  report_dir: test-reports
+```
+
+Command-line options override configuration file settings.
+
 ### Output Examples
 
-#### AI Format (Default)
+#### Progress Format (Default)
 ```
-✅ 150 passed, ❌ 0 failed, ⚠️ 1 skipped
-Summary: All tests passed in 0.45s
-Detailed reports: test-reports/2025-01-20-14-30-45/
+....F.F.S...........
+FAILURES (2):
+  test/atoms/parser_test.rb:42 - Expected 5 but got 4
+  test/molecules/executor_test.rb:15 - Timeout error
+
+Finished in 0.45s
+18 passed, 2 failed, 1 skipped
 ```
 
-#### Compact Format (CI-friendly)
+#### Progress-File Format (One dot per file)
 ```
-..F.F.S...........
+..F.F.S
 ```
 
 #### JSON Format

@@ -87,6 +87,14 @@ parser = OptionParser.new do |opts|
     options[:per_file] = true
   end
 
+  opts.on("--max-display N", Integer, "Maximum failures to display (default: 7)") do |n|
+    options[:max_display] = n
+  end
+
+  opts.on("--stop-threshold N", Integer, "Stop tests after N failures (default: 21)") do |n|
+    options[:stop_threshold] = n
+  end
+
   opts.separator ""
   opts.separator "Rake Integration:"
 
@@ -139,6 +147,8 @@ parser = OptionParser.new do |opts|
   opts.separator "  ace-test test/foo_test.rb:42    # Run test at specific line"
   opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
+  opts.separator "  ace-test --stop-threshold 10     # Stop after 10 failures"
+  opts.separator "  ace-test --max-display 5         # Show only first 5 failures"
   opts.separator "  ace-test clean-test-reports      # Delete all test reports except latest"
   opts.separator ""
   opts.separator "Rake Integration Examples:"

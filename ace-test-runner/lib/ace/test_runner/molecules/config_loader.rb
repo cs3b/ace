@@ -8,6 +8,8 @@ module Ace
     module Molecules
       class ConfigLoader
         DEFAULT_CONFIG_PATHS = [
+          ".ace/test.yml",
+          ".ace/test.yaml",
           ".ace/test-runner.yml",
           ".ace/test-runner.yaml",
           "test-runner.yml",
@@ -36,6 +38,10 @@ module Ace
             fail_fast: false,
             save_reports: true,
             report_dir: "test-reports"
+          },
+          failure_limits: {
+            max_display: 7,
+            stop_threshold: 21
           }
         }.freeze
 
@@ -72,6 +78,17 @@ module Ace
           if options[:report_dir]
             merged[:defaults] ||= {}
             merged[:defaults][:report_dir] = options[:report_dir]
+          end
+
+          # Override failure limits with command-line options
+          if options[:max_display]
+            merged[:failure_limits] ||= {}
+            merged[:failure_limits][:max_display] = options[:max_display]
+          end
+
+          if options[:stop_threshold]
+            merged[:failure_limits] ||= {}
+            merged[:failure_limits][:stop_threshold] = options[:stop_threshold]
           end
 
           OpenStruct.new(merged)
@@ -114,11 +131,13 @@ module Ace
           config[:patterns] ||= deep_copy(DEFAULT_CONFIG[:patterns])
           config[:groups] ||= deep_copy(DEFAULT_CONFIG[:groups])
           config[:defaults] ||= deep_copy(DEFAULT_CONFIG[:defaults])
+          config[:failure_limits] ||= deep_copy(DEFAULT_CONFIG[:failure_limits])
 
           # Merge with defaults for missing values
           config[:patterns] = deep_copy(DEFAULT_CONFIG[:patterns]).merge(config[:patterns])
           config[:groups] = deep_copy(DEFAULT_CONFIG[:groups]).merge(config[:groups])
           config[:defaults] = deep_copy(DEFAULT_CONFIG[:defaults]).merge(config[:defaults])
+          config[:failure_limits] = deep_copy(DEFAULT_CONFIG[:failure_limits]).merge(config[:failure_limits])
 
           config
         end
