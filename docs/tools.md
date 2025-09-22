@@ -163,28 +163,39 @@ ace-test-suite --format json --parallel
   - ConfigHelpers for testing
   - Minitest extensions
 
-## Legacy Tools (Being Migrated)
+## Planned Gems (Coming Soon)
 
-The following tools from dev-tools are being migrated to individual ace-* gems:
+The following tools from dev-tools are being packaged as focused ace-* gems:
 
-### Planned ace-git
-- `git-add`, `git-commit`, `git-status`, `git-log`, `git-push`, `git-pull`
-- `git-fetch`, `git-tag`
+### ace-search
+- **Purpose**: Unified file and content search across codebases
+- **Commands**: `ace-search` (replaces `search`)
+- **Features**: File search, content grep, preset patterns, interactive mode
 
-### Planned ace-llm
-- `llm-query` - Multi-provider LLM integration
+### ace-nav
+- **Purpose**: Navigation and path manipulation tools
+- **Commands**: `ace-ls`, `ace-tree`, `ace-find`, `ace-create`
+- **Combines**: nav-ls, nav-path, nav-tree, create-path
 
-### Planned ace-handbook
-- `handbook` - Workflow and template management
-- `task-manager` - Task tracking
-- `release-manager` - Release coordination
+### ace-git
+- **Purpose**: Enhanced git operations and smart commit generation
+- **Commands**: `ace-gc` (smart commit), `ace-git-*` (enhanced git commands)
+- **Features**: Intelligent commit messages, workflow automation
 
-### Planned ace-dev
-- `search` - Unified file/content search
-- `create-path` - File/directory creation
-- `nav-ls`, `nav-path`, `nav-tree` - Navigation utilities
-- `code-review`, `code-review-synthesize` - Code review tools
-- `reflection-synthesize` - Development reflections
+### ace-taskflow
+- **Purpose**: Task and release management
+- **Commands**: `ace-tf` (task management), `ace-tfr` (release management)
+- **Combines**: task-manager, release-manager functionality
+
+### ace-review
+- **Purpose**: Code review automation and synthesis
+- **Commands**: `ace-review`, `ace-review-synth`
+- **Features**: Preset-based reviews, synthesis reports, quality checks
+
+### ace-llm
+- **Purpose**: Multi-provider AI model integration
+- **Commands**: `ace-llm`
+- **Features**: Unified interface for OpenAI, Anthropic, Google, local models
 
 ## Development Workflow
 
