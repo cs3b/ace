@@ -56,18 +56,18 @@ module Ace
           # Check if we executed multiple commands (per-file) or single command (grouped)
           if execution_result[:commands] && execution_result[:commands].is_a?(Array)
             # Each file was executed separately, parse and sum them all
-            parsed_result = aggregate_individual_results(execution_result[:stdout])
+            @parsed_result = aggregate_individual_results(execution_result[:stdout])
           else
             # Single command execution (grouped)
-            parsed_result = @result_parser.parse_output(execution_result[:stdout])
+            @parsed_result = @result_parser.parse_output(execution_result[:stdout])
           end
 
           # Build result object
-          @result = build_result(parsed_result, execution_result, start_time)
+          @result = build_result(@parsed_result, execution_result, start_time)
 
           # Analyze failures
           if @result.has_failures?
-            analyzed_failures = @failure_analyzer.analyze_all(parsed_result[:failures])
+            analyzed_failures = @failure_analyzer.analyze_all(@parsed_result[:failures])
             @result.failures_detail = analyzed_failures
           end
 
@@ -83,6 +83,11 @@ module Ace
 
           # Output to stdout
           @formatter.on_finish(@result)
+
+          # Display profile results if requested
+          if @configuration.profile && @parsed_result[:test_times] && !@parsed_result[:test_times].empty?
+            display_profile(@parsed_result[:test_times], @configuration.profile)
+          end
 
           # Return exit code
           @result.success? ? 0 : 1
@@ -115,7 +120,8 @@ module Ace
             parallel: options[:parallel],
             color: config_with_options.defaults[:color] == "auto" ? true : config_with_options.defaults[:color],
             per_file: options[:per_file],
-            failure_limits: config_with_options.failure_limits
+            failure_limits: config_with_options.failure_limits,
+            profile: options[:profile]
           )
         end
 
@@ -180,7 +186,8 @@ module Ace
           options = {
             fail_fast: @configuration.fail_fast,
             verbose: @configuration.verbose,
-            per_file: @configuration.per_file  # Allow per-file execution if needed for debugging
+            per_file: @configuration.per_file,  # Allow per-file execution if needed for debugging
+            profile: @configuration.profile      # Add profile option for verbose timing
           }
 
           # Add stop threshold if configured
@@ -239,7 +246,8 @@ module Ace
             },
             failures: [],
             duration: 0.0,
-            deprecations: []
+            deprecations: [],
+            test_times: []
           }
 
           individual_outputs.each do |output|
@@ -258,7 +266,13 @@ module Ace
             aggregated[:failures].concat(parsed[:failures])
             aggregated[:deprecations].concat(parsed[:deprecations])
             aggregated[:duration] += parsed[:duration]
+
+            # Collect test times if available
+            aggregated[:test_times].concat(parsed[:test_times]) if parsed[:test_times]
           end
+
+          # Re-sort test times by duration
+          aggregated[:test_times].sort_by! { |t| -t[:duration] } if aggregated[:test_times]
 
           aggregated
         end
@@ -286,6 +300,41 @@ module Ace
 
           report.report_path = report_path
           report_path
+        end
+
+        def display_profile(test_times, count)
+          return if test_times.empty?
+
+          # Take only the slowest N tests
+          slowest = test_times.first(count)
+
+          puts "\n" + "=" * 60
+          puts "Slowest Tests (Top #{[count, test_times.size].min})"
+          puts "=" * 60
+
+          slowest.each_with_index do |test, index|
+            # Format duration nicely
+            duration = format("%.3fs", test[:duration])
+
+            # Try to shorten the file path if location is available
+            location = if test[:location]
+              test[:location].gsub(/^.*\/test\//, "test/")
+            else
+              "unknown location"
+            end
+
+            puts format("%2d. %-50s %8s",
+              index + 1,
+              test[:name][0..49],  # Truncate long test names
+              duration
+            )
+            puts "    #{location}" if test[:location]
+          end
+
+          # Show total time for all tests
+          total_time = test_times.sum { |t| t[:duration] }
+          puts "-" * 60
+          puts format("Total time in tests: %.3fs", total_time)
         end
       end
     end
