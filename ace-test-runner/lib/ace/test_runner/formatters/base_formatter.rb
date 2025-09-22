@@ -6,10 +6,12 @@ module Ace
       # Base class for all formatters
       class BaseFormatter
         attr_reader :options
+        attr_accessor :report_path
 
         def initialize(options = {})
           @options = options
           @use_color = options.fetch(:color, true) && $stdout.tty?
+          @report_path = nil
         end
 
         # Format the test result for stdout output

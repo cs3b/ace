@@ -1,121 +1,57 @@
 # frozen_string_literal: true
 
+require_relative "base_formatter"
+
 module Ace
   module TestRunner
     module Formatters
-      # Markdown formatter for human-readable reports
+      # Markdown formatter for generating individual failure report files
+      # This formatter is used internally for creating detailed failure reports
+      # It is not exposed as a user-selectable output format
       class MarkdownFormatter < BaseFormatter
-        def format_stdout(result)
-          # For markdown, provide a brief summary on stdout
-          lines = []
-          lines << "# Test Results"
-          lines << ""
-          lines << "**Status:** #{result.success? ? '✅ Passed' : '❌ Failed'}"
-          lines << "**Summary:** #{result.summary_line}"
-          lines << "**Duration:** #{format_duration(result.duration)}"
-
-          if result.has_failures?
-            lines << ""
-            lines << "## Failures"
-            result.failures_detail.take(5).each_with_index do |failure, idx|
-              lines << "#{idx + 1}. `#{failure.full_test_name}` at #{failure.short_location}"
-            end
-
-            if result.failures_detail.size > 5
-              lines << "... and #{result.failures_detail.size - 5} more"
-            end
-          end
-
-          lines.join("\n")
+        def initialize(options = {})
+          super
+          @configuration = options
         end
 
-        def format_report(report)
-          # Return the markdown string for saving
-          generate_markdown_report(report)
-        end
-
+        # Generate markdown report for a single failure
         def generate_failure_report(failure, index)
-          # Generate individual markdown report for a single failure
           lines = []
 
-          lines << "# Failure Report: #{failure.full_test_name}"
+          lines << "# Failure Report: #{failure.test_name}"
           lines << ""
           lines << "**Generated:** #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           lines << "**Failure #:** #{index}"
           lines << ""
-
           lines << "## Summary"
           lines << ""
           lines << "- **Test:** `#{failure.full_test_name}`"
-          lines << "- **Type:** #{failure.type.to_s.capitalize}"
+          lines << "- **Type:** #{failure.type.capitalize}"
           lines << "- **File:** `#{failure.file_path}`"
           lines << "- **Line:** #{failure.line_number}"
           lines << ""
-
           lines << "## Error Details"
           lines << ""
           lines << "### Message"
           lines << "```"
           lines << failure.message
           lines << "```"
-          lines << ""
 
-          # Code context with syntax highlighting
-          if failure.respond_to?(:code_context) && failure.code_context
-            lines << "### Code Context"
+          if failure.backtrace && !failure.backtrace.empty?
             lines << ""
-            lines << "File: `#{failure.code_context[:file]}`"
-            lines << ""
-            lines << "```ruby"
-            failure.code_context[:lines].each do |line_num, line_data|
-              if line_data[:highlighted]
-                lines << ">>> #{line_num.to_s.rjust(4)}: #{line_data[:content]}  # <-- FAILURE HERE"
-              else
-                lines << "    #{line_num.to_s.rjust(4)}: #{line_data[:content]}"
-              end
-            end
+            lines << "### Backtrace"
             lines << "```"
-            lines << ""
+            lines << failure.backtrace.take(10).join("\n")
+            lines << "```"
           end
 
-          # Full backtrace
-          if failure.respond_to?(:formatted_backtrace) && failure.formatted_backtrace&.any?
-            lines << "### Stack Trace"
-            lines << ""
-            lines << "#### Project Files"
-            lines << ""
-            failure.formatted_backtrace.select { |f| f[:in_project] }.each do |frame|
-              if frame[:raw]
-                lines << "- #{frame[:raw]}"
-              else
-                lines << "- `#{frame[:file]}:#{frame[:line]}` in `#{frame[:method]}`"
-              end
-            end
-            lines << ""
-
-            external_frames = failure.formatted_backtrace.reject { |f| f[:in_project] }
-            if external_frames.any?
-              lines << "#### External Libraries"
-              lines << ""
-              external_frames.take(10).each do |frame|
-                if frame[:raw]
-                  lines << "- #{frame[:raw]}"
-                else
-                  lines << "- `#{frame[:file]}:#{frame[:line]}` in `#{frame[:method]}`"
-                end
-              end
-              lines << ""
-            end
-          end
-
-          # Debugging information
           if failure.fix_suggestion
+            lines << ""
             lines << "## Suggested Fix"
-            lines << ""
             lines << failure.fix_suggestion
-            lines << ""
           end
 
+          lines << ""
           lines << "## Debugging Tips"
           lines << ""
           lines << "1. Check the assertion values - are they what you expected?"
@@ -123,173 +59,20 @@ module Ace
           lines << "3. Verify the implementation - does the code match the expected behavior?"
           lines << "4. Look for race conditions or timing issues if the test is flaky"
           lines << ""
-
           lines << "---"
           lines << "*Generated by ace-test-runner*"
 
           lines.join("\n")
         end
 
-        def on_start(total_files)
-          puts "Starting test execution for #{pluralize(total_files, 'file')}..."
+        # Not used for console output
+        def format_stdout(result)
+          ""
         end
 
-        def on_test_complete(file, success, duration)
-          status = success ? "✓" : "✗"
-          puts "  #{status} #{File.basename(file)} (#{format_duration(duration)})"
-        end
-
-        def on_finish(result)
-          puts ""
-          puts format_stdout(result)
-        end
-
-        private
-
-        def generate_markdown_report(report)
-          lines = []
-
-          # Header
-          lines << "# Test Execution Report"
-          lines << ""
-          lines << "**Generated:** #{report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
-          lines << "**Status:** #{report.success? ? '✅ Success' : '❌ Failed'}"
-          lines << ""
-
-          # Executive Summary
-          lines << "## Executive Summary"
-          lines << ""
-          lines << report.result.summary_line
-          lines << ""
-          lines << "- **Pass Rate:** #{format_percentage(report.result.pass_rate)}"
-          lines << "- **Duration:** #{format_duration(report.result.duration)}"
-          lines << "- **Total Assertions:** #{report.result.assertions}"
-          lines << ""
-
-          # Statistics Table
-          lines << "## Test Statistics"
-          lines << ""
-          lines << "| Metric | Count | Percentage |"
-          lines << "|--------|-------|------------|"
-          lines << "| Total Tests | #{report.result.total_tests} | 100% |"
-          lines << "| Passed | #{report.result.passed} | #{calculate_percentage(report.result.passed, report.result.total_tests)}% |"
-          lines << "| Failed | #{report.result.failed} | #{calculate_percentage(report.result.failed, report.result.total_tests)}% |"
-          lines << "| Errors | #{report.result.errors} | #{calculate_percentage(report.result.errors, report.result.total_tests)}% |"
-          lines << "| Skipped | #{report.result.skipped} | #{calculate_percentage(report.result.skipped, report.result.total_tests)}% |"
-          lines << ""
-
-          # Failures Section
-          if report.result.has_failures?
-            lines << "## Test Failures"
-            lines << ""
-            lines << "Total failures: #{report.result.failures_detail.size}"
-            lines << ""
-
-            report.result.failures_detail.each_with_index do |failure, idx|
-              lines << "### #{idx + 1}. #{failure.full_test_name}"
-              lines << ""
-              lines << "- **Type:** #{failure.type.to_s.capitalize}"
-              lines << "- **Location:** `#{failure.location}`"
-              lines << ""
-              lines << "**Error Message:**"
-              lines << "```"
-              lines << failure.message
-              lines << "```"
-              lines << ""
-
-              # Include code context if available
-              if failure.respond_to?(:code_context) && failure.code_context
-                lines << "**Code Context:**"
-                lines << "```ruby"
-                failure.code_context[:lines].each do |line_num, line_data|
-                  prefix = line_data[:highlighted] ? ">>> " : "    "
-                  lines << "#{prefix}#{line_num.to_s.rjust(4)}: #{line_data[:content]}"
-                end
-                lines << "```"
-                lines << ""
-              end
-
-              # Include formatted backtrace
-              if failure.respond_to?(:formatted_backtrace) && failure.formatted_backtrace&.any?
-                lines << "**Stack Trace (Project Files):**"
-                lines << ""
-                failure.formatted_backtrace.select { |f| f[:in_project] }.take(5).each do |frame|
-                  if frame[:raw]
-                    lines << "- #{frame[:raw]}"
-                  else
-                    lines << "- `#{frame[:file]}:#{frame[:line]}` in `#{frame[:method]}`"
-                  end
-                end
-                lines << ""
-              end
-
-              if failure.fix_suggestion
-                lines << "**Suggested Fix:**"
-                lines << "> #{failure.fix_suggestion}"
-                lines << ""
-              end
-            end
-          end
-
-          # Deprecations Section
-          if report.result.has_deprecations?
-            lines << "## Deprecation Warnings"
-            lines << ""
-            lines << "The following deprecations were detected:"
-            lines << ""
-            report.result.deprecations.each do |deprecation|
-              lines << "- #{deprecation}"
-            end
-            lines << ""
-          end
-
-          # Files Tested Section
-          if report.files_tested.any?
-            lines << "## Files Tested"
-            lines << ""
-            lines << "The following test files were executed:"
-            lines << ""
-            report.files_tested.each do |file|
-              lines << "- `#{file}`"
-            end
-            lines << ""
-          end
-
-          # Environment Section
-          lines << "## Test Environment"
-          lines << ""
-          lines << "| Property | Value |"
-          lines << "|----------|-------|"
-          lines << "| Ruby Version | #{report.environment[:ruby_version]} |"
-          lines << "| Platform | #{report.environment[:ruby_platform]} |"
-          lines << "| Minitest Version | #{report.environment[:minitest_version]} |"
-          lines << "| Test Runner Version | #{report.environment[:ace_test_runner_version]} |"
-          lines << "| Working Directory | `#{report.environment[:working_directory]}` |"
-          lines << ""
-
-          # Configuration Section
-          lines << "## Configuration"
-          lines << ""
-          lines << "| Setting | Value |"
-          lines << "|---------|-------|"
-          lines << "| Format | #{report.configuration.format} |"
-          lines << "| Report Directory | `#{report.configuration.report_dir}` |"
-          lines << "| Save Reports | #{report.configuration.save_reports} |"
-          lines << "| Fail Fast | #{report.configuration.fail_fast} |"
-          lines << "| Verbose | #{report.configuration.verbose} |"
-          lines << ""
-
-          # Footer
-          lines << "---"
-          lines << ""
-          lines << "*Generated by ace-test-runner v#{VERSION}*"
-
-          lines.join("\n")
-        end
-
-        def calculate_percentage(value, total)
-          return 0 if total == 0
-          ((value.to_f / total) * 100).round(1)
+        # Not used for report generation
+        def format_report(report)
+          {}
         end
       end
     end

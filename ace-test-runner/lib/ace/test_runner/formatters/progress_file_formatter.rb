@@ -22,9 +22,11 @@ module Ace
           # Progress dots are printed during execution, ensure newline
           lines << "" if @test_count > 0
 
-          # Report directory with timestamp
-          if @configuration && @configuration[:save_reports]
-            timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
+          # Report directory - use actual report path if available
+          if @report_path
+            lines << "Details: #{@report_path}/"
+          elsif @configuration && @configuration[:save_reports]
+            timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
             lines << "Details: #{@configuration[:report_dir] || 'test-reports'}/#{timestamp}/"
           end
 
@@ -45,20 +47,19 @@ module Ace
           if result.has_failures?
             lines << ""
             total_failures = result.failed + result.errors
-            lines << "FAILURES (#{total_failures}):"
-
-            # Get report path if available
-            report_path = if @configuration && @configuration[:save_reports]
-              timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
-              "#{@configuration[:report_dir] || 'test-reports'}/#{timestamp}"
-            else
-              "test-reports/latest"
-            end
 
             # Display up to MAX_FAILURES_TO_DISPLAY failures
             failures_to_show = result.failures_detail.take(MAX_FAILURES_TO_DISPLAY)
 
-            failures_to_show.each do |failure|
+            # Show failure count header with reference to full report if needed
+            if total_failures > MAX_FAILURES_TO_DISPLAY
+              report_path = @report_path || "test-reports/latest"
+              lines << "FAILURES (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
+            else
+              lines << "FAILURES (#{total_failures}):"
+            end
+
+            failures_to_show.each_with_index do |failure, idx|
               # Extract file and line from location (e.g., "/path/file.rb:42:in `test_method'")
               location_match = failure.location.match(/^([^:]+):(\d+)/)
               if location_match
@@ -69,17 +70,23 @@ module Ace
                 location = failure.location
               end
 
-              # 2-line format: location - short message + report path
+              # Format: location - short message with individual failure report path
               message = truncate_message(failure.message, 60)
               lines << "  #{location} - #{message}"
-              lines << "  → Details: #{report_path}/failures.json"
-              lines << ""  # Add blank line between failures for readability
+
+              # Show individual failure report path if we have the report path
+              if @report_path
+                failure_filename = format("%03d-%s.md", idx + 1,
+                  failure.full_test_name.gsub(/\W+/, "_").downcase[0...50])
+                lines << "  → Details: #{@report_path}/failures/#{failure_filename}"
+              end
             end
 
             # If there are more failures than displayed
             if result.failures_detail.size > MAX_FAILURES_TO_DISPLAY
               remaining = result.failures_detail.size - MAX_FAILURES_TO_DISPLAY
-              lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report for details."
+              report_path = @report_path || "test-reports/latest"
+              lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report: #{report_path}/failures.json"
             end
           end
 

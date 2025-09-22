@@ -33,8 +33,8 @@ parser = OptionParser.new do |opts|
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-f", "--format FORMAT", %w[ai compact json markdown progress progress-file],
-          "Output format: progress (default), progress-file, compact, ai, json, markdown") do |format|
+  opts.on("-f", "--format FORMAT", %w[json progress progress-file],
+          "Output format: progress (default), progress-file, json") do |format|
     options[:format] = format
   end
 
@@ -133,7 +133,7 @@ parser = OptionParser.new do |opts|
   opts.separator "  ace-test unit                    # Run all unit tests"
   opts.separator "  ace-test unit --format progress  # Run unit tests with progress display"
   opts.separator "  ace-test quick                   # Run quick tests (atoms + molecules)"
-  opts.separator "  ace-test --format compact        # CI-friendly compact output"
+  opts.separator "  ace-test --format json           # JSON output for programmatic use"
   opts.separator "  ace-test test/foo_test.rb        # Run specific file"
   opts.separator "  ace-test test/foo_test.rb:42    # Run test at specific line"
   opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
