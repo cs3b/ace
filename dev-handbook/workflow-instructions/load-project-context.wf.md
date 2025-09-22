@@ -6,18 +6,18 @@ Load essential project documentation to understand the project's objectives, arc
 
 ## Prerequisites
 
-- The `context` tool is available (from dev-tools)
-- Context presets configured in `.coding-agent/context.yml`
+- The `ace-context` tool is available (from ace-context gem)
+- Context presets configured in `.ace/context/*.md` files
 
 ## Process Steps
 
 1. **Load Project Context:**
 
    ```bash
-   context --preset project
+   ace-context project
    ```
 
-   This loads the project context as configured in your preset, typically including:
+   This loads the project context as configured in your preset (in `.ace/context/project.md`), typically including:
    - Core documentation files (README, architecture, design docs)
    - Project configuration and setup files
    - Current repository status (git status, branch info)
@@ -28,11 +28,11 @@ Load essential project documentation to understand the project's objectives, arc
 2. **Review Loaded Context:**
 
    Read the complete cached context files to understand:
-   
+
    ```bash
    # Read the full cached context files (not just snippets)
-   # The context tool outputs cache locations like:
-   # /path/to/docs/context/cached/[preset-name].md
+   # The ace-context tool outputs cache locations like:
+   # .cache/ace-context/[preset-name].md
    ```
    
    From the full context, understand:
@@ -49,11 +49,11 @@ Load essential project documentation to understand the project's objectives, arc
 
    ```bash
    # Load multiple presets if user specifically requests them
-   context --preset dev-tools     # Additional submodule context
-   context --preset dev-handbook  # Another submodule context
+   ace-context dev-tools     # Additional context preset
+   ace-context dev-handbook  # Another context preset
 
    # List available presets to see options
-   context --list-presets
+   ace-context --list
    ```
 
    Only load additional presets if the user explicitly asks for them.

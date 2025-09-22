@@ -5,81 +5,183 @@ require_relative "../test_helper"
 class PresetManagerTest < AceTestCase
   include Ace::TestSupport::ConfigHelpers
 
-  def test_loads_default_preset
-    manager = Ace::Context::Molecules::PresetManager.new
+  def setup
+    @preset_content = <<~MARKDOWN
+      ---
+      description: Test preset
+      params:
+        output: cache
+        embed_itself: true
+        max_size: 1048576
+        timeout: 30
+      context:
+        files:
+          - README.md
+          - docs/*.md
+        commands:
+          - echo "test"
+        exclude:
+          - "**/node_modules/**"
+      ---
 
-    preset = manager.get_preset("default")
+      # Test Preset
 
-    assert preset
-    assert_equal "default", preset[:name]
-    assert preset[:include].include?("README.md")
+      This is a test preset.
+    MARKDOWN
+  end
+
+  def test_loads_preset_from_markdown_file
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/context")
+      File.write(".ace/context/test.md", @preset_content)
+
+      manager = Ace::Context::Molecules::PresetManager.new
+      preset = manager.get_preset("test")
+
+      assert preset
+      assert_equal "test", preset[:name]
+      assert_equal "Test preset", preset[:description]
+      assert_equal "cache", preset[:output]
+    end
+  end
+
+  def test_parses_frontmatter_correctly
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/context")
+      File.write(".ace/context/test.md", @preset_content)
+
+      manager = Ace::Context::Molecules::PresetManager.new
+      preset = manager.get_preset("test")
+
+      # Check params
+      assert_equal "cache", preset.dig(:params, "output")
+      assert_equal true, preset.dig(:params, "embed_itself")
+      assert_equal 1048576, preset.dig(:params, "max_size")
+      assert_equal 30, preset.dig(:params, "timeout")
+
+      # Check context
+      assert_equal ["README.md", "docs/*.md"], preset.dig(:context, "files")
+      assert_equal ["echo \"test\""], preset.dig(:context, "commands")
+      assert_equal ["**/node_modules/**"], preset.dig(:context, "exclude")
+    end
+  end
+
+  def test_extracts_body_content
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/context")
+      File.write(".ace/context/test.md", @preset_content)
+
+      manager = Ace::Context::Molecules::PresetManager.new
+      preset = manager.get_preset("test")
+
+      assert preset[:body]
+      assert preset[:body].include?("# Test Preset")
+      assert preset[:body].include?("This is a test preset.")
+    end
   end
 
   def test_lists_presets
     with_temp_dir do
-      config = {
-        "context" => {
-          "presets" => {
-            "test1" => { "include" => ["*.md"] },
-            "test2" => { "include" => ["*.rb"] }
-          }
-        }
-      }
-
-      FileUtils.mkdir_p(".ace")
-      File.write(".ace/context.yml", config.to_yaml)
+      FileUtils.mkdir_p(".ace/context")
+      File.write(".ace/context/preset1.md", @preset_content)
+      File.write(".ace/context/preset2.md", @preset_content.sub("Test preset", "Second preset"))
 
       manager = Ace::Context::Molecules::PresetManager.new
       presets = manager.list_presets
 
       assert_equal 2, presets.size
-      assert presets.any? { |p| p[:name] == "test1" }
-      assert presets.any? { |p| p[:name] == "test2" }
+      names = presets.map { |p| p[:name] }
+      assert_includes names, "preset1"
+      assert_includes names, "preset2"
     end
   end
 
   def test_preset_exists_check
-    manager = Ace::Context::Molecules::PresetManager.new
-
-    assert manager.preset_exists?("default")
-    refute manager.preset_exists?("nonexistent")
-  end
-
-  def test_handles_missing_config_gracefully
     with_temp_dir do
-      # No config files exist
+      FileUtils.mkdir_p(".ace/context")
+      File.write(".ace/context/exists.md", @preset_content)
+
       manager = Ace::Context::Molecules::PresetManager.new
 
-      # Should fall back to default config
-      preset = manager.get_preset("default")
-      assert preset
+      assert manager.preset_exists?("exists")
+      refute manager.preset_exists?("nonexistent")
     end
   end
 
-  def test_preset_with_metadata
+  def test_handles_missing_presets_gracefully
     with_temp_dir do
-      config = {
-        "context" => {
-          "presets" => {
-            "meta_test" => {
-              "include" => ["*.md"],
-              "metadata" => {
-                "author" => "Test",
-                "version" => "1.0"
-              }
-            }
-          }
-        }
-      }
+      # No .ace/context directory
+      manager = Ace::Context::Molecules::PresetManager.new
 
-      FileUtils.mkdir_p(".ace")
-      File.write(".ace/context.yml", config.to_yaml)
+      preset = manager.get_preset("nonexistent")
+      assert_nil preset
+
+      presets = manager.list_presets
+      assert_empty presets
+    end
+  end
+
+  def test_handles_invalid_frontmatter
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/context")
+
+      # Invalid YAML in frontmatter
+      invalid_content = <<~MARKDOWN
+        ---
+        description: Test
+        invalid yaml here [[[
+        ---
+        Content
+      MARKDOWN
+
+      File.write(".ace/context/invalid.md", invalid_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
-      preset = manager.get_preset("meta_test")
+      preset = manager.get_preset("invalid")
 
-      assert_equal "Test", preset[:metadata]["author"]
-      assert_equal "1.0", preset[:metadata]["version"]
+      # Should handle gracefully
+      assert_nil preset
+    end
+  end
+
+  def test_handles_missing_frontmatter
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/context")
+
+      # No frontmatter at all
+      no_frontmatter = "# Just Markdown\n\nNo frontmatter here."
+      File.write(".ace/context/nofm.md", no_frontmatter)
+
+      manager = Ace::Context::Molecules::PresetManager.new
+      preset = manager.get_preset("nofm")
+
+      # Should handle gracefully
+      assert_nil preset
+    end
+  end
+
+  def test_default_values_for_missing_params
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/context")
+
+      minimal_content = <<~MARKDOWN
+        ---
+        description: Minimal preset
+        context:
+          files:
+            - README.md
+        ---
+        Minimal content
+      MARKDOWN
+
+      File.write(".ace/context/minimal.md", minimal_content)
+
+      manager = Ace::Context::Molecules::PresetManager.new
+      preset = manager.get_preset("minimal")
+
+      assert preset
+      assert_equal "stdio", preset[:output]  # Default output
+      assert_equal({}, preset[:params])  # Empty params hash
     end
   end
 end
