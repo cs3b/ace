@@ -2,6 +2,8 @@
 
 require_relative "../atoms/path_expander"
 require_relative "../models/cascade_path"
+require_relative "directory_traverser"
+require_relative "project_root_finder"
 
 module Ace
   module Core
@@ -25,10 +27,24 @@ module Ace
         # Initialize finder with search paths
         # @param search_paths [Array<String>] Paths to search
         # @param file_patterns [Array<String>] File patterns to look for
+        # @param use_traversal [Boolean] Whether to use directory traversal (default: auto-detect)
         def initialize(search_paths: DEFAULT_SEARCH_PATHS,
-                       file_patterns: DEFAULT_FILE_PATTERNS)
-          @search_paths = search_paths.map { |p| Atoms::PathExpander.expand(p) }
+                       file_patterns: DEFAULT_FILE_PATTERNS,
+                       use_traversal: nil)
           @file_patterns = file_patterns
+
+          # Auto-detect: use traversal only if using default search paths
+          if use_traversal.nil?
+            @use_traversal = (search_paths == DEFAULT_SEARCH_PATHS)
+          else
+            @use_traversal = use_traversal
+          end
+
+          if @use_traversal
+            @search_paths = build_traversal_paths
+          else
+            @search_paths = search_paths.map { |p| Atoms::PathExpander.expand(p) }
+          end
         end
 
         # Find all config files in cascade order
@@ -65,7 +81,70 @@ module Ace
           find_all.select { |path| path.type == type }
         end
 
+        # Find a specific config file using the cascade
+        # @param filename [String] Specific filename to find
+        # @return [String, nil] Path to the first found config file
+        def find_file(filename)
+          # Use traversal to find all possible locations
+          traverser = DirectoryTraverser.new
+          config_dirs = traverser.find_config_directories
+
+          # Check each config directory in order (closest first)
+          config_dirs.each do |dir|
+            file_path = File.join(dir, filename)
+            return file_path if File.exist?(file_path)
+          end
+
+          # Check home directory
+          home_path = File.expand_path("~/.ace/#{filename}")
+          return home_path if File.exist?(home_path)
+
+          nil
+        end
+
+        # Find all instances of a config file in the cascade
+        # @param filename [String] Specific filename to find
+        # @return [Array<String>] All found file paths in cascade order
+        def find_all_files(filename)
+          files = []
+
+          # Use traversal to find all possible locations
+          traverser = DirectoryTraverser.new
+          config_dirs = traverser.find_config_directories
+
+          # Check each config directory
+          config_dirs.each do |dir|
+            file_path = File.join(dir, filename)
+            files << file_path if File.exist?(file_path)
+          end
+
+          # Check home directory
+          home_path = File.expand_path("~/.ace/#{filename}")
+          files << home_path if File.exist?(home_path)
+
+          files
+        end
+
+        # Get the search paths being used
+        # @return [Array<String>] Ordered list of search paths
+        def search_paths
+          @search_paths
+        end
+
         private
+
+        # Build search paths using directory traversal
+        # @return [Array<String>] Expanded search paths
+        def build_traversal_paths
+          traverser = DirectoryTraverser.new
+          paths = traverser.find_config_directories
+
+          # Add home directory if not already included
+          home_config = File.expand_path("~/.ace")
+          paths << home_config unless paths.include?(home_config)
+
+          paths
+        end
 
         # Find config files in a specific path with pattern
         # @param base_path [String] Base path to search

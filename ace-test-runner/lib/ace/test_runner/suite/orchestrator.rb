@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "yaml"
 require "open3"
 
 module Ace
@@ -9,9 +8,8 @@ module Ace
       class Orchestrator
         attr_reader :config, :packages, :results, :running_processes
 
-        def initialize(config_path = ".ace/test-suite.yml")
-          @config_path = config_path
-          @config = load_config
+        def initialize(config)
+          @config = config
           @packages = config.dig("test_suite", "packages") || []
           @results = {}
           @running_processes = {}
@@ -65,14 +63,6 @@ module Ace
         end
 
         private
-
-        def load_config
-          unless File.exist?(@config_path)
-            raise "Configuration file not found: #{@config_path}"
-          end
-
-          YAML.load_file(@config_path)
-        end
 
         def validate_packages!
           @packages.each do |package|

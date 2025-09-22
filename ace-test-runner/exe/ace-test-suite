@@ -70,25 +70,12 @@ rescue OptionParser::InvalidArgument => e
   exit 1
 end
 
-# Use ConfigDiscovery to find the config file
-config_discovery = Ace::Core::ConfigDiscovery.new
-config_file = if options[:config] == ".ace/test-suite.yml"
-  # Default config - use discovery
-  config_discovery.find_config_file("test-suite.yml") || options[:config]
-else
-  # User specified config - use as is if exists, otherwise try discovery
-  if File.exist?(options[:config])
-    options[:config]
-  else
-    # Try to find the file using discovery
-    config_discovery.find_config_file(File.basename(options[:config]))
-  end
-end
+# Load the config using ConfigDiscovery
+config_file = options[:config] == ".ace/test-suite.yml" ? "test-suite.yml" : options[:config]
+config = Ace::Core::ConfigDiscovery.load(config_file)
 
-unless config_file && File.exist?(config_file)
-  puts "Error: Configuration file not found: #{options[:config]}"
-  puts
-  puts "Searched in: #{config_discovery.config_search_paths.join(', ')}"
+unless config
+  puts "Error: Configuration file not found: #{config_file}"
   puts
   puts "Create a test suite configuration at .ace/test-suite.yml in your project root"
   puts
@@ -112,47 +99,32 @@ unless config_file && File.exist?(config_file)
   exit 1
 end
 
-# Update options with the found config file
-options[:config] = config_file
-
 # Override config with command line options if provided
-if options[:parallel] || options[:group] || options[:no_color] || options[:verbose]
-  require "yaml"
-  config = YAML.load_file(options[:config])
-
-  # Override max_parallel if specified
-  config["test_suite"]["max_parallel"] = options[:parallel] if options[:parallel]
-
-  # Filter by group if specified
-  if options[:group]
-    config["test_suite"]["packages"].select! { |p| p["group"] == options[:group] }
-    if config["test_suite"]["packages"].empty?
-      puts "Error: No packages found in group '#{options[:group]}'"
-      exit 1
-    end
-  end
-
-  # Override color setting
-  config["test_suite"]["display"] ||= {}
-  config["test_suite"]["display"]["color"] = false if options[:no_color]
-
-  # Set verbose mode
-  if options[:verbose]
-    config["test_suite"]["test_options"] ||= {}
-    config["test_suite"]["test_options"]["verbose"] = true
-  end
-
-  # Save modified config to temporary file and use it
-  require "tempfile"
-  temp_config = Tempfile.new(["test-suite", ".yml"])
-  temp_config.write(YAML.dump(config))
-  temp_config.close
-  options[:config] = temp_config.path
+if options[:parallel]
+  config["test_suite"]["max_parallel"] = options[:parallel]
 end
 
-# Run the test suite
+if options[:group]
+  config["test_suite"]["packages"].select! { |p| p["group"] == options[:group] }
+  if config["test_suite"]["packages"].empty?
+    puts "Error: No packages found in group '#{options[:group]}'"
+    exit 1
+  end
+end
+
+if options[:no_color]
+  config["test_suite"]["display"] ||= {}
+  config["test_suite"]["display"]["color"] = false
+end
+
+if options[:verbose]
+  config["test_suite"]["test_options"] ||= {}
+  config["test_suite"]["test_options"]["verbose"] = true
+end
+
+# Run the test suite with the config
 begin
-  exit_code = Ace::TestRunner::Suite.run(options[:config])
+  exit_code = Ace::TestRunner::Suite.run(config)
   exit exit_code
 rescue Ace::TestRunner::Suite::Error => e
   puts "Error: #{e.message}"
@@ -164,9 +136,4 @@ rescue => e
   puts "Unexpected error: #{e.message}"
   puts e.backtrace if options[:verbose]
   exit 1
-ensure
-  # Clean up temp config if we created one
-  if defined?(temp_config) && temp_config
-    temp_config.unlink rescue nil
-  end
 end

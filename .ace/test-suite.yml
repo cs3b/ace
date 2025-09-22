@@ -5,22 +5,22 @@ test_suite:
   # Packages to test in order of priority
   packages:
     - name: ace-test-support
-      path: ./ace-test-support
+      path: ace-test-support
       group: foundation
       priority: 2
 
     - name: ace-core
-      path: ./ace-core
+      path: ace-core
       group: foundation
       priority: 1
 
     - name: ace-test-runner
-      path: ./ace-test-runner
+      path: ace-test-runner
       group: foundation
       priority: 1
 
     - name: ace-context
-      path: ./ace-context
+      path: ace-context
       group: tools
       priority: 3
 

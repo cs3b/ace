@@ -10,8 +10,8 @@ module Ace
     module Suite
       class Error < StandardError; end
 
-      def self.run(config_path = ".ace/test-suite.yml")
-        orchestrator = Orchestrator.new(config_path)
+      def self.run(config)
+        orchestrator = Orchestrator.new(config)
         orchestrator.run
       end
     end

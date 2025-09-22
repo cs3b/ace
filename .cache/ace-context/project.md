@@ -10,7 +10,9 @@ You are working on the Coding Agent Workflow Toolkit (Meta) - a comprehensive me
 
 ## Files
 
-<file path="docs/architecture.md">
+### docs/architecture.md
+
+```
 # ACE - System Architecture
 
 ## Overview
@@ -171,9 +173,11 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 *For detailed architectural decisions, see [docs/decisions.md](decisions.md)*
 
 
-</file>
+```
 
-<file path="docs/blueprint.md">
+### docs/blueprint.md
+
+```
 # Project Blueprint: ACE (Agent Coding Environment)
 
 ## What is a Blueprint?
@@ -226,9 +230,11 @@ AI agents should ignore these during normal operations:
 - `docs/context/cached/**/*` # Legacy cached context files
 
 
-</file>
+```
 
-<file path="docs/decisions.md">
+### docs/decisions.md
+
+```
 # Project Decisions
 
 This document provides actionable decisions from Architecture Decision Records (ADRs) that directly affect how AI agents and developers should work with this codebase.
@@ -327,9 +333,11 @@ This document provides actionable decisions from Architecture Decision Records (
 ## Decision History
 
 For complete decision history and detailed rationale, refer to the individual ADR documents in `docs/decisions/`.
-</file>
+```
 
-<file path="docs/tools.md">
+### docs/tools.md
+
+```
 # ACE Tools Reference
 
 ## Available Tools
@@ -347,8 +355,11 @@ For complete decision history and detailed rationale, refer to the individual AD
 ### ace-context
 
 ```sh
-ace-context --preset project           # Load project context
-ace-context --preset project --no-cache # Output to stdout (for piping)
+ace-context project                    # Load project preset
+ace-context project --output stdio     # Output to stdout (for piping)
+ace-context project --output cache     # Save to cache directory
+ace-context project --output file.md   # Save to specific file
+ace-context --list                     # List available presets
 ```
 
 ### ace-test
@@ -359,9 +370,11 @@ ace-test test/foo_test.rb:42           # Test at specific line
 ```
 
 
-</file>
+```
 
-<file path="docs/what-do-we-build.md">
+### docs/what-do-we-build.md
+
+```
 # ACE (Agent Coding Environment)
 
 ## What We Build
@@ -393,59 +406,54 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 *ACE: Making AI-assisted development as simple as `gem install`.*
 
 
-</file>
+```
 
 ## Commands
 
-<output command="pwd" success="true">
+### Command: `pwd`
 
+**Output:**
+```
 /Users/mc/Ps/ace-meta
 
-</output>
+```
 
-<output command="date" success="true">
+### Command: `date`
 
-Mon Sep 22 18:05:42 WEST 2025
+**Output:**
+```
+Mon Sep 22 18:24:59 WEST 2025
 
-</output>
+```
 
-<output command="git status --short" success="true">
+### Command: `git status --short`
 
- D .ace/context.yml
- M .cache/ace-context/project.md
- M ace-context/README.md
- D ace-context/config/context.yml
- M ace-context/exe/ace-context
- M ace-context/lib/ace/context.rb
- M ace-context/lib/ace/context/molecules/preset_manager.rb
- D ace-context/lib/ace/context/molecules/template_discoverer.rb
- M ace-context/lib/ace/context/organisms/context_loader.rb
- D docs/context/code-review.md
- D docs/context/dev-handbook.md
- D docs/context/dev-tools.md
- D docs/context/project.md
-?? .ace/context/
-?? ace-context/.ace.example/
+**Output:**
+```
 
-</output>
+```
 
-<output command="task-manager recent --limit 3" success="true">
+### Command: `task-manager recent --limit 3`
 
-Status: 12 done, 4 pending (16 total)
-Recent Tasks (3/501 shown):
+**Output:**
+```
+Status: 13 done, 4 pending (17 total)
+Recent Tasks (3/502 shown):
 ==================================================
+v.0.9.0+task.017 * DONE * 1 hour ago * Refactor ace-context to markdown-only preset configuration
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.017-refactor-ace-context-to-markdown-only-preset-configuration.md
 v.0.9.0+task.016 * DONE * 2 days ago * Implement Smart Caching for ace-context
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.016-implement-smart-caching-for-ace-context.md
 v.0.9.0+task.005 * DONE * 2 days ago * Create ace-context Gem
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.005-create-ace-context-gem.md
-v.0.9.0+task.008 * PENDING * 2 days ago * Configure .ace for This Project
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
 
-</output>
+```
 
-<output command="task-manager next --limit 3" success="true">
+### Command: `task-manager next --limit 3`
 
-Status: 12 done, 4 pending (16 total)
+**Output:**
+```
+Status: 13 done, 4 pending (17 total)
 Next Tasks (3 shown):
 ==================================================
 v.0.9.0+task.006 * PENDING * 3 days ago * Create ace-capture Gem
@@ -455,24 +463,28 @@ v.0.9.0+task.007 * PENDING * 3 days ago * Create ace-git Gem with ace-gc Only
 v.0.9.0+task.008 * PENDING * 2 days ago * Configure .ace for This Project
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
 
-</output>
+```
 
-<output command="release-manager current" success="true">
+### Command: `release-manager current`
 
+**Output:**
+```
 Current Release Information:
 ========================================
   Name:      v.0.9.0-mono-repo-multiple-gems
   Version:   v.0.9.0
   Path:      /Users/mc/Ps/ace-meta/dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems
   Status:    active
-  Tasks:     16
+  Tasks:     17
   Created:   2025-09-22 14:47:31
   Modified:  2025-09-22 14:47:31
 
-</output>
+```
 
-<output command="eza -R -1 -L 2 --git-ignore --absolute $PROJECT_ROOT_PATH" success="true">
+### Command: `eza -R -1 -L 2 --git-ignore --absolute $PROJECT_ROOT_PATH`
 
+**Output:**
+```
 /Users/mc/Ps/ace-meta/ace-context
 /Users/mc/Ps/ace-meta/ace-core
 /Users/mc/Ps/ace-meta/ace-test-runner
@@ -491,4 +503,4 @@ Current Release Information:
 /Users/mc/Ps/ace-meta/Rakefile
 /Users/mc/Ps/ace-meta/README.md
 
-</output>
+```
