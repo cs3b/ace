@@ -29,6 +29,19 @@ This document provides actionable decisions from Architecture Decision Records (
 **Impact**: When embedding documents in workflows, always use the `<documents>` wrapper with appropriate document type tags. This enables automated synchronization and validation.
 **Details**: [ADR-005](decisions/ADR-005-universal-document-embedding-system.md)
 
+## Architecture Decisions
+
+### Mono-Repo Migration to ace-* Gems
+**Decision**: Migrate from multi-repository submodule architecture to mono-repo with modular ace-* Ruby gems.
+**Impact**: When working with the codebase:
+- All new functionality goes into appropriate ace-* gems at the repository root
+- Follow ATOM architecture (atoms/, molecules/, organisms/, models/) in each gem
+- Use the root Gemfile for development dependencies
+- Run commands with `bundle exec` during development
+- Configuration uses .ace/ cascade with nearest/deepest wins
+- Legacy dev-* directories are being migrated incrementally
+**Details**: [ADR-015](decisions/ADR-015-mono-repo-ace-gems-migration.md)
+
 ## Development Tool Decisions
 
 ### CI-Aware VCR Configuration

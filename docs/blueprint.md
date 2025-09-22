@@ -1,4 +1,4 @@
-# Project Blueprint: Coding Agent Workflow Toolkit (Meta)
+# Project Blueprint: ACE (Agent Coding Environment)
 
 ## What is a Blueprint?
 
@@ -6,38 +6,65 @@ This document provides a concise overview of the project's structure and organiz
 
 ## Project Organization
 
-This is a **meta-repository** using Git submodules to organize different aspects of the workflow toolkit:
+This is a **mono-repo** with modular Ruby gems providing the ACE ecosystem:
 
-- **dev-handbook/** - Development resources and workflows (Git submodule)
-  - **guides/** - Best practices and standards for development
-  - **tools/** - Utility scripts to support development workflows
-  - **workflow-instructions/** - Structured commands for AI agents
-  - **templates/** - Project templates and document templates
-  - **zed/** - Editor integration
+### Current ace-* Gems (Operational)
 
-- **dev-taskflow/** - Project-specific documentation and task management (Git submodule)
-  - **backlog/** - Pending tasks for future releases
-  - **current/** - Active release cycle work
-  - **done/** - Completed releases and tasks
+- **ace-core/** - Zero-dependency configuration management gem
+  - **lib/ace/core/** - ATOM-structured implementation
+    - **atoms/** - Pure functions (yaml_parser, env_parser, deep_merger)
+    - **molecules/** - Composed operations (yaml_loader, config_finder)
+    - **organisms/** - Business logic (config_resolver, environment_manager)
+    - **models/** - Data structures (config, cascade_path)
+  - **test/** - Minitest test suite (80+ tests)
+  - **exe/** - No executables (library gem)
+
+- **ace-context/** - Context loading with smart caching
+  - **lib/ace/context/** - ATOM-structured implementation
+    - **atoms/** - File utilities and formatters
+    - **molecules/** - Context operations (context_chunker, context_merger)
+    - **organisms/** - Main context loader
+    - **models/** - Data models (context_data, preset)
+  - **test/** - Minitest test suite
+  - **exe/ace-context** - CLI executable
+
+- **ace-test-runner/** - Test execution with parallel processing
+  - **lib/ace/test_runner/** - Test discovery and execution
+  - **test/** - Minitest test suite
+  - **exe/ace-test** - Individual test runner
+  - **exe/ace-test-suite** - CI-optimized suite runner
+
+- **ace-test-support/** - Shared testing infrastructure
+  - **lib/ace/test_support/** - Test utilities and helpers
+  - **test/** - Minitest test suite (65+ tests)
+  - **exe/** - No executables (support library)
+
+### Legacy Components (Being Migrated)
+
+- **dev-handbook/** - Development resources and workflows (Git submodule, migrating to ace-handbook)
+  - **workflow-instructions/** - AI agent workflows
+  - **templates/** - Document templates
+  - **.integrations/claude/agents/** - Specialized agents
+
+- **dev-taskflow/** - Task management (Git submodule, migrating to ace-taskflow)
+  - **current/** - Active release work
+  - **done/** - Completed releases
+
+- **dev-tools/** - CLI tools (Git submodule, being split into ace-* gems)
+  - **exe/** - Legacy executable commands
+
+### Core Documentation
+
+- **docs/** - System-level documentation
   - **decisions/** - Architecture Decision Records (ADRs)
-
-- **dev-tools/** - CLI tools submodule for LLM integration (Git submodule)
-  - **lib/** - Ruby source code, organized by the ATOM architecture pattern
-    - **coding_agent_tools/** - Main module
-      - **atoms/** - Basic utilities and low-level components
-      - **molecules/** - Composed operations and behavior-oriented helpers
-      - **organisms/** - Business logic and complex orchestration
-      - **ecosystems/** - Complete workflows and system-level coordination
-      - **models/** - Data structures and pure data carriers
-      - **cli/** - CLI command classes
-      - **middlewares/** - Cross-cutting concerns
-  - **spec/** - RSpec test files (unit, integration, CLI)
-  - **exe/** - Executable CLI tools for LLM integration (25+ commands)
-  - **docs/** - Tools-specific documentation (moved from root)
-
-- **docs/** - Core project documentation (permanent reference materials)
-  - **decisions/** - Architecture Decision Records (ADRs)
+  - **context/** - Context templates and cached output
   - **migrations/** - Documentation migration records
+
+- **.github/** - CI/CD configuration
+  - **workflows/ci.yml** - GitHub Actions matrix testing
+
+- **Gemfile** - Root workspace dependencies
+- **.bundle/config** - Workspace bundle configuration
 
 
 ## Read-Only Paths
@@ -46,32 +73,28 @@ AI agents should treat the following paths as read-only unless explicitly instru
 
 - `docs/decisions/**/*` # Architecture Decision Records
 - `docs/migrations/**/*` # Documentation migration records
-- `dev-handbook/guides/**/*` # Development guides (submodule)
-- `dev-handbook/workflow-instructions/**/*` # AI workflow instructions (submodule)
-- `dev-handbook/templates/**/*` # Project templates (submodule)
-- `dev-taskflow/done/**/*` # Completed tasks should not be modified
-- `dev-taskflow/current/*/handbook_review/**/*` # Historical review snapshots
-- `dev-taskflow/*/handbook_review/**/*` # All historical review snapshots
-- `dev-tools/lib/**/*` # Ruby source code (submodule)
-- `dev-tools/spec/**/*` # Test files (submodule)
-- `dev-tools/exe/**/*` # CLI executables (submodule)
+- `ace-*/lib/**/*` # Gem source code (modify only for bug fixes)
+- `ace-*/test/**/*` # Gem test files (modify only for test updates)
+- `.github/workflows/**/*` # CI/CD configuration
+- `dev-handbook/guides/**/*` # Legacy development guides
+- `dev-handbook/workflow-instructions/**/*` # Legacy AI workflow instructions
+- `dev-taskflow/done/**/*` # Completed tasks
+- `dev-taskflow/current/*/reflections/**/*` # Development reflections
 - `*.lock` # Dependency lock files
-- `package-lock.json` # Node.js dependency lock
-- `dev-tools/Gemfile.lock` # Ruby dependency lock
+- `Gemfile.lock` # Root workspace lock file
 
 ## Ignored Paths
 
 AI agents should generally ignore the contents of the following paths during normal operations:
 
 - `dev-taskflow/done/**/*` # Completed tasks and releases
-- `dev-taskflow/sessions/**/*` # Session logs
-- `node_modules/**/*` # Node.js dependencies
-- `dev-tools/vendor/**/*` # Bundler dependencies
+- `ace-*/coverage/**/*` # Test coverage reports
+- `ace-*/.bundle/**/*` # Gem-specific bundle cache
+- `vendor/bundle/**/*` # Bundled dependencies
 - `tmp/**/*` # Temporary files
 - `log/**/*` # Log files
 - `.git/**/*` # Git internals
 - `.bundle/**/*` # Bundle cache
-- `coverage/**/*` # Test coverage reports
 - `.idea/**/*`, `.vscode/**/*` # Editor configurations
 - `**/.*.swp`, `**/.*.swo` # Swap files
 - `**/.DS_Store` # macOS system files
@@ -79,6 +102,7 @@ AI agents should generally ignore the contents of the following paths during nor
 - `**/.env` # Environment files
 - `**/.env.*` # Environment variants
 - `*.session.log` # Session logs
-- `*.lock` # Lock files
+- `*.lock` # Lock files (except for reference)
 - `*.tmp` # Temporary files
 - `*~` # Backup files
+- `docs/context/cached/**/*` # Cached context files (generated)

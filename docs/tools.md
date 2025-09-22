@@ -1,412 +1,252 @@
-# Coding Agent Tools - Development Tools Reference
+# ACE Tools - Development Tools Reference
 
-## Main Cheat-sheet
+## Current ace-* Gem Tools
 
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| **`search`** | **Unified intelligent search** | **`--files`, `--preset`, `--fzf`** |
-| `code-review` | Preset-based code review | `--preset`, `--context` |
-| `code-review-synthesize` | Review synthesis tool | `--format` |
-| `create-path` | Create files/directories | `--force`, `--content` |
-| `git-add` | Enhanced git add | `--patch`, `--all` |
-| `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
-| `git-fetch` | Enhanced git fetch | `--all`, `--prune` |
-| `git-log` | Enhanced git log | `--oneline`, `--graph` |
-| `git-pull` | Enhanced git pull | `--rebase`, `--ff-only` |
-| `git-push` | Enhanced git push | `--force`, `--dry-run` |
-| `git-status` | Enhanced git status | `--verbose`, `--short` |
-| `git-tag` | Enhanced git tag | `--annotate`, `--delete` |
-| `handbook` | Development handbook access | `sync-templates` |
-| `llm-query` | Unified LLM query | `--model`, `--output` |
-| `nav-ls` | Enhanced directory listing | `--long`, `--all` |
-| `nav-path` | Intelligent path navigation | `task`, `file` |
-| `nav-tree` | Enhanced project tree | `--context`, `--depth` |
-| `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
-| `release-manager` | Release management | `current`, `report` |
-| `task-manager` | Project task management | `--filter`, `--sort` |
+### Core Tools Available Now
 
-## Persona Cheat-sheets
-
-### AI Agent
-
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `task-manager` | Manage tasks | `--filter`, `--sort` |
-| `llm-query` | Query AI models | `--model`, `--output` |
-| `nav-path` | Navigate paths | `task`, `file` |
-| `release-manager` | Manage releases | `current`, `report` |
-
-### Human Developer
-
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `code-review` | Review code | `--preset`, `--model` |
-| `handbook` | Access guides | `sync-templates` |
-| `reflection-synthesize` | Generate reports | `--session`, `--focus` |
-
-### Git Power-User
-
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `git-add` | Stage files | `--patch`, `--all` |
-| `git-commit` | Smart commit | `--intention` |
-| `git-status` | Check status | `--verbose` |
-| `git-tag` | Manage tags | `--annotate` |
-
-### Release Manager
-
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `release-manager` | Coordinate releases | `current`, `report` |
-| `task-manager` | Track deliverables | `--filter`, `--sort` |
+| Tool | Purpose | Gem | Key Features |
+|------|---------|-----|--------------|
+| **`ace-context`** | **Load project context** | **ace-context** | Smart caching, multi-format output, preset support |
+| **`ace-test`** | **Run individual tests** | **ace-test-runner** | Detailed output, failure analysis, single file focus |
+| **`ace-test-suite`** | **Run test suites** | **ace-test-runner** | CI-optimized, parallel execution, multi-source |
 
 ## Setup Requirements
 
 ### Dependencies
 
-* **Ruby** >= 3.2.0
+* **Ruby** >= 3.0.0 (3.2.0 recommended)
 * **Bundler** for dependency management
-* **Git** CLI for repository operations
-* **dev-handbook** submodule for task management utilities
+* **Git** for repository operations
 
 ### Environment Setup
 
 ```bash
-# Initial setup (run from dev-tools/ directory)
-cd dev-tools && bundle install
+# Initial setup (run from repository root)
+bundle install
 
-# Load Ruby console with gem loaded
-cd dev-tools && bundle exec irb -r ./lib/coding_agent_tools
+# Development mode - use bundle exec
+bundle exec ace-context --help
+bundle exec ace-test --help
+bundle exec ace-test-suite --help
+
+# After gem installation (future)
+ace-context --preset project
+ace-test ace-core/test/ace/core/atoms/test_yaml_parser.rb
+ace-test-suite
 ```
 
-## Gem Executables
+## ace-context - Context Loading Tool
 
-### `search` – Fast unified search for files and content
-<details><summary>Details</summary>
-
+### Basic Usage
 ```bash
-search [PATTERN] [OPTIONS]
+ace-context [OPTIONS]
 ```
 
-**Key flags:** `--files` (file search), `--preset NAME` (use preset), `--fzf` (interactive)
+### Key Options
+- `--preset NAME` - Use a preset configuration (default: project)
+- `--format FORMAT` - Output format: yaml, json, toml, xml (default: yaml)
+- `--output PATH` - Output file path (default: stdout)
+- `--cache` / `--no-cache` - Enable/disable smart caching
 
-**Example:**
+### Examples
 ```bash
-search "TODO" --preset todo  # Find all TODO comments
+# Load project context with caching
+ace-context --preset project
+
+# Output as JSON without cache
+ace-context --preset project --format json --no-cache
+
+# Save to file
+ace-context --preset project --output context.yml
+
+# Use different preset
+ace-context --preset development
 ```
-</details>
 
-### `code-review` – Preset-based code review with context integration
-<details><summary>Details</summary>
+### Configuration
+Create `.ace/context.yml` for custom presets:
+```yaml
+presets:
+  custom:
+    files:
+      - "README.md"
+      - "docs/*.md"
+    commands:
+      git_status:
+        command: "git status --short"
+      recent_commits:
+        command: "git log --oneline -5"
+```
 
+## ace-test - Individual Test Runner
+
+### Basic Usage
 ```bash
-code-review [OPTIONS]
+ace-test [TEST_FILES...] [OPTIONS]
 ```
 
-**Key flags:** `--preset NAME` (review preset), `--context FILE` (context file)
+### Key Options
+- `--name PATTERN` - Run only tests matching pattern
+- `--verbose` - Show detailed output
+- `--seed SEED` - Set random seed for test order
 
-**Example:**
+### Examples
 ```bash
-code-review --preset architecture  # Review architecture changes
+# Run specific test file
+ace-test ace-core/test/ace/core/atoms/test_yaml_parser.rb
+
+# Run tests matching pattern
+ace-test ace-core/test/**/*_test.rb --name "/parse/"
+
+# Run with verbose output
+ace-test ace-context/test --verbose
 ```
-</details>
 
-### `code-review-synthesize` – Synthesize code review results
-<details><summary>Details</summary>
+## ace-test-suite - CI Test Suite Runner
 
+### Basic Usage
 ```bash
-code-review-synthesize [OPTIONS]
+ace-test-suite [OPTIONS]
 ```
 
-**Key flags:** `--format FORMAT` (output format)
+### Key Options
+- `--parallel` - Run tests in parallel
+- `--format FORMAT` - Output format: progress, documentation, json
+- `--fail-fast` - Stop on first failure
 
-**Example:**
+### Examples
 ```bash
-code-review-synthesize --format markdown  # Generate markdown report
+# Run all tests across gems
+ace-test-suite
+
+# Run in parallel with fail-fast
+ace-test-suite --parallel --fail-fast
+
+# CI-optimized run
+ace-test-suite --format json --parallel
 ```
-</details>
 
-### `create-path` – Create files/directories with templates
-<details><summary>Details</summary>
+## Gem Architecture
 
+### ace-core (Foundation)
+- **Purpose**: Configuration management with cascade resolution
+- **No executables**: Library gem only
+- **Key Features**:
+  - YAML/environment configuration loading
+  - Deep hash merging
+  - Path expansion
+  - Zero external dependencies
+
+### ace-context (Context Loading)
+- **Executable**: `ace-context`
+- **Dependencies**: ace-core
+- **Key Features**:
+  - Smart file-based caching
+  - Multi-format output (YAML, JSON, TOML, XML)
+  - Command execution integration
+  - Template processing
+
+### ace-test-runner (Test Execution)
+- **Executables**: `ace-test`, `ace-test-suite`
+- **Dependencies**: ace-core, ace-test-support
+- **Key Features**:
+  - Multi-source test discovery
+  - Parallel execution support
+  - CI-optimized output
+  - Detailed failure reporting
+
+### ace-test-support (Testing Infrastructure)
+- **Purpose**: Shared test utilities
+- **No executables**: Support library only
+- **Key Features**:
+  - TestEnvironment for isolation
+  - ConfigHelpers for testing
+  - Minitest extensions
+
+## Legacy Tools (Being Migrated)
+
+The following tools from dev-tools are being migrated to individual ace-* gems:
+
+### Planned ace-git
+- `git-add`, `git-commit`, `git-status`, `git-log`, `git-push`, `git-pull`
+- `git-fetch`, `git-tag`
+
+### Planned ace-llm
+- `llm-query` - Multi-provider LLM integration
+
+### Planned ace-handbook
+- `handbook` - Workflow and template management
+- `task-manager` - Task tracking
+- `release-manager` - Release coordination
+
+### Planned ace-dev
+- `search` - Unified file/content search
+- `create-path` - File/directory creation
+- `nav-ls`, `nav-path`, `nav-tree` - Navigation utilities
+- `code-review`, `code-review-synthesize` - Code review tools
+- `reflection-synthesize` - Development reflections
+
+## Development Workflow
+
+### Testing a Gem
 ```bash
-create-path PATH [OPTIONS]
+# Run tests for specific gem
+cd ace-core
+bundle exec rake test
+
+# Run with coverage
+COVERAGE=true bundle exec rake test
 ```
 
-**Key flags:** `--force` (overwrite), `--content TEXT` (file content)
-
-**Example:**
+### Using in Development
 ```bash
-create-path docs/new-guide.md --content "# Guide"  # Create with content
-```
-</details>
-
-### `git-add` – Enhanced git add with smart staging
-<details><summary>Details</summary>
-
-```bash
-git-add [FILES] [OPTIONS]
+# Always use bundle exec in development
+bundle exec ace-context --preset project
+bundle exec ace-test ace-*/test/**/*_test.rb
 ```
 
-**Key flags:** `--patch` (interactive), `--all` (all changes)
-
-**Example:**
-```bash
-git-add --patch  # Interactive staging
-```
-</details>
-
-### `git-commit` – Enhanced git commit with intentions
-<details><summary>Details</summary>
-
-```bash
-git-commit [OPTIONS]
+### CI Integration
+```yaml
+# GitHub Actions example
+- name: Run tests
+  run: bundle exec ace-test-suite --format json
 ```
 
-**Key flags:** `--intention TYPE` (commit type), `--no-edit` (skip editor)
+## Configuration
 
-**Example:**
-```bash
-git-commit --intention fix  # Create fix commit
-```
-</details>
+### Global Configuration
+ACE uses a cascade resolution system for configuration:
+1. `.ace/[tool].yml` in current directory
+2. `.ace/[tool].yml` in parent directories (up to home)
+3. Built-in defaults
 
-### `git-fetch` – Enhanced git fetch
-<details><summary>Details</summary>
+### Example Configuration Files
 
-```bash
-git-fetch [OPTIONS]
-```
-
-**Key flags:** `--all` (all remotes), `--prune` (remove deleted)
-
-**Example:**
-```bash
-git-fetch --all --prune  # Fetch all and cleanup
-```
-</details>
-
-### `git-log` – Enhanced git log display
-<details><summary>Details</summary>
-
-```bash
-git-log [OPTIONS]
+`.ace/settings.yml` (ace-core):
+```yaml
+app_name: my-project
+environment: development
 ```
 
-**Key flags:** `--oneline` (compact), `--graph` (show graph)
-
-**Example:**
-```bash
-git-log --oneline --graph  # Visual commit history
-```
-</details>
-
-### `git-pull` – Enhanced git pull
-<details><summary>Details</summary>
-
-```bash
-git-pull [OPTIONS]
+`.ace/context.yml` (ace-context):
+```yaml
+cache:
+  enabled: true
+  directory: .cache/context
+presets:
+  project:
+    files: ["README.md", "docs/*.md"]
 ```
 
-**Key flags:** `--rebase` (rebase instead), `--ff-only` (fast-forward only)
-
-**Example:**
-```bash
-git-pull --rebase  # Pull with rebase
-```
-</details>
-
-### `git-push` – Enhanced git push
-<details><summary>Details</summary>
-
-```bash
-git-push [OPTIONS]
+`.ace/test-runner.yml` (ace-test-runner):
+```yaml
+parallel: true
+format: progress
+sources:
+  - "test/**/*_test.rb"
+  - "spec/**/*_spec.rb"
 ```
 
-**Key flags:** `--force` (force push), `--dry-run` (preview)
+---
 
-**Example:**
-```bash
-git-push --dry-run  # Preview push changes
-```
-</details>
-
-### `git-status` – Enhanced git status
-<details><summary>Details</summary>
-
-```bash
-git-status [OPTIONS]
-```
-
-**Key flags:** `--verbose` (detailed), `--short` (compact)
-
-**Example:**
-```bash
-git-status --short  # Compact status view
-```
-</details>
-
-### `git-tag` – Enhanced git tag management
-<details><summary>Details</summary>
-
-```bash
-git-tag [TAGNAME] [OPTIONS]
-```
-
-**Key flags:** `--annotate` (annotated tag), `--delete` (delete tag)
-
-**Example:**
-```bash
-git-tag v1.0.0 --annotate  # Create annotated tag
-```
-</details>
-
-### `handbook` – Development handbook access
-<details><summary>Details</summary>
-
-```bash
-handbook [COMMAND] [OPTIONS]
-```
-
-**Key flags:** `sync-templates` (sync templates)
-
-**Example:**
-```bash
-handbook sync-templates  # Sync project templates
-```
-</details>
-
-### `llm-query` – Unified LLM query interface
-<details><summary>Details</summary>
-
-```bash
-llm-query PROMPT [OPTIONS]
-```
-
-**Key flags:** `--model NAME` (model selection), `--output FILE` (save output)
-
-**Examples:**
-```bash
-llm-query "Explain this code" --model gpt4     # Query with GPT-4
-llm-query "Review this code" codex:o3          # Query with Codex o3
-llm-query "Hello world" codex:o3-mini         # Query with Codex o3-mini
-llm-query "Local help" codexoss:llama3        # Query with Codex OSS (Ollama)
-```
-</details>
-
-### `nav-ls` – Enhanced directory listing
-<details><summary>Details</summary>
-
-```bash
-nav-ls [PATH] [OPTIONS]
-```
-
-**Key flags:** `--long` (detailed), `--all` (show hidden)
-
-**Example:**
-```bash
-nav-ls --long --all  # Detailed listing with hidden files
-```
-</details>
-
-### `nav-path` – Intelligent path navigation
-<details><summary>Details</summary>
-
-```bash
-nav-path COMMAND [ARGS]
-```
-
-**Key flags:** `task` (find task), `file` (find file)
-
-**Example:**
-```bash
-nav-path file blueprint  # Find blueprint file
-```
-</details>
-
-### `nav-tree` – Enhanced project tree view
-<details><summary>Details</summary>
-
-```bash
-nav-tree [PATH] [OPTIONS]
-```
-
-**Key flags:** `--context` (with context), `--depth N` (tree depth)
-
-**Example:**
-```bash
-nav-tree --depth 2  # Show 2-level tree
-```
-</details>
-
-### `reflection-synthesize` – Generate reflection reports
-<details><summary>Details</summary>
-
-```bash
-reflection-synthesize [OPTIONS]
-```
-
-**Key flags:** `--session ID` (session), `--focus AREA` (focus area)
-
-**Example:**
-```bash
-reflection-synthesize --session today  # Today's reflection
-```
-</details>
-
-### `release-manager` – Release management tool
-<details><summary>Details</summary>
-
-```bash
-release-manager COMMAND [OPTIONS]
-```
-
-**Key flags:** `current` (current release), `report` (generate report)
-
-**Example:**
-```bash
-release-manager current  # Show current release
-```
-</details>
-
-### `task-manager` – Project task management
-<details><summary>Details</summary>
-
-```bash
-task-manager [COMMAND] [OPTIONS]
-```
-
-**Key flags:** `--filter STATUS` (filter tasks), `--sort FIELD` (sort by)
-
-**Example:**
-```bash
-task-manager --filter pending  # Show pending tasks
-```
-</details>
-
-## Workflow Integration
-
-### Finding Files
-```bash
-search "*.rb" --files  # Find Ruby files
-nav-path file spec  # Navigate to spec file
-```
-
-### Managing Tasks
-```bash
-task-manager --filter pending  # List pending tasks
-nav-path task 001  # Navigate to task
-```
-
-### Git Workflow
-```bash
-git-status --short  # Quick status check
-git-add --patch  # Interactive staging
-git-commit --intention feat  # Feature commit
-```
-
-### Code Review
-```bash
-code-review --preset security  # Security review
-code-review-synthesize  # Generate report
-```
+*Note: This document reflects the current state of the ACE mono-repo migration. As more ace-* gems are created, this reference will be updated with their tools and usage.*
