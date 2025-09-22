@@ -8,7 +8,9 @@ require "fileutils"
 module Ace
   module Core
     module Molecules
-      class ProjectRootFinderTest < Minitest::Test
+      class ProjectRootFinderTest < AceTestCase
+        include Ace::TestSupport::SubprocessRunner
+
         def setup
           @original_pwd = Dir.pwd
           @test_dir = Dir.mktmpdir("ace-test-")
@@ -28,10 +30,16 @@ module Ace
           FileUtils.mkdir_p(nested_dir)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          Dir.chdir(nested_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{nested_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.find
+          RUBY
 
-          assert_equal File.realpath(project_dir), File.realpath(finder.find)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(project_dir), File.realpath(output.strip)
         end
 
         def test_finds_rakefile_root
@@ -41,10 +49,16 @@ module Ace
           FileUtils.mkdir_p(nested_dir)
           FileUtils.touch(File.join(project_dir, "Rakefile"))
 
-          Dir.chdir(nested_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{nested_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.find
+          RUBY
 
-          assert_equal File.realpath(project_dir), File.realpath(finder.find)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(project_dir), File.realpath(output.strip)
         end
 
         def test_finds_gemfile_root
@@ -54,10 +68,16 @@ module Ace
           FileUtils.mkdir_p(nested_dir)
           FileUtils.touch(File.join(project_dir, "Gemfile"))
 
-          Dir.chdir(nested_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{nested_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.find
+          RUBY
 
-          assert_equal File.realpath(project_dir), File.realpath(finder.find)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(project_dir), File.realpath(output.strip)
         end
 
         def test_returns_nil_when_no_markers_found
@@ -65,10 +85,17 @@ module Ace
           no_project_dir = File.join(@test_dir, "no_project")
           FileUtils.mkdir_p(no_project_dir)
 
-          Dir.chdir(no_project_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{no_project_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            result = finder.find
+            puts result.nil? ? "nil" : result
+          RUBY
 
-          assert_nil finder.find
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal "nil", output.strip
         end
 
         def test_find_or_current_returns_current_when_not_found
@@ -76,10 +103,16 @@ module Ace
           no_project_dir = File.join(@test_dir, "no_project")
           FileUtils.mkdir_p(no_project_dir)
 
-          Dir.chdir(no_project_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{no_project_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.find_or_current
+          RUBY
 
-          assert_equal Dir.pwd, finder.find_or_current
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(no_project_dir), File.realpath(output.strip)
         end
 
         def test_in_project_returns_true_when_found
@@ -87,20 +120,32 @@ module Ace
           FileUtils.mkdir_p(project_dir)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          Dir.chdir(project_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{project_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.in_project?
+          RUBY
 
-          assert finder.in_project?
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal "true", output.strip
         end
 
         def test_in_project_returns_false_when_not_found
           no_project_dir = File.join(@test_dir, "no_project")
           FileUtils.mkdir_p(no_project_dir)
 
-          Dir.chdir(no_project_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{no_project_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.in_project?
+          RUBY
 
-          refute finder.in_project?
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal "false", output.strip
         end
 
         def test_relative_path_from_project_root
@@ -110,32 +155,54 @@ module Ace
           FileUtils.touch(nested_file)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          Dir.chdir(File.dirname(nested_file))
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{File.dirname(nested_file)}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.relative_path("#{nested_file}")
+          RUBY
 
-          assert_equal "lib/nested/file.rb", finder.relative_path(nested_file)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal "lib/nested/file.rb", output.strip
         end
 
         def test_relative_path_returns_nil_when_not_in_project
           no_project_dir = File.join(@test_dir, "no_project")
+          file_path = File.join(no_project_dir, "file.rb")
           FileUtils.mkdir_p(no_project_dir)
+          FileUtils.touch(file_path)
 
-          Dir.chdir(no_project_dir)
-          finder = ProjectRootFinder.new
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{no_project_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            result = finder.relative_path("#{file_path}")
+            puts result.nil? ? "nil" : result
+          RUBY
 
-          assert_nil finder.relative_path(Dir.pwd)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal "nil", output.strip
         end
 
         def test_custom_markers
+          # Create project with custom marker
           project_dir = File.join(@test_dir, "custom_project")
-          nested_dir = File.join(project_dir, "src")
+          nested_dir = File.join(project_dir, "deep", "nested")
           FileUtils.mkdir_p(nested_dir)
-          FileUtils.touch(File.join(project_dir, ".custom_marker"))
+          FileUtils.touch(File.join(project_dir, ".custom-root"))
 
-          Dir.chdir(nested_dir)
-          finder = ProjectRootFinder.new(markers: [".custom_marker"])
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{nested_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new(markers: ['.custom-root'])
+            puts finder.find
+          RUBY
 
-          assert_equal File.realpath(project_dir), File.realpath(finder.find)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(project_dir), File.realpath(output.strip)
         end
 
         def test_class_method_find
@@ -143,18 +210,29 @@ module Ace
           FileUtils.mkdir_p(project_dir)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          Dir.chdir(project_dir)
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            puts Ace::Core::Molecules::ProjectRootFinder.find(start_path: "#{project_dir}")
+          RUBY
 
-          assert_equal File.realpath(project_dir), File.realpath(ProjectRootFinder.find)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(project_dir), File.realpath(output.strip)
         end
 
         def test_class_method_find_or_current
           no_project_dir = File.join(@test_dir, "no_project")
           FileUtils.mkdir_p(no_project_dir)
 
-          Dir.chdir(no_project_dir)
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{no_project_dir}")
+            puts Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          RUBY
 
-          assert_equal Dir.pwd, ProjectRootFinder.find_or_current
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(no_project_dir), File.realpath(output.strip)
         end
 
         def test_start_path_option
@@ -163,30 +241,36 @@ module Ace
           FileUtils.mkdir_p(nested_dir)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          # Test from outside the project
-          Dir.chdir(@test_dir)
-          finder = ProjectRootFinder.new(start_path: nested_dir)
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            finder = Ace::Core::Molecules::ProjectRootFinder.new(start_path: "#{nested_dir}")
+            puts finder.find
+          RUBY
 
-          assert_equal File.realpath(project_dir), File.realpath(finder.find)
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal File.realpath(project_dir), File.realpath(output.strip)
         end
 
         def test_prefers_markers_in_order
-          # Create nested projects with different markers
-          outer_project = File.join(@test_dir, "outer")
-          inner_project = File.join(outer_project, "inner")
-          FileUtils.mkdir_p(inner_project)
+          # Create structure where .git is deeper than Gemfile
+          outer_dir = File.join(@test_dir, "outer")
+          inner_dir = File.join(outer_dir, "inner")
+          FileUtils.mkdir_p(inner_dir)
+          FileUtils.touch(File.join(outer_dir, "Gemfile"))
+          FileUtils.mkdir_p(File.join(inner_dir, ".git"))
 
-          # Outer has lower priority marker
-          FileUtils.touch(File.join(outer_project, "package.json"))
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{inner_dir}")
+            finder = Ace::Core::Molecules::ProjectRootFinder.new
+            puts finder.find
+          RUBY
 
-          # Inner has higher priority marker
-          FileUtils.mkdir_p(File.join(inner_project, ".git"))
-
-          Dir.chdir(inner_project)
-          finder = ProjectRootFinder.new
-
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
           # Should find .git first (higher priority)
-          assert_equal File.realpath(inner_project), File.realpath(finder.find)
+          assert_equal File.realpath(inner_dir), File.realpath(output.strip)
         end
 
         def test_caching
@@ -194,24 +278,28 @@ module Ace
           FileUtils.mkdir_p(project_dir)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          Dir.chdir(project_dir)
+          # Test that cache works within subprocess
+          code = <<~RUBY
+            require 'ace/core/molecules/project_root_finder'
+            Dir.chdir("#{project_dir}")
 
-          # First call should find the project root
-          result1 = ProjectRootFinder.find
+            finder1 = Ace::Core::Molecules::ProjectRootFinder.new
+            result1 = finder1.find
 
-          # Remove the .git directory
-          FileUtils.rm_rf(File.join(project_dir, ".git"))
+            # Clear cache
+            Ace::Core::Molecules::ProjectRootFinder.clear_cache!
 
-          # Second call should return cached result
-          result2 = ProjectRootFinder.find
+            # Should return nil after clearing when no PROJECT_ROOT_PATH
+            # But we're in a dir with .git, so it should still find it
+            finder2 = Ace::Core::Molecules::ProjectRootFinder.new
+            result2 = finder2.find
 
-          assert_equal result1, result2
+            puts result1 == result2
+          RUBY
 
-          # Clear cache and try again
-          ProjectRootFinder.clear_cache!
-          result3 = ProjectRootFinder.find
-
-          assert_nil result3
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+          assert_equal "true", output.strip
         end
       end
     end

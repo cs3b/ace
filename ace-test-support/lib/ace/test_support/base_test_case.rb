@@ -7,6 +7,7 @@ module Ace
     # Base test case class with common utilities for all ace-* gems
     class BaseTestCase < Minitest::Test
       include TestHelper
+      include SubprocessRunner
 
       def fixture_path(path)
         File.expand_path("fixtures/#{path}", File.dirname(caller_locations(1, 1)[0].path))

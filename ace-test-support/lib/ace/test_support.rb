@@ -9,6 +9,7 @@ require "yaml"
 
 require_relative "test_support/version"
 require_relative "test_support/test_helper"  # Load helper module first
+require_relative "test_support/subprocess_runner"  # Subprocess isolation utilities
 require_relative "test_support/base_test_case"  # Then base test case that uses it
 require_relative "test_support/config_helpers"
 require_relative "test_support/test_environment"

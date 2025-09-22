@@ -9,7 +9,8 @@ require "fileutils"
 module Ace
   module Core
     module Molecules
-      class DirectoryTraverserTest < Minitest::Test
+      class DirectoryTraverserTest < AceTestCase
+        include Ace::TestSupport::SubprocessRunner
         def setup
           @original_pwd = Dir.pwd
           @test_dir = Dir.mktmpdir("ace-test-")
@@ -85,14 +86,25 @@ module Ace
           FileUtils.mkdir_p(nested_dir)
           FileUtils.mkdir_p(File.join(project_dir, ".git"))
 
-          Dir.chdir(nested_dir)
-          traverser = DirectoryTraverser.new
+          code = <<~RUBY
+            require 'ace/core/molecules/directory_traverser'
+            require 'pathname'
+            Dir.chdir("#{nested_dir}")
+            traverser = Ace::Core::Molecules::DirectoryTraverser.new
 
-          hierarchy = traverser.directory_hierarchy
-          assert_equal 3, hierarchy.length
-          assert_equal File.realpath(nested_dir), File.realpath(hierarchy[0])
-          assert_equal File.realpath(middle_dir), File.realpath(hierarchy[1])
-          assert_equal File.realpath(project_dir), File.realpath(hierarchy[2])
+            hierarchy = traverser.directory_hierarchy
+            puts hierarchy.length
+            hierarchy.each { |dir| puts Pathname.new(dir).realpath }
+          RUBY
+
+          output, status = run_in_clean_env(code: code, requires: [])
+          assert status.success?, "Subprocess failed: #{output}"
+
+          lines = output.strip.split("\n")
+          assert_equal "3", lines[0]
+          assert_equal File.realpath(nested_dir), File.realpath(lines[1])
+          assert_equal File.realpath(middle_dir), File.realpath(lines[2])
+          assert_equal File.realpath(project_dir), File.realpath(lines[3])
         end
 
         def test_build_cascade_priorities
