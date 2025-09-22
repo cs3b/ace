@@ -30,7 +30,6 @@ parser = OptionParser.new do |opts|
   opts.separator "  system      Run system tests"
   opts.separator "  all         Run all tests (default)"
   opts.separator "  quick       Run quick tests (atoms + molecules)"
-  opts.separator "  clean-test-reports  Delete all test reports except the latest"
   opts.separator ""
   opts.separator "Options:"
 
@@ -95,6 +94,10 @@ parser = OptionParser.new do |opts|
     options[:stop_threshold] = n
   end
 
+  opts.on("--profile [N]", Integer, "Show N slowest tests (default: 10)") do |n|
+    options[:profile] = n || 10
+  end
+
   opts.separator ""
   opts.separator "Rake Integration:"
 
@@ -149,7 +152,8 @@ parser = OptionParser.new do |opts|
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
   opts.separator "  ace-test --stop-threshold 10     # Stop after 10 failures"
   opts.separator "  ace-test --max-display 5         # Show only first 5 failures"
-  opts.separator "  ace-test clean-test-reports      # Delete all test reports except latest"
+  opts.separator "  ace-test --profile 20            # Show 20 slowest tests"
+  opts.separator "  ace-test --cleanup-reports       # Clean up old test reports"
   opts.separator ""
   opts.separator "Rake Integration Examples:"
   opts.separator "  ace-test --set-default-rake-test   # Set ace-test as default for 'rake test'"
@@ -168,7 +172,7 @@ rescue OptionParser::InvalidArgument => e
 end
 
 # Parse target argument (first non-option argument)
-known_targets = %w[atoms molecules organisms models unit integration system all quick clean-test-reports]
+known_targets = %w[atoms molecules organisms models unit integration system all quick]
 target = nil
 test_files = []
 line_number = nil
@@ -195,37 +199,7 @@ end
 options[:target] = target if target
 options[:files] = test_files unless test_files.empty?
 
-# Handle clean-test-reports command
-if target == "clean-test-reports"
-  require "ace/test_runner/molecules/report_storage"
-  require "fileutils"
-
-  base_dir = options[:report_dir] || "test-reports"
-
-  # Find all report directories
-  reports = Dir.glob(File.join(base_dir, "*"))
-               .select { |d| File.directory?(d) && !File.symlink?(d) }
-               .select { |d| File.basename(d) =~ /^\d{8}-\d{6}$/ }  # Match timestamp format
-               .sort
-               .reverse  # Most recent first
-
-  if reports.size <= 1
-    puts "No old reports to clean up."
-  else
-    # Keep only the most recent report
-    to_delete = reports[1..-1]  # All except the first (most recent)
-
-    puts "Cleaning up test reports (keeping only the latest)..."
-    puts "Deleting #{to_delete.size} old reports:"
-
-    to_delete.each do |report_path|
-      puts "  - #{File.basename(report_path)}"
-      FileUtils.rm_rf(report_path)
-    end
-  end
-
-  exit 0
-end
+# Removed clean-test-reports command - use --cleanup-reports instead
 
 # Handle Report cleanup commands
 if options[:cleanup_reports]

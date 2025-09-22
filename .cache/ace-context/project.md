@@ -422,7 +422,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Mon Sep 22 20:30:55 WEST 2025
+Mon Sep 22 22:10:03 WEST 2025
 
 ```
 
@@ -432,6 +432,7 @@ Mon Sep 22 20:30:55 WEST 2025
 ```
  M .cache/ace-context/project.md
  M ace-core/test-reports/latest
+ M ace-test-runner/exe/ace-test
 
 ```
 
@@ -442,12 +443,12 @@ Mon Sep 22 20:30:55 WEST 2025
 Status: 13 done, 4 pending (17 total)
 Recent Tasks (3/502 shown):
 ==================================================
-v.0.9.0+task.017 * DONE * 2 hours ago * Refactor ace-context to markdown-only preset configuration
+v.0.9.0+task.006 * PENDING * 1 hour ago * Create ace-capture Gem
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-capture-gem.md
+v.0.9.0+task.017 * DONE * 4 hours ago * Refactor ace-context to markdown-only preset configuration
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.017-refactor-ace-context-to-markdown-only-preset-configuration.md
 v.0.9.0+task.016 * DONE * 2 days ago * Implement Smart Caching for ace-context
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.016-implement-smart-caching-for-ace-context.md
-v.0.9.0+task.005 * DONE * 2 days ago * Create ace-context Gem
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.005-create-ace-context-gem.md
 
 ```
 
@@ -458,7 +459,7 @@ v.0.9.0+task.005 * DONE * 2 days ago * Create ace-context Gem
 Status: 13 done, 4 pending (17 total)
 Next Tasks (3 shown):
 ==================================================
-v.0.9.0+task.006 * PENDING * 3 days ago * Create ace-capture Gem
+v.0.9.0+task.006 * PENDING * 1 hour ago * Create ace-capture Gem
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-capture-gem.md
 v.0.9.0+task.007 * PENDING * 3 days ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
