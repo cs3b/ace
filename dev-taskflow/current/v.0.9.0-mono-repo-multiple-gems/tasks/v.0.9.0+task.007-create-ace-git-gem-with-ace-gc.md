@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.007
-status: pending
+status: in-progress
 priority: medium
 estimate: 6h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002, v.0.9.0+task.003, v.0.9.0+task.004]

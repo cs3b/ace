@@ -6,10 +6,10 @@ require "ace/taskflow/molecules/file_namer"
 class FileNamerTest < AceTestCase
   def setup
     @config = {
-      "taskflow" => {
-        "idea" => {
-          "directory" => "/test/ideas"
-        }
+      "directory" => "/test/ideas",
+      "file_naming" => {
+        "timestamp_format" => "%Y%m%d-%H%M%S",
+        "title_max_length" => 50
       }
     }
     @namer = Ace::Taskflow::Molecules::FileNamer.new(@config)
@@ -86,7 +86,7 @@ class FileNamerTest < AceTestCase
   end
 
   def test_uses_default_directory_when_not_configured
-    config = { "taskflow" => { "idea" => {} } }
+    config = {}
     namer = Ace::Taskflow::Molecules::FileNamer.new(config)
 
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
