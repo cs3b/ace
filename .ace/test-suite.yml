@@ -24,6 +24,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-nav
+      path: ace-nav
+      group: tools
+      priority: 3
+
   # Test command options
   test_options:
     format: compact
