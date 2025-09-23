@@ -29,33 +29,57 @@ The system maintains separation between ideas (captured thoughts) and tasks (act
 ### Interface Contract
 
 ```bash
-# Release Management
-ace-taskflow release                      # Show current release info
-ace-taskflow release list                 # List all releases
-ace-taskflow release switch <name>        # Switch to different release
-ace-taskflow release create <name>        # Create new release
-ace-taskflow release complete             # Move current to done
-ace-taskflow release status               # Detailed statistics
-
-# Task Management
+# Task Management (Singular - operations on one)
 ace-taskflow task                         # Show next actionable task
-ace-taskflow task next [--limit N]        # Next N tasks
-ace-taskflow task list [filters]          # List all tasks
+ace-taskflow task <id>                    # Show specific task details
 ace-taskflow task create <title>          # Create new task
-ace-taskflow task start <task-id>         # Mark as in-progress
-ace-taskflow task done <task-id>          # Mark as completed
-ace-taskflow task from-idea <idea-file>   # Convert idea to task
+ace-taskflow task start <id>              # Mark as in-progress
+ace-taskflow task done <id>               # Mark as completed
+ace-taskflow task move <id> <release>     # Move to different release
+ace-taskflow task update <id>             # Update task metadata
+ace-taskflow task from-idea <file>        # Convert idea to task
 
-# Context switches for tasks
-ace-taskflow task --backlog               # Work with backlog
-ace-taskflow task --current               # Current release (default)
-ace-taskflow task --release <name>        # Specific release
+# Task Collections (Plural - browse/list many)
+ace-taskflow tasks                        # List tasks in current release
+ace-taskflow tasks --all                  # List ALL tasks across releases
+ace-taskflow tasks --backlog              # List backlog tasks
+ace-taskflow tasks --release <name>       # List tasks in specific release
+ace-taskflow tasks --status <status>      # Filter by status
+ace-taskflow tasks --priority <priority>  # Filter by priority
+ace-taskflow tasks --recent [--days N]    # Recently modified tasks
+ace-taskflow tasks --stats                # Task statistics
 
-# Idea Management (simplified, no task subcommand)
-ace-taskflow idea <content>               # Capture to backlog/ideas
-ace-taskflow idea <content> --current     # To current release
-ace-taskflow idea list                    # List all ideas
-ace-taskflow idea show <idea-id>          # Display idea
+# Release Management (Singular - operations on one)
+ace-taskflow release                      # Show current release info
+ace-taskflow release <name>               # Show specific release info
+ace-taskflow release create <name>        # Create new release
+ace-taskflow release switch <name>        # Switch to different release
+ace-taskflow release complete             # Complete current release
+ace-taskflow release promote              # Promote from backlog to current
+ace-taskflow release validate             # Validate current release
+ace-taskflow release changelog            # Generate changelog
+
+# Release Collections (Plural - browse/list many)
+ace-taskflow releases                     # List all releases
+ace-taskflow releases --backlog           # List backlog releases only
+ace-taskflow releases --current           # Show current release(s)
+ace-taskflow releases --done              # List completed releases
+ace-taskflow releases --stats             # Release statistics
+
+# Idea Management (Singular - operations on one)
+ace-taskflow idea <content>               # Capture idea to backlog
+ace-taskflow idea <content> --current     # Capture to current release
+ace-taskflow idea <id>                    # Show specific idea
+ace-taskflow idea to-task <id>            # Convert idea to task
+ace-taskflow idea archive <id>            # Archive specific idea
+
+# Idea Collections (Plural - browse/list many)
+ace-taskflow ideas                        # List all ideas
+ace-taskflow ideas --backlog              # List backlog ideas
+ace-taskflow ideas --current              # List current release ideas
+ace-taskflow ideas --release <name>       # List ideas in specific release
+ace-taskflow ideas --search <term>        # Search ideas
+ace-taskflow ideas --recent [--days N]    # Recently captured ideas
 ```
 
 **Error Handling:**

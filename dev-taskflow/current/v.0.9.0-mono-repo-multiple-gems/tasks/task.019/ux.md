@@ -35,17 +35,17 @@ ace-taskflow idea "Add caching to improve API response time"
 ```bash
 # Release info
 ace-taskflow release                      # Current release info
-ace-taskflow release list                 # All releases
+ace-taskflow releases                     # List all releases
 
 # Task management
 ace-taskflow task                         # Next actionable task
-ace-taskflow task list                    # All tasks in current release
+ace-taskflow tasks                        # List tasks in current release
 ace-taskflow task start task.019          # Start working on a task
 ace-taskflow task done task.019           # Mark task as complete
 
 # Idea capture
 ace-taskflow idea "Quick thought"         # Capture to backlog
-ace-taskflow idea list                    # See all ideas
+ace-taskflow ideas                        # List all ideas
 ```
 
 ---
@@ -64,14 +64,19 @@ In Progress: 2 tasks
 Pending: 2 tasks
 
 # What did I work on recently?
-$ ace-taskflow task recent --days 1
+$ ace-taskflow tasks --recent --days 1
 Recent Tasks (last 24 hours):
   ✓ task.018 - Create ace-nav gem (completed 2h ago)
   ⚡ task.019 - Implement ace-taskflow commands (in-progress)
 
 # What should I work on next?
-$ ace-taskflow task next --limit 3
-Next actionable tasks:
+$ ace-taskflow task
+Next task: task.019 - Implement ace-taskflow release and task management
+Priority: high, Estimate: 3d
+
+# See more options?
+$ ace-taskflow tasks --status pending --limit 3
+Pending tasks:
 1. task.019 - Implement ace-taskflow release and task management
 2. task.007 - Create ace-git gem with ace-gc only
 3. task.008 - Configure .ace for this project
@@ -81,7 +86,7 @@ Next actionable tasks:
 
 ```bash
 # Get task details
-$ ace-taskflow task show task.019
+$ ace-taskflow task task.019
 Task: v.0.9.0+task.019
 Title: Implement ace-taskflow Release and Task Management Commands
 Status: pending → in-progress
@@ -107,7 +112,7 @@ Task task.019 marked as complete
 Duration: 2d 4h (estimated: 3d)
 
 # Quick status check
-$ ace-taskflow release status
+$ ace-taskflow release
 Release: v.0.9.0-mono-repo-multiple-gems
 Progress: ████████████████░░░░ 83% (15/18)
 Completed today: 1
@@ -123,7 +128,7 @@ Remaining: 2
 
 ```bash
 # List all releases
-$ ace-taskflow release list
+$ ace-taskflow releases
 Releases:
   CURRENT:
     v.0.9.0-mono-repo-multiple-gems (15/18 tasks)
@@ -137,7 +142,7 @@ Releases:
     v.0.7.0-prototype (12/12 tasks)
 
 # Get detailed release information
-$ ace-taskflow release status
+$ ace-taskflow release
 Release: v.0.9.0-mono-repo-multiple-gems
 Created: 2025-09-19
 Duration: 4 days
@@ -215,17 +220,17 @@ Created task: v.0.10.0+task.002
 ### Task Lifecycle
 
 ```bash
-# View task in different statuses
-$ ace-taskflow task list --status draft
+# View tasks in different statuses
+$ ace-taskflow tasks --status draft
 Draft tasks (need planning):
   task.001 - Implement caching layer
 
-$ ace-taskflow task list --status pending
+$ ace-taskflow tasks --status pending
 Pending tasks (ready to start):
   task.002 - Fix memory leak
   task.003 - Update documentation
 
-$ ace-taskflow task list --status in-progress
+$ ace-taskflow tasks --status in-progress
 Tasks in progress:
   task.004 - Refactor authentication (started by: you, 2h ago)
 
@@ -238,17 +243,17 @@ $ ace-taskflow task done task.001
 
 ```bash
 # High priority tasks only
-$ ace-taskflow task list --priority high
+$ ace-taskflow tasks --priority high
 High priority tasks:
   task.002 - Fix memory leak (pending)
   task.005 - Security patch (pending)
 
 # Sort by different criteria
-$ ace-taskflow task list --sort priority:desc,created:asc
-$ ace-taskflow task list --sort estimate:asc
+$ ace-taskflow tasks --sort priority:desc,created:asc
+$ ace-taskflow tasks --sort estimate:asc
 
 # Complex filters
-$ ace-taskflow task list \
+$ ace-taskflow tasks \
   --status pending,in-progress \
   --priority high,medium \
   --sort priority:desc
@@ -258,23 +263,23 @@ $ ace-taskflow task list \
 
 ```bash
 # View backlog tasks
-$ ace-taskflow task list --backlog
+$ ace-taskflow tasks --backlog
 Backlog tasks:
   task.030 - Migrate to GraphQL
   task.031 - Add multi-language support
 
 # View tasks in specific release
-$ ace-taskflow task list --release v.0.11.0
+$ ace-taskflow tasks --release v.0.11.0
 Tasks in v.0.11.0-enhanced-testing:
   task.001 - Add integration test suite
   task.002 - Set up CI/CD pipeline
 
 # Move task between releases
-$ ace-taskflow task move task.030 --to current
+$ ace-taskflow task move task.030 current
 Moved task.030 to current release (v.0.10.0)
 
-$ ace-taskflow task reschedule task.031 --to v.0.12.0
-Rescheduled task.031 to v.0.12.0
+$ ace-taskflow task move task.031 v.0.12.0
+Moved task.031 to v.0.12.0
 ```
 
 ---
@@ -301,7 +306,7 @@ Captured idea: backlog/ideas/performance/20250923-143100-optimize-database.md
 
 ```bash
 # List all ideas
-$ ace-taskflow idea list
+$ ace-taskflow ideas
 Ideas (12 total):
   BACKLOG (8):
     20250923-websocket-investigation.md
@@ -315,7 +320,7 @@ Ideas (12 total):
     ...
 
 # View specific idea
-$ ace-taskflow idea show 20250923-websocket
+$ ace-taskflow idea 20250923-websocket
 Title: Investigate WebSocket for real-time updates
 Captured: 2025-09-23 14:30:22
 Category: feature
@@ -325,7 +330,7 @@ Content:
   improve UX with instant updates.
 
 # Search ideas
-$ ace-taskflow idea list --search "cache"
+$ ace-taskflow ideas --search "cache"
 Matching ideas:
   20250921-caching-strategy.md
   20250920-redis-cache.md
@@ -335,7 +340,7 @@ Matching ideas:
 
 ```bash
 # Convert single idea to task
-$ ace-taskflow task from-idea backlog/ideas/20250923-websocket.md
+$ ace-taskflow idea to-task 20250923-websocket
 Creating task from idea: Investigate WebSocket for real-time updates
 
 Enter priority (high/medium/low) [medium]: high
@@ -360,20 +365,19 @@ Ideas moved to: current/v.0.10.0/docs/ideas/
 
 ```bash
 # Review backlog ideas for next release
-$ ace-taskflow idea list --backlog | head -20
+$ ace-taskflow ideas --backlog | head -20
 
 # Create next release
 $ ace-taskflow release create v.0.11.0-user-experience
 
-# Convert promising ideas to tasks
-$ ace-taskflow task from-idea backlog/ideas/ux-*.md \
-  --release v.0.11.0 \
-  --priority medium \
-  --status draft
+# Convert promising ideas to tasks (batch)
+$ for idea in $(ace-taskflow ideas --backlog | grep ux-); do
+  ace-taskflow idea to-task $idea --release v.0.11.0
+done
 
 # Review the new release
-$ ace-taskflow task list --release v.0.11.0
-$ ace-taskflow release status --release v.0.11.0
+$ ace-taskflow tasks --release v.0.11.0
+$ ace-taskflow release v.0.11.0
 ```
 
 ### Sprint Planning
@@ -516,16 +520,19 @@ taskflow:
 alias atr='ace-taskflow release'
 alias att='ace-taskflow task'
 alias ati='ace-taskflow idea'
+alias atrs='ace-taskflow releases'
+alias atts='ace-taskflow tasks'
+alias atis='ace-taskflow ideas'
 
 # Quick workflows
-alias next='ace-taskflow task next'
+alias task='ace-taskflow task'
 alias done='ace-taskflow task done'
 alias idea='ace-taskflow idea'
 
 # Usage
-$ next
-$ done task.019
-$ idea "Quick thought"
+$ task              # See next task
+$ done task.019     # Complete task
+$ idea "Quick thought"  # Capture idea
 ```
 
 ---
