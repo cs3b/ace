@@ -7,6 +7,7 @@
 | **`ace-context`** | Load project context |
 | **`ace-test`** | Run single package tests |
 | **`ace-test-suite`** | Run all packages' tests at once |
+| **`ace-taskflow`** | Capture ideas and manage tasks |
 
 ## Usage Examples
 
@@ -29,3 +30,8 @@ ace-test test/foo_test.rb              # Test specific file
 ace-test test/foo_test.rb:42           # Test at specific line
 ```
 
+### ace-taskflow
+
+```sh
+ace-taskflow idea "Add dark mode support"      # Capture an idea
+```

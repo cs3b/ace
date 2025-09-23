@@ -23,7 +23,7 @@ gem install ace-taskflow
 Quickly capture ideas with automatic timestamping and organization:
 
 ```bash
-ace-tf idea "Add dark mode support to the application"
+ace-taskflow idea "Add dark mode support to the application"
 ```
 
 Ideas are saved to the configured directory (default: `./ideas`) with timestamped filenames.
@@ -33,9 +33,9 @@ Ideas are saved to the configured directory (default: `./ideas`) with timestampe
 Future releases will include task management capabilities:
 
 ```bash
-ace-tf task create "Implement user authentication"
-ace-tf task list
-ace-tf task complete TASK_ID
+ace-taskflow task create "Implement user authentication"
+ace-taskflow task list
+ace-taskflow task complete TASK_ID
 ```
 
 ### Release Management (Coming Soon)
@@ -43,9 +43,9 @@ ace-tf task complete TASK_ID
 Future releases will include release management features:
 
 ```bash
-ace-tf release create v1.0.0
-ace-tf release current
-ace-tf release list
+ace-taskflow release create v1.0.0
+ace-taskflow release current
+ace-taskflow release list
 ```
 
 ## Configuration
@@ -99,7 +99,7 @@ bundle exec rake test
 To test the CLI:
 
 ```bash
-bundle exec ace-tf idea "Test idea"
+bundle exec ace-taskflow idea "Test idea"
 ```
 
 ## License
