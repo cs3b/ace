@@ -69,6 +69,7 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
+- **ace-taskflow**: Task and idea management
 
 ### Workflows (.wf.md)
 
@@ -160,7 +161,6 @@ Development patterns and best practices:
 ### Planned Migrations
 
 - **ace-handbook**: Workflows, guides, and templates as a gem
-- **ace-taskflow**: Task and release management
 - **ace-git**: Enhanced git operations
 - **ace-llm**: Multi-provider LLM integration
 
@@ -347,6 +347,7 @@ For complete decision history and detailed rationale, refer to the individual AD
 | **`ace-context`** | Load project context |
 | **`ace-test`** | Run single package tests |
 | **`ace-test-suite`** | Run all packages' tests at once |
+| **`ace-taskflow`** | Capture ideas and manage tasks |
 
 ## Usage Examples
 
@@ -369,6 +370,11 @@ ace-test test/foo_test.rb              # Test specific file
 ace-test test/foo_test.rb:42           # Test at specific line
 ```
 
+### ace-taskflow
+
+```sh
+ace-taskflow idea "Add dark mode support"      # Capture an idea
+```
 
 ```
 
@@ -387,13 +393,13 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
+- **ace-taskflow**: Idea capture and task management
 
 ## Coming Soon
 
 - **ace-search**: Unified file and content search across codebases
 - **ace-nav**: Navigation and path manipulation (ls, tree, find, create)
 - **ace-git**: Enhanced git operations and smart commit generation
-- **ace-taskflow**: Task and release management (ace-tf, ace-tfr commands)
 - **ace-review**: Code review automation and synthesis
 - **ace-llm**: Multi-provider AI model integration
 
@@ -422,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Mon Sep 22 23:02:12 WEST 2025
+Tue Sep 23 14:06:35 WEST 2025
 
 ```
 
@@ -430,12 +436,18 @@ Mon Sep 22 23:02:12 WEST 2025
 
 **Output:**
 ```
- M Gemfile
- M Gemfile.lock
- M ace-core/test-reports/latest
- M dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
-?? .ace/taskflow/
-?? ace-taskflow/
+ M .cache/ace-context/project.md
+ M .claude/commands/update-context-docs.md
+ M ace-taskflow/README.md
+ D ace-taskflow/exe/ace-tf
+ M ace-taskflow/lib/ace/taskflow/cli.rb
+ M ace-taskflow/lib/ace/taskflow/commands/idea_command.rb
+ D bin/ace-tf
+ M docs/architecture.md
+ M docs/tools.md
+ M docs/what-do-we-build.md
+?? ace-taskflow/exe/ace-taskflow
+?? bin/ace-taskflow
 
 ```
 
@@ -443,14 +455,14 @@ Mon Sep 22 23:02:12 WEST 2025
 
 **Output:**
 ```
-Status: 14 done, 3 pending (17 total)
+Status: 14 done, 1 in-progress, 2 pending (17 total)
 Recent Tasks (3/502 shown):
 ==================================================
-v.0.9.0+task.006 * DONE * 1 hour ago * Create ace-taskflow Gem
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
-v.0.9.0+task.007 * PENDING * 1 hours ago * Create ace-git Gem with ace-gc Only
+v.0.9.0+task.007 * IN-PROGRESS * 15 hours ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
-v.0.9.0+task.017 * DONE * 5 hours ago * Refactor ace-context to markdown-only preset configuration
+v.0.9.0+task.006 * DONE * 15 hours ago * Create ace-taskflow Gem
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
+v.0.9.0+task.017 * DONE * 20 hours ago * Refactor ace-context to markdown-only preset configuration
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.017-refactor-ace-context-to-markdown-only-preset-configuration.md
 
 ```
@@ -459,14 +471,14 @@ v.0.9.0+task.017 * DONE * 5 hours ago * Refactor ace-context to markdown-only pr
 
 **Output:**
 ```
-Status: 14 done, 3 pending (17 total)
+Status: 14 done, 1 in-progress, 2 pending (17 total)
 Next Tasks (3 shown):
 ==================================================
-v.0.9.0+task.007 * PENDING * 1 hours ago * Create ace-git Gem with ace-gc Only
+v.0.9.0+task.007 * IN-PROGRESS * 15 hours ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
-v.0.9.0+task.008 * PENDING * 2 days ago * Configure .ace for This Project
+v.0.9.0+task.008 * PENDING * 3 days ago * Configure .ace for This Project
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
-v.0.9.0+task.009 * PENDING * 3 days ago * Create Migration Documentation
+v.0.9.0+task.009 * PENDING * 4 days ago * Create Migration Documentation
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.009-create-migration-documentation.md
 
 ```

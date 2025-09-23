@@ -7,11 +7,11 @@ module Ace
         def execute(args)
           content = args.join(" ")
           if content.empty?
-            puts "Usage: ace-tf idea <your idea>"
+            puts "Usage: ace-taskflow idea <your idea>"
             puts ""
             puts "Examples:"
-            puts '  ace-tf idea "Add dark mode support"'
-            puts '  ace-tf idea "Refactor authentication module"'
+            puts '  ace-taskflow idea "Add dark mode support"'
+            puts '  ace-taskflow idea "Refactor authentication module"'
             exit 1
           end
 

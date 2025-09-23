@@ -32,10 +32,10 @@ module Ace
       end
 
       def self.show_help
-        puts "Usage: ace-tf <subcommand> [options]"
+        puts "Usage: ace-taskflow <subcommand> [options]"
         puts ""
         puts "Subcommands:"
-        puts "  idea     - Capture ideas (replaces capture-it)"
+        puts "  idea     - Capture ideas"
         puts "  task     - Task management (coming soon)"
         puts "  release  - Release management (coming soon)"
         puts ""
