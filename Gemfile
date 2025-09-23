@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 gem 'ace-context', path: 'ace-context'
 gem 'ace-core', path: 'ace-core'
 # gem 'ace-git', path: 'ace-git'
+gem 'ace-nav', path: 'ace-nav'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
