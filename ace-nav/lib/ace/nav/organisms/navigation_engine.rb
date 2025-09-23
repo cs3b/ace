@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/handbook_scanner"
+require_relative "../molecules/protocol_scanner"
 require_relative "../molecules/resource_resolver"
 require_relative "../molecules/task_resolver"
 require_relative "../atoms/path_normalizer"
@@ -10,9 +10,10 @@ module Ace
     module Organisms
       # Orchestrates navigation operations
       class NavigationEngine
-        def initialize(handbook_scanner: nil, resource_resolver: nil, task_resolver: nil, path_normalizer: nil)
-          @handbook_scanner = handbook_scanner || Molecules::HandbookScanner.new
-          @resource_resolver = resource_resolver || Molecules::ResourceResolver.new(handbook_scanner: @handbook_scanner)
+        def initialize(handbook_scanner: nil, protocol_scanner: nil, resource_resolver: nil, task_resolver: nil, path_normalizer: nil)
+          # Support legacy handbook_scanner parameter
+          @protocol_scanner = protocol_scanner || handbook_scanner || Molecules::ProtocolScanner.new
+          @resource_resolver = resource_resolver || Molecules::ResourceResolver.new(protocol_scanner: @protocol_scanner)
           @task_resolver = task_resolver || Molecules::TaskResolver.new
           @path_normalizer = path_normalizer || Atoms::PathNormalizer.new
         end
@@ -79,13 +80,19 @@ module Ace
 
         # Show available sources
         def sources(options = {})
-          all_sources = @handbook_scanner.scan_all_sources
+          all_sources = @protocol_scanner.scan_all_sources
 
           if options[:verbose]
             all_sources.map(&:to_h)
           else
-            all_sources.map { |s| "#{s.alias_name} (#{s.type}): #{s.handbook_path}" }
+            all_sources.map { |s| "#{s.alias_name} (#{s.type}): #{s.path}" }
           end
+        end
+
+        # Get all discovered protocols
+        def discovered_protocols
+          config_loader = Molecules::ConfigLoader.new
+          config_loader.discovered_protocols
         end
 
         private

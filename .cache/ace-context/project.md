@@ -428,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 23 14:06:35 WEST 2025
+Tue Sep 23 19:06:24 WEST 2025
 
 ```
 
@@ -437,17 +437,19 @@ Tue Sep 23 14:06:35 WEST 2025
 **Output:**
 ```
  M .cache/ace-context/project.md
- M .claude/commands/update-context-docs.md
- M ace-taskflow/README.md
- D ace-taskflow/exe/ace-tf
- M ace-taskflow/lib/ace/taskflow/cli.rb
- M ace-taskflow/lib/ace/taskflow/commands/idea_command.rb
- D bin/ace-tf
- M docs/architecture.md
- M docs/tools.md
- M docs/what-do-we-build.md
-?? ace-taskflow/exe/ace-taskflow
-?? bin/ace-taskflow
+ D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/2025-09-20-performance-optimization-lessons.md
+ D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/BACKWARD_COMPATIBILITY_IMPLEMENTATION.md
+ D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/reflection-ace-context-test-timing-fix.md
+ D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/reflection-minitest-setup-for-ace-core.md
+ D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/research-ace-mono-repo.md
+?? ace-nav/
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/ace-contex-dev-summary.md
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/researches/
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/2025-09-20-performance-optimization-lessons.md
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/reflection-ace-context-test-timing-fix.md
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/reflection-minitest-setup-for-ace-core.md
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/task.018/
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
 
 ```
 
@@ -455,15 +457,15 @@ Tue Sep 23 14:06:35 WEST 2025
 
 **Output:**
 ```
-Status: 14 done, 1 in-progress, 2 pending (17 total)
-Recent Tasks (3/502 shown):
+Status: 14 done, 2 in-progress, 2 pending (18 total)
+Recent Tasks (3/503 shown):
 ==================================================
-v.0.9.0+task.007 * IN-PROGRESS * 15 hours ago * Create ace-git Gem with ace-gc Only
+v.0.9.0+task.018 * IN-PROGRESS * 1 hour ago * Create ace-nav Gem for Navigation and Handbook Discovery
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
+v.0.9.0+task.007 * IN-PROGRESS * 20 hours ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
-v.0.9.0+task.006 * DONE * 15 hours ago * Create ace-taskflow Gem
+v.0.9.0+task.006 * DONE * 20 hours ago * Create ace-taskflow Gem
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
-v.0.9.0+task.017 * DONE * 20 hours ago * Refactor ace-context to markdown-only preset configuration
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.017-refactor-ace-context-to-markdown-only-preset-configuration.md
 
 ```
 
@@ -471,10 +473,10 @@ v.0.9.0+task.017 * DONE * 20 hours ago * Refactor ace-context to markdown-only p
 
 **Output:**
 ```
-Status: 14 done, 1 in-progress, 2 pending (17 total)
+Status: 14 done, 2 in-progress, 2 pending (18 total)
 Next Tasks (3 shown):
 ==================================================
-v.0.9.0+task.007 * IN-PROGRESS * 15 hours ago * Create ace-git Gem with ace-gc Only
+v.0.9.0+task.007 * IN-PROGRESS * 20 hours ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
 v.0.9.0+task.008 * PENDING * 3 days ago * Configure .ace for This Project
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
@@ -493,9 +495,9 @@ Current Release Information:
   Version:   v.0.9.0
   Path:      /Users/mc/Ps/ace-meta/dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems
   Status:    active
-  Tasks:     17
-  Created:   2025-09-22 14:47:31
-  Modified:  2025-09-22 14:47:31
+  Tasks:     18
+  Created:   2025-09-23 14:14:43
+  Modified:  2025-09-23 14:14:43
 
 ```
 
@@ -505,6 +507,7 @@ Current Release Information:
 ```
 /Users/mc/Ps/ace-meta/ace-context
 /Users/mc/Ps/ace-meta/ace-core
+/Users/mc/Ps/ace-meta/ace-nav
 /Users/mc/Ps/ace-meta/ace-taskflow
 /Users/mc/Ps/ace-meta/ace-test-runner
 /Users/mc/Ps/ace-meta/ace-test-support

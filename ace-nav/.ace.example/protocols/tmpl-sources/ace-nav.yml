@@ -1,0 +1,7 @@
+# Example: ace-nav template sources
+# Copy this file to .ace/protocols/tmpl-sources/ to enable
+name: ace-nav
+type: directory
+path: ./handbook/templates/
+priority: 100
+description: "ace-nav templates"

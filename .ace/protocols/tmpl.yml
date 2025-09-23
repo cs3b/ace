@@ -1,0 +1,55 @@
+# Protocol definition for templates
+protocol: tmpl
+name: "Templates"
+description: "Reusable document and code templates"
+enabled: true
+
+
+# File extensions to match
+extensions:
+  - .tmpl.md
+  - .template.md
+
+# Categories for organizing templates
+categories:
+  - minitest
+  - rspec
+  - task
+  - release
+  - documentation
+  - code-review
+
+# Template for creating new templates
+create_template: |
+  ---
+  name: %{name}
+  category: %{category}
+  description: Template description
+  ---
+
+  # %{name} Template
+
+  ## Usage
+
+  Describe how to use this template.
+
+  ## Template Content
+
+  [Your template content here]
+
+  ## Variables
+
+  - `%{variable}`: Description of this variable
+
+  ## Examples
+
+  Show examples of the template in use.
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true

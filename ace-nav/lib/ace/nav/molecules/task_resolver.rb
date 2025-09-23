@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
 require "pathname"
+require_relative "config_loader"
 
 module Ace
   module Nav
     module Molecules
       # Resolves task:// URIs to task files
       class TaskResolver
-        def initialize
+        def initialize(config_loader: nil)
           @base_path = find_project_root
+          @config_loader = config_loader || ConfigLoader.new
+          @config = @config_loader.load_protocol_config("task")
         end
 
         def resolve(task_identifier)
@@ -16,12 +19,16 @@ module Ace
           task_number = extract_task_number(task_identifier)
           return nil unless task_number
 
-          # Search for task files
-          patterns = [
-            "dev-taskflow/current/*/tasks/*task.#{task_number}*.md",
-            "dev-taskflow/current/*/tasks/task.#{task_number}/*.md",
-            "dev-taskflow/backlog/*task.#{task_number}*.md"
-          ]
+          # Get search paths from configuration
+          search_paths = @config["search_paths"] || default_search_paths
+
+          # Build patterns for each search path
+          patterns = search_paths.flat_map do |search_path|
+            [
+              "#{search_path}/*task.#{task_number}*.md",
+              "#{search_path}/task.#{task_number}/*.md"
+            ]
+          end
 
           patterns.each do |pattern|
             files = Dir.glob(File.join(@base_path, pattern))
@@ -34,11 +41,16 @@ module Ace
         def list_tasks(pattern = "*")
           task_pattern = pattern == "*" ? "*" : "*#{pattern}*"
 
-          patterns = [
-            "dev-taskflow/current/*/tasks/#{task_pattern}.md",
-            "dev-taskflow/current/*/tasks/task.*/#{task_pattern}.md",
-            "dev-taskflow/backlog/#{task_pattern}.md"
-          ]
+          # Get search paths from configuration
+          search_paths = @config["search_paths"] || default_search_paths
+
+          # Build patterns for each search path
+          patterns = search_paths.flat_map do |search_path|
+            [
+              "#{search_path}/#{task_pattern}.md",
+              "#{search_path}/task.*/#{task_pattern}.md"
+            ]
+          end
 
           tasks = []
           patterns.each do |pat|
@@ -69,8 +81,19 @@ module Ace
           Dir.pwd
         end
 
+        def default_search_paths
+          [
+            "dev-taskflow/current/*/tasks",
+            "dev-taskflow/backlog"
+          ]
+        end
+
         def extract_task_number(identifier)
           return nil if identifier.nil?
+
+          # Check if autocorrection is enabled
+          autocorrect_enabled = @config.dig("autocorrect", "enabled") != false
+          pad_zeros = @config.dig("autocorrect", "pad_zeros") != false
 
           # Handle different formats:
           # - "018", "18" -> "018"
@@ -78,9 +101,11 @@ module Ace
           # - "task.018" -> "018"
 
           if identifier =~ /task\.(\d+)/
-            $1.rjust(3, "0") # Pad with zeros
+            number = $1
+            autocorrect_enabled && pad_zeros ? number.rjust(3, "0") : number
           elsif identifier =~ /^(\d+)$/
-            $1.rjust(3, "0") # Pad with zeros
+            number = $1
+            autocorrect_enabled && pad_zeros ? number.rjust(3, "0") : number
           else
             identifier # Return as-is and let the search handle it
           end

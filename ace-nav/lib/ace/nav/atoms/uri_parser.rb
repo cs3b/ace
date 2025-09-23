@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
+require_relative "../molecules/config_loader"
+
 module Ace
   module Nav
     module Atoms
       # Parses resource URIs
       class UriParser
-        VALID_PROTOCOLS = %w[wfi tmpl guide sample task].freeze
+        def initialize(config_loader: nil)
+          @config_loader = config_loader || Molecules::ConfigLoader.new
+        end
 
         def parse(uri_string)
           return nil unless uri_string.is_a?(String)
@@ -15,7 +19,7 @@ module Ace
           protocol = parts[0]
           rest = parts[1]
 
-          return nil unless VALID_PROTOCOLS.include?(protocol)
+          return nil unless valid_protocol?(protocol)
           return { protocol: protocol, source: nil, path: nil } if rest.nil? || rest.empty?
 
           # Check for source-specific syntax (@source/path or @source)
@@ -27,7 +31,11 @@ module Ace
         end
 
         def valid_protocol?(protocol)
-          VALID_PROTOCOLS.include?(protocol)
+          @config_loader.valid_protocol?(protocol)
+        end
+
+        def valid_protocols
+          @config_loader.valid_protocols
         end
 
         def extract_protocol(uri_string)

@@ -1,21 +1,22 @@
 # frozen_string_literal: true
 
+require_relative "../molecules/config_loader"
+
 module Ace
   module Nav
     module Models
       # Represents a parsed resource URI
       class ResourceUri
-        VALID_PROTOCOLS = %w[wfi tmpl guide sample task].freeze
-
         attr_reader :protocol, :source, :path, :raw
 
-        def initialize(raw_uri)
+        def initialize(raw_uri, config_loader: nil)
           @raw = raw_uri
+          @config_loader = config_loader || Molecules::ConfigLoader.new
           parse_uri(raw_uri)
         end
 
         def valid?
-          !protocol.nil? && VALID_PROTOCOLS.include?(protocol)
+          !protocol.nil? && @config_loader.valid_protocol?(protocol)
         end
 
         def source_specific?

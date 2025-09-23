@@ -1,0 +1,7 @@
+# Example: ace-nav guide sources
+# Copy this file to .ace/protocols/guide-sources/ to enable
+name: ace-nav
+type: directory
+path: ./handbook/guides/
+priority: 100
+description: "ace-nav guides and documentation"

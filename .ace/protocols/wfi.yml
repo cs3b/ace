@@ -1,0 +1,51 @@
+# Protocol definition for workflow instructions
+protocol: wfi
+name: "Workflow Instructions"
+description: "Step-by-step workflow guides for development tasks"
+enabled: true
+
+# File extensions to match
+extensions:
+  - .wfi.md
+  - .workflow.md
+  - .wf.md  # Legacy dev-handbook format
+
+# Template for creating new workflows
+create_template: |
+  # %{name}
+
+  ## Goal
+
+  Describe the objective of this workflow.
+
+  ## Prerequisites
+
+  - List any requirements
+  - Tools or access needed
+
+  ## Process Steps
+
+  1. **Step One**
+     - Details about this step
+     - Sub-steps if needed
+
+  2. **Step Two**
+     - Details about this step
+
+  ## Success Criteria
+
+  - [ ] Criteria one
+  - [ ] Criteria two
+
+  ## Common Issues
+
+  Document any common problems and solutions.
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true
