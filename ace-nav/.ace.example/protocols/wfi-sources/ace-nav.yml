@@ -1,0 +1,7 @@
+# Example: ace-nav workflow instruction sources
+# Copy this file to .ace/protocols/wfi-sources/ to enable
+name: ace-nav
+type: directory
+path: ./handbook/workflow-instructions/
+priority: 100
+description: "ace-nav workflow instructions"

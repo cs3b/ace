@@ -1,0 +1,6 @@
+# Local workflow instructions
+name: dev-handbook
+type: path
+path: $PROJECT_ROOT_PATH/dev-handbook/workflow-instructions/
+priority: 10
+description: "Legacy handbook workflows"

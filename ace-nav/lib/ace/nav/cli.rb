@@ -16,6 +16,15 @@ module Ace
       def run(argv)
         parse_options(argv)
 
+        # Check for standalone options that don't require a path/URI
+        if @options[:help]
+          show_help
+          return
+        elsif @options[:sources]
+          show_sources
+          return
+        end
+
         # Get the path/URI argument
         path_or_uri = argv.first
 
@@ -79,11 +88,7 @@ module Ace
       end
 
       def execute(path_or_uri)
-        if @options[:help]
-          show_help
-        elsif @options[:sources]
-          show_sources
-        elsif @options[:create]
+        if @options[:create]
           create_resource(path_or_uri)
         elsif @options[:list]
           list_resources(path_or_uri)
@@ -104,12 +109,23 @@ module Ace
         puts "  ace-nav task://018                         # Find task by number"
         puts "  ace-nav --sources                          # Show available sources"
         puts
-        puts "Protocols:"
-        puts "  wfi://   - Workflow instructions"
-        puts "  tmpl://  - Templates"
-        puts "  guide:// - Guides"
-        puts "  sample:// - Sample files"
-        puts "  task://  - Tasks"
+        puts "Available Protocols:"
+
+        protocols = @engine.discovered_protocols
+        if protocols.empty?
+          puts "  No protocols discovered. Check your configuration."
+        else
+          protocols.sort.each do |key, protocol|
+            name = protocol["name"] || key.capitalize
+            desc = protocol["description"] || ""
+            if desc.empty?
+              puts "  #{key}://   - #{name}"
+            else
+              puts "  #{key}://   - #{name}"
+              puts "           #{desc}"
+            end
+          end
+        end
         puts
         puts "Sources (use @ prefix):"
         puts "  @project - Project overrides (./.ace/handbook)"

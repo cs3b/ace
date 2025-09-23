@@ -1,0 +1,60 @@
+# Protocol definition for guides
+protocol: guide
+name: "Guides"
+description: "Documentation and how-to guides"
+enabled: true
+
+
+# File extensions to match
+extensions:
+  - .guide.md
+  - .md
+
+# Categories for organizing guides
+categories:
+  - getting-started
+  - architecture
+  - development
+  - deployment
+  - troubleshooting
+  - best-practices
+
+# Template for creating new guides
+create_template: |
+  # %{name}
+
+  ## Overview
+
+  Brief introduction to this guide.
+
+  ## Table of Contents
+
+  - [Section 1](#section-1)
+  - [Section 2](#section-2)
+  - [Section 3](#section-3)
+
+  ## Section 1
+
+  Content for section 1.
+
+  ## Section 2
+
+  Content for section 2.
+
+  ## Section 3
+
+  Content for section 3.
+
+  ## Related Guides
+
+  - Link to related guide 1
+  - Link to related guide 2
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true

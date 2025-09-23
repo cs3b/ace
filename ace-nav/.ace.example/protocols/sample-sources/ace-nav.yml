@@ -1,0 +1,7 @@
+# Example: ace-nav sample sources
+# Copy this file to .ace/protocols/sample-sources/ to enable
+name: ace-nav
+type: directory
+path: ./handbook/samples/
+priority: 100
+description: "ace-nav sample files and examples"

@@ -3,15 +3,18 @@
 require_relative "../atoms/gem_resolver"
 require_relative "../atoms/path_normalizer"
 require_relative "../models/handbook_source"
+require_relative "config_loader"
 
 module Ace
   module Nav
     module Molecules
       # Scans and indexes available handbooks
       class HandbookScanner
-        def initialize(gem_resolver: nil, path_normalizer: nil)
+        def initialize(gem_resolver: nil, path_normalizer: nil, config_loader: nil)
           @gem_resolver = gem_resolver || Atoms::GemResolver.new
           @path_normalizer = path_normalizer || Atoms::PathNormalizer.new
+          @config_loader = config_loader || ConfigLoader.new
+          @settings = @config_loader.load_settings
         end
 
         def scan_all_sources
@@ -128,33 +131,70 @@ module Ace
         end
 
         def scan_custom_sources
-          # TODO: Load from configuration
-          []
+          sources = []
+          config_sources = @settings.dig("handbooks", "sources") || []
+
+          config_sources.each do |source_config|
+            next if source_config["gem"] # Skip gem sources (handled elsewhere)
+
+            if source_config["path"]
+              path = File.expand_path(source_config["path"])
+              next unless Dir.exist?(path)
+
+              sources << Models::HandbookSource.new(
+                name: source_config["alias"] || File.basename(path),
+                path: path,
+                alias_name: "@#{source_config["alias"] || File.basename(path)}",
+                type: :custom,
+                priority: 200
+              )
+            end
+          end
+
+          sources
         end
 
         def scan_custom_source(alias_name)
-          # TODO: Load from configuration
+          config_sources = @settings.dig("handbooks", "sources") || []
+
+          # Remove @ prefix if present
+          search_alias = alias_name.start_with?("@") ? alias_name[1..] : alias_name
+
+          config_sources.each do |source_config|
+            next unless source_config["alias"] == search_alias
+
+            path = File.expand_path(source_config["path"])
+            return nil unless Dir.exist?(path)
+
+            return Models::HandbookSource.new(
+              name: source_config["alias"],
+              path: path,
+              alias_name: "@#{source_config["alias"]}",
+              type: :custom,
+              priority: 200
+            )
+          end
+
           nil
         end
 
         def protocol_to_directory(protocol)
-          case protocol
-          when "wfi" then "workflow-instructions"
-          when "tmpl" then "templates"
-          when "guide" then "guides"
-          when "sample" then "samples"
-          else protocol
-          end
+          config = @config_loader.load_protocol_config(protocol)
+          return protocol unless config
+
+          # Use the directory specified in the protocol config
+          config["directory"] || protocol
         end
 
         def protocol_to_extension(protocol)
-          case protocol
-          when "wfi" then ".wfi.md"
-          when "tmpl" then ".tmpl.md"
-          when "guide" then ".guide.md"
-          when "sample" then ""
-          else ".md"
-          end
+          config = @config_loader.load_protocol_config(protocol)
+          return ".md" unless config
+
+          # Use the extensions specified in the protocol config
+          extensions = config["extensions"]
+          return "" if extensions.nil? || extensions.empty?
+
+          extensions.first
         end
       end
     end
