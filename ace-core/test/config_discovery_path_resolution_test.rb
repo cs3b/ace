@@ -82,6 +82,8 @@ module Ace
 
         # Create directories that paths will reference
         FileUtils.mkdir_p(File.join(project_dir, "lib"))
+        # Create directory relative to the config file location
+        FileUtils.mkdir_p(File.join(ace_dir, "lib"))
 
         # Create config with relative paths
         config = {
@@ -104,13 +106,14 @@ module Ace
 
         begin
           discovery = ConfigDiscovery.new
-          # Mock the find_config_file to return our nested config
-          discovery.instance_variable_get(:@finder).stub :find_file, config_file do
+          # Mock the find_all_files to return our nested config (load_config uses find_all_config_files which calls find_all_files)
+          discovery.instance_variable_get(:@finder).stub :find_all_files, [config_file] do
             loaded = discovery.load_config("settings.yml")
 
-            # Paths should be relative to project root (parent of .ace)
-            assert_equal File.join(project_dir, "lib"), loaded["settings"]["source_dir"]
-            assert_equal File.expand_path(File.join(project_dir, "..", "output")), loaded["settings"]["output"]
+            # Paths with ./ or ../ should be relative to config file's directory (.ace/configs)
+            assert_equal File.join(ace_dir, "lib"), loaded["settings"]["source_dir"]
+            # ../output from .ace/configs resolves to .ace/output
+            assert_equal File.expand_path(File.join(ace_dir, "..", "output")), loaded["settings"]["output"]
           end
         ensure
           ENV["PROJECT_ROOT_PATH"] = original_env if original_env
