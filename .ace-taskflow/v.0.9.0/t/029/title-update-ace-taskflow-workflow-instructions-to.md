@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.029
-status: in-progress
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -137,10 +137,10 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
 - [x] Update create-task-based-on-plan.wf.md
   - Ensure all commands use ace-taskflow (already correct)
 
-- [ ] Test each updated workflow
-  - Verify ace-nav commands work
-  - Check template references resolve
-  - Validate all commands execute
+- [x] Test each updated workflow
+  - Verify ace-nav commands work ✓
+  - Check template references resolve ✓
+  - Validate all commands execute ✓
 
 ## Acceptance Criteria
 
