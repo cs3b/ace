@@ -1,0 +1,163 @@
+# ace-taskflow configuration example
+# Copy this file to .ace/taskflow.yml and customize for your project
+
+taskflow:
+  # Root directory for all taskflow data
+  # Default: .ace-taskflow
+  root: ".ace-taskflow"
+
+  # Task directory name within releases
+  # Default: t (results in paths like v.0.9.0/t/001/task.md)
+  task_dir: "t"
+
+  # Release management
+  # Strategy for selecting primary active release when multiple are active
+  # Options: lowest (default), highest, newest, oldest
+  active_strategy: "lowest"
+
+  # Allow multiple releases to be active simultaneously
+  # Default: true
+  allow_multiple_active: true
+
+  # Qualified task references
+  references:
+    # Enable qualified references like v.0.9.0+018, backlog+025
+    # Default: true
+    allow_qualified: true
+
+    # Allow referencing tasks across different releases
+    # Default: true
+    allow_cross_release: true
+
+  # Default contexts for new items
+  defaults:
+    # Where ideas go by default
+    # Options: active (current release), backlog, or specific release name
+    # Default: active
+    idea_location: "active"
+
+    # Where new tasks go by default
+    # Options: active (current release), backlog, or specific release name
+    # Default: active
+    task_location: "active"
+
+  # Global settings (optional)
+  settings:
+    author:
+      name: "Your Name"
+      email: "your.email@example.com"
+    formatting:
+      timestamp_format: "%Y-%m-%d %H:%M:%S"
+      timezone: "UTC"
+    git:
+      auto_commit: false              # Automatically commit after operations
+      commit_prefix: "taskflow:"      # Prefix for auto-commits
+    output:
+      verbose: true                   # Show detailed output
+      color: true                     # Use colored output
+
+  # Idea subcommand configuration
+  idea:
+    # Directory for ideas (relative to root or release)
+    directory: "ideas"
+
+    # Template for new idea files
+    # Available variables: %{title}, %{content}, %{timestamp}, %{author}, %{tags}
+    template: |
+      # %{title}
+
+      ## Description
+      %{content}
+
+      ## Metadata
+      - **Captured**: %{timestamp}
+      - **Author**: %{author}
+      - **Status**: unprocessed
+
+      ## Next Steps
+      - [ ] Review and categorize
+      - [ ] Convert to task if actionable
+      - [ ] Archive if not relevant
+
+    # File naming configuration
+    file_naming:
+      pattern: "%{timestamp}-%{title}"
+      title_max_length: 50
+      timestamp_format: "%Y%m%d-%H%M%S"
+
+    # Categories for ideas
+    categories:
+      enabled: true
+      default: "general"
+      allowed:
+        - general
+        - feature
+        - bugfix
+        - refactor
+        - documentation
+        - performance
+        - testing
+        - workflow
+        - architecture
+        - security
+
+  # Task subcommand configuration
+  task:
+    # Template for new task files
+    template: |
+      ---
+      id: %{id}
+      status: pending
+      priority: medium
+      estimate: TBD
+      dependencies: []
+      ---
+
+      # %{title}
+
+      ## Description
+      *Task description goes here*
+
+      ## Acceptance Criteria
+      - [ ] Criterion 1
+      - [ ] Criterion 2
+      - [ ] Criterion 3
+
+      ## Implementation Notes
+      *Implementation details and notes*
+
+    # Valid status transitions
+    transitions:
+      draft: [pending, blocked]
+      pending: [in-progress, blocked]
+      in-progress: [done, pending, blocked]
+      blocked: [pending, in-progress]
+      done: [pending]  # Allow reopening
+
+  # Release subcommand configuration
+  release:
+    # Template for new release files
+    template: |
+      # Release: %{name}
+
+      ## Overview
+      *Description of this release*
+
+      ## Goals
+      - [ ] Goal 1
+      - [ ] Goal 2
+      - [ ] Goal 3
+
+      ## Status
+      - **Created**: %{date}
+      - **Status**: %{status}
+      - **Target Date**: TBD
+
+      ## Notes
+      *Additional notes about this release*
+
+    # Validation rules before demoting to done
+    validation:
+      require_no_in_progress: true    # No tasks can be in-progress
+      require_no_high_priority: true  # No high-priority tasks pending
+      warn_on_pending: true            # Warn if any tasks are pending
