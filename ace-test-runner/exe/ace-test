@@ -296,16 +296,7 @@ end
 
 # Run tests
 begin
-  debug_timing = ENV['DEBUG_TIMING'] == '1'
-  start_time = Time.now
-
   exit_code = Ace::TestRunner.run(options)
-
-  if debug_timing
-    elapsed = Time.now - start_time
-    STDERR.puts "[TIMING] TestRunner.run complete: #{(elapsed * 1000).round(2)}ms"
-    STDERR.puts "[TIMING] Exiting with code: #{exit_code}"
-  end
 
   # Use exit! for direct mode to skip at_exit handlers
   if options[:direct]
