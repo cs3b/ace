@@ -37,8 +37,9 @@ module Ace
         # @return [String, nil] Project root path or nil if not found
         def find
           # Check environment variable first
-          if ENV['PROJECT_ROOT_PATH'] && !ENV['PROJECT_ROOT_PATH'].empty?
-            project_root = Atoms::PathExpander.expand(ENV['PROJECT_ROOT_PATH'])
+          project_root_env = env_project_root
+          if project_root_env && !project_root_env.empty?
+            project_root = Atoms::PathExpander.expand(project_root_env)
             return project_root if Dir.exist?(project_root)
           end
 
@@ -89,25 +90,21 @@ module Ace
         # Class method for convenience
         # @return [String, nil] Project root path
         def self.find(start_path: nil, markers: PROJECT_MARKERS)
-          # Check environment variable first for quick return
-          if ENV['PROJECT_ROOT_PATH'] && !ENV['PROJECT_ROOT_PATH'].empty?
-            project_root = File.expand_path(ENV['PROJECT_ROOT_PATH'])
-            return project_root if Dir.exist?(project_root)
-          end
-
           new(start_path: start_path, markers: markers).find
         end
 
         # Class method to find or use current directory
         # @return [String] Project root path or current directory
         def self.find_or_current(start_path: nil, markers: PROJECT_MARKERS)
-          # Check environment variable first for quick return
-          if ENV['PROJECT_ROOT_PATH'] && !ENV['PROJECT_ROOT_PATH'].empty?
-            project_root = File.expand_path(ENV['PROJECT_ROOT_PATH'])
-            return project_root if Dir.exist?(project_root)
-          end
-
           new(start_path: start_path, markers: markers).find_or_current
+        end
+
+        protected
+
+        # Access PROJECT_ROOT_PATH environment variable
+        # Extracted to allow test stubbing without modifying global ENV
+        def env_project_root
+          ENV['PROJECT_ROOT_PATH']
         end
 
         private
