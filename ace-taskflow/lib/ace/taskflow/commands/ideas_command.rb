@@ -134,12 +134,48 @@ module Ace
         end
 
         def display_idea_line(idea, verbose)
-          if verbose
-            timestamp = idea[:created_at] ? idea[:created_at].strftime("%Y-%m-%d %H:%M") : "Unknown"
-            puts "• [#{idea[:id]}] #{idea[:title]} (#{timestamp})"
-            puts "  Path: #{idea[:path]}" if idea[:path]
+          puts "• [#{idea[:id]}] #{idea[:title]}"
+
+          # Always show path on second line
+          if idea[:path]
+            relative_path = format_relative_path(idea[:path])
+            puts "  #{relative_path}"
+          end
+
+          # Show timestamp only in verbose mode
+          if verbose && idea[:created_at]
+            timestamp = idea[:created_at].strftime("%Y-%m-%d %H:%M")
+            puts "  Created: #{timestamp}"
+          end
+        end
+
+        def format_relative_path(path)
+          # Make path relative to project root
+          root_path = Molecules::ConfigLoader.find_root
+          relative = path.sub(/^#{Regexp.escape(root_path)}\//, "")
+
+          # Truncate if too long
+          max_length = 68
+          if relative.length > max_length
+            # Smart truncation for .ace-taskflow paths
+            if relative.start_with?(".ace-taskflow/")
+              parts = relative.split("/")
+              if parts.length >= 4
+                # .ace-taskflow/release/subfolder/filename.md
+                prefix = parts[0..2].join("/")  # .ace-taskflow/v.0.9.0/ideas
+                filename = parts[-1]
+                if filename.length > 35
+                  filename = "#{filename[0..15]}...#{filename[-15..]}"
+                end
+                "#{prefix}/#{filename}"
+              else
+                relative[0..67]
+              end
+            else
+              "#{relative[0...32]}...#{relative[-32..]}"
+            end
           else
-            puts "• [#{idea[:id]}] #{idea[:title]}"
+            relative
           end
         end
 

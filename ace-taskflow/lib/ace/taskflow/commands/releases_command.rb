@@ -110,6 +110,13 @@ module Ace
           end
 
           puts "  #{release.name}#{suffix}"
+
+          # Show release directory path on second line
+          if release.path
+            relative_path = format_relative_path(release.path)
+            puts "    #{relative_path}/"
+          end
+
           puts "    Progress: #{progress}"
 
           if release.in_progress_count > 0
@@ -118,6 +125,23 @@ module Ace
 
           if release.pending_count > 0
             puts "    Pending: #{release.pending_count}"
+          end
+        end
+
+        def format_relative_path(path)
+          # Make path relative to project root
+          root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
+          relative = path.sub(/^#{Regexp.escape(root_path)}\/?/, "")
+
+          # Truncate if too long
+          max_length = 70
+          if relative.length > max_length
+            # Keep the beginning and end, truncate middle
+            start_length = 35
+            end_length = 32
+            "#{relative[0...start_length]}...#{relative[-end_length..]}"
+          else
+            relative
           end
         end
 
