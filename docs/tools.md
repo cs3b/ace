@@ -40,7 +40,9 @@ ace-taskflow tasks --status pending            # List pending tasks
 ace-taskflow tasks --stats                     # Show task statistics
 ace-taskflow release                           # Show active release
 ace-taskflow releases --stats                  # Show release statistics
-ace-taskflow idea 'Add dark mode'              # Capture an idea
+ace-taskflow idea create 'Add dark mode'       # Capture an idea
+ace-taskflow idea create 'Bug fix' --git-commit  # Capture and commit idea
+ace-taskflow idea create 'Feature' -llm -gc    # Enhance and commit idea
 ```
 
 ### ace-nav
