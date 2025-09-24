@@ -428,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 02:14:34 WEST 2025
+Wed Sep 24 11:40:02 WEST 2025
 
 ```
 
@@ -437,10 +437,11 @@ Wed Sep 24 02:14:34 WEST 2025
 **Output:**
 ```
  M .cache/ace-context/project.md
- M ace-context/exe/ace-context
- M ace-context/lib/ace/context/organisms/context_loader.rb
  M ace-core/lib/ace/core/molecules/file_aggregator.rb
  M ace-core/test-reports/latest
+ M dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
+?? ace-taskflow/lib/ace/taskflow/atoms/
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/ideas/
 
 ```
 
@@ -448,14 +449,14 @@ Wed Sep 24 02:14:34 WEST 2025
 
 **Output:**
 ```
-Status: 16 done, 1 in-progress, 3 pending (20 total)
+Status: 16 done, 2 in-progress, 2 pending (20 total)
 Recent Tasks (3/505 shown):
 ==================================================
-v.0.9.0+task.019 * PENDING * 3 hours ago * Implement ace-taskflow Release and Task Management Commands
+v.0.9.0+task.019 * IN-PROGRESS * 1 hour ago * Implement ace-taskflow Release and Task Management Commands
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
-v.0.9.0+task.020 * DONE * 4 hours ago * Refactor ace-nav to follow standard ace configuration cascade pattern
+v.0.9.0+task.020 * DONE * 13 hours ago * Refactor ace-nav to follow standard ace configuration cascade pattern
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.020-refactor-ace-nav-to-follow-standard-ace-configuration.md
-v.0.9.0+task.018 * DONE * 7 hours ago * Create ace-nav Gem for Navigation and Handbook Discovery
+v.0.9.0+task.018 * DONE * 16 hours ago * Create ace-nav Gem for Navigation and Handbook Discovery
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
 
 ```
@@ -464,14 +465,14 @@ v.0.9.0+task.018 * DONE * 7 hours ago * Create ace-nav Gem for Navigation and Ha
 
 **Output:**
 ```
-Status: 16 done, 1 in-progress, 3 pending (20 total)
+Status: 16 done, 2 in-progress, 2 pending (20 total)
 Next Tasks (3 shown):
 ==================================================
-v.0.9.0+task.007 * IN-PROGRESS * 1 days ago * Create ace-git Gem with ace-gc Only
+v.0.9.0+task.007 * IN-PROGRESS * 2 days ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
-v.0.9.0+task.008 * PENDING * 3 days ago * Configure .ace for This Project
+v.0.9.0+task.008 * PENDING * 4 days ago * Configure .ace for This Project
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
-v.0.9.0+task.009 * PENDING * 4 days ago * Create Migration Documentation
+v.0.9.0+task.009 * PENDING * 5 days ago * Create Migration Documentation
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.009-create-migration-documentation.md
 
 ```
