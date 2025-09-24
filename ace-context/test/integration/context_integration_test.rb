@@ -41,7 +41,7 @@ class ContextIntegrationTest < AceTestCase
 
     # Load using the API
     Dir.chdir(@env.project_dir) do
-      context = Ace::Context.load_preset("project")
+      context = Ace::Context.load_preset("project", base_dir: Dir.pwd)
 
       assert_equal 2, context.file_count
       assert context.content.include?("Project")
@@ -208,7 +208,7 @@ class ContextIntegrationTest < AceTestCase
     # Change to project directory for context loading
     Dir.chdir(@env.project_dir) do
       # Load multiple presets
-      context = Ace::Context.load_multiple_presets(["preset1", "preset2"])
+      context = Ace::Context.load_multiple_presets(["preset1", "preset2"], base_dir: Dir.pwd)
 
       assert_equal 2, context.file_count
       assert context.content.include?("Content 1")
