@@ -428,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 23 19:06:24 WEST 2025
+Wed Sep 24 01:56:48 WEST 2025
 
 ```
 
@@ -436,20 +436,23 @@ Tue Sep 23 19:06:24 WEST 2025
 
 **Output:**
 ```
+ M .ace/protocols/wfi-sources/local.yml
  M .cache/ace-context/project.md
- D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/2025-09-20-performance-optimization-lessons.md
- D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/BACKWARD_COMPATIBILITY_IMPLEMENTATION.md
- D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/reflection-ace-context-test-timing-fix.md
- D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/reflection-minitest-setup-for-ace-core.md
- D dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/research-ace-mono-repo.md
-?? ace-nav/
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/ace-contex-dev-summary.md
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/docs/researches/
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/2025-09-20-performance-optimization-lessons.md
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/reflection-ace-context-test-timing-fix.md
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/reflection-minitest-setup-for-ace-core.md
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/task.018/
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
+ M ace-context/lib/ace/context/molecules/preset_manager.rb
+ M ace-core/test-reports/latest
+ D ace-core/test/test_output.txt
+ M ace-nav/lib/ace/nav/models/protocol_source.rb
+ M ace-nav/lib/ace/nav/molecules/protocol_scanner.rb
+ M ace-nav/lib/ace/nav/molecules/source_registry.rb
+ M ace-test-runner/exe/ace-test
+ M ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb
+?? .ace/handbook/
+?? ace-core/lib/ace/core/organisms/virtual_config_resolver.rb
+?? ace-test-runner/lib/ace/test_runner/atoms/test_type_detector.rb
+?? ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb
+?? ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb
+?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/2025-09-24-subprocess-test-performance.md
+?? docs/testing-patterns.md
 
 ```
 
@@ -457,15 +460,15 @@ Tue Sep 23 19:06:24 WEST 2025
 
 **Output:**
 ```
-Status: 14 done, 2 in-progress, 2 pending (18 total)
-Recent Tasks (3/503 shown):
+Status: 16 done, 1 in-progress, 3 pending (20 total)
+Recent Tasks (3/505 shown):
 ==================================================
-v.0.9.0+task.018 * IN-PROGRESS * 1 hour ago * Create ace-nav Gem for Navigation and Handbook Discovery
+v.0.9.0+task.019 * PENDING * 3 hours ago * Implement ace-taskflow Release and Task Management Commands
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
+v.0.9.0+task.020 * DONE * 3 hours ago * Refactor ace-nav to follow standard ace configuration cascade pattern
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.020-refactor-ace-nav-to-follow-standard-ace-configuration.md
+v.0.9.0+task.018 * DONE * 7 hours ago * Create ace-nav Gem for Navigation and Handbook Discovery
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
-v.0.9.0+task.007 * IN-PROGRESS * 20 hours ago * Create ace-git Gem with ace-gc Only
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
-v.0.9.0+task.006 * DONE * 20 hours ago * Create ace-taskflow Gem
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.006-create-ace-taskflow-gem.md
 
 ```
 
@@ -473,10 +476,10 @@ v.0.9.0+task.006 * DONE * 20 hours ago * Create ace-taskflow Gem
 
 **Output:**
 ```
-Status: 14 done, 2 in-progress, 2 pending (18 total)
+Status: 16 done, 1 in-progress, 3 pending (20 total)
 Next Tasks (3 shown):
 ==================================================
-v.0.9.0+task.007 * IN-PROGRESS * 20 hours ago * Create ace-git Gem with ace-gc Only
+v.0.9.0+task.007 * IN-PROGRESS * 1 days ago * Create ace-git Gem with ace-gc Only
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
 v.0.9.0+task.008 * PENDING * 3 days ago * Configure .ace for This Project
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
@@ -495,7 +498,7 @@ Current Release Information:
   Version:   v.0.9.0
   Path:      /Users/mc/Ps/ace-meta/dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems
   Status:    active
-  Tasks:     18
+  Tasks:     20
   Created:   2025-09-23 14:14:43
   Modified:  2025-09-23 14:14:43
 
