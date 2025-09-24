@@ -3,7 +3,7 @@
 ## Goal
 
 Guide the AI agent and developer through **drafting a new release** in the project backlog.
-This includes creating the initial release directory structure under `dev-taskflow/backlog/`,
+This includes creating the initial release directory structure under `.ace-taskflow/backlog/`,
 setting up the standard subdirectories, creating the release overview document, and breaking the
 user-provided release scope into actionable tasks.
 
@@ -11,7 +11,7 @@ user-provided release scope into actionable tasks.
 
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
 * The current project version is known or can be discovered from the project's version file.
-* Access to the `dev-taskflow/` and `dev-handbook/` directories.
+* Access to the `.ace-taskflow/` and `dev-handbook/` directories.
 * Higher-order navigation tools are available for task management.
 
 ## Project Context Loading
@@ -26,23 +26,23 @@ user-provided release scope into actionable tasks.
      * Release codename (derive from user input if not explicitly given, using project-themed naming).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
-2. **Create Release Using release-manager**
-   * Use the release-manager tool to create the release structure:
+2. **Create Release Using ace-taskflow release**
+   * Use the ace-taskflow release tool to create the release structure:
      ```bash
-     release-manager draft v.X.Y.Z codename
+     ace-taskflow release create v.X.Y.Z codename
      ```
-     Example: `release-manager draft v.0.3.0 new-feature`
+     Example: `ace-taskflow release create v.0.3.0 new-feature`
    
    * This automatically creates:
-     - Release directory: `dev-taskflow/backlog/v.X.Y.Z-codename/`  
+     - Release directory: `.ace-taskflow/backlog/v.X.Y.Z-codename/`  
      - All standard subdirectories from template (tasks/, ideas/, docs/, reflections/, researches/, user-experience/, etc.)
      - Initial `release-overview.md` file with basic structure
 
 3. **Rename Overview to README.md**
-   * The release-manager created `release-overview.md` - rename it to follow standard convention:
+   * The ace-taskflow release created `release-overview.md` - rename it to follow standard convention:
      ```bash
-     mv dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
-        dev-taskflow/backlog/v.X.Y.Z-codename/README.md
+     mv .ace-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
+        .ace-taskflow/backlog/v.X.Y.Z-codename/README.md
      ```
    * This ensures the overview is discoverable and follows GitHub/GitLab conventions
 
@@ -67,7 +67,7 @@ user-provided release scope into actionable tasks.
      b. Create a new task file using the task template:
 
      c. Key rules for task creation:
-        * Use `task-manager create --release v.X.Y.Z-codename --title "Task Title" --priority high --estimate "4h"` to generate tasks automatically
+        * Use `ace-taskflow task create "Task Title" --priority high --estimate "4h"` to generate tasks automatically
         * This handles ID generation, file naming, and proper directory placement
         * Planning steps use asterisk markers (`* [ ]`)
         * Execution steps use hyphen markers (`- [ ]`)
@@ -107,16 +107,16 @@ user-provided release scope into actionable tasks.
 
      ```bash
      # Check release directory exists
-     ls -la dev-taskflow/backlog/v.X.Y.Z-codename/
+     ls -la .ace-taskflow/backlog/v.X.Y.Z-codename/
 
      # Verify README.md exists
-     [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/README.md" ] && echo "✓ README.md" || echo "✗ README.md missing"
+     [ -f ".ace-taskflow/backlog/v.X.Y.Z-codename/README.md" ] && echo "✓ README.md" || echo "✗ README.md missing"
 
      # Count created tasks
-     find dev-taskflow/backlog/v.X.Y.Z-codename/tasks -name "*.md" | wc -l
+     find .ace-taskflow/backlog/v.X.Y.Z-codename/tasks -name "*.md" | wc -l
      ```
      
-   * The subdirectory structure is guaranteed by release-manager draft
+   * The subdirectory structure is guaranteed by ace-taskflow release create
 
 9. **Prepare Commit Message (Do NOT Execute)**
    * Display the following git command for the user:
@@ -145,7 +145,7 @@ user-provided release scope into actionable tasks.
 
 ## Output / Success Criteria
 
-* A new directory `dev-taskflow/backlog/v.X.Y.Z-codename/` exists with all subdirectories
+* A new directory `.ace-taskflow/backlog/v.X.Y.Z-codename/` exists with all subdirectories
 * README.md created and populated with user's notes and release information
 * All user notes have corresponding task files with unique IDs
 * Each task follows the standard format with clear objectives and acceptance criteria
@@ -182,15 +182,15 @@ user-provided release scope into actionable tasks.
 
 **Symptoms:**
 
-* `release-manager draft` command not found
+* `ace-taskflow release create` command not found
 * Release creation fails with error
 * Template directory not found
 
 **Recovery Steps:**
 
-1. Verify release-manager is available:
+1. Verify ace-taskflow release is available:
    ```bash
-   which release-manager || echo "release-manager not found"
+   which ace-taskflow release || echo "ace-taskflow release not found"
    ```
 2. Check if dev-handbook submodule is properly initialized:
    ```bash
@@ -198,7 +198,7 @@ user-provided release scope into actionable tasks.
    ```
 3. If command fails, fall back to manual creation:
    ```bash
-   mkdir -p dev-taskflow/backlog/v.X.Y.Z-codename/{tasks,ideas,docs,reflections,researches}
+   mkdir -p .ace-taskflow/backlog/v.X.Y.Z-codename/{tasks,ideas,docs,reflections,researches}
    ```
 4. Create README.md manually with template content
 
@@ -206,29 +206,29 @@ user-provided release scope into actionable tasks.
 
 * Ensure dev-tools are properly installed and in PATH
 * Verify dev-handbook submodule is initialized
-* Test release-manager command before starting workflow
+* Test ace-taskflow release command before starting workflow
 
 **Task ID Generation Failures:**
 
 **Symptoms:**
 
-* `task-manager create` command not found or fails
+* `ace-taskflow task create` command not found or fails
 * Duplicate task ID generation
 * Inconsistent numbering sequence
 
 **Recovery Steps:**
 
 1. Check if higher-order navigation tools are available
-2. Verify task-manager tools are properly configured
-3. Use nav-path with simpler parameters if complex ones fail
+2. Verify ace-taskflow tasks tools are properly configured
+3. Use ace-taskflow task with simpler parameters if complex ones fail
 4. Ensure task uniqueness is maintained by the system
 5. Ask user to verify task numbering approach
 
 **Prevention:**
 
-* Test `task-manager create` functionality before starting release creation
+* Test `ace-taskflow task create` functionality before starting release creation
 * Verify project tooling is properly set up
-* Understand available nav-path options and capabilities
+* Understand available ace-taskflow task options and capabilities
 
 **Version Conflicts:**
 
@@ -240,7 +240,7 @@ user-provided release scope into actionable tasks.
 
 **Recovery Steps:**
 
-1. Check existing releases: `ls -la dev-taskflow/backlog/`
+1. Check existing releases: `ls -la .ace-taskflow/backlog/`
 2. Ask user whether to:
    * Merge with existing release (if same version)
    * Use different version number
@@ -266,27 +266,27 @@ user-provided release scope into actionable tasks.
 **Symptoms:**
 
 * Cannot rename release-overview.md to README.md
-* File not found after release-manager draft
+* File not found after ace-taskflow release create
 * Permission denied on rename operation
 
 **Recovery Steps:**
 
 1. Check if release-overview.md was created:
    ```bash
-   ls -la dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md
+   ls -la .ace-taskflow/backlog/v.X.Y.Z-codename/release-overview.md
    ```
 2. If file exists but rename fails, check permissions
 3. If file doesn't exist, create README.md manually with template
 4. Alternative rename approach:
    ```bash
-   cp dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
-      dev-taskflow/backlog/v.X.Y.Z-codename/README.md
-   rm dev-taskflow/backlog/v.X.Y.Z-codename/release-overview.md
+   cp .ace-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
+      .ace-taskflow/backlog/v.X.Y.Z-codename/README.md
+   rm .ace-taskflow/backlog/v.X.Y.Z-codename/release-overview.md
    ```
 
 **Prevention:**
 
-* Verify release-manager completed successfully before rename
+* Verify ace-taskflow release completed successfully before rename
 * Check file permissions in release directory
 * Have template content ready as fallback
 
@@ -404,14 +404,14 @@ user-provided release scope into actionable tasks.
 
 1. Check if README.md exists:
    ```bash
-   [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/README.md" ] || \
+   [ -f ".ace-taskflow/backlog/v.X.Y.Z-codename/README.md" ] || \
      echo "README.md missing - check for release-overview.md"
    ```
-2. If structure is incomplete, re-run release-manager draft:
+2. If structure is incomplete, re-run ace-taskflow release create:
    ```bash
    # Remove partial release and recreate
-   rm -rf dev-taskflow/backlog/v.X.Y.Z-codename
-   release-manager draft v.X.Y.Z codename
+   rm -rf .ace-taskflow/backlog/v.X.Y.Z-codename
+   ace-taskflow release create v.X.Y.Z codename
    ```
 3. Verify task creation completed successfully
 4. Validate README.md content has been populated
@@ -445,7 +445,7 @@ When errors occur during release creation:
 
 ## Usage Example
 >
-> "Prepare a new release with the notes in `dev-taskflow/backlog/ideas.md`.
+> "Prepare a new release with the notes in `.ace-taskflow/backlog/ideas.md`.
 > Expected version: `v.0.3.0`, codename: `atlas`."
 
 ---
@@ -540,7 +540,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 <!-- Additional context, decisions, or clarifications --></template>
 
     <template path="dev-handbook/templates/task-management/task.pending.template.md">---
-id: <generated automatically by nav-path>
+id: <generated automatically by ace-taskflow>
 status: pending
 priority: <high/medium/low>
 estimate: <n>h

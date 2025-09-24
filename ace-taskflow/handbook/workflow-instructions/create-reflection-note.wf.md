@@ -56,7 +56,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
      ```bash
      # Get current release information and path automatically
-     create-path file:reflection-new --title '<reflection-title>'
+     # TODO: Create file using standard methods or future ace-taskflow feature:reflection-new --title '<reflection-title>'
 
      # This tool will:
      # 1. Determine current release context automatically
@@ -205,7 +205,7 @@ When no specific context is provided, follow this process:
    git diff --name-only HEAD~5
 
    # Review completed tasks using task manager
-   task-manager recent --limit 5 --filter status:done
+   ace-taskflow tasks --recent --limit 5 --filter status:done
    ```
 
 2. **Extract Insights:**

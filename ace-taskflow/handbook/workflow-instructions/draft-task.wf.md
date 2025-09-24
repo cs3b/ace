@@ -6,10 +6,10 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Prerequisites
 
-* Enhanced ideas or direct requirements (optional input from capture-it)
+* Enhanced ideas or direct requirements (optional input from ace-taskflow idea)
 * Understanding of user experience and interface requirements
-* Access to `dev-taskflow/` directory for task storage
-* Higher-order navigation tools available (nav-path)
+* Access to `.ace-taskflow/` directory for task storage
+* ace-taskflow command available for task management
 * Load Project Context
 
 ## Project Context Loading
@@ -21,7 +21,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 1. **Gather Behavioral Requirements**
    * Collect input material focusing on user experience:
      * Direct behavioral requirements from user
-     * Enhanced ideas from capture-it output
+     * Enhanced ideas from ace-taskflow idea output
      * User stories or experience descriptions
      * Interface specifications or contracts
    * If files are referenced, read their contents
@@ -46,7 +46,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * API endpoints with request/response formats
      * UI components with expected behaviors
      * Data flow and interaction patterns
-   * Use examples from existing tools (like capture-it pattern)
+   * Use examples from existing tools (like ace-taskflow idea pattern)
    * Specify public contracts that implementation must satisfy
 
 4. **Present Behavioral Draft for Verification**
@@ -76,7 +76,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 6. **Determine Storage Location and Create Draft Tasks**
    * For each approved behavioral specification:
-     * Use `task-manager create --title "Task Title" --status draft --priority high --estimate "TBD"` to:
+     * Use `ace-taskflow task create --title "Task Title" --status draft --priority high --estimate "TBD"` to:
        * Create task file with proper ID sequencing
        * Set status to "draft" automatically
        * Include behavioral specification template
@@ -89,7 +89,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Interface Contract definitions with examples
      * Success Criteria as mandatory requirements
      * Validation Questions highlighting unknowns
-     * Integration with capture-it if applicable
+     * Integration with ace-taskflow idea if applicable
    * Avoid adding implementation details
 
 8. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
@@ -99,7 +99,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Note: Multiple idea files may be combined into one task
    * For EACH source idea file:
      * Extract task number from created task path: `echo "$TASK_PATH" | grep -oE "task\.([0-9]{3})" | cut -d. -f2`
-     * Get current release path: `RELEASE_PATH=$(release-manager current | grep "Path:" | awk '{print $2}')`
+     * Get current release path: `RELEASE_PATH=$(ace-taskflow release | grep "Path:" | awk '{print $2}')`
      * Create destination directory if needed: `mkdir -p "$RELEASE_PATH/docs/ideas"`
      * Build destination filename: `$TASK_NUM-$(basename "$IDEA_FILE_PATH")`
        * For multiple files with same task: Use same prefix for all (e.g., `040-017-idea.md`, `040-018-idea.md`)
@@ -115,7 +115,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * [ ] Task references updated to new locations
      * [ ] Git movements committed
    * Error handling:
-     * If release-manager fails: Create files in backlog/drafts/ instead
+     * If ace-taskflow release create fails: Create files in backlog/drafts/ instead
      * If git-mv fails: Report error and manual intervention needed
    * Success indicators:
      * Report each file movement: "Moved: [old-path] -> [new-path]"
@@ -166,7 +166,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Input
 
-* Enhanced ideas from capture-it (optional but recommended)
+* Enhanced ideas from ace-taskflow idea (optional but recommended)
 * Direct behavioral requirements or user stories
 * Interface specifications or contracts
 * User experience descriptions
@@ -195,7 +195,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 ## Usage Examples
 
 **Example 1: Capture-it integration**
-> "Draft tasks from enhanced idea: dev-taskflow/backlog/ideas/20250130-1445-oauth-authentication.md"
+> "Draft tasks from enhanced idea: .ace-taskflow/backlog/ideas/20250130-1445-oauth-authentication.md"
 
 **Example 2: Direct behavioral requirements**
 > "Create behavioral specification for: Users need secure login with OAuth support and 24-hour sessions"
@@ -310,7 +310,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 
 ## References
 
-- Related capture-it output (if applicable)
+- Related ace-taskflow idea output (if applicable)
 - User experience requirements
 - Interface specification examples
 ```

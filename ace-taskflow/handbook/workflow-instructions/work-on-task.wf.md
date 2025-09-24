@@ -17,7 +17,7 @@
 For experienced users, here's the condensed workflow:
 
 1. **Read linked documents** - Load project context and workflow instructions
-2. **Select task** - Use `task-manager next` to get next task or specify task path
+2. **Select task** - Use `ace-taskflow task` to get next task or specify task path
 3. **Mark in-progress** - Update task status to `in-progress`
 4. **Execute plan** - Work through planning and execution steps autonomously
 5. **Validate completion** - Verify all subtasks and acceptance criteria are done
@@ -30,17 +30,17 @@ For experienced users, here's the condensed workflow:
 
      ```bash
      # Get next task to work on
-     task-manager next
+     ace-taskflow task
      ```
 
    * Alternatively, manually select by listing available tasks:
 
      ```bash
      # Find current release directory with context
-     nav-ls --long dev-taskflow/current/
+     ls --long .ace-taskflow/$(ace-taskflow release --path)/
 
      # List available tasks with status filtering
-     task-manager list --status pending --current
+     ace-taskflow tasks --status pending --current
      ```
 
    * Review task metadata to select appropriate task:
@@ -199,7 +199,7 @@ When creating task-related documentation and deliverables:
 
 ### Document Placement Rules
 
-* **Task-specific documentation**: Create in `dev-taskflow/current/v.X.Y.Z-release/docs/`
+* **Task-specific documentation**: Create in `{release-path}/docs/` (use `ace-taskflow release` to find current release path)
 * **Task-specific naming**: Prefix documents with task number (e.g., `25-validation-criteria-checklist.md`)
 * **Analysis documents**: Research findings, compliance reports, validation results
 * **Planning documents**: Implementation plans, action plans, design specifications
@@ -207,9 +207,10 @@ When creating task-related documentation and deliverables:
 
 ### Examples
 
-* **Analysis Report**: `dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-report.md`
-* **Action Plan**: `dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-fixes.md`
-* **Process Guide**: `dev-taskflow/current/v.0.3.0-workflows/docs/25-validation-criteria-checklist.md`
+* **Analysis Report**: `{release-path}/docs/25-workflow-compliance-report.md`
+* **Action Plan**: `{release-path}/docs/25-workflow-compliance-fixes.md`
+* **Process Guide**: `{release-path}/docs/25-validation-criteria-checklist.md`
+* Note: Use `ace-taskflow release` to get the current release path, e.g., `.ace-taskflow/v.0.3.0`
 
 ### Documentation Standards
 
@@ -222,7 +223,7 @@ When creating task-related documentation and deliverables:
 
 When creating scripts to manipulate text or files (codemods):
 
-* **Location**: Create all codemods in the current release directory: `dev-taskflow/current/v.X.Y.Z-release/codemods/`
+* **Location**: Create all codemods in the current release directory: `{release-path}/codemods/` (use `ace-taskflow release` to find path)
 * **Purpose**: Scripts that automate text transformations, file modifications, or batch operations
 * **Naming**: Use descriptive names reflecting the transformation (e.g., `convert-templates.sh`, `migrate-yaml-format.rb`)
 * **Documentation**: Include comments explaining the transformation logic
@@ -256,7 +257,7 @@ When working with temporary files:
 
    ```bash
    # Find and check dependency tasks with intelligent search
-   task-manager list --filter dependencies --current
+   ace-taskflow tasks --filter dependencies --current
    ```
 
 2. Verify required tools are available:
@@ -264,7 +265,7 @@ When working with temporary files:
    ```bash
    # Check tool availability with enhanced verification
    handbook --verify-tools git npm
-   nav-ls --filter "bin/*" .
+   ls --filter "bin/*" .
    ```
 
 3. For blocking dependencies:
@@ -584,7 +585,7 @@ When errors occur during task execution:
 
 ## Usage Example
 >
-> "Work on task dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.3-refactor-workflows.md"
+> "Work on task using: ace-taskflow task 3" or "ace-taskflow task v.0.3.0+003"
 
 ---
 

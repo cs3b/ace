@@ -125,10 +125,10 @@ Execute the final deployment and archival phase of project releases, transitioni
 ### 5. Documentation Archival
 
 14. **Archive Release Documentation:**
-    - Create archive directory: `mkdir -p dev-taskflow/done/`
-    - Move current release documentation: `mv dev-taskflow/current/* dev-taskflow/done/v<X.Y.Z>-<codename>/`
-    - Example: `mv dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2 dev-taskflow/done/`
-    - Verify move completed successfully and `dev-taskflow/current/` is empty
+    - Create archive directory: `mkdir -p .ace-taskflow/done/`
+    - Move current release documentation: `mv .ace-taskflow/$(ace-taskflow release --path)/* .ace-taskflow/done/v<X.Y.Z>-<codename>/`
+    - Example: `mv .ace-taskflow/$(ace-taskflow release --path)/v.0.3.0-feedback-after-meta.v.0.2 .ace-taskflow/done/`
+    - Verify move completed successfully and `.ace-taskflow/$(ace-taskflow release --path)/` is empty
 
 15. **Update Roadmap (Remove Completed Release):**
     - Remove the completed release from roadmap's "Planned Major Releases" table
@@ -147,7 +147,7 @@ Execute the final deployment and archival phase of project releases, transitioni
       ```
 
 16. **Commit Documentation Archival:**
-    - Stage archival changes: `git add dev-taskflow/done/v<X.Y.Z>-<codename>/ dev-taskflow/current/`
+    - Stage archival changes: `git add .ace-taskflow/done/v<X.Y.Z>-<codename>/ .ace-taskflow/$(ace-taskflow release --path)/`
     - Commit archival: `git commit -m "chore(release): archive v<X.Y.Z>-<codename> documentation"`
     - Example: `git commit -m "chore(release): archive v0.3.0-feedback-after-meta documentation"`
 
@@ -317,7 +317,7 @@ The publish release workflow is complete when:
 
 - All version numbers are finalized and consistent
 - Package is successfully published to appropriate registries
-- Release documentation is archived in `dev-taskflow/done/`
+- Release documentation is archived in `.ace-taskflow/done/`
 - Git repository contains proper tags and commit history
 - Stakeholders are notified of release completion
 - Post-release monitoring is active

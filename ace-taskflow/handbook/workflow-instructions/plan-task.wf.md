@@ -44,7 +44,7 @@ Create a detailed implementation plan for a task that already has a validated be
 1. **Load and Validate Draft Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `task-manager list --filter status:draft` to get draft tasks
+     - If no task specified: Run `ace-taskflow tasks --filter status:draft` to get draft tasks
      - Document the selected task path for reference
    - **Load Task Content:**
      - Read the task file from the identified path
@@ -441,7 +441,7 @@ When transforming from review-task to plan-task focus:
 ## Usage Example
 
 **Input:** Draft task with behavioral specification
-> "Plan implementation for task dev-taskflow/current/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md (status: draft)"
+> "Plan implementation for task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md (status: draft)"
 
 **Process:** Technical research, tool selection, implementation planning
 
@@ -453,7 +453,7 @@ This workflow transforms draft tasks with validated behavioral specifications in
 
 <documents>
     <template path="dev-handbook/templates/task-management/task.pending.template.md">---
-id: <generated automatically by nav-path>
+id: <generated automatically by ace-taskflow>
 status: pending
 priority: <high/medium/low>
 estimate: <n>h
