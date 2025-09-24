@@ -428,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 01:56:48 WEST 2025
+Wed Sep 24 02:14:34 WEST 2025
 
 ```
 
@@ -436,23 +436,11 @@ Wed Sep 24 01:56:48 WEST 2025
 
 **Output:**
 ```
- M .ace/protocols/wfi-sources/local.yml
  M .cache/ace-context/project.md
- M ace-context/lib/ace/context/molecules/preset_manager.rb
+ M ace-context/exe/ace-context
+ M ace-context/lib/ace/context/organisms/context_loader.rb
+ M ace-core/lib/ace/core/molecules/file_aggregator.rb
  M ace-core/test-reports/latest
- D ace-core/test/test_output.txt
- M ace-nav/lib/ace/nav/models/protocol_source.rb
- M ace-nav/lib/ace/nav/molecules/protocol_scanner.rb
- M ace-nav/lib/ace/nav/molecules/source_registry.rb
- M ace-test-runner/exe/ace-test
- M ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb
-?? .ace/handbook/
-?? ace-core/lib/ace/core/organisms/virtual_config_resolver.rb
-?? ace-test-runner/lib/ace/test_runner/atoms/test_type_detector.rb
-?? ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb
-?? ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/reflections/2025-09-24-subprocess-test-performance.md
-?? docs/testing-patterns.md
 
 ```
 
@@ -465,7 +453,7 @@ Recent Tasks (3/505 shown):
 ==================================================
 v.0.9.0+task.019 * PENDING * 3 hours ago * Implement ace-taskflow Release and Task Management Commands
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
-v.0.9.0+task.020 * DONE * 3 hours ago * Refactor ace-nav to follow standard ace configuration cascade pattern
+v.0.9.0+task.020 * DONE * 4 hours ago * Refactor ace-nav to follow standard ace configuration cascade pattern
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.020-refactor-ace-nav-to-follow-standard-ace-configuration.md
 v.0.9.0+task.018 * DONE * 7 hours ago * Create ace-nav Gem for Navigation and Handbook Discovery
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
@@ -527,5 +515,6 @@ Current Release Information:
 /Users/mc/Ps/ace-meta/mise.toml
 /Users/mc/Ps/ace-meta/Rakefile
 /Users/mc/Ps/ace-meta/README.md
+/Users/mc/Ps/ace-meta/reflections
 
 ```
