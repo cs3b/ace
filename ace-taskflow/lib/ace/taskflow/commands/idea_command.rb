@@ -83,6 +83,8 @@ module Ace
             puts "Options:"
             puts "  --backlog          Create in backlog"
             puts "  --release <name>   Create in specific release"
+            puts "  --git-commit, -gc  Auto-commit the idea file"
+            puts "  --llm-enhance, -llm Enhance with LLM suggestions"
             exit 1
           end
 
@@ -114,9 +116,9 @@ module Ace
             end
           end
 
-          # Capture the idea
+          # Capture the idea with options
           writer = Organisms::IdeaWriter.new(config)
-          path = writer.write(options[:content])
+          path = writer.write(options[:content], options)
           puts "Idea captured: #{path}"
         end
 
@@ -167,7 +169,9 @@ module Ace
         def parse_capture_options(args)
           options = {
             content: "",
-            location: nil
+            location: nil,
+            git_commit: nil,
+            llm_enhance: nil
           }
 
           content_parts = []
@@ -183,6 +187,18 @@ module Ace
               i += 2
             when "--current"
               options[:location] = "current"
+              i += 1
+            when "--git-commit", "-gc"
+              options[:git_commit] = true
+              i += 1
+            when "--no-git-commit"
+              options[:git_commit] = false
+              i += 1
+            when "--llm-enhance", "-llm"
+              options[:llm_enhance] = true
+              i += 1
+            when "--no-llm-enhance"
+              options[:llm_enhance] = false
               i += 1
             else
               content_parts << arg
@@ -244,6 +260,10 @@ module Ace
           puts "  create <content>   Capture new idea"
           puts "    --backlog        Create in backlog"
           puts "    --release <name> Create in specific release"
+          puts "    --git-commit, -gc   Auto-commit the idea file"
+          puts "    --no-git-commit     Don't commit (overrides config)"
+          puts "    --llm-enhance, -llm Enhance with LLM suggestions"
+          puts "    --no-llm-enhance    Don't enhance (overrides config)"
           puts "  to-task <id>       Convert idea to task"
           puts "  archive <id>       Archive an idea"
           puts ""
@@ -252,12 +272,22 @@ module Ace
           puts "  --release <name>   Work with specific release"
           puts "  --current          Work with current/active release (default)"
           puts ""
+          puts "Configuration:"
+          puts "  Set defaults in .ace/taskflow.yml:"
+          puts "    taskflow:"
+          puts "      idea:"
+          puts "        defaults:"
+          puts "          git_commit: true    # Auto-commit by default"
+          puts "          llm_enhance: true   # Auto-enhance by default"
+          puts ""
           puts "Examples:"
           puts "  ace-taskflow idea"
           puts "  ace-taskflow idea caching"
           puts "  ace-taskflow idea create 'Add caching layer'"
           puts "  ace-taskflow idea create 'Future feature' --backlog"
           puts "  ace-taskflow idea create 'Bug fix' --release v.0.9.1"
+          puts "  ace-taskflow idea create 'New feature' --git-commit"
+          puts "  ace-taskflow idea create 'Complex task' --llm-enhance --git-commit"
         end
       end
     end
