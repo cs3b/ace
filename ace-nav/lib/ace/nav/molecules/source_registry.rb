@@ -89,7 +89,8 @@ module Ace
             priority: data["priority"] || default_priority(origin),
             description: data["description"],
             origin: origin,
-            config_file: file_path
+            config_file: file_path,
+            config_dir: file_path  # Pass the config file path for relative resolution
           )
         rescue StandardError => e
           warn "Failed to load source file #{file_path}: #{e.message}"
