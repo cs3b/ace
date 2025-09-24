@@ -69,7 +69,7 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Comprehensive task and release management
+- **ace-taskflow**: Task and release management with enhanced idea capture
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 
 ### Workflows (.wf.md)
@@ -384,7 +384,9 @@ ace-taskflow tasks --status pending            # List pending tasks
 ace-taskflow tasks --stats                     # Show task statistics
 ace-taskflow release                           # Show active release
 ace-taskflow releases --stats                  # Show release statistics
-ace-taskflow idea 'Add dark mode'              # Capture an idea
+ace-taskflow idea create 'Add dark mode'       # Capture an idea
+ace-taskflow idea create 'Bug fix' --git-commit  # Capture and commit idea
+ace-taskflow idea create 'Feature' -llm -gc    # Enhance and commit idea
 ```
 
 ### ace-nav
@@ -413,7 +415,7 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Comprehensive task and release management with idea capture
+- **ace-taskflow**: Task and release management with enhanced idea capture (git commit, LLM enhancement)
 - **ace-nav**: Resource discovery and navigation across ace-* gems
 
 ## Coming Soon
@@ -448,7 +450,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 22:48:47 WEST 2025
+Wed Sep 24 23:56:11 WEST 2025
 
 ```
 
@@ -456,21 +458,15 @@ Wed Sep 24 22:48:47 WEST 2025
 
 **Output:**
 ```
- D .ace-taskflow/backlog/ideas/20250924-214543-backlog-idea-with-commit.md
- D .ace-taskflow/v.0.9.0/ideas/20250924-214515-test-idea-with-git-commit.md
- D .ace-taskflow/v.0.9.0/ideas/20250924-214532-test-with-both-flags-enabled.md
- M .ace-taskflow/v.0.9.0/t/025/add-git-commit-and-llm-enhance-flags-to-idea-comma.md
- M .ace-taskflow/v.0.9.0/t/026/add-reschedule-subcommand-to-tasks-command.md
- M .cache/ace-context/project.md
- M ace-taskflow/lib/ace/taskflow/commands/idea_command.rb
- M ace-taskflow/lib/ace/taskflow/molecules/config_loader.rb
+ M ace-taskflow/lib/ace/taskflow/molecules/idea_enhancer.rb
  M ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb
-?? .ace-taskflow/v.0.9.0/ideas/20250924-182540-each-command-should-have-config-flag-that-will-d.md
-?? .ace-taskflow/v.0.9.0/t/025/qa/
-?? .ace-taskflow/v.0.9.0/t/026/qa/
-?? .ace-taskflow/v.0.9.0/t/027/qa/
-?? ace-taskflow/lib/ace/taskflow/molecules/git_executor.rb
-?? ace-taskflow/lib/ace/taskflow/molecules/idea_enhancer.rb
+ M dev-tools/Gemfile
+ M dev-tools/Gemfile.lock
+?? .ace-taskflow/v.0.9.0/ideas/20250924-232822-write-a-qa-task-workflow-into-the-ace-taskflow-pac.md
+?? .ace-taskflow/v.0.9.0/ideas/20250924-232849-write-a-qa-task-workflow-into-the-ace-taskflow-pac.md
+?? .ace-taskflow/v.0.9.0/ideas/20250924-235558-add-support-for-multiple-git-repositories-in-ace-c.md
+?? .ace/protocols/tmpl-sources/
+?? ace-taskflow/templates/
 
 ```
 

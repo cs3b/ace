@@ -196,6 +196,7 @@ PLATFORMS
 DEPENDENCIES
   addressable (~> 2.8)
   aruba (~> 2.0)
+  bigdecimal (~> 3.2)
   bundler-audit
   csv (~> 3.0)
   dotenv (~> 2.0)

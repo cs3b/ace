@@ -30,4 +30,5 @@ group :development, :test do
   gem 'kramdown-parser-gfm', '~> 1.0'
   gem 'ostruct', '~> 0.6.1'
   gem 'zeitwerk', '~> 2.6'
+  gem 'bigdecimal', '~> 3.1'
 end
