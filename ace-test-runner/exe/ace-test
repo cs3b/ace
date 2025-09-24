@@ -4,6 +4,7 @@
 # Prevent Minitest from autorunning when ace-test exits
 ENV["MT_NO_AUTORUN"] = "1"
 
+
 require "optparse"
 require "ace/test_runner"
 
@@ -86,6 +87,14 @@ parser = OptionParser.new do |opts|
     options[:per_file] = true
   end
 
+  opts.on("--direct", "Force in-process execution (faster, less isolation)") do
+    options[:direct] = true
+  end
+
+  opts.on("--subprocess", "Force subprocess execution (slower, full isolation)") do
+    options[:subprocess] = true
+  end
+
   opts.on("--max-display N", Integer, "Maximum failures to display (default: 7)") do |n|
     options[:max_display] = n
   end
@@ -150,6 +159,8 @@ parser = OptionParser.new do |opts|
   opts.separator "  ace-test test/foo_test.rb:42    # Run test at specific line"
   opts.separator "  ace-test --filter user           # Run only tests matching 'user'"
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
+  opts.separator "  ace-test --direct                # Force in-process execution (faster)"
+  opts.separator "  ace-test --subprocess            # Force subprocess execution (isolated)"
   opts.separator "  ace-test --stop-threshold 10     # Stop after 10 failures"
   opts.separator "  ace-test --max-display 5         # Show only first 5 failures"
   opts.separator "  ace-test --profile 20            # Show 20 slowest tests"
@@ -285,8 +296,23 @@ end
 
 # Run tests
 begin
+  debug_timing = ENV['DEBUG_TIMING'] == '1'
+  start_time = Time.now
+
   exit_code = Ace::TestRunner.run(options)
-  exit exit_code
+
+  if debug_timing
+    elapsed = Time.now - start_time
+    STDERR.puts "[TIMING] TestRunner.run complete: #{(elapsed * 1000).round(2)}ms"
+    STDERR.puts "[TIMING] Exiting with code: #{exit_code}"
+  end
+
+  # Use exit! for direct mode to skip at_exit handlers
+  if options[:direct]
+    exit! exit_code
+  else
+    exit exit_code
+  end
 rescue Ace::TestRunner::Error => e
   puts "Error: #{e.message}"
   exit 1
