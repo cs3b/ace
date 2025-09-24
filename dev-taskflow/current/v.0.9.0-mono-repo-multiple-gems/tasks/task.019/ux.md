@@ -2,7 +2,7 @@
 
 ## Overview
 
-ace-taskflow provides a unified interface for managing your development workflow through releases, tasks, and ideas. This document shows real-world usage examples for common workflows.
+ace-taskflow provides a unified interface for managing your development workflow through releases, tasks, and ideas. It features a clean directory structure (.ace-taskflow/), qualified task references (v.0.9.0+018, backlog+025), and simple release transitions (promote/demote).
 
 ## Table of Contents
 
@@ -34,17 +34,22 @@ ace-taskflow idea "Add caching to improve API response time"
 
 ```bash
 # Release info
-ace-taskflow release                      # Current release info
+ace-taskflow release                      # Show active release(s)
 ace-taskflow releases                     # List all releases
 
 # Task management
-ace-taskflow task                         # Next actionable task
-ace-taskflow tasks                        # List tasks in current release
-ace-taskflow task start task.019          # Start working on a task
-ace-taskflow task done task.019           # Mark task as complete
+ace-taskflow task                         # Next task from active release
+ace-taskflow tasks                        # List tasks in active release
+ace-taskflow task start 019               # Start working on a task
+ace-taskflow task done 019                # Mark task as complete
+
+# Qualified task references
+ace-taskflow task v.0.9.0+018             # Task from specific release
+ace-taskflow task backlog+025             # Task from backlog
 
 # Idea capture
-ace-taskflow idea "Quick thought"         # Capture to backlog
+ace-taskflow idea "Quick thought"         # Capture to active release
+ace-taskflow idea "Future work" --backlog # Capture to backlog
 ace-taskflow ideas                        # List all ideas
 ```
 
@@ -57,8 +62,8 @@ ace-taskflow ideas                        # List all ideas
 ```bash
 # What release am I working on?
 $ ace-taskflow release
-Current Release: v.0.9.0-mono-repo-multiple-gems
-Status: active
+Active Release: v.0.9.0
+Location: .ace-taskflow/v.0.9.0/
 Progress: 14/18 tasks complete (78%)
 In Progress: 2 tasks
 Pending: 2 tasks
@@ -71,44 +76,52 @@ Recent Tasks (last 24 hours):
 
 # What should I work on next?
 $ ace-taskflow task
-Next task: task.019 - Implement ace-taskflow release and task management
+Next task: 019 - Implement ace-taskflow release and task management
 Priority: high, Estimate: 3d
+Path: .ace-taskflow/v.0.9.0/t/019/task.md
+
+# Check backlog tasks?
+$ ace-taskflow task --backlog
+Next backlog task: 025 - Refactor authentication module
 
 # See more options?
-$ ace-taskflow tasks --status pending --limit 3
-Pending tasks:
-1. task.019 - Implement ace-taskflow release and task management
-2. task.007 - Create ace-git gem with ace-gc only
-3. task.008 - Configure .ace for this project
+$ ace-taskflow tasks --status pending
+Pending tasks in v.0.9.0:
+  019 - Implement ace-taskflow
+  007 - Create ace-git gem
+  008 - Configure .ace project
 ```
 
 ### Starting Work on a Task
 
 ```bash
-# Get task details
-$ ace-taskflow task task.019
-Task: v.0.9.0+task.019
-Title: Implement ace-taskflow Release and Task Management Commands
-Status: pending → in-progress
+# Get task details (multiple ways)
+$ ace-taskflow task 019                   # Current context
+$ ace-taskflow task v.0.9.0+019           # Explicit release
+$ ace-taskflow task current+019           # Explicit current
+
+Task: 019
+Title: Implement ace-taskflow Release and Task Management
+Status: pending
 Priority: high
-Estimate: 3d
-Path: tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
+Path: .ace-taskflow/v.0.9.0/t/019/task.md
 
 # Mark it as in-progress
-$ ace-taskflow task start task.019
-Task task.019 marked as in-progress
+$ ace-taskflow task start 019
+Task 019 marked as in-progress
 Started at: 2025-09-23 10:30:00
 
-# Open the task file (if needed)
-$ ace-taskflow task show task.019 --open
+# Task has its own folder now
+$ ls .ace-taskflow/v.0.9.0/t/019/
+task.md  ux/  qa/  docs/
 ```
 
 ### Completing Work
 
 ```bash
 # Mark task as done
-$ ace-taskflow task done task.019
-Task task.019 marked as complete
+$ ace-taskflow task done 019
+Task 019 marked as complete
 Duration: 2d 4h (estimated: 3d)
 
 # Quick status check
@@ -130,70 +143,79 @@ Remaining: 2
 # List all releases
 $ ace-taskflow releases
 Releases:
-  CURRENT:
-    v.0.9.0-mono-repo-multiple-gems (15/18 tasks)
+  ACTIVE:
+    v.0.9.0 (15/18 tasks) - primary
+    v.0.9.1 (3/5 tasks)   - hotfix
 
   BACKLOG:
-    v.0.10.0-performance-improvements (planned)
-    v.0.11.0-enhanced-testing (draft)
+    v.0.10.0 (planned)
+    v.0.11.0 (draft)
 
   DONE:
-    v.0.8.0-initial-setup (18/18 tasks)
-    v.0.7.0-prototype (12/12 tasks)
+    v.0.8.0 (18/18 tasks)
+    v.0.7.0 (12/12 tasks)
 
-# Get detailed release information
+# Show active release(s)
 $ ace-taskflow release
-Release: v.0.9.0-mono-repo-multiple-gems
-Created: 2025-09-19
-Duration: 4 days
-Tasks:
-  Completed: 15 (83%)
-  In Progress: 1 (6%)
-  Pending: 2 (11%)
-Velocity: 3.75 tasks/day
-Estimated completion: 1 day remaining
+Active Releases (2):
+  v.0.9.0 - Main Development (primary)
+    Path: .ace-taskflow/v.0.9.0/
+    Progress: 15/18 (83%)
+
+  v.0.9.1 - Hotfix
+    Path: .ace-taskflow/v.0.9.1/
+    Progress: 3/5 (60%)
+
+# Show specific release
+$ ace-taskflow release v.0.10.0
+Release: v.0.10.0
+Status: backlog
+Path: .ace-taskflow/backlog/v.0.10.0/
 ```
 
-### Creating a New Release
+### Creating and Promoting Releases
 
 ```bash
-# Create a new release in backlog
-$ ace-taskflow release create v.0.10.0-performance-improvements
-Created release: v.0.10.0-performance-improvements
-Path: dev-taskflow/backlog/v.0.10.0-performance-improvements/
+# Create a new release (always in backlog)
+$ ace-taskflow release create v.0.10.0
+Created release: v.0.10.0
+Path: .ace-taskflow/backlog/v.0.10.0/
 Status: backlog
 
-# Switch context to work on it
-$ ace-taskflow release switch v.0.10.0
-Switched to release: v.0.10.0-performance-improvements
-Note: This is a backlog release. Use 'release promote' when ready to make it current.
+# Promote from backlog to active
+$ ace-taskflow release promote v.0.10.0
+Promoting v.0.10.0: backlog → active
+Moved to: .ace-taskflow/v.0.10.0/
+
+# Or promote the next backlog release
+$ ace-taskflow release promote
+Promoting v.0.11.0 (lowest in backlog)
 ```
 
-### Completing a Release
+### Demoting a Release (Completing)
 
 ```bash
-# Check if ready to complete
+# Check if ready
 $ ace-taskflow release validate
 Release validation for v.0.9.0:
   ✓ No tasks in 'in-progress' status
   ✓ All high-priority tasks completed
-  ✓ Test coverage acceptable
-  ⚠ 2 pending tasks remain (consider rescheduling)
+  ⚠ 2 pending tasks remain
 
-# Move pending tasks to next release
-$ ace-taskflow task move task.008,task.009 --to v.0.10.0
-Moved 2 tasks to v.0.10.0-performance-improvements
+# Move pending tasks using qualified references
+$ ace-taskflow task move v.0.9.0+008 v.0.10.0
+$ ace-taskflow task move v.0.9.0+009 backlog
+Moved tasks to their destinations
 
-# Complete the release
-$ ace-taskflow release complete
-Release v.0.9.0-mono-repo-multiple-gems completed!
-Moved to: dev-taskflow/done/v.0.9.0-mono-repo-multiple-gems/
-Tasks completed: 16/18 (2 rescheduled)
+# Demote the release (active → done)
+$ ace-taskflow release demote v.0.9.0
+Demoting v.0.9.0: active → done
+Moved to: .ace-taskflow/done/v.0.9.0/
+Completed: 16/18 tasks
 
-# Promote next release
-$ ace-taskflow release promote
-Promoted v.0.10.0-performance-improvements to current
-Path: dev-taskflow/current/v.0.10.0-performance-improvements/
+# Or demote to backlog (rare)
+$ ace-taskflow release demote v.0.9.1 --to backlog
+Demoting v.0.9.1: active → backlog
 ```
 
 ---
@@ -203,40 +225,46 @@ Path: dev-taskflow/current/v.0.10.0-performance-improvements/
 ### Creating Tasks
 
 ```bash
-# Create a new task in current release
-$ ace-taskflow task create "Implement caching layer for API responses"
-Created task: v.0.10.0+task.001
-Path: tasks/v.0.10.0+task.001-implement-caching-layer-for-api-responses.md
+# Create task in active release
+$ ace-taskflow task create "Implement caching layer"
+Created task: 001
+Path: .ace-taskflow/v.0.10.0/t/001/task.md
 Status: draft
 
-# Create a task with options
-$ ace-taskflow task create "Fix memory leak in worker process" \
-  --priority high \
-  --estimate 1d \
-  --status pending
-Created task: v.0.10.0+task.002
+# Create task in backlog
+$ ace-taskflow task create "Future feature" --backlog
+Created task: backlog+042
+Path: .ace-taskflow/backlog/t/042/task.md
+
+# Create task in specific release
+$ ace-taskflow task create "Hotfix" --release v.0.9.1
+Created task: v.0.9.1+003
+Path: .ace-taskflow/v.0.9.1/t/003/task.md
 ```
 
 ### Task Lifecycle
 
 ```bash
-# View tasks in different statuses
-$ ace-taskflow tasks --status draft
-Draft tasks (need planning):
-  task.001 - Implement caching layer
+# View tasks in different contexts
+$ ace-taskflow tasks                      # Active release
+Tasks in v.0.10.0:
+  001 - Implement caching layer (draft)
+  002 - Fix memory leak (pending)
 
-$ ace-taskflow tasks --status pending
-Pending tasks (ready to start):
-  task.002 - Fix memory leak
-  task.003 - Update documentation
+$ ace-taskflow tasks --backlog            # Backlog tasks
+Backlog tasks:
+  042 - Future feature (draft)
+  043 - Technical debt (pending)
 
-$ ace-taskflow tasks --status in-progress
-Tasks in progress:
-  task.004 - Refactor authentication (started by: you, 2h ago)
+$ ace-taskflow tasks --all                # Everything
+All tasks:
+  v.0.9.0+018 - Nav gem (done)
+  v.0.10.0+001 - Caching (draft)
+  backlog+042 - Future feature (draft)
 
 # Move through lifecycle
-$ ace-taskflow task start task.001
-$ ace-taskflow task done task.001
+$ ace-taskflow task start 001
+$ ace-taskflow task done 001
 ```
 
 ### Filtering and Sorting
@@ -259,27 +287,26 @@ $ ace-taskflow tasks \
   --sort priority:desc
 ```
 
-### Working Across Releases
+### Working with Qualified References
 
 ```bash
-# View backlog tasks
-$ ace-taskflow tasks --backlog
-Backlog tasks:
-  task.030 - Migrate to GraphQL
-  task.031 - Add multi-language support
+# Reference tasks from any context
+$ ace-taskflow task v.0.9.0+018           # Specific release
+$ ace-taskflow task backlog+042           # From backlog
+$ ace-taskflow task current+001           # Explicit current
 
-# View tasks in specific release
-$ ace-taskflow tasks --release v.0.11.0
-Tasks in v.0.11.0-enhanced-testing:
-  task.001 - Add integration test suite
-  task.002 - Set up CI/CD pipeline
+# Move tasks between contexts
+$ ace-taskflow task move backlog+042 v.0.10.0
+Moved task 042: backlog → v.0.10.0
+New reference: v.0.10.0+003
 
-# Move task between releases
-$ ace-taskflow task move task.030 current
-Moved task.030 to current release (v.0.10.0)
+$ ace-taskflow task move v.0.9.0+007 backlog
+Moved task 007: v.0.9.0 → backlog
+New reference: backlog+044
 
-$ ace-taskflow task move task.031 v.0.12.0
-Moved task.031 to v.0.12.0
+# Cross-release operations
+$ ace-taskflow task done v.0.9.1+002      # Complete in different release
+$ ace-taskflow task start backlog+043     # Start backlog task
 ```
 
 ---
@@ -289,17 +316,17 @@ Moved task.031 to v.0.12.0
 ### Quick Idea Capture
 
 ```bash
-# Capture to backlog (default)
-$ ace-taskflow idea "Investigate WebSocket for real-time updates"
-Captured idea: backlog/ideas/20250923-143022-investigate-websocket.md
+# Capture to active release (default)
+$ ace-taskflow idea "Add input validation for user form"
+Captured: .ace-taskflow/v.0.10.0/ideas/20250923-143045-input-validation.md
 
-# Capture to current release
-$ ace-taskflow idea "Add input validation for user form" --current
-Captured idea: current/v.0.10.0/ideas/20250923-143045-add-input-validation.md
+# Capture to backlog
+$ ace-taskflow idea "Investigate WebSocket" --backlog
+Captured: .ace-taskflow/backlog/ideas/20250923-143022-websocket.md
 
-# Capture with category
-$ ace-taskflow idea "Optimize database indexes" --category performance
-Captured idea: backlog/ideas/performance/20250923-143100-optimize-database.md
+# Capture to specific release
+$ ace-taskflow idea "Performance optimization" --release v.0.11.0
+Captured: .ace-taskflow/backlog/v.0.11.0/ideas/20250923-143100-performance.md
 ```
 
 ### Managing Ideas
@@ -308,15 +335,15 @@ Captured idea: backlog/ideas/performance/20250923-143100-optimize-database.md
 # List all ideas
 $ ace-taskflow ideas
 Ideas (12 total):
-  BACKLOG (8):
-    20250923-websocket-investigation.md
-    20250922-graphql-migration.md
-    20250921-caching-strategy.md
-    ...
-
-  CURRENT RELEASE (4):
+  v.0.10.0 (4):
     20250923-input-validation.md
     20250923-error-handling.md
+    ...
+
+  BACKLOG (8):
+    20250923-websocket.md
+    20250922-graphql.md
+    20250921-caching.md
     ...
 
 # View specific idea
@@ -339,22 +366,17 @@ Matching ideas:
 ### Converting Ideas to Tasks
 
 ```bash
-# Convert single idea to task
+# Convert idea to task
 $ ace-taskflow idea to-task 20250923-websocket
-Creating task from idea: Investigate WebSocket for real-time updates
+Converting idea to task...
 
-Enter priority (high/medium/low) [medium]: high
-Enter estimate (e.g., 2d, 4h) [TBD]: 3d
-Enter initial status (draft/pending) [draft]: draft
+Target release [active/v.0.10.0]: v.0.11.0
+Priority [medium]: high
+Estimate [TBD]: 3d
 
-Created task: v.0.10.0+task.006
-Original idea moved to: current/v.0.10.0/docs/ideas/task.006-websocket.md
-
-# Batch conversion with defaults
-$ ace-taskflow task from-idea backlog/ideas/*.md --auto
-Converting 8 ideas to tasks...
-Created 8 draft tasks in current release
-Ideas moved to: current/v.0.10.0/docs/ideas/
+Created: v.0.11.0+004
+Path: .ace-taskflow/backlog/v.0.11.0/t/004/task.md
+Idea archived to: .ace-taskflow/backlog/v.0.11.0/t/004/docs/original-idea.md
 ```
 
 ---
@@ -364,20 +386,20 @@ Ideas moved to: current/v.0.10.0/docs/ideas/
 ### Release Planning Session
 
 ```bash
-# Review backlog ideas for next release
-$ ace-taskflow ideas --backlog | head -20
+# Review backlog ideas
+$ ace-taskflow ideas --backlog
 
-# Create next release
-$ ace-taskflow release create v.0.11.0-user-experience
+# Create and setup new release
+$ ace-taskflow release create v.0.11.0
+Created in backlog: .ace-taskflow/backlog/v.0.11.0/
 
-# Convert promising ideas to tasks (batch)
-$ for idea in $(ace-taskflow ideas --backlog | grep ux-); do
-  ace-taskflow idea to-task $idea --release v.0.11.0
-done
+# Convert ideas to tasks in new release
+$ ace-taskflow idea to-task 20250923-ux-redesign --release v.0.11.0
+$ ace-taskflow idea to-task 20250922-dark-mode --release v.0.11.0
 
-# Review the new release
+# Review and promote when ready
 $ ace-taskflow tasks --release v.0.11.0
-$ ace-taskflow release v.0.11.0
+$ ace-taskflow release promote v.0.11.0
 ```
 
 ### Sprint Planning
@@ -465,52 +487,105 @@ Created folder: tasks/task.010-implement-oauth2-authentication/
   tests/
 
 # Add files to task folder
-$ cd tasks/task.010-implement-oauth2-authentication/
-$ echo "# OAuth2 Research Notes" > research/oauth2-providers.md
-$ echo "# API Design" > design/api-spec.md
+$ cd .ace-taskflow/v.0.10.0/t/010/
+$ ls
+task.md  ux/  qa/  docs/
+$ echo "# OAuth2 Research" > docs/research.md
+$ echo "# API Design" > docs/api-spec.md
 ```
 
 ### Bulk Operations
 
 ```bash
-# Reschedule multiple tasks
-$ ace-taskflow task reschedule task.020,task.021,task.022 \
-  --to v.0.11.0 \
-  --reason "Deprioritized for performance work"
-Rescheduled 3 tasks to v.0.11.0
+# Move multiple tasks using qualified references
+$ ace-taskflow task move v.0.9.0+020 backlog
+$ ace-taskflow task move v.0.9.0+021 backlog
+$ ace-taskflow task move backlog+030 v.0.11.0
+Moved 3 tasks to their destinations
 
-# Bulk status update
-$ ace-taskflow task update task.* \
-  --status pending \
-  --where "status:draft AND priority:high"
-Updated 4 tasks from draft to pending
+# Bulk operations with shell
+$ for task in 020 021 022; do
+  ace-taskflow task move v.0.9.0+$task v.0.11.0
+done
 
 # Archive old ideas
-$ ace-taskflow idea archive --older-than 30d
-Archived 15 ideas older than 30 days
-Moved to: backlog/ideas/.archive/
+$ ace-taskflow ideas --older-than 30d | while read idea; do
+  ace-taskflow idea archive $idea
+done
+```
+
+---
+
+## Directory Structure
+
+### New Clean Layout
+
+```
+.ace-taskflow/                 # Configurable root
+├── backlog/                  # Backlog items
+│   ├── ideas/                # Unassigned ideas
+│   ├── t/                    # Backlog tasks
+│   │   └── 025/
+│   │       └── task.md
+│   └── v.0.11.0/             # Future release (in backlog)
+│       ├── release.md
+│       └── t/
+├── v.0.9.0/                  # Active release
+│   ├── release.md           # Release metadata
+│   ├── ideas/                # Release ideas
+│   ├── docs/                 # Documentation
+│   ├── qa/                   # Tests & reviews
+│   ├── reflections/          # Dev notes
+│   └── t/                    # Tasks
+│       ├── 018/
+│       │   ├── task.md      # Main task file
+│       │   ├── ux/          # UX designs
+│       │   └── qa/          # Tests
+│       └── 019/
+└── done/                     # Completed releases
+    └── v.0.8.0/
+```
+
+### Task References
+
+```bash
+# Simple (current context)
+019                            # Task in active release
+
+# Qualified (explicit context)
+current+019                    # Explicit current/active
+backlog+025                    # From backlog
+v.0.9.0+018                    # From specific release
+v.0.11.0+004                   # From backlog release
 ```
 
 ---
 
 ## Configuration Examples
 
-### Custom Paths (.ace/taskflow.yml)
+### Configuration (.ace/taskflow.yml)
 
 ```yaml
 taskflow:
-  release:
-    current_path: "./releases/active"
-    backlog_path: "./releases/planning"
-    done_path: "./releases/archive"
+  # Root directory for all taskflow data
+  root: ".ace-taskflow"              # Default, can be changed
 
-  task:
-    directory: "work-items"
-    use_folders: true
+  # Task organization
+  task_dir: "t"                      # Tasks folder name
 
-  idea:
-    directory: "ideas"
-    default_location: current  # Capture to current by default
+  # Release management
+  active_strategy: "lowest"          # How to pick primary active
+  allow_multiple_active: true        # Allow multiple active releases
+
+  # Qualified references
+  references:
+    allow_qualified: true            # Enable v.0.9.0+018 syntax
+    allow_cross_release: true        # Can reference other releases
+
+  # Default contexts
+  defaults:
+    idea_location: "active"          # Where ideas go by default
+    task_location: "active"          # Where new tasks go
 ```
 
 ### Command Aliases
