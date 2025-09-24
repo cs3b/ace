@@ -428,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 11:40:02 WEST 2025
+Wed Sep 24 13:17:16 WEST 2025
 
 ```
 
@@ -436,12 +436,6 @@ Wed Sep 24 11:40:02 WEST 2025
 
 **Output:**
 ```
- M .cache/ace-context/project.md
- M ace-core/lib/ace/core/molecules/file_aggregator.rb
- M ace-core/test-reports/latest
- M dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
-?? ace-taskflow/lib/ace/taskflow/atoms/
-?? dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/ideas/
 
 ```
 
@@ -449,15 +443,15 @@ Wed Sep 24 11:40:02 WEST 2025
 
 **Output:**
 ```
-Status: 16 done, 2 in-progress, 2 pending (20 total)
-Recent Tasks (3/505 shown):
+Status: 17 done, 1 draft, 1 in-progress, 4 pending (23 total)
+Recent Tasks (3/507 shown):
 ==================================================
-v.0.9.0+task.019 * IN-PROGRESS * 1 hour ago * Implement ace-taskflow Release and Task Management Commands
+v.0.9.0+task.023 * PENDING * 1 hour ago * Create ace-llm-providers-cli gem for CLI-based LLM providers
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.023-create-ace-llm-providers-cli-gem-for-cli-based-llm-providers.md
+v.0.9.0+task.021 * PENDING * 1 hours ago * Extract llm-query from dev-tools to ace-llm gem
+  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.021-extract-llm-query-from-dev-tools-to-ace-llm-gem.md
+v.0.9.0+task.019 * DONE * 1 hours ago * Implement ace-taskflow Release and Task Management Commands
   dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
-v.0.9.0+task.020 * DONE * 13 hours ago * Refactor ace-nav to follow standard ace configuration cascade pattern
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.020-refactor-ace-nav-to-follow-standard-ace-configuration.md
-v.0.9.0+task.018 * DONE * 16 hours ago * Create ace-nav Gem for Navigation and Handbook Discovery
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.018-create-ace-nav-gem-for-navigation-and-handbook-discovery.md
 
 ```
 
@@ -465,7 +459,7 @@ v.0.9.0+task.018 * DONE * 16 hours ago * Create ace-nav Gem for Navigation and H
 
 **Output:**
 ```
-Status: 16 done, 2 in-progress, 2 pending (20 total)
+Status: 17 done, 1 draft, 1 in-progress, 4 pending (23 total)
 Next Tasks (3 shown):
 ==================================================
 v.0.9.0+task.007 * IN-PROGRESS * 2 days ago * Create ace-git Gem with ace-gc Only
@@ -487,7 +481,7 @@ Current Release Information:
   Version:   v.0.9.0
   Path:      /Users/mc/Ps/ace-meta/dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems
   Status:    active
-  Tasks:     20
+  Tasks:     24
   Created:   2025-09-23 14:14:43
   Modified:  2025-09-23 14:14:43
 
