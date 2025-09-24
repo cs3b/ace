@@ -9,9 +9,12 @@ module Ace
         subcommand = args.shift
 
         case subcommand
-        when "idea", "ideas"
+        when "idea"
           require_relative "commands/idea_command"
           Commands::IdeaCommand.new.execute(args)
+        when "ideas"
+          require_relative "commands/ideas_command"
+          Commands::IdeasCommand.new.execute(args)
         when "task"
           require_relative "commands/task_command"
           Commands::TaskCommand.new.execute(args)
@@ -72,7 +75,8 @@ module Ace
         puts "  releases - Browse and list multiple releases"
         puts ""
         puts "Idea Management:"
-        puts "  idea     - Capture and manage ideas"
+        puts "  idea     - Operations on single ideas"
+        puts "  ideas    - Browse and list multiple ideas"
         puts ""
         puts "Configuration:"
         puts "  config   - Show current configuration"
@@ -86,7 +90,9 @@ module Ace
         puts "  ace-taskflow tasks --status pending  # List pending tasks"
         puts "  ace-taskflow release                 # Show active release"
         puts "  ace-taskflow releases --stats        # Show release statistics"
-        puts "  ace-taskflow idea 'Add caching'      # Capture an idea"
+        puts "  ace-taskflow idea                    # Show next idea"
+        puts "  ace-taskflow idea create 'Add caching' # Capture an idea"
+        puts "  ace-taskflow ideas --all             # List all ideas"
         puts ""
         puts "For subcommand help:"
         puts "  ace-taskflow <subcommand> --help"
