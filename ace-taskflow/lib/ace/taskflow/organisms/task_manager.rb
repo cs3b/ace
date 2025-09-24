@@ -85,9 +85,10 @@ module Ace
           task_number = generate_task_number(context_path)
           task_id = generate_task_id(context, task_number)
 
-          # Create task directory and file
+          # Create task directory and file with descriptive name
           task_dir = Atoms::PathBuilder.build_task_path("", context_path, task_number)
-          task_file = File.join(task_dir, "task.md")
+          filename = Atoms::PathBuilder.generate_task_filename(title)
+          task_file = File.join(task_dir, filename)
 
           begin
             FileUtils.mkdir_p(task_dir)
@@ -184,9 +185,12 @@ module Ace
             # Move task directory
             FileUtils.mv(old_dir, new_dir)
 
+            # Find the task file in the new directory (it has the same name as before)
+            task_filename = File.basename(task[:path])
+            new_task_file = File.join(new_dir, task_filename)
+
             # Update task ID in file
-            task_file = File.join(new_dir, "task.md")
-            update_task_id_in_file(task_file, new_id)
+            update_task_id_in_file(new_task_file, new_id)
 
             new_reference = Atoms::TaskReferenceParser.format(target, new_number)
 

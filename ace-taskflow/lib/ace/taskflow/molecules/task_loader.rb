@@ -57,10 +57,20 @@ module Ace
 
           return tasks unless File.directory?(task_dir)
 
-          # Find all task.md files
-          Dir.glob(File.join(task_dir, "*", "task.md")).each do |task_file|
-            task_data = load_task(task_file)
-            tasks << task_data if task_data
+          # Iterate through task directories (e.g., t/001/, t/002/)
+          Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
+            # Find .md files in the task folder (not in subfolders)
+            md_files = Dir.glob(File.join(task_folder, "*.md"))
+
+            # Find the task file - the one with YAML frontmatter containing task metadata
+            task_file = md_files.find do |file|
+              has_task_frontmatter?(file)
+            end
+
+            if task_file
+              task_data = load_task(task_file)
+              tasks << task_data if task_data
+            end
           end
 
           tasks
@@ -133,10 +143,24 @@ module Ace
 
           return nil unless context_path
 
-          # Build task file path and load
-          task_file = Atoms::PathBuilder.build_task_file_path("", context_path, number)
-          task_file = task_file.sub(/^\//, "") # Remove leading slash if present
-          load_task(task_file)
+          # Build task directory path
+          task_dir = Atoms::PathBuilder.build_task_path("", context_path, number)
+          # Only remove leading slash if it creates a double slash
+          task_dir = task_dir.sub(/^\/\//, "/")
+
+          # Find the .md file in the task directory
+          return nil unless File.directory?(task_dir)
+
+          md_files = Dir.glob(File.join(task_dir, "*.md"))
+          return nil if md_files.empty?
+
+          # Find the task file - the one with YAML frontmatter containing task metadata
+          task_file = md_files.find do |file|
+            has_task_frontmatter?(file)
+          end
+
+          # Load the task file if found
+          load_task(task_file) if task_file
         end
 
         # Update task status
@@ -161,6 +185,24 @@ module Ace
 
         def default_root_path
           File.join(Dir.pwd, ".ace-taskflow")
+        end
+
+        def has_task_frontmatter?(file_path)
+          return false unless File.exist?(file_path)
+
+          begin
+            content = File.read(file_path, encoding: "utf-8")
+            parsed = Atoms::YamlParser.parse(content)
+
+            # Check if frontmatter exists and contains task metadata
+            frontmatter = parsed[:frontmatter]
+            return false unless frontmatter
+
+            # A task file should have at least an id and status in frontmatter
+            !!(frontmatter["id"] && frontmatter["status"])
+          rescue StandardError
+            false
+          end
         end
 
         def extract_title(content)
