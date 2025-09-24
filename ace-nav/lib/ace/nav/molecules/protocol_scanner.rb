@@ -167,7 +167,16 @@ module Ace
         private
 
         def create_resource_info(file_path, search_path, source, protocol)
-          relative_path = file_path.sub("#{search_path}/", "")
+          # Ensure search_path ends with a separator for proper substitution
+          normalized_search_path = search_path.end_with?("/") ? search_path : "#{search_path}/"
+
+          # Calculate relative path from the search path
+          if file_path.start_with?(normalized_search_path)
+            relative_path = file_path[normalized_search_path.length..]
+          else
+            # Fallback to original logic if path doesn't start with search_path
+            relative_path = file_path.sub("#{search_path}/", "")
+          end
 
           # Remove extension for resource path
           protocol_config = @config_loader.load_protocol_config(protocol)

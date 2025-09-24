@@ -88,6 +88,14 @@ module Ace
       end
 
       def execute(path_or_uri)
+        # Check if it's a protocol-only URI (e.g., "tmpl://")
+        # and automatically treat it as a list operation with wildcard
+        if path_or_uri.match?(/^\w+:\/\/$/)
+          # Protocol-only URI, add wildcard and force list mode
+          path_or_uri = "#{path_or_uri}*"
+          @options[:list] = true
+        end
+
         if @options[:create]
           create_resource(path_or_uri)
         elsif @options[:list]
