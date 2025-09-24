@@ -11,15 +11,19 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
+
 - **Input**: Developers and AI agents reading workflow instructions
 - **Process**: Follow updated workflows with correct ace-* tool commands
 - **Output**: Successful task execution using current mono-repo tools
 
 ### Expected Behavior
+
 The ace-taskflow workflow instructions should reference only the current ace-* tools from the mono-repo architecture, removing all references to deprecated tools (task-manager, release-manager, capture-it, context, handbook) and ensuring consistent, working commands throughout.
 
 ### Interface Contract
-Users will execute workflows using:
+
+The workflows can use tools to make work more efficient and accurate:
+
 - `ace-taskflow task/tasks` for task management
 - `ace-taskflow release/releases` for release management
 - `ace-taskflow idea/ideas` for idea capture
@@ -28,6 +32,7 @@ Users will execute workflows using:
 - Standard git commands instead of custom wrappers
 
 ### Success Criteria
+
 - [ ] All deprecated tool references replaced with ace-* equivalents
 - [ ] All workflow commands execute successfully
 - [ ] Path references updated to correct locations
@@ -41,15 +46,21 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Map all deprecated tools to their ace-* replacements
+
+- [ ] Map all deprecated tools to their ace-* replacements
   - task-manager → ace-taskflow task/tasks
   - release-manager → ace-taskflow release/releases
   - capture-it → ace-taskflow idea/ideas
   - context → ace-context
   - handbook → investigate replacement (possibly ace-nav)
+
+  |=> need examples
+
   - git-commit/git-mv → standard git commands
 
-* [ ] Identify all affected workflow files (12 files total)
+  |=> keep the git-commit (we still have it), but we will use git mv instread of git mv
+
+- [ ] Identify all affected workflow files (12 files total)
   - capture-idea.wf.md (already correct)
   - draft-task.wf.md
   - work-on-task.wf.md
@@ -63,12 +74,13 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
   - review-code.wf.md
   - create-task-based-on-plan.wf.md
 
-* [ ] Document command syntax changes
+- [ ] Document command syntax changes
   - Old vs new command mappings
   - Option/flag differences
   - Output format changes
 
 ### Execution Steps
+
 - [ ] Update draft-task.wf.md
   - Replace task-manager with ace-taskflow commands
   - Update git-mv/git-commit references
