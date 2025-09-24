@@ -11,64 +11,75 @@ dependencies: [v.0.9.0+task.006]
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Command-line invocations like `ace-taskflow release`, `ace-taskflow task next`, `ace-taskflow idea "content"`
-- **Process**: Seamless navigation between releases, task lifecycle management, and idea capture with context awareness
-- **Output**: Clear status information, task listings, release statistics, and confirmation of actions
+- **Input**: Command-line invocations like `ace-taskflow release`, `ace-taskflow task`, `ace-taskflow idea "content"`, with qualified task references (e.g., `v.0.9.0+018`, `backlog+025`)
+- **Process**: Seamless navigation between releases, task lifecycle management across contexts (backlog/active/done), and idea capture with flexible targeting
+- **Output**: Clear status information, task listings with context indicators, release state transitions, and confirmation of actions
 
 ### Expected Behavior
 
 The ace-taskflow tool provides a unified interface for managing releases, tasks, and ideas within a development workflow. Users experience:
 
-1. **Release Management**: Navigate between backlog, current, and done releases with clear visibility of release status
-2. **Task Lifecycle**: Move tasks through draft → planned → in-progress → done states naturally
-3. **Idea Capture**: Quick, frictionless capture of ideas to appropriate locations (backlog or release-specific)
-4. **Context Awareness**: Commands respect current release context with ability to override via flags
+1. **Release Management**: Navigate between backlog, active, and done releases with promote/demote transitions
+2. **Task Lifecycle**: Move tasks through states and between contexts (backlog/releases) using qualified references
+3. **Idea Capture**: Quick, frictionless capture of ideas to backlog or release-specific locations
+4. **Context Awareness**: Commands work within active release by default, with `--backlog`, `--release` overrides
+5. **Simplified Structure**: Clean directory layout with `.ace-taskflow/v.X.Y.Z/t/NNN/task.md` paths
 
-The system maintains separation between ideas (captured thoughts) and tasks (actionable work items), with a clear promotion path from ideas to tasks when ready.
+The system supports tasks in backlog (without release assignment), qualified task references (e.g., `v.0.9.0+018`, `backlog+025`), and multiple active releases with automatic primary selection.
 
 ### Interface Contract
 
 ```bash
 # Task Management (Singular - operations on one)
-ace-taskflow task                         # Show next actionable task
-ace-taskflow task <id>                    # Show specific task details
-ace-taskflow task create <title>          # Create new task
-ace-taskflow task start <id>              # Mark as in-progress
-ace-taskflow task done <id>               # Mark as completed
-ace-taskflow task move <id> <release>     # Move to different release
-ace-taskflow task update <id>             # Update task metadata
-ace-taskflow task from-idea <file>        # Convert idea to task
+ace-taskflow task                         # Show next task from active release
+ace-taskflow task <ref>                   # Show task (018, v.0.9.0+018, backlog+025)
+ace-taskflow task create <title>          # Create new task in active release
+ace-taskflow task start <ref>             # Mark as in-progress
+ace-taskflow task done <ref>              # Mark as completed
+ace-taskflow task move <ref> <target>     # Move task (target: backlog, v.0.10.0)
+ace-taskflow task update <ref>            # Update task metadata
+
+# Qualified task references:
+#   018 or task.018           - current context
+#   current+018               - explicit current/active
+#   backlog+018               - from backlog
+#   v.0.9.0+018               - from specific release
 
 # Task Collections (Plural - browse/list many)
-ace-taskflow tasks                        # List tasks in current release
-ace-taskflow tasks --all                  # List ALL tasks across releases
+ace-taskflow tasks                        # List tasks in active release
+ace-taskflow tasks --all                  # List ALL tasks (backlog + releases)
 ace-taskflow tasks --backlog              # List backlog tasks
 ace-taskflow tasks --release <name>       # List tasks in specific release
 ace-taskflow tasks --status <status>      # Filter by status
 ace-taskflow tasks --priority <priority>  # Filter by priority
 ace-taskflow tasks --recent [--days N]    # Recently modified tasks
-ace-taskflow tasks --stats                # Task statistics
+ace-taskflow tasks --stats                # Task statistics with context breakdown
 
 # Release Management (Singular - operations on one)
-ace-taskflow release                      # Show current release info
+ace-taskflow release                      # Show active release(s)
 ace-taskflow release <name>               # Show specific release info
-ace-taskflow release create <name>        # Create new release
-ace-taskflow release switch <name>        # Switch to different release
-ace-taskflow release complete             # Complete current release
-ace-taskflow release promote              # Promote from backlog to current
-ace-taskflow release validate             # Validate current release
+ace-taskflow release create <name>        # Create new release in backlog
+ace-taskflow release promote [<name>]     # Promote: backlog → active
+ace-taskflow release demote [<name>]      # Demote: active → done (or --to backlog)
+ace-taskflow release validate             # Validate active release
 ace-taskflow release changelog            # Generate changelog
+
+# Release transitions (no "complete", just promote/demote):
+#   backlog → active (promote)
+#   active → done (demote)
+#   active → backlog (demote --to backlog, rare)
 
 # Release Collections (Plural - browse/list many)
 ace-taskflow releases                     # List all releases
-ace-taskflow releases --backlog           # List backlog releases only
-ace-taskflow releases --current           # Show current release(s)
+ace-taskflow releases --backlog           # List backlog releases
+ace-taskflow releases --active            # Show active release(s)
 ace-taskflow releases --done              # List completed releases
 ace-taskflow releases --stats             # Release statistics
 
 # Idea Management (Singular - operations on one)
-ace-taskflow idea <content>               # Capture idea to backlog
-ace-taskflow idea <content> --current     # Capture to current release
+ace-taskflow idea <content>               # Capture to active release (default)
+ace-taskflow idea <content> --backlog     # Capture to backlog
+ace-taskflow idea <content> --release <n> # Capture to specific release
 ace-taskflow idea <id>                    # Show specific idea
 ace-taskflow idea to-task <id>            # Convert idea to task
 ace-taskflow idea archive <id>            # Archive specific idea
@@ -83,15 +94,16 @@ ace-taskflow ideas --recent [--days N]    # Recently captured ideas
 ```
 
 **Error Handling:**
-- [No current release]: Clear message with suggestion to create or switch release
-- [Invalid task ID]: List available task IDs with fuzzy matching suggestions
-- [Missing configuration]: Use sensible defaults with informative message
-- [Invalid status transition]: Explain valid transitions (e.g., can't go from done to draft)
+- [No active release]: Clear message, suggest promoting from backlog
+- [Invalid task reference]: Show valid formats (018, v.0.9.0+018, backlog+025)
+- [Missing configuration]: Use defaults (.ace-taskflow/, sensible structure)
+- [Invalid status transition]: Explain valid transitions
+- [Multiple active releases]: Show all, indicate primary (lowest version)
 
 **Edge Cases:**
-- [Multiple releases with same name]: Use full path or disambiguation prompt
-- [Empty release]: Show helpful message about adding tasks or ideas
-- [Concurrent modifications]: Detect and warn about conflicts
+- [Task not found]: Search across contexts, suggest qualified reference
+- [Cross-release move]: Validate target exists, handle ID conflicts
+- [Empty contexts]: Show helpful next steps for each context type
 
 ### Success Criteria
 
@@ -156,7 +168,8 @@ The implementation follows the ATOM architecture pattern established in ace-* ge
 
 ### Implementation Strategy
 Port and refactor existing functionality from dev-tools while:
-- Maintaining backward compatibility with existing file formats
+- Implementing new directory structure (.ace-taskflow/v.X.Y.Z/t/NNN/)
+- Supporting qualified task references (v.0.9.0+018, backlog+025)
 - Using ace-core for configuration management
 - Following established patterns from ace-context and ace-test-runner
 
@@ -165,7 +178,7 @@ Port and refactor existing functionality from dev-tools while:
 ### Create
 - ace-taskflow/lib/ace/taskflow/commands/release_command.rb
   - Purpose: Release subcommand orchestrator
-  - Key components: current, list, switch, create, complete, status actions
+  - Key components: show, promote, demote, create, validate actions
   - Dependencies: Release organisms and molecules
 
 - ace-taskflow/lib/ace/taskflow/commands/task_command.rb
@@ -209,8 +222,13 @@ Port and refactor existing functionality from dev-tools while:
   - Dependencies: None (pure function)
 
 - ace-taskflow/lib/ace/taskflow/atoms/path_builder.rb
-  - Purpose: Build paths for tasks, ideas, releases
-  - Key components: Path joining, validation
+  - Purpose: Build paths for new structure (.ace-taskflow/v.X.Y.Z/t/NNN/)
+  - Key components: Path construction, context resolution
+  - Dependencies: None (pure function)
+
+- ace-taskflow/lib/ace/taskflow/atoms/task_reference_parser.rb
+  - Purpose: Parse qualified task references (v.0.9.0+018, backlog+025)
+  - Key components: Reference parsing, validation
   - Dependencies: None (pure function)
 
 - ace-taskflow/lib/ace/taskflow/models/task.rb
@@ -235,8 +253,8 @@ Port and refactor existing functionality from dev-tools while:
   - Integration points: Command classes
 
 - ace-taskflow/lib/ace/taskflow/configuration.rb
-  - Changes: Add release and task configuration sections
-  - Impact: Enables path and behavior configuration
+  - Changes: Add root directory, context settings, reference patterns
+  - Impact: Enables flexible directory structure and qualified references
   - Integration points: All commands use configuration
 
 ## Risk Assessment
@@ -259,20 +277,20 @@ Port and refactor existing functionality from dev-tools while:
 
 ### Planning Steps
 
-* [ ] Analyze existing task-manager and release-manager implementations
-  - Review command structures and options
-  - Document current file formats and conventions
-  - Identify reusable components
+* [ ] Design new directory structure
+  - Define .ace-taskflow/ layout (backlog/, v.X.Y.Z/, done/)
+  - Plan task organization (/t/NNN/task.md)
+  - Design configuration for root directory
 
-* [ ] Research ace-core configuration integration
-  - Study configuration cascade pattern
-  - Plan taskflow.yml structure
-  - Define default configurations
+* [ ] Design qualified task reference system
+  - Define reference formats (v.0.9.0+018, backlog+025, current+018)
+  - Plan parsing and resolution logic
+  - Handle cross-release references
 
-* [ ] Design command interface consistency
-  - Align with ace-context and ace-test patterns
-  - Define common flags and options
-  - Plan output formats
+* [ ] Plan release state transitions
+  - Define promote/demote operations
+  - Handle multiple active releases
+  - Design primary active selection (lowest version)
 
 ### Execution Steps
 
@@ -287,57 +305,57 @@ Port and refactor existing functionality from dev-tools while:
 
 - [ ] Implement release command functionality
   - [ ] Create release_manager organism
-  - [ ] Implement current, list, and status actions
-  - [ ] Add release creation and completion
-  - [ ] Implement release switching logic
+  - [ ] Implement show active, promote, demote actions
+  - [ ] Add release creation in backlog
+  - [ ] Handle multiple active releases
   > TEST: Release operations
   > Type: Integration test
-  > Assert: Release commands work correctly
-  > Command: bundle exec ace-taskflow release current
+  > Assert: Release transitions work correctly
+  > Command: bundle exec ace-taskflow release
 
 - [ ] Implement task command functionality
   - [ ] Create task_manager organism
-  - [ ] Implement next and list actions
-  - [ ] Add task creation and state transitions
-  - [ ] Implement from-idea conversion
-  - [ ] Add context switching (--backlog, --current, --release)
+  - [ ] Implement qualified reference parsing
+  - [ ] Add backlog task support
+  - [ ] Enable cross-release task moves
+  - [ ] Add context switching (--backlog, --release)
   > TEST: Task operations
   > Type: Integration test
-  > Assert: Task commands work correctly
-  > Command: bundle exec ace-taskflow task next
+  > Assert: Qualified references work correctly
+  > Command: bundle exec ace-taskflow task v.0.9.0+018
 
 - [ ] Enhance idea command
-  - [ ] Add --current flag for release-specific capture
-  - [ ] Implement idea list and show actions
-  - [ ] Update idea formatter with configuration
+  - [ ] Default to active release (not backlog)
+  - [ ] Add --backlog flag for backlog capture
+  - [ ] Implement idea to-task conversion
   > TEST: Idea capture
   > Type: Integration test
   > Assert: Ideas captured to correct location
-  > Command: bundle exec ace-taskflow idea "Test idea" --current
+  > Command: bundle exec ace-taskflow idea "Test idea" --backlog
 
 - [ ] Implement ATOM components
-  - [ ] Create atoms for parsing and path building
-  - [ ] Create molecules for loading and filtering
-  - [ ] Create models for data structures
-  - [ ] Wire components together in organisms
+  - [ ] Create task_reference_parser atom
+  - [ ] Update path_builder for new structure
+  - [ ] Create context_resolver molecule
+  - [ ] Wire components for qualified references
   > TEST: Component integration
   > Type: Unit tests
-  > Assert: All components work correctly
+  > Assert: Reference parsing and resolution work
   > Command: bundle exec rake test
 
 - [ ] Add configuration support
-  - [ ] Extend configuration.rb for release/task settings
-  - [ ] Implement configuration loading and validation
-  - [ ] Add configuration cascade support
+  - [ ] Define root directory configuration
+  - [ ] Add context settings (active_strategy)
+  - [ ] Enable qualified reference patterns
   > TEST: Configuration loading
   > Type: Integration test
-  > Assert: Configuration loaded from .ace/taskflow.yml
-  > Command: bundle exec ace-taskflow release --debug
+  > Assert: Root directory configurable
+  > Command: bundle exec ace-taskflow config show
 
-- [ ] Create migration documentation
-  - [ ] Document command mapping from old to new
-  - [ ] Create migration guide for users
-  - [ ] Add backward compatibility notes
+- [ ] Create migration support
+  - [ ] Build migration script for directory structure
+  - [ ] Map old paths to new structure
+  - [ ] Document breaking changes
 
 - [ ] Write comprehensive tests
   - [ ] Unit tests for atoms and molecules
@@ -350,13 +368,15 @@ Port and refactor existing functionality from dev-tools while:
 
 ## Acceptance Criteria
 
-- [ ] All release commands functional (current, list, create, complete, status)
-- [ ] All task commands functional (next, list, create, start, done, from-idea)
-- [ ] Context switching works (--backlog, --current, --release)
-- [ ] Configuration loaded from .ace/taskflow.yml
-- [ ] Backward compatibility maintained with existing file formats
+- [ ] New directory structure implemented (.ace-taskflow/v.X.Y.Z/t/NNN/)
+- [ ] Release transitions work (promote/demote, no complete)
+- [ ] Qualified task references functional (v.0.9.0+018, backlog+025)
+- [ ] Backlog supports tasks without release assignment
+- [ ] Multiple active releases handled with primary selection
+- [ ] Context switching works (--backlog, --release)
+- [ ] Configuration loaded from .ace/taskflow.yml with root directory setting
+- [ ] Migration script for existing structure
 - [ ] Comprehensive test coverage
-- [ ] Migration documentation complete
 
 ## References
 
