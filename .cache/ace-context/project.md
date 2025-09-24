@@ -69,7 +69,7 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Task and idea management
+- **ace-taskflow**: Comprehensive task and release management
 
 ### Workflows (.wf.md)
 
@@ -189,7 +189,7 @@ This document provides navigation guidance for the ACE codebase, highlighting wh
 ```
 ace-*/          # Ruby gems following ATOM architecture
 dev-handbook/   # Workflows, agents, guides (legacy, migrating to ace-handbook)
-dev-taskflow/   # Task management (legacy, migrating to ace-taskflow)
+.ace-taskflow/  # Task and release management (migrated from dev-taskflow)
 dev-tools/      # CLI tools (legacy, being split into ace-* gems)
 .claude/        # Claude Code integration (commands and agent symlinks)
 .ace/           # Configuration cascade root
@@ -210,15 +210,15 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 - `.github/workflows/**/*` # CI/CD configuration
 - `dev-handbook/guides/**/*` # Development guides
 - `dev-handbook/workflow-instructions/**/*` # AI workflow instructions
-- `dev-taskflow/done/**/*` # Completed tasks
-- `dev-taskflow/current/*/reflections/**/*` # Development reflections
+- `.ace-taskflow/done/**/*` # Completed tasks
+- `.ace-taskflow/v.*/retro/**/*` # Development retrospectives
 - `Gemfile.lock` # Root workspace lock file
 
 ## Ignored Paths
 
 AI agents should ignore these during normal operations:
 
-- `dev-taskflow/done/**/*` # Completed tasks and releases
+- `.ace-taskflow/done/**/*` # Completed tasks and releases
 - `.cache/ace-*/**/*` # Cached output from ace tools
 - `ace-*/coverage/**/*` # Test coverage reports
 - `**/test-reports/**/*` # Test report files
@@ -347,7 +347,7 @@ For complete decision history and detailed rationale, refer to the individual AD
 | **`ace-context`** | Load project context |
 | **`ace-test`** | Run single package tests |
 | **`ace-test-suite`** | Run all packages' tests at once |
-| **`ace-taskflow`** | Capture ideas and manage tasks |
+| **`ace-taskflow`** | Comprehensive task and release management |
 
 ## Usage Examples
 
@@ -373,7 +373,13 @@ ace-test test/foo_test.rb:42           # Test at specific line
 ### ace-taskflow
 
 ```sh
-ace-taskflow idea "Add dark mode support"      # Capture an idea
+ace-taskflow task                              # Show next task
+ace-taskflow task show 123                     # Show specific task details
+ace-taskflow tasks --status pending            # List pending tasks
+ace-taskflow tasks --stats                     # Show task statistics
+ace-taskflow release                           # Show active release
+ace-taskflow releases --stats                  # Show release statistics
+ace-taskflow idea 'Add dark mode'              # Capture an idea
 ```
 
 ```
@@ -393,7 +399,7 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Idea capture and task management
+- **ace-taskflow**: Comprehensive task and release management with idea capture
 
 ## Coming Soon
 
@@ -428,7 +434,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 13:54:39 WEST 2025
+Wed Sep 24 14:48:17 WEST 2025
 
 ```
 
@@ -436,7 +442,7 @@ Wed Sep 24 13:54:39 WEST 2025
 
 **Output:**
 ```
- M .cache/ace-context/project.md
+?? .ace/protocols/wfi-sources/ace-taskflow.yml
 
 ```
 
