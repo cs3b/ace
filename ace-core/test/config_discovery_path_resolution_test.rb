@@ -9,7 +9,6 @@ require "yaml"
 module Ace
   module Core
     class ConfigDiscoveryPathResolutionTest < AceTestCase
-      include Ace::TestSupport::SubprocessRunner
       def setup
         @test_dir = Dir.mktmpdir("ace-test-")
         @original_pwd = Dir.pwd
@@ -49,27 +48,25 @@ module Ace
         config_file = File.join(ace_dir, "test.yml")
         File.write(config_file, YAML.dump(config))
 
-        code = <<~RUBY
-          require 'ace/core/config_discovery'
-          Dir.chdir("#{project_dir}")
-          discovery = Ace::Core::ConfigDiscovery.new
-          loaded = discovery.load_config("test.yml")
+        Dir.chdir(project_dir) do
+          # Temporarily unset PROJECT_ROOT_PATH
+          original_env = ENV["PROJECT_ROOT_PATH"]
+          ENV.delete("PROJECT_ROOT_PATH")
 
-          puts loaded["test_suite"]["packages"][0]["path"]
-          puts loaded["test_suite"]["packages"][1]["path"]
-          puts loaded["test_suite"]["some_file"]
-        RUBY
+          begin
+            discovery = ConfigDiscovery.new
+            loaded = discovery.load_config("test.yml")
 
-        output, status = run_in_clean_env(code: code, requires: [])
-        assert status.success?, "Subprocess failed: #{output}"
-
-        lines = output.strip.split("\n")
-        # Plain paths (without ./) should resolve relative to project root
-        # Use realpath to handle /private/var symlink on macOS
-        assert_equal File.realpath(File.join(project_dir, "lib")), File.realpath(lines[0])
-        assert_equal File.realpath(File.join(project_dir, "src")), File.realpath(lines[1])
-        # config/settings.yml has 'config' which is recognized as project path
-        assert_equal File.realpath(File.join(project_dir, "config/settings.yml")), File.realpath(lines[2])
+            # Plain paths (without ./) should resolve relative to project root
+            # Use realpath to handle /private/var symlink on macOS
+            assert_equal File.realpath(File.join(project_dir, "lib")), File.realpath(loaded["test_suite"]["packages"][0]["path"])
+            assert_equal File.realpath(File.join(project_dir, "src")), File.realpath(loaded["test_suite"]["packages"][1]["path"])
+            # config/settings.yml has 'config' which is recognized as project path
+            assert_equal File.realpath(File.join(project_dir, "config/settings.yml")), File.realpath(loaded["test_suite"]["some_file"])
+          ensure
+            ENV["PROJECT_ROOT_PATH"] = original_env if original_env
+          end
+        end
       end
 
       def test_resolves_paths_in_nested_ace_directory
@@ -143,29 +140,25 @@ module Ace
         config_file = File.join(ace_dir, "paths.yml")
         File.write(config_file, YAML.dump(config))
 
-        code = <<~RUBY
-          require 'ace/core/config_discovery'
-          Dir.chdir("#{project_dir}")
-          discovery = Ace::Core::ConfigDiscovery.new
-          loaded = discovery.load_config("paths.yml")
+        Dir.chdir(project_dir) do
+          # Temporarily unset PROJECT_ROOT_PATH
+          original_env = ENV["PROJECT_ROOT_PATH"]
+          ENV.delete("PROJECT_ROOT_PATH")
 
-          # Output paths for validation
-          puts loaded["paths"]["relative"]
-          puts loaded["paths"]["absolute"]
-          puts loaded["paths"]["home"]
-          puts loaded["paths"]["plain"]
-        RUBY
+          begin
+            discovery = ConfigDiscovery.new
+            loaded = discovery.load_config("paths.yml")
 
-        output, status = run_in_clean_env(code: code, requires: [])
-        assert status.success?, "Subprocess failed: #{output}"
-
-        lines = output.strip.split("\n")
-        # ./relative should resolve relative to .ace/ directory (where config file is)
-        # Use realpath to handle /private/var symlink on macOS
-        assert_equal File.realpath(File.join(project_dir, ".ace", "relative")), File.realpath(lines[0])
-        assert_equal "/usr/local/bin", lines[1]
-        assert_equal "~/Documents", lines[2]
-        assert_equal "some_file.txt", lines[3]
+            # ./relative should resolve relative to .ace/ directory (where config file is)
+            # Use realpath to handle /private/var symlink on macOS
+            assert_equal File.realpath(File.join(project_dir, ".ace", "relative")), File.realpath(loaded["paths"]["relative"])
+            assert_equal "/usr/local/bin", loaded["paths"]["absolute"]
+            assert_equal "~/Documents", loaded["paths"]["home"]
+            assert_equal "some_file.txt", loaded["paths"]["plain"]
+          ensure
+            ENV["PROJECT_ROOT_PATH"] = original_env if original_env
+          end
+        end
       end
 
       def test_resolves_paths_in_arrays
@@ -191,24 +184,24 @@ module Ace
         config_file = File.join(ace_dir, "build.yml")
         File.write(config_file, YAML.dump(config))
 
-        code = <<~RUBY
-          require 'ace/core/config_discovery'
-          Dir.chdir("#{project_dir}")
-          discovery = Ace::Core::ConfigDiscovery.new
-          loaded = discovery.load_config("build.yml")
+        Dir.chdir(project_dir) do
+          # Temporarily unset PROJECT_ROOT_PATH
+          original_env = ENV["PROJECT_ROOT_PATH"]
+          ENV.delete("PROJECT_ROOT_PATH")
 
-          loaded["include_dirs"].each { |dir| puts dir }
-        RUBY
+          begin
+            discovery = ConfigDiscovery.new
+            loaded = discovery.load_config("build.yml")
 
-        output, status = run_in_clean_env(code: code, requires: [])
-        assert status.success?, "Subprocess failed: #{output}"
-
-        lines = output.strip.split("\n")
-        # Plain paths should resolve relative to project root
-        # Use realpath to handle /private/var symlink on macOS
-        assert_equal File.realpath(File.join(project_dir, "lib")), File.realpath(lines[0])
-        assert_equal File.realpath(File.join(project_dir, "test")), File.realpath(lines[1])
-        assert_equal "/absolute/path", lines[2]
+            # Plain paths should resolve relative to project root
+            # Use realpath to handle /private/var symlink on macOS
+            assert_equal File.realpath(File.join(project_dir, "lib")), File.realpath(loaded["include_dirs"][0])
+            assert_equal File.realpath(File.join(project_dir, "test")), File.realpath(loaded["include_dirs"][1])
+            assert_equal "/absolute/path", loaded["include_dirs"][2]
+          ensure
+            ENV["PROJECT_ROOT_PATH"] = original_env if original_env
+          end
+        end
       end
 
       def test_disable_path_resolution

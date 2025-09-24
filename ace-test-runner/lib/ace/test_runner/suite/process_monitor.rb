@@ -127,10 +127,14 @@ module Ace
 
               # Final callback
               if callback
+                # Use results[:success] from summary.json if available, otherwise check exit code
+                # This ensures the package status matches what ace-test actually reported
+                success_status = results[:success] != nil ? results[:success] : (exit_status == 0)
+
                 callback.call(package, {
                   status: :completed,
                   completed: true,
-                  success: exit_status == 0,
+                  success: success_status,
                   exit_code: exit_status,
                   elapsed: elapsed,
                   results: results
@@ -169,8 +173,10 @@ module Ace
         def build_command(package, options)
           cmd_parts = ["ace-test"]
 
-          # Add format
-          cmd_parts << "--format" << (options["format"] || "compact")
+          # Add format (use progress if compact is specified since ace-test doesn't have compact format)
+          format = options["format"] || "progress"
+          format = "progress" if format == "compact"  # Handle legacy compact format
+          cmd_parts << "--format" << format
 
           # Add other options
           cmd_parts << "--no-save" unless options["save_reports"]
