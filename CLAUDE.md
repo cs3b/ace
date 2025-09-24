@@ -8,11 +8,11 @@ This is the **Coding Agent Workflow Toolkit (Meta)** repository - a meta-reposit
 development workflow systems. It contains three integrated components:
 
 * **dev-handbook/**: Standardized development guides, workflow instructions, and templates *(integrated development)*
-* **dev-taskflow/**: Unified task management structure for all components *(integrated development)*
+* **.ace-taskflow/**: Unified task and release management structure *(migrated from dev-taskflow)*
 * **dev-tools/**: CLI tools for LLM integration and development automation *(integrated development)*
 
-**Main work focus**: The development work is now integrated across all three components as part of a unified meta-project. The **dev-taskflow/** provides
-centralized task management for coordinated development across **dev-handbook/** (guides and workflows) and **dev-tools/** (executable tools).
+**Main work focus**: The development work is now integrated across all three components as part of a unified meta-project. The **.ace-taskflow/** provides
+centralized task and release management for coordinated development across **dev-handbook/** (guides and workflows) and **dev-tools/** (executable tools).
 
 ## Agent Recommendations
 
