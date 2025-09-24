@@ -1,6 +1,6 @@
 # Local workflow instructions
-name: local-wfi
+name: local
 type: directory
-path: /Users/mc/Ps/ace-meta/ace-nav/handbook/workflow-instructions/
-priority: 10
-description: "Local workflow instructions from ace-nav"
+path: .ace/handbook/workflow-instructions
+priority: 5
+description: "Local project workflow instructions"

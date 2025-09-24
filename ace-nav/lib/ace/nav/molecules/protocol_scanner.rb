@@ -67,7 +67,14 @@ module Ace
           else
             # Match files with specified extensions
             extensions.each do |ext|
-              glob_pattern = File.join(search_path, "**", "#{pattern}#{ext}")
+              # Check if pattern already ends with this extension
+              if pattern.end_with?(ext)
+                # Pattern already has extension, search as-is
+                glob_pattern = File.join(search_path, "**", pattern)
+              else
+                # Append extension to pattern
+                glob_pattern = File.join(search_path, "**", "#{pattern}#{ext}")
+              end
 
               Dir.glob(glob_pattern).each do |file_path|
                 next unless File.file?(file_path)

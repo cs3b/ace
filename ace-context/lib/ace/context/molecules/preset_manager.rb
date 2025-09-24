@@ -32,14 +32,18 @@ module Ace
         def load_presets
           presets = {}
 
-          # Load all markdown files from .ace/context/
-          Dir.glob('.ace/context/*.md').each do |file|
-            name = File.basename(file, '.md')
-            preset_data = load_preset_from_file(file)
+          # Use VirtualConfigResolver to find all context/*.md files
+          require 'ace/core/organisms/virtual_config_resolver'
+          resolver = Ace::Core::Organisms::VirtualConfigResolver.new
+
+          # Get all context/*.md files from virtual map
+          resolver.glob("context/*.md").each do |relative_path, absolute_path|
+            name = File.basename(absolute_path, '.md')
+            preset_data = load_preset_from_file(absolute_path)
 
             if preset_data
               preset_data[:name] = name
-              preset_data[:source_file] = file
+              preset_data[:source_file] = absolute_path
               presets[name] = preset_data
             end
           end
