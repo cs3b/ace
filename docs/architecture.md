@@ -55,14 +55,17 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
 - **ace-taskflow**: Comprehensive task and release management
+- **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 
 ### Workflows (.wf.md)
 
 Self-contained instruction documents for AI agents:
 
-- Located in `dev-handbook/workflow-instructions/`
+- Migrating to `ace-taskflow/handbook/workflow-instructions/`
+- Legacy location: `dev-handbook/workflow-instructions/`
 - Include all necessary context and templates
 - Follow ADR-001 self-containment principle
+- Discoverable via ace-nav wfi:// protocol
 
 ### Agents (.ag.md)
 
@@ -87,6 +90,7 @@ Development patterns and best practices:
 - **Commands**: `.claude/commands/` maps workflows to slash commands
 - **Agents**: `.claude/agents/` provides agent access via Task tool
 - **Deterministic CLI**: All tools provide predictable, parseable output
+- **wfi:// Protocol**: Direct workflow access via ace-nav integration
 
 ### Platform Compatibility
 
