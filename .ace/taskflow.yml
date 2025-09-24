@@ -1,6 +1,26 @@
 # ace-taskflow configuration for this project
 
 taskflow:
+  # Root directory for all taskflow data
+  root: ".ace-taskflow"
+
+  # Task directory name within releases
+  task_dir: "t"
+
+  # Release management
+  active_strategy: "lowest"          # How to pick primary active release (lowest version number)
+  allow_multiple_active: true        # Allow multiple active releases
+
+  # Qualified references
+  references:
+    allow_qualified: true            # Enable v.0.9.0+018 syntax
+    allow_cross_release: true        # Can reference other releases
+
+  # Default contexts for new items
+  defaults:
+    idea_location: "active"          # Where ideas go by default (active, backlog, or release name)
+    task_location: "active"          # Where new tasks go by default
+
   # Global settings
   settings:
     author:
