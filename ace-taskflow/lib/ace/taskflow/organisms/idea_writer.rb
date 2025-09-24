@@ -18,15 +18,18 @@ module Ace
           # Merge options with config defaults
           options = merge_options_with_config(options)
 
-          # Prepare metadata
+          # Prepare initial metadata
           metadata = prepare_metadata(content, options)
 
-          # Enhance content if requested
+          # Enhance content if requested (this may update metadata with suggested filename)
           enhanced_content = if should_enhance?(options)
                                enhance_idea(content, metadata)
                              else
                                content
                              end
+
+          # Re-prepare metadata in case enhancement added a suggested filename
+          metadata = prepare_metadata(enhanced_content, metadata)
 
           # Generate file path and ensure directory exists
           path = generate_path(metadata)
@@ -87,7 +90,8 @@ module Ace
         def prepare_metadata(content, metadata)
           metadata = metadata.dup
           metadata[:timestamp] ||= Time.now.strftime(timestamp_format)
-          metadata[:title] ||= extract_title(content)
+          # Use suggested filename from LLM if available, otherwise extract from content
+          metadata[:title] ||= metadata[:suggested_filename] || extract_title(content)
           metadata
         end
 
@@ -169,12 +173,23 @@ module Ace
         end
 
         def enhance_idea(content, metadata)
-          enhancer = Molecules::IdeaEnhancer.new(debug: @debug)
+          enhancer = Molecules::IdeaEnhancer.new(debug: @debug, config: @config)
           context = {
             location: metadata[:location] || "active",
-            timestamp: metadata[:timestamp]
+            timestamp: metadata[:timestamp],
+            llm_model: @config.dig("defaults", "llm_model")
           }
-          enhancer.enhance(content, context)
+          result = enhancer.enhance(content, context)
+
+          # Return enhanced content or original if enhancement failed
+          if result[:success]
+            # Store filename suggestion in metadata if available
+            metadata[:suggested_filename] = result[:filename] if result[:filename]
+            result[:content]
+          else
+            debug_log("Enhancement failed, using original content: #{result[:error]}") if @debug
+            content
+          end
         end
 
         def commit_idea(path, metadata)
@@ -224,6 +239,10 @@ module Ace
           else
             "active"
           end
+        end
+
+        def debug_log(message)
+          puts "Debug [IdeaWriter]: #{message}" if @debug
         end
       end
     end

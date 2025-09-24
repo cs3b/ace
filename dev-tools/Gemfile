@@ -29,3 +29,5 @@ group :development, :test do
   gem "aruba", "~> 2.0"
   gem "rspec-temp_dir", "~> 1.0"
 end
+
+gem "bigdecimal", "~> 3.2"
