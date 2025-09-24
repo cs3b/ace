@@ -18,7 +18,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## High-Level Execution Plan
 
@@ -225,7 +225,7 @@ When no specific context is provided, follow this process:
 When creating reflections, systematically populate these enhancement sections to capture improvement opportunities:
 
 ### Automation Insights
-Use the prompting guide from `dev-handbook/templates/release-reflections/enhanced-prompts.template.md` to:
+Use the prompting guide from `ace-nav tmpl://release-reflections/enhanced-prompts` to:
 - Identify repetitive manual processes that could be automated
 - Assess time savings and implementation complexity
 - Prioritize automation opportunities by impact
@@ -359,7 +359,7 @@ Capture observations about development workflow effectiveness and areas for opti
 This workflow helps capture valuable insights and learnings, creating a knowledge base that improves future development work.
 
 <documents>
-    <template path="dev-handbook/templates/release-reflections/retrospective.template.md">
+    <template path="tmpl://release-reflections/retrospective">
 # Reflection: [Topic/Date]
 
 **Date**: YYYY-MM-DD

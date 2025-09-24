@@ -14,7 +14,7 @@ Review and update task content without changing its status. This workflow enable
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## Process Steps
 

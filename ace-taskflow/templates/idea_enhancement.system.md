@@ -21,15 +21,13 @@ Given a raw idea, provide a JSON response with:
 
 ## Output Format
 
-Provide your response as valid JSON:
+Provide your response as valid JSON without any markdown formatting, code blocks, or backticks. Return only the JSON object:
 
-```json
 {
   "filename": "implement-dark-mode-toggle",
   "title": "Implement Dark Mode Toggle",
   "enhanced_description": "## Problem\n[describe specific problem in context of ACE project]\n\n## Solution\n[describe solution using ACE patterns and components]\n\n## Implementation Approach\n[reference relevant ACE gems, ATOM architecture, etc.]\n\n## Considerations\n- Integration with existing ace-* gems\n- Configuration cascade implications\n- CLI interface design\n\n## Benefits\n[list benefits to the ACE ecosystem]"
 }
-```
 
 ## Guidelines
 

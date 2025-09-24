@@ -46,11 +46,10 @@ This provides:
 # Multi-repository review with all diffs
 code-review \
   --preset ruby-atom-modular \
-  --context 'presets: [project, dev-handbook, dev-tools]' \
+  --context 'presets: [project]' \
   --subject 'commands: [
     "git diff 8e7882c~1..HEAD",
-    "git -C dev-handbook diff 0567c83~1..HEAD",
-    "git -C dev-tools diff df8f6e2~1..HEAD"
+    # Add more repository diffs as needed
   ]' \
   --add-focus 'scope/tests,scope/docs' \
   --model "google:gemini-2.5-flash" \
@@ -104,11 +103,10 @@ When review parameters are complex, store them in a context file:
 subject: diff from sha till HEAD on following repos
 
 [main]         8e7882c chore: update submodules
-[dev-handbook] 0567c83 feat: implement preset config
-[dev-tools]    df8f6e2 refactor: redesign command
+# [other-repo] commit-sha description
 
 context:
-- presets: project, dev-handbook, dev-tools
+- presets: project
 - focus modules:
     - architecture/atom
     - languages/ruby

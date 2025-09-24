@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.029
-status: pending
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
@@ -79,18 +79,18 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
 
 ### Execution Steps
 
-- [ ] Update work-on-task.wf.md
+- [x] Update work-on-task.wf.md
   - Line 13: `dev-handbook/workflow-instructions/load-project-context.wf.md` → `ace-nav wfi://load-project-context`
   - Line 267: Remove `handbook --verify-tools git npm` entirely
   - Line 259: Update task filtering to use ace-taskflow commands
 
-- [ ] Update draft-task.wf.md
+- [x] Update draft-task.wf.md
   - Line 17: `dev-handbook/workflow-instructions/load-project-context.wf.md` → `ace-nav wfi://load-project-context`
   - Line 106: `git-mv` → `git mv`
   - Line 111: Keep `git-commit` (still available)
   - Line 213: `<template path="dev-handbook/templates/task-management/task.draft.template.md">` → `<template path="tmpl://task-management/task.draft">`
 
-- [ ] Update plan-task.wf.md
+- [x] Update plan-task.wf.md
   - Line 17: → `ace-nav wfi://load-project-context`
   - Line 455: → `<template path="tmpl://task-management/task.pending">`
   - Line 470: `tree -L 2 dev-handbook/guides` → `ace-nav guide://`
@@ -99,7 +99,7 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
   - Line 591: → `<template path="tmpl://task-management/task.file-modification-checklist">`
   - Line 622: → `<template path="tmpl://task-management/task.risk-assessment">`
 
-- [ ] Update draft-release.wf.md
+- [x] Update draft-release.wf.md
   - Line 14: Remove `dev-handbook/` directory reference
   - Line 19: → `ace-nav wfi://load-project-context`
   - Lines 195-197: Remove submodule check entirely
@@ -108,34 +108,34 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
   - Line 542: → `<template path="tmpl://task-management/task.pending">`
   - Line 557: `tree -L 2 dev-handbook/guides` → `ace-nav guide://`
 
-- [ ] Update publish-release.wf.md
+- [x] Update publish-release.wf.md
   - Line 17: → `ace-nav wfi://load-project-context`
   - Lines 90-91: Keep `git-commit` (still available)
   - Line 327: → `<template path="tmpl://release-management/changelog">`
 
-- [ ] Update review-task.wf.md
+- [x] Update review-task.wf.md
   - Line 17: → `ace-nav wfi://load-project-context`
 
-- [ ] Update review-questions.wf.md
+- [x] Update review-questions.wf.md
   - Line 17: → `ace-nav wfi://load-project-context`
   - Line 18: `dev-handbook/workflow-instructions/review-task.wf.md` → `ace-nav wfi://review-task`
 
-- [ ] Update review-code.wf.md
+- [x] Update review-code.wf.md
   - Line 49: Remove `dev-handbook` from presets
   - Line 52: Remove git submodule command for dev-handbook
   - Line 107: Remove dev-handbook commit reference
   - Line 111: Update presets list
 
-- [ ] Update create-reflection-note.wf.md
+- [x] Update create-reflection-note.wf.md
   - Line 21: → `ace-nav wfi://load-project-context`
   - Line 228: Update or embed template reference
   - Line 362: → `<template path="tmpl://release-reflections/retrospective">`
 
-- [ ] Update replan-cascade-task.wf.md
+- [x] Update replan-cascade-task.wf.md
   - Line 90: → `<template path="tmpl://tasks/impact-note">`
 
-- [ ] Update create-task-based-on-plan.wf.md
-  - Ensure all commands use ace-taskflow
+- [x] Update create-task-based-on-plan.wf.md
+  - Ensure all commands use ace-taskflow (already correct)
 
 - [ ] Test each updated workflow
   - Verify ace-nav commands work
