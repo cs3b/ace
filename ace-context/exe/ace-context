@@ -109,7 +109,9 @@ when 'stdio'
 when 'cache'
   # Save to cache directory
   require 'fileutils'
-  cache_dir = '.cache/ace-context'
+  require 'ace/core/molecules/project_root_finder'
+  project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+  cache_dir = File.join(project_root, '.cache/ace-context')
   FileUtils.mkdir_p(cache_dir)
 
   cache_file = File.join(cache_dir, "#{preset_name}.md")
