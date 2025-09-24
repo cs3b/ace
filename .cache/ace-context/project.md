@@ -428,7 +428,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 13:17:16 WEST 2025
+Wed Sep 24 13:54:39 WEST 2025
 
 ```
 
@@ -436,6 +436,7 @@ Wed Sep 24 13:17:16 WEST 2025
 
 **Output:**
 ```
+ M .cache/ace-context/project.md
 
 ```
 
@@ -443,15 +444,8 @@ Wed Sep 24 13:17:16 WEST 2025
 
 **Output:**
 ```
-Status: 17 done, 1 draft, 1 in-progress, 4 pending (23 total)
-Recent Tasks (3/507 shown):
-==================================================
-v.0.9.0+task.023 * PENDING * 1 hour ago * Create ace-llm-providers-cli gem for CLI-based LLM providers
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.023-create-ace-llm-providers-cli-gem-for-cli-based-llm-providers.md
-v.0.9.0+task.021 * PENDING * 1 hours ago * Extract llm-query from dev-tools to ace-llm gem
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.021-extract-llm-query-from-dev-tools-to-ace-llm-gem.md
-v.0.9.0+task.019 * DONE * 1 hours ago * Implement ace-taskflow Release and Task Management Commands
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.019-implement-ace-taskflow-release-and-task-management-commands.md
+Status: No tasks found
+No recent tasks found
 
 ```
 
@@ -459,15 +453,6 @@ v.0.9.0+task.019 * DONE * 1 hours ago * Implement ace-taskflow Release and Task 
 
 **Output:**
 ```
-Status: 17 done, 1 draft, 1 in-progress, 4 pending (23 total)
-Next Tasks (3 shown):
-==================================================
-v.0.9.0+task.007 * IN-PROGRESS * 2 days ago * Create ace-git Gem with ace-gc Only
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.007-create-ace-git-gem-with-ace-gc.md
-v.0.9.0+task.008 * PENDING * 4 days ago * Configure .ace for This Project
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.008-configure-ace-for-this-project.md
-v.0.9.0+task.009 * PENDING * 5 days ago * Create Migration Documentation
-  dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems/tasks/v.0.9.0+task.009-create-migration-documentation.md
 
 ```
 
@@ -475,15 +460,6 @@ v.0.9.0+task.009 * PENDING * 5 days ago * Create Migration Documentation
 
 **Output:**
 ```
-Current Release Information:
-========================================
-  Name:      v.0.9.0-mono-repo-multiple-gems
-  Version:   v.0.9.0
-  Path:      /Users/mc/Ps/ace-meta/dev-taskflow/current/v.0.9.0-mono-repo-multiple-gems
-  Status:    active
-  Tasks:     24
-  Created:   2025-09-23 14:14:43
-  Modified:  2025-09-23 14:14:43
 
 ```
 
@@ -502,11 +478,12 @@ Current Release Information:
 /Users/mc/Ps/ace-meta/CLAUDE.md
 /Users/mc/Ps/ace-meta/dev-handbook
 /Users/mc/Ps/ace-meta/dev-local
-/Users/mc/Ps/ace-meta/dev-taskflow
 /Users/mc/Ps/ace-meta/dev-tools
 /Users/mc/Ps/ace-meta/docs
 /Users/mc/Ps/ace-meta/Gemfile
 /Users/mc/Ps/ace-meta/Gemfile.lock
+/Users/mc/Ps/ace-meta/ideas
+/Users/mc/Ps/ace-meta/migrate-taskflow.sh
 /Users/mc/Ps/ace-meta/mise.toml
 /Users/mc/Ps/ace-meta/Rakefile
 /Users/mc/Ps/ace-meta/README.md
