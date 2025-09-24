@@ -135,6 +135,32 @@ rollback_migration() {
     exit 1
   fi
 
+  # Reverse phase 4: Move qa folders back and rename retro to reflections
+  local release_dir="$TARGET_DIR/$RELEASE_VERSION"
+  if [[ -d "$release_dir/retro" ]]; then
+    execute_cmd "git mv '$release_dir/retro' '$release_dir/reflections'" "Restoring reflections name"
+  fi
+
+  if [[ -d "$release_dir/qa" ]]; then
+    if [[ -d "$release_dir/qa/code-review" ]]; then
+      if [[ -n "$(ls -A '$release_dir/qa/code-review' 2>/dev/null)" ]]; then
+        execute_cmd "git mv '$release_dir/qa/code-review' '$release_dir/code-review'" "Moving code-review out of qa"
+      else
+        mv "$release_dir/qa/code-review" "$release_dir/"
+      fi
+    fi
+
+    if [[ -d "$release_dir/qa/test-cases" ]]; then
+      if [[ -n "$(ls -A '$release_dir/qa/test-cases' 2>/dev/null)" ]]; then
+        execute_cmd "git mv '$release_dir/qa/test-cases' '$release_dir/test-cases'" "Moving test-cases out of qa"
+      else
+        mv "$release_dir/qa/test-cases" "$release_dir/"
+      fi
+    fi
+
+    rmdir "$release_dir/qa" 2>/dev/null || true
+  fi
+
   # Move back to original location
   execute_cmd "git mv '$TARGET_DIR' '$SOURCE_DIR'" "Moving $TARGET_DIR back to $SOURCE_DIR"
 
@@ -276,6 +302,64 @@ phase3_restructure_tasks() {
   fi
 }
 
+phase4_organize_qa_and_retro() {
+  log_info "Phase 4: Organizing QA folders and renaming reflections to retro"
+
+  local release_dir="$TARGET_DIR/$RELEASE_VERSION"
+  local qa_dir="$release_dir/qa"
+
+  # Create qa directory
+  if [[ "$DRY_RUN" == false ]]; then
+    mkdir -p "$qa_dir"
+  else
+    log_info "Would create directory: $qa_dir"
+  fi
+
+  # Move code-review and test-cases into qa folder
+  if [[ -d "$release_dir/code-review" || "$DRY_RUN" == true ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+      log_info "Would move: $release_dir/code-review -> $qa_dir/code-review"
+    else
+      if [[ -d "$release_dir/code-review" ]]; then
+        # Check if directory has files
+        if [[ -n "$(ls -A '$release_dir/code-review' 2>/dev/null)" ]]; then
+          execute_cmd "git mv '$release_dir/code-review' '$qa_dir/code-review'" "Moving code-review to qa folder"
+        else
+          # Empty directory, use regular mv
+          mv "$release_dir/code-review" "$qa_dir/"
+          log_info "Moved empty code-review directory to qa"
+        fi
+      fi
+    fi
+  fi
+
+  if [[ -d "$release_dir/test-cases" || "$DRY_RUN" == true ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+      log_info "Would move: $release_dir/test-cases -> $qa_dir/test-cases"
+    else
+      if [[ -d "$release_dir/test-cases" ]]; then
+        # Check if directory has files
+        if [[ -n "$(ls -A '$release_dir/test-cases' 2>/dev/null)" ]]; then
+          execute_cmd "git mv '$release_dir/test-cases' '$qa_dir/test-cases'" "Moving test-cases to qa folder"
+        else
+          # Empty directory, use regular mv
+          mv "$release_dir/test-cases" "$qa_dir/"
+          log_info "Moved empty test-cases directory to qa"
+        fi
+      fi
+    fi
+  fi
+
+  # Rename reflections to retro
+  if [[ -d "$release_dir/reflections" || "$DRY_RUN" == true ]]; then
+    execute_cmd "git mv '$release_dir/reflections' '$release_dir/retro'" "Renaming reflections to retro"
+  fi
+
+  if [[ "$DRY_RUN" == false ]]; then
+    log_success "Phase 4 completed: QA organized and reflections renamed"
+  fi
+}
+
 verify_migration() {
   log_info "Verifying migration..."
 
@@ -364,6 +448,14 @@ main() {
     # Commit after phase 3
     git add -A
     git commit -m "chore: restructure .ace-taskflow tasks with descriptive names (phase 3)" || true
+  fi
+
+  phase4_organize_qa_and_retro
+
+  if [[ "$DRY_RUN" == false ]]; then
+    # Commit after phase 4
+    git add -A
+    git commit -m "chore: organize qa folders and rename reflections to retro (phase 4)" || true
   fi
 
   verify_migration
