@@ -11,12 +11,12 @@ user-provided release scope into actionable tasks.
 
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
 * The current project version is known or can be discovered from the project's version file.
-* Access to the `.ace-taskflow/` and `dev-handbook/` directories.
+* Access to the `.ace-taskflow/` directory.
 * Higher-order navigation tools are available for task management.
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## Process Steps
 
@@ -192,9 +192,9 @@ user-provided release scope into actionable tasks.
    ```bash
    which ace-taskflow release || echo "ace-taskflow release not found"
    ```
-2. Check if dev-handbook submodule is properly initialized:
+2. Check if templates are accessible:
    ```bash
-   ls -la dev-handbook/.meta/tpl/project-structure/release-dir-structure/
+   ace-nav tmpl://
    ```
 3. If command fails, fall back to manual creation:
    ```bash
@@ -205,7 +205,7 @@ user-provided release scope into actionable tasks.
 **Prevention:**
 
 * Ensure dev-tools are properly installed and in PATH
-* Verify dev-handbook submodule is initialized
+* Verify templates are accessible via ace-nav
 * Test ace-taskflow release command before starting workflow
 
 **Task ID Generation Failures:**
@@ -454,7 +454,7 @@ This workflow focuses on **drafting** a release in the backlog. Once development
 moves to `current/`. For publishing completed releases, use the publish-release workflow.
 
 <documents>
-    <template path="dev-handbook/templates/release-management/release-overview.template.md"># v.X.Y.Z [Codename]
+    <template path="tmpl://release-management/release-overview"># v.X.Y.Z [Codename]
 
 ## Release Overview
 
@@ -539,7 +539,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 
 <!-- Additional context, decisions, or clarifications --></template>
 
-    <template path="dev-handbook/templates/task-management/task.pending.template.md">---
+    <template path="tmpl://task-management/task.pending">---
 id: <generated automatically by ace-taskflow>
 status: pending
 priority: <high/medium/low>
@@ -554,7 +554,7 @@ dependencies: [<ticket-ids>]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+ace-nav guide://
 ```
 
 _Result excerpt:_

@@ -137,8 +137,10 @@ module Ace
 
             # Embed context if configured
             if frontmatter["embed_context"] && frontmatter["context_preset"]
+              debug_log("Fetching ace-context preset: #{frontmatter["context_preset"]}")
               project_context = fetch_ace_context(frontmatter["context_preset"])
               prompt_body = prompt_body.gsub("{project_context}", project_context)
+              debug_log("System prompt length with context: #{prompt_body.length} chars")
             end
 
             return prompt_body
@@ -194,15 +196,27 @@ module Ace
 
                 # Extract the actual response from the text field
                 if wrapper["text"]
-                  # Parse the JSON within the text field
-                  data = JSON.parse(wrapper["text"])
+                  text = wrapper["text"].strip
+
+                  # Strip markdown code blocks if present (fallback for older prompts)
+                  if text.start_with?("```json") && text.end_with?("```")
+                    debug_log("Stripping markdown json code blocks from response")
+                    text = text.gsub(/^```json\s*\n?/, '').gsub(/\n?```\s*$/, '')
+                  elsif text.start_with?("```") && text.end_with?("```")
+                    debug_log("Stripping markdown code blocks from response")
+                    text = text.gsub(/^```\s*\n?/, '').gsub(/\n?```\s*$/, '')
+                  end
+
+                  # Parse the cleaned JSON
+                  data = JSON.parse(text)
+                  debug_log("Successfully parsed LLM response")
                   { success: true, data: data }
                 else
                   debug_log("No text field in LLM response: #{stdout}")
                   { success: false, error: "Invalid response format from llm-query" }
                 end
               rescue JSON::ParserError => e
-                debug_log("Invalid JSON response: #{stdout}")
+                debug_log("Invalid JSON response: #{stdout[0..500]}...")
                 { success: false, error: "Invalid JSON response: #{e.message}" }
               end
             else

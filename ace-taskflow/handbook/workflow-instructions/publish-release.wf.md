@@ -14,7 +14,7 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## High-Level Execution Plan
 
@@ -324,7 +324,7 @@ The publish release workflow is complete when:
 - Project status reflects published state
 
 <documents>
-    <template path="dev-handbook/templates/release-management/changelog.template.md"># Changelog
+    <template path="tmpl://release-management/changelog"># Changelog
 
 All notable changes to this project will be documented in this file.
 

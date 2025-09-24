@@ -10,7 +10,7 @@
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## Quick Start
 
@@ -256,16 +256,16 @@ When working with temporary files:
 1. Check dependency task status:
 
    ```bash
-   # Find and check dependency tasks with intelligent search
-   ace-taskflow tasks --filter dependencies --current
+   # Find and check dependency tasks
+   ace-taskflow tasks --status pending --current
    ```
 
 2. Verify required tools are available:
 
    ```bash
-   # Check tool availability with enhanced verification
-   handbook --verify-tools git npm
-   ls --filter "bin/*" .
+   # Check tool availability
+   which git npm
+   ls bin/
    ```
 
 3. For blocking dependencies:

@@ -14,7 +14,7 @@ Create a detailed implementation plan for a task that already has a validated be
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## Task Type Considerations
 
@@ -452,7 +452,7 @@ When transforming from review-task to plan-task focus:
 This workflow transforms draft tasks with validated behavioral specifications into fully planned, implementation-ready tasks with detailed technical approaches.
 
 <documents>
-    <template path="dev-handbook/templates/task-management/task.pending.template.md">---
+    <template path="tmpl://task-management/task.pending">---
 id: <generated automatically by ace-taskflow>
 status: pending
 priority: <high/medium/low>
@@ -467,7 +467,7 @@ dependencies: [<ticket-ids>]
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+ace-nav guide://
 ```
 
 _Result excerpt:_
@@ -550,7 +550,7 @@ Why are we doing this?
 ```
 </template>
 
-    <template path="dev-handbook/templates/task-management/task.technical-approach.template.md">## Technical Approach
+    <template path="tmpl://task-management/task.technical-approach">## Technical Approach
 
 ### Architecture Pattern
 - [ ] Pattern selection and rationale
@@ -570,7 +570,7 @@ Why are we doing this?
 - [ ] Performance monitoring
 </template>
 
-    <template path="dev-handbook/templates/task-management/task.tool-selection-matrix.template.md">## Tool Selection
+    <template path="tmpl://task-management/task.tool-selection-matrix">## Tool Selection
 
 | Criteria | Option A | Option B | Option C | Selected |
 |----------|----------|----------|----------|----------|
@@ -588,7 +588,7 @@ Why are we doing this?
 - [ ] Compatibility verification completed
 </template>
 
-    <template path="dev-handbook/templates/task-management/task.file-modification-checklist.template.md">## File Modifications
+    <template path="tmpl://task-management/task.file-modification-checklist">## File Modifications
 
 ### Create
 - path/to/new/file.ext
@@ -619,7 +619,7 @@ Why are we doing this?
   - Documentation updates: [number of markdown files with references]
 </template>
 
-    <template path="dev-handbook/templates/task-management/task.risk-assessment.template.md">## Risk Assessment
+    <template path="tmpl://task-management/task.risk-assessment">## Risk Assessment
 
 ### Technical Risks
 - **Risk:** [Description]

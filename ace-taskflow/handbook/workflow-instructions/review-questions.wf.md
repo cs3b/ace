@@ -14,8 +14,8 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
-- Load existing review workflow: `dev-handbook/workflow-instructions/review-task.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
+- Load existing review workflow: `ace-nav wfi://review-task`
 
 ## Process Steps
 

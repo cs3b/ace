@@ -14,7 +14,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `ace-nav wfi://load-project-context`
 
 ## Process Steps
 
@@ -103,7 +103,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Create destination directory if needed: `mkdir -p "$RELEASE_PATH/docs/ideas"`
      * Build destination filename: `$TASK_NUM-$(basename "$IDEA_FILE_PATH")`
        * For multiple files with same task: Use same prefix for all (e.g., `040-017-idea.md`, `040-018-idea.md`)
-     * Execute file movement: `git-mv "$IDEA_FILE_PATH" "$RELEASE_PATH/docs/ideas/$DESTINATION_FILENAME"`
+     * Execute file movement: `git mv "$IDEA_FILE_PATH" "$RELEASE_PATH/docs/ideas/$DESTINATION_FILENAME"`
    * Update task references:
      * Update the task file's References section with new idea file locations
      * Ensure all moved files are properly tracked
@@ -116,7 +116,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * [ ] Git movements committed
    * Error handling:
      * If ace-taskflow release create fails: Create files in backlog/drafts/ instead
-     * If git-mv fails: Report error and manual intervention needed
+     * If git mv fails: Report error and manual intervention needed
    * Success indicators:
      * Report each file movement: "Moved: [old-path] -> [new-path]"
      * Confirm all source ideas organized: "All X idea files moved to current release"
@@ -210,7 +210,7 @@ This workflow creates behavior-first specifications that serve as clear contract
 ## Embedded Templates
 
 <documents>
-<template path="dev-handbook/templates/task-management/task.draft.template.md">---
+<template path="tmpl://task-management/task.draft">---
 id: {id}
 status: draft
 priority: {priority}

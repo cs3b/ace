@@ -87,7 +87,7 @@
 ## Embedded Templates
 
 <documents>
-    <template path="dev-handbook/templates/tasks/impact-note.template.md">## Impact Notes from {source_task_id} Completion
+    <template path="tmpl://tasks/impact-note">## Impact Notes from {source_task_id} Completion
 
 **Generated**: {date}
 **Source Task**: {source_task_title}
