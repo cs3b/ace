@@ -9,8 +9,8 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 - One or more tasks exist with `needs_review: true` flag
 - Understanding of task review question format and structure
 - Authority to make implementation decisions or access to stakeholders
-- Write access to task files in `dev-taskflow/`
-- Access to `task-manager` tool for finding tasks
+- Write access to task files in `.ace-taskflow/`
+- Access to `ace-taskflow tasks` tool for finding tasks
 
 ## Project Context Loading
 
@@ -23,11 +23,11 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
    
    ```bash
    # List all tasks requiring review
-   task-manager list --filter needs_review:true
+   ace-taskflow tasks --filter needs_review:true
    
    # Filter by specific status if needed
-   task-manager list --filter status:draft,needs_review:true
-   task-manager list --filter status:pending,needs_review:true
+   ace-taskflow tasks --filter status:draft,needs_review:true
+   ace-taskflow tasks --filter status:pending,needs_review:true
    ```
    
    **Selection Strategy:**
@@ -227,7 +227,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
    **For Multiple Tasks:**
    ```bash
    # Generate review queue
-   task-manager list --filter needs_review:true > review-queue.txt
+   ace-taskflow tasks --filter needs_review:true > review-queue.txt
    
    # Process each task systematically
    for task in $(cat review-queue.txt); do
@@ -325,7 +325,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 ### Common Issues:
 
 **"No tasks need review"**
-- Run `task-manager list --filter needs_review:true`
+- Run `ace-taskflow tasks --filter needs_review:true`
 - Check if reviews were already completed
 - Look for tasks with questions but missing flag
 

@@ -112,7 +112,7 @@
 
 ```bash
 # Run cascade review after completing task 4
-nav-path file v.0.4.0+task.4
+ace-taskflow task v.0.4.0+004
 # Verify task is complete
 
 # Execute cascade review

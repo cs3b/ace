@@ -9,7 +9,7 @@ Review and update task content without changing its status. This workflow enable
 - Task file exists with any valid status (draft, pending, in_progress, completed)
 - Understanding of task's current state and content structure
 - Clear intent for what needs to be updated or refined
-- Write access to task files in `dev-taskflow/`
+- Write access to task files in `.ace-taskflow/`
 - Access to project documentation and codebase for research
 
 ## Project Context Loading
@@ -21,8 +21,8 @@ Review and update task content without changing its status. This workflow enable
 1. **Load and Analyze Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `task-manager list` to view all tasks
-     - Filter by status if needed: `task-manager list --filter status:draft`
+     - If no task specified: Run `ace-taskflow tasks` to view all tasks
+     - Filter by status if needed: `ace-taskflow tasks --filter status:draft`
    - **Load Task Content:**
      - Read the task file from the identified path
      - Note the current status (draft, pending, in_progress, completed)
@@ -155,7 +155,7 @@ Review and update task content without changing its status. This workflow enable
    - **Update Metadata for Tracking:**
      - Add `needs_review: true` to metadata if human input required
      - Remove `needs_review` flag when questions are resolved
-     - This enables filtering: `task-manager list --filter needs_review:true`
+     - This enables filtering: `ace-taskflow tasks --filter needs_review:true`
    - **Preserve Structure:**
      - Maintain existing section organization
      - Keep all metadata fields intact (except needs_review)
@@ -309,11 +309,11 @@ Review and update task content without changing its status. This workflow enable
 
 ```bash
 # List all tasks requiring human input
-task-manager list --filter needs_review:true
+ace-taskflow tasks --filter needs_review:true
 
 # Filter by status and review needs
-task-manager list --filter status:draft,needs_review:true
-task-manager list --filter status:pending,needs_review:true
+ace-taskflow tasks --filter status:draft,needs_review:true
+ace-taskflow tasks --filter status:pending,needs_review:true
 ```
 
 ### Review Workflow Patterns
@@ -338,7 +338,7 @@ task-manager list --filter status:pending,needs_review:true
 ### Pattern 1: Behavioral Refinement (draft)
 ```bash
 # Review draft task to clarify interface contracts
-review-task dev-taskflow/current/v.0.5.0/tasks/task.001.md
+review-task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/task.001.md
 # Add missing error scenarios and edge cases to interface contract
 # Clarify ambiguous success criteria
 # Add validation questions discovered during review
@@ -347,7 +347,7 @@ review-task dev-taskflow/current/v.0.5.0/tasks/task.001.md
 ### Pattern 2: Technical Enhancement (pending)
 ```bash
 # Review pending task to update implementation approach
-review-task dev-taskflow/current/v.0.5.0/tasks/task.002.md
+review-task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/task.002.md
 # Refine tool selection based on new research
 # Add discovered test scenarios
 # Update risk assessment with new considerations
@@ -356,7 +356,7 @@ review-task dev-taskflow/current/v.0.5.0/tasks/task.002.md
 ### Pattern 3: Progress Documentation (in_progress)
 ```bash
 # Review active task to document progress
-review-task dev-taskflow/current/v.0.5.0/tasks/task.003.md
+review-task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/task.003.md
 # Add progress notes section
 # Document blockers or discoveries
 # Update remaining steps and estimates
@@ -365,7 +365,7 @@ review-task dev-taskflow/current/v.0.5.0/tasks/task.003.md
 ### Pattern 4: Retrospective Addition (completed)
 ```bash
 # Review completed task to add lessons learned
-review-task dev-taskflow/done/v.0.4.0/tasks/task.010.md
+review-task .ace-taskflow/done/v.0.4.0/tasks/task.010.md
 # Add retrospective notes
 # Document what could be improved
 # Identify follow-up tasks
@@ -374,7 +374,7 @@ review-task dev-taskflow/done/v.0.4.0/tasks/task.010.md
 ### Pattern 5: Comprehensive Renaming Review (pending)
 ```bash
 # Review task involving renaming to ensure comprehensive scope
-review-task dev-taskflow/current/v.0.5.0/tasks/rename-component.md
+review-task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/rename-component.md
 
 # Check for missing rename scope:
 # 1. Find all directories with old name
@@ -401,7 +401,7 @@ grep -r "old_name" . --include="*.rb" --include="*.py" --include="*.js" --includ
 
 **"Task not found" Error:**
 - **Cause**: Invalid task path or ID
-- **Solution**: Use `task-manager list` to find correct path
+- **Solution**: Use `ace-taskflow tasks` to find correct path
 
 **"Invalid status update attempt" Error:**
 - **Cause**: Trying to change status field

@@ -100,7 +100,7 @@ code-review --preset ruby-atom-modular \
 When review parameters are complex, store them in a context file:
 
 ```markdown
-# dev-taskflow/current/*/docs/code-review-contexts.md
+# .ace-taskflow/$(ace-taskflow release --path)/*/docs/code-review-contexts.md
 subject: diff from sha till HEAD on following repos
 
 [main]         8e7882c chore: update submodules

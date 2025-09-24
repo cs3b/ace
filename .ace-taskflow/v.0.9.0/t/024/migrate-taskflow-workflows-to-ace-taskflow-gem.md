@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.024
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -32,14 +32,14 @@ ace-taskflow idea "New idea"               # Capture ideas
 
 ### Success Criteria
 
-- [ ] All 12 workflow files successfully moved to ace-taskflow/handbook/workflow-instructions/
-- [ ] Workflows discoverable via wfi-sources protocol with type: gem
-- [ ] All path references updated from dev-taskflow/ to .ace-taskflow/
-- [ ] All command references updated to use ace-taskflow equivalents
-- [ ] Workflows remain self-contained per ADR-001
-- [ ] Tests pass with new workflow locations
-- [ ] Git-commit from dev-tools still works
-- [ ] Standard git commands (mv, push) work correctly
+- [x] All 12 workflow files successfully moved to ace-taskflow/handbook/workflow-instructions/
+- [x] Workflows discoverable via wfi-sources protocol with type: gem
+- [x] All path references updated from dev-taskflow/ to .ace-taskflow/
+- [x] All command references updated to use ace-taskflow equivalents
+- [x] Workflows remain self-contained per ADR-001
+- [x] Tests pass with new workflow locations
+- [x] Git-commit from dev-tools still works
+- [x] Standard git commands (mv, push) work correctly
 
 ## Validation Questions
 

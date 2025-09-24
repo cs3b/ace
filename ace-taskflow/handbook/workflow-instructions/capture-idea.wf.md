@@ -2,14 +2,14 @@
 
 ## Goal
 
-Use the capture-it tool to capture and enhance raw ideas within project context, transforming informal thoughts into structured, contextual ideas ready for future specification phases.
+Use the ace-taskflow idea tool to capture and enhance raw ideas within project context, transforming informal thoughts into structured, contextual ideas ready for future specification phases.
 
 ## Prerequisites
 
-* `capture-it` tool available (from dev-tools Ruby gem)
+* `ace-taskflow idea` tool available (from dev-tools Ruby gem)
 * Raw idea text or concept to capture
 * LLM provider configured (Google Gemini recommended)
-* Write access to `dev-taskflow/backlog/ideas/` directory
+* Write access to `.ace-taskflow/backlog/ideas/` directory
 
 ## Process Steps
 
@@ -23,41 +23,41 @@ Use the capture-it tool to capture and enhance raw ideas within project context,
 2. **Choose Appropriate Command Options:**
    * **Basic usage** (most common):
      ```bash
-     capture-it "your raw idea text here"
+     ace-taskflow idea "your raw idea text here"
      ```
 
    * **From clipboard**:
      ```bash
-     capture-it --clipboard
+     ace-taskflow idea --clipboard
      ```
 
    * **From file**:
      ```bash
-     capture-it --file path/to/idea-notes.txt
+     ace-taskflow idea --file path/to/idea-notes.txt
      ```
 
    * **For long ideas** (over 1000 words):
      ```bash
-     capture-it "long idea text..." --big-user-input-allowed
+     ace-taskflow idea "long idea text..." --big-user-input-allowed
      ```
 
    * **With debug information**:
      ```bash
-     capture-it "idea text" --debug
+     ace-taskflow idea "idea text" --debug
      ```
 
 3. **Execute Idea Capture:**
-   * Run the selected capture-it command
+   * Run the selected ace-taskflow idea command
    * The tool will automatically:
      * Load current project context from all `docs/*.md` files
      * Generate project-specific enhancement questions
      * Create structured idea file with timestamp naming
-     * Store in `dev-taskflow/backlog/ideas/` directory
+     * Store in `.ace-taskflow/backlog/ideas/` directory
    * Monitor the output for the created file path
 
 4. **Verify Idea Creation:**
    * Check that the command completed successfully
-   * Note the output file path (format: `dev-taskflow/backlog/ideas/YYYYMMDD-HHMM-idea-slug.md`)
+   * Note the output file path (format: `.ace-taskflow/backlog/ideas/YYYYMMDD-HHMM-idea-slug.md`)
    * Verify the file exists and contains enhanced content
    * Review the generated questions and context for quality
 
@@ -93,29 +93,29 @@ Use the capture-it tool to capture and enhance raw ideas within project context,
 ### Pattern 1: Quick Idea Capture
 ```bash
 # Capture a brief concept immediately
-capture-it "Add real-time notifications to the dashboard"
-# => Created: dev-taskflow/backlog/ideas/20250730-1430-real-time-dashboard-notifications.md
+ace-taskflow idea "Add real-time notifications to the dashboard"
+# => Created: .ace-taskflow/backlog/ideas/20250730-1430-real-time-dashboard-notifications.md
 ```
 
 ### Pattern 2: Detailed Idea from Notes
 ```bash
 # Capture from prepared notes file
-capture-it --file brainstorm-session-notes.txt
-# => Created: dev-taskflow/backlog/ideas/20250730-1432-brainstorm-session-insights.md
+ace-taskflow idea --file brainstorm-session-notes.txt
+# => Created: .ace-taskflow/backlog/ideas/20250730-1432-brainstorm-session-insights.md
 ```
 
 ### Pattern 3: Clipboard Integration
 ```bash
 # Copy idea text to clipboard first, then:
-capture-it --clipboard
-# => Created: dev-taskflow/backlog/ideas/20250730-1434-clipboard-captured-idea.md
+ace-taskflow idea --clipboard
+# => Created: .ace-taskflow/backlog/ideas/20250730-1434-clipboard-captured-idea.md
 ```
 
 ### Pattern 4: Long-form Idea Processing
 ```bash
 # For comprehensive ideas or requirements documents
-capture-it --file detailed-requirements.md --big-user-input-allowed
-# => Created: dev-taskflow/backlog/ideas/20250730-1436-detailed-requirements-analysis.md
+ace-taskflow idea --file detailed-requirements.md --big-user-input-allowed
+# => Created: .ace-taskflow/backlog/ideas/20250730-1436-detailed-requirements-analysis.md
 ```
 
 ## Error Handling
@@ -124,7 +124,7 @@ capture-it --file detailed-requirements.md --big-user-input-allowed
 
 **"No input provided" Error:**
 * **Cause**: Missing idea text argument and no clipboard/file specified
-* **Solution**: Provide idea text: `capture-it "your idea"`
+* **Solution**: Provide idea text: `ace-taskflow idea "your idea"`
 
 **"Input too large" Error:**
 * **Cause**: Idea text exceeds 1000 words without permission flag
@@ -145,7 +145,7 @@ capture-it --file detailed-requirements.md --big-user-input-allowed
 
 ## Success Criteria
 
-* Idea successfully captured in `dev-taskflow/backlog/ideas/` directory
+* Idea successfully captured in `.ace-taskflow/backlog/ideas/` directory
 * Generated file contains enhanced idea with project context
 * File includes relevant questions for future specification
 * Timestamp-based filename created for easy organization
@@ -170,24 +170,24 @@ capture-it --file detailed-requirements.md --big-user-input-allowed
 ### Example 1: User Feedback Integration
 ```bash
 # After receiving user feedback: "Users want better mobile experience"
-capture-it "Users report difficulties with mobile interface - want better responsive design and touch interactions"
+ace-taskflow idea "Users report difficulties with mobile interface - want better responsive design and touch interactions"
 # Output: Creates enhanced idea with mobile UX questions and project-specific considerations
 ```
 
 ### Example 2: Technical Improvement Ideas
 ```bash
 # During code review, note performance concerns
-capture-it "Database queries in user dashboard are slow - consider caching layer and query optimization"
+ace-taskflow idea "Database queries in user dashboard are slow - consider caching layer and query optimization"
 # Output: Creates idea with technical questions about architecture and performance impact
 ```
 
 ### Example 3: Feature Brainstorming Session
 ```bash
 # Capture multiple ideas from team meeting
-capture-it --file team-brainstorm-2025-01-30.txt --big-user-input-allowed
+ace-taskflow idea --file team-brainstorm-2025-01-30.txt --big-user-input-allowed
 # Output: Creates comprehensive idea file with context-aware enhancement questions
 ```
 
 ---
 
-This workflow enables efficient capture and enhancement of raw ideas, ensuring they're preserved with proper project context and structured for future development consideration. The capture-it tool handles the complexity of context loading and enhancement, providing a simple interface for idea preservation.
+This workflow enables efficient capture and enhancement of raw ideas, ensuring they're preserved with proper project context and structured for future development consideration. The ace-taskflow idea tool handles the complexity of context loading and enhancement, providing a simple interface for idea preservation.
