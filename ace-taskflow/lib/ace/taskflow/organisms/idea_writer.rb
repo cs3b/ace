@@ -198,16 +198,20 @@ module Ace
         end
 
         def build_commit_message(title, location)
-          # Truncate title to 50 chars for commit message
-          short_title = title.length > 50 ? "#{title[0..47]}..." : title
+          # Format title for conventional commit subject line
+          subject = title.strip
+          subject = subject[0].downcase + subject[1..-1] if subject.length > 0
+          subject = subject.length > 40 ? "#{subject[0..37]}..." : subject
 
           if location.include?("backlog")
-            "Capture idea in backlog: #{short_title}"
+            "docs(backlog): add idea - #{subject}"
           elsif location =~ /v\.\d+\.\d+\.\d+/
+            # Extract version from location (works for both active and specific releases)
             version = location.match(/v\.\d+\.\d+\.\d+/)[0]
-            "Capture idea in #{version}: #{short_title}"
+            "docs(#{version}): add idea - #{subject}"
           else
-            "Capture idea: #{short_title}"
+            # Fallback to backlog if we can't determine version (shouldn't happen)
+            "docs(backlog): add idea - #{subject}"
           end
         end
 
