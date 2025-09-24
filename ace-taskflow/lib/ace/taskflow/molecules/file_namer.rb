@@ -44,7 +44,8 @@ module Ace
         end
 
         def idea_directory
-          @config["directory"] || "./ideas"
+          # Check both flat config and nested under "idea" key
+          @config["directory"] || @config.dig("idea", "directory") || "./ideas"
         end
       end
     end
