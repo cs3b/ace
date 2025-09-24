@@ -108,18 +108,34 @@ module Ace
         # @param release_path [String] Path to the release
         # @return [Hash] Statistics about the release
         def get_statistics(release_path)
+          require_relative "../atoms/yaml_parser"
           task_path = File.join(release_path, "t")
           return default_statistics unless File.directory?(task_path)
 
-          task_files = Dir.glob(File.join(task_path, "*", "task.md"))
           stats = default_statistics
 
-          task_files.each do |file|
-            content = File.read(file)
-            if match = content.match(/^status:\s*(\w+)$/m)
-              status = match[1].downcase
-              stats[:statuses][status] = (stats[:statuses][status] || 0) + 1
-              stats[:total] += 1
+          # Find all task directories
+          Dir.glob(File.join(task_path, "*")).select { |d| File.directory?(d) }.each do |task_folder|
+            # Find .md files in the task folder (not in subfolders)
+            md_files = Dir.glob(File.join(task_folder, "*.md"))
+
+            # Process each .md file that has task frontmatter
+            md_files.each do |file|
+              begin
+                content = File.read(file, encoding: "utf-8")
+                parsed = Atoms::YamlParser.parse(content)
+                frontmatter = parsed[:frontmatter]
+
+                # Only count files with proper task frontmatter
+                if frontmatter && frontmatter["id"] && frontmatter["status"]
+                  status = frontmatter["status"].downcase
+                  stats[:statuses][status] = (stats[:statuses][status] || 0) + 1
+                  stats[:total] += 1
+                end
+              rescue StandardError
+                # Skip files that can't be parsed
+                next
+              end
             end
           end
 

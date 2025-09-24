@@ -14,13 +14,14 @@ module Ace
           File.join(root, context, "t", task_number.to_s)
         end
 
-        # Build task file path
+        # Build task file path (with optional filename)
         # @param root [String] The root directory
         # @param context [String] The context
         # @param task_number [String, Integer] The task number
-        # @return [String] The complete path to the task.md file
-        def self.build_task_file_path(root, context, task_number)
-          File.join(build_task_path(root, context, task_number), "task.md")
+        # @param filename [String] Optional filename (defaults to "task.md")
+        # @return [String] The complete path to the task file
+        def self.build_task_file_path(root, context, task_number, filename = "task.md")
+          File.join(build_task_path(root, context, task_number), filename)
         end
 
         # Build release path
@@ -90,6 +91,28 @@ module Ace
         # @return [String] The qualified reference (e.g., v.0.9.0+018)
         def self.build_qualified_reference(context, task_number)
           "#{context}+#{task_number.to_s.rjust(3, '0')}"
+        end
+
+        # Generate descriptive filename from title
+        # @param title [String] The task title
+        # @param max_length [Integer] Maximum filename length (default: 50)
+        # @return [String] The sanitized filename with .md extension
+        def self.generate_task_filename(title, max_length = 50)
+          # Remove special characters and convert to lowercase with hyphens
+          filename = title.downcase
+                          .gsub(/[^a-z0-9\s-]/, "") # Remove special chars
+                          .gsub(/\s+/, "-")          # Replace spaces with hyphens
+                          .gsub(/-+/, "-")           # Collapse multiple hyphens
+                          .gsub(/^-|-$/, "")         # Remove leading/trailing hyphens
+
+          # Truncate if needed
+          filename = filename[0, max_length] if filename.length > max_length
+
+          # Ensure it doesn't end with a hyphen after truncation
+          filename = filename.gsub(/-$/, "")
+
+          # Add .md extension
+          "#{filename}.md"
         end
       end
     end
