@@ -29,6 +29,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-taskflow
+      path: ace-taskflow
+      group: tools
+      priority: 3
+
   # Test command options
   test_options:
     format: compact
