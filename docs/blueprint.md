@@ -9,7 +9,7 @@ This document provides navigation guidance for the ACE codebase, highlighting wh
 ```
 ace-*/          # Ruby gems following ATOM architecture
 dev-handbook/   # Workflows, agents, guides (legacy, migrating to ace-handbook)
-dev-taskflow/   # Task management (legacy, migrating to ace-taskflow)
+.ace-taskflow/  # Task and release management (migrated from dev-taskflow)
 dev-tools/      # CLI tools (legacy, being split into ace-* gems)
 .claude/        # Claude Code integration (commands and agent symlinks)
 .ace/           # Configuration cascade root
@@ -30,15 +30,15 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 - `.github/workflows/**/*` # CI/CD configuration
 - `dev-handbook/guides/**/*` # Development guides
 - `dev-handbook/workflow-instructions/**/*` # AI workflow instructions
-- `dev-taskflow/done/**/*` # Completed tasks
-- `dev-taskflow/current/*/reflections/**/*` # Development reflections
+- `.ace-taskflow/done/**/*` # Completed tasks
+- `.ace-taskflow/v.*/retro/**/*` # Development retrospectives
 - `Gemfile.lock` # Root workspace lock file
 
 ## Ignored Paths
 
 AI agents should ignore these during normal operations:
 
-- `dev-taskflow/done/**/*` # Completed tasks and releases
+- `.ace-taskflow/done/**/*` # Completed tasks and releases
 - `.cache/ace-*/**/*` # Cached output from ace tools
 - `ace-*/coverage/**/*` # Test coverage reports
 - `**/test-reports/**/*` # Test report files
