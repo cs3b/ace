@@ -2,6 +2,7 @@
 
 require_relative '../atoms/file_reader'
 require_relative '../atoms/glob_expander'
+require_relative 'project_root_finder'
 
 module Ace
   module Core
@@ -10,7 +11,7 @@ module Ace
       class FileAggregator
         def initialize(options = {})
           @max_size = options[:max_size] || Atoms::FileReader::MAX_FILE_SIZE
-          @base_dir = options[:base_dir] || Dir.pwd
+          @base_dir = options[:base_dir] || ProjectRootFinder.find_or_current
           @exclude_patterns = options[:exclude] || []
         end
 
@@ -135,30 +136,33 @@ module Ace
         # @param file_path [String] File path
         # @param result [Hash] Result hash to update
         def process_file(file_path, result)
-          # Make path relative to base directory if possible
-          display_path = make_relative_path(file_path)
+          # Resolve file path relative to base directory if not absolute
+          resolved_path = File.absolute_path?(file_path) ? file_path : File.join(@base_dir, file_path)
+
+          # Make path relative to base directory for display
+          display_path = make_relative_path(resolved_path)
 
           # Check if file is readable
-          unless Atoms::FileReader.readable?(file_path)
+          unless Atoms::FileReader.readable?(resolved_path)
             result[:errors] << "File not readable: #{display_path}"
             result[:stats][:error_count] += 1
             return
           end
 
           # Check if file is binary
-          if Atoms::FileReader.binary?(file_path)
+          if Atoms::FileReader.binary?(resolved_path)
             result[:errors] << "Binary file skipped: #{display_path}"
             result[:stats][:skipped_count] += 1
             return
           end
 
           # Read file content
-          read_result = Atoms::FileReader.read(file_path, max_size: @max_size)
+          read_result = Atoms::FileReader.read(resolved_path, max_size: @max_size)
 
           if read_result[:success]
             result[:files] << {
               path: display_path,
-              absolute_path: File.expand_path(file_path),
+              absolute_path: File.expand_path(resolved_path),
               content: read_result[:content],
               size: read_result[:size]
             }

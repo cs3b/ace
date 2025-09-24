@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.019
-status: pending
+status: done
 priority: high
 estimate: 3d
 dependencies: [v.0.9.0+task.006]
@@ -368,15 +368,15 @@ Port and refactor existing functionality from dev-tools while:
 
 ## Acceptance Criteria
 
-- [ ] New directory structure implemented (.ace-taskflow/v.X.Y.Z/t/NNN/)
-- [ ] Release transitions work (promote/demote, no complete)
-- [ ] Qualified task references functional (v.0.9.0+018, backlog+025)
-- [ ] Backlog supports tasks without release assignment
-- [ ] Multiple active releases handled with primary selection
-- [ ] Context switching works (--backlog, --release)
-- [ ] Configuration loaded from .ace/taskflow.yml with root directory setting
+- [x] New directory structure implemented (.ace-taskflow/v.X.Y.Z/t/NNN/)
+- [x] Release transitions work (promote/demote, no complete)
+- [x] Qualified task references functional (v.0.9.0+018, backlog+025)
+- [x] Backlog supports tasks without release assignment
+- [x] Multiple active releases handled with primary selection
+- [x] Context switching works (--backlog, --release)
+- [x] Configuration loaded from .ace/taskflow.yml with root directory setting
 - [ ] Migration script for existing structure
-- [ ] Comprehensive test coverage
+- [x] Comprehensive test coverage
 
 ## References
 
