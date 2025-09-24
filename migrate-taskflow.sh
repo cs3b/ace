@@ -218,7 +218,7 @@ phase3_restructure_tasks() {
       # Simulate a few tasks for dry-run
       for i in 001 019 022; do
         local task_file="$tasks_dir/v.0.9.0+task.${i}-sample-task.md"
-        local task_num=$(printf "%03d" $i)
+        local task_num=$(printf "%03d" $((10#$i)))
         local task_name="sample-task"
         local task_folder="$target_tasks_dir/$task_num"
 
@@ -233,7 +233,7 @@ phase3_restructure_tasks() {
           # Extract task number and name
           # Pattern: v.0.9.0+task.NNN-descriptive-name
           if [[ "$basename" =~ v\.[0-9]+\.[0-9]+\.[0-9]+\+task\.([0-9]+)-(.+) ]]; then
-            local task_num=$(printf "%03d" ${BASH_REMATCH[1]})
+            local task_num=$(printf "%03d" $((10#${BASH_REMATCH[1]})))
             local task_name="${BASH_REMATCH[2]}"
             local task_folder="$target_tasks_dir/$task_num"
 
