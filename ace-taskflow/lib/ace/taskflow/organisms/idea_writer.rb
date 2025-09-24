@@ -2,6 +2,8 @@
 
 require "fileutils"
 require "time"
+require_relative "../molecules/git_executor"
+require_relative "../molecules/idea_enhancer"
 
 module Ace
   module Taskflow
@@ -9,15 +11,35 @@ module Ace
       class IdeaWriter
         def initialize(config = nil)
           @config = config || load_config
+          @debug = ENV["DEBUG"] == "true"
         end
 
-        def write(content, metadata = {})
-          metadata = prepare_metadata(content, metadata)
+        def write(content, options = {})
+          # Merge options with config defaults
+          options = merge_options_with_config(options)
+
+          # Prepare metadata
+          metadata = prepare_metadata(content, options)
+
+          # Enhance content if requested
+          enhanced_content = if should_enhance?(options)
+                               enhance_idea(content, metadata)
+                             else
+                               content
+                             end
+
+          # Generate file path and ensure directory exists
           path = generate_path(metadata)
           ensure_directory_exists(path)
 
-          formatted_content = format_idea(content, metadata)
+          # Format and write the idea
+          formatted_content = format_idea(enhanced_content, metadata)
           File.write(path, formatted_content)
+
+          # Commit to git if requested
+          if should_commit?(options)
+            commit_idea(path, metadata)
+          end
 
           path
         end
@@ -120,6 +142,84 @@ module Ace
           @config.dig("file_naming", "timestamp_format") ||
             @config.dig("formatting", "timestamp_format") ||
             "%Y-%m-%d %H:%M:%S"
+        end
+
+        def merge_options_with_config(options)
+          # Start with config defaults
+          defaults = {
+            git_commit: @config.dig("defaults", "git_commit") || false,
+            llm_enhance: @config.dig("defaults", "llm_enhance") || false
+          }
+
+          # Merge with provided options (command-line flags override config)
+          merged = defaults.dup
+          merged[:git_commit] = options[:git_commit] unless options[:git_commit].nil?
+          merged[:llm_enhance] = options[:llm_enhance] unless options[:llm_enhance].nil?
+          merged[:location] = options[:location] if options[:location]
+
+          merged
+        end
+
+        def should_commit?(options)
+          options[:git_commit] == true
+        end
+
+        def should_enhance?(options)
+          options[:llm_enhance] == true
+        end
+
+        def enhance_idea(content, metadata)
+          enhancer = Molecules::IdeaEnhancer.new(debug: @debug)
+          context = {
+            location: metadata[:location] || "active",
+            timestamp: metadata[:timestamp]
+          }
+          enhancer.enhance(content, context)
+        end
+
+        def commit_idea(path, metadata)
+          executor = Molecules::GitExecutor.new(debug: @debug)
+
+          # Build commit message
+          title = metadata[:title] || "idea"
+          location = determine_location_context(path)
+          message = build_commit_message(title, location)
+
+          # Execute commit
+          result = executor.execute_commit(path, message)
+
+          if result.success?
+            puts "Git commit successful: #{result.message}" if @debug
+          else
+            puts "Warning: Git commit failed: #{result.error}"
+          end
+
+          result
+        end
+
+        def build_commit_message(title, location)
+          # Truncate title to 50 chars for commit message
+          short_title = title.length > 50 ? "#{title[0..47]}..." : title
+
+          if location.include?("backlog")
+            "Capture idea in backlog: #{short_title}"
+          elsif location =~ /v\.\d+\.\d+\.\d+/
+            version = location.match(/v\.\d+\.\d+\.\d+/)[0]
+            "Capture idea in #{version}: #{short_title}"
+          else
+            "Capture idea: #{short_title}"
+          end
+        end
+
+        def determine_location_context(path)
+          # Extract location from path
+          if path.include?("/backlog/")
+            "backlog"
+          elsif match = path.match(/\/(v\.\d+\.\d+\.\d+)\//)
+            match[1]
+          else
+            "active"
+          end
         end
       end
     end

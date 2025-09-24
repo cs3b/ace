@@ -132,7 +132,16 @@ module Ace
           end
 
           # Include idea and task sections if present
-          config["idea"] = taskflow_section["idea"] if taskflow_section["idea"]
+          if taskflow_section["idea"]
+            config["idea"] = taskflow_section["idea"]
+            # Merge idea defaults into main defaults
+            if taskflow_section["idea"]["defaults"]
+              config["defaults"] ||= {}
+              config["defaults"]["git_commit"] = taskflow_section["idea"]["defaults"]["git_commit"] unless taskflow_section["idea"]["defaults"]["git_commit"].nil?
+              config["defaults"]["llm_enhance"] = taskflow_section["idea"]["defaults"]["llm_enhance"] unless taskflow_section["idea"]["defaults"]["llm_enhance"].nil?
+            end
+          end
+
           config["task"] = taskflow_section["task"] if taskflow_section["task"]
           config["release"] = taskflow_section["release"] if taskflow_section["release"]
 
