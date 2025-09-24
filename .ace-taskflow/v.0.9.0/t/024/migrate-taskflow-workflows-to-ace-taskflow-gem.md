@@ -32,7 +32,7 @@ ace-taskflow idea "New idea"               # Capture ideas
 
 ### Success Criteria
 
-- [ ] All 11 workflow files successfully moved to ace-taskflow/handbook/workflow-instructions/
+- [ ] All 12 workflow files successfully moved to ace-taskflow/handbook/workflow-instructions/
 - [ ] Workflows discoverable via wfi-sources protocol with type: gem
 - [ ] All path references updated from dev-taskflow/ to .ace-taskflow/
 - [ ] All command references updated to use ace-taskflow equivalents
@@ -61,6 +61,9 @@ ace-taskflow idea "New idea"               # Capture ideas
 9. review-questions.wf.md - Question review
 10. review-task.wf.md - Task review
 11. work-on-task.wf.md - Task execution
+12. create-task-based-on-plan.md - Task creation from plan (from .integrations/claude/commands/_custom/)
+    - Note: This workflow needs expansion from its current minimal form
+    - Should be converted to full .wf.md format during migration
 
 ## Implementation Plan
 
@@ -78,9 +81,13 @@ ace-taskflow idea "New idea"               # Capture ideas
    - Configure path to handbook/workflow-instructions/
 
 ### Phase 3: Move Workflow Files
-3. Use git mv to relocate all 11 workflow files:
+3. Use git mv to relocate all 12 workflow files:
    ```bash
+   # Move the 11 main workflow files
    git mv dev-handbook/workflow-instructions/{capture-idea,create-reflection-note,draft-release,draft-task,plan-task,publish-release,replan-cascade-task,review-code,review-questions,review-task,work-on-task}.wf.md ace-taskflow/handbook/workflow-instructions/
+
+   # Move the custom command workflow
+   git mv dev-handbook/.integrations/claude/commands/_custom/create-task-based-on-plan.md ace-taskflow/handbook/workflow-instructions/create-task-based-on-plan.wf.md
    ```
 
 ### Phase 4: Update Path References
@@ -137,7 +144,7 @@ ace-taskflow idea "New idea"               # Capture ideas
 - `ace-taskflow/handbook/README.md`
 
 ### Files to Modify:
-- All 11 workflow .wf.md files (path and command updates)
+- All 12 workflow .wf.md files (path and command updates)
 
 ### Files to Delete:
 - Original workflow files in dev-handbook (via git mv)
