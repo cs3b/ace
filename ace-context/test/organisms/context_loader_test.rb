@@ -50,7 +50,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("default")
 
       assert_equal 2, context.file_count
@@ -87,7 +87,7 @@ class ContextLoaderTest < AceTestCase
       # Create preset with exclusions
       create_preset("test")
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("test")
 
       assert_equal 1, context.file_count
@@ -115,7 +115,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("cache_test")
 
       assert_equal "cache", context.metadata[:output]
@@ -139,7 +139,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("cmd_test")
 
       assert context.commands
@@ -175,7 +175,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("glob_test")
 
       assert_equal 2, context.file_count
@@ -202,7 +202,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("body_test")
 
       assert context.metadata[:preset_content]
@@ -228,6 +228,7 @@ class ContextLoaderTest < AceTestCase
 
       # Override some params via options
       loader = Ace::Context::Organisms::ContextLoader.new(
+        base_dir: Dir.pwd,
         max_size: 1000000,  # Override
         timeout: 20,        # Override
         custom: "value"     # Additional
@@ -258,7 +259,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Context::Organisms::ContextLoader.new
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("format_test")
 
       # Should be formatted as YAML

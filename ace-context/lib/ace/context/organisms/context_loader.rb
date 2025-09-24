@@ -5,6 +5,7 @@ require 'ace/core'
 require 'ace/core/molecules/context_merger'
 require 'ace/core/molecules/file_aggregator'
 require 'ace/core/molecules/output_formatter'
+require 'ace/core/molecules/project_root_finder'
 require 'ace/core/atoms/command_executor'
 require 'ace/core/atoms/template_parser'
 require 'ace/core/atoms/file_reader'
@@ -22,7 +23,7 @@ module Ace
           @merger = Ace::Core::Molecules::ContextMerger.new
           @file_aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size],
-            base_dir: options[:base_dir] || Dir.pwd
+            base_dir: options[:base_dir] || project_root
           )
           @command_executor = Ace::Core::Atoms::CommandExecutor
           @output_formatter = Ace::Core::Molecules::OutputFormatter.new(
@@ -204,7 +205,7 @@ module Ace
           if config[:include] && config[:include].any?
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: @options[:max_size],
-              base_dir: @options[:base_dir] || Dir.pwd,
+              base_dir: @options[:base_dir] || project_root,
               exclude: config[:exclude] || []
             )
 
@@ -238,7 +239,7 @@ module Ace
           if context_config['files'] && context_config['files'].any?
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: options[:max_size] || options['max_size'],
-              base_dir: options[:base_dir] || Dir.pwd,
+              base_dir: options[:base_dir] || project_root,
               exclude: context_config['exclude'] || []
             )
 
@@ -263,7 +264,7 @@ module Ace
           if context_config['commands'] && context_config['commands'].any?
             timeout = options[:timeout] || options['timeout'] || 30
             context_config['commands'].each do |command|
-              cmd_result = @command_executor.execute(command, timeout: timeout)
+              cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
               context.commands ||= []
               context.commands << {
                 command: command,
@@ -331,7 +332,7 @@ module Ace
           if config['files'] && config['files'].any?
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config['max_size'] || @options[:max_size],
-              base_dir: @options[:base_dir] || Dir.pwd
+              base_dir: @options[:base_dir] || project_root
             )
 
             # Use aggregate_files to preserve order for explicit file lists
@@ -344,7 +345,7 @@ module Ace
           if config['include'] && config['include'].any?
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config['max_size'] || @options[:max_size],
-              base_dir: @options[:base_dir] || Dir.pwd,
+              base_dir: @options[:base_dir] || project_root,
               exclude: config['exclude'] || []
             )
 
@@ -357,7 +358,7 @@ module Ace
           if config['commands'] && config['commands'].any?
             timeout = config['timeout'] || @options[:timeout] || 30
             config['commands'].each do |command|
-              cmd_result = @command_executor.execute(command, timeout: timeout)
+              cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
               data[:commands] << {
                 command: command,
                 output: cmd_result[:stdout],
@@ -409,6 +410,10 @@ module Ace
           else
             context
           end
+        end
+
+        def project_root
+          @project_root ||= Ace::Core::Molecules::ProjectRootFinder.find_or_current
         end
       end
     end
