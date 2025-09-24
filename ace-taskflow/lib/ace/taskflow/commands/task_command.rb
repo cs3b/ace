@@ -13,11 +13,14 @@ module Ace
         end
 
         def execute(args)
+          # Parse display mode options first
+          display_mode = parse_display_mode(args)
+
           subaction = args.shift
 
           case subaction
           when nil, "next"
-            show_next_task(args)
+            show_next_task(args, display_mode: display_mode)
           when "create"
             create_task(args)
           when "start"
@@ -32,7 +35,7 @@ module Ace
             show_help
           else
             # Try to show specific task
-            show_task(subaction)
+            show_task(subaction, display_mode: display_mode)
           end
         rescue StandardError => e
           puts "Error: #{e.message}"
@@ -41,23 +44,46 @@ module Ace
 
         private
 
-        def show_next_task(args)
+        def parse_display_mode(args)
+          # Check for display mode options and remove them from args
+          if index = args.index("--path")
+            args.delete_at(index)
+            return "path"
+          elsif index = args.index("--content")
+            args.delete_at(index)
+            return "content"
+          end
+          # Default to path mode
+          "path"
+        end
+
+        def show_next_task(args, display_mode: "path")
           context = parse_context(args)
           task = @manager.get_next_task(context: context)
 
           if task
-            display_task(task)
+            case display_mode
+            when "path"
+              display_task_path(task)
+            when "content"
+              display_task(task)
+            end
           else
             puts "No pending or in-progress tasks found."
             puts "Use 'ace-taskflow task create' to add a new task."
           end
         end
 
-        def show_task(reference)
+        def show_task(reference, display_mode: "path")
           task = @manager.show_task(reference)
 
           if task
-            display_task(task)
+            case display_mode
+            when "path"
+              display_task_path(task)
+            when "content"
+              display_task(task)
+            end
           else
             puts "Task '#{reference}' not found."
             puts "Valid formats: 018, task.018, v.0.9.0+018, backlog+025"
@@ -182,6 +208,16 @@ module Ace
           exit 0
         end
 
+        def display_task_path(task_data)
+          task = Models::Task.new(task_data)
+          if task.path
+            puts task.path
+          else
+            puts "# Task has no path"
+            exit 1
+          end
+        end
+
         def display_task(task_data)
           task = Models::Task.new(task_data)
 
@@ -242,6 +278,10 @@ module Ace
           puts "  move <ref> <target> Move task to different context"
           puts "  update <reference> Update task metadata"
           puts ""
+          puts "Display Options:"
+          puts "  --path             Show only task file path (default)"
+          puts "  --content          Show full task content"
+          puts ""
           puts "Reference formats:"
           puts "  018               Task in current context"
           puts "  task.018          Task in current context"
@@ -250,8 +290,10 @@ module Ace
           puts "  current+018       Explicit current/active"
           puts ""
           puts "Examples:"
-          puts "  ace-taskflow task"
-          puts "  ace-taskflow task 019"
+          puts "  ace-taskflow task                    # Show next task path"
+          puts "  ace-taskflow task --content          # Show next task with full content"
+          puts "  ace-taskflow task 019 --path         # Show path for task 019"
+          puts "  ace-taskflow task 019 --content      # Show full content for task 019"
           puts "  ace-taskflow task create 'Add caching layer'"
           puts "  ace-taskflow task start 019"
           puts "  ace-taskflow task done 019"
