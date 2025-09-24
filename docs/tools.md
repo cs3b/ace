@@ -8,10 +8,11 @@
 | **`ace-test`** | Run single package tests |
 | **`ace-test-suite`** | Run all packages' tests at once |
 | **`ace-taskflow`** | Comprehensive task and release management |
+| **`ace-nav`** | Resource discovery and navigation |
 
 ## Usage Examples
 
-| *Each ace-* gem has its own detailed documentation in ace-*/docs/usage.md
+*Each ace-* gem has its own detailed documentation in ace-*/docs/usage.md
 
 ### ace-context
 
@@ -40,4 +41,13 @@ ace-taskflow tasks --stats                     # Show task statistics
 ace-taskflow release                           # Show active release
 ace-taskflow releases --stats                  # Show release statistics
 ace-taskflow idea 'Add dark mode'              # Capture an idea
+```
+
+### ace-nav
+
+```sh
+ace-nav wfi://capture-idea                     # Find workflow by name
+ace-nav 'wfi://*task*' --list                  # List matching workflows
+ace-nav wfi://setup --content                  # Show workflow content
+ace-nav --sources                              # Show available sources
 ```
