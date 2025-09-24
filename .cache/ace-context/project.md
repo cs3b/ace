@@ -70,14 +70,17 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
 - **ace-taskflow**: Comprehensive task and release management
+- **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 
 ### Workflows (.wf.md)
 
 Self-contained instruction documents for AI agents:
 
-- Located in `dev-handbook/workflow-instructions/`
+- Migrating to `ace-taskflow/handbook/workflow-instructions/`
+- Legacy location: `dev-handbook/workflow-instructions/`
 - Include all necessary context and templates
 - Follow ADR-001 self-containment principle
+- Discoverable via ace-nav wfi:// protocol
 
 ### Agents (.ag.md)
 
@@ -102,6 +105,7 @@ Development patterns and best practices:
 - **Commands**: `.claude/commands/` maps workflows to slash commands
 - **Agents**: `.claude/agents/` provides agent access via Task tool
 - **Deterministic CLI**: All tools provide predictable, parseable output
+- **wfi:// Protocol**: Direct workflow access via ace-nav integration
 
 ### Platform Compatibility
 
@@ -348,10 +352,11 @@ For complete decision history and detailed rationale, refer to the individual AD
 | **`ace-test`** | Run single package tests |
 | **`ace-test-suite`** | Run all packages' tests at once |
 | **`ace-taskflow`** | Comprehensive task and release management |
+| **`ace-nav`** | Resource discovery and navigation |
 
 ## Usage Examples
 
-| *Each ace-* gem has its own detailed documentation in ace-*/docs/usage.md
+*Each ace-* gem has its own detailed documentation in ace-*/docs/usage.md
 
 ### ace-context
 
@@ -382,6 +387,15 @@ ace-taskflow releases --stats                  # Show release statistics
 ace-taskflow idea 'Add dark mode'              # Capture an idea
 ```
 
+### ace-nav
+
+```sh
+ace-nav wfi://capture-idea                     # Find workflow by name
+ace-nav 'wfi://*task*' --list                  # List matching workflows
+ace-nav wfi://setup --content                  # Show workflow content
+ace-nav --sources                              # Show available sources
+```
+
 ```
 
 ### docs/what-do-we-build.md
@@ -400,11 +414,11 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
 - **ace-taskflow**: Comprehensive task and release management with idea capture
+- **ace-nav**: Resource discovery and navigation across ace-* gems
 
 ## Coming Soon
 
 - **ace-search**: Unified file and content search across codebases
-- **ace-nav**: Navigation and path manipulation (ls, tree, find, create)
 - **ace-git**: Enhanced git operations and smart commit generation
 - **ace-review**: Code review automation and synthesis
 - **ace-llm**: Multi-provider AI model integration
@@ -434,7 +448,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 14:48:17 WEST 2025
+Wed Sep 24 22:48:47 WEST 2025
 
 ```
 
@@ -442,7 +456,21 @@ Wed Sep 24 14:48:17 WEST 2025
 
 **Output:**
 ```
-?? .ace/protocols/wfi-sources/ace-taskflow.yml
+ D .ace-taskflow/backlog/ideas/20250924-214543-backlog-idea-with-commit.md
+ D .ace-taskflow/v.0.9.0/ideas/20250924-214515-test-idea-with-git-commit.md
+ D .ace-taskflow/v.0.9.0/ideas/20250924-214532-test-with-both-flags-enabled.md
+ M .ace-taskflow/v.0.9.0/t/025/add-git-commit-and-llm-enhance-flags-to-idea-comma.md
+ M .ace-taskflow/v.0.9.0/t/026/add-reschedule-subcommand-to-tasks-command.md
+ M .cache/ace-context/project.md
+ M ace-taskflow/lib/ace/taskflow/commands/idea_command.rb
+ M ace-taskflow/lib/ace/taskflow/molecules/config_loader.rb
+ M ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb
+?? .ace-taskflow/v.0.9.0/ideas/20250924-182540-each-command-should-have-config-flag-that-will-d.md
+?? .ace-taskflow/v.0.9.0/t/025/qa/
+?? .ace-taskflow/v.0.9.0/t/026/qa/
+?? .ace-taskflow/v.0.9.0/t/027/qa/
+?? ace-taskflow/lib/ace/taskflow/molecules/git_executor.rb
+?? ace-taskflow/lib/ace/taskflow/molecules/idea_enhancer.rb
 
 ```
 
@@ -488,7 +516,6 @@ No recent tasks found
 /Users/mc/Ps/ace-meta/docs
 /Users/mc/Ps/ace-meta/Gemfile
 /Users/mc/Ps/ace-meta/Gemfile.lock
-/Users/mc/Ps/ace-meta/ideas
 /Users/mc/Ps/ace-meta/migrate-taskflow.sh
 /Users/mc/Ps/ace-meta/mise.toml
 /Users/mc/Ps/ace-meta/Rakefile
