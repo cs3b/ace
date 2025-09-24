@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.029
-status: draft
+status: pending
 priority: high
 estimate: 8h
 dependencies: []
@@ -47,21 +47,17 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
 
 ### Planning Steps
 
-- [ ] Map all deprecated tools to their ace-* replacements
+- [x] Map all deprecated tools to their ace-* replacements
   - task-manager → ace-taskflow task/tasks
   - release-manager → ace-taskflow release/releases
   - capture-it → ace-taskflow idea/ideas
   - context → ace-context
-  - handbook → investigate replacement (possibly ace-nav)
+  - handbook → REMOVE (not used, drop all references)
+  - git-commit → KEEP (still available)
+  - git-mv → git mv (use standard git command)
 
-  |=> need examples
-
-  - git-commit/git-mv → standard git commands
-
-  |=> keep the git-commit (we still have it), but we will use git mv instread of git mv
-
-- [ ] Identify all affected workflow files (12 files total)
-  - capture-idea.wf.md (already correct)
+- [x] Identify all affected workflow files (12 files total)
+  - capture-idea.wf.md (already correct ✓)
   - draft-task.wf.md
   - work-on-task.wf.md
   - draft-release.wf.md
@@ -74,66 +70,77 @@ Migrate all workflow instructions in ace-taskflow/handbook/workflow-instructions
   - review-code.wf.md
   - create-task-based-on-plan.wf.md
 
-- [ ] Document command syntax changes
-  - Old vs new command mappings
-  - Option/flag differences
-  - Output format changes
+- [x] Document required changes
+  - Workflow loading: Use `ace-nav wfi://load-project-context`
+  - Template references: Use `tmpl://` protocol (e.g., `tmpl://task-management/task.draft`)
+  - Guide listing: Replace `tree` with `ace-nav guide://`
+  - Submodules: Remove all references (no longer used)
+  - Tool verification: Remove `handbook --verify-tools`
 
 ### Execution Steps
 
-- [ ] Update draft-task.wf.md
-  - Replace task-manager with ace-taskflow commands
-  - Update git-mv/git-commit references
-  - Fix template and context paths
-
 - [ ] Update work-on-task.wf.md
-  - Update release path commands
-  - Replace task filtering commands
-  - Remove handbook tool references
+  - Line 13: `dev-handbook/workflow-instructions/load-project-context.wf.md` → `ace-nav wfi://load-project-context`
+  - Line 267: Remove `handbook --verify-tools git npm` entirely
+  - Line 259: Update task filtering to use ace-taskflow commands
 
-- [ ] Update draft-release.wf.md
-  - Replace git-commit references
-  - Update template paths
-  - Fix dev-handbook references
-
-- [ ] Update publish-release.wf.md
-  - Replace git-commit --guided references
-  - Update template paths
-  - Fix context loading
-
-- [ ] Update review-task.wf.md
-  - Update context loading path
-  - Replace any task-manager references
+- [ ] Update draft-task.wf.md
+  - Line 17: `dev-handbook/workflow-instructions/load-project-context.wf.md` → `ace-nav wfi://load-project-context`
+  - Line 106: `git-mv` → `git mv`
+  - Line 111: Keep `git-commit` (still available)
+  - Line 213: `<template path="dev-handbook/templates/task-management/task.draft.template.md">` → `<template path="tmpl://task-management/task.draft">`
 
 - [ ] Update plan-task.wf.md
-  - Update context loading path
-  - Fix all template paths
-  - Replace task management commands
+  - Line 17: → `ace-nav wfi://load-project-context`
+  - Line 455: → `<template path="tmpl://task-management/task.pending">`
+  - Line 470: `tree -L 2 dev-handbook/guides` → `ace-nav guide://`
+  - Line 553: → `<template path="tmpl://task-management/task.technical-approach">`
+  - Line 573: → `<template path="tmpl://task-management/task.tool-selection-matrix">`
+  - Line 591: → `<template path="tmpl://task-management/task.file-modification-checklist">`
+  - Line 622: → `<template path="tmpl://task-management/task.risk-assessment">`
 
-- [ ] Update replan-cascade-task.wf.md
-  - Update template paths
-  - Replace task management commands
+- [ ] Update draft-release.wf.md
+  - Line 14: Remove `dev-handbook/` directory reference
+  - Line 19: → `ace-nav wfi://load-project-context`
+  - Lines 195-197: Remove submodule check entirely
+  - Line 208: Remove "Verify dev-handbook submodule" line
+  - Line 457: → `<template path="tmpl://release-management/release-overview">`
+  - Line 542: → `<template path="tmpl://task-management/task.pending">`
+  - Line 557: `tree -L 2 dev-handbook/guides` → `ace-nav guide://`
 
-- [ ] Update create-reflection-note.wf.md
-  - Update context loading path
-  - Fix template paths
+- [ ] Update publish-release.wf.md
+  - Line 17: → `ace-nav wfi://load-project-context`
+  - Lines 90-91: Keep `git-commit` (still available)
+  - Line 327: → `<template path="tmpl://release-management/changelog">`
+
+- [ ] Update review-task.wf.md
+  - Line 17: → `ace-nav wfi://load-project-context`
 
 - [ ] Update review-questions.wf.md
-  - Update workflow path references
-  - Fix context loading
+  - Line 17: → `ace-nav wfi://load-project-context`
+  - Line 18: `dev-handbook/workflow-instructions/review-task.wf.md` → `ace-nav wfi://review-task`
 
 - [ ] Update review-code.wf.md
-  - Update context preset loading to use ace-context
-  - Fix any dev-handbook references
+  - Line 49: Remove `dev-handbook` from presets
+  - Line 52: Remove git submodule command for dev-handbook
+  - Line 107: Remove dev-handbook commit reference
+  - Line 111: Update presets list
+
+- [ ] Update create-reflection-note.wf.md
+  - Line 21: → `ace-nav wfi://load-project-context`
+  - Line 228: Update or embed template reference
+  - Line 362: → `<template path="tmpl://release-reflections/retrospective">`
+
+- [ ] Update replan-cascade-task.wf.md
+  - Line 90: → `<template path="tmpl://tasks/impact-note">`
 
 - [ ] Update create-task-based-on-plan.wf.md
-  - Ensure uses ace-taskflow task create
-  - Update any old tool references
+  - Ensure all commands use ace-taskflow
 
 - [ ] Test each updated workflow
-  - Verify commands execute
-  - Check file paths exist
-  - Validate template references
+  - Verify ace-nav commands work
+  - Check template references resolve
+  - Validate all commands execute
 
 ## Acceptance Criteria
 
