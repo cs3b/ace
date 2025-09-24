@@ -39,28 +39,15 @@ module Ace
           validate_configuration!
 
           start_time = Time.now
-          debug_timing = ENV['DEBUG_TIMING'] == '1'
-          last_checkpoint = start_time
-
-          def log_timing(message, start, last, enabled)
-            return last unless enabled
-            now = Time.now
-            elapsed_step = now - last
-            elapsed_total = now - start
-            STDERR.puts "[TIMING] #{message}: #{(elapsed_step * 1000).round(2)}ms (total: #{(elapsed_total * 1000).round(2)}ms)"
-            now
-          end
 
           # Find test files
           test_files = find_test_files
           if test_files.empty?
             return handle_no_tests
           end
-          last_checkpoint = log_timing("Find test files", start_time, last_checkpoint, debug_timing)
 
           # Count total available test files (before filtering)
           total_available = count_total_test_files
-          last_checkpoint = log_timing("Count test files", start_time, last_checkpoint, debug_timing)
 
           # Notify start with both counts
           if @formatter.respond_to?(:on_start_with_totals)
@@ -68,11 +55,9 @@ module Ace
           else
             @formatter.on_start(test_files.size)
           end
-          last_checkpoint = log_timing("Formatter start", start_time, last_checkpoint, debug_timing)
 
           # Execute tests
           execution_result = execute_tests(test_files)
-          last_checkpoint = log_timing("Execute tests", start_time, last_checkpoint, debug_timing)
 
           # Parse results
           # Check if we executed multiple commands (per-file) or single command (grouped)
@@ -83,22 +68,18 @@ module Ace
             # Single command execution (grouped)
             @parsed_result = @result_parser.parse_output(execution_result[:stdout])
           end
-          last_checkpoint = log_timing("Parse results", start_time, last_checkpoint, debug_timing)
 
           # Build result object
           @result = build_result(@parsed_result, execution_result, start_time)
-          last_checkpoint = log_timing("Build result object", start_time, last_checkpoint, debug_timing)
 
           # Analyze failures
           if @result.has_failures?
             analyzed_failures = @failure_analyzer.analyze_all(@parsed_result[:failures])
             @result.failures_detail = analyzed_failures
           end
-          last_checkpoint = log_timing("Analyze failures", start_time, last_checkpoint, debug_timing)
 
           # Generate and save report
           report = @report_generator.generate(@result, test_files)
-          last_checkpoint = log_timing("Generate report", start_time, last_checkpoint, debug_timing)
 
           # Save reports if configured
           if @configuration.save_reports
@@ -106,19 +87,14 @@ module Ace
             # Pass report path to formatter before outputting
             @formatter.report_path = report_path if @formatter.respond_to?(:report_path=)
           end
-          last_checkpoint = log_timing("Save reports", start_time, last_checkpoint, debug_timing)
 
           # Output to stdout
           @formatter.on_finish(@result)
-          last_checkpoint = log_timing("Formatter output", start_time, last_checkpoint, debug_timing)
 
           # Display profile results if requested
           if @configuration.profile && @parsed_result[:test_times] && !@parsed_result[:test_times].empty?
             display_profile(@parsed_result[:test_times], @configuration.profile)
           end
-          last_checkpoint = log_timing("Profile display", start_time, last_checkpoint, debug_timing)
-
-          log_timing("Total orchestration", start_time, start_time, debug_timing) if debug_timing
 
           # Return exit code
           @result.success? ? 0 : 1
