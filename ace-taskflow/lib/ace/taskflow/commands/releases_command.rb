@@ -63,11 +63,17 @@ module Ace
           # Get releases based on preset configuration
           releases = get_releases_for_preset(preset_config)
 
+          # Apply limit if specified
+          original_count = releases.size
+          if additional_filters[:limit] && additional_filters[:limit] > 0
+            releases = releases.take(additional_filters[:limit])
+          end
+
           # Display releases
           if releases.empty?
             puts "No releases found for preset '#{preset_name}'."
           else
-            display_releases_with_preset(releases, preset_config)
+            display_releases_with_preset(releases, preset_config, original_count, additional_filters[:limit])
           end
         end
 
@@ -85,6 +91,11 @@ module Ace
               @manager.list_releases
             end
 
+            # Apply limit if specified
+            if options[:limit] && options[:limit] > 0
+              releases = releases.take(options[:limit])
+            end
+
             display_releases(releases, options)
           end
         end
@@ -96,6 +107,9 @@ module Ace
           while i < args.length
             arg = args[i]
             case arg
+            when "--limit"
+              filters[:limit] = args[i + 1].to_i if i + 1 < args.length
+              i += 2
             when "--stats"
               filters[:stats] = true
               i += 1
@@ -129,11 +143,15 @@ module Ace
           @manager.list_releases(filter)
         end
 
-        def display_releases_with_preset(releases, preset_config)
+        def display_releases_with_preset(releases, preset_config, original_count = nil, limit = nil)
           preset_name = preset_config[:name]
           description = preset_config[:description]
 
-          puts "Releases: #{preset_name} (#{releases.size} found)"
+          if limit && original_count && original_count > limit
+            puts "Releases: #{preset_name} (showing #{releases.size} of #{original_count} found)"
+          else
+            puts "Releases: #{preset_name} (#{releases.size} found)"
+          end
           puts description if description && description != "#{preset_name} preset"
           puts "=" * 50
 
@@ -194,6 +212,8 @@ module Ace
               options[:filter] = "done"
             when "--stats"
               options[:stats] = true
+            when "--limit"
+              options[:limit] = args[index + 1].to_i if index + 1 < args.length
             when "--help", "-h"
               show_help
               exit 0
