@@ -117,6 +117,25 @@ module Ace
         # @return [Array<Hash>] Sorted tasks
         def self.sort_tasks(tasks, sort_by = :id, ascending = true)
           sorted = case sort_by
+          when :sort
+            # Special sorting for sort field with in-progress priority
+            tasks.sort do |a, b|
+              # In-progress always comes first
+              if a[:status] == 'in-progress' && b[:status] != 'in-progress'
+                -1
+              elsif b[:status] == 'in-progress' && a[:status] != 'in-progress'
+                1
+              elsif a[:sort] && b[:sort]
+                a[:sort] <=> b[:sort]  # Both have sort: compare sort values
+              elsif a[:sort]
+                -1  # a has sort, b doesn't: a comes first
+              elsif b[:sort]
+                1   # b has sort, a doesn't: b comes first
+              else
+                # Neither has sort: compare by task ID number
+                extract_task_number(a[:id]) <=> extract_task_number(b[:id])
+              end
+            end
           when :priority
             tasks.sort_by { |t| priority_value(t[:priority]) }
           when :status
@@ -184,6 +203,16 @@ module Ace
         end
 
         private
+
+        def self.extract_task_number(task_id)
+          return 999999 unless task_id
+          # Extract numeric task number from IDs like "v.0.9.0+task.027"
+          if match = task_id.match(/task\.(\d+)$/)
+            match[1].to_i
+          else
+            999999  # Large number for tasks without proper ID format
+          end
+        end
 
         def self.priority_value(priority)
           case priority.to_s.downcase

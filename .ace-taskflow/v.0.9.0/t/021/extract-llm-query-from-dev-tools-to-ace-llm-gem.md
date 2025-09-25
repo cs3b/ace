@@ -4,6 +4,7 @@ status: pending
 priority: high
 estimate: 8h
 dependencies: []
+sort: 994
 ---
 
 # Extract llm-query from dev-tools to ace-llm gem
