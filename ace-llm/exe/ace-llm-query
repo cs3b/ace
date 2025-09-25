@@ -8,6 +8,10 @@ require "pathname"
 lib_path = File.expand_path("../lib", __dir__)
 $LOAD_PATH.unshift(lib_path) if File.directory?(lib_path)
 
+# Add ace-core lib if in development mode
+ace_core_lib = File.expand_path("../../ace-core/lib", __dir__)
+$LOAD_PATH.unshift(ace_core_lib) if File.directory?(ace_core_lib)
+
 require "ace/llm"
 
 module Ace
@@ -197,15 +201,18 @@ module Ace
         when "google"
           Ace::LLM::Organisms::GoogleClient
         when "openai"
-          # Ace::LLM::Organisms::OpenAIClient # To be implemented
-          error_output("OpenAI provider not yet implemented")
-          exit(1)
+          Ace::LLM::Organisms::OpenAIClient
         when "anthropic"
-          # Ace::LLM::Organisms::AnthropicClient # To be implemented
-          error_output("Anthropic provider not yet implemented")
-          exit(1)
+          Ace::LLM::Organisms::AnthropicClient
+        when "mistral"
+          Ace::LLM::Organisms::MistralClient
+        when "togetherai"
+          Ace::LLM::Organisms::TogetherAIClient
+        when "lmstudio"
+          Ace::LLM::Organisms::LMStudioClient
         else
-          error_output("Provider '#{provider}' not yet implemented")
+          error_output("Provider '#{provider}' not supported")
+          error_output("Supported providers: google, openai, anthropic, mistral, togetherai, lmstudio")
           exit(1)
         end
 

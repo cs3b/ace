@@ -1,7 +1,31 @@
 # frozen_string_literal: true
 
-require "ace/core"
+# Try to load ace-core if available
+begin
+  require "ace/core"
+rescue LoadError
+  # ace-core is optional for basic functionality
+end
+
 require_relative "llm/version"
+
+# Require all necessary components explicitly (no autoloading for now)
+require_relative "llm/atoms/env_reader"
+require_relative "llm/atoms/http_client"
+require_relative "llm/atoms/xdg_directory_resolver"
+
+require_relative "llm/molecules/file_io_handler"
+require_relative "llm/molecules/llm_alias_resolver"
+require_relative "llm/molecules/provider_model_parser"
+require_relative "llm/molecules/format_handlers"
+
+require_relative "llm/organisms/base_client"
+require_relative "llm/organisms/google_client"
+require_relative "llm/organisms/openai_client"
+require_relative "llm/organisms/anthropic_client"
+require_relative "llm/organisms/mistral_client"
+require_relative "llm/organisms/togetherai_client"
+require_relative "llm/organisms/lmstudio_client"
 
 module Ace
   module LLM
@@ -9,39 +33,5 @@ module Ace
     class ProviderError < Error; end
     class ConfigurationError < Error; end
     class AuthenticationError < Error; end
-
-    # Autoloader configuration
-    def self.setup_autoloader
-      @loader ||= begin
-        loader = Zeitwerk::Loader.for_gem_extension(Ace::LLM)
-
-        # Configure inflections for technical acronyms
-        loader.inflector.inflect(
-          "llm" => "LLM",
-          "xdg" => "XDG",
-          "http" => "HTTP",
-          "api" => "API",
-          "json" => "JSON",
-          "openai" => "OpenAI",
-          "lmstudio" => "LMStudio",
-          "togetherai" => "TogetherAI"
-        )
-
-        loader.push_dir(File.expand_path("llm", __dir__))
-        loader.ignore("#{__dir__}/llm/version.rb")
-        loader
-      end
-    end
-
-    def self.load!
-      setup_autoloader.setup
-    end
-
-    def self.eager_load!
-      setup_autoloader.eager_load
-    end
   end
 end
-
-# Load the gem
-Ace::LLM.load!

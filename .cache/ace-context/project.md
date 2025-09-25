@@ -450,7 +450,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Thu Sep 25 21:50:32 WEST 2025
+Thu Sep 25 22:11:58 WEST 2025
 
 ```
 
@@ -458,8 +458,7 @@ Thu Sep 25 21:50:32 WEST 2025
 
 **Output:**
 ```
- D .ace-taskflow/.ace-taskflow/backlog/ideas/20250924-172023-test-idea-for-backlog-storage.md
- M .cache/ace-context/project.md
+ M .ace-taskflow/v.0.9.0/t/031/ux/usage.md
 
 ```
 
@@ -492,6 +491,7 @@ No recent tasks found
 ```
 /Users/mc/Ps/ace-meta/ace-context
 /Users/mc/Ps/ace-meta/ace-core
+/Users/mc/Ps/ace-meta/ace-llm
 /Users/mc/Ps/ace-meta/ace-nav
 /Users/mc/Ps/ace-meta/ace-taskflow
 /Users/mc/Ps/ace-meta/ace-test-runner

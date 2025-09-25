@@ -58,7 +58,8 @@ module Ace
 
           return tasks unless File.directory?(task_dir)
 
-          # Iterate through task directories (e.g., t/001/, t/002/)
+          # Iterate through task directories
+          # Supports both old format (t/001/) and new format (t/001-feat-taskflow/)
           Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
             # Find .md files in the task folder (not in subfolders)
             md_files = Dir.glob(File.join(task_folder, "*.md"))
@@ -144,13 +145,9 @@ module Ace
 
           return nil unless context_path
 
-          # Build task directory path
-          task_dir = Atoms::PathBuilder.build_task_path("", context_path, number)
-          # Only remove leading slash if it creates a double slash
-          task_dir = task_dir.sub(/^\/\//, "/")
-
-          # Find the .md file in the task directory
-          return nil unless File.directory?(task_dir)
+          # Try to find the task directory (supports both old and new formats)
+          task_dir = find_task_directory(context_path, number)
+          return nil unless task_dir && File.directory?(task_dir)
 
           md_files = Dir.glob(File.join(task_dir, "*.md"))
           return nil if md_files.empty?
@@ -218,6 +215,31 @@ module Ace
             return line.strip unless line.strip.empty?
           end
           "Untitled Task"
+        end
+
+        # Find task directory, supporting both old and new formats
+        # @param context_path [String] The context directory path
+        # @param number [String] The task number
+        # @return [String, nil] The task directory path or nil if not found
+        def find_task_directory(context_path, number)
+          task_base = File.join(context_path, "t")
+          padded_number = number.to_s.rjust(3, '0')
+
+          # First try old format (just the number)
+          old_format_dir = File.join(task_base, padded_number)
+          return old_format_dir if File.directory?(old_format_dir)
+
+          # Then try new format (number with slug)
+          # Look for directories starting with the padded number followed by a hyphen
+          pattern = File.join(task_base, "#{padded_number}-*")
+          matching_dirs = Dir.glob(pattern).select { |d| File.directory?(d) }
+          return matching_dirs.first unless matching_dirs.empty?
+
+          # Finally try unpadded number for compatibility
+          unpadded_dir = File.join(task_base, number.to_s)
+          return unpadded_dir if File.directory?(unpadded_dir)
+
+          nil
         end
       end
     end

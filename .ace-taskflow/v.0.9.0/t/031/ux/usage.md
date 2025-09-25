@@ -37,6 +37,7 @@ qa/
 ## Usage Scenarios
 
 ### Scenario 1: Creating a New Task
+
 ```bash
 $ ace-taskflow task create "Add support for GitHub issues import"
 
@@ -46,6 +47,7 @@ Path: .ace-taskflow/v.0.9.0/t/035-feat-taskflow-github-import/task.035.md
 ```
 
 ### Scenario 2: Browsing Tasks in File Explorer
+
 ```bash
 # Before: Meaningless numbers
 /t/025/
@@ -59,6 +61,7 @@ Path: .ace-taskflow/v.0.9.0/t/035-feat-taskflow-github-import/task.035.md
 ```
 
 ### Scenario 3: AI Agent Navigation
+
 ```bash
 # AI agent using ace-nav can understand task context from paths
 $ ace-nav 'wfi://*taskflow*' --list
@@ -70,6 +73,7 @@ $ ace-nav 'wfi://*taskflow*' --list
 ```
 
 ### Scenario 4: Quick Task Discovery
+
 ```bash
 # Find all feature tasks
 $ ls .ace-taskflow/v.*/t/ | grep feat-
@@ -83,6 +87,7 @@ $ ls .ace-taskflow/v.*/t/ | grep fix-
 ```
 
 ### Scenario 5: Migration of Existing Tasks
+
 ```bash
 $ ace-taskflow migrate-paths
 
@@ -100,3 +105,4 @@ Migration complete: 27 tasks updated
 3. **Improved Search**: Can use standard file tools to filter by type/component
 4. **AI-Friendly**: Agents can understand project structure without parsing files
 5. **Human-Friendly**: Developers can navigate tasks more efficiently
+
