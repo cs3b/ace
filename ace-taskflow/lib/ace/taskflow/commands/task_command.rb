@@ -3,6 +3,7 @@
 require_relative "../organisms/task_manager"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/task_filter"
+require_relative "../molecules/dependency_tree_visualizer"
 require_relative "../models/task"
 
 module Ace
@@ -55,6 +56,9 @@ module Ace
           elsif index = args.index("--content")
             args.delete_at(index)
             return "content"
+          elsif index = args.index("--tree")
+            args.delete_at(index)
+            return "tree"
           end
           # Default to formatted display
           "formatted"
@@ -96,6 +100,8 @@ module Ace
               display_task_path(task)
             when "content"
               display_task(task)
+            when "tree"
+              display_task_tree(task)
             else
               # Default formatted display
               display_task_formatted(task)
@@ -328,6 +334,32 @@ module Ace
           end
         end
 
+        def display_task_tree(task_data)
+          task = Models::Task.new(task_data)
+          ref = task.qualified_reference || task.task_number || task.id
+
+          puts "Task: #{ref} - #{task.title}"
+          puts ""
+
+          # Get all tasks to check dependencies
+          all_tasks = @manager.list_tasks(context: "all")
+
+          # Generate dependency tree
+          tree_output = Molecules::DependencyTreeVisualizer.generate_task_tree(task.id, all_tasks)
+          puts tree_output
+
+          # Show blocking information if dependencies exist
+          if task.dependencies && !task.dependencies.empty?
+            puts ""
+            blocking_tasks = Molecules::DependencyResolver.get_blocking_tasks(task_data, all_tasks)
+            if blocking_tasks.any?
+              puts "Blocked by: #{blocking_tasks.map { |t| t[:task_number] || t[:id] }.join(', ')}"
+            else
+              puts "All dependencies met - ready to start"
+            end
+          end
+        end
+
         def format_relative_path(path)
           # Make path relative to project root
           root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
@@ -351,6 +383,7 @@ module Ace
           puts "Subcommands:"
           puts "  (none)             Show next task from active release"
           puts "  <reference>        Show specific task"
+          puts "    --tree           Show task dependency tree"
           puts "  create <title>     Create new task"
           puts "    --backlog        Create in backlog"
           puts "    --release <name> Create in specific release"

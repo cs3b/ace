@@ -1,23 +1,14 @@
 # frozen_string_literal: true
 
+require_relative "client_registry"
+
 module Ace
   module LLM
     module Molecules
       # ProviderModelParser handles parsing and validation of provider:model syntax
       # for the unified LLM query interface
       class ProviderModelParser
-        # Default models for each provider
-        DEFAULT_MODELS = {
-          "google" => "gemini-2.5-flash",
-          "anthropic" => "claude-3-5-sonnet-20241022",
-          "openai" => "gpt-4o",
-          "mistral" => "mistral-large-latest",
-          "togetherai" => "meta-llama/Llama-3-70b-chat-hf",
-          "lmstudio" => "local-model"
-        }.freeze
-
-        # List of supported providers
-        SUPPORTED_PROVIDERS = %w[google anthropic openai mistral togetherai lmstudio].freeze
+        # All provider information now comes from the registry
 
         # Result object for parsed provider:model combinations
         ParseResult = Struct.new(:provider, :model, :valid, :error, :original_input) do
@@ -34,12 +25,14 @@ module Ace
           end
         end
 
-        attr_reader :alias_resolver
+        attr_reader :alias_resolver, :registry
 
         # Initialize parser
         # @param alias_resolver [LlmAliasResolver, nil] Optional alias resolver
-        def initialize(alias_resolver: nil)
+        # @param registry [ClientRegistry, nil] Optional client registry
+        def initialize(alias_resolver: nil, registry: nil)
           @alias_resolver = alias_resolver || LlmAliasResolver.new
+          @registry = registry || ClientRegistry.new
         end
 
         # Parse a provider:model string or alias
@@ -88,14 +81,16 @@ module Ace
         # Get list of supported providers
         # @return [Array<String>] List of provider names
         def supported_providers
-          SUPPORTED_PROVIDERS
+          @registry.available_providers
         end
 
         # Get default model for a provider
         # @param provider [String] Provider name
-        # @return [String] Default model name
+        # @return [String, nil] Default model name or nil if provider not found
         def default_model_for(provider)
-          DEFAULT_MODELS[provider] || "default"
+          # Get from registry only - no hardcoded fallbacks
+          models = @registry.models_for_provider(provider)
+          models&.first
         end
 
         # Get all available aliases from the resolver

@@ -450,7 +450,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Thu Sep 25 22:11:58 WEST 2025
+Thu Sep 25 23:51:58 WEST 2025
 
 ```
 
@@ -458,7 +458,19 @@ Thu Sep 25 22:11:58 WEST 2025
 
 **Output:**
 ```
- M .ace-taskflow/v.0.9.0/t/031/ux/usage.md
+ M .ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/task.034.md
+ M .ace-taskflow/v.0.9.0/t/035-feat-llm-configuration-based-provider-a/task.035.md
+ M .cache/ace-context/project.md
+ M ace-llm/README.md
+ M ace-llm/Rakefile
+ M ace-llm/exe/ace-llm-query
+ M ace-llm/lib/ace/llm/molecules/provider_model_parser.rb
+?? ace-llm/.ace.example/llm/providers/
+?? ace-llm/lib/ace/llm/atoms/provider_config_validator.rb
+?? ace-llm/lib/ace/llm/molecules/client_registry.rb
+?? ace-llm/lib/ace/llm/molecules/provider_loader.rb
+?? ace-llm/providers/
+?? ace-llm/test/
 
 ```
 
