@@ -164,7 +164,13 @@ module Ace
 
         def get_tasks_for_preset(preset_config)
           context = preset_config[:context] || 'current'
-          filters = preset_config[:filters] || {}
+          filters_raw = preset_config[:filters] || {}
+
+          # Convert string keys to symbols for compatibility with TaskManager
+          filters = {}
+          filters_raw.each do |key, value|
+            filters[key.to_sym] = value
+          end
 
           case context
           when 'all'
