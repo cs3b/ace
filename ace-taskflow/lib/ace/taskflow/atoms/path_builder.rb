@@ -9,19 +9,28 @@ module Ace
         # @param root [String] The root directory (e.g., .ace-taskflow)
         # @param context [String] The context (backlog, v.X.Y.Z, done/v.X.Y.Z)
         # @param task_number [String, Integer] The task number
+        # @param slug_part [String] Optional descriptive slug part (e.g., "feat-taskflow-idea")
         # @return [String] The complete path to the task directory
-        def self.build_task_path(root, context, task_number)
-          File.join(root, context, "t", task_number.to_s)
+        def self.build_task_path(root, context, task_number, slug_part = nil)
+          task_dir_name = if slug_part
+            "#{task_number.to_s.rjust(3, '0')}-#{slug_part}"
+          else
+            task_number.to_s
+          end
+          File.join(root, context, "t", task_dir_name)
         end
 
         # Build task file path (with optional filename)
         # @param root [String] The root directory
         # @param context [String] The context
         # @param task_number [String, Integer] The task number
-        # @param filename [String] Optional filename (defaults to "task.md")
+        # @param filename [String] Optional filename (defaults to "task.NNN.md" for new format)
+        # @param slug_part [String] Optional descriptive slug part
         # @return [String] The complete path to the task file
-        def self.build_task_file_path(root, context, task_number, filename = "task.md")
-          File.join(build_task_path(root, context, task_number), filename)
+        def self.build_task_file_path(root, context, task_number, filename = nil, slug_part = nil)
+          # Use new naming convention: task.NNN.md when slug is present
+          actual_filename = filename || (slug_part ? "task.#{task_number.to_s.rjust(3, '0')}.md" : "task.md")
+          File.join(build_task_path(root, context, task_number, slug_part), actual_filename)
         end
 
         # Build release path
@@ -58,8 +67,12 @@ module Ace
         # @param path [String] The file or directory path
         # @return [String, nil] The task number or nil if not found
         def self.extract_task_number(path)
-          # Match patterns like /t/019/ or /t/019/task.md
-          match = path.match(%r{/t/(\d+)(?:/|$)})
+          # Match patterns like:
+          # - /t/019/ (old format)
+          # - /t/019/task.md (old format)
+          # - /t/019-feat-taskflow/ (new format)
+          # - /t/019-feat-taskflow/task.019.md (new format)
+          match = path.match(%r{/t/(\d+)(?:-[^/]+)?(?:/|$)})
           match ? match[1] : nil
         end
 
@@ -97,6 +110,7 @@ module Ace
         # @param title [String] The task title
         # @param max_length [Integer] Maximum filename length (default: 50)
         # @return [String] The sanitized filename with .md extension
+        # @deprecated Use task.NNN.md naming convention with descriptive directory names instead
         def self.generate_task_filename(title, max_length = 50)
           # Remove special characters and convert to lowercase with hyphens
           filename = title.downcase
@@ -113,6 +127,18 @@ module Ace
 
           # Add .md extension
           "#{filename}.md"
+        end
+
+        # Extract slug part from a task directory name
+        # @param dir_name [String] Directory name (e.g., "025-feat-taskflow-idea")
+        # @return [String, nil] The slug part without number, or nil for old format
+        def self.extract_slug_from_dir(dir_name)
+          # Match pattern like 025-feat-taskflow-idea
+          if dir_name =~ /^\d{3}-(.+)$/
+            $1
+          else
+            nil
+          end
         end
       end
     end

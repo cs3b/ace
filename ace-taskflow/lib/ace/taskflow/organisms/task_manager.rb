@@ -5,6 +5,7 @@ require_relative "../molecules/task_loader"
 require_relative "../molecules/task_filter"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/config_loader"
+require_relative "../molecules/task_slug_generator"
 require_relative "../atoms/task_reference_parser"
 require_relative "../atoms/path_builder"
 require_relative "../atoms/yaml_parser"
@@ -95,13 +96,14 @@ module Ace
             return { success: false, message: "Invalid context: #{context}" }
           end
 
-          # Generate task ID
+          # Generate task ID and slug
           task_number = generate_task_number(context_path)
           task_id = generate_task_id(context, task_number)
+          slug_part = Molecules::TaskSlugGenerator.generate_descriptive_part(title, metadata)
 
-          # Create task directory and file with descriptive name
-          task_dir = Atoms::PathBuilder.build_task_path("", context_path, task_number)
-          filename = Atoms::PathBuilder.generate_task_filename(title)
+          # Create task directory and file with new naming convention
+          task_dir = Atoms::PathBuilder.build_task_path("", context_path, task_number, slug_part)
+          filename = "task.#{task_number}.md"
           task_file = File.join(task_dir, filename)
 
           begin
@@ -184,13 +186,17 @@ module Ace
             return { success: false, message: "Invalid target context: #{target}" }
           end
 
-          # Generate new task number in target
+          # Generate new task number and slug in target
           new_number = generate_task_number(target_path)
           new_id = generate_task_id(target, new_number)
 
+          # Extract title from task for slug generation
+          task_title = task[:title] || "Untitled Task"
+          slug_part = Molecules::TaskSlugGenerator.generate_descriptive_part(task_title, task[:metadata] || {})
+
           # Build paths
           old_dir = File.dirname(task[:path])
-          new_dir = Atoms::PathBuilder.build_task_path("", target_path, new_number)
+          new_dir = Atoms::PathBuilder.build_task_path("", target_path, new_number, slug_part)
 
           begin
             # Create target directory
@@ -199,9 +205,15 @@ module Ace
             # Move task directory
             FileUtils.mv(old_dir, new_dir)
 
-            # Find the task file in the new directory (it has the same name as before)
-            task_filename = File.basename(task[:path])
-            new_task_file = File.join(new_dir, task_filename)
+            # Use new naming convention for moved task
+            new_task_file = File.join(new_dir, "task.#{new_number}.md")
+
+            # If old task uses different naming, rename it
+            old_filename = File.basename(task[:path])
+            temp_file = File.join(new_dir, old_filename)
+            if File.exist?(temp_file) && temp_file != new_task_file
+              FileUtils.mv(temp_file, new_task_file)
+            end
 
             # Update task ID in file
             update_task_id_in_file(new_task_file, new_id)
