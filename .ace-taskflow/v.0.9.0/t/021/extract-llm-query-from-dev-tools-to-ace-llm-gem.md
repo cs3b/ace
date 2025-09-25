@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.021
-status: pending
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
@@ -195,24 +195,24 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
 
 ### Planning Steps
 
-* [ ] Analyze dev-tools llm-query structure comprehensively
+* [x] Analyze dev-tools llm-query structure comprehensively
   - Review all provider implementations
   - Map dry-cli usage to OptionParser equivalents
   - Identify ace-core integration points
 
-* [ ] Design ace-llm gem structure following ATOM pattern
+* [x] Design ace-llm gem structure following ATOM pattern
   - Plan atoms/molecules/organisms organization
   - Map existing classes to new structure
   - Define module namespaces
 
-* [ ] Plan configuration migration strategy
+* [x] Plan configuration migration strategy
   - Design .ace/llm/ configuration structure
   - Plan backward compatibility approach
   - Define migration timeline
 
 ### Execution Steps
 
-- [ ] Step 1: Create ace-llm gem scaffold
+- [x] Step 1: Create ace-llm gem scaffold
   - Create ace-llm directory at repository root
   - Create gemspec with dependencies (ace-core, faraday, addressable, kramdown)
   - Setup standard gem structure (lib/, exe/, test/)
@@ -221,7 +221,7 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
   > Assert: ace-llm gem structure matches ace-* patterns
   > Command: ls -la ace-llm/ && cat ace-llm/ace-llm.gemspec
 
-- [ ] Step 2: Port atoms (pure functions)
+- [x] Step 2: Port atoms (pure functions)
   - Copy xdg_directory_resolver, env_reader to ace-llm/lib/ace/llm/atoms/
   - Adapt to use ace-core's ProjectRootFinder where applicable
   - Remove any dry-* dependencies
@@ -305,10 +305,10 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
 
 ## Acceptance Criteria
 
-- [ ] ace-llm gem created with proper structure and gemspec
+- [x] ace-llm gem created with proper structure and gemspec
 - [ ] All provider clients ported and functional
 - [ ] Command works without dry-cli dependencies
-- [ ] Alias resolution works with ace-core config cascade
+- [x] Alias resolution works with ace-core config cascade
 - [ ] Cost tracking and pricing functional
 - [ ] All current llm-query features maintained
 - [ ] Tests pass for all provider integrations
