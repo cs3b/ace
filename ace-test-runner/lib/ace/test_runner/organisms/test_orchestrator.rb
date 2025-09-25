@@ -59,9 +59,28 @@ module Ace
           # Execute tests
           execution_result = execute_tests(test_files)
 
-          # Parse results
-          # Check if we executed multiple commands (per-file) or single command (grouped)
-          if execution_result[:commands] && execution_result[:commands].is_a?(Array)
+          # Check if execution failed (e.g., LoadError)
+          if !execution_result[:success] && execution_result[:stderr] && !execution_result[:stderr].empty?
+            # Handle load errors or other failures
+            @parsed_result = {
+              summary: {
+                runs: 0,
+                assertions: 0,
+                failures: 0,
+                errors: test_files.size,  # Count all test files as errors
+                skips: 0,
+                passed: 0
+              },
+              failures: [],
+              errors: [{
+                message: execution_result[:stderr].strip,
+                type: "LoadError",
+                files: test_files
+              }],
+              deprecations: [],
+              duration: execution_result[:duration]
+            }
+          elsif execution_result[:commands] && execution_result[:commands].is_a?(Array)
             # Each file was executed separately, parse and sum them all
             @parsed_result = aggregate_individual_results(execution_result[:stdout])
           else
