@@ -123,7 +123,7 @@ module Ace
               description: 'Next actionable tasks (pending + in-progress)',
               context: 'current',
               filters: { status: ['pending', 'in-progress'] },
-              sort: { by: :priority, ascending: false },
+              sort: { by: :sort, ascending: true },
               display: { group_by: nil },
               type: 'tasks',
               default: true
@@ -153,7 +153,7 @@ module Ace
               description: 'Pending items only',
               context: 'current',
               filters: { status: ['pending'] },
-              sort: { by: :priority, ascending: false },
+              sort: { by: :sort, ascending: true },
               display: {},
               type: nil, # Universal preset
               default: true
@@ -163,7 +163,7 @@ module Ace
               description: 'In-progress items only',
               context: 'current',
               filters: { status: ['in-progress'] },
-              sort: { by: :priority, ascending: false },
+              sort: { by: :sort, ascending: true },
               display: {},
               type: nil, # Universal preset
               default: true

@@ -247,9 +247,8 @@ module Ace
           if stats[:by_priority].any?
             puts "By Priority:"
             stats[:by_priority].each do |priority, count|
-              indicator = priority_indicator(priority)
               percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{indicator} #{priority.capitalize}: #{count} (#{percentage}%)"
+              puts "  #{priority.capitalize}: #{count} (#{percentage}%)"
             end
             puts ""
           end
@@ -353,10 +352,9 @@ module Ace
           task = Models::Task.new(task_data)
 
           status_str = status_icon(task.status)
-          priority_str = priority_indicator(task.priority)
           ref = task.qualified_reference || task.task_number || task.id
 
-          puts "  #{ref.ljust(15)} #{status_str} #{priority_str} #{task.title}"
+          puts "  #{ref.ljust(15)} #{status_str} #{task.title}"
 
           # Show path on second line
           if task.path
@@ -364,12 +362,13 @@ module Ace
             puts "    #{relative_path}"
           end
 
-          if task.estimate && task.estimate != "TBD"
-            puts "    Estimate: #{task.estimate}"
-          end
+          # Combine estimate and dependencies on one line if both present
+          details = []
+          details << "Estimate: #{task.estimate}" if task.estimate && task.estimate != "TBD"
+          details << "Dependencies: #{task.dependencies.join(', ')}" unless task.dependencies.empty?
 
-          unless task.dependencies.empty?
-            puts "    Dependencies: #{task.dependencies.join(', ')}"
+          if details.any?
+            puts "    #{details.join(' | ')}"
           end
         end
 
@@ -411,9 +410,8 @@ module Ace
           if stats[:by_priority].any?
             puts "By Priority:"
             stats[:by_priority].each do |priority, count|
-              indicator = priority_indicator(priority)
               percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{indicator} #{priority.capitalize}: #{count} (#{percentage}%)"
+              puts "  #{priority.capitalize}: #{count} (#{percentage}%)"
             end
             puts ""
           end
@@ -429,23 +427,16 @@ module Ace
 
         def status_icon(status)
           case status.to_s.downcase
-          when "done" then "✓"
-          when "in-progress" then "⚡"
-          when "pending" then "○"
-          when "blocked" then "⊘"
+          when "draft" then "⚫"
+          when "pending" then "⚪"
+          when "in-progress" then "🟡"
+          when "done" then "🟢"
+          when "blocked", "skipped" then "🔴"
           else "?"
           end
         end
 
-        def priority_indicator(priority)
-          case priority.to_s.downcase
-          when "critical" then "🔴"
-          when "high" then "🟡"
-          when "medium" then "🟢"
-          when "low" then "⚪"
-          else "⚪"
-          end
-        end
+        # Priority indicator removed - using status colors instead
 
         def execute_reschedule(args)
           require_relative "../organisms/task_scheduler"

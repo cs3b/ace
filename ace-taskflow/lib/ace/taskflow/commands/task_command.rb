@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../organisms/task_manager"
+require_relative "../molecules/list_preset_manager"
+require_relative "../molecules/task_filter"
 require_relative "../models/task"
 
 module Ace
@@ -10,6 +12,7 @@ module Ace
       class TaskCommand
         def initialize
           @manager = Organisms::TaskManager.new
+          @preset_manager = Molecules::ListPresetManager.new
         end
 
         def execute(args)
@@ -53,13 +56,20 @@ module Ace
             args.delete_at(index)
             return "content"
           end
-          # Default to path mode
-          "path"
+          # Default to formatted display
+          "formatted"
         end
 
         def show_next_task(args, display_mode: "path")
-          context = parse_context(args)
-          task = @manager.get_next_task(context: context)
+          # Use the 'next' preset to get tasks
+          preset_config = @preset_manager.apply_preset('next', { limit: 1 })
+          tasks = get_tasks_for_preset(preset_config)
+
+          # Sort tasks according to preset
+          tasks = apply_preset_sorting(tasks, preset_config)
+
+          # Get first task
+          task = tasks.first
 
           if task
             case display_mode
@@ -67,6 +77,9 @@ module Ace
               display_task_path(task)
             when "content"
               display_task(task)
+            else
+              # Default formatted display
+              display_task_formatted(task)
             end
           else
             puts "No pending or in-progress tasks found."
@@ -83,6 +96,9 @@ module Ace
               display_task_path(task)
             when "content"
               display_task(task)
+            else
+              # Default formatted display
+              display_task_formatted(task)
             end
           else
             puts "Task '#{reference}' not found."
@@ -242,10 +258,11 @@ module Ace
 
         def status_icon(status)
           case status.to_s.downcase
-          when "done" then "✓"
-          when "in-progress" then "⚡"
-          when "pending" then "○"
-          when "blocked" then "⊘"
+          when "draft" then "⚫"
+          when "pending" then "⚪"
+          when "in-progress" then "🟡"
+          when "done" then "🟢"
+          when "blocked", "skipped" then "🔴"
           else "?"
           end
         end
@@ -264,6 +281,70 @@ module Ace
           "current"
         end
 
+        def get_tasks_for_preset(preset_config)
+          context = preset_config[:context] || 'current'
+          filters_raw = preset_config[:filters] || {}
+
+          # Convert string keys to symbols for compatibility with TaskManager
+          filters = {}
+          filters_raw.each do |key, value|
+            filters[key.to_sym] = value
+          end
+
+          @manager.list_tasks(context: context, filters: filters)
+        end
+
+        def apply_preset_sorting(tasks, preset_config)
+          sort_config = preset_config[:sort] || { by: :sort, ascending: true }
+
+          Molecules::TaskFilter.sort_tasks(
+            tasks,
+            sort_config[:by],
+            sort_config[:ascending]
+          )
+        end
+
+        def display_task_formatted(task_data)
+          task = Models::Task.new(task_data)
+
+          status_str = status_icon(task.status)
+          ref = task.qualified_reference || task.task_number || task.id
+
+          puts "Task: #{ref} #{status_str} #{task.title}"
+
+          # Show path on second line
+          if task.path
+            relative_path = format_relative_path(task.path)
+            puts "  Path: #{relative_path}"
+          end
+
+          # Combine estimate and dependencies on one line if both present
+          details = []
+          details << "Estimate: #{task.estimate}" if task.estimate && task.estimate != "TBD"
+          details << "Dependencies: #{task.dependencies.join(', ')}" unless task.dependencies.empty?
+
+          if details.any?
+            puts "  #{details.join(' | ')}"
+          end
+        end
+
+        def format_relative_path(path)
+          # Make path relative to project root
+          root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
+          relative = path.sub(/^#{Regexp.escape(root_path)}\/?/, "")
+
+          # Truncate if too long
+          max_length = 70
+          if relative.length > max_length
+            # Keep the beginning and end, truncate middle
+            start_length = 35
+            end_length = 32
+            "#{relative[0...start_length]}...#{relative[-end_length..]}"
+          else
+            relative
+          end
+        end
+
         def show_help
           puts "Usage: ace-taskflow task [subcommand] [options]"
           puts ""
@@ -279,8 +360,9 @@ module Ace
           puts "  update <reference> Update task metadata"
           puts ""
           puts "Display Options:"
-          puts "  --path             Show only task file path (default)"
+          puts "  --path             Show only task file path"
           puts "  --content          Show full task content"
+          puts "  (default)          Show formatted task with status"
           puts ""
           puts "Reference formats:"
           puts "  018               Task in current context"
