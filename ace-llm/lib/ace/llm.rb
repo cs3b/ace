@@ -27,8 +27,6 @@ require_relative "llm/organisms/mistral_client"
 require_relative "llm/organisms/togetherai_client"
 require_relative "llm/organisms/lmstudio_client"
 
-require_relative "llm/client_registry"
-
 module Ace
   module LLM
     class Error < StandardError; end

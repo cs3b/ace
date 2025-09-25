@@ -196,16 +196,23 @@ module Ace
       end
 
       def create_client(provider, model)
-        # Try to load extensions first (only once)
-        Ace::LLM::ClientRegistry.load_extensions unless @extensions_loaded
-        @extensions_loaded = true
-
-        # Get client class from registry
-        client_class = Ace::LLM::ClientRegistry.get(provider)
-
-        unless client_class
+        # Map provider to client class
+        client_class = case provider
+        when "google"
+          Ace::LLM::Organisms::GoogleClient
+        when "openai"
+          Ace::LLM::Organisms::OpenAIClient
+        when "anthropic"
+          Ace::LLM::Organisms::AnthropicClient
+        when "mistral"
+          Ace::LLM::Organisms::MistralClient
+        when "togetherai"
+          Ace::LLM::Organisms::TogetherAIClient
+        when "lmstudio"
+          Ace::LLM::Organisms::LMStudioClient
+        else
           error_output("Provider '#{provider}' not supported")
-          error_output("Supported providers: #{Ace::LLM::ClientRegistry.providers.join(", ")}")
+          error_output("Supported providers: google, openai, anthropic, mistral, togetherai, lmstudio")
           exit(1)
         end
 
