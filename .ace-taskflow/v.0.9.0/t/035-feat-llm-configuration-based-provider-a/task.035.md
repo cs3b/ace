@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.035
-status: pending
+status: done
 priority: high
 estimate: 2 days
 dependencies: [task.021]
@@ -55,40 +55,40 @@ api_key:
 
 ## Acceptance Criteria
 
-- [ ] ClientRegistry class created to manage provider registration
-- [ ] YAML configuration loader implemented
-- [ ] Default provider configurations created
-- [ ] Dynamic gem loading support added
-- [ ] Backward compatibility maintained with existing code
-- [ ] Provider discovery from multiple directories (.ace/llm/providers/, ~/.config/ace-llm/providers/)
-- [ ] Validation of provider configurations on load
-- [ ] Clear error messages for missing gems or invalid configs
-- [ ] Tests for configuration loading and provider instantiation
+- [x] ClientRegistry class created to manage provider registration
+- [x] YAML configuration loader implemented
+- [x] Default provider configurations created
+- [x] Dynamic gem loading support added
+- [x] Backward compatibility maintained with existing code
+- [x] Provider discovery from multiple directories (.ace/llm/providers/, ~/.config/ace-llm/providers/)
+- [x] Validation of provider configurations on load
+- [x] Clear error messages for missing gems or invalid configs
+- [x] Tests for configuration loading and provider instantiation
 
 ## Planning Steps
 
-* [ ] Design ClientRegistry interface
-* [ ] Define provider configuration schema
-* [ ] Plan gem loading strategy
-* [ ] Design error handling approach
+* [x] Design ClientRegistry interface
+* [x] Define provider configuration schema
+* [x] Plan gem loading strategy
+* [x] Design error handling approach
 
 ## Execution Steps
 
 ### Phase 1: Core Registry Implementation
 
-- [ ] Create `ace-llm/lib/ace/llm/molecules/client_registry.rb`
+- [x] Create `ace-llm/lib/ace/llm/molecules/client_registry.rb`
   - Load provider configurations from YAML
   - Validate configuration schema
   - Cache loaded configurations
   - Provide lookup interface
 
-- [ ] Create `ace-llm/lib/ace/llm/atoms/provider_config_validator.rb`
+- [x] Create `ace-llm/lib/ace/llm/atoms/provider_config_validator.rb`
   - Validate required fields (name, class, gem)
   - Validate model lists
   - Validate API key requirements
   - Return validation errors
 
-- [ ] Create `ace-llm/lib/ace/llm/molecules/provider_loader.rb`
+- [x] Create `ace-llm/lib/ace/llm/molecules/provider_loader.rb`
   - Attempt to require provider gem
   - Load provider class dynamically
   - Handle missing gems gracefully
@@ -96,7 +96,7 @@ api_key:
 
 ### Phase 2: Default Configurations
 
-- [ ] Create default provider configurations
+- [x] Create default provider configurations
   - `.ace/llm/providers/google.yml`
   - `.ace/llm/providers/openai.yml`
   - `.ace/llm/providers/anthropic.yml`
@@ -104,38 +104,38 @@ api_key:
   - `.ace/llm/providers/togetherai.yml`
   - `.ace/llm/providers/lmstudio.yml`
 
-- [ ] Create provider template
+- [x] Create provider template
   - `.ace/llm/providers/template.yml.example`
   - Document all available options
   - Provide examples for custom providers
 
 ### Phase 3: Integration
 
-- [ ] Refactor `ace-llm/exe/ace-llm-query`
+- [x] Refactor `ace-llm/exe/ace-llm-query`
   - Replace hardcoded case statement with ClientRegistry
   - Load registry on startup
   - Use registry.get_client(provider, model)
   - Handle provider not found errors
 
-- [ ] Update ProviderModelParser
+- [x] Update ProviderModelParser
   - Integrate with ClientRegistry for validation
   - Check if provider exists in registry
   - Validate model against provider's model list
 
-- [ ] Add provider listing capability
+- [x] Add provider listing capability
   - `ace-llm-query --list-providers`
   - Show available providers and their models
   - Indicate which gems are missing
 
 ### Phase 4: Testing and Documentation
 
-- [ ] Add tests for ClientRegistry
+- [x] Add tests for ClientRegistry
   - Test configuration loading
   - Test provider instantiation
   - Test error handling
   - Test gem loading
 
-- [ ] Update documentation
+- [x] Update documentation
   - Document provider configuration format
   - Add examples for custom providers
   - Document gem-based provider creation

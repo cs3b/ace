@@ -1,6 +1,6 @@
 # ace-llm
 
-LLM provider integration for AI-assisted development. Query any LLM provider through a unified CLI interface with cost tracking and output formatting.
+LLM provider integration for AI-assisted development. Query any LLM provider through a unified CLI interface with cost tracking and output formatting. Features a configuration-based provider architecture that supports dynamic provider registration via YAML files.
 
 ## Installation
 
@@ -31,6 +31,9 @@ ace-llm-query google "Explain closures"
 
 # Use aliases for quick access
 ace-llm-query gflash "Write a haiku about coding"
+
+# List available providers and their status
+ace-llm-query --list-providers
 ```
 
 ### Common Aliases
@@ -90,17 +93,50 @@ providers:
     pro: "gemini-2.5-pro"
 ```
 
+### Provider Configuration
+
+Providers are now configured via YAML files in `.ace/llm/providers/`. You can add custom providers or override default configurations:
+
+```yaml
+# .ace/llm/providers/custom-provider.yml
+name: custom-provider
+class: CustomProviders::MyLLMClient
+gem: custom-llm-provider  # External gem
+models:
+  - model-1
+  - model-2
+api_key:
+  env: CUSTOM_API_KEY
+  required: true
+capabilities:
+  - text_generation
+  - streaming
+default_options:
+  temperature: 0.7
+  max_tokens: 4096
+```
+
+#### Configuration Search Paths
+
+Provider configurations are loaded from (in order):
+1. Project `.ace/llm/providers/` directory
+2. User config `~/.config/ace-llm/providers/`
+3. Gem built-in `providers/` directory
+
+First configuration found wins if there are duplicates.
+
 ## Supported Providers
 
-Currently implemented:
-- **Google** (Gemini models)
+All providers are now configuration-based and support dynamic loading:
 
-Coming soon:
-- **OpenAI** (GPT models)
-- **Anthropic** (Claude models)
-- **Mistral**
-- **Together AI**
-- **LM Studio** (local models)
+- **Google** (Gemini models) - `gemini-2.5-flash`, `gemini-2.5-pro`
+- **OpenAI** (GPT models) - `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`
+- **Anthropic** (Claude models) - `claude-3-5-sonnet`, `claude-3-opus`
+- **Mistral** - `mistral-large-latest`, `mistral-small-latest`
+- **Together AI** - Various open-source models
+- **LM Studio** (local models) - Custom local models
+
+Use `ace-llm-query --list-providers` to see available providers and their configuration status.
 
 ## Development
 
@@ -119,10 +155,20 @@ bundle exec rake install
 
 The gem follows the ATOM architecture pattern:
 
-- **Atoms**: Pure functions (env_reader, http_client, xdg_directory_resolver)
-- **Molecules**: Composed operations (llm_alias_resolver, provider_model_parser, format_handlers)
+- **Atoms**: Pure functions (env_reader, http_client, xdg_directory_resolver, provider_config_validator)
+- **Molecules**: Composed operations (client_registry, provider_loader, llm_alias_resolver, provider_model_parser, format_handlers)
 - **Organisms**: Provider clients (base_client, google_client, etc.)
 - **Commands**: CLI implementation using OptionParser
+
+### Configuration-Based Provider Architecture
+
+The new architecture features:
+- **ClientRegistry**: Manages provider configurations and instantiation
+- **ProviderLoader**: Handles dynamic gem and class loading
+- **ProviderConfigValidator**: Validates provider configuration schemas
+- **YAML-based configuration**: Define providers without code changes
+- **Dynamic discovery**: Auto-discover providers from multiple directories
+- **Gem-based plugins**: Support for provider gems as separate packages
 
 ## License
 

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'dependency_resolver'
+
 module Ace
   module Taskflow
     module Molecules
@@ -110,53 +112,63 @@ module Ace
           result
         end
 
-        # Sort tasks by various criteria
+        # Sort tasks by various criteria with dependency awareness
         # @param tasks [Array<Hash>] Tasks to sort
         # @param sort_by [Symbol] Sort criterion
         # @param ascending [Boolean] Sort direction
+        # @param consider_dependencies [Boolean] Whether to consider dependencies in sorting
         # @return [Array<Hash>] Sorted tasks
-        def self.sort_tasks(tasks, sort_by = :id, ascending = true)
-          sorted = case sort_by
-          when :sort
-            # Special sorting for sort field with in-progress priority
-            tasks.sort do |a, b|
-              # In-progress always comes first
-              if a[:status] == 'in-progress' && b[:status] != 'in-progress'
-                -1
-              elsif b[:status] == 'in-progress' && a[:status] != 'in-progress'
-                1
-              elsif a[:sort] && b[:sort]
-                a[:sort] <=> b[:sort]  # Both have sort: compare sort values
-              elsif a[:sort]
-                -1  # a has sort, b doesn't: a comes first
-              elsif b[:sort]
-                1   # b has sort, a doesn't: b comes first
-              else
-                # Neither has sort: compare by task ID number
-                extract_task_number(a[:id]) <=> extract_task_number(b[:id])
-              end
-            end
-          when :priority
-            tasks.sort_by { |t| priority_value(t[:priority]) }
-          when :status
-            tasks.sort_by { |t| status_value(t[:status]) }
-          when :id
-            tasks.sort_by { |t| t[:id] || "" }
-          when :modified
-            tasks.sort_by do |t|
-              if t[:path] && File.exist?(t[:path])
-                File.mtime(t[:path])
-              else
-                Time.at(0)
-              end
-            end
-          when :estimate
-            tasks.sort_by { |t| parse_estimate(t[:estimate]) }
-          else
-            tasks
-          end
+        def self.sort_tasks(tasks, sort_by = :id, ascending = true, consider_dependencies = true)
+          # Check if any tasks have dependencies
+          has_dependencies = tasks.any? { |t| t[:dependencies] && !t[:dependencies].empty? }
 
-          ascending ? sorted : sorted.reverse
+          # If dependencies exist and should be considered, use dependency-aware sorting
+          if consider_dependencies && has_dependencies
+            DependencyResolver.dependency_aware_sort(tasks, sort_by, ascending)
+          else
+            # Standard sorting without dependency consideration
+            sorted = case sort_by
+            when :sort
+              # Special sorting for sort field with in-progress priority
+              tasks.sort do |a, b|
+                # In-progress always comes first
+                if a[:status] == 'in-progress' && b[:status] != 'in-progress'
+                  -1
+                elsif b[:status] == 'in-progress' && a[:status] != 'in-progress'
+                  1
+                elsif a[:sort] && b[:sort]
+                  a[:sort] <=> b[:sort]  # Both have sort: compare sort values
+                elsif a[:sort]
+                  -1  # a has sort, b doesn't: a comes first
+                elsif b[:sort]
+                  1   # b has sort, a doesn't: b comes first
+                else
+                  # Neither has sort: compare by task ID number
+                  extract_task_number(a[:id]) <=> extract_task_number(b[:id])
+                end
+              end
+            when :priority
+              tasks.sort_by { |t| priority_value(t[:priority]) }
+            when :status
+              tasks.sort_by { |t| status_value(t[:status]) }
+            when :id
+              tasks.sort_by { |t| t[:id] || "" }
+            when :modified
+              tasks.sort_by do |t|
+                if t[:path] && File.exist?(t[:path])
+                  File.mtime(t[:path])
+                else
+                  Time.at(0)
+                end
+              end
+            when :estimate
+              tasks.sort_by { |t| parse_estimate(t[:estimate]) }
+            else
+              tasks
+            end
+
+            ascending ? sorted : sorted.reverse
+          end
         end
 
         # Check if task matches filter string

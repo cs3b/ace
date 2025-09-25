@@ -1,0 +1,21 @@
+name: anthropic
+class: Ace::LLM::Organisms::AnthropicClient
+gem: ace-llm
+models:
+  - claude-3-5-sonnet-20241022
+  - claude-3-5-haiku-20241022
+  - claude-3-opus-20240229
+  - claude-3-sonnet-20240229
+  - claude-3-haiku-20240307
+api_key:
+  env: ANTHROPIC_API_KEY
+  required: true
+  description: Anthropic API key
+capabilities:
+  - text_generation
+  - streaming
+  - function_calling
+  - vision
+default_options:
+  temperature: 0.7
+  max_tokens: 4096

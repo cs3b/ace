@@ -1,0 +1,33 @@
+name: openai
+class: Ace::LLM::Organisms::OpenAIClient
+gem: ace-llm
+models:
+  - gpt-4o
+  - gpt-4o-mini
+  - gpt-4-turbo
+  - gpt-3.5-turbo
+  - o3-mini
+aliases:
+  global:
+    gpt4: openai:4
+    gpt4o: openai:4o
+    o4mini: openai:mini
+    gpt35: openai:3.5
+  model:
+    4: gpt-4-turbo
+    4o: gpt-4o
+    mini: gpt-4o-mini
+    3.5: gpt-3.5-turbo
+api_key:
+  env: OPENAI_API_KEY
+  required: true
+  description: OpenAI API key
+capabilities:
+  - text_generation
+  - streaming
+  - function_calling
+  - vision
+  - embeddings
+default_options:
+  temperature: 0.7
+  max_tokens: 4096

@@ -1,0 +1,19 @@
+name: mistral
+class: Ace::LLM::Organisms::MistralClient
+gem: ace-llm
+models:
+  - mistral-large-latest
+  - mistral-small-latest
+  - mistral-medium-latest
+  - codestral-latest
+api_key:
+  env: MISTRAL_API_KEY
+  required: true
+  description: Mistral AI API key
+capabilities:
+  - text_generation
+  - streaming
+  - code_generation
+default_options:
+  temperature: 0.7
+  max_tokens: 4096

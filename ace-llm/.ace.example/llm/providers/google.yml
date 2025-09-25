@@ -1,0 +1,19 @@
+name: google
+class: Ace::LLM::Organisms::GoogleClient
+gem: ace-llm
+models:
+  - gemini-2.5-flash
+  - gemini-2.5-pro
+  - gemini-exp
+api_key:
+  env: GEMINI_API_KEY
+  required: true
+  description: Google AI Studio API key
+capabilities:
+  - text_generation
+  - streaming
+  - function_calling
+  - vision
+default_options:
+  temperature: 0.7
+  max_tokens: 8192

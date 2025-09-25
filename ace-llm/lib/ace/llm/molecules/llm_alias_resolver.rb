@@ -15,25 +15,9 @@ module Ace
         USER_CONFIG_SUBDIR = ".config/ace-llm"
         USER_CONFIG_FILE = "aliases.yml"
 
-        # Minimal hardcoded defaults as emergency fallback
-        DEFAULT_ALIASES = {
-          "global" => {
-            # Google aliases
-            "gflash" => "google:gemini-2.5-flash",
-            "gpro" => "google:gemini-2.5-pro",
-            "gfast" => "google:gemini-2.5-flash-lite",
-            # Anthropic aliases
-            "opus" => "anthropic:claude-3-opus-20240229",
-            "sonnet" => "anthropic:claude-3-5-sonnet-20241022",
-            "haiku" => "anthropic:claude-3-haiku-20240307",
-            "csonnet" => "anthropic:claude-3-5-sonnet-20241022",
-            "csonet" => "anthropic:claude-3-5-sonnet-20241022",
-            # OpenAI aliases
-            "gpt4" => "openai:gpt-4-turbo-preview",
-            "gpt4o" => "openai:gpt-4o",
-            "o4mini" => "openai:gpt-4o-mini",
-            "gpt35" => "openai:gpt-3.5-turbo"
-          },
+        # Empty default structure when no config files exist
+        EMPTY_CONFIG = {
+          "global" => {},
           "providers" => {}
         }.freeze
 
@@ -126,8 +110,8 @@ module Ace
             return load_yaml_config(user_config_path)
           end
 
-          # Fallback to hardcoded defaults
-          DEFAULT_ALIASES.dup
+          # Return empty config if no files found
+          EMPTY_CONFIG.dup
         end
 
         # Load configuration using ace-core's config cascade

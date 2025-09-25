@@ -3,6 +3,7 @@
 require_relative "../organisms/task_manager"
 require_relative "../molecules/task_filter"
 require_relative "../molecules/list_preset_manager"
+require_relative "../molecules/dependency_tree_visualizer"
 require_relative "../models/task"
 
 module Ace
@@ -57,7 +58,7 @@ module Ace
           # Parse additional filters from remaining args
           additional_filters = parse_additional_filters(remaining_args)
 
-          # Check for special flags
+          # Check for stats only (other formatters handled after filtering)
           if additional_filters[:stats]
             show_statistics_for_preset(preset_name)
             return
@@ -79,9 +80,15 @@ module Ace
             tasks = tasks.take(additional_filters[:limit])
           end
 
-          # Display tasks
+          # Display tasks with appropriate formatter
           if tasks.empty?
             puts "No tasks found for preset '#{preset_name}'."
+          elsif additional_filters[:tree]
+            display_tree_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:path]
+            display_paths_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:list]
+            display_list_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
           else
             display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
           end
@@ -121,9 +128,15 @@ module Ace
             tasks = tasks.take(options[:limit])
           end
 
-          # Display tasks
+          # Display tasks with appropriate formatter
           if tasks.empty?
             puts "No tasks found."
+          elsif options[:tree]
+            show_dependency_tree(tasks, options)
+          elsif options[:path]
+            display_task_paths(tasks, options)
+          elsif options[:list]
+            display_task_list(tasks, options)
           else
             display_tasks(tasks, options)
           end
@@ -150,6 +163,15 @@ module Ace
               i += 2
             when "--stats"
               filters[:stats] = true
+              i += 1
+            when "--tree"
+              filters[:tree] = true
+              i += 1
+            when "--path"
+              filters[:path] = true
+              i += 1
+            when "--list"
+              filters[:list] = true
               i += 1
             when "--help", "-h"
               show_help
@@ -296,6 +318,15 @@ module Ace
               i += 2
             when "--stats"
               options[:stats] = true
+              i += 1
+            when "--tree"
+              options[:tree] = true
+              i += 1
+            when "--path"
+              options[:path] = true
+              i += 1
+            when "--list"
+              options[:list] = true
               i += 1
             when "--sort"
               sort_spec = args[i + 1]
@@ -566,6 +597,9 @@ module Ace
           puts "  --days <n>           Modify days for time-based presets"
           puts "  --limit <n>          Limit number of results displayed"
           puts "  --stats              Show statistics for preset"
+          puts "  --tree               Show dependency tree view"
+          puts "  --path               Show paths only"
+          puts "  --list               Show simple list format"
           puts ""
           puts "Reschedule Options:"
           puts "  --add-next           Place tasks before existing pending tasks"
@@ -576,6 +610,128 @@ module Ace
           puts "Custom Presets:"
           puts "  Create YAML files in .ace/taskflow/presets/ to define custom presets"
           puts "  Example: .ace/taskflow/presets/urgent.yml"
+        end
+
+        def show_dependency_tree_for_preset(preset_name)
+          preset_config = @preset_manager.apply_preset(preset_name)
+          return unless preset_config
+
+          tasks = get_tasks_for_preset(preset_config)
+          puts "Dependency Tree for '#{preset_name}' preset:"
+          puts preset_config[:description] if preset_config[:description]
+          puts "=" * 50
+          puts ""
+          puts Molecules::DependencyTreeVisualizer.generate_forest(tasks)
+        end
+
+        def show_dependency_tree(tasks, options)
+          # Get ALL tasks for complete dependency visualization
+          all_tasks = @manager.list_tasks(context: "all")
+
+          if options[:all]
+            puts "Global Dependency Tree:"
+          elsif options[:release]
+            puts "Dependency Tree for #{options[:release]}:"
+          else
+            puts "Dependency Tree for Active Release:"
+          end
+          puts "=" * 50
+          puts ""
+          puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
+        end
+
+        # Formatter methods for preset context
+        def display_tree_with_preset(tasks, preset_config, original_count = nil, limit = nil)
+          preset_name = preset_config[:name]
+          description = preset_config[:description]
+
+          # Get ALL tasks for complete dependency visualization
+          all_tasks = @manager.list_tasks(context: "all")
+
+          if limit && original_count && original_count > limit
+            puts "Dependency Tree: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
+          else
+            puts "Dependency Tree: #{preset_name} (#{tasks.size} found)"
+          end
+          puts description if description && description != "#{preset_name} preset"
+          puts "=" * 50
+          puts ""
+          puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
+        end
+
+        def display_paths_with_preset(tasks, preset_config, original_count = nil, limit = nil)
+          preset_name = preset_config[:name]
+          description = preset_config[:description]
+
+          if limit && original_count && original_count > limit
+            puts "Tasks: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
+          else
+            puts "Tasks: #{preset_name} (#{tasks.size} found)"
+          end
+          puts description if description && description != "#{preset_name} preset"
+          puts "=" * 50
+
+          tasks.each do |task|
+            puts task[:path] if task[:path]
+          end
+        end
+
+        def display_list_with_preset(tasks, preset_config, original_count = nil, limit = nil)
+          preset_name = preset_config[:name]
+          description = preset_config[:description]
+
+          if limit && original_count && original_count > limit
+            puts "Tasks: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
+          else
+            puts "Tasks: #{preset_name} (#{tasks.size} found)"
+          end
+          puts description if description && description != "#{preset_name} preset"
+          puts "=" * 50
+
+          tasks.each do |task|
+            ref = task[:task_number] || task[:id]
+            puts "#{ref} #{task[:title]}"
+          end
+        end
+
+        # Formatter methods for legacy context
+        def display_task_paths(tasks, options)
+          if options[:recent]
+            puts "Recent Tasks (#{tasks.size} found):"
+          elsif options[:all]
+            puts "All Tasks (#{tasks.size} total):"
+          elsif options[:backlog]
+            puts "Backlog Tasks (#{tasks.size}):"
+          elsif options[:release]
+            puts "Tasks in #{options[:release]} (#{tasks.size}):"
+          else
+            puts "Tasks in Active Release (#{tasks.size}):"
+          end
+          puts "=" * 50
+
+          tasks.each do |task|
+            puts task[:path] if task[:path]
+          end
+        end
+
+        def display_task_list(tasks, options)
+          if options[:recent]
+            puts "Recent Tasks (#{tasks.size} found):"
+          elsif options[:all]
+            puts "All Tasks (#{tasks.size} total):"
+          elsif options[:backlog]
+            puts "Backlog Tasks (#{tasks.size}):"
+          elsif options[:release]
+            puts "Tasks in #{options[:release]} (#{tasks.size}):"
+          else
+            puts "Tasks in Active Release (#{tasks.size}):"
+          end
+          puts "=" * 50
+
+          tasks.each do |task|
+            ref = task[:task_number] || task[:id]
+            puts "#{ref} #{task[:title]}"
+          end
         end
       end
     end

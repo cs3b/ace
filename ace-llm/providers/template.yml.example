@@ -1,0 +1,50 @@
+# Provider Configuration Template
+# Copy this file and rename it to <provider-name>.yml to add a new provider
+
+# Required: Provider name (lowercase, alphanumeric with hyphens/underscores)
+name: custom-provider
+
+# Required: Full Ruby class name that implements the provider
+class: CustomProviders::MyLLMClient
+
+# Required: Gem that provides the class (use 'ace-llm' for built-in providers)
+gem: custom-llm-provider
+
+# Optional: List of supported models for this provider
+models:
+  - model-1
+  - model-2
+  - model-3
+
+# Optional: API endpoint for the provider (if not using standard URL)
+endpoint: https://api.custom-provider.com
+
+# Optional: API key configuration
+api_key:
+  # Environment variable to read the API key from
+  env: CUSTOM_PROVIDER_API_KEY
+  # Whether API key is required (default: true)
+  required: true
+  # Description for documentation
+  description: Custom Provider API key from dashboard
+
+# Optional: Provider capabilities (used for feature detection)
+capabilities:
+  - text_generation    # Basic text generation
+  - streaming          # Streaming responses
+  - function_calling   # Function/tool calling
+  - vision            # Image understanding
+  - embeddings        # Text embeddings
+  - code_generation   # Specialized code generation
+
+# Optional: Default generation options
+default_options:
+  temperature: 0.7       # Randomness (0.0-2.0)
+  max_tokens: 4096      # Maximum output tokens
+  top_p: 0.95           # Nucleus sampling
+  top_k: 40             # Top-k sampling
+  timeout: 30           # Request timeout in seconds
+  max_retries: 3        # Maximum retry attempts
+
+# Optional: Version information
+version: "1.0.0"

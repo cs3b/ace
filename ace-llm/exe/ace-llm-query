@@ -13,6 +13,7 @@ ace_core_lib = File.expand_path("../../ace-core/lib", __dir__)
 $LOAD_PATH.unshift(ace_core_lib) if File.directory?(ace_core_lib)
 
 require "ace/llm"
+require "ace/llm/molecules/client_registry"
 
 # Load .env files from .ace cascade (if ace-core is available)
 Ace::LLM::Atoms::EnvReader.load_env_cascade
@@ -29,12 +30,21 @@ module Ace
           system: nil,
           timeout: 30,
           force: false,
-          debug: false
+          debug: false,
+          list_providers: false
         }
+        @registry = Molecules::ClientRegistry.new
       end
 
       def run(args)
         parse_arguments(args)
+
+        # Handle special commands
+        if @options[:list_providers]
+          list_providers
+          exit(0)
+        end
+
         execute_query
       rescue Ace::LLM::Error => e
         error_output(e.message)
@@ -57,6 +67,11 @@ module Ace
 
         # Parse options
         remaining_args = parser.parse(args)
+
+        # Check if we're just listing providers
+        if @options[:list_providers]
+          return # Return early for list-providers
+        end
 
         # Extract provider_model and prompt from remaining args
         if remaining_args.empty?
@@ -129,13 +144,19 @@ module Ace
             exit(0)
           end
 
+          opts.on("--list-providers", "List available providers and their status") do
+            @options[:list_providers] = true
+          end
+
           opts.separator ""
           opts.separator "Examples:"
           opts.separator '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
           opts.separator '  ace-llm-query gflash "Quick question" # using alias'
           opts.separator '  ace-llm-query openai prompt.txt --output response.md'
           opts.separator ""
-          opts.separator "Providers: google, openai, anthropic, mistral, togetherai, lmstudio"
+          opts.separator "Providers: #{available_provider_names.join(', ')}"
+          opts.separator ""
+          opts.separator "Use --list-providers to see all providers and their status"
         end
       end
 
@@ -199,27 +220,20 @@ module Ace
       end
 
       def create_client(provider, model)
-        # Map provider to client class
-        client_class = case provider
-        when "google"
-          Ace::LLM::Organisms::GoogleClient
-        when "openai"
-          Ace::LLM::Organisms::OpenAIClient
-        when "anthropic"
-          Ace::LLM::Organisms::AnthropicClient
-        when "mistral"
-          Ace::LLM::Organisms::MistralClient
-        when "togetherai"
-          Ace::LLM::Organisms::TogetherAIClient
-        when "lmstudio"
-          Ace::LLM::Organisms::LMStudioClient
-        else
-          error_output("Provider '#{provider}' not supported")
-          error_output("Supported providers: google, openai, anthropic, mistral, togetherai, lmstudio")
-          exit(1)
-        end
-
-        client_class.new(model: model, timeout: @options[:timeout])
+        # Use registry to get client
+        @registry.get_client(
+          provider,
+          model: model,
+          timeout: @options[:timeout]
+        )
+      rescue Ace::LLM::ProviderError => e
+        error_output(e.message)
+        error_output("Available providers: #{@registry.available_providers.join(', ')}")
+        exit(1)
+      rescue LoadError => e
+        error_output("Provider '#{provider}' requires missing gem: #{e.message}")
+        error_output("Please install the required gem and try again")
+        exit(1)
       end
 
       def generation_options
@@ -254,6 +268,38 @@ module Ace
 
       def error_output(message)
         $stderr.puts "Error: #{message}"
+      end
+
+      def list_providers
+        puts "Available LLM Providers:"
+        puts ""
+
+        providers = @registry.list_providers_with_status
+
+        providers.each do |provider|
+          status = provider[:available] ? "✓" : "✗"
+          api_status = if provider[:api_key_required]
+                        provider[:api_key_present] ? "(API key configured)" : "(API key required)"
+                      else
+                        "(No API key needed)"
+                      end
+
+          puts "#{status} #{provider[:name]} #{api_status}"
+
+          if provider[:models] && !provider[:models].empty?
+            puts "  Models: #{provider[:models].join(', ')}"
+          end
+
+          unless provider[:available]
+            puts "  Gem required: #{provider[:gem]}"
+          end
+
+          puts ""
+        end
+      end
+
+      def available_provider_names
+        @registry.available_providers
       end
     end
   end

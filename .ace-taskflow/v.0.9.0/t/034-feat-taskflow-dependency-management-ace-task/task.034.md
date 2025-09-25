@@ -17,33 +17,37 @@ This enhancement enables complex project management with clear critical paths an
 ## Behavioral Specification
 
 The system will:
+
 1. Prevent tasks from transitioning to 'in-progress' if dependencies are not met
 2. Provide clear output indicating why a task is blocked
-3. Offer topological sorting to suggest next actionable tasks
+3. Integrate dependency checking into default task sorting (tasks with unmet dependencies appear after their dependencies)
 4. Show dependencies and their statuses in task details
+5. Provide dependency tree visualization for understanding task relationships
 
 Commands:
+
 - `ace-taskflow task add-dependency <task_id> --depends-on <other_task_id>`
 - `ace-taskflow task remove-dependency <task_id> --depends-on <other_task_id>`
-- `ace-taskflow tasks --ready` (show only actionable tasks)
-- `ace-taskflow task show <id> --dependencies` (show full dependency tree)
+- `ace-taskflow tasks --tree` (show dependency tree view for all tasks)
+- `ace-taskflow task show <id> --tree` (show dependency tree for specific task)
 
 ## Acceptance Criteria
 
 - [ ] Task model extended with dependencies array
 - [ ] DependencyValidator prevents circular dependencies
-- [ ] DependencyResolver determines task readiness
+- [ ] DependencyResolver determines task readiness and performs topological sorting
 - [ ] Status transitions respect dependency constraints
-- [ ] Topological sorting for task ordering
+- [ ] Default task sorting automatically considers dependencies
+- [ ] Dependency tree visualization available
 - [ ] CLI commands for dependency management
 - [ ] Clear error messages for dependency violations
 
 ## Planning Steps
 
-* [ ] Design dependency data model
-* [ ] Research topological sorting algorithms
-* [ ] Plan circular dependency detection approach
-* [ ] Define blocked task behavior
+- [ ] Design dependency data model
+- [ ] Research topological sorting algorithms
+- [ ] Plan circular dependency detection approach
+- [ ] Define blocked task behavior
 
 ## Execution Steps
 
@@ -61,12 +65,12 @@ Commands:
   - Calculate task readiness
   - Build dependency graph
   - Implement topological sorting
-  - Find critical path
+  - Check if dependencies are met
 
-- [ ] Create `ace-taskflow/lib/ace/taskflow/molecules/task_graph_generator.rb`
-  - Generate visual dependency graphs
-  - Export to DOT format
-  - ASCII tree representation
+- [ ] Create `ace-taskflow/lib/ace/taskflow/molecules/dependency_tree_visualizer.rb`
+  - Generate ASCII tree representation
+  - Show dependency status indicators
+  - Support both global and task-specific views
 
 - [ ] Update `ace-taskflow/lib/ace/taskflow/organisms/task_manager.rb`
   - Check dependencies on status updates
@@ -76,17 +80,18 @@ Commands:
 - [ ] Add dependency management commands
   - Implement add-dependency subcommand
   - Implement remove-dependency subcommand
-  - Add --ready filter to tasks command
-  - Enhance task show with dependency tree
+  - Add --tree flag to tasks command for tree view
+  - Add --tree flag to task show command
 
 - [ ] Update `ace-taskflow/lib/ace/taskflow/molecules/task_filter.rb`
-  - Add ready/blocked filters
-  - Support dependency-based sorting
+  - Integrate dependency checking into sort_tasks method
+  - Apply topological sorting when dependencies exist
+  - Maintain existing sort/id ordering for independent tasks
 
 - [ ] Add visual indicators
   - Show blocked status in listings
   - Display dependency count
-  - Highlight critical path tasks
+  - Show dependency status in tree view
 
 - [ ] Update documentation
   - Document dependency management
@@ -106,4 +111,6 @@ This is the most complex phase, requiring careful design to avoid breaking exist
 This phase can leverage Phase 1 (descriptive paths) for better dependency visualization and integrates well with Phase 3 (enhanced stats) to show blocked task counts.
 
 Related ideas:
+
 - .ace-taskflow/v.0.9.0/ideas/20250925-004814-add-support-for-task-dependencies-in-ace-taskflow.md
+
