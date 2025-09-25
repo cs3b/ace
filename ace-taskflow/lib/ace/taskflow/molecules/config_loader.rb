@@ -19,6 +19,11 @@ module Ace
           "defaults" => {
             "idea_location" => "active",
             "task_location" => "active"
+          },
+          "tasks" => {
+            "defaults" => {
+              "reschedule_strategy" => "add_next"
+            }
           }
         }.freeze
 
@@ -143,6 +148,7 @@ module Ace
           end
 
           config["task"] = taskflow_section["task"] if taskflow_section["task"]
+          config["tasks"] = taskflow_section["tasks"] if taskflow_section["tasks"]
           config["release"] = taskflow_section["release"] if taskflow_section["release"]
 
           config

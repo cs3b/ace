@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.026
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
+sort: 31
 ---
 
 # Add reschedule subcommand to tasks command
@@ -14,47 +15,47 @@ Implement a reschedule subcommand for `ace-taskflow tasks` that allows reorderin
 
 ## Planning Steps
 
-* [ ] Review old task-manager reschedule implementation
-* [ ] Design sort value management approach
-* [ ] Plan command interface and options
+* [x] Review old task-manager reschedule implementation
+* [x] Design sort value management approach
+* [x] Plan command interface and options
 
 ## Execution Steps
 
-- [ ] Modify `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
-  - [ ] Add reschedule subcommand handling
-  - [ ] Parse task IDs from arguments
-  - [ ] Add `--add-next` option (places at front of queue)
-  - [ ] Add `--add-at-end` option (places at end of queue)
-  - [ ] Add `--after <task>` option (places after specific task)
-  - [ ] Add `--before <task>` option (places before specific task)
-  - [ ] Read default strategy from configuration
-- [ ] Create `ace-taskflow/lib/ace/taskflow/organisms/task_scheduler.rb`
-  - [ ] Implement sort value calculation logic
-  - [ ] Support relative positioning (before/after specific task)
-  - [ ] Handle frontmatter updates
-  - [ ] Support batch operations
-- [ ] Update configuration handling
-  - [ ] Add `tasks.defaults.reschedule_strategy` config option
-  - [ ] Support values: "add_next" (default), "add_at_end"
-  - [ ] Allow project and user-level configuration
-- [ ] Update task model to support sort values
-  - [ ] Add sort field parsing from frontmatter
-  - [ ] Implement sort value comparison
-- [ ] Add command help documentation
-- [ ] Create tests for reschedule functionality
+- [x] Modify `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
+  - [x] Add reschedule subcommand handling
+  - [x] Parse task IDs from arguments
+  - [x] Add `--add-next` option (places at front of queue)
+  - [x] Add `--add-at-end` option (places at end of queue)
+  - [x] Add `--after <task>` option (places after specific task)
+  - [x] Add `--before <task>` option (places before specific task)
+  - [x] Read default strategy from configuration
+- [x] Create `ace-taskflow/lib/ace/taskflow/organisms/task_scheduler.rb`
+  - [x] Implement sort value calculation logic
+  - [x] Support relative positioning (before/after specific task)
+  - [x] Handle frontmatter updates
+  - [x] Support batch operations
+- [x] Update configuration handling
+  - [x] Add `tasks.defaults.reschedule_strategy` config option
+  - [x] Support values: "add_next" (default), "add_at_end"
+  - [x] Allow project and user-level configuration
+- [x] Update task model to support sort values
+  - [x] Add sort field parsing from frontmatter
+  - [x] Implement sort value comparison
+- [x] Add command help documentation
+- [x] Create tests for reschedule functionality
 
 ## Acceptance Criteria
 
-- [ ] `ace-taskflow tasks reschedule 025 026 027` uses configured default strategy
-- [ ] `--add-next` flag places tasks before existing pending tasks
-- [ ] `--add-at-end` flag places tasks after highest task
-- [ ] `--after task.029` places tasks after task 029
-- [ ] `--before task.029` places tasks before task 029
-- [ ] Multiple tasks can be rescheduled in one command
-- [ ] Sort values are properly updated in task frontmatter
-- [ ] Command preserves relative order of specified tasks
-- [ ] Configuration default is respected when no flag specified
-- [ ] Relative positioning works with any task reference format
+- [x] `ace-taskflow tasks reschedule 025 026 027` uses configured default strategy
+- [x] `--add-next` flag places tasks before existing pending tasks
+- [x] `--add-at-end` flag places tasks after highest task
+- [x] `--after task.029` places tasks after task 029
+- [x] `--before task.029` places tasks before task 029
+- [x] Multiple tasks can be rescheduled in one command
+- [x] Sort values are properly updated in task frontmatter
+- [x] Command preserves relative order of specified tasks
+- [x] Configuration default is respected when no flag specified
+- [x] Relative positioning works with any task reference format
 
 ## Implementation Notes
 

@@ -5,6 +5,7 @@ priority: medium
 estimate: 2h
 dependencies: []
 completed_at: 2025-09-24
+sort: 30
 ---
 
 # Add git-commit and llm-enhance flags to idea command

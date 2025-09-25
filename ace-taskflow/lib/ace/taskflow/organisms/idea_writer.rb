@@ -28,8 +28,16 @@ module Ace
                                content
                              end
 
-          # Re-prepare metadata in case enhancement added a suggested filename
-          metadata = prepare_metadata(enhanced_content, metadata)
+          # If we have a suggested filename from LLM, use it as the title for file naming
+          if metadata[:suggested_filename]
+            metadata[:title] = metadata[:suggested_filename]
+            debug_log("Using LLM suggested filename: #{metadata[:suggested_filename]}")
+          else
+            # Otherwise re-prepare metadata from enhanced content
+            metadata = prepare_metadata(enhanced_content, metadata)
+          end
+
+          debug_log("Final metadata title for filename: #{metadata[:title]}")
 
           # Generate file path and ensure directory exists
           path = generate_path(metadata)
@@ -91,7 +99,10 @@ module Ace
           metadata = metadata.dup
           metadata[:timestamp] ||= Time.now.strftime(timestamp_format)
           # Use suggested filename from LLM if available, otherwise extract from content
-          metadata[:title] ||= metadata[:suggested_filename] || extract_title(content)
+          if metadata[:suggested_filename] && !metadata[:title]
+            metadata[:title] = metadata[:suggested_filename]
+          end
+          metadata[:title] ||= extract_title(content)
           metadata
         end
 

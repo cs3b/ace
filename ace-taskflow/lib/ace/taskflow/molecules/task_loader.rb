@@ -37,6 +37,7 @@ module Ace
             priority: frontmatter["priority"] || "medium",
             estimate: frontmatter["estimate"],
             dependencies: frontmatter["dependencies"] || [],
+            sort: frontmatter["sort"],
             title: extract_title(body_content),
             content: body_content,
             path: path,
