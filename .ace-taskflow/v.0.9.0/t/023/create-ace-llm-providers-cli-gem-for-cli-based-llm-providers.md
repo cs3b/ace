@@ -4,7 +4,7 @@ status: pending
 priority: high
 estimate: 6h
 dependencies: [v.0.9.0+task.021]
-sort: 995
+sort: 980
 ---
 
 # Create ace-llm-providers-cli gem for CLI-based LLM providers

@@ -1,10 +1,11 @@
 ---
 id: v.0.9.0+task.007
-status: in-progress
+status: pending
 priority: medium
 estimate: 6h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002, v.0.9.0+task.003, v.0.9.0+task.004]
 needs_review: true
+sort: 981
 ---
 
 # Create ace-git Gem with ace-gc Only
@@ -114,28 +115,32 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
 
 ### Planning Steps
 
-* [ ] Review current git-commit complexity
-* [ ] Design simplified monorepo approach
-* [ ] Plan intention-based commit system
-* [ ] Define commit message conventions
+- [ ] Review current git-commit complexity
+- [ ] Design simplified monorepo approach
+- [ ] Plan intention-based commit system
+- [ ] Define commit message conventions
 
 ### Execution Steps
 
 - [ ] Create gem skeleton following ATOM architecture
+
   ```bash
   mkdir -p ace-git/{lib/ace/git/{atoms,molecules,organisms,models},test/{atoms,molecules,organisms,integration,support},config,exe,.bundle}
   ```
 
 - [ ] Create .bundle/config for ace-git
+
   ```yaml
   # ace-git/.bundle/config
   ---
   BUNDLE_GEMFILE: "../Gemfile"
   ```
+
   > NOTE: This follows the Option C pattern established with ace-core
   > Allows ace-git to use shared root Gemfile for all dependencies
 
 - [ ] Create ace-git.gemspec
+
   ```ruby
   Gem::Specification.new do |spec|
     spec.name = "ace-git"
@@ -149,12 +154,15 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
 - [ ] Copy test support from ace-core
+
   ```bash
   cp -r ../ace-core/test/support ace-git/test/
   ```
+
   > NOTE: Reuse TestEnvironment and ConfigHelpers for integration testing
 
 - [ ] Implement commit builder (simplified)
+
   ```ruby
   # lib/ace/git/organisms/commit_builder.rb
   module Ace
@@ -176,12 +184,14 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
     end
   end
   ```
+
   > TEST: Commit builder
   > Type: Unit Test
   > Assert: Builds correct git command
   > Command: cd ace-git && rake test TEST=test/commit_builder_test.rb
 
 - [ ] Implement intention parser
+
   ```ruby
   # lib/ace/git/intention_parser.rb
   module Ace
@@ -208,6 +218,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
 - [ ] Implement message formatter
+
   ```ruby
   # lib/ace/git/message_formatter.rb
   module Ace
@@ -244,12 +255,14 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
     end
   end
   ```
+
   > TEST: Message formatting
   > Type: Unit Test
   > Assert: Formats conventional commits
   > Command: cd ace-git && rake test TEST=test/message_formatter_test.rb
 
 - [ ] Create ace-gc executable
+
   ```ruby
   #!/usr/bin/env ruby
   # exe/ace-gc
@@ -265,6 +278,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
 - [ ] Create default config/git.yml
+
   ```yaml
   git:
     conventions:
@@ -282,6 +296,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
 - [ ] Create sample .ace/git/config/git.yml
+
   ```yaml
   git:
     conventions:
@@ -300,6 +315,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
 - [ ] Set up test helper
+
   ```ruby
   # test/test_helper.rb
   require 'minitest/autorun'
@@ -309,6 +325,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
 - [ ] Write commit builder tests
+
   ```ruby
   class CommitBuilderTest < Minitest::Test
     def test_builds_simple_commit
@@ -336,15 +353,18 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   > Command: cd test-repo && ace-gc feat
 
 - [ ] Update root Gemfile
+
   ```ruby
   gem "ace-git", path: "ace-git"
   ```
+
   > NOTE: Root Gemfile configuration:
   > - No vendor/bundle (gems install to mise Ruby location)
   > - Shared dev dependencies (minitest ~> 5.20, rake ~> 13.0, minitest-reporters ~> 1.6)
   > - All gems use .bundle/config to reference parent Gemfile
 
 - [ ] Create README
+
   ```markdown
   # ace-git
 
@@ -365,6 +385,7 @@ Create the ace-git gem with a simplified git-commit command (ace-gc) designed fo
   ```
 
   No submodule complexity, just clean commits.
+
   ```
 
 ## Acceptance Criteria

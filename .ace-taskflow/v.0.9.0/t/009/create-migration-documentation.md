@@ -4,7 +4,7 @@ status: pending
 priority: low
 estimate: 4h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.005, v.0.9.0+task.006, v.0.9.0+task.007, v.0.9.0+task.008]
-sort: 997
+sort: 983
 ---
 
 # Create Migration Documentation

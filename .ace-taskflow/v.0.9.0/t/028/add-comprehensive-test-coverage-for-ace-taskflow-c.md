@@ -4,7 +4,7 @@ status: pending
 priority: medium
 estimate: 8h
 dependencies: []
-sort: 993
+sort: 978
 ---
 
 # Add comprehensive test coverage for ace-taskflow commands
