@@ -386,6 +386,7 @@ module Ace
           puts "  --stats      Show release statistics"
           puts ""
           puts "Additional Preset Filters:"
+          puts "  --limit <n>  Limit number of results displayed"
           puts "  --stats      Show statistics for preset"
           puts ""
           puts "Custom Presets:"
