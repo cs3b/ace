@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'set'
+require 'time'
 
 module Ace
   module Core

@@ -450,7 +450,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Sep 24 23:56:11 WEST 2025
+Thu Sep 25 02:02:15 WEST 2025
 
 ```
 
@@ -458,15 +458,9 @@ Wed Sep 24 23:56:11 WEST 2025
 
 **Output:**
 ```
- M ace-taskflow/lib/ace/taskflow/molecules/idea_enhancer.rb
- M ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb
- M dev-tools/Gemfile
- M dev-tools/Gemfile.lock
-?? .ace-taskflow/v.0.9.0/ideas/20250924-232822-write-a-qa-task-workflow-into-the-ace-taskflow-pac.md
-?? .ace-taskflow/v.0.9.0/ideas/20250924-232849-write-a-qa-task-workflow-into-the-ace-taskflow-pac.md
-?? .ace-taskflow/v.0.9.0/ideas/20250924-235558-add-support-for-multiple-git-repositories-in-ace-c.md
-?? .ace/protocols/tmpl-sources/
-?? ace-taskflow/templates/
+ M .cache/ace-context/project.md
+?? .ace-taskflow/v.0.9.0/t/021/qa/
+?? ace-taskflow/.ace-taskflow/
 
 ```
 
