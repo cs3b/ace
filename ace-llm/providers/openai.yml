@@ -2,22 +2,23 @@ name: openai
 class: Ace::LLM::Organisms::OpenAIClient
 gem: ace-llm
 models:
-  - gpt-4o
-  - gpt-4o-mini
-  - gpt-4-turbo
-  - gpt-3.5-turbo
+  - gpt-5
+  - gpt-5-turbo
+  - gpt-5-mini
+  - o3
   - o3-mini
 aliases:
   global:
-    gpt4: openai:4
-    gpt4o: openai:4o
-    o4mini: openai:mini
-    gpt35: openai:3.5
+    gpt5: openai:5
+    gpt5turbo: openai:5turbo
+    gpt5mini: openai:5mini
+    o3: openai:o3
   model:
-    4: gpt-4-turbo
-    4o: gpt-4o
-    mini: gpt-4o-mini
-    3.5: gpt-3.5-turbo
+    5: gpt-5
+    5turbo: gpt-5-turbo
+    5mini: gpt-5-mini
+    o3: o3
+    o3mini: o3-mini
 api_key:
   env: OPENAI_API_KEY
   required: true
