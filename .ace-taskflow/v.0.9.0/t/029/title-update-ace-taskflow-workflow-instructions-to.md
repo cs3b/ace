@@ -4,6 +4,7 @@ status: done
 priority: high
 estimate: 8h
 dependencies: []
+sort: 996
 ---
 
 # Update ace-taskflow workflow instructions to use ace-* tools

@@ -6,7 +6,8 @@ module Ace
       # Task data structure
       class Task
         attr_reader :id, :status, :priority, :estimate, :dependencies,
-                    :title, :content, :path, :task_number, :context, :metadata
+                    :title, :content, :path, :task_number, :context, :metadata,
+                    :sort
 
         def initialize(attributes = {})
           @id = attributes[:id]
@@ -20,6 +21,7 @@ module Ace
           @task_number = attributes[:task_number]
           @context = attributes[:context]
           @metadata = attributes[:metadata] || {}
+          @sort = attributes[:sort]
         end
 
         # Convert to hash
@@ -35,7 +37,8 @@ module Ace
             path: path,
             task_number: task_number,
             context: context,
-            metadata: metadata
+            metadata: metadata,
+            sort: sort
           }
         end
 
@@ -74,7 +77,16 @@ module Ace
         def <=>(other)
           return 0 unless other.is_a?(Task)
 
-          # First by priority
+          # First by sort value if both have it
+          if sort && other.sort
+            sort_order = sort <=> other.sort
+            return sort_order unless sort_order == 0
+          elsif sort || other.sort
+            # One has sort value, it comes first
+            return sort ? -1 : 1
+          end
+
+          # Then by priority
           priority_order = priority_value <=> other.priority_value
           return priority_order unless priority_order == 0
 

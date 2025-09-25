@@ -4,6 +4,7 @@ status: done
 priority: high
 estimate: 1h
 dependencies: []
+sort: 997
 ---
 
 # Fix ace-nav protocol path formatting and support protocol-only queries
