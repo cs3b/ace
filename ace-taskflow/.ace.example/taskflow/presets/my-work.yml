@@ -1,0 +1,16 @@
+# Example custom preset for personal work items
+description: "My assigned or in-progress work"
+type:  # Universal preset - works with tasks, ideas, and releases
+context: "current"
+filters:
+  status:
+    - "in-progress"
+  # You can add custom filters here based on your workflow
+  # assignee: ["your-name"]  # If you track assignments
+  # tags: ["personal"]       # If you use tags
+sort:
+  by: "modified"
+  ascending: false  # Most recently modified first
+display:
+  show_dates: true
+  days: 14  # Show items from last 2 weeks

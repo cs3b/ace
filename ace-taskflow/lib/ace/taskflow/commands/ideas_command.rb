@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/idea_loader"
+require_relative "../molecules/list_preset_manager"
 require_relative "../models/idea"
 
 module Ace
@@ -10,6 +11,7 @@ module Ace
         def initialize
           @root_path = Molecules::ConfigLoader.find_root
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
+          @preset_manager = Molecules::ListPresetManager.new
         end
 
         def execute(args)
@@ -18,13 +20,17 @@ module Ace
             exit 0
           end
 
-          # Parse options
-          options = parse_options(args)
-
-          if options[:stats]
-            show_statistics
+          # Check if first argument is a preset name
+          preset_name = detect_preset_name(args)
+          if preset_name
+            args.shift # Remove preset name from args
+            execute_with_preset(preset_name, args)
+          elsif args.empty? || (!args.first.start_with?('-') && !@preset_manager.preset_exists?(args.first, :ideas))
+            # Default to 'recent' preset for ideas when no arguments or no valid preset/flag
+            execute_with_preset('recent', args)
           else
-            list_ideas(options)
+            # Fallback to legacy flag-based execution for backward compatibility
+            execute_legacy(args)
           end
         rescue StandardError => e
           puts "Error: #{e.message}"
@@ -32,6 +38,152 @@ module Ace
         end
 
         private
+
+        def detect_preset_name(args)
+          return nil if args.empty? || args.first.start_with?('-')
+
+          potential_preset = args.first
+          # Check if it's a known preset or custom preset
+          if @preset_manager.preset_exists?(potential_preset, :ideas)
+            potential_preset
+          else
+            nil
+          end
+        end
+
+        def execute_with_preset(preset_name, remaining_args)
+          # Parse additional filters from remaining args
+          additional_filters = parse_additional_filters(remaining_args)
+
+          # Check for special flags
+          if additional_filters[:stats]
+            show_statistics_for_preset(preset_name)
+            return
+          end
+
+          # Apply preset with additional filters
+          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+          return unless preset_config
+
+          # Get ideas based on preset configuration
+          ideas = get_ideas_for_preset(preset_config)
+
+          # Display ideas
+          if ideas.empty?
+            puts "No ideas found for preset '#{preset_name}'."
+          else
+            display_ideas_with_preset(ideas, preset_config)
+          end
+        end
+
+        def execute_legacy(args)
+          # Original implementation for backward compatibility
+          options = parse_options(args)
+
+          if options[:stats]
+            show_statistics
+          else
+            list_ideas(options)
+          end
+        end
+
+        def parse_additional_filters(args)
+          filters = {}
+
+          i = 0
+          while i < args.length
+            arg = args[i]
+            case arg
+            when "--days"
+              filters[:days] = args[i + 1].to_i if i + 1 < args.length
+              i += 2
+            when "--stats"
+              filters[:stats] = true
+              i += 1
+            when "--verbose", "-v"
+              filters[:verbose] = true
+              i += 1
+            when "--help", "-h"
+              show_help
+              exit 0
+            else
+              i += 1
+            end
+          end
+
+          filters
+        end
+
+        def get_ideas_for_preset(preset_config)
+          context = preset_config[:context] || 'current'
+
+          case context
+          when 'all'
+            get_all_ideas_for_preset
+          when 'backlog'
+            @idea_loader.load_all(context: "backlog", include_content: false)
+          when 'current'
+            @idea_loader.load_all(context: "current", include_content: false)
+          else
+            # Assume it's a specific release context
+            @idea_loader.load_all(context: context, include_content: false)
+          end
+        end
+
+        def get_all_ideas_for_preset
+          all_ideas = []
+          release_resolver = Molecules::ReleaseResolver.new(@root_path)
+
+          # Active releases
+          active_releases = release_resolver.find_active
+          active_releases.each do |release|
+            ideas = @idea_loader.load_all(context: release[:name], include_content: false)
+            ideas.each { |idea| idea[:release] = release[:name] }
+            all_ideas.concat(ideas)
+          end
+
+          # Backlog
+          backlog_ideas = @idea_loader.load_all(context: "backlog", include_content: false)
+          backlog_ideas.each { |idea| idea[:release] = "backlog" }
+          all_ideas.concat(backlog_ideas)
+
+          all_ideas
+        end
+
+        def display_ideas_with_preset(ideas, preset_config)
+          preset_name = preset_config[:name]
+          description = preset_config[:description]
+
+          puts "Ideas: #{preset_name} (#{ideas.size} found)"
+          puts description if description && description != "#{preset_name} preset"
+          puts "=" * 50
+
+          # Check if grouping is needed
+          display_config = preset_config[:display] || {}
+          if display_config[:group_by] == 'context' || display_config[:group_by] == :context
+            # Group by release/context
+            grouped = ideas.group_by { |idea| idea[:release] || 'current' }
+            grouped.each do |context, context_ideas|
+              puts ""
+              puts "#{context} (#{context_ideas.length} ideas):"
+              context_ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false) }
+            end
+          else
+            ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false) }
+          end
+        end
+
+        def show_statistics_for_preset(preset_name)
+          preset_config = @preset_manager.apply_preset(preset_name)
+          return unless preset_config
+
+          puts "Ideas Statistics for '#{preset_name}' preset:"
+          puts preset_config[:description] if preset_config[:description]
+          puts "=" * 50
+
+          # Use existing statistics logic
+          show_statistics
+        end
 
         def parse_options(args)
           options = {
@@ -213,24 +365,41 @@ module Ace
         end
 
         def show_help
-          puts "Usage: ace-taskflow ideas [options]"
+          puts "Usage: ace-taskflow ideas [preset] [options]"
           puts ""
           puts "List and browse ideas across releases and backlog"
           puts ""
-          puts "Options:"
+          puts "Presets (recommended):"
+          available_presets = @preset_manager.list_presets(:ideas)
+          available_presets.each do |preset|
+            name = preset[:name]
+            desc = preset[:description]
+            default_marker = preset[:default] ? " (default for ideas)" : ""
+            puts "  #{name.ljust(12)} #{desc}#{default_marker}"
+          end
+          puts ""
+          puts "Preset Examples:"
+          puts "  ace-taskflow ideas                    # Uses 'recent' preset (default)"
+          puts "  ace-taskflow ideas all               # All ideas, grouped by context"
+          puts "  ace-taskflow ideas recent --days 3   # Recent ideas with custom filter"
+          puts "  ace-taskflow ideas all --stats       # Statistics for all preset"
+          puts ""
+          puts "Legacy Flag Options (backward compatibility):"
           puts "  --backlog          Show ideas from backlog"
           puts "  --release <name>   Show ideas from specific release"
-          puts "  --current          Show ideas from current/active release (default)"
+          puts "  --current          Show ideas from current/active release"
           puts "  --all              Show all ideas across all contexts"
           puts "  --stats            Show idea statistics"
           puts "  --verbose, -v      Show detailed information"
           puts ""
-          puts "Examples:"
-          puts "  ace-taskflow ideas                      # List ideas in current release"
-          puts "  ace-taskflow ideas --backlog            # List backlog ideas"
-          puts "  ace-taskflow ideas --release v.0.9.0    # List ideas from specific release"
-          puts "  ace-taskflow ideas --all                # List all ideas"
-          puts "  ace-taskflow ideas --stats              # Show statistics"
+          puts "Additional Preset Filters:"
+          puts "  --days <n>         Modify days for time-based presets"
+          puts "  --verbose, -v      Show detailed information"
+          puts "  --stats            Show statistics for preset"
+          puts ""
+          puts "Custom Presets:"
+          puts "  Create YAML files in .ace/taskflow/presets/ to define custom presets"
+          puts "  Example: .ace/taskflow/presets/creative.yml"
         end
       end
     end

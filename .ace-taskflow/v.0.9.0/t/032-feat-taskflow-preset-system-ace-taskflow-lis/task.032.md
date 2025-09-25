@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.032
-status: pending
+status: done
 priority: high
 estimate: 1 week
 dependencies: [task.031]
@@ -26,51 +26,51 @@ Presets will be configurable via `.ace/taskflow/presets/*.yml`
 
 ## Acceptance Criteria
 
-- [ ] ListPresetManager molecule created following ace-context pattern
-- [ ] Default presets implemented: next, recent, all, pending, in-progress, done
-- [ ] Commands refactored to use presets instead of flags
-- [ ] Preset composition allows combining presets with filters
-- [ ] Custom presets can be defined in .ace/taskflow/presets/
-- [ ] Backward compatibility maintained for existing flags
+- [x] ListPresetManager molecule created following ace-context pattern
+- [x] Default presets implemented: next, recent, all, pending, in-progress, done
+- [x] Commands refactored to use presets instead of flags
+- [x] Preset composition allows combining presets with filters
+- [x] Custom presets can be defined in .ace/taskflow/presets/
+- [x] Backward compatibility maintained for existing flags
 
 ## Planning Steps
 
-* [ ] Study ace-context PresetManager implementation
-* [ ] Design preset configuration format
-* [ ] Plan migration strategy for existing command flags
-* [ ] Define default preset behaviors
+* [x] Study ace-context PresetManager implementation
+* [x] Design preset configuration format
+* [x] Plan migration strategy for existing command flags
+* [x] Define default preset behaviors
 
 ## Execution Steps
 
-- [ ] Create `ace-taskflow/lib/ace/taskflow/molecules/list_preset_manager.rb`
+- [x] Create `ace-taskflow/lib/ace/taskflow/molecules/list_preset_manager.rb`
   - Load presets from .ace/taskflow/presets/
   - Provide default presets (next, recent, all, etc.)
   - Support preset inheritance and composition
 
-- [ ] Create default preset configurations
+- [x] Create default preset configurations
   - `.ace/taskflow/presets/next.yml` - pending & in-progress, sorted by priority
   - `.ace/taskflow/presets/recent.yml` - recently modified, sorted by date
   - `.ace/taskflow/presets/all.yml` - all items, grouped by context
 
-- [ ] Refactor `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
+- [x] Refactor `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
   - Replace flag parsing with preset selection
   - Support preset as first argument
   - Apply additional filters on top of preset
 
-- [ ] Refactor `ace-taskflow/lib/ace/taskflow/commands/ideas_command.rb`
+- [x] Refactor `ace-taskflow/lib/ace/taskflow/commands/ideas_command.rb`
   - Implement same preset pattern
   - Maintain consistency with tasks command
 
-- [ ] Refactor `ace-taskflow/lib/ace/taskflow/commands/releases_command.rb`
+- [x] Refactor `ace-taskflow/lib/ace/taskflow/commands/releases_command.rb`
   - Apply preset system
   - Add release-specific presets (active, backlog, done)
 
-- [ ] Update help text and documentation
+- [x] Update help text and documentation
   - Show available presets in --help
   - Document preset configuration format
   - Add examples of custom presets
 
-- [ ] Add tests
+- [x] Add tests
   - Unit tests for ListPresetManager
   - Integration tests for command changes
   - Backward compatibility tests

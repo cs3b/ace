@@ -1,0 +1,13 @@
+# Example preset for weekly review meetings
+description: "Items completed or modified this week"
+type:  # Universal - works across tasks, ideas, releases
+context: "all"  # Look across all contexts
+filters:
+  # No status filter - see everything
+sort:
+  by: "modified"
+  ascending: false
+display:
+  group_by: "status"  # Group by completion status
+  show_dates: true
+  days: 7  # Last week's activity

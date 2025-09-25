@@ -6,6 +6,50 @@ module Ace
       # EnvReader provides environment variable reading utilities
       # This is an atom - it has no dependencies on other parts of this gem
       class EnvReader
+        # Load .env files from .ace cascade
+        # Following ace patterns, searches for .env in:
+        # - ./.ace/llm/.env (current project)
+        # - ../.ace/llm/.env (parent dirs up to root)
+        # - ~/.ace/llm/.env (user home)
+        # - ./.ace/.env (fallback)
+        # - ~/.ace/.env (fallback)
+        # @return [Hash] All loaded environment variables
+        def self.load_env_cascade
+          return {} unless defined?(Ace::Core)
+
+          loaded_vars = {}
+
+          # Find all .env files in cascade
+          discovery = Ace::Core::ConfigDiscovery.new
+
+          # Look for llm-specific env files first
+          llm_env_files = discovery.find_all_config_files("llm/.env")
+
+          # Also check for general .ace/.env as fallback
+          general_env_files = discovery.find_all_config_files(".env")
+
+          # Combine and deduplicate (llm-specific takes precedence)
+          all_files = (general_env_files + llm_env_files).uniq
+
+          # Load files (later files override earlier ones)
+          all_files.each do |file|
+            next unless File.exist?(file)
+            vars = Ace::Core::Molecules::EnvLoader.load_file(file)
+            loaded_vars.merge!(vars) if vars
+          end
+
+          # Set all loaded variables (overwrite existing ENV - .ace/.env has priority)
+          Ace::Core::Molecules::EnvLoader.set_environment(loaded_vars, overwrite: true)
+
+          loaded_vars
+        rescue LoadError
+          # ace-core not available, skip .env loading
+          {}
+        rescue => e
+          # Log warning but don't fail
+          warn "Warning: Failed to load .env files: #{e.message}" if ENV["DEBUG"]
+          {}
+        end
         # Get an environment variable value
         # @param key [String] Environment variable name
         # @param default [String, nil] Default value if not found
