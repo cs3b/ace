@@ -6,6 +6,15 @@ models:
   - mistral-small-latest
   - mistral-medium-latest
   - codestral-latest
+aliases:
+  global:
+    mistral-large: mistral:large
+    mistral-medium: mistral:medium
+  model:
+    large: mistral-large-latest
+    medium: mistral-medium-latest
+    small: mistral-small-latest
+    code: codestral-latest
 api_key:
   env: MISTRAL_API_KEY
   required: true
