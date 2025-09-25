@@ -5,6 +5,14 @@ models:
   - gemini-2.5-flash
   - gemini-2.5-pro
   - gemini-exp
+aliases:
+  global:
+    gflash: google:flash
+    gpro: google:pro
+    gfast: google:flash
+  model:
+    flash: gemini-2.5-flash
+    pro: gemini-2.5-pro
 api_key:
   env: GEMINI_API_KEY
   required: true

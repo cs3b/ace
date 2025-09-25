@@ -4,6 +4,12 @@ gem: ace-llm
 models:
   - local-model
   - custom-model
+aliases:
+  global:
+    local: lmstudio:local
+  model:
+    local: local-model
+    custom: custom-model
 endpoint: http://localhost:1234
 api_key:
   required: false
