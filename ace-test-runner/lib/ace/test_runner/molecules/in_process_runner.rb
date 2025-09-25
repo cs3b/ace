@@ -51,7 +51,13 @@ module Ace
             # Load test files directly
             files.each do |file|
               file_path = File.expand_path(file)
-              load file_path
+              begin
+                load file_path
+              rescue LoadError => e
+                stderr_io.puts "Failed to load #{file}: #{e.message}"
+                # Re-raise to fail the entire test run
+                raise
+              end
             end
 
             # Run Minitest with captured output
@@ -70,7 +76,8 @@ module Ace
             success = false
             exit_code = 124
           rescue LoadError => e
-            stderr_io.puts "Error loading test file: #{e.message}"
+            # LoadError already logged in the loop above
+            stderr_io.puts "Test run aborted due to load error"
             success = false
             exit_code = 1
           rescue => e

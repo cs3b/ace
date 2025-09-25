@@ -34,15 +34,19 @@ module Ace
 
           # Add the test files
           if files.is_a?(Array)
-            # Require each file with proper path handling
-            files.each do |f|
+            # Build a Ruby script that requires each file and fails on LoadError
+            requires_script = files.map do |f|
               # Add ./ prefix if it's a relative path without one
               path = f.start_with?('/') || f.start_with?('./') ? f : "./#{f}"
-              cmd_parts << "-r#{path}"
-            end
-            # Run Minitest after requiring all files, then exit to prevent double run
+              # Escape the path for shell safety
+              escaped_path = path.gsub("'", "\\\\'")
+              "begin; require '#{escaped_path}'; rescue LoadError => e; STDERR.puts \\\"Failed to load #{escaped_path}: \\\" + e.message; exit(1); end"
+            end.join("; ")
+
+            # Execute the requires and then run Minitest
             cmd_parts << "-e"
-            cmd_parts << "'exit_code = Minitest.autorun; exit(exit_code)'"
+            # Use double quotes to wrap the entire script
+            cmd_parts << "\"#{requires_script}; exit_code = Minitest.autorun; exit(exit_code)\""
           else
             # Single file - just pass it as argument (Minitest autoruns)
             cmd_parts << files
