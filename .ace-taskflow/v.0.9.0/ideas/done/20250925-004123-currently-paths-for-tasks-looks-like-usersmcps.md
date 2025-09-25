@@ -5,8 +5,11 @@
 title: Implement Descriptive Task Paths in ace-taskflow
 filename_suggestion: ace-taskflow-descriptive-task-paths
 enhanced_at: 2025-09-25 00:41:23
-location: active
+location: done
 llm_model: gflash
+completed_by: [v.0.9.0+task.031]
+completed_at: 2025-09-25
+status: done
 ---
 
 ## Problem
