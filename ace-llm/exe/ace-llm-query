@@ -14,6 +14,9 @@ $LOAD_PATH.unshift(ace_core_lib) if File.directory?(ace_core_lib)
 
 require "ace/llm"
 
+# Load .env files from .ace cascade (if ace-core is available)
+Ace::LLM::Atoms::EnvReader.load_env_cascade
+
 module Ace
   module LLM
     # CLI for ace-llm-query command
@@ -257,7 +260,5 @@ module Ace
 end
 
 # Run the CLI
-if __FILE__ == $0
-  cli = Ace::LLM::QueryCLI.new
-  cli.run(ARGV)
-end
+cli = Ace::LLM::QueryCLI.new
+cli.run(ARGV)

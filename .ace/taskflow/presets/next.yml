@@ -1,0 +1,12 @@
+description: "Next actionable tasks (pending + in-progress)"
+type: "tasks"
+context: "current"
+filters:
+  status:
+    - "pending"
+    - "in-progress"
+sort:
+  by: "priority"
+  ascending: false
+display:
+  group_by: null

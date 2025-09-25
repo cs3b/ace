@@ -2,6 +2,7 @@
 
 require_relative "../organisms/task_manager"
 require_relative "../molecules/task_filter"
+require_relative "../molecules/list_preset_manager"
 require_relative "../models/task"
 
 module Ace
@@ -11,6 +12,7 @@ module Ace
       class TasksCommand
         def initialize
           @manager = Organisms::TaskManager.new
+          @preset_manager = Molecules::ListPresetManager.new
         end
 
         def execute(args)
@@ -20,7 +22,67 @@ module Ace
             return execute_reschedule(args)
           end
 
-          # Parse options
+          # Check if first argument is a preset name
+          preset_name = detect_preset_name(args)
+          if preset_name
+            args.shift # Remove preset name from args
+            execute_with_preset(preset_name, args)
+          elsif args.empty? || (!args.first.start_with?('-') && !@preset_manager.preset_exists?(args.first, :tasks))
+            # Default to 'next' preset when no arguments or no valid preset/flag
+            execute_with_preset('next', args)
+          else
+            # Fallback to legacy flag-based execution for backward compatibility
+            execute_legacy(args)
+          end
+        rescue StandardError => e
+          puts "Error: #{e.message}"
+          exit 1
+        end
+
+        private
+
+        def detect_preset_name(args)
+          return nil if args.empty? || args.first.start_with?('-')
+
+          potential_preset = args.first
+          # Check if it's a known preset or custom preset
+          if @preset_manager.preset_exists?(potential_preset, :tasks)
+            potential_preset
+          else
+            nil
+          end
+        end
+
+        def execute_with_preset(preset_name, remaining_args)
+          # Parse additional filters from remaining args
+          additional_filters = parse_additional_filters(remaining_args)
+
+          # Check for special flags
+          if additional_filters[:stats]
+            show_statistics_for_preset(preset_name)
+            return
+          end
+
+          # Apply preset with additional filters
+          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+          return unless preset_config
+
+          # Get tasks based on preset configuration
+          tasks = get_tasks_for_preset(preset_config)
+
+          # Sort tasks according to preset
+          tasks = apply_preset_sorting(tasks, preset_config)
+
+          # Display tasks
+          if tasks.empty?
+            puts "No tasks found for preset '#{preset_name}'."
+          else
+            display_tasks_with_preset(tasks, preset_config)
+          end
+        end
+
+        def execute_legacy(args)
+          # Original implementation for backward compatibility
           options = parse_options(args)
 
           # Get tasks based on context
@@ -54,12 +116,128 @@ module Ace
           else
             display_tasks(tasks, options)
           end
-        rescue StandardError => e
-          puts "Error: #{e.message}"
-          exit 1
         end
 
-        private
+        def parse_additional_filters(args)
+          filters = {}
+
+          i = 0
+          while i < args.length
+            arg = args[i]
+            case arg
+            when "--status"
+              filters[:status] = args[i + 1].split(',') if i + 1 < args.length
+              i += 2
+            when "--priority"
+              filters[:priority] = args[i + 1].split(',') if i + 1 < args.length
+              i += 2
+            when "--days"
+              filters[:days] = args[i + 1].to_i if i + 1 < args.length
+              i += 2
+            when "--stats"
+              filters[:stats] = true
+              i += 1
+            when "--help", "-h"
+              show_help
+              exit 0
+            else
+              i += 1
+            end
+          end
+
+          filters
+        end
+
+        def get_tasks_for_preset(preset_config)
+          context = preset_config[:context] || 'current'
+          filters = preset_config[:filters] || {}
+
+          case context
+          when 'all'
+            @manager.list_tasks(context: "all", filters: filters)
+          when 'backlog'
+            @manager.list_tasks(context: "backlog", filters: filters)
+          when 'current'
+            @manager.list_tasks(context: "current", filters: filters)
+          else
+            # Assume it's a specific release context
+            @manager.list_tasks(context: context, filters: filters)
+          end
+        end
+
+        def apply_preset_sorting(tasks, preset_config)
+          sort_config = preset_config[:sort] || { by: :sort, ascending: true }
+
+          Molecules::TaskFilter.sort_tasks(
+            tasks,
+            sort_config[:by],
+            sort_config[:ascending]
+          )
+        end
+
+        def display_tasks_with_preset(tasks, preset_config)
+          preset_name = preset_config[:name]
+          description = preset_config[:description]
+
+          puts "Tasks: #{preset_name} (#{tasks.size} found)"
+          puts description if description && description != "#{preset_name} preset"
+          puts "=" * 50
+
+          # Check if grouping is needed
+          display_config = preset_config[:display] || {}
+          if display_config[:group_by] == 'context' || display_config[:group_by] == :context
+            grouped = tasks.group_by { |t| t[:context] }
+            grouped.each do |context, context_tasks|
+              puts ""
+              puts "#{context}:"
+              context_tasks.each { |task| display_task_line(task) }
+            end
+          else
+            tasks.each { |task| display_task_line(task) }
+          end
+        end
+
+        def show_statistics_for_preset(preset_name)
+          preset_config = @preset_manager.apply_preset(preset_name)
+          return unless preset_config
+
+          context = preset_config[:context] || 'current'
+          stats = @manager.get_statistics(context: context)
+
+          puts "Task Statistics for '#{preset_name}' preset:"
+          puts preset_config[:description] if preset_config[:description]
+          puts "=" * 50
+          puts "Total: #{stats[:total]} tasks"
+          puts ""
+
+          if stats[:by_status].any?
+            puts "By Status:"
+            stats[:by_status].each do |status, count|
+              icon = status_icon(status)
+              percentage = (count.to_f / stats[:total] * 100).round
+              puts "  #{icon} #{status.capitalize}: #{count} (#{percentage}%)"
+            end
+            puts ""
+          end
+
+          if stats[:by_priority].any?
+            puts "By Priority:"
+            stats[:by_priority].each do |priority, count|
+              indicator = priority_indicator(priority)
+              percentage = (count.to_f / stats[:total] * 100).round
+              puts "  #{indicator} #{priority.capitalize}: #{count} (#{percentage}%)"
+            end
+            puts ""
+          end
+
+          if stats[:by_context].any? && context == "all"
+            puts "By Context:"
+            stats[:by_context].each do |ctx, count|
+              percentage = (count.to_f / stats[:total] * 100).round
+              puts "  #{ctx}: #{count} (#{percentage}%)"
+            end
+          end
+        end
 
         def parse_options(args)
           options = {
@@ -329,13 +507,30 @@ module Ace
         end
 
         def show_help
-          puts "Usage: ace-taskflow tasks [options]"
+          puts "Usage: ace-taskflow tasks [preset] [options]"
           puts "       ace-taskflow tasks reschedule <tasks> [options]"
+          puts ""
+          puts "Presets (recommended):"
+          available_presets = @preset_manager.list_presets(:tasks)
+          available_presets.each do |preset|
+            name = preset[:name]
+            desc = preset[:description]
+            default_marker = preset[:default] ? " (default)" : ""
+            puts "  #{name.ljust(12)} #{desc}#{default_marker}"
+          end
           puts ""
           puts "Subcommands:"
           puts "  reschedule           Reorder tasks by updating sort values"
           puts ""
-          puts "Listing Options:"
+          puts "Preset Examples:"
+          puts "  ace-taskflow tasks                    # Uses 'next' preset (default)"
+          puts "  ace-taskflow tasks recent             # Recently modified tasks"
+          puts "  ace-taskflow tasks recent --days 3    # Recent with custom filter"
+          puts "  ace-taskflow tasks all                # All tasks, grouped by context"
+          puts "  ace-taskflow tasks pending            # Only pending tasks"
+          puts "  ace-taskflow tasks next --stats       # Statistics for next preset"
+          puts ""
+          puts "Legacy Flag Options (backward compatibility):"
           puts "  --all                List ALL tasks (backlog + releases)"
           puts "  --backlog            List backlog tasks"
           puts "  --release <name>     List tasks in specific release"
@@ -346,29 +541,21 @@ module Ace
           puts "  --stats              Show task statistics"
           puts "  --sort <field>       Sort by field (priority, status, id, modified)"
           puts ""
+          puts "Additional Preset Filters:"
+          puts "  --status <statuses>  Add status filter to preset"
+          puts "  --priority <levels>  Add priority filter to preset"
+          puts "  --days <n>           Modify days for time-based presets"
+          puts "  --stats              Show statistics for preset"
+          puts ""
           puts "Reschedule Options:"
-          puts "  --add-next           Place tasks before existing pending tasks (front of queue)"
-          puts "  --add-at-end         Place tasks after highest task (end of queue)"
+          puts "  --add-next           Place tasks before existing pending tasks"
+          puts "  --add-at-end         Place tasks after highest task"
           puts "  --after <task>       Place tasks after specific task"
           puts "  --before <task>      Place tasks before specific task"
           puts ""
-          puts "Sort formats:"
-          puts "  --sort priority:desc  Sort by priority descending"
-          puts "  --sort id:asc         Sort by ID ascending"
-          puts ""
-          puts "Examples:"
-          puts "  ace-taskflow tasks"
-          puts "  ace-taskflow tasks --all"
-          puts "  ace-taskflow tasks --backlog"
-          puts "  ace-taskflow tasks --status pending,in-progress"
-          puts "  ace-taskflow tasks --priority high,critical"
-          puts "  ace-taskflow tasks --recent --days 3"
-          puts "  ace-taskflow tasks --stats"
-          puts ""
-          puts "  ace-taskflow tasks reschedule 025 026 027"
-          puts "  ace-taskflow tasks reschedule 025 026 --add-next"
-          puts "  ace-taskflow tasks reschedule 025 --after task.029"
-          puts "  ace-taskflow tasks reschedule 025 --before v.0.9.0+task.029"
+          puts "Custom Presets:"
+          puts "  Create YAML files in .ace/taskflow/presets/ to define custom presets"
+          puts "  Example: .ace/taskflow/presets/urgent.yml"
         end
       end
     end

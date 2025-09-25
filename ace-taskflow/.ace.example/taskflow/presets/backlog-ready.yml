@@ -1,0 +1,15 @@
+# Example preset for backlog items ready to work on
+description: "Backlog items with no blockers, ready to start"
+type: "tasks"
+context: "backlog"
+filters:
+  status:
+    - "pending"
+  # Assuming tasks without dependencies are ready
+  # You could add custom filters for "ready" state
+sort:
+  by: "priority"
+  ascending: false
+display:
+  group_by: "priority"
+  show_estimate: true  # If tracking estimates
