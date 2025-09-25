@@ -73,11 +73,17 @@ module Ace
           # Sort tasks according to preset
           tasks = apply_preset_sorting(tasks, preset_config)
 
+          # Apply limit if specified
+          original_count = tasks.size
+          if additional_filters[:limit] && additional_filters[:limit] > 0
+            tasks = tasks.take(additional_filters[:limit])
+          end
+
           # Display tasks
           if tasks.empty?
             puts "No tasks found for preset '#{preset_name}'."
           else
-            display_tasks_with_preset(tasks, preset_config)
+            display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
           end
         end
 
@@ -110,6 +116,11 @@ module Ace
             )
           end
 
+          # Apply limit if specified
+          if options[:limit] && options[:limit] > 0
+            tasks = tasks.take(options[:limit])
+          end
+
           # Display tasks
           if tasks.empty?
             puts "No tasks found."
@@ -133,6 +144,9 @@ module Ace
               i += 2
             when "--days"
               filters[:days] = args[i + 1].to_i if i + 1 < args.length
+              i += 2
+            when "--limit"
+              filters[:limit] = args[i + 1].to_i if i + 1 < args.length
               i += 2
             when "--stats"
               filters[:stats] = true
@@ -175,11 +189,15 @@ module Ace
           )
         end
 
-        def display_tasks_with_preset(tasks, preset_config)
+        def display_tasks_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           preset_name = preset_config[:name]
           description = preset_config[:description]
 
-          puts "Tasks: #{preset_name} (#{tasks.size} found)"
+          if limit && original_count && original_count > limit
+            puts "Tasks: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
+          else
+            puts "Tasks: #{preset_name} (#{tasks.size} found)"
+          end
           puts description if description && description != "#{preset_name} preset"
           puts "=" * 50
 
@@ -283,6 +301,9 @@ module Ace
               else
                 options[:sort][:by] = sort_spec.to_sym
               end
+              i += 2
+            when "--limit"
+              options[:limit] = args[i + 1].to_i
               i += 2
             when "--help", "-h"
               show_help

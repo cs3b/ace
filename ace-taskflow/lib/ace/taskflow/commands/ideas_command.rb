@@ -68,11 +68,17 @@ module Ace
           # Get ideas based on preset configuration
           ideas = get_ideas_for_preset(preset_config)
 
+          # Apply limit if specified
+          original_count = ideas.size
+          if additional_filters[:limit] && additional_filters[:limit] > 0
+            ideas = ideas.take(additional_filters[:limit])
+          end
+
           # Display ideas
           if ideas.empty?
             puts "No ideas found for preset '#{preset_name}'."
           else
-            display_ideas_with_preset(ideas, preset_config)
+            display_ideas_with_preset(ideas, preset_config, original_count, additional_filters[:limit])
           end
         end
 
@@ -96,6 +102,9 @@ module Ace
             case arg
             when "--days"
               filters[:days] = args[i + 1].to_i if i + 1 < args.length
+              i += 2
+            when "--limit"
+              filters[:limit] = args[i + 1].to_i if i + 1 < args.length
               i += 2
             when "--stats"
               filters[:stats] = true
@@ -150,11 +159,15 @@ module Ace
           all_ideas
         end
 
-        def display_ideas_with_preset(ideas, preset_config)
+        def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil)
           preset_name = preset_config[:name]
           description = preset_config[:description]
 
-          puts "Ideas: #{preset_name} (#{ideas.size} found)"
+          if limit && original_count && original_count > limit
+            puts "Ideas: #{preset_name} (showing #{ideas.size} of #{original_count} found)"
+          else
+            puts "Ideas: #{preset_name} (#{ideas.size} found)"
+          end
           puts description if description && description != "#{preset_name} preset"
           puts "=" * 50
 
