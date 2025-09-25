@@ -407,6 +407,7 @@ module Ace
           puts ""
           puts "Additional Preset Filters:"
           puts "  --days <n>         Modify days for time-based presets"
+          puts "  --limit <n>        Limit number of results displayed"
           puts "  --verbose, -v      Show detailed information"
           puts "  --stats            Show statistics for preset"
           puts ""
