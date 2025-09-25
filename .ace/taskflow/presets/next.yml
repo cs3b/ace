@@ -6,7 +6,7 @@ filters:
     - "pending"
     - "in-progress"
 sort:
-  by: "priority"
-  ascending: false
+  by: "sort"
+  ascending: true
 display:
   group_by: null
