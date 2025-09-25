@@ -1,0 +1,256 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require "pathname"
+
+# Add lib directory to load path if running from development
+lib_path = File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift(lib_path) if File.directory?(lib_path)
+
+require "ace/llm"
+
+module Ace
+  module LLM
+    # CLI for ace-llm-query command
+    class QueryCLI
+      def initialize
+        @options = {
+          format: "text",
+          temperature: nil,
+          max_tokens: nil,
+          system: nil,
+          timeout: 30,
+          force: false,
+          debug: false
+        }
+      end
+
+      def run(args)
+        parse_arguments(args)
+        execute_query
+      rescue Ace::LLM::Error => e
+        error_output(e.message)
+        exit(1)
+      rescue StandardError => e
+        if @options[:debug]
+          error_output("Error: #{e.class}: #{e.message}")
+          error_output(e.backtrace.join("\n"))
+        else
+          error_output("Error: #{e.message}")
+          error_output("Use --debug for more information")
+        end
+        exit(1)
+      end
+
+      private
+
+      def parse_arguments(args)
+        parser = create_option_parser
+
+        # Parse options
+        remaining_args = parser.parse(args)
+
+        # Extract provider_model and prompt from remaining args
+        if remaining_args.empty?
+          puts parser
+          exit(0)
+        end
+
+        @provider_model = remaining_args.shift
+        @prompt = remaining_args.join(" ")
+
+        # If no prompt provided, show help for the provider
+        if @prompt.nil? || @prompt.empty?
+          show_provider_help
+          exit(0)
+        end
+      rescue OptionParser::InvalidOption => e
+        error_output(e.message)
+        puts parser
+        exit(1)
+      end
+
+      def create_option_parser
+        OptionParser.new do |opts|
+          opts.banner = "Usage: ace-llm-query PROVIDER[:MODEL] PROMPT [options]"
+          opts.separator ""
+          opts.separator "Query any LLM provider through a unified interface"
+          opts.separator ""
+          opts.separator "Options:"
+
+          opts.on("-o", "--output FILE", "Output file path") do |file|
+            @options[:output] = file
+          end
+
+          opts.on("-f", "--format FORMAT", ["text", "json", "markdown"],
+                  "Output format (text, json, markdown)") do |format|
+            @options[:format] = format
+          end
+
+          opts.on("-t", "--temperature FLOAT", Float, "Temperature (0.0-2.0)") do |temp|
+            @options[:temperature] = temp
+          end
+
+          opts.on("-m", "--max-tokens INT", Integer, "Maximum output tokens") do |tokens|
+            @options[:max_tokens] = tokens
+          end
+
+          opts.on("-s", "--system TEXT", "System instruction/prompt") do |system|
+            @options[:system] = system
+          end
+
+          opts.on("--timeout SECONDS", Integer, "Request timeout in seconds") do |timeout|
+            @options[:timeout] = timeout
+          end
+
+          opts.on("--force", "Force overwrite existing files") do
+            @options[:force] = true
+          end
+
+          opts.on("-d", "--debug", "Enable debug output") do
+            @options[:debug] = true
+          end
+
+          opts.on("-h", "--help", "Show this help message") do
+            puts opts
+            exit(0)
+          end
+
+          opts.on("-v", "--version", "Show version") do
+            puts "ace-llm-query #{Ace::LLM::VERSION}"
+            exit(0)
+          end
+
+          opts.separator ""
+          opts.separator "Examples:"
+          opts.separator '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
+          opts.separator '  ace-llm-query gflash "Quick question" # using alias'
+          opts.separator '  ace-llm-query openai prompt.txt --output response.md'
+          opts.separator ""
+          opts.separator "Providers: google, openai, anthropic, mistral, togetherai, lmstudio"
+        end
+      end
+
+      def show_provider_help
+        puts "Available aliases for '#{@provider_model}':"
+        puts ""
+
+        # Show aliases from resolver
+        resolver = Ace::LLM::Molecules::LlmAliasResolver.new
+        aliases = resolver.available_aliases
+
+        if aliases[:global] && !aliases[:global].empty?
+          puts "Global aliases:"
+          aliases[:global].each do |alias_name, target|
+            puts "  #{alias_name} → #{target}"
+          end
+        end
+
+        puts ""
+        puts "Use: ace-llm-query #{@provider_model} \"your prompt here\""
+      end
+
+      def execute_query
+        # Parse provider and model
+        parser = Ace::LLM::Molecules::ProviderModelParser.new
+        parse_result = parser.parse(@provider_model)
+
+        unless parse_result.valid?
+          error_output(parse_result.error)
+          exit(1)
+        end
+
+        # Load prompt content
+        file_handler = Ace::LLM::Molecules::FileIoHandler.new
+        prompt_text = file_handler.read_content(@prompt)
+
+        # Build messages
+        messages = build_messages(prompt_text)
+
+        # Create client and generate response
+        client = create_client(parse_result.provider, parse_result.model)
+        response = client.generate(messages, **generation_options)
+
+        # Format and output response
+        output_response(response)
+      end
+
+      def build_messages(prompt_text)
+        messages = []
+
+        # Add system message if provided
+        if @options[:system]
+          file_handler = Ace::LLM::Molecules::FileIoHandler.new
+          system_text = file_handler.read_content(@options[:system])
+          messages << { role: "system", content: system_text }
+        end
+
+        # Add user message
+        messages << { role: "user", content: prompt_text }
+        messages
+      end
+
+      def create_client(provider, model)
+        # Map provider to client class
+        client_class = case provider
+        when "google"
+          Ace::LLM::Organisms::GoogleClient
+        when "openai"
+          # Ace::LLM::Organisms::OpenAIClient # To be implemented
+          error_output("OpenAI provider not yet implemented")
+          exit(1)
+        when "anthropic"
+          # Ace::LLM::Organisms::AnthropicClient # To be implemented
+          error_output("Anthropic provider not yet implemented")
+          exit(1)
+        else
+          error_output("Provider '#{provider}' not yet implemented")
+          exit(1)
+        end
+
+        client_class.new(model: model, timeout: @options[:timeout])
+      end
+
+      def generation_options
+        opts = {}
+        opts[:temperature] = @options[:temperature] if @options[:temperature]
+        opts[:max_tokens] = @options[:max_tokens] if @options[:max_tokens]
+        opts
+      end
+
+      def output_response(response)
+        # Get format handler
+        handler = Ace::LLM::Molecules::FormatHandlers.get_handler(@options[:format])
+        formatted_output = handler.format(response)
+
+        if @options[:output]
+          # Write to file
+          file_handler = Ace::LLM::Molecules::FileIoHandler.new
+          file_handler.write_content(
+            formatted_output,
+            @options[:output],
+            format: @options[:format],
+            force: @options[:force]
+          )
+
+          # Show summary
+          puts handler.generate_summary(response, @options[:output])
+        else
+          # Output to stdout
+          puts formatted_output
+        end
+      end
+
+      def error_output(message)
+        $stderr.puts "Error: #{message}"
+      end
+    end
+  end
+end
+
+# Run the CLI
+if __FILE__ == $0
+  cli = Ace::LLM::QueryCLI.new
+  cli.run(ARGV)
+end

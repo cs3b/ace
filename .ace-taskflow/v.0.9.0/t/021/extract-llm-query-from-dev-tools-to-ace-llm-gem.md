@@ -230,7 +230,7 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
   > Assert: No dry-* requires in atoms
   > Command: grep -r "require.*dry" ace-llm/lib/ace/llm/atoms/ || echo "No dry dependencies found"
 
-- [ ] Step 3: Port molecules (composed operations)
+- [x] Step 3: Port molecules (composed operations)
   - Port llm_alias_resolver with ace-core config cascade
   - Port provider_model_parser, file_io_handler, metadata_normalizer
   - Port format handlers (text, json, markdown)
@@ -239,7 +239,7 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
   > Assert: Molecules use ace-core properly
   > Command: grep -r "Ace::Core" ace-llm/lib/ace/llm/molecules/ | head -5
 
-- [ ] Step 4: Port organisms (provider clients)
+- [x] Step 4: Port organisms (provider clients)
   - Port GoogleClient, OpenAIClient, AnthropicClient with Faraday
   - Port LMStudioClient, MistralClient, TogetherAIClient
   - Ensure all use consistent error handling
@@ -248,7 +248,7 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
   > Assert: All provider clients present and using Faraday
   > Command: ls ace-llm/lib/ace/llm/organisms/*_client.rb | wc -l
 
-- [ ] Step 5: Implement command without dry-cli
+- [x] Step 5: Implement command without dry-cli
   - Create ace-llm/lib/ace/llm/commands/query.rb with OptionParser
   - Port all command options and argument handling
   - Integrate with ported molecules and organisms
@@ -266,7 +266,7 @@ Extract the llm-query command from dev-tools (a non-gem submodule) into a proper
   > Assert: Cost tracking components present
   > Command: ls ace-llm/lib/ace/llm/molecules/*cost* ace-llm/lib/ace/llm/molecules/*pricing*
 
-- [ ] Step 7: Create executable
+- [x] Step 7: Create executable
   - Create ace-llm/exe/ace-llm-query
   - Direct execution without ExecutableWrapper
   - Ensure proper load path setup
