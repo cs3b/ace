@@ -28,15 +28,41 @@ ace-taskflow idea "Add dark mode support to the application"
 
 Ideas are saved to the configured directory (default: `./ideas`) with timestamped filenames.
 
-### Task Management (Coming Soon)
+### Task Management
 
-Future releases will include task management capabilities:
+Create and manage tasks with descriptive paths:
 
 ```bash
+# Create a new task (automatically generates descriptive path)
 ace-taskflow task create "Implement user authentication"
+# Creates: .ace-taskflow/v.0.9.0/t/035-feat-user-authentication/task.035.md
+
+# List and navigate tasks
 ace-taskflow task list
-ace-taskflow task complete TASK_ID
+ace-taskflow task          # Get next task
+ace-taskflow task 035      # Navigate to specific task
+ace-taskflow task complete 035
+
+# Migrate existing tasks to new descriptive format
+ace-taskflow migrate-paths              # Migrate all tasks
+ace-taskflow migrate-paths --dry-run    # Preview changes without migrating
 ```
+
+#### Descriptive Task Paths
+
+Tasks now use semantic directory names that include:
+- **Task number**: Unique identifier (e.g., `035`)
+- **Type**: Task nature (`feat`, `fix`, `docs`, `test`, `refactor`)
+- **Context**: Component affected (e.g., `taskflow`, `context`, `nav`)
+- **Keywords**: Descriptive summary from title
+
+Example: `035-feat-taskflow-github-import/task.035.md`
+
+Benefits:
+- Instant context when browsing directories
+- Better organization and grouping
+- Improved searchability
+- AI-friendly structure
 
 ### Release Management (Coming Soon)
 
