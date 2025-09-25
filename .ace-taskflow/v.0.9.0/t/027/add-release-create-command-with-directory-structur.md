@@ -4,7 +4,7 @@ status: pending
 priority: medium
 estimate: 4h
 dependencies: []
-sort: 977
+sort: 963
 ---
 
 # Add release create command with directory structure

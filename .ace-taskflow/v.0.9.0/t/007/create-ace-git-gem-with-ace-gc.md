@@ -5,7 +5,7 @@ priority: medium
 estimate: 6h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002, v.0.9.0+task.003, v.0.9.0+task.004]
 needs_review: true
-sort: 981
+sort: 967
 ---
 
 # Create ace-git Gem with ace-gc Only
