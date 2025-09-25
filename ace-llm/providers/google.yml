@@ -3,15 +3,17 @@ class: Ace::LLM::Organisms::GoogleClient
 gem: ace-llm
 models:
   - gemini-2.5-flash
+  - gemini-2.5-flash-lite
   - gemini-2.5-pro
   - gemini-exp
 aliases:
   global:
     gflash: google:flash
     gpro: google:pro
-    gfast: google:flash
+    glite: google:lite
   model:
     flash: gemini-2.5-flash
+    lite: gemini-2.5-flash-lite
     pro: gemini-2.5-pro
 api_key:
   env: GEMINI_API_KEY
