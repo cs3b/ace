@@ -81,10 +81,13 @@ module Ace
           # Get current sort values
           min_sort = pending_tasks.map { |t| get_task_sort_value(t) }.compact.min || 1000
 
-          # Assign new sort values starting from (min_sort - tasks_to_reschedule.length)
-          new_sort_base = min_sort - tasks_to_reschedule.length
+          # Sort tasks by their ID to maintain natural order
+          sorted_tasks = tasks_to_reschedule.sort_by { |t| parse_task_sequential_number(t[:id]) || 999999 }
 
-          tasks_to_reschedule.each_with_index do |task, index|
+          # Assign new sort values starting from (min_sort - sorted_tasks.length)
+          new_sort_base = min_sort - sorted_tasks.length
+
+          sorted_tasks.each_with_index do |task, index|
             new_sort_value = new_sort_base + index
             update_task_sort(task, new_sort_value)
             puts "  Rescheduled #{task[:id]} with sort value #{new_sort_value}"
@@ -101,7 +104,10 @@ module Ace
           # Use the higher of the two as the base
           new_sort_base = [max_sort, max_sequential].max + 1
 
-          tasks_to_reschedule.each_with_index do |task, index|
+          # Sort tasks by their ID to maintain natural order
+          sorted_tasks = tasks_to_reschedule.sort_by { |t| parse_task_sequential_number(t[:id]) || 999999 }
+
+          sorted_tasks.each_with_index do |task, index|
             new_sort_value = new_sort_base + index
             update_task_sort(task, new_sort_value)
             puts "  Rescheduled #{task[:id]} with sort value #{new_sort_value}"
@@ -129,11 +135,14 @@ module Ace
             ref_sort + 100
           end
 
+          # Sort tasks by their ID to maintain natural order
+          sorted_tasks = tasks_to_reschedule.sort_by { |t| parse_task_sequential_number(t[:id]) || 999999 }
+
           # Place tasks in the gap between reference and next task
           gap_size = next_sort - ref_sort
-          increment = gap_size.to_f / (tasks_to_reschedule.length + 1)
+          increment = gap_size.to_f / (sorted_tasks.length + 1)
 
-          tasks_to_reschedule.each_with_index do |task, index|
+          sorted_tasks.each_with_index do |task, index|
             new_sort_value = (ref_sort + (increment * (index + 1))).to_i
             update_task_sort(task, new_sort_value)
             puts "  Rescheduled #{task[:id]} with sort value #{new_sort_value} (after #{reference_task[:id]})"
@@ -161,11 +170,14 @@ module Ace
             ref_sort - 100
           end
 
+          # Sort tasks by their ID to maintain natural order
+          sorted_tasks = tasks_to_reschedule.sort_by { |t| parse_task_sequential_number(t[:id]) || 999999 }
+
           # Place tasks in the gap between previous and reference task
           gap_size = ref_sort - prev_sort
-          increment = gap_size.to_f / (tasks_to_reschedule.length + 1)
+          increment = gap_size.to_f / (sorted_tasks.length + 1)
 
-          tasks_to_reschedule.each_with_index do |task, index|
+          sorted_tasks.each_with_index do |task, index|
             new_sort_value = (prev_sort + (increment * (index + 1))).to_i
             update_task_sort(task, new_sort_value)
             puts "  Rescheduled #{task[:id]} with sort value #{new_sort_value} (before #{reference_task[:id]})"

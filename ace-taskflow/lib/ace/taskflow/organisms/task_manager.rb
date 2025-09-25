@@ -33,13 +33,27 @@ module Ace
           in_progress = tasks.select { |t| t[:status] == "in-progress" }
           return in_progress.first unless in_progress.empty?
 
-          # Then high priority pending
-          high_priority = tasks.select { |t| t[:status] == "pending" && t[:priority] == "high" }
-          return high_priority.first unless high_priority.empty?
-
-          # Then any pending
+          # For pending tasks, sort by sort value first, then by ID
           pending = tasks.select { |t| t[:status] == "pending" }
-          pending.first
+          return nil if pending.empty?
+
+          # Sort pending tasks: those with sort values first (ascending), then by task ID
+          sorted_pending = pending.sort do |a, b|
+            if a[:sort] && b[:sort]
+              a[:sort] <=> b[:sort]
+            elsif a[:sort]
+              -1  # a has sort, comes first
+            elsif b[:sort]
+              1   # b has sort, comes first
+            else
+              # Neither has sort, compare by task ID number
+              a_num = a[:id]&.match(/task\.(\d+)$/)&.[](1)&.to_i || 999999
+              b_num = b[:id]&.match(/task\.(\d+)$/)&.[](1)&.to_i || 999999
+              a_num <=> b_num
+            end
+          end
+
+          sorted_pending.first
         end
 
         # Show specific task

@@ -63,8 +63,8 @@ module Ace
 
         def parse_options(args)
           options = {
-            filters: {},
-            sort: { by: :priority, ascending: false }
+            filters: { status: ["in-progress", "pending"] },  # Default to actionable tasks
+            sort: { by: :sort, ascending: true }  # Default to sort field
           }
 
           i = 0
@@ -73,6 +73,7 @@ module Ace
             case arg
             when "--all"
               options[:all] = true
+              options[:filters].delete(:status)  # Remove default status filter for --all
               i += 1
             when "--backlog"
               options[:backlog] = true
