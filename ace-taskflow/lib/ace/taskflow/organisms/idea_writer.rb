@@ -20,6 +20,7 @@ module Ace
 
           # Prepare initial metadata
           metadata = prepare_metadata(content, options)
+          debug_log("Initial metadata after prepare: #{metadata.inspect}")
 
           # Enhance content if requested (this may update metadata with suggested filename)
           enhanced_content = if should_enhance?(options)
@@ -32,9 +33,9 @@ module Ace
           if metadata[:suggested_filename]
             metadata[:title] = metadata[:suggested_filename]
             debug_log("Using LLM suggested filename: #{metadata[:suggested_filename]}")
-          else
-            # Otherwise re-prepare metadata from enhanced content
-            metadata = prepare_metadata(enhanced_content, metadata)
+          elsif !metadata[:title]
+            # Only extract title from content if no title was provided
+            metadata[:title] = extract_title(enhanced_content)
           end
 
           debug_log("Final metadata title for filename: #{metadata[:title]}")
@@ -171,6 +172,12 @@ module Ace
           merged[:git_commit] = options[:git_commit] unless options[:git_commit].nil?
           merged[:llm_enhance] = options[:llm_enhance] unless options[:llm_enhance].nil?
           merged[:location] = options[:location] if options[:location]
+
+          # Preserve metadata fields if provided
+          merged[:title] = options[:title] if options[:title]
+          merged[:timestamp] = options[:timestamp] if options[:timestamp]
+          merged[:author] = options[:author] if options[:author]
+          merged[:tags] = options[:tags] if options[:tags]
 
           merged
         end
