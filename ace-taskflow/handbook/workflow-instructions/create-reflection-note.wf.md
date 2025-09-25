@@ -60,7 +60,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
      # This tool will:
      # 1. Determine current release context automatically
-     # 2. Create target directory if needed
+     # 2. Create target directory if needed (e.g., [release-dir]/retro/)
      # 3. Generate appropriate filename with timestamp
      # 4. Create the reflection file and return full path
      ```
@@ -359,7 +359,7 @@ Capture observations about development workflow effectiveness and areas for opti
 This workflow helps capture valuable insights and learnings, creating a knowledge base that improves future development work.
 
 <documents>
-    <template path="tmpl://release-reflections/retrospective">
+    <template path="tmpl://release-reflections/retro">
 # Reflection: [Topic/Date]
 
 **Date**: YYYY-MM-DD

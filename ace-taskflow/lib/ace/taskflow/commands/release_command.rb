@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../organisms/release_manager"
+require_relative "../organisms/release_creator"
 require_relative "../models/release"
 
 module Ace
@@ -78,18 +79,47 @@ module Ace
         end
 
         def create_release(args)
-          name = args.first
+          # Parse arguments
+          codename = nil
+          version = nil
+          location = "backlog"
 
-          unless name
-            puts "Usage: ace-taskflow release create <name>"
-            puts "Example: ace-taskflow release create v.0.10.0"
+          while args.any?
+            arg = args.shift
+            case arg
+            when "--release", "-r"
+              version = args.shift
+            when "--current", "-c"
+              location = "active"
+            when "--backlog", "-b"
+              location = "backlog"
+            else
+              codename = arg
+            end
+          end
+
+          unless codename
+            puts "Usage: ace-taskflow release create <codename> [options]"
+            puts ""
+            puts "Options:"
+            puts "  --release, -r <version>  Specify version (e.g., v.0.10.0)"
+            puts "  --current, -c            Create as active release"
+            puts "  --backlog, -b            Create in backlog (default)"
+            puts ""
+            puts "Examples:"
+            puts "  ace-taskflow release create authentication-refactor"
+            puts "  ace-taskflow release create dark-mode --release v.0.12.0"
+            puts "  ace-taskflow release create api-v2 --current"
             exit 1
           end
 
-          result = @manager.create_release(name)
+          # Create the release using the new creator
+          creator = Organisms::ReleaseCreator.new(@manager.root_path)
+          result = creator.create(codename, version: version, location: location)
 
           if result[:success]
             puts result[:message]
+            puts "Version: #{result[:version]}"
             puts "Path: #{result[:path]}"
           else
             puts "Error: #{result[:message]}"
@@ -207,21 +237,25 @@ module Ace
           puts "Usage: ace-taskflow release [subcommand] [options]"
           puts ""
           puts "Subcommands:"
-          puts "  (none)             Show active release(s)"
-          puts "  <name>             Show specific release info"
-          puts "  create <name>      Create new release in backlog"
-          puts "  promote [<name>]   Promote release from backlog to active"
-          puts "  demote [<name>]    Demote release from active to done"
-          puts "    --to backlog     Demote to backlog instead of done"
-          puts "  validate [<name>]  Validate release for completion"
-          puts "  changelog [<name>] Generate changelog for release"
+          puts "  (none)                    Show active release(s)"
+          puts "  <name>                    Show specific release info"
+          puts "  create <codename> [opts]  Create new release with auto-versioning"
+          puts "    --release <version>     Specify version (default: auto-increment)"
+          puts "    --current               Create as active release"
+          puts "    --backlog               Create in backlog (default)"
+          puts "  promote [<name>]          Promote release from backlog to active"
+          puts "  demote [<name>]           Demote release from active to done"
+          puts "    --to backlog            Demote to backlog instead of done"
+          puts "  validate [<name>]         Validate release for completion"
+          puts "  changelog [<name>]        Generate changelog for release"
           puts ""
           puts "Examples:"
           puts "  ace-taskflow release"
           puts "  ace-taskflow release v.0.9.0"
-          puts "  ace-taskflow release create v.0.10.0"
+          puts "  ace-taskflow release create authentication    # auto-increments to v.0.10.0"
+          puts "  ace-taskflow release create api-v2 --release v.0.12.0"
+          puts "  ace-taskflow release create dark-mode --current"
           puts "  ace-taskflow release promote v.0.10.0"
-          puts "  ace-taskflow release demote"
           puts "  ace-taskflow release demote --to backlog"
         end
       end

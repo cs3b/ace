@@ -5,6 +5,7 @@ require_relative "../molecules/release_resolver"
 require_relative "../molecules/task_loader"
 require_relative "../molecules/config_loader"
 require_relative "../atoms/path_builder"
+require_relative "release_creator"
 
 module Ace
   module Taskflow
@@ -46,37 +47,24 @@ module Ace
           end
         end
 
-        # Create new release in backlog
+        # Create new release in backlog (legacy method for backward compatibility)
         # @param name [String] Release name (e.g., v.0.10.0)
         # @return [Hash] Result with :success and :message
         def create_release(name)
-          # Validate name format
-          unless name.match?(/^v\.\d+\.\d+\.\d+/)
-            return { success: false, message: "Invalid release name format. Use v.X.Y.Z" }
+          # For backward compatibility, if a full version is provided, use it directly
+          if name.match?(/^v\.\d+\.\d+\.\d+/)
+            # Extract codename if present (e.g., v.0.10.0-feature -> feature)
+            parts = name.split('-', 2)
+            version = parts[0]
+            codename = parts[1] || version
+
+            creator = ReleaseCreator.new(@root_path)
+            return creator.create(codename, version: version, location: "backlog")
           end
 
-          # Check if already exists
-          if @resolver.exists?(name)
-            return { success: false, message: "Release #{name} already exists" }
-          end
-
-          # Create in backlog
-          release_path = Atoms::PathBuilder.build_release_path(@root_path, name, "backlog")
-
-          begin
-            FileUtils.mkdir_p(release_path)
-            FileUtils.mkdir_p(File.join(release_path, "t"))
-            FileUtils.mkdir_p(File.join(release_path, "ideas"))
-            FileUtils.mkdir_p(File.join(release_path, "docs"))
-
-            # Create release.md file
-            release_file = File.join(release_path, "release.md")
-            File.write(release_file, generate_release_template(name))
-
-            { success: true, message: "Created release #{name} in backlog", path: release_path }
-          rescue StandardError => e
-            { success: false, message: "Failed to create release: #{e.message}" }
-          end
+          # Otherwise treat as codename and auto-increment
+          creator = ReleaseCreator.new(@root_path)
+          creator.create(name, location: "backlog")
         end
 
         # Promote release from backlog to active
@@ -256,33 +244,6 @@ module Ace
           changelog
         end
 
-        private
-
-        def generate_release_template(name)
-          <<~TEMPLATE
-            # Release: #{name}
-
-            ## Overview
-
-            *Description of this release*
-
-            ## Goals
-
-            - [ ] Goal 1
-            - [ ] Goal 2
-            - [ ] Goal 3
-
-            ## Status
-
-            - **Created**: #{Time.now.strftime('%Y-%m-%d')}
-            - **Status**: backlog
-            - **Target Date**: TBD
-
-            ## Notes
-
-            *Additional notes about this release*
-          TEMPLATE
-        end
       end
     end
   end
