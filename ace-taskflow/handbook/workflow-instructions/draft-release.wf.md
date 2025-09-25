@@ -34,8 +34,8 @@ user-provided release scope into actionable tasks.
      Example: `ace-taskflow release create v.0.3.0 new-feature`
    
    * This automatically creates:
-     - Release directory: `.ace-taskflow/backlog/v.X.Y.Z-codename/`  
-     - All standard subdirectories from template (tasks/, ideas/, docs/, reflections/, researches/, user-experience/, etc.)
+     - Release directory: `.ace-taskflow/backlog/v.X.Y.Z-codename/`
+     - All standard subdirectories from template (t/, ideas/, docs/, retro/, researches/, user-experience/, etc.)
      - Initial `release-overview.md` file with basic structure
 
 3. **Rename Overview to README.md**
@@ -113,7 +113,7 @@ user-provided release scope into actionable tasks.
      [ -f ".ace-taskflow/backlog/v.X.Y.Z-codename/README.md" ] && echo "✓ README.md" || echo "✗ README.md missing"
 
      # Count created tasks
-     find .ace-taskflow/backlog/v.X.Y.Z-codename/tasks -name "*.md" | wc -l
+     find .ace-taskflow/backlog/v.X.Y.Z-codename/t -name "*.md" | wc -l
      ```
      
    * The subdirectory structure is guaranteed by ace-taskflow release create
