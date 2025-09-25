@@ -125,6 +125,8 @@ module Ace
 
         def get_ideas_for_preset(preset_config)
           context = preset_config[:context] || 'current'
+          # Note: ideas_loader doesn't use filters in the same way as tasks,
+          # but we keep this consistent for future expansion
 
           case context
           when 'all'

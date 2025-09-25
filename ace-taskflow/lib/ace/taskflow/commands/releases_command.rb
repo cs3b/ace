@@ -126,7 +126,8 @@ module Ace
 
         def get_releases_for_preset(preset_config)
           context = preset_config[:context] || 'all'
-          filters = preset_config[:filters] || {}
+          # Note: release_manager doesn't use filters in the same way,
+          # it uses a simple string filter argument
 
           # Map preset context to manager filter
           filter = case context
