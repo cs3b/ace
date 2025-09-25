@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "yaml"
 require_relative "../molecules/task_loader"
 require_relative "../molecules/task_slug_generator"
 require_relative "../atoms/path_builder"
@@ -208,7 +209,7 @@ module Ace
             # Parse frontmatter
             if content =~ /\A---\s*\n(.*?)\n---\s*\n/m
               yaml_content = $1
-              frontmatter = YAML.safe_load(yaml_content)
+              frontmatter = YAML.safe_load(yaml_content, permitted_classes: [Symbol, Date])
 
               # Check for task metadata
               !!(frontmatter["id"] && frontmatter["status"])

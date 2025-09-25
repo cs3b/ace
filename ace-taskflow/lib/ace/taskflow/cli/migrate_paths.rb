@@ -4,7 +4,7 @@ require_relative "../organisms/task_migrator"
 
 module Ace
   module Taskflow
-    module CLI
+    module Commands
       # CLI command for migrating task paths to new format
       class MigratePaths
         def self.run(args = [])

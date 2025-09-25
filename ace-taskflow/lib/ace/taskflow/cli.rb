@@ -27,6 +27,9 @@ module Ace
         when "releases"
           require_relative "commands/releases_command"
           Commands::ReleasesCommand.new.execute(args)
+        when "migrate-paths"
+          require_relative "cli/migrate_paths"
+          Commands::MigratePaths.run(args)
         when "config"
           show_config
           exit 0
