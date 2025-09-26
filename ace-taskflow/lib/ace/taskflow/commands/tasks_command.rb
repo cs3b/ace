@@ -4,6 +4,7 @@ require_relative "../organisms/task_manager"
 require_relative "../molecules/task_filter"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/dependency_tree_visualizer"
+require_relative "../molecules/stats_formatter"
 require_relative "../models/task"
 
 module Ace
@@ -14,6 +15,7 @@ module Ace
         def initialize
           @manager = Organisms::TaskManager.new
           @preset_manager = Molecules::ListPresetManager.new
+          @stats_formatter = Molecules::StatsFormatter.new
         end
 
         def execute(args)
@@ -218,16 +220,14 @@ module Ace
         end
 
         def display_tasks_with_preset(tasks, preset_config, original_count = nil, limit = nil)
-          preset_name = preset_config[:name]
-          description = preset_config[:description]
-
-          if limit && original_count && original_count > limit
-            puts "Tasks: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
-          else
-            puts "Tasks: #{preset_name} (#{tasks.size} found)"
-          end
-          puts description if description && description != "#{preset_name} preset"
-          puts "=" * 50
+          # Display three-line header
+          context = preset_config[:context] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           # Check if grouping is needed
           display_config = preset_config[:display] || {}
@@ -248,40 +248,7 @@ module Ace
           return unless preset_config
 
           context = preset_config[:context] || 'current'
-          stats = @manager.get_statistics(context: context)
-
-          puts "Task Statistics for '#{preset_name}' preset:"
-          puts preset_config[:description] if preset_config[:description]
-          puts "=" * 50
-          puts "Total: #{stats[:total]} tasks"
-          puts ""
-
-          if stats[:by_status].any?
-            puts "By Status:"
-            stats[:by_status].each do |status, count|
-              icon = status_icon(status)
-              percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{icon} #{status.capitalize}: #{count} (#{percentage}%)"
-            end
-            puts ""
-          end
-
-          if stats[:by_priority].any?
-            puts "By Priority:"
-            stats[:by_priority].each do |priority, count|
-              percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{priority.capitalize}: #{count} (#{percentage}%)"
-            end
-            puts ""
-          end
-
-          if stats[:by_context].any? && context == "all"
-            puts "By Context:"
-            stats[:by_context].each do |ctx, count|
-              percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{ctx}: #{count} (#{percentage}%)"
-            end
-          end
+          puts @stats_formatter.format_stats_view(context: context)
         end
 
         def parse_options(args)
@@ -353,18 +320,23 @@ module Ace
         end
 
         def display_tasks(tasks, options)
-          if options[:recent]
-            puts "Recent Tasks (#{tasks.size} found):"
-          elsif options[:all]
-            puts "All Tasks (#{tasks.size} total):"
-          elsif options[:backlog]
-            puts "Backlog Tasks (#{tasks.size}):"
-          elsif options[:release]
-            puts "Tasks in #{options[:release]} (#{tasks.size}):"
-          else
-            puts "Tasks in Active Release (#{tasks.size}):"
-          end
-          puts "=" * 50
+          # Display three-line header
+          context = if options[:all]
+                     "all"
+                   elsif options[:backlog]
+                     "backlog"
+                   elsif options[:release]
+                     options[:release]
+                   else
+                     "current"
+                   end
+
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           # Group by context if showing all
           if options[:all]
@@ -421,39 +393,7 @@ module Ace
         end
 
         def show_statistics(context)
-          stats = @manager.get_statistics(context: context)
-
-          puts "Task Statistics:"
-          puts "=" * 50
-          puts "Total: #{stats[:total]} tasks"
-          puts ""
-
-          if stats[:by_status].any?
-            puts "By Status:"
-            stats[:by_status].each do |status, count|
-              icon = status_icon(status)
-              percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{icon} #{status.capitalize}: #{count} (#{percentage}%)"
-            end
-            puts ""
-          end
-
-          if stats[:by_priority].any?
-            puts "By Priority:"
-            stats[:by_priority].each do |priority, count|
-              percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{priority.capitalize}: #{count} (#{percentage}%)"
-            end
-            puts ""
-          end
-
-          if stats[:by_context].any? && context == "all"
-            puts "By Context:"
-            stats[:by_context].each do |ctx, count|
-              percentage = (count.to_f / stats[:total] * 100).round
-              puts "  #{ctx}: #{count} (#{percentage}%)"
-            end
-          end
+          puts @stats_formatter.format_stats_view(context: context)
         end
 
         def status_icon(status)
@@ -625,51 +565,54 @@ module Ace
         end
 
         def show_dependency_tree(tasks, options)
+          # Display three-line header
+          context = if options[:all]
+                     "all"
+                   elsif options[:release]
+                     options[:release]
+                   else
+                     "current"
+                   end
+
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
+
           # Get ALL tasks for complete dependency visualization
           all_tasks = @manager.list_tasks(context: "all")
-
-          if options[:all]
-            puts "Global Dependency Tree:"
-          elsif options[:release]
-            puts "Dependency Tree for #{options[:release]}:"
-          else
-            puts "Dependency Tree for Active Release:"
-          end
-          puts "=" * 50
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
         end
 
         # Formatter methods for preset context
         def display_tree_with_preset(tasks, preset_config, original_count = nil, limit = nil)
-          preset_name = preset_config[:name]
-          description = preset_config[:description]
+          # Display three-line header
+          context = preset_config[:context] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           # Get ALL tasks for complete dependency visualization
           all_tasks = @manager.list_tasks(context: "all")
-
-          if limit && original_count && original_count > limit
-            puts "Dependency Tree: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
-          else
-            puts "Dependency Tree: #{preset_name} (#{tasks.size} found)"
-          end
-          puts description if description && description != "#{preset_name} preset"
-          puts "=" * 50
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
         end
 
         def display_paths_with_preset(tasks, preset_config, original_count = nil, limit = nil)
-          preset_name = preset_config[:name]
-          description = preset_config[:description]
-
-          if limit && original_count && original_count > limit
-            puts "Tasks: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
-          else
-            puts "Tasks: #{preset_name} (#{tasks.size} found)"
-          end
-          puts description if description && description != "#{preset_name} preset"
-          puts "=" * 50
+          # Display three-line header
+          context = preset_config[:context] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           tasks.each do |task|
             puts task[:path] if task[:path]
@@ -677,16 +620,14 @@ module Ace
         end
 
         def display_list_with_preset(tasks, preset_config, original_count = nil, limit = nil)
-          preset_name = preset_config[:name]
-          description = preset_config[:description]
-
-          if limit && original_count && original_count > limit
-            puts "Tasks: #{preset_name} (showing #{tasks.size} of #{original_count} found)"
-          else
-            puts "Tasks: #{preset_name} (#{tasks.size} found)"
-          end
-          puts description if description && description != "#{preset_name} preset"
-          puts "=" * 50
+          # Display three-line header
+          context = preset_config[:context] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           tasks.each do |task|
             ref = task[:task_number] || task[:id]
@@ -696,18 +637,23 @@ module Ace
 
         # Formatter methods for legacy context
         def display_task_paths(tasks, options)
-          if options[:recent]
-            puts "Recent Tasks (#{tasks.size} found):"
-          elsif options[:all]
-            puts "All Tasks (#{tasks.size} total):"
-          elsif options[:backlog]
-            puts "Backlog Tasks (#{tasks.size}):"
-          elsif options[:release]
-            puts "Tasks in #{options[:release]} (#{tasks.size}):"
-          else
-            puts "Tasks in Active Release (#{tasks.size}):"
-          end
-          puts "=" * 50
+          # Display three-line header
+          context = if options[:all]
+                     "all"
+                   elsif options[:backlog]
+                     "backlog"
+                   elsif options[:release]
+                     options[:release]
+                   else
+                     "current"
+                   end
+
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           tasks.each do |task|
             puts task[:path] if task[:path]
@@ -715,18 +661,23 @@ module Ace
         end
 
         def display_task_list(tasks, options)
-          if options[:recent]
-            puts "Recent Tasks (#{tasks.size} found):"
-          elsif options[:all]
-            puts "All Tasks (#{tasks.size} total):"
-          elsif options[:backlog]
-            puts "Backlog Tasks (#{tasks.size}):"
-          elsif options[:release]
-            puts "Tasks in #{options[:release]} (#{tasks.size}):"
-          else
-            puts "Tasks in Active Release (#{tasks.size}):"
-          end
-          puts "=" * 50
+          # Display three-line header
+          context = if options[:all]
+                     "all"
+                   elsif options[:backlog]
+                     "backlog"
+                   elsif options[:release]
+                     options[:release]
+                   else
+                     "current"
+                   end
+
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            context: context
+          )
+          puts header
 
           tasks.each do |task|
             ref = task[:task_number] || task[:id]
