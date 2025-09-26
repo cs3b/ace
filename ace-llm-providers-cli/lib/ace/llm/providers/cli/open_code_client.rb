@@ -21,7 +21,7 @@ module Ace
             "opencode"
           end
 
-          # Default model when user doesn't specify one
+          # Default model (can be overridden by config)
           DEFAULT_MODEL = "google/gemini-2.5-flash"
 
           def initialize(model: nil, **options)
@@ -56,85 +56,20 @@ module Ace
 
           # List available OpenCode models
           def list_models
-            unless opencode_available?
-              # Fallback models when OpenCode CLI is unavailable
-              return fallback_models
-            end
-
-            begin
-              # Try to get models from OpenCode CLI
-              cmd = ["opencode", "models"]
-              stdout, stderr, status = execute_opencode_command(cmd, timeout: 30)
-
-              unless status.success?
-                # If models command fails, return fallback
-                return fallback_models
-              end
-
-              parse_models_output(stdout)
-            rescue => e
-              # If anything goes wrong, return fallback models
-              fallback_models
-            end
-          end
-
-          private
-
-          def fallback_models
+            # Return a standard set of models that OpenCode typically supports
+            # Actual models come from YAML config
             [
-              # Google models
               { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Fast Google model", context_size: 1_000_000 },
               { id: "google/gemini-2.0-flash-experimental", name: "Gemini 2.0 Flash", description: "Experimental Google model", context_size: 1_000_000 },
               { id: "google/gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Advanced Google model", context_size: 2_000_000 },
-
-              # Anthropic models
               { id: "anthropic/claude-3-5-sonnet", name: "Claude 3.5 Sonnet", description: "Anthropic model", context_size: 200_000 },
               { id: "anthropic/claude-3-5-haiku", name: "Claude 3.5 Haiku", description: "Fast Anthropic model", context_size: 200_000 },
-
-              # OpenAI models
               { id: "openai/gpt-4o", name: "GPT-4 Omni", description: "OpenAI model", context_size: 128_000 },
-              { id: "openai/gpt-4o-mini", name: "GPT-4 Omni Mini", description: "Small OpenAI model", context_size: 128_000 },
+              { id: "openai/gpt-4o-mini", name: "GPT-4 Omni Mini", description: "Small OpenAI model", context_size: 128_000 }
             ]
           end
 
-          def parse_models_output(stdout)
-            # Parse model list from OpenCode CLI output
-            # Format may vary, so we'll handle common formats
-            models = []
-
-            begin
-              # Try JSON parsing first
-              json_data = JSON.parse(stdout)
-              if json_data.is_a?(Array)
-                models = json_data.map do |model|
-                  {
-                    id: model["id"] || model["name"],
-                    name: model["display_name"] || model["name"],
-                    description: model["description"] || "OpenCode model",
-                    context_size: model["context_size"] || 128_000
-                  }
-                end
-              end
-            rescue JSON::ParserError
-              # Fall back to line-based parsing
-              stdout.lines.each do |line|
-                next if line.strip.empty? || line.start_with?("#")
-
-                # Simple format: model_id [display_name] (context_size)
-                if line =~ /^([\w\/\-\.]+)/
-                  model_id = $1.strip
-                  models << {
-                    id: model_id,
-                    name: model_id.split("/").last.capitalize,
-                    description: "OpenCode model",
-                    context_size: 128_000
-                  }
-                end
-              end
-            end
-
-            models.empty? ? fallback_models : models
-          end
+          private
 
           def format_messages_as_prompt(messages)
             # Handle both array of message hashes and string prompt

@@ -21,7 +21,7 @@ module Ace
             "codexoss"
           end
 
-          # Default model
+          # Default model (can be overridden by config)
           DEFAULT_MODEL = "default"
 
           def initialize(model: nil, **options)
