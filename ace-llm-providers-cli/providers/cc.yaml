@@ -1,0 +1,21 @@
+name: cc
+display_name: Claude Code
+class: Ace::LLM::Providers::CLI::ClaudeCodeClient
+gem: ace/llm/providers/cli
+description: Claude Code via CLI
+models:
+  - opus
+  - opus4
+  - sonnet
+  - haiku
+default_model: sonnet
+aliases:
+  global:
+    claude-code: "cc:sonnet"
+    cc-opus: "cc:opus"
+    cc-sonnet: "cc:sonnet"
+    cc-haiku: "cc:haiku"
+  model:
+    o: opus
+    s: sonnet
+    h: haiku

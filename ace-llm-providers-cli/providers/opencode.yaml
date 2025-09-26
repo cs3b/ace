@@ -1,0 +1,11 @@
+name: opencode
+display_name: OpenCode
+class: Ace::LLM::Providers::CLI::OpenCodeClient
+gem: ace/llm/providers/cli
+description: OpenCode via CLI
+models:
+  - default
+default_model: default
+aliases:
+  global:
+    oc: "opencode:default"
