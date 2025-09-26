@@ -4,6 +4,7 @@ require_relative "../organisms/task_manager"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/task_filter"
 require_relative "../molecules/dependency_tree_visualizer"
+require 'stringio'
 require_relative "../models/task"
 
 module Ace
@@ -69,29 +70,40 @@ module Ace
         end
 
         def show_next_task(args, display_mode: "path")
-          # Use the 'next' preset to get tasks
-          preset_config = @preset_manager.apply_preset('next', { limit: 1 })
-          tasks = get_tasks_for_preset(preset_config)
+          # Use tasks command with limit 1 to get the next task
+          require_relative "tasks_command"
+          tasks_cmd = TasksCommand.new
 
-          # Sort tasks according to preset
-          tasks = apply_preset_sorting(tasks, preset_config)
+          # Add --limit 1 to args for single task display
+          modified_args = ["next", "--limit", "1"]
 
-          # Get first task
-          task = tasks.first
+          # Capture output to process it based on display mode
+          original_stdout = $stdout
+          output = StringIO.new
+          $stdout = output
 
-          if task
-            case display_mode
-            when "path"
-              display_task_path(task)
-            when "content"
-              display_task(task)
+          begin
+            tasks_cmd.execute(modified_args)
+            result = output.string
+
+            # For path mode, extract just the path from output
+            if display_mode == "path" && result.include?(".ace-taskflow/")
+              # Extract path from the output
+              lines = result.split("\n")
+              path_line = lines.find { |l| l.include?(".ace-taskflow/") }
+              if path_line
+                # Clean up the path line to get just the path
+                path = path_line.strip.gsub(/^\s+/, '')
+                puts path
+              else
+                puts "No pending or in-progress tasks found."
+              end
             else
-              # Default formatted display
-              display_task_formatted(task)
+              # For other modes, show full output
+              puts result
             end
-          else
-            puts "No pending or in-progress tasks found."
-            puts "Use 'ace-taskflow task create' to add a new task."
+          ensure
+            $stdout = original_stdout
           end
         end
 
