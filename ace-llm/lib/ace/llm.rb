@@ -18,6 +18,9 @@ require_relative "llm/molecules/file_io_handler"
 require_relative "llm/molecules/llm_alias_resolver"
 require_relative "llm/molecules/provider_model_parser"
 require_relative "llm/molecules/format_handlers"
+require_relative "llm/molecules/client_registry"
+
+require_relative "llm/query_interface"
 
 require_relative "llm/organisms/base_client"
 require_relative "llm/organisms/google_client"

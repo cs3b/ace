@@ -101,12 +101,22 @@ module Ace
           lines << ""
 
           TASK_STATUS_ORDER.each do |status|
-            count = task_stats[:by_status][status] || 0
+            if status == "blocked"
+              # Combine blocked and skipped counts
+              count = (task_stats[:by_status]["blocked"] || 0) +
+                      (task_stats[:by_status]["skipped"] || 0)
+            elsif status == "skipped"
+              # Skip since combined with blocked
+              next
+            else
+              count = task_stats[:by_status][status] || 0
+            end
             next if count == 0
 
             icon = TASK_STATUS_ICONS[status] || TASK_STATUS_ICONS["unknown"]
             percentage = task_stats[:total] > 0 ? (count.to_f / task_stats[:total] * 100).round : 0
-            lines << "  #{icon} #{status.capitalize}: #{count} (#{percentage}%)"
+            display_status = status == "blocked" ? "blocked/skipped" : status
+            lines << "  #{icon} #{display_status.capitalize}: #{count} (#{percentage}%)"
           end
 
           # Unknown statuses
@@ -218,7 +228,16 @@ module Ace
           parts = []
 
           TASK_STATUS_ORDER.each do |status|
-            count = task_stats[:by_status][status] || 0
+            if status == "blocked"
+              # Combine blocked and skipped counts
+              count = (task_stats[:by_status]["blocked"] || 0) +
+                      (task_stats[:by_status]["skipped"] || 0)
+            elsif status == "skipped"
+              # Skip since combined with blocked
+              next
+            else
+              count = task_stats[:by_status][status] || 0
+            end
             icon = TASK_STATUS_ICONS[status] || TASK_STATUS_ICONS["unknown"]
             parts << "#{icon} #{count}"
           end

@@ -29,14 +29,12 @@ module Ace
           preset_name = detect_preset_name(args)
           if preset_name
             args.shift # Remove preset name from args
-            execute_with_preset(preset_name, args)
-          elsif args.empty? || (!args.first.start_with?('-') && !@preset_manager.preset_exists?(args.first, :tasks))
-            # Default to 'next' preset when no arguments or no valid preset/flag
-            execute_with_preset('next', args)
           else
-            # Fallback to legacy flag-based execution for backward compatibility
-            execute_legacy(args)
+            # Default to 'next' preset for tasks
+            preset_name = 'next'
           end
+
+          execute_with_preset(preset_name, args)
         rescue StandardError => e
           puts "Error: #{e.message}"
           exit 1
@@ -96,54 +94,6 @@ module Ace
           end
         end
 
-        def execute_legacy(args)
-          # Original implementation for backward compatibility
-          options = parse_options(args)
-
-          # Get tasks based on context
-          tasks = if options[:all]
-            @manager.list_tasks(context: "all", filters: options[:filters])
-          elsif options[:backlog]
-            @manager.list_tasks(context: "backlog", filters: options[:filters])
-          elsif options[:release]
-            @manager.list_tasks(context: options[:release], filters: options[:filters])
-          elsif options[:recent]
-            @manager.get_recent_tasks(days: options[:days] || 7)
-          elsif options[:stats]
-            show_statistics(options[:context] || "all")
-            return
-          else
-            @manager.list_tasks(context: "current", filters: options[:filters])
-          end
-
-          # Sort tasks
-          if options[:sort]
-            tasks = Molecules::TaskFilter.sort_tasks(
-              tasks,
-              options[:sort][:by],
-              options[:sort][:ascending]
-            )
-          end
-
-          # Apply limit if specified
-          if options[:limit] && options[:limit] > 0
-            tasks = tasks.take(options[:limit])
-          end
-
-          # Display tasks with appropriate formatter
-          if tasks.empty?
-            puts "No tasks found."
-          elsif options[:tree]
-            show_dependency_tree(tasks, options)
-          elsif options[:path]
-            display_task_paths(tasks, options)
-          elsif options[:list]
-            display_task_list(tasks, options)
-          else
-            display_tasks(tasks, options)
-          end
-        end
-
         def parse_additional_filters(args)
           filters = {}
 
@@ -175,6 +125,28 @@ module Ace
             when "--list"
               filters[:list] = true
               i += 1
+            # Legacy flag mappings
+            when "--all"
+              filters[:_preset_override] = "all"
+              i += 1
+            when "--backlog"
+              filters[:context] = "backlog"
+              i += 1
+            when "--release"
+              filters[:context] = args[i + 1] if i + 1 < args.length
+              i += 2
+            when "--recent"
+              filters[:_preset_override] = "recent"
+              i += 1
+            when "--sort"
+              sort_spec = args[i + 1]
+              if sort_spec && sort_spec.include?(':')
+                field, direction = sort_spec.split(':')
+                filters[:sort] = { by: field.to_sym, ascending: direction == 'asc' }
+              elsif sort_spec
+                filters[:sort] = { by: sort_spec.to_sym, ascending: true }
+              end
+              i += 2
             when "--help", "-h"
               show_help
               exit 0
@@ -185,6 +157,62 @@ module Ace
 
           filters
         end
+
+        def execute_with_preset(preset_name, remaining_args)
+          # Parse additional filters from remaining args
+          additional_filters = parse_additional_filters(remaining_args)
+
+          # Handle preset override from legacy flags
+          if additional_filters[:_preset_override]
+            preset_name = additional_filters.delete(:_preset_override)
+          end
+
+          # Check for stats only (other formatters handled after filtering)
+          if additional_filters[:stats]
+            show_statistics_for_preset(preset_name)
+            return
+          end
+
+          # Apply preset with additional filters
+          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+          return unless preset_config
+
+          # Override context if provided via legacy flags
+          if additional_filters[:context]
+            preset_config[:context] = additional_filters[:context]
+          end
+
+          # Override sort if provided
+          if additional_filters[:sort]
+            preset_config[:sort] = additional_filters[:sort]
+          end
+
+          # Get tasks based on preset configuration
+          tasks = get_tasks_for_preset(preset_config)
+
+          # Sort tasks according to preset
+          tasks = apply_preset_sorting(tasks, preset_config)
+
+          # Apply limit if specified
+          original_count = tasks.size
+          if additional_filters[:limit] && additional_filters[:limit] > 0
+            tasks = tasks.take(additional_filters[:limit])
+          end
+
+          # Display tasks with appropriate formatter
+          if tasks.empty?
+            puts "No tasks found for preset '#{preset_name}'."
+          elsif additional_filters[:tree]
+            display_tree_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:path]
+            display_paths_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:list]
+            display_list_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          else
+            display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          end
+        end
+
 
         def get_tasks_for_preset(preset_config)
           context = preset_config[:context] || 'current'
@@ -251,92 +279,6 @@ module Ace
           puts @stats_formatter.format_stats_view(context: context)
         end
 
-        def parse_options(args)
-          options = {
-            filters: { status: ["in-progress", "pending"] },  # Default to actionable tasks
-            sort: { by: :sort, ascending: true }  # Default to sort field
-          }
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            when "--all"
-              options[:all] = true
-              options[:filters].delete(:status)  # Remove default status filter for --all
-              i += 1
-            when "--backlog"
-              options[:backlog] = true
-              i += 1
-            when "--release"
-              options[:release] = args[i + 1]
-              i += 2
-            when "--status"
-              options[:filters][:status] = args[i + 1].split(',')
-              i += 2
-            when "--priority"
-              options[:filters][:priority] = args[i + 1].split(',')
-              i += 2
-            when "--recent"
-              options[:recent] = true
-              i += 1
-            when "--days"
-              options[:days] = args[i + 1].to_i
-              i += 2
-            when "--stats"
-              options[:stats] = true
-              i += 1
-            when "--tree"
-              options[:tree] = true
-              i += 1
-            when "--path"
-              options[:path] = true
-              i += 1
-            when "--list"
-              options[:list] = true
-              i += 1
-            when "--sort"
-              sort_spec = args[i + 1]
-              if sort_spec.include?(':')
-                field, direction = sort_spec.split(':')
-                options[:sort][:by] = field.to_sym
-                options[:sort][:ascending] = direction == 'asc'
-              else
-                options[:sort][:by] = sort_spec.to_sym
-              end
-              i += 2
-            when "--limit"
-              options[:limit] = args[i + 1].to_i
-              i += 2
-            when "--help", "-h"
-              show_help
-              exit 0
-            else
-              i += 1
-            end
-          end
-
-          options
-        end
-
-        def display_tasks(tasks, options)
-          # Display three-line header
-          context = if options[:all]
-                     "all"
-                   elsif options[:backlog]
-                     "backlog"
-                   elsif options[:release]
-                     options[:release]
-                   else
-                     "current"
-                   end
-
-          header = @stats_formatter.format_header(
-            command_type: :tasks,
-            displayed_count: tasks.size,
-            context: context
-          )
-          puts header
 
           # Group by context if showing all
           if options[:all]
@@ -392,9 +334,6 @@ module Ace
           end
         end
 
-        def show_statistics(context)
-          puts @stats_formatter.format_stats_view(context: context)
-        end
 
         def status_icon(status)
           case status.to_s.downcase

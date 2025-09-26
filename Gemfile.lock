@@ -10,6 +10,23 @@ PATH
     ace-core (0.9.0)
 
 PATH
+  remote: ace-git-commit
+  specs:
+    ace-git-commit (0.9.0)
+      ace-core (~> 0.9.0)
+      ace-llm (~> 0.1.0)
+
+PATH
+  remote: ace-llm
+  specs:
+    ace-llm (0.1.0)
+      ace-core (~> 0.9.0)
+      addressable (~> 2.8)
+      faraday (~> 2.0)
+      kramdown (~> 2.0)
+      kramdown-parser-gfm (~> 1.0)
+
+PATH
   remote: ace-nav
   specs:
     ace-nav (0.1.0)
@@ -99,6 +116,8 @@ PLATFORMS
 DEPENDENCIES
   ace-context!
   ace-core!
+  ace-git-commit!
+  ace-llm!
   ace-nav!
   ace-taskflow!
   ace-test-runner!
