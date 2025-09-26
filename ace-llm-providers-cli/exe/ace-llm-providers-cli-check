@@ -10,7 +10,7 @@ class CLIChecker
   CLI_TOOLS = {
     "claude" => {
       name: "Claude Code",
-      provider: "cc",
+      provider: "claude",
       check_cmd: ["claude", "--version"],
       install_cmd: "npm install -g @anthropic-ai/claude-cli",
       auth_cmd: "claude setup-token",
@@ -94,7 +94,8 @@ class CLIChecker
       puts "\n💡 Some tools need authentication. Run the auth commands shown above."
     else
       puts "\n🎉 All installed CLI tools are ready to use with ace-llm!"
-      puts "   Example: ace-llm-query cc:opus \"Hello, Claude!\""
+      puts "   Example: ace-llm-query claude:opus \"Hello, Claude!\""
+      puts "   Or using alias: ace-llm-query cc \"Hello, Claude!\""
     end
 
     # Exit with appropriate code

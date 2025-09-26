@@ -16,7 +16,7 @@ describe "Provider Registration" do
   end
 
   it "providers have correct provider_name" do
-    assert_equal "cc", Ace::LLM::Providers::CLI::ClaudeCodeClient.provider_name
+    assert_equal "claude", Ace::LLM::Providers::CLI::ClaudeCodeClient.provider_name
     assert_equal "codex", Ace::LLM::Providers::CLI::CodexClient.provider_name
     assert_equal "opencode", Ace::LLM::Providers::CLI::OpenCodeClient.provider_name
     assert_equal "codexoss", Ace::LLM::Providers::CLI::CodexOSSClient.provider_name

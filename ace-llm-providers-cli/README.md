@@ -34,7 +34,7 @@ cp -r gems/ace-llm-providers-cli/.ace.example/llm/providers/*.yml .ace/llm/provi
 
 This gem requires at least one CLI tool to be installed. Each provider has its own CLI tool:
 
-### Claude Code (cc)
+### Claude Code (claude)
 ```bash
 # Install Claude CLI
 npm install -g @anthropic-ai/claude-cli
@@ -78,10 +78,11 @@ codex-oss init
 Once installed, the CLI providers automatically register with ace-llm and can be used through the standard `ace-llm-query` interface:
 
 ```bash
-# Claude Code examples
-ace-llm-query cc:opus "Explain this Ruby pattern"
-ace-llm-query cc:sonnet "Generate a test for this code" --output test.rb
-ace-llm-query cc:haiku "Quick refactor suggestion"
+# Claude Code examples (using cc alias or claude directly)
+ace-llm-query cc "Explain this Ruby pattern"  # Uses cc alias -> claude:sonnet
+ace-llm-query claude:opus "Explain this Ruby pattern"
+ace-llm-query claude:sonnet "Generate a test for this code" --output test.rb
+ace-llm-query claude:haiku "Quick refactor suggestion"
 
 # Codex examples
 ace-llm-query codex:gpt-5 "Review this code for best practices"
@@ -99,11 +100,11 @@ ace-llm-query codexoss "Suggest improvements"
 
 ```bash
 # Output to file
-ace-llm-query cc:opus "Generate README" --output README.md
+ace-llm-query claude:opus "Generate README" --output README.md
 
 # Different formats
-ace-llm-query cc:sonnet "Explain" --format json
-ace-llm-query cc:sonnet "Explain" --format markdown
+ace-llm-query claude:sonnet "Explain" --format json
+ace-llm-query claude:sonnet "Explain" --format markdown
 
 # Temperature control
 ace-llm-query codex:gpt-5 "Creative writing" --temperature 0.9
@@ -112,7 +113,7 @@ ace-llm-query codex:gpt-5 "Creative writing" --temperature 0.9
 ace-llm-query opencode "Summary" --max-tokens 500
 
 # System prompts
-ace-llm-query cc:opus "Review" --system "You are a code reviewer"
+ace-llm-query claude:opus "Review" --system "You are a code reviewer"
 
 # Timeout control
 ace-llm-query codexoss "Complex analysis" --timeout 180
@@ -136,7 +137,7 @@ Example output:
 ```
 🔍 Checking CLI-based LLM providers for ace-llm-providers-cli
 
-✅ Claude Code     (cc)
+✅ Claude Code     (claude)
    Version: 1.2.3
    Auth: 🔓 Authenticated
 
@@ -165,11 +166,11 @@ Example output:
 
 ## Provider Details
 
-### Claude Code (cc)
-- **Models**: opus, opus4, sonnet, haiku
-- **Default**: sonnet
+### Claude Code (claude)
+- **Models**: claude-opus-4-1, claude-opus-4-0, claude-sonnet-4-0, claude-3-5-haiku-latest
+- **Default**: claude-sonnet-4-0
 - **Context**: 200,000 tokens
-- **Aliases**: claude-code, cc-opus, cc-sonnet, cc-haiku
+- **Aliases**: cc (maps to claude:sonnet), claude-code, cc-opus, cc-sonnet, cc-haiku
 
 ### Codex (codex)
 - **Models**: gpt-5, gpt-5-mini
