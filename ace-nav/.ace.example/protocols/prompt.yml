@@ -1,0 +1,39 @@
+# Protocol definition for system prompts
+protocol: prompt
+name: "System Prompts"
+description: "System prompts for LLM interactions and tools"
+enabled: true
+
+# File extensions to match
+extensions:
+  - .system.md
+  - .prompt.md
+
+# Template for creating new prompts
+create_template: |
+  # %{name} System Prompt
+
+  You are an expert in %{domain}. Your task is to %{task}.
+
+  ## Instructions
+
+  1. Follow these guidelines
+  2. Maintain consistency
+  3. Be precise and clear
+
+  ## Format
+
+  Describe the expected output format.
+
+  ## Examples
+
+  Provide concrete examples of expected behavior.
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true
