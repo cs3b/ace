@@ -8,108 +8,176 @@ needs_review: true
 sort: 967
 ---
 
-# Create ace-git Gem with ace-gc Only
+# Create ace-git-commit Gem with LLM Integration
 
-## Review Questions (Pending Human Input)
+## Design Decisions
 
-### [HIGH] Critical Implementation Questions
+### Resolved Based on User Feedback
 
-- [ ] **LLM Integration Migration Strategy**: The existing dev-tools git commit implementation includes sophisticated LLM integration (314-line GitOrchestrator, CommitMessageGenerator with multi-provider support, system prompts). Should this be:
-  - **Research conducted**: Analyzed dev-tools implementation - full LLM integration with provider factory, multiple models (Google/Anthropic/OpenAI/etc), system prompt templates, intention-based generation
-  - **Current complexity**: GitOrchestrator handles multi-repo operations, concurrent execution, LLM message generation, template loading, provider management
-  - **Task specification**: Claims "simplified" and "Remove submodule-specific code" but unclear if this includes removing LLM features entirely
-  - **Option A**: Migrate full LLM functionality to ace-git (complex, ~300+ lines)
-  - **Option B**: Create simplified ace-gc without LLM (task examples show only basic intentions like 'feat', 'fix')
-  - **Option C**: Hybrid approach - basic intentions with optional LLM enhancement
-  - **Why needs human input**: Business decision on feature scope vs simplicity
-
-- [ ] **Multi-Repository vs Mono-Repository Scope**: The current implementation handles complex multi-repository operations (submodules, cross-repo coordination, execution ordering). The task states "monorepo use" and "Remove all submodule and multi-repo complexity":
-  - **Research conducted**: GitOrchestrator includes submodule detection, repository scanning, path dispatching, concurrent/sequential execution across repos
-  - **Current features**: Multi-repo coordinator, path dispatcher, submodule-first execution ordering, cross-repository operations
-  - **Task requirement**: "simplified git-commit (ace-gc) designed for monorepo use"
-  - **Question**: Does "monorepo" mean single git repository operations only, or does it still need to handle the ace-meta monorepo structure with multiple ace-* gems?
-  - **Why needs human input**: Scope clarification affects architecture significantly
-
-- [ ] **Configuration and Intention System Design**: The task shows basic intention parsing (feat/fix/docs) but current implementation has rich configuration:
-  - **Research conducted**: Current system loads configuration from multiple sources, supports complex intention contexts, has sophisticated message formatting
-  - **Current features**: Configuration cascade (.ace/), intention-based prompting, commit message templates, multi-provider LLM selection
-  - **Task examples**: Simple intentions ('feat', 'fix') with basic scope detection
-  - **Design question**: Should ace-git configuration follow ace-core pattern with .ace/git/config/ cascade, or use simpler embedded defaults?
-  - **Why needs human input**: Configuration complexity vs simplicity trade-off decision
-
-### [MEDIUM] Implementation Approach Questions
-
-- [ ] **ATOM Architecture Mapping**: How should the complex git operations map to ATOM layers?
-  - **Research conducted**: Current GitOrchestrator is a large organism (~936 lines) handling multiple concerns
-  - **ATOM pattern**: atoms/ (pure functions), molecules/ (operations), organisms/ (orchestration), models/ (data)
-  - **Current mixing**: GitOrchestrator handles command building, execution, formatting, LLM integration, multi-repo coordination
-  - **Suggested breakdown**:
-    - Atoms: git command builders, message cleaners, intention parsers
-    - Molecules: commit message formatter, config loader
-    - Organisms: commit builder (simplified orchestration)
-    - Models: commit options, commit result
-  - **Why needs human input**: Architecture decisions affect maintainability and testing
-
-- [ ] **Dependencies and Integration**: Should ace-git depend on any dev-tools components for LLM functionality?
-  - **Research conducted**: dev-tools has extensive LLM infrastructure (ClientFactory, ProviderModelParser, multiple provider clients)
-  - **Current approach**: Task specifies "ace-core dependency (~> 0.9.0)" only
-  - **Integration options**: Pure ace-git implementation vs leveraging existing dev-tools LLM infrastructure
-  - **Why needs human input**: Dependency strategy affects gem isolation and maintenance
-
-### [LOW] Enhancement Questions
-
-- [ ] **Test Strategy Alignment**: The task mentions "reuse TestEnvironment and ConfigHelpers" from ace-core:
-  - **Research conducted**: ace-context uses ace-test-support via test_helper.rb, ace-core has established test patterns
-  - **Current test infrastructure**: 29 passing tests in ace-core, shared test support infrastructure
-  - **Suggested approach**: Follow ace-context pattern with test/test_helper.rb requiring ace/test_support
-  - **Default assumption**: Use ace-test-support for consistency with other ace-* gems
-
-- [ ] **Git Command Interface Design**: Should ace-gc follow git's interface patterns or create a more semantic interface?
-  - **Research conducted**: Current implementation supports extensive git options (force, dry-run, concurrent, etc.)
-  - **Task examples**: Simple `ace-gc feat` vs `git commit -m "feat: message"`
-  - **Suggested default**: Keep simple semantic interface as shown in task examples
-  - **Why low priority**: Implementation detail that can be refined during development
+1. **LLM Integration**: Use ace-llm Ruby classes directly (not subprocess)
+2. **Repository Scope**: Single repository only (true monorepo)
+3. **Default Model**: Use alias 'glite' from ace-llm config
+4. **Template Location**: Store system prompts in dev-handbook/templates/prompts/
+5. **Default Behavior**: Stage all changes by default unless --only-staged flag is used
+6. **Interface**: Similar to existing git-commit with -i (intention) and -m (message) flags
+7. **ace-llm QueryInterface**: Create new interface in ace-llm with named parameters matching CLI
 
 ## Objective
 
-Create the ace-git gem with a simplified git-commit command (ace-gc) designed for monorepo use. Remove all submodule and multi-repo complexity, focusing on clean, intention-based commits for a single repository.
+Create the ace-git-commit gem with LLM-powered commit message generation using ace-llm-query. Provide a clean interface for monorepo commits with automatic staging by default.
 
 ## Scope of Work
 
-- Set up gem skeleton
-- Add dependency on ace-core in gemspec
-- Create simplified git-commit (ace-gc) for monorepo
-- Remove submodule-specific code
-- Include default config for commit conventions
-- Write tests using shared infrastructure
+- Set up gem skeleton following ATOM architecture
+- Add dependencies on ace-core and ace-llm in gemspec
+- First: Create QueryInterface in ace-llm with named parameters
+- Integrate with ace-llm QueryInterface (not subprocess)
+- Copy system prompt from dev-tools to dev-handbook/templates/prompts/
+- Support intention-based (-i) and direct message (-m) commits
+- Default to staging all changes (explicit --only-staged for current staging)
+- Include configuration with 'glite' as default model
+- Write comprehensive tests using ace-test-support
+
+## ace-llm Integration Plan
+
+### QueryInterface Addition to ace-llm
+
+Create a new QueryInterface in ace-llm that provides a simple Ruby API with named parameters matching the CLI:
+
+```ruby
+# ace-llm/lib/ace/llm/query_interface.rb
+module Ace
+  module LLM
+    class QueryInterface
+      # Named parameters match CLI flags exactly
+      def self.query(provider_model, prompt,
+                    output: nil,           # --output FILE
+                    format: "text",        # --format FORMAT
+                    temperature: nil,      # --temperature FLOAT
+                    max_tokens: nil,       # --max-tokens INT
+                    system: nil,           # --system TEXT
+                    timeout: 30,           # --timeout SECONDS
+                    force: false,          # --force
+                    debug: false)          # --debug
+
+        # Implementation that mirrors CLI behavior
+        registry = Molecules::ClientRegistry.new
+        parser = Molecules::ProviderModelParser.new(registry: registry)
+
+        # Parse model/alias
+        parse_result = parser.parse(provider_model)
+        raise Error, parse_result.error unless parse_result.valid?
+
+        # Build messages
+        messages = []
+        messages << { role: "system", content: system } if system
+        messages << { role: "user", content: prompt }
+
+        # Get client with options
+        client = registry.get_client(
+          parse_result.provider,
+          model: parse_result.model,
+          timeout: timeout
+        )
+
+        # Generate with optional parameters
+        generation_opts = {}
+        generation_opts[:temperature] = temperature if temperature
+        generation_opts[:max_tokens] = max_tokens if max_tokens
+
+        response = client.generate(messages, **generation_opts)
+
+        # Handle output option if provided
+        if output
+          handler = Molecules::FormatHandlers.get_handler(format)
+          formatted = handler.format(response)
+
+          file_handler = Molecules::FileIoHandler.new
+          file_handler.write_content(formatted, output, format: format, force: force)
+        end
+
+        response
+      end
+    end
+  end
+end
+```
+
+### ace-git-commit MessageGenerator Implementation
+
+```ruby
+# lib/ace/git_commit/molecules/message_generator.rb
+module Ace
+  module GitCommit
+    class MessageGenerator
+      def generate(diff, intention = nil)
+        system_prompt = load_system_prompt
+        user_prompt = build_user_prompt(diff, intention)
+
+        # Direct Ruby call with named parameters matching CLI
+        response = Ace::LLM::QueryInterface.query(
+          @model,              # e.g., "glite"
+          user_prompt,
+          system: system_prompt,
+          temperature: 0.7,
+          timeout: 60
+        )
+
+        clean_commit_message(response[:text])
+      end
+    end
+  end
+end
+```
+
+### Benefits of This Approach
+
+1. **One-to-one CLI mapping**: Named parameters match CLI flags exactly
+2. **No subprocess overhead**: Direct Ruby method calls
+3. **Better error handling**: Ruby exceptions instead of shell errors
+4. **Easier testing**: Can mock QueryInterface.query
+5. **Consistent interface**: Same parameter names as CLI users know
 
 ### Deliverables
 
-#### Create
+#### Create in ace-llm
 
-- ace-git/.bundle/config (BUNDLE_GEMFILE pointing to parent)
-- ace-git/ace-git.gemspec
-- ace-git/lib/ace/git.rb
-- ace-git/lib/ace/git/version.rb
-- ace-git/lib/ace/git/organisms/commit_builder.rb
-- ace-git/lib/ace/git/molecules/intention_parser.rb
-- ace-git/lib/ace/git/molecules/message_formatter.rb
-- ace-git/lib/ace/git/models/ (data structures)
-- ace-git/exe/ace-gc
-- ace-git/config/git.yml (gem defaults)
-- ace-git/test/test_helper.rb
-- ace-git/test/support/ (copy from ace-core)
-- ace-git/test/organisms/commit_builder_test.rb
-- ace-git/test/molecules/intention_parser_test.rb
-- ace-git/test/molecules/message_formatter_test.rb
-- ace-git/test/integration/git_commit_integration_test.rb
-- ace-git/Rakefile
-- ace-git/README.md
-- .ace/git/config/git.yml (project sample)
+- ace-llm/lib/ace/llm/query_interface.rb (new QueryInterface class)
+
+#### Modify in ace-llm
+
+- ace-llm/lib/ace/llm.rb (require the new query_interface)
+
+#### Create in ace-git-commit
+
+- ace-git-commit/.bundle/config (BUNDLE_GEMFILE pointing to parent)
+- ace-git-commit/ace-git-commit.gemspec (with ace-llm dependency)
+- ace-git-commit/lib/ace/git_commit.rb
+- ace-git-commit/lib/ace/git_commit/version.rb
+- ace-git-commit/lib/ace/git_commit/organisms/commit_orchestrator.rb
+- ace-git-commit/lib/ace/git_commit/molecules/diff_analyzer.rb
+- ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb
+- ace-git-commit/lib/ace/git_commit/molecules/file_stager.rb
+- ace-git-commit/lib/ace/git_commit/atoms/git_executor.rb
+- ace-git-commit/lib/ace/git_commit/models/commit_options.rb
+- ace-git-commit/exe/ace-git-commit
+- ace-git-commit/config/git.yml (gem defaults with glite model)
+- dev-handbook/templates/prompts/git-commit.system.md (system prompt)
+- ace-git-commit/test/test_helper.rb
+- ace-git-commit/test/support/ (copy from ace-core)
+- ace-git-commit/test/organisms/commit_orchestrator_test.rb
+- ace-git-commit/test/molecules/diff_analyzer_test.rb
+- ace-git-commit/test/molecules/message_generator_test.rb
+- ace-git-commit/test/integration/git_commit_integration_test.rb
+- ace-git-commit/Rakefile
+- ace-git-commit/README.md
+- .ace/git/config/git.yml (project sample with glite)
+- .ace-taskflow/v.0.9.0/t/007-feat-git-ace-git-gem-ace-gc-only/ux/usage.md
 
 #### Modify
 
-- Gemfile (add ace-git entry)
+- ace-llm/lib/ace/llm.rb (require query_interface)
+- Gemfile (add ace-git-commit entry)
 
 ## Implementation Plan
 
