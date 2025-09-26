@@ -3,7 +3,6 @@ class: Ace::LLM::Providers::CLI::ClaudeCodeClient
 gem: ace-llm-providers-cli
 models:
   - claude-opus-4-1
-  - claude-opus-4-0
   - claude-sonnet-4-0
   - claude-3-5-haiku-latest
 aliases:
@@ -15,7 +14,6 @@ aliases:
     cc-haiku: claude:haiku
   model:
     opus: claude-opus-4-1
-    opus4: claude-opus-4-0
     sonnet: claude-sonnet-4-0
     haiku: claude-3-5-haiku-latest
     o: claude-opus-4-1

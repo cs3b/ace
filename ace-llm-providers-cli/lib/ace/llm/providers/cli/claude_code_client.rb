@@ -60,7 +60,6 @@ module Ace
             # This is a simplified list - actual models come from YAML config
             [
               { id: "claude-opus-4-1", name: "Claude Opus 4.1", description: "Most capable model", context_size: 200_000 },
-              { id: "claude-opus-4-0", name: "Claude Opus 4.0", description: "Previous Opus version", context_size: 200_000 },
               { id: "claude-sonnet-4-0", name: "Claude Sonnet 4.0", description: "Balanced model", context_size: 200_000 },
               { id: "claude-3-5-haiku-latest", name: "Claude Haiku 3.5", description: "Fast model", context_size: 200_000 }
             ]
@@ -178,7 +177,9 @@ module Ace
             end
 
             begin
-              response = JSON.parse(stdout)
+              # Allow duplicate keys to avoid warnings from Claude CLI output
+              # Some versions of Claude CLI may return JSON with duplicate keys
+              response = JSON.parse(stdout, allow_duplicate_key: true)
             rescue JSON::ParserError => e
               raise Ace::LLM::ProviderError, "Failed to parse Claude response: #{e.message}"
             end
