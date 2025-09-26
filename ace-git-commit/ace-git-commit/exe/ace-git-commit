@@ -1,0 +1,107 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/ace/git_commit"
+
+module Ace
+  module GitCommit
+    # CLI for ace-git-commit
+    class CLI
+      def self.run(argv)
+        new.run(argv)
+      end
+
+      def run(argv)
+        options = parse_options(argv)
+
+        # Remaining arguments are files
+        options.files = argv unless argv.empty?
+
+        orchestrator = Organisms::CommitOrchestrator.new
+        success = orchestrator.execute(options)
+
+        exit(success ? 0 : 1)
+      rescue GitError => e
+        $stderr.puts "Error: #{e.message}"
+        exit 1
+      rescue Interrupt
+        $stderr.puts "\nCommit cancelled"
+        exit 130
+      end
+
+      private
+
+      def parse_options(argv)
+        options = Models::CommitOptions.new
+
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: ace-git-commit [options] [files...]"
+          opts.separator ""
+          opts.separator "Options:"
+
+          opts.on("-i", "--intention INTENTION", "Provide context for LLM message generation") do |i|
+            options.intention = i
+          end
+
+          opts.on("-m", "--message MESSAGE", "Use provided message directly (no LLM)") do |m|
+            options.message = m
+          end
+
+          opts.on("--model MODEL", "Override default LLM model (e.g., glite, gflash)") do |model|
+            options.model = model
+          end
+
+          opts.on("-s", "--only-staged", "Commit only currently staged changes") do
+            options.only_staged = true
+          end
+
+          opts.on("-n", "--dry-run", "Show what would be committed without doing it") do
+            options.dry_run = true
+          end
+
+          opts.on("-d", "--debug", "Enable debug output") do
+            options.debug = true
+          end
+
+          opts.on("-f", "--force", "Force operation (for future use)") do
+            options.force = true
+          end
+
+          opts.on("-h", "--help", "Show this help message") do
+            puts opts
+            exit 0
+          end
+
+          opts.on("-v", "--version", "Show version") do
+            puts "ace-git-commit #{VERSION}"
+            exit 0
+          end
+
+          opts.separator ""
+          opts.separator "Examples:"
+          opts.separator "  ace-git-commit                              # Generate message for all changes"
+          opts.separator "  ace-git-commit -i 'fix auth bug'            # Generate with intention"
+          opts.separator "  ace-git-commit -m 'feat: add feature'       # Use specific message"
+          opts.separator "  ace-git-commit src/auth.rb                  # Commit specific file"
+          opts.separator "  ace-git-commit --only-staged                # Commit only staged changes"
+          opts.separator "  ace-git-commit --model gflash -i 'refactor' # Use different model"
+          opts.separator ""
+          opts.separator "By default, stages ALL changes unless --only-staged or specific files provided"
+        end
+
+        parser.parse!(argv)
+        options
+      rescue OptionParser::InvalidOption => e
+        $stderr.puts "Error: #{e.message}"
+        $stderr.puts "Try 'ace-git-commit --help' for more information"
+        exit 1
+      end
+    end
+  end
+end
+
+# Run if executed directly
+if __FILE__ == $0
+  Ace::GitCommit::CLI.run(ARGV)
+end

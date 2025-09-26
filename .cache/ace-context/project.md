@@ -426,7 +426,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Fri Sep 26 00:59:52 WEST 2025
+Fri Sep 26 14:13:12 WEST 2025
 
 ```
 
@@ -434,8 +434,9 @@ Fri Sep 26 00:59:52 WEST 2025
 
 **Output:**
 ```
- M .ace-taskflow/v.0.9.0/t/023-feat-llm-ace-llm-providers-cli-gem-cli-/task.023.md
-?? ace-llm-providers-cli/
+ M .ace-taskflow/v.0.9.0/t/033-feat-taskflow-enhanced-stats-summary-display/task.033.md
+ M .ace-taskflow/v.0.9.0/t/033-feat-taskflow-enhanced-stats-summary-display/ux/usage.md
+ M .cache/ace-context/project.md
 
 ```
 
