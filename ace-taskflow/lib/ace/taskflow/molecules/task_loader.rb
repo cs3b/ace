@@ -179,6 +179,45 @@ module Ace
           false
         end
 
+        # Update task dependencies
+        # @param task_path [String] Path to the task file
+        # @param new_dependencies [Array<String>] New dependency list
+        # @return [Boolean] True if successful
+        def update_task_dependencies(task_path, new_dependencies)
+          return false unless File.exist?(task_path)
+
+          content = File.read(task_path)
+
+          # Format dependencies for YAML
+          deps_yaml = if new_dependencies.nil? || new_dependencies.empty?
+            "dependencies: []"
+          else
+            formatted_deps = new_dependencies.map { |d| d.to_s }
+            "dependencies: [#{formatted_deps.join(', ')}]"
+          end
+
+          # Check if dependencies field exists
+          if content =~ /^dependencies:/m
+            # Update existing dependencies field
+            updated_content = content.sub(/^dependencies:.*$/m, deps_yaml)
+          else
+            # Add dependencies field after status or priority
+            if content =~ /^(status:.*?)$/m
+              updated_content = content.sub(/^(status:.*?)$/m, "\\1\n#{deps_yaml}")
+            elsif content =~ /^(priority:.*?)$/m
+              updated_content = content.sub(/^(priority:.*?)$/m, "\\1\n#{deps_yaml}")
+            else
+              # Add after id field
+              updated_content = content.sub(/^(id:.*?)$/m, "\\1\n#{deps_yaml}")
+            end
+          end
+
+          File.write(task_path, updated_content)
+          true
+        rescue StandardError
+          false
+        end
+
         private
 
         def default_root_path

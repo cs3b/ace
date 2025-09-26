@@ -6,9 +6,11 @@ require_relative "../molecules/task_filter"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/task_slug_generator"
+require_relative "../molecules/dependency_resolver"
 require_relative "../atoms/task_reference_parser"
 require_relative "../atoms/path_builder"
 require_relative "../atoms/yaml_parser"
+require_relative "../atoms/dependency_validator"
 
 module Ace
   module Taskflow
@@ -140,6 +142,96 @@ module Ace
           update_task_status(reference, "done")
         end
 
+        # Add dependency to a task
+        # @param reference [String] Task reference
+        # @param depends_on [String] Dependency task reference
+        # @return [Hash] Result with :success and :message
+        def add_dependency(reference, depends_on)
+          task = @task_loader.find_task_by_reference(reference)
+          unless task
+            return { success: false, message: "Task #{reference} not found" }
+          end
+
+          dep_task = @task_loader.find_task_by_reference(depends_on)
+          unless dep_task
+            return { success: false, message: "Dependency task #{depends_on} not found" }
+          end
+
+          # Check for self-dependency
+          if Atoms::DependencyValidator.self_dependency?(task[:id], dep_task[:id])
+            return { success: false, message: "Task cannot depend on itself" }
+          end
+
+          # Check if dependency already exists
+          current_deps = task[:dependencies] || []
+          dep_id = dep_task[:id]
+          if current_deps.include?(dep_id) || current_deps.include?(dep_task[:task_number])
+            return { success: false, message: "Dependency already exists" }
+          end
+
+          # Check for circular dependency
+          all_tasks = @task_loader.load_all_tasks
+          task_map = all_tasks.each_with_object({}) do |t, map|
+            map[t[:id]] = t
+            map[t[:task_number]] = t if t[:task_number]
+          end
+
+          if Atoms::DependencyValidator.would_create_cycle?(task[:id], dep_task[:id], task_map)
+            path = Atoms::DependencyValidator.find_circular_path(task[:id], dep_task[:id], task_map)
+            return {
+              success: false,
+              message: "Would create circular dependency: #{path.join(' -> ')}"
+            }
+          end
+
+          # Add the dependency
+          new_deps = current_deps + [dep_id]
+          if @task_loader.update_task_dependencies(task[:path], new_deps)
+            {
+              success: true,
+              message: "Added dependency: #{reference} now depends on #{depends_on}"
+            }
+          else
+            { success: false, message: "Failed to update task dependencies" }
+          end
+        end
+
+        # Remove dependency from a task
+        # @param reference [String] Task reference
+        # @param depends_on [String] Dependency task reference to remove
+        # @return [Hash] Result with :success and :message
+        def remove_dependency(reference, depends_on)
+          task = @task_loader.find_task_by_reference(reference)
+          unless task
+            return { success: false, message: "Task #{reference} not found" }
+          end
+
+          dep_task = @task_loader.find_task_by_reference(depends_on)
+          unless dep_task
+            return { success: false, message: "Dependency task #{depends_on} not found" }
+          end
+
+          # Check if dependency exists
+          current_deps = task[:dependencies] || []
+          dep_id = dep_task[:id]
+          dep_num = dep_task[:task_number]
+
+          unless current_deps.include?(dep_id) || current_deps.include?(dep_num)
+            return { success: false, message: "Dependency does not exist" }
+          end
+
+          # Remove the dependency
+          new_deps = current_deps.reject { |d| d == dep_id || d == dep_num }
+          if @task_loader.update_task_dependencies(task[:path], new_deps)
+            {
+              success: true,
+              message: "Removed dependency: #{reference} no longer depends on #{depends_on}"
+            }
+          else
+            { success: false, message: "Failed to update task dependencies" }
+          end
+        end
+
         # Update task status
         # @param reference [String] Task reference
         # @param new_status [String] New status
@@ -156,6 +248,19 @@ module Ace
               success: false,
               message: "Invalid status transition: #{task[:status]} → #{new_status}"
             }
+          end
+
+          # Check dependencies if transitioning to in-progress
+          if new_status == "in-progress" && !task[:dependencies].to_a.empty?
+            all_tasks = @task_loader.load_all_tasks
+            unless Molecules::DependencyResolver.dependencies_met?(task, all_tasks)
+              blocking_tasks = Molecules::DependencyResolver.get_blocking_tasks(task, all_tasks)
+              blocking_refs = blocking_tasks.map { |t| t[:task_number] || t[:id] }
+              return {
+                success: false,
+                message: "Cannot start task: blocked by dependencies #{blocking_refs.join(', ')}"
+              }
+            end
           end
 
           # Update the task file
