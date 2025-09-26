@@ -1,0 +1,7 @@
+# ace-git-commit system prompt sources
+# Copy this file to .ace/protocols/prompt-sources/ to enable
+name: ace-git-commit
+type: directory
+path: ./handbook/prompts/
+priority: 100
+description: "ace-git-commit system prompts"

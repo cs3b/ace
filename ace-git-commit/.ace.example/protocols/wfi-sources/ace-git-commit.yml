@@ -1,0 +1,7 @@
+# ace-git-commit workflow instruction sources
+# Copy this file to .ace/protocols/wfi-sources/ to enable
+name: ace-git-commit
+type: directory
+path: ./handbook/workflow-instructions/
+priority: 100
+description: "ace-git-commit workflow instructions"
