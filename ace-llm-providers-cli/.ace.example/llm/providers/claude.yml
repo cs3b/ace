@@ -1,4 +1,4 @@
-name: cc
+name: claude
 class: Ace::LLM::Providers::CLI::ClaudeCodeClient
 gem: ace-llm-providers-cli
 models:
@@ -8,10 +8,11 @@ models:
   - claude-3-5-haiku-latest
 aliases:
   global:
-    claude-code: cc:sonnet
-    cc-opus: cc:opus
-    cc-sonnet: cc:sonnet
-    cc-haiku: cc:haiku
+    cc: claude:sonnet
+    claude-code: claude:sonnet
+    cc-opus: claude:opus
+    cc-sonnet: claude:sonnet
+    cc-haiku: claude:haiku
   model:
     opus: claude-opus-4-1
     opus4: claude-opus-4-0

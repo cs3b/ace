@@ -69,8 +69,9 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Task and release management with enhanced idea capture
+- **ace-taskflow**: Task and release management with dependencies and tree visualization
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
+- **ace-llm**: Multi-provider AI model integration with client registry
 
 ### Workflows (.wf.md)
 
@@ -166,7 +167,8 @@ Development patterns and best practices:
 
 - **ace-handbook**: Workflows, guides, and templates as a gem
 - **ace-git**: Enhanced git operations
-- **ace-llm**: Multi-provider LLM integration
+- **ace-search**: Unified file and content search across codebases
+- **ace-review**: Code review automation and synthesis
 
 ### Vision
 
@@ -344,59 +346,32 @@ For complete decision history and detailed rationale, refer to the individual AD
 ```
 # ACE Tools Reference
 
-## Available Tools
+| Tool | Purpose | Key Commands |
+|------|---------|--------------|
+| **ace-context** | Load project context | `ace-context project`, `ace-context --list` |
+| **ace-test** | Run tests | `ace-test test/file.rb`, `ace-test test/file.rb:42` |
+| **ace-test-suite** | Run all tests | `ace-test-suite` |
+| **ace-taskflow** | Task management | `ace-taskflow task`, `ace-taskflow tasks --preset current` |
+| **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
+| **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 
-| Tool | Purpose |
-|------|---------|
-| **`ace-context`** | Load project context |
-| **`ace-test`** | Run single package tests |
-| **`ace-test-suite`** | Run all packages' tests at once |
-| **`ace-taskflow`** | Comprehensive task and release management |
-| **`ace-nav`** | Resource discovery and navigation |
-
-## Usage Examples
-
-*Each ace-* gem has its own detailed documentation in ace-*/docs/usage.md
-
-### ace-context
+## Quick Examples
 
 ```sh
-ace-context project                    # Load project preset
-ace-context project --output stdio     # Output to stdout (for piping)
-ace-context project --output cache     # Save to cache directory
-ace-context project --output file.md   # Save to specific file
-ace-context --list                     # List available presets
-```
+# Task management
+ace-taskflow task                       # Show next task
+ace-taskflow tasks --tree               # Dependency tree view
+ace-taskflow idea create "Feature" -gc  # Capture and commit idea
 
-### ace-test
+# Navigation and context
+ace-context project --output stdio      # Load context to stdout
+ace-nav 'wfi://*task*' --list          # Find workflow patterns
 
-```sh
-ace-test test/foo_test.rb              # Test specific file
+# Testing
 ace-test test/foo_test.rb:42           # Test at specific line
 ```
 
-### ace-taskflow
-
-```sh
-ace-taskflow task                              # Show next task
-ace-taskflow task show 123                     # Show specific task details
-ace-taskflow tasks --status pending            # List pending tasks
-ace-taskflow tasks --stats                     # Show task statistics
-ace-taskflow release                           # Show active release
-ace-taskflow releases --stats                  # Show release statistics
-ace-taskflow idea create 'Add dark mode'       # Capture an idea
-ace-taskflow idea create 'Bug fix' --git-commit  # Capture and commit idea
-ace-taskflow idea create 'Feature' -llm -gc    # Enhance and commit idea
-```
-
-### ace-nav
-
-```sh
-ace-nav wfi://capture-idea                     # Find workflow by name
-ace-nav 'wfi://*task*' --list                  # List matching workflows
-ace-nav wfi://setup --content                  # Show workflow content
-ace-nav --sources                              # Show available sources
-```
+*Full documentation in each ace-*/docs/usage.md*
 
 ```
 
@@ -415,15 +390,16 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Task and release management with enhanced idea capture (git commit, LLM enhancement)
-- **ace-nav**: Resource discovery and navigation across ace-* gems
+- **ace-taskflow**: Task and release management with dependencies and tree visualization
+- **ace-nav**: Resource discovery and navigation with wfi:// protocol support
+- **ace-llm**: Multi-provider AI model integration with client registry
 
 ## Coming Soon
 
 - **ace-search**: Unified file and content search across codebases
 - **ace-git**: Enhanced git operations and smart commit generation
 - **ace-review**: Code review automation and synthesis
-- **ace-llm**: Multi-provider AI model integration
+- **ace-handbook**: Workflows, guides, and templates as a gem
 
 ## The Vision
 
@@ -450,7 +426,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Thu Sep 25 23:51:58 WEST 2025
+Fri Sep 26 00:59:52 WEST 2025
 
 ```
 
@@ -458,19 +434,8 @@ Thu Sep 25 23:51:58 WEST 2025
 
 **Output:**
 ```
- M .ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/task.034.md
- M .ace-taskflow/v.0.9.0/t/035-feat-llm-configuration-based-provider-a/task.035.md
- M .cache/ace-context/project.md
- M ace-llm/README.md
- M ace-llm/Rakefile
- M ace-llm/exe/ace-llm-query
- M ace-llm/lib/ace/llm/molecules/provider_model_parser.rb
-?? ace-llm/.ace.example/llm/providers/
-?? ace-llm/lib/ace/llm/atoms/provider_config_validator.rb
-?? ace-llm/lib/ace/llm/molecules/client_registry.rb
-?? ace-llm/lib/ace/llm/molecules/provider_loader.rb
-?? ace-llm/providers/
-?? ace-llm/test/
+ M .ace-taskflow/v.0.9.0/t/023-feat-llm-ace-llm-providers-cli-gem-cli-/task.023.md
+?? ace-llm-providers-cli/
 
 ```
 
@@ -504,6 +469,7 @@ No recent tasks found
 /Users/mc/Ps/ace-meta/ace-context
 /Users/mc/Ps/ace-meta/ace-core
 /Users/mc/Ps/ace-meta/ace-llm
+/Users/mc/Ps/ace-meta/ace-llm-providers-cli
 /Users/mc/Ps/ace-meta/ace-nav
 /Users/mc/Ps/ace-meta/ace-taskflow
 /Users/mc/Ps/ace-meta/ace-test-runner

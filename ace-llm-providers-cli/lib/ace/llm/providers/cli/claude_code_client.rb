@@ -16,9 +16,9 @@ module Ace
           API_BASE_URL = "https://claude.ai"
           DEFAULT_GENERATION_CONFIG = {}.freeze
 
-          # Provider registration - auto-registers as "cc"
+          # Provider registration - auto-registers as "claude"
           def self.provider_name
-            "cc"
+            "claude"
           end
 
           # Default model (can be overridden by config)
@@ -201,7 +201,7 @@ module Ace
 
             # Build standard metadata structure
             metadata = {
-              provider: "cc",
+              provider: "claude",
               model: @model || DEFAULT_MODEL,
               input_tokens: usage["input_tokens"] || 0,
               output_tokens: usage["output_tokens"] || 0,
