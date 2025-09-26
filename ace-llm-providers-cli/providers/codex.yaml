@@ -1,0 +1,18 @@
+name: codex
+display_name: Codex CLI
+class: Ace::LLM::Providers::CLI::CodexClient
+gem: ace/llm/providers/cli
+description: Codex via CLI
+models:
+  - gpt-5
+  - gpt-5-mini
+  - mini
+  - default
+default_model: gpt-5
+aliases:
+  global:
+    codex-gpt5: "codex:gpt-5"
+    codex-mini: "codex:mini"
+  model:
+    5: gpt-5
+    m: mini

@@ -1,0 +1,288 @@
+# frozen_string_literal: true
+
+require "open3"
+require "json"
+require "shellwords"
+require "timeout"
+
+module Ace
+  module LLM
+    module Providers
+      module CLI
+        # Client for interacting with Claude Code via the Claude CLI
+        # Provides access to Claude Code models through subprocess execution
+        class ClaudeCodeClient < Ace::LLM::Organisms::BaseClient
+          # Not used for CLI interaction but required by BaseClient
+          API_BASE_URL = "https://claude.ai"
+          DEFAULT_GENERATION_CONFIG = {}.freeze
+
+          # Provider registration - auto-registers as "cc"
+          def self.provider_name
+            "cc"
+          end
+
+          # Available models for Claude Code
+          AVAILABLE_MODELS = {
+            "opus" => "claude-opus-4-1",
+            "opus4" => "claude-opus-4-0",
+            "sonnet" => "claude-sonnet-4-0",
+            "haiku" => "claude-3-5-haiku-latest"
+          }.freeze
+
+          # Default model for quick access
+          DEFAULT_MODEL = "sonnet"
+
+          def initialize(model: nil, **options)
+            @model = normalize_model_name(model || DEFAULT_MODEL)
+            # Skip normal BaseClient initialization that requires API key
+            @options = options
+            @generation_config = options[:generation_config] || {}
+          end
+
+          # Override to indicate this client doesn't need API credentials
+          def needs_credentials?
+            false
+          end
+
+          # Generate a response from the LLM
+          # @param messages [Array<Hash>] Conversation messages
+          # @param options [Hash] Generation options
+          # @return [Hash] Response with text and metadata
+          def generate(messages, **options)
+            validate_claude_availability!
+
+            # Convert messages to prompt format
+            prompt = format_messages_as_prompt(messages)
+
+            cmd = build_claude_command(prompt, options)
+            stdout, stderr, status = execute_claude_command(cmd)
+
+            parse_claude_response(stdout, stderr, status, prompt, options)
+          rescue => e
+            handle_claude_error(e)
+          end
+
+          # List available Claude Code models
+          def list_models
+            unless claude_available?
+              # Fallback models when Claude CLI is unavailable
+              return %w[opus sonnet haiku].map do |model|
+                {
+                  id: model,
+                  name: model,
+                  description: "Claude Code model",
+                  context_size: 200_000
+                }
+              end
+            end
+
+            # Get unique base model names (opus, sonnet, haiku)
+            unique_models = %w[opus sonnet haiku]
+
+            unique_models.map do |model_name|
+              {
+                id: model_name,
+                name: model_name,
+                description: "Claude Code model",
+                context_size: model_context_size(model_name)
+              }
+            end
+          end
+
+          private
+
+          def model_context_size(model_name)
+            # Claude Code models have large context windows
+            case model_name
+            when /opus/
+              200_000
+            when /sonnet/
+              200_000
+            when /haiku/
+              200_000
+            else
+              128_000 # Conservative default
+            end
+          end
+
+          def format_messages_as_prompt(messages)
+            # Handle both array of message hashes and string prompt
+            return messages if messages.is_a?(String)
+
+            # Convert array of messages to formatted prompt
+            formatted = messages.map do |msg|
+              role = msg[:role] || msg["role"]
+              content = msg[:content] || msg["content"]
+
+              case role
+              when "system"
+                "System: #{content}"
+              when "user"
+                "User: #{content}"
+              when "assistant"
+                "Assistant: #{content}"
+              else
+                content
+              end
+            end
+
+            formatted.join("\n\n")
+          end
+
+          def claude_available?
+            system("which claude > /dev/null 2>&1")
+          end
+
+          def validate_claude_availability!
+            unless claude_available?
+              raise Ace::LLM::ProviderError, "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-cli"
+            end
+
+            # Check if Claude is authenticated (quick check)
+            unless claude_authenticated?
+              raise Ace::LLM::AuthenticationError, "Claude authentication required. Run 'claude setup-token' to configure"
+            end
+          end
+
+          def claude_authenticated?
+            # Quick check if Claude can execute (will fail fast if not authenticated)
+            # Using a minimal test that should complete quickly
+            cmd = ["claude", "--version"]
+            stdout, _, status = Open3.capture3(*cmd)
+            status.success? && (stdout.include?("Claude") || stdout.include?("claude"))
+          rescue
+            false
+          end
+
+          def build_claude_command(prompt, options)
+            cmd = ["claude", "-p"]
+
+            # Add prompt (from string or file)
+            if prompt.is_a?(String) && File.exist?(prompt)
+              cmd << File.read(prompt)
+            else
+              cmd << prompt.to_s
+            end
+
+            # Always use JSON output for consistent parsing
+            cmd << "--output-format" << "json"
+
+            # Add model selection if not default
+            if @model && @model != DEFAULT_MODEL
+              cmd << "--model" << @model
+            end
+
+            # Add system prompt if provided (look for it in various places)
+            system_content = options[:system_instruction] ||
+                           options[:system] ||
+                           options[:system_prompt] ||
+                           @generation_config[:system_prompt]
+
+            if system_content
+              cmd << "--system" << system_content.to_s
+            end
+
+            # Add temperature if provided
+            temp = options[:temperature] || @generation_config[:temperature]
+            if temp
+              cmd << "--temperature" << temp.to_s
+            end
+
+            # Add max tokens if provided
+            max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
+            if max_tokens
+              cmd << "--max-tokens" << max_tokens.to_s
+            end
+
+            cmd
+          end
+
+          def execute_claude_command(cmd)
+            # Execute with timeout to prevent hanging
+            timeout_val = @options[:timeout] || 120
+            Timeout.timeout(timeout_val) do
+              Open3.capture3(*cmd)
+            end
+          rescue Timeout::Error
+            raise Ace::LLM::ProviderError, "Claude CLI execution timed out after #{timeout_val} seconds"
+          end
+
+          def parse_claude_response(stdout, stderr, status, prompt, options)
+            unless status.success?
+              error_msg = stderr.empty? ? stdout : stderr
+              raise Ace::LLM::ProviderError, "Claude CLI failed: #{error_msg}"
+            end
+
+            begin
+              response = JSON.parse(stdout)
+            rescue JSON::ParserError => e
+              raise Ace::LLM::ProviderError, "Failed to parse Claude response: #{e.message}"
+            end
+
+            # Extract the text result
+            text = response["result"] || response["response"] || ""
+
+            # Build metadata
+            metadata = build_metadata(response, prompt, options)
+
+            # Return hash compatible with ace-llm format
+            {
+              text: text,
+              metadata: metadata
+            }
+          end
+
+          def build_metadata(response, prompt, options)
+            usage = response["usage"] || {}
+
+            # Build standard metadata structure
+            metadata = {
+              provider: "cc",
+              model: @model || DEFAULT_MODEL,
+              input_tokens: usage["input_tokens"] || 0,
+              output_tokens: usage["output_tokens"] || 0,
+              total_tokens: (usage["input_tokens"] || 0) + (usage["output_tokens"] || 0),
+              cached_tokens: usage["cache_read_input_tokens"] || 0,
+              finish_reason: response["subtype"] || "success",
+              took: (response["duration_ms"] || 0) / 1000.0,
+              timestamp: Time.now.utc.iso8601
+            }
+
+            # Add cost information if available
+            if response["total_cost_usd"]
+              metadata[:cost] = {
+                input_cost: 0.0, # Claude provides total only
+                output_cost: 0.0,
+                total_cost: response["total_cost_usd"],
+                currency: "USD"
+              }
+            end
+
+            # Add session ID if available
+            metadata[:session_id] = response["session_id"] if response["session_id"]
+
+            # Add any Claude-specific data
+            metadata[:provider_specific] = {
+              uuid: response["uuid"],
+              service_tier: usage["service_tier"],
+              duration_api_ms: response["duration_api_ms"],
+              cache_creation_tokens: usage["cache_creation_input_tokens"]
+            }.compact
+
+            metadata
+          end
+
+          def handle_claude_error(error)
+            # Re-raise the error for proper handling by the base client error flow
+            raise error
+          end
+
+          def normalize_model_name(model)
+            # Map aliases to actual model names, or pass through
+            AVAILABLE_MODELS[model] || model
+          end
+        end
+      end
+    end
+  end
+end

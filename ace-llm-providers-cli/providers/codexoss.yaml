@@ -1,0 +1,11 @@
+name: codexoss
+display_name: Codex OSS
+class: Ace::LLM::Providers::CLI::CodexOSSClient
+gem: ace/llm/providers/cli
+description: Codex OSS via CLI
+models:
+  - default
+default_model: default
+aliases:
+  global:
+    codex-oss: "codexoss:default"

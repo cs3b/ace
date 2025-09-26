@@ -1,0 +1,211 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "open3"
+require "json"
+
+# CLI detection utility for ace-llm-providers-cli
+# Checks availability and authentication status of CLI tools
+class CLIChecker
+  CLI_TOOLS = {
+    "claude" => {
+      name: "Claude Code",
+      provider: "cc",
+      check_cmd: ["claude", "--version"],
+      install_cmd: "npm install -g @anthropic-ai/claude-cli",
+      auth_cmd: "claude setup-token",
+      auth_check: -> { check_claude_auth }
+    },
+    "codex" => {
+      name: "Codex",
+      provider: "codex",
+      check_cmd: ["codex", "--version"],
+      install_cmd: "npm install -g @openai/codex",
+      install_url: "https://codex.ai",
+      auth_cmd: "codex login",
+      auth_check: -> { check_codex_auth }
+    },
+    "opencode" => {
+      name: "OpenCode",
+      provider: "opencode",
+      check_cmd: ["opencode", "--version"],
+      install_cmd: "npm install -g opencode-cli",
+      install_url: "https://opencode.dev",
+      auth_cmd: "opencode auth",
+      auth_check: -> { check_opencode_auth }
+    },
+    "codex-oss" => {
+      name: "Codex OSS",
+      provider: "codexoss",
+      check_cmd: ["codex-oss", "--version"],
+      install_cmd: "pip install codex-oss",
+      install_url: "https://github.com/codex-oss/codex",
+      auth_cmd: "codex-oss init",
+      auth_check: -> { check_codexoss_auth }
+    }
+  }.freeze
+
+  def self.run
+    new.check_all
+  end
+
+  def check_all
+    puts "🔍 Checking CLI-based LLM providers for ace-llm-providers-cli\n\n"
+
+    results = []
+    max_name_length = CLI_TOOLS.values.map { |t| t[:name].length }.max
+
+    CLI_TOOLS.each do |cli_name, config|
+      result = check_cli_tool(cli_name, config)
+      results << result
+
+      # Format output
+      name_padded = config[:name].ljust(max_name_length)
+      status_icon = result[:available] ? "✅" : "❌"
+      auth_icon = result[:authenticated] ? "🔓" : "🔒"
+
+      puts "#{status_icon} #{name_padded} (#{config[:provider]})"
+
+      if result[:available]
+        puts "   Version: #{result[:version]}"
+        puts "   Auth: #{auth_icon} #{result[:auth_status]}"
+      else
+        puts "   Status: Not installed"
+        puts "   Install: #{config[:install_cmd]}"
+        puts "   URL: #{config[:install_url]}" if config[:install_url]
+      end
+
+      puts
+    end
+
+    # Summary
+    available_count = results.count { |r| r[:available] }
+    authenticated_count = results.count { |r| r[:authenticated] }
+
+    puts "─" * 50
+    puts "\n📊 Summary:"
+    puts "   Available: #{available_count}/#{CLI_TOOLS.size} CLI tools installed"
+    puts "   Authenticated: #{authenticated_count}/#{available_count} tools authenticated" if available_count > 0
+
+    if available_count == 0
+      puts "\n💡 To use CLI providers, install at least one tool from above."
+      puts "   After installation, run this check again to verify authentication."
+    elsif authenticated_count < available_count
+      puts "\n💡 Some tools need authentication. Run the auth commands shown above."
+    else
+      puts "\n🎉 All installed CLI tools are ready to use with ace-llm!"
+      puts "   Example: ace-llm-query cc:opus \"Hello, Claude!\""
+    end
+
+    # Exit with appropriate code
+    exit(available_count == 0 ? 1 : 0)
+  end
+
+  private
+
+  def check_cli_tool(cli_name, config)
+    result = {
+      name: config[:name],
+      provider: config[:provider],
+      available: false,
+      authenticated: false,
+      version: nil,
+      auth_status: "Not checked"
+    }
+
+    # Check if tool is available
+    if system("which #{cli_name} > /dev/null 2>&1")
+      result[:available] = true
+
+      # Get version
+      begin
+        stdout, _, status = Open3.capture3(*config[:check_cmd])
+        result[:version] = extract_version(stdout) if status.success?
+      rescue => e
+        result[:version] = "Unknown"
+      end
+
+      # Check authentication
+      if config[:auth_check]
+        auth_result = instance_exec(&config[:auth_check])
+        result[:authenticated] = auth_result[:authenticated]
+        result[:auth_status] = auth_result[:message]
+      else
+        result[:auth_status] = "No auth check available"
+      end
+    end
+
+    result
+  end
+
+  def extract_version(output)
+    # Try to extract version number from various formats
+    if output =~ /(\d+\.\d+\.\d+)/
+      $1
+    elsif output =~ /v(\d+\.\d+)/
+      $1
+    else
+      output.lines.first&.strip || "Unknown"
+    end
+  end
+
+  def self.check_claude_auth
+    # Check if Claude is authenticated
+    cmd = ["claude", "--version"]
+    stdout, _, status = Open3.capture3(*cmd)
+
+    if status.success? && (stdout.include?("Claude") || stdout.include?("claude"))
+      { authenticated: true, message: "Authenticated" }
+    else
+      { authenticated: false, message: "Run: claude setup-token" }
+    end
+  rescue => e
+    { authenticated: false, message: "Authentication check failed" }
+  end
+
+  def self.check_codex_auth
+    # Check if Codex is authenticated
+    # Try a simple help command that should work if authenticated
+    cmd = ["codex", "--help"]
+    _, _, status = Open3.capture3(*cmd)
+
+    if status.success?
+      { authenticated: true, message: "Authenticated" }
+    else
+      { authenticated: false, message: "Run: codex login" }
+    end
+  rescue => e
+    { authenticated: false, message: "Authentication check failed" }
+  end
+
+  def self.check_opencode_auth
+    # Check if OpenCode is authenticated
+    cmd = ["opencode", "--version"]
+    _, _, status = Open3.capture3(*cmd)
+
+    if status.success?
+      { authenticated: true, message: "Authenticated" }
+    else
+      { authenticated: false, message: "Run: opencode auth" }
+    end
+  rescue => e
+    { authenticated: false, message: "Authentication check failed" }
+  end
+
+  def self.check_codexoss_auth
+    # Check if Codex OSS is configured
+    cmd = ["codex-oss", "--version"]
+    stdout, _, status = Open3.capture3(*cmd)
+
+    if status.success? && stdout.include?("codex")
+      { authenticated: true, message: "Configured" }
+    else
+      { authenticated: false, message: "Run: codex-oss init" }
+    end
+  rescue => e
+    { authenticated: false, message: "Configuration check failed" }
+  end
+end
+
+# Run the checker
+CLIChecker.run if __FILE__ == $0

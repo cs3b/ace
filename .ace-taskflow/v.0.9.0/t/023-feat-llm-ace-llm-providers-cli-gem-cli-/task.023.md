@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.023
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: [v.0.9.0+task.021]
@@ -198,24 +198,24 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
 
 ### Planning Steps
 
-* [ ] Analyze CLI provider patterns in dev-tools
+* [x] Analyze CLI provider patterns in dev-tools
   - Review subprocess execution patterns
   - Understand authentication flows
   - Map CLI tool detection logic
 
-* [ ] Design plugin registration mechanism
+* [x] Design plugin registration mechanism
   - Plan auto-registration on gem load
   - Define provider namespace structure
   - Ensure compatibility with ace-llm core
 
-* [ ] Plan CLI tool detection strategy
+* [x] Plan CLI tool detection strategy
   - Design availability checks
   - Plan setup instruction generation
   - Define authentication verification
 
 ### Execution Steps
 
-- [ ] Step 1: Create ace-llm-providers-cli gem scaffold
+- [x] Step 1: Create ace-llm-providers-cli gem scaffold
   - Create ace-llm-providers-cli directory
   - Create gemspec with ace-llm dependency
   - Setup standard gem structure
@@ -224,7 +224,7 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: ace-llm-providers-cli gem structure created
   > Command: ls -la ace-llm-providers-cli/ && cat ace-llm-providers-cli/ace-llm-providers-cli.gemspec
 
-- [ ] Step 2: Create provider registration mechanism
+- [x] Step 2: Create provider registration mechanism
   - Create lib/ace/llm/providers/cli.rb entry point
   - Implement auto-registration on require
   - Test with ace-llm ClientFactory
@@ -233,7 +233,7 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: Providers register when gem loaded
   > Command: ruby -e "require 'ace/llm'; require 'ace/llm/providers/cli'; puts Ace::LLM::ClientFactory.providers"
 
-- [ ] Step 3: Port ClaudeCodeClient
+- [x] Step 3: Port ClaudeCodeClient
   - Copy and adapt from dev-tools
   - Update namespace to Ace::LLM::Providers::CLI
   - Maintain subprocess execution logic
@@ -242,7 +242,7 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: ClaudeCodeClient loads and registers
   > Command: ruby -e "require 'ace/llm/providers/cli'; p Ace::LLM::Providers::CLI::ClaudeCodeClient"
 
-- [ ] Step 4: Port CodexClient
+- [x] Step 4: Port CodexClient
   - Migrate Codex CLI integration
   - Update model mappings (GPT-5, etc.)
   - Preserve authentication checks
@@ -251,7 +251,7 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: CodexClient functional
   > Command: ls ace-llm-providers-cli/lib/ace/llm/providers/cli/codex_client.rb
 
-- [ ] Step 5: Port remaining CLI providers
+- [x] Step 5: Port remaining CLI providers
   - Port OpenCodeClient
   - Port CodexOSSClient
   - Ensure consistent error handling
@@ -260,7 +260,7 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: All 4 CLI providers migrated
   > Command: ls ace-llm-providers-cli/lib/ace/llm/providers/cli/*_client.rb | wc -l
 
-- [ ] Step 6: Implement CLI detection utility
+- [x] Step 6: Implement CLI detection utility
   - Create exe/ace-llm-providers-cli-check
   - Check each CLI tool availability
   - Provide setup instructions
@@ -269,7 +269,7 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: Check command works
   > Command: ace-llm-providers-cli/exe/ace-llm-providers-cli-check
 
-- [ ] Step 7: Add error handling
+- [x] Step 7: Add error handling
   - CLI not found exceptions
   - Authentication error handling
   - Subprocess timeout handling
@@ -278,16 +278,16 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
   > Assert: Proper error classes defined
   > Command: grep -r "class.*Error" ace-llm-providers-cli/lib/
 
-- [ ] Step 8: Create integration tests
+- [x] Step 8: Create integration tests
   - Test registration with ace-llm
   - Test subprocess execution safety
   - Test error scenarios
   > TEST: Integration Tests
   > Type: Test Suite
   > Assert: Tests pass
-  > Command: cd ace-llm-providers-cli && bundle exec rspec
+  > Command: cd ace-llm-providers-cli && bundle exec rake test
 
-- [ ] Step 9: Documentation
+- [x] Step 9: Documentation
   - Create README with setup instructions
   - Document each CLI provider
   - Add troubleshooting guide
@@ -298,14 +298,14 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
 
 ## Acceptance Criteria
 
-- [ ] ace-llm-providers-cli gem created with proper structure
-- [ ] All 4 CLI providers ported and functional
-- [ ] Dynamic registration works with ace-llm core
-- [ ] CLI tool detection with helpful setup messages
-- [ ] Subprocess execution with proper timeout handling
-- [ ] Clear error messages for missing/unauthenticated tools
-- [ ] Integration tests pass
-- [ ] Documentation complete
+- [x] ace-llm-providers-cli gem created with proper structure
+- [x] All 4 CLI providers ported and functional
+- [x] Dynamic registration works with ace-llm core
+- [x] CLI tool detection with helpful setup messages
+- [x] Subprocess execution with proper timeout handling
+- [x] Clear error messages for missing/unauthenticated tools
+- [x] Integration tests pass
+- [x] Documentation complete
 
 ## References
 
