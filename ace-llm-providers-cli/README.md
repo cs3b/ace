@@ -167,7 +167,7 @@ Example output:
 ## Provider Details
 
 ### Claude Code (claude)
-- **Models**: claude-opus-4-1, claude-opus-4-0, claude-sonnet-4-0, claude-3-5-haiku-latest
+- **Models**: claude-opus-4-1, claude-sonnet-4-0, claude-3-5-haiku-latest
 - **Default**: claude-sonnet-4-0
 - **Context**: 200,000 tokens
 - **Aliases**: cc (maps to claude:sonnet), claude-code, cc-opus, cc-sonnet, cc-haiku
