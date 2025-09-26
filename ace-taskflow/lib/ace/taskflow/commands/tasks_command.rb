@@ -129,7 +129,7 @@ module Ace
 
           # Check for stats only (other formatters handled after filtering)
           if additional_filters[:stats]
-            show_statistics_for_preset(preset_name)
+            show_statistics_for_preset(preset_name, additional_filters)
             return
           end
 
@@ -231,11 +231,17 @@ module Ace
           end
         end
 
-        def show_statistics_for_preset(preset_name)
-          preset_config = @preset_manager.apply_preset(preset_name)
+        def show_statistics_for_preset(preset_name, additional_filters = {})
+          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
           return unless preset_config
 
-          context = preset_config[:context] || 'current'
+          # Override context if provided via legacy flags
+          if additional_filters[:context]
+            context = additional_filters[:context]
+          else
+            context = preset_config[:context] || 'current'
+          end
+
           puts @stats_formatter.format_stats_view(context: context)
         end
 
