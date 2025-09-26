@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 require "optparse"
-require_relative "../lib/ace/git_commit"
+require "ace/git_commit"
 
 module Ace
   module GitCommit
@@ -101,7 +101,5 @@ module Ace
   end
 end
 
-# Run if executed directly
-if __FILE__ == $0
-  Ace::GitCommit::CLI.run(ARGV)
-end
+# Always run the CLI (like ace-taskflow and ace-context)
+Ace::GitCommit::CLI.run(ARGV)

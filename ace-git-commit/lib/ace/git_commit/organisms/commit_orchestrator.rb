@@ -50,11 +50,12 @@ module Ace
         # Load configuration
         # @return [Hash] Configuration
         def load_config
-          # Try to load from ace-core config resolver
-          if defined?(Ace::Core::ConfigResolver)
-            Ace::Core::ConfigResolver.load("git")
+          # Load git configuration using ace-core
+          git_config = Ace::Core.get("git")
+
+          if git_config && git_config.is_a?(Hash)
+            git_config
           else
-            # Fallback to default config
             default_config
           end
         rescue StandardError
