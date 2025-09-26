@@ -33,7 +33,7 @@ module Ace
           @root_path = root_path || Molecules::ConfigLoader.find_root
           @task_manager = Organisms::TaskManager.new
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
-          @release_resolver = Molecules::ReleaseResolver.new(@root_path)
+          @release_resolver = Molecules::ReleaseResolver.new
         end
 
         # Generate three-line header for list outputs
@@ -140,7 +140,20 @@ module Ace
                    when "all"
                      { name: "All Releases", path: @root_path, context: "all" }
                    else
-                     @release_resolver.find_release(context)
+                     # Try to find release or create a release info from version string
+                     found_release = @release_resolver.find_release(context)
+                     if found_release
+                       found_release
+                     elsif context&.match(/^v\.\d+\.\d+\.\d+/)
+                       # Create release info from version string
+                       {
+                         name: context,
+                         path: File.join(@root_path, ".ace-taskflow", context),
+                         context: context
+                       }
+                     else
+                       nil
+                     end
                    end
 
           return nil unless release
@@ -148,7 +161,7 @@ module Ace
           # Extract codename from release name if present
           if release[:name] && release[:name].match(/^v\.\d+\.\d+\.\d+/)
             # Try to find a codename file or extract from directory name
-            codename = extract_codename(release[:name])
+            codename = extract_codename_from_path(release[:path])
             release[:codename] = codename if codename
           end
 
@@ -158,12 +171,33 @@ module Ace
           release
         end
 
-        def extract_codename(release_name)
-          # For now, return a placeholder - this could be enhanced to read from metadata
-          case release_name
-          when /v\.0\.9\.0/
-            '"Neptune" Release'
-          else
+        def extract_codename_from_path(release_path)
+          # Read codename from the release's main markdown file
+          # Format: first header line of the file (e.g., "# v.0.9.0 Mono-Repo Multiple Gems")
+          return nil unless release_path && File.directory?(release_path)
+
+          # Find the main markdown file (usually the only .md file in the release root)
+          md_files = Dir.glob(File.join(release_path, "*.md"))
+          return nil if md_files.empty?
+
+          # Read the first markdown file found
+          main_file = md_files.first
+          begin
+            content = File.read(main_file)
+            # Extract first header (# Header Text)
+            if match = content.match(/^#\s+(.+)$/)
+              header = match[1]
+              # Extract the descriptive part after the version
+              # e.g., "v.0.9.0 Mono-Repo Multiple Gems" -> "Mono-Repo Multiple Gems"
+              if header.match(/^v\.\d+\.\d+\.\d+\s+(.+)$/)
+                $1
+              else
+                header
+              end
+            else
+              nil
+            end
+          rescue
             nil
           end
         end
