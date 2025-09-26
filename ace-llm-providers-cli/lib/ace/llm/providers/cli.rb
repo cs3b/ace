@@ -8,32 +8,15 @@ module Ace
     module Providers
       module CLI
         # Main entry point for CLI providers
-        # Auto-registers providers when this file is required
+        # Simply requires the provider client classes
+        # Configuration comes from YAML files in .ace.example/llm/providers/
         class << self
-          def register_providers
-            # Register provider configurations in ace-llm's registry
-            # by placing YAML files in the providers directory
-            register_provider_configs
-
+          def setup
             # Require all CLI provider client classes
             require_cli_providers
           end
 
           private
-
-          def register_provider_configs
-            # Get the providers directory in this gem
-            providers_dir = File.expand_path("../../../../../providers", __FILE__)
-
-            # Ensure directory exists
-            return unless File.directory?(providers_dir)
-
-            # Add to ace-llm's config paths if possible
-            if defined?(Ace::LLM::Molecules::ClientRegistry)
-              # This would need ace-llm to expose a way to add config paths dynamically
-              # For now, we'll rely on YAML configs being copied or symlinked
-            end
-          end
 
           def require_cli_providers
             # Require each CLI provider client
@@ -54,8 +37,8 @@ module Ace
           end
         end
 
-        # Auto-register on require
-        register_providers
+        # Auto-setup on require
+        setup
       end
     end
   end

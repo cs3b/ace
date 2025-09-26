@@ -21,19 +21,11 @@ module Ace
             "cc"
           end
 
-          # Available models for Claude Code
-          AVAILABLE_MODELS = {
-            "opus" => "claude-opus-4-1",
-            "opus4" => "claude-opus-4-0",
-            "sonnet" => "claude-sonnet-4-0",
-            "haiku" => "claude-3-5-haiku-latest"
-          }.freeze
-
-          # Default model for quick access
-          DEFAULT_MODEL = "sonnet"
+          # Default model (can be overridden by config)
+          DEFAULT_MODEL = "claude-sonnet-4-0"
 
           def initialize(model: nil, **options)
-            @model = normalize_model_name(model || DEFAULT_MODEL)
+            @model = model || DEFAULT_MODEL
             # Skip normal BaseClient initialization that requires API key
             @options = options
             @generation_config = options[:generation_config] || {}
@@ -64,46 +56,18 @@ module Ace
 
           # List available Claude Code models
           def list_models
-            unless claude_available?
-              # Fallback models when Claude CLI is unavailable
-              return %w[opus sonnet haiku].map do |model|
-                {
-                  id: model,
-                  name: model,
-                  description: "Claude Code model",
-                  context_size: 200_000
-                }
-              end
-            end
-
-            # Get unique base model names (opus, sonnet, haiku)
-            unique_models = %w[opus sonnet haiku]
-
-            unique_models.map do |model_name|
-              {
-                id: model_name,
-                name: model_name,
-                description: "Claude Code model",
-                context_size: model_context_size(model_name)
-              }
-            end
+            # Return models based on what the CLI supports
+            # This is a simplified list - actual models come from YAML config
+            [
+              { id: "claude-opus-4-1", name: "Claude Opus 4.1", description: "Most capable model", context_size: 200_000 },
+              { id: "claude-opus-4-0", name: "Claude Opus 4.0", description: "Previous Opus version", context_size: 200_000 },
+              { id: "claude-sonnet-4-0", name: "Claude Sonnet 4.0", description: "Balanced model", context_size: 200_000 },
+              { id: "claude-3-5-haiku-latest", name: "Claude Haiku 3.5", description: "Fast model", context_size: 200_000 }
+            ]
           end
 
           private
 
-          def model_context_size(model_name)
-            # Claude Code models have large context windows
-            case model_name
-            when /opus/
-              200_000
-            when /sonnet/
-              200_000
-            when /haiku/
-              200_000
-            else
-              128_000 # Conservative default
-            end
-          end
 
           def format_messages_as_prompt(messages)
             # Handle both array of message hashes and string prompt
@@ -275,11 +239,6 @@ module Ace
           def handle_claude_error(error)
             # Re-raise the error for proper handling by the base client error flow
             raise error
-          end
-
-          def normalize_model_name(model)
-            # Map aliases to actual model names, or pass through
-            AVAILABLE_MODELS[model] || model
           end
         end
       end

@@ -22,6 +22,14 @@ Or install it yourself as:
 $ gem install ace-llm-providers-cli
 ```
 
+### Configuration
+
+Provider configurations are in `.ace.example/llm/providers/`. Copy these to your project's `.ace/llm/providers/` directory:
+
+```bash
+cp -r gems/ace-llm-providers-cli/.ace.example/llm/providers/*.yml .ace/llm/providers/
+```
+
 ## Prerequisites
 
 This gem requires at least one CLI tool to be installed. Each provider has its own CLI tool:

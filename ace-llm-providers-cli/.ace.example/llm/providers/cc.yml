@@ -1,0 +1,30 @@
+name: cc
+class: Ace::LLM::Providers::CLI::ClaudeCodeClient
+gem: ace-llm-providers-cli
+models:
+  - claude-opus-4-1
+  - claude-opus-4-0
+  - claude-sonnet-4-0
+  - claude-3-5-haiku-latest
+aliases:
+  global:
+    claude-code: cc:sonnet
+    cc-opus: cc:opus
+    cc-sonnet: cc:sonnet
+    cc-haiku: cc:haiku
+  model:
+    opus: claude-opus-4-1
+    opus4: claude-opus-4-0
+    sonnet: claude-sonnet-4-0
+    haiku: claude-3-5-haiku-latest
+    o: claude-opus-4-1
+    s: claude-sonnet-4-0
+    h: claude-3-5-haiku-latest
+capabilities:
+  - text_generation
+  - streaming
+  - function_calling
+  - vision
+default_options:
+  temperature: 0.7
+  max_tokens: 4096
