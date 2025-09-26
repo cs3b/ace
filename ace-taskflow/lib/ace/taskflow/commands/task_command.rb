@@ -35,6 +35,10 @@ module Ace
             move_task(args)
           when "update"
             update_task(args)
+          when "add-dependency"
+            add_dependency(args)
+          when "remove-dependency"
+            remove_dependency(args)
           when "--help", "-h"
             show_help
           else
@@ -273,6 +277,66 @@ module Ace
           end
         end
 
+        def add_dependency(args)
+          # Parse arguments
+          task_ref = args.shift
+          depends_on_ref = nil
+
+          args.each_with_index do |arg, index|
+            if arg == "--depends-on" || arg == "-d"
+              depends_on_ref = args[index + 1]
+              break
+            end
+          end
+
+          # Validate arguments
+          if task_ref.nil? || depends_on_ref.nil?
+            puts "Usage: ace-taskflow task add-dependency <task_ref> --depends-on <dependency_ref>"
+            puts "Example: ace-taskflow task add-dependency 034 --depends-on 031"
+            exit 1
+          end
+
+          # Add the dependency
+          result = @manager.add_dependency(task_ref, depends_on_ref)
+
+          if result[:success]
+            puts result[:message]
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
+        def remove_dependency(args)
+          # Parse arguments
+          task_ref = args.shift
+          depends_on_ref = nil
+
+          args.each_with_index do |arg, index|
+            if arg == "--depends-on" || arg == "-d"
+              depends_on_ref = args[index + 1]
+              break
+            end
+          end
+
+          # Validate arguments
+          if task_ref.nil? || depends_on_ref.nil?
+            puts "Usage: ace-taskflow task remove-dependency <task_ref> --depends-on <dependency_ref>"
+            puts "Example: ace-taskflow task remove-dependency 034 --depends-on 031"
+            exit 1
+          end
+
+          # Remove the dependency
+          result = @manager.remove_dependency(task_ref, depends_on_ref)
+
+          if result[:success]
+            puts result[:message]
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
         def parse_context(args)
           args.each_with_index do |arg, index|
             case arg
@@ -391,6 +455,10 @@ module Ace
           puts "  done <reference>   Mark task as completed"
           puts "  move <ref> <target> Move task to different context"
           puts "  update <reference> Update task metadata"
+          puts "  add-dependency <ref> --depends-on <dep>"
+          puts "                     Add dependency to task"
+          puts "  remove-dependency <ref> --depends-on <dep>"
+          puts "                     Remove dependency from task"
           puts ""
           puts "Display Options:"
           puts "  --path             Show only task file path"

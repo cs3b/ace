@@ -62,24 +62,83 @@ module Ace
         # @param ascending [Boolean] Sort direction
         # @return [Array<Hash>] Sorted tasks with dependencies considered
         def self.dependency_aware_sort(tasks, sort_by = :sort, ascending = true)
-          # Separate tasks into ready and blocked
-          ready_tasks = []
-          blocked_tasks = []
+          # First, perform topological sort to get dependency order
+          topo_sorted = topological_sort_with_levels(tasks)
 
+          # Now apply the requested sort within each dependency level
+          result = []
+          topo_sorted.each do |level_tasks|
+            sorted_level = apply_standard_sort(level_tasks, sort_by, ascending)
+            result.concat(sorted_level)
+          end
+
+          result
+        end
+
+        # Perform topological sort grouped by dependency levels
+        # @param tasks [Array<Hash>] Tasks to sort
+        # @return [Array<Array<Hash>>] Tasks grouped by dependency level
+        def self.topological_sort_with_levels(tasks)
+          task_map = build_task_map(tasks)
+          in_degree = {}
+          dependents = {}
+
+          # Initialize in-degree and dependents map
           tasks.each do |task|
-            if dependencies_met?(task, tasks)
-              ready_tasks << task
-            else
-              blocked_tasks << task
+            task_id = task[:id]
+            in_degree[task_id] = 0
+            dependents[task_id] = []
+          end
+
+          # Calculate in-degrees and build dependents map
+          tasks.each do |task|
+            next unless task[:dependencies]
+
+            task[:dependencies].each do |dep_id|
+              normalized_dep = normalize_id(dep_id)
+              dep_task = task_map[normalized_dep]
+              next unless dep_task
+
+              in_degree[task[:id]] += 1
+              dependents[normalized_dep] << task[:id]
             end
           end
 
-          # Sort each group using existing sort logic
-          ready_sorted = apply_standard_sort(ready_tasks, sort_by, ascending)
-          blocked_sorted = apply_standard_sort(blocked_tasks, sort_by, ascending)
+          # Group tasks by levels
+          levels = []
+          processed = Set.new
 
-          # Return ready tasks first, then blocked tasks
-          ready_sorted + blocked_sorted
+          while processed.size < tasks.size
+            # Find all tasks with in-degree 0 that haven't been processed
+            current_level = []
+
+            tasks.each do |task|
+              next if processed.include?(task[:id])
+              next unless in_degree[task[:id]] == 0
+
+              current_level << task
+              processed.add(task[:id])
+            end
+
+            # If no tasks can be added, we have a cycle or disconnected tasks
+            if current_level.empty?
+              # Add remaining tasks as a final level
+              remaining = tasks.select { |t| !processed.include?(t[:id]) }
+              levels << remaining unless remaining.empty?
+              break
+            end
+
+            levels << current_level
+
+            # Reduce in-degree for dependent tasks
+            current_level.each do |task|
+              dependents[task[:id]].each do |dependent_id|
+                in_degree[dependent_id] -= 1
+              end
+            end
+          end
+
+          levels
         end
 
         # Check for circular dependencies
@@ -166,6 +225,12 @@ module Ace
             # Also map by task number for flexible reference
             if task[:task_number]
               map[task[:task_number]] = task
+              # Also map with "task." prefix for compatibility
+              map["task.#{task[:task_number]}"] = task
+            end
+            # Extract and map just the numeric part
+            if task[:id] && match = task[:id].match(/task\.(\d+)$/)
+              map["task.#{match[1]}"] = task
             end
           end
         end
