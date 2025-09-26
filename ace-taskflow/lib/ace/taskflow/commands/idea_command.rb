@@ -5,6 +5,7 @@ require_relative "../molecules/config_loader"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/idea_loader"
 require_relative "../models/idea"
+require 'stringio'
 
 module Ace
   module Taskflow
@@ -49,14 +50,32 @@ module Ace
         private
 
         def show_next_idea(args)
-          context = parse_context(args)
-          idea = @idea_loader.find_next(context: context)
+          # Use ideas command with limit 1 to get the next idea
+          require_relative "ideas_command"
+          ideas_cmd = IdeasCommand.new
 
-          if idea
-            display_idea(idea)
-          else
-            puts "No ideas found in #{context_name(context)}."
-            puts "Use 'ace-taskflow idea create' to capture a new idea."
+          # Add --limit 1 to args for single idea display
+          modified_args = args + ["--limit", "1"]
+
+          # Capture output to process it
+          original_stdout = $stdout
+          output = StringIO.new
+          $stdout = output
+
+          begin
+            ideas_cmd.execute(modified_args)
+            result = output.string
+
+            # Check if no ideas were found
+            if result.include?("No ideas found")
+              puts "No ideas found in current release."
+              puts "Use 'ace-taskflow idea create' to capture a new idea."
+            else
+              # Show the output from ideas command
+              puts result
+            end
+          ensure
+            $stdout = original_stdout
           end
         end
 

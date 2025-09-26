@@ -54,46 +54,6 @@ module Ace
           end
         end
 
-        def execute_with_preset(preset_name, remaining_args)
-          # Parse additional filters from remaining args
-          additional_filters = parse_additional_filters(remaining_args)
-
-          # Check for stats only (other formatters handled after filtering)
-          if additional_filters[:stats]
-            show_statistics_for_preset(preset_name)
-            return
-          end
-
-          # Apply preset with additional filters
-          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return unless preset_config
-
-          # Get tasks based on preset configuration
-          tasks = get_tasks_for_preset(preset_config)
-
-          # Sort tasks according to preset
-          tasks = apply_preset_sorting(tasks, preset_config)
-
-          # Apply limit if specified
-          original_count = tasks.size
-          if additional_filters[:limit] && additional_filters[:limit] > 0
-            tasks = tasks.take(additional_filters[:limit])
-          end
-
-          # Display tasks with appropriate formatter
-          if tasks.empty?
-            puts "No tasks found for preset '#{preset_name}'."
-          elsif additional_filters[:tree]
-            display_tree_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:path]
-            display_paths_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:list]
-            display_list_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          else
-            display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          end
-        end
-
         def parse_additional_filters(args)
           filters = {}
 
@@ -277,20 +237,6 @@ module Ace
 
           context = preset_config[:context] || 'current'
           puts @stats_formatter.format_stats_view(context: context)
-        end
-
-
-          # Group by context if showing all
-          if options[:all]
-            grouped = tasks.group_by { |t| t[:context] }
-            grouped.each do |context, context_tasks|
-              puts ""
-              puts "#{context}:"
-              context_tasks.each { |task| display_task_line(task) }
-            end
-          else
-            tasks.each { |task| display_task_line(task) }
-          end
         end
 
         def display_task_line(task_data)
@@ -561,56 +507,6 @@ module Ace
         def display_list_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
           context = preset_config[:context] || 'current'
-          header = @stats_formatter.format_header(
-            command_type: :tasks,
-            displayed_count: tasks.size,
-            context: context
-          )
-          puts header
-
-          tasks.each do |task|
-            ref = task[:task_number] || task[:id]
-            puts "#{ref} #{task[:title]}"
-          end
-        end
-
-        # Formatter methods for legacy context
-        def display_task_paths(tasks, options)
-          # Display three-line header
-          context = if options[:all]
-                     "all"
-                   elsif options[:backlog]
-                     "backlog"
-                   elsif options[:release]
-                     options[:release]
-                   else
-                     "current"
-                   end
-
-          header = @stats_formatter.format_header(
-            command_type: :tasks,
-            displayed_count: tasks.size,
-            context: context
-          )
-          puts header
-
-          tasks.each do |task|
-            puts task[:path] if task[:path]
-          end
-        end
-
-        def display_task_list(tasks, options)
-          # Display three-line header
-          context = if options[:all]
-                     "all"
-                   elsif options[:backlog]
-                     "backlog"
-                   elsif options[:release]
-                     options[:release]
-                   else
-                     "current"
-                   end
-
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
