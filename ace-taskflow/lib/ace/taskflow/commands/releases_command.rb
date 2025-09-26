@@ -2,6 +2,7 @@
 
 require_relative "../organisms/release_manager"
 require_relative "../molecules/list_preset_manager"
+require_relative "../molecules/stats_formatter"
 require_relative "../models/release"
 
 module Ace
@@ -12,6 +13,7 @@ module Ace
         def initialize
           @manager = Organisms::ReleaseManager.new
           @preset_manager = Molecules::ListPresetManager.new
+          @stats_formatter = Molecules::StatsFormatter.new
         end
 
         def execute(args)

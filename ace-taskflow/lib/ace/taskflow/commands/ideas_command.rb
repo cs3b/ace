@@ -2,6 +2,7 @@
 
 require_relative "../molecules/idea_loader"
 require_relative "../molecules/list_preset_manager"
+require_relative "../molecules/stats_formatter"
 require_relative "../models/idea"
 
 module Ace
@@ -12,6 +13,7 @@ module Ace
           @root_path = Molecules::ConfigLoader.find_root
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
           @preset_manager = Molecules::ListPresetManager.new
+          @stats_formatter = Molecules::StatsFormatter.new(@root_path)
         end
 
         def execute(args)
@@ -162,16 +164,14 @@ module Ace
         end
 
         def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil)
-          preset_name = preset_config[:name]
-          description = preset_config[:description]
-
-          if limit && original_count && original_count > limit
-            puts "Ideas: #{preset_name} (showing #{ideas.size} of #{original_count} found)"
-          else
-            puts "Ideas: #{preset_name} (#{ideas.size} found)"
-          end
-          puts description if description && description != "#{preset_name} preset"
-          puts "=" * 50
+          # Display three-line header
+          context = preset_config[:context] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :ideas,
+            displayed_count: ideas.size,
+            context: context
+          )
+          puts header
 
           # Check if grouping is needed
           display_config = preset_config[:display] || {}
@@ -192,12 +192,8 @@ module Ace
           preset_config = @preset_manager.apply_preset(preset_name)
           return unless preset_config
 
-          puts "Ideas Statistics for '#{preset_name}' preset:"
-          puts preset_config[:description] if preset_config[:description]
-          puts "=" * 50
-
-          # Use existing statistics logic
-          show_statistics
+          context = preset_config[:context] || 'current'
+          puts @stats_formatter.format_stats_view(context: context)
         end
 
         def parse_options(args)
@@ -275,8 +271,13 @@ module Ace
           if all_ideas.empty?
             puts "No ideas found across all releases and backlog"
           else
-            puts "All Ideas (#{all_ideas.length} total):"
-            puts "=" * 60
+            # Display three-line header for all ideas
+            header = @stats_formatter.format_header(
+              command_type: :ideas,
+              displayed_count: all_ideas.length,
+              context: 'all'
+            )
+            puts header
 
             # Group by context
             grouped = all_ideas.group_by { |idea| idea[:release] }
@@ -292,8 +293,25 @@ module Ace
         end
 
         def display_ideas_list(ideas, context_name, verbose)
-          puts "Ideas in #{context_name} (#{ideas.length} total):"
-          puts "=" * 60
+          # Display three-line header
+          # Determine context from context_name
+          context = case context_name
+                   when /^Release v\.\d+\.\d+\.\d+/
+                     context_name.sub('Release ', '')
+                   when 'Current Release'
+                     'current'
+                   when 'Backlog'
+                     'backlog'
+                   else
+                     context_name
+                   end
+
+          header = @stats_formatter.format_header(
+            command_type: :ideas,
+            displayed_count: ideas.size,
+            context: context
+          )
+          puts header
 
           ideas.each do |idea|
             display_idea_line(idea, verbose)
@@ -347,25 +365,8 @@ module Ace
         end
 
         def show_statistics
-          counts = @idea_loader.count_by_context
-          total = counts.values.sum
-
-          puts "Ideas Statistics:"
-          puts "=" * 60
-          puts "Total ideas: #{total}"
-          puts ""
-          puts "By context:"
-
-          # Sort with active releases first, then backlog
-          sorted_counts = counts.sort_by do |context, _count|
-            context == "backlog" ? "zzz" : context
-          end
-
-          sorted_counts.each do |context, count|
-            next if count == 0
-            bar = "█" * [count, 50].min
-            puts "  #{context.ljust(15)} #{count.to_s.rjust(3)} #{bar}"
-          end
+          # Use the new stats formatter for all contexts
+          puts @stats_formatter.format_stats_view(context: 'all')
         end
 
         def context_name(context)
