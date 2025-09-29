@@ -1,0 +1,8 @@
+# Example configuration for ace-test-support
+helpers:
+  enabled: true
+  path: ./test/support
+
+fixtures:
+  enabled: true
+  path: ./test/fixtures
