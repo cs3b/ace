@@ -19,10 +19,23 @@ module Ace
           idea_dir = determine_idea_directory(context)
           return [] unless idea_dir && Dir.exist?(idea_dir)
 
-          Dir.glob(File.join(idea_dir, "*.md"))
+          # Load ideas from main ideas/ directory
+          main_ideas = Dir.glob(File.join(idea_dir, "*.md"))
             .sort
             .map { |path| load_idea_file(path, include_content) }
             .compact
+
+          # Also load ideas from done/ subdirectory
+          done_dir = File.join(idea_dir, "done")
+          if Dir.exist?(done_dir)
+            done_ideas = Dir.glob(File.join(done_dir, "*.md"))
+              .sort
+              .map { |path| load_idea_file(path, include_content) }
+              .compact
+            main_ideas.concat(done_ideas)
+          end
+
+          main_ideas
         end
 
         def find_next(context: "current")
@@ -165,7 +178,15 @@ module Ace
 
         def count_ideas_in_directory(dir)
           return 0 unless Dir.exist?(dir)
-          Dir.glob(File.join(dir, "*.md")).count
+
+          # Count ideas in main directory
+          main_count = Dir.glob(File.join(dir, "*.md")).count
+
+          # Also count ideas in done/ subdirectory
+          done_dir = File.join(dir, "done")
+          done_count = Dir.exist?(done_dir) ? Dir.glob(File.join(done_dir, "*.md")).count : 0
+
+          main_count + done_count
         end
       end
     end

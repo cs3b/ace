@@ -31,6 +31,10 @@ module Ace
             show_next_idea(args)
           when "create"
             create_idea(args)
+          when "done"
+            mark_idea_done(args)
+          when "reschedule"
+            reschedule_idea(args)
           when "to-task"
             convert_idea_to_task(args)
           when "archive"
@@ -269,6 +273,86 @@ module Ace
           exit 0
         end
 
+        def reschedule_idea(args)
+          reference = args.shift
+
+          unless reference
+            puts "Usage: ace-taskflow idea reschedule <reference> [options]"
+            puts "Options:"
+            puts "  --add-next         Place before other pending ideas"
+            puts "  --add-at-end       Place after all ideas"
+            puts "  --after <ref>      Place after specific idea"
+            puts "  --before <ref>     Place before specific idea"
+            exit 1
+          end
+
+          # Parse options
+          options = {}
+          i = 0
+          while i < args.length
+            case args[i]
+            when "--add-next"
+              options[:add_next] = true
+              i += 1
+            when "--add-at-end"
+              options[:add_at_end] = true
+              i += 1
+            when "--after"
+              options[:after] = args[i + 1]
+              i += 2
+            when "--before"
+              options[:before] = args[i + 1]
+              i += 2
+            else
+              i += 1
+            end
+          end
+
+          # Reschedule the idea
+          require_relative "../organisms/idea_scheduler"
+          scheduler = Organisms::IdeaScheduler.new(@root_path)
+          result = scheduler.reschedule(reference, options)
+
+          if result[:success]
+            puts result[:message]
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
+        def mark_idea_done(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow idea done <reference>"
+            puts "Example: ace-taskflow idea done implement-caching"
+            exit 1
+          end
+
+          # Find the idea
+          context = parse_context(args[1..-1] || [])
+          idea = @idea_loader.find_by_partial_name(reference, context: context)
+
+          unless idea
+            puts "No idea found matching '#{reference}' in #{context_name(context)}."
+            exit 1
+          end
+
+          # Move idea to done
+          require_relative "../molecules/idea_directory_mover"
+          mover = Molecules::IdeaDirectoryMover.new
+          result = mover.move_to_done(idea[:path])
+
+          if result[:success]
+            puts "Idea '#{reference}' marked as done and moved to done/"
+            puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
 
         def show_help
           puts "Usage: ace-taskflow idea [subcommand] [options]"
@@ -283,6 +367,12 @@ module Ace
           puts "    --no-git-commit     Don't commit (overrides config)"
           puts "    --llm-enhance, -llm Enhance with LLM suggestions"
           puts "    --no-llm-enhance    Don't enhance (overrides config)"
+          puts "  done <reference>   Mark idea as done and move to done/"
+          puts "  reschedule <ref>   Reorder idea position"
+          puts "    --add-next       Place before other pending ideas"
+          puts "    --add-at-end     Place after all ideas"
+          puts "    --after <ref>    Place after specific idea"
+          puts "    --before <ref>   Place before specific idea"
           puts "  to-task <id>       Convert idea to task"
           puts "  archive <id>       Archive an idea"
           puts ""

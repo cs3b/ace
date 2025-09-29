@@ -6,6 +6,7 @@ require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/dependency_tree_visualizer"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/task"
+require_relative "../atoms/path_formatter"
 
 module Ace
   module Taskflow
@@ -270,20 +271,8 @@ module Ace
         end
 
         def format_relative_path(path)
-          # Make path relative to project root
           root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
-          relative = path.sub(/^#{Regexp.escape(root_path)}\/?/, "")
-
-          # Truncate if too long
-          max_length = 70
-          if relative.length > max_length
-            # Keep the beginning and end, truncate middle
-            start_length = 35
-            end_length = 32
-            "#{relative[0...start_length]}...#{relative[-end_length..]}"
-          else
-            relative
-          end
+          Atoms::PathFormatter.format_display_path(path, root_path, max_length: 70)
         end
 
 
@@ -505,8 +494,12 @@ module Ace
           )
           puts header
 
+          root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
           tasks.each do |task|
-            puts task[:path] if task[:path]
+            if task[:path]
+              relative_path = Atoms::PathFormatter.format_relative_path(task[:path], root_path)
+              puts relative_path
+            end
           end
         end
 

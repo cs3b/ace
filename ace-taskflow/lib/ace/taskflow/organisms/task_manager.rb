@@ -135,11 +135,38 @@ module Ace
           update_task_status(reference, "in-progress")
         end
 
-        # Mark task as done
+        # Mark task as done and move to done/
         # @param reference [String] Task reference
         # @return [Hash] Result with :success and :message
         def complete_task(reference)
-          update_task_status(reference, "done")
+          task = @task_loader.find_task_by_reference(reference)
+          unless task
+            return { success: false, message: "Task #{reference} not found" }
+          end
+
+          # Update status first
+          status_result = update_task_status(reference, "done")
+          unless status_result[:success]
+            return status_result
+          end
+
+          # Move task to done directory
+          require_relative "../molecules/task_directory_mover"
+          mover = Molecules::TaskDirectoryMover.new
+          move_result = mover.move_to_done(task[:path])
+
+          if move_result[:success]
+            {
+              success: true,
+              message: "Task #{reference} marked as done and moved to done/"
+            }
+          else
+            # Status was updated but move failed
+            {
+              success: true,
+              message: "Task #{reference} marked as done (move to done/ failed: #{move_result[:message]})"
+            }
+          end
         end
 
         # Add dependency to a task
