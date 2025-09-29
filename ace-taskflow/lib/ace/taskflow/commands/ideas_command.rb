@@ -4,6 +4,7 @@ require_relative "../molecules/idea_loader"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/idea"
+require_relative "../atoms/path_formatter"
 
 module Ace
   module Taskflow
@@ -235,33 +236,9 @@ module Ace
         end
 
         def format_relative_path(path)
-          # Make path relative to project root
-          root_path = Molecules::ConfigLoader.find_root
-          relative = path.sub(/^#{Regexp.escape(root_path)}\//, "")
-
-          # Truncate if too long
-          max_length = 68
-          if relative.length > max_length
-            # Smart truncation for .ace-taskflow paths
-            if relative.start_with?(".ace-taskflow/")
-              parts = relative.split("/")
-              if parts.length >= 4
-                # .ace-taskflow/release/subfolder/filename.md
-                prefix = parts[0..2].join("/")  # .ace-taskflow/v.0.9.0/ideas
-                filename = parts[-1]
-                if filename.length > 35
-                  filename = "#{filename[0..15]}...#{filename[-15..]}"
-                end
-                "#{prefix}/#{filename}"
-              else
-                relative[0..67]
-              end
-            else
-              "#{relative[0...32]}...#{relative[-32..]}"
-            end
-          else
-            relative
-          end
+          # Use project root, not .ace-taskflow root
+          root_path = Dir.pwd
+          Atoms::PathFormatter.format_display_path(path, root_path, max_length: 68)
         end
 
 

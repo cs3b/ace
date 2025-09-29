@@ -1,6 +1,6 @@
 ---
 # Prompt Sources Protocol Configuration for ace-git-commit gem
-# Copy this file to .ace/protocols/prompt-sources/ to enable
+# This enables prompt discovery from the installed ace-git-commit gem
 
 name: ace-git-commit
 type: gem

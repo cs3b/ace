@@ -1,6 +1,6 @@
 ---
 # WFI Sources Protocol Configuration for ace-git-commit gem
-# Copy this file to .ace/protocols/wfi-sources/ to enable
+# This enables workflow discovery from the installed ace-git-commit gem
 
 name: ace-git-commit
 type: gem
