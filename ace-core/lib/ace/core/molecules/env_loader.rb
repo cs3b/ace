@@ -99,6 +99,29 @@ module Ace
           existing = env_files.select { |f| File.exist?(f) }
           load_multiple(*existing, overwrite: false) unless existing.empty?
         end
+
+        # Load .env files from cascade without setting ENV
+        # @param search_paths [Array<String>, nil] Optional search paths
+        # @return [Hash] Merged variables from all .env files
+        def self.load_cascade(search_paths: nil)
+          require_relative "../config_discovery"
+
+          discovery = ConfigDiscovery.new(start_path: search_paths&.first)
+          merged_vars = {}
+
+          # Find all .env files in cascade (returns in priority order)
+          env_files = discovery.find_all_config_files(".env")
+
+          # Load each file and merge (later files override earlier)
+          env_files.reverse_each do |filepath|
+            next unless File.exist?(filepath)
+
+            file_vars = load_file(filepath)
+            merged_vars.merge!(file_vars) if file_vars && !file_vars.empty?
+          end
+
+          merged_vars
+        end
       end
     end
   end
