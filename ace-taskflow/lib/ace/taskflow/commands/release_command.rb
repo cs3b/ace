@@ -25,6 +25,8 @@ module Ace
             promote_release(args)
           when "demote"
             demote_release(args)
+          when "reschedule"
+            reschedule_release(args)
           when "validate"
             validate_release(args)
           when "changelog"
@@ -140,6 +142,46 @@ module Ace
           end
         end
 
+        def reschedule_release(args)
+          reference = args.shift
+
+          unless reference
+            puts "Usage: ace-taskflow release reschedule <reference> [options]"
+            puts "Options:"
+            puts "  --status <value>           Update release status"
+            puts "  --target-date <YYYY-MM-DD> Update target completion date"
+            exit 1
+          end
+
+          # Parse options
+          options = {}
+          i = 0
+          while i < args.length
+            case args[i]
+            when "--status"
+              options[:status] = args[i + 1]
+              i += 2
+            when "--target-date"
+              options[:target_date] = args[i + 1]
+              i += 2
+            else
+              i += 1
+            end
+          end
+
+          # Reschedule the release
+          require_relative "../organisms/release_scheduler"
+          scheduler = Organisms::ReleaseScheduler.new
+          result = scheduler.reschedule(reference, options)
+
+          if result[:success]
+            puts result[:message]
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
         def demote_release(args)
           # Parse options
           name = nil
@@ -246,6 +288,9 @@ module Ace
           puts "  promote [<name>]          Promote release from backlog to active"
           puts "  demote [<name>]           Demote release from active to done"
           puts "    --to backlog            Demote to backlog instead of done"
+          puts "  reschedule <ref> [opts]   Update release metadata"
+          puts "    --status <value>        Update release status"
+          puts "    --target-date <date>    Update target date (YYYY-MM-DD)"
           puts "  validate [<name>]         Validate release for completion"
           puts "  changelog [<name>]        Generate changelog for release"
           puts ""

@@ -58,9 +58,9 @@ module Ace
 
           return tasks unless File.directory?(task_dir)
 
-          # Iterate through task directories
+          # Iterate through task directories in main t/ directory
           # Supports both old format (t/001/) and new format (t/001-feat-taskflow/)
-          Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
+          Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "done" }.each do |task_folder|
             # Find .md files in the task folder (not in subfolders)
             md_files = Dir.glob(File.join(task_folder, "*.md"))
 
@@ -72,6 +72,25 @@ module Ace
             if task_file
               task_data = load_task(task_file)
               tasks << task_data if task_data
+            end
+          end
+
+          # Also load tasks from done/ subdirectory
+          done_dir = File.join(task_dir, "done")
+          if File.directory?(done_dir)
+            Dir.glob(File.join(done_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
+              # Find .md files in the task folder
+              md_files = Dir.glob(File.join(task_folder, "*.md"))
+
+              # Find the task file - the one with YAML frontmatter containing task metadata
+              task_file = md_files.find do |file|
+                has_task_frontmatter?(file)
+              end
+
+              if task_file
+                task_data = load_task(task_file)
+                tasks << task_data if task_data
+              end
             end
           end
 
@@ -264,7 +283,8 @@ module Ace
           task_base = File.join(context_path, "t")
           padded_number = number.to_s.rjust(3, '0')
 
-          # First try old format (just the number)
+          # First try in main t/ directory
+          # Try old format (just the number)
           old_format_dir = File.join(task_base, padded_number)
           return old_format_dir if File.directory?(old_format_dir)
 
@@ -274,9 +294,26 @@ module Ace
           matching_dirs = Dir.glob(pattern).select { |d| File.directory?(d) }
           return matching_dirs.first unless matching_dirs.empty?
 
-          # Finally try unpadded number for compatibility
+          # Try unpadded number for compatibility
           unpadded_dir = File.join(task_base, number.to_s)
           return unpadded_dir if File.directory?(unpadded_dir)
+
+          # Now try in done/ subdirectory
+          done_base = File.join(task_base, "done")
+          if File.directory?(done_base)
+            # Try old format in done/
+            old_format_done_dir = File.join(done_base, padded_number)
+            return old_format_done_dir if File.directory?(old_format_done_dir)
+
+            # Try new format in done/
+            done_pattern = File.join(done_base, "#{padded_number}-*")
+            done_matching_dirs = Dir.glob(done_pattern).select { |d| File.directory?(d) }
+            return done_matching_dirs.first unless done_matching_dirs.empty?
+
+            # Try unpadded in done/
+            unpadded_done_dir = File.join(done_base, number.to_s)
+            return unpadded_done_dir if File.directory?(unpadded_done_dir)
+          end
 
           nil
         end
