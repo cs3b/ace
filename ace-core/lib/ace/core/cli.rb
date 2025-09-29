@@ -1,51 +1,96 @@
 # frozen_string_literal: true
 
-require "thor"
+require "optparse"
 require_relative "organisms/config_initializer"
 require_relative "organisms/config_diff"
+require_relative "models/config_templates"
 
 module Ace
   module Core
-    class CLI < Thor
-      desc "init [GEM]", "Initialize configuration for specific gem or all"
-      option :force, type: :boolean, desc: "Overwrite existing files"
-      option :dry_run, type: :boolean, desc: "Show what would be done"
-      option :global, type: :boolean, desc: "Use ~/.ace instead of ./.ace"
-      option :verbose, type: :boolean, desc: "Show detailed output"
-      def init(gem = nil)
-        initializer = ConfigInitializer.new(
-          force: options[:force],
-          dry_run: options[:dry_run],
-          global: options[:global],
-          verbose: options[:verbose]
-        )
+    class CLI
+      def self.start(argv)
+        new.run(argv)
+      end
 
-        if gem
-          initializer.init_gem(gem)
+      def run(argv)
+        return show_help if argv.empty?
+
+        command = argv.shift
+
+        case command
+        when "init"
+          run_init(argv)
+        when "diff"
+          run_diff(argv)
+        when "list"
+          run_list(argv)
+        when "version", "--version", "-v"
+          show_version
+        when "help", "--help", "-h"
+          show_help
+        else
+          puts "Unknown command: #{command}"
+          puts ""
+          show_help
+          exit 1
+        end
+      end
+
+      private
+
+      def run_init(argv)
+        options = {}
+        gem_name = nil
+
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: ace-framework init [GEM] [options]"
+          opts.on("--force", "Overwrite existing files") { options[:force] = true }
+          opts.on("--dry-run", "Show what would be done") { options[:dry_run] = true }
+          opts.on("--global", "Use ~/.ace instead of ./.ace") { options[:global] = true }
+          opts.on("--verbose", "Show detailed output") { options[:verbose] = true }
+          opts.on("-h", "--help", "Show this help") { puts opts; exit }
+        end
+
+        parser.parse!(argv)
+        gem_name = argv.shift
+
+        initializer = ConfigInitializer.new(**options)
+
+        if gem_name
+          initializer.init_gem(gem_name)
         else
           initializer.init_all
         end
       end
 
-      desc "diff", "Compare configs with examples"
-      option :global, type: :boolean, desc: "Compare global configs"
-      option :local, type: :boolean, desc: "Compare local configs (default)"
-      option :file, type: :string, desc: "Compare specific file"
-      option :one_line, type: :boolean, desc: "One-line summary per file"
-      def diff
-        differ = ConfigDiff.new(
-          global: options[:global],
-          file: options[:file],
-          one_line: options[:one_line]
-        )
+      def run_diff(argv)
+        options = {}
 
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: ace-framework diff [options]"
+          opts.on("--global", "Compare global configs") { options[:global] = true }
+          opts.on("--local", "Compare local configs (default)") { options[:local] = true }
+          opts.on("--file PATH", "Compare specific file") { |f| options[:file] = f }
+          opts.on("--one-line", "One-line summary per file") { options[:one_line] = true }
+          opts.on("-h", "--help", "Show this help") { puts opts; exit }
+        end
+
+        parser.parse!(argv)
+
+        differ = ConfigDiff.new(**options)
         differ.run
       end
 
-      desc "list", "List available ace-* gems with example configs"
-      option :verbose, type: :boolean, desc: "Show detailed information"
-      def list
-        require_relative "models/config_templates"
+      def run_list(argv)
+        verbose = false
+
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: ace-framework list [options]"
+          opts.on("--verbose", "Show detailed information") { verbose = true }
+          opts.on("-h", "--help", "Show this help") { puts opts; exit }
+        end
+
+        parser.parse!(argv)
 
         puts "Available ace-* gems with example configurations:\n\n"
 
@@ -64,11 +109,11 @@ module Ace
 
           puts "  #{gem_name} #{source_label}"
 
-          if options[:verbose]
+          if verbose
             puts "    Path: #{info[:path]}"
             puts "    Gem: #{info[:gem_path]}" if info[:gem_path]
             example_dir = ConfigTemplates.example_dir_for(gem_name)
-            if File.exist?(example_dir)
+            if example_dir && File.exist?(example_dir)
               example_files = Dir.glob("#{example_dir}/**/*").reject { |f| File.directory?(f) }
               puts "    Example files: #{example_files.size}"
             end
@@ -79,9 +124,23 @@ module Ace
         puts "Use 'ace-framework init' to initialize all configurations"
       end
 
-      desc "version", "Show version"
-      def version
+      def show_version
         puts "ace-framework #{Ace::Core::VERSION}"
+      end
+
+      def show_help
+        puts "ace-framework - Configuration management for ace-* gems"
+        puts ""
+        puts "Usage: ace-framework COMMAND [options]"
+        puts ""
+        puts "Commands:"
+        puts "  init [GEM]    Initialize configuration for specific gem or all"
+        puts "  diff          Compare configs with examples"
+        puts "  list          List available ace-* gems with example configs"
+        puts "  version       Show version"
+        puts "  help          Show this help"
+        puts ""
+        puts "Run 'ace-framework COMMAND --help' for more information on a command."
       end
     end
   end
