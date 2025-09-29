@@ -6,20 +6,20 @@ module Ace
       # EnvReader provides environment variable reading utilities
       # This is an atom - it has no dependencies on other parts of this gem
       class EnvReader
-        # Load .env files from .ace cascade and optionally set to ENV
-        # Following ace patterns, searches for .env in:
-        # - ./.ace/llm/.env (current project)
-        # - ../.ace/llm/.env (parent dirs up to root)
-        # - ~/.ace/llm/.env (user home)
-        # - ./.ace/.env (fallback)
-        # - ~/.ace/.env (fallback)
-        # @param set_env [Boolean] Whether to set loaded vars to ENV (default: false for clean isolation)
+        # [DEPRECATED] Use Ace::Core.get_env instead
+        # Load .env files from .ace cascade
+        # @deprecated Use Ace::Core.get_env for individual keys
+        # @param set_env [Boolean] Whether to set loaded vars to ENV
         # @return [Hash] All loaded environment variables
         def self.load_env_cascade(set_env: false)
-          loaded_vars = load_env_cascade_without_setting
+          return {} unless defined?(Ace::Core)
 
-          if set_env && defined?(Ace::Core)
-            # Only set to ENV if explicitly requested
+          warn "[DEPRECATION] EnvReader.load_env_cascade is deprecated. Use Ace::Core.get_env instead" if ENV["DEBUG"]
+
+          # Delegate to ace-core
+          loaded_vars = Ace::Core::Molecules::EnvLoader.load_cascade
+
+          if set_env
             Ace::Core::Molecules::EnvLoader.set_environment(loaded_vars, overwrite: true)
           end
 
@@ -109,7 +109,7 @@ module Ace
         end
 
         # Get API key for a provider from environment
-        # First checks ENV, then loads from .ace/.env cascade if needed
+        # Uses ace-core to check ENV and .ace/.env cascade
         # @param provider [String] Provider name (e.g., "google", "openai")
         # @return [String, nil] API key if found
         def self.get_api_key(provider)
@@ -132,61 +132,15 @@ module Ace
             ["#{provider.upcase}_API_KEY"]
           end
 
-          # First check ENV for any of the keys
-          key_names.each do |key_name|
-            value = ENV[key_name]
-            return value if value && !value.strip.empty?
-          end
+          # Use ace-core to check each key (it checks ENV first, then cascade)
+          return nil unless defined?(Ace::Core)
 
-          # If not in ENV, load from .ace/.env cascade (without polluting ENV)
-          loaded_vars = load_env_cascade_without_setting
-
-          # Check loaded vars for any of the keys
           key_names.each do |key_name|
-            value = loaded_vars[key_name]
+            value = Ace::Core.get_env(key_name)
             return value if value && !value.strip.empty?
           end
 
           nil
-        end
-
-        # Load .env files from cascade without setting ENV
-        # This is used internally for on-demand key loading
-        # @return [Hash] Loaded environment variables
-        def self.load_env_cascade_without_setting
-          return {} unless defined?(Ace::Core)
-
-          loaded_vars = {}
-
-          begin
-            # Find all .env files in cascade
-            discovery = Ace::Core::ConfigDiscovery.new
-
-            # Look for llm-specific env files first
-            llm_env_files = discovery.find_all_config_files("llm/.env")
-
-            # Also check for general .ace/.env as fallback
-            general_env_files = discovery.find_all_config_files(".env")
-
-            # Combine and deduplicate (llm-specific takes precedence)
-            all_files = (general_env_files + llm_env_files).uniq
-
-            # Load files (later files override earlier ones)
-            all_files.each do |file|
-              next unless File.exist?(file)
-              vars = Ace::Core::Molecules::EnvLoader.load_file(file)
-              loaded_vars.merge!(vars) if vars
-            end
-
-            loaded_vars
-          rescue LoadError
-            # ace-core not available, skip .env loading
-            {}
-          rescue => e
-            # Log warning but don't fail
-            warn "Warning: Failed to load .env files: #{e.message}" if ENV["DEBUG"]
-            {}
-          end
         end
       end
     end

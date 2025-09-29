@@ -49,6 +49,34 @@ module Ace
       def environment(root: Dir.pwd)
         Organisms::EnvironmentManager.new(root_path: root)
       end
+
+      # Get environment variable from cascade without polluting ENV
+      # First checks ENV, then loads from .ace/.env cascade
+      # @param key [String] Environment variable name
+      # @param default [Object] Default value if not found
+      # @return [String, Object] Variable value or default
+      def get_env(key, default = nil)
+        # Check ENV first for already-set variables
+        return ENV[key] if ENV.key?(key) && !ENV[key].to_s.empty?
+
+        # Load from cascade (cached for performance)
+        cascade_vars[key] || default
+      end
+
+      # Clear the cascade cache (useful for testing or reloading)
+      def clear_env_cache
+        @cascade_vars = nil
+      end
+
+      private
+
+      # Cached cascade variables
+      def cascade_vars
+        @cascade_vars ||= begin
+          require_relative "core/molecules/env_loader"
+          Molecules::EnvLoader.load_cascade
+        end
+      end
     end
   end
 end
