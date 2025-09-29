@@ -1,0 +1,249 @@
+#!/usr/bin/env bash
+
+# setup-ace-config
+#
+# Sets up ACE configuration by copying example configs from all ace-* gems
+# to the project's .ace directory
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+ACE_DIR=".ace"
+BACKUP_DIR=".ace.backup.$(date +%Y%m%d-%H%M%S)"
+VERBOSE=${VERBOSE:-false}
+
+# Print colored output
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[✓]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[!]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[✗]${NC} $1"
+}
+
+# Check if we're in the right directory
+check_project_root() {
+    if [ ! -f "Gemfile" ] || [ ! -d "ace-core" ]; then
+        print_error "This script must be run from the ace-meta project root"
+        print_info "Current directory: $(pwd)"
+        exit 1
+    fi
+}
+
+# Backup existing configuration
+backup_existing() {
+    if [ -d "$ACE_DIR" ] && [ "$(ls -A $ACE_DIR 2>/dev/null)" ]; then
+        print_info "Backing up existing configuration to $BACKUP_DIR"
+        cp -r "$ACE_DIR" "$BACKUP_DIR"
+        print_success "Backup created at $BACKUP_DIR"
+    fi
+}
+
+# Create .ace directory structure
+create_structure() {
+    print_info "Creating .ace directory structure..."
+    mkdir -p "$ACE_DIR"
+}
+
+# Copy example configs from a gem
+copy_gem_config() {
+    local gem_name="$1"
+    local example_dir="${gem_name}/ace.example"
+
+    if [ -d "$example_dir" ]; then
+        print_info "Copying configuration from $gem_name"
+
+        # Use rsync if available for better control, otherwise use cp
+        if command -v rsync &> /dev/null; then
+            rsync -av --exclude='*.md' "$example_dir/" "$ACE_DIR/" > /dev/null 2>&1
+        else
+            cp -r "$example_dir"/* "$ACE_DIR/" 2>/dev/null || true
+        fi
+
+        print_success "  Copied $gem_name configuration"
+
+        # List what was copied if verbose
+        if [ "$VERBOSE" = "true" ]; then
+            find "$example_dir" -type f -name "*.yml" -o -name "*.yaml" | while read -r file; do
+                rel_path="${file#$example_dir/}"
+                echo "    - $rel_path"
+            done
+        fi
+    else
+        [ "$VERBOSE" = "true" ] && print_warning "  No example config found for $gem_name"
+    fi
+}
+
+# Copy all gem configurations
+copy_all_configs() {
+    print_info "Copying example configurations from all ace-* gems..."
+
+    local gem_count=0
+    for gem_dir in ace-*/; do
+        if [ -d "${gem_dir}ace.example" ]; then
+            copy_gem_config "${gem_dir%/}"
+            ((gem_count++))
+        fi
+    done
+
+    if [ $gem_count -eq 0 ]; then
+        print_warning "No ace.example directories found in any gems"
+        print_info "You may need to set up example configs first"
+    else
+        print_success "Copied configurations from $gem_count gems"
+    fi
+}
+
+# Verify configuration structure
+verify_structure() {
+    print_info "Verifying configuration structure..."
+
+    local required_files=(
+        "core/settings.yml"
+        "git/commit.yml"
+        "test/runner.yml"
+    )
+
+    local missing=0
+    for file in "${required_files[@]}"; do
+        if [ -f "$ACE_DIR/$file" ]; then
+            [ "$VERBOSE" = "true" ] && print_success "  Found $file"
+        else
+            print_warning "  Missing $file"
+            ((missing++))
+        fi
+    done
+
+    if [ $missing -eq 0 ]; then
+        print_success "All essential configurations are present"
+    else
+        print_warning "$missing essential configuration(s) missing"
+        print_info "Some gems may not have example configs yet"
+    fi
+}
+
+# Show configuration summary
+show_summary() {
+    print_info "Configuration Summary:"
+    echo ""
+    echo "  Configuration directory: $ACE_DIR"
+
+    # Count config files
+    local yml_count=$(find "$ACE_DIR" -name "*.yml" -o -name "*.yaml" 2>/dev/null | wc -l)
+    local md_count=$(find "$ACE_DIR" -name "*.md" 2>/dev/null | wc -l)
+
+    echo "  YAML configs: $yml_count"
+    echo "  Markdown presets: $md_count"
+    echo ""
+
+    # Show namespace summary
+    print_info "Configured namespaces:"
+    for dir in "$ACE_DIR"/*/; do
+        if [ -d "$dir" ]; then
+            namespace=$(basename "$dir")
+            file_count=$(find "$dir" -type f | wc -l)
+            echo "  - $namespace ($file_count files)"
+        fi
+    done
+}
+
+# Test configuration loading
+test_loading() {
+    if [ "$TEST_LOADING" = "true" ]; then
+        print_info "Testing configuration loading..."
+
+        if command -v ruby &> /dev/null; then
+            # Test loading core config
+            if ruby -r ./ace-core/lib/ace/core -e "p Ace::Core.get('core')" &> /dev/null; then
+                print_success "  Core configuration loads successfully"
+            else
+                print_error "  Failed to load core configuration"
+            fi
+        else
+            print_warning "  Ruby not found, skipping load test"
+        fi
+    fi
+}
+
+# Main execution
+main() {
+    echo "==================================="
+    echo "    ACE Configuration Setup"
+    echo "==================================="
+    echo ""
+
+    # Parse arguments
+    for arg in "$@"; do
+        case $arg in
+            -v|--verbose)
+                VERBOSE=true
+                shift
+                ;;
+            -t|--test)
+                TEST_LOADING=true
+                shift
+                ;;
+            -h|--help)
+                echo "Usage: $0 [OPTIONS]"
+                echo ""
+                echo "Options:"
+                echo "  -v, --verbose    Show detailed output"
+                echo "  -t, --test       Test configuration loading after setup"
+                echo "  -h, --help       Show this help message"
+                echo ""
+                echo "Environment variables:"
+                echo "  VERBOSE=true     Enable verbose output"
+                echo ""
+                exit 0
+                ;;
+            *)
+                print_error "Unknown option: $arg"
+                echo "Use -h for help"
+                exit 1
+                ;;
+        esac
+    done
+
+    # Run setup steps
+    check_project_root
+    backup_existing
+    create_structure
+    copy_all_configs
+    verify_structure
+    test_loading
+
+    echo ""
+    show_summary
+
+    echo ""
+    print_success "Configuration setup complete!"
+    echo ""
+    print_info "Next steps:"
+    echo "  1. Review and customize configurations in $ACE_DIR/"
+    echo "  2. Test with: ruby -r ace/core -e \"p Ace::Core.get('core')\""
+    echo "  3. See $ACE_DIR/README.md for documentation"
+
+    if [ -d "$BACKUP_DIR" ]; then
+        echo ""
+        print_info "Your previous configuration was backed up to:"
+        echo "  $BACKUP_DIR"
+    fi
+}
+
+# Run main function
+main "$@"

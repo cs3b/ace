@@ -1,0 +1,245 @@
+# Example LLM provider configuration
+# Copy and rename this file for each provider you want to configure
+# e.g., openai.yml, anthropic.yml, claude.yml
+
+provider:
+  # Provider name (must match provider implementation)
+  name: "example"
+
+  # Provider type
+  # Options: api, cli, local
+  type: "api"
+
+  # Enable this provider
+  enabled: false
+
+  # Provider description
+  description: "Example provider configuration template"
+
+  # Authentication
+  auth:
+    # API key source
+    # Options: env, file, direct
+    type: "env"
+
+    # Environment variable name (if type: env)
+    env_var: "EXAMPLE_API_KEY"
+
+    # Key file path (if type: file)
+    key_file: "~/.example/api_key"
+
+    # Direct key (if type: direct) - NOT RECOMMENDED
+    # api_key: "sk-..."
+
+    # Additional auth headers
+    headers: {}
+
+  # API configuration (for type: api)
+  api:
+    # Base URL for API
+    base_url: "https://api.example.com/v1"
+
+    # API version
+    version: "v1"
+
+    # Endpoints
+    endpoints:
+      completions: "/completions"
+      chat: "/chat/completions"
+      embeddings: "/embeddings"
+      models: "/models"
+
+    # Request headers
+    headers:
+      "Content-Type": "application/json"
+      "Accept": "application/json"
+
+    # Timeout settings
+    timeout:
+      connect: 10
+      read: 60
+      write: 60
+
+  # CLI configuration (for type: cli)
+  cli:
+    # Command to execute
+    command: "example-cli"
+
+    # Command arguments template
+    # Variables: {prompt}, {model}, {temperature}, {max_tokens}
+    args_template: "query --model {model} --prompt '{prompt}'"
+
+    # Environment variables for CLI
+    environment: {}
+
+    # Working directory
+    working_dir: null
+
+    # Output format
+    # Options: json, text, yaml
+    output_format: "json"
+
+    # Output parsing
+    response_path: "choices[0].message.content"
+
+  # Model configuration
+  models:
+    # Available models for this provider
+    available:
+      - name: "example-large"
+        context_size: 128000
+        max_output: 4096
+        supports_functions: true
+        supports_vision: false
+
+      - name: "example-small"
+        context_size: 32000
+        max_output: 2048
+        supports_functions: false
+        supports_vision: false
+
+    # Model name mapping
+    # Map generic names to provider-specific names
+    mapping:
+      "gpt-4": "example-large"
+      "gpt-3.5-turbo": "example-small"
+
+    # Default model for this provider
+    default: "example-small"
+
+  # Rate limiting
+  rate_limit:
+    # Requests per minute
+    rpm: 60
+
+    # Tokens per minute
+    tpm: 90000
+
+    # Concurrent requests
+    max_concurrent: 5
+
+    # Rate limit strategy
+    # Options: fixed, exponential, adaptive
+    strategy: "exponential"
+
+  # Retry configuration
+  retry:
+    # Enable retries
+    enabled: true
+
+    # Maximum retry attempts
+    max_attempts: 3
+
+    # Retry delay (seconds)
+    initial_delay: 1
+
+    # Exponential backoff multiplier
+    backoff_multiplier: 2
+
+    # Maximum delay (seconds)
+    max_delay: 30
+
+    # Retry on status codes
+    retry_on_status:
+      - 429  # Rate limit
+      - 500  # Server error
+      - 502  # Bad gateway
+      - 503  # Service unavailable
+      - 504  # Gateway timeout
+
+  # Error handling
+  errors:
+    # How to handle errors
+    # Options: raise, log, fallback
+    strategy: "raise"
+
+    # Fallback provider (if strategy: fallback)
+    fallback: null
+
+    # Custom error messages
+    messages:
+      401: "Invalid API key for {provider}"
+      429: "Rate limit exceeded for {provider}"
+      500: "Internal server error at {provider}"
+
+  # Response processing
+  response:
+    # Response format
+    # Options: json, text, stream
+    format: "json"
+
+    # Response validation
+    validate: true
+
+    # Sanitize response
+    sanitize: false
+
+    # Transform response
+    transform: null
+
+  # Monitoring
+  monitoring:
+    # Enable metrics collection
+    enabled: false
+
+    # Metrics to collect
+    metrics:
+      - latency
+      - tokens
+      - errors
+      - cost
+
+    # Metrics export
+    export:
+      type: "log"  # Options: log, prometheus, datadog
+      interval: 60  # seconds
+
+  # Features
+  features:
+    # Streaming support
+    streaming: false
+
+    # Function calling
+    functions: false
+
+    # Vision/image support
+    vision: false
+
+    # Embeddings
+    embeddings: false
+
+    # Fine-tuning
+    fine_tuning: false
+
+  # Cost configuration
+  cost:
+    # Currency
+    currency: "USD"
+
+    # Cost per 1000 input tokens
+    input_per_1k: 0.01
+
+    # Cost per 1000 output tokens
+    output_per_1k: 0.03
+
+    # Minimum charge per request
+    minimum: 0.0
+
+  # Compliance and security
+  security:
+    # Data residency
+    data_residency: null
+
+    # Compliance standards
+    compliance: []
+
+    # Encrypt requests
+    encrypt_requests: false
+
+    # Audit logging
+    audit_log: false
+
+  # Custom configuration
+  custom:
+    # Add any provider-specific settings here
+    # These will be passed to the provider implementation

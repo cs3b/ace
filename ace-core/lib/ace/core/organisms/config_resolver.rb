@@ -67,6 +67,76 @@ module Ace
           config.get(*keys)
         end
 
+        # Resolve configuration for a specific namespace
+        # @param namespace [String] Namespace name (e.g., "git", "llm", "test")
+        # @param file [String, nil] Specific file within namespace (e.g., "runner" for test/runner.yml)
+        # @return [Models::Config] Resolved configuration
+        def resolve_namespace(namespace, file: nil)
+          # Determine file pattern based on namespace and file
+          namespace_patterns = determine_namespace_patterns(namespace, file)
+
+          # Create finder with namespace-specific patterns
+          finder = Molecules::ConfigFinder.new(
+            search_paths: search_paths,
+            file_patterns: namespace_patterns
+          )
+
+          cascade_paths = finder.find_all.select(&:exists)
+
+          if cascade_paths.empty?
+            return Models::Config.new({}, source: "#{namespace}_defaults", merge_strategy: merge_strategy)
+          end
+
+          # Load and merge configs
+          configs = cascade_paths.map do |cascade_path|
+            Molecules::YamlLoader.load_file(cascade_path.path)
+          end
+
+          merged_data = configs.reverse.reduce({}) do |result, config|
+            Atoms::DeepMerger.merge(
+              result,
+              config.data,
+              array_strategy: merge_strategy
+            )
+          end
+
+          sources = cascade_paths.map(&:path).join(" -> ")
+          Models::Config.new(
+            merged_data,
+            source: sources,
+            merge_strategy: merge_strategy
+          )
+        end
+
+        private
+
+        # Determine file patterns for a namespace
+        # @param namespace [String] Namespace name
+        # @param file [String, nil] Specific file name
+        # @return [Array<String>] File patterns to search for
+        def determine_namespace_patterns(namespace, file)
+          case namespace
+          when "core"
+            ["core/settings.yml", "core/settings.yaml"]
+          when "llm"
+            ["llm/query.yml", "llm/query.yaml"]
+          when "git"
+            ["git/commit.yml", "git/commit.yaml"]
+          when "test"
+            if file
+              ["test/#{file}.yml", "test/#{file}.yaml"]
+            else
+              ["test/*.yml", "test/*.yaml"]
+            end
+          else
+            if file
+              ["#{namespace}/#{file}.yml", "#{namespace}/#{file}.yaml"]
+            else
+              ["#{namespace}/config.yml", "#{namespace}/config.yaml"]
+            end
+          end
+        end
+
         # Find config files
         # @return [Array<Models::CascadePath>] All potential config paths
         def find_configs

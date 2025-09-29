@@ -1,0 +1,108 @@
+# Configuration for ace-core gem
+# This file should be copied to .ace/core/settings.yml in your project
+#
+# Configuration cascade: Project (.ace) → User home (~/.ace) → Environment vars
+# Last value wins when merging configurations
+
+ace:
+  # Version of the ace-core configuration format
+  version: "0.9.0"
+
+  # Configuration cascade settings
+  config_cascade:
+    # Enable configuration cascade loading
+    enabled: true
+
+    # Paths to search for configuration files (in order of priority)
+    # Later paths override earlier ones
+    search_paths:
+      - "./.ace"        # Project-local configuration (highest priority)
+      - "~/.ace"        # User home configuration
+
+    # File patterns to look for in each search path
+    file_patterns:
+      - "settings.yml"     # Core settings
+      - "config.yml"       # Generic config files
+      - "*.yml"            # Any YAML file in namespace
+      - "*/config.yml"     # Namespace-specific configs
+      - "*/settings.yml"   # Namespace-specific settings
+
+    # How to merge configuration objects
+    # Options: deep (recursive merge), shallow (top-level only), replace (no merge)
+    merge_strategy: deep
+
+    # How to handle arrays when merging
+    # Options: replace (use last), concat (combine), union (combine unique)
+    array_strategy: replace
+
+  # Environment variable handling
+  environment:
+    # Load .env files automatically
+    load_dotenv: true
+
+    # .env files to load (in order, later overrides earlier)
+    dotenv_files:
+      - ".env.local"    # Local overrides (gitignored)
+      - ".env"          # Project defaults
+
+    # Whether to overwrite existing environment variables
+    overwrite_existing: false
+
+    # Enable environment variable cascade loading
+    cascade_enabled: true
+
+  # Core settings
+  settings:
+    # Automatically create directories when needed
+    auto_create_directories: true
+
+    # Enable verbose logging for debugging
+    verbose_logging: false
+
+    # Cache time-to-live in seconds
+    cache_ttl: 300
+
+    # Default output format
+    output_format: "yaml"  # Options: yaml, json, text
+
+  # Security settings
+  security:
+    # Validate file paths before operations
+    validate_paths: true
+
+    # Patterns that should never be accessed
+    forbidden_patterns:
+      - "**/.git/**"          # Git internals
+      - "**/node_modules/**"  # Node dependencies
+      - "**/*.key"            # Private keys
+      - "**/*.pem"            # Certificates
+      - "**/secrets/**"       # Secret directories
+      - "**/.env*"            # Environment files (except when explicitly loaded)
+
+  # Logging configuration
+  logging:
+    # Log level: debug, info, warn, error, fatal
+    level: "info"
+
+    # Log file location (relative to project root)
+    file: ".logs/ace.log"
+
+    # Maximum log file size before rotation (in MB)
+    max_size: 10
+
+    # Number of old log files to keep
+    keep: 5
+
+  # Cache configuration
+  cache:
+    # Enable caching
+    enabled: true
+
+    # Cache directory (relative to project root)
+    directory: ".cache/ace-core"
+
+    # Maximum cache size in MB
+    max_size: 100
+
+    # Cache cleanup interval in seconds
+    cleanup_interval: 3600

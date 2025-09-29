@@ -1,0 +1,351 @@
+# Configuration for ace-taskflow gem
+# This file should be copied to .ace/taskflow/config.yml in your project
+#
+# Controls task management and workflow
+
+taskflow:
+  # Task directory structure
+  directories:
+    # Root directory for tasks
+    root: ".ace-taskflow"
+
+    # Active release directory
+    active: "v.%{version}"
+
+    # Task subdirectory
+    tasks: "t"
+
+    # Ideas/backlog directory
+    ideas: "backlog/ideas"
+
+    # Completed tasks
+    done: "done"
+
+    # Retrospectives
+    retro: "retro"
+
+  # Task file naming
+  naming:
+    # Task file pattern
+    task_pattern: "task.%{id}.md"
+
+    # Idea file pattern
+    idea_pattern: "%{timestamp}-%{slug}.md"
+
+    # Done file pattern
+    done_pattern: "%{date}-task.%{id}.md"
+
+    # ID format (3-digit zero-padded)
+    id_format: "%03d"
+
+    # Timestamp format
+    timestamp_format: "%Y%m%d-%H%M"
+
+    # Date format for done files
+    date_format: "%Y%m%d"
+
+  # Task metadata
+  metadata:
+    # Required fields
+    required:
+      - id
+      - status
+      - title
+
+    # Optional fields
+    optional:
+      - priority
+      - estimate
+      - dependencies
+      - assignee
+      - tags
+      - created
+      - updated
+      - completed
+
+    # Default values
+    defaults:
+      status: "pending"
+      priority: "medium"
+
+    # Valid values
+    valid_values:
+      status:
+        - pending
+        - in_progress
+        - blocked
+        - review
+        - done
+        - cancelled
+
+      priority:
+        - critical
+        - high
+        - medium
+        - low
+
+  # Task lifecycle
+  lifecycle:
+    # Auto-transition rules
+    auto_transitions:
+      # When all dependencies are done, mark as ready
+      ready_when_deps_done: true
+
+      # Move to done folder when marked complete
+      move_to_done: true
+
+      # Archive old done tasks
+      archive_after_days: 90
+
+    # Allowed transitions
+    transitions:
+      pending:
+        - in_progress
+        - cancelled
+
+      in_progress:
+        - blocked
+        - review
+        - done
+        - pending
+
+      blocked:
+        - in_progress
+        - cancelled
+
+      review:
+        - in_progress
+        - done
+
+      done: []  # Terminal state
+
+      cancelled: []  # Terminal state
+
+  # Release management
+  releases:
+    # Current release version
+    current: "0.9.0"
+
+    # Version format
+    version_format: "\\d+\\.\\d+\\.\\d+"
+
+    # Release states
+    states:
+      - planning
+      - active
+      - completed
+      - archived
+
+    # Auto-create release structure
+    auto_create: true
+
+    # Release file pattern
+    release_file: "RELEASE.md"
+
+  # Ideas management
+  ideas:
+    # Auto-capture from commits
+    capture_from_commits: false
+
+    # Idea categories
+    categories:
+      - feature
+      - improvement
+      - bugfix
+      - research
+      - refactor
+
+    # Auto-promote to task
+    auto_promote:
+      enabled: false
+      threshold: 3  # votes/priority
+
+    # Idea retention (days)
+    retention_days: 180
+
+  # Presets for task queries
+  presets:
+    # Preset directory
+    directory: ".ace/taskflow/presets"
+
+    # Available presets
+    available:
+      - current    # Current sprint/release tasks
+      - next       # Next up tasks
+      - blocked    # Blocked tasks
+      - review     # Tasks in review
+      - recent     # Recently completed
+      - mine       # My assigned tasks
+
+    # Default preset
+    default: "current"
+
+  # Task templates
+  templates:
+    # Template directory
+    directory: ".ace/taskflow/templates"
+
+    # Task template
+    task: |
+      ---
+      id: %{id}
+      status: pending
+      priority: medium
+      estimate:
+      dependencies: []
+      ---
+
+      # %{title}
+
+      ## Objective
+
+      ## Scope of Work
+
+      ## Implementation Plan
+
+      ## Acceptance Criteria
+
+      - [ ]
+
+    # Idea template
+    idea: |
+      # %{title}
+
+      ## Description
+
+      ## Motivation
+
+      ## Category: %{category}
+
+      ## Priority:
+
+      ## Notes
+
+      Date: %{date}
+
+  # Display settings
+  display:
+    # Task list format
+    list_format: "table"  # table, list, cards
+
+    # Fields to show in list
+    list_fields:
+      - id
+      - status
+      - priority
+      - title
+      - estimate
+
+    # Color coding
+    color_coding:
+      enabled: true
+      by_status: true
+      by_priority: false
+
+    # Sort order
+    default_sort:
+      field: "priority"
+      order: "desc"
+
+    # Grouping
+    group_by: "status"
+
+  # Notifications
+  notifications:
+    # Enable notifications
+    enabled: false
+
+    # Notification triggers
+    triggers:
+      - task_blocked
+      - task_completed
+      - review_requested
+      - dependency_resolved
+
+    # Notification methods
+    methods:
+      - log
+      # - email
+      # - slack
+
+  # Integration
+  integration:
+    # Git integration
+    git:
+      # Link tasks to commits
+      link_commits: true
+
+      # Task ID in commit format
+      commit_format: "\\[#%{id}\\]"
+
+      # Auto-close on commit
+      auto_close: false
+
+    # GitHub integration
+    github:
+      enabled: false
+      link_issues: false
+      sync_status: false
+
+  # Reporting
+  reporting:
+    # Generate reports
+    enabled: true
+
+    # Report directory
+    directory: ".ace-taskflow/reports"
+
+    # Report formats
+    formats:
+      - markdown
+      - json
+      # - html
+
+    # Report types
+    types:
+      - velocity
+      - burndown
+      - status
+      - retrospective
+
+    # Reporting period
+    period: "weekly"
+
+  # Performance
+  performance:
+    # Cache task data
+    cache_enabled: true
+
+    # Cache TTL
+    cache_ttl: 300  # seconds
+
+    # Index for fast search
+    index_enabled: false
+
+    # Maximum tasks to load
+    max_tasks: 1000
+
+  # Security
+  security:
+    # Validate task IDs
+    validate_ids: true
+
+    # Sanitize file paths
+    sanitize_paths: true
+
+    # Audit trail
+    audit_enabled: false
+
+  # Development
+  development:
+    # Debug mode
+    debug: false
+
+    # Dry run mode
+    dry_run: false
+
+    # Mock data
+    use_mock_data: false
+
+    # Test mode
+    test_mode: false

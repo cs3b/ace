@@ -6,7 +6,7 @@ require 'yaml'
 module Ace
   module Context
     module Molecules
-      # Manages context presets from markdown files in .ace/context/
+      # Manages context presets from markdown files in .ace/context/presets/
       class PresetManager
         attr_reader :presets
 
@@ -36,8 +36,8 @@ module Ace
           require 'ace/core/organisms/virtual_config_resolver'
           resolver = Ace::Core::Organisms::VirtualConfigResolver.new
 
-          # Get all context/*.md files from virtual map
-          resolver.glob("context/*.md").each do |relative_path, absolute_path|
+          # Get all context/presets/*.md files from virtual map
+          resolver.glob("context/presets/*.md").each do |relative_path, absolute_path|
             name = File.basename(absolute_path, '.md')
             preset_data = load_preset_from_file(absolute_path)
 

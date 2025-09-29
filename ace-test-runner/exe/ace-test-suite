@@ -11,7 +11,7 @@ require "ace/test_runner"
 require "ace/test_runner/suite"
 
 options = {
-  config: ".ace/test-suite.yml",
+  config: ".ace/test/suite.yml",
   parallel: nil,
   group: nil,
   verbose: false
@@ -22,7 +22,7 @@ parser = OptionParser.new do |opts|
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-c", "--config FILE", "Configuration file (default: .ace/test-suite.yml)") do |config|
+  opts.on("-c", "--config FILE", "Configuration file (default: .ace/test/suite.yml)") do |config|
     options[:config] = config
   end
 
@@ -70,14 +70,13 @@ rescue OptionParser::InvalidArgument => e
   exit 1
 end
 
-# Load the config using ConfigDiscovery
-config_file = options[:config] == ".ace/test-suite.yml" ? "test-suite.yml" : options[:config]
-config = Ace::Core::ConfigDiscovery.load(config_file)
+# Load the config using namespace method
+config = Ace::Core.get("test", file: "suite")
 
 unless config
-  puts "Error: Configuration file not found: #{config_file}"
+  puts "Error: Configuration file not found: .ace/test/suite.yml"
   puts
-  puts "Create a test suite configuration at .ace/test-suite.yml in your project root"
+  puts "Create a test suite configuration at .ace/test/suite.yml in your project root"
   puts
   puts "Example configuration:"
   puts <<~YAML

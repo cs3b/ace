@@ -61,10 +61,10 @@ module Ace
         def load_config
           require "yaml"
 
-          # Try to load taskflow.yml directly from .ace directory
+          # Load taskflow config from .ace/taskflow directory
           config_paths = [
-            File.join(Dir.pwd, ".ace", "taskflow.yml"),
-            File.join(Dir.home, ".ace", "taskflow.yml")
+            File.join(Dir.pwd, ".ace", "taskflow", "config.yml"),
+            File.join(Dir.home, ".ace", "taskflow", "config.yml")
           ]
 
           config_paths.each do |path|

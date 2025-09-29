@@ -69,8 +69,8 @@ parser.parse!
 if options[:list]
   presets = Ace::Context.list_presets
   if presets.empty?
-    puts "No presets found in .ace/context/"
-    puts "Create markdown files with YAML frontmatter in .ace/context/ to define presets."
+    puts "No presets found in .ace/context/presets/"
+    puts "Create markdown files with YAML frontmatter in .ace/context/presets/ to define presets."
     puts "Example presets are available in the ace-context gem at .ace.example/context/"
   else
     puts "Available presets:"
