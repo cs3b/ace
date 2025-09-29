@@ -54,8 +54,8 @@ module Ace
 
           @protocols = {}
 
-          # 1. Load from user ~/.ace/protocols/
-          load_directory_protocols(File.expand_path("~/.ace/protocols")).each do |protocol_data|
+          # 1. Load from user ~/.ace/nav/protocols/
+          load_directory_protocols(File.expand_path("~/.ace/nav/protocols")).each do |protocol_data|
             key = protocol_data["protocol"]
             @protocols[key] = protocol_data if key
           end
@@ -112,7 +112,7 @@ module Ace
 
           # Check each .ace directory for a protocols subdirectory
           config_dirs.each do |config_dir|
-            protocol_dir = File.join(config_dir, "protocols")
+            protocol_dir = File.join(config_dir, "nav/protocols")
             dirs << protocol_dir if Dir.exist?(protocol_dir)
           end
 
