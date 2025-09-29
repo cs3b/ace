@@ -10,8 +10,8 @@ module Ace
 
             root = root_path || Dir.pwd
 
-            # Remove the root path and any leading slash
-            relative = absolute_path.sub(/^#{Regexp.escape(root)}\/?/, "")
+            # Remove the root path and the leading slash only
+            relative = absolute_path.sub(/^#{Regexp.escape(root)}\//, "")
 
             # If nothing was removed, the path might already be relative
             relative == absolute_path && !absolute_path.start_with?("/") ? absolute_path : relative

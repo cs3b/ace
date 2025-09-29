@@ -5,6 +5,7 @@ require_relative "../molecules/config_loader"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/idea_loader"
 require_relative "../models/idea"
+require_relative "../atoms/path_formatter"
 require 'stringio'
 
 module Ace
@@ -142,7 +143,10 @@ module Ace
           # Capture the idea with options
           writer = Organisms::IdeaWriter.new(config)
           path = writer.write(options[:content], options)
-          puts "Idea captured: #{path}"
+          # Use project root, not .ace-taskflow root
+          root_path = Dir.pwd
+          relative_path = Atoms::PathFormatter.format_relative_path(path, root_path)
+          puts "Idea captured: #{relative_path}"
         end
 
         def display_idea(idea_data)
@@ -154,7 +158,10 @@ module Ace
           puts "Context: #{idea.context}"
 
           if idea.path
-            puts "Path: #{idea.path}"
+            # Use project root, not .ace-taskflow root
+            root_path = Dir.pwd
+            relative_path = Atoms::PathFormatter.format_relative_path(idea.path, root_path)
+            puts "Path: #{relative_path}"
           end
 
           if idea.content

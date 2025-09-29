@@ -4,4 +4,5 @@
 [env]
 # Add the bin directory to PATH for executable commands
 PROJECT_ROOT_PATH = "/Users/mc/Ps/ace-meta"
+ACE_TASKFLOW_PATH = "/Users/mc/Ps/ace-meta/.ace-taskflow"
 _.path = ["./bin", "./dev-tools/exe"]

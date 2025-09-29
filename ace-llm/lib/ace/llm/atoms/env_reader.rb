@@ -6,49 +6,24 @@ module Ace
       # EnvReader provides environment variable reading utilities
       # This is an atom - it has no dependencies on other parts of this gem
       class EnvReader
-        # Load .env files from .ace cascade
+        # Load .env files from .ace cascade and optionally set to ENV
         # Following ace patterns, searches for .env in:
         # - ./.ace/llm/.env (current project)
         # - ../.ace/llm/.env (parent dirs up to root)
         # - ~/.ace/llm/.env (user home)
         # - ./.ace/.env (fallback)
         # - ~/.ace/.env (fallback)
+        # @param set_env [Boolean] Whether to set loaded vars to ENV (default: false for clean isolation)
         # @return [Hash] All loaded environment variables
-        def self.load_env_cascade
-          return {} unless defined?(Ace::Core)
+        def self.load_env_cascade(set_env: false)
+          loaded_vars = load_env_cascade_without_setting
 
-          loaded_vars = {}
-
-          # Find all .env files in cascade
-          discovery = Ace::Core::ConfigDiscovery.new
-
-          # Look for llm-specific env files first
-          llm_env_files = discovery.find_all_config_files("llm/.env")
-
-          # Also check for general .ace/.env as fallback
-          general_env_files = discovery.find_all_config_files(".env")
-
-          # Combine and deduplicate (llm-specific takes precedence)
-          all_files = (general_env_files + llm_env_files).uniq
-
-          # Load files (later files override earlier ones)
-          all_files.each do |file|
-            next unless File.exist?(file)
-            vars = Ace::Core::Molecules::EnvLoader.load_file(file)
-            loaded_vars.merge!(vars) if vars
+          if set_env && defined?(Ace::Core)
+            # Only set to ENV if explicitly requested
+            Ace::Core::Molecules::EnvLoader.set_environment(loaded_vars, overwrite: true)
           end
 
-          # Set all loaded variables (overwrite existing ENV - .ace/.env has priority)
-          Ace::Core::Molecules::EnvLoader.set_environment(loaded_vars, overwrite: true)
-
           loaded_vars
-        rescue LoadError
-          # ace-core not available, skip .env loading
-          {}
-        rescue => e
-          # Log warning but don't fail
-          warn "Warning: Failed to load .env files: #{e.message}" if ENV["DEBUG"]
-          {}
         end
         # Get an environment variable value
         # @param key [String] Environment variable name
@@ -134,26 +109,83 @@ module Ace
         end
 
         # Get API key for a provider from environment
+        # First checks ENV, then loads from .ace/.env cascade if needed
         # @param provider [String] Provider name (e.g., "google", "openai")
         # @return [String, nil] API key if found
         def self.get_api_key(provider)
-          # Try provider-specific keys first
-          case provider.downcase
+          # Determine which keys to look for based on provider
+          key_names = case provider.downcase
           when "google", "gemini"
-            get("GEMINI_API_KEY") || get("GOOGLE_API_KEY")
+            ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
           when "openai"
-            get("OPENAI_API_KEY")
+            ["OPENAI_API_KEY"]
           when "anthropic"
-            get("ANTHROPIC_API_KEY")
+            ["ANTHROPIC_API_KEY"]
           when "mistral"
-            get("MISTRAL_API_KEY")
+            ["MISTRAL_API_KEY"]
           when "together", "togetherai"
-            get("TOGETHER_API_KEY") || get("TOGETHERAI_API_KEY")
+            ["TOGETHER_API_KEY", "TOGETHERAI_API_KEY"]
           when "lmstudio"
-            nil # No API key needed for local
+            return nil # No API key needed for local
           else
             # Try generic pattern
-            get("#{provider.upcase}_API_KEY")
+            ["#{provider.upcase}_API_KEY"]
+          end
+
+          # First check ENV for any of the keys
+          key_names.each do |key_name|
+            value = ENV[key_name]
+            return value if value && !value.strip.empty?
+          end
+
+          # If not in ENV, load from .ace/.env cascade (without polluting ENV)
+          loaded_vars = load_env_cascade_without_setting
+
+          # Check loaded vars for any of the keys
+          key_names.each do |key_name|
+            value = loaded_vars[key_name]
+            return value if value && !value.strip.empty?
+          end
+
+          nil
+        end
+
+        # Load .env files from cascade without setting ENV
+        # This is used internally for on-demand key loading
+        # @return [Hash] Loaded environment variables
+        def self.load_env_cascade_without_setting
+          return {} unless defined?(Ace::Core)
+
+          loaded_vars = {}
+
+          begin
+            # Find all .env files in cascade
+            discovery = Ace::Core::ConfigDiscovery.new
+
+            # Look for llm-specific env files first
+            llm_env_files = discovery.find_all_config_files("llm/.env")
+
+            # Also check for general .ace/.env as fallback
+            general_env_files = discovery.find_all_config_files(".env")
+
+            # Combine and deduplicate (llm-specific takes precedence)
+            all_files = (general_env_files + llm_env_files).uniq
+
+            # Load files (later files override earlier ones)
+            all_files.each do |file|
+              next unless File.exist?(file)
+              vars = Ace::Core::Molecules::EnvLoader.load_file(file)
+              loaded_vars.merge!(vars) if vars
+            end
+
+            loaded_vars
+          rescue LoadError
+            # ace-core not available, skip .env loading
+            {}
+          rescue => e
+            # Log warning but don't fail
+            warn "Warning: Failed to load .env files: #{e.message}" if ENV["DEBUG"]
+            {}
           end
         end
       end

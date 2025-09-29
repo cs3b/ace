@@ -6,6 +6,7 @@ require_relative "../molecules/task_filter"
 require_relative "../molecules/dependency_tree_visualizer"
 require 'stringio'
 require_relative "../models/task"
+require_relative "../atoms/path_formatter"
 
 module Ace
   module Taskflow
@@ -249,7 +250,10 @@ module Ace
         def display_task_path(task_data)
           task = Models::Task.new(task_data)
           if task.path
-            puts task.path
+            # Use project root, not .ace-taskflow root
+            root_path = Dir.pwd
+            relative_path = Atoms::PathFormatter.format_relative_path(task.path, root_path)
+            puts relative_path
           else
             puts "# Task has no path"
             exit 1
@@ -437,20 +441,9 @@ module Ace
         end
 
         def format_relative_path(path)
-          # Make path relative to project root
-          root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
-          relative = path.sub(/^#{Regexp.escape(root_path)}\/?/, "")
-
-          # Truncate if too long
-          max_length = 70
-          if relative.length > max_length
-            # Keep the beginning and end, truncate middle
-            start_length = 35
-            end_length = 32
-            "#{relative[0...start_length]}...#{relative[-end_length..]}"
-          else
-            relative
-          end
+          # Use project root, not .ace-taskflow root
+          root_path = Dir.pwd
+          Atoms::PathFormatter.format_display_path(path, root_path, max_length: 70)
         end
 
         def show_help

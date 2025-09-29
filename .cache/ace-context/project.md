@@ -426,7 +426,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Fri Sep 26 14:13:12 WEST 2025
+Mon Sep 29 19:39:42 WEST 2025
 
 ```
 
@@ -434,9 +434,18 @@ Fri Sep 26 14:13:12 WEST 2025
 
 **Output:**
 ```
- M .ace-taskflow/v.0.9.0/t/033-feat-taskflow-enhanced-stats-summary-display/task.033.md
- M .ace-taskflow/v.0.9.0/t/033-feat-taskflow-enhanced-stats-summary-display/ux/usage.md
+ M .ace-taskflow/v.0.9.0/t/041-feat-taskflow-move-done-and-reschedule/task.041.md
  M .cache/ace-context/project.md
+ M ace-git-commit/.ace.example/protocols/prompt-sources/ace-git-commit.yml
+ M ace-git-commit/.ace.example/protocols/wfi-sources/ace-git-commit.yml
+ M ace-nav/.ace.example/protocols/prompt.yml
+ M ace-taskflow/lib/ace/taskflow/organisms/task_manager.rb
+?? .ace/protocols/prompt-sources/
+?? .ace/protocols/prompt.yml
+?? .ace/protocols/wfi-sources/ace-git-commit.yml
+?? ace-git-commit/handbook/prompts/git-commit.md
+?? ace-taskflow/lib/ace/taskflow/molecules/idea_directory_mover.rb
+?? ace-taskflow/lib/ace/taskflow/molecules/task_directory_mover.rb
 
 ```
 
@@ -469,6 +478,7 @@ No recent tasks found
 ```
 /Users/mc/Ps/ace-meta/ace-context
 /Users/mc/Ps/ace-meta/ace-core
+/Users/mc/Ps/ace-meta/ace-git-commit
 /Users/mc/Ps/ace-meta/ace-llm
 /Users/mc/Ps/ace-meta/ace-llm-providers-cli
 /Users/mc/Ps/ace-meta/ace-nav

@@ -271,7 +271,8 @@ module Ace
         end
 
         def format_relative_path(path)
-          root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
+          # Use project root, not .ace-taskflow root
+          root_path = Dir.pwd
           Atoms::PathFormatter.format_display_path(path, root_path, max_length: 70)
         end
 
@@ -494,7 +495,8 @@ module Ace
           )
           puts header
 
-          root_path = @manager.instance_variable_get(:@root_path) || Dir.pwd
+          # Use project root, not .ace-taskflow root
+          root_path = Dir.pwd
           tasks.each do |task|
             if task[:path]
               relative_path = Atoms::PathFormatter.format_relative_path(task[:path], root_path)
