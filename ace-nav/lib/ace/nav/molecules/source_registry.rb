@@ -42,7 +42,7 @@ module Ace
 
         def discover_user_sources(protocol)
           sources = []
-          user_sources_dir = File.expand_path("~/.ace/protocols/#{protocol}-sources")
+          user_sources_dir = File.expand_path("~/.ace/nav/protocols/#{protocol}-sources")
 
           return sources unless Dir.exist?(user_sources_dir)
 
@@ -63,7 +63,7 @@ module Ace
 
           # Check each .ace directory for protocol sources
           config_dirs.each do |config_dir|
-            sources_dir = File.join(config_dir, "protocols", "#{protocol}-sources")
+            sources_dir = File.join(config_dir, "nav/protocols", "#{protocol}-sources")
             next unless Dir.exist?(sources_dir)
 
             Dir.glob(File.join(sources_dir, "*.yml")).each do |source_file|
