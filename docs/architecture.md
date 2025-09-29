@@ -54,9 +54,10 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Task and release management with dependencies and tree visualization
+- **ace-taskflow**: Task, release, and idea management with move-to-done and rescheduling
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
-- **ace-llm**: Multi-provider AI model integration with client registry
+- **ace-llm**: Multi-provider AI model integration with CLI-based providers support
+- **ace-git-commit**: Smart git commit generation with LLM integration
 
 ### Workflows (.wf.md)
 
@@ -151,7 +152,6 @@ Development patterns and best practices:
 ### Planned Migrations
 
 - **ace-handbook**: Workflows, guides, and templates as a gem
-- **ace-git**: Enhanced git operations
 - **ace-search**: Unified file and content search across codebases
 - **ace-review**: Code review automation and synthesis
 
