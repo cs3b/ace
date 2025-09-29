@@ -1,0 +1,6 @@
+# Example configuration for ace-llm-providers-cli
+providers:
+  - name: example_provider
+    enabled: false
+    api_key: YOUR_API_KEY_HERE
+    endpoint: https://api.example.com

@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.044
-status: pending
+status: completed
 priority: medium
-estimate: TBD
+estimate: 2h
 dependencies: []
+completed_at: 2025-09-29
 ---
 
 # Implement ace-core init subcommand for configuration management
@@ -14,14 +15,14 @@ Implement a centralized `ace-core init` subcommand that manages configuration in
 
 ## Acceptance Criteria
 
-- [ ] Create `ace-core` CLI executable with `init` and `diff` subcommands
-- [ ] Each ace-* gem has an `ace.example/` directory mirroring `.ace/` structure
-- [ ] `init` command copies config files and reports copied vs skipped files
-- [ ] `diff` subcommand compares current configs with ace.example templates
-- [ ] Display `docs/config.md` content on first run when config is missing
-- [ ] Support `--force`, `--dry-run`, `--global` flags for init command
-- [ ] Support `--one-line`, `--file`, `--global/--local` options for diff command
-- [ ] All existing ace-* gems updated with ace.example directories
+- [x] Create `ace-core` CLI executable with `init` and `diff` subcommands
+- [x] Each ace-* gem has an `ace.example/` directory mirroring `.ace/` structure
+- [x] `init` command copies config files and reports copied vs skipped files
+- [x] `diff` subcommand compares current configs with ace.example templates
+- [x] Display `docs/config.md` content on first run when config is missing
+- [x] Support `--force`, `--dry-run`, `--global` flags for init command
+- [x] Support `--one-line`, `--file`, `--global/--local` options for diff command
+- [x] All existing ace-* gems updated with ace.example directories
 
 ## Implementation Notes
 
