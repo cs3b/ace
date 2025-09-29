@@ -42,9 +42,46 @@ module Ace
         differ.run
       end
 
+      desc "list", "List available ace-* gems with example configs"
+      option :verbose, type: :boolean, desc: "Show detailed information"
+      def list
+        require_relative "models/config_templates"
+
+        puts "Available ace-* gems with example configurations:\n\n"
+
+        if ConfigTemplates.all_gems.empty?
+          puts "No ace-* gems with example configurations found."
+          return
+        end
+
+        ConfigTemplates.all_gems.each do |gem_name|
+          info = ConfigTemplates.gem_info[gem_name]
+          source_label = case info[:source]
+                         when :local then "[local]"
+                         when :gem then "[gem]"
+                         when :both then "[local+gem]"
+                         end
+
+          puts "  #{gem_name} #{source_label}"
+
+          if options[:verbose]
+            puts "    Path: #{info[:path]}"
+            puts "    Gem: #{info[:gem_path]}" if info[:gem_path]
+            example_dir = ConfigTemplates.example_dir_for(gem_name)
+            if File.exist?(example_dir)
+              example_files = Dir.glob("#{example_dir}/**/*").reject { |f| File.directory?(f) }
+              puts "    Example files: #{example_files.size}"
+            end
+          end
+        end
+
+        puts "\nUse 'ace-framework init [GEM]' to initialize a specific gem's configuration"
+        puts "Use 'ace-framework init' to initialize all configurations"
+      end
+
       desc "version", "Show version"
       def version
-        puts "ace-core #{Ace::Core::VERSION}"
+        puts "ace-framework #{Ace::Core::VERSION}"
       end
     end
   end
