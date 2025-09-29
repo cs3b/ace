@@ -1,0 +1,30 @@
+# Example test suite configuration
+# Copy to .ace/test/suite.yml in your project and customize
+
+test_suite:
+  # Maximum parallel test processes
+  max_parallel: 10
+
+  # Packages to test (for monorepos or multi-package projects)
+  packages:
+    - name: your-package
+      path: .              # Path relative to project root
+      group: main          # Group for selective testing
+      priority: 1          # Lower number = higher priority
+
+    # Add more packages as needed:
+    # - name: another-package
+    #   path: packages/another
+    #   group: utilities
+    #   priority: 2
+
+  # Test execution options
+  test_options:
+    format: compact        # Output format: compact, verbose, json
+    save_reports: true     # Save test reports to .ace/test-reports/
+    fail_fast: false       # Stop on first failure
+
+  # Display settings (optional)
+  display:
+    show_progress: true
+    color: true

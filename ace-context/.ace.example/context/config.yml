@@ -1,0 +1,20 @@
+# Example ace-context configuration
+# Copy to .ace/context/config.yml in your project and customize
+
+context:
+  # Cache settings
+  cache:
+    enabled: true
+    directory: ".cache/ace-context"
+    ttl: 3600  # Cache time-to-live in seconds (1 hour)
+
+  # Output settings (optional)
+  output:
+    format: markdown        # Options: markdown, yaml, json, text
+    include_metadata: true  # Include file metadata in output
+    line_numbers: true      # Show line numbers in file content
+
+  # File handling (optional)
+  files:
+    max_file_size: 1048576  # Maximum file size to include (1MB)
+    skip_binary: true       # Skip binary files

@@ -15,7 +15,7 @@ global: false
 ## Available Commands
 
 - `ace-framework init [GEM]` - Initialize configuration for specific gem or all
-- `ace-framework diff` - Compare your configs with the examples
+- `ace-framework diff [GEM]` - Compare configs with examples for specific gem or all
 - `ace-framework list` - List available ace-* gems with example configs
 - `ace-framework version` - Show version information
 
@@ -49,12 +49,17 @@ ace-framework list
 # Initialize all configurations
 ace-framework init
 
-# Initialize specific gem
+# Initialize specific gem (both formats work)
 ace-framework init ace-taskflow
+ace-framework init taskflow
 
 # Preview what would be done
 ace-framework init --dry-run
 
-# Compare configurations
+# Compare all configurations
 ace-framework diff --one-line
+
+# Compare specific gem (both formats work)
+ace-framework diff ace-context
+ace-framework diff context --one-line
 ```

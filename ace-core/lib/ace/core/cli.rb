@@ -65,9 +65,10 @@ module Ace
 
       def run_diff(argv)
         options = {}
+        gem_name = nil
 
         parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-framework diff [options]"
+          opts.banner = "Usage: ace-framework diff [GEM] [options]"
           opts.on("--global", "Compare global configs") { options[:global] = true }
           opts.on("--local", "Compare local configs (default)") { options[:local] = true }
           opts.on("--file PATH", "Compare specific file") { |f| options[:file] = f }
@@ -76,9 +77,15 @@ module Ace
         end
 
         parser.parse!(argv)
+        gem_name = argv.shift
 
         differ = ConfigDiff.new(**options)
-        differ.run
+
+        if gem_name
+          differ.diff_gem(gem_name)
+        else
+          differ.run
+        end
       end
 
       def run_list(argv)
@@ -135,7 +142,7 @@ module Ace
         puts ""
         puts "Commands:"
         puts "  init [GEM]    Initialize configuration for specific gem or all"
-        puts "  diff          Compare configs with examples"
+        puts "  diff [GEM]    Compare configs with examples for specific gem or all"
         puts "  list          List available ace-* gems with example configs"
         puts "  version       Show version"
         puts "  help          Show this help"

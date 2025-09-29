@@ -24,6 +24,19 @@ module Ace
         print_results
       end
 
+      def diff_gem(gem_name)
+        # Normalize gem name (support both "ace-context" and "context")
+        gem_name = gem_name.start_with?("ace-") ? gem_name : "ace-#{gem_name}"
+
+        unless ConfigTemplates.gem_exists?(gem_name)
+          puts "Error: Gem '#{gem_name}' not found or has no example configurations"
+          exit 1
+        end
+
+        diff_gem_configs(gem_name)
+        print_results
+      end
+
       private
 
       def config_directory
@@ -39,7 +52,7 @@ module Ace
       def diff_gem_configs(gem_name)
         source_dir = ConfigTemplates.example_dir_for(gem_name)
 
-        return unless File.exist?(source_dir)
+        return unless source_dir && File.exist?(source_dir)
 
         Dir.glob("#{source_dir}/**/*").each do |source_file|
           next if File.directory?(source_file)
