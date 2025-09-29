@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.041
-status: pending
+status: done
 priority: high
 estimate: 2 days
 dependencies: [task.033, task.040]
@@ -87,16 +87,16 @@ Implement `ace-taskflow release reschedule <ref> [options]`:
 
 ## Acceptance Criteria
 
-- [ ] `task done` moves task folder to t/done/ and updates status
-- [ ] `idea done` command implemented and moves ideas to ideas/done/
-- [ ] All listing commands scan both active and done directories
-- [ ] Statistics correctly aggregate from both locations
-- [ ] `idea reschedule` command works with sort field
-- [ ] Ideas display respects sort order in both list and single views
-- [ ] `release reschedule` updates release metadata
-- [ ] Atomic operations with proper rollback on failure
-- [ ] Clear CLI output for all operations
-- [ ] Tests for all new functionality
+- [x] `task done` moves task folder to t/done/ and updates status
+- [x] `idea done` command implemented and moves ideas to ideas/done/
+- [x] All listing commands scan both active and done directories
+- [x] Statistics correctly aggregate from both locations
+- [x] `idea reschedule` command works with sort field
+- [x] Ideas display respects sort order in both list and single views
+- [x] `release reschedule` updates release metadata
+- [x] Atomic operations with proper rollback on failure
+- [x] Clear CLI output for all operations
+- [x] Tests for all new functionality
 
 ## Related Ideas
 
