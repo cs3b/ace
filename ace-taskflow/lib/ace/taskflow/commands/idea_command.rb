@@ -395,7 +395,7 @@ module Ace
           puts "  --current          Work with current/active release (default)"
           puts ""
           puts "Configuration:"
-          puts "  Set defaults in .ace/taskflow.yml:"
+          puts "  Set defaults in .ace/taskflow/config.yml:"
           puts "    taskflow:"
           puts "      idea:"
           puts "        defaults:"

@@ -69,9 +69,10 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Task and release management with dependencies and tree visualization
+- **ace-taskflow**: Task, release, and idea management with move-to-done and rescheduling
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
-- **ace-llm**: Multi-provider AI model integration with client registry
+- **ace-llm**: Multi-provider AI model integration with CLI-based providers support
+- **ace-git-commit**: Smart git commit generation with LLM integration
 
 ### Workflows (.wf.md)
 
@@ -166,7 +167,6 @@ Development patterns and best practices:
 ### Planned Migrations
 
 - **ace-handbook**: Workflows, guides, and templates as a gem
-- **ace-git**: Enhanced git operations
 - **ace-search**: Unified file and content search across codebases
 - **ace-review**: Code review automation and synthesis
 
@@ -354,21 +354,23 @@ For complete decision history and detailed rationale, refer to the individual AD
 | **ace-taskflow** | Task management | `ace-taskflow task`, `ace-taskflow tasks --preset current` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
+| **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged` |
 
 ## Quick Examples
 
 ```sh
 # Task management
-ace-taskflow task                       # Show next task
-ace-taskflow tasks --tree               # Dependency tree view
-ace-taskflow idea create "Feature" -gc  # Capture and commit idea
+ace-taskflow task done 019              # Mark complete & move to done/
+ace-taskflow idea reschedule "feat" --add-next  # Reschedule idea
+ace-taskflow release reschedule v.0.9.0 --status active
+
+# Git commits
+ace-git-commit                          # Generate commit for all changes
+ace-git-commit --staged                 # Commit only staged files
 
 # Navigation and context
 ace-context project --output stdio      # Load context to stdout
 ace-nav 'wfi://*task*' --list          # Find workflow patterns
-
-# Testing
-ace-test test/foo_test.rb:42           # Test at specific line
 ```
 
 *Full documentation in each ace-*/docs/usage.md*
@@ -390,9 +392,10 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Task and release management with dependencies and tree visualization
+- **ace-taskflow**: Task, release, and idea management with move-to-done and rescheduling
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
-- **ace-llm**: Multi-provider AI model integration with client registry
+- **ace-llm**: Multi-provider AI model integration with CLI-based providers (Claude, Codex, OpenCode)
+- **ace-git-commit**: Smart git commit generation with LLM integration
 
 ## Coming Soon
 
@@ -426,7 +429,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Mon Sep 29 19:39:42 WEST 2025
+Mon Sep 29 23:09:21 WEST 2025
 
 ```
 
@@ -434,18 +437,64 @@ Mon Sep 29 19:39:42 WEST 2025
 
 **Output:**
 ```
- M .ace-taskflow/v.0.9.0/t/041-feat-taskflow-move-done-and-reschedule/task.041.md
+ D .ace/context/ace-meta.md
+ D .ace/context/gems.md
+ D .ace/context/minimal.md
+ D .ace/context/project.md
+ D .ace/context/release.md
+ D .ace/git/config/git.yml
+ D .ace/protocols/guide-sources/ace-taskflow.yml
+ D .ace/protocols/guide-sources/handbook.yml
+ D .ace/protocols/guide.yml
+ D .ace/protocols/prompt-sources/ace-git-commit.yml
+ D .ace/protocols/prompt.yml
+ D .ace/protocols/sample.yml
+ D .ace/protocols/task.yml
+ D .ace/protocols/tmpl-sources/ace-taskflow.yml
+ D .ace/protocols/tmpl-sources/handbook.yml
+ D .ace/protocols/tmpl.yml
+ D .ace/protocols/wfi-sources/ace-git-commit.yml
+ D .ace/protocols/wfi-sources/ace-taskflow.yml
+ D .ace/protocols/wfi-sources/handbook.yml
+ D .ace/protocols/wfi-sources/local.yml
+ D .ace/protocols/wfi.yml
+ D .ace/settings.yml
+ D .ace/taskflow.yml
+ D .ace/test-suite.yml
+ D .ace/test.yml
  M .cache/ace-context/project.md
- M ace-git-commit/.ace.example/protocols/prompt-sources/ace-git-commit.yml
- M ace-git-commit/.ace.example/protocols/wfi-sources/ace-git-commit.yml
- M ace-nav/.ace.example/protocols/prompt.yml
- M ace-taskflow/lib/ace/taskflow/organisms/task_manager.rb
-?? .ace/protocols/prompt-sources/
-?? .ace/protocols/prompt.yml
-?? .ace/protocols/wfi-sources/ace-git-commit.yml
-?? ace-git-commit/handbook/prompts/git-commit.md
-?? ace-taskflow/lib/ace/taskflow/molecules/idea_directory_mover.rb
-?? ace-taskflow/lib/ace/taskflow/molecules/task_directory_mover.rb
+ M ace-context/exe/ace-context
+ M ace-context/lib/ace/context/molecules/preset_manager.rb
+ D ace-core/config/settings.yml
+ M ace-core/lib/ace/core.rb
+ M ace-core/lib/ace/core/organisms/config_resolver.rb
+ D ace-git-commit/config/git.yml
+ M ace-taskflow/lib/ace/taskflow/commands/idea_command.rb
+ M ace-taskflow/lib/ace/taskflow/configuration.rb
+ M ace-taskflow/lib/ace/taskflow/molecules/config_loader.rb
+ M ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb
+ D ace-test-runner/.ace/test-cache/test_files.json
+ D ace-test-runner/config/default.yml
+ D ace-test-runner/config/groups.yml
+ M ace-test-runner/exe/ace-test-suite
+?? .ace-taskflow/v.0.9.0/retro/20250929-ace-taskflow-path-display-fixes.md
+?? .ace/README.md
+?? .ace/context/config.yml
+?? .ace/context/presets/
+?? .ace/core/
+?? .ace/git/commit.yml
+?? .ace/llm/query.yml
+?? .ace/nav/
+?? .ace/taskflow/config.yml
+?? .ace/test/
+?? ace-context/ace.example/
+?? ace-core/ace.example/
+?? ace-git-commit/ace.example/
+?? ace-llm/ace.example/
+?? ace-nav/ace.example/
+?? ace-taskflow/ace.example/
+?? ace-test-runner/ace.example/
+?? bin/setup-ace-config
 
 ```
 

@@ -1,0 +1,167 @@
+# Configuration for ace-test-runner
+# This file should be copied to .ace/test/runner.yml in your project
+#
+# Controls test execution behavior and output formatting
+
+test:
+  # Output format for test results
+  # Options: ai (AI-friendly), compact, json, markdown, verbose
+  format: ai
+
+  # Directory to save test reports (relative to project root)
+  report_dir: test-reports
+
+  # Whether to save detailed reports to disk
+  save_reports: true
+
+  # Stop execution on first test failure
+  fail_fast: false
+
+  # Show detailed test execution output
+  verbose: false
+
+  # Auto-fix deprecated test patterns when detected
+  fix_deprecations: false
+
+  # Test file patterns to search for
+  patterns:
+    - test/**/*_test.rb      # Minitest convention
+    - spec/**/*_spec.rb      # RSpec convention
+    - test/**/*_spec.rb      # Mixed convention
+
+  # Timeout for test execution (in seconds, null = no timeout)
+  timeout: null
+
+  # Run tests in parallel (experimental)
+  parallel: false
+
+  # Number of parallel workers (auto-detect if not set)
+  parallel_workers: null
+
+  # Enable colored output in terminal
+  color: true
+
+  # Show test execution time
+  show_time: true
+
+  # Show slow tests (tests taking longer than threshold)
+  show_slow_tests: true
+  slow_test_threshold: 1.0  # seconds
+
+  # Test coverage settings
+  coverage:
+    enabled: false
+    minimum: 80            # Minimum coverage percentage
+    format: html          # Options: html, json, text
+    output_dir: coverage  # Coverage report directory
+
+  # Report retention settings
+  report_retention:
+    # Number of reports to keep
+    keep_count: 10
+
+    # Maximum age of reports in days
+    max_age_days: 30
+
+    # Clean old reports automatically
+    auto_clean: true
+
+  # Test environment setup
+  environment:
+    # Load test helper automatically
+    load_helper: true
+
+    # Test helper file path
+    helper_path: test/test_helper.rb
+
+    # Environment variables to set during tests
+    variables:
+      RACK_ENV: test
+      RAILS_ENV: test
+      ACE_ENV: test
+
+  # Backtrace filtering
+  backtrace:
+    # Filter gem paths from backtraces
+    filter_gems: true
+
+    # Show full backtraces
+    full: false
+
+    # Number of backtrace lines to show
+    limit: 10
+
+    # Patterns to filter from backtraces
+    filter_patterns:
+      - /gems/
+      - /rubies/
+      - /\.rbenv/
+      - /\.rvm/
+
+  # Test output settings
+  output:
+    # Show seed value for randomized tests
+    show_seed: true
+
+    # Show test counts
+    show_counts: true
+
+    # Show examples/assertions
+    show_examples: true
+
+    # Buffer output until test completes
+    buffer: false
+
+  # Retry settings for flaky tests
+  retry:
+    # Enable test retry on failure
+    enabled: false
+
+    # Maximum retry attempts
+    max_attempts: 3
+
+    # Only retry specific error types
+    retry_on:
+      - Timeout::Error
+      - Net::ReadTimeout
+
+  # Notification settings
+  notifications:
+    # Enable desktop notifications
+    desktop: false
+
+    # Sound on test completion
+    sound: false
+
+    # Notification triggers
+    on_success: false
+    on_failure: true
+
+  # Custom test runners
+  runners:
+    # Minitest runner options
+    minitest:
+      pride: false         # Pride reporter (rainbow colors)
+      verbose: false      # Verbose test names
+      parallelize: false  # Use Minitest parallelization
+
+    # RSpec runner options (if RSpec tests detected)
+    rspec:
+      format: progress    # Options: progress, documentation, json
+      fail_fast: false
+      color: true
+      warnings: false
+
+  # Debugging options
+  debug:
+    # Enable debug output
+    enabled: false
+
+    # Pause on test failure
+    pause_on_failure: false
+
+    # Open debugger on failure
+    debugger_on_failure: false
+
+    # Save failing test state
+    save_state: false

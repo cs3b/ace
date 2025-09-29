@@ -1,0 +1,186 @@
+# Protocol definition for workflow instructions
+# This file should be copied to .ace/nav/protocols/wfi.yml
+#
+# Defines the workflow instruction protocol for ace-nav
+
+protocol: wfi
+name: "Workflow Instructions"
+description: "Step-by-step workflow guides for development tasks"
+enabled: true
+
+# File matching
+extensions:
+  - .wfi.md          # Workflow instruction markdown
+  - .workflow.md     # Alternative extension
+  - .wf.md          # Short form
+
+# File patterns to match
+patterns:
+  - "**/*.wfi.md"
+  - "**/*.workflow.md"
+  - "**/*.wf.md"
+
+# Search paths
+search_paths:
+  - "dev-handbook/workflow-instructions"
+  - ".ace/workflows"
+  - "docs/workflows"
+
+# Template for creating new workflows
+create_template: |
+  # %{name}
+
+  ## Goal
+
+  Describe the objective of this workflow.
+
+  ## Prerequisites
+
+  - List any requirements
+  - Tools or access needed
+  - Knowledge prerequisites
+
+  ## Process Steps
+
+  1. **Step One**
+     - Details about this step
+     - Sub-steps if needed
+     - Expected outcome
+
+  2. **Step Two**
+     - Details about this step
+     - Commands to run
+     - Files to create/modify
+
+  3. **Step Three**
+     - Final steps
+     - Verification steps
+
+  ## Success Criteria
+
+  - [ ] Criteria one is met
+  - [ ] Criteria two is achieved
+  - [ ] All tests pass
+  - [ ] Documentation updated
+
+  ## Common Issues
+
+  ### Issue 1: [Description]
+  **Solution:** How to resolve
+
+  ### Issue 2: [Description]
+  **Solution:** How to resolve
+
+  ## References
+
+  - Link to related documentation
+  - Link to similar workflows
+
+# Protocol capabilities
+capabilities:
+  searchable: true        # Can search for workflows
+  supports_glob: true     # Supports glob patterns
+  supports_create: true   # Can create new workflows
+  supports_content: true  # Can read workflow content
+  supports_list: true     # Can list all workflows
+  supports_edit: true     # Can edit workflows
+  supports_delete: false  # Cannot delete (safety)
+
+# Metadata extraction
+metadata:
+  # Fields to extract from front matter
+  fields:
+    - goal
+    - category
+    - tags
+    - author
+    - created
+    - updated
+    - version
+
+  # Required fields
+  required:
+    - goal
+
+# Navigation behavior
+navigation:
+  # How to display in listings
+  display:
+    format: "tree"      # tree, list, grid
+    show_description: true
+    show_metadata: false
+    group_by: "category"
+
+  # Sorting
+  sort:
+    field: "name"       # name, created, updated
+    order: "asc"        # asc, desc
+
+# Content processing
+content:
+  # Process markdown
+  process_markdown: true
+
+  # Extract sections
+  extract_sections:
+    - "Goal"
+    - "Prerequisites"
+    - "Process Steps"
+    - "Success Criteria"
+
+  # Syntax highlighting
+  syntax_highlight: true
+
+  # Maximum content size (bytes)
+  max_size: 1048576  # 1MB
+
+# Validation
+validation:
+  # Validate workflow structure
+  enabled: true
+
+  # Required sections
+  required_sections:
+    - "Goal"
+    - "Process Steps"
+    - "Success Criteria"
+
+  # Lint markdown
+  lint_markdown: false
+
+  # Check links
+  check_links: false
+
+# Integration
+integration:
+  # IDE support
+  ide:
+    vscode: true
+    sublime: false
+    vim: false
+
+  # Generate table of contents
+  generate_toc: true
+
+  # Export formats
+  export_formats:
+    - markdown
+    - html
+    - pdf
+
+# Caching
+cache:
+  enabled: true
+  ttl: 600  # 10 minutes
+  directory: ".cache/ace-nav/wfi"
+
+# Security
+security:
+  # Sanitize content
+  sanitize: false
+
+  # Forbidden patterns in content
+  forbidden_content: []
+
+  # Maximum workflow depth (includes)
+  max_depth: 5

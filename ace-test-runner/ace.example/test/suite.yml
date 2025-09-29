@@ -1,0 +1,246 @@
+# Test suite configuration for ace-test-runner
+# This file should be copied to .ace/test/suite.yml in your project
+#
+# Defines test groups for organized test execution
+# Usage: ace-test --group unit
+
+groups:
+  # Unit tests - fast, isolated tests
+  unit:
+    description: "Fast, isolated unit tests"
+    patterns:
+      - "test/unit/**/*_test.rb"
+      - "test/*_test.rb"              # Top-level test files
+      - "test/*/atoms/*_test.rb"       # Atoms are pure functions
+      - "spec/unit/**/*_spec.rb"       # RSpec unit tests
+    exclude:
+      - "test/**/*_integration_test.rb"
+      - "test/**/*_system_test.rb"
+    options:
+      fail_fast: false
+      timeout: 10                      # 10 second timeout per test
+      parallel: true                   # Run in parallel
+      format: compact                  # Compact output for speed
+
+  # Integration tests - tests with dependencies
+  integration:
+    description: "Tests that integrate multiple components"
+    patterns:
+      - "test/integration/**/*_test.rb"
+      - "test/*_integration_test.rb"
+      - "test/*/molecules/*_test.rb"   # Molecules integrate components
+      - "spec/integration/**/*_spec.rb"
+    options:
+      fail_fast: false
+      timeout: 30                      # 30 second timeout
+      parallel: false                  # Sequential for shared resources
+      format: ai                       # Detailed output
+
+  # System/E2E tests - full system tests
+  system:
+    description: "End-to-end system tests"
+    patterns:
+      - "test/system/**/*_test.rb"
+      - "test/e2e/**/*_test.rb"
+      - "test/*/organisms/*_test.rb"   # Organisms orchestrate workflows
+      - "spec/system/**/*_spec.rb"
+      - "spec/features/**/*_spec.rb"   # Feature tests
+    options:
+      fail_fast: true                  # Stop on first failure
+      timeout: 60                      # 60 second timeout
+      verbose: true                    # Show detailed progress
+      save_reports: true              # Always save system test reports
+
+  # Performance tests - benchmarks
+  performance:
+    description: "Performance and benchmark tests"
+    patterns:
+      - "test/performance/**/*_test.rb"
+      - "test/benchmark/**/*_test.rb"
+      - "test/**/*_performance_test.rb"
+      - "spec/performance/**/*_spec.rb"
+    options:
+      verbose: true
+      timeout: 120                     # 2 minute timeout
+      format: markdown                 # Good for reports
+      environment:
+        MEASURE_PERFORMANCE: "true"
+        BENCHMARK_ITERATIONS: "1000"
+
+  # Acceptance tests - user acceptance criteria
+  acceptance:
+    description: "User acceptance tests"
+    patterns:
+      - "test/acceptance/**/*_test.rb"
+      - "test/features/**/*_test.rb"
+      - "spec/acceptance/**/*_spec.rb"
+    options:
+      fail_fast: false
+      verbose: true
+      format: markdown
+
+  # API tests - API endpoint testing
+  api:
+    description: "API endpoint tests"
+    patterns:
+      - "test/api/**/*_test.rb"
+      - "test/controllers/**/*_test.rb"
+      - "test/requests/**/*_test.rb"
+      - "spec/requests/**/*_spec.rb"
+      - "spec/api/**/*_spec.rb"
+    options:
+      parallel: true
+      format: json                     # JSON for API test results
+
+  # Model tests - data model testing
+  models:
+    description: "Data model and entity tests"
+    patterns:
+      - "test/models/**/*_test.rb"
+      - "test/*/models/*_test.rb"
+      - "spec/models/**/*_spec.rb"
+    options:
+      parallel: true
+      timeout: 5                       # Models should be fast
+
+  # Smoke tests - minimal sanity check
+  smoke:
+    description: "Quick smoke tests for basic sanity"
+    files:                            # Explicit file list
+      - "test/test_helper.rb"
+      - "test/ace_test.rb"
+    patterns:
+      - "test/*/version_test.rb"      # Version tests
+      - "test/smoke/**/*_test.rb"     # Dedicated smoke tests
+    options:
+      fail_fast: true
+      verbose: false
+      timeout: 5
+      format: compact
+
+  # CI tests - continuous integration suite
+  ci:
+    description: "Test suite for CI/CD pipeline"
+    patterns:
+      - "test/**/*_test.rb"
+      - "spec/**/*_spec.rb"
+    exclude:
+      - "test/performance/**/*"       # Skip performance in CI
+      - "test/benchmark/**/*"         # Skip benchmarks in CI
+      - "test/manual/**/*"            # Skip manual tests
+    options:
+      fail_fast: false
+      parallel: true
+      format: json                    # Machine-readable for CI
+      save_reports: true
+      coverage:
+        enabled: true
+        minimum: 80
+
+  # All tests - complete test suite
+  all:
+    description: "Complete test suite"
+    patterns:
+      - "test/**/*_test.rb"
+      - "spec/**/*_spec.rb"
+    exclude:
+      - "test/tmp/**/*"               # Exclude temporary test files
+      - "test/fixtures/**/*"          # Exclude fixtures
+    options:
+      fail_fast: false
+      parallel: false                  # Sequential for completeness
+
+  # Gem-specific test groups
+  # Add custom groups for each ace-* gem
+  ace-core:
+    description: "ace-core gem tests"
+    patterns:
+      - "ace-core/test/**/*_test.rb"
+    options:
+      format: ai
+
+  ace-llm:
+    description: "ace-llm gem tests"
+    patterns:
+      - "ace-llm/test/**/*_test.rb"
+    options:
+      format: ai
+      environment:
+        MOCK_LLM_RESPONSES: "true"    # Use mocked responses
+
+  ace-git-commit:
+    description: "ace-git-commit gem tests"
+    patterns:
+      - "ace-git-commit/test/**/*_test.rb"
+    options:
+      format: ai
+
+  ace-test-runner:
+    description: "ace-test-runner gem tests"
+    patterns:
+      - "ace-test-runner/test/**/*_test.rb"
+    options:
+      format: ai
+      # Meta: test runner testing itself
+      environment:
+        ACE_TEST_RUNNER_SELF_TEST: "true"
+
+# Custom test suites
+# Define project-specific test combinations
+suites:
+  # Pre-commit: fast tests before commit
+  pre-commit:
+    description: "Fast tests to run before committing"
+    groups:
+      - unit
+      - smoke
+    options:
+      fail_fast: true
+      timeout: 30
+
+  # Pre-deploy: comprehensive tests before deployment
+  pre-deploy:
+    description: "Comprehensive tests before deployment"
+    groups:
+      - unit
+      - integration
+      - system
+      - api
+    options:
+      fail_fast: false
+      coverage:
+        enabled: true
+        minimum: 85
+
+  # Nightly: extended test suite
+  nightly:
+    description: "Extended nightly test suite"
+    groups:
+      - all
+      - performance
+    options:
+      verbose: true
+      save_reports: true
+
+# Test environment profiles
+# Different configurations for different environments
+profiles:
+  development:
+    default_group: unit
+    default_format: compact
+    color: true
+    verbose: false
+
+  ci:
+    default_group: ci
+    default_format: json
+    color: false
+    save_reports: true
+    fail_fast: false
+
+  production:
+    default_group: smoke
+    default_format: markdown
+    save_reports: true
+    notifications:
+      on_failure: true

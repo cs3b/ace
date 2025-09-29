@@ -20,12 +20,22 @@ module Ace
         resolver.resolve
       end
 
-      # Get configuration value by key path
-      # @param keys [Array<String,Symbol>] Key path to value
+      # Get configuration value by key path or namespace
+      # @param namespace_or_keys [String, Symbol, Array] Namespace name or key path
+      # @param file [String, nil] Optional file name for namespace
+      # @param keys [Array<String,Symbol>] Additional key path after namespace
       # @return [Object] Configuration value
-      def get(*keys)
+      def get(namespace_or_keys, *keys, file: nil)
         resolver = Organisms::ConfigResolver.new
-        resolver.get(*keys)
+
+        # If first arg looks like a namespace, resolve it
+        if namespace_or_keys.is_a?(String) && namespace_or_keys.match?(/^[a-z]+$/)
+          config = resolver.resolve_namespace(namespace_or_keys, file: file)
+          keys.empty? ? config.data : config.get(*keys)
+        else
+          # Traditional key path lookup
+          resolver.get(namespace_or_keys, *keys)
+        end
       end
 
       # Load environment variables

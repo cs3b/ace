@@ -97,11 +97,11 @@ module Ace
         FileUtils.mkdir_p(File.join(root_directory, "backlog", "t"))
         FileUtils.mkdir_p(File.join(root_directory, "done"))
 
-        # Create initial .ace/taskflow.yml if not exists
-        ace_dir = File.join(Dir.pwd, ".ace")
-        FileUtils.mkdir_p(ace_dir)
+        # Create initial .ace/taskflow/config.yml if not exists
+        taskflow_dir = File.join(Dir.pwd, ".ace", "taskflow")
+        FileUtils.mkdir_p(taskflow_dir)
 
-        config_file = File.join(ace_dir, "taskflow.yml")
+        config_file = File.join(taskflow_dir, "config.yml")
         unless File.exist?(config_file)
           File.write(config_file, default_config_yaml)
         end

@@ -92,13 +92,13 @@ module Ace
           # Start from current directory and walk up
           current = Dir.pwd
           while current != "/" && current != File.dirname(current)
-            ace_config = File.join(current, ".ace", "taskflow.yml")
-            paths << ace_config if File.exist?(ace_config)
+            config = File.join(current, ".ace", "taskflow", "config.yml")
+            paths << config if File.exist?(config)
             current = File.dirname(current)
           end
 
           # Add home directory config
-          home_config = File.join(Dir.home, ".ace", "taskflow.yml")
+          home_config = File.join(Dir.home, ".ace", "taskflow", "config.yml")
           paths << home_config if File.exist?(home_config)
 
           # Reverse to apply from home to current (cascade)
