@@ -70,7 +70,7 @@ module Ace
           "formatted"
         end
 
-        def show_next_task(args, display_mode: "path")
+        def show_next_task(args, display_mode: "formatted")
           # Use tasks command with limit 1 to get the next task
           require_relative "tasks_command"
           tasks_cmd = TasksCommand.new
@@ -85,26 +85,32 @@ module Ace
 
           begin
             tasks_cmd.execute(modified_args)
-            result = output.string
-
-            # For path mode, extract just the path from output
-            if display_mode == "path" && result.include?(".ace-taskflow/")
-              # Extract path from the output
-              lines = result.split("\n")
-              path_line = lines.find { |l| l.include?(".ace-taskflow/") }
-              if path_line
-                # Clean up the path line to get just the path
-                path = path_line.strip.gsub(/^\s+/, '')
-                puts path
-              else
-                puts "No pending or in-progress tasks found."
-              end
-            else
-              # For other modes, show full output
-              puts result
-            end
+          rescue SystemExit => e
+            # Handle exit calls from tasks command - but continue
           ensure
             $stdout = original_stdout
+          end
+
+          result = output.string
+
+          # For path mode, extract just the path from output
+          if display_mode == "path" && result.include?(".ace-taskflow/")
+            # Extract path from the output
+            lines = result.split("\n")
+            path_line = lines.find { |l| l.include?(".ace-taskflow/") }
+            if path_line
+              # Clean up the path line to get just the path
+              path = path_line.strip.gsub(/^\s+/, '')
+              puts path
+            else
+              puts "No pending or in-progress tasks found."
+            end
+          elsif result && !result.empty?
+            # For other modes, show full output
+            puts result
+          else
+            # If no output captured, execute directly without capture
+            tasks_cmd.execute(modified_args)
           end
         end
 
@@ -443,7 +449,7 @@ module Ace
         def format_relative_path(path)
           # Use project root, not .ace-taskflow root
           root_path = Dir.pwd
-          Atoms::PathFormatter.format_display_path(path, root_path, max_length: 70)
+          Atoms::PathFormatter.format_relative_path(path, root_path)
         end
 
         def show_help

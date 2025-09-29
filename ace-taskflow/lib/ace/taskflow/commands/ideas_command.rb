@@ -238,7 +238,7 @@ module Ace
         def format_relative_path(path)
           # Use project root, not .ace-taskflow root
           root_path = Dir.pwd
-          Atoms::PathFormatter.format_display_path(path, root_path, max_length: 68)
+          Atoms::PathFormatter.format_relative_path(path, root_path)
         end
 
 

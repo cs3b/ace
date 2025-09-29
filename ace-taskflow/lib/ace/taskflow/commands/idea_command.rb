@@ -69,18 +69,24 @@ module Ace
 
           begin
             ideas_cmd.execute(modified_args)
-            result = output.string
-
-            # Check if no ideas were found
-            if result.include?("No ideas found")
-              puts "No ideas found in current release."
-              puts "Use 'ace-taskflow idea create' to capture a new idea."
-            else
-              # Show the output from ideas command
-              puts result
-            end
+          rescue SystemExit => e
+            # Handle exit calls from ideas command - but continue
           ensure
             $stdout = original_stdout
+          end
+
+          result = output.string
+
+          # Check if no ideas were found
+          if result.include?("No ideas found")
+            puts "No ideas found in current release."
+            puts "Use 'ace-taskflow idea create' to capture a new idea."
+          elsif result && !result.empty?
+            # Show the output from ideas command
+            puts result
+          else
+            # If no output captured, try showing ideas directly
+            ideas_cmd.execute(modified_args)
           end
         end
 
