@@ -14,12 +14,18 @@ PATH
   specs:
     ace-git-commit (0.9.0)
       ace-core (~> 0.9.0)
-      ace-llm (~> 0.1.0)
+      ace-llm (~> 0.9.0)
+
+PATH
+  remote: ace-llm-providers-cli
+  specs:
+    ace-llm-providers-cli (0.9.0)
+      ace-llm (~> 0.9.0)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.1.0)
+    ace-llm (0.9.0)
       ace-core (~> 0.9.0)
       addressable (~> 2.8)
       faraday (~> 2.0)
@@ -29,7 +35,7 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.1.0)
+    ace-nav (0.9.0)
       ace-core (~> 0.1)
 
 PATH
@@ -65,6 +71,7 @@ GEM
     builder (3.3.0)
     concurrent-ruby (1.3.5)
     csv (3.3.5)
+    docile (1.4.1)
     dotenv (2.8.1)
     dry-cli (1.3.0)
     dry-configurable (1.3.0)
@@ -106,6 +113,12 @@ GEM
     rake (13.3.0)
     rexml (3.4.4)
     ruby-progressbar (1.13.0)
+    simplecov (0.22.0)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.13.2)
+    simplecov_json_formatter (0.1.4)
     uri (1.0.3)
     zeitwerk (2.7.3)
 
@@ -118,6 +131,7 @@ DEPENDENCIES
   ace-core!
   ace-git-commit!
   ace-llm!
+  ace-llm-providers-cli!
   ace-nav!
   ace-taskflow!
   ace-test-runner!
@@ -137,6 +151,7 @@ DEPENDENCIES
   minitest-reporters (~> 1.6)
   ostruct (~> 0.6.1)
   rake (~> 13.0)
+  simplecov (~> 0.22)
   zeitwerk (~> 2.6)
 
 BUNDLED WITH

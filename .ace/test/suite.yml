@@ -34,6 +34,21 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-git-commit
+      path: ace-git-commit
+      group: tools
+      priority: 3
+
+    - name: ace-llm
+      path: ace-llm
+      group: tools
+      priority: 3
+
+    - name: ace-llm-providers-cli
+      path: ace-llm-providers-cli
+      group: tools
+      priority: 3
+
   # Test command options
   test_options:
     format: compact

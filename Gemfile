@@ -5,6 +5,7 @@ gem 'ace-context', path: 'ace-context'
 gem 'ace-core', path: 'ace-core'
 gem 'ace-git-commit', path: 'ace-git-commit'
 gem 'ace-llm', path: 'ace-llm'
+gem 'ace-llm-providers-cli', path: 'ace-llm-providers-cli'
 gem 'ace-nav', path: 'ace-nav'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
@@ -16,6 +17,7 @@ group :development, :test do
   gem 'minitest', '~> 5.20'
   gem 'minitest-reporters', '~> 1.6'
   gem 'rake', '~> 13.0'
+  gem 'simplecov', '~> 0.22'
 
   # Temporary: dev-tools dependencies for migration period
   # TODO: Remove once dev-tools are properly isolated or ace-context handles bundler contexts

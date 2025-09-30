@@ -27,6 +27,11 @@ jobs:
           - ace-test-support
           - ace-test-runner
           - ace-context
+          - ace-nav
+          - ace-taskflow
+          - ace-git-commit
+          - ace-llm
+          - ace-llm-providers-cli
 
     steps:
       - name: Checkout code
