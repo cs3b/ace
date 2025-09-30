@@ -429,7 +429,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 30 08:54:07 WEST 2025
+Tue Sep 30 09:08:55 WEST 2025
 
 ```
 
@@ -437,49 +437,8 @@ Tue Sep 30 08:54:07 WEST 2025
 
 **Output:**
 ```
-D  .ace/context/config.yml
- D .ace/context/presets/ace-meta.md
- D .ace/context/presets/gems.md
- D .ace/context/presets/minimal.md
- M .ace/context/presets/project.md
- D .ace/context/presets/release.md
-D  .ace/llm/query.yml
-D  .ace/nav/config.yml
-D  .ace/test-support/config.yml
- M .cache/ace-context/project.md
- M .claude/settings.json
-D  ace-context/.ace.example/context/config.yml
- D ace-context/.ace.example/context/default.md
- D ace-context/.ace.example/context/minimal.md
- D ace-context/.ace.example/context/project.md
- D ace-context/.ace.example/context/release.md
- M ace-context/test/integration/context_integration_test.rb
- M ace-context/test/molecules/preset_manager_test.rb
- M ace-context/test/organisms/context_loader_test.rb
- M ace-core/lib/ace/core/organisms/config_resolver.rb
- M ace-git-commit/.ace.example/git/commit.yml
- M ace-git-commit/lib/ace/git_commit/organisms/commit_orchestrator.rb
- M ace-llm-providers-cli/.ace.example/llm/providers/claude.yml
-D  ace-llm/.ace.example/llm/query.yml
- M ace-nav/.ace.example/nav/protocols/prompt.yml
- D ace-nav/.ace.example/nav/protocols/sample-sources/ace-nav.yml
- D ace-nav/.ace.example/nav/protocols/sample.yml
- D ace-nav/.ace.example/nav/protocols/task-sources/README.md
- D ace-nav/.ace.example/nav/protocols/task.yml
- M ace-nav/.ace.example/nav/protocols/wfi.yml
- M ace-taskflow/.ace.example/taskflow/config.yml
- D ace-taskflow/.ace.example/taskflow/presets/backlog-ready.yml
- D ace-taskflow/.ace.example/taskflow/presets/my-work.yml
- D ace-taskflow/.ace.example/taskflow/presets/urgent.yml
- D ace-taskflow/.ace.example/taskflow/presets/weekly-review.yml
- M ace-test-runner/.ace.example/test/runner.yml
-D  ace-test-support/.ace.example/test-support/config.yml
-?? ace-context/.ace.example/context/presets/
-?? ace-git-commit/.ace.example/nav/
-?? ace-taskflow/.ace.example/nav/
-?? ace-taskflow/.ace.example/taskflow/presets/all.yml
-?? ace-taskflow/.ace.example/taskflow/presets/next.yml
-?? ace-taskflow/.ace.example/taskflow/presets/recent.yml
+ M ace-nav/test/ace/nav/molecules/source_registry_test.rb
+ M ace-nav/test/test_helper.rb
 
 ```
 

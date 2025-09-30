@@ -30,7 +30,13 @@ module Ace
 
         # If first arg looks like a namespace, resolve it
         if namespace_or_keys.is_a?(String) && namespace_or_keys.match?(/^[a-z]+$/)
-          config = resolver.resolve_namespace(namespace_or_keys, file: file)
+          # Use resolve_for instead of deprecated resolve_namespace
+          patterns = if file
+            ["#{namespace_or_keys}/#{file}.yml", "#{namespace_or_keys}/#{file}.yaml"]
+          else
+            ["#{namespace_or_keys}/*.yml", "#{namespace_or_keys}/*.yaml"]
+          end
+          config = resolver.resolve_for(patterns)
           keys.empty? ? config.data : config.get(*keys)
         else
           # Traditional key path lookup

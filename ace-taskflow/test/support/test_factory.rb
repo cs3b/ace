@@ -93,19 +93,51 @@ module TestFactory
   def self.create_test_filesystem(base_dir)
     FileUtils.mkdir_p(base_dir)
 
-    # Create standard structure
+    # Create .ace-taskflow root directory
+    taskflow_root = File.join(base_dir, ".ace-taskflow")
+    FileUtils.mkdir_p(taskflow_root)
+
+    # Create .ace/taskflow/config.yml for config discovery
+    config_dir = File.join(base_dir, ".ace", "taskflow")
+    FileUtils.mkdir_p(config_dir)
+    File.write(File.join(config_dir, "config.yml"), "root: .ace-taskflow\n")
+
+    # Create standard structure in .ace-taskflow
     %w[v.0.9.0 v.0.8.0 backlog done].each do |dir|
-      FileUtils.mkdir_p(File.join(base_dir, dir))
+      FileUtils.mkdir_p(File.join(taskflow_root, dir))
     end
 
+    # Create release files
+    File.write(File.join(taskflow_root, "v.0.9.0", "release.md"), <<~RELEASE)
+      ---
+      version: v.0.9.0
+      status: active
+      created_at: #{Time.now.strftime("%Y-%m-%d")}
+      ---
+
+      # Release v.0.9.0
+      Test release
+    RELEASE
+
+    File.write(File.join(taskflow_root, "v.0.8.0", "release.md"), <<~RELEASE)
+      ---
+      version: v.0.8.0
+      status: completed
+      created_at: #{(Time.now - 30 * 24 * 60 * 60).strftime("%Y-%m-%d")}
+      ---
+
+      # Release v.0.8.0
+      Previous release
+    RELEASE
+
     # Create sample tasks
-    create_task_structure(base_dir, "v.0.9.0", 5)
-    create_task_structure(base_dir, "v.0.8.0", 3)
-    create_task_structure(base_dir, "backlog", 10)
+    create_task_structure(taskflow_root, "v.0.9.0", 5)
+    create_task_structure(taskflow_root, "v.0.8.0", 3)
+    create_task_structure(taskflow_root, "backlog", 10)
 
     # Create sample ideas
-    create_idea_structure(base_dir, "v.0.9.0", 3)
-    create_idea_structure(base_dir, "backlog", 5)
+    create_idea_structure(taskflow_root, "v.0.9.0", 3)
+    create_idea_structure(taskflow_root, "backlog", 5)
   end
 
   def self.create_task_structure(base_dir, release, count)
