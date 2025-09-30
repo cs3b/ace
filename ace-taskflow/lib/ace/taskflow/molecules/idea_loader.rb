@@ -15,36 +15,43 @@ module Ace
           @release_resolver = ReleaseResolver.new(@root_path)
         end
 
-        def load_all(context: "current", include_content: false)
+        def load_all(context: "current", include_content: false, scope: :next)
           idea_dir = determine_idea_directory(context)
           return [] unless idea_dir && Dir.exist?(idea_dir)
 
-          # Load ideas from main ideas/ directory
-          main_ideas = Dir.glob(File.join(idea_dir, "*.md"))
-            .sort
-            .map { |path| load_idea_file(path, include_content) }
-            .compact
+          ideas = []
 
-          # Also load ideas from done/ subdirectory
-          done_dir = File.join(idea_dir, "done")
-          if Dir.exist?(done_dir)
-            done_ideas = Dir.glob(File.join(done_dir, "*.md"))
+          # Load pending ideas from main ideas/ directory (for :next and :all scopes)
+          if [:next, :all, :recent].include?(scope)
+            pending_ideas = Dir.glob(File.join(idea_dir, "*.md"))
               .sort
               .map { |path| load_idea_file(path, include_content) }
               .compact
-            main_ideas.concat(done_ideas)
+            ideas.concat(pending_ideas)
           end
 
-          main_ideas
+          # Load done ideas from done/ subdirectory (for :done and :all scopes)
+          if [:done, :all].include?(scope)
+            done_dir = File.join(idea_dir, "done")
+            if Dir.exist?(done_dir)
+              done_ideas = Dir.glob(File.join(done_dir, "*.md"))
+                .sort
+                .map { |path| load_idea_file(path, include_content) }
+                .compact
+              ideas.concat(done_ideas)
+            end
+          end
+
+          ideas
         end
 
         def find_next(context: "current")
-          ideas = load_all(context: context, include_content: false)
+          ideas = load_all(context: context, include_content: false, scope: :next)
           ideas.first
         end
 
         def find_by_partial_name(partial, context: "current")
-          ideas = load_all(context: context, include_content: false)
+          ideas = load_all(context: context, include_content: false, scope: :all)
 
           # Find first idea where filename contains the partial string
           ideas.find do |idea|

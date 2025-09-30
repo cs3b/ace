@@ -28,8 +28,8 @@ module Ace
           if preset_name
             args.shift # Remove preset name from args
           else
-            # Default to 'recent' preset for ideas
-            preset_name = 'recent'
+            # Default to 'next' preset for ideas (show only pending)
+            preset_name = 'next'
           end
 
           execute_with_preset(preset_name, args)
@@ -70,6 +70,9 @@ module Ace
           # Apply preset with additional filters
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
           return unless preset_config
+
+          # Add preset name to config for scope determination
+          preset_config[:name] = preset_name
 
           # Override context if provided via legacy flags
           if additional_filters[:context]
@@ -140,36 +143,49 @@ module Ace
 
         def get_ideas_for_preset(preset_config)
           context = preset_config[:context] || 'current'
-          # Note: ideas_loader doesn't use filters in the same way as tasks,
-          # but we keep this consistent for future expansion
+          preset_name = preset_config[:name] || 'next'
+
+          # Determine scope based on preset name
+          scope = case preset_name
+          when 'next', 'pending'
+            :next
+          when 'done'
+            :done
+          when 'all', 'all-releases'
+            :all
+          when 'recent'
+            :recent
+          else
+            :next  # Default to pending ideas only
+          end
 
           case context
           when 'all'
-            get_all_ideas_for_preset
+            get_all_ideas_for_preset(scope)
           when 'backlog'
-            @idea_loader.load_all(context: "backlog", include_content: false)
+            @idea_loader.load_all(context: "backlog", include_content: false, scope: scope)
           when 'current'
-            @idea_loader.load_all(context: "current", include_content: false)
+            @idea_loader.load_all(context: "current", include_content: false, scope: scope)
           else
             # Assume it's a specific release context
-            @idea_loader.load_all(context: context, include_content: false)
+            @idea_loader.load_all(context: context, include_content: false, scope: scope)
           end
         end
 
-        def get_all_ideas_for_preset
+        def get_all_ideas_for_preset(scope = :next)
           all_ideas = []
           release_resolver = Molecules::ReleaseResolver.new(@root_path)
 
           # Active releases
           active_releases = release_resolver.find_active
           active_releases.each do |release|
-            ideas = @idea_loader.load_all(context: release[:name], include_content: false)
+            ideas = @idea_loader.load_all(context: release[:name], include_content: false, scope: scope)
             ideas.each { |idea| idea[:release] = release[:name] }
             all_ideas.concat(ideas)
           end
 
           # Backlog
-          backlog_ideas = @idea_loader.load_all(context: "backlog", include_content: false)
+          backlog_ideas = @idea_loader.load_all(context: "backlog", include_content: false, scope: scope)
           backlog_ideas.each { |idea| idea[:release] = "backlog" }
           all_ideas.concat(backlog_ideas)
 
@@ -258,10 +274,10 @@ module Ace
           end
           puts ""
           puts "Preset Examples:"
-          puts "  ace-taskflow ideas                    # Uses 'recent' preset (default)"
-          puts "  ace-taskflow ideas all               # All ideas, grouped by context"
+          puts "  ace-taskflow ideas                    # Uses 'next' preset (pending ideas only)"
+          puts "  ace-taskflow ideas all               # All ideas including done"
+          puts "  ace-taskflow ideas done              # Only completed ideas"
           puts "  ace-taskflow ideas recent --days 3   # Recent ideas with custom filter"
-          puts "  ace-taskflow ideas all --stats       # Statistics for all preset"
           puts ""
           puts "Additional Options:"
           puts "  --days <n>         Modify days for time-based presets"
