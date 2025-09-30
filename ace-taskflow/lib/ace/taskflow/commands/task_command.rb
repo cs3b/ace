@@ -27,6 +27,15 @@ module Ace
           case subaction
           when nil, "next"
             show_next_task(args, display_mode: display_mode)
+          when "show"
+            # Show specific task
+            reference = args.shift
+            unless reference
+              puts "Error: 'show' requires a task reference"
+              puts "Usage: ace-taskflow task show <reference>"
+              exit 1
+            end
+            show_task(reference, display_mode: display_mode)
           when "create"
             create_task(args)
           when "start"
