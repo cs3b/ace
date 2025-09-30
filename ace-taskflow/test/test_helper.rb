@@ -16,8 +16,27 @@ class AceTaskflowTestCase < AceTestCase
   def capture_stdout
     original_stdout = $stdout
     $stdout = StringIO.new
-    yield
+    begin
+      yield
+    rescue SystemExit => e
+      # Capture exit calls but don't propagate them
+      # This allows tests to continue even when commands call exit
+    end
     $stdout.string
+  ensure
+    $stdout = original_stdout
+  end
+
+  def capture_stdout_with_exit
+    original_stdout = $stdout
+    exit_code = nil
+    $stdout = StringIO.new
+    begin
+      yield
+    rescue SystemExit => e
+      exit_code = e.status
+    end
+    [$stdout.string, exit_code]
   ensure
     $stdout = original_stdout
   end
