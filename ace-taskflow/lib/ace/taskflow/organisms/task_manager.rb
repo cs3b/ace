@@ -101,6 +101,15 @@ module Ace
           # Generate task ID and slug
           task_number = generate_task_number(context_path)
           task_id = generate_task_id(context, task_number)
+
+          # Safety check: Verify ID doesn't exist in either t/ or done/
+          if task_id_exists?(context_path, task_id)
+            return {
+              success: false,
+              message: "Task ID #{task_id} already exists! This should not happen. Please report this issue."
+            }
+          end
+
           slug_part = Molecules::TaskSlugGenerator.generate_descriptive_part(title, metadata)
 
           # Create task directory and file with new naming convention
@@ -422,15 +431,25 @@ module Ace
         end
 
         def generate_task_number(context_path)
-          task_dir = File.join(context_path, "t")
-          return "001" unless File.directory?(task_dir)
+          # Scan both active and done task directories
+          task_dirs = [
+            File.join(context_path, "t"),
+            File.join(context_path, "done")
+          ]
 
-          # Find highest existing number
-          existing = Dir.glob(File.join(task_dir, "*")).map do |path|
-            File.basename(path).to_i
+          existing = []
+          task_dirs.each do |task_dir|
+            next unless File.directory?(task_dir)
+
+            existing += Dir.glob(File.join(task_dir, "*")).map do |path|
+              # Extract task number from directory name (e.g., "001-task-name" → 1)
+              File.basename(path).split('-').first.to_i
+            end
           end
 
-          next_number = existing.max.to_i + 1
+          return "001" if existing.empty?
+
+          next_number = existing.max + 1
           next_number.to_s.rjust(3, '0')
         end
 
@@ -496,6 +515,26 @@ module Ace
           content = File.read(file_path)
           updated = content.sub(/^id:\s*.+$/m, "id: #{new_id}")
           File.write(file_path, updated)
+        end
+
+        def task_id_exists?(context_path, task_id)
+          # Check both active and done directories for existing task IDs
+          dirs = [
+            File.join(context_path, "t"),
+            File.join(context_path, "done")
+          ]
+
+          dirs.any? do |dir|
+            next false unless File.directory?(dir)
+
+            Dir.glob(File.join(dir, "*")).any? do |path|
+              # Check if directory name contains the task ID
+              dirname = File.basename(path)
+              # Match task ID pattern (e.g., "001", "002", etc.) at the start of dirname
+              task_number = task_id.split('.').last
+              dirname.start_with?("#{task_number}-")
+            end
+          end
         end
       end
     end
