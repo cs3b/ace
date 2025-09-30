@@ -1,34 +1,24 @@
-# Example ace-taskflow configuration
-# Copy to .ace/taskflow/config.yml in your project and customize
+# Minimal ace-taskflow configuration
+# Copy to .ace/taskflow/config.yml to customize
 
 taskflow:
-  # Task directory structure
-  directories:
-    root: ".ace-taskflow"
-    active: "v.%{version}"
-    tasks: "t"
-    ideas: "backlog/ideas"
+  # Root directory for tasks (default: .ace-taskflow)
+  root: ".ace-taskflow"
 
-  # Task naming
-  naming:
-    task_pattern: "task.%{id}.md"
-    id_format: "%03d"  # 3-digit zero-padded
+  # Task directory name (default: t)
+  task_dir: "t"
 
-  # Release management
-  releases:
-    current: "0.1.0"  # Your current release version
-    auto_create: true
+  # Default locations for new items
+  defaults:
+    idea_location: "active"      # Where to save ideas: active, backlog, or v.X.Y.Z
+    task_location: "active"      # Where to create tasks: active or v.X.Y.Z
+    git_commit: false            # Auto-commit new ideas
+    llm_enhance: false           # Use LLM to enhance ideas
 
-  # Ideas management (optional)
-  ideas:
-    directory: "./ideas"  # Where to store ideas
-    defaults:
-      git_commit: false   # Auto-commit new ideas
-      llm_enhance: false  # Use LLM to enhance ideas
+  # Idea configuration
+  idea:
+    directory: "./ideas"         # Where to save ideas locally
 
-  # Display settings (optional)
-  display:
-    list_format: "table"  # table, list, or cards
-    color_coding:
-      enabled: true
-      by_status: true
+  # Release configuration
+  release:
+    current: "0.1.0"            # Your current release version

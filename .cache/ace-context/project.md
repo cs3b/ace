@@ -429,7 +429,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Mon Sep 29 23:09:21 WEST 2025
+Tue Sep 30 08:54:07 WEST 2025
 
 ```
 
@@ -437,64 +437,49 @@ Mon Sep 29 23:09:21 WEST 2025
 
 **Output:**
 ```
- D .ace/context/ace-meta.md
- D .ace/context/gems.md
- D .ace/context/minimal.md
- D .ace/context/project.md
- D .ace/context/release.md
- D .ace/git/config/git.yml
- D .ace/protocols/guide-sources/ace-taskflow.yml
- D .ace/protocols/guide-sources/handbook.yml
- D .ace/protocols/guide.yml
- D .ace/protocols/prompt-sources/ace-git-commit.yml
- D .ace/protocols/prompt.yml
- D .ace/protocols/sample.yml
- D .ace/protocols/task.yml
- D .ace/protocols/tmpl-sources/ace-taskflow.yml
- D .ace/protocols/tmpl-sources/handbook.yml
- D .ace/protocols/tmpl.yml
- D .ace/protocols/wfi-sources/ace-git-commit.yml
- D .ace/protocols/wfi-sources/ace-taskflow.yml
- D .ace/protocols/wfi-sources/handbook.yml
- D .ace/protocols/wfi-sources/local.yml
- D .ace/protocols/wfi.yml
- D .ace/settings.yml
- D .ace/taskflow.yml
- D .ace/test-suite.yml
- D .ace/test.yml
+D  .ace/context/config.yml
+ D .ace/context/presets/ace-meta.md
+ D .ace/context/presets/gems.md
+ D .ace/context/presets/minimal.md
+ M .ace/context/presets/project.md
+ D .ace/context/presets/release.md
+D  .ace/llm/query.yml
+D  .ace/nav/config.yml
+D  .ace/test-support/config.yml
  M .cache/ace-context/project.md
- M ace-context/exe/ace-context
- M ace-context/lib/ace/context/molecules/preset_manager.rb
- D ace-core/config/settings.yml
- M ace-core/lib/ace/core.rb
+ M .claude/settings.json
+D  ace-context/.ace.example/context/config.yml
+ D ace-context/.ace.example/context/default.md
+ D ace-context/.ace.example/context/minimal.md
+ D ace-context/.ace.example/context/project.md
+ D ace-context/.ace.example/context/release.md
+ M ace-context/test/integration/context_integration_test.rb
+ M ace-context/test/molecules/preset_manager_test.rb
+ M ace-context/test/organisms/context_loader_test.rb
  M ace-core/lib/ace/core/organisms/config_resolver.rb
- D ace-git-commit/config/git.yml
- M ace-taskflow/lib/ace/taskflow/commands/idea_command.rb
- M ace-taskflow/lib/ace/taskflow/configuration.rb
- M ace-taskflow/lib/ace/taskflow/molecules/config_loader.rb
- M ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb
- D ace-test-runner/.ace/test-cache/test_files.json
- D ace-test-runner/config/default.yml
- D ace-test-runner/config/groups.yml
- M ace-test-runner/exe/ace-test-suite
-?? .ace-taskflow/v.0.9.0/retro/20250929-ace-taskflow-path-display-fixes.md
-?? .ace/README.md
-?? .ace/context/config.yml
-?? .ace/context/presets/
-?? .ace/core/
-?? .ace/git/commit.yml
-?? .ace/llm/query.yml
-?? .ace/nav/
-?? .ace/taskflow/config.yml
-?? .ace/test/
-?? ace-context/ace.example/
-?? ace-core/ace.example/
-?? ace-git-commit/ace.example/
-?? ace-llm/ace.example/
-?? ace-nav/ace.example/
-?? ace-taskflow/ace.example/
-?? ace-test-runner/ace.example/
-?? bin/setup-ace-config
+ M ace-git-commit/.ace.example/git/commit.yml
+ M ace-git-commit/lib/ace/git_commit/organisms/commit_orchestrator.rb
+ M ace-llm-providers-cli/.ace.example/llm/providers/claude.yml
+D  ace-llm/.ace.example/llm/query.yml
+ M ace-nav/.ace.example/nav/protocols/prompt.yml
+ D ace-nav/.ace.example/nav/protocols/sample-sources/ace-nav.yml
+ D ace-nav/.ace.example/nav/protocols/sample.yml
+ D ace-nav/.ace.example/nav/protocols/task-sources/README.md
+ D ace-nav/.ace.example/nav/protocols/task.yml
+ M ace-nav/.ace.example/nav/protocols/wfi.yml
+ M ace-taskflow/.ace.example/taskflow/config.yml
+ D ace-taskflow/.ace.example/taskflow/presets/backlog-ready.yml
+ D ace-taskflow/.ace.example/taskflow/presets/my-work.yml
+ D ace-taskflow/.ace.example/taskflow/presets/urgent.yml
+ D ace-taskflow/.ace.example/taskflow/presets/weekly-review.yml
+ M ace-test-runner/.ace.example/test/runner.yml
+D  ace-test-support/.ace.example/test-support/config.yml
+?? ace-context/.ace.example/context/presets/
+?? ace-git-commit/.ace.example/nav/
+?? ace-taskflow/.ace.example/nav/
+?? ace-taskflow/.ace.example/taskflow/presets/all.yml
+?? ace-taskflow/.ace.example/taskflow/presets/next.yml
+?? ace-taskflow/.ace.example/taskflow/presets/recent.yml
 
 ```
 

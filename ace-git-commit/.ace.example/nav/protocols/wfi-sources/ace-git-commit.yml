@@ -1,0 +1,19 @@
+---
+# WFI Sources Protocol Configuration for ace-git-commit gem
+# This enables workflow discovery from the installed ace-git-commit gem
+
+name: ace-git-commit
+type: gem
+description: Workflow instructions from ace-git-commit gem
+priority: 10
+
+# Configuration for workflow discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/workflow-instructions)
+  relative_path: handbook/workflow-instructions
+
+  # Pattern for finding workflow files (default: *.wf.md)
+  pattern: "*.wf.md"
+
+  # Enable discovery
+  enabled: true

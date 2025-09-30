@@ -8,7 +8,6 @@ models:
 aliases:
   global:
     cc: claude:sonnet
-    claude-code: claude:sonnet
     cc-opus: claude:opus
     cc-sonnet: claude:sonnet
     cc-haiku: claude:haiku
@@ -16,9 +15,6 @@ aliases:
     opus: claude-opus-4-1
     sonnet: claude-sonnet-4-0
     haiku: claude-3-5-haiku-latest
-    o: claude-opus-4-1
-    s: claude-sonnet-4-0
-    h: claude-3-5-haiku-latest
 capabilities:
   - text_generation
   - streaming

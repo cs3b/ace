@@ -1,0 +1,10 @@
+description: "Recently modified items (last 7 days)"
+type:  # Universal preset for tasks, ideas, releases
+context: "current"
+filters: {}
+sort:
+  by: "modified"
+  ascending: false
+display:
+  show_dates: true
+  days: 7

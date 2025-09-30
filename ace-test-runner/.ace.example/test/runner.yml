@@ -1,21 +1,25 @@
-# Example test runner configuration
-# Copy to .ace/test/runner.yml in your project and customize
+# ace-test-runner configuration
+# Copy to .ace/test/runner.yml if you need to override defaults
 
-test_runner:
-  # Test framework configuration
-  framework: rspec         # Options: rspec, minitest, test-unit
+test:
+  # Output format: progress, progress-file, or json
+  format: progress
 
-  # Test file patterns
-  patterns:
-    - "test/**/*_test.rb"   # For minitest/test-unit
-    - "spec/**/*_spec.rb"   # For rspec
+  # Test reports directory
+  report_dir: test-reports
+  save_reports: true
 
-  # Coverage settings (optional)
-  coverage:
-    enabled: true
-    minimum: 80             # Minimum coverage percentage
+  # Test execution options
+  fail_fast: false
+  verbose: false
+  parallel: false
+  color: true
 
-  # Output formatting (optional)
-  output:
-    format: progress        # Options: progress, documentation, json
-    color: true
+  # Timeout in seconds (nil = no timeout)
+  timeout: null
+
+  # Test file patterns (optional - has good defaults)
+  # patterns:
+  #   all: "test/**/*_test.rb"
+  #   unit: "test/unit/**/*_test.rb"
+  #   integration: "test/integration/**/*_test.rb"

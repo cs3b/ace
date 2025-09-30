@@ -1,56 +1,11 @@
 {
     "permissions": {
         "deny": [
-            "Bash(git status*)",
-            "Bash(git commit*)",
-            "Bash(git add*)",
-            "Bash(git log*)",
-            "Bash(git push*)",
-            "Bash(git pull*)",
-            "Bash(git fetch*)",
-            "Bash(git checkout*)",
-            "Bash(git branch*)",
-            "Bash(git merge*)",
-            "Bash(git rebase*)",
-            "Bash(git reset*)",
-            "Bash(git stash*)",
-            "Bash(git tag*)",
-            "Bash(git remote*)",
-            "Bash(git restore*)",
-            "Bash(git clone*)",
-            "Bash(git init*)"
+            "Bash(git commit :*)",
         ],
         "allow": [
-            "Bash(git-status*)",
-            "Bash(git-commit*)",
-            "Bash(git-add*)",
-            "Bash(git-log*)",
-            "Bash(git-push*)",
-            "Bash(git-pull*)",
-            "Bash(git-fetch*)",
-            "Bash(git-checkout*)",
-            "Bash(git-switch*)",
-            "Bash(git-restore*)",
-            "Bash(git-mv*)",
-            "Bash(git-rm*)",
-            "Bash(git-tag*)",
-            "Bash(task-manager*)",
-            "Bash(release-manager*)",
-            "Bash(code-lint*)",
-            "Bash(create-path*)"
+            "Bash(ace-git-commit :*)",
+            "Bash(ace-:*)",
         ]
-    },
-    "hooks": {
-        "PreToolUse": [
-            {
-                "matcher": "Bash",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "ruby $CLAUDE_PROJECT_DIR/.claude/hooks/enforce-wrapper-tools.rb"
-                    }
-                ]
-            }
-        ]
-    }
+  }
 }

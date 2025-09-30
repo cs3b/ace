@@ -23,8 +23,8 @@ class ContextLoaderTest < AceTestCase
       # #{name.capitalize} Preset
     MARKDOWN
 
-    FileUtils.mkdir_p(".ace/context")
-    File.write(".ace/context/#{name}.md", content)
+    FileUtils.mkdir_p(".ace/context/presets")
+    File.write(".ace/context/presets/#{name}.md", content)
   end
 
   def test_loads_preset_with_files

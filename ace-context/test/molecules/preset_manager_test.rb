@@ -32,8 +32,8 @@ class PresetManagerTest < AceTestCase
 
   def test_loads_preset_from_markdown_file
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
-      File.write(".ace/context/test.md", @preset_content)
+      FileUtils.mkdir_p(".ace/context/presets")
+      File.write(".ace/context/presets/test.md", @preset_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("test")
@@ -47,8 +47,8 @@ class PresetManagerTest < AceTestCase
 
   def test_parses_frontmatter_correctly
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
-      File.write(".ace/context/test.md", @preset_content)
+      FileUtils.mkdir_p(".ace/context/presets")
+      File.write(".ace/context/presets/test.md", @preset_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("test")
@@ -68,8 +68,8 @@ class PresetManagerTest < AceTestCase
 
   def test_extracts_body_content
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
-      File.write(".ace/context/test.md", @preset_content)
+      FileUtils.mkdir_p(".ace/context/presets")
+      File.write(".ace/context/presets/test.md", @preset_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("test")
@@ -82,9 +82,9 @@ class PresetManagerTest < AceTestCase
 
   def test_lists_presets
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
-      File.write(".ace/context/preset1.md", @preset_content)
-      File.write(".ace/context/preset2.md", @preset_content.sub("Test preset", "Second preset"))
+      FileUtils.mkdir_p(".ace/context/presets")
+      File.write(".ace/context/presets/preset1.md", @preset_content)
+      File.write(".ace/context/presets/preset2.md", @preset_content.sub("Test preset", "Second preset"))
 
       manager = Ace::Context::Molecules::PresetManager.new
       presets = manager.list_presets
@@ -98,8 +98,8 @@ class PresetManagerTest < AceTestCase
 
   def test_preset_exists_check
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
-      File.write(".ace/context/exists.md", @preset_content)
+      FileUtils.mkdir_p(".ace/context/presets")
+      File.write(".ace/context/presets/exists.md", @preset_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
 
@@ -123,7 +123,7 @@ class PresetManagerTest < AceTestCase
 
   def test_handles_invalid_frontmatter
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
+      FileUtils.mkdir_p(".ace/context/presets")
 
       # Invalid YAML in frontmatter
       invalid_content = <<~MARKDOWN
@@ -134,7 +134,7 @@ class PresetManagerTest < AceTestCase
         Content
       MARKDOWN
 
-      File.write(".ace/context/invalid.md", invalid_content)
+      File.write(".ace/context/presets/invalid.md", invalid_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("invalid")
@@ -146,11 +146,11 @@ class PresetManagerTest < AceTestCase
 
   def test_handles_missing_frontmatter
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
+      FileUtils.mkdir_p(".ace/context/presets")
 
       # No frontmatter at all
       no_frontmatter = "# Just Markdown\n\nNo frontmatter here."
-      File.write(".ace/context/nofm.md", no_frontmatter)
+      File.write(".ace/context/presets/nofm.md", no_frontmatter)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("nofm")
@@ -162,7 +162,7 @@ class PresetManagerTest < AceTestCase
 
   def test_default_values_for_missing_params
     with_temp_dir do
-      FileUtils.mkdir_p(".ace/context")
+      FileUtils.mkdir_p(".ace/context/presets")
 
       minimal_content = <<~MARKDOWN
         ---
@@ -174,7 +174,7 @@ class PresetManagerTest < AceTestCase
         Minimal content
       MARKDOWN
 
-      File.write(".ace/context/minimal.md", minimal_content)
+      File.write(".ace/context/presets/minimal.md", minimal_content)
 
       manager = Ace::Context::Molecules::PresetManager.new
       preset = manager.get_preset("minimal")
