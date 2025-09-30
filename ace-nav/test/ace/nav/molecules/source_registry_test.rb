@@ -46,7 +46,7 @@ module Ace
 
         def test_discovers_user_sources
           # Create user source directory
-          user_sources_dir = File.expand_path("~/.ace/protocols/example-sources")
+          user_sources_dir = File.expand_path("~/.ace/nav/protocols/example-sources")
           FileUtils.mkdir_p(user_sources_dir)
 
           user_source = {
@@ -232,7 +232,7 @@ module Ace
           FileUtils.mkdir_p(child_dir)
 
           # Create source in parent
-          parent_sources_dir = File.join(parent_dir, ".ace", "protocols", "test-sources")
+          parent_sources_dir = File.join(parent_dir, ".ace", "nav/protocols", "test-sources")
           FileUtils.mkdir_p(parent_sources_dir)
           File.write(File.join(parent_sources_dir, "parent.yml"), {
             "name" => "parent_source",
@@ -241,7 +241,7 @@ module Ace
           }.to_yaml)
 
           # Create source in child
-          child_sources_dir = File.join(child_dir, ".ace", "protocols", "test-sources")
+          child_sources_dir = File.join(child_dir, ".ace", "nav/protocols", "test-sources")
           FileUtils.mkdir_p(child_sources_dir)
           File.write(File.join(child_sources_dir, "child.yml"), {
             "name" => "child_source",

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ace/nav"
 
 require "minitest/autorun"
@@ -44,7 +43,7 @@ module TestHelper
 
   # Create a test source registration
   def create_test_source(dir, protocol_name, source_name, config = {})
-    sources_dir = File.join(dir, ".ace", "protocols", "#{protocol_name}-sources")
+    sources_dir = File.join(dir, ".ace", "nav/protocols", "#{protocol_name}-sources")
     FileUtils.mkdir_p(sources_dir)
 
     source_config = {

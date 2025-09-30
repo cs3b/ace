@@ -16,6 +16,14 @@ module Ace
           @completed_packages = []
           @waiting_packages = []
           @failed_packages = []
+
+          # Use ace-core's project root detection
+          require "ace/core/config_discovery"
+          discovery = Ace::Core::ConfigDiscovery.new
+          @project_root = discovery.project_root
+
+          # Resolve package paths relative to project root
+          resolve_package_paths! if @project_root
         end
 
         def run
@@ -68,6 +76,15 @@ module Ace
           @packages.each do |package|
             unless Dir.exist?(package["path"])
               raise "Package directory not found: #{package['path']} for #{package['name']}"
+            end
+          end
+        end
+
+        def resolve_package_paths!
+          @packages.each do |package|
+            # If path is relative (doesn't start with /), resolve it relative to project root
+            if package["path"] && !package["path"].start_with?("/")
+              package["path"] = File.join(@project_root, package["path"])
             end
           end
         end

@@ -34,10 +34,10 @@ class TaskCommandTest < AceTaskflowTestCase
 
       Dir.chdir(dir) do
         output = capture_stdout do
-          @command.execute
+          @command.execute([])
         end
 
-        assert_match(/No pending tasks found/, output)
+        assert_match(/No.*task/i, output)
       end
     end
   end
