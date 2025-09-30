@@ -50,15 +50,23 @@ module Ace
         # Load configuration
         # @return [Hash] Configuration
         def load_config
-          # Load git configuration using ace-core
-          git_config = Ace::Core.get("git")
+          # Load git/commit.yml configuration using ace-core
+          require 'ace/core/organisms/config_resolver'
 
-          if git_config && git_config.is_a?(Hash)
-            git_config
+          resolver = Ace::Core::Organisms::ConfigResolver.new(
+            file_patterns: ["git/commit.yml", "git/commit.yaml"]
+          )
+
+          config = resolver.resolve
+
+          if config && config.data && !config.data.empty?
+            # Extract git section if present, otherwise use root
+            config.data["git"] || config.data
           else
             default_config
           end
-        rescue StandardError
+        rescue StandardError => e
+          warn "Error loading git commit config: #{e.message}" if ENV["DEBUG"]
           default_config
         end
 

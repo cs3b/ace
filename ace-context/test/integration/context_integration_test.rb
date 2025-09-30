@@ -16,8 +16,8 @@ class ContextIntegrationTest < AceTestCase
 
   def test_full_context_loading_workflow
     # Create markdown preset
-    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context"))
-    File.write(File.join(@env.project_dir, ".ace/context/project.md"), <<~MARKDOWN
+    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context/presets"))
+    File.write(File.join(@env.project_dir, ".ace/context/presets/project.md"), <<~MARKDOWN
       ---
       description: Project preset
       params:
@@ -53,8 +53,8 @@ class ContextIntegrationTest < AceTestCase
 
   def test_list_presets_from_directory
     # Create multiple presets
-    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context"))
-    File.write(File.join(@env.project_dir, ".ace/context/preset1.md"), <<~MARKDOWN
+    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context/presets"))
+    File.write(File.join(@env.project_dir, ".ace/context/presets/preset1.md"), <<~MARKDOWN
       ---
       description: First preset
       params:
@@ -66,7 +66,7 @@ class ContextIntegrationTest < AceTestCase
     MARKDOWN
     )
 
-    File.write(File.join(@env.project_dir, ".ace/context/preset2.md"), <<~MARKDOWN
+    File.write(File.join(@env.project_dir, ".ace/context/presets/preset2.md"), <<~MARKDOWN
       ---
       description: Second preset
       params:
@@ -117,8 +117,8 @@ class ContextIntegrationTest < AceTestCase
 
   def test_write_output_with_chunking
     # Create preset
-    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context"))
-    File.write(File.join(@env.project_dir, ".ace/context/test.md"), <<~MARKDOWN
+    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context/presets"))
+    File.write(File.join(@env.project_dir, ".ace/context/presets/test.md"), <<~MARKDOWN
       ---
       description: Test preset
       params:
@@ -150,8 +150,8 @@ class ContextIntegrationTest < AceTestCase
 
   def test_integration_with_commands
     # Create preset with commands
-    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context"))
-    File.write(File.join(@env.project_dir, ".ace/context/cmd.md"), <<~MARKDOWN
+    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context/presets"))
+    File.write(File.join(@env.project_dir, ".ace/context/presets/cmd.md"), <<~MARKDOWN
       ---
       description: Command preset
       params:
@@ -177,8 +177,8 @@ class ContextIntegrationTest < AceTestCase
 
   def test_multiple_preset_loading
     # Create presets
-    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context"))
-    File.write(File.join(@env.project_dir, ".ace/context/preset1.md"), <<~MARKDOWN
+    FileUtils.mkdir_p(File.join(@env.project_dir, ".ace/context/presets"))
+    File.write(File.join(@env.project_dir, ".ace/context/presets/preset1.md"), <<~MARKDOWN
       ---
       description: First
       params:
@@ -190,7 +190,7 @@ class ContextIntegrationTest < AceTestCase
     MARKDOWN
     )
 
-    File.write(File.join(@env.project_dir, ".ace/context/preset2.md"), <<~MARKDOWN
+    File.write(File.join(@env.project_dir, ".ace/context/presets/preset2.md"), <<~MARKDOWN
       ---
       description: Second
       params:

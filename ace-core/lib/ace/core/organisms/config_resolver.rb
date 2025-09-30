@@ -67,24 +67,20 @@ module Ace
           config.get(*keys)
         end
 
-        # Resolve configuration for a specific namespace
-        # @param namespace [String] Namespace name (e.g., "git", "llm", "test")
-        # @param file [String, nil] Specific file within namespace (e.g., "runner" for test/runner.yml)
+        # Resolve configuration for specific file patterns
+        # @param patterns [Array<String>, String] File patterns to search for
         # @return [Models::Config] Resolved configuration
-        def resolve_namespace(namespace, file: nil)
-          # Determine file pattern based on namespace and file
-          namespace_patterns = determine_namespace_patterns(namespace, file)
-
-          # Create finder with namespace-specific patterns
+        def resolve_for(patterns)
+          # Create finder with specified patterns
           finder = Molecules::ConfigFinder.new(
             search_paths: search_paths,
-            file_patterns: namespace_patterns
+            file_patterns: Array(patterns)
           )
 
           cascade_paths = finder.find_all.select(&:exists)
 
           if cascade_paths.empty?
-            return Models::Config.new({}, source: "#{namespace}_defaults", merge_strategy: merge_strategy)
+            return Models::Config.new({}, source: "no_config_found", merge_strategy: merge_strategy)
           end
 
           # Load and merge configs
@@ -108,43 +104,24 @@ module Ace
           )
         end
 
-        private
+        # Resolve configuration for a specific namespace
+        # @param namespace [String] Namespace name (e.g., "git", "test")
+        # @param file [String, nil] Specific file within namespace (e.g., "runner" for test/runner.yml)
+        # @return [Models::Config] Resolved configuration
+        # @deprecated This method contains hardcoded gem-specific knowledge and will be removed.
+        #   Each gem should manage its own config patterns using resolve_for or ConfigResolver.new
+        def resolve_namespace(namespace, file: nil)
+          warn "[DEPRECATION] `resolve_namespace` is deprecated. " \
+               "Gems should use ConfigResolver.new(file_patterns: patterns).resolve instead."
 
-        # Determine file patterns for a namespace
-        # @param namespace [String] Namespace name
-        # @param file [String, nil] Specific file name
-        # @return [Array<String>] File patterns to search for
-        def determine_namespace_patterns(namespace, file)
-          case namespace
-          when "core"
-            ["core/settings.yml", "core/settings.yaml"]
-          when "llm"
-            ["llm/query.yml", "llm/query.yaml"]
-          when "git"
-            ["git/commit.yml", "git/commit.yaml"]
-          when "test"
-            if file
-              ["test/#{file}.yml", "test/#{file}.yaml"]
-            else
-              ["test/*.yml", "test/*.yaml"]
-            end
+          # Generic fallback pattern - no gem-specific knowledge
+          patterns = if file
+            ["#{namespace}/#{file}.yml", "#{namespace}/#{file}.yaml"]
           else
-            if file
-              ["#{namespace}/#{file}.yml", "#{namespace}/#{file}.yaml"]
-            else
-              ["#{namespace}/config.yml", "#{namespace}/config.yaml"]
-            end
+            ["#{namespace}/*.yml", "#{namespace}/*.yaml"]
           end
-        end
 
-        # Find config files
-        # @return [Array<Models::CascadePath>] All potential config paths
-        def find_configs
-          finder = Molecules::ConfigFinder.new(
-            search_paths: search_paths,
-            file_patterns: file_patterns
-          )
-          finder.find_all
+          resolve_for(patterns)
         end
 
         # Get config from specific type
@@ -178,6 +155,18 @@ module Ace
             merge_strategy: merge_strategy
           )
         end
+
+        # Find config files
+        # @return [Array<Models::CascadePath>] All potential config paths
+        def find_configs
+          finder = Molecules::ConfigFinder.new(
+            search_paths: search_paths,
+            file_patterns: file_patterns
+          )
+          finder.find_all
+        end
+
+        private
 
         # Create default config structure
         # @param path [String] Where to create config

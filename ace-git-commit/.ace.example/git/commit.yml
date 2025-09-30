@@ -1,16 +1,14 @@
-# Example ace-git-commit configuration
-# Copy to .ace/git/commit.yml in your project and customize
+# Minimal ace-git-commit configuration
+# Copy to .ace/git/commit.yml and customize for your project
 
 git:
-  # Default LLM model for commit generation
-  # Uses model aliases from .ace/llm/query.yml
-  model: glite  # Options: gpt4, claude, glite, or any configured model
+  # LLM model for commit message generation
+  model: glite  # or gpt4, claude, etc. - must match provider alias
 
   # Commit message conventions
   conventions:
     format: conventional  # conventional, simple, or detailed
 
-    # Scope detection from file paths
     scopes:
       enabled: true
       detect_from_paths: true
@@ -22,13 +20,3 @@ git:
         - ui
         - docs
         - test
-        - config
-
-  # LLM generation settings (optional)
-  generation:
-    temperature: 0.7
-    max_tokens: 500
-
-  # Author settings (optional)
-  author:
-    sign_commits: false

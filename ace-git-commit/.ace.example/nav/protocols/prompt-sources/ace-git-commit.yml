@@ -1,0 +1,19 @@
+---
+# Prompt Sources Protocol Configuration for ace-git-commit gem
+# This enables prompt discovery from the installed ace-git-commit gem
+
+name: ace-git-commit
+type: gem
+description: System prompts from ace-git-commit gem
+priority: 10
+
+# Configuration for prompt discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/prompts)
+  relative_path: handbook/prompts
+
+  # Pattern for finding prompt files (supports both *.md and *.prompt.md)
+  pattern: "*.md"
+
+  # Enable discovery
+  enabled: true

@@ -4,7 +4,6 @@ name: "Workflow Instructions"
 description: "Step-by-step workflow guides for development tasks"
 enabled: true
 
-
 # File extensions to match
 extensions:
   - .wfi.md
