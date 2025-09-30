@@ -732,7 +732,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 30 23:23:46 WEST 2025
+Wed Oct  1 00:07:38 WEST 2025
 
 ```
 
@@ -740,26 +740,44 @@ Tue Sep 30 23:23:46 WEST 2025
 
 **Output:**
 ```
- M .ace/test/suite.yml
  M .cache/ace-context/project.md
- M .github/workflows/test.yml
- M Gemfile
- M Gemfile.lock
- M Rakefile
- M ace-git-commit/ace-git-commit.gemspec
- M ace-llm/lib/ace/llm/version.rb
- M ace-nav/lib/ace/nav.rb
- M ace-nav/lib/ace/nav/version.rb
-?? .simplecov
-?? ace-git-commit/test/ace/
-?? ace-llm-providers-cli/test/ace/
-?? ace-llm/test/ace/
-?? ace-llm/test/test_helper.rb
-?? ace-nav/test/ace/nav_test.rb
-?? ace-taskflow/.ace-taskflow/backlog/t/003-task-backlog/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.2.0-v-0-9-0/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.3.0-new-features/
-?? ace-taskflow/test/ace/
+ M ace-llm/coverage/.resultset.json
+ M ace-llm/coverage/index.html
+ M ace-taskflow/lib/ace/taskflow.rb
+ D ace-taskflow/test/ace/taskflow_test.rb
+ M ace-taskflow/test/test_helper.rb
+?? ace-taskflow/.ace-taskflow/backlog/t/004-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/005-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/006-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/007-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/008-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/009-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/010-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/t/011-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.10.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.11.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.12.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.13.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.14.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.15.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.16.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.17.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.18.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.19.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.20.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.21.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.22.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.23.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.24.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.25.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.26.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.27.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.28.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.29.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.6.0-invalid-version/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.7.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.8.0-new-features/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.9.0-v-0-9-0/
 
 ```
 

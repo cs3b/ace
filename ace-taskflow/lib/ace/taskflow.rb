@@ -7,6 +7,12 @@ require_relative "taskflow/cli"
 module Ace
   module Taskflow
     class Error < StandardError; end
-    # Entry point module
+
+    # Define module namespaces
+    module Atoms; end
+    module Molecules; end
+    module Organisms; end
+    module Models; end
+    module Commands; end
   end
 end
