@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-09-30T22:13:08+01:00
+---
+
 # Idea
 
 Investigate random ace-test behaviour, observed in ace-taskflow:

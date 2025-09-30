@@ -732,7 +732,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 30 21:45:47 WEST 2025
+Tue Sep 30 22:06:17 WEST 2025
 
 ```
 
@@ -740,16 +740,6 @@ Tue Sep 30 21:45:47 WEST 2025
 
 **Output:**
 ```
- M .cache/ace-context/project.md
-?? .ace-taskflow/v.0.9.0/t/001-task-taskflow---title-migrate-batch-operatio/
-?? .ace-taskflow/v.0.9.0/t/002-feat-taskflow---title-migrate-idea-workflows/
-?? .ace-taskflow/v.0.9.0/t/003-task-taskflow---title-migrate-roadmap-workfl/
-?? .ace-taskflow/v.0.9.0/t/004-test-taskflow---title-migrate-testing-workfl/
-?? .ace-taskflow/v.0.9.0/t/005-feat-taskflow---title-ace-taskflow-retro-pac/
-?? .ace-taskflow/v.0.9.0/t/006-feat-taskflow---title-ace-taskflow-review-pa/
-?? .ace-taskflow/v.0.9.0/t/007-feat-handbook---title-ace-handbook-package--/
-?? .ace-taskflow/v.0.9.0/t/008-docs-context---title-extend-ace-context-doc/
-?? .ace-taskflow/v.0.9.0/t/009-feat-git---title-ace-git-package-operat/
 
 ```
 
