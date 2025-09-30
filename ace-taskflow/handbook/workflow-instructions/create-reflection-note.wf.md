@@ -55,15 +55,26 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - Determine where to save the reflection using current release context:
 
      ```bash
-     # Get current release information and path automatically
-     # TODO: Create file using standard methods or future ace-taskflow feature:reflection-new --title '<reflection-title>'
+     # Find the current/latest release directory
+     RELEASE_DIR=$(ls -d /Users/mc/Ps/ace-meta/.ace-taskflow/v.*/ 2>/dev/null | tail -1)
 
-     # This tool will:
-     # 1. Determine current release context automatically
-     # 2. Create target directory if needed (e.g., [release-dir]/retro/)
-     # 3. Generate appropriate filename with timestamp
-     # 4. Create the reflection file and return full path
+     if [ -n "$RELEASE_DIR" ]; then
+         # Save in the current release's retro folder
+         RETRO_DIR="${RELEASE_DIR}retro"
+         mkdir -p "$RETRO_DIR"
+         REFLECTION_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
+     else
+         # Fallback: No release found, use project-level reflections
+         RETRO_DIR="/Users/mc/Ps/ace-meta/reflections"
+         mkdir -p "$RETRO_DIR"
+         REFLECTION_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
+     fi
+
+     # Example: For ace-test-runner fixes on 2025-09-30
+     # Path would be: .ace-taskflow/v.0.9.0/retro/2025-09-30-ace-test-runner-fixes.md
      ```
+
+   **Important:** Reflections should always go in the current release's `retro/` folder when a release exists. Only use a project-level reflections folder as a fallback.
 
 
 3. **Create Reflection Structure:**
@@ -136,7 +147,12 @@ Capture individual or team observations, learnings, and ideas for improvement du
 6. **Review and Save:**
    - Ensure all sections have meaningful content
    - Remove empty sections if not applicable
-   - Save file with descriptive filename
+   - Save file using the path determined in Step 2:
+     ```bash
+     # Save to the determined location (from Step 2)
+     # E.g.: .ace-taskflow/v.0.9.0/retro/2025-09-30-ace-test-runner-fixes.md
+     echo "Saving reflection to: $REFLECTION_PATH"
+     ```
 
 ## Conversation Analysis Process
 
@@ -304,7 +320,7 @@ Focus on new skills, tools, or concepts mastered during the work.
 - Reflection note created with meaningful content
 - Insights captured for future reference
 - Action items clearly defined
-- File saved in appropriate location
+- File saved in current release's retro/ folder (or project reflections/ as fallback)
 - Learning documented for team benefit
 
 ## Best Practices
