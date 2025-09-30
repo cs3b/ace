@@ -36,5 +36,10 @@ module Ace
     class ProviderError < Error; end
     class ConfigurationError < Error; end
     class AuthenticationError < Error; end
+
+    # Define module namespaces
+    module Atoms; end
+    module Molecules; end
+    module Organisms; end
   end
 end

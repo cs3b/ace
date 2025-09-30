@@ -6,6 +6,10 @@ module Ace
   module Nav
     class Error < StandardError; end
 
-    # Main module for ace-nav functionality
+    # Define module namespaces
+    module Atoms; end
+    module Molecules; end
+    module Organisms; end
+    module Models; end
   end
 end

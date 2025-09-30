@@ -732,7 +732,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 30 22:06:17 WEST 2025
+Tue Sep 30 23:23:46 WEST 2025
 
 ```
 
@@ -740,6 +740,26 @@ Tue Sep 30 22:06:17 WEST 2025
 
 **Output:**
 ```
+ M .ace/test/suite.yml
+ M .cache/ace-context/project.md
+ M .github/workflows/test.yml
+ M Gemfile
+ M Gemfile.lock
+ M Rakefile
+ M ace-git-commit/ace-git-commit.gemspec
+ M ace-llm/lib/ace/llm/version.rb
+ M ace-nav/lib/ace/nav.rb
+ M ace-nav/lib/ace/nav/version.rb
+?? .simplecov
+?? ace-git-commit/test/ace/
+?? ace-llm-providers-cli/test/ace/
+?? ace-llm/test/ace/
+?? ace-llm/test/test_helper.rb
+?? ace-nav/test/ace/nav_test.rb
+?? ace-taskflow/.ace-taskflow/backlog/t/003-task-backlog/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.2.0-v-0-9-0/
+?? ace-taskflow/.ace-taskflow/backlog/v.0.3.0-new-features/
+?? ace-taskflow/test/ace/
 
 ```
 
