@@ -1,9 +1,8 @@
-description: "All items across all contexts"
+description: "All tasks in current release (all statuses)"
 type:  # Universal preset
-context: "all"
+context: "current"
 filters: {}
 sort:
-  by: "context"
+  by: "sort"
   ascending: true
-display:
-  group_by: "context"
+display: {}

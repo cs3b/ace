@@ -140,7 +140,17 @@ module Ace
             },
             'all' => {
               name: 'all',
-              description: 'All items across all contexts',
+              description: 'All tasks in current release (all statuses)',
+              context: 'current',
+              filters: {},
+              sort: { by: :sort, ascending: true },
+              display: {},
+              type: nil, # Universal preset
+              default: true
+            },
+            'all-releases' => {
+              name: 'all-releases',
+              description: 'All tasks across all releases',
               context: 'all',
               filters: {},
               sort: { by: :context, ascending: true },

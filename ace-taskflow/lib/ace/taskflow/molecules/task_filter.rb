@@ -151,6 +151,8 @@ module Ace
               tasks.sort_by { |t| priority_value(t[:priority]) }
             when :status
               tasks.sort_by { |t| status_value(t[:status]) }
+            when :context, "context"
+              tasks.sort_by { |t| t[:context] || "" }
             when :id
               tasks.sort_by { |t| t[:id] || "" }
             when :modified
