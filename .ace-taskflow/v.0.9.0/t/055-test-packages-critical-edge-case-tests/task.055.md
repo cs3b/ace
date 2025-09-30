@@ -13,6 +13,7 @@ dependencies: []
 Add comprehensive edge case tests to ensure ACE packages work reliably across different execution contexts, handle errors gracefully, and guard critical behaviors. Focus on tests that provide value by protecting against real-world failure scenarios.
 
 **Key Focus Areas:**
+
 1. Execution from any directory depth in project tree
 2. Missing core component tests (CommitOrchestrator, FileStager, NavigationEngine)
 3. Error recovery and handling
@@ -23,7 +24,9 @@ Add comprehensive edge case tests to ensure ACE packages work reliably across di
 ## Behavioral Specification
 
 ### User Experience
+
 Developers and AI agents should be able to:
+
 - Execute ACE commands from any directory level within a project
 - Rely on graceful error handling when network/filesystem issues occur
 - Trust that path handling works with unicode, spaces, and special characters
@@ -37,10 +40,10 @@ Developers and AI agents should be able to:
 
 ## Planning Steps
 
-* [ ] Review current test coverage in each package to identify existing patterns
-* [ ] Prioritize test implementation based on risk (P0 → P1 → P2)
-* [ ] Set up test fixtures for directory depth scenarios
-* [ ] Design test helpers for common edge case patterns
+- [ ] Review current test coverage in each package to identify existing patterns
+- [ ] Prioritize test implementation based on risk (P0 → P1 → P2)
+- [ ] Set up test fixtures for directory depth scenarios
+- [ ] Design test helpers for common edge case patterns
 
 ## Execution Steps
 
@@ -63,7 +66,6 @@ Developers and AI agents should be able to:
 
 ### P2 - Nice to Have (Robustness)
 
-- [ ] All packages: Add performance tests for large files and deep nesting
 - [ ] ace-llm: Add concurrency tests for multiple simultaneous requests
 - [ ] ace-nav: Add resource discovery edge cases (permission denied, circular symlinks)
 
