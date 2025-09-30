@@ -190,7 +190,15 @@ For experienced users, here's the condensed workflow:
      bin/build
      ```
 
-   * Update task status to `done`
+   * Mark task as done using ace-taskflow command:
+
+     ```bash
+     # Use task ID or task number
+     ace-taskflow task done v.0.9.0+009
+     # OR
+     ace-taskflow task done 009
+     ```
+
    * Work is complete and ready for review
 
 ## Task Documentation Organization
