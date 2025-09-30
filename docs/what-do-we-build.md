@@ -10,7 +10,7 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Task, release, and idea management with move-to-done and rescheduling
+- **ace-taskflow**: Task, release, and idea management with presets, move-to-done, and rescheduling
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers (Claude, Codex, OpenCode)
 - **ace-git-commit**: Smart git commit generation with LLM integration
