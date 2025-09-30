@@ -46,9 +46,9 @@ Developers and AI agents should be able to:
 
 ### P0 - Critical (Blocks Production)
 
-- [ ] **ace-git-commit**: Create `test/ace/git_commit/commit_orchestrator_test.rb` with integration tests
-- [ ] **ace-git-commit**: Create `test/ace/git_commit/file_stager_test.rb` with staging operation tests
-- [ ] **ace-nav**: Enable and implement skipped `NavigationEngine` integration tests
+- [x] **ace-git-commit**: Create `test/organisms/commit_orchestrator_test.rb` with integration tests (10 tests, all passing)
+- [x] **ace-git-commit**: Create `test/molecules/file_stager_test.rb` with staging operation tests (15 tests, all passing)
+- [x] **ace-nav**: Enable and implement skipped `NavigationEngine` integration tests (Created test/organisms/navigation_engine_test.rb)
 - [ ] **ace-core**: Add `test/ace/core/molecules/directory_traverser_edge_test.rb` for deep directory execution
 - [ ] **ace-llm**: Add error handling tests for network timeouts, rate limiting, malformed responses
 
