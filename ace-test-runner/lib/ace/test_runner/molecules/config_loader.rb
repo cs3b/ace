@@ -8,6 +8,8 @@ module Ace
     module Molecules
       class ConfigLoader
         DEFAULT_CONFIG_PATHS = [
+          ".ace/test/runner.yml",
+          ".ace/test/runner.yaml",
           ".ace/test.yml",
           ".ace/test.yaml",
           ".ace/test-runner.yml",
