@@ -429,7 +429,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 30 09:08:55 WEST 2025
+Tue Sep 30 11:04:27 WEST 2025
 
 ```
 
@@ -437,8 +437,6 @@ Tue Sep 30 09:08:55 WEST 2025
 
 **Output:**
 ```
- M ace-nav/test/ace/nav/molecules/source_registry_test.rb
- M ace-nav/test/test_helper.rb
 
 ```
 
