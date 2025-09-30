@@ -57,12 +57,12 @@ Developers and AI agents should be able to:
 
 ### P1 - Important (Production Quality)
 
-- [ ] **ace-core**: Add path edge case tests (unicode, spaces, special chars, long paths)
-- [ ] **ace-core**: Add config cascade edge case tests (circular refs, priority conflicts)
-- [ ] **ace-context**: Add preset dependency tests (circular includes, missing files)
-- [ ] **ace-context**: Add file content edge case tests (binary, invalid UTF-8, BOM markers)
-- [ ] **ace-git-commit**: Add git state edge case tests (detached HEAD, merge conflicts, empty repo)
-- [ ] **ace-llm-providers-cli**: Add CLI execution edge case tests (command not found, process killed)
+- [x] **ace-core**: Add path edge case tests (unicode, spaces, special chars, long paths) - 15 tests created
+- [x] **ace-core**: Add config cascade edge case tests (circular refs, priority conflicts) - 12 tests created
+- [x] **ace-context**: Add preset dependency tests (circular includes, missing files) - 15 tests created
+- [ ] **ace-context**: Add file content edge case tests (binary, invalid UTF-8, BOM markers) - Skipped (covered by ace-core FileReader tests)
+- [x] **ace-git-commit**: Add git state edge case tests (detached HEAD, merge conflicts, empty repo) - 15 tests created
+- [x] **ace-llm-providers-cli**: Add CLI execution edge case tests (command not found, process killed) - 37 tests created (27 passing, 10 skipped)
 
 ### P2 - Nice to Have (Robustness)
 
