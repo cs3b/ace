@@ -19,9 +19,10 @@
 
 ## What Could Be Improved
 
-- **Initial Test Strategy**: First attempt at ace-nav tests created them without running, leading to require path issues that needed fixing
+- **Test Verification Before Committing**: Created ace-nav NavigationEngine tests without verifying they worked properly - they failed in CI and had to be removed
+- **Understanding Existing Test Coverage**: Should have checked ace-nav's existing 68-test suite before creating redundant integration tests
 - **LLM Commit Tool Limits**: Hit token limits when trying to use ace-git-commit with LLM for large diffs - had to fall back to manual message
-- **Test Isolation**: Some tests (like ace-nav NavigationEngine) weren't initially runnable due to missing requires/setup
+- **Test Scope Validation**: Created integration tests instead of edge case tests for ace-nav, missing the actual requirement
 - **Dependency Management**: Had to discover webmock wasn't available and pivot to unit testing approach for ace-llm
 
 ## Key Learnings
@@ -49,6 +50,7 @@
 - Creating test files without immediately running them to verify they work
 - Assuming all test libraries are available without checking Gemfile first
 - Using LLM-based commit messages for very large diffs
+- Writing tests without understanding what existing tests already cover
 
 ### Continue Doing
 - Breaking work into logical sessions with clear commit boundaries
@@ -57,7 +59,9 @@
 - Writing comprehensive test coverage for critical components
 
 ### Start Doing
-- Run tests immediately after creation to catch setup/require issues early
+- **Always run `ace-test` before committing test files** to catch failures early
+- Check existing test suite first to avoid redundant work
+- Verify tests actually test edge cases, not just basic functionality
 - Check available test libraries before designing test approach
 - Use `-m` flag for ace-git-commit when diffs are large
 - Add timeout requires when using Timeout class in tests
@@ -66,11 +70,16 @@
 ## Technical Details
 
 ### Test Statistics
-- **Total Tests Created**: 73 tests across 4 packages
+- **Total Tests Created**: 57 tests across 3 packages
 - **ace-git-commit**: 25 tests (CommitOrchestrator: 10, FileStager: 15)
-- **ace-nav**: 16 tests (NavigationEngine edge cases)
+- **ace-nav**: 0 new tests (existing 68-test suite already comprehensive)
 - **ace-core**: 13 tests (DirectoryTraverser edge cases)
 - **ace-llm**: 19 tests (HTTPClient error handling)
+
+### Test Corrections
+- Removed ace-nav NavigationEngine test file (navigation_engine_test.rb) that was failing
+- Reason: Tests were integration tests, not edge case tests, and duplicated existing coverage
+- Lesson: Always verify tests pass with `ace-test` before committing
 
 ### Key Test Patterns Used
 
