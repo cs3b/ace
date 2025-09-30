@@ -50,8 +50,11 @@ module Ace
               1   # b has sort, comes first
             else
               # Neither has sort, compare by task ID number
-              a_num = a[:id]&.match(/task\.(\d+)$/)&.[](1)&.to_i || 999999
-              b_num = b[:id]&.match(/task\.(\d+)$/)&.[](1)&.to_i || 999999
+              # Handle both string and integer IDs
+              a_id_str = a[:id].to_s
+              b_id_str = b[:id].to_s
+              a_num = a_id_str.match(/task\.(\d+)$/)&.[](1)&.to_i || a_id_str.to_i || 999999
+              b_num = b_id_str.match(/task\.(\d+)$/)&.[](1)&.to_i || b_id_str.to_i || 999999
               a_num <=> b_num
             end
           end
