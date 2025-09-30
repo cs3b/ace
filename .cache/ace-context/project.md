@@ -371,7 +371,7 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-context**: Project context loading
 - **ace-test-runner**: Test execution and reporting
 - **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Task, release, and idea management with move-to-done and rescheduling
+- **ace-taskflow**: Task, release, and idea management with presets, move-to-done, and rescheduling
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers support
 - **ace-git-commit**: Smart git commit generation with LLM integration
@@ -653,7 +653,7 @@ For complete decision history and detailed rationale, refer to the individual AD
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list` |
 | **ace-test** | Run tests | `ace-test test/file.rb`, `ace-test test/file.rb:42` |
 | **ace-test-suite** | Run all tests | `ace-test-suite` |
-| **ace-taskflow** | Task management | `ace-taskflow task`, `ace-taskflow tasks --preset current` |
+| **ace-taskflow** | Task management | `ace-taskflow task show 018`, `ace-taskflow tasks all` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged` |
@@ -662,9 +662,10 @@ For complete decision history and detailed rationale, refer to the individual AD
 
 ```sh
 # Task management
+ace-taskflow task show 019              # Show task details
 ace-taskflow task done 019              # Mark complete & move to done/
-ace-taskflow idea reschedule "feat" --add-next  # Reschedule idea
-ace-taskflow release reschedule v.0.9.0 --status active
+ace-taskflow tasks all                  # All tasks in current release
+ace-taskflow tasks all-releases         # All tasks across all releases
 
 # Git commits
 ace-git-commit                          # Generate commit for all changes
@@ -694,7 +695,7 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-context**: Project context loading with smart caching
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Task, release, and idea management with move-to-done and rescheduling
+- **ace-taskflow**: Task, release, and idea management with presets, move-to-done, and rescheduling
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers (Claude, Codex, OpenCode)
 - **ace-git-commit**: Smart git commit generation with LLM integration
@@ -731,7 +732,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Tue Sep 30 20:47:54 WEST 2025
+Tue Sep 30 21:45:47 WEST 2025
 
 ```
 
@@ -739,105 +740,16 @@ Tue Sep 30 20:47:54 WEST 2025
 
 **Output:**
 ```
- D .ace-taskflow/v.0.9.0/t/001-feat-core-minimal-ace-core-gem/task.001.md
- D .ace-taskflow/v.0.9.0/t/002-feat-root-gemfile-workspace/task.002.md
- D .ace-taskflow/v.0.9.0/t/003-test-core-set-up-minitest-ace-core/task.003.md
- D .ace-taskflow/v.0.9.0/t/004-test-core-integration-tests-ace-core/task.004.md
- D .ace-taskflow/v.0.9.0/t/005-feat-context-ace-context-gem/task.005.md
- D .ace-taskflow/v.0.9.0/t/006-feat-taskflow-ace-taskflow-gem/task.006.md
- D .ace-taskflow/v.0.9.0/t/007-feat-git-ace-git-gem-ace-gc-only/task.007.md
- D .ace-taskflow/v.0.9.0/t/007-feat-git-ace-git-gem-ace-gc-only/ux/usage.md
- D .ace-taskflow/v.0.9.0/t/010-test-test-ace-test-runner-package-execut/task.010.md
- D .ace-taskflow/v.0.9.0/t/011-test-test-redesign-ace-test-runner-perfo/task.011.md
- D .ace-taskflow/v.0.9.0/t/012-test-test-ace-test-runner-progress-repor/task.012.md
- D .ace-taskflow/v.0.9.0/t/013-feat-test-ace-test-runner-rich-developer/task.013.md
- D .ace-taskflow/v.0.9.0/t/014-test-test-enhanced-report-generation-ind/task.014.md
- D .ace-taskflow/v.0.9.0/t/015-test-test-optimize-ace-test-runner-perfo/task.015.md
- D .ace-taskflow/v.0.9.0/t/016-feat-context-smart-caching-ace-context/task.016.md
- D .ace-taskflow/v.0.9.0/t/017-refactor-context-ace-context-markdown-only-pres/task.017.md
- D .ace-taskflow/v.0.9.0/t/018-feat-nav-ace-nav-gem-navigation-handboo/task.018.md
- D .ace-taskflow/v.0.9.0/t/018-feat-nav-ace-nav-gem-navigation-handboo/ux.md
- D .ace-taskflow/v.0.9.0/t/019-feat-taskflow-ace-taskflow-release-managemen/task.019.md
- D .ace-taskflow/v.0.9.0/t/019-feat-taskflow-ace-taskflow-release-managemen/ux.md
- D .ace-taskflow/v.0.9.0/t/020-refactor-nav-ace-nav-follow-standard-config/task.020.md
- D .ace-taskflow/v.0.9.0/t/021-task-llm-extract-llm-query-dev-tools-ac/progress.md
- D .ace-taskflow/v.0.9.0/t/021-task-llm-extract-llm-query-dev-tools-ac/qa/ux.md
- D .ace-taskflow/v.0.9.0/t/021-task-llm-extract-llm-query-dev-tools-ac/task.021.md
- D .ace-taskflow/v.0.9.0/t/022-task-taskflow-migrate-dev-taskflow-ace-taskf/task.022.md
- D .ace-taskflow/v.0.9.0/t/023-feat-llm-ace-llm-providers-cli-gem-cli-/task.023.md
- D .ace-taskflow/v.0.9.0/t/024-task-taskflow-migrate-workflows-ace-taskflow/task.024.md
- D .ace-taskflow/v.0.9.0/t/025-feat-llm-git-commit-llm-enhance-flags-i/qa/usage.md
- D .ace-taskflow/v.0.9.0/t/025-feat-llm-git-commit-llm-enhance-flags-i/task.025.md
- D .ace-taskflow/v.0.9.0/t/026-feat-reschedule-subcommand-tasks-co/qa/usage.md
- D .ace-taskflow/v.0.9.0/t/026-feat-reschedule-subcommand-tasks-co/task.026.md
- D .ace-taskflow/v.0.9.0/t/027-feat-release-command-directory-stru/qa/usage.md
- D .ace-taskflow/v.0.9.0/t/027-feat-release-command-directory-stru/task.027.md
- D .ace-taskflow/v.0.9.0/t/028-test-taskflow-comprehensive-coverage-ace-tas/task.028.md
- D .ace-taskflow/v.0.9.0/t/029-task-taskflow-ace-taskflow-workflow-instruct/task.029.md
- D .ace-taskflow/v.0.9.0/t/030-fix-nav-ace-nav-protocol-path-formatti/task.030.md
- D .ace-taskflow/v.0.9.0/t/031-feat-taskflow-descriptive-paths-ace-taskflow/task.031.md
- D .ace-taskflow/v.0.9.0/t/031-feat-taskflow-descriptive-paths-ace-taskflow/ux/usage.md
- D .ace-taskflow/v.0.9.0/t/032-feat-taskflow-preset-system-ace-taskflow-lis/task.032.md
- D .ace-taskflow/v.0.9.0/t/032-feat-taskflow-preset-system-ace-taskflow-lis/ux/usage.md
- D .ace-taskflow/v.0.9.0/t/033-feat-taskflow-enhanced-stats-summary-display/task.033.md
- D .ace-taskflow/v.0.9.0/t/033-feat-taskflow-enhanced-stats-summary-display/ux/usage.md
- D .ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/task.034.md
- D .ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/ux/usage.md
- D .ace-taskflow/v.0.9.0/t/035-feat-llm-configuration-based-provider-a/task.035.md
- D .ace-taskflow/v.0.9.0/t/036-fix-llm-ace-llm-query-executable-follo/task.036.md
- D .ace-taskflow/v.0.9.0/t/037-feat-llm-env-cascade-loading-support-ac/task.037.md
- D .ace-taskflow/v.0.9.0/t/038-feat-llm-proper-binstub-ace-llm-query/task.038.md
- D .ace-taskflow/v.0.9.0/t/039-task-taskflow-ace-taskflow-display-status-co/task.039.md
- D .ace-taskflow/v.0.9.0/t/040-task-taskflow-implemented-dependency-aware-s/task.040.md
- D .ace-taskflow/v.0.9.0/t/041-feat-taskflow-move-done-and-reschedule/docs/ideas/041-feat-taskflow-move-done-tasks.md
- D .ace-taskflow/v.0.9.0/t/041-feat-taskflow-move-done-and-reschedule/docs/ideas/041-feat-taskflow-reschedule-ideas-releases.md
- D .ace-taskflow/v.0.9.0/t/041-feat-taskflow-move-done-and-reschedule/task.041.md
- D .ace-taskflow/v.0.9.0/t/042-fix-git-ace-git-commit-api-key-loading/task.042.md
- D .ace-taskflow/v.0.9.0/t/043-refactor-core-env-loading-centralize-ace-cor/task.043.md
- D .ace-taskflow/v.0.9.0/t/044-feat-core-ace-core-init-subcommand-confi/task.044.md
- D .ace-taskflow/v.0.9.0/t/045-task-restructurin---title-configuration-namespac/task.045.md
-?? .ace-taskflow/v.0.9.0/t/done/001-feat-core-minimal-ace-core-gem/
-?? .ace-taskflow/v.0.9.0/t/done/002-feat-root-gemfile-workspace/
-?? .ace-taskflow/v.0.9.0/t/done/003-test-core-set-up-minitest-ace-core/
-?? .ace-taskflow/v.0.9.0/t/done/004-test-core-integration-tests-ace-core/
-?? .ace-taskflow/v.0.9.0/t/done/005-feat-context-ace-context-gem/
-?? .ace-taskflow/v.0.9.0/t/done/006-feat-taskflow-ace-taskflow-gem/
-?? .ace-taskflow/v.0.9.0/t/done/007-feat-git-ace-git-gem-ace-gc-only/
-?? .ace-taskflow/v.0.9.0/t/done/010-test-test-ace-test-runner-package-execut/
-?? .ace-taskflow/v.0.9.0/t/done/011-test-test-redesign-ace-test-runner-perfo/
-?? .ace-taskflow/v.0.9.0/t/done/012-test-test-ace-test-runner-progress-repor/
-?? .ace-taskflow/v.0.9.0/t/done/013-feat-test-ace-test-runner-rich-developer/
-?? .ace-taskflow/v.0.9.0/t/done/014-test-test-enhanced-report-generation-ind/
-?? .ace-taskflow/v.0.9.0/t/done/015-test-test-optimize-ace-test-runner-perfo/
-?? .ace-taskflow/v.0.9.0/t/done/016-feat-context-smart-caching-ace-context/
-?? .ace-taskflow/v.0.9.0/t/done/017-refactor-context-ace-context-markdown-only-pres/
-?? .ace-taskflow/v.0.9.0/t/done/018-feat-nav-ace-nav-gem-navigation-handboo/
-?? .ace-taskflow/v.0.9.0/t/done/019-feat-taskflow-ace-taskflow-release-managemen/
-?? .ace-taskflow/v.0.9.0/t/done/020-refactor-nav-ace-nav-follow-standard-config/
-?? .ace-taskflow/v.0.9.0/t/done/021-task-llm-extract-llm-query-dev-tools-ac/
-?? .ace-taskflow/v.0.9.0/t/done/022-task-taskflow-migrate-dev-taskflow-ace-taskf/
-?? .ace-taskflow/v.0.9.0/t/done/023-feat-llm-ace-llm-providers-cli-gem-cli-/
-?? .ace-taskflow/v.0.9.0/t/done/024-task-taskflow-migrate-workflows-ace-taskflow/
-?? .ace-taskflow/v.0.9.0/t/done/025-feat-llm-git-commit-llm-enhance-flags-i/
-?? .ace-taskflow/v.0.9.0/t/done/026-feat-reschedule-subcommand-tasks-co/
-?? .ace-taskflow/v.0.9.0/t/done/027-feat-release-command-directory-stru/
-?? .ace-taskflow/v.0.9.0/t/done/028-test-taskflow-comprehensive-coverage-ace-tas/
-?? .ace-taskflow/v.0.9.0/t/done/029-task-taskflow-ace-taskflow-workflow-instruct/
-?? .ace-taskflow/v.0.9.0/t/done/030-fix-nav-ace-nav-protocol-path-formatti/
-?? .ace-taskflow/v.0.9.0/t/done/031-feat-taskflow-descriptive-paths-ace-taskflow/
-?? .ace-taskflow/v.0.9.0/t/done/032-feat-taskflow-preset-system-ace-taskflow-lis/
-?? .ace-taskflow/v.0.9.0/t/done/033-feat-taskflow-enhanced-stats-summary-display/
-?? .ace-taskflow/v.0.9.0/t/done/035-feat-llm-configuration-based-provider-a/
-?? .ace-taskflow/v.0.9.0/t/done/036-fix-llm-ace-llm-query-executable-follo/
-?? .ace-taskflow/v.0.9.0/t/done/037-feat-llm-env-cascade-loading-support-ac/
-?? .ace-taskflow/v.0.9.0/t/done/038-feat-llm-proper-binstub-ace-llm-query/
-?? .ace-taskflow/v.0.9.0/t/done/039-task-taskflow-ace-taskflow-display-status-co/
-?? .ace-taskflow/v.0.9.0/t/done/040-task-taskflow-implemented-dependency-aware-s/
-?? .ace-taskflow/v.0.9.0/t/done/041-feat-taskflow-move-done-and-reschedule/
-?? .ace-taskflow/v.0.9.0/t/done/042-fix-git-ace-git-commit-api-key-loading/
-?? .ace-taskflow/v.0.9.0/t/done/043-refactor-core-env-loading-centralize-ace-cor/
-?? .ace-taskflow/v.0.9.0/t/done/044-feat-core-ace-core-init-subcommand-confi/
-?? .ace-taskflow/v.0.9.0/t/done/045-task-restructurin---title-configuration-namespac/
+ M .cache/ace-context/project.md
+?? .ace-taskflow/v.0.9.0/t/001-task-taskflow---title-migrate-batch-operatio/
+?? .ace-taskflow/v.0.9.0/t/002-feat-taskflow---title-migrate-idea-workflows/
+?? .ace-taskflow/v.0.9.0/t/003-task-taskflow---title-migrate-roadmap-workfl/
+?? .ace-taskflow/v.0.9.0/t/004-test-taskflow---title-migrate-testing-workfl/
+?? .ace-taskflow/v.0.9.0/t/005-feat-taskflow---title-ace-taskflow-retro-pac/
+?? .ace-taskflow/v.0.9.0/t/006-feat-taskflow---title-ace-taskflow-review-pa/
+?? .ace-taskflow/v.0.9.0/t/007-feat-handbook---title-ace-handbook-package--/
+?? .ace-taskflow/v.0.9.0/t/008-docs-context---title-extend-ace-context-doc/
+?? .ace-taskflow/v.0.9.0/t/009-feat-git---title-ace-git-package-operat/
 
 ```
 
