@@ -195,10 +195,23 @@ module Ace
         def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil)
           # Display three-line header
           context = preset_config[:context] || 'current'
+
+          # Get total count of ALL ideas for proper display
+          total_ideas = if preset_config[:name] == 'all' || preset_config[:name] == 'done'
+                         # For 'all' or 'done' presets, get the actual total including done
+                         all_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+                         all_ideas.size
+                       else
+                         # For 'next' and other presets, still show total for context
+                         all_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+                         all_ideas.size
+                       end
+
           header = @stats_formatter.format_header(
             command_type: :ideas,
             displayed_count: ideas.size,
-            context: context
+            context: context,
+            total_count: total_ideas
           )
           puts header
 

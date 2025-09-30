@@ -40,8 +40,9 @@ module Ace
         # @param command_type [Symbol] :tasks or :ideas
         # @param displayed_count [Integer] Number of items being displayed
         # @param context [String] Current context (for release identification)
+        # @param total_count [Integer] Optional override for total count (for filtered views)
         # @return [String] Formatted three-line header
-        def format_header(command_type:, displayed_count: 0, context: "current")
+        def format_header(command_type:, displayed_count: 0, context: "current", total_count: nil)
           # Get release information
           release_info = get_release_info(context)
           return minimal_header(command_type, displayed_count) unless release_info
@@ -52,9 +53,12 @@ module Ace
 
           lines = []
 
+          # Use provided total_count or fall back to calculated stats
+          actual_total = total_count || (command_type == :tasks ? task_stats[:total] : idea_stats[:total])
+
           # Line 1: Context line
           lines << format_context_line(command_type, displayed_count,
-                                       command_type == :tasks ? task_stats[:total] : idea_stats[:total],
+                                       actual_total,
                                        release_info)
 
           # Line 2: Ideas status
@@ -213,7 +217,8 @@ module Ace
                      "current"
                    end
 
-          ideas = @idea_loader.load_all(context: context, include_content: false)
+          # Get ALL ideas including done for accurate stats
+          ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
 
           stats = {
             total: ideas.size,
@@ -221,7 +226,12 @@ module Ace
           }
 
           ideas.each do |idea|
-            status = idea[:status] || "new"
+            # Determine status based on path
+            status = if idea[:path] && idea[:path].include?("/done/")
+                      "done"
+                     else
+                      idea[:status] || "new"
+                     end
             stats[:by_status][status] ||= 0
             stats[:by_status][status] += 1
           end
@@ -243,7 +253,16 @@ module Ace
         def format_ideas_line(idea_stats)
           parts = []
 
+          # Show pending ideas (new) and done ideas
+          new_count = idea_stats[:by_status]["new"] || 0
+          done_count = idea_stats[:by_status]["done"] || 0
+
+          parts << "💡 #{new_count}" if new_count > 0
+          parts << "✅ #{done_count}" if done_count > 0
+
+          # Add other statuses from IDEA_STATUS_ORDER
           IDEA_STATUS_ORDER.each do |status|
+            next if status == "new" # Already handled
             count = idea_stats[:by_status][status] || 0
             next if count == 0
 
@@ -252,7 +271,8 @@ module Ace
           end
 
           # Add unknown statuses
-          unknown_count = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) }.values.sum
+          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || s == "done" }
+          unknown_count = unknown_statuses.values.sum
           parts << "❓ #{unknown_count}" if unknown_count > 0
 
           "Ideas: #{parts.join(' | ')} • #{idea_stats[:total]} total"
