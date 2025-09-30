@@ -10,6 +10,7 @@ context:
     - docs/what-do-we-build.md
     - docs/blueprint.md
     - docs/architecture.md
+    - docs/ace-gems.g.md
     - docs/decisions.md
     - docs/tools.md
   commands:
