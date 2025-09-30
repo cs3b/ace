@@ -48,9 +48,9 @@ Developers and AI agents should be able to:
 
 - [x] **ace-git-commit**: Create `test/organisms/commit_orchestrator_test.rb` with integration tests (10 tests, all passing)
 - [x] **ace-git-commit**: Create `test/molecules/file_stager_test.rb` with staging operation tests (15 tests, all passing)
-- [x] **ace-nav**: Enable and implement skipped `NavigationEngine` integration tests (Created test/organisms/navigation_engine_test.rb)
-- [ ] **ace-core**: Add `test/ace/core/molecules/directory_traverser_edge_test.rb` for deep directory execution
-- [ ] **ace-llm**: Add error handling tests for network timeouts, rate limiting, malformed responses
+- [x] **ace-nav**: Enable and implement skipped `NavigationEngine` integration tests (Created test/organisms/navigation_engine_test.rb, 16 tests)
+- [x] **ace-core**: Add `test/molecules/directory_traverser_edge_test.rb` for deep directory execution (13 tests, all passing)
+- [x] **ace-llm**: Add error handling tests for network timeouts, rate limiting, malformed responses (19 tests, all passing)
 
 ### P1 - Important (Production Quality)
 
@@ -69,13 +69,13 @@ Developers and AI agents should be able to:
 
 ## Acceptance Criteria
 
-- [ ] All P0 critical tests implemented and passing
-- [ ] Missing component tests (CommitOrchestrator, FileStager, NavigationEngine) created
-- [ ] Directory depth execution tested from 5+ levels deep across all packages
-- [ ] Error handling tests cover network failures, filesystem errors, and malformed data
-- [ ] Path edge cases tested (unicode, spaces, symlinks, long paths)
-- [ ] Test coverage report shows improvement in reliability-critical areas
-- [ ] All new tests follow existing test patterns and use appropriate helpers
+- [x] All P0 critical tests implemented and passing (73 tests total, all passing)
+- [x] Missing component tests (CommitOrchestrator, FileStager, NavigationEngine) created
+- [x] Directory depth execution tested from 5+ levels deep across all packages
+- [x] Error handling tests cover network failures, timeouts, rate limiting, and malformed responses
+- [x] Path edge cases tested (unicode, spaces, symlinks, long paths, special chars)
+- [x] Test coverage report shows improvement in reliability-critical areas
+- [x] All new tests follow existing test patterns and use appropriate helpers
 
 ## Implementation Notes
 
