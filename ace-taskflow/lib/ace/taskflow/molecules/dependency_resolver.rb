@@ -100,7 +100,7 @@ module Ace
               next unless dep_task
 
               in_degree[task[:id]] += 1
-              dependents[normalized_dep] << task[:id]
+              dependents[dep_task[:id]] << task[:id]
             end
           end
 

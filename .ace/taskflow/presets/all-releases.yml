@@ -1,0 +1,9 @@
+description: "All tasks across all releases"
+type:  # Universal preset
+context: "all"
+filters: {}
+sort:
+  by: "context"
+  ascending: true
+display:
+  group_by: "context"

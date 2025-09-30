@@ -87,9 +87,6 @@ module Ace
               filters[:list] = true
               i += 1
             # Legacy flag mappings
-            when "--all"
-              filters[:_preset_override] = "all"
-              i += 1
             when "--backlog"
               filters[:context] = "backlog"
               i += 1
@@ -396,12 +393,12 @@ module Ace
           puts "  ace-taskflow tasks                    # Uses 'next' preset (default)"
           puts "  ace-taskflow tasks recent             # Recently modified tasks"
           puts "  ace-taskflow tasks recent --days 3    # Recent with custom filter"
-          puts "  ace-taskflow tasks all                # All tasks, grouped by context"
+          puts "  ace-taskflow tasks all                # All tasks in current release"
+          puts "  ace-taskflow tasks all-releases       # All tasks across all releases"
           puts "  ace-taskflow tasks pending            # Only pending tasks"
           puts "  ace-taskflow tasks next --stats       # Statistics for next preset"
           puts ""
           puts "Legacy Flag Options (backward compatibility):"
-          puts "  --all                List ALL tasks (backlog + releases)"
           puts "  --backlog            List backlog tasks"
           puts "  --release <name>     List tasks in specific release"
           puts "  --status <statuses>  Filter by status (comma-separated)"
