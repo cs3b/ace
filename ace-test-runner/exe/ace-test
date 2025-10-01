@@ -99,10 +99,6 @@ parser = OptionParser.new do |opts|
     options[:max_display] = n
   end
 
-  opts.on("--stop-threshold N", Integer, "Stop tests after N failures (default: 21)") do |n|
-    options[:stop_threshold] = n
-  end
-
   opts.on("--profile [N]", Integer, "Show N slowest tests (default: 10)") do |n|
     options[:profile] = n || 10
   end
@@ -161,7 +157,6 @@ parser = OptionParser.new do |opts|
   opts.separator "  ace-test --fail-fast --verbose   # Stop on first failure with details"
   opts.separator "  ace-test --direct                # Force in-process execution (faster)"
   opts.separator "  ace-test --subprocess            # Force subprocess execution (isolated)"
-  opts.separator "  ace-test --stop-threshold 10     # Stop after 10 failures"
   opts.separator "  ace-test --max-display 5         # Show only first 5 failures"
   opts.separator "  ace-test --profile 20            # Show 20 slowest tests"
   opts.separator "  ace-test --cleanup-reports       # Clean up old test reports"

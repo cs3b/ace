@@ -67,8 +67,9 @@ module Ace
         end
 
         def execute_with_progress(files, options = {}, &block)
-          # For performance, execute all files together unless explicitly disabled
-          if options[:per_file] == true
+          # Fail-fast requires per-file execution to stop on first failure
+          # For performance, execute all files together unless explicitly disabled or fail-fast enabled
+          if options[:per_file] == true || options[:fail_fast]
             execute_per_file_with_progress(files, options, &block)
           else
             # Execute all files in a single Ruby process for performance
@@ -91,8 +92,6 @@ module Ace
 
         def execute_per_file_with_progress(files, options = {}, &block)
           results = []
-          failure_count = 0
-          stop_threshold = options[:stop_threshold]
 
           files.each do |file|
             yield({ type: :start, file: file }) if block_given?
@@ -100,32 +99,17 @@ module Ace
             result = execute_single_file(file, options)
             results << result
 
-            # Count failures if threshold is set
-            if stop_threshold && !result[:success]
-              # Parse output to count actual test failures
-              parser = Atoms::ResultParser.new
-              test_results = parser.parse(result[:stdout])
-              failure_count += test_results[:failures].size + test_results[:errors].size
-            end
-
             if block_given?
               yield({
                 type: :complete,
                 file: file,
                 success: result[:success],
-                duration: result[:duration],
-                failure_count: failure_count
+                duration: result[:duration]
               })
             end
 
             # Stop on first failure if fail_fast is set
             break if options[:fail_fast] && !result[:success]
-
-            # Stop if failure threshold exceeded
-            if stop_threshold && failure_count >= stop_threshold
-              yield({ type: :threshold_exceeded, count: failure_count, threshold: stop_threshold }) if block_given?
-              break
-            end
           end
 
           merge_results(results)

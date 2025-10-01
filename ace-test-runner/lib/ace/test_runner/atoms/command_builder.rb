@@ -22,10 +22,8 @@ module Ace
           # Add test framework options
           cmd_parts << "-Ilib:test" unless options[:no_load_path]
 
-          # Add minitest options if needed
-          if options[:fail_fast]
-            cmd_parts << "-rminitest/fail_fast"
-          end
+          # Note: fail_fast is handled by test executor, not minitest
+          # We don't use minitest/fail_fast gem to avoid extra dependencies
 
           # Add verbose mode if profile is requested
           if options[:profile]

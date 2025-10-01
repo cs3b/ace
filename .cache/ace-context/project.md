@@ -732,7 +732,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Oct  1 13:19:13 WEST 2025
+Wed Oct  1 21:05:06 WEST 2025
 
 ```
 
@@ -741,66 +741,8 @@ Wed Oct  1 13:19:13 WEST 2025
 **Output:**
 ```
  M .cache/ace-context/project.md
- M .gitignore
-D  ace-llm/coverage/.last_run.json
-D  ace-llm/coverage/.resultset.json
-D  ace-llm/coverage/.resultset.json.lock
-D  ace-llm/coverage/assets/0.13.2/DataTables-1.10.20/images/sort_asc.png
-D  ace-llm/coverage/assets/0.13.2/DataTables-1.10.20/images/sort_asc_disabled.png
-D  ace-llm/coverage/assets/0.13.2/DataTables-1.10.20/images/sort_both.png
-D  ace-llm/coverage/assets/0.13.2/DataTables-1.10.20/images/sort_desc.png
-D  ace-llm/coverage/assets/0.13.2/DataTables-1.10.20/images/sort_desc_disabled.png
-D  ace-llm/coverage/assets/0.13.2/application.css
-D  ace-llm/coverage/assets/0.13.2/application.js
-D  ace-llm/coverage/assets/0.13.2/colorbox/border.png
-D  ace-llm/coverage/assets/0.13.2/colorbox/controls.png
-D  ace-llm/coverage/assets/0.13.2/colorbox/loading.gif
-D  ace-llm/coverage/assets/0.13.2/colorbox/loading_background.png
-D  ace-llm/coverage/assets/0.13.2/favicon_green.png
-D  ace-llm/coverage/assets/0.13.2/favicon_red.png
-D  ace-llm/coverage/assets/0.13.2/favicon_yellow.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_flat_0_aaaaaa_40x100.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_flat_75_ffffff_40x100.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_glass_55_fbf9ee_1x400.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_glass_65_ffffff_1x400.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_glass_75_dadada_1x400.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_glass_75_e6e6e6_1x400.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_glass_95_fef1ec_1x400.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-bg_highlight-soft_75_cccccc_1x100.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-icons_222222_256x240.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-icons_2e83ff_256x240.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-icons_454545_256x240.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-icons_888888_256x240.png
-D  ace-llm/coverage/assets/0.13.2/images/ui-icons_cd0a0a_256x240.png
-D  ace-llm/coverage/assets/0.13.2/loading.gif
-D  ace-llm/coverage/assets/0.13.2/magnify.png
-D  ace-llm/coverage/index.html
- M ace-taskflow/lib/ace/taskflow/molecules/release_resolver.rb
- M ace-taskflow/test/commands/task_command_test.rb
- M ace-taskflow/test/commands/tasks_command_test.rb
- M ace-taskflow/test/support/test_factory.rb
-?? ace-taskflow/.ace-taskflow/backlog/t/014-task-backlog/
-?? ace-taskflow/.ace-taskflow/backlog/t/015-task-backlog/
-?? ace-taskflow/.ace-taskflow/backlog/t/016-task-backlog/
-?? ace-taskflow/.ace-taskflow/backlog/t/017-task-backlog/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.36.0-new-features/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.37.0-invalid-version/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.38.0-v-0-9-0/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.39.0-new-features/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.40.0-invalid-version/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.41.0-v-0-9-0/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.42.0-v-0-9-0/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.43.0-invalid-version/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.44.0-new-features/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.45.0-new-features/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.46.0-invalid-version/
-?? ace-taskflow/.ace-taskflow/backlog/v.0.47.0-v-0-9-0/
-?? ace-taskflow/test/atoms/dependency_validator_test.rb
-?? ace-taskflow/test/atoms/path_builder_test.rb
-?? ace-taskflow/test/atoms/path_formatter_test.rb
-?? ace-taskflow/test/atoms/yaml_parser_test.rb
-?? ace-taskflow/test/models/
-?? ace-taskflow/test/molecules/task_filter_test.rb
+ D ace-taskflow/spec/organisms/task_scheduler_spec.rb
+?? ace-taskflow/test/organisms/task_scheduler_test.rb
 
 ```
 

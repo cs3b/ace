@@ -91,10 +91,28 @@ module Ace
           # Build result object
           @result = build_result(@parsed_result, execution_result, start_time)
 
-          # Analyze failures
+          # Analyze failures and errors
           if @result.has_failures?
+            # Collect both failures and errors for analysis
+            all_failures = @parsed_result[:failures] || []
+
+            # Convert errors to failure format if present
+            if @parsed_result[:errors] && @parsed_result[:errors].any?
+              error_failures = @parsed_result[:errors].map do |error|
+                {
+                  type: :error,
+                  test_name: error[:type] || "LoadError",
+                  message: error[:message] || "Unknown error",
+                  location: nil,
+                  full_content: error[:message] || "Unknown error",
+                  files: error[:files]
+                }
+              end
+              all_failures = all_failures + error_failures
+            end
+
             analyzed_failures = @failure_analyzer.analyze_all(
-              @parsed_result[:failures],
+              all_failures,
               stderr: @result.stderr
             )
             @result.failures_detail = analyzed_failures
@@ -218,11 +236,6 @@ module Ace
             per_file: @configuration.per_file,  # Allow per-file execution if needed for debugging
             profile: @configuration.profile      # Add profile option for verbose timing
           }
-
-          # Add stop threshold if configured
-          if @configuration.failure_limits && @configuration.failure_limits[:stop_threshold]
-            options[:stop_threshold] = @configuration.failure_limits[:stop_threshold]
-          end
 
           # Always use execute_with_progress for consistent interface
           # The method internally decides whether to run per-file or grouped
