@@ -26,7 +26,7 @@ module Ace
           @parallel = attributes[:parallel] || false
           @color = attributes.fetch(:color, true)
           @per_file = attributes[:per_file] || false  # Default to grouped execution for performance
-          @failure_limits = attributes[:failure_limits] || { max_display: 7, stop_threshold: 21 }
+          @failure_limits = attributes[:failure_limits] || { max_display: 10, stop_threshold: 20 }
           @profile = attributes[:profile]  # nil means no profiling, number means show N slowest tests
         end
 
