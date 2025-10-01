@@ -3,7 +3,7 @@
 | Tool | Purpose | Key Commands |
 |------|---------|--------------|
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list` |
-| **ace-test** | Run tests | `ace-test test/file.rb`, `ace-test test/file.rb:42` |
+| **ace-test** | Run tests | `ace-test`, `ace-test --fail-fast`, `ace-test atoms` |
 | **ace-test-suite** | Run all tests | `ace-test-suite` |
 | **ace-taskflow** | Task management | `ace-taskflow task show 018`, `ace-taskflow tasks all` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
@@ -13,6 +13,13 @@
 ## Quick Examples
 
 ```sh
+# Test execution
+ace-test                                # Run all tests with progress
+ace-test --fail-fast                    # Stop on first failure
+ace-test atoms                          # Run only atom tests
+ace-test test/file.rb:42                # Run test at specific line
+ace-test --max-display 3                # Show only first 3 failures
+
 # Task management
 ace-taskflow task show 019              # Show task details
 ace-taskflow task done 019              # Mark complete & move to done/
