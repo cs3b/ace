@@ -55,12 +55,24 @@ module Ace
             # Display up to max_failures_to_display failures
             failures_to_show = result.failures_detail.take(@max_failures_to_display)
 
+            # Determine the label based on what types we have
+            failure_count = result.failures_detail.count { |f| f.type == :failure }
+            error_count = result.failures_detail.count { |f| f.type == :error }
+
+            label = if failure_count > 0 && error_count > 0
+              "FAILURES & ERRORS"
+            elsif error_count > 0
+              "ERRORS"
+            else
+              "FAILURES"
+            end
+
             # Show failure count header with reference to full report if needed
             if total_failures > @max_failures_to_display
               report_path = @report_path || "test-reports/latest"
-              lines << "FAILURES (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
+              lines << "#{label} (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
             else
-              lines << "FAILURES (#{total_failures}):"
+              lines << "#{label} (#{total_failures}):"
             end
 
             failures_to_show.each_with_index do |failure, idx|
