@@ -4,16 +4,21 @@ module Ace
   module Taskflow
     module Models
       class Idea
-        attr_reader :id, :filename, :title, :content, :path, :created_at, :context
+        attr_reader :id, :filename, :title, :content, :path, :created_at, :context, :tags, :status
 
         def initialize(data)
-          @id = data[:id]
-          @filename = data[:filename]
-          @title = data[:title] || extract_title_from_filename(data[:filename])
-          @content = data[:content]
-          @path = data[:path]
-          @created_at = data[:created_at] || Time.now
-          @context = data[:context] || "current"
+          # Normalize to symbol keys to support both string and symbol keys
+          attrs = data.transform_keys(&:to_sym)
+
+          @id = attrs[:id]
+          @filename = attrs[:filename]
+          @title = attrs[:title] || extract_title_from_filename(attrs[:filename])
+          @content = attrs[:content]
+          @path = attrs[:path]
+          @created_at = attrs[:created_at]
+          @context = attrs[:context] || "current"
+          @tags = attrs[:tags] || []
+          @status = attrs[:status] || "pending"
         end
 
         def to_h
@@ -24,7 +29,9 @@ module Ace
             content: @content,
             path: @path,
             created_at: @created_at,
-            context: @context
+            context: @context,
+            tags: @tags,
+            status: @status
           }
         end
 

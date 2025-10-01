@@ -140,7 +140,7 @@ class ReleaseModelTest < AceTaskflowTestCase
     data.delete(:statistics)
     release = Ace::Taskflow::Models::Release.new(data)
 
-    # Should handle missing statistics gracefully
-    assert_nil release.statistics
+    # Should handle missing statistics gracefully with default hash
+    assert_equal({total: 0, statuses: {}, created_at: nil, modified_at: nil}, release.statistics)
   end
 end

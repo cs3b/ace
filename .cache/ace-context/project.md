@@ -651,7 +651,7 @@ For complete decision history and detailed rationale, refer to the individual AD
 | Tool | Purpose | Key Commands |
 |------|---------|--------------|
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list` |
-| **ace-test** | Run tests | `ace-test test/file.rb`, `ace-test test/file.rb:42` |
+| **ace-test** | Run tests | `ace-test`, `ace-test --fail-fast`, `ace-test atoms` |
 | **ace-test-suite** | Run all tests | `ace-test-suite` |
 | **ace-taskflow** | Task management | `ace-taskflow task show 018`, `ace-taskflow tasks all` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
@@ -661,6 +661,13 @@ For complete decision history and detailed rationale, refer to the individual AD
 ## Quick Examples
 
 ```sh
+# Test execution
+ace-test                                # Run all tests with progress
+ace-test --fail-fast                    # Stop on first failure
+ace-test atoms                          # Run only atom tests
+ace-test test/file.rb:42                # Run test at specific line
+ace-test --max-display 3                # Show only first 3 failures
+
 # Task management
 ace-taskflow task show 019              # Show task details
 ace-taskflow task done 019              # Mark complete & move to done/
@@ -732,7 +739,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Oct  1 21:05:06 WEST 2025
+Wed Oct  1 22:35:31 WEST 2025
 
 ```
 
@@ -741,8 +748,19 @@ Wed Oct  1 21:05:06 WEST 2025
 **Output:**
 ```
  M .cache/ace-context/project.md
- D ace-taskflow/spec/organisms/task_scheduler_spec.rb
-?? ace-taskflow/test/organisms/task_scheduler_test.rb
+ M ace-taskflow/lib/ace/taskflow/models/release.rb
+ M ace-taskflow/test/atoms/dependency_validator_test.rb
+ M ace-taskflow/test/atoms/path_builder_test.rb
+ M ace-taskflow/test/atoms/path_formatter_test.rb
+ M ace-taskflow/test/commands/idea_command_test.rb
+ M ace-taskflow/test/commands/releases_command_test.rb
+ M ace-taskflow/test/commands/tasks_command_test.rb
+ M ace-taskflow/test/models/release_test.rb
+ M ace-taskflow/test/molecules/list_preset_manager_test.rb
+ M ace-taskflow/test/organisms/task_manager_test.rb
+ M ace-taskflow/test/support/test_factory.rb
+ M ace-taskflow/test/test_helper.rb
+?? ace-taskflow/test/support/test_factory_test.rb
 
 ```
 

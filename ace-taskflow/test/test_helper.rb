@@ -44,4 +44,8 @@ class AceTaskflowTestCase < AceTestCase
   def with_test_project(&block)
     TestFactory.with_test_directory(&block)
   end
+
+  def with_clean_project(&block)
+    TestFactory.with_clean_project(&block)
+  end
 end

@@ -216,7 +216,8 @@ class PathBuilderTest < AceTaskflowTestCase
   def test_build_task_path_handles_integer_task_number
     result = @builder.build_task_path(@root, "v.0.9.0", 42)
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/042", result
+    # Integers are converted to strings without zero-padding
+    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/42", result
   end
 
   def test_build_task_path_handles_string_task_number

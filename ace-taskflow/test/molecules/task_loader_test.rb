@@ -11,7 +11,7 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_task_from_file
     with_test_project do |dir|
       Dir.chdir(dir) do
-        task_file = File.join(dir, "v.0.9.0", "t", "001", "task.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "001", "task.001.md")
         task = @loader.load_task(task_file)
 
         assert task
@@ -25,7 +25,8 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_all_tasks_from_release
     with_test_project do |dir|
       Dir.chdir(dir) do
-        tasks = @loader.load_all_tasks("v.0.9.0")
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = @loader.load_tasks_from_context(release_path)
 
         assert_equal 5, tasks.length
         assert tasks.all? { |t| t[:id].start_with?("v.0.9.0+task") }
@@ -36,9 +37,9 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_tasks_with_filter
     with_test_project do |dir|
       Dir.chdir(dir) do
-        pending_tasks = @loader.load_all_tasks("v.0.9.0") do |task|
-          task[:status] == "pending"
-        end
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        all_tasks = @loader.load_tasks_from_context(release_path)
+        pending_tasks = all_tasks.select { |task| task[:status] == "pending" }
 
         assert_equal 3, pending_tasks.length
         assert pending_tasks.all? { |t| t[:status] == "pending" }
@@ -85,17 +86,14 @@ class TaskLoaderTest < AceTaskflowTestCase
   end
 
   def test_extract_task_title
-    content = <<~CONTENT
-      ---
-      id: test
-      ---
-
+    # extract_title expects body content (without frontmatter)
+    body_content = <<~CONTENT
       # This is the Task Title
 
       Description here
     CONTENT
 
-    title = @loader.extract_title(content)
+    title = @loader.extract_title(body_content)
     assert_equal "This is the Task Title", title
   end
 
