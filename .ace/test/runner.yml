@@ -51,3 +51,8 @@ failure_limits:
 
   # Stop test execution after this many failures
   stop_threshold: 21
+
+# Execution settings (optional)
+# execution:
+#   # Stop at first failing group when running groups sequentially
+#   group_fail_fast: false

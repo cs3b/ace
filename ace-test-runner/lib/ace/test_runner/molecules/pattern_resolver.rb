@@ -33,6 +33,29 @@ module Ace
           targets.flat_map { |target| resolve_target(target) }.uniq
         end
 
+        def resolve_group_sequential(group_name)
+          group_key = group_name.to_s
+          group_members = @groups[group_key]
+          return [] unless group_members
+
+          group_members.flat_map do |member|
+            member_key = member.to_s
+
+            if @groups.key?(member_key)
+              # Recursively expand nested groups
+              resolve_group_sequential(member_key)
+            elsif @patterns.key?(member_key)
+              # Pattern found - return as a group
+              files = expand_pattern(@patterns[member_key])
+              files.empty? ? [] : [{ name: member_key, files: files }]
+            else
+              # Direct pattern - expand and wrap
+              files = expand_pattern(member)
+              files.empty? ? [] : [{ name: "other", files: files }]
+            end
+          end
+        end
+
         def available_targets
           (@groups.keys + @patterns.keys).map(&:to_s).sort
         end

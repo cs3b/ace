@@ -232,6 +232,30 @@ module Ace
           end
         end
 
+        def on_group_start(group_name, file_count)
+          # Print visual separator before group
+          puts "" unless @test_count == 0
+          puts ""
+          puts "Running #{group_name} (#{file_count} #{file_count == 1 ? 'file' : 'files'})..."
+          @test_count = 0
+        end
+
+        def on_group_complete(group_name, success, duration, summary)
+          # Ensure we're on a new line after dots
+          puts unless @test_count == 0 || @test_count % @line_width == 0
+
+          # Show group completion status
+          status_icon = success ? "✓" : "✗"
+          test_count = summary[:runs] || 0
+          failure_count = summary[:failures] || 0
+
+          status_line = "#{status_icon} #{group_name} complete " +
+                       "(#{format_duration(duration)}, #{test_count} tests, #{failure_count} failures)"
+
+          puts colorize(status_line, success ? :green : :red)
+          puts ""
+        end
+
         def on_finish(result)
           # Ensure we're on a new line
           puts unless @test_count == 0 || @test_count % @line_width == 0

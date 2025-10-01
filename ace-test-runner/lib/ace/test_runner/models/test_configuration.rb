@@ -8,7 +8,8 @@ module Ace
         attr_accessor :format, :report_dir, :save_reports, :fail_fast,
                       :verbose, :filter, :fix_deprecations, :patterns,
                       :timeout, :parallel, :color, :per_file, :groups,
-                      :target, :config_path, :failure_limits, :profile
+                      :target, :config_path, :failure_limits, :profile,
+                      :execution
 
         def initialize(attributes = {})
           @format = attributes[:format] || "progress"  # Default to per-test progress
@@ -28,6 +29,7 @@ module Ace
           @per_file = attributes[:per_file] || false  # Default to grouped execution for performance
           @failure_limits = attributes[:failure_limits] || { max_display: 7 }
           @profile = attributes[:profile]  # nil means no profiling, number means show N slowest tests
+          @execution = attributes[:execution] || {}
         end
 
         def valid_format?
@@ -69,7 +71,8 @@ module Ace
             color: color,
             per_file: per_file,
             failure_limits: failure_limits,
-            profile: profile
+            profile: profile,
+            execution: execution
           }
         end
 

@@ -3,6 +3,7 @@
 require_relative "../formatters/base_formatter"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/pattern_resolver"
+require_relative "sequential_group_executor"
 
 module Ace
   module TestRunner
@@ -39,6 +40,11 @@ module Ace
           validate_configuration!
 
           start_time = Time.now
+
+          # Check if sequential group execution should be used
+          if should_execute_sequentially?
+            return run_sequential_groups(start_time)
+          end
 
           # Find test files
           test_files = find_test_files
@@ -142,6 +148,125 @@ module Ace
 
         private
 
+        def run_sequential_groups(start_time)
+          # Resolve groups sequentially
+          groups = @pattern_resolver.resolve_group_sequential(@configuration.target)
+
+          if groups.empty?
+            return handle_no_tests
+          end
+
+          # Count total files
+          all_files = groups.flat_map { |g| g[:files] }
+          total_available = count_total_test_files
+
+          # Notify start
+          if @formatter.respond_to?(:on_start_with_totals)
+            @formatter.on_start_with_totals(all_files.size, total_available)
+          else
+            @formatter.on_start(all_files.size)
+          end
+
+          # Create sequential executor
+          executor = SequentialGroupExecutor.new(
+            test_executor: @test_executor,
+            result_parser: @result_parser,
+            formatter: @formatter
+          )
+
+          # Execute groups sequentially
+          execution_result = executor.execute_groups(groups, sequential_options) do |event|
+            case event[:type]
+            when :stdout
+              @formatter.on_test_stdout(event[:content]) if @formatter.respond_to?(:on_test_stdout)
+            when :complete
+              if @formatter.respond_to?(:on_test_complete)
+                @formatter.on_test_complete(
+                  event[:file],
+                  event[:success],
+                  event[:duration]
+                )
+              end
+            end
+          end
+
+          # Use the parsed result from sequential executor
+          @parsed_result = execution_result[:parsed_result]
+
+          # Build result object
+          @result = build_result(@parsed_result, execution_result, start_time)
+
+          # Analyze failures
+          if @result.has_failures?
+            all_failures = @parsed_result[:failures] || []
+
+            if @parsed_result[:errors] && @parsed_result[:errors].any?
+              error_failures = @parsed_result[:errors].map do |error|
+                {
+                  type: :error,
+                  test_name: error[:type] || "LoadError",
+                  message: error[:message] || "Unknown error",
+                  location: nil,
+                  full_content: error[:message] || "Unknown error",
+                  files: error[:files]
+                }
+              end
+              all_failures = all_failures + error_failures
+            end
+
+            analyzed_failures = @failure_analyzer.analyze_all(
+              all_failures,
+              stderr: @result.stderr
+            )
+            @result.failures_detail = analyzed_failures
+          end
+
+          # Generate and save report
+          report = @report_generator.generate(@result, all_files)
+
+          if @configuration.save_reports
+            report_path = save_reports(report)
+            @formatter.report_path = report_path if @formatter.respond_to?(:report_path=)
+          end
+
+          # Output to stdout
+          @formatter.on_finish(@result)
+
+          # Display profile results if requested
+          if @configuration.profile && @parsed_result[:test_times] && !@parsed_result[:test_times].empty?
+            display_profile(@parsed_result[:test_times], @configuration.profile)
+          end
+
+          # Show stopped message if execution was stopped
+          if execution_result[:stopped_at_group]
+            puts "\nSTOPPED: Group '#{execution_result[:stopped_at_group]}' failed (--fail-fast enabled)"
+          end
+
+          # Return exit code
+          @result.success? ? 0 : 1
+        end
+
+        def should_execute_sequentially?
+          # Execute sequentially if target is a group (not a pattern or file)
+          return false unless @configuration.target
+
+          target_str = @configuration.target.to_s
+          target_sym = @configuration.target.to_sym
+
+          # Check both string and symbol keys for compatibility
+          @configuration.groups&.key?(target_str) || @configuration.groups&.key?(target_sym)
+        end
+
+        def sequential_options
+          {
+            fail_fast: @configuration.fail_fast,
+            verbose: @configuration.verbose,
+            per_file: @configuration.per_file,
+            profile: @configuration.profile,
+            group_fail_fast: @configuration.execution&.[](:group_fail_fast)
+          }
+        end
+
         def build_configuration(options)
           # Load configuration from file
           config_loader = Molecules::ConfigLoader.new
@@ -168,7 +293,8 @@ module Ace
             color: config_with_options.defaults[:color] == "auto" ? true : config_with_options.defaults[:color],
             per_file: options[:per_file],
             failure_limits: config_with_options.failure_limits,
-            profile: options[:profile]
+            profile: options[:profile],
+            execution: config_with_options.execution || {}
           )
         end
 
