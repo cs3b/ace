@@ -180,29 +180,37 @@ module TestFactory
 
   def self.with_test_directory
     Dir.mktmpdir do |dir|
-      create_test_filesystem(dir)
-      yield dir
+      # Stub Ace::Core::ConfigDiscovery to return temp dir as project root
+      # This prevents tests from finding the real project via PWD environment variable
+      with_stubbed_project_root(dir) do
+        create_test_filesystem(dir)
+        yield dir
+      end
     end
   end
 
   # Create a clean test project with minimal setup (no default fixtures)
   def self.with_clean_project
     Dir.mktmpdir do |dir|
-      # Create .ace-taskflow root directory
-      taskflow_root = File.join(dir, ".ace-taskflow")
-      FileUtils.mkdir_p(taskflow_root)
+      # Stub Ace::Core::ConfigDiscovery to return temp dir as project root
+      # This prevents tests from finding the real project via PWD environment variable
+      with_stubbed_project_root(dir) do
+        # Create .ace-taskflow root directory
+        taskflow_root = File.join(dir, ".ace-taskflow")
+        FileUtils.mkdir_p(taskflow_root)
 
-      # Create .ace/taskflow/config.yml for config discovery
-      config_dir = File.join(dir, ".ace", "taskflow")
-      FileUtils.mkdir_p(config_dir)
-      File.write(File.join(config_dir, "config.yml"), "root: .ace-taskflow\n")
+        # Create .ace/taskflow/config.yml for config discovery
+        config_dir = File.join(dir, ".ace", "taskflow")
+        FileUtils.mkdir_p(config_dir)
+        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
-      # Create standard directories but no content
-      %w[backlog done].each do |subdir|
-        FileUtils.mkdir_p(File.join(taskflow_root, subdir))
+        # Create standard directories but no content
+        %w[backlog done].each do |subdir|
+          FileUtils.mkdir_p(File.join(taskflow_root, subdir))
+        end
+
+        yield dir
       end
-
-      yield dir
     end
   end
 
@@ -310,6 +318,29 @@ module TestFactory
         File.join(ideas_dir, "#{idea_num}.md"),
         sample_idea_content("Idea #{idea_num}")
       )
+    end
+  end
+
+  # Stub Ace::Core::ConfigDiscovery.project_root to return a specific directory
+  # This is essential for test isolation when running under bundle exec
+  # @param project_root_path [String] Path to use as project root
+  # @yield Block to execute with stubbed project root
+  def self.with_stubbed_project_root(project_root_path)
+    require "ace/core/config_discovery"
+
+    # Save original method
+    original_method = Ace::Core::ConfigDiscovery.singleton_method(:project_root)
+
+    # Stub to return test directory
+    Ace::Core::ConfigDiscovery.define_singleton_method(:project_root) do
+      project_root_path
+    end
+
+    begin
+      yield
+    ensure
+      # Restore original method
+      Ace::Core::ConfigDiscovery.define_singleton_method(:project_root, original_method)
     end
   end
 end

@@ -47,11 +47,13 @@ class TaskManagerTest < AceTaskflowTestCase
         result = manager.create_task("New task title", context: "v.0.9.0")
 
         assert result[:success]
-        assert_equal "v.0.9.0+task.006", result[:task_id]
+        # Test fixtures have: v.0.9.0 (5 tasks), v.0.8.0 (3 tasks), backlog (10 tasks)
+        # Global max is 010, so next task should be 011
+        assert_equal "v.0.9.0+task.011", result[:task_id]
 
-        # Verify file was created
-        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "006", "*.md")).first
-        assert task_file
+        # Verify file was created (directory includes slug: "011-task-new-title")
+        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "011-*", "*.md")).first
+        assert task_file, "Task file should exist in t/011-* directory"
         assert File.exist?(task_file)
       end
     end
