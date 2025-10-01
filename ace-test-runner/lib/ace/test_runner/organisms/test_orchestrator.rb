@@ -59,9 +59,9 @@ module Ace
           # Execute tests
           execution_result = execute_tests(test_files)
 
-          # Check if execution failed (e.g., LoadError)
-          if !execution_result[:success] && execution_result[:stderr] && !execution_result[:stderr].empty?
-            # Handle load errors or other failures
+          # Check if execution failed with LoadError (stdout is empty means tests didn't run)
+          if !execution_result[:success] && execution_result[:stdout].to_s.empty? && execution_result[:stderr] && !execution_result[:stderr].empty?
+            # Handle load errors or other failures that prevented test execution
             @parsed_result = {
               summary: {
                 runs: 0,
@@ -93,7 +93,10 @@ module Ace
 
           # Analyze failures
           if @result.has_failures?
-            analyzed_failures = @failure_analyzer.analyze_all(@parsed_result[:failures])
+            analyzed_failures = @failure_analyzer.analyze_all(
+              @parsed_result[:failures],
+              stderr: @result.stderr
+            )
             @result.failures_detail = analyzed_failures
           end
 
@@ -251,7 +254,8 @@ module Ace
             start_time: start_time,
             end_time: Time.now,
             deprecations: parsed_result[:deprecations],
-            raw_output: execution_result[:stdout]
+            raw_output: execution_result[:stdout],
+            stderr: execution_result[:stderr]
           )
         end
 
@@ -317,11 +321,20 @@ module Ace
           # Always save raw output
           storage.save_raw_output(@result.raw_output, report_path)
 
+          # Save stderr if present
+          storage.save_stderr(@result.stderr, report_path) if @result.stderr && !@result.stderr.empty?
+
           # Save individual failure reports if there are failures
           if @result.has_failures? && @configuration.format != "json"
             markdown_formatter_class = Atoms::LazyLoader.load_formatter("markdown")
             markdown_formatter = markdown_formatter_class.new(@configuration.to_h)
-            storage.save_individual_failure_reports(@result.failures_detail, report_path, markdown_formatter)
+            max_display = @configuration.failure_limits ? @configuration.failure_limits[:max_display] : nil
+            storage.save_individual_failure_reports(
+              @result.failures_detail,
+              report_path,
+              markdown_formatter,
+              max_display: max_display
+            )
           end
 
           report.report_path = report_path

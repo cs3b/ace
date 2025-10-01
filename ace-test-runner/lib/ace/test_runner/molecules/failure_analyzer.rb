@@ -74,10 +74,15 @@ module Ace
           Models::TestFailure.new(failure_data)
         end
 
-        def analyze_all(failures)
+        def analyze_all(failures, stderr: nil)
           return [] unless failures.is_a?(Array)
 
-          failures.map { |failure| analyze_failure(failure) }
+          failures.map do |failure|
+            analyzed = analyze_failure(failure)
+            # Associate stderr with all failures if present
+            analyzed.stderr_warnings = stderr if stderr && !stderr.empty?
+            analyzed
+          end
         end
 
         def group_by_type(failures)
