@@ -42,8 +42,7 @@ module Ace
             report_dir: "test-reports"
           },
           failure_limits: {
-            max_display: 7,
-            stop_threshold: 21
+            max_display: 7
           }
         }.freeze
 
@@ -86,11 +85,6 @@ module Ace
           if options[:max_display]
             merged[:failure_limits] ||= {}
             merged[:failure_limits][:max_display] = options[:max_display]
-          end
-
-          if options[:stop_threshold]
-            merged[:failure_limits] ||= {}
-            merged[:failure_limits][:stop_threshold] = options[:stop_threshold]
           end
 
           OpenStruct.new(merged)
