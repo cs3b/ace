@@ -103,9 +103,11 @@ module TestFactory
     File.write(File.join(config_dir, "config.yml"), "root: .ace-taskflow\n")
 
     # Create standard structure in .ace-taskflow
-    %w[v.0.9.0 v.0.8.0 backlog done].each do |dir|
+    %w[v.0.9.0 backlog done].each do |dir|
       FileUtils.mkdir_p(File.join(taskflow_root, dir))
     end
+    # Create v.0.8.0 in done directory since it's completed
+    FileUtils.mkdir_p(File.join(taskflow_root, "done", "v.0.8.0"))
 
     # Create release files
     File.write(File.join(taskflow_root, "v.0.9.0", "release.md"), <<~RELEASE)
@@ -119,7 +121,7 @@ module TestFactory
       Test release
     RELEASE
 
-    File.write(File.join(taskflow_root, "v.0.8.0", "release.md"), <<~RELEASE)
+    File.write(File.join(taskflow_root, "done", "v.0.8.0", "release.md"), <<~RELEASE)
       ---
       version: v.0.8.0
       status: completed
@@ -132,7 +134,7 @@ module TestFactory
 
     # Create sample tasks
     create_task_structure(taskflow_root, "v.0.9.0", 5)
-    create_task_structure(taskflow_root, "v.0.8.0", 3)
+    create_task_structure(File.join(taskflow_root, "done"), "v.0.8.0", 3)
     create_task_structure(taskflow_root, "backlog", 10)
 
     # Create sample ideas
@@ -153,7 +155,7 @@ module TestFactory
                end
 
       File.write(
-        File.join(task_dir, "task.md"),
+        File.join(task_dir, "task.#{task_num}.md"),
         sample_task_content(
           id: "#{release}+task.#{task_num}",
           status: status,

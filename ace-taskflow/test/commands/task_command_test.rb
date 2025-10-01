@@ -15,9 +15,9 @@ class TaskCommandTest < AceTaskflowTestCase
           @command.execute([])
         end
 
-        # Should select the first pending task
-        assert_match(/v\.0\.9\.0\+task\.003/, output)
-        assert_match(/pending/, output)
+        # Should select the in-progress task (prioritized over pending)
+        assert_match(/v\.0\.9\.0\+002/, output)
+        assert_match(/in-progress|🟡/, output)
       end
     end
   end
