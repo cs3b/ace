@@ -88,6 +88,56 @@ module Ace
 
           output.join("\n")
         end
+
+        # Format full task details for content display
+        # @param task [Hash] Task data
+        # @return [String] Full task details
+        def self.format_full_task(task)
+          output = []
+
+          output << "Task: #{task[:id] || task[:task_number]}"
+          output << "Title: #{task[:title]}"
+          output << "Status: #{status_icon(task[:status])} #{task[:status]}"
+          output << "Priority: #{task[:priority]}"
+          output << "Estimate: #{task[:estimate] || 'TBD'}"
+
+          unless task[:dependencies].to_a.empty?
+            output << "Dependencies: #{task[:dependencies].join(', ')}"
+          end
+
+          if task[:path]
+            output << "Path: #{task[:path]}"
+          end
+
+          output << ""
+          output << "--- Content ---"
+          output << task[:content] if task[:content]
+
+          output.join("\n")
+        end
+
+        # Format task path only
+        # @param task [Hash] Task data
+        # @param root_path [String] Root path for relative display
+        # @return [String] Relative path or error message
+        def self.format_task_path(task, root_path = Dir.pwd)
+          if task[:path]
+            # Calculate relative path
+            require_relative "../atoms/path_formatter"
+            Atoms::PathFormatter.format_relative_path(task[:path], root_path)
+          else
+            "# Task has no path"
+          end
+        end
+
+        # Format success confirmation with timestamp
+        # @param message [String] Success message
+        # @param action [String] Action performed ("Started", "Completed")
+        # @return [String] Formatted confirmation
+        def self.format_confirmation(message, action)
+          timestamp = Time.now.strftime('%Y-%m-%d %H:%M:%S')
+          "#{message}\n#{action} at: #{timestamp}"
+        end
       end
     end
   end
