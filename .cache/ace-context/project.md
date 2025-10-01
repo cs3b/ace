@@ -739,7 +739,7 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 
 **Output:**
 ```
-Wed Oct  1 22:35:31 WEST 2025
+Wed Oct  1 23:36:38 WEST 2025
 
 ```
 
@@ -747,20 +747,28 @@ Wed Oct  1 22:35:31 WEST 2025
 
 **Output:**
 ```
- M .cache/ace-context/project.md
- M ace-taskflow/lib/ace/taskflow/models/release.rb
- M ace-taskflow/test/atoms/dependency_validator_test.rb
- M ace-taskflow/test/atoms/path_builder_test.rb
- M ace-taskflow/test/atoms/path_formatter_test.rb
- M ace-taskflow/test/commands/idea_command_test.rb
- M ace-taskflow/test/commands/releases_command_test.rb
- M ace-taskflow/test/commands/tasks_command_test.rb
- M ace-taskflow/test/models/release_test.rb
- M ace-taskflow/test/molecules/list_preset_manager_test.rb
- M ace-taskflow/test/organisms/task_manager_test.rb
- M ace-taskflow/test/support/test_factory.rb
- M ace-taskflow/test/test_helper.rb
-?? ace-taskflow/test/support/test_factory_test.rb
+ D .ace-taskflow/backlog/v.0.11.0-promoted-release/v.0.11.0-promoted-release.md
+?? .ace-taskflow/backlog/t/060-task-backlog/
+?? .ace-taskflow/backlog/t/064-task-backlog/
+?? .ace-taskflow/backlog/v.0.13.0-promoted-release/
+?? .ace-taskflow/backlog/v.0.14.0-new-features/
+?? .ace-taskflow/backlog/v.0.15.0-promoted-release/
+?? .ace-taskflow/v.0.10.0-new-features/t/
+?? .ace-taskflow/v.0.11.0-promoted-release/
+?? .ace-taskflow/v.0.12.0-new-features/
+?? .ace-taskflow/v.0.9.0/t/062-task-new-title/
+?? .ace-taskflow/v.0.9.0/t/066-task-new-title/
+?? ace-taskflow/docs/FINAL_SESSION_SUMMARY.md
+?? ace-taskflow/docs/PHASE_3_COMPLETE.md
+?? ace-taskflow/docs/SESSION_SUMMARY.md
+?? ace-taskflow/lib/ace/taskflow/molecules/idea_arg_parser.rb
+?? ace-taskflow/lib/ace/taskflow/molecules/idea_display_formatter.rb
+?? ace-taskflow/lib/ace/taskflow/molecules/release_arg_parser.rb
+?? ace-taskflow/lib/ace/taskflow/molecules/release_display_formatter.rb
+?? ace-taskflow/test/molecules/idea_arg_parser_test.rb
+?? ace-taskflow/test/molecules/idea_display_formatter_test.rb
+?? ace-taskflow/test/molecules/release_arg_parser_test.rb
+?? ace-taskflow/test/molecules/release_display_formatter_test.rb
 
 ```
 
