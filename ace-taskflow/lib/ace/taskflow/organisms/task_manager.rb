@@ -434,26 +434,30 @@ module Ace
         end
 
         def generate_task_number(context_path)
-          # Scan both active and done task directories
-          task_dirs = [
-            File.join(context_path, "t"),
-            File.join(context_path, "done")
-          ]
+          # Load ALL tasks from ALL releases and contexts to find global maximum
+          # This ensures task IDs are never reused across the entire project
+          all_tasks = @task_loader.load_all_tasks
 
-          existing = []
-          task_dirs.each do |task_dir|
-            next unless File.directory?(task_dir)
+          # Extract task numbers from all tasks
+          existing_numbers = all_tasks.map do |task|
+            # Task number can be in task[:task_number] or extracted from task[:id]
+            task[:task_number]&.to_i || extract_number_from_id(task[:id])
+          end.compact
 
-            existing += Dir.glob(File.join(task_dir, "*")).map do |path|
-              # Extract task number from directory name (e.g., "001-task-name" → 1)
-              File.basename(path).split('-').first.to_i
-            end
-          end
+          return "001" if existing_numbers.empty?
 
-          return "001" if existing.empty?
-
-          next_number = existing.max + 1
+          next_number = existing_numbers.max + 1
           next_number.to_s.rjust(3, '0')
+        end
+
+        # Extract numeric part from task ID (e.g., "v.0.9.0+task.058" → 58)
+        # @param id [String] Task ID
+        # @return [Integer, nil] Extracted number or nil
+        def extract_number_from_id(id)
+          return nil unless id
+
+          match = id.match(/task\.(\d+)/)
+          match ? match[1].to_i : nil
         end
 
         def generate_task_id(context, number)
