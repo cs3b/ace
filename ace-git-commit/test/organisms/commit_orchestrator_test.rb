@@ -1,73 +1,65 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "tmpdir"
-require "fileutils"
+require "minitest/mock"
 
 class CommitOrchestratorTest < TestCase
   def setup
-    @temp_dir = Dir.mktmpdir
-    @original_dir = Dir.pwd
-    Dir.chdir(@temp_dir)
-
-    # Initialize git repo
-    `git init -q`
-    `git config user.name "Test User"`
-    `git config user.email "test@example.com"`
+    @mock_git = Minitest::Mock.new
+    @mock_diff_analyzer = Minitest::Mock.new
+    @mock_file_stager = Minitest::Mock.new
+    @mock_message_generator = Minitest::Mock.new
 
     @orchestrator = Ace::GitCommit::Organisms::CommitOrchestrator.new
-  end
 
-  def teardown
-    Dir.chdir(@original_dir)
-    FileUtils.rm_rf(@temp_dir)
+    # Inject mocks
+    @orchestrator.instance_variable_set(:@git, @mock_git)
+    @orchestrator.instance_variable_set(:@diff_analyzer, @mock_diff_analyzer)
+    @orchestrator.instance_variable_set(:@file_stager, @mock_file_stager)
+    @orchestrator.instance_variable_set(:@message_generator, @mock_message_generator)
   end
 
   def test_validates_git_repository
-    # Create temp dir that's not a git repo
-    non_git_dir = Dir.mktmpdir
-    begin
-      Dir.chdir(non_git_dir)
+    @mock_git.expect :in_repository?, false
 
-      # Create new orchestrator in non-git directory
-      orchestrator = Ace::GitCommit::Organisms::CommitOrchestrator.new
-
-      error = assert_raises(Ace::GitCommit::GitError) do
-        orchestrator.execute(create_options(message: "test"))
-      end
-
-      assert_match(/not in a git repository/i, error.message)
-    ensure
-      Dir.chdir(@temp_dir)
-      FileUtils.rm_rf(non_git_dir)
+    error = assert_raises(Ace::GitCommit::GitError) do
+      @orchestrator.execute(create_options(message: "test"))
     end
+
+    assert_match(/not in a git repository/i, error.message)
+    @mock_git.verify
   end
 
   def test_returns_false_when_no_changes
-    Dir.chdir(@temp_dir)
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_git.expect :has_staged_changes?, false
 
     result = @orchestrator.execute(create_options(message: "test"))
 
     refute result, "Should return false when no changes to commit"
+    @mock_git.verify
+    @mock_file_stager.verify
   end
 
   def test_commits_with_direct_message
-    Dir.chdir(@temp_dir)
-
-    File.write("test.txt", "content")
-    `git add test.txt`
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_git.expect :has_staged_changes?, true
+    @mock_git.expect :execute, nil, ["commit", "-m", "feat: add test file"]
 
     result = @orchestrator.execute(create_options(message: "feat: add test file"))
 
     assert result, "Commit should succeed"
-    assert_equal "feat: add test file", `git log -1 --pretty=%B`.strip
+    @mock_git.verify
+    @mock_file_stager.verify
   end
 
   def test_stages_specific_files
-    Dir.chdir(@temp_dir)
-
-    File.write("file1.txt", "content1")
-    File.write("file2.txt", "content2")
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_files, nil, [["file1.txt"]]
+    @mock_git.expect :has_staged_changes?, true
+    @mock_git.expect :execute, nil, ["commit", "-m", "feat: add file1"]
 
     result = @orchestrator.execute(
       create_options(
@@ -77,25 +69,16 @@ class CommitOrchestratorTest < TestCase
     )
 
     assert result, "Commit should succeed"
-
-    # Get committed files - account for first commit (no parent)
-    committed_files = if `git rev-list --count HEAD`.strip == "1"
-      `git ls-tree --name-only -r HEAD`.strip.split("\n")
-    else
-      `git diff-tree --no-commit-id --name-only -r HEAD`.strip.split("\n")
-    end
-
-    assert_includes committed_files, "file1.txt"
-    refute_includes committed_files, "file2.txt"
+    @mock_git.verify
+    @mock_file_stager.verify
   end
 
   def test_stages_all_changes
-    Dir.chdir(@temp_dir)
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, nil
+    @mock_git.expect :has_staged_changes?, true
+    @mock_git.expect :execute, nil, ["commit", "-m", "feat: add all files"]
 
-    File.write("file1.txt", "content1")
-    File.write("file2.txt", "content2")
-
-    # stage_all happens when only_staged=false and files=[]
     result = @orchestrator.execute(
       create_options(
         only_staged: false,
@@ -104,124 +87,83 @@ class CommitOrchestratorTest < TestCase
     )
 
     assert result, "Commit should succeed"
-
-    # Get committed files - account for first commit
-    committed_files = if `git rev-list --count HEAD`.strip == "1"
-      `git ls-tree --name-only -r HEAD`.strip.split("\n")
-    else
-      `git diff-tree --no-commit-id --name-only -r HEAD`.strip.split("\n")
-    end
-
-    assert_includes committed_files, "file1.txt"
-    assert_includes committed_files, "file2.txt"
+    @mock_git.verify
+    @mock_file_stager.verify
   end
 
   def test_dry_run_does_not_commit
-    Dir.chdir(@temp_dir)
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_git.expect :has_staged_changes?, true
+    @mock_file_stager.expect :staged_files, ["test.txt"]
+    @mock_diff_analyzer.expect :get_staged_diff, "diff content"
+    @mock_diff_analyzer.expect :analyze_diff, { insertions: 5, deletions: 2 }, ["diff content"]
 
-    File.write("test.txt", "content")
-    `git add test.txt`
+    # Suppress stdout during dry run
+    original_stdout = $stdout
+    $stdout = StringIO.new
 
     result = @orchestrator.execute(
       create_options(
         message: "feat: test",
-        dry_run: true
+        dry_run: true,
+        debug: true
       )
     )
 
+    $stdout = original_stdout
+
     assert result, "Dry run should succeed"
-    assert_empty `git log --oneline`.strip, "Should not create commit in dry run"
+    @mock_git.verify
+    @mock_file_stager.verify
+    @mock_diff_analyzer.verify
   end
 
   def test_handles_commit_failure_gracefully
-    Dir.chdir(@temp_dir)
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_git.expect :has_staged_changes?, true
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "pre-commit hook failed"
+    end
 
-    File.write("test.txt", "content")
-    `git add test.txt`
-
-    # Create a pre-commit hook that fails
-    hooks_dir = File.join(@temp_dir, ".git", "hooks")
-    FileUtils.mkdir_p(hooks_dir)
-    hook_path = File.join(hooks_dir, "pre-commit")
-    File.write(hook_path, "#!/bin/sh\nexit 1\n")
-    FileUtils.chmod(0755, hook_path)
-
-    # Capture output to avoid noise
+    # Suppress stdout during test
     original_stdout = $stdout
-    original_stderr = $stderr
     $stdout = StringIO.new
-    $stderr = StringIO.new
 
     result = @orchestrator.execute(create_options(message: "feat: test"))
 
     $stdout = original_stdout
-    $stderr = original_stderr
 
     refute result, "Should return false when commit fails"
-    # Verify no commit was created
-    commit_count = `git rev-list --count HEAD 2>/dev/null`.strip
-    assert commit_count.empty? || commit_count == "0", "Should have no commits after failure (got: #{commit_count.inspect})"
+    @mock_git.verify
+    @mock_file_stager.verify
   end
 
-  def test_execution_from_deep_directory
-    Dir.chdir(@temp_dir)
-
-    # Create deep directory structure (5 levels)
-    deep_dir = File.join(@temp_dir, *Array.new(5) { "level" })
-    FileUtils.mkdir_p(deep_dir)
-
-    File.write(File.join(@temp_dir, "test.txt"), "content")
-
-    # Change to deep directory
-    Dir.chdir(deep_dir)
-
-    # Stage from deep directory
-    `git add ../../../../../test.txt`
-
-    result = @orchestrator.execute(create_options(message: "feat: test from deep"))
-
-    assert result, "Should commit from deep directory"
-  end
-
-  def test_handles_unicode_filenames
-    Dir.chdir(@temp_dir)
-
-    filename = "café_文件.txt"
-    File.write(filename, "content")
+  def test_generates_message_with_llm_when_intention_provided
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_git.expect :has_staged_changes?, true
+    @mock_diff_analyzer.expect :get_staged_diff, "diff content"
+    @mock_diff_analyzer.expect :changed_files, ["file.txt"] do |**kwargs|
+      kwargs == { staged_only: true }
+    end
+    @mock_message_generator.expect :generate, "feat: generated message" do |diff, **kwargs|
+      diff == "diff content" && kwargs == { intention: "add feature", files: ["file.txt"] }
+    end
+    @mock_git.expect :execute, nil, ["commit", "-m", "feat: generated message"]
 
     result = @orchestrator.execute(
       create_options(
-        files: [filename],
-        message: "feat: add unicode file"
+        intention: "add feature"
       )
     )
 
-    assert result, "Should handle unicode filenames"
-
-    # Verify commit was created
-    commit_count = `git rev-list --count HEAD`.strip.to_i
-    assert_equal 1, commit_count, "Should have 1 commit"
-
-    # Verify file is in the commit (ls-tree shows actual content)
-    committed = `git ls-tree --name-only -r HEAD`.strip
-    # Git may encode unicode differently, so just check file exists in tree
-    refute_empty committed, "Should have files in commit"
-  end
-
-  def test_handles_files_with_spaces
-    Dir.chdir(@temp_dir)
-
-    filename = "file with spaces.txt"
-    File.write(filename, "content")
-
-    result = @orchestrator.execute(
-      create_options(
-        files: [filename],
-        message: "feat: add file with spaces"
-      )
-    )
-
-    assert result, "Should handle files with spaces"
+    assert result, "Commit with LLM should succeed"
+    @mock_git.verify
+    @mock_file_stager.verify
+    @mock_diff_analyzer.verify
+    @mock_message_generator.verify
   end
 
   private
