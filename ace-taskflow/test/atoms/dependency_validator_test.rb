@@ -38,8 +38,9 @@ class DependencyValidatorTest < AceTaskflowTestCase
   end
 
   def test_would_create_cycle_detects_simple_cycle
-    # task.001 -> task.002, adding task.002 -> task.001 would create cycle
-    refute @validator.would_create_cycle?("task.001", "task.002", @task_map)
+    # task.002 depends on task.001, so adding task.001 -> task.002 WOULD create cycle
+    assert @validator.would_create_cycle?("task.001", "task.002", @task_map)
+    # task.003 -> task.002 -> task.001, so adding task.001 -> task.003 WOULD create cycle
     assert @validator.would_create_cycle?("task.001", "task.003", @task_map)
   end
 

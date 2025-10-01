@@ -237,6 +237,55 @@ module Ace
           false
         end
 
+        # Parse task metadata from content string (unit testable)
+        # @param content [String] Task file content
+        # @return [Hash] Parsed metadata
+        def parse_metadata(content)
+          parsed = Atoms::YamlParser.parse(content)
+          frontmatter = parsed[:frontmatter]
+
+          return nil unless frontmatter
+
+          {
+            id: frontmatter["id"],
+            status: frontmatter["status"] || "pending",
+            priority: frontmatter["priority"] || "medium",
+            estimate: frontmatter["estimate"],
+            dependencies: frontmatter["dependencies"] || [],
+            sort: frontmatter["sort"],
+            title: extract_title(parsed[:content])
+          }
+        rescue StandardError
+          nil
+        end
+
+        # Extract title from content (unit testable)
+        # @param content [String] Task body content
+        # @return [String] Extracted title
+        def extract_title(content)
+          # Extract title from first heading or first line
+          lines = content.to_s.split("\n")
+          lines.each do |line|
+            # Look for markdown heading
+            if match = line.match(/^#\s+(.+)$/)
+              return match[1].strip
+            end
+            # Return first non-empty line if no heading
+            return line.strip unless line.strip.empty?
+          end
+          "Untitled Task"
+        end
+
+        # Validate task structure (unit testable)
+        # @param task [Hash] Task hash to validate
+        # @return [Boolean] True if valid
+        def valid_task?(task)
+          return false unless task.is_a?(Hash)
+          return false unless task[:id] || task["id"]
+
+          true
+        end
+
         private
 
         def default_root_path
@@ -259,20 +308,6 @@ module Ace
           rescue StandardError
             false
           end
-        end
-
-        def extract_title(content)
-          # Extract title from first heading or first line
-          lines = content.to_s.split("\n")
-          lines.each do |line|
-            # Look for markdown heading
-            if match = line.match(/^#\s+(.+)$/)
-              return match[1].strip
-            end
-            # Return first non-empty line if no heading
-            return line.strip unless line.strip.empty?
-          end
-          "Untitled Task"
         end
 
         # Find task directory, supporting both old and new formats

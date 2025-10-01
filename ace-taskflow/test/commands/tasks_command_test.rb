@@ -4,15 +4,15 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/commands/tasks_command"
 
 class TasksCommandTest < AceTaskflowTestCase
-  def setup
-    @command = Ace::Taskflow::Commands::TasksCommand.new
-  end
+  # Note: TasksCommand must be created inside test directory context
+  # so TaskManager finds the correct .ace-taskflow root path
 
   def test_list_all_tasks
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute([])
+          command.execute(["all"]) # Use 'all' preset to show all tasks in current release
         end
 
         # Should show tasks from active release
@@ -33,8 +33,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_tasks_with_status_filter
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--status", "pending"])
+          command.execute(["pending"]) # Use 'pending' preset
         end
 
         # Should only show pending tasks
@@ -52,8 +53,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_tasks_from_specific_release
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--release", "v.0.8.0"])
+          command.execute(["all", "--release", "done/v.0.8.0"]) # Use 'all' preset with specific release context
         end
 
         # Should show v.0.8.0 tasks
@@ -70,8 +72,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_all_releases_tasks
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--all"])
+          command.execute(["all-releases"]) # Use 'all-releases' preset
         end
 
         # Should show tasks from all releases
@@ -85,8 +88,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_backlog_tasks
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--backlog"])
+          command.execute(["--backlog"])
         end
 
         # Should show only backlog tasks
@@ -103,8 +107,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_tasks_statistics
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--stats"])
+          command.execute(["--stats"])
         end
 
         # Should show statistics
@@ -131,8 +136,9 @@ class TasksCommandTest < AceTaskflowTestCase
       end
 
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--priority", "high"])
+          command.execute(["--priority", "high"])
         end
 
         # Should show only high priority tasks
@@ -146,8 +152,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_reschedule_tasks
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["reschedule", "v.0.9.0+003,v.0.9.0+004", "v.0.8.0"])
+          command.execute(["reschedule", "v.0.9.0+003,v.0.9.0+004", "v.0.8.0"])
         end
 
         assert_match(/Rescheduled/, output)
@@ -168,8 +175,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_reschedule_with_invalid_tasks
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["reschedule", "v.0.9.0+999", "v.0.8.0"])
+          command.execute(["reschedule", "v.0.9.0+999", "v.0.8.0"])
         end
 
         assert_match(/not found/, output)
@@ -180,8 +188,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_with_count_limit
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--count", "2"])
+          command.execute(["--count", "2"])
         end
 
         # Should only show 2 tasks
@@ -194,8 +203,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_sorted_by_id
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--sort", "id"])
+          command.execute(["--sort", "id"])
         end
 
         task_lines = output.lines.select { |l| l.include?("+task.") }
@@ -210,8 +220,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_list_sorted_by_status
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--sort", "status"])
+          command.execute(["--sort", "status"])
         end
 
         lines = output.lines
@@ -229,8 +240,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_verbose_output
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--verbose"])
+          command.execute(["--verbose"])
         end
 
         # Should include additional details
@@ -247,8 +259,9 @@ class TasksCommandTest < AceTaskflowTestCase
       FileUtils.rm_rf(Dir.glob(File.join(dir, "**/t")))
 
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute([])
+          command.execute([])
         end
 
         assert_match(/No tasks found/, output)
@@ -259,8 +272,9 @@ class TasksCommandTest < AceTaskflowTestCase
   def test_export_to_json
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          @command.execute(["--format", "json"])
+          command.execute(["--format", "json"])
         end
 
         # Should output valid JSON

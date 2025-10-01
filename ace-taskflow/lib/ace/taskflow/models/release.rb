@@ -9,13 +9,16 @@ module Ace
                     :created_at, :modified_at
 
         def initialize(attributes = {})
-          @name = attributes[:name]
-          @path = attributes[:path]
-          @status = attributes[:status]
-          @version = attributes[:version]
-          @statistics = attributes[:statistics] || default_statistics
-          @created_at = attributes[:created_at]
-          @modified_at = attributes[:modified_at]
+          # Normalize to symbol keys to support both string and symbol keys
+          attrs = attributes.transform_keys(&:to_sym)
+
+          @name = attrs[:name]
+          @path = attrs[:path]
+          @status = attrs[:status]
+          @version = attrs[:version]
+          @statistics = attrs[:statistics] || default_statistics
+          @created_at = attrs[:created_at]
+          @modified_at = attrs[:modified_at]
         end
 
         # Convert to hash

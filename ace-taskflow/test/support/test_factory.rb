@@ -184,4 +184,132 @@ module TestFactory
       yield dir
     end
   end
+
+  # Create a clean test project with minimal setup (no default fixtures)
+  def self.with_clean_project
+    Dir.mktmpdir do |dir|
+      # Create .ace-taskflow root directory
+      taskflow_root = File.join(dir, ".ace-taskflow")
+      FileUtils.mkdir_p(taskflow_root)
+
+      # Create .ace/taskflow/config.yml for config discovery
+      config_dir = File.join(dir, ".ace", "taskflow")
+      FileUtils.mkdir_p(config_dir)
+      File.write(File.join(config_dir, "config.yml"), "root: .ace-taskflow\n")
+
+      # Create standard directories but no content
+      %w[backlog done].each do |subdir|
+        FileUtils.mkdir_p(File.join(taskflow_root, subdir))
+      end
+
+      yield dir
+    end
+  end
+
+  # Create a specific release with optional tasks
+  # @param base_dir [String] Base directory
+  # @param version [String] Release version (e.g., "v.0.9.0")
+  # @param status [String] Release status: "active", "backlog", or "done"
+  # @param tasks [Array<Hash>] Optional array of task specs: [{num: "001", status: "pending", ...}]
+  def self.create_release(base_dir, version, status: "active", tasks: [])
+    taskflow_root = File.join(base_dir, ".ace-taskflow")
+
+    # Determine release location based on status
+    release_path = case status
+                   when "active"
+                     File.join(taskflow_root, version)
+                   when "backlog"
+                     File.join(taskflow_root, "backlog", version)
+                   when "done"
+                     File.join(taskflow_root, "done", version)
+                   else
+                     File.join(taskflow_root, version)
+                   end
+
+    FileUtils.mkdir_p(release_path)
+    FileUtils.mkdir_p(File.join(release_path, "t"))
+    FileUtils.mkdir_p(File.join(release_path, "i"))
+    FileUtils.mkdir_p(File.join(release_path, "docs"))
+
+    # Create .active marker for active releases
+    File.write(File.join(release_path, ".active"), "") if status == "active"
+
+    # Create release.md
+    File.write(File.join(release_path, "release.md"), <<~RELEASE)
+      ---
+      version: #{version}
+      status: #{status}
+      created_at: #{Time.now.strftime("%Y-%m-%d")}
+      ---
+
+      # Release #{version}
+      Test release
+    RELEASE
+
+    # Create tasks if provided
+    tasks.each do |task_spec|
+      create_task(release_path, version, task_spec)
+    end
+
+    release_path
+  end
+
+  # Create a specific task in a release
+  # @param release_path [String] Path to release directory
+  # @param version [String] Release version
+  # @param spec [Hash] Task specification: {num: "001", status: "pending", priority: "medium", ...}
+  def self.create_task(release_path, version, spec)
+    task_num = spec[:num] || spec[:number] || "001"
+    task_dir = File.join(release_path, "t", task_num)
+    FileUtils.mkdir_p(task_dir)
+
+    task_metadata = {
+      id: "#{version}+task.#{task_num}",
+      status: spec[:status] || "pending",
+      priority: spec[:priority] || "medium",
+      estimate: spec[:estimate] || "4h",
+      dependencies: spec[:dependencies] || [],
+      sort: spec[:sort] || (task_num.to_i * 100)
+    }
+
+    File.write(
+      File.join(task_dir, "task.#{task_num}.md"),
+      sample_task_content(task_metadata)
+    )
+  end
+
+  # Create multiple tasks with known IDs for predictable testing
+  # @param base_dir [String] Base directory
+  # @param release [String] Release version
+  # @param task_ids [Array<String>] Task numbers (e.g., ["001", "002", "003"])
+  # @param statuses [Hash] Optional status overrides: {"001" => "done", "002" => "pending"}
+  def self.create_known_tasks(base_dir, release, task_ids, statuses: {})
+    taskflow_root = File.join(base_dir, ".ace-taskflow")
+    release_path = File.join(taskflow_root, release)
+
+    FileUtils.mkdir_p(File.join(release_path, "t"))
+
+    task_ids.each do |task_num|
+      status = statuses[task_num] || "pending"
+      create_task(release_path, release, { num: task_num, status: status })
+    end
+  end
+
+  # Create ideas with known IDs
+  # @param base_dir [String] Base directory
+  # @param release [String] Release version
+  # @param count [Integer] Number of ideas to create
+  def self.create_known_ideas(base_dir, release, count)
+    taskflow_root = File.join(base_dir, ".ace-taskflow")
+    ideas_dir = File.join(taskflow_root, release, "i")
+    FileUtils.mkdir_p(ideas_dir)
+
+    count.times do |i|
+      idea_num = sprintf("%03d", i + 1)
+      File.write(
+        File.join(ideas_dir, "#{idea_num}.md"),
+        sample_idea_content("Idea #{idea_num}")
+      )
+    end
+  end
 end

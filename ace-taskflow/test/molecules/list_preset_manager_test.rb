@@ -27,9 +27,9 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
       assert_equal "next", preset[:name]
       assert_equal "Next actionable tasks (pending + in-progress)", preset[:description]
       assert_equal "current", preset[:context]
-      assert_equal ["pending", "in-progress"], preset[:filters]["status"]
-      assert_equal "priority", preset[:sort]["by"]
-      assert_equal false, preset[:sort]["ascending"]
+      assert_equal ["pending", "in-progress"], preset[:filters][:status]
+      assert_equal :sort, preset[:sort][:by]
+      assert_equal true, preset[:sort][:ascending]
     end
 
     it "returns recent preset configuration" do
@@ -47,9 +47,9 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
       preset = @manager.get_preset("all")
 
       assert_equal "all", preset[:name]
-      assert_equal "All items across all contexts", preset[:description]
-      assert_equal "all", preset[:context]
-      assert_equal "context", preset[:display]["group_by"]
+      assert_equal "All tasks in current release (all statuses)", preset[:description]
+      assert_equal "current", preset[:context]
+      assert_equal({}, preset[:display])
     end
   end
 

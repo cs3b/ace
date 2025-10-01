@@ -7,6 +7,9 @@ require_relative "../molecules/release_resolver"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/task_slug_generator"
 require_relative "../molecules/dependency_resolver"
+require_relative "../molecules/task_selector"
+require_relative "../molecules/task_statistics"
+require_relative "../molecules/status_validator"
 require_relative "../atoms/task_reference_parser"
 require_relative "../atoms/path_builder"
 require_relative "../atoms/yaml_parser"
@@ -32,34 +35,8 @@ module Ace
         def get_next_task(context: "current")
           tasks = list_tasks(context: context, filters: { status: ["pending", "in-progress"] })
 
-          # Prioritize in-progress tasks
-          in_progress = tasks.select { |t| t[:status] == "in-progress" }
-          return in_progress.first unless in_progress.empty?
-
-          # For pending tasks, sort by sort value first, then by ID
-          pending = tasks.select { |t| t[:status] == "pending" }
-          return nil if pending.empty?
-
-          # Sort pending tasks: those with sort values first (ascending), then by task ID
-          sorted_pending = pending.sort do |a, b|
-            if a[:sort] && b[:sort]
-              a[:sort] <=> b[:sort]
-            elsif a[:sort]
-              -1  # a has sort, comes first
-            elsif b[:sort]
-              1   # b has sort, comes first
-            else
-              # Neither has sort, compare by task ID number
-              # Handle both string and integer IDs
-              a_id_str = a[:id].to_s
-              b_id_str = b[:id].to_s
-              a_num = a_id_str.match(/task\.(\d+)$/)&.[](1)&.to_i || a_id_str.to_i || 999999
-              b_num = b_id_str.match(/task\.(\d+)$/)&.[](1)&.to_i || b_id_str.to_i || 999999
-              a_num <=> b_num
-            end
-          end
-
-          sorted_pending.first
+          # Delegate to pure logic molecule
+          Molecules::TaskSelector.select_next(tasks)
         end
 
         # Show specific task
@@ -281,8 +258,8 @@ module Ace
             return { success: false, message: "Task #{reference} not found" }
           end
 
-          # Validate status transition
-          unless valid_status_transition?(task[:status], new_status)
+          # Validate status transition using pure logic molecule
+          unless Molecules::StatusValidator.valid_transition?(task[:status], new_status)
             return {
               success: false,
               message: "Invalid status transition: #{task[:status]} → #{new_status}"
@@ -388,31 +365,8 @@ module Ace
         def get_statistics(context: "all")
           tasks = list_tasks(context: context)
 
-          stats = {
-            total: tasks.size,
-            by_status: {},
-            by_priority: {},
-            by_context: {}
-          }
-
-          tasks.each do |task|
-            # Count by status
-            status = task[:status] || "unknown"
-            stats[:by_status][status] ||= 0
-            stats[:by_status][status] += 1
-
-            # Count by priority
-            priority = task[:priority] || "unknown"
-            stats[:by_priority][priority] ||= 0
-            stats[:by_priority][priority] += 1
-
-            # Count by context
-            ctx = task[:context] || "unknown"
-            stats[:by_context][ctx] ||= 0
-            stats[:by_context][ctx] += 1
-          end
-
-          stats
+          # Delegate to pure logic molecule
+          Molecules::TaskStatistics.calculate(tasks)
         end
 
         private
@@ -504,19 +458,6 @@ module Ace
           TEMPLATE
         end
 
-        def valid_status_transition?(from, to)
-          # Define valid transitions
-          transitions = {
-            "draft" => ["pending", "blocked"],
-            "pending" => ["in-progress", "blocked"],
-            "in-progress" => ["done", "pending", "blocked"],
-            "blocked" => ["pending", "in-progress"],
-            "done" => ["pending"] # Allow reopening
-          }
-
-          allowed = transitions[from] || []
-          allowed.include?(to)
-        end
 
         def update_task_id_in_file(file_path, new_id)
           content = File.read(file_path)
