@@ -128,6 +128,7 @@ module Ace
           config[:groups] ||= deep_copy(DEFAULT_CONFIG[:groups])
           config[:defaults] ||= deep_copy(DEFAULT_CONFIG[:defaults])
           config[:failure_limits] ||= deep_copy(DEFAULT_CONFIG[:failure_limits])
+          config[:execution] ||= {}
 
           # Merge with defaults for missing values
           config[:patterns] = deep_copy(DEFAULT_CONFIG[:patterns]).merge(config[:patterns])
