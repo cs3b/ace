@@ -69,19 +69,38 @@ module Ace
         end
 
         # Find root directory from configuration
+        # Uses ace-core to detect project root, then finds taskflow directory within it
         # @return [String] Root directory path
+        # @raise [RuntimeError] If not in a project or taskflow directory not found
         def self.find_root
-          config = load
-          root = config["root"] || DEFAULT_CONFIG["root"]
+          # 1. Find project root using ace-core
+          require "ace/core/config_discovery"
+          project_root = Ace::Core::ConfigDiscovery.project_root
 
-          # Expand path relative to current directory
-          if root.start_with?("~")
-            File.expand_path(root)
-          elsif root.start_with?("/")
-            root
-          else
-            File.join(Dir.pwd, root)
+          unless project_root
+            raise "Not in an ACE project. No project root found from #{Dir.pwd}"
           end
+
+          # 2. Get configured taskflow root directory name
+          config = load
+          root_dir = config["root"] || DEFAULT_CONFIG["root"]
+
+          # 3. Build absolute path: project_root + taskflow_root
+          # Handle absolute paths in configuration (for special cases)
+          taskflow_root = if root_dir.start_with?("~")
+            File.expand_path(root_dir)
+          elsif root_dir.start_with?("/")
+            root_dir
+          else
+            File.join(project_root, root_dir)
+          end
+
+          # 4. Validate it exists
+          unless Dir.exist?(taskflow_root)
+            raise "Taskflow directory not found: #{taskflow_root}. Run 'ace-taskflow init' to create it."
+          end
+
+          taskflow_root
         end
 
         private
@@ -122,8 +141,16 @@ module Ace
         def self.extract_taskflow_config(taskflow_section)
           config = {}
 
-          # Map configuration structure
-          config["root"] = taskflow_section["root"] if taskflow_section["root"]
+          # Map configuration structure with backward compatibility
+          # Support both new format (taskflow.root) and old format (taskflow.directories.root)
+          config["root"] = if taskflow_section["root"]
+            # New format: taskflow.root (preferred)
+            taskflow_section["root"]
+          elsif taskflow_section["directories"] && taskflow_section["directories"]["root"]
+            # Old format: taskflow.directories.root (deprecated but supported)
+            taskflow_section["directories"]["root"]
+          end
+
           config["task_dir"] = taskflow_section["task_dir"] if taskflow_section["task_dir"]
           config["active_strategy"] = taskflow_section["active_strategy"] if taskflow_section["active_strategy"]
           config["allow_multiple_active"] = taskflow_section["allow_multiple_active"] unless taskflow_section["allow_multiple_active"].nil?
