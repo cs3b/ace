@@ -26,13 +26,21 @@ This is problematic because:
 ❯ # No output at all
 ```
 
-**Expected behavior (matching git commit):**
+**Expected behavior:**
 ```
 ❯ ace-git-commit
-[main e90676a] feat(taskflow): Add retro management commands
- 3 files changed, 145 insertions(+), 2 deletions(-)
- create mode 100644 lib/ace/taskflow/commands/retro.rb
+39a9e5fa (HEAD -> main) feat(task): Draft task 056 - Add informative output to ace-git-commit
+ .ace-taskflow/v.0.9.0/ideas/20250930-105556-we-have-not-info-about-what-files-have-been-commit.md |  34 -----------------------
+ .cache/ace-context/project.md                                                                     | 100 +++++++++++++++++++++++++++++++++++++++++--------------------------
+ ace-taskflow/lib/ace/taskflow/molecules/release_resolver.rb                                       |   6 ++--
+ ace-taskflow/test/commands/release_command_test.rb                                                |  19 +++++++------
+ ace-taskflow/test/commands/task_command_test.rb                                                   |   6 ++--
+ ace-taskflow/test/commands/tasks_command_test.rb                                                  |   4 +--
+ ace-taskflow/test/support/test_factory.rb                                                         |  10 ++++---
+ 7 files changed, 87 insertions(+), 92 deletions(-)
 ```
+
+Format: `git log --oneline HEAD -1` followed by `git diff --stat HEAD~1 HEAD` output
 
 ## Idea Reference
 - Source: `.ace-taskflow/v.0.9.0/docs/ideas/056-20250930-105556-we-have-not-info-about-what-files-have-been-commit.md`
@@ -40,118 +48,165 @@ This is problematic because:
 ## Solution Design
 
 ### Output Format
-Match git commit's standard output format:
+
+Use git's native formatting commands to build the summary:
+
 ```
-[branch commit-hash] commit-message-first-line
+<commit-hash> (<refs>) <commit-message-first-line>
+ <file-path> | <changes-count> <+/->
+ <file-path> | <changes-count> <+/->
+ ...
  N files changed, X insertions(+), Y deletions(-)
- create mode <mode> <file>  # for new files
- delete mode <mode> <file>  # for deleted files
- rename <old> => <new>      # for renamed files
 ```
+
+Commands to use:
+- `git log --oneline HEAD -1` - Get commit hash, refs, and message
+- `git diff --stat HEAD~1 HEAD` - Get file-by-file stats with visual bars
 
 ### Implementation Approach
 
-**Option 1: Parse git commit output (RECOMMENDED)**
+**Option 1: Parse git commit output**
 - Capture stderr from `git commit` (where the summary goes)
 - Parse and display it to stdout
 - Pros: Matches git exactly, no custom formatting
-- Cons: Parsing git output (but it's stable format)
+- Cons: Parsing git output, harder to extend for multi-commit scenarios
 
-**Option 2: Build summary from git operations**
-- After commit, run `git show --stat --format="%h" HEAD`
-- Format and display the information
-- Pros: Clean separation, uses git APIs
-- Cons: Extra git command, need to format manually
+**Option 2: Build summary from git operations (SELECTED)**
+- After commit, run `git log --oneline HEAD -1` and `git diff --stat HEAD~1 HEAD`
+- Display the output directly (already formatted by git)
+- Pros: Clean separation, uses git APIs, extensible for future multi-commit operations
+- Cons: Two extra git commands after commit
 
-**Decision: Option 1** - Use git's own output for consistency
+**Decision: Option 2** - Better supports future multi-commit scenarios where we'll display summary for each commit made
 
 ### Changes Required
 
-1. **ace-git-commit/lib/ace/git_commit/atoms/git_executor.rb**
-   - Modify `execute` method to capture stderr separately
-   - Return both stdout and stderr
-   - Update return type: `{ stdout: String, stderr: String, combined: String }`
+1. **ace-git-commit/lib/ace/git_commit/molecules/commit_summarizer.rb** (NEW)
+   - Create new molecule for generating commit summaries
+   - Method: `summarize(commit_sha)`
+   - Runs `git log --oneline <sha> -1`
+   - Runs `git diff --stat <sha>~1 <sha>`
+   - Returns combined output string
 
 2. **ace-git-commit/lib/ace/git_commit/organisms/commit_orchestrator.rb**
-   - Update `perform_commit` method to capture commit output
-   - Parse stderr for commit summary
-   - Display summary to stdout (not just in debug mode)
-   - Keep stderr separate for actual errors
+   - After successful commit in `perform_commit`:
+     - Get commit SHA from `git rev-parse HEAD`
+     - Call `CommitSummarizer.summarize(sha)`
+     - Output summary to stdout
+   - Handle dry-run mode (show "would commit" instead of summary)
+   - Handle debug mode (show both debug info and summary)
 
-3. **Tests to update:**
-   - `test/atoms/git_executor_test.rb` - test new return format
-   - `test/organisms/commit_orchestrator_test.rb` - verify output display
-   - Add integration test that verifies actual commit output
+3. **Tests to add/update:**
+   - `test/molecules/commit_summarizer_test.rb` (NEW)
+   - `test/organisms/commit_orchestrator_test.rb` - verify summary display
+   - Add integration test for full commit workflow with output
 
 ### Edge Cases
-- Empty commits (should still show output)
-- Large commits (100+ files)
-- Binary files
-- Renamed files
-- Dry-run mode (should show "would commit" message)
-- Debug mode (should show both debug info and commit summary)
+- Empty commits (git diff will show nothing, that's fine)
+- Large commits (100+ files) - git handles this well with summary line
+- Binary files - shown in diff stat
+- Renamed files - shown in diff stat
+- First commit in repo (no parent, use `git show --stat` instead)
+- Dry-run mode (skip summary, already shows "would commit" message)
+- Debug mode (show both debug info and commit summary)
 
 ## Acceptance Criteria
 
-- [ ] ace-git-commit displays commit summary like git commit
-- [ ] Shows branch name and commit hash
-- [ ] Shows file count and insertion/deletion stats
-- [ ] Shows individual file status (create/delete/rename)
+- [ ] ace-git-commit displays commit summary using git's native formatting
+- [ ] Shows commit hash with refs (e.g., `39a9e5fa (HEAD -> main)`)
+- [ ] Shows commit message first line
+- [ ] Shows per-file diff stats with visual bars
+- [ ] Shows summary line (N files changed, X insertions(+), Y deletions(-))
 - [ ] Works in normal mode
-- [ ] Works in --dry-run mode (shows "would commit")
-- [ ] Works in --debug mode (shows both debug and summary)
+- [ ] Works in --dry-run mode (no summary, keeps existing behavior)
+- [ ] Works in --debug mode (shows both debug info and summary)
+- [ ] Handles first commit in repo (no parent commit)
 - [ ] Error messages still go to stderr
 - [ ] Exit codes remain unchanged
 - [ ] All existing tests pass
-- [ ] New tests cover output formatting
+- [ ] New CommitSummarizer molecule has full test coverage
+- [ ] Output supports future multi-commit operations
 
 ## Implementation Plan
 
-### Phase 1: Modify git_executor (30 min)
-1. Update `execute` method to return structured output
-2. Add tests for new return format
-3. Ensure backward compatibility with existing callers
+### Phase 1: Create CommitSummarizer molecule (45 min)
+1. Create `lib/ace/git_commit/molecules/commit_summarizer.rb`
+2. Implement `summarize(commit_sha, git_executor)` method:
+   - Run `git log --oneline <sha> -1`
+   - Run `git diff --stat <sha>~1 <sha>` (or `git show --stat <sha>` for first commit)
+   - Combine outputs with newline
+3. Handle first commit edge case (no parent)
+4. Create `test/molecules/commit_summarizer_test.rb` with full coverage
 
-### Phase 2: Update commit_orchestrator (45 min)
-1. Capture commit output in `perform_commit`
-2. Parse and format commit summary
-3. Display to stdout
-4. Handle edge cases (dry-run, debug modes)
+### Phase 2: Update commit_orchestrator (30 min)
+1. After successful commit in `perform_commit`:
+   - Get commit SHA: `git rev-parse HEAD`
+   - Create CommitSummarizer instance
+   - Call `summarizer.summarize(sha, @git)`
+   - Output summary to stdout (not in dry-run mode)
+2. Keep existing debug mode behavior
 
-### Phase 3: Testing (45 min)
-1. Update existing tests for new behavior
-2. Add integration tests for output format
-3. Test edge cases (large commits, renames, etc.)
-4. Manual testing with various commit scenarios
+### Phase 3: Testing and validation (45 min)
+1. Update `test/organisms/commit_orchestrator_test.rb`
+2. Add integration test for full commit workflow
+3. Test edge cases:
+   - First commit in repo
+   - Large commits
+   - Empty commits
+   - Dry-run mode
+   - Debug mode
+4. Manual testing with real commits
 
 ## Testing Strategy
 
 ### Unit Tests
 ```ruby
-# test/atoms/git_executor_test.rb
-def test_execute_returns_structured_output
-  result = executor.execute("status")
-  assert_instance_of Hash, result
-  assert_includes result, :stdout
-  assert_includes result, :stderr
+# test/molecules/commit_summarizer_test.rb
+def test_summarize_returns_formatted_output
+  summarizer = CommitSummarizer.new
+  output = summarizer.summarize("HEAD", git_executor)
+
+  assert_match /^[a-f0-9]{8}/, output  # commit hash
+  assert_match /\d+ files? changed/, output  # summary line
+end
+
+def test_summarize_handles_first_commit
+  # Test with repo that has only one commit
+  # Should use git show instead of git diff
 end
 
 # test/organisms/commit_orchestrator_test.rb
-def test_displays_commit_summary
+def test_displays_commit_summary_after_commit
   output = capture_stdout do
     orchestrator.execute(options)
   end
-  assert_match /\[main [a-f0-9]{7}\]/, output
-  assert_match /\d+ files? changed/, output
+
+  assert_match /^[a-f0-9]{8}/, output  # commit hash
+  assert_match /\d+ files? changed/, output  # summary
+  refute_match /Committing\.\.\./, output unless options.debug
+end
+
+def test_no_summary_in_dry_run_mode
+  options.dry_run = true
+  output = capture_stdout do
+    orchestrator.execute(options)
+  end
+
+  refute_match /^[a-f0-9]{8}/, output  # no commit hash
+  assert_match /=== DRY RUN ===/, output
 end
 ```
 
 ### Integration Tests
 ```ruby
-def test_commit_output_matches_git_format
+def test_full_commit_workflow_with_output
   # Setup repo with changes
   # Run ace-git-commit
-  # Verify output format
+  # Verify output contains:
+  #   - commit hash and refs
+  #   - commit message
+  #   - file stats
+  #   - summary line
 end
 ```
 
