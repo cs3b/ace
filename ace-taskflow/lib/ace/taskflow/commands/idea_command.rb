@@ -44,8 +44,8 @@ module Ace
             show_help
             exit 0
           else
-            # Try to show specific idea by partial name
-            show_idea(subaction, args)
+            # Try to show specific idea by partial name, or create if not found
+            show_idea_or_create(subaction, args)
           end
         rescue => e
           puts "Error: #{e.message}"
@@ -101,6 +101,29 @@ module Ace
           else
             puts "No idea found matching '#{reference}' in #{context_name(context)}."
             exit 1
+          end
+        end
+
+        def show_idea_or_create(first_arg, remaining_args)
+          # If first_arg is a flag, treat this as a create command
+          if first_arg.start_with?("--") || first_arg.start_with?("-")
+            all_args = [first_arg] + remaining_args
+            create_idea(all_args)
+            return
+          end
+
+          # Try to find an existing idea
+          context = parse_context(remaining_args)
+          idea = @idea_loader.find_by_partial_name(first_arg, context: context)
+
+          if idea
+            # Found an idea, show it
+            full_idea = @idea_loader.load_idea(idea[:path])
+            display_idea(full_idea)
+          else
+            # No idea found, treat all arguments as content for a new idea
+            all_args = [first_arg] + remaining_args
+            create_idea(all_args)
           end
         end
 
