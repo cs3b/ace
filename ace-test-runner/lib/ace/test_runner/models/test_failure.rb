@@ -6,7 +6,8 @@ module Ace
       # Represents a single test failure or error
       class TestFailure
         attr_accessor :type, :test_name, :test_class, :message, :file_path,
-                      :line_number, :backtrace, :fix_suggestion
+                      :line_number, :backtrace, :fix_suggestion, :code_context,
+                      :stderr_warnings
 
         def initialize(attributes = {})
           @type = attributes[:type] || :failure  # :failure or :error
@@ -17,6 +18,8 @@ module Ace
           @line_number = attributes[:line_number]
           @backtrace = attributes[:backtrace] || []
           @fix_suggestion = attributes[:fix_suggestion]
+          @code_context = attributes[:code_context]
+          @stderr_warnings = attributes[:stderr_warnings]
         end
 
         def location
@@ -71,7 +74,9 @@ module Ace
             file_path: file_path,
             line_number: line_number,
             backtrace: backtrace,
-            fix_suggestion: fix_suggestion
+            fix_suggestion: fix_suggestion,
+            code_context: code_context,
+            stderr_warnings: stderr_warnings
           }
         end
 

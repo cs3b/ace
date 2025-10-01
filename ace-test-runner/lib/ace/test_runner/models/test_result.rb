@@ -7,7 +7,7 @@ module Ace
       class TestResult
         attr_accessor :passed, :failed, :skipped, :errors, :assertions,
                       :duration, :start_time, :end_time, :failures_detail,
-                      :deprecations, :raw_output
+                      :deprecations, :raw_output, :stderr
 
         def initialize(attributes = {})
           @passed = attributes[:passed] || 0
@@ -21,6 +21,7 @@ module Ace
           @failures_detail = attributes[:failures_detail] || []
           @deprecations = attributes[:deprecations] || []
           @raw_output = attributes[:raw_output] || ""
+          @stderr = attributes[:stderr] || ""
         end
 
         def total_tests

@@ -36,6 +36,15 @@ module Ace
           output_file
         end
 
+        def save_stderr(stderr, report_dir)
+          return nil if stderr.nil? || stderr.empty?
+
+          ensure_directory(report_dir)
+          stderr_file = File.join(report_dir, "raw_stderr.txt")
+          File.write(stderr_file, stderr)
+          stderr_file
+        end
+
         def save_summary(result, report_dir)
           ensure_directory(report_dir)
           summary_file = File.join(report_dir, "summary.json")
@@ -67,14 +76,17 @@ module Ace
           failures_file
         end
 
-        def save_individual_failure_reports(failures, report_dir, formatter)
+        def save_individual_failure_reports(failures, report_dir, formatter, max_display: nil)
           return [] if failures.empty?
 
           failures_dir = File.join(report_dir, "failures")
           ensure_directory(failures_dir)
 
+          # Limit number of individual .md files to max_display if specified
+          failures_to_save = max_display ? failures.take(max_display) : failures
+
           report_files = []
-          failures.each_with_index do |failure, index|
+          failures_to_save.each_with_index do |failure, index|
             filename = generate_failure_filename(failure, index + 1)
             filepath = File.join(failures_dir, filename)
 
@@ -83,7 +95,7 @@ module Ace
             report_files << filepath
           end
 
-          # Create an index file
+          # Create an index file for ALL failures (not just the limited ones)
           create_failure_index(failures, failures_dir)
 
           report_files
