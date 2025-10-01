@@ -9,10 +9,11 @@ module Ace
         PATTERNS = {
           summary: /(\d+) (?:tests?|runs?), (\d+) assertions?, (\d+) failures?, (\d+) errors?, (\d+) skips?/,
           failure: /^\s+\d+\) (Failure|Error):\n(.+?)(?=^\s+\d+\) |^Finished in|\z)/m,
-          # Pattern for inline verbose failures - match each failure individually
-          inline_failure: /^\s*(test_[\w_]+).*?\s+FAIL\s+.*?\n((?:.*?\n)*?)(?=^\s*test_|^[A-Z]|\z)/m,
-          # Pattern for inline errors
-          inline_error: /^\s*(test_[\w_]+).*?\s+ERROR\s+.*?\n((?:.*?\n)*?)(?=^\s*test_|^[A-Z]|\z)/m,
+          # Pattern for inline verbose failures - match test name, FAIL marker, and content until next test or EOF
+          # Matches: "  test_name                 FAIL (0.02s)\n    error details\n    /path/file.rb:123..."
+          inline_failure: /^\s+(test_[\w_]+).*?FAIL.*?\([\d.]+s\)\n(.*?)(?=^\s+test_[\w_]+.*?(?:PASS|FAIL|ERROR|SKIP)|^Finished in|\z)/m,
+          # Pattern for inline errors - same structure as failures but with ERROR marker
+          inline_error: /^\s+(test_[\w_]+).*?ERROR.*?\([\d.]+s\)\n(.*?)(?=^\s+test_[\w_]+.*?(?:PASS|FAIL|ERROR|SKIP)|^Finished in|\z)/m,
           location: /\[(.*?):(\d+)\]/,
           duration: /Finished in ([\d.]+)s/,
           deprecation: /DEPRECATION WARNING: (.+)/,
@@ -68,20 +69,19 @@ module Ace
           end
 
           # If no failures found, try inline verbose format
-          # But ONLY if the output contains FAIL or ERROR to avoid expensive regex on success
+          # But ONLY if the output contains FAIL or ERROR to avoid expensive processing on success
           if failures.empty? && (clean_output.include?(' FAIL ') || clean_output.include?(' ERROR '))
-            # Parse FAIL lines
-            if clean_output.include?(' FAIL ')
-              clean_output.scan(PATTERNS[:inline_failure]) do |test_name, failure_content|
-                failure = parse_inline_failure(test_name, failure_content, :failure)
-                failures << failure if failure
-              end
-            end
+            # Split by test headers and process each block
+            test_blocks = clean_output.split(/(?=^\s+test_[\w_]+)/).select { |s| s.match?(/^\s+test_/) }
 
-            # Parse ERROR lines
-            if clean_output.include?(' ERROR ')
-              clean_output.scan(PATTERNS[:inline_error]) do |test_name, error_content|
-                failure = parse_inline_failure(test_name, error_content, :error)
+            test_blocks.each do |block|
+              # Check if this block contains a FAIL or ERROR
+              if block =~ /^\s+(test_[\w_]+).*?(ERROR|FAIL).*?\(([\d.]+)s\)\n(.*)/m
+                test_name = $1
+                type = $2 == 'ERROR' ? :error : :failure
+                content = $4
+
+                failure = parse_inline_failure(test_name, content, type)
                 failures << failure if failure
               end
             end
@@ -183,23 +183,33 @@ module Ace
 
           lines = content.strip.lines
 
-          # Extract location from the last line that looks like a file path
+          # Extract location from any line that looks like a file path (first occurrence)
           location = nil
-          lines.reverse.each do |line|
-            if line =~ /^\s*(.+\.rb):(\d+)/
+          location_line_idx = nil
+          lines.each_with_index do |line, idx|
+            # Match absolute paths with .rb extension
+            if line =~ %r{^\s*(/[^:]+\.rb):(\d+)}
               location = {
                 file: $1.strip,
                 line: $2.to_i
               }
+              location_line_idx = idx
               break
             end
           end
 
-          # Extract message (Expected/Actual lines)
+          # Extract message (all lines before location, trimmed)
+          # Skip empty lines and indentation
           message_lines = []
-          lines.each do |line|
-            next if line =~ /^\s*$/ || line =~ /\.rb:\d+/
-            message_lines << line.strip
+          lines[0...location_line_idx].each do |line|
+            stripped = line.strip
+            next if stripped.empty?
+            message_lines << stripped
+          end
+
+          # If no message extracted, use first non-empty line
+          if message_lines.empty? && lines.any?
+            message_lines << lines.first.strip
           end
 
           {
