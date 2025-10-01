@@ -15,19 +15,4 @@ ace-*/test-reports
 ace-*/coverage
 
 # ace-taskflow test artifacts
-ace-taskflow/.ace-taskflow/backlog/t/014-task-backlog/
-ace-taskflow/.ace-taskflow/backlog/t/015-task-backlog/
-ace-taskflow/.ace-taskflow/backlog/t/016-task-backlog/
-ace-taskflow/.ace-taskflow/backlog/t/017-task-backlog/
-ace-taskflow/.ace-taskflow/backlog/v.0.36.0-new-features/
-ace-taskflow/.ace-taskflow/backlog/v.0.37.0-invalid-version/
-ace-taskflow/.ace-taskflow/backlog/v.0.38.0-v-0-9-0/
-ace-taskflow/.ace-taskflow/backlog/v.0.39.0-new-features/
-ace-taskflow/.ace-taskflow/backlog/v.0.40.0-invalid-version/
-ace-taskflow/.ace-taskflow/backlog/v.0.41.0-v-0-9-0/
-ace-taskflow/.ace-taskflow/backlog/v.0.42.0-v-0-9-0/
-ace-taskflow/.ace-taskflow/backlog/v.0.43.0-invalid-version/
-ace-taskflow/.ace-taskflow/backlog/v.0.44.0-new-features/
-ace-taskflow/.ace-taskflow/backlog/v.0.45.0-new-features/
-ace-taskflow/.ace-taskflow/backlog/v.0.46.0-invalid-version/
-ace-taskflow/.ace-taskflow/backlog/v.0.47.0-v-0-9-0/
+ace-taskflow/.ace-taskflow/
