@@ -4,10 +4,14 @@
 # Controls task management and workflow
 
 taskflow:
+  # Taskflow root directory (relative to project root)
+  # The project root is auto-detected using ace-core
+  root: ".ace-taskflow"
+
   # Task directory structure
   directories:
-    # Root directory for tasks
-    root: ".ace-taskflow"
+    # Note: 'root' moved to top-level taskflow.root (above)
+    # Old format taskflow.directories.root is deprecated but still supported
 
     # Active release directory
     active: "v.%{version}"
