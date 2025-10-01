@@ -8,4 +8,5 @@ source: ace-taskflow
 
 read and run `ace-nav wfi://create-task-based-on-plan`
 
-read and run @.claude/commands/commit.md
+read and run `ace-nav wfi://commit`
+
