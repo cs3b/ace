@@ -47,6 +47,9 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add test file"]
+    @mock_git.expect :execute, "abc1234", ["rev-parse", "HEAD"]
+    @mock_git.expect :execute, "abc1234 (HEAD -> main) feat: add test file", ["log", "--oneline", "abc1234", "-1"]
+    @mock_git.expect :execute, " file.rb | 5 +++++\n 1 file changed, 5 insertions(+)", ["diff", "--stat", "abc1234~1", "abc1234"], capture_stderr: true
 
     result = @orchestrator.execute(create_options(message: "feat: add test file"))
 
@@ -60,6 +63,9 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.expect :stage_files, nil, [["file1.txt"]]
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add file1"]
+    @mock_git.expect :execute, "def5678", ["rev-parse", "HEAD"]
+    @mock_git.expect :execute, "def5678 feat: add file1", ["log", "--oneline", "def5678", "-1"]
+    @mock_git.expect :execute, " file1.txt | 3 +++\n 1 file changed, 3 insertions(+)", ["diff", "--stat", "def5678~1", "def5678"], capture_stderr: true
 
     result = @orchestrator.execute(
       create_options(
@@ -78,6 +84,9 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.expect :stage_all, nil
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add all files"]
+    @mock_git.expect :execute, "ghi9012", ["rev-parse", "HEAD"]
+    @mock_git.expect :execute, "ghi9012 feat: add all files", ["log", "--oneline", "ghi9012", "-1"]
+    @mock_git.expect :execute, " file1.rb | 3 +++\n file2.rb | 2 ++\n 2 files changed, 5 insertions(+)", ["diff", "--stat", "ghi9012~1", "ghi9012"], capture_stderr: true
 
     result = @orchestrator.execute(
       create_options(
@@ -152,6 +161,9 @@ class CommitOrchestratorTest < TestCase
       diff == "diff content" && kwargs == { intention: "add feature", files: ["file.txt"] }
     end
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: generated message"]
+    @mock_git.expect :execute, "jkl3456", ["rev-parse", "HEAD"]
+    @mock_git.expect :execute, "jkl3456 feat: generated message", ["log", "--oneline", "jkl3456", "-1"]
+    @mock_git.expect :execute, " file.txt | 10 ++++++++++\n 1 file changed, 10 insertions(+)", ["diff", "--stat", "jkl3456~1", "jkl3456"], capture_stderr: true
 
     result = @orchestrator.execute(
       create_options(

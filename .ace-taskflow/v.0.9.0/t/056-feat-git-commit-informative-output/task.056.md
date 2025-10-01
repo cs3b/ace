@@ -1,10 +1,12 @@
 # Task 056: Add informative output to ace-git-commit
 
 ## Status
-- **State**: todo
+- **State**: done
 - **Priority**: P2
 - **Estimate**: 2-3 hours
 - **Created**: 2025-10-01
+- **Started**: 2025-10-01
+- **Completed**: 2025-10-01
 
 ## Context
 
@@ -112,20 +114,20 @@ Commands to use:
 
 ## Acceptance Criteria
 
-- [ ] ace-git-commit displays commit summary using git's native formatting
-- [ ] Shows commit hash with refs (e.g., `39a9e5fa (HEAD -> main)`)
-- [ ] Shows commit message first line
-- [ ] Shows per-file diff stats with visual bars
-- [ ] Shows summary line (N files changed, X insertions(+), Y deletions(-))
-- [ ] Works in normal mode
-- [ ] Works in --dry-run mode (no summary, keeps existing behavior)
-- [ ] Works in --debug mode (shows both debug info and summary)
-- [ ] Handles first commit in repo (no parent commit)
-- [ ] Error messages still go to stderr
-- [ ] Exit codes remain unchanged
-- [ ] All existing tests pass
-- [ ] New CommitSummarizer molecule has full test coverage
-- [ ] Output supports future multi-commit operations
+- [x] ace-git-commit displays commit summary using git's native formatting
+- [x] Shows commit hash with refs (e.g., `39a9e5fa (HEAD -> main)`)
+- [x] Shows commit message first line
+- [x] Shows per-file diff stats with visual bars
+- [x] Shows summary line (N files changed, X insertions(+), Y deletions(-))
+- [x] Works in normal mode
+- [x] Works in --dry-run mode (no summary, keeps existing behavior)
+- [x] Works in --debug mode (shows both debug info and summary)
+- [x] Handles first commit in repo (no parent commit)
+- [x] Error messages still go to stderr
+- [x] Exit codes remain unchanged
+- [x] All existing tests pass
+- [x] New CommitSummarizer molecule has full test coverage
+- [x] Output supports future multi-commit operations
 
 ## Implementation Plan
 

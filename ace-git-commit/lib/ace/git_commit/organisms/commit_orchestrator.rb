@@ -178,7 +178,14 @@ module Ace
           # Execute commit
           @git.execute("commit", "-m", message)
 
-          puts "Commit successful!" if options.debug
+          # Get the commit SHA
+          commit_sha = @git.execute("rev-parse", "HEAD").strip
+
+          # Display commit summary
+          summarizer = Molecules::CommitSummarizer.new(@git)
+          summary = summarizer.summarize(commit_sha)
+          puts summary
+
           true
         rescue GitError => e
           puts "Commit failed: #{e.message}"

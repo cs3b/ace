@@ -51,14 +51,14 @@ module Ace
           find_all.select { |r| r[:status] == "active" }
         end
 
-        # Find primary active release (lowest version)
+        # Find primary active release (highest version)
         # @return [Hash, nil] Primary active release info or nil
         def find_primary_active
           active = find_active
           return nil if active.empty?
 
-          # Sort by version and return the lowest
-          active.min_by { |r| parse_version(r[:name]) }
+          # Sort by version and return the highest
+          active.max_by { |r| parse_version(r[:name]) }
         end
 
         # Find release by name or path

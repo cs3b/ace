@@ -12,7 +12,7 @@ class TasksCommandTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         output = capture_stdout do
-          @command.execute
+          @command.execute([])
         end
 
         # Should show tasks from active release
@@ -248,7 +248,7 @@ class TasksCommandTest < AceTaskflowTestCase
 
       Dir.chdir(dir) do
         output = capture_stdout do
-          @command.execute
+          @command.execute([])
         end
 
         assert_match(/No tasks found/, output)
