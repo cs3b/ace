@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.049
-status: pending
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
@@ -335,7 +335,7 @@ Workflows must detect testing framework dynamically:
 
 *Concrete implementation actions that modify code, create files, or change the system state.*
 
-- [ ] Migrate fix-tests workflow to ace-taskflow/handbook/workflow-instructions/
+- [x] Migrate fix-tests workflow to ace-taskflow/handbook/workflow-instructions/
   - Copy from dev-handbook/workflow-instructions/fix-tests.wf.md
   - Add YAML front matter (name, allowed-tools, description, argument-hint)
   - Update context loading: `ace-nav wfi://load-project-context`
@@ -347,7 +347,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Workflow self-contained, discoverable via ace-nav wfi://fix-tests
   > Command: ace-nav wfi://fix-tests --verify
 
-- [ ] Migrate create-test-cases workflow to ace-taskflow/handbook/workflow-instructions/
+- [x] Migrate create-test-cases workflow to ace-taskflow/handbook/workflow-instructions/
   - Copy from dev-handbook/workflow-instructions/create-test-cases.wf.md
   - Add YAML front matter metadata
   - Update context loading to use ace-nav protocol
@@ -358,7 +358,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Workflow self-contained, test case template embedded
   > Command: ace-nav wfi://create-test-cases --verify
 
-- [ ] Migrate improve-code-coverage workflow to ace-taskflow/handbook/workflow-instructions/
+- [x] Migrate improve-code-coverage workflow to ace-taskflow/handbook/workflow-instructions/
   - Copy from dev-handbook/workflow-instructions/improve-code-coverage.wf.md
   - Add YAML front matter metadata
   - Update context loading references
@@ -369,7 +369,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Workflow self-contained, coverage templates embedded
   > Command: ace-nav wfi://improve-code-coverage --verify
 
-- [ ] Create Claude command for fix-tests
+- [x] Create Claude command for fix-tests
   - Create .claude/commands/ace/fix-tests.md
   - Add YAML front matter: description, allowed-tools, argument-hint
   - Add command body: `read and run \`ace-nav wfi://fix-tests\``
@@ -379,7 +379,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Command file exists, references wfi://fix-tests protocol
   > Command: cat .claude/commands/ace/fix-tests.md | grep "wfi://fix-tests"
 
-- [ ] Create Claude command for create-test-cases
+- [x] Create Claude command for create-test-cases
   - Create .claude/commands/ace/create-test-cases.md
   - Add YAML front matter metadata
   - Add command body: `read and run \`ace-nav wfi://create-test-cases\``
@@ -389,7 +389,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Command file exists, references wfi://create-test-cases protocol
   > Command: cat .claude/commands/ace/create-test-cases.md | grep "wfi://create-test-cases"
 
-- [ ] Create Claude command for improve-code-coverage
+- [x] Create Claude command for improve-code-coverage
   - Create .claude/commands/ace/improve-code-coverage.md
   - Add YAML front matter metadata
   - Add command body: `read and run \`ace-nav wfi://improve-code-coverage\``
@@ -399,7 +399,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Command file exists, references wfi://improve-code-coverage protocol
   > Command: cat .claude/commands/ace/improve-code-coverage.md | grep "wfi://improve-code-coverage"
 
-- [ ] Validate all workflows are discoverable via ace-nav
+- [x] Validate all workflows are discoverable via ace-nav
   - Test fix-tests workflow discovery
   - Test create-test-cases workflow discovery
   - Test improve-code-coverage workflow discovery
@@ -409,7 +409,7 @@ Workflows must detect testing framework dynamically:
   > Assert: All workflows discoverable through ace-nav wfi:// protocol
   > Command: ace-nav 'wfi://*test*' --list | grep -E "(fix-tests|create-test-cases|improve-code-coverage)"
 
-- [ ] Validate workflow self-containment per ADR-001
+- [x] Validate workflow self-containment per ADR-001
   - Verify no external workflow dependencies except core docs
   - Check all templates embedded using XML format
   - Confirm context loading uses ace-nav protocol
@@ -419,7 +419,7 @@ Workflows must detect testing framework dynamically:
   > Assert: Workflows self-contained, templates embedded, no external deps
   > Command: # Manual review of workflows against ADR-001 checklist
 
-- [ ] Test Claude commands invoke workflows correctly
+- [x] Test Claude commands invoke workflows correctly
   - Test /ace:fix-tests command execution
   - Test /ace:create-test-cases command execution
   - Test /ace:improve-code-coverage command execution
@@ -431,16 +431,16 @@ Workflows must detect testing framework dynamically:
 ## Acceptance Criteria
 
 - [x] AC 1: UX/usage documentation created at `ux/usage.md` for Claude commands
-- [ ] AC 2: Three workflow files migrated to `ace-taskflow/handbook/workflow-instructions/`
-- [ ] AC 3: All workflows self-contained with embedded templates (ADR-002 XML format)
-- [ ] AC 4: Three Claude command files created in `.claude/commands/ace/`
-- [ ] AC 5: All Claude commands correctly reference `ace-nav wfi://[workflow-name]`
-- [ ] AC 6: Workflows discoverable via `ace-nav wfi://` protocol
-- [ ] AC 7: Commands are thin wrappers to workflows (no CLI tools)
-- [ ] AC 8: No external dependencies except core docs (ADR-001 compliance)
-- [ ] AC 9: Framework detection logic included for multiple test frameworks
-- [ ] AC 10: All workflows validated against self-containment principle
-- [ ] AC 11: Migration follows task 048 two-layer architecture pattern (workflows + commands)
+- [x] AC 2: Three workflow files migrated to `ace-taskflow/handbook/workflow-instructions/`
+- [x] AC 3: All workflows self-contained with embedded templates (ADR-002 XML format)
+- [x] AC 4: Three Claude command files created in `.claude/commands/ace/`
+- [x] AC 5: All Claude commands correctly reference `ace-nav wfi://[workflow-name]`
+- [x] AC 6: Workflows discoverable via `ace-nav wfi://` protocol
+- [x] AC 7: Commands are thin wrappers to workflows (no CLI tools)
+- [x] AC 8: No external dependencies except core docs (ADR-001 compliance)
+- [x] AC 9: Framework detection logic included for multiple test frameworks
+- [x] AC 10: All workflows validated against self-containment principle
+- [x] AC 11: Migration follows task 048 two-layer architecture pattern (workflows + commands)
 
 ## References
 
