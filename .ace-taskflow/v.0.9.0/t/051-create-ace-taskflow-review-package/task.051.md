@@ -4,9 +4,99 @@ status: draft
 priority: high
 estimate: TBD
 dependencies: []
+needs_review: true
 ---
 
 # Create ace-taskflow-review package
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Package Structure & Integration Strategy
+
+- [ ] **Should ace-taskflow-review be a separate gem or integrated into ace-taskflow core?**
+  - **Research conducted**:
+    - Examined ace-git-commit (standalone gem with own CLI)
+    - Reviewed ace-taskflow CLI structure (subcommands: idea, task, release, retro)
+    - Current code-review tools in dev-tools/ are standalone executables
+  - **Pattern analysis**:
+    - ace-git-commit: Standalone gem with `ace-git-commit` CLI
+    - ace-taskflow: Single gem with subcommands via `ace-taskflow <subcommand>`
+  - **Two viable approaches**:
+    1. **Separate gem**: `ace-review` with `ace-review code` / `ace-review synthesize` commands
+    2. **Integrated subcommand**: Extend ace-taskflow with `ace-taskflow review code` / `ace-taskflow review synthesize`
+  - **Why needs human input**:
+    - Architectural decision affecting installation, versioning, and user experience
+    - Task description mentions "ace-taskflow-review package" but also "ace-taskflow review" namespace
+    - Need clarity on whether reviews are core to task management or separate concern
+
+- [ ] **Where should code reviews be stored by default?**
+  - **Research conducted**:
+    - Found `.ace-taskflow/v.X.X.X/docs/` directory structure in current releases
+    - Completed releases have `/docs/` directories with various markdown files
+    - Config supports release-based organization (v.0.9.0 structure)
+  - **Suggested default**: `.ace-taskflow/<release>/docs/reviews/` for release-specific reviews
+  - **Alternative options**:
+    - `.ace-taskflow/<release>/reviews/` (top-level in release)
+    - `.ace-taskflow/reviews/<release>/` (reviews-first organization)
+    - Configurable via `.ace/review/config.yml`
+  - **Why needs human input**: Storage pattern affects discoverability and integration with other ace-taskflow features
+
+### [MEDIUM] Migration Strategy
+
+- [ ] **Should existing dev-tools code-review implementation be migrated or wrapped?**
+  - **Research conducted**:
+    - Current implementation in `dev-tools/lib/coding_agent_tools/` with full ATOM architecture
+    - Executables: `dev-tools/exe/code-review` and `dev-tools/exe/code-review-synthesize`
+    - Implementation includes: ReviewManager organism, preset system, LLM integration
+  - **Migration options**:
+    1. **Full migration**: Move all code to new gem, update imports, deprecate dev-tools version
+    2. **Wrapper approach**: New gem delegates to existing dev-tools implementation
+    3. **Incremental**: Start with wrapper, migrate incrementally
+  - **Suggested default**: Wrapper approach initially for faster delivery
+  - **Why needs human input**: Affects development effort, timeline, and backward compatibility
+
+- [ ] **How should we handle backward compatibility with existing code-review commands?**
+  - **Research conducted**:
+    - Current commands: `code-review`, `code-review-synthesize` in dev-tools/exe/
+    - Workflow files reference these commands directly
+    - No version constraints found in workflow documentation
+  - **Suggested default**:
+    - Keep existing commands working via symlinks or PATH priority
+    - Add deprecation notices recommending new ace-review/ace-taskflow commands
+    - Document migration path in CHANGELOG
+  - **Why needs human input**: User migration strategy and deprecation timeline decision
+
+### [MEDIUM] Feature Scope & Interface
+
+- [ ] **Should review commands support task-specific reviews out of the box?**
+  - **Research conducted**:
+    - Interface contract mentions: `ace-taskflow review task <task-id>`
+    - Would require integration with ace-taskflow task file parsing
+    - Need to extract file changes associated with specific task
+  - **Implementation considerations**:
+    - Tasks don't currently track associated file changes
+    - Would need git history analysis or manual file specification
+    - Could use task branch naming convention (if exists)
+  - **Suggested default**: Start without task-specific reviews, add in v2
+  - **Why needs human input**: Feature complexity vs initial release scope trade-off
+
+- [ ] **What configuration should be exposed for review storage location?**
+  - **Research conducted**:
+    - ace-core provides configuration cascade (.ace/ directories)
+    - ace-taskflow has extensive config in `.ace/taskflow/config.yml`
+    - Other ace-* gems use `.ace/<gem-name>/config.yml` pattern
+  - **Suggested configuration structure**:
+    ```yaml
+    review:
+      storage:
+        strategy: "release-based"  # or "time-based", "feature-based"
+        base_path: ".ace-taskflow/%{release}/docs/reviews"
+        auto_organize: true
+      defaults:
+        model: "google:gemini-2.5-flash"
+        preset: "pr"
+    ```
+  - **Why needs human input**: Balance between flexibility and simplicity
 
 ## Behavioral Specification
 
