@@ -51,6 +51,20 @@ For experienced users, here's the condensed workflow:
 
 2. **Load Task & Validate Plan:**
    * Load the content of the selected task `.md` file
+   * **Load Additional Task Resources:**
+     * Check if task folder contains additional files:
+       ```bash
+       # List all files in the task folder
+       ls -la path/to/task/folder/
+       ```
+     * Read all relevant files in the task folder, especially:
+       * `ux/usage.md` - User experience and usage documentation
+       * `ux/*.md` - UX specifications and designs
+       * `docs/*.md` - Task-specific documentation
+       * `research/*.md` - Research findings and analysis
+       * Any other subdirectories with context files
+     * These files provide essential context for implementation
+     * Load them before starting work to understand full requirements
    * **Verify Task Structure:**
 
      ```markdown

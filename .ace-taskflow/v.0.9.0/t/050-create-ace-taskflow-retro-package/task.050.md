@@ -72,10 +72,15 @@ Add **retro** commands to ace-taskflow CLI:
 
 **ace-taskflow retros** (plural - listing/browsing):
 
-- `ace-taskflow retros` - List active retros in current release (excludes done/)
+- `ace-taskflow retros` - List active retros in current/active release (excludes done/)
 - `ace-taskflow retros --all` - Include done retros from all releases
 - `ace-taskflow retros --release <version>` - List from specific release (excludes done by default)
-- `ace-taskflow retros --done` - List only done retros
+- `ace-taskflow retros --done` - List only done retros from current/active release
+- `ace-taskflow retros --current` - Explicit current/active release (same as default)
+
+**Default Release Behavior**:
+- When no `--release` flag specified: Uses current/active release
+- Same pattern as `ace-taskflow tasks` and `ace-taskflow ideas`
 
 ### Claude Command vs CLI Tool Distinction
 
@@ -120,10 +125,12 @@ Retros follow a done-based lifecycle:
 4. **Done**: Moved to `.ace-taskflow/<release>/retro/done/`
 
 **Directory Structure**:
+
 - `retro/` - Active retros (default listing)
 - `retro/done/` - Completed retros (included with --all or --done)
 
 **Similar Pattern to**:
+
 - Ideas: `ideas/` and `ideas/done/`
 - Tasks: Active vs completed status filtering
 
@@ -162,7 +169,11 @@ Retros follow a done-based lifecycle:
 - [ ] Design retro file creation and discovery logic
   - Template loading from wfi://create-reflection-note
   - File naming convention: YYYY-MM-DD-slug.md
-  - Release context resolution (current vs specific vs backlog)
+  - Release context resolution:
+    - Default (no flag): Current/active release via ReleaseResolver.find_primary_active
+    - --current: Explicit current/active release
+    - --release <version>: Specific release
+    - --all: All releases
 
 ### Execution Steps
 

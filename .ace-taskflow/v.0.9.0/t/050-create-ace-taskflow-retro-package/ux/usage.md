@@ -40,11 +40,14 @@ ace-taskflow retro [<reference>]         # Shorthand for show
 Browse and list multiple retrospective notes:
 
 ```bash
-ace-taskflow retros                      # List active retros in current release (excludes done/)
+ace-taskflow retros                      # List active retros in current/active release (excludes done/)
 ace-taskflow retros --all                # Include done retros from all releases
-ace-taskflow retros --done               # List only done retros
+ace-taskflow retros --done               # List only done retros from current/active release
+ace-taskflow retros --current            # Explicit current/active release (same as default)
 ace-taskflow retros --release <version>  # List from specific release (excludes done by default)
 ```
+
+**Default Release**: When no `--release` flag is specified, commands use the current/active release (same pattern as tasks/ideas).
 
 ## Retro Lifecycle
 
@@ -336,9 +339,10 @@ Mark a retro as done and move it to the done/ subfolder.
 List retrospective notes with filtering.
 
 **Options**:
-- (none): List active retros from current release (excludes done/)
+- (none): List active retros from current/active release (excludes done/)
 - `--all`: Include done retros from all releases
-- `--done`: List only done retros
+- `--done`: List only done retros from current/active release
+- `--current`: Explicit current/active release (same as default)
 - `--release <version>`: List from specific release (excludes done by default)
 - `--limit <n>`: Limit number of results
 
@@ -352,13 +356,20 @@ List retrospective notes with filtering.
 - Uses `RetroLoader.list_active_retros()` for default
 - Uses `RetroLoader.list_all_retros()` for --all
 - Uses `RetroLoader.list_done_retros()` for --done
-- Resolves release context
+- Resolves release context via ReleaseResolver (defaults to current/active)
 - Formats for terminal display
 
 **Listing Behavior**:
-- Default: Active retros only (excludes `retro/done/`)
-- `--all`: Includes both `retro/` and `retro/done/`
-- `--done`: Only from `retro/done/`
+- Default: Active retros from current/active release only (excludes `retro/done/`)
+- `--all`: Includes both `retro/` and `retro/done/` from all releases
+- `--done`: Only from `retro/done/` in current/active release
+- `--release <version>`: From specified release (excludes done unless combined with --all)
+
+**Release Resolution**:
+- No flag → Current/active release (via ReleaseResolver.find_primary_active)
+- `--current` → Explicit current/active release
+- `--release <version>` → Specified release (e.g., v.0.8.0)
+- `--all` → All releases combined
 
 ## Tips and Best Practices
 
