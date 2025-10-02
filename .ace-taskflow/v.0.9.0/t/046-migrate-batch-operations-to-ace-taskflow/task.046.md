@@ -142,12 +142,12 @@ This migration follows the established ace-taskflow command migration pattern:
 2. `plan-tasks.wf.md`
    - Purpose: Batch workflow for planning multiple draft tasks
    - Key components: Draft task discovery, sequential planning execution, status transition tracking
-   - Dependencies: `plan-task.wf.md`, `ace-taskflow tasks --filter status:draft`
+   - Dependencies: `plan-task.wf.md`, `ace-taskflow tasks --status draft`
 
 3. `work-on-tasks.wf.md`
    - Purpose: Batch workflow for executing work on multiple tasks
    - Key components: Pending task discovery, sequential work execution, git tagging
-   - Dependencies: `work-on-task.wf.md`, `ace-taskflow tasks --filter status:pending`
+   - Dependencies: `work-on-task.wf.md`, `ace-taskflow tasks --status pending`
 
 4. `review-tasks.wf.md`
    - Purpose: Batch workflow for reviewing multiple tasks
@@ -302,7 +302,7 @@ This migration follows the established ace-taskflow command migration pattern:
 - [ ] Create `ace-taskflow/handbook/workflow-instructions/plan-tasks.wf.md`
   - Extract logic from `.claude/commands/plan-tasks.md`
   - Add self-contained workflow instructions
-  - Include draft task discovery using `ace-taskflow tasks --filter status:draft`
+  - Include draft task discovery using `ace-taskflow tasks --status draft`
   - Add Task tool delegation for each draft task
   - Include status transition tracking (draft → pending)
   - Add aggregated reporting structure
@@ -324,7 +324,7 @@ This migration follows the established ace-taskflow command migration pattern:
 - [ ] Create `ace-taskflow/handbook/workflow-instructions/work-on-tasks.wf.md`
   - Extract logic from `.claude/commands/work-on-tasks.md`
   - Add self-contained workflow instructions
-  - Include pending task discovery using `ace-taskflow tasks --filter status:pending`
+  - Include pending task discovery using `ace-taskflow tasks --status pending`
   - Add Task tool delegation for each pending task
   - Include git tagging logic per task
   - Add work progress tracking

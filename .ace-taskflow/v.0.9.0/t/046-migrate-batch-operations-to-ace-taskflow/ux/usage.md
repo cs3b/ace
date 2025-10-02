@@ -29,7 +29,7 @@ Commands starting with `/` are executed **within Claude Code**:
 Commands without `/` are **terminal/bash commands**:
 ```bash
 ace-taskflow ideas --backlog
-ace-taskflow tasks --filter status:draft
+ace-taskflow tasks --status draft
 ace-taskflow idea done <reference>
 ace-nav wfi://draft-tasks
 ```
@@ -87,7 +87,7 @@ ace-taskflow ideas --backlog
 
 ```bash
 # Step 1: See which tasks need planning (bash command)
-ace-taskflow tasks --filter status:draft
+ace-taskflow tasks --status draft
 ```
 
 ```
@@ -122,7 +122,7 @@ ace-taskflow tasks --filter status:draft
 
 ```bash
 # Step 1: Identify high-priority pending tasks (bash command)
-ace-taskflow tasks --filter priority:high status:pending
+ace-taskflow tasks --priority high --status pending
 ```
 
 ```
@@ -206,7 +206,7 @@ ace-taskflow ideas --backlog | grep "20250930"
 
 ```bash
 # Work on next 3 pending tasks - first identify them (bash command)
-ace-taskflow tasks --filter status:pending --limit 3
+ace-taskflow tasks --status pending --limit 3
 ```
 
 ```
@@ -216,7 +216,7 @@ ace-taskflow tasks --filter status:pending --limit 3
 
 ```bash
 # Review only draft tasks - first check which ones (bash command)
-ace-taskflow tasks --filter status:draft
+ace-taskflow tasks --status draft
 ```
 
 ```
@@ -292,7 +292,7 @@ ace-taskflow tasks --filter status:draft
 
 ```bash
 # 1. Review all pending tasks - check status (bash)
-ace-taskflow tasks --filter status:pending
+ace-taskflow tasks --status pending
 ```
 
 ```
@@ -307,7 +307,7 @@ ace-taskflow tasks --filter status:pending
 
 ```bash
 # 4. Work through high-priority items - identify them (bash)
-ace-taskflow tasks --filter priority:high status:pending
+ace-taskflow tasks --priority high --status pending
 ```
 
 ```
@@ -339,34 +339,34 @@ ace-taskflow ideas --backlog
 /ace:plan-tasks v.0.9.0+task.048
 ```
 
-### 2. Use Filters Effectively
-Leverage ace-taskflow filters to target specific tasks:
+### 2. Use Flags Effectively
+Leverage ace-taskflow flags to target specific tasks:
 ```bash
 # High priority only (bash)
-ace-taskflow tasks --filter priority:high status:pending
+ace-taskflow tasks --priority high --status pending
 
 # Specific estimate (bash)
-ace-taskflow tasks --filter estimate:2h
+ace-taskflow tasks --estimate 2h
 
-# Multiple filters (bash)
-ace-taskflow tasks --filter priority:high status:pending estimate:2h
+# Multiple flags combined (bash)
+ace-taskflow tasks --priority high --status pending --limit 5
 ```
 
 ### 3. Check Status Before Processing
 Always verify task status before batch operations:
 ```bash
 # Check draft tasks before planning (bash)
-ace-taskflow tasks --filter status:draft
+ace-taskflow tasks --status draft
 
 # Check pending tasks before working (bash)
-ace-taskflow tasks --filter status:pending
+ace-taskflow tasks --status pending
 ```
 
 ### 4. Handle Failures Gracefully
 Review failure summaries and address blockers:
 ```bash
 # After a failed batch operation, check blocked tasks (bash)
-ace-taskflow tasks --filter status:blocked
+ace-taskflow tasks --status blocked
 ```
 
 ```
@@ -419,7 +419,7 @@ ace-taskflow ideas --backlog
 
 **Purpose**: Add implementation plans to draft tasks
 
-**Input Discovery**: Uses `ace-taskflow tasks --filter status:draft` to find draft tasks
+**Input Discovery**: Uses `ace-taskflow tasks --status draft` to find draft tasks
 
 **Usage**:
 ```
@@ -438,7 +438,7 @@ ace-taskflow ideas --backlog
 
 **Purpose**: Execute implementation work on tasks
 
-**Input Discovery**: Uses `ace-taskflow tasks --filter status:pending` to find pending tasks
+**Input Discovery**: Uses `ace-taskflow tasks --status pending` to find pending tasks
 
 **Usage**:
 ```
@@ -457,7 +457,7 @@ ace-taskflow ideas --backlog
 
 **Purpose**: Review tasks for quality and completeness
 
-**Input Discovery**: Uses `ace-taskflow tasks` with various filters (status, priority, etc.)
+**Input Discovery**: Uses `ace-taskflow tasks` with various flags (--status, --priority, --recent, etc.)
 
 **Usage**:
 ```
@@ -475,13 +475,13 @@ ace-taskflow ideas --backlog
 **Check** (using bash commands):
 ```bash
 # Verify tasks exist (bash)
-ace-taskflow tasks --all
+ace-taskflow tasks
 
 # Check current release (bash)
 ace-taskflow release
 
 # Verify task status (bash)
-ace-taskflow tasks --filter status:draft
+ace-taskflow tasks --status draft
 ```
 
 ### Problem: Workflow not found
