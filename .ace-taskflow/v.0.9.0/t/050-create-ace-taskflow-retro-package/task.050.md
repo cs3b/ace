@@ -1,12 +1,58 @@
 ---
 id: v.0.9.0+task.050
-status: pending
+status: in-progress
 priority: high
 estimate: 6h
 dependencies: []
+needs_review: true
 ---
 
 # Create retro management commands for ace-taskflow
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Package Architecture - ace-review Separation
+
+- [ ] Should code review functionality be extracted into separate `ace-review` package?
+  - **Research conducted**:
+    - Current state: `code-review` tool in `dev-tools` package with full implementation
+    - Pattern discovered: Mono-repo with multiple gems (ace-taskflow, ace-nav, ace-context, ace-llm, etc.)
+    - Similar pattern: `ace-taskflow` manages tasks/ideas/retros; could `ace-review` manage code reviews
+    - Code review has: CLI commands, organisms, molecules, models, extensive spec coverage
+  - **Current implementation**:
+    - Files: `dev-tools/lib/coding_agent_tools/cli/commands/code/review.rb` (719 lines)
+    - Executable: `dev-tools/exe/code-review`
+    - Full ecosystem: ReviewManager, ReviewPresetManager, ContextIntegrator, PromptEnhancer, LLMExecutor
+    - Session management: Creates sessions in `.ace-taskflow/<release>/code-review/` directory
+  - **Architectural considerations**:
+    - **Pro separation**: Clean separation of concerns, independent versioning, reusable across projects
+    - **Pro separation**: Matches existing pattern (ace-taskflow, ace-nav, ace-context are separate gems)
+    - **Pro staying in dev-tools**: Already integrated, working, less migration overhead
+    - **Con separation**: Requires defining dependency graph (likely depends on ace-core, ace-llm)
+  - **Suggested default**: Extract to `ace-review` package following mono-repo pattern
+  - **Why needs human input**: Strategic architecture decision affecting project organization and future maintenance
+
+- [ ] If `ace-review` package created, should code reviews default to current release or be configurable?
+  - **Research conducted**:
+    - Current behavior: Creates sessions in `.ace-taskflow/<release>/code-review/` (line 635 in review.rb)
+    - Similar pattern: `ace-taskflow retros` defaults to current release, supports `--release` flag
+    - Code shows: `find_current_release_dir` method looks for dev-taskflow/current (line 648-658)
+  - **Suggested default**:
+    - Default to current/active release (consistent with ace-taskflow pattern)
+    - Make configurable via `--release <version>` flag (same as retro/task/idea commands)
+    - Optional: Support `--output` to override and save anywhere
+  - **Why needs human input**: User experience consistency vs flexibility trade-off
+
+- [ ] Should `ace-review` follow the same CLI command patterns as `ace-taskflow`?
+  - **Research conducted**:
+    - ace-taskflow pattern: `retro`/`retros`, `task`/`tasks`, `idea`/`ideas` (singular/plural)
+    - Current code-review: Single command `code-review` with many flags/options
+    - Pattern opportunity: `ace-review review`/`ace-review reviews` for listing past reviews
+  - **Suggested default**:
+    - `ace-review create` or `ace-review run` - Execute new review (current `code-review` behavior)
+    - `ace-review reviews` or `ace-review list` - List past reviews from release(s)
+    - `ace-review show <session>` - Display specific review session
+  - **Why needs human input**: CLI design philosophy (simple vs feature-rich flags)
 
 ## 0. Directory Audit ✅
 
