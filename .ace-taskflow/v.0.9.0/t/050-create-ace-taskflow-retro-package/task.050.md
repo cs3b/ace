@@ -8,7 +8,6 @@ dependencies: []
 
 # Create retro management commands for ace-taskflow
 
-
 ## 0. Directory Audit ✅
 
 _Command run:_
@@ -49,13 +48,16 @@ Add retrospective (retro) management commands to ace-taskflow CLI following the 
 ## Scope of Work
 
 ### CLI Command Structure
+
 Add **retro** commands to ace-taskflow CLI:
+
 - `ace-taskflow retro` - Operations on single retrospective notes
 - `ace-taskflow retros` - Browse and list multiple retrospective notes
 
 ### Command Responsibilities
 
 **ace-taskflow retro** (singular - non-interactive file creation):
+
 - `ace-taskflow retro create [title]` - Create new reflection note file with template
   - Creates timestamped file: `YYYY-MM-DD-<slug>.md`
   - Uses template from wfi://create-reflection-note
@@ -65,6 +67,7 @@ Add **retro** commands to ace-taskflow CLI:
 - Future: `ace-taskflow retro synthesize` - Trigger synthesis workflow
 
 **ace-taskflow retros** (plural - listing/browsing):
+
 - `ace-taskflow retros` - List all retrospective notes in current release
 - `ace-taskflow retros --all` - List from all releases
 - `ace-taskflow retros --release <version>` - List from specific release
@@ -72,12 +75,14 @@ Add **retro** commands to ace-taskflow CLI:
 ### Claude Command vs CLI Tool Distinction
 
 **Claude Command** (`/ace:create-reflection-note`):
+
 - Located: `.claude/commands/ace/create-reflection-note.md`
 - Usage: Only callable by Claude agents, NOT from bash CLI
 - Behavior: Runs workflow via `ace-nav wfi://create-reflection-note`
 - Content population: Agent analyzes context and populates content
 
 **CLI Tool** (`ace-taskflow retro create`):
+
 - Located: `ace-taskflow/lib/ace/taskflow/commands/retro_command.rb`
 - Usage: Bash command line tool
 - Behavior: Creates file with template structure
@@ -86,6 +91,7 @@ Add **retro** commands to ace-taskflow CLI:
 ### Naming Convention Alignment
 
 Follow established patterns:
+
 - **Singular commands** (task/idea/retro): Non-interactive file creation, operations on single items
 - **Plural commands** (tasks/ideas/retros): Listing, browsing, filtering multiple items
 - NOT "reflection" → Use "retro" for brevity and consistency
@@ -94,6 +100,7 @@ Follow established patterns:
 ### File Extension Consistency
 
 Based on audit, standardize to `.md`:
+
 - Current: Mix of `.md` and `.rn.md` extensions
 - Decision: Use `.md` for all reflection notes (standard markdown)
 - Naming: `YYYY-MM-DD-<descriptive-slug>.md`
@@ -101,6 +108,7 @@ Based on audit, standardize to `.md`:
 ### Deliverables
 
 #### Create
+
 - `ace-taskflow/lib/ace/taskflow/commands/retro_command.rb`
 - `ace-taskflow/lib/ace/taskflow/commands/retros_command.rb`
 - `ace-taskflow/lib/ace/taskflow/organisms/retro_manager.rb`
@@ -109,6 +117,7 @@ Based on audit, standardize to `.md`:
 - `ace-taskflow/test/commands/retros_command_test.rb`
 
 #### Modify
+
 - `ace-taskflow/lib/ace/taskflow/cli.rb` - Add retro/retros routes
 - `ace-taskflow/README.md` - Document new commands
 
@@ -116,19 +125,19 @@ Based on audit, standardize to `.md`:
 
 ### Planning Steps
 
-* [ ] Analyze existing task and idea command implementations for patterns
+- [ ] Analyze existing task and idea command implementations for patterns
   > TEST: Pattern Understanding
   > Type: Pre-condition Check
   > Assert: Identify file creation, template usage, and display patterns
   > Command: # grep -r "create.*args" ace-taskflow/lib/ace/taskflow/commands/
 
-* [ ] Review retro file structure in .ace-taskflow/v.0.9.0/retro/
+- [ ] Review retro file structure in .ace-taskflow/v.0.9.0/retro/
   > TEST: Structure Validation
   > Type: Pre-condition Check
   > Assert: Understand current file naming and location patterns
   > Command: # ls -la .ace-taskflow/v.0.9.0/retro/
 
-* [ ] Design retro file creation and discovery logic
+- [ ] Design retro file creation and discovery logic
   - Template loading from wfi://create-reflection-note
   - File naming convention: YYYY-MM-DD-slug.md
   - Release context resolution (current vs specific vs backlog)
