@@ -221,7 +221,7 @@ When no specific context is provided, follow this process:
    git diff --name-only HEAD~5
 
    # Review completed tasks using task manager
-   ace-taskflow tasks --recent --limit 5 --filter status:done
+   ace-taskflow tasks recent --limit 5
    ```
 
 2. **Extract Insights:**

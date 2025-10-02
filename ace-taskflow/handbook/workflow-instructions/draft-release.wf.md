@@ -67,7 +67,7 @@ user-provided release scope into actionable tasks.
      b. Create a new task file using the task template:
 
      c. Key rules for task creation:
-        * Use `ace-taskflow task create "Task Title" --priority high --estimate "4h"` to generate tasks automatically
+        * Use `ace-taskflow task create "Task Title" --estimate "4h"` to generate tasks automatically
         * This handles ID generation, file naming, and proper directory placement
         * Planning steps use asterisk markers (`* [ ]`)
         * Execution steps use hyphen markers (`- [ ]`)
