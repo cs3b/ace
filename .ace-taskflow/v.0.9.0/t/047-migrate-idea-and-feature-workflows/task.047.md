@@ -20,7 +20,7 @@ dependencies: []
 Users experience seamless idea management workflows that are centrally available through the ace-taskflow command. When users need to organize ideas, capture features, or document unplanned work, they invoke ace-taskflow commands that delegate to workflow instructions using the wfi:// protocol.
 
 The system provides:
-- Idea prioritization that ranks and aligns ideas with project goals
+- Idea prioritization that ranks and aligns ideas with project goals using `ace-taskflow idea reschedule` (sort metadata, not file renaming)
 - Feature capture that creates detailed/comprehensive idea documentation for application features
 - Unplanned work documentation that captures completed work as done tasks
 
@@ -37,7 +37,8 @@ The system provides:
 /ace:prioritize-ideas
 # Reads ideas from .ace-taskflow/backlog/ideas/
 # Executes: wfi://prioritize-align-ideas
-# Output: Ranked ideas with alignment scores
+# Uses: ace-taskflow idea reschedule commands to set priority order
+# Output: Ideas with sort metadata showing priority order
 
 # Capture application features (as detailed ideas)
 /ace:capture-features [app-path]
@@ -92,6 +93,7 @@ Enable centralized idea management workflows through ace-taskflow CLI, providing
    - Source: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/prioritize-align-ideas.wf.md`
    - Destination: `ace-taskflow/handbook/workflow-instructions/prioritize-align-ideas.wf.md`
    - Command: `ace-taskflow idea prioritize`
+   - Implementation: Uses `ace-taskflow idea reschedule` to set priority order via sort metadata (no file renaming)
 
 2. **capture-application-features** (dev-handbook → ace-taskflow)
    - Source: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/capture-application-features.wf.md`
