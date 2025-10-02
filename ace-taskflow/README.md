@@ -64,6 +64,36 @@ Benefits:
 - Improved searchability
 - AI-friendly structure
 
+### Retrospective Management
+
+Capture and manage reflection notes for development sessions:
+
+```bash
+# Create a new reflection note
+ace-taskflow retro create "sprint-23-learnings"
+
+# List active retrospective notes
+ace-taskflow retros
+
+# View specific retro
+ace-taskflow retro show sprint-23-learnings
+
+# Mark retro as done (moves to done/ folder)
+ace-taskflow retro done sprint-23-learnings
+
+# List all retros including done
+ace-taskflow retros --all
+
+# List only done retros
+ace-taskflow retros --done
+```
+
+Retrospective notes follow the done pattern similar to ideas:
+- **Active retros**: Stored in `.ace-taskflow/<release>/retro/`
+- **Done retros**: Moved to `.ace-taskflow/<release>/retro/done/`
+- Default listing excludes done retros (cleaner view)
+- Use `--all` or `--done` flags to include completed retros
+
 ### Release Management (Coming Soon)
 
 Future releases will include release management features:
