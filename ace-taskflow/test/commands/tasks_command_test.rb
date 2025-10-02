@@ -276,7 +276,14 @@ class TasksCommandTest < AceTaskflowTestCase
           command.execute([])
         end
 
-        assert_match(/No tasks found/, output)
+        # Verify header is always shown (even with 0 tasks)
+        assert_match(/v\.\d+\.\d+\.\d+:/, output, "Header line 1 (release info) should be present")
+        assert_match(/Ideas:/, output, "Header line 2 (ideas stats) should be present")
+        assert_match(/Tasks:/, output, "Header line 3 (tasks stats) should be present")
+        assert_match(/={40}/, output, "Separator line should be present")
+
+        # Verify empty message is shown after header
+        assert_match(/No tasks found for preset/, output, "Empty message should be shown")
       end
     end
   end

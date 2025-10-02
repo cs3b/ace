@@ -158,9 +158,7 @@ module Ace
           end
 
           # Display tasks with appropriate formatter
-          if tasks.empty?
-            puts "No tasks found for preset '#{preset_name}'."
-          elsif additional_filters[:tree]
+          if additional_filters[:tree]
             display_tree_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
           elsif additional_filters[:path]
             display_paths_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
@@ -214,6 +212,13 @@ module Ace
             context: context
           )
           puts header
+
+          # Handle empty results
+          if tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return
+          end
 
           # Check if grouping is needed
           display_config = preset_config[:display] || {}
@@ -476,6 +481,13 @@ module Ace
           )
           puts header
 
+          # Handle empty results
+          if tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return
+          end
+
           # Get ALL tasks for complete dependency visualization
           all_tasks = @manager.list_tasks(context: "all")
           puts ""
@@ -491,6 +503,13 @@ module Ace
             context: context
           )
           puts header
+
+          # Handle empty results
+          if tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return
+          end
 
           # Use project root, not .ace-taskflow root
           root_path = Dir.pwd
@@ -511,6 +530,13 @@ module Ace
             context: context
           )
           puts header
+
+          # Handle empty results
+          if tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return
+          end
 
           tasks.each do |task|
             ref = task[:task_number] || task[:id]
