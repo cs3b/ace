@@ -483,6 +483,7 @@ When transforming from review-task to plan-task focus:
 - Embedded tests for critical operations
 - Clear integration with existing architecture
 - Rollback procedures documented
+- UX/usage documentation created for user-facing features (when applicable)
 
 ## Common Patterns
 
@@ -503,6 +504,12 @@ When transforming from review-task to plan-task focus:
 - Plan configuration management
 - Emphasize error handling and recovery
 - Document external dependencies
+
+### User-Facing Features
+- Create comprehensive usage scenarios early
+- Validate command syntax before finalizing
+- Include both success and error examples
+- Document migration path from legacy features
 
 ## Usage Example
 
