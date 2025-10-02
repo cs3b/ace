@@ -9,7 +9,7 @@ module Ace
                       :verbose, :filter, :fix_deprecations, :patterns,
                       :timeout, :parallel, :color, :per_file, :groups,
                       :target, :config_path, :failure_limits, :profile,
-                      :execution
+                      :execution, :files
 
         def initialize(attributes = {})
           @format = attributes[:format] || "progress"  # Default to per-test progress
@@ -30,6 +30,7 @@ module Ace
           @failure_limits = attributes[:failure_limits] || { max_display: 7 }
           @profile = attributes[:profile]  # nil means no profiling, number means show N slowest tests
           @execution = attributes[:execution] || {}
+          @files = attributes[:files]  # Specific files to test (overrides target/patterns)
         end
 
         def valid_format?
@@ -72,7 +73,8 @@ module Ace
             per_file: per_file,
             failure_limits: failure_limits,
             profile: profile,
-            execution: execution
+            execution: execution,
+            files: files
           }
         end
 

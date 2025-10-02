@@ -181,14 +181,17 @@ end
 known_targets = %w[atoms molecules organisms models unit integration system all quick]
 target = nil
 test_files = []
-line_number = nil
 
 ARGV.each do |arg|
   if arg =~ /^(.+):(\d+)$/
-    # File with line number
-    test_files << $1
-    line_number = $2.to_i
-    options[:filter] = "line:#{line_number}"
+    # File with line number - validate file exists
+    file_part = $1
+    unless File.exist?(file_part)
+      puts "Error: File not found: #{file_part}"
+      exit 1
+    end
+    # Store complete "file:line" format for Minitest to handle
+    test_files << arg
   elsif File.exist?(arg) && arg.end_with?(".rb")
     # Specific test file
     test_files << arg

@@ -65,6 +65,12 @@ module Ace
           return :subprocess if options[:subprocess] || @force_mode == :subprocess
           return :direct if options[:direct] || @force_mode == :direct
 
+          # Use subprocess for line number filtering (file:line format)
+          # This provides cleaner output without Minitest reporter duplication
+          if files.any? { |f| f.match?(/:\d+$/) }
+            return :subprocess
+          end
+
           # Auto-detect based on test content
           needs_subprocess = files.any? { |file| @test_type_detector.needs_subprocess?(file) }
 
