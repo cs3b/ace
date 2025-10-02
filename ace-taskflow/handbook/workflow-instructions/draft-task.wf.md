@@ -76,7 +76,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 6. **Determine Storage Location and Create Draft Tasks**
    * For each approved behavioral specification:
-     * Use `ace-taskflow task create --title "Task Title" --status draft --priority high --estimate "TBD"` to:
+     * Use `ace-taskflow task create --title "Task Title" --status draft --estimate "TBD"` to:
        * Create task file with proper ID sequencing
        * Set status to "draft" automatically
        * Include behavioral specification template
