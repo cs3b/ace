@@ -11,7 +11,7 @@ node_modules
 .cache
 *.bak
 tmp
-ace-*/test-reports
+**/test-reports
 ace-*/coverage
 
 # ace-taskflow test artifacts
