@@ -6,11 +6,32 @@ This document provides practical examples of how to use the batch task commands 
 
 Batch task commands allow you to process multiple tasks in a single command invocation, streamlining your workflow when managing multiple related tasks.
 
-**Available Commands:**
+**Available Claude Code Commands:**
 - `/ace:draft-tasks` - Create multiple draft tasks from idea files
 - `/ace:plan-tasks` - Plan implementation for multiple draft tasks
 - `/ace:work-on-tasks` - Execute work on multiple tasks
 - `/ace:review-tasks` - Review multiple tasks
+
+## Command Types
+
+This guide uses two types of commands:
+
+### Claude Code Commands (Slash Commands)
+Commands starting with `/` are executed **within Claude Code**:
+```
+/ace:draft-tasks
+/ace:plan-tasks
+/ace:work-on-tasks
+/ace:review-tasks
+```
+
+### Bash CLI Commands
+Commands without `/` are **terminal/bash commands**:
+```bash
+ace-taskflow tasks --filter status:draft
+ace-nav wfi://draft-tasks
+ls .ace-taskflow/v.0.9.0/ideas/
+```
 
 ## Command Structure
 
@@ -30,10 +51,12 @@ All batch commands follow the same invocation pattern:
 **Goal**: Review backlog ideas and create draft tasks for the week
 
 ```bash
-# Step 1: Check what ideas are in the backlog
+# Step 1: Check what ideas are in the backlog (bash command)
 ls .ace-taskflow/v.0.9.0/ideas/
+```
 
-# Step 2: Create draft tasks from all ideas
+```
+# Step 2: Create draft tasks from all ideas (Claude Code command)
 /ace:draft-tasks
 
 # Output:
@@ -61,10 +84,12 @@ ls .ace-taskflow/v.0.9.0/ideas/
 **Goal**: Add implementation plans to all draft tasks
 
 ```bash
-# Step 1: See which tasks need planning
+# Step 1: See which tasks need planning (bash command)
 ace-taskflow tasks --filter status:draft
+```
 
-# Step 2: Plan all draft tasks
+```
+# Step 2: Plan all draft tasks (Claude Code command)
 /ace:plan-tasks
 
 # Output:
@@ -94,10 +119,12 @@ ace-taskflow tasks --filter status:draft
 **Goal**: Work through specific high-priority tasks
 
 ```bash
-# Step 1: Identify high-priority pending tasks
+# Step 1: Identify high-priority pending tasks (bash command)
 ace-taskflow tasks --filter priority:high status:pending
+```
 
-# Step 2: Work on specific tasks by ID
+```
+# Step 2: Work on specific tasks by ID (Claude Code command)
 /ace:work-on-tasks v.0.9.0+task.048 v.0.9.0+task.050
 
 # Output:
@@ -126,8 +153,8 @@ ace-taskflow tasks --filter priority:high status:pending
 
 **Goal**: Review all tasks in current release for quality and completeness
 
-```bash
-# Step 1: Review all tasks to identify issues
+```
+# Review all tasks to identify issues (Claude Code command)
 /ace:review-tasks
 
 # Output:
@@ -160,19 +187,33 @@ ace-taskflow tasks --filter priority:high status:pending
 
 **Goal**: Process only specific subsets of tasks
 
-```bash
-# Draft tasks from specific idea files
+```
+# Draft tasks from specific idea files (Claude Code command)
 /ace:draft-tasks .ace-taskflow/v.0.9.0/ideas/20250930-*.md
+```
 
-# Plan tasks with specific IDs
+```
+# Plan tasks with specific IDs (Claude Code command)
 /ace:plan-tasks v.0.9.0+task.048 v.0.9.0+task.049 v.0.9.0+task.050
+```
 
-# Work on next 3 pending tasks
+```bash
+# Work on next 3 pending tasks - first identify them (bash command)
 ace-taskflow tasks --filter status:pending --limit 3
-/ace:work-on-tasks v.0.9.0+task.048 v.0.9.0+task.049 v.0.9.0+task.050
+```
 
-# Review only draft tasks (check for clarity)
+```
+# Then work on them (Claude Code command)
+/ace:work-on-tasks v.0.9.0+task.048 v.0.9.0+task.049 v.0.9.0+task.050
+```
+
+```bash
+# Review only draft tasks - first check which ones (bash command)
 ace-taskflow tasks --filter status:draft
+```
+
+```
+# Then review specific tasks (Claude Code command)
 /ace:review-tasks v.0.9.0+task.053 v.0.9.0+task.054
 ```
 
@@ -180,8 +221,8 @@ ace-taskflow tasks --filter status:draft
 
 **Goal**: Handle failures gracefully and continue processing
 
-```bash
-# Attempt to work on multiple tasks
+```
+# Attempt to work on multiple tasks (Claude Code command)
 /ace:work-on-tasks v.0.9.0+task.048 v.0.9.0+task.049 v.0.9.0+task.050
 
 # Output:
@@ -220,35 +261,55 @@ ace-taskflow tasks --filter status:draft
 
 ### Typical Weekly Workflow
 
-```bash
-# Monday: Convert ideas to draft tasks
+```
+# Monday: Convert ideas to draft tasks (Claude Code)
 /ace:draft-tasks
+```
 
-# Tuesday: Plan implementation for drafts
+```
+# Tuesday: Plan implementation for drafts (Claude Code)
 /ace:plan-tasks
+```
 
-# Wednesday-Thursday: Execute tasks
+```
+# Wednesday-Thursday: Execute tasks (Claude Code)
 /ace:work-on-tasks
+```
 
-# Friday: Review completed work
+```
+# Friday: Review completed work (Claude Code)
 /ace:review-tasks
 ```
 
 ### Release Preparation Workflow
 
 ```bash
-# 1. Review all pending tasks
+# 1. Review all pending tasks - check status (bash)
 ace-taskflow tasks --filter status:pending
+```
+
+```
+# 2. Review them (Claude Code)
 /ace:review-tasks
+```
 
-# 2. Plan any remaining drafts
+```
+# 3. Plan any remaining drafts (Claude Code)
 /ace:plan-tasks
+```
 
-# 3. Work through high-priority items
+```bash
+# 4. Work through high-priority items - identify them (bash)
 ace-taskflow tasks --filter priority:high status:pending
-/ace:work-on-tasks [task-ids]
+```
 
-# 4. Final quality review
+```
+# 5. Work on them (Claude Code)
+/ace:work-on-tasks [task-ids]
+```
+
+```
+# 6. Final quality review (Claude Code)
 /ace:review-tasks
 ```
 
@@ -256,8 +317,8 @@ ace-taskflow tasks --filter priority:high status:pending
 
 ### 1. Start Small
 Begin with a few tasks to understand the workflow:
-```bash
-# Process just 2-3 tasks first
+```
+# Process just 2-3 tasks first (Claude Code)
 /ace:draft-tasks .ace-taskflow/v.0.9.0/ideas/idea1.md
 /ace:plan-tasks v.0.9.0+task.048
 ```
@@ -265,44 +326,48 @@ Begin with a few tasks to understand the workflow:
 ### 2. Use Filters Effectively
 Leverage ace-taskflow filters to target specific tasks:
 ```bash
-# High priority only
+# High priority only (bash)
 ace-taskflow tasks --filter priority:high status:pending
 
-# Specific estimate
+# Specific estimate (bash)
 ace-taskflow tasks --filter estimate:2h
 
-# Multiple filters
+# Multiple filters (bash)
 ace-taskflow tasks --filter priority:high status:pending estimate:2h
 ```
 
 ### 3. Check Status Before Processing
 Always verify task status before batch operations:
 ```bash
-# Check draft tasks before planning
+# Check draft tasks before planning (bash)
 ace-taskflow tasks --filter status:draft
 
-# Check pending tasks before working
+# Check pending tasks before working (bash)
 ace-taskflow tasks --filter status:pending
 ```
 
 ### 4. Handle Failures Gracefully
 Review failure summaries and address blockers:
 ```bash
-# After a failed batch operation, check blocked tasks
+# After a failed batch operation, check blocked tasks (bash)
 ace-taskflow tasks --filter status:blocked
+```
 
-# Work on blockers individually
+```
+# Work on blockers individually (Claude Code)
 /ace:work-on-tasks v.0.9.0+task.049
 ```
 
 ### 5. Incremental Processing
 For large batches, process in smaller chunks:
-```bash
-# Instead of all at once
+```
+# Instead of all at once (Claude Code)
 /ace:draft-tasks  # might process 20 ideas
 
-# Process in batches
+# Process in batches (Claude Code)
 /ace:draft-tasks idea1.md idea2.md idea3.md
+```
+```
 # ... review results ...
 /ace:draft-tasks idea4.md idea5.md idea6.md
 ```
@@ -311,10 +376,12 @@ For large batches, process in smaller chunks:
 
 ### /ace:draft-tasks
 
+**Type**: Claude Code command
+
 **Purpose**: Create multiple draft tasks from idea files
 
 **Usage**:
-```bash
+```
 /ace:draft-tasks                          # All ideas in backlog
 /ace:draft-tasks idea1.md idea2.md        # Specific files
 /ace:draft-tasks pattern-*.md             # Pattern matching
@@ -326,10 +393,12 @@ For large batches, process in smaller chunks:
 
 ### /ace:plan-tasks
 
+**Type**: Claude Code command
+
 **Purpose**: Add implementation plans to draft tasks
 
 **Usage**:
-```bash
+```
 /ace:plan-tasks                           # All draft tasks
 /ace:plan-tasks v.0.9.0+task.048         # Specific task
 /ace:plan-tasks task.048 task.049        # Multiple tasks
@@ -341,10 +410,12 @@ For large batches, process in smaller chunks:
 
 ### /ace:work-on-tasks
 
+**Type**: Claude Code command
+
 **Purpose**: Execute implementation work on tasks
 
 **Usage**:
-```bash
+```
 /ace:work-on-tasks                        # Next pending task
 /ace:work-on-tasks v.0.9.0+task.048      # Specific task
 /ace:work-on-tasks task.048 task.049     # Multiple tasks
@@ -356,10 +427,12 @@ For large batches, process in smaller chunks:
 
 ### /ace:review-tasks
 
+**Type**: Claude Code command
+
 **Purpose**: Review tasks for quality and completeness
 
 **Usage**:
-```bash
+```
 /ace:review-tasks                         # Next 5 actionable tasks
 /ace:review-tasks v.0.9.0+task.048       # Specific task
 /ace:review-tasks                         # All non-completed
@@ -371,27 +444,27 @@ For large batches, process in smaller chunks:
 
 ### Problem: Command doesn't find any tasks
 
-**Check**:
+**Check** (using bash commands):
 ```bash
-# Verify tasks exist
+# Verify tasks exist (bash)
 ace-taskflow tasks --all
 
-# Check current release
+# Check current release (bash)
 ace-taskflow release
 
-# Verify task status
+# Verify task status (bash)
 ace-taskflow tasks --filter status:draft
 ```
 
 ### Problem: Workflow not found
 
-**Check**:
+**Check** (using bash commands):
 ```bash
-# Verify workflow exists
+# Verify workflow exists (bash)
 ace-nav wfi://draft-tasks --list
 ace-nav wfi://plan-tasks --list
 
-# Check all task workflows
+# Check all task workflows (bash)
 ace-nav 'wfi://*tasks' --list
 ```
 
@@ -399,12 +472,11 @@ ace-nav 'wfi://*tasks' --list
 
 **Fix**:
 ```bash
-# Check task metadata
+# Check task metadata (bash)
 ace-taskflow task show 048
-
-# Manually update if needed (edit task file)
-# Change status in frontmatter
 ```
+
+Then manually edit task file and change status in frontmatter if needed.
 
 ## Migration Notes
 
