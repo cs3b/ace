@@ -64,7 +64,6 @@ Add **retro** commands to ace-taskflow CLI:
   - Non-interactive: Just creates file structure for LLM/agent to populate
   - Similar pattern to `ace-taskflow task create` and `ace-taskflow idea create`
 - `ace-taskflow retro show <reference>` - Display specific reflection note
-- Future: `ace-taskflow retro synthesize` - Trigger synthesis workflow
 
 **ace-taskflow retros** (plural - listing/browsing):
 
@@ -220,6 +219,7 @@ Based on audit, standardize to `.md`:
 ## Out of Scope
 
 - ❌ **Workflow Implementation**: Workflow files already exist, not modifying them
+- ❌ **Synthesis CLI Command**: Synthesis stays as workflow/Claude command only (wfi://synthesize-reflection-notes)
 - ❌ **Content Analysis**: Synthesis logic stays in workflow, not in CLI
 - ❌ **Interactive Content Editing**: Commands create files, LLM/user populates content
 - ❌ **Claude Command Changes**: Existing `/ace:create-reflection-note` stays unchanged
