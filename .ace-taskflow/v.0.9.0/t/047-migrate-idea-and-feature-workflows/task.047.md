@@ -22,30 +22,39 @@ Users experience seamless idea management workflows that are centrally available
 The system provides:
 - Idea prioritization that ranks and aligns ideas with project goals
 - Feature capture that creates detailed/comprehensive idea documentation for application features
-- Unplanned work documentation that captures ad-hoc changes for future planning
+- Unplanned work documentation that captures completed work as done tasks
 
-All workflows output to `.ace-taskflow/backlog/ideas/` directory - feature capture creates more detailed "beefy" ideas compared to quick idea capture, but both are treated as ideas in the same location.
+**Output locations:**
+- Ideas (quick & detailed): `.ace-taskflow/backlog/ideas/` - feature capture creates "beefy" ideas with comprehensive specs
+- Unplanned work: `.ace-taskflow/v.X.X.X/t/done/` - creates completed task files with status `done`
 
 ### Interface Contract
 
-```bash
+**Claude Code Commands** (Slash commands):
+
+```
 # Prioritize and align ideas
-ace-taskflow idea prioritize
+/ace:prioritize-ideas
 # Reads ideas from .ace-taskflow/backlog/ideas/
 # Executes: wfi://prioritize-align-ideas
 # Output: Ranked ideas with alignment scores
 
 # Capture application features (as detailed ideas)
-ace-taskflow idea capture-features [--app-path <path>]
+/ace:capture-features [app-path]
 # Executes: wfi://capture-application-features
 # Output: Detailed/beefy idea file in .ace-taskflow/backlog/ideas/
 # Note: Creates comprehensive idea with components, interactions, tracking specs
 
 # Document unplanned work
-ace-taskflow idea document-unplanned <description>
+/ace:document-unplanned [description]
 # Executes: wfi://document-unplanned-work
-# Output: Unplanned work captured in .ace-taskflow/backlog/ideas/
+# Output: Completed task in .ace-taskflow/v.X.X.X/t/done/ with status done
 ```
+
+**Command File Locations**:
+- `.claude/commands/ace/prioritize-ideas.md` → wfi://prioritize-align-ideas
+- `.claude/commands/ace/capture-features.md` → wfi://capture-application-features
+- `.claude/commands/ace/document-unplanned.md` → wfi://document-unplanned-work
 
 **Error Handling:**
 - Missing .ace-taskflow directory: Report error and suggest initialization
@@ -94,6 +103,7 @@ Enable centralized idea management workflows through ace-taskflow CLI, providing
    - Source: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/document-unplanned-work.wf.md`
    - Destination: `ace-taskflow/handbook/workflow-instructions/document-unplanned-work.wf.md`
    - Command: `ace-taskflow idea document-unplanned`
+   - Output: Completed task files in `.ace-taskflow/v.X.X.X/t/done/` with status `done`
 
 ### Interface Scope
 - CLI commands under `ace-taskflow idea` namespace
