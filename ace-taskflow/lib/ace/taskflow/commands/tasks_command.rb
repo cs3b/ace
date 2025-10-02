@@ -65,9 +65,6 @@ module Ace
             when "--status"
               filters[:status] = args[i + 1].split(',') if i + 1 < args.length
               i += 2
-            when "--priority"
-              filters[:priority] = args[i + 1].split(',') if i + 1 < args.length
-              i += 2
             when "--days"
               filters[:days] = args[i + 1].to_i if i + 1 < args.length
               i += 2
@@ -93,9 +90,6 @@ module Ace
             when "--release"
               filters[:context] = args[i + 1] if i + 1 < args.length
               i += 2
-            when "--recent"
-              filters[:_preset_override] = "recent"
-              i += 1
             when "--sort"
               sort_spec = args[i + 1]
               if sort_spec && sort_spec.include?(':')
@@ -407,8 +401,6 @@ module Ace
           puts "  --backlog            List backlog tasks"
           puts "  --release <name>     List tasks in specific release"
           puts "  --status <statuses>  Filter by status (comma-separated)"
-          puts "  --priority <levels>  Filter by priority (comma-separated)"
-          puts "  --recent             Show recently modified tasks"
           puts "  --days <n>           Days to look back (default: 7)"
           puts "  --stats              Show task statistics"
           puts "  --sort <field>       Sort by field (priority, status, id, modified)"
@@ -416,7 +408,6 @@ module Ace
           puts ""
           puts "Additional Preset Filters:"
           puts "  --status <statuses>  Add status filter to preset"
-          puts "  --priority <levels>  Add priority filter to preset"
           puts "  --days <n>           Modify days for time-based presets"
           puts "  --limit <n>          Limit number of results displayed"
           puts "  --stats              Show statistics for preset"

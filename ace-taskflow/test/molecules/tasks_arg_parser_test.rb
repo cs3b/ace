@@ -16,12 +16,6 @@ class TasksArgParserTest < Minitest::Test
     assert_equal ["pending", "in-progress"], result[:status]
   end
 
-  def test_parse_filters_with_priority_flag
-    result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters(["--priority", "high,medium"])
-
-    assert_equal ["high", "medium"], result[:priority]
-  end
-
   def test_parse_filters_with_days_flag
     result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters(["--days", "7"])
 
@@ -55,12 +49,6 @@ class TasksArgParserTest < Minitest::Test
     assert_equal "v.0.9.0", result[:context]
   end
 
-  def test_parse_filters_with_recent_flag
-    result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters(["--recent"])
-
-    assert_equal "recent", result[:_preset_override]
-  end
-
   def test_parse_filters_with_sort_field_only
     result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters(["--sort", "priority"])
 
@@ -85,13 +73,11 @@ class TasksArgParserTest < Minitest::Test
   def test_parse_filters_with_multiple_flags
     result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters([
       "--status", "pending",
-      "--priority", "high",
       "--days", "7",
       "--stats"
     ])
 
     assert_equal ["pending"], result[:status]
-    assert_equal ["high"], result[:priority]
     assert_equal 7, result[:days]
     assert_equal true, result[:stats]
   end
@@ -110,11 +96,11 @@ class TasksArgParserTest < Minitest::Test
     skip "Test needs fix - will be reviewed in Phase 9"
     result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters([
       "--status",
-      "--priority", "high"
+      "--days", "7"
     ])
 
     # --status has no value, so it gets skipped
-    assert_equal ["high"], result[:priority]
+    assert_equal 7, result[:days]
     refute result.key?(:status)
   end
 
