@@ -21,10 +21,10 @@ Users experience seamless idea management workflows that are centrally available
 
 The system provides:
 - Idea prioritization that ranks and aligns ideas with project goals
-- Feature capture that extracts capabilities from applications into structured documentation
+- Feature capture that creates detailed/comprehensive idea documentation for application features
 - Unplanned work documentation that captures ad-hoc changes for future planning
 
-All workflows maintain consistent behavior with existing patterns while being accessible through the unified ace-taskflow interface.
+All workflows output to `.ace-taskflow/backlog/ideas/` directory - feature capture creates more detailed "beefy" ideas compared to quick idea capture, but both are treated as ideas in the same location.
 
 ### Interface Contract
 
@@ -35,10 +35,11 @@ ace-taskflow idea prioritize
 # Executes: wfi://prioritize-align-ideas
 # Output: Ranked ideas with alignment scores
 
-# Capture application features
+# Capture application features (as detailed ideas)
 ace-taskflow idea capture-features [--app-path <path>]
 # Executes: wfi://capture-application-features
-# Output: Feature documentation in .ace-taskflow/backlog/features/
+# Output: Detailed/beefy idea file in .ace-taskflow/backlog/ideas/
+# Note: Creates comprehensive idea with components, interactions, tracking specs
 
 # Document unplanned work
 ace-taskflow idea document-unplanned <description>
@@ -87,6 +88,7 @@ Enable centralized idea management workflows through ace-taskflow CLI, providing
    - Source: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/capture-application-features.wf.md`
    - Destination: `ace-taskflow/handbook/workflow-instructions/capture-application-features.wf.md`
    - Command: `ace-taskflow idea capture-features`
+   - Output: Detailed idea files in `.ace-taskflow/backlog/ideas/` (same as capture-idea, but more comprehensive)
 
 3. **document-unplanned-work** (dev-handbook → ace-taskflow)
    - Source: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/document-unplanned-work.wf.md`
