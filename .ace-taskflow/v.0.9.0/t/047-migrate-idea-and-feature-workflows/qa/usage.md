@@ -60,10 +60,32 @@ read and run `ace-nav wfi://commit`
 ```
 
 **Expected Output:**
-- Ideas renamed with priority prefixes (001-010 for high priority)
+- Ideas prioritized using `ace-taskflow idea reschedule` with sort metadata
+- High priority ideas positioned first (via `--add-next` and `--after` commands)
 - Implementation roadmap created at `000-implementation-roadmap.md`
 - All ideas aligned with current project architecture
-- Git commit with organized backlog
+- Git commit shows modified idea files (sort field added/updated, not renamed)
+
+**Example Reschedule Sequence:**
+```bash
+# After analyzing 20 ideas, prioritize top 3:
+ace-taskflow idea reschedule context-optimization --add-next --backlog
+# → Sets sort: 10.0 (first position)
+
+ace-taskflow idea reschedule error-handling --after context-optimization --backlog
+# → Sets sort: 20.0 (after first)
+
+ace-taskflow idea reschedule workflow-automation --after error-handling --backlog
+# → Sets sort: 30.0 (after second)
+
+# Position lower priority ideas at end:
+ace-taskflow idea reschedule minor-refactor --add-at-end --backlog
+# → Sets sort: 90.0 (last position)
+
+# Verify order:
+ace-taskflow ideas --backlog --limit 5
+# Shows ideas in priority order based on sort values
+```
 
 **Test Validation:**
 ```bash
@@ -75,6 +97,9 @@ test -f .claude/commands/ace/prioritize-ideas.md
 
 # Verify command uses wfi:// protocol
 grep -q "wfi://prioritize-align-ideas" .claude/commands/ace/prioritize-ideas.md
+
+# Verify ideas have sort metadata
+grep -l "^sort:" .ace-taskflow/backlog/ideas/*.md | wc -l
 ```
 
 ---
