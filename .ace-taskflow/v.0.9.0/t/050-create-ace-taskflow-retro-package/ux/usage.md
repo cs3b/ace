@@ -31,6 +31,7 @@ Operations on single retrospective notes:
 ```bash
 ace-taskflow retro create <title>        # Create new reflection note
 ace-taskflow retro show <reference>      # Display specific reflection
+ace-taskflow retro done <reference>      # Mark retro as done (move to done/)
 ace-taskflow retro [<reference>]         # Shorthand for show
 ```
 
@@ -39,10 +40,37 @@ ace-taskflow retro [<reference>]         # Shorthand for show
 Browse and list multiple retrospective notes:
 
 ```bash
-ace-taskflow retros                      # List retros in current release
-ace-taskflow retros --all                # List from all releases
-ace-taskflow retros --release <version>  # List from specific release
+ace-taskflow retros                      # List active retros in current release (excludes done/)
+ace-taskflow retros --all                # Include done retros from all releases
+ace-taskflow retros --done               # List only done retros
+ace-taskflow retros --release <version>  # List from specific release (excludes done by default)
 ```
+
+## Retro Lifecycle
+
+Retros follow a lifecycle similar to ideas:
+
+1. **Create** → File created in `.ace-taskflow/<release>/retro/`
+2. **Populate** → Content filled by user or agent
+3. **Analyze** → Insights extracted, actions created from learnings
+4. **Done** → Moved to `.ace-taskflow/<release>/retro/done/`
+
+**Directory Structure**:
+```
+.ace-taskflow/v.0.9.0/
+└── retro/
+    ├── 2025-10-02-current-sprint-learnings.md    # Active retros
+    ├── 2025-10-01-api-refactor-insights.md
+    └── done/                                       # Completed retros
+        ├── 2025-09-30-migration-retro.md
+        └── 2025-09-28-performance-analysis.md
+```
+
+**When to Mark as Done**:
+- Retro content has been analyzed
+- Key insights converted to tasks or actions
+- Learnings documented in appropriate places
+- No further action needed on this retro
 
 ## Usage Scenarios
 
@@ -68,17 +96,17 @@ ace-taskflow retro create "ace-test-runner fixes"
 - Open file in editor to fill in content manually, OR
 - Use Claude agent to analyze session and populate content
 
-### Scenario 2: List All Reflection Notes in Current Release
+### Scenario 2: List Active Reflection Notes in Current Release
 
-**Goal**: See what retrospective notes have been created for the current release.
+**Goal**: See what active retrospective notes exist for the current release.
 
 **Commands**:
 ```bash
-# List all retros in current release
+# List active retros in current release (excludes done/)
 ace-taskflow retros
 
 # Output:
-# Retrospective Notes (v.0.9.0):
+# Active Retrospective Notes (v.0.9.0):
 # 2025-10-02  ace-test-runner-fixes
 # 2025-10-01  task-056-commit-output-implementation
 # 2025-09-30  ace-taskflow-duplicate-id-fix
@@ -88,7 +116,8 @@ ace-taskflow retros
 **Expected Output**:
 - Formatted list showing date and title
 - Ordered by date (newest first)
-- Only shows retros from current/active release
+- Only shows active retros from current/active release (excludes done/ folder)
+- Note: Completed retros are in done/ and not shown by default
 
 ### Scenario 3: View a Specific Reflection Note
 
@@ -135,33 +164,83 @@ ace-taskflow retro create "migration learnings" --release v.0.8.0
 - Same template structure as current release
 - Release context preserved in file location
 
-### Scenario 5: List All Retrospectives Across All Releases
+### Scenario 5: Mark Retro as Done After Analysis
 
-**Goal**: Get overview of all reflection notes across the entire project history.
+**Goal**: Move a retro to done/ folder after analyzing it and creating action items.
 
 **Commands**:
 ```bash
-# List all retros from all releases
+# Mark retro as done (similar to ace-taskflow idea done)
+ace-taskflow retro done ace-test-runner
+
+# Output:
+# Retro 'ace-test-runner-fixes' marked as done and moved to retro/done/
+# Path: .ace-taskflow/v.0.9.0/retro/done/2025-10-02-ace-test-runner-fixes.md
+# Completed at: 2025-10-02 15:30:00
+```
+
+**Expected Output**:
+- File moved from `retro/` to `retro/done/`
+- Confirmation message with new path
+- Timestamp of completion
+
+**When to Use**:
+- After extracting insights and creating tasks from retro
+- When learnings have been documented elsewhere
+- Retro content has been fully processed
+
+### Scenario 6: List All Retrospectives Including Done
+
+**Goal**: Get overview of all reflection notes including completed ones.
+
+**Commands**:
+```bash
+# List all retros from all releases including done
 ace-taskflow retros --all
 
 # Output:
 # Retrospective Notes (All Releases):
 #
 # v.0.9.0:
-#   2025-10-02  ace-test-runner-fixes
-#   2025-10-01  task-056-commit-output-implementation
+#   Active:
+#     2025-10-02  ace-test-runner-fixes
+#     2025-10-01  task-056-commit-output-implementation
+#   Done:
+#     2025-09-30  migration-learnings
 #
 # v.0.8.0:
-#   2025-09-15  migration-learnings
+#   Done:
+#     2025-09-15  initial-setup-retro
 # ...
 ```
 
 **Expected Output**:
-- Retros grouped by release
-- Chronological order within each release
+- Retros grouped by release and status (Active/Done)
+- Chronological order within each group
 - Total count summary
 
-### Scenario 6: Error Handling - No Retros Found
+### Scenario 7: List Only Done Retrospectives
+
+**Goal**: Review completed retrospectives to see what has been actioned.
+
+**Commands**:
+```bash
+# List only done retros
+ace-taskflow retros --done
+
+# Output:
+# Done Retrospective Notes (v.0.9.0):
+# 2025-09-30  migration-learnings
+# 2025-09-28  api-refactor-insights
+# ...
+```
+
+**Expected Output**:
+- Only retros from retro/done/ directory
+- Ordered by date
+- From current release unless --all specified
+
+### Scenario 8: Error Handling - No Retros Found
 
 **Goal**: Understand behavior when no reflection notes exist.
 
@@ -225,24 +304,61 @@ Display the content of a specific reflection note.
 - Parses frontmatter and content
 - Formats for terminal display
 
+### `ace-taskflow retro done <reference>`
+
+Mark a retro as done and move it to the done/ subfolder.
+
+**Parameters**:
+- `<reference>`: Filename or partial name match (e.g., `ace-test` matches `ace-test-runner-fixes`)
+
+**Options**:
+- `--release <version>`: Mark done in specific release context
+
+**Output**:
+- Confirmation message with new path
+- Timestamp of completion
+- File moved from `retro/` to `retro/done/`
+
+**Internal Implementation**:
+- Uses `RetroManager.mark_retro_done(reference)`
+- Finds retro file in `retro/` directory
+- Moves to `retro/done/` preserving filename
+- Similar to `IdeaDirectoryMover.move_to_done`
+
+**When to Use**:
+- After retro content has been analyzed
+- Key insights converted to tasks/actions
+- Learnings documented appropriately
+- No further work needed on this retro
+
 ### `ace-taskflow retros [options]`
 
 List retrospective notes with filtering.
 
 **Options**:
-- `--all`: List from all releases
-- `--release <version>`: List from specific release
+- (none): List active retros from current release (excludes done/)
+- `--all`: Include done retros from all releases
+- `--done`: List only done retros
+- `--release <version>`: List from specific release (excludes done by default)
 - `--limit <n>`: Limit number of results
 
 **Output**:
-- Formatted list of retros grouped by release
+- Formatted list of retros grouped by release and status
 - Shows date and title for each
-- Summary count
+- Summary count and status indicators
 
 **Internal Implementation**:
 - Uses `RetroManager.list_retros(context:, filters:)`
+- Uses `RetroLoader.list_active_retros()` for default
+- Uses `RetroLoader.list_all_retros()` for --all
+- Uses `RetroLoader.list_done_retros()` for --done
 - Resolves release context
 - Formats for terminal display
+
+**Listing Behavior**:
+- Default: Active retros only (excludes `retro/done/`)
+- `--all`: Includes both `retro/` and `retro/done/`
+- `--done`: Only from `retro/done/`
 
 ## Tips and Best Practices
 
@@ -266,11 +382,36 @@ List retrospective notes with filtering.
 - Manual reflection writing
 - Template generation
 
+**Use CLI** (`ace-taskflow retro done`):
+- After manually reviewing and actioning retro
+- When insights have been converted to tasks
+- To archive processed retros
+
 **Use Claude Command** (`/ace:create-reflection-note`):
 - Automated content analysis and generation
 - Session analysis and insight extraction
 - Pattern recognition and synthesis
 - AI-assisted reflection writing
+
+### Managing the Retro Lifecycle
+
+**Active Retros** (in `retro/`):
+- Keep retros active while insights are still being extracted
+- Active retros appear in default listings
+- Use for ongoing retrospective work
+
+**Done Retros** (in `retro/done/`):
+- Move to done after creating tasks/actions from insights
+- Done retros excluded from default listings (cleaner view)
+- Use `--all` or `--done` to see completed retros
+- Good for historical reference without cluttering active view
+
+**Workflow Example**:
+1. Create retro: `ace-taskflow retro create "sprint-23-learnings"`
+2. Populate content (manually or with Claude)
+3. Extract insights, create tasks from action items
+4. Mark as done: `ace-taskflow retro done sprint-23-learnings`
+5. Retro now in `retro/done/`, tasks are tracked separately
 
 ### File Location Strategy
 
