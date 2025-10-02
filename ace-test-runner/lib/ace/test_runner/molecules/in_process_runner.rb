@@ -48,8 +48,33 @@ module Ace
               require "minitest/autorun"
             end
 
-            # Load test files directly
+            # First pass: check for line numbers and resolve test names
+            # This must be done before loading files
+            test_names_to_run = []
+            files_to_load = []
+
             files.each do |file|
+              # Check if file has line number (file:line format)
+              if file =~ /^(.+):(\d+)$/
+                actual_file = $1
+                line_number = $2.to_i
+
+                # Resolve line number to test name
+                require_relative "../atoms/line_number_resolver"
+                test_name = Ace::TestRunner::Atoms::LineNumberResolver.resolve_test_at_line(actual_file, line_number)
+                test_names_to_run << test_name if test_name
+
+                files_to_load << actual_file
+              else
+                files_to_load << file
+              end
+            end
+
+            # Store test names in options to pass to run_minitest_with_args
+            options = options.merge(test_names_filter: test_names_to_run) if test_names_to_run.any?
+
+            # Load the test files
+            files_to_load.uniq.each do |file|
               file_path = File.expand_path(file)
               begin
                 load file_path
@@ -61,12 +86,13 @@ module Ace
             end
 
             # Run Minitest with captured output
+            # Suppress Minitest's own output by using null reporter
             exit_code = if @timeout
               Timeout.timeout(@timeout) do
-                run_minitest_with_args(options)
+                run_minitest_silent(options)
               end
             else
-              run_minitest_with_args(options)
+              run_minitest_silent(options)
             end
 
             success = exit_code == true || exit_code == 0
@@ -151,8 +177,37 @@ module Ace
           args << "--seed" << options[:seed].to_s if options[:seed]
           args << "--verbose" if options[:verbose]
 
+          # Add test name filter if line numbers were provided
+          if options[:test_names_filter] && options[:test_names_filter].any?
+            pattern = options[:test_names_filter].map { |name| Regexp.escape(name) }.join("|")
+            args << "--name" << "/#{pattern}/"
+          end
+
           # Run Minitest
           # Returns true on success, false on failure
+          Minitest.run(args)
+        end
+
+        def run_minitest_silent(options)
+          # Minitest uses reporters that can bypass $stdout redirection
+          # We need to suppress Minitest's own output completely
+
+          # Build Minitest arguments
+          args = []
+          args << "--seed" << options[:seed].to_s if options[:seed]
+
+          # Add test name filter if line numbers were provided
+          if options[:test_names_filter] && options[:test_names_filter].any?
+            pattern = options[:test_names_filter].map { |name| Regexp.escape(name) }.join("|")
+            args << "--name" << "/#{pattern}/"
+          end
+
+          # Suppress Minitest's reporter output
+          # Use a minimal reporter that doesn't print anything
+          require 'minitest/reporters'
+          Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new($stdout)
+
+          # Run Minitest
           Minitest.run(args)
         end
       end

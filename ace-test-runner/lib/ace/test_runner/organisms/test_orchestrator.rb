@@ -3,6 +3,7 @@
 require_relative "../formatters/base_formatter"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/pattern_resolver"
+require_relative "../atoms/test_folder_detector"
 require_relative "sequential_group_executor"
 
 module Ace
@@ -16,6 +17,9 @@ module Ace
           @configuration = build_configuration(options)
           @pattern_resolver = Molecules::PatternResolver.new(@configuration)
           @test_detector = Atoms::TestDetector.new(patterns: @configuration.patterns)
+
+          # Track if user explicitly specified --report-dir to avoid auto-detection override
+          @report_dir_override = options[:report_dir] ? :user_specified : nil
 
           # Use SmartTestExecutor for intelligent subprocess/direct execution choice
           require_relative "../molecules/smart_test_executor"
@@ -51,6 +55,10 @@ module Ace
           if test_files.empty?
             return handle_no_tests
           end
+
+          # Detect and set report directory based on test file location
+          # This ensures test-reports is created at the same level as the test folder
+          detect_and_set_report_dir(test_files)
 
           # Count total available test files (before filtering)
           total_available = count_total_test_files
@@ -158,6 +166,10 @@ module Ace
 
           # Count total files
           all_files = groups.flat_map { |g| g[:files] }
+
+          # Detect and set report directory based on test file location
+          detect_and_set_report_dir(all_files)
+
           total_available = count_total_test_files
 
           # Notify start
@@ -294,7 +306,8 @@ module Ace
             per_file: options[:per_file],
             failure_limits: config_with_options.failure_limits,
             profile: options[:profile],
-            execution: config_with_options.execution || {}
+            execution: config_with_options.execution || {},
+            files: options[:files]
           )
         end
 
@@ -306,7 +319,22 @@ module Ace
         end
 
         def find_test_files
-          # Always use PatternResolver for consistency
+          # If specific files are provided (e.g., from command line), use them directly
+          if @configuration.files && !@configuration.files.empty?
+            files = @configuration.files
+
+            # Don't apply filter when files contain line numbers (file:line format)
+            has_line_numbers = files.any? { |f| f.match?(/:\d+$/) }
+
+            # Apply filter only if no line numbers and filter is provided
+            if @configuration.filter && !has_line_numbers
+              files = @test_detector.filter_by_pattern(files, @configuration.filter)
+            end
+
+            return files
+          end
+
+          # Otherwise, use PatternResolver for consistency
           begin
             if @configuration.target
               files = @pattern_resolver.resolve_target(@configuration.target)
@@ -444,6 +472,20 @@ module Ace
           aggregated[:test_times].sort_by! { |t| -t[:duration] } if aggregated[:test_times]
 
           aggregated
+        end
+
+        def detect_and_set_report_dir(test_files)
+          # Only auto-detect if not explicitly configured by user via --report-dir option
+          # We track this to avoid overriding user's explicit choice
+          return if @report_dir_override == :user_specified
+
+          detected_dir = Atoms::TestFolderDetector.detect_report_dir(test_files)
+
+          if detected_dir
+            # Override the configuration's report_dir with detected location
+            @configuration.report_dir = detected_dir
+            @report_dir_override = :auto_detected
+          end
         end
 
         def save_reports(report)
