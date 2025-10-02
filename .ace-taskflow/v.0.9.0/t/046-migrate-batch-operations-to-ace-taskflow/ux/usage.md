@@ -30,6 +30,7 @@ Commands without `/` are **terminal/bash commands**:
 ```bash
 ace-taskflow ideas --backlog
 ace-taskflow tasks --status draft
+ace-taskflow tasks recent
 ace-taskflow idea done <reference>
 ace-nav wfi://draft-tasks
 ```
@@ -118,11 +119,11 @@ ace-taskflow tasks --status draft
 
 ### Scenario 3: Focused Development Sprint
 
-**Goal**: Work through specific high-priority tasks
+**Goal**: Work through specific pending tasks
 
 ```bash
-# Step 1: Identify high-priority pending tasks (bash command)
-ace-taskflow tasks --priority high --status pending
+# Step 1: Identify pending tasks (bash command)
+ace-taskflow tasks --status pending
 ```
 
 ```
@@ -306,8 +307,8 @@ ace-taskflow tasks --status pending
 ```
 
 ```bash
-# 4. Work through high-priority items - identify them (bash)
-ace-taskflow tasks --priority high --status pending
+# 4. Work through pending items - identify them (bash)
+ace-taskflow tasks --status pending
 ```
 
 ```
@@ -342,14 +343,17 @@ ace-taskflow ideas --backlog
 ### 2. Use Flags Effectively
 Leverage ace-taskflow flags to target specific tasks:
 ```bash
-# High priority only (bash)
-ace-taskflow tasks --priority high --status pending
+# By status (bash)
+ace-taskflow tasks --status pending
 
-# Specific estimate (bash)
-ace-taskflow tasks --estimate 2h
+# Recent tasks (bash)
+ace-taskflow tasks recent
 
-# Multiple flags combined (bash)
-ace-taskflow tasks --priority high --status pending --limit 5
+# With limit (bash)
+ace-taskflow tasks --status pending --limit 5
+
+# By release (bash)
+ace-taskflow tasks --release v.0.9.0
 ```
 
 ### 3. Check Status Before Processing
@@ -457,7 +461,7 @@ ace-taskflow ideas --backlog
 
 **Purpose**: Review tasks for quality and completeness
 
-**Input Discovery**: Uses `ace-taskflow tasks` with various flags (--status, --priority, --recent, etc.)
+**Input Discovery**: Uses `ace-taskflow tasks` with various flags (--status, --release, etc.) or `ace-taskflow tasks recent`
 
 **Usage**:
 ```
