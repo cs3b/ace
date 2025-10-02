@@ -5,9 +5,11 @@
 The update-roadmap workflow provides a systematic process for maintaining project roadmaps in sync with task and release management state. It enables AI agents and developers to update roadmap documentation following the established roadmap structure defined in the Roadmap Definition Guide.
 
 **Available Workflows:**
+
 - `wfi://update-roadmap` - Update roadmap based on current project state
 
 **Key Benefits:**
+
 - Maintains roadmap consistency with actual task/release state
 - Follows standardized roadmap format from roadmap-definition.g.md
 - Provides validation and error checking
@@ -16,38 +18,45 @@ The update-roadmap workflow provides a systematic process for maintaining projec
 ## Command Types
 
 ### Claude Code Commands (AI Agent Context)
-When working within Claude Code, use slash commands:
+
+When working within Claude Code, use slash commands with `/ace:` prefix:
+
 ```
-/update-roadmap
+/ace:update-roadmap
 ```
 
 ### Workflow Protocol (Direct Invocation)
+
 When working with ace-nav directly:
+
 ```bash
 ace-nav wfi://update-roadmap
 ```
 
-**Note:** In this task, we're creating the workflow instruction document only. The `ace-taskflow roadmap` CLI command is out of scope and will be implemented in a future task.
+**Note:** In this task, we're creating the workflow instruction document only. The `ace-taskflow roadmap` CLI read-only query is out of scope and will be implemented in a future task.
 
 ## Command Structure
 
 ### Workflow Invocation
 
 **Basic Syntax:**
+
 ```bash
 # Via ace-nav protocol
 ace-nav wfi://update-roadmap
 
-# Via Claude Code slash command
-/update-roadmap
+# Via Claude Code slash command (recommended)
+/ace:update-roadmap
 ```
 
 **No Arguments:**
+
 - The workflow operates on the current project's `.ace-taskflow/` structure
 - Automatically detects roadmap location (`.ace-taskflow/roadmap.md`)
 - Uses project context to determine release state
 
 **Default Behaviors:**
+
 - Validates roadmap format against roadmap-definition.g.md
 - Updates Planned Major Releases table from folder structure
 - Synchronizes cross-release dependencies
@@ -61,9 +70,10 @@ ace-nav wfi://update-roadmap
 **Goal:** Add newly drafted release to roadmap's Planned Major Releases table
 
 **Steps:**
+
 ```bash
 # In Claude Code
-/update-roadmap
+/ace:update-roadmap
 
 # The workflow will:
 # 1. Load current roadmap from .ace-taskflow/roadmap.md
@@ -77,6 +87,7 @@ ace-nav wfi://update-roadmap
 ```
 
 **Expected Output:**
+
 ```
 ✓ Loaded roadmap from .ace-taskflow/roadmap.md
 ✓ Validated roadmap format (all sections present)
@@ -97,9 +108,10 @@ Roadmap updated successfully
 **Goal:** Clean up roadmap after release is published and moved to done/
 
 **Steps:**
+
 ```bash
 # After running publish-release workflow
-/update-roadmap
+/ace:update-roadmap
 
 # The workflow will:
 # 1. Load current roadmap
@@ -112,6 +124,7 @@ Roadmap updated successfully
 ```
 
 **Expected Output:**
+
 ```
 ✓ Loaded roadmap from .ace-taskflow/roadmap.md
 ✓ Validated roadmap format
@@ -132,9 +145,10 @@ Roadmap cleanup completed
 **Goal:** Validate and fix roadmap after manual edits
 
 **Steps:**
+
 ```bash
 # After manually editing roadmap sections
-/update-roadmap
+/ace:update-roadmap
 
 # The workflow will:
 # 1. Load current roadmap
@@ -147,6 +161,7 @@ Roadmap cleanup completed
 ```
 
 **Expected Output (with errors):**
+
 ```
 ✗ Validation failed: 3 issues found
 
@@ -166,7 +181,7 @@ Choice: f
 ✓ Updated last_reviewed to 2025-10-02
 ✗ Cannot auto-fix: Cross-release dependency reference needs manual review
 
-Please review and fix remaining issues, then re-run /update-roadmap
+Please review and fix remaining issues, then re-run /ace:update-roadmap
 ```
 
 ### Scenario 4: Fresh roadmap creation from template
@@ -174,9 +189,10 @@ Please review and fix remaining issues, then re-run /update-roadmap
 **Goal:** Initialize roadmap for new project
 
 **Steps:**
+
 ```bash
 # In new project with no roadmap
-/update-roadmap
+/ace:update-roadmap
 
 # The workflow will:
 # 1. Detect missing roadmap file
@@ -187,6 +203,7 @@ Please review and fix remaining issues, then re-run /update-roadmap
 ```
 
 **Expected Output:**
+
 ```
 ✗ Roadmap not found at .ace-taskflow/roadmap.md
 
@@ -212,11 +229,13 @@ Next steps: Review and update Project Vision and Strategic Objectives
 ### Workflow Execution
 
 **Syntax:**
+
 ```bash
 ace-nav wfi://update-roadmap
 ```
 
 **What It Does:**
+
 1. Loads roadmap from `.ace-taskflow/roadmap.md`
 2. Validates format against roadmap-definition.g.md specification
 3. Analyzes release state from `.ace-taskflow/` folder structure
@@ -228,6 +247,7 @@ ace-nav wfi://update-roadmap
 9. Commits changes with descriptive message
 
 **Input Sources:**
+
 - `.ace-taskflow/roadmap.md` (current roadmap)
 - `.ace-taskflow/v.*/release.md` (release metadata)
 - `.ace-taskflow/` folder structure (release locations)
@@ -235,10 +255,12 @@ ace-nav wfi://update-roadmap
 - `dev-handbook/templates/project-docs/roadmap/roadmap.template.md` (template)
 
 **Output:**
+
 - Updated `.ace-taskflow/roadmap.md`
 - Git commit with changes
 
 **Internal Implementation:**
+
 - Workflow instructions in `ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`
 - Uses Read, Write, Edit, Grep tools
 - Follows self-contained workflow principle (ADR-001)
@@ -248,6 +270,7 @@ ace-nav wfi://update-roadmap
 **Common Errors:**
 
 **1. Roadmap Format Validation Failed**
+
 ```
 Error: Roadmap validation failed
   - Missing section: "Strategic Objectives"
@@ -257,6 +280,7 @@ Fix: Review dev-handbook/guides/roadmap-definition.g.md for required format
 ```
 
 **2. Roadmap File Not Found**
+
 ```
 Error: Roadmap not found at .ace-taskflow/roadmap.md
 
@@ -266,6 +290,7 @@ Options:
 ```
 
 **3. Release Folder Inconsistency**
+
 ```
 Warning: Release v.0.9.0 in roadmap table but not found in .ace-taskflow/
 
@@ -273,6 +298,7 @@ Action: Workflow will prompt to remove stale entry or update folder structure
 ```
 
 **4. Git Commit Failed**
+
 ```
 Error: Failed to commit roadmap changes
   - Uncommitted changes in working directory
@@ -286,12 +312,14 @@ Fix: Resolve git issues manually, then re-run workflow
 ### When to Update Roadmap
 
 **Regular Update Triggers:**
+
 - After drafting a new release (draft-release workflow)
 - After publishing a release (publish-release workflow)
 - When release targets change significantly
 - Quarterly roadmap review cycles
 
 **Avoid Frequent Updates For:**
+
 - Individual task status changes (roadmap is high-level)
 - Minor release metadata edits
 - Documentation-only changes
@@ -299,6 +327,7 @@ Fix: Resolve git issues manually, then re-run workflow
 ### Roadmap Maintenance
 
 **Best Practices:**
+
 1. **Let Workflows Handle It**: Use `/update-roadmap` instead of manual edits
 2. **Validate Before Committing**: Workflow validates automatically
 3. **Keep Vision Stable**: Don't change vision section frequently
@@ -306,6 +335,7 @@ Fix: Resolve git issues manually, then re-run workflow
 5. **Document Dependencies**: Call out blocking dependencies explicitly
 
 **Common Pitfalls:**
+
 - ❌ Editing roadmap manually without validation
 - ❌ Including too many planned releases (>4-5 is too many)
 - ❌ Forgetting to remove completed releases
@@ -315,31 +345,34 @@ Fix: Resolve git issues manually, then re-run workflow
 ### Integration with Other Workflows
 
 **Draft Release → Update Roadmap:**
+
 ```bash
 # After creating new release
-/draft-release v.0.10.0 "Spark"
+/ace:draft-release v.0.10.0 "Spark"
 # ... release scaffolding created ...
 
 # Update roadmap to include new release
-/update-roadmap
+/ace:update-roadmap
 ```
 
 **Publish Release → Update Roadmap:**
+
 ```bash
 # After publishing release
-/publish-release v.0.9.0
+/ace:publish-release v.0.9.0
 # ... release moved to done/ ...
 
 # Clean up roadmap
-/update-roadmap
+/ace:update-roadmap
 ```
 
 **Roadmap Review Cycle:**
+
 ```bash
 # Quarterly review process
 1. Review strategic objectives and vision
 2. Update release targets based on progress
-3. Run /update-roadmap to sync with current state
+3. Run /ace:update-roadmap to sync with current state
 4. Commit reviewed roadmap
 ```
 
@@ -350,6 +383,7 @@ Fix: Resolve git issues manually, then re-run workflow
 **Problem:** Workflow reports roadmap not found
 
 **Solutions:**
+
 1. Check roadmap location: `.ace-taskflow/roadmap.md` (not root `ROADMAP.md`)
 2. Create from template using workflow prompt
 3. Move existing roadmap to correct location
@@ -359,6 +393,7 @@ Fix: Resolve git issues manually, then re-run workflow
 **Problem:** Roadmap format validation errors persist
 
 **Solutions:**
+
 1. Compare against template: `dev-handbook/templates/project-docs/roadmap/roadmap.template.md`
 2. Review guide: `dev-handbook/guides/roadmap-definition.g.md`
 3. Check table column headers match exactly
@@ -370,6 +405,7 @@ Fix: Resolve git issues manually, then re-run workflow
 **Problem:** Releases in folder structure don't appear in roadmap
 
 **Solutions:**
+
 1. Verify release.md files exist in release directories
 2. Check release.md has valid metadata (version, codename)
 3. Ensure releases are in active locations (v.*/not done/)
@@ -380,22 +416,25 @@ Fix: Resolve git issues manually, then re-run workflow
 **Problem:** Workflow fails to commit due to conflicts
 
 **Solutions:**
+
 1. Ensure working directory is clean before running
 2. Pull latest changes: `git pull origin main`
 3. Resolve conflicts manually if they exist
-4. Re-run `/update-roadmap` after conflict resolution
+4. Re-run `/ace:update-roadmap` after conflict resolution
 
 ## Migration Notes
 
 ### Legacy Update-Roadmap Command
 
 **Before (dev-handbook):**
+
 ```
 # Legacy command reference (not yet implemented)
 @dev-handbook/workflow-instructions/update-roadmap.wf.md
 ```
 
 **After (ace-taskflow):**
+
 ```
 # New workflow location
 ace-nav wfi://update-roadmap
@@ -405,6 +444,7 @@ ace-taskflow roadmap update
 ```
 
 **Key Differences:**
+
 - **Location**: Moved from dev-handbook to ace-taskflow
 - **Discovery**: Uses ace-nav wfi:// protocol
 - **Self-Contained**: Embeds templates per ADR-002
@@ -417,12 +457,15 @@ ace-taskflow roadmap update
 ### Future Enhancements
 
 Planned for future tasks (out of scope for task 048):
-- `ace-taskflow roadmap update` CLI command
-- `ace-taskflow roadmap sync --release <version>` filtered updates
-- `ace-taskflow roadmap validate` format validation only
-- `ace-taskflow roadmap show` display current roadmap
-- LLM-assisted roadmap content generation
-- Automatic roadmap updates on release lifecycle events
+
+- `ace-taskflow roadmap` CLI read-only query (lists planned releases)
+- `ace-taskflow roadmap --limit N` display first N releases
+- `ace-taskflow roadmap --format [table|json]` output formatting
+- LLM-assisted roadmap content generation (via workflow enhancements)
+- Automatic roadmap validation checks in CI/CD
+- Release timeline visualization
+
+**Note:** Roadmap updates remain agent-driven via `/ace:update-roadmap` workflow. No CLI update commands (separation of concerns: CLI for reading, workflows for writing).
 
 ## Review Criteria
 
