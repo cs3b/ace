@@ -136,8 +136,8 @@ This migration follows the established ace-taskflow command migration pattern:
 
 1. `draft-tasks.wf.md`
    - Purpose: Batch workflow for creating multiple draft tasks from ideas
-   - Key components: Idea file discovery, sequential Task tool invocation, aggregated reporting
-   - Dependencies: `draft-task.wf.md`, `ace-taskflow tasks` command
+   - Key components: Idea discovery via `ace-taskflow ideas --backlog`, sequential Task tool invocation, `ace-taskflow idea done` for cleanup
+   - Dependencies: `draft-task.wf.md`, `ace-taskflow ideas`, `ace-taskflow idea done`
 
 2. `plan-tasks.wf.md`
    - Purpose: Batch workflow for planning multiple draft tasks
@@ -277,8 +277,9 @@ This migration follows the established ace-taskflow command migration pattern:
 - [ ] Create `ace-taskflow/handbook/workflow-instructions/draft-tasks.wf.md`
   - Extract logic from `.claude/commands/draft-tasks.md`
   - Add self-contained workflow instructions
-  - Include idea file discovery using `find` or `glob`
+  - Use `ace-taskflow ideas --backlog` for idea discovery
   - Add Task tool delegation pattern for each idea
+  - Use `ace-taskflow idea done <reference>` instead of `git mv` for idea cleanup
   - Include aggregated reporting structure
   - Add error handling per idea file
   > TEST: Workflow Content Validation

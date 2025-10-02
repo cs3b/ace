@@ -28,9 +28,10 @@ Commands starting with `/` are executed **within Claude Code**:
 ### Bash CLI Commands
 Commands without `/` are **terminal/bash commands**:
 ```bash
+ace-taskflow ideas --backlog
 ace-taskflow tasks --filter status:draft
+ace-taskflow idea done <reference>
 ace-nav wfi://draft-tasks
-ls .ace-taskflow/v.0.9.0/ideas/
 ```
 
 ## Command Structure
@@ -52,7 +53,7 @@ All batch commands follow the same invocation pattern:
 
 ```bash
 # Step 1: Check what ideas are in the backlog (bash command)
-ls .ace-taskflow/v.0.9.0/ideas/
+ace-taskflow ideas --backlog
 ```
 
 ```
@@ -62,19 +63,20 @@ ls .ace-taskflow/v.0.9.0/ideas/
 # Output:
 # Processing 5 idea files...
 #
-# [1/5] Processing: 20250930-improve-test-coverage.md
+# [1/5] Processing: 20250930-improve-test-coverage
 #   ✓ Created task v.0.9.0+task.048: Improve test coverage
-#   ✓ Idea file moved to release docs
+#   ✓ Idea marked as done (ace-taskflow idea done 20250930-improve-test-coverage)
 #
-# [2/5] Processing: 20250930-refactor-config-loader.md
+# [2/5] Processing: 20250930-refactor-config-loader
 #   ✓ Created task v.0.9.0+task.049: Refactor config loader
-#   ✓ Idea file moved to release docs
+#   ✓ Idea marked as done (ace-taskflow idea done 20250930-refactor-config-loader)
 #
 # ... (3 more)
 #
 # Summary:
 # - Total ideas processed: 5
 # - Tasks created: 5
+# - Ideas marked as done: 5
 # - Failures: 0
 # - New task IDs: 048, 049, 050, 051, 052
 ```
@@ -187,9 +189,14 @@ ace-taskflow tasks --filter priority:high status:pending
 
 **Goal**: Process only specific subsets of tasks
 
+```bash
+# First, check specific ideas in backlog (bash command)
+ace-taskflow ideas --backlog | grep "20250930"
 ```
-# Draft tasks from specific idea files (Claude Code command)
-/ace:draft-tasks .ace-taskflow/v.0.9.0/ideas/20250930-*.md
+
+```
+# Draft tasks from specific idea references (Claude Code command)
+/ace:draft-tasks 20250930-improve-test-coverage 20250930-refactor-config-loader
 ```
 
 ```
@@ -317,9 +324,18 @@ ace-taskflow tasks --filter priority:high status:pending
 
 ### 1. Start Small
 Begin with a few tasks to understand the workflow:
+```bash
+# Check available ideas first (bash)
+ace-taskflow ideas --backlog
 ```
-# Process just 2-3 tasks first (Claude Code)
-/ace:draft-tasks .ace-taskflow/v.0.9.0/ideas/idea1.md
+
+```
+# Process just 2-3 ideas first (Claude Code)
+/ace:draft-tasks idea-reference-1 idea-reference-2
+```
+
+```
+# Plan one task to see the process (Claude Code)
 /ace:plan-tasks v.0.9.0+task.048
 ```
 
@@ -360,16 +376,19 @@ ace-taskflow tasks --filter status:blocked
 
 ### 5. Incremental Processing
 For large batches, process in smaller chunks:
+```bash
+# Check how many ideas you have (bash)
+ace-taskflow ideas --backlog
 ```
-# Instead of all at once (Claude Code)
-/ace:draft-tasks  # might process 20 ideas
 
-# Process in batches (Claude Code)
-/ace:draft-tasks idea1.md idea2.md idea3.md
 ```
+# Instead of all at once, process in batches (Claude Code)
+/ace:draft-tasks idea-ref-1 idea-ref-2 idea-ref-3
 ```
-# ... review results ...
-/ace:draft-tasks idea4.md idea5.md idea6.md
+
+```
+# ... review results, then continue ...
+/ace:draft-tasks idea-ref-4 idea-ref-5 idea-ref-6
 ```
 
 ## Command Reference
@@ -380,14 +399,17 @@ For large batches, process in smaller chunks:
 
 **Purpose**: Create multiple draft tasks from idea files
 
+**Input Discovery**: Uses `ace-taskflow ideas --backlog` to find ideas
+
+**Idea Cleanup**: Uses `ace-taskflow idea done <reference>` to mark ideas as done
+
 **Usage**:
 ```
 /ace:draft-tasks                          # All ideas in backlog
-/ace:draft-tasks idea1.md idea2.md        # Specific files
-/ace:draft-tasks pattern-*.md             # Pattern matching
+/ace:draft-tasks idea-ref-1 idea-ref-2    # Specific idea references
 ```
 
-**Output**: Task IDs, idea file movements, error summary
+**Output**: Task IDs, ideas marked as done, error summary
 
 ---
 
@@ -397,6 +419,8 @@ For large batches, process in smaller chunks:
 
 **Purpose**: Add implementation plans to draft tasks
 
+**Input Discovery**: Uses `ace-taskflow tasks --filter status:draft` to find draft tasks
+
 **Usage**:
 ```
 /ace:plan-tasks                           # All draft tasks
@@ -404,7 +428,7 @@ For large batches, process in smaller chunks:
 /ace:plan-tasks task.048 task.049        # Multiple tasks
 ```
 
-**Output**: Status transitions, planning summaries, technical decisions
+**Output**: Status transitions (draft→pending), planning summaries, technical decisions
 
 ---
 
@@ -414,14 +438,16 @@ For large batches, process in smaller chunks:
 
 **Purpose**: Execute implementation work on tasks
 
+**Input Discovery**: Uses `ace-taskflow tasks --filter status:pending` to find pending tasks
+
 **Usage**:
 ```
-/ace:work-on-tasks                        # Next pending task
+/ace:work-on-tasks                        # Next pending task(s)
 /ace:work-on-tasks v.0.9.0+task.048      # Specific task
 /ace:work-on-tasks task.048 task.049     # Multiple tasks
 ```
 
-**Output**: Implementation status, test results, git tags
+**Output**: Implementation status, test results, git tags, status transitions
 
 ---
 
@@ -431,11 +457,13 @@ For large batches, process in smaller chunks:
 
 **Purpose**: Review tasks for quality and completeness
 
+**Input Discovery**: Uses `ace-taskflow tasks` with various filters (status, priority, etc.)
+
 **Usage**:
 ```
-/ace:review-tasks                         # Next 5 actionable tasks
+/ace:review-tasks                         # Next actionable tasks
 /ace:review-tasks v.0.9.0+task.048       # Specific task
-/ace:review-tasks                         # All non-completed
+/ace:review-tasks task.048 task.049      # Multiple tasks
 ```
 
 **Output**: Questions, readiness assessment, needs_review flags
