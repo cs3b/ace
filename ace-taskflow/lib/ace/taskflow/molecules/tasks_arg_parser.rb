@@ -19,9 +19,6 @@ module Ace
             when "--status"
               filters[:status] = parse_csv_value(args, i + 1)
               i += 2
-            when "--priority"
-              filters[:priority] = parse_csv_value(args, i + 1)
-              i += 2
             when "--days"
               filters[:days] = parse_int_value(args, i + 1)
               i += 2
@@ -46,9 +43,6 @@ module Ace
             when "--release"
               filters[:context] = parse_string_value(args, i + 1)
               i += 2
-            when "--recent"
-              filters[:_preset_override] = "recent"
-              i += 1
             when "--sort"
               filters[:sort] = parse_sort_spec(args, i + 1)
               i += 2

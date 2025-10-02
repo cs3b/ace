@@ -128,34 +128,6 @@ class TasksCommandTest < AceTaskflowTestCase
     end
   end
 
-  def test_tasks_by_priority
-    skip "Test needs fix - will be reviewed in Phase 9"
-    with_test_project do |dir|
-      # Set different priorities
-      task_files = Dir.glob(File.join(dir, "v.0.9.0", "t", "*", "task.md"))
-      task_files[0..1].each do |file|
-        content = File.read(file)
-        File.write(file, content.gsub(/priority: \w+/, "priority: high"))
-      end
-      task_files[2..3].each do |file|
-        content = File.read(file)
-        File.write(file, content.gsub(/priority: \w+/, "priority: low"))
-      end
-
-      Dir.chdir(dir) do
-        command = Ace::Taskflow::Commands::TasksCommand.new
-        output = capture_stdout do
-          command.execute(["--priority", "high"])
-        end
-
-        # Should show only high priority tasks
-        assert_match(/v\.0\.9\.0\+task\.001/, output)
-        assert_match(/v\.0\.9\.0\+task\.002/, output)
-        refute_match(/v\.0\.9\.0\+task\.003/, output)
-      end
-    end
-  end
-
   def test_reschedule_tasks
     skip "Integration test needs fixture update - will be reviewed in Phase 9"
     with_test_project do |dir|
