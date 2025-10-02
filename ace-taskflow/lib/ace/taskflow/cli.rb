@@ -27,6 +27,12 @@ module Ace
         when "releases"
           require_relative "commands/releases_command"
           Commands::ReleasesCommand.new.execute(args)
+        when "retro"
+          require_relative "commands/retro_command"
+          Commands::RetroCommand.new.execute(args)
+        when "retros"
+          require_relative "commands/retros_command"
+          Commands::RetrosCommand.new.execute(args)
         when "migrate-paths"
           require_relative "cli/migrate_paths"
           Commands::MigratePaths.run(args)
@@ -81,6 +87,10 @@ module Ace
         puts "  idea     - Operations on single ideas"
         puts "  ideas    - Browse and list multiple ideas"
         puts ""
+        puts "Retrospective Management:"
+        puts "  retro    - Operations on single retrospective notes"
+        puts "  retros   - Browse and list multiple retrospective notes"
+        puts ""
         puts "Configuration:"
         puts "  config   - Show current configuration"
         puts ""
@@ -96,6 +106,8 @@ module Ace
         puts "  ace-taskflow idea                    # Show next idea"
         puts "  ace-taskflow idea create 'Add caching' # Capture an idea"
         puts "  ace-taskflow ideas --all             # List all ideas"
+        puts "  ace-taskflow retro create 'Session learnings' # Create reflection note"
+        puts "  ace-taskflow retros --all            # List all retros (including done)"
         puts ""
         puts "For subcommand help:"
         puts "  ace-taskflow <subcommand> --help"
