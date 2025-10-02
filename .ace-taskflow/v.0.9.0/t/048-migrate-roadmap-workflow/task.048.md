@@ -11,36 +11,70 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: User invokes `ace-taskflow roadmap update` or `ace-taskflow roadmap sync` to maintain project roadmap
-- **Process**: System analyzes current tasks, releases, and goals to generate/update roadmap documentation
-- **Output**: Updated ROADMAP.md file reflecting current project state, priorities, and planned work
+
+**Agent Workflow (Write Operations):**
+- **Input**: Agent invokes `/ace:update-roadmap` Claude command or `ace-nav wfi://update-roadmap`
+- **Process**: Agent executes workflow to analyze releases and update roadmap documentation
+- **Output**: Updated `.ace-taskflow/roadmap.md` with synchronized release information
+
+**CLI Query (Read Operations):**
+- **Input**: User runs `ace-taskflow roadmap` to view upcoming releases
+- **Process**: CLI reads and displays planned releases from roadmap.md
+- **Output**: Formatted list of planned releases with version, codename, and target window
 
 ### Expected Behavior
 
-Users experience automatic roadmap generation and synchronization based on the current state of tasks and releases in .ace-taskflow. When users invoke roadmap commands, the system:
+**Three Distinct Interfaces:**
 
-- Analyzes all active tasks across releases
-- Identifies priorities and dependencies
-- Generates milestone summaries
-- Updates roadmap documentation with structured sections (Now, Next, Later, Done)
-- Maintains consistency between task files and roadmap representation
+1. **Workflow** (`ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`)
+   - Agent instructions for updating roadmap
+   - Analyzes release state from `.ace-taskflow/` structure
+   - Updates Planned Major Releases table
+   - Synchronizes cross-release dependencies
+   - Commits changes
 
-The workflow provides a bird's-eye view of project direction without requiring manual roadmap maintenance.
+2. **Claude Command** (`/ace:update-roadmap`)
+   - Triggers the update-roadmap workflow
+   - Provides agent-friendly interface
+   - Part of ace-taskflow command namespace
+
+3. **CLI Tool** (`ace-taskflow roadmap`)
+   - Read-only query of planned releases
+   - Lists releases from roadmap.md in short format
+   - Similar to `ace-taskflow tasks` (display, not modify)
+   - Optional `--limit N` to show first N releases
 
 ### Interface Contract
 
 ```bash
-# Update roadmap based on current tasks
-ace-taskflow roadmap update
-# Executes: wfi://update-roadmap
-# Reads: .ace-taskflow/*/t/*/task.*.md
-# Output: Updates ROADMAP.md or .ace-taskflow/docs/roadmap.md
+# AGENT WORKFLOW (Write - updates roadmap)
+/ace:update-roadmap
+# Executes: ace-nav wfi://update-roadmap
+# Reads: .ace-taskflow/roadmap.md, .ace-taskflow/v.*/release.md
+# Output: Updates .ace-taskflow/roadmap.md and commits
 
-# Sync roadmap with releases (if applicable)
-ace-taskflow roadmap sync [--release <version>]
-# Executes: wfi://update-roadmap with release filter
-# Output: Roadmap synchronized with specified release
+# Alternative workflow invocation
+ace-nav wfi://update-roadmap
+# Same behavior as Claude command
+
+# CLI QUERY (Read - displays releases)
+ace-taskflow roadmap
+# Reads: .ace-taskflow/roadmap.md
+# Output: Displays planned releases in short format
+# Example output:
+#   v.0.9.0  "Mono-Repo Multiple Gems"  Q4 2025
+#   v.0.10.0 "Spark"                    Q2 2026
+#   v1.0.0   "Keystone"                 Q3 2026
+
+# CLI with limit
+ace-taskflow roadmap --limit 3
+# Output: Shows first 3 planned releases
 ```
+
+**Role Separation:**
+- **Workflows**: Complex operations requiring analysis and updates (agent-executed)
+- **Claude Commands**: Shortcuts to invoke workflows (`/ace:*` prefix)
+- **CLI Tools**: Simple read-only queries for data display (human-friendly)
 
 **Error Handling:**
 - No tasks found: Generate minimal roadmap with placeholder sections
@@ -54,18 +88,25 @@ ace-taskflow roadmap sync [--release <version>]
 
 ### Success Criteria
 
-- [ ] **Automated Generation**: Roadmap updates automatically from task state without manual editing
-- [ ] **Accurate Representation**: Roadmap reflects current priorities, milestones, and task status
-- [ ] **Clear Structure**: Roadmap uses consistent sections (Now/Next/Later/Done or similar)
-- [ ] **CLI Integration**: Users access roadmap commands through ace-taskflow interface
-- [ ] **Change Detection**: System identifies when roadmap is out of sync and needs update
+- [ ] **Workflow Created**: Agent can update roadmap via `/ace:update-roadmap` command
+- [ ] **Agent Instructions Clear**: Workflow document provides complete step-by-step process
+- [ ] **Format Validation**: Workflow validates against roadmap-definition.g.md structure
+- [ ] **Release Synchronization**: Workflow detects and syncs release state changes
+- [ ] **Claude Integration**: `/ace:update-roadmap` command invokes workflow correctly
 
-### Validation Questions
+### Scope Clarification
 
-- [ ] **Roadmap Location**: Should roadmap be at project root (ROADMAP.md) or in .ace-taskflow/docs/?
-- [ ] **Update Frequency**: Should roadmap update automatically on task changes or only on explicit command?
-- [ ] **Section Structure**: What roadmap format best serves user needs (Now/Next/Later, Quarterly, Release-based)?
-- [ ] **Filtering Options**: Should users be able to generate filtered roadmaps (by priority, category, release)?
+**In Scope (This Task):**
+- ✅ Create workflow instruction document (`update-roadmap.wf.md`)
+- ✅ Create Claude command (`/ace:update-roadmap`)
+- ✅ Define behavioral specifications for roadmap updates
+- ✅ Document integration with draft-release and publish-release workflows
+
+**Out of Scope (Future Tasks):**
+- ❌ `ace-taskflow roadmap` CLI implementation (read-only query)
+- ❌ Ruby code for roadmap parsing/generation
+- ❌ Automated roadmap updates on task changes
+- ❌ LLM-based roadmap content generation
 
 ## Objective
 
@@ -73,31 +114,44 @@ Provide automated roadmap maintenance that keeps high-level project planning syn
 
 ## Scope of Work
 
-### Workflow to Migrate
-1. **update-roadmap** (dev-handbook → ace-taskflow)
-   - Source: Search in dev-handbook for update-roadmap or roadmap-related workflows
-   - Destination: `ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`
-   - Command: `ace-taskflow roadmap update`
-   - Note: If workflow doesn't exist, create behavioral specification for new implementation
+### Workflow to Create
+1. **update-roadmap workflow** (new in ace-taskflow/handbook)
+   - Location: `ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`
+   - Purpose: Agent instructions for updating roadmap from release state
+   - Integration: Invoked via `/ace:update-roadmap` Claude command
+   - Note: No existing workflow to migrate; creating new behavioral specification
 
 ### Interface Scope
-- CLI commands under `ace-taskflow roadmap` namespace
-- wfi:// protocol integration
-- Roadmap generation logic
-- Task analysis and prioritization
-- Milestone extraction
+- **Workflow document**: Complete agent instructions for roadmap updates
+- **Claude command**: `/ace:update-roadmap` trigger
+- **wfi:// protocol**: `ace-nav wfi://update-roadmap` integration
+- **Validation**: Format checking against roadmap-definition.g.md
+- **Synchronization**: Release state detection and table updates
 
 ### Deliverables
 
-#### Behavioral Specifications
-- Roadmap generation behavior
-- Task-to-roadmap mapping rules
-- Section structure and formatting
-- Update triggers and conditions
+#### Workflow Document
+- `ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`
+- Self-contained with embedded templates (ADR-001, ADR-002)
+- Step-by-step process for roadmap updates
+- Error handling and validation procedures
+
+#### Claude Command
+- `.claude/commands/ace/update-roadmap.md`
+- Maps `/ace:update-roadmap` to workflow invocation
+- Part of ace-taskflow command namespace
+
+#### Documentation
+- UX/usage guide for workflow execution
+- Integration patterns with draft-release and publish-release
+- Troubleshooting and best practices
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: File parsing logic, template engines, data structures
+- ❌ **Ruby CLI Implementation**: `ace-taskflow roadmap` command (read-only query - future task)
+- ❌ **CLI Update Commands**: No `ace-taskflow roadmap update` or `sync` subcommands (agents use workflows, not CLI)
+- ❌ **Automated Triggers**: Automatic roadmap updates on task/release changes
+- ❌ **Ruby Code**: File parsing logic, roadmap generators, template engines
 - ❌ **Visual Roadmaps**: Graphical timeline representations, Gantt charts
 - ❌ **Interactive Features**: Web-based roadmap viewers, real-time updates
 - ❌ **Historical Tracking**: Roadmap version history, change diffs
@@ -144,24 +198,43 @@ dev-handbook/
 
 ### Architecture Pattern
 
-**Documentation-First Approach:**
-- This task creates a **workflow instruction document only** - no Ruby code implementation
-- The workflow will define behavioral specifications for a future `ace-taskflow roadmap` CLI command
-- Follows ACE self-contained workflow principle (ADR-001): all necessary context embedded
-- Integrates with existing ace-nav wfi:// protocol for workflow discovery
+**Three-Layer Architecture (Distinct Roles):**
+
+1. **Workflow Layer** (Agent Instructions)
+   - Purpose: Define HOW agents update roadmaps
+   - Location: `ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`
+   - Consumer: AI agents executing roadmap updates
+   - Operations: Write (analyze, update, commit)
+
+2. **Command Layer** (Workflow Triggers)
+   - Purpose: Provide shortcuts to invoke workflows
+   - Location: `.claude/commands/ace/update-roadmap.md`
+   - Consumer: AI agents using Claude Code
+   - Invocation: `/ace:update-roadmap` → `ace-nav wfi://update-roadmap`
+
+3. **CLI Layer** (Data Queries) - **OUT OF SCOPE**
+   - Purpose: Display roadmap data (read-only)
+   - Future Location: `ace-taskflow/lib/ace/taskflow/commands/roadmap_command.rb`
+   - Consumer: Humans and agents needing roadmap info
+   - Operations: Read (list releases, show targets)
+
+**This Task's Scope:**
+- ✅ Layer 1: Create workflow document
+- ✅ Layer 2: Create Claude command
+- ❌ Layer 3: CLI implementation (future task)
 
 **Integration Strategy:**
-- Workflow document placed in `ace-taskflow/handbook/workflow-instructions/update-roadmap.wf.md`
-- References existing roadmap guide (`dev-handbook/guides/roadmap-definition.g.md`)
-- Uses existing roadmap template for validation structure
+- Workflow follows self-contained principle (ADR-001)
+- Embeds templates using XML format (ADR-002)
+- References roadmap-definition.g.md for validation rules
 - Accessible via `ace-nav wfi://update-roadmap` protocol
-- Future CLI implementation will execute this workflow via wfi:// protocol
+- Invokable via `/ace:update-roadmap` Claude command
 
 **Rationale:**
-- Separates behavioral specification (what) from implementation (how)
-- Enables immediate use by AI agents via workflow instructions
-- Provides complete specification for future Ruby gem implementation
-- Maintains consistency with other ace-taskflow workflow instructions
+- **Separation of Concerns**: Workflows for complex write operations, CLI for simple reads
+- **Agent-First Design**: Workflows optimized for AI execution, not CLI arguments
+- **Human Accessibility**: CLI provides quick roadmap queries without running workflows
+- **Consistency**: Follows ace-taskflow patterns (task/tasks, release/releases, roadmap pattern)
 
 ### Technology Stack
 
@@ -172,8 +245,8 @@ dev-handbook/
 
 **Workflow Integration:**
 - ace-nav for wfi:// protocol discovery
-- Future: ace-taskflow CLI roadmap subcommand (out of scope for this task)
-- Claude Code command integration via `.claude/commands/`
+- Claude Code command integration via `.claude/commands/ace/`
+- Future: ace-taskflow CLI `roadmap` read-only query (separate task)
 
 **Document Format:**
 - Markdown (.wf.md extension)
@@ -185,20 +258,23 @@ dev-handbook/
 
 **Phase 1: Workflow Document Creation**
 1. Create update-roadmap.wf.md with complete behavioral specification
-2. Embed roadmap template and validation rules
-3. Define step-by-step process for roadmap updates
-4. Include error handling and validation procedures
+2. Embed roadmap template in XML format (ADR-002)
+3. Define step-by-step process for roadmap updates (load, validate, update, commit)
+4. Include error handling and recovery procedures
+5. Add integration guidance for draft-release and publish-release workflows
 
-**Phase 2: Claude Code Integration**
-5. Create slash command in `.claude/commands/update-roadmap.md`
-6. Map command to workflow via ace-nav wfi:// protocol
+**Phase 2: Claude Command Integration**
+6. Create Claude command in `.claude/commands/ace/update-roadmap.md`
+7. Map `/ace:update-roadmap` to `ace-nav wfi://update-roadmap` invocation
+8. Follow ace-taskflow command namespace convention
 
 **Phase 3: Validation**
-7. Test workflow discoverability via ace-nav
-8. Verify template embedding follows ADR-002
-9. Validate against existing roadmap structure
+9. Test workflow discoverability via `ace-nav wfi://update-roadmap`
+10. Verify template embedding follows ADR-002 XML format
+11. Validate workflow self-containment (ADR-001)
+12. Test `/ace:update-roadmap` command invocation
 
-**Note:** This task is documentation-only. Future task will implement CLI command.
+**Note:** This task creates workflow documentation only. CLI implementation is a future task.
 
 ## File Modifications
 
@@ -217,9 +293,9 @@ dev-handbook/
   - Embedded roadmap template in XML format
   - Integration with ace-nav wfi:// protocol
 
-- `.claude/commands/update-roadmap.md`
-  - Purpose: Claude Code slash command integration
-  - Key components: Command metadata, workflow invocation
+- `.claude/commands/ace/update-roadmap.md`
+  - Purpose: `/ace:update-roadmap` Claude command integration
+  - Key components: Command metadata, ace-nav wfi:// invocation
   - Dependencies: ace-nav, update-roadmap.wf.md
 
 ### Modify
@@ -301,7 +377,7 @@ dev-handbook/
   > TEST: Command Integration
   > Type: Integration Validation
   > Assert: Command file references ace-nav wfi://update-roadmap protocol
-  > Command: # grep "wfi://update-roadmap" .claude/commands/update-roadmap.md
+  > Command: # grep "wfi://update-roadmap" .claude/commands/ace/update-roadmap.md
 
 - [ ] Verify workflow discoverability via ace-nav
   > TEST: Workflow Discovery
@@ -321,10 +397,12 @@ dev-handbook/
 - [ ] AC 2: Workflow is self-contained with embedded roadmap template following ADR-002 XML format
 - [ ] AC 3: Process steps cover complete roadmap update cycle (load, validate, update, commit)
 - [ ] AC 4: Workflow discoverable via `ace-nav wfi://update-roadmap` protocol
-- [ ] AC 5: Claude Code slash command `/update-roadmap` created and functional
-- [ ] AC 6: Workflow references roadmap-definition.g.md for validation rules (not duplicating them)
-- [ ] AC 7: Error handling and validation procedures documented
-- [ ] AC 8: Success criteria clearly defined and measurable
+- [ ] AC 5: Claude Code command `/ace:update-roadmap` created at `.claude/commands/ace/update-roadmap.md`
+- [ ] AC 6: Claude command correctly invokes `ace-nav wfi://update-roadmap`
+- [ ] AC 7: Workflow references roadmap-definition.g.md for validation rules (not duplicating them)
+- [ ] AC 8: Error handling and validation procedures documented
+- [ ] AC 9: Integration with draft-release and publish-release workflows documented
+- [ ] AC 10: Three-layer architecture (workflow/command/CLI) clearly explained in technical approach
 
 ## Out of Scope
 
