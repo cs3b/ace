@@ -270,49 +270,29 @@ for wf in prioritize-align-ideas capture-application-features document-unplanned
 done
 ```
 
-### Test 4: Backward Compatibility
-**Goal:** Ensure old command files are updated or removed
-
-```bash
-# Check if old commands still exist in root
-for cmd in prioritize-align-ideas capture-application-features document-unplanned-work; do
-  if test -f ".claude/commands/$cmd.md"; then
-    echo "⚠ Old command still exists: $cmd.md"
-    echo "   Should be removed or redirected"
-  else
-    echo "✓ Old command removed: $cmd.md"
-  fi
-done
-```
-
 ---
 
 ## Post-Migration User Experience
 
 ### Quick Reference Card
 
-| Task | Old Command | New Command | Workflow Location | Output |
-|------|-------------|-------------|-------------------|--------|
-| Organize ideas | `/prioritize-align-ideas` | `/ace:prioritize-ideas` | `wfi://prioritize-align-ideas` | Ranked ideas in `.ace-taskflow/backlog/ideas/` |
-| Document features (detailed ideas) | `/capture-application-features` | `/ace:capture-features` | `wfi://capture-application-features` | Beefy idea in `.ace-taskflow/backlog/ideas/` |
-| Capture unplanned work | `/document-unplanned-work` | `/ace:document-unplanned` | `wfi://document-unplanned-work` | Completed task in `.ace-taskflow/v.X.X.X/t/done/` with status `done` |
+| Task | Command | Workflow Location | Output |
+|------|---------|-------------------|--------|
+| Organize ideas | `/ace:prioritize-ideas` | `wfi://prioritize-align-ideas` | Ranked ideas in `.ace-taskflow/backlog/ideas/` with sort metadata |
+| Document features (detailed ideas) | `/ace:capture-features` | `wfi://capture-application-features` | Beefy idea in `.ace-taskflow/backlog/ideas/` |
+| Capture unplanned work | `/ace:document-unplanned` | `wfi://document-unplanned-work` | Completed task in `.ace-taskflow/v.X.X.X/t/done/` with status `done` |
 
 ### For Users
 
-**Before Migration:**
-- Commands in root `.claude/commands/` directory
-- Workflows in `dev-handbook/workflow-instructions/`
-- Direct file path references
-- Feature docs possibly in separate folder
-
-**After Migration:**
+**New Architecture:**
 - Commands organized under `.claude/commands/ace/` namespace
 - Workflows in `ace-taskflow/handbook/workflow-instructions/`
 - wfi:// protocol for platform-independent access
-- Shorter, cleaner command names
+- Clean command names with `/ace:` prefix
 - **Organized storage**:
   - Ideas (quick & detailed): `.ace-taskflow/backlog/ideas/`
   - Unplanned work: `.ace-taskflow/v.X.X.X/t/done/` (as completed tasks)
+- **Prioritization**: Uses `ace-taskflow idea reschedule` with sort metadata (no file renaming)
 
 ### For AI Agents (Platform Independent)
 
