@@ -114,7 +114,6 @@ module Ace
         puts "  ace-nav wfi://setup --content              # Show content"
         puts "  ace-nav 'wfi://*' --list                   # List all workflows"
         puts "  ace-nav wfi://setup --create               # Create from template"
-        puts "  ace-nav task://018                         # Find task by number"
         puts "  ace-nav --sources                          # Show available sources"
         puts
         puts "Available Protocols:"
