@@ -1,13 +1,13 @@
 # Task 047: Workflow Migration - Usage Scenarios
 
-## Unified Idea Storage
+## Output Locations
 
-**Key Concept:** All three workflows output to `.ace-taskflow/backlog/ideas/` directory:
-- **Quick ideas** (via `capture-idea`): Brief concepts like "Add caching layer"
-- **Detailed ideas** (via `capture-features`): Comprehensive "beefy" ideas with full specs, components, interactions
-- **Unplanned work** (via `document-unplanned`): Documenting completed work as ideas/tasks
+**Key Concept:** Workflows output to different locations based on their purpose:
+- **Quick ideas** (via `capture-idea`): Brief concepts like "Add caching layer" → `.ace-taskflow/backlog/ideas/`
+- **Detailed ideas** (via `capture-features`): Comprehensive "beefy" ideas with full specs → `.ace-taskflow/backlog/ideas/`
+- **Unplanned work** (via `document-unplanned`): Completed work as done tasks → `.ace-taskflow/v.X.X.X/t/done/`
 
-This unified approach treats feature documentation as just a more detailed form of idea capture - same storage location, but varying levels of detail.
+This approach treats feature documentation as a more detailed form of idea capture (same storage as ideas), while unplanned work becomes a completed task directly in the done folder.
 
 ## What We're Migrating
 
@@ -30,7 +30,7 @@ This unified approach treats feature documentation as just a more detailed form 
 **Target Location:** `ace-taskflow/handbook/workflow-instructions/document-unplanned-work.wf.md`
 **Command:** `/ace:document-unplanned`
 
-**Purpose:** Document significant work completed during a session that wasn't part of any planned task.
+**Purpose:** Document significant work completed during a session that wasn't part of any planned task. Creates completed task files in `.ace-taskflow/v.X.X.X/t/done/` with status `done`.
 
 ---
 
@@ -41,20 +41,20 @@ This unified approach treats feature documentation as just a more detailed form 
 **Context:** You have 20 unorganized idea files in `.ace-taskflow/backlog/ideas/` and need to prioritize them for the next release cycle.
 
 **Current Workflow (Before Migration):**
-```bash
-# User manually invokes slash command
+```
+User invokes Claude Code command:
 /prioritize-align-ideas
 
-# Claude reads file directly
+Claude reads file directly:
 read whole file and follow @dev-handbook/workflow-instructions/prioritize-align-ideas.wf.md
 ```
 
 **After Migration:**
-```bash
-# User invokes migrated command
+```
+User invokes migrated Claude Code command:
 /ace:prioritize-ideas
 
-# Claude uses wfi:// protocol
+Claude uses wfi:// protocol:
 read and run `ace-nav wfi://prioritize-align-ideas`
 read and run `ace-nav wfi://commit`
 ```
@@ -84,20 +84,20 @@ grep -q "wfi://prioritize-align-ideas" .claude/commands/ace/prioritize-ideas.md
 **Context:** Building a marketing site with CMS-editable sections. Need to create comprehensive documentation for the Hero Banner feature as a detailed idea file.
 
 **Current Workflow (Before Migration):**
-```bash
-# User invokes command
+```
+User invokes Claude Code command:
 /capture-application-features
 
-# Claude reads file directly from dev-handbook
+Claude reads file directly from dev-handbook:
 read whole file and follow @dev-handbook/workflow-instructions/capture-application-features.wf.md
 ```
 
 **After Migration:**
-```bash
-# User invokes migrated command
+```
+User invokes migrated Claude Code command:
 /ace:capture-features
 
-# Claude uses wfi:// protocol
+Claude uses wfi:// protocol:
 read and run `ace-nav wfi://capture-application-features`
 read and run `ace-nav wfi://commit`
 ```
@@ -142,20 +142,20 @@ grep -q "wfi://capture-application-features" .claude/commands/ace/capture-featur
 **Context:** During development, you fixed a critical bug that wasn't tracked in any task. Need to document it for retrospectives and release notes.
 
 **Current Workflow (Before Migration):**
-```bash
-# User invokes command
+```
+User invokes Claude Code command:
 /document-unplanned-work
 
-# Claude reads file directly
+Claude reads file directly:
 read whole file and follow @dev-handbook/workflow-instructions/document-unplanned-work.wf.md
 ```
 
 **After Migration:**
-```bash
-# User invokes migrated command
+```
+User invokes migrated Claude Code command:
 /ace:document-unplanned
 
-# Claude uses wfi:// protocol
+Claude uses wfi:// protocol:
 read and run `ace-nav wfi://document-unplanned-work`
 read and run `ace-nav wfi://commit`
 ```
@@ -169,13 +169,20 @@ Claude: I'll help document unplanned work. What work did you complete?
 User: Fixed a race condition in task scheduler that caused duplicate task IDs
 
 Claude: [Follows workflow]
-- Creates task: v.0.9.0+task.XXX-fix-task-scheduler-race-condition.md
-- Status: done (work already completed)
+- Creates task file with status: done (work already completed)
 - Documents: issue, root cause, solution, files modified
 - Includes: git commit references, testing validation
+- Moves directly to done folder
 
-Output: Task created and marked as done:
-.ace-taskflow/v.0.9.0/tasks/v.0.9.0+task.XXX-fix-task-scheduler-race-condition.md
+Output: Completed task documented in:
+.ace-taskflow/v.0.9.0/t/done/XXX-fix-task-scheduler-race-condition/task.XXX.md
+
+File metadata:
+---
+id: v.0.9.0+task.XXX
+status: done
+priority: high
+---
 ```
 
 **Test Validation:**
@@ -263,7 +270,7 @@ done
 |------|-------------|-------------|-------------------|--------|
 | Organize ideas | `/prioritize-align-ideas` | `/ace:prioritize-ideas` | `wfi://prioritize-align-ideas` | Ranked ideas in `.ace-taskflow/backlog/ideas/` |
 | Document features (detailed ideas) | `/capture-application-features` | `/ace:capture-features` | `wfi://capture-application-features` | Beefy idea in `.ace-taskflow/backlog/ideas/` |
-| Capture unplanned work | `/document-unplanned-work` | `/ace:document-unplanned` | `wfi://document-unplanned-work` | Idea/task in `.ace-taskflow/backlog/ideas/` |
+| Capture unplanned work | `/document-unplanned-work` | `/ace:document-unplanned` | `wfi://document-unplanned-work` | Completed task in `.ace-taskflow/v.X.X.X/t/done/` with status `done` |
 
 ### For Users
 
@@ -278,7 +285,9 @@ done
 - Workflows in `ace-taskflow/handbook/workflow-instructions/`
 - wfi:// protocol for platform-independent access
 - Shorter, cleaner command names
-- **Unified storage**: All outputs in `.ace-taskflow/backlog/ideas/` (quick ideas, detailed ideas, unplanned work)
+- **Organized storage**:
+  - Ideas (quick & detailed): `.ace-taskflow/backlog/ideas/`
+  - Unplanned work: `.ace-taskflow/v.X.X.X/t/done/` (as completed tasks)
 
 ### For AI Agents (Platform Independent)
 
