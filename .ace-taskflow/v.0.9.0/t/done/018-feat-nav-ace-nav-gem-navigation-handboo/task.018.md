@@ -339,6 +339,10 @@ Implement a unified navigation and resource discovery system that enables ace-* 
 - [x] **Error Handling**: All error conditions and edge cases handle as specified
 - [x] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
 
+## Implementation Notes
+
+**task:// Protocol Status**: The task:// protocol was designed as part of this task but was never fully implemented. While the code exists in TaskResolver, no protocol configuration file was created, making the protocol non-functional. The ace-taskflow CLI (`ace-taskflow task <task-ref>`) provides superior task management functionality, so the task:// protocol implementation has been removed. Use `ace-taskflow task` commands for all task lookups.
+
 ## Out of Scope
 
 - ❌ Backward compatibility with nav-* commands (handled via config instead)

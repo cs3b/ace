@@ -2,7 +2,6 @@
 
 require_relative "../molecules/protocol_scanner"
 require_relative "../molecules/resource_resolver"
-require_relative "../molecules/task_resolver"
 require_relative "../atoms/path_normalizer"
 
 module Ace
@@ -10,48 +9,37 @@ module Ace
     module Organisms
       # Orchestrates navigation operations
       class NavigationEngine
-        def initialize(handbook_scanner: nil, protocol_scanner: nil, resource_resolver: nil, task_resolver: nil, path_normalizer: nil)
+        def initialize(handbook_scanner: nil, protocol_scanner: nil, resource_resolver: nil, path_normalizer: nil)
           # Support legacy handbook_scanner parameter
           @protocol_scanner = protocol_scanner || handbook_scanner || Molecules::ProtocolScanner.new
           @resource_resolver = resource_resolver || Molecules::ResourceResolver.new(protocol_scanner: @protocol_scanner)
-          @task_resolver = task_resolver || Molecules::TaskResolver.new
           @path_normalizer = path_normalizer || Atoms::PathNormalizer.new
         end
 
         # Resolve a single resource URI to a path
         def resolve(uri_string, options = {})
-          # Check if it's a task URI
-          if uri_string.start_with?("task://")
-            resolve_task(uri_string, options)
-          else
-            resource = @resource_resolver.resolve(uri_string)
-            return nil unless resource
+          resource = @resource_resolver.resolve(uri_string)
+          return nil unless resource
 
-            if options[:content]
-              resource.content
-            elsif options[:verbose]
-              resource.to_h
-            else
-              resource.path
-            end
+          if options[:content]
+            resource.content
+          elsif options[:verbose]
+            resource.to_h
+          else
+            resource.path
           end
         end
 
         # List resources matching a pattern
         def list(uri_pattern, options = {})
-          # Check if it's a task pattern
-          if uri_pattern.start_with?("task://")
-            list_tasks(uri_pattern, options)
-          else
-            resources = @resource_resolver.resolve_pattern(uri_pattern)
+          resources = @resource_resolver.resolve_pattern(uri_pattern)
 
-            if options[:tree]
-              format_as_tree(resources)
-            elsif options[:verbose]
-              resources.map(&:to_h)
-            else
-              format_as_list(resources)
-            end
+          if options[:tree]
+            format_as_tree(resources)
+          elsif options[:verbose]
+            resources.map(&:to_h)
+          else
+            format_as_list(resources)
           end
         end
 
@@ -96,48 +84,6 @@ module Ace
         end
 
         private
-
-        def resolve_task(uri_string, options = {})
-          # Extract task identifier from URI
-          task_id = uri_string.sub("task://", "")
-
-          # Find the task file
-          task_path = @task_resolver.resolve(task_id)
-          return nil unless task_path
-
-          if options[:content]
-            File.read(task_path)
-          elsif options[:verbose]
-            {
-              uri: uri_string,
-              path: task_path,
-              exists: File.exist?(task_path)
-            }
-          else
-            task_path
-          end
-        end
-
-        def list_tasks(uri_pattern, options = {})
-          # Extract pattern from URI
-          pattern = uri_pattern.sub("task://", "")
-
-          # Get matching task files
-          tasks = @task_resolver.list_tasks(pattern)
-
-          if options[:verbose]
-            tasks.map do |path|
-              {
-                uri: "task://#{File.basename(path, ".md")}",
-                path: path
-              }
-            end
-          else
-            tasks.map do |path|
-              "task://#{File.basename(path, ".md")} → #{path}"
-            end
-          end
-        end
 
         def format_as_list(resources)
           resources.map do |resource|
