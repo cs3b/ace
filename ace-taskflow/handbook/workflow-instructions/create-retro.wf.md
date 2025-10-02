@@ -1,8 +1,8 @@
-# Create Reflection Note Workflow Instruction
+# Create Retro Workflow Instruction
 
 ## Goal
 
-Capture individual or team observations, learnings, and ideas for improvement during development work. These notes document insights that can help improve future work processes and outcomes.
+Capture individual or team observations, learnings, and ideas for improvement during development work. These retros document insights that can help improve future work processes and outcomes.
 
 **Enhanced Capabilities:**
 
@@ -12,7 +12,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
 ## Prerequisites
 
-- Understanding of what reflections to capture (learnings, challenges, improvements)
+- Understanding of what retros to capture (learnings, challenges, improvements)
 - Access to create files in the project structure
 - Current working session or specific context to reflect upon
 
@@ -24,23 +24,23 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
 ### Planning Steps
 
-- [ ] Determine the scope and context of the reflection (current session, specific task, or provided topic)
-- [ ] Identify the appropriate location for saving the reflection note
+- [ ] Determine the scope and context of the retro (current session, specific task, or provided topic)
+- [ ] Identify the appropriate location for saving the retro
 - [ ] Analyze recent work patterns and extract key insights
 
 ### Execution Steps
 
-- [ ] Create reflection structure using the embedded template
-- [ ] Gather and analyze reflection content from recent work or provided context
-- [ ] Populate reflection sections with meaningful insights and learnings
-- [ ] Save reflection note with appropriate filename and location
+- [ ] Create retro structure using the embedded template
+- [ ] Gather and analyze retro content from recent work or provided context
+- [ ] Populate retro sections with meaningful insights and learnings
+- [ ] Save retro with appropriate filename and location
 
 ## Process Steps
 
-1. **Determine Reflection Context:**
+1. **Determine Retro Context:**
    - If user provides specific context:
      - Use the provided topic, task, or time period
-     - Focus reflection on that specific area
+     - Focus retro on that specific area
    - If no context provided:
      - Self-review the current working session
      - Analyze recent changes and activities
@@ -52,7 +52,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
      - Note tool result issues (large output, truncation, token limits)
 
 2. **Identify Target Location:**
-   - Determine where to save the reflection using current release context:
+   - Determine where to save the retro using current release context:
 
      ```bash
      # Find the current/latest release directory
@@ -62,24 +62,24 @@ Capture individual or team observations, learnings, and ideas for improvement du
          # Save in the current release's retro folder
          RETRO_DIR="${RELEASE_DIR}retro"
          mkdir -p "$RETRO_DIR"
-         REFLECTION_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
+         RETRO_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
      else
-         # Fallback: No release found, use project-level reflections
-         RETRO_DIR="/Users/mc/Ps/ace-meta/reflections"
+         # Fallback: No release found, use project-level retros
+         RETRO_DIR="/Users/mc/Ps/ace-meta/retros"
          mkdir -p "$RETRO_DIR"
-         REFLECTION_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
+         RETRO_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
      fi
 
      # Example: For ace-test-runner fixes on 2025-09-30
      # Path would be: .ace-taskflow/v.0.9.0/retro/2025-09-30-ace-test-runner-fixes.md
      ```
 
-   **Important:** Reflections should always go in the current release's `retro/` folder when a release exists. Only use a project-level reflections folder as a fallback.
+   **Important:** Reflections should always go in the current release's `retro/` folder when a release exists. Only use a project-level retros folder as a fallback.
 
 
 3. **Create Reflection Structure:**
 
-   Use the reflection template:
+   Use the retro template:
 
 4. **Gather Reflection Content:**
 
@@ -98,12 +98,12 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - What patterns emerged?
    - What knowledge was gained?
 
-5. **Populate Reflection:**
+5. **Populate Retro:**
 
    **Example Content Generation:**
 
    ```markdown
-   # Reflection: Authentication System Refactor
+   # Retro: Authentication System Refactor
 
    **Date**: 2024-01-26
    **Context**: Refactoring the authentication system to support OAuth
@@ -151,12 +151,12 @@ Capture individual or team observations, learnings, and ideas for improvement du
      ```bash
      # Save to the determined location (from Step 2)
      # E.g.: .ace-taskflow/v.0.9.0/retro/2025-09-30-ace-test-runner-fixes.md
-     echo "Saving reflection to: $REFLECTION_PATH"
+     echo "Saving retro to: $RETRO_PATH"
      ```
 
 ## Conversation Analysis Process
 
-For conversation-based self-reflection, follow these specialized steps:
+For conversation-based self-retro, follow these specialized steps:
 
 1. **Analyze Conversation Thread:**
    - Review the entire conversation from start to current point
@@ -230,7 +230,7 @@ When no specific context is provided, follow this process:
    - Recognize successful approaches
    - Consider process improvements
 
-3. **Generate Reflection:**
+3. **Generate Retro:**
    - Summarize the session's accomplishments
    - Document any blockers encountered
    - Capture new learnings
@@ -238,10 +238,10 @@ When no specific context is provided, follow this process:
 
 ## Enhanced Reflection Sections
 
-When creating reflections, systematically populate these enhancement sections to capture improvement opportunities:
+When creating retros, systematically populate these enhancement sections to capture improvement opportunities:
 
 ### Automation Insights
-Use the prompting guide from `ace-nav tmpl://release-reflections/enhanced-prompts` to:
+Use the prompting guide from `ace-nav tmpl://release-retros/enhanced-prompts` to:
 - Identify repetitive manual processes that could be automated
 - Assess time savings and implementation complexity
 - Prioritize automation opportunities by impact
@@ -317,10 +317,10 @@ Focus on new skills, tools, or concepts mastered during the work.
 
 ## Success Criteria
 
-- Reflection note created with meaningful content
+- Retro created with meaningful content
 - Insights captured for future reference
 - Action items clearly defined
-- File saved in current release's retro/ folder (or project reflections/ as fallback)
+- File saved in current release's retro/ folder (or project retros/ as fallback)
 - Learning documented for team benefit
 
 ## Best Practices
@@ -331,7 +331,7 @@ Focus on new skills, tools, or concepts mastered during the work.
 - Focus on actionable improvements
 - Include specific examples
 - Keep entries concise but complete
-- Date and contextualize reflections
+- Date and contextualize retros
 
 **DON'T:**
 
@@ -362,24 +362,24 @@ Capture observations about development workflow effectiveness and areas for opti
 ## Usage Examples
 
 **With context:**
-> "Create a reflection note about the authentication system refactor we just completed"
+> "Create a retro about the authentication system refactor we just completed"
 
 **Without context:**
-> "Create a reflection note" (triggers self-review of current session)
+> "Create a retro" (triggers self-review of current session)
 
 **Specific learning:**
-> "Create a reflection note about the OAuth integration challenges we faced"
+> "Create a retro about the OAuth integration challenges we faced"
 
 ---
 
 This workflow helps capture valuable insights and learnings, creating a knowledge base that improves future development work.
 
 <documents>
-    <template path="tmpl://release-reflections/retro">
-# Reflection: [Topic/Date]
+    <template path="tmpl://release-retros/retro">
+# Retro: [Topic/Date]
 
 **Date**: YYYY-MM-DD
-**Context**: [Brief description of what this reflection covers]
+**Context**: [Brief description of what this retro covers]
 **Author**: [Name or identifier]
 **Type**: [Standard | Conversation Analysis | Self-Review]
 
@@ -401,7 +401,7 @@ This workflow helps capture valuable insights and learnings, creating a knowledg
 - [New understanding developed]
 - [Valuable lesson learned]
 
-## Conversation Analysis (For conversation-based reflections)
+## Conversation Analysis (For conversation-based retros)
 
 ### Challenge Patterns Identified
 
