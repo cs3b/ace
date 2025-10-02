@@ -1,0 +1,11 @@
+description: "Draft tasks"
+type: "tasks"
+context: "current"
+filters:
+  status:
+    - "draft"
+sort:
+  by: "sort"
+  ascending: true
+display:
+  group_by: null
