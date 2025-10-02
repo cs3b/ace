@@ -287,7 +287,73 @@ Create a detailed implementation plan for a task that already has a validated be
        > Command: # Run project-specific test command --verify-result
      ```
 
-9. **Task Status Promotion:**
+9. **UX/Usage Documentation Creation:**
+
+   **Purpose:** Create practical usage documentation to validate the implementation approach and provide clear examples for users. This helps ensure the plan is heading in the right direction before finalizing.
+
+   **When to Create:**
+   - **User-facing features**: Commands, CLI tools, APIs, workflows
+   - **Developer tools**: Build systems, test frameworks, development utilities
+   - **Skip for**: Internal refactoring, technical debt, infrastructure tasks
+
+   **Create ux/usage.md in task directory:**
+   - Path: `<task-directory>/ux/usage.md`
+   - Example: `.ace-taskflow/v.0.9.0/t/046-batch-operations/ux/usage.md`
+
+   **Document Structure:**
+
+   **Overview Section:**
+   - Brief description of what the feature does
+   - List of available commands/features
+   - Key benefits or use cases
+
+   **Command Types** (if applicable):
+   - Distinguish between command execution contexts
+   - Example: Claude Code commands vs bash CLI commands
+   - Show syntax differences clearly
+
+   **Command Structure:**
+   - Basic invocation patterns
+   - Argument formats
+   - Option/flag usage
+   - Default behaviors
+
+   **Usage Scenarios** (3-6 real-world examples):
+   - **Scenario 1**: Common/typical use case
+     - Goal statement
+     - Step-by-step commands
+     - Expected output
+   - **Scenario 2**: Alternative workflow
+   - **Scenario 3**: Edge case handling
+   - **Scenario 4**: Complex/advanced usage
+   - Include both successful and error cases
+
+   **Command Reference:**
+   - Detailed syntax for each command
+   - Parameter descriptions
+   - Input/output formats
+   - Internal implementation notes (what tools/commands it uses)
+
+   **Tips and Best Practices:**
+   - Common pitfalls to avoid
+   - Recommended workflows
+   - Performance considerations
+   - Troubleshooting guidance
+
+   **Migration Notes** (if replacing existing feature):
+   - Legacy vs new command comparison
+   - Key differences
+   - Transition guidance
+
+   **Review Criteria:**
+   - [ ] Examples use actual command syntax (verified against implementation)
+   - [ ] Scenarios cover common and edge cases
+   - [ ] Command types clearly distinguished
+   - [ ] Output examples realistic and helpful
+   - [ ] Troubleshooting addresses likely issues
+   - [ ] Migration path clear if applicable
+
+10. **Task Status Promotion:**
    - Update task metadata:
      - Change `status: draft` to `status: pending`
      - Verify priority and estimate are appropriate
