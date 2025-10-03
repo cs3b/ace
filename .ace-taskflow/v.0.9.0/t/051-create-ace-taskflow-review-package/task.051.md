@@ -18,15 +18,17 @@ reviewed_by: User
 
 #### Should ace-taskflow-review be a separate gem or integrated into ace-taskflow core?
 
-- **Decision**: Separate gem named `ace-review` with `ace-review code` and `ace-review synthesize` commands
+- **Decision**: Separate gem named `ace-review` with `ace-review code` command
 - **Rationale**:
   - Reviews are a distinct concern from task management
   - Separate gem allows independent versioning and installation
   - Follows pattern of other standalone ace-* tools
   - Cleaner separation of concerns
+  - Synthesis handled via workflow instructions (no CLI needed)
 - **Implementation Notes**:
   - Create new gem: `ace-review`
-  - CLI commands: `ace-review code`, `ace-review synthesize`
+  - CLI command: `ace-review code` only
+  - Synthesis via workflow instructions (wfi://synthesize-reviews)
   - Follow ace-gems.g.md best practices
   - Leverage ace-core for configuration and utilities
 - **Resolved by**: User
@@ -76,7 +78,7 @@ reviewed_by: User
   - Avoids maintaining duplicate functionality
 - **Implementation Notes**:
   - Replace `code-review` with `ace-review code`
-  - Replace `code-review-synthesize` with `ace-review synthesize`
+  - Remove `code-review-synthesize` CLI (use wfi://synthesize-reviews instead)
   - Update all workflow files to use new commands
   - Document migration in CHANGELOG and README
 - **Resolved by**: User
@@ -123,29 +125,29 @@ reviewed_by: User
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: User invokes review commands via ace-taskflow CLI (e.g., `ace-taskflow review code`, `ace-taskflow review synthesize`)
-- **Process**: System performs code reviews or synthesizes multiple reviews into actionable insights
-- **Output**: Structured review documents with findings, suggestions, and synthesized patterns across reviews
+- **Input**: User invokes `ace-review code` CLI command with preset configuration
+- **Process**: System performs code review analysis using LLM providers
+- **Output**: Structured review document with findings and suggestions
 
 ### Expected Behavior
 
-Users experience comprehensive code review workflows accessible through ace-taskflow. The system provides:
+Users experience automated code review via the `ace-review` CLI tool:
 
-**Review Code**: Analyzes code for quality, patterns, and potential improvements
-- Accepts file paths, directories, or commit references
+**Review Code** (`ace-review code`): Analyzes code for quality, patterns, and potential improvements
+- Accepts file paths, directories, or commit references via presets
 - Performs automated code analysis (structure, patterns, best practices)
 - Identifies potential issues, improvements, and learning opportunities
 - Generates structured review document with categorized findings
 - Links findings to specific code locations
+- Stores reviews in `.ace-taskflow/<release>/reviews/`
 
-**Synthesize Reviews**: Analyzes multiple code reviews to identify patterns and systemic issues
-- Reads review documents from specified period or release
-- Identifies recurring code patterns (good and problematic)
-- Highlights systemic issues requiring architectural attention
-- Generates synthesis with prioritized improvement recommendations
-- Tracks progress on previously identified issues
+**Synthesize Reviews** (workflow only): Pattern analysis across multiple reviews
+- No CLI command - use `wfi://synthesize-reviews` workflow instead
+- Manual process: read 2-4 review files and combine into synthesis
+- Identifies recurring patterns and systemic issues
+- Handled by workflow instructions, not automated CLI
 
-The workflows integrate with .ace-taskflow structure, storing reviews organized by release, making review insights accessible for planning refactoring work and process improvements.
+The tool integrates with .ace-taskflow structure, storing reviews organized by release, making review insights accessible for planning refactoring work and process improvements.
 
 ### Interface Contract
 
@@ -156,22 +158,19 @@ ace-review code [--preset <preset-name>] [--output-dir <path>]
 # Default preset: "pr" (pull request review)
 # Output: Review document in .ace-taskflow/<release>/reviews/
 
-# Synthesize multiple reviews (replaces code-review-synthesize)
-ace-review synthesize [--release <version>] [--since <date>] [--output-dir <path>]
-# Executes: Synthesis of multiple review documents
-# Reads: .ace-taskflow/<release>/reviews/*.md
-# Output: Synthesis document with patterns and recommendations
-
 # Configuration:
 # - Main config: .ace/review/code.yml
 # - Presets: .ace/review/presets/{preset-name}.yml
 # - Default storage: .ace-taskflow/<current-release>/reviews/
 # - Override via: --output-dir flag
+
+# Note: Synthesis is done via workflow instructions
+# Use: wfi://synthesize-reviews (no CLI command)
 ```
 
 **Error Handling:**
 - Invalid path or commit: Report error with helpful message
-- No reviews found for synthesis: Report empty state, suggest running reviews first
+- Invalid preset: Report available presets
 - Analysis failure: Provide partial results with error context
 
 **Edge Cases:**
@@ -183,9 +182,9 @@ ace-review synthesize [--release <version>] [--since <date>] [--output-dir <path
 
 - [ ] **Automated Analysis**: System identifies common code quality issues and improvement opportunities
 - [ ] **Actionable Feedback**: Reviews provide specific, implementable suggestions
-- [ ] **Pattern Recognition**: Synthesis identifies recurring issues across multiple reviews
-- [ ] **Task Integration**: Reviews can be linked to specific tasks for context
-- [ ] **Progress Tracking**: System tracks improvement on previously identified issues
+- [ ] **Preset Flexibility**: Support for custom presets and configuration
+- [ ] **Storage Integration**: Reviews properly stored in `.ace-taskflow/<release>/reviews/`
+- [ ] **LLM Provider Support**: Works with multiple LLM providers via ace-llm
 
 ### Validation Questions
 
@@ -204,15 +203,16 @@ Create a dedicated review package (ace-review) that enables automated code revie
 ### Package Structure
 New package: **ace-review** (Ruby gem)
 - Location: `dev-tools/ace-review/`
-- CLI commands: `ace-review code`, `ace-review synthesize`
+- CLI command: `ace-review code` only
 - Architecture: Follow ATOM pattern (atoms, molecules, organisms, models)
 - Configuration: `.ace/review/code.yml` + `.ace/review/presets/*.yml`
-- Workflows to integrate:
+- Note: Synthesis handled via workflow instructions (no CLI)
 
 ### Implementation Source
 1. **Migrate from dev-tools code-review**
    - Source: `dev-tools/lib/coding_agent_tools/code_review/`
-   - Executables: `dev-tools/exe/code-review`, `dev-tools/exe/code-review-synthesize`
+   - Executable: `dev-tools/exe/code-review` (copy and adapt)
+   - Ignore: `dev-tools/exe/code-review-synthesize` (not needed)
    - Copy and adapt to ace-review structure
    - Use ace-core utilities and configuration
 
@@ -223,13 +223,13 @@ New package: **ace-review** (Ruby gem)
    - Maintain preset structure and capabilities
 
 ### Interface Scope
-- CLI commands: `ace-review code`, `ace-review synthesize`
+- CLI command: `ace-review code` only
 - Preset-based configuration system
 - Code analysis and pattern detection
 - Review document generation and management
-- Synthesis and pattern recognition logic
 - Release-based storage integration
 - Configurable output locations
+- Note: Synthesis done via `wfi://synthesize-reviews` workflow
 
 ### Deliverables
 
@@ -237,7 +237,7 @@ New package: **ace-review** (Ruby gem)
 - `ace-review` gem following ace-gems.g.md best practices
 - ATOM architecture (atoms, molecules, organisms, models)
 - ace-core integration for configuration and utilities
-- Executables: `ace-review` with `code` and `synthesize` subcommands
+- Executable: `ace-review` with `code` subcommand only
 
 #### Configuration System
 - Main config: `.ace/review/code.yml`
@@ -247,9 +247,9 @@ New package: **ace-review** (Ruby gem)
 
 #### CLI Interface
 - `ace-review code [--preset <name>] [--output-dir <path>]`
-- `ace-review synthesize [--release <version>] [--output-dir <path>]`
 - Preset-based review execution
 - Configurable output locations
+- No synthesize CLI (use workflow instructions instead)
 
 #### Migration
 - Update workflow files to use new commands
@@ -303,10 +303,10 @@ New package: **ace-review** (Ruby gem)
 
 ### Updated Commands
 
-| Old Command | New Command |
-|------------|-------------|
-| `code-review` | `ace-review code` |
-| `code-review-synthesize` | `ace-review synthesize` |
+| Old Command | New Command | Notes |
+|------------|-------------|-------|
+| `code-review` | `ace-review code` | Direct replacement |
+| `code-review-synthesize` | `wfi://synthesize-reviews` | Workflow only, no CLI |
 
 ### Configuration Structure
 

@@ -4,15 +4,16 @@
 
 ## Overview
 
-**ace-review** is a dedicated code review and pattern synthesis tool that enables automated code analysis and quality improvement across releases. It provides preset-based review workflows and synthesizes insights from multiple reviews to identify systemic patterns and improvement opportunities.
+**ace-review** is a dedicated code review tool that enables automated code analysis and quality improvement across releases. It provides preset-based review workflows using LLM-powered analysis to identify code quality issues, architectural concerns, and improvement opportunities.
 
 **Key Features:**
 - Preset-based code review with configurable analysis criteria
-- Multi-review synthesis for pattern recognition
 - Release-aware storage and organization
 - Flexible configuration with preset overrides
 - LLM-powered analysis using multiple providers
 - Integration with ace-taskflow release structure
+
+**Note**: Review synthesis is handled via workflow instructions (`wfi://synthesize-reviews`), not as a CLI command.
 
 ## Installation
 
@@ -56,12 +57,6 @@ ace-review code --preset security
 
 # Review code with custom output location
 ace-review code --preset pr --output-dir ./reviews
-
-# Synthesize multiple reviews
-ace-review synthesize
-
-# Synthesize reviews from specific release
-ace-review synthesize --release v.0.9.0
 ```
 
 ### Command Options
@@ -72,15 +67,6 @@ ace-review synthesize --release v.0.9.0
 |--------|-------|-------------|---------|
 | `--preset` | `-p` | Preset name to use | `--preset security` |
 | `--output-dir` | `-o` | Custom output directory | `--output-dir ./reviews` |
-| `--help` | `-h` | Show help message | `--help` |
-
-#### `ace-review synthesize`
-
-| Option | Short | Description | Example |
-|--------|-------|-------------|---------|
-| `--release` | `-r` | Specific release version | `--release v.0.9.0` |
-| `--since` | `-s` | Reviews since date | `--since 2025-09-01` |
-| `--output-dir` | `-o` | Custom output directory | `--output-dir ./synthesis` |
 | `--help` | `-h` | Show help message | `--help` |
 
 ## Common Scenarios
@@ -164,42 +150,7 @@ Documentation Analysis:
 ✓ Review saved: .ace-taskflow/v.0.9.0/reviews/docs-review-2025-10-03.md
 ```
 
-### Scenario 4: Synthesize Multiple Reviews
-
-**Goal**: Identify patterns and systemic issues across multiple code reviews
-
-**Commands**:
-```bash
-# Synthesize all reviews from current release
-ace-review synthesize
-
-# Synthesize reviews from specific time period
-ace-review synthesize --since 2025-09-01
-```
-
-**Expected Output**:
-```
-Synthesizing reviews...
-Found 12 reviews in .ace-taskflow/v.0.9.0/reviews/
-Analyzing patterns across reviews...
-
-Pattern Analysis:
-📊 Recurring Issues:
-   - Error handling: 8 occurrences
-   - Test coverage: 6 occurrences
-   - Documentation gaps: 5 occurrences
-
-💡 Recommendations:
-   1. Add error handling guidelines (HIGH priority)
-   2. Improve test coverage requirements (MEDIUM)
-   3. Update documentation standards (MEDIUM)
-
-✓ Synthesis saved: .ace-taskflow/v.0.9.0/reviews/synthesis-2025-10-03.md
-```
-
-**Next Steps**: Create tasks for systemic improvements identified
-
-### Scenario 5: Custom Preset Review
+### Scenario 4: Custom Preset Review
 
 **Goal**: Review code with a custom preset for specific project needs
 
@@ -340,62 +291,11 @@ ace-review code --preset docs --output-dir ./my-reviews
 - `2`: Review generation failed
 
 **See Also**:
-- `ace-review synthesize` - Synthesize multiple reviews
 - Configuration documentation in `.ace/review/code.yml`
+- Preset configuration in `.ace/review/presets/`
 
-### `ace-review synthesize`
-
-Synthesize multiple review documents to identify patterns and systemic issues.
-
-**Syntax**:
-```bash
-ace-review synthesize [--release <version>] [--since <date>] [--output-dir <path>]
-```
-
-**Parameters**:
-- None
-
-**Options**:
-| Flag | Short | Type | Description | Default |
-|------|-------|------|-------------|---------|
-| `--release` | `-r` | string | Specific release version | Current release |
-| `--since` | `-s` | date | Reviews since date (YYYY-MM-DD) | All reviews |
-| `--output-dir` | `-o` | path | Custom output directory | `.ace-taskflow/<release>/reviews` |
-| `--verbose` | `-v` | flag | Verbose output | `false` |
-| `--help` | `-h` | flag | Show help message | - |
-
-**Examples**:
-
-```bash
-# Example 1: Synthesize current release reviews
-ace-review synthesize
-# Output:
-# Synthesizing reviews from v.0.9.0...
-# Found 12 reviews
-# ✓ Synthesis saved: .ace-taskflow/v.0.9.0/reviews/synthesis-2025-10-03.md
-
-# Example 2: Specific release
-ace-review synthesize --release v.0.8.0
-# Output:
-# Synthesizing reviews from v.0.8.0...
-# Found 8 reviews
-# ✓ Synthesis saved: .ace-taskflow/v.0.8.0/reviews/synthesis-2025-10-03.md
-
-# Example 3: Time-based filter
-ace-review synthesize --since 2025-09-01
-# Output:
-# Synthesizing reviews since 2025-09-01...
-# Found 6 reviews
-# ✓ Synthesis saved: .ace-taskflow/v.0.9.0/reviews/synthesis-2025-10-03.md
-```
-
-**Exit Codes**:
-- `0`: Success
-- `1`: No reviews found
-- `2`: Synthesis generation failed
-
-**See Also**:
-- `ace-review code` - Generate individual reviews
+**Note on Review Synthesis**:
+Synthesis of multiple reviews is handled via workflow instructions (`wfi://synthesize-reviews`), not as a CLI command. This allows for flexible manual analysis of 2-4 review files to identify patterns and systemic issues.
 
 ## Available Presets
 
@@ -427,22 +327,6 @@ ls -la .ace/review/presets/
 
 # Use built-in preset
 ace-review code --preset pr
-```
-
-### Problem: No Reviews Found for Synthesis
-
-**Symptom**: `No reviews found in .ace-taskflow/v.0.9.0/reviews/`
-
-**Solution**:
-```bash
-# First generate some reviews
-ace-review code --preset pr
-
-# Verify reviews directory
-ls -la .ace-taskflow/v.0.9.0/reviews/
-
-# Then synthesize
-ace-review synthesize
 ```
 
 ### Problem: Output Directory Not Found
@@ -478,15 +362,15 @@ echo $GOOGLE_API_KEY
 
 1. **Use Appropriate Presets**: Choose presets that match your review focus (security for security reviews, docs for documentation, etc.)
 
-2. **Regular Synthesis**: Run `ace-review synthesize` weekly to identify patterns and systemic issues early
+2. **Regular Review**: Run `ace-review code --preset pr` before merging pull requests
 
 3. **Custom Presets for Teams**: Create team-specific presets in `.ace/review/presets/` that encode your team's standards and focus areas
 
-4. **Review Before Merging**: Always run `ace-review code --preset pr` before merging pull requests
+4. **Manual Synthesis**: Periodically review 2-4 recent reviews together using `wfi://synthesize-reviews` to identify patterns and systemic issues
 
 5. **Archive Old Reviews**: Reviews are stored per-release, making it easy to see quality evolution over time
 
-6. **Actionable Findings**: Convert synthesis findings into tasks using `ace-taskflow task draft`
+6. **Actionable Findings**: Convert review findings into tasks using `ace-taskflow task draft`
 
 ## Migration Notes
 
@@ -496,8 +380,8 @@ This package replaces the previous `code-review` commands from `dev-tools`.
 
 | Old Command | New Command | Notes |
 |-------------|-------------|-------|
-| `code-review` | `ace-review code` | Same functionality, new name |
-| `code-review-synthesize` | `ace-review synthesize` | Same functionality, new name |
+| `code-review` | `ace-review code` | Direct replacement |
+| `code-review-synthesize` | `wfi://synthesize-reviews` | Workflow only, no CLI |
 | `code-review --preset pr` | `ace-review code --preset pr` | Preset system unchanged |
 
 ### Configuration Migration
@@ -523,7 +407,7 @@ cp .coding-agent/code-review.yml .ace/review/code.yml
 
 # 3. Update workflow files to use new commands
 # Replace 'code-review' with 'ace-review code'
-# Replace 'code-review-synthesize' with 'ace-review synthesize'
+# Synthesis is now via workflow instructions only (no CLI)
 ```
 
 ### Breaking Changes
@@ -531,10 +415,11 @@ cp .coding-agent/code-review.yml .ace/review/code.yml
 1. **No backward compatibility**: Old `code-review` commands will not work after migration
 2. **Configuration location**: Must update config path from `.coding-agent/` to `.ace/review/`
 3. **Storage location**: Reviews now default to `.ace-taskflow/<release>/reviews/` instead of previous location
+4. **Synthesis CLI removed**: `code-review-synthesize` replaced with workflow instructions (`wfi://synthesize-reviews`)
 
 ### What Stays the Same
 
 - Preset structure and format
 - Review output format
 - LLM provider configuration
-- Synthesis algorithm and patterns
+- Core review analysis logic
