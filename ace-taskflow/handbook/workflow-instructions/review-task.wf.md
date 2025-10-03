@@ -22,7 +22,7 @@ Review and update task content without changing its status. This workflow enable
    - **Task Selection:**
      - If specific task provided: Use the provided task path
      - If no task specified: Run `ace-taskflow tasks` to view all tasks
-     - Filter by status if needed: `ace-taskflow tasks --filter status:draft`
+     - Filter by status if needed: `ace-taskflow tasks --status draft`
    - **Load Task Content:**
      - Read the task file from the identified path
      - Note the current status (draft, pending, in_progress, completed)
@@ -155,7 +155,7 @@ Review and update task content without changing its status. This workflow enable
    - **Update Metadata for Tracking:**
      - Add `needs_review: true` to metadata if human input required
      - Remove `needs_review` flag when questions are resolved
-     - This enables filtering: `ace-taskflow tasks --filter needs_review:true`
+     - Find tasks needing review: `ace-taskflow tasks needs-review` (preset)
    - **Preserve Structure:**
      - Maintain existing section organization
      - Keep all metadata fields intact (except needs_review)
@@ -308,12 +308,15 @@ Review and update task content without changing its status. This workflow enable
 ### Finding Tasks Needing Review
 
 ```bash
-# List all tasks requiring human input
-ace-taskflow tasks --filter needs_review:true
+# List all tasks requiring human input (using preset)
+ace-taskflow tasks needs-review
 
-# Filter by status and review needs
-ace-taskflow tasks --filter status:draft,needs_review:true
-ace-taskflow tasks --filter status:pending,needs_review:true
+# Or find by status, then check for needs_review flag manually
+ace-taskflow tasks --status draft
+ace-taskflow tasks --status pending
+
+# Alternative: use grep to find tasks with needs_review flag
+grep -r "needs_review: true" .ace-taskflow/*/t/
 ```
 
 ### Review Workflow Patterns

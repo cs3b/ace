@@ -44,7 +44,7 @@ Create a detailed implementation plan for a task that already has a validated be
 1. **Load and Validate Draft Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `ace-taskflow tasks --filter status:draft` to get draft tasks
+     - If no task specified: Run `ace-taskflow tasks --status draft` to get draft tasks
      - Document the selected task path for reference
    - **Load Task Content:**
      - Read the task file from the identified path

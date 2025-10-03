@@ -1,0 +1,11 @@
+description: "Tasks requiring review (needs_review flag set)"
+type: "tasks"
+context: "current"
+filters:
+  metadata:
+    needs_review: true
+sort:
+  by: "priority"
+  ascending: true
+display:
+  group_by: null

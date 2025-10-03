@@ -75,6 +75,29 @@ module Ace
           end
         end
 
+        # Filter tasks by metadata field
+        # @param tasks [Array<Hash>] Tasks to filter
+        # @param field [String/Symbol] Metadata field name
+        # @param value [Object] Expected value (true/false for boolean fields)
+        # @return [Array<Hash>] Filtered tasks
+        def self.filter_by_metadata(tasks, field, value)
+          return tasks if field.nil?
+
+          field_key = field.to_s
+          tasks.select do |task|
+            metadata = task[:metadata] || {}
+            # Handle both string and symbol keys
+            metadata_value = metadata[field_key] || metadata[field.to_sym]
+
+            # Handle boolean comparisons
+            if value == true || value == false
+              metadata_value == value
+            else
+              metadata_value == value
+            end
+          end
+        end
+
         # Apply multiple filters
         # @param tasks [Array<Hash>] Tasks to filter
         # @param filters [Hash] Filter criteria
@@ -107,6 +130,13 @@ module Ace
           # Apply recent filter
           if filters[:recent_days]
             result = filter_recent(result, filters[:recent_days])
+          end
+
+          # Apply metadata filters
+          if filters[:metadata]
+            filters[:metadata].each do |field, value|
+              result = filter_by_metadata(result, field, value)
+            end
           end
 
           result

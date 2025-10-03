@@ -32,7 +32,7 @@ ace-taskflow tasks --status pending --limit 5
 ```
 
 **Common filter patterns if user specifies:**
-- Tasks needing human input: `ace-taskflow tasks --filter needs_review:true`
+- Tasks needing human input: `ace-taskflow tasks needs-review` (preset)
 - Draft tasks needing clarification: `ace-taskflow tasks --status draft`
 - Pending tasks for implementation review: `ace-taskflow tasks --status pending`
 - Specific task IDs or ranges

@@ -2,5 +2,5 @@
 name: dev-handbook
 type: path
 path: $PROJECT_ROOT_PATH/dev-handbook/workflow-instructions/
-priority: 10
+priority: 1000
 description: "Legacy handbook workflows"
