@@ -31,6 +31,22 @@ reviewed_by: User
   - Synthesis via workflow instructions (wfi://synthesize-reviews)
   - Follow ace-gems.g.md best practices
   - Leverage ace-core for configuration and utilities
+  - **Template System**:
+    - Directory structure: `.ace/review/templates/` (base/, format/, focus/, guidelines/)
+    - Template cascade: project → user → gem (built-in)
+    - Migrate from `dev-handbook/templates/review-modules/`
+  - **prompt:// Protocol**:
+    - URI format for template references: `prompt://category/path`
+    - Supports `prompt://`, `file://`, and direct paths
+    - Resolution cascade for flexibility
+  - **Focus Module System**:
+    - Additive composition: Base + Format + Focus(1..n) + Guidelines
+    - Built-in modules: architecture/atom, languages/ruby, quality/security, etc.
+    - Multiple focus modules can be combined per preset
+    - Custom team templates in `.ace/review/templates/focus/team/`
+  - **Molecules to Implement**:
+    - PromptResolver: Resolves prompt:// URIs with cascade lookup
+    - PromptComposer: Composes final prompt from modules
 - **Resolved by**: User
 - **Date**: 2025-10-03
 
@@ -119,6 +135,29 @@ reviewed_by: User
   - Support same preset structure as current `.coding-agent/code-review.yml`
   - Load presets from both main config and preset directory
   - Preset directory files override main config presets if same name
+  - **Example Configuration with Focus Modules**:
+    ```yaml
+    presets:
+      security:
+        prompt_composition:
+          base: "prompt://base/system"
+          format: "prompt://format/detailed"
+          focus:
+            - "prompt://focus/quality/security"
+          guidelines:
+            - "prompt://guidelines/tone"
+            - "prompt://guidelines/icons"
+
+      ruby-atom:
+        prompt_composition:
+          base: "prompt://base/system"
+          format: "prompt://format/standard"
+          focus:
+            - "prompt://focus/architecture/atom"
+            - "prompt://focus/languages/ruby"
+          guidelines:
+            - "prompt://guidelines/tone"
+    ```
 - **Resolved by**: User
 - **Date**: 2025-10-03
 
@@ -244,6 +283,18 @@ New package: **ace-review** (Ruby gem)
 - Preset directory: `.ace/review/presets/`
 - Example presets migrated from `.coding-agent/code-review.yml`
 - Support for custom user presets
+
+#### Template System
+- Built-in templates in gem: `lib/ace/review/templates/`
+  - `base/` - Core system prompts (system.md, sections.md)
+  - `format/` - Output styles (standard.md, detailed.md, compact.md)
+  - `focus/` - Review focus modules (architecture/atom, languages/ruby, quality/security, etc.)
+  - `guidelines/` - Style guidelines (tone.md, icons.md)
+- Template cascade for overrides: project (`.ace/review/templates/`) → user (`~/.ace/review/templates/`) → gem
+- Migrate from `dev-handbook/templates/review-modules/`
+- PromptResolver molecule: Resolves `prompt://` URIs
+- PromptComposer molecule: Composes prompts from modules
+- Support for `prompt://`, `file://`, and direct path references
 
 #### CLI Interface
 - `ace-review code [--preset <name>] [--output-dir <path>]`

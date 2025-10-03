@@ -181,16 +181,31 @@ presets:
   pr:
     description: "Pull request review"
     prompt_composition:
-      base: "system"
-      format: "standard"
+      base: "prompt://base/system"
+      format: "prompt://format/standard"
       guidelines:
-        - "tone"
-        - "icons"
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
     context: "project"
     subject:
       commands:
         - git diff origin/main...HEAD
         - git log origin/main..HEAD --oneline
+
+  security:
+    description: "Security-focused review"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/detailed"
+      focus:
+        - "prompt://focus/quality/security"
+      guidelines:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    context: "project"
+    subject:
+      commands:
+        - git diff HEAD~5..HEAD
 ```
 
 ### Custom Presets
@@ -201,14 +216,15 @@ Create individual preset files in `.ace/review/presets/`:
 # .ace/review/presets/my-team-review.yml
 description: "Team-specific review criteria"
 prompt_composition:
-  base: "system"
-  format: "detailed"
+  base: "prompt://base/system"
+  format: "prompt://format/detailed"
   focus:
-    - "quality/performance"
-    - "architecture/patterns"
+    - "prompt://focus/quality/performance"
+    - "prompt://focus/architecture/atom"
+    - "prompt://project/focus/team/standards"
   guidelines:
-    - "tone"
-    - "icons"
+    - "prompt://guidelines/tone"
+    - "prompt://guidelines/icons"
 context:
   files:
     - docs/team-guidelines.md
@@ -299,6 +315,108 @@ Built-in presets (from `.ace/review/code.yml`):
 | `test` | Test quality | Test coverage and quality |
 | `agents` | Agent definitions | Agent file reviews |
 
+## Focus Modules
+
+Focus modules allow you to add specific review criteria to the base review prompt. Multiple focus modules can be combined for comprehensive reviews.
+
+### Built-in Focus Areas
+
+| Category | Module | Focus |
+|----------|--------|-------|
+| Architecture | `architecture/atom` | ATOM pattern compliance |
+| Languages | `languages/ruby` | Ruby best practices |
+| Frameworks | `frameworks/rails` | Rails conventions |
+| Frameworks | `frameworks/vue-firebase` | Vue.js + Firebase patterns |
+| Quality | `quality/security` | Security vulnerabilities |
+| Quality | `quality/performance` | Performance optimization |
+| Scope | `scope/tests` | Test quality & coverage |
+| Scope | `scope/docs` | Documentation completeness |
+
+### Combining Focus Modules
+
+```bash
+# Security + Ruby language focus
+ace-review code --preset security
+
+# Architecture + Language focus (custom preset)
+# In .ace/review/code.yml:
+presets:
+  ruby-atom:
+    prompt_composition:
+      base: "prompt://base/system"
+      focus:
+        - "prompt://focus/architecture/atom"
+        - "prompt://focus/languages/ruby"
+```
+
+### Custom Focus Modules
+
+Create custom focus modules for team-specific standards:
+
+1. **Create template file**:
+   ```
+   .ace/review/templates/focus/team/standards.md
+   ```
+
+2. **Write focus criteria**:
+   ```markdown
+   # Team Standards Focus
+
+   ## Naming Conventions
+   - Use descriptive variable names
+   - Follow team prefixing rules
+
+   ## Code Organization
+   - Group related functions
+   - Maximum 200 lines per file
+   ```
+
+3. **Reference in preset**:
+   ```yaml
+   presets:
+     team-review:
+       prompt_composition:
+         base: "prompt://base/system"
+         focus:
+           - "prompt://focus/architecture/atom"
+           - "prompt://project/focus/team/standards"
+   ```
+
+### Template Override
+
+Override built-in templates by placing files in:
+- Project: `./.ace/review/templates/`
+- User: `~/.ace/review/templates/`
+
+Example - override security focus:
+```
+.ace/review/templates/focus/quality/security.md
+```
+
+The project/user version will be used instead of the gem's built-in version.
+
+### prompt:// Protocol
+
+Reference templates using URI syntax:
+
+```yaml
+prompt_composition:
+  base: "prompt://base/system"              # Built-in
+  base: "prompt://project/base/custom"      # Force project lookup
+  base: "file://./my-prompt.md"             # Direct file path
+
+  focus:
+    - "prompt://focus/quality/security"     # Cascade lookup
+    - "prompt://project/focus/team-rules"   # Project only
+    - "file://./custom-focus.md"            # Direct file
+```
+
+**Resolution Order**:
+1. `prompt://` - searches project → user → gem
+2. `prompt://project/` - project only
+3. `prompt://gem/` - gem built-in only
+4. `file://` - direct file path
+
 ## Troubleshooting
 
 ### Problem: Preset Not Found
@@ -359,6 +477,10 @@ echo $GOOGLE_API_KEY
 5. **Archive Old Reviews**: Reviews are stored per-release, making it easy to see quality evolution over time
 
 6. **Actionable Findings**: Convert review findings into tasks using `ace-taskflow task draft`
+
+7. **Use Appropriate Focus**: Combine focus modules for comprehensive reviews (e.g., `security` + `architecture/atom` + `languages/ruby`)
+
+8. **Create Team Templates**: Build shared focus modules in `.ace/review/templates/focus/team/` for consistent standards across your team
 
 ## Migration Notes
 
