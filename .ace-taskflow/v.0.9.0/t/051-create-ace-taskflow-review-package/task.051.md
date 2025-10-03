@@ -2,101 +2,123 @@
 id: v.0.9.0+task.051
 status: draft
 priority: high
-estimate: TBD
+estimate: 6-8h
 dependencies: []
-needs_review: true
+review_completed: 2025-10-03
+reviewed_by: User
 ---
 
-# Create ace-taskflow-review package
+# Create ace-review package
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
-### [HIGH] Package Structure & Integration Strategy
+### ✅ [RESOLVED] Package Structure & Integration Strategy
 
-- [ ] **Should ace-taskflow-review be a separate gem or integrated into ace-taskflow core?**
-  - **Research conducted**:
-    - Examined ace-git-commit (standalone gem with own CLI)
-    - Reviewed ace-taskflow CLI structure (subcommands: idea, task, release, retro)
-    - Current code-review tools in dev-tools/ are standalone executables
-  - **Pattern analysis**:
-    - ace-git-commit: Standalone gem with `ace-git-commit` CLI
-    - ace-taskflow: Single gem with subcommands via `ace-taskflow <subcommand>`
-  - **Two viable approaches**:
-    1. **Separate gem**: `ace-review` with `ace-review code` / `ace-review synthesize` commands
-    2. **Integrated subcommand**: Extend ace-taskflow with `ace-taskflow review code` / `ace-taskflow review synthesize`
-  - **Why needs human input**:
-    - Architectural decision affecting installation, versioning, and user experience
-    - Task description mentions "ace-taskflow-review package" but also "ace-taskflow review" namespace
-    - Need clarity on whether reviews are core to task management or separate concern
+**Original Priority**: HIGH
 
-- [ ] **Where should code reviews be stored by default?**
-  - **Research conducted**:
-    - Found `.ace-taskflow/v.X.X.X/docs/` directory structure in current releases
-    - Completed releases have `/docs/` directories with various markdown files
-    - Config supports release-based organization (v.0.9.0 structure)
-  - **Suggested default**: `.ace-taskflow/<release>/docs/reviews/` for release-specific reviews
-  - **Alternative options**:
-    - `.ace-taskflow/<release>/reviews/` (top-level in release)
-    - `.ace-taskflow/reviews/<release>/` (reviews-first organization)
-    - Configurable via `.ace/review/config.yml`
-  - **Why needs human input**: Storage pattern affects discoverability and integration with other ace-taskflow features
+#### Should ace-taskflow-review be a separate gem or integrated into ace-taskflow core?
 
-### [MEDIUM] Migration Strategy
+- **Decision**: Separate gem named `ace-review` with `ace-review code` and `ace-review synthesize` commands
+- **Rationale**:
+  - Reviews are a distinct concern from task management
+  - Separate gem allows independent versioning and installation
+  - Follows pattern of other standalone ace-* tools
+  - Cleaner separation of concerns
+- **Implementation Notes**:
+  - Create new gem: `ace-review`
+  - CLI commands: `ace-review code`, `ace-review synthesize`
+  - Follow ace-gems.g.md best practices
+  - Leverage ace-core for configuration and utilities
+- **Resolved by**: User
+- **Date**: 2025-10-03
 
-- [ ] **Should existing dev-tools code-review implementation be migrated or wrapped?**
-  - **Research conducted**:
-    - Current implementation in `dev-tools/lib/coding_agent_tools/` with full ATOM architecture
-    - Executables: `dev-tools/exe/code-review` and `dev-tools/exe/code-review-synthesize`
-    - Implementation includes: ReviewManager organism, preset system, LLM integration
-  - **Migration options**:
-    1. **Full migration**: Move all code to new gem, update imports, deprecate dev-tools version
-    2. **Wrapper approach**: New gem delegates to existing dev-tools implementation
-    3. **Incremental**: Start with wrapper, migrate incrementally
-  - **Suggested default**: Wrapper approach initially for faster delivery
-  - **Why needs human input**: Affects development effort, timeline, and backward compatibility
+#### Where should code reviews be stored by default?
 
-- [ ] **How should we handle backward compatibility with existing code-review commands?**
-  - **Research conducted**:
-    - Current commands: `code-review`, `code-review-synthesize` in dev-tools/exe/
-    - Workflow files reference these commands directly
-    - No version constraints found in workflow documentation
-  - **Suggested default**:
-    - Keep existing commands working via symlinks or PATH priority
-    - Add deprecation notices recommending new ace-review/ace-taskflow commands
-    - Document migration path in CHANGELOG
-  - **Why needs human input**: User migration strategy and deprecation timeline decision
+- **Decision**: `.ace-taskflow/<release>/reviews/` (top-level in release), configurable via config file or CLI argument
+- **Rationale**:
+  - Top-level in release provides clear visibility
+  - Supports both configuration file and runtime override
+  - Integrates with existing release structure
+- **Implementation Notes**:
+  - Default path: `.ace-taskflow/<current-release>/reviews/`
+  - Config option in `.ace/review/code.yml`
+  - CLI flag: `--output-dir` or similar for override
+- **Resolved by**: User
+- **Date**: 2025-10-03
 
-### [MEDIUM] Feature Scope & Interface
+### ✅ [RESOLVED] Migration Strategy
 
-- [ ] **Should review commands support task-specific reviews out of the box?**
-  - **Research conducted**:
-    - Interface contract mentions: `ace-taskflow review task <task-id>`
-    - Would require integration with ace-taskflow task file parsing
-    - Need to extract file changes associated with specific task
-  - **Implementation considerations**:
-    - Tasks don't currently track associated file changes
-    - Would need git history analysis or manual file specification
-    - Could use task branch naming convention (if exists)
-  - **Suggested default**: Start without task-specific reviews, add in v2
-  - **Why needs human input**: Feature complexity vs initial release scope trade-off
+**Original Priority**: MEDIUM
 
-- [ ] **What configuration should be exposed for review storage location?**
-  - **Research conducted**:
-    - ace-core provides configuration cascade (.ace/ directories)
-    - ace-taskflow has extensive config in `.ace/taskflow/config.yml`
-    - Other ace-* gems use `.ace/<gem-name>/config.yml` pattern
-  - **Suggested configuration structure**:
-    ```yaml
-    review:
-      storage:
-        strategy: "release-based"  # or "time-based", "feature-based"
-        base_path: ".ace-taskflow/%{release}/docs/reviews"
-        auto_organize: true
-      defaults:
-        model: "google:gemini-2.5-flash"
-        preset: "pr"
-    ```
-  - **Why needs human input**: Balance between flexibility and simplicity
+#### Should existing dev-tools code-review implementation be migrated or wrapped?
+
+- **Decision**: Full migration - copy and adjust files from dev-tools implementation
+- **Rationale**:
+  - New architecture leverages ace-core capabilities
+  - Clean slate allows following ace-gems.g.md best practices
+  - Most files can be copied and adjusted for new structure
+  - Provides opportunity to improve implementation
+- **Implementation Notes**:
+  - Copy implementation from `dev-tools/lib/coding_agent_tools/`
+  - Adapt to use ace-core utilities and configuration
+  - Follow ATOM architecture pattern (atoms, molecules, organisms, models)
+  - Update imports and dependencies to use ace-core
+  - Maintain preset system and LLM integration
+- **Resolved by**: User
+- **Date**: 2025-10-03
+
+#### How should we handle backward compatibility with existing code-review commands?
+
+- **Decision**: No backward compatibility - direct replacement
+- **Rationale**:
+  - Clean break simplifies codebase
+  - Clear migration path for users
+  - Avoids maintaining duplicate functionality
+- **Implementation Notes**:
+  - Replace `code-review` with `ace-review code`
+  - Replace `code-review-synthesize` with `ace-review synthesize`
+  - Update all workflow files to use new commands
+  - Document migration in CHANGELOG and README
+- **Resolved by**: User
+- **Date**: 2025-10-03
+
+### ✅ [RESOLVED] Feature Scope & Interface
+
+**Original Priority**: MEDIUM
+
+#### Should review commands support task-specific reviews out of the box?
+
+- **Decision**: No - use preset system for flexibility (like current code-review)
+- **Rationale**:
+  - Preset system already provides flexible configuration
+  - Can create presets for different review scenarios
+  - Avoids complexity of task file integration
+  - Users can customize reviews via presets
+- **Implementation Notes**:
+  - Maintain robust preset system from current implementation
+  - Support preset customization and extension
+  - Document how to create custom presets for specific needs
+  - Focus on making preset system powerful and flexible
+- **Resolved by**: User
+- **Date**: 2025-10-03
+
+#### What configuration should be exposed for review storage location?
+
+- **Decision**: Main config at `.ace/review/code.yml` with separate preset files at `.ace/review/presets/preset-name.yml`
+- **Rationale**:
+  - Follows existing pattern from `.coding-agent/code-review.yml`
+  - Separate preset files allow modular configuration
+  - Users can add custom presets without modifying main config
+  - Supports preset sharing and reuse
+- **Implementation Notes**:
+  - Main configuration file: `.ace/review/code.yml`
+  - Preset directory: `.ace/review/presets/`
+  - Individual presets: `.ace/review/presets/{preset-name}.yml`
+  - Support same preset structure as current `.coding-agent/code-review.yml`
+  - Load presets from both main config and preset directory
+  - Preset directory files override main config presets if same name
+- **Resolved by**: User
+- **Date**: 2025-10-03
 
 ## Behavioral Specification
 
@@ -128,27 +150,23 @@ The workflows integrate with .ace-taskflow structure, storing reviews organized 
 ### Interface Contract
 
 ```bash
-# Review code files or commits
-ace-taskflow review code <path-or-commit> [--type <architecture|quality|security>]
-# Executes: wfi://review-code
-# Analyzes specified code
-# Output: Review document in .ace-taskflow/<release>/docs/reviews/
+# Review code using presets (replaces code-review)
+ace-review code [--preset <preset-name>] [--output-dir <path>]
+# Executes: Code review using specified preset configuration
+# Default preset: "pr" (pull request review)
+# Output: Review document in .ace-taskflow/<release>/reviews/
 
-# Review specific task implementation
-ace-taskflow review task <task-id>
-# Executes: wfi://review-code with task context
-# Reviews code changes for specific task
-# Output: Task-linked review document
-
-# Synthesize multiple reviews
-ace-taskflow review synthesize [--release <version>] [--since <date>]
-# Executes: wfi://synthesize-reviews
-# Reads: .ace-taskflow/<release>/docs/reviews/*.md
+# Synthesize multiple reviews (replaces code-review-synthesize)
+ace-review synthesize [--release <version>] [--since <date>] [--output-dir <path>]
+# Executes: Synthesis of multiple review documents
+# Reads: .ace-taskflow/<release>/reviews/*.md
 # Output: Synthesis document with patterns and recommendations
 
-# List reviews
-ace-taskflow review list [--release <version>]
-# Output: List of reviews with dates and focus areas
+# Configuration:
+# - Main config: .ace/review/code.yml
+# - Presets: .ace/review/presets/{preset-name}.yml
+# - Default storage: .ace-taskflow/<current-release>/reviews/
+# - Override via: --output-dir flag
 ```
 
 **Error Handling:**
@@ -179,49 +197,65 @@ ace-taskflow review list [--release <version>]
 
 ## Objective
 
-Create a dedicated review package (ace-taskflow-review) that enables automated code review and pattern synthesis, supporting code quality improvement and architectural decision-making across releases.
+Create a dedicated review package (ace-review) that enables automated code review and pattern synthesis, supporting code quality improvement and architectural decision-making across releases.
 
 ## Scope of Work
 
 ### Package Structure
-New package: **ace-taskflow-review** (Ruby gem)
-- Location: `dev-tools/ace-taskflow-review/`
-- CLI namespace: `ace-taskflow review`
+New package: **ace-review** (Ruby gem)
+- Location: `dev-tools/ace-review/`
+- CLI commands: `ace-review code`, `ace-review synthesize`
+- Architecture: Follow ATOM pattern (atoms, molecules, organisms, models)
+- Configuration: `.ace/review/code.yml` + `.ace/review/presets/*.yml`
 - Workflows to integrate:
 
-### Workflows to Migrate
-1. **review-code** (ace-taskflow → ace-taskflow-review)
-   - Source: `/Users/mc/Ps/ace-meta/ace-taskflow/handbook/workflow-instructions/review-code.wf.md`
-   - Integration: `ace-taskflow-review` calls wfi://review-code
-   - Command: `ace-taskflow review code`
+### Implementation Source
+1. **Migrate from dev-tools code-review**
+   - Source: `dev-tools/lib/coding_agent_tools/code_review/`
+   - Executables: `dev-tools/exe/code-review`, `dev-tools/exe/code-review-synthesize`
+   - Copy and adapt to ace-review structure
+   - Use ace-core utilities and configuration
 
-2. **synthesize-reviews** (dev-handbook → ace-taskflow-review)
-   - Source: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/synthesize-reviews.wf.md`
-   - Integration: `ace-taskflow-review` calls wfi://synthesize-reviews
-   - Command: `ace-taskflow review synthesize`
+2. **Configuration Migration**
+   - Source: `.coding-agent/code-review.yml`
+   - Target: `.ace/review/code.yml` (main config)
+   - Target: `.ace/review/presets/*.yml` (individual presets)
+   - Maintain preset structure and capabilities
 
 ### Interface Scope
-- CLI commands under `ace-taskflow review` namespace
-- wfi:// protocol integration for workflow delegation
+- CLI commands: `ace-review code`, `ace-review synthesize`
+- Preset-based configuration system
 - Code analysis and pattern detection
 - Review document generation and management
 - Synthesis and pattern recognition logic
-- Task and release context integration
+- Release-based storage integration
+- Configurable output locations
 
 ### Deliverables
 
-#### Behavioral Specifications
-- Code review user experience
-- Analysis criteria and patterns
-- Synthesis algorithm behavior
-- Integration with ace-taskflow core
+#### Gem Package
+- `ace-review` gem following ace-gems.g.md best practices
+- ATOM architecture (atoms, molecules, organisms, models)
+- ace-core integration for configuration and utilities
+- Executables: `ace-review` with `code` and `synthesize` subcommands
 
-#### Package Structure
-- Ruby gem structure with CLI interface
-- Workflow integration layer
-- Code analysis framework
-- Configuration management
-- Documentation and examples
+#### Configuration System
+- Main config: `.ace/review/code.yml`
+- Preset directory: `.ace/review/presets/`
+- Example presets migrated from `.coding-agent/code-review.yml`
+- Support for custom user presets
+
+#### CLI Interface
+- `ace-review code [--preset <name>] [--output-dir <path>]`
+- `ace-review synthesize [--release <version>] [--output-dir <path>]`
+- Preset-based review execution
+- Configurable output locations
+
+#### Migration
+- Update workflow files to use new commands
+- Migrate existing presets to new structure
+- Update documentation and examples
+- CHANGELOG documenting breaking changes
 
 ## Out of Scope
 
@@ -232,7 +266,56 @@ New package: **ace-taskflow-review** (Ruby gem)
 
 ## References
 
-- Workflow files: `/Users/mc/Ps/ace-meta/ace-taskflow/handbook/workflow-instructions/review-code.wf.md`
-- Workflow files: `/Users/mc/Ps/ace-meta/dev-handbook/workflow-instructions/synthesize-reviews.wf.md`
-- Package pattern: Existing ace-taskflow gem structure
-- Template: `/Users/mc/Ps/ace-meta/ace-taskflow/handbook/workflow-instructions/draft-task.wf.md`
+- Source implementation: `dev-tools/lib/coding_agent_tools/code_review/`
+- Current executables: `dev-tools/exe/code-review`, `dev-tools/exe/code-review-synthesize`
+- Current config: `.coding-agent/code-review.yml`
+- Gem development guide: `docs/ace-gems.g.md`
+- Architecture guide: `docs/architecture.md`
+- ace-core documentation: `dev-tools/ace-core/README.md`
+
+---
+
+## Review Completion Summary
+
+**Date**: 2025-10-03
+**Reviewed by**: User
+**Questions Resolved**: 6 (2 HIGH, 4 MEDIUM)
+**Implementation Readiness**: ✅ Ready for implementation
+
+### Key Decisions Made
+
+1. **Package Architecture**: Separate gem `ace-review` with standalone CLI
+2. **Storage Location**: `.ace-taskflow/<release>/reviews/` with config/CLI override support
+3. **Migration Strategy**: Full migration from dev-tools, leveraging ace-core
+4. **Backward Compatibility**: None - direct command replacement
+5. **Feature Scope**: Preset-based system (no task-specific reviews initially)
+6. **Configuration**: Main config at `.ace/review/code.yml` + preset directory `.ace/review/presets/`
+
+### Implementation Guidance
+
+- Follow ace-gems.g.md best practices
+- Use ATOM architecture pattern
+- Leverage ace-core for configuration cascade and utilities
+- Copy and adapt existing dev-tools implementation
+- Maintain robust preset system for flexibility
+- Default storage: `.ace-taskflow/<current-release>/reviews/`
+- Support both config file and CLI argument overrides
+
+### Updated Commands
+
+| Old Command | New Command |
+|------------|-------------|
+| `code-review` | `ace-review code` |
+| `code-review-synthesize` | `ace-review synthesize` |
+
+### Configuration Structure
+
+```
+.ace/
+└── review/
+    ├── code.yml              # Main configuration
+    └── presets/              # Custom preset directory
+        ├── pr.yml
+        ├── security.yml
+        └── custom.yml
+```
