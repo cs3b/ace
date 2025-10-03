@@ -20,21 +20,23 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 ## Process Steps
 
 1. **Find Next Task Needing Review:**
-   
+
    ```bash
-   # List all tasks requiring review
-   ace-taskflow tasks --filter needs_review:true
-   
-   # Filter by specific status if needed
-   ace-taskflow tasks --filter status:draft,needs_review:true
-   ace-taskflow tasks --filter status:pending,needs_review:true
+   # List tasks by status (needs_review is a metadata field, not a filter)
+   ace-taskflow tasks --status draft
+   ace-taskflow tasks --status pending
+
+   # You'll need to check task files manually for needs_review: true flag
+   # Or use grep to find tasks with the flag:
+   grep -r "needs_review: true" .ace-taskflow/*/t/
    ```
-   
+
    **Selection Strategy:**
    - Prioritize HIGH priority tasks first
    - Within same priority, select oldest tasks
    - Consider task dependencies (review prerequisites first)
    - Note the task path for loading
+   - **Note**: `needs_review` is a task metadata field that must be checked by reading task files
 
 2. **Load and Analyze Task Questions:**
    
@@ -226,9 +228,9 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
    
    **For Multiple Tasks:**
    ```bash
-   # Generate review queue
-   ace-taskflow tasks --filter needs_review:true > review-queue.txt
-   
+   # Generate review queue (find tasks with needs_review flag)
+   grep -r "needs_review: true" .ace-taskflow/*/t/ | cut -d: -f1 > review-queue.txt
+
    # Process each task systematically
    for task in $(cat review-queue.txt); do
      echo "Reviewing: $task"
@@ -325,7 +327,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 ### Common Issues:
 
 **"No tasks need review"**
-- Run `ace-taskflow tasks --filter needs_review:true`
+- Run `ace-taskflow tasks needs-review` (preset) or `grep -r "needs_review: true" .ace-taskflow/*/t/`
 - Check if reviews were already completed
 - Look for tasks with questions but missing flag
 
