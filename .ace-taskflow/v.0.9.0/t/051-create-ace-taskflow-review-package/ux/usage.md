@@ -15,18 +15,6 @@
 
 **Note**: Review synthesis is handled via workflow instructions (`wfi://synthesize-reviews`), not as a CLI command.
 
-## Installation
-
-```bash
-# Install as part of dev-tools (once implemented)
-cd dev-tools/ace-review
-bundle install
-bundle exec rake install
-
-# Verify installation
-ace-review --help
-```
-
 ## Quick Start (5 minutes)
 
 Get started with a basic pull request review:
