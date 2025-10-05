@@ -1,6 +1,6 @@
 # ace-review
 
-Automated code review tool for the ACE framework. Provides preset-based code analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
+Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
 ## Features
 
@@ -30,19 +30,19 @@ gem install ace-review
 
 ```bash
 # Review pull request changes (default)
-ace-review code
+ace-review
 
 # Security-focused review
-ace-review code --preset security
+ace-review --preset security
 
 # List available presets
-ace-review code --list-presets
+ace-review --list-presets
 
 # List available prompt modules
-ace-review code --list-prompts
+ace-review --list-prompts
 
 # Execute review with LLM automatically
-ace-review code --preset pr --auto-execute
+ace-review --preset pr --auto-execute
 ```
 
 ## Configuration
@@ -155,10 +155,10 @@ Available focus modules:
 
 ## CLI Reference
 
-### ace-review code
+### ace-review
 
 ```bash
-ace-review code [options]
+ace-review [options]
 ```
 
 Options:
@@ -185,7 +185,7 @@ This gem replaces the previous `code-review` commands:
 
 | Old Command | New Command |
 |-------------|-------------|
-| `code-review` | `ace-review code` |
+| `code-review` | `ace-review` |
 | `code-review-synthesize` | Use workflow: `wfi://synthesize-reviews` |
 
 ### Migration Steps
@@ -201,7 +201,7 @@ This gem replaces the previous `code-review` commands:
    ```
 
 3. **Update workflow files**
-   - Replace `code-review` with `ace-review code`
+   - Replace `code-review` with `ace-review`
    - Remove `code-review-synthesize` CLI usage
 
 ## Architecture
@@ -223,7 +223,7 @@ bundle install
 bundle exec rake test
 
 # Run with local changes
-bundle exec exe/ace-review code --list-presets
+bundle exec exe/ace-review --list-presets
 
 # Console for debugging
 bundle exec rake console

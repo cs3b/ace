@@ -8,10 +8,9 @@ require "rainbow"
 module Ace
   module Review
     module CLI
-      module Commands
-        # Code review command
-        class Code < Dry::CLI::Command
-          desc "Execute code review using presets or custom configuration"
+      # Main review command
+      class Command < Dry::CLI::Command
+        desc "Execute review using presets or custom configuration"
 
           option :preset, type: :string, default: "pr",
                           desc: "Review preset from configuration"
@@ -215,4 +214,3 @@ module Ace
       end
     end
   end
-end

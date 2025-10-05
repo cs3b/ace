@@ -5,6 +5,27 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-10-05
+
+### Changed
+
+- **BREAKING**: Simplified CLI interface from `ace-review code` to just `ace-review`
+- Tool is now more universal - presets determine what type of review (code, docs, security, etc.)
+- Cleaner, more intuitive command structure
+- Migration from v0.8 legacy code-review system
+
+### Migration
+
+Update all commands from:
+```bash
+ace-review code --preset pr
+```
+
+To:
+```bash
+ace-review --preset pr
+```
+
 ## [0.1.0] - 2025-10-05
 
 ### Added
