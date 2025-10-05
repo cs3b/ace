@@ -4,7 +4,71 @@ status: draft
 priority: high
 estimate: TBD
 dependencies: []
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+
+- [ ] **Package Boundary and Legacy Migration**: Should ace-handbook replace the existing `handbook` CLI in dev-tools/exe/handbook completely, or coexist during transition?
+  - **Research conducted**: Found existing handbook CLI with sync-templates and claude commands in dev-tools/
+  - **Current implementation**: dev-tools/exe/handbook provides sync-templates, claude generate-commands, integrate, validate, list, update-registry
+  - **Suggested approach**: Create ace-handbook as new gem, then migrate existing commands with deprecation warnings
+  - **Why needs human input**: Migration strategy affects user experience and development workflow continuity
+
+- [ ] **CLI Namespace Collision**: How to handle the namespace conflict between existing `handbook` command and proposed `ace-handbook` command?
+  - **Research conducted**: Analyzed ace-* gem naming pattern (ace-taskflow, ace-nav, ace-llm)
+  - **Current pattern**: All ace-* gems use hyphenated names (ace-taskflow not taskflow)
+  - **Suggested approach**: Use `ace-handbook` as CLI name to follow established pattern
+  - **Why needs human input**: User experience consistency vs. command brevity trade-off
+
+- [ ] **Workflow Integration Architecture**: Should the ace-handbook gem invoke wfi:// workflows directly through ace-nav, or embed/duplicate the workflow logic?
+  - **Research conducted**: Examined wfi:// protocol in ace-nav, workflow locations in dev-handbook/.meta/wfi/
+  - **Current architecture**: ace-nav provides wfi:// protocol for workflow discovery and execution
+  - **Suggested approach**: Use ace-nav wfi:// integration to maintain single source of truth for workflows
+  - **Why needs human input**: Performance vs. maintainability trade-off for workflow execution
+
+### [MEDIUM] Architecture Questions
+
+- [ ] **Template Storage Strategy**: Where should handbook artifact templates be stored - within ace-handbook gem or remain in dev-handbook/?
+  - **Research conducted**: Found ADR-002 XML template embedding, dev-handbook/templates/ structure
+  - **Current pattern**: Templates stored in dev-handbook/templates/ with XML embedding in workflows
+  - **Suggested approach**: Keep templates in dev-handbook/, ace-handbook references them via ace-nav
+  - **Why needs human input**: Packaging vs. central template management trade-off
+
+- [ ] **Configuration Approach**: Should ace-handbook use ace-core configuration cascade or have its own config structure?
+  - **Research conducted**: Analyzed ace-core configuration system, .ace/ cascade pattern
+  - **Existing pattern**: All ace-* gems use ace-core for configuration management
+  - **Suggested approach**: Follow pattern with .ace/handbook/config.yml structure
+  - **Why needs human input**: Standard configuration location may conflict with existing handbook configurations
+
+### [LOW] Enhancement Questions
+
+- [ ] **Multi-Project Support**: Should ace-handbook support operating on multiple project handbooks from one installation?
+  - **Research conducted**: Examined ace-core project discovery, current handbook structure
+  - **Current behavior**: Tools operate on current project context only
+  - **Suggested approach**: Follow existing pattern, operate on current project only
+  - **Why needs human input**: Feature scope and complexity implications
+
+## Research Findings (2025-10-05)
+
+### Project Context Discovery
+- **ACE Architecture**: Mono-repo of modular ace-* Ruby gems following ATOM pattern (atoms/, molecules/, organisms/, models/)
+- **All Target Workflows Exist**: All 8 meta workflows are present in `/Users/mc/Ps/ace-meta/dev-handbook/.meta/wfi/`
+- **Existing Legacy CLI**: Found active `handbook` CLI in dev-tools/exe/handbook with sync-templates and claude commands
+- **Established Patterns**: ace-* gems follow consistent CLI structure with simple exe/ scripts delegating to lib/ace/*/cli.rb
+
+### Critical Dependencies Identified
+1. **ace-nav Integration**: wfi:// protocol provides workflow discovery and execution
+2. **ace-core Configuration**: Established .ace/ cascade pattern used across all gems
+3. **Template System**: ADR-002 mandates XML template embedding within workflows
+4. **Migration Path**: Need strategy for transitioning from dev-tools/handbook to ace-handbook
+
+### Implementation Readiness Assessment
+- **Ready with assumptions**: Can proceed with ace-handbook gem creation using standard patterns
+- **Blocked on decisions**: CLI naming, legacy migration strategy, and workflow integration approach need clarification
+- **Templates available**: Can use ace-gem creation patterns from docs/ace-gems.g.md
 
 # Create ace-handbook package
 
