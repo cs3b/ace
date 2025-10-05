@@ -353,9 +353,9 @@ presets:
 
 Create custom focus modules for team-specific standards:
 
-1. **Create template file**:
+1. **Create prompt file**:
    ```
-   .ace/review/templates/focus/team/standards.md
+   .ace/review/prompts/focus/team/standards.md
    ```
 
 2. **Write focus criteria**:
@@ -382,40 +382,43 @@ Create custom focus modules for team-specific standards:
            - "prompt://project/focus/team/standards"
    ```
 
-### Template Override
+### Prompt Override
 
-Override built-in templates by placing files in:
-- Project: `./.ace/review/templates/`
-- User: `~/.ace/review/templates/`
+Override built-in prompts by placing files in:
+- Project: `./.ace/review/prompts/`
+- User: `~/.ace/review/prompts/`
 
 Example - override security focus:
 ```
-.ace/review/templates/focus/quality/security.md
+.ace/review/prompts/focus/quality/security.md
 ```
 
 The project/user version will be used instead of the gem's built-in version.
 
 ### prompt:// Protocol
 
-Reference templates using URI syntax:
+Reference prompts using URI syntax or direct file paths:
 
 ```yaml
 prompt_composition:
-  base: "prompt://base/system"              # Built-in
+  base: "prompt://base/system"              # Built-in via protocol
   base: "prompt://project/base/custom"      # Force project lookup
-  base: "file://./my-prompt.md"             # Direct file path
+  base: "./my-prompt.md"                    # Direct file (relative to config)
+  base: "prompts/my-prompt.md"              # Direct file (from project root)
 
   focus:
     - "prompt://focus/quality/security"     # Cascade lookup
     - "prompt://project/focus/team-rules"   # Project only
-    - "file://./custom-focus.md"            # Direct file
+    - "./custom-focus.md"                   # Relative to config file
+    - "prompts/custom-focus.md"             # From project root
 ```
 
 **Resolution Order**:
-1. `prompt://` - searches project → user → gem
-2. `prompt://project/` - project only
-3. `prompt://gem/` - gem built-in only
-4. `file://` - direct file path
+1. `prompt://category/path` - searches project → user → gem
+2. `prompt://project/path` - project only
+3. `prompt://gem/path` - gem built-in only
+4. `./file.md` - relative to config file directory
+5. `file.md` - relative to project root
 
 ## Troubleshooting
 
@@ -480,7 +483,7 @@ echo $GOOGLE_API_KEY
 
 7. **Use Appropriate Focus**: Combine focus modules for comprehensive reviews (e.g., `security` + `architecture/atom` + `languages/ruby`)
 
-8. **Create Team Templates**: Build shared focus modules in `.ace/review/templates/focus/team/` for consistent standards across your team
+8. **Create Team Prompts**: Build shared focus modules in `.ace/review/prompts/focus/team/` for consistent standards across your team
 
 ## Migration Notes
 
