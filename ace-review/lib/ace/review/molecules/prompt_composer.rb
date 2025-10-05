@@ -8,7 +8,7 @@ module Ace
         attr_reader :resolver
 
         def initialize(resolver: nil)
-          @resolver = resolver || PromptResolver.new
+          @resolver = resolver || NavPromptResolver.new
         end
 
         # Compose a full prompt from composition configuration

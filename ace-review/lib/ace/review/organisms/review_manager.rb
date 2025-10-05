@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "time"
+require "yaml"
 
 module Ace
   module Review
@@ -12,45 +13,46 @@ module Ace
                     :subject_extractor, :context_extractor
 
         def initialize
-          @preset_manager = Molecules::PresetManager.new
-          @prompt_resolver = Molecules::PromptResolver.new
-          @prompt_composer = Molecules::PromptComposer.new(@prompt_resolver)
-          @subject_extractor = Molecules::SubjectExtractor.new
-          @context_extractor = Molecules::ContextExtractor.new
+          @preset_manager = Ace::Review::Molecules::PresetManager.new
+          @prompt_resolver = Ace::Review::Molecules::NavPromptResolver.new
+          @prompt_composer = Ace::Review::Molecules::PromptComposer.new(resolver: @prompt_resolver)
+          @subject_extractor = Ace::Review::Molecules::SubjectExtractor.new
+          @context_extractor = Ace::Review::Molecules::ContextExtractor.new
         end
 
         # Execute a code review with the given options
-        # @param options [Hash] review options
+        # @param options [ReviewOptions] review options object
         # @return [Hash] review results
         def execute_review(options)
-          # Resolve preset if specified
-          preset_config = resolve_preset(options)
-          return preset_config unless preset_config[:success]
+          # Convert to ReviewOptions if needed
+          options = ensure_review_options(options)
 
-          config = preset_config[:config]
+          # Step 1: Prepare configuration
+          config_result = prepare_review_config(options)
+          return config_result unless config_result[:success]
 
-          # Extract subject (what to review)
-          subject = extract_subject(config[:subject] || options[:subject])
-          return { success: false, error: "No code to review" } if subject.empty?
+          # Step 2: Extract content
+          content_result = extract_review_content(config_result[:config], options)
+          return content_result unless content_result[:success]
 
-          # Extract context (background info)
-          context = extract_context(config[:context] || options[:context])
+          # Step 3: Compose prompt
+          prompt_result = compose_review_prompt(
+            config_result[:config],
+            content_result[:context],
+            content_result[:subject]
+          )
+          return prompt_result unless prompt_result[:success]
 
-          # Build complete prompt
-          prompt = build_prompt(config, context, subject)
+          # Step 4: Prepare review data structure
+          review_data = build_review_data(
+            options,
+            config_result[:config],
+            content_result,
+            prompt_result[:prompt]
+          )
 
-          # Prepare review data
-          review_data = {
-            preset: options[:preset],
-            config: config,
-            subject: subject,
-            context: context,
-            prompt: prompt,
-            model: config[:model]
-          }
-
-          # Execute with LLM if requested
-          if options[:auto_execute]
+          # Step 5: Execute or prepare session
+          if options.auto_execute
             execute_with_llm(review_data, options)
           else
             prepare_session(review_data, options)
@@ -69,8 +71,15 @@ module Ace
 
         private
 
-        def resolve_preset(options)
-          preset_name = options[:preset] || "pr"
+        # Ensure we have a ReviewOptions object
+        def ensure_review_options(options)
+          return options if options.is_a?(Models::ReviewOptions)
+          Models::ReviewOptions.new(options.is_a?(Hash) ? options : {})
+        end
+
+        # Step 1: Prepare and validate configuration
+        def prepare_review_config(options)
+          preset_name = options.preset || "pr"
 
           unless @preset_manager.preset_exists?(preset_name)
             available = @preset_manager.available_presets.join(", ")
@@ -80,8 +89,65 @@ module Ace
             }
           end
 
-          config = @preset_manager.resolve_preset(preset_name, options)
+          # Resolve preset with options
+          config = @preset_manager.resolve_preset(preset_name, options.to_h)
+
+          # Merge options with config
+          options.merge_config(config)
+
           { success: true, config: config }
+        end
+
+        # Step 2: Extract subject and context
+        def extract_review_content(config, options)
+          # Extract subject (what to review)
+          subject_config = options.subject || config[:subject]
+          subject = extract_subject(subject_config)
+
+          if subject.nil? || subject.empty?
+            return { success: false, error: "No code to review" }
+          end
+
+          # Extract context (background info)
+          context_config = options.context || config[:context]
+          context = extract_context(context_config)
+
+          {
+            success: true,
+            subject: subject,
+            context: context
+          }
+        end
+
+        # Step 3: Compose the review prompt
+        def compose_review_prompt(config, context, subject)
+          # Build prompt composition from options or config
+          composition = config[:prompt_composition] || {}
+
+          prompt = @prompt_composer.build_review_prompt(
+            composition,
+            context,
+            subject,
+            config_dir: File.dirname(@preset_manager.config_path || ".")
+          )
+
+          if prompt.nil? || prompt.empty?
+            return { success: false, error: "Failed to compose prompt" }
+          end
+
+          { success: true, prompt: prompt }
+        end
+
+        # Build the complete review data structure
+        def build_review_data(options, config, content, prompt)
+          {
+            preset: options.preset,
+            config: config,
+            subject: content[:subject],
+            context: content[:context],
+            prompt: prompt,
+            model: options.effective_model(config[:model])
+          }
         end
 
         def extract_subject(subject_config)
@@ -93,18 +159,8 @@ module Ace
           @context_extractor.extract(context_config)
         end
 
-        def build_prompt(config, context, subject)
-          @prompt_composer.build_review_prompt(
-            config[:prompt_composition],
-            context,
-            subject,
-            config_dir: File.dirname(@preset_manager.config_path || ".")
-          )
-        end
-
         def execute_with_llm(review_data, options)
-          require_relative "../molecules/llm_executor"
-          executor = Molecules::LlmExecutor.new
+          executor = Ace::Review::Molecules::LlmExecutor.new
 
           result = executor.execute(
             prompt: review_data[:prompt],
@@ -112,7 +168,7 @@ module Ace
           )
 
           if result[:success]
-            save_review(result[:response], review_data, options)
+            save_review_output(result[:response], review_data, options)
           else
             result
           end
@@ -121,33 +177,35 @@ module Ace
         def prepare_session(review_data, options)
           session_dir = create_session_directory(options)
 
-          # Save prompt
-          prompt_file = File.join(session_dir, "prompt.md")
-          File.write(prompt_file, review_data[:prompt])
-
-          # Save subject
-          subject_file = File.join(session_dir, "subject.md")
-          File.write(subject_file, review_data[:subject])
-
-          # Save context if present
-          unless review_data[:context].empty?
-            context_file = File.join(session_dir, "context.md")
-            File.write(context_file, review_data[:context])
-          end
-
-          # Save metadata
-          metadata_file = File.join(session_dir, "metadata.yml")
-          File.write(metadata_file, YAML.dump(create_metadata(review_data)))
+          # Save all session files
+          save_session_files(session_dir, review_data)
 
           {
             success: true,
             session_dir: session_dir,
-            prompt_file: prompt_file,
+            prompt_file: File.join(session_dir, "prompt.md"),
             message: "Review session prepared in #{session_dir}"
           }
         end
 
-        def save_review(response, review_data, options)
+        def save_session_files(session_dir, review_data)
+          # Save prompt
+          File.write(File.join(session_dir, "prompt.md"), review_data[:prompt])
+
+          # Save subject
+          File.write(File.join(session_dir, "subject.md"), review_data[:subject])
+
+          # Save context if present
+          unless review_data[:context].empty?
+            File.write(File.join(session_dir, "context.md"), review_data[:context])
+          end
+
+          # Save metadata
+          metadata = create_metadata(review_data)
+          File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
+        end
+
+        def save_review_output(response, review_data, options)
           output_file = determine_output_file(options)
           ensure_output_directory(output_file)
 
@@ -164,9 +222,9 @@ module Ace
         end
 
         def create_session_directory(options)
-          if options[:session_dir]
-            FileUtils.mkdir_p(options[:session_dir])
-            return options[:session_dir]
+          if options.session_dir
+            FileUtils.mkdir_p(options.session_dir)
+            return options.session_dir
           end
 
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
@@ -180,9 +238,7 @@ module Ace
         end
 
         def determine_output_file(options)
-          if options[:output]
-            return options[:output]
-          end
+          return options.output if options.output
 
           # Use storage config
           base_path = @preset_manager.review_base_path

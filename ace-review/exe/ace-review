@@ -21,7 +21,6 @@ lib_path = File.expand_path("../lib", __dir__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "ace/review"
-require "ace/review/cli"
 
-# Execute CLI with single command
-Ace::Review::CLI::Command.new.call
+# Run the CLI
+Ace::Review::CLI.new.run(ARGV)
