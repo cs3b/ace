@@ -1,0 +1,132 @@
+# ace-review configuration file
+# This file defines default settings and presets for code reviews
+
+# Default settings applied to all reviews unless overridden
+defaults:
+  model: "google:gemini-2.5-flash"
+  output_format: "markdown"
+  context: "project"
+
+# Storage configuration
+storage:
+  # Where to store review outputs
+  # %{release} will be replaced with current release
+  base_path: ".ace-taskflow/%{release}/reviews"
+  auto_organize: true
+
+# Review presets - predefined configurations for common review scenarios
+presets:
+  # Pull request review - default preset
+  pr:
+    description: "Pull request review - comprehensive code changes review"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/standard"
+      guidelines:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    context: "project"
+    subject:
+      commands:
+        - "git diff origin/main...HEAD"
+        - "git log origin/main..HEAD --oneline"
+
+  # General code quality review
+  code:
+    description: "Code quality review - architecture and conventions"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/detailed"
+      focus:
+        - "prompt://focus/architecture/atom"
+      guidelines:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    context: "project"
+    subject:
+      commands:
+        - "git diff HEAD~3..HEAD"
+
+  # Documentation review
+  docs:
+    description: "Documentation review - completeness and clarity"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/standard"
+      focus:
+        - "prompt://focus/scope/docs"
+      guidelines:
+        - "prompt://guidelines/tone"
+    context:
+      files:
+        - "README.md"
+    subject:
+      files:
+        - "**/*.md"
+
+  # Security-focused review
+  security:
+    description: "Security review - vulnerability and risk analysis"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/detailed"
+      focus:
+        - "prompt://focus/quality/security"
+      guidelines:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    context: "project"
+    subject:
+      commands:
+        - "git diff HEAD~5..HEAD"
+
+  # Performance review
+  performance:
+    description: "Performance review - optimization opportunities"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/detailed"
+      focus:
+        - "prompt://focus/quality/performance"
+      guidelines:
+        - "prompt://guidelines/tone"
+    context: "project"
+    subject:
+      commands:
+        - "git diff HEAD~3..HEAD"
+
+  # Test quality review
+  test:
+    description: "Test review - coverage and quality"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/standard"
+      focus:
+        - "prompt://focus/scope/tests"
+      guidelines:
+        - "prompt://guidelines/tone"
+    context:
+      files:
+        - "test/test_helper.rb"
+    subject:
+      files:
+        - "test/**/*_test.rb"
+        - "spec/**/*_spec.rb"
+
+  # Agent definition review
+  agents:
+    description: "Agent definition review - structure and clarity"
+    prompt_composition:
+      base: "prompt://base/system"
+      format: "prompt://format/detailed"
+      focus:
+        - "prompt://focus/scope/docs"
+      guidelines:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    context:
+      files:
+        - "docs/agents.g.md"
+    subject:
+      files:
+        - "**/*.ag.md"

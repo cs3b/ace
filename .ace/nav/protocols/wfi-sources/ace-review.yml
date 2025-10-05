@@ -1,0 +1,19 @@
+---
+# WFI Sources Protocol Configuration for ace-review gem
+# This enables workflow discovery from the installed ace-review gem
+
+name: ace-review
+type: gem
+description: Code review workflow instructions from ace-review gem
+priority: 10
+
+# Configuration for workflow discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/workflow-instructions)
+  relative_path: handbook/workflow-instructions
+
+  # Pattern for finding workflow files (default: *.wf.md)
+  pattern: "*.wf.md"
+
+  # Enable discovery
+  enabled: true
