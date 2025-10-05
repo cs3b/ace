@@ -1,0 +1,26 @@
+# Ruby ATOM architecture review preset
+# Combines Ruby language best practices with ATOM architecture patterns
+
+description: "Ruby code review with ATOM architecture focus"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/detailed"
+  focus:
+    - "prompt://focus/architecture/atom"
+    - "prompt://focus/languages/ruby"
+  guidelines:
+    - "prompt://guidelines/tone"
+    - "prompt://guidelines/icons"
+
+context:
+  files:
+    - "docs/architecture.md"
+    - "README.md"
+
+subject:
+  commands:
+    - "git diff HEAD~1..HEAD -- '*.rb'"
+    - "git diff HEAD~1..HEAD -- 'lib/**/*.rb'"
+
+model: "google:gemini-2.5-flash"
