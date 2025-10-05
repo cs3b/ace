@@ -7,6 +7,7 @@ gem 'ace-git-commit', path: 'ace-git-commit'
 gem 'ace-llm', path: 'ace-llm'
 gem 'ace-llm-providers-cli', path: 'ace-llm-providers-cli'
 gem 'ace-nav', path: 'ace-nav'
+gem 'ace-review', path: 'ace-review'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
@@ -23,6 +24,7 @@ group :development, :test do
   # TODO: Remove once dev-tools are properly isolated or ace-context handles bundler contexts
   # These are needed for task-manager, release-manager, and other dev-tools executables
   gem 'addressable', '~> 2.8'
+  gem 'bigdecimal', '~> 3.1'
   gem 'csv', '~> 3.0'
   gem 'dotenv', '~> 2.0'
   gem 'dry-cli'
@@ -33,5 +35,4 @@ group :development, :test do
   gem 'kramdown-parser-gfm', '~> 1.0'
   gem 'ostruct', '~> 0.6.1'
   gem 'zeitwerk', '~> 2.6'
-  gem 'bigdecimal', '~> 3.1'
 end

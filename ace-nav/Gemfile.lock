@@ -13,7 +13,7 @@ PATH
 PATH
   remote: .
   specs:
-    ace-nav (0.9.0)
+    ace-nav (0.9.1)
       ace-core (~> 0.1)
 
 GEM

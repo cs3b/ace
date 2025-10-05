@@ -9,7 +9,7 @@ module Ace
     end
 
     def test_version_is_correct
-      assert_equal "0.9.0", ::Ace::Nav::VERSION
+      assert_equal "0.9.1", ::Ace::Nav::VERSION
     end
 
     def test_module_exists

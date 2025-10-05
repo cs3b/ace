@@ -73,6 +73,79 @@ module Ace
           end
         end
 
+        def test_find_resources_with_prefix_pattern
+          # Test the new prefix pattern functionality (pattern ending with /)
+          resource_dir = File.join(@test_dir, "test-resources", "test")
+          FileUtils.mkdir_p(resource_dir)
+
+          # Create resources with common prefixes
+          File.write(File.join(resource_dir, "create-task.test.md"), "# Create Task")
+          File.write(File.join(resource_dir, "create-project.test.md"), "# Create Project")
+          File.write(File.join(resource_dir, "create-user.test.md"), "# Create User")
+          File.write(File.join(resource_dir, "delete-task.test.md"), "# Delete Task")
+          File.write(File.join(resource_dir, "update-task.test.md"), "# Update Task")
+
+          Dir.chdir(@test_dir) do
+            # Find resources with "create" prefix using trailing slash
+            resources = @scanner.find_resources("test", "create/")
+
+            assert_equal 3, resources.length
+            paths = resources.map { |r| r[:relative_path] }
+
+            assert paths.any? { |p| p.include?("create-task") }
+            assert paths.any? { |p| p.include?("create-project") }
+            assert paths.any? { |p| p.include?("create-user") }
+            refute paths.any? { |p| p.include?("delete") }
+            refute paths.any? { |p| p.include?("update") }
+          end
+        end
+
+        def test_find_resources_with_subdirectory_pattern
+          # Test actual subdirectory pattern functionality
+          resource_dir = File.join(@test_dir, "test-resources", "test")
+          subdir = File.join(resource_dir, "admin")
+          FileUtils.mkdir_p(subdir)
+
+          # Create resources in subdirectory
+          File.write(File.join(subdir, "users.test.md"), "# Admin Users")
+          File.write(File.join(subdir, "roles.test.md"), "# Admin Roles")
+          File.write(File.join(resource_dir, "main.test.md"), "# Main")
+
+          Dir.chdir(@test_dir) do
+            # Find resources in admin/ subdirectory
+            resources = @scanner.find_resources("test", "admin/")
+
+            assert_equal 2, resources.length
+            paths = resources.map { |r| r[:relative_path] }
+
+            assert paths.any? { |p| p.include?("admin/users") }
+            assert paths.any? { |p| p.include?("admin/roles") }
+          end
+        end
+
+        def test_find_resources_with_nested_subdirectory_pattern
+          # Test nested subdirectory pattern functionality
+          resource_dir = File.join(@test_dir, "test-resources", "test")
+          nested_dir = File.join(resource_dir, "workflows", "create")
+          FileUtils.mkdir_p(nested_dir)
+
+          # Create resources in nested subdirectory
+          File.write(File.join(nested_dir, "task.test.md"), "# Create Task Workflow")
+          File.write(File.join(nested_dir, "project.test.md"), "# Create Project Workflow")
+          File.write(File.join(resource_dir, "workflows", "delete.test.md"), "# Delete Workflow")
+
+          Dir.chdir(@test_dir) do
+            # Find resources in workflows/create/ subdirectory
+            resources = @scanner.find_resources("test", "workflows/create/")
+
+            assert_equal 2, resources.length
+            paths = resources.map { |r| r[:relative_path] }
+
+            assert paths.any? { |p| p.include?("workflows/create/task") }
+            assert paths.any? { |p| p.include?("workflows/create/project") }
+          end
+        end
+
         def test_find_resources_filters_by_extensions
           # Create resources with different extensions
           resource_dir = File.join(@test_dir, "test-resources", "test")
