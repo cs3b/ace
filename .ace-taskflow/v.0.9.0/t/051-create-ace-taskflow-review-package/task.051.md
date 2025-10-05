@@ -31,19 +31,19 @@ reviewed_by: User
   - Synthesis via workflow instructions (wfi://synthesize-reviews)
   - Follow ace-gems.g.md best practices
   - Leverage ace-core for configuration and utilities
-  - **Template System**:
-    - Directory structure: `.ace/review/templates/` (base/, format/, focus/, guidelines/)
-    - Template cascade: project → user → gem (built-in)
+  - **Prompt System**:
+    - Directory structure: `.ace/review/prompts/` (base/, format/, focus/, guidelines/)
+    - Prompt cascade: project → user → gem (built-in)
     - Migrate from `dev-handbook/templates/review-modules/`
   - **prompt:// Protocol**:
-    - URI format for template references: `prompt://category/path`
-    - Supports `prompt://`, `file://`, and direct paths
+    - URI format for prompt references: `prompt://category/path`
+    - File references: `./file.md` (relative to config) or `file.md` (from project root)
     - Resolution cascade for flexibility
   - **Focus Module System**:
     - Additive composition: Base + Format + Focus(1..n) + Guidelines
     - Built-in modules: architecture/atom, languages/ruby, quality/security, etc.
     - Multiple focus modules can be combined per preset
-    - Custom team templates in `.ace/review/templates/focus/team/`
+    - Custom team prompts in `.ace/review/prompts/focus/team/`
   - **Molecules to Implement**:
     - PromptResolver: Resolves prompt:// URIs with cascade lookup
     - PromptComposer: Composes final prompt from modules
@@ -284,17 +284,17 @@ New package: **ace-review** (Ruby gem)
 - Example presets migrated from `.coding-agent/code-review.yml`
 - Support for custom user presets
 
-#### Template System
-- Built-in templates in gem: `lib/ace/review/templates/`
+#### Prompt System
+- Built-in prompts in gem: `lib/ace/review/prompts/`
   - `base/` - Core system prompts (system.md, sections.md)
   - `format/` - Output styles (standard.md, detailed.md, compact.md)
   - `focus/` - Review focus modules (architecture/atom, languages/ruby, quality/security, etc.)
   - `guidelines/` - Style guidelines (tone.md, icons.md)
-- Template cascade for overrides: project (`.ace/review/templates/`) → user (`~/.ace/review/templates/`) → gem
+- Prompt cascade for overrides: project (`.ace/review/prompts/`) → user (`~/.ace/review/prompts/`) → gem
 - Migrate from `dev-handbook/templates/review-modules/`
-- PromptResolver molecule: Resolves `prompt://` URIs
+- PromptResolver molecule: Resolves `prompt://` URIs and direct file paths
 - PromptComposer molecule: Composes prompts from modules
-- Support for `prompt://`, `file://`, and direct path references
+- File reference support: `./file.md` (relative to config) or `file.md` (from project root)
 
 #### CLI Interface
 - `ace-review code [--preset <name>] [--output-dir <path>]`
