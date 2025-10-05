@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# Specify your gem's dependencies in ace-review.gemspec
+gemspec
+
+# Use local versions of ace gems during development
+gem "ace-core", path: "../ace-core" if File.exist?("../ace-core")
+gem "ace-test-support", path: "../ace-test-support", group: :test if File.exist?("../ace-test-support")
+
+group :development do
+  gem "pry"
+  gem "yard"
+end
+
+group :test do
+  gem "simplecov", require: false
+end
