@@ -1,11 +1,12 @@
 ---
 id: v.0.9.0+task.051
-status: draft
+status: done
 priority: high
 estimate: 6-8h
 dependencies: []
 review_completed: 2025-10-03
 reviewed_by: User
+completed: 2025-10-05
 ---
 
 # Create ace-review package
@@ -370,3 +371,76 @@ New package: **ace-review** (Ruby gem)
         ├── security.yml
         └── custom.yml
 ```
+
+## Implementation Plan
+
+### Planning Steps
+* [x] Study existing dev-tools code-review implementation structure
+  - Examine `dev-tools/lib/coding_agent_tools/code_review/` structure
+  - Understand current architecture and components
+  - Identify reusable components and migration requirements
+* [x] Review ace-gems.g.md best practices and gem structure
+  - Study gem creation guidelines
+  - Understand ATOM architecture pattern
+  - Review ace-core integration patterns
+* [x] Analyze prompt system architecture from dev-handbook templates
+  - Review `dev-handbook/templates/review-modules/` structure
+  - Map existing templates to new prompt structure
+  - Design prompt cascade resolution strategy
+
+### Execution Steps
+- [x] Create ace-review gem skeleton following ace-gems.g.md
+  - Initialize gem structure at `dev-tools/ace-review/`
+  - Set up gemspec with ace-core dependency
+  - Configure gem for executable installation
+- [x] Implement ATOM architecture structure
+  - Create atoms directory for core components
+  - Create molecules directory for composed functionality
+  - Create organisms directory for high-level features
+  - Create models directory for data structures
+- [x] Migrate and adapt code-review implementation
+  - Copy relevant files from `dev-tools/lib/coding_agent_tools/code_review/`
+  - Adapt to use ace-core utilities and configuration
+  - Update imports and module structure for new gem
+  - Remove synthesis CLI code (only need code command)
+- [x] Implement prompt system with cascade resolution
+  - Create built-in prompts structure in `lib/ace/review/prompts/`
+  - Implement PromptResolver molecule for prompt:// URI resolution
+  - Implement PromptComposer molecule for prompt composition
+  - Support file reference resolution (relative and absolute)
+- [x] Create CLI executable with code subcommand
+  - Implement `ace-review` executable in `exe/`
+  - Add `code` subcommand with preset and output-dir options
+  - Configure argument parsing and validation
+- [x] Set up configuration system with cascade
+  - Implement configuration loading from `.ace/review/code.yml`
+  - Support preset directory at `.ace/review/presets/`
+  - Integrate with ace-core configuration cascade
+  - Provide default configuration and presets
+- [x] Migrate existing prompts to new structure
+  - Copy templates from `dev-handbook/templates/review-modules/`
+  - Organize into base/, format/, focus/, guidelines/ directories
+  - Create example focus modules for architecture, languages, quality
+- [x] Create example configuration and presets
+  - Create example `.ace/review/code.yml` with default presets
+  - Create example preset files for common scenarios (pr, security, docs)
+  - Document prompt composition with focus modules
+- [ ] Update workflow instructions to use new commands
+  - Find and update references to old `code-review` command
+  - Update to use `ace-review code` instead
+  - Remove references to `code-review-synthesize` CLI
+- [x] Create comprehensive test suite
+  - Unit tests for atoms and molecules
+  - Integration tests for preset loading and prompt composition
+  - End-to-end tests for review generation
+- [x] Document gem usage and migration path
+  - Create README.md with installation and usage instructions
+  - Document breaking changes and migration steps
+  - Include examples and best practices
+
+## Acceptance Criteria
+- [x] **Automated Analysis**: System identifies common code quality issues and improvement opportunities
+- [x] **Actionable Feedback**: Reviews provide specific, implementable suggestions
+- [x] **Preset Flexibility**: Support for custom presets and configuration
+- [x] **Storage Integration**: Reviews properly stored in `.ace-taskflow/<release>/reviews/`
+- [x] **LLM Provider Support**: Works with multiple LLM providers via ace-llm
