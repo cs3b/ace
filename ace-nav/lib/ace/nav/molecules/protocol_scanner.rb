@@ -70,6 +70,8 @@ module Ace
 
               if has_subdir
                 # Subdirectory exists, list files in it
+                found_subdir_paths = Set.new  # Track paths to avoid duplicates
+
                 if extensions.empty?
                   # Match any file in the subdirectory
                   glob_pattern = File.join(subdir_path, "*")
@@ -78,6 +80,8 @@ module Ace
                   [glob_pattern, glob_pattern_nested].each do |gp|
                     Dir.glob(gp).each do |file_path|
                       next unless File.file?(file_path)
+                      next if found_subdir_paths.include?(file_path)  # Skip duplicates
+                      found_subdir_paths.add(file_path)
                       resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
                     end
                   end
@@ -90,6 +94,8 @@ module Ace
                     [glob_pattern, glob_pattern_nested].each do |gp|
                       Dir.glob(gp).each do |file_path|
                         next unless File.file?(file_path)
+                        next if found_subdir_paths.include?(file_path)  # Skip duplicates
+                        found_subdir_paths.add(file_path)
                         resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
                       end
                     end

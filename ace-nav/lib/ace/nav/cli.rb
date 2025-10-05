@@ -94,6 +94,12 @@ module Ace
           # Protocol-only URI, add wildcard and force list mode
           path_or_uri = "#{path_or_uri}*"
           @options[:list] = true
+        elsif path_or_uri.include?("*") || path_or_uri.include?("?")
+          # Pattern contains wildcards, force list mode
+          @options[:list] = true
+        elsif path_or_uri.match?(/\/$/)
+          # Pattern ends with /, force list mode (subdirectory/prefix pattern)
+          @options[:list] = true
         end
 
         if @options[:create]

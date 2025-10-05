@@ -11,6 +11,10 @@ ace-nav provides unified navigation and path resolution across the ACE ecosystem
 - **Automatic Discovery**: Discovers handbooks bundled in ace-* gems without configuration
 - **URI Resolution**: Resolves resource URIs (wfi://, tmpl://, guide://, sample://, task://)
 - **Override Cascade**: Multi-level overrides with @ prefix for source-specific lookups
+- **Smart Pattern Matching**:
+  - Subdirectory/prefix patterns (e.g., `prompt://guidelines/`)
+  - Wildcard patterns auto-list without `--list` flag
+  - Intelligent detection of multi-result patterns
 - **Fuzzy Matching**: Intelligent autocorrection and partial path matching
 - **Performance**: Fast cached lookups after initial scan (< 100ms)
 - **Simple CLI**: Single command with options, no complex subcommands
@@ -63,12 +67,27 @@ ace-nav tmpl://@ace-test/minitest --create  # Uses ace-test template
 
 ### Resource Discovery
 
+ace-nav intelligently detects patterns that should return multiple results:
+
 ```bash
-# List all resources
+# Automatic list mode (no --list needed!)
+ace-nav prompt://                    # All prompts (protocol-only)
+ace-nav prompt://guidelines/         # All files in guidelines/ directory
+ace-nav "prompt://format/*"          # All files matching pattern
+ace-nav "wfi://create*"              # All workflows starting with 'create'
+
+# Subdirectory and prefix patterns
+ace-nav prompt://focus/               # Lists all focus modules
+ace-nav prompt://focus/quality/       # Lists quality-specific focus modules
+ace-nav wfi://review/                 # Lists all review-related workflows
+
+# Explicit list mode still works
 ace-nav 'wfi://*' --list             # All workflows
 ace-nav 'tmpl://@project/*' --list   # Project template overrides
 ace-nav 'wfi://*test*' --list        # Test-related workflows
 ```
+
+**New in v0.9.1:** Patterns ending with `/` or containing wildcards (`*`, `?`) automatically enable list mode!
 
 ### Task Navigation
 
