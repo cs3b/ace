@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-05T10:40:59+01:00
+---
+
 # Idea
 
 ---
