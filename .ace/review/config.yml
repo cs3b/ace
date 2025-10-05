@@ -1,0 +1,18 @@
+# ace-review configuration file
+# This file defines default settings and presets for code reviews
+
+# Default settings applied to all reviews unless overridden
+defaults:
+  model: "google:gemini-2.5-flash"
+  output_format: "markdown"
+  context: "project"
+
+# Storage configuration
+storage:
+  # Where to store review outputs
+  # %{release} will be replaced with current release
+  base_path: ".ace-taskflow/%{release}/reviews"
+  auto_organize: true
+
+# Review presets - load from .ace/review/presets/*.yml
+# Individual preset files provide better organization and shareability

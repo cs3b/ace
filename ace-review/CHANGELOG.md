@@ -5,6 +5,28 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2025-10-05
+
+### Changed
+
+- **Configuration file renamed**: `code.yml` → `config.yml` for consistency with ace-* naming conventions
+  - Updated all references in code, tests, and documentation
+  - Both `.ace.example/review/config.yml` and `.ace/review/config.yml` now use new name
+- **Preset organization improved**: All presets now stored as individual files
+  - Extracted 7 presets from main config to separate `.yml` files in `review/presets/`
+  - Main `config.yml` now contains only defaults and storage settings
+  - Presets: pr, code, docs, security, performance, test, agents, ruby-atom
+- **Configuration cascade integration**: Removed hardcoded paths in favor of ace-core
+  - `PresetManager` now uses `Ace::Core::Molecules::ConfigFinder` for all file discovery
+  - Automatic cascade resolution across `./.ace → ~/.ace` without hardcoded paths
+  - Preset files discovered automatically across entire configuration cascade
+  - Maintains backward compatibility with fallback for environments without ace-core
+
+### Fixed
+
+- Configuration system now properly respects ace-core's configuration cascade
+- Preset loading works correctly from both local and user config directories
+
 ## [0.9.2] - 2025-10-05
 
 ### Fixed
@@ -88,7 +110,7 @@ ace-review --preset pr
 
 - **BREAKING**: Replaced `code-review` command with `ace-review code`
 - **BREAKING**: Removed `code-review-synthesize` CLI (use `wfi://synthesize-reviews` workflow)
-- **BREAKING**: Configuration moved from `.coding-agent/code-review.yml` to `.ace/review/code.yml`
+- **BREAKING**: Configuration moved from `.coding-agent/code-review.yml` to `.ace/review/config.yml`
 - **BREAKING**: Storage location now defaults to `.ace-taskflow/<release>/reviews/`
 - Preset files now support separate directory at `.ace/review/presets/`
 - Improved preset override system with `--add-focus` option
@@ -99,6 +121,6 @@ ace-review --preset pr
 To migrate from the old code-review system:
 
 1. Install ace-review gem
-2. Copy `.coding-agent/code-review.yml` to `.ace/review/code.yml`
+2. Copy `.coding-agent/code-review.yml` to `.ace/review/config.yml`
 3. Update workflow files to use `ace-review code` instead of `code-review`
 4. Synthesis is now handled via workflow instructions only (no CLI command)

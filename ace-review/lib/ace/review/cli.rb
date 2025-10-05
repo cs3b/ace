@@ -143,7 +143,7 @@ module Ace
         presets = manager.list_presets
         if presets.empty?
           puts "No presets found"
-          puts "Create presets in .ace/review/code.yml or .ace/review/presets/"
+          puts "Create presets in .ace/review/config.yml or .ace/review/presets/"
           return
         end
 

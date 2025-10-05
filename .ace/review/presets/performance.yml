@@ -1,0 +1,17 @@
+# Performance review - optimization opportunities
+
+description: "Performance review - optimization opportunities"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/detailed"
+  focus:
+    - "prompt://focus/quality/performance"
+  guidelines:
+    - "prompt://guidelines/tone"
+
+context: "project"
+
+subject:
+  commands:
+    - "git diff HEAD~3..HEAD"
