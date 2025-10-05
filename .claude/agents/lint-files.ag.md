@@ -1,1 +1,0 @@
-../../dev-handbook/.integrations/claude/agents/lint-files.ag.md
