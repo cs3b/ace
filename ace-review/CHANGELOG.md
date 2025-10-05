@@ -5,6 +5,42 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-10-05
+
+### Fixed
+
+- **Prompt resolution** now works correctly via ace-nav integration
+  - Fixed custom `PromptResolver` that wasn't working properly
+  - Replaced with `NavPromptResolver` using ace-nav's universal resolution
+  - Registered ace-review prompts with ace-nav protocol for proper discovery
+- **Critical command injection vulnerability** in `GitExtractor`
+  - Fixed unsafe string interpolation in git commands
+  - Now uses array arguments with `Open3.capture3(*command_parts)`
+- **Code organization issues**
+  - Fixed overly complex `ReviewManager#execute_review` method
+  - Replaced hash options with proper `ReviewOptions` class
+  - Improved separation of concerns throughout
+
+### Changed
+
+- Refactored `ReviewManager` into clearer, testable steps
+- Dependencies now include `ace-nav ~> 0.9` for proper prompt resolution
+
+## [0.9.1] - 2025-10-05
+
+### Fixed
+
+- Replaced Zeitwerk with explicit requires following ace-gems conventions
+- Fixed all require_relative paths and namespace references
+- Removed unnecessary dependencies (zeitwerk, tty-*, rainbow, dry-cli)
+- Replaced dry-cli with OptionParser for consistency with other ace gems
+- Simplified output formatting to use plain text without external libraries
+
+### Changed
+
+- Minimal dependencies - now only requires ace-core (~> 0.9)
+- CLI implementation now follows standard ace-gems patterns
+
 ## [0.9.0] - 2025-10-05
 
 ### Changed

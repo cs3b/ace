@@ -1,27 +1,18 @@
+File: README.md
+----------------------------------------
 # ace-review
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.2
-
-## Important Fixes in 0.9.2
-
-- **Fixed Prompt Resolution**: Now properly works via ace-nav integration
-- **Security Fix**: Patched critical command injection vulnerability in git operations
-- **Code Quality**: Fixed overly complex methods and improved architecture
-- **Dependencies**: Added ace-nav for proper prompt resolution
-
 ## Features
 
-- **ace-nav integration** - Universal prompt resolution with user overrides via ace-nav protocol
 - **Preset-based reviews** - Predefined configurations for common scenarios (PR, security, docs, etc.)
 - **Flexible prompt composition** - Modular prompts with base, format, focus, and guidelines
-- **Prompt cascade** - Override built-in prompts at project or user level through ace-nav
+- **Prompt cascade** - Override built-in prompts at project or user level
 - **Multiple focus modules** - Combine architecture, language, and quality focuses
 - **Release integration** - Stores reviews in `.ace-taskflow/<release>/reviews/`
 - **LLM provider support** - Works with any provider supported by ace-llm
 - **Custom presets** - Create team-specific review configurations
-- **Secure command execution** - Protected against command injection vulnerabilities
 
 ## Installation
 
@@ -36,11 +27,6 @@ Or install it directly:
 ```bash
 gem install ace-review
 ```
-
-### Dependencies
-
-- `ace-core` (~> 0.9) - Core ACE framework utilities
-- `ace-nav` (~> 0.9) - Universal resource navigation and prompt resolution
 
 ## Quick Start
 
@@ -120,16 +106,10 @@ subject:
 
 ### Prompt Cascade
 
-ace-review uses ace-nav for prompt resolution, enabling universal override capability:
-
-1. **ace-nav resolution** (when available):
-   - Project overrides: `./.ace/review/prompts/`
-   - User overrides: `~/.ace/review/prompts/`
-   - Gem built-in: `handbook/prompts/` within the gem
-
-2. **Fallback resolution** (when ace-nav unavailable):
-   - Direct file path resolution
-   - Relative to configuration file or project root
+Prompts are resolved in this order:
+1. Project: `./.ace/review/prompts/`
+2. User: `~/.ace/review/prompts/`
+3. Built-in: Gem's internal prompts
 
 ### Prompt Structure
 
@@ -231,13 +211,9 @@ This gem replaces the previous `code-review` commands:
 ace-review follows the ATOM architecture pattern:
 
 - **Atoms**: Pure functions (git_extractor, file_reader)
-  - Secure command execution with array-based parameter passing
-- **Molecules**: Composed operations (preset_manager, prompt_composer, nav_prompt_resolver)
-  - Integration with ace-nav for universal prompt resolution
+- **Molecules**: Composed operations (preset_manager, prompt_composer)
 - **Organisms**: Business orchestration (review_manager)
-  - Decomposed into clear, testable steps
-- **Models**: Data structures (review_options)
-  - Clean parameter objects replacing hash options
+- **Models**: Data structures (review_config, preset)
 
 ## Development
 

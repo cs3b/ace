@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "set"
 require_relative "../atoms/gem_resolver"
 require_relative "../atoms/path_normalizer"
 require_relative "../models/handbook_source"
@@ -54,32 +55,138 @@ module Ace
 
           resources = []
 
-          if extensions.empty?
-            # If no extensions specified, match any file
-            glob_pattern = File.join(search_path, "**", pattern)
-            glob_pattern += "*" unless pattern.end_with?("*")
+          # Check if pattern contains directory structure
+          if pattern.include?("/")
+            # Handle subdirectory patterns
+            if pattern.end_with?("/")
+              # Pattern like "base/" has two interpretations:
+              # 1. Files in a subdirectory named "base"
+              # 2. Files that start with "base" prefix
+              prefix = pattern.chomp("/")
 
-            Dir.glob(glob_pattern).each do |file_path|
-              next unless File.file?(file_path)
+              # First, try as a subdirectory
+              subdir_path = File.join(search_path, prefix)
+              has_subdir = Dir.exist?(subdir_path)
 
-              resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+              if has_subdir
+                # Subdirectory exists, list files in it
+                if extensions.empty?
+                  # Match any file in the subdirectory
+                  glob_pattern = File.join(subdir_path, "*")
+                  glob_pattern_nested = File.join(subdir_path, "**", "*")
+
+                  [glob_pattern, glob_pattern_nested].each do |gp|
+                    Dir.glob(gp).each do |file_path|
+                      next unless File.file?(file_path)
+                      resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                    end
+                  end
+                else
+                  # Match files with specified extensions in the subdirectory
+                  extensions.each do |ext|
+                    glob_pattern = File.join(subdir_path, "*#{ext}")
+                    glob_pattern_nested = File.join(subdir_path, "**", "*#{ext}")
+
+                    [glob_pattern, glob_pattern_nested].each do |gp|
+                      Dir.glob(gp).each do |file_path|
+                        next unless File.file?(file_path)
+                        resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                      end
+                    end
+                  end
+                end
+              end
+
+              # Also try as a prefix pattern (files starting with prefix)
+              found_paths = Set.new  # Track paths to avoid duplicates
+
+              if extensions.empty?
+                # Match files starting with prefix
+                glob_patterns = [
+                  File.join(search_path, "#{prefix}*"),
+                  File.join(search_path, "**", "#{prefix}*")
+                ]
+
+                glob_patterns.each do |gp|
+                  Dir.glob(gp).each do |file_path|
+                    next unless File.file?(file_path)
+                    next if found_paths.include?(file_path)  # Skip duplicates
+                    found_paths.add(file_path)
+                    resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                  end
+                end
+              else
+                # Match files with specified extensions starting with prefix
+                extensions.each do |ext|
+                  glob_patterns = [
+                    File.join(search_path, "#{prefix}*#{ext}"),
+                    File.join(search_path, "**", "#{prefix}*#{ext}")
+                  ]
+
+                  glob_patterns.each do |gp|
+                    Dir.glob(gp).each do |file_path|
+                      next unless File.file?(file_path)
+                      next if found_paths.include?(file_path)  # Skip duplicates
+                      found_paths.add(file_path)
+                      resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                    end
+                  end
+                end
+              end
+            else
+              # Pattern like "base/*" or "base/something" - use as-is but handle properly
+              if extensions.empty?
+                glob_pattern = File.join(search_path, pattern)
+                glob_pattern += "*" unless pattern.end_with?("*") || pattern.include?("*")
+
+                Dir.glob(glob_pattern).each do |file_path|
+                  next unless File.file?(file_path)
+                  resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                end
+              else
+                extensions.each do |ext|
+                  if pattern.end_with?(ext)
+                    glob_pattern = File.join(search_path, pattern)
+                  else
+                    glob_pattern = File.join(search_path, "#{pattern}#{ext}")
+                  end
+
+                  Dir.glob(glob_pattern).each do |file_path|
+                    next unless File.file?(file_path)
+                    resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                  end
+                end
+              end
             end
           else
-            # Match files with specified extensions
-            extensions.each do |ext|
-              # Check if pattern already ends with this extension
-              if pattern.end_with?(ext)
-                # Pattern already has extension, search as-is
-                glob_pattern = File.join(search_path, "**", pattern)
-              else
-                # Append extension to pattern
-                glob_pattern = File.join(search_path, "**", "#{pattern}#{ext}")
-              end
+            # Original behavior for patterns without directory structure
+            if extensions.empty?
+              # If no extensions specified, match any file
+              glob_pattern = File.join(search_path, "**", pattern)
+              glob_pattern += "*" unless pattern.end_with?("*")
 
               Dir.glob(glob_pattern).each do |file_path|
                 next unless File.file?(file_path)
 
                 resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+              end
+            else
+              # Match files with specified extensions
+              extensions.each do |ext|
+                # Check if pattern already ends with this extension
+                if pattern.end_with?(ext)
+                  # Pattern already has extension, search as-is
+                  glob_pattern = File.join(search_path, "**", pattern)
+                else
+                  # Append extension to pattern
+                  glob_pattern = File.join(search_path, "**", "#{pattern}#{ext}")
+                end
+
+                Dir.glob(glob_pattern).each do |file_path|
+                  next unless File.file?(file_path)
+
+                  resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+                end
               end
             end
           end

@@ -1,36 +1,51 @@
 # frozen_string_literal: true
 
-require "zeitwerk"
+# Try to load ace-core if available
+begin
+  require "ace/core"
+rescue LoadError
+  # ace-core is optional for basic functionality
+end
+
 require_relative "review/version"
+
+# Require all necessary components explicitly
+require_relative "review/atoms/file_reader"
+require_relative "review/atoms/git_extractor"
+
+require_relative "review/molecules/context_extractor"
+require_relative "review/molecules/llm_executor"
+require_relative "review/molecules/preset_manager"
+require_relative "review/molecules/prompt_composer"
+require_relative "review/molecules/nav_prompt_resolver"
+require_relative "review/molecules/prompt_resolver"  # Keep for backwards compatibility
+require_relative "review/molecules/subject_extractor"
+
+require_relative "review/organisms/review_manager"
+
+require_relative "review/models/review_options"
+
+require_relative "review/cli"
 
 module Ace
   module Review
     class Error < StandardError; end
 
-    class << self
-      # Lazy-load zeitwerk loader
-      def loader
-        @loader ||= begin
-          loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
-          loader.inflector.inflect(
-            "cli" => "CLI",
-            "llm" => "LLM"
-          )
-          loader.setup
-          loader
-        end
-      end
+    # Define module namespaces
+    module Atoms; end
+    module Molecules; end
+    module Organisms; end
+    module Models; end
 
+    class << self
       # Configuration accessor
       def config
         @config ||= begin
-          require "ace/core"
           base_config = Ace::Core.config
           base_config.get("ace", "review") || default_config
+        rescue StandardError
+          default_config
         end
-      rescue LoadError
-        # If ace-core is not available, use defaults
-        default_config
       end
 
       # Default configuration
@@ -103,6 +118,3 @@ module Ace
     end
   end
 end
-
-# Eager load the loader
-Ace::Review.loader
