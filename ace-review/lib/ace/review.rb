@@ -16,7 +16,6 @@ module Ace
             "cli" => "CLI",
             "llm" => "LLM"
           )
-          loader.ignore("#{__dir__}/review/prompts")
           loader.setup
           loader
         end

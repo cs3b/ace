@@ -144,7 +144,7 @@ module Ace
         end
 
         def gem_prompt_dir
-          @gem_prompt_dir ||= File.expand_path("../prompts", __dir__)
+          @gem_prompt_dir ||= File.expand_path("../../../../handbook/prompts", __dir__)
         end
 
         def collect_prompts_from_dir(dir, collection, label)
