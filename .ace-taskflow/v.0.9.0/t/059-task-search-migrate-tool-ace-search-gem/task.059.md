@@ -7,13 +7,13 @@ Migrate the legacy search tool from dev-tools/exe/search to a new ace-search gem
 ### Behavioral Specification
 
 The system should provide a search capability packaged as an ace-search Ruby gem that:
-1. Maintains exact CLI interface compatibility with dev-tools/exe/search
+1. Maintains exact CLI interface compatibility with dev-tools/exe/search (except editor integration)
 2. Follows ACE gem architecture patterns (ATOM structure)
 3. Leverages ace-core for configuration and shared utilities
-4. Provides clean separation between search logic and UI concerns
+4. Provides clean separation between search logic and output concerns
 5. Supports all existing search modes (file, content, hybrid)
-6. Preserves editor integration functionality
-7. Maintains preset and configuration compatibility
+6. Improves file search to match paths and filenames (not just names)
+7. Supports comprehensive configuration defaults and preset system
 
 ### User Experience
 
@@ -21,30 +21,36 @@ Users will continue using the search command with identical syntax and behavior:
 ```bash
 # These commands should work exactly as before
 search "pattern" --type content
-search config --editor nvim
 search --preset code "TODO"
-search --open --fzf "function"
+search --fzf "function"
+
+# Improved file search matches paths and names
+search --files "controller" # matches paths like app/controllers/user_controller.rb
 ```
 
-The only visible change will be the underlying implementation moving from dev-tools to ace-search gem.
+Key improvements:
+- File search now matches full paths, not just filenames
+- Configuration supports all CLI flags as defaults
+- Presets organized in separate files for better maintainability
 
 ### Interface Contract
 
 #### Inputs
-- Pattern: Search string or regex pattern
-- Options: All existing CLI flags must be preserved
+- Pattern: Search string or regex pattern (for files: matches paths and names)
+- Options: All existing CLI flags must be preserved (except editor-related)
   - Type flags: `-t`, `-f`, `-c`, `--files`, `--content`
   - Pattern flags: `-i`, `-w`, `-U`, `--hidden`
   - Context flags: `-A`, `-B`, `-C`
-  - Filter flags: `-g`, `--include`, `--exclude`
+  - Filter flags: `-g`, `--include`, `--exclude`, `--max-results`
   - Scope flags: `--staged`, `--tracked`, `--changed`
-  - Output flags: `--json`, `--yaml`, `-l`
-  - Interactive flags: `--fzf`, `--open`, `--editor`
+  - Output flags: `--json`, `--yaml`, `-l`, `--files-with-matches`
+  - Interactive flags: `--fzf`
+  - All flags can be set as defaults in configuration
 
 #### Outputs
 - Search results in text, JSON, or YAML format
-- Editor integration commands
-- Configuration status and updates
+- File paths with clickable terminal links (file:line format)
+- Configuration status (when using config subcommand)
 
 #### Processing
 1. Parse command-line arguments
@@ -70,9 +76,9 @@ The only visible change will be the underlying implementation moving from dev-to
   - [ ] Configure gemspec with ace-core dependency
 
 - [ ] Migrate search components
-  - [ ] Port atoms (ripgrep_executor, fd_executor, editor_detector, editor_launcher)
-  - [ ] Port molecules (preset_manager, git_scope_filter, dwim_analyzer, etc.)
-  - [ ] Port organisms (unified_searcher, editor_integration, result_formatter)
+  - [ ] Port atoms (ripgrep_executor, fd_executor, path_matcher)
+  - [ ] Port molecules (preset_manager, git_scope_filter, dwim_analyzer, time_filter, fzf_integrator)
+  - [ ] Port organisms (unified_searcher, result_formatter, result_aggregator)
   - [ ] Port models (search_result, search_options, search_preset)
 
 - [ ] Create executable with compatibility wrapper
@@ -87,10 +93,11 @@ The only visible change will be the underlying implementation moving from dev-to
   - [ ] Use ace-core atoms where applicable (file_reader, yaml_parser)
 
 - [ ] Set up configuration
-  - [ ] Create .ace.example/search/config.yml template
-  - [ ] Migrate editor configuration to ace format
-  - [ ] Support preset definitions in config
-  - [ ] Maintain backward compatibility with existing configs
+  - [ ] Create .ace.example/search/config.yml template with default flags
+  - [ ] Create .ace.example/search/presets/ directory structure
+  - [ ] Support presets as separate YAML files in presets/ directory
+  - [ ] Allow any CLI flag as a configuration default
+  - [ ] Ensure configuration cascade: defaults → config → preset → CLI flags
 
 - [ ] Create comprehensive tests
   - [ ] Port existing tests from dev-tools/spec
@@ -113,10 +120,12 @@ The only visible change will be the underlying implementation moving from dev-to
 
 ## Acceptance Criteria
 
-- [ ] All existing search commands work without modification
-- [ ] Output format identical to current implementation
+- [ ] All existing search commands work without modification (except editor integration)
+- [ ] File search improved to match full paths, not just filenames
+- [ ] Output format identical to current implementation (with clickable terminal links)
 - [ ] Performance equal or better than current version
-- [ ] Configuration compatible with existing .ace/ settings
+- [ ] Configuration supports all CLI flags as defaults
+- [ ] Presets organized in .ace/search/presets/ directory
 - [ ] All tests passing with ace-test-support
 - [ ] Usage documentation complete and accurate
 - [ ] Can be installed as standalone gem
@@ -141,13 +150,19 @@ The only visible change will be the underlying implementation moving from dev-to
 
 ## Notes
 
-This migration represents a significant architectural improvement, moving from a monolithic dev-tools structure to a modular gem-based approach. The key challenge is maintaining 100% backward compatibility while improving the internal structure.
+This migration represents a significant architectural improvement, moving from a monolithic dev-tools structure to a modular gem-based approach.
 
-Benefits of migration:
+### Key Changes from Original:
+1. **Removed editor integration**: Terminal already handles file:line clicking, making in-tool editor integration redundant. Users can rely on their terminal emulator's ability to open files at specific lines.
+2. **Improved file search**: Now matches full paths (e.g., "controller" matches `app/controllers/user_controller.rb`), not just filenames.
+3. **Better configuration**: Any CLI flag can be set as a default in config (e.g., `case_insensitive: true`, `max_results: 100`).
+4. **Organized presets**: Moved from single config file to separate files in `.ace/search/presets/` directory for better maintainability.
+
+### Benefits of migration:
 1. **Modularity**: Clean separation of concerns following ATOM pattern
 2. **Reusability**: Can be installed as standalone gem
 3. **Maintainability**: Better test coverage with ace-test-support
-4. **Configuration**: Leverages ace-core's configuration cascade
+4. **Configuration**: Leverages ace-core's configuration cascade with comprehensive defaults
 5. **Standards**: Follows established ACE gem patterns
 
-The migration should be done incrementally with careful testing at each step to ensure no functionality is lost.
+The migration should be done incrementally with careful testing at each step to ensure no functionality is lost (except intentionally removed editor integration).
