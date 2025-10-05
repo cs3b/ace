@@ -2,14 +2,14 @@
 
 ## Goal
 
-Perform comprehensive code review using the `ace-review code` command with preset configurations and automated execution.
+Perform comprehensive code review using the `ace-review` command with preset configurations and automated execution.
 
 ## Context Loading
 
 **FIRST: Load the code review context for all reference information:**
 ```bash
-ace-review code --list-presets
-ace-review code --list-prompts
+ace-review --list-presets
+ace-review --list-prompts
 ```
 
 This provides:
@@ -23,9 +23,9 @@ This provides:
 **FOR AI CODING AGENTS - READ THIS FIRST**
 
 ### What TO DO:
-1. **Run `ace-review code --list-presets`** for reference
+1. **Run `ace-review --list-presets`** for reference
 2. **Select appropriate preset** or compose custom configuration
-3. **Execute `ace-review code`** with `--auto-execute` flag
+3. **Execute `ace-review`** with `--auto-execute` flag
 4. **Review generated report** for insights
 
 ### What NOT TO DO:
@@ -45,7 +45,7 @@ This provides:
 
 ```bash
 # Multi-repository review with all diffs
-ace-review code \
+ace-review \
   --preset ruby-atom \
   --context 'presets: [project]' \
   --subject 'commands: [
@@ -59,7 +59,7 @@ ace-review code \
 
 ### Key Parameters Explained
 
-- **`--preset`**: Base configuration (see `ace-review code --list-presets`)
+- **`--preset`**: Base configuration (see `ace-review --list-presets`)
 - **`--context`**: Background docs to include (presets or files)
 - **`--subject`**: What to review (commands for diffs, or file patterns)
 - **`--add-focus`**: Additional focus modules to layer on preset
@@ -69,28 +69,28 @@ ace-review code \
 
 ```bash
 # See what's available
-ace-review code --list-presets   # All preset configurations
-ace-review code --list-prompts   # All modular components
-ace-review code --help           # Full command documentation
+ace-review --list-presets   # All preset configurations
+ace-review --list-prompts   # All modular components
+ace-review --help           # Full command documentation
 ```
 
 ## Common Scenarios
 
 ### Daily PR Review
 ```bash
-ace-review code --preset pr --auto-execute
+ace-review --preset pr --auto-execute
 ```
 
 ### Pre-Commit Check
 ```bash
-ace-review code --preset code \
+ace-review --preset code \
   --subject 'commands: ["git diff --staged"]' \
   --auto-execute
 ```
 
 ### Architecture Compliance
 ```bash
-ace-review code --preset ruby-atom-modular \
+ace-review --preset ruby-atom-modular \
   --context 'presets: [project, dev-tools]' \
   --auto-execute
 ```
@@ -100,7 +100,7 @@ ace-review code --preset ruby-atom-modular \
 When review parameters are complex, store them in a context file:
 
 ```markdown
-# .ace-taskflow/$(ace-taskflow release --path)/*/docs/ace-review code-contexts.md
+# .ace-taskflow/$(ace-taskflow release --path)/*/docs/ace-review-contexts.md
 subject: diff from sha till HEAD on following repos
 
 [main]         8e7882c chore: update submodules
@@ -121,22 +121,22 @@ Then reference the parameters in your command.
 
 | Issue | Solution |
 |-------|----------|
-| "Preset not found" | Run `ace-review code --list-presets` |
+| "Preset not found" | Run `ace-review --list-presets` |
 | "Git diff empty" | Check git range with `git diff` |
 | "LLM timeout" | Narrow the review scope |
 
 ### Debug Mode
 ```bash
 # See what would be executed
-ace-review code --preset pr --dry-run
+ace-review --preset pr --dry-run
 
 # Check preset configuration
-grep -A 10 "ruby-atom-modular:" .coding-agent/ace-review code.yml
+grep -A 10 "ruby-atom-modular:" .coding-agent/ace-review.yml
 ```
 
 ## Success Criteria
 
-- ✅ Context loaded with `context --preset ace-review code`
+- ✅ Context loaded with `context --preset ace-review`
 - ✅ Appropriate preset or configuration selected
 - ✅ Subject correctly specified (diffs or files)
 - ✅ Command executed with `--auto-execute`
@@ -145,7 +145,7 @@ grep -A 10 "ruby-atom-modular:" .coding-agent/ace-review code.yml
 
 ## Summary
 
-1. **Load context**: `context --preset ace-review code` for reference
+1. **Load context**: `context --preset ace-review` for reference
 2. **Choose approach**: Preset, custom, or context file
 3. **Execute**: Single command with `--auto-execute`
 4. **Review**: Read generated report for insights
@@ -154,4 +154,4 @@ grep -A 10 "ruby-atom-modular:" .coding-agent/ace-review code.yml
 
 ---
 
-*For complete reference, always run `context --preset ace-review code` first.*
+*For complete reference, always run `context --preset ace-review` first.*

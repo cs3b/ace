@@ -1,20 +1,20 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Ace Review - Automated code review tool
+# Ace Review - Automated review tool
 #
-# This executable provides code review functionality for the ACE framework.
+# This executable provides review functionality for the ACE framework.
 # It supports preset-based reviews with configurable focus areas using LLM analysis.
 #
-# Usage: ace-review code [options]
+# Usage: ace-review [options]
 #
 # Examples:
-#   ace-review code --preset pr
-#   ace-review code --preset security --auto-execute
-#   ace-review code --list-presets
+#   ace-review --preset pr
+#   ace-review --preset security --auto-execute
+#   ace-review --list-presets
 #
 # For more information:
-#   ace-review code --help
+#   ace-review --help
 
 # Use absolute path resolution to support execution from any directory
 lib_path = File.expand_path("../lib", __dir__)
@@ -22,7 +22,6 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "ace/review"
 require "ace/review/cli"
-require "dry/cli"
 
-# Execute CLI
-Dry::CLI.new(Ace::Review::CLI::Commands).call
+# Execute CLI with single command
+Ace::Review::CLI::Command.new.call
