@@ -1,0 +1,36 @@
+---
+# Prompt Sources Protocol Configuration for ace-review gem
+# This enables prompt discovery from the installed ace-review gem
+
+name: ace-review
+type: gem
+description: Review prompts and focus modules from ace-review gem
+priority: 10
+
+# Configuration for prompt discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/prompts)
+  relative_path: handbook/prompts
+
+  # Pattern for finding prompt files (supports both *.md and *.prompt.md)
+  pattern: "*.md"
+
+  # Enable discovery
+  enabled: true
+
+# Categories of prompts available
+categories:
+  - base       # Core system prompts
+  - format     # Output format modules
+  - focus      # Review focus modules (architecture, languages, quality, etc.)
+  - guidelines # Style and tone guidelines
+
+# Notes for users
+notes: |
+  ace-review provides modular prompts for code review composition:
+  - Base: System prompts for review foundation
+  - Format: Standard, detailed, or compact output formats
+  - Focus: Specific review areas like security, performance, architecture
+  - Guidelines: Tone, icons, and style guides
+
+  Use prompt:// URIs to reference these prompts in your review configurations.
