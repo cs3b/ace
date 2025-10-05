@@ -25,7 +25,7 @@ class AceReviewTest < Minitest::Test
   def create_test_config(content = nil)
     FileUtils.mkdir_p(".ace/review")
     config_content = content || default_test_config
-    File.write(".ace/review/code.yml", config_content)
+    File.write(".ace/review/config.yml", config_content)
   end
 
   # Helper to create a test preset file

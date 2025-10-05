@@ -1,0 +1,20 @@
+# Test review - coverage and quality
+
+description: "Test review - coverage and quality"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/standard"
+  focus:
+    - "prompt://focus/scope/tests"
+  guidelines:
+    - "prompt://guidelines/tone"
+
+context:
+  files:
+    - "test/test_helper.rb"
+
+subject:
+  files:
+    - "test/**/*_test.rb"
+    - "spec/**/*_spec.rb"

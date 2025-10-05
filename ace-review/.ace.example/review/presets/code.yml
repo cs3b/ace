@@ -1,0 +1,18 @@
+# Code quality review - architecture and conventions
+
+description: "Code quality review - architecture and conventions"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/detailed"
+  focus:
+    - "prompt://focus/architecture/atom"
+  guidelines:
+    - "prompt://guidelines/tone"
+    - "prompt://guidelines/icons"
+
+context: "project"
+
+subject:
+  commands:
+    - "git diff HEAD~3..HEAD"

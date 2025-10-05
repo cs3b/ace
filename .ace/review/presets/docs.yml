@@ -1,0 +1,19 @@
+# Documentation review - completeness and clarity
+
+description: "Documentation review - completeness and clarity"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/standard"
+  focus:
+    - "prompt://focus/scope/docs"
+  guidelines:
+    - "prompt://guidelines/tone"
+
+context:
+  files:
+    - "README.md"
+
+subject:
+  files:
+    - "**/*.md"

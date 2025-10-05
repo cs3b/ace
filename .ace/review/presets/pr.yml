@@ -1,0 +1,17 @@
+# Pull request review - comprehensive code changes review
+
+description: "Pull request review - comprehensive code changes review"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/standard"
+  guidelines:
+    - "prompt://guidelines/tone"
+    - "prompt://guidelines/icons"
+
+context: "project"
+
+subject:
+  commands:
+    - "git diff origin/main...HEAD"
+    - "git log origin/main..HEAD --oneline"

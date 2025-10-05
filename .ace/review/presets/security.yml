@@ -1,0 +1,18 @@
+# Security review - vulnerability and risk analysis
+
+description: "Security review - vulnerability and risk analysis"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/detailed"
+  focus:
+    - "prompt://focus/quality/security"
+  guidelines:
+    - "prompt://guidelines/tone"
+    - "prompt://guidelines/icons"
+
+context: "project"
+
+subject:
+  commands:
+    - "git diff HEAD~5..HEAD"

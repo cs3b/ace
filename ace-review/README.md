@@ -2,14 +2,14 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.2
+**Version:** 0.9.3
 
-## Important Fixes in 0.9.2
+## Changes in 0.9.3
 
-- **Fixed Prompt Resolution**: Now properly works via ace-nav integration
-- **Security Fix**: Patched critical command injection vulnerability in git operations
-- **Code Quality**: Fixed overly complex methods and improved architecture
-- **Dependencies**: Added ace-nav for proper prompt resolution
+- **Configuration Renamed**: `code.yml` → `config.yml` for consistency
+- **Preset Organization**: All presets now in separate files under `review/presets/`
+- **Configuration Cascade**: Now uses ace-core's ConfigFinder (no hardcoded paths)
+- **Better Modularity**: Main config contains only defaults and storage settings
 
 ## Features
 
@@ -65,7 +65,7 @@ ace-review --preset pr --auto-execute
 
 ### Main Configuration
 
-Create `.ace/review/code.yml` in your project:
+Create `.ace/review/config.yml` in your project:
 
 ```yaml
 defaults:
@@ -77,19 +77,8 @@ storage:
   base_path: ".ace-taskflow/%{release}/reviews"
   auto_organize: true
 
-presets:
-  pr:
-    description: "Pull request review"
-    prompt_composition:
-      base: "prompt://base/system"
-      format: "prompt://format/standard"
-      guidelines:
-        - "prompt://guidelines/tone"
-        - "prompt://guidelines/icons"
-    context: "project"
-    subject:
-      commands:
-        - "git diff origin/main...HEAD"
+# Review presets - load from .ace/review/presets/*.yml
+# Individual preset files provide better organization and shareability
 ```
 
 ### Custom Presets
@@ -219,7 +208,7 @@ This gem replaces the previous `code-review` commands:
 
 2. **Copy configuration**
    ```bash
-   cp .coding-agent/code-review.yml .ace/review/code.yml
+   cp .coding-agent/code-review.yml .ace/review/config.yml
    ```
 
 3. **Update workflow files**

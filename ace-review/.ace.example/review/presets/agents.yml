@@ -1,0 +1,20 @@
+# Agent definition review - structure and clarity
+
+description: "Agent definition review - structure and clarity"
+
+prompt_composition:
+  base: "prompt://base/system"
+  format: "prompt://format/detailed"
+  focus:
+    - "prompt://focus/scope/docs"
+  guidelines:
+    - "prompt://guidelines/tone"
+    - "prompt://guidelines/icons"
+
+context:
+  files:
+    - "docs/agents.g.md"
+
+subject:
+  files:
+    - "**/*.ag.md"
