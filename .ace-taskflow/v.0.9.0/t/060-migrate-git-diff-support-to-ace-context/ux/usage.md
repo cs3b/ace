@@ -1,437 +1,145 @@
-# Task 060: Migrate Git/Diff Support to ace-context - Usage Guide
+# Unified Content Aggregation: ace-context with Git/Diff Support
 
-## Document Type: How-To Guide + Reference
+## Document Type: Reference + How-To Guide
 
 ## Overview
 
-This task migrates git/diff extraction logic from ace-review to ace-context, centralizing all content aggregation capabilities in a single location. The goal is to eliminate code duplication and enable unified configuration schemas across the ACE ecosystem.
+ace-context now serves as the universal content aggregator for the ACE ecosystem, with support for files, commands, presets, AND git diffs. This enables unified configuration across all tools and eliminates duplication between ace-review and ace-context.
 
-**Key Outcomes:**
-- ace-context gains `diffs:` configuration key for git diff ranges
-- ace-review simplifies by delegating all content extraction to ace-context
-- Unified config schema: compose files + commands + presets + diffs in one place
-- Better reusability: any tool can use ace-context for git content
+**What's New:**
+- `diffs:` configuration key for git diff ranges
+- Unified schema across ace-context and ace-review
+- Compose files + commands + presets + diffs in one config
+- Single API for all content extraction
 
-## Context
+## Unified Configuration Schema
 
-**Current Problem:**
-```
-ace-review/
-├── atoms/git_extractor.rb         # Git operations
-├── molecules/subject_extractor.rb # Extracts files/commands/diffs
-└── molecules/context_extractor.rb # Extracts files/commands
-
-ace-context/
-├── organisms/context_loader.rb    # Extracts files/commands
-└── [NO git/diff support]
-```
-
-**After Migration:**
-```
-ace-context/
-├── atoms/git_extractor.rb         # Migrated from ace-review
-└── organisms/context_loader.rb    # Now supports diffs: [...]
-
-ace-review/
-├── [Uses Ace::Context.load_auto for everything]
-└── [Focuses on review orchestration only]
-```
-
-## Implementation Phases
-
-### Phase 1: Extend ace-context with Git/Diff Support
-
-**Goal**: Add git diff extraction capabilities to ace-context
-
-**Steps**:
-
-1. **Migrate GitExtractor atom**:
-```bash
-# Copy from ace-review to ace-context
-cp ace-review/lib/ace/review/atoms/git_extractor.rb \
-   ace-context/lib/ace/context/atoms/git_extractor.rb
-
-# Update namespace from Ace::Review to Ace::Context
-# Ensure array-based command execution for security
-```
-
-2. **Update ContextLoader to support diffs**:
-```ruby
-# In ace-context/lib/ace/context/organisms/context_loader.rb
-def process_template_config(config)
-  # ... existing files, commands handling ...
-
-  # NEW: Process diffs key
-  if config['diffs'] && config['diffs'].any?
-    config['diffs'].each do |diff_range|
-      result = Ace::Context::Atoms::GitExtractor.extract_diff(diff_range)
-      if result[:success]
-        data[:diffs] ||= []
-        data[:diffs] << {
-          range: diff_range,
-          output: result[:output]
-        }
-      else
-        data[:errors] << "Failed to extract diff #{diff_range}: #{result[:error]}"
-      end
-    end
-  end
-end
-```
-
-3. **Add tests**:
-```bash
-cd ace-context
-bundle exec ruby -Ilib:test test/context/atoms/git_extractor_test.rb
-```
-
-**Expected Output**:
-```
-GitExtractor
-  ✓ extract_diff with valid range returns diff content
-  ✓ extract_diff with invalid range returns error
-  ✓ staged_diff returns staged changes
-  ✓ working_diff returns unstaged changes
-
-4 tests, 0 failures
-```
-
-### Phase 2: Add ace-context Dependency to ace-review
-
-**Goal**: Make ace-review depend on ace-context gem
-
-**Steps**:
-
-1. **Update gemspec**:
-```ruby
-# In ace-review/ace-review.gemspec
-spec.add_dependency 'ace-context', '~> 0.9'
-```
-
-2. **Update main require file**:
-```ruby
-# In ace-review/lib/ace/review.rb (top of file)
-require 'ace/context'
-```
-
-3. **Install dependency**:
-```bash
-cd ace-review
-bundle install
-```
-
-**Expected Output**:
-```
-Fetching ace-context 0.9.x
-Installing ace-context 0.9.x
-Bundle complete!
-```
-
-### Phase 3: Refactor ace-review to Use ace-context
-
-**Goal**: Replace duplicate extraction code with ace-context calls
-
-**Steps**:
-
-1. **Update subject extraction**:
-```ruby
-# In ace-review/lib/ace/review/organisms/review_manager.rb
-
-# BEFORE:
-def extract_subject(subject_config)
-  @subject_extractor.extract(subject_config)
-end
-
-# AFTER:
-def extract_subject(subject_config)
-  return "" unless subject_config
-
-  context = Ace::Context.load_auto(subject_config, format: 'markdown')
-  context.content || ""
-end
-```
-
-2. **Update context extraction**:
-```ruby
-# BEFORE:
-def extract_context(context_config)
-  @context_extractor.extract(context_config)
-end
-
-# AFTER:
-def extract_context(context_config)
-  return "" unless context_config
-
-  # Handle presets: [...] syntax
-  if context_config.is_a?(String) && context_config.include?('presets:')
-    parsed = YAML.safe_load(context_config)
-    if parsed['presets']
-      context = Ace::Context.load_multiple_presets(
-        parsed['presets'],
-        format: 'markdown'
-      )
-      return context.content || ""
-    end
-  end
-
-  # Handle everything else
-  context = Ace::Context.load_auto(context_config, format: 'markdown')
-  context.content || ""
-end
-```
-
-3. **Delete redundant files**:
-```bash
-cd ace-review
-rm lib/ace/review/molecules/subject_extractor.rb
-rm lib/ace/review/molecules/context_extractor.rb
-rm lib/ace/review/atoms/git_extractor.rb
-```
-
-4. **Update requires**:
-```ruby
-# In ace-review/lib/ace/review.rb
-# Remove these lines:
-# require_relative "review/atoms/git_extractor"
-# require_relative "review/molecules/subject_extractor"
-# require_relative "review/molecules/context_extractor"
-```
-
-5. **Run tests**:
-```bash
-cd ace-review
-bundle exec rake test
-```
-
-**Expected Output**:
-```
-ReviewManager
-  ✓ extract_subject uses ace-context
-  ✓ extract_context supports presets
-  ✓ extract_context handles files and commands
-
-All tests passing
-```
-
-### Phase 4: Update Documentation
-
-**Goal**: Document the new unified schema and capabilities
-
-**Files to Update**:
-
-1. **ace-context/README.md**:
-```markdown
-## Configuration Keys
+### Complete Reference
 
 ```yaml
 context:
-  files: [...]       # File paths and glob patterns
-  commands: [...]    # Shell commands to execute
-  include: [...]     # Include patterns
-  exclude: [...]     # Exclude patterns
-  presets: [...]     # Load ace-context presets
-  diffs: [...]       # NEW: Git diff ranges
+  # File patterns (glob support)
+  files:
+    - "lib/**/*.rb"
+    - "docs/architecture.md"
+
+  # Shell commands to execute
+  commands:
+    - "git log --oneline -5"
+    - "ls -la"
+
+  # Include patterns (glob)
+  include:
+    - "src/**/*.js"
+
+  # Exclude patterns
+  exclude:
+    - "**/*_test.rb"
+    - "node_modules/**"
+
+  # ace-context presets
+  presets:
+    - project
+    - architecture
+
+  # NEW: Git diff ranges
+  diffs:
+    - "origin/main...HEAD"
+    - "HEAD~5..HEAD"
+    - "abc123..def456"
 ```
 
-### Example: Unified Content Loading
+### Key Naming Convention
+
+**IMPORTANT**: Use `files:` not `patterns:` for file globs.
 
 ```yaml
-context:
-  presets: [project]              # Load project documentation
-  files: ["lib/new-feature/**/*"] # Add new code files
-  diffs: ["origin/main...HEAD"]   # Include git changes
-  commands: ["git log -5"]        # Add recent commits
+# ✅ CORRECT
+files: ["lib/**/*.rb"]
+
+# ❌ WRONG
+patterns: ["lib/**/*.rb"]
 ```
-```
 
-2. **ace-review/README.md**:
-```markdown
-## Changes in 0.9.6
+## Command-Line Interface
 
-- **ace-context Integration**: All content extraction now delegated to ace-context
-- **Unified Schema**: Consistent config across ace-context and ace-review
-- **Preset Support**: `--context 'presets: [project]'` now works as documented
-- **Simplified Codebase**: Removed duplicate extraction logic
-
-### Subject and Context Configuration
-
-Both `--subject` and `--context` now use ace-context's unified schema:
+### ace-context CLI
 
 ```bash
-# Files (use 'files:' not 'patterns:')
-ace-review --subject 'files: ["lib/**/*.rb"]'
+# Load context with git diffs
+ace-context --config 'diffs: ["origin/main...HEAD"]' --output ./context.md
 
-# Git diffs
-ace-review --subject 'diffs: ["origin/main...HEAD"]'
+# Compose multiple sources
+ace-context --config '
+  files: ["lib/**/*.rb"]
+  diffs: ["HEAD~3..HEAD"]
+  presets: [project]
+' --output stdio
+```
 
-# Presets (now supported!)
-ace-review --context 'presets: [project, architecture]'
+### ace-review CLI
 
-# Composition
+ace-review now uses ace-context for all content extraction.
+
+```bash
+# Subject with files
+ace-review --subject 'files: ["new-feature/**/*.rb"]' --auto-execute
+
+# Subject with git diff
+ace-review --subject 'diffs: ["origin/main...HEAD"]' --auto-execute
+
+# Context with presets (now works!)
+ace-review --context 'presets: [project, architecture]' --auto-execute
+
+# Compose subject and context
 ace-review \
-  --subject 'files: ["new/**/*.rb"], diffs: ["main...HEAD"]' \
-  --context 'presets: [project]'
-```
-```
-
-3. **ace-review/CHANGELOG.md**:
-```markdown
-## [0.9.6] - 2025-10-06
-
-### Changed
-
-- **ace-context integration**: Migrated all content extraction to ace-context
-  - Removed duplicate `SubjectExtractor` and `ContextExtractor`
-  - ace-review now uses `Ace::Context.load_auto()` for all content loading
-  - Added ace-context dependency to gemspec
-
-### Added
-
-- **Preset support in context**: `--context 'presets: [...]'` now works (was documented but not implemented)
-- **Unified config schema**: Same configuration works for both subject and context
-- **Composable sources**: Mix files, commands, diffs, and presets in one config
-
-### Removed
-
-- `lib/ace/review/molecules/subject_extractor.rb` - replaced by ace-context
-- `lib/ace/review/molecules/context_extractor.rb` - replaced by ace-context
-- `lib/ace/review/atoms/git_extractor.rb` - migrated to ace-context
-
-### Fixed
-
-- Clarified documentation: use `files:` not `patterns:` for file globs
-```
-
-### Phase 5: Version Bumps and Testing
-
-**Goal**: Finalize versions and ensure all tests pass
-
-**Steps**:
-
-1. **Bump ace-context version**:
-```ruby
-# In ace-context/lib/ace/context/version.rb
-VERSION = "0.10.0"  # Minor bump for new diffs: feature
-```
-
-2. **Update ace-review version**:
-```ruby
-# In ace-review/lib/ace/review/version.rb
-VERSION = "0.9.6"  # Already updated in Phase 2
-```
-
-3. **Run full test suites**:
-```bash
-# ace-context tests
-cd ace-context
-bundle exec rake test
-# Expected: All tests pass with new git diff tests
-
-# ace-review tests
-cd ace-review
-bundle exec rake test
-# Expected: All tests pass with ace-context integration
-```
-
-4. **Manual integration test**:
-```bash
-cd ace-review
-
-# Test file extraction
-ace-review --preset ruby-atom \
-  --subject 'files: ["ace-context/lib/**/*.rb"]' \
-  --dry-run
-
-# Test diff extraction
-ace-review --preset pr \
-  --subject 'diffs: ["origin/main...HEAD"]' \
-  --dry-run
-
-# Test preset context (previously broken)
-ace-review --preset code \
+  --subject 'files: ["lib/**/*.rb"], diffs: ["HEAD~3..HEAD"]' \
   --context 'presets: [project]' \
-  --subject 'diffs: ["HEAD~1..HEAD"]' \
-  --dry-run
-
-# Test composition
-ace-review \
-  --subject 'files: ["lib/**/*.rb"], diffs: ["main...feature"]' \
-  --context 'presets: [project, architecture]' \
-  --dry-run
+  --auto-execute
 ```
 
-**Expected Output**:
-```
-✓ Review session prepared: .ace-taskflow/v.0.9.0/reviews/review-20251006-HHMMSS
-  Prompt: .../prompt.md.tmp
-  Subject: .../subject.md.tmp
-  Context: .../context.md.tmp
-```
+## Configuration Examples
 
-5. **Commit changes**:
-```bash
-# Commit ace-context changes
-cd ace-context
-git add .
-git commit -m "feat: Add git/diff support for unified content aggregation
+### Example 1: Multi-Source Review Subject
 
-- Add GitExtractor atom for git operations
-- Support diffs: key in ContextLoader
-- Enable composition of files + commands + diffs + presets
-- Update to v0.10.0"
+**File**: `.ace/review/presets/comprehensive.yml`
 
-# Commit ace-review changes
-cd ../ace-review
-git add .
-git commit -m "refactor: Integrate ace-context for content extraction
-
-- Add ace-context dependency
-- Replace SubjectExtractor/ContextExtractor with ace-context calls
-- Enable preset support in context configuration
-- Update to v0.9.6
-- Remove duplicate extraction code"
-```
-
-## Usage Scenarios
-
-### Scenario 1: Review New Feature Code with Context
-
-**Goal**: Review new feature files with project documentation as context
-
-**Before** (doesn't work):
-```bash
-ace-review --subject 'files: ["new-feature/**/*.rb"]' \
-           --context 'presets: [project]'
-# Error: presets not supported in context
-```
-
-**After** (works with ace-context):
-```bash
-ace-review --subject 'files: ["new-feature/**/*.rb"]' \
-           --context 'presets: [project]' \
-           --auto-execute
-
-# ✓ Loads project preset for context
-# ✓ Loads new feature files for subject
-# ✓ Composes review prompt
-# ✓ Executes LLM review
-```
-
-### Scenario 2: Review Git Changes Across Multiple Repos
-
-**Goal**: Review changes across main repo and submodules
-
-**Configuration**:
 ```yaml
-# .ace/review/presets/multi-repo.yml
+description: "Comprehensive review with all content types"
+
+subject:
+  files:
+    - "src/new-feature/**/*.js"     # New feature code
+  diffs:
+    - "origin/main...HEAD"          # All changes since main
+  commands:
+    - "git log --oneline -10"       # Recent commits
+
+context:
+  presets: [project, architecture]  # Documentation
+```
+
+**Usage**:
+```bash
+ace-review --preset comprehensive --auto-execute
+```
+
+### Example 2: Multi-Repository Diff Review
+
+**File**: `.ace/review/presets/multi-repo.yml`
+
+```yaml
+description: "Review changes across main repo and submodules"
+
 subject:
   diffs:
     - "origin/main...HEAD"                    # Main repo
-    - "ace-context/origin/main...HEAD"        # Submodule
-    - "ace-review/origin/main...HEAD"         # Submodule
+    - "ace-context/origin/main...HEAD"        # Submodule 1
+    - "ace-review/origin/main...HEAD"         # Submodule 2
 
 context:
-  presets: [project, architecture]
+  presets: [project]
+  files: ["docs/architecture.md"]
 ```
 
 **Usage**:
@@ -439,151 +147,359 @@ context:
 ace-review --preset multi-repo --auto-execute
 ```
 
-### Scenario 3: Compose Multiple Content Sources
+### Example 3: ace-context Preset with Git Context
 
-**Goal**: Review specific files + recent changes + with full context
+**File**: `.ace/context/presets/recent-changes.md`
+
+```yaml
+---
+description: Recent code changes with project context
+context:
+  files:
+    - "README.md"
+    - "docs/architecture.md"
+  diffs:
+    - "HEAD~5..HEAD"
+  commands:
+    - "git log --oneline -5 --stat"
+---
+
+# Recent Changes Context
+
+This preset provides context about recent changes including documentation and git history.
+```
+
+**Usage**:
+```bash
+# Via ace-context
+ace-context recent-changes --output ./recent-changes.md
+
+# Via ace-review
+ace-review --context 'presets: [recent-changes]' --subject 'files: ["lib/**/*.rb"]'
+```
+
+## API Reference
+
+### ace-context Ruby API
+
+```ruby
+require 'ace/context'
+
+# Load with git diffs
+config = {
+  'files' => ['lib/**/*.rb'],
+  'diffs' => ['origin/main...HEAD'],
+  'presets' => ['project']
+}
+
+context = Ace::Context.load_auto(config, format: 'markdown')
+puts context.content
+```
+
+### Git Diff Formats
+
+The `diffs:` key accepts any valid git diff range:
+
+```yaml
+diffs:
+  # Two-dot diff (difference between branches)
+  - "main..feature"
+
+  # Three-dot diff (changes since divergence)
+  - "origin/main...HEAD"
+
+  # Commit range
+  - "abc123..def456"
+
+  # Relative to HEAD
+  - "HEAD~5..HEAD"
+  - "HEAD~1..HEAD"
+
+  # Special keywords (expanded automatically)
+  - "staged"          # git diff --staged
+  - "working"         # git diff (unstaged)
+  - "pr"              # git diff tracking-branch...HEAD
+```
+
+## Usage Scenarios
+
+### Scenario 1: Review New Feature with Full Context
+
+**Goal**: Review new feature code with project documentation and recent changes
 
 **Command**:
 ```bash
 ace-review \
-  --subject 'files: ["lib/new/**/*.rb"], diffs: ["HEAD~3..HEAD"]' \
-  --context 'presets: [project], files: ["docs/architecture.md"]' \
+  --subject 'files: ["features/auth/**/*.rb"]' \
+  --context 'presets: [project], diffs: ["HEAD~10..HEAD"]' \
+  --preset security \
   --auto-execute
 ```
 
 **What happens**:
-1. Subject includes: new files + git diff of last 3 commits
-2. Context includes: project preset + architecture docs
-3. All aggregated by ace-context using unified schema
-4. ace-review composes prompt and calls LLM
+1. Subject includes all auth feature files
+2. Context includes project preset + last 10 commits
+3. Review focuses on security (from preset)
+4. LLM reviews with full context
+
+**Expected Output**:
+```
+✓ Review Complete
+
+  Subject: 15 files from features/auth/
+  Context: Project docs + 10 recent commits
+  Focus: Security analysis
+
+  Review saved: .ace-taskflow/v.0.9.0/reviews/review-20251006-HHMMSS/review.md
+```
+
+### Scenario 2: Daily PR Review
+
+**Goal**: Quick review of today's changes
+
+**Command**:
+```bash
+ace-review \
+  --subject 'diffs: ["origin/main...HEAD"]' \
+  --context 'presets: [project]' \
+  --auto-execute
+```
+
+**What happens**:
+1. Subject is git diff from main branch
+2. Context is project documentation
+3. Default PR review preset used
+4. Automatic execution
+
+### Scenario 3: Compose Multiple Diff Sources
+
+**Goal**: Review changes from multiple branches/commits
+
+**Command**:
+```bash
+ace-review \
+  --subject 'diffs: ["main..feature-1", "main..feature-2"]' \
+  --context 'files: ["docs/api.md"]' \
+  --auto-execute
+```
+
+**What happens**:
+1. Both feature branch diffs included in subject
+2. API documentation provides context
+3. Review compares both feature implementations
+
+## Configuration Options
+
+### Global Defaults
+
+**File**: `~/.ace/context/config.yml`
+
+```yaml
+defaults:
+  format: markdown-xml
+  max_size: 10485760  # 10MB
+  timeout: 30          # seconds
+```
+
+### Project Configuration
+
+**File**: `.ace/context/config.yml`
+
+```yaml
+defaults:
+  format: markdown
+  base_dir: ./src
+
+# Project-specific presets
+presets:
+  quick-review:
+    context:
+      diffs: ["HEAD~1..HEAD"]
+      files: ["README.md"]
+```
+
+### ace-review Configuration
+
+**File**: `.ace/review/config.yml`
+
+```yaml
+defaults:
+  model: "google:gemini-2.5-flash"
+  context: "project"  # Use 'project' preset by default
+
+# Storage (uses ace-taskflow)
+# storage:
+#   base_path: ".ace-taskflow/%{release}/reviews"
+```
 
 ## Troubleshooting
 
-### Problem: Tests Failing After Migration
+### Problem: "Preset not found"
 
-**Symptom**: `NameError: uninitialized constant SubjectExtractor`
-
-**Solution**:
-```bash
-# Update test files to use ace-context
-# Replace extractor tests with integration tests
-
-# Example:
-# BEFORE:
-# extractor = SubjectExtractor.new
-# subject = extractor.extract(config)
-
-# AFTER:
-# context = Ace::Context.load_auto(config)
-# subject = context.content
+**Symptom**:
 ```
-
-### Problem: Git Diff Not Working
-
-**Symptom**: `Error: Failed to extract diff`
-
-**Solution**:
-```bash
-# Ensure you're in a git repository
-git status
-
-# Verify the range is valid
-git log --oneline origin/main...HEAD
-
-# Check ace-context git extractor works
-cd ace-context
-bundle exec ruby -Ilib -e "
-  require 'ace/context'
-  result = Ace::Context::Atoms::GitExtractor.extract_diff('HEAD~1..HEAD')
-  puts result[:success] ? 'OK' : result[:error]
-"
+Error: Preset 'project' not found
 ```
-
-### Problem: Preset Not Found
-
-**Symptom**: `Preset 'project' not found`
 
 **Solution**:
 ```bash
 # List available presets
 ace-context --list-presets
 
-# Check preset exists
+# Check preset file exists
 ls -la .ace/context/presets/project.md
 
-# Verify preset format
-cat .ace/context/presets/project.md
-# Should have frontmatter with:
-# ---
-# description: ...
-# context:
-#   files: [...]
-# ---
+# Check preset format (needs frontmatter)
+head -20 .ace/context/presets/project.md
+```
+
+### Problem: "Invalid git range"
+
+**Symptom**:
+```
+Error: Failed to extract diff origin/main...HEAD
+```
+
+**Solution**:
+```bash
+# Verify git range is valid
+git log --oneline origin/main...HEAD
+
+# Check you're in a git repository
+git status
+
+# Try simpler range
+ace-review --subject 'diffs: ["HEAD~1..HEAD"]'
+```
+
+### Problem: "No code to review"
+
+**Symptom**:
+```
+Error: No code to review
+```
+
+**Solution**:
+```bash
+# Check config uses 'files:' not 'patterns:'
+# WRONG: --subject 'patterns: ["lib/**/*.rb"]'
+# RIGHT: --subject 'files: ["lib/**/*.rb"]'
+
+# Verify files exist
+ls -la lib/**/*.rb
+
+# Test with explicit file
+ace-review --subject 'files: ["README.md"]' --dry-run
+```
+
+## Migration from ace-review 0.9.5
+
+### Changed: Preset Support in Context
+
+**Before** (0.9.5 - didn't work):
+```bash
+ace-review --context 'presets: [project]'
+# Error: presets not supported
+```
+
+**After** (0.9.6 - works):
+```bash
+ace-review --context 'presets: [project]'
+# ✓ Loads project preset via ace-context
+```
+
+### Changed: Use `files:` not `patterns:`
+
+**Before** (confused):
+```bash
+ace-review --subject 'patterns: ["lib/**/*.rb"]'
+# Error: No code to review
+```
+
+**After** (correct):
+```bash
+ace-review --subject 'files: ["lib/**/*.rb"]'
+# ✓ Works correctly
+```
+
+### New: Compose Multiple Sources
+
+**Now Possible**:
+```bash
+ace-review \
+  --subject 'files: ["new/**/*"], diffs: ["main...HEAD"]' \
+  --context 'presets: [project, arch], files: ["docs/api.md"]'
 ```
 
 ## Best Practices
 
-### 1. Use Unified Schema Consistently
+### 1. Use Unified Schema Everywhere
 
-Always use the same config keys across ace-context and ace-review:
-- `files:` for file paths and globs (NOT `patterns:`)
+Always use the same keys across ace-context and ace-review:
+- `files:` for file paths/globs
 - `commands:` for shell commands
-- `diffs:` for git diff ranges
+- `diffs:` for git ranges
 - `presets:` for ace-context presets
 
-### 2. Compose Sources Strategically
+### 2. Compose Strategically
 
-Combine sources for comprehensive reviews:
 ```yaml
 subject:
-  files: ["new/**/*"]        # What changed
-  diffs: ["main...feature"]  # How it changed
+  files: ["new/**/*"]        # What's new
+  diffs: ["main...feature"]  # What changed
 
 context:
   presets: [project]         # What matters
-  files: ["docs/api.md"]     # Specific reference
+  files: ["docs/api.md"]     # Specific docs
 ```
 
-### 3. Test Both Gems Independently
+### 3. Use Presets for Common Patterns
 
-Before integration testing:
-```bash
-# Test ace-context alone
-cd ace-context
-bundle exec rake test
+Create reusable presets instead of repeating configs:
 
-# Test ace-review alone
-cd ace-review
-bundle exec rake test
-
-# Then test integration
-ace-review --preset test-preset --dry-run
+```yaml
+# .ace/review/presets/daily-review.yml
+subject:
+  diffs: ["origin/main...HEAD"]
+context:
+  presets: [project]
+  diffs: ["HEAD~10..HEAD"]  # Recent context
 ```
 
-## Success Checklist
+Then: `ace-review --preset daily-review --auto-execute`
 
-- [ ] ace-context supports `diffs:` key
-- [ ] GitExtractor migrated and tested
-- [ ] ace-review uses ace-context for all extraction
-- [ ] Duplicate code removed from ace-review
-- [ ] `presets:` works in ace-review context
-- [ ] All tests pass in both gems
-- [ ] Documentation updated
-- [ ] Version numbers bumped appropriately
-- [ ] Integration tested manually
-- [ ] Changes committed with clear messages
+## Reference Tables
 
-## Migration Notes
+### Supported Configuration Keys
 
-**From ace-review 0.9.5 to 0.9.6:**
+| Key | Type | Description | Example |
+|-----|------|-------------|---------|
+| `files` | Array | File paths and glob patterns | `["lib/**/*.rb"]` |
+| `commands` | Array | Shell commands to execute | `["git log -5"]` |
+| `include` | Array | Include patterns (globs) | `["src/**/*.js"]` |
+| `exclude` | Array | Exclude patterns | `["**/test/**"]` |
+| `presets` | Array | ace-context preset names | `["project", "arch"]` |
+| `diffs` | Array | Git diff ranges | `["main...HEAD"]` |
 
-- Replace `SubjectExtractor` usage → `Ace::Context.load_auto`
-- Replace `ContextExtractor` usage → `Ace::Context.load_auto` or `load_multiple_presets`
-- Update test mocks/stubs to use ace-context methods
-- Remove requires for deleted extractor files
+### Git Diff Range Formats
 
-**Key Differences:**
-- ace-review no longer has git_extractor atom (moved to ace-context)
-- Preset support now actually works in context configuration
-- Unified schema means same config works everywhere
-- Better error messages from ace-context's centralized handling
+| Format | Description | Example |
+|--------|-------------|---------|
+| `A..B` | Changes from A to B (two-dot) | `main..feature` |
+| `A...B` | Changes since divergence (three-dot) | `origin/main...HEAD` |
+| `COMMIT..COMMIT` | Between specific commits | `abc123..def456` |
+| `HEAD~N..HEAD` | Last N commits | `HEAD~5..HEAD` |
+| `staged` | Staged changes | `staged` |
+| `working` | Unstaged changes | `working` |
+| `pr` | PR diff vs tracking branch | `pr` |
+
+### ace-review Command Options
+
+| Option | Short | Description | Example |
+|--------|-------|-------------|---------|
+| `--subject` | | What to review | `--subject 'files: [...]'` |
+| `--context` | | Background info | `--context 'presets: [project]'` |
+| `--preset` | `-p` | Review preset | `--preset security` |
+| `--auto-execute` | | Run LLM immediately | `--auto-execute` |
+| `--dry-run` | | Prepare without executing | `--dry-run` |
+| `--model` | `-m` | Override LLM model | `--model gpt-4` |
