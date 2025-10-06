@@ -377,11 +377,19 @@ module Ace
 
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config['max_size'] || @options[:max_size],
-              base_dir: @options[:base_dir] || project_root
+              base_dir: @options[:base_dir] || project_root,
+              exclude: config['exclude'] || []
             )
 
-            # Use aggregate_files to preserve order for explicit file lists
-            result = aggregator.aggregate_files(resolved_files)
+            # Check if any patterns contain glob characters
+            has_globs = resolved_files.any? { |f| f.include?('*') || f.include?('?') || f.include?('[') }
+
+            # Use aggregate for globs, aggregate_files for literal paths
+            result = if has_globs
+                       aggregator.aggregate(resolved_files)
+                     else
+                       aggregator.aggregate_files(resolved_files)
+                     end
             data[:files] = result[:files]
             data[:errors].concat(result[:errors])
           end
