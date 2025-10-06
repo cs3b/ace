@@ -90,6 +90,26 @@ module Ace
             end
           end
 
+          # Add diffs section
+          if data[:diffs] && !data[:diffs].empty?
+            output << "## Git Diffs"
+            output << ""
+
+            data[:diffs].each do |diff|
+              output << "### Diff: `#{diff[:range]}`"
+              output << ""
+
+              if diff[:success]
+                output << "```diff"
+                output << diff[:output]
+                output << "```"
+              else
+                output << "**Error:** #{diff[:error]}"
+              end
+              output << ""
+            end
+          end
+
           # Add errors section
           if data[:errors] && !data[:errors].empty?
             output << "## Errors"
@@ -164,6 +184,22 @@ module Ace
             output << '  </commands>'
           end
 
+          # Add diffs
+          if data[:diffs] && !data[:diffs].empty?
+            output << '  <diffs>'
+            data[:diffs].each do |diff|
+              output << "    <diff range=\"#{escape_xml(diff[:range])}\" success=\"#{diff[:success]}\">"
+              if diff[:output]
+                output << "      <output><![CDATA[#{diff[:output]}]]></output>"
+              end
+              if diff[:error]
+                output << "      <error>#{escape_xml(diff[:error])}</error>"
+              end
+              output << '    </diff>'
+            end
+            output << '  </diffs>'
+          end
+
           # Add errors
           if data[:errors] && !data[:errors].empty?
             output << '  <errors>'
@@ -223,6 +259,23 @@ module Ace
               output << ""
               output << cmd[:output] if cmd[:output]
               output << "</output>"
+              output << ""
+            end
+          end
+
+          # Add diffs
+          if data[:diffs] && !data[:diffs].empty?
+            output << "## Git Diffs"
+            output << ""
+
+            data[:diffs].each do |diff|
+              success_attr = diff[:success] ? 'true' : 'false'
+              error_attr = diff[:error] ? " error=\"#{escape_xml(diff[:error])}\"" : ""
+
+              output << "<diff range=\"#{escape_xml(diff[:range])}\" success=\"#{success_attr}\"#{error_attr}>"
+              output << ""
+              output << diff[:output] if diff[:output]
+              output << "</diff>"
               output << ""
             end
           end
