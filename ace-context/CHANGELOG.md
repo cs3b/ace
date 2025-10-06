@@ -5,6 +5,34 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2025-10-06
+
+### Added
+- **Protocol resolution support** via ace-nav integration
+  - Load resources using protocols: `ace-context wfi://workflow-name`
+  - Supported protocols: `wfi://` (workflows), `guide://`, `task://`, and any ace-nav protocol
+  - Works in input arguments and `context.files` arrays
+- **YAML frontmatter template support**
+  - Detect and process files with YAML frontmatter (starts with `---`)
+  - Support `context:` key in frontmatter for configuration
+  - Merge `params:` from frontmatter into processing options
+- **Workflow embedding via protocols**
+  - Reference workflows in `context.files: [wfi://draft-task, wfi://plan-task]`
+  - Automatic recursive protocol resolution
+  - Zero duplication - workflows reference each other declaratively
+
+### Changed
+- `load_auto()` now detects `://` pattern and delegates to protocol resolution
+- `load_file()` treats files with YAML frontmatter as templates
+- `load_template()` processes frontmatter config directly when `context:` key present
+- CLI updated to use `load_auto()` instead of `load_preset()` for flexible input handling
+
+### Technical Details
+- `resolve_protocol()` delegates to `ace-nav` for path resolution
+- `resolve_file_reference()` handles protocols in file arrays
+- Protocol resolution integrated in both preset and template config processing
+- Maintains backward compatibility with existing file paths, presets, and inline YAML
+
 ## [0.10.0] - 2025-10-06
 
 ### Added

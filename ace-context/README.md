@@ -11,7 +11,7 @@ gem install ace-context
 Or add to your Gemfile:
 
 ```ruby
-gem 'ace-context', '~> 0.9.0'
+gem 'ace-context', '~> 0.11.0'
 ```
 
 ## Usage
@@ -27,6 +27,11 @@ ace-context
 
 # Load specific preset
 ace-context project
+
+# Load via protocol (ace-nav integration)
+ace-context wfi://create-task          # Load workflow
+ace-context guide://testing            # Load guide
+ace-context task://061                 # Load task context
 
 # Output modes
 ace-context project --output stdio    # Output to terminal
@@ -104,11 +109,33 @@ context:
     - architecture
 ```
 
+**Protocols**: Reference resources via ace-nav protocols
+```yaml
+context:
+  files:
+    - wfi://draft-task        # Workflow via wfi:// protocol
+    - wfi://plan-task         # Another workflow
+    - guide://testing         # Guide via guide:// protocol
+```
+
+Protocols work in:
+- Input arguments: `ace-context wfi://create-task`
+- `context.files` arrays in YAML frontmatter
+- Automatic recursive resolution for nested protocol references
+
+Supported protocols (via ace-nav):
+- `wfi://` - Workflow instructions
+- `guide://` - Development guides
+- `task://` - Task context (future)
+- Any custom protocol registered with ace-nav
+
 All sources can be combined in a single configuration:
 ```yaml
 context:
   presets: [project]
-  files: ["lib/new-feature/**/*.rb"]
+  files:
+    - "lib/new-feature/**/*.rb"
+    - wfi://draft-task           # Protocol reference
   diffs: ["origin/main...HEAD"]
   commands: ["git log -5 --oneline"]
 ```
@@ -137,12 +164,21 @@ require 'ace/context'
 context = Ace::Context.load_preset('project')
 puts context.content
 
-# List presets
-presets = Ace::Context.list_presets
-presets.each { |p| puts p[:name] }
+# Load via protocol
+context = Ace::Context.load_auto('wfi://create-task')
+puts context.content
 
 # Load from file
 context = Ace::Context.load_file('README.md')
+
+# Auto-detect input type (preset, file, protocol, or inline YAML)
+context = Ace::Context.load_auto('project')          # Preset
+context = Ace::Context.load_auto('wfi://workflow')   # Protocol
+context = Ace::Context.load_auto('/path/to/file')    # File
+
+# List presets
+presets = Ace::Context.list_presets
+presets.each { |p| puts p[:name] }
 ```
 
 ### Output Modes
