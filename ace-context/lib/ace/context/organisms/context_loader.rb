@@ -118,6 +118,14 @@ module Ace
 
         def load_auto(input)
           # Auto-detect input type
+          # Strip whitespace to handle CLI arguments properly
+          input = input.strip
+
+          # Check for protocol first (e.g., wfi://,  guide://, task://)
+          if input.match?(/^[\w-]+:\/\//)
+            return load_protocol(input)
+          end
+
           if File.exist?(input)
             # It's a file
             load_file(input)
@@ -238,6 +246,11 @@ module Ace
 
           # Process files from context configuration
           if context_config['files'] && context_config['files'].any?
+            # Resolve any protocol references (e.g., wfi://workflow-name)
+            resolved_files = context_config['files'].map do |file_ref|
+              resolve_file_reference(file_ref)
+            end.compact
+
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: options[:max_size] || options['max_size'],
               base_dir: options[:base_dir] || project_root,
@@ -245,7 +258,7 @@ module Ace
             )
 
             # Use aggregate to handle glob patterns
-            result = aggregator.aggregate(context_config['files'])
+            result = aggregator.aggregate(resolved_files)
 
             # Add files to context if embed_itself is true
             if options[:embed_itself] || options['embed_itself']
@@ -331,13 +344,18 @@ module Ace
 
           # Process files
           if config['files'] && config['files'].any?
+            # Resolve any protocol references (e.g., wfi://workflow-name)
+            resolved_files = config['files'].map do |file_ref|
+              resolve_file_reference(file_ref)
+            end.compact
+
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config['max_size'] || @options[:max_size],
               base_dir: @options[:base_dir] || project_root
             )
 
             # Use aggregate_files to preserve order for explicit file lists
-            result = aggregator.aggregate_files(config['files'])
+            result = aggregator.aggregate_files(resolved_files)
             data[:files] = result[:files]
             data[:errors].concat(result[:errors])
           end
@@ -433,6 +451,43 @@ module Ace
             context
           else
             context
+          end
+        end
+
+        def load_protocol(protocol_ref)
+          # Resolve protocol using ace-nav
+          resolved_path = resolve_protocol(protocol_ref)
+
+          if resolved_path && File.exist?(resolved_path)
+            # Load the resolved file
+            load_file(resolved_path)
+          else
+            # Protocol resolution failed
+            context = Models::ContextData.new
+            context.metadata[:error] = "Failed to resolve protocol: #{protocol_ref}"
+            context.metadata[:protocol_ref] = protocol_ref
+            context
+          end
+        end
+
+        def resolve_protocol(protocol_ref)
+          # Use ace-nav to resolve protocol to real path
+          result = `ace-nav "#{protocol_ref}" 2>&1`.strip
+
+          if $?.success? && !result.empty? && File.exist?(result)
+            result
+          else
+            nil
+          end
+        end
+
+        def resolve_file_reference(file_ref)
+          # Check if it's a protocol reference (contains ://)
+          if file_ref.match?(/^[\w-]+:\/\//)
+            resolve_protocol(file_ref)
+          else
+            # Regular file path or glob pattern
+            file_ref
           end
         end
 

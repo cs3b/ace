@@ -85,11 +85,11 @@ if options[:list]
   exit
 end
 
-# Determine preset name
-preset_name = options[:preset] || ARGV[0] || 'default'
+# Determine input (preset name, file path, or protocol)
+input = options[:preset] || ARGV[0] || 'default'
 
-# Load the preset
-context = Ace::Context.load_preset(preset_name, options)
+# Load the context (auto-detect: preset, file, protocol, or inline YAML)
+context = Ace::Context.load_auto(input, options)
 
 # Handle errors
 if context.metadata[:error]
@@ -114,7 +114,9 @@ when 'cache'
   cache_dir = File.join(project_root, '.cache/ace-context')
   FileUtils.mkdir_p(cache_dir)
 
-  cache_file = File.join(cache_dir, "#{preset_name}.md")
+  # Generate cache filename from input (preset name, protocol, or sanitized file path)
+  cache_name = input.gsub(/[^a-zA-Z0-9-]/, '_')
+  cache_file = File.join(cache_dir, "#{cache_name}.md")
   result = Ace::Context.write_output(context, cache_file, options)
 
   if result[:success]
