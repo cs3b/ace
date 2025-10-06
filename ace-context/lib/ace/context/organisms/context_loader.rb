@@ -130,17 +130,17 @@ module Ace
           input = input.strip
 
           # Check for protocol first (e.g., wfi://,  guide://, task://)
-          if input.match?(/^[\w-]+:\/\//)
+          if input.match?(/\A[\w-]+:\/\//)
             return load_protocol(input)
           end
 
           if File.exist?(input)
             # It's a file
             load_file(input)
-          elsif input.match?(/^[\w-]+$/)
+          elsif input.match?(/\A[\w-]+\z/)
             # Looks like a preset name
             load_preset(input)
-          elsif input.include?('files:') || input.include?('commands:')
+          elsif input.include?('files:') || input.include?('commands:') || input.include?('include:') || input.include?('diffs:') || input.include?('presets:')
             # Looks like inline YAML
             load_inline_yaml(input)
           else
