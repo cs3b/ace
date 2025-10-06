@@ -1,9 +1,9 @@
 ---
 description: Create complete task from plan (draft behavioral spec + implementation planning + commit)
-params:
-  embed_itself: true
-  output: cache
 context:
+  params:
+    output: cache
+  embed_document_source: true
   files:
     - wfi://draft-task
     - wfi://plan-task

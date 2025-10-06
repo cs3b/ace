@@ -41,8 +41,9 @@ module Ace
             )
           end
 
-          # Merge params into options for processing
-          merged_options = @options.merge(preset[:params] || {})
+          # Merge params into options for processing (support both context.params and top-level params)
+          params = preset.dig(:context, :params) || preset.dig(:context, 'params') || preset[:params] || {}
+          merged_options = @options.merge(params)
 
           # Process the preset context configuration
           context = load_from_preset_config(preset, merged_options)
@@ -50,7 +51,7 @@ module Ace
           context.metadata[:output] = preset[:output]  # Store default output mode
 
           # Re-format if format was specified
-          format = preset[:format] || preset.dig(:params, 'format') || merged_options[:format] || 'markdown'
+          format = preset[:format] || params['format'] || params[:format] || merged_options[:format] || 'markdown'
           format_context(context, format)
 
           context
@@ -191,14 +192,37 @@ module Ace
             # Use frontmatter as the main config
             config = frontmatter['context'] || frontmatter
 
-            # Merge params into options if present
-            if frontmatter['params'].is_a?(Hash)
-              @options = @options.merge(frontmatter['params'])
+            # Merge params into options if present (support both context.params and top-level params)
+            params = config['params'] || frontmatter['params']
+            if params.is_a?(Hash)
+              @options = @options.merge(params)
             end
 
-            # Process the config
+            # Process the config (loads embedded files from context.files)
             context = process_template_config(config)
             context.metadata[:frontmatter] = frontmatter
+
+            # If embed_document_source is true, prepend the source file BEFORE embedded files
+            if config['embed_document_source']
+              # Get current embedded files
+              embedded_files = context.files.dup
+
+              # Clear files array
+              context.instance_variable_set(:@files, [])
+
+              # Add source file FIRST
+              context.add_file(path, template_content)
+
+              # Then add embedded files
+              embedded_files.each do |file_info|
+                context.add_file(file_info[:path], file_info[:content])
+              end
+
+              # Re-format with all files in correct order
+              format = config['format'] || @options[:format] || 'markdown-xml'
+              return format_context(context, format)
+            end
+
             return context
           end
 

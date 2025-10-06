@@ -6,4 +6,4 @@ last_modified: '2025-10-06'
 source: ace-taskflow
 ---
 
-ace-context wfi://create-task
+read and run `ace-context wfi://create-task`
