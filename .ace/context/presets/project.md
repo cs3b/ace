@@ -1,11 +1,11 @@
 ---
 description: Project-wide context
-params:
-  output: cache
-  embed_itself: true
-  max_size: 10485760
-  timeout: 30
 context:
+  params:
+    output: cache
+    max_size: 10485760
+    timeout: 30
+  embed_document_source: true
   files:
     - docs/what-do-we-build.md
     - docs/blueprint.md
