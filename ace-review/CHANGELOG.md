@@ -5,6 +5,28 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.6] - 2025-10-06
+
+### Changed
+
+- **ace-context integration**: Refactored to use ace-context for unified content aggregation
+  - `SubjectExtractor` now delegates to `Ace::Context.load_auto` for all content extraction
+  - `ContextExtractor` now delegates to `Ace::Context.load_auto` for all content extraction
+  - Preserved special behaviors (staged/working/pr keywords, project context defaults)
+  - Eliminated duplicated file reading, command execution, and git extraction logic
+
+### Added
+
+- **ace-context dependency**: Added `ace-context ~> 0.9` as runtime dependency
+- **Enhanced composition**: Can now combine files + commands + diffs + presets in unified configs
+- **Preset support in context**: `presets:` key now functional in context configuration
+- **Diffs support**: New `diffs:` key supported in subject and context configs
+
+### Removed
+
+- **Redundant atoms**: Deleted `git_extractor.rb` and `file_reader.rb` (now in ace-context)
+- **Duplicated logic**: All content extraction now centralized in ace-context
+
 ## [0.9.5] - 2025-10-06
 
 ### Changed

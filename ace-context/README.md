@@ -53,6 +53,8 @@ context:
   commands:
     - git status --short
     - date
+  diffs:
+    - origin/main...HEAD    # Git diff ranges
   exclude:
     - "**/node_modules/**"
     - "**/vendor/**"
@@ -61,6 +63,54 @@ context:
 # Project Context
 
 Additional markdown content for this preset...
+```
+
+### Content Sources
+
+ace-context supports multiple content sources that can be combined:
+
+**Files**: Glob patterns for file inclusion
+```yaml
+context:
+  files:
+    - README.md
+    - "lib/**/*.rb"
+    - docs/architecture.md
+```
+
+**Commands**: Execute shell commands and include output
+```yaml
+context:
+  commands:
+    - git status --short
+    - git log -5 --oneline
+    - date
+```
+
+**Diffs**: Include git diff output for code review
+```yaml
+context:
+  diffs:
+    - origin/main...HEAD      # Changes in current branch
+    - HEAD~5..HEAD           # Last 5 commits
+    - --cached               # Staged changes
+```
+
+**Presets**: Include other ace-context presets
+```yaml
+context:
+  presets:
+    - project
+    - architecture
+```
+
+All sources can be combined in a single configuration:
+```yaml
+context:
+  presets: [project]
+  files: ["lib/new-feature/**/*.rb"]
+  diffs: ["origin/main...HEAD"]
+  commands: ["git log -5 --oneline"]
 ```
 
 ### Example Presets

@@ -2,7 +2,17 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.5
+**Version:** 0.9.6
+
+## Changes in 0.9.6
+
+- **ace-context Integration**: Refactored to use ace-context for unified content aggregation
+  - SubjectExtractor and ContextExtractor now delegate to ace-context
+  - Eliminated duplicated file/command/git extraction logic
+  - Enabled `presets:` support in context configuration
+  - Added support for `diffs:` key in subject/context configs
+- **Simplified Architecture**: Removed redundant atoms (git_extractor, file_reader)
+- **Enhanced Composition**: Can now combine files + commands + diffs + presets in unified configs
 
 ## Changes in 0.9.5
 
@@ -41,6 +51,7 @@ gem install ace-review
 ### Dependencies
 
 - `ace-core` (~> 0.9) - Core ACE framework utilities
+- `ace-context` (~> 0.9) - Unified content aggregation and context loading
 - `ace-nav` (~> 0.9) - Universal resource navigation and prompt resolution
 
 ## Quick Start
