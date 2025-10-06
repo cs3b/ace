@@ -5,6 +5,21 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2025-10-06
+
+### Fixed
+- **Regex anchor bug in `load_auto`** - Critical bugfix for YAML config detection
+  - Changed `/^[\w-]+$/` to `/\A[\w-]+\z/` to match string boundaries, not line boundaries
+  - Fixed protocol detection regex `/^[\w-]+:\/\//` to `/\A[\w-]+:\/\//`
+  - Added detection for `include:`, `diffs:`, `presets:` keys in inline YAML
+  - **Impact**: YAML configs like `files: ["lib/**/*.rb"]` were incorrectly detected as preset "---"
+  - **Fixes**: "No code to review" error in ace-review when using file/diff configs
+- **Glob pattern support in `files:` configuration**
+  - Added automatic detection of glob characters (`*`, `?`, `[`) in file patterns
+  - Routes glob patterns to `aggregate()` and literal paths to `aggregate_files()`
+  - Added `exclude:` parameter support in file aggregation
+  - **Impact**: Patterns like `lib/**/*.rb` now correctly expand to matching files
+
 ## [0.11.0] - 2025-10-06
 
 ### Added
