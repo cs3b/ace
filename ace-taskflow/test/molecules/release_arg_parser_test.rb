@@ -4,6 +4,74 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/molecules/release_arg_parser"
 
 class ReleaseArgParserTest < Minitest::Test
+  def test_parse_display_mode_with_path_flag_no_subfolder
+    args = ["v.0.9.0", "--path"]
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "path", result[:mode]
+    assert_nil result[:subfolder]
+    # Verify --path was removed from args, v.0.9.0 remains as release name
+    assert_equal ["v.0.9.0"], args
+  end
+
+  def test_parse_display_mode_with_content_flag
+    args = ["--content", "v.0.9.0"]
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "content", result[:mode]
+    assert_nil result[:subfolder]
+    # Verify --content was removed from args
+    assert_equal ["v.0.9.0"], args
+  end
+
+  def test_parse_display_mode_default
+    args = ["v.0.9.0"]
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "formatted", result[:mode]
+    assert_nil result[:subfolder]
+    # Args should remain unchanged
+    assert_equal ["v.0.9.0"], args
+  end
+
+  def test_parse_display_mode_empty_args
+    args = []
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "formatted", result[:mode]
+    assert_nil result[:subfolder]
+    assert_equal [], args
+  end
+
+  def test_parse_display_mode_with_path_and_subfolder
+    args = ["--path", "retro", "v.0.9.0"]
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "path", result[:mode]
+    assert_equal "retro", result[:subfolder]
+    # Verify --path and subfolder were removed from args
+    assert_equal ["v.0.9.0"], args
+  end
+
+  def test_parse_display_mode_with_path_and_nested_subfolder
+    args = ["--path", "t/042", "v.0.9.0"]
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "path", result[:mode]
+    assert_equal "t/042", result[:subfolder]
+    assert_equal ["v.0.9.0"], args
+  end
+
+  def test_parse_display_mode_path_subfolder_is_flag
+    args = ["--path", "--some-flag", "v.0.9.0"]
+    result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_display_mode(args)
+
+    assert_equal "path", result[:mode]
+    assert_nil result[:subfolder]
+    # --path removed, but --some-flag and v.0.9.0 remain
+    assert_equal ["--some-flag", "v.0.9.0"], args
+  end
+
   def test_parse_create_args_with_codename_only
     result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_create_args(["dark-mode"])
 

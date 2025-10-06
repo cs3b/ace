@@ -3,6 +3,8 @@
 require_relative "../organisms/release_manager"
 require_relative "../organisms/release_creator"
 require_relative "../models/release"
+require_relative "../molecules/release_arg_parser"
+require_relative "../atoms/path_formatter"
 
 module Ace
   module Taskflow
@@ -14,11 +16,16 @@ module Ace
         end
 
         def execute(args)
+          # Parse display mode options first
+          display_options = parse_display_mode(args)
+          display_mode = display_options[:mode]
+          subfolder = display_options[:subfolder]
+
           subaction = args.shift
 
           case subaction
           when nil, "show"
-            show_active_releases
+            show_active_releases(display_mode: display_mode, subfolder: subfolder)
           when "create"
             create_release(args)
           when "promote"
@@ -35,7 +42,7 @@ module Ace
             show_help
           else
             # Try to show specific release
-            show_release(subaction)
+            show_release(subaction, display_mode: display_mode, subfolder: subfolder)
           end
         rescue StandardError => e
           puts "Error: #{e.message}"
@@ -44,7 +51,11 @@ module Ace
 
         private
 
-        def show_active_releases
+        def parse_display_mode(args)
+          Molecules::ReleaseArgParser.parse_display_mode(args)
+        end
+
+        def show_active_releases(display_mode: "formatted", subfolder: nil)
           releases = @manager.show_active
 
           if releases.empty?
@@ -55,21 +66,33 @@ module Ace
 
           if releases.size == 1
             release = releases.first
-            display_release(release)
+            case display_mode
+            when "path"
+              display_release_path(release, subfolder: subfolder)
+            else
+              display_release(release)
+            end
           else
-            puts "Active Releases (#{releases.size}):"
-            puts ""
-            releases.each_with_index do |release, index|
-              primary = index == 0 ? " (primary)" : ""
-              puts "  #{release[:name]}#{primary}"
-              puts "    Path: #{release[:path]}"
-              puts "    Progress: #{progress_bar(release[:statistics])}"
+            # For multiple releases, show all paths if in path mode
+            if display_mode == "path"
+              releases.each do |release|
+                display_release_path(release, subfolder: subfolder)
+              end
+            else
+              puts "Active Releases (#{releases.size}):"
               puts ""
+              releases.each_with_index do |release, index|
+                primary = index == 0 ? " (primary)" : ""
+                puts "  #{release[:name]}#{primary}"
+                puts "    Path: #{release[:path]}"
+                puts "    Progress: #{progress_bar(release[:statistics])}"
+                puts ""
+              end
             end
           end
         end
 
-        def show_release(name)
+        def show_release(name, display_mode: "formatted", subfolder: nil)
           release = @manager.show_release(name)
 
           unless release
@@ -77,7 +100,12 @@ module Ace
             exit 1
           end
 
-          display_release(release)
+          case display_mode
+          when "path"
+            display_release_path(release, subfolder: subfolder)
+          else
+            display_release(release)
+          end
         end
 
         def create_release(args)
@@ -242,6 +270,22 @@ module Ace
           display_statistics(model.statistics)
         end
 
+        def display_release_path(release, subfolder: nil)
+          model = Models::Release.new(release)
+          if model.path
+            # Use project root for relative path
+            root_path = Dir.pwd
+            relative_path = Atoms::PathFormatter.format_relative_path(model.path, root_path)
+
+            # Append subfolder if provided
+            final_path = subfolder ? File.join(relative_path, subfolder) : relative_path
+            puts final_path
+          else
+            puts "# Release has no path"
+            exit 1
+          end
+        end
+
         def display_statistics(stats)
           total = stats[:total]
           done = stats[:statuses]["done"] || 0
@@ -294,9 +338,17 @@ module Ace
           puts "  validate [<name>]         Validate release for completion"
           puts "  changelog [<name>]        Generate changelog for release"
           puts ""
+          puts "Display Options:"
+          puts "  --path [subfolder]        Show release directory path, optionally with subfolder"
+          puts "  --content                 Show full release details (default)"
+          puts ""
           puts "Examples:"
           puts "  ace-taskflow release"
+          puts "  ace-taskflow release --path"
+          puts "  ace-taskflow release --path retro"
           puts "  ace-taskflow release v.0.9.0"
+          puts "  ace-taskflow release v.0.9.0 --path"
+          puts "  ace-taskflow release v.0.9.0 --path docs"
           puts "  ace-taskflow release create authentication    # auto-increments to v.0.10.0"
           puts "  ace-taskflow release create api-v2 --release v.0.12.0"
           puts "  ace-taskflow release create dark-mode --current"
