@@ -6,6 +6,7 @@ module Ace
   module Review
     module Molecules
       # Extracts context (background information) for reviews
+      # Delegates to ace-context for unified content aggregation
       class ContextExtractor
         DEFAULT_PROJECT_DOCS = [
           "README.md",
@@ -17,7 +18,6 @@ module Ace
         ].freeze
 
         def initialize
-          @file_reader = Atoms::FileReader
           @preset_manager = nil # Lazy load to avoid circular dependency
         end
 
@@ -43,107 +43,94 @@ module Ace
 
         def extract_from_string(input)
           # Try to parse as YAML first
-          parsed = YAML.safe_load(input)
-          return extract_from_hash(parsed) if parsed.is_a?(Hash)
+          begin
+            parsed = YAML.safe_load(input)
+            return extract_from_hash(parsed) if parsed.is_a?(Hash)
+          rescue Psych::SyntaxError
+            # Continue with string processing
+          end
 
-          # Check if it's a preset name
+          # Check if it's an ace-review preset name
           if preset_context = load_preset_context(input)
             return extract(preset_context)
           end
 
+          # Check if it's an ace-context preset
+          if ace_context_preset_exists?(input)
+            return use_ace_context({ "presets" => [input] })
+          end
+
           # Treat as file path
-          extract_file(input)
-        rescue Psych::SyntaxError
-          # If YAML parsing fails, treat as file path
-          extract_file(input)
+          use_ace_context({ "files" => [input] })
         end
 
         def extract_from_hash(config)
-          parts = []
-
-          # Read specified files
-          if config["files"]
-            files = config["files"]
-            files = [files] unless files.is_a?(Array)
-
-            files.each do |file|
-              content = extract_file(file)
-              parts << content unless content.empty?
+          # Check for ace-review preset reference
+          if config["preset"]
+            if preset_context = load_preset_context(config["preset"])
+              return extract(preset_context)
             end
           end
 
-          # Include inline content
+          # Check if config has 'presets' key - delegate to ace-context
+          if config["presets"]
+            return use_ace_context(config)
+          end
+
+          # Otherwise use ace-context for unified extraction
+          # Include inline content if provided
           if config["content"]
-            parts << config["content"]
-          end
+            parts = [config["content"]]
 
-          # Execute commands for dynamic context
-          if config["commands"]
-            config["commands"].each do |command|
-              output = execute_command(command)
-              parts << format_command_context(command, output) if output
+            # Extract other parts via ace-context
+            context_config = config.reject { |k, _| k == "content" }
+            if context_config.any?
+              parts << use_ace_context(context_config)
             end
+
+            return parts.join("\n\n" + "=" * 80 + "\n\n")
           end
 
-          parts.join("\n\n" + "=" * 80 + "\n\n")
+          use_ace_context(config)
         end
 
         def extract_project_context
-          parts = []
+          # Build list of existing project docs
+          existing_docs = DEFAULT_PROJECT_DOCS.select { |path| File.exist?(path) }
 
-          DEFAULT_PROJECT_DOCS.each do |doc_path|
-            content = extract_file(doc_path)
-            parts << content unless content.empty?
-          end
-
-          if parts.empty?
+          if existing_docs.empty?
             # If no standard docs found, try to find any markdown files
-            fallback_docs = Dir.glob("{*.md,docs/*.md}").first(3)
-            fallback_docs.each do |doc|
-              content = extract_file(doc)
-              parts << content unless content.empty?
-            end
+            existing_docs = Dir.glob("{*.md,docs/*.md}").first(3)
           end
 
-          parts.join("\n\n" + "=" * 80 + "\n\n")
-        end
+          return "" if existing_docs.empty?
 
-        def extract_file(path)
-          result = @file_reader.read(path)
-          return "" unless result[:success]
-
-          <<~CONTENT
-            File: #{path}
-            #{"-" * 40}
-            #{result[:content]}
-          CONTENT
+          # Use ace-context to load all docs
+          use_ace_context({ "files" => existing_docs })
         end
 
         def load_preset_context(preset_name)
-          # Lazy load preset manager
+          # Lazy load preset manager for ace-review presets
           @preset_manager ||= PresetManager.new
 
           preset = @preset_manager.load_preset(preset_name)
           preset&.dig("context")
         end
 
-        def execute_command(command)
-          require "open3"
-          stdout, stderr, status = Open3.capture3(command)
-          return nil unless status.success?
-
-          stdout
-        rescue StandardError => e
-          warn "Failed to execute context command '#{command}': #{e.message}" if Ace::Review.debug?
-          nil
+        def ace_context_preset_exists?(preset_name)
+          # Check if this is a valid ace-context preset
+          Ace::Context.list_presets.any? { |p| p[:name] == preset_name }
+        rescue StandardError
+          false
         end
 
-        def format_command_context(command, output)
-          <<~CONTEXT
-            Command Output: #{command}
-            #{"-" * 40}
-            #{output}
-          CONTEXT
+        def use_ace_context(config)
+          # Use ace-context for unified content extraction
+          result = Ace::Context.load_auto(YAML.dump(config), format: 'markdown')
+          result.content
+        rescue StandardError => e
+          warn "ace-context extraction failed: #{e.message}" if Ace::Review.debug?
+          ""
         end
       end
     end

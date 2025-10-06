@@ -195,23 +195,24 @@ end
 
 #### Phase 3: Refactor ace-review to Use ace-context
 
-- [ ] Replace `SubjectExtractor` with ace-context calls
-  - Modify `ace-review/lib/ace/review/organisms/review_manager.rb`
-  - Change `extract_subject(config)` to use `Ace::Context.load_auto(config)`
-  - Handle both string and hash configs properly
+- [x] Replace `SubjectExtractor` with ace-context calls
+  - Modified SubjectExtractor to delegate to Ace::Context.load_auto
+  - Preserved special keywords (staged, working, pr)
+  - Supports files, commands, and diffs via ace-context
 
-- [ ] Replace `ContextExtractor` with ace-context calls
-  - Modify `ace-review/lib/ace/review/organisms/review_manager.rb`
-  - Change `extract_context(config)` to use `Ace::Context.load_auto(config)` or `load_multiple_presets`
-  - Enable `presets:` support for context (currently documented but not working)
+- [x] Replace `ContextExtractor` with ace-context calls
+  - Modified ContextExtractor to delegate to Ace::Context.load_auto
+  - Preserved "project" context behavior (default docs)
+  - Supports ace-review presets and ace-context presets
+  - Enables `presets:` support for context
 
-- [ ] Delete redundant extraction code
-  - Remove `ace-review/lib/ace/review/molecules/subject_extractor.rb`
-  - Remove `ace-review/lib/ace/review/molecules/context_extractor.rb`
-  - Remove `ace-review/lib/ace/review/atoms/git_extractor.rb`
+- [x] Delete redundant extraction code
+  - Removed `ace-review/lib/ace/review/atoms/git_extractor.rb`
+  - Removed `ace-review/lib/ace/review/atoms/file_reader.rb`
+  - Kept SubjectExtractor and ContextExtractor as compatibility wrappers
 
-- [ ] Update require statements
-  - Clean up `ace-review/lib/ace/review.rb` to remove deleted files
+- [x] Update require statements
+  - Cleaned up `ace-review/lib/ace/review.rb` to remove deleted atom files
 
 #### Phase 4: Update Documentation and Tests
 
