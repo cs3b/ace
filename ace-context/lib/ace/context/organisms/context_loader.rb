@@ -60,7 +60,15 @@ module Ace
           # Check if it's a template file
           content = File.read(path) rescue nil
 
-          if content && Ace::Core::Atoms::TemplateParser.template?(content)
+          # Treat as template if:
+          # 1. TemplateParser recognizes it as a template, OR
+          # 2. It has YAML frontmatter (starts with ---)
+          is_template = content && (
+            Ace::Core::Atoms::TemplateParser.template?(content) ||
+            content.start_with?('---')
+          )
+
+          if is_template
             # Parse as template
             load_template(path)
           else
@@ -176,7 +184,25 @@ module Ace
             end
           end
 
-          # Parse template configuration
+          # Check if frontmatter contains config directly (via 'context' key or template config keys)
+          # This is the newer pattern for workflow files
+          if frontmatter['context'].is_a?(Hash) ||
+             (frontmatter.keys & %w[files commands include exclude diffs]).any?
+            # Use frontmatter as the main config
+            config = frontmatter['context'] || frontmatter
+
+            # Merge params into options if present
+            if frontmatter['params'].is_a?(Hash)
+              @options = @options.merge(frontmatter['params'])
+            end
+
+            # Process the config
+            context = process_template_config(config)
+            context.metadata[:frontmatter] = frontmatter
+            return context
+          end
+
+          # Otherwise, parse template configuration from body
           parse_result = Ace::Core::Atoms::TemplateParser.parse(template_content)
 
           unless parse_result[:success]
