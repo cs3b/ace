@@ -7,6 +7,8 @@ rescue LoadError
   # ace-core is optional for basic functionality
 end
 
+require "ace/context"
+
 require_relative "review/version"
 
 # Require all necessary components explicitly
