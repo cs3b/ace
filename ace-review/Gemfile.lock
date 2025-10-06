@@ -1,4 +1,10 @@
 PATH
+  remote: ../ace-context
+  specs:
+    ace-context (0.9.0)
+      ace-core (~> 0.9.0)
+
+PATH
   remote: ../ace-core
   specs:
     ace-core (0.9.0)
@@ -6,7 +12,7 @@ PATH
 PATH
   remote: ../ace-nav
   specs:
-    ace-nav (0.9.0)
+    ace-nav (0.9.1)
       ace-core (~> 0.1)
 
 PATH
@@ -19,7 +25,8 @@ PATH
 PATH
   remote: .
   specs:
-    ace-review (0.9.2)
+    ace-review (0.9.6)
+      ace-context (~> 0.9)
       ace-core (~> 0.9)
       ace-nav (~> 0.9)
 
@@ -82,6 +89,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  ace-context!
   ace-core!
   ace-nav!
   ace-review!
