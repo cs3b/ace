@@ -11,6 +11,7 @@ require 'ace/core/atoms/template_parser'
 require 'ace/core/atoms/file_reader'
 require_relative '../molecules/preset_manager'
 require_relative '../models/context_data'
+require_relative '../atoms/git_extractor'
 
 module Ace
   module Context
@@ -365,6 +366,29 @@ module Ace
                 success: cmd_result[:success],
                 error: cmd_result[:error]
               }
+            end
+          end
+
+          # Process diffs
+          if config['diffs'] && config['diffs'].any?
+            data[:diffs] ||= []
+            config['diffs'].each do |diff_range|
+              result = Atoms::GitExtractor.extract_diff(diff_range)
+              if result[:success]
+                data[:diffs] << {
+                  range: diff_range,
+                  output: result[:output],
+                  success: true
+                }
+              else
+                data[:diffs] << {
+                  range: diff_range,
+                  output: "",
+                  success: false,
+                  error: result[:error]
+                }
+                data[:errors] << "Git diff failed for '#{diff_range}': #{result[:error]}"
+              end
             end
           end
 

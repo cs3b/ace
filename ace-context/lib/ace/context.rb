@@ -7,6 +7,7 @@ require_relative 'context/version'
 require_relative 'context/organisms/context_loader'
 require_relative 'context/molecules/preset_manager'
 require_relative 'context/molecules/context_file_writer'
+require_relative 'context/atoms/git_extractor'
 
 module Ace
   module Context
