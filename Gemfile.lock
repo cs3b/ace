@@ -41,7 +41,8 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.9.5)
+    ace-review (0.9.6)
+      ace-context (~> 0.9)
       ace-core (~> 0.9)
       ace-nav (~> 0.9)
 

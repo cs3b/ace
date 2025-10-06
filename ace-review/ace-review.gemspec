@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'ace-core', '~> 0.9'
+  spec.add_dependency 'ace-context', '~> 0.9'
   spec.add_dependency 'ace-nav', '~> 0.9'
 
   # Development dependencies
