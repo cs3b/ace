@@ -1,10 +1,11 @@
 ---
 id: v.0.9.0+task.061
-status: pending
+status: in-progress
 priority: high
 estimate: 3-5h
 dependencies: []
 created: 2025-10-06
+progress: "Phase 1 & 2 complete (ace-context git/diff support + ace-review dependency). Phase 3-5 pending (refactoring ace-review to use ace-context)."
 ---
 
 # Migrate Git/Diff Support to ace-context
@@ -155,41 +156,41 @@ end
 
 ### Planning Steps
 
-* [ ] **Analyze ace-review git extraction**: Document all git operations in `ace-review/lib/ace/review/atoms/git_extractor.rb`
-* [ ] **Review ace-context extension points**: Identify where to add `diffs:` support in `ContextLoader#process_template_config`
-* [ ] **Design output format**: Determine how git diffs should be formatted in context output (markdown, xml, etc.)
-* [ ] **Identify edge cases**: Document error handling for invalid git ranges, missing repos, etc.
+* [x] **Analyze ace-review git extraction**: Document all git operations in `ace-review/lib/ace/review/atoms/git_extractor.rb`
+* [x] **Review ace-context extension points**: Identify where to add `diffs:` support in `ContextLoader#process_template_config`
+* [x] **Design output format**: Determine how git diffs should be formatted in context output (markdown, xml, etc.)
+* [x] **Identify edge cases**: Document error handling for invalid git ranges, missing repos, etc.
 
 ### Execution Steps
 
 #### Phase 1: Extend ace-context with Git/Diff Support
 
-- [ ] Create `ace-context/lib/ace/context/atoms/git_extractor.rb`
+- [x] Create `ace-context/lib/ace/context/atoms/git_extractor.rb`
   - Migrate from `ace-review/lib/ace/review/atoms/git_extractor.rb`
   - Keep array-based command execution for security
   - Add methods: `extract_diff`, `staged_diff`, `working_diff`, `tracking_branch`
 
-- [ ] Update `ace-context/lib/ace/context/organisms/context_loader.rb`
+- [x] Update `ace-context/lib/ace/context/organisms/context_loader.rb`
   - Add `diffs:` key support in `process_template_config` (line ~358)
   - Handle diff extraction with error reporting
   - Format diff output consistently with other content types
 
-- [ ] Update `ace-context/lib/ace/context.rb`
+- [x] Update `ace-context/lib/ace/context.rb`
   - Require new git_extractor atom
   - Export as part of public API
 
-- [ ] Add tests for git operations in ace-context
+- [x] Add tests for git operations in ace-context
   - Test diff extraction
   - Test error handling (invalid ranges, no git repo)
   - Test output formatting
 
 #### Phase 2: Add ace-context Dependency to ace-review
 
-- [ ] Update `ace-review/ace-review.gemspec`
+- [x] Update `ace-review/ace-review.gemspec`
   - Add `spec.add_dependency 'ace-context', '~> 0.9'`
   - Bump version to 0.9.6
 
-- [ ] Update `ace-review/lib/ace/review.rb`
+- [x] Update `ace-review/lib/ace/review.rb`
   - Add `require 'ace/context'` at top level
 
 #### Phase 3: Refactor ace-review to Use ace-context
