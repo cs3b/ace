@@ -87,23 +87,23 @@ module Ace
           }
         end
 
-        # Get storage configuration
+        # Get storage configuration (user config only, no defaults)
         def storage_config
-          config&.dig("storage") || Ace::Review.get("storage") || {}
+          config&.dig("storage") || {}
         end
 
         # Get the base path for storing reviews
         def review_base_path
-          # Check for configured path first
+          # 1. Check for configured path first (user config only)
           configured_path = storage_config["base_path"]
           return expand_path_template(configured_path) if configured_path
 
-          # Try to get from ace-taskflow
+          # 2. Try to get from ace-taskflow
           release_path = get_release_path
           return release_path if release_path
 
-          # Fallback
-          "./reviews"
+          # 3. Fallback to cache directory
+          File.join(project_root, ".cache/ace-review/sessions")
         end
 
         private
