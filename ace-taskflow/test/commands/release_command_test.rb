@@ -42,7 +42,17 @@ class ReleaseCommandTest < AceTaskflowTestCase
   end
 
   def test_show_release_with_path_flag
-    skip "Path flag not implemented in current version"
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        output = capture_stdout do
+          @command.execute(["v.0.9.0", "--path"])
+        end
+
+        # Should show only the path, not release details
+        assert_match(%r{\.ace-taskflow/v\.0\.9\.0}, output)
+        refute_match(/Release:|Status:|Progress:/, output)
+      end
+    end
   end
 
   def test_show_specific_release

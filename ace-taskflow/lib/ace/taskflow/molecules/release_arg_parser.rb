@@ -6,6 +6,28 @@ module Ace
       # Pure logic for parsing release command arguments
       # Unit testable - no I/O
       class ReleaseArgParser
+        # Parse display mode flags from arguments
+        # Modifies args array by removing matched flags and optional subfolder
+        # @param args [Array<String>] Command arguments (modified in place)
+        # @return [Hash] Display mode hash with :mode and :subfolder keys
+        #   mode: "path", "content", or "formatted"
+        #   subfolder: optional subfolder path (only for --path mode)
+        def self.parse_display_mode(args)
+          if index = args.index("--path")
+            args.delete_at(index)
+            # Check if next argument is a subfolder (not a flag)
+            subfolder = nil
+            if index < args.length && !args[index].start_with?("-")
+              subfolder = args.delete_at(index)
+            end
+            return { mode: "path", subfolder: subfolder }
+          elsif index = args.index("--content")
+            args.delete_at(index)
+            return { mode: "content", subfolder: nil }
+          end
+          { mode: "formatted", subfolder: nil }
+        end
+
         # Parse create subcommand arguments
         # @param args [Array<String>] Command arguments
         # @return [Hash] Parsed create options
