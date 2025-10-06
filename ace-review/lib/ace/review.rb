@@ -56,10 +56,6 @@ module Ace
             "output_format" => "markdown",
             "context" => "project"
           },
-          "storage" => {
-            "base_path" => ".ace-taskflow/%{release}/reviews",
-            "auto_organize" => true
-          },
           "presets" => default_presets
         }
       end

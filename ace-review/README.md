@@ -2,14 +2,15 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.4
+**Version:** 0.9.5
 
-## Changes in 0.9.4
+## Changes in 0.9.5
 
-- **Dynamic Storage**: Defaults to `$(ace-taskflow release --path reviews)` (no config needed)
-- **Organized Sessions**: All review files in one folder with `.tmp` for temporary files
-- **Smart Detection**: Automatically finds release folder, falls back gracefully
-- **Correct Binary**: Fixed to check for `ace-llm-query` instead of `ace-llm`
+- **Storage Path Detection**: Fixed 3-tier priority (user config → ace-taskflow → `.cache/ace-review/sessions/`)
+- **No Hardcoded Defaults**: Removed hardcoded storage defaults that prevented smart detection
+- **Correct Fallback**: Changed from `./reviews` to `.cache/ace-review/sessions/` for consistency
+- **LLM Command Fix**: Fixed remaining `ace-llm` references to use `ace-llm-query` correctly
+- **Workflow Rename**: Simplified command from `/ace:review-code` to `/ace:review`
 
 ## Features
 

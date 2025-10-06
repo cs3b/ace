@@ -28,8 +28,8 @@ module Ace
             }
           end
 
-          # Execute via ace-llm
-          result = execute_ace_llm(prompt, model)
+          # Execute via ace-llm-query
+          result = execute_ace_llm_query(prompt, model)
 
           if result[:success]
             {
@@ -52,7 +52,7 @@ module Ace
           system("which #{command} > /dev/null 2>&1")
         end
 
-        def execute_ace_llm(prompt, model)
+        def execute_ace_llm_query(prompt, model)
           # Write prompt to temp file
           require "tempfile"
           temp_file = Tempfile.new(["review-prompt", ".md"])
@@ -60,10 +60,9 @@ module Ace
           temp_file.close
 
           begin
-            # Execute ace-llm
+            # Execute ace-llm-query
             cmd = [
-              "ace-llm",
-              "query",
+              "ace-llm-query",
               "--model", model,
               "--file", temp_file.path
             ]

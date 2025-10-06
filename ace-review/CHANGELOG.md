@@ -5,6 +5,25 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.5] - 2025-10-06
+
+### Changed
+
+- **Workflow command renamed**: `review-code.wf.md` → `review.wf.md`
+  - Claude command changed from `/ace:review-code` to `/ace:review` for simplicity
+  - Updated workflow invocation from `wfi://review-code` to `wfi://review`
+
+### Fixed
+
+- **Storage path detection**: Removed hardcoded storage defaults that prevented smart detection
+  - `storage_config` now only checks user config, not module defaults
+  - Properly implements 3-tier priority: user config → ace-taskflow → cache directory
+  - Fallback path changed from `./reviews` to `.cache/ace-review/sessions/`
+- **LLM command execution**: Fixed remaining `ace-llm` command reference in `llm_executor.rb`
+  - Changed from `ace-llm query` to direct `ace-llm-query` invocation
+  - Renamed method from `execute_ace_llm` to `execute_ace_llm_query` for clarity
+- **Configuration comments**: Updated config file comments to reflect correct detection order
+
 ## [0.9.4] - 2025-10-05
 
 ### Changed

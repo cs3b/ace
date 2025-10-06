@@ -3,15 +3,16 @@
 
 # Default settings applied to all reviews unless overridden
 defaults:
-  model: "google:gemini-2.5-flash"
+  model: "google:gemini-2.5-flash-lite"
   output_format: "markdown"
   context: "project"
 
 # Storage configuration
 # storage:
 #   # Where to store review outputs
-#   # If not specified, uses: $(ace-taskflow release --path reviews)
-#   # Or fallback to: ./reviews
+#   # Detection order (if not specified):
+#   #   1. Try: $(ace-taskflow release --path reviews)
+#   #   2. Fallback: .cache/ace-review/sessions/
 #   # You can override with custom path (supports %{release} placeholder):
 #   base_path: ".ace-taskflow/%{release}/reviews"
 #   auto_organize: true
