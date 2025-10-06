@@ -1,14 +1,13 @@
-# Task 060: Migrate Git/Diff Support to ace-context
+---
+id: v.0.9.0+task.061
+status: pending
+priority: high
+estimate: 3-5h
+dependencies: []
+created: 2025-10-06
+---
 
-## Metadata
-
-- **ID**: 060
-- **Status**: draft
-- **Priority**: high
-- **Estimate**: 3-5 hours
-- **Created**: 2025-10-06
-- **Dependencies**: None
-- **Related**: ace-context, ace-review refactoring
+# Migrate Git/Diff Support to ace-context
 
 ## Context
 
@@ -260,7 +259,7 @@ end
 
 - [ ] Commit changes
   - Atomic commits per phase
-  - Clear commit messages referencing task 060
+  - Clear commit messages referencing task 061
 
 ## Acceptance Criteria
 
