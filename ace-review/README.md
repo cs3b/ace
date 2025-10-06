@@ -2,14 +2,14 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.3
+**Version:** 0.9.4
 
-## Changes in 0.9.3
+## Changes in 0.9.4
 
-- **Configuration Renamed**: `code.yml` → `config.yml` for consistency
-- **Preset Organization**: All presets now in separate files under `review/presets/`
-- **Configuration Cascade**: Now uses ace-core's ConfigFinder (no hardcoded paths)
-- **Better Modularity**: Main config contains only defaults and storage settings
+- **Dynamic Storage**: Defaults to `$(ace-taskflow release --path reviews)` (no config needed)
+- **Organized Sessions**: All review files in one folder with `.tmp` for temporary files
+- **Smart Detection**: Automatically finds release folder, falls back gracefully
+- **Correct Binary**: Fixed to check for `ace-llm-query` instead of `ace-llm`
 
 ## Features
 

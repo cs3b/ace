@@ -8,11 +8,13 @@ defaults:
   context: "project"
 
 # Storage configuration
-storage:
-  # Where to store review outputs
-  # %{release} will be replaced with current release
-  base_path: ".ace-taskflow/%{release}/reviews"
-  auto_organize: true
+# storage:
+#   # Where to store review outputs
+#   # If not specified, uses: $(ace-taskflow release --path reviews)
+#   # Or fallback to: ./reviews
+#   # You can override with custom path (supports %{release} placeholder):
+#   base_path: ".ace-taskflow/%{release}/reviews"
+#   auto_organize: true
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability

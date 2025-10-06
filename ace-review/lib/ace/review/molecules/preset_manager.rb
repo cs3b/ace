@@ -94,10 +94,16 @@ module Ace
 
         # Get the base path for storing reviews
         def review_base_path
-          path_template = storage_config["base_path"] || ".ace-taskflow/%{release}/reviews"
+          # Check for configured path first
+          configured_path = storage_config["base_path"]
+          return expand_path_template(configured_path) if configured_path
 
-          # Replace placeholders
-          path_template.gsub("%{release}", current_release)
+          # Try to get from ace-taskflow
+          release_path = get_release_path
+          return release_path if release_path
+
+          # Fallback
+          "./reviews"
         end
 
         private
@@ -284,12 +290,27 @@ module Ace
         def current_release
           # Try to get current release from ace-taskflow
           if system("which ace-taskflow > /dev/null 2>&1")
-            release = `ace-taskflow release --current 2>/dev/null`.strip
+            release = `ace-taskflow release 2>/dev/null`.strip
             return release unless release.empty?
           end
 
           # Fallback to v.0.0.0
           "v.0.0.0"
+        end
+
+        def get_release_path
+          return nil unless system("which ace-taskflow > /dev/null 2>&1")
+
+          path = `ace-taskflow release --path reviews 2>/dev/null`.strip
+          path.empty? ? nil : path
+        end
+
+        def expand_path_template(template)
+          return template unless template
+
+          # Keep existing %{release} expansion if user configured it
+          release = current_release
+          template.gsub("%{release}", release)
         end
       end
     end

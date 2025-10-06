@@ -19,12 +19,12 @@ module Ace
         def execute(prompt:, model: nil)
           model ||= @default_model
 
-          # Check if ace-llm is available
-          unless command_exists?("ace-llm")
+          # Check if ace-llm-query is available
+          unless command_exists?("ace-llm-query")
             return {
               success: false,
               response: nil,
-              error: "ace-llm not found. Please install ace-llm gem or use --dry-run"
+              error: "ace-llm-query not found. Please install ace-llm gem or use --dry-run"
             }
           end
 

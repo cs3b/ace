@@ -5,6 +5,28 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4] - 2025-10-05
+
+### Changed
+
+- **Dynamic storage path**: Storage now defaults to `$(ace-taskflow release --path reviews)`
+  - Falls back to `./reviews` if ace-taskflow not available
+  - Config `storage.base_path` commented out by default, uses smart detection
+  - User can still override by uncommenting and setting custom path
+- **Review file organization**: All review files now stored together with `.tmp` pattern
+  - Session files in `{release_path}/reviews/review-{timestamp}/`
+  - Temporary files use `.tmp` extension: `prompt.md.tmp`, `subject.md.tmp`, `context.md.tmp`
+  - Committable files: `metadata.yml`, `review.md`
+  - Gitignore pattern changed from `.ace-review-sessions/` to `**/*.tmp`
+- **Command detection**: Binary check updated from `ace-llm` to `ace-llm-query`
+  - Error message now correctly references `ace-llm-query`
+
+### Fixed
+
+- Review sessions no longer create separate `.ace-review-sessions` directory
+- All review artifacts now properly organized in release-specific folders
+- Temporary working files automatically gitignored via `.tmp` extension
+
 ## [0.9.3] - 2025-10-05
 
 ### Changed
