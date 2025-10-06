@@ -1,5 +1,5 @@
 # Test and temporary files
-.ace-review-sessions/
+**/*.tmp
 
 # Ruby and Bundler
 *.gem

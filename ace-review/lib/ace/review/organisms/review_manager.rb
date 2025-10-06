@@ -51,11 +51,22 @@ module Ace
             prompt_result[:prompt]
           )
 
-          # Step 5: Execute or prepare session
+          # Step 5: Create session directory
+          session_dir = create_session_directory(options)
+
+          # Step 6: Save session files
+          save_session_files(session_dir, review_data)
+
+          # Step 7: Execute or just prepare
           if options.auto_execute
-            execute_with_llm(review_data, options)
+            execute_with_llm(review_data, session_dir)
           else
-            prepare_session(review_data, options)
+            {
+              success: true,
+              session_dir: session_dir,
+              prompt_file: File.join(session_dir, "prompt.md.tmp"),
+              message: "Review session prepared in #{session_dir}"
+            }
           end
         end
 
@@ -159,7 +170,7 @@ module Ace
           @context_extractor.extract(context_config)
         end
 
-        def execute_with_llm(review_data, options)
+        def execute_with_llm(review_data, session_dir)
           executor = Ace::Review::Molecules::LlmExecutor.new
 
           result = executor.execute(
@@ -168,46 +179,32 @@ module Ace
           )
 
           if result[:success]
-            save_review_output(result[:response], review_data, options)
+            save_review_output(result[:response], review_data, session_dir)
           else
             result
           end
         end
 
-        def prepare_session(review_data, options)
-          session_dir = create_session_directory(options)
-
-          # Save all session files
-          save_session_files(session_dir, review_data)
-
-          {
-            success: true,
-            session_dir: session_dir,
-            prompt_file: File.join(session_dir, "prompt.md"),
-            message: "Review session prepared in #{session_dir}"
-          }
-        end
-
         def save_session_files(session_dir, review_data)
-          # Save prompt
-          File.write(File.join(session_dir, "prompt.md"), review_data[:prompt])
+          # Save prompt (temporary - with .tmp extension)
+          File.write(File.join(session_dir, "prompt.md.tmp"), review_data[:prompt])
 
-          # Save subject
-          File.write(File.join(session_dir, "subject.md"), review_data[:subject])
+          # Save subject (temporary - with .tmp extension)
+          File.write(File.join(session_dir, "subject.md.tmp"), review_data[:subject])
 
-          # Save context if present
+          # Save context if present (temporary - with .tmp extension)
           unless review_data[:context].empty?
-            File.write(File.join(session_dir, "context.md"), review_data[:context])
+            File.write(File.join(session_dir, "context.md.tmp"), review_data[:context])
           end
 
-          # Save metadata
+          # Save metadata (committable - no .tmp extension)
           metadata = create_metadata(review_data)
           File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
         end
 
-        def save_review_output(response, review_data, options)
-          output_file = determine_output_file(options)
-          ensure_output_directory(output_file)
+        def save_review_output(response, review_data, session_dir)
+          # Save review to session directory as review.md
+          output_file = File.join(session_dir, "review.md")
 
           # Add metadata header to response
           full_content = add_review_metadata(response, review_data)
@@ -227,31 +224,14 @@ module Ace
             return options.session_dir
           end
 
+          # Use reviews folder from preset manager
+          base_path = @preset_manager.review_base_path
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-          session_dir = File.join(
-            Dir.pwd,
-            ".ace-review-sessions",
-            "review-#{timestamp}"
-          )
+          session_dir = File.join(base_path, "review-#{timestamp}")
           FileUtils.mkdir_p(session_dir)
           session_dir
         end
 
-        def determine_output_file(options)
-          return options.output if options.output
-
-          # Use storage config
-          base_path = @preset_manager.review_base_path
-          FileUtils.mkdir_p(base_path)
-
-          timestamp = Time.now.strftime("%Y-%m-%d-%H%M%S")
-          File.join(base_path, "review-#{timestamp}.md")
-        end
-
-        def ensure_output_directory(file_path)
-          dir = File.dirname(file_path)
-          FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
-        end
 
         def create_metadata(review_data)
           {
