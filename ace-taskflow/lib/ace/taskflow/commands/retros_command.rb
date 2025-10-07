@@ -18,7 +18,7 @@ module Ace
 
           if options[:help]
             show_help
-            exit 0
+            return 0
           end
 
           # Determine scope from flags
@@ -45,9 +45,11 @@ module Ace
           else
             display_retros(retros, context, scope, options)
           end
+
+          0
         rescue StandardError => e
           puts "Error: #{e.message}"
-          exit 1
+          1
         end
 
         private

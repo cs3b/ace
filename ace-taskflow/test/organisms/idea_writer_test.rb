@@ -81,11 +81,13 @@ class IdeaWriterTest < AceTestCase
     assert_match(/this-is-a-long-idea/, basename, "Filename should contain sanitized title")
   end
 
-  def test_handles_empty_content_gracefully
+  def test_raises_error_on_empty_content
     content = ""
-    path = @writer.write(content)
 
-    assert File.exist?(path), "File should be created even with empty content"
-    assert_match(/idea\.md$/, path, "Should use default 'idea' in filename for empty content")
+    error = assert_raises(Ace::Taskflow::Organisms::IdeaWriterError) do
+      @writer.write(content)
+    end
+
+    assert_match(/No content provided/, error.message)
   end
 end
