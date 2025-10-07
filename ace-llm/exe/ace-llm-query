@@ -31,7 +31,8 @@ module Ace
           timeout: 30,
           force: false,
           debug: false,
-          list_providers: false
+          list_providers: false,
+          model: nil
         }
         @registry = Molecules::ClientRegistry.new
       end
@@ -95,7 +96,8 @@ module Ace
 
       def create_option_parser
         OptionParser.new do |opts|
-          opts.banner = "Usage: ace-llm-query PROVIDER[:MODEL] PROMPT [options]"
+          opts.banner = "Usage: ace-llm-query PROVIDER[:MODEL] PROMPT [options]\n" \
+                        "       ace-llm-query PROVIDER PROMPT --model MODEL [options]"
           opts.separator ""
           opts.separator "Query any LLM provider through a unified interface"
           opts.separator ""
@@ -126,6 +128,10 @@ module Ace
             @options[:timeout] = timeout
           end
 
+          opts.on("--model MODEL", "Model name (overrides PROVIDER[:MODEL] if both present)") do |model|
+            @options[:model] = model
+          end
+
           opts.on("--force", "Force overwrite existing files") do
             @options[:force] = true
           end
@@ -152,6 +158,8 @@ module Ace
           opts.separator "Examples:"
           opts.separator '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
           opts.separator '  ace-llm-query gflash "Quick question" # using alias'
+          opts.separator '  ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite'
+          opts.separator '  ace-llm-query gflash "test" --model gemini-pro # override alias model'
           opts.separator '  ace-llm-query openai prompt.txt --output response.md'
           opts.separator ""
           opts.separator "Providers: #{available_provider_names.join(', ')}"
@@ -189,6 +197,16 @@ module Ace
           exit(1)
         end
 
+        # Resolve final model: --model flag > positional :MODEL > provider default
+        final_model = @options[:model] || parse_result.model
+
+        # Validate that we have a model from some source
+        if final_model.nil? || final_model.empty?
+          error_output("No model specified and no default available for #{parse_result.provider}")
+          error_output("Use --model MODEL or PROVIDER:MODEL syntax")
+          exit(1)
+        end
+
         # Load prompt content
         file_handler = Ace::LLM::Molecules::FileIoHandler.new
         prompt_text = file_handler.read_content(@prompt)
@@ -197,7 +215,7 @@ module Ace
         messages = build_messages(prompt_text)
 
         # Create client and generate response
-        client = create_client(parse_result.provider, parse_result.model)
+        client = create_client(parse_result.provider, final_model)
         response = client.generate(messages, **generation_options)
 
         # Format and output response

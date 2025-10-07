@@ -22,6 +22,7 @@ module Ace
       # @param timeout [Integer] Request timeout in seconds (--timeout SECONDS)
       # @param force [Boolean] Force overwrite output file (--force)
       # @param debug [Boolean] Enable debug output (--debug)
+      # @param model [String, nil] Model name (overrides PROVIDER[:MODEL] if both present) (--model MODEL)
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
@@ -33,7 +34,8 @@ module Ace
                     system: nil,
                     timeout: 30,
                     force: false,
-                    debug: false)
+                    debug: false,
+                    model: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -43,6 +45,14 @@ module Ace
         parse_result = parser.parse(provider_model)
         raise Error, parse_result.error unless parse_result.valid?
 
+        # Resolve final model: model parameter > positional :MODEL > provider default
+        final_model = model || parse_result.model
+
+        # Validate that we have a model from some source
+        if final_model.nil? || final_model.empty?
+          raise Error, "No model specified and no default available for #{parse_result.provider}"
+        end
+
         # Build messages array
         messages = []
         messages << { role: "system", content: system } if system && !system.empty?
@@ -51,7 +61,7 @@ module Ace
         # Get client with timeout option
         client = registry.get_client(
           parse_result.provider,
-          model: parse_result.model,
+          model: final_model,
           timeout: timeout
         )
 
@@ -63,7 +73,7 @@ module Ace
         # Debug output if requested
         if debug
           $stderr.puts "Provider: #{parse_result.provider}"
-          $stderr.puts "Model: #{parse_result.model}"
+          $stderr.puts "Model: #{final_model}"
           $stderr.puts "Temperature: #{temperature}" if temperature
           $stderr.puts "Max tokens: #{max_tokens}" if max_tokens
         end
@@ -77,7 +87,7 @@ module Ace
         # Build result hash
         result = {
           text: text_content,
-          model: parse_result.model,
+          model: final_model,
           provider: parse_result.provider,
           usage: response[:usage],
           metadata: response[:metadata]

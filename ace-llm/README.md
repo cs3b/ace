@@ -62,6 +62,10 @@ ace-llm-query gflash code.rb --system "You are a Ruby expert"
 
 # Output as JSON
 ace-llm-query gflash "List 5 tips" --format json --output tips.json
+
+# Override model with --model flag
+ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite
+ace-llm-query gflash "Quick test" --model gemini-pro  # Override alias model
 ```
 
 ## Configuration
