@@ -14,9 +14,11 @@ ace-review --list-prompts
 
 This provides:
 - Complete command help and options
-- All 14 available presets with descriptions
+- All available presets with descriptions
 - Available prompt modules (base, format, focus, guidelines)
 - Tool documentation and examples
+
+**Note**: Since v0.9.6, ace-review uses ace-context for unified content aggregation, supporting `files:`, `diffs:`, `commands:`, and `presets:` in configuration.
 
 ## ⚠️ CRITICAL: AI Agent Instructions ⚠️
 
@@ -44,26 +46,52 @@ This provides:
 ### The Main Command Pattern
 
 ```bash
-# Multi-repository review with all diffs
+# Multi-repository review with git diffs
 ace-review \
   --preset ruby-atom \
   --context 'presets: [project]' \
-  --subject 'commands: [
-    "git diff 8e7882c~1..HEAD",
-    # Add more repository diffs as needed
-  ]' \
+  --subject 'diffs: ["8e7882c~1..HEAD", "origin/main...HEAD"]' \
   --add-focus 'scope/tests,scope/docs' \
   --model "google:gemini-2.5-flash" \
+  --auto-execute
+
+# Review specific files with context
+ace-review \
+  --preset code \
+  --subject 'files: ["lib/ace/review/**/*.rb"]' \
+  --context 'presets: [project]' \
   --auto-execute
 ```
 
 ### Key Parameters Explained
 
 - **`--preset`**: Base configuration (see `ace-review --list-presets`)
-- **`--context`**: Background docs to include (presets or files)
-- **`--subject`**: What to review (commands for diffs, or file patterns)
+- **`--context`**: Background docs to include (YAML config or preset name)
+- **`--subject`**: What to review (YAML config, git range, keyword, or file pattern)
 - **`--add-focus`**: Additional focus modules to layer on preset
 - **`--auto-execute`**: Run LLM query immediately (no manual steps)
+
+### Configuration Schema (ace-context v0.9.6+)
+
+Both `--subject` and `--context` accept unified YAML configuration:
+
+```yaml
+# ✅ CORRECT: Use these keys
+files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
+diffs: ["origin/main...HEAD", "HEAD~5..HEAD"]  # Git diff ranges
+commands: ["git log --oneline -5"]       # Shell commands to execute
+presets: [project, architecture]         # ace-context preset names
+
+# ❌ WRONG: Don't use 'patterns:' (removed in v0.9.6)
+patterns: ["lib/**/*.rb"]  # No longer supported
+```
+
+**Simple String Shortcuts** (for `--subject`):
+- `"staged"` → staged changes
+- `"working"` → unstaged changes
+- `"pr"` → changes vs tracking branch
+- `"HEAD~1..HEAD"` → git range (auto-detected)
+- `"lib/**/*.rb"` → file pattern (auto-detected)
 
 ## Quick Discovery Commands
 
@@ -78,42 +106,81 @@ ace-review --help           # Full command documentation
 
 ### Daily PR Review
 ```bash
+# Simple: uses default subject (staged + working changes)
 ace-review --preset pr --auto-execute
+
+# Explicit: review changes vs main branch
+ace-review --preset pr --subject 'diffs: ["origin/main...HEAD"]' --auto-execute
 ```
 
 ### Pre-Commit Check
 ```bash
+# Review staged changes
+ace-review --preset code --subject staged --auto-execute
+
+# Or explicitly
+ace-review --preset code --subject 'diffs: ["staged"]' --auto-execute
+```
+
+### Review Specific Files
+```bash
+# Review files matching pattern
 ace-review --preset code \
-  --subject 'commands: ["git diff --staged"]' \
+  --subject 'files: ["lib/ace/review/**/*.rb"]' \
+  --auto-execute
+
+# Multiple file patterns
+ace-review --preset code \
+  --subject 'files: ["lib/**/*.rb", "spec/**/*_spec.rb"]' \
   --auto-execute
 ```
 
 ### Architecture Compliance
 ```bash
-ace-review --preset ruby-atom-modular \
-  --context 'presets: [project, dev-tools]' \
+# Review with architectural context
+ace-review --preset ruby-atom \
+  --context 'presets: [project]' \
+  --auto-execute
+```
+
+### Compose Multiple Sources
+```bash
+# Review files + diffs with full context
+ace-review --preset code \
+  --subject 'files: ["new-feature/**/*.rb"], diffs: ["HEAD~5..HEAD"]' \
+  --context 'presets: [project], files: ["docs/architecture.md"]' \
   --auto-execute
 ```
 
 ## Using Context Files
 
-When review parameters are complex, store them in a context file:
+When review parameters are complex, store them in a preset file:
 
-```markdown
-# .ace-taskflow/$(ace-taskflow release --path)/*/docs/ace-review-contexts.md
-subject: diff from sha till HEAD on following repos
+```yaml
+# .ace/review/presets/multi-repo.yml
+description: "Review changes across main repo and submodules"
 
-[main]         8e7882c chore: update submodules
-# [other-repo] commit-sha description
+subject:
+  diffs:
+    - "8e7882c~1..HEAD"                    # Main repo: specific commit range
+    - "origin/main...HEAD"                 # All changes vs main
+  files:
+    - "docs/CHANGELOG.md"                  # Include changelog
 
 context:
-- presets: project
-- focus modules:
+  presets: [project]                       # Load project documentation
+  files: ["docs/architecture.md"]          # Specific architectural docs
+
+prompt:
+  focus:
     - architecture/atom
     - languages/ruby
 ```
 
-Then reference the parameters in your command.
+Then use the preset:
+```bash
+ace-review --preset multi-repo --auto-execute
+```
 
 ## Essential Tips
 
@@ -121,36 +188,51 @@ Then reference the parameters in your command.
 
 | Issue | Solution |
 |-------|----------|
-| "Preset not found" | Run `ace-review --list-presets` |
-| "Git diff empty" | Check git range with `git diff` |
-| "LLM timeout" | Narrow the review scope |
+| "No code to review" | Use `files:` not `patterns:` → `--subject 'files: ["lib/**/*.rb"]'` |
+| "Preset not found" | Run `ace-review --list-presets` to see available presets |
+| "Git diff empty" | Check git range: `git log origin/main...HEAD` |
+| "LLM timeout" | Narrow the review scope or use faster model |
+| "Invalid git range" | Verify range exists: `git diff HEAD~5..HEAD` |
 
 ### Debug Mode
 ```bash
 # See what would be executed
 ace-review --preset pr --dry-run
 
+# Verify subject extraction
+ace-review --subject 'files: ["lib/**/*.rb"]' --dry-run --verbose
+
 # Check preset configuration
-grep -A 10 "ruby-atom-modular:" .coding-agent/ace-review.yml
+ace-review --list-presets
+cat .ace/review/presets/ruby-atom.yml
 ```
 
 ## Success Criteria
 
-- ✅ Context loaded with `context --preset ace-review`
+- ✅ Available presets and prompts listed
 - ✅ Appropriate preset or configuration selected
-- ✅ Subject correctly specified (diffs or files)
+- ✅ Subject correctly specified using `files:`, `diffs:`, or keywords
+- ✅ Context properly configured (optional but recommended)
 - ✅ Command executed with `--auto-execute`
-- ✅ Review report generated and saved
+- ✅ Review report generated and saved to session directory
 - ✅ No manual llm-query execution needed
 
 ## Summary
 
-1. **Load context**: `context --preset ace-review` for reference
-2. **Choose approach**: Preset, custom, or context file
+1. **Discovery**: Run `ace-review --list-presets` and `--list-prompts`
+2. **Configure**: Choose preset and specify subject/context
+   - Use `files:` for file patterns
+   - Use `diffs:` for git ranges
+   - Use `presets:` for ace-context presets
+   - Compose multiple sources as needed
 3. **Execute**: Single command with `--auto-execute`
 4. **Review**: Read generated report for insights
 
-**Remember**: This workflow generates review reports only. Task creation is the user's responsibility after reviewing the reports.
+**Remember**:
+- This workflow generates review reports only
+- Use `files:` not `patterns:` for file patterns (v0.9.6+)
+- All content extraction delegated to ace-context for unified aggregation
+- Task creation is the user's responsibility after reviewing reports
 
 ---
 
