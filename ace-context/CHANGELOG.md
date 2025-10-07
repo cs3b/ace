@@ -5,6 +5,21 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] - 2025-10-06
+
+### Changed
+- **`embed_document_source` output format** - Raw content with XML blocks
+  - Source document now output as unmodified raw content (frontmatter + markdown)
+  - Embedded files, commands, and diffs wrapped in semantic XML blocks: `<files>`, `<commands>`, `<diffs>`
+  - Removed "# Context" wrapper and markdown sections when embedding source
+  - **Impact**: Cleaner separation between source document and embedded content
+  - **Use case**: Workflow files can embed themselves with their dependent workflows in proper format
+
+### Fixed
+- **Frontmatter preservation in output** - YAML format maintained
+  - Original YAML frontmatter now output with `---` delimiters instead of bulleted list
+  - Applies to both `markdown` and `markdown-xml` output formats when using `embed_document_source`
+
 ## [0.11.1] - 2025-10-06
 
 ### Fixed
