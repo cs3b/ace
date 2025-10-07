@@ -253,7 +253,6 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/068-write-integration-tests/
 ---
 id: v.0.9.0+task.068
 status: pending
-priority: medium
 estimate: 4h
 dependencies: [066, 067]
 ---
@@ -371,7 +370,7 @@ Usage: ace-taskflow task create [TITLE] [options]
 Options:
   --title TITLE           Task title (alternative to positional arg)
   --status STATUS         Initial status (pending, draft, in-progress, done, blocked)
-  --priority PRIORITY     Priority level (critical, high, medium, low)
+  --urgency URGENCY      Urgency level (low, medium, high, critical)
   --estimate ESTIMATE     Effort estimate (e.g., 2h, 1d, TBD)
   --dependencies DEPS     Comma-separated dependency list (e.g., 018,019,020)
   --backlog              Create task in backlog
@@ -383,7 +382,7 @@ Examples:
   ace-taskflow task create 'Implement feature X'
 
   # Flag-based with metadata
-  ace-taskflow task create --title 'Fix bug Y' --priority critical --status pending
+  ace-taskflow task create --title 'Fix bug Y' --urgency critical --status pending
 
   # With dependencies
   ace-taskflow task create 'Write tests' --dependencies 041,042 --estimate 4h
@@ -404,25 +403,30 @@ Examples:
 **Syntax**:
 
 ```bash
-ace-taskflow task create [TITLE] [--title TITLE] [--status STATUS] [--priority PRIORITY] [--estimate ESTIMATE] [--dependencies DEPS] [--backlog | --release VERSION] [--help]
+ace-taskflow task create [TITLE] [--title TITLE] [--status STATUS] [--estimate ESTIMATE] [--dependencies DEPS] [--backlog | --release VERSION] [--<key> <value>...] [--help]
 ```
 
 **Parameters**:
 
 - `TITLE` (positional): Task title (optional if --title provided)
 
-**Options**:
+**Standard Options**:
 
 | Flag | Short | Type | Required | Description | Default | Valid Values |
 |------|-------|------|----------|-------------|---------|--------------|
 | `--title` | | string | no* | Task title | (from positional) | Any string |
 | `--status` | | string | no | Initial status | `pending` | pending, draft, in-progress, done, blocked |
-| `--priority` | | string | no | Priority level | `medium` | critical, high, medium, low |
 | `--estimate` | | string | no | Effort estimate | `TBD` | Any string (e.g., 2h, 1d, 3 days) |
 | `--dependencies` | | string | no | Comma-separated task IDs | `[]` | 018, 018,019, task.018 |
 | `--backlog` | | flag | no | Create in backlog | false | N/A (flag present or not) |
 | `--release` | | string | no | Create in specific release | (current) | v.0.9.0, backlog |
 | `--help` | `-h` | flag | no | Show help and exit | false | N/A |
+
+**Arbitrary Metadata**:
+
+| Pattern | Description | Examples |
+|---------|-------------|----------|
+| `--<key> <value>` | Any other flag saved to frontmatter | `--assignee john`, `--urgency high`, `--sprint 5`, `--tags ui,refactor` |
 
 \* At least one of `TITLE` (positional) or `--title` is required
 
@@ -439,28 +443,29 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/070-add-logging/task.070.md
 ace-taskflow task create --title 'Add logging'
 # Output: (identical to Example 1)
 
-# Example 3: Task with priority
-ace-taskflow task create 'Fix crash on startup' --priority critical
+# Example 3: Task with arbitrary metadata
+ace-taskflow task create 'Fix crash on startup' --urgency critical --assignee alice
 # Output:
 Created task v.0.9.0+task.071
 Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/071-fix-crash-on-startup/task.071.md
 
-# Example 4: Full metadata
+# Example 4: Full standard metadata
 ace-taskflow task create \
   --title 'Implement caching' \
   --status pending \
-  --priority high \
   --estimate 3h \
   --dependencies 068,069
 # Output:
 Created task v.0.9.0+task.072
 Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/072-implement-caching/task.072.md
 
-# Example 5: Draft task in backlog
+# Example 5: Draft task with custom metadata
 ace-taskflow task create \
   --title 'Research alternatives' \
   --status draft \
-  --backlog
+  --backlog \
+  --category research \
+  --sprint 6
 # Output:
 Created task backlog+task.026
 Path: /Users/mc/Ps/ace-meta/.ace-taskflow/backlog/t/026-research-alternatives/task.026.md
@@ -488,7 +493,7 @@ ace-taskflow task create --help
 **Symptom**:
 
 ```bash
-ace-taskflow task create --priority high
+ace-taskflow task create --category urgent
 # Error: Task title is required
 #
 # Usage: ace-taskflow task create <title> [options]
@@ -499,10 +504,10 @@ ace-taskflow task create --priority high
 
 ```bash
 # Provide title as positional argument
-ace-taskflow task create 'My task' --priority high
+ace-taskflow task create 'My task' --category urgent
 
 # OR provide title via --title flag
-ace-taskflow task create --title 'My task' --priority high
+ace-taskflow task create --title 'My task' --category urgent
 ```
 
 ### Problem: "invalid option" error
@@ -523,7 +528,7 @@ ace-taskflow task create 'Task' --invalid-flag value
 ace-taskflow task create --help
 
 # Use correct flag names
-ace-taskflow task create 'Task' --priority high --estimate 2h
+ace-taskflow task create 'Task' --category urgent --estimate 2h
 ```
 
 ### Problem: Dependencies not parsed correctly
@@ -577,7 +582,7 @@ When creating tasks with multiple metadata fields, use flags for clarity:
 # Good: Clear and explicit
 ace-taskflow task create \
   --title 'Implement feature X' \
-  --priority high \
+  --category urgent \
   --estimate 4h \
   --dependencies 070,071
 
@@ -656,7 +661,7 @@ ace-taskflow task create 'My task'
 ace-taskflow task create 'My task'
 
 # After: NEW options available
-ace-taskflow task create 'My task' --priority high
+ace-taskflow task create 'My task' --category urgent
 ```
 
 ### Key Improvements
@@ -690,7 +695,7 @@ ace-taskflow task add-dependency XXX --depends-on YYY
 # Single command with all metadata
 ace-taskflow task create \
   --title 'My task' \
-  --priority high \
+  --category urgent \
   --estimate 3h \
   --dependencies YYY
 ```
