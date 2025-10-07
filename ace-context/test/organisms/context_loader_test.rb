@@ -7,12 +7,12 @@ class ContextLoaderTest < AceTestCase
     content ||= <<~MARKDOWN
       ---
       description: Test preset
-      params:
-        output: stdio
-        embed_itself: true
-        max_size: 1048576
-        timeout: 30
       context:
+        params:
+          output: stdio
+          max_size: 1048576
+          timeout: 30
+        embed_document_source: true
         files:
           - "**/*.md"
         commands:
@@ -38,10 +38,10 @@ class ContextLoaderTest < AceTestCase
       create_preset("default", <<~MARKDOWN
         ---
         description: Default preset
-        params:
-          output: stdio
-          embed_itself: true
         context:
+          params:
+            output: stdio
+          embed_document_source: true
           files:
             - README.md
             - docs/*.md
@@ -104,10 +104,10 @@ class ContextLoaderTest < AceTestCase
       create_preset("cache_test", <<~MARKDOWN
         ---
         description: Cache test
-        params:
-          output: cache
-          embed_itself: true
         context:
+          params:
+            output: cache
+          embed_document_source: true
           files:
             - test.md
         ---
@@ -127,10 +127,10 @@ class ContextLoaderTest < AceTestCase
       create_preset("cmd_test", <<~MARKDOWN
         ---
         description: Command test
-        params:
-          output: stdio
-          timeout: 5
         context:
+          params:
+            output: stdio
+            timeout: 5
           commands:
             - echo "Hello"
             - pwd
@@ -164,10 +164,10 @@ class ContextLoaderTest < AceTestCase
       create_preset("glob_test", <<~MARKDOWN
         ---
         description: Glob test
-        params:
-          output: stdio
-          embed_itself: true
         context:
+          params:
+            output: stdio
+          embed_document_source: true
           files:
             - "ace-*/README.md"
         ---
@@ -191,9 +191,9 @@ class ContextLoaderTest < AceTestCase
       create_preset("body_test", <<~MARKDOWN
         ---
         description: Body test
-        params:
-          output: stdio
         context:
+          params:
+            output: stdio
           files: []
         ---
         # Body Test
@@ -215,11 +215,11 @@ class ContextLoaderTest < AceTestCase
       create_preset("merge_test", <<~MARKDOWN
         ---
         description: Merge test
-        params:
-          output: cache
-          max_size: 500000
-          timeout: 10
         context:
+          params:
+            output: cache
+            max_size: 500000
+            timeout: 10
           files: []
         ---
         Merge test
@@ -247,11 +247,11 @@ class ContextLoaderTest < AceTestCase
       create_preset("format_test", <<~MARKDOWN
         ---
         description: Format test
-        params:
-          output: stdio
-          format: yaml
-          embed_itself: true
         context:
+          params:
+            output: stdio
+            format: yaml
+          embed_document_source: true
           files:
             - test.txt
         ---
@@ -270,4 +270,43 @@ class ContextLoaderTest < AceTestCase
       assert context.content.match?(/files:|Files:/), "Content should include files section"
     end
   end
+
+  def test_new_structure_with_embed_document_source
+    with_temp_dir do
+      # Create sample files
+      File.write("README.md", "# Test Project")
+      FileUtils.mkdir_p("docs")
+      File.write("docs/guide.md", "# Guide")
+
+      # Create preset with NEW structure
+      create_preset("new_structure", <<~MARKDOWN
+        ---
+        description: New structure test
+        context:
+          params:
+            output: stdio
+            max_size: 2097152
+            timeout: 60
+          embed_document_source: true
+          files:
+            - README.md
+            - docs/guide.md
+        ---
+        # New Structure Preset
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("new_structure")
+
+      # Verify files are embedded
+      assert_equal 2, context.file_count, "Should have 2 files embedded"
+      assert context.content.include?("Test Project"), "Should include README content"
+      assert context.content.include?("Guide"), "Should include guide content"
+
+      # Verify output mode is respected
+      assert_equal "stdio", context.metadata[:output]
+    end
+  end
+
 end

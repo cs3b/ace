@@ -57,14 +57,18 @@ module Ace
 
           return nil unless frontmatter
 
+          # Only support NEW structure: context.params
+          context_config = frontmatter['context'] || {}
+          params = context_config['params'] || {}
+
           {
             description: frontmatter['description'] || "#{File.basename(file, '.md')} preset",
-            params: frontmatter['params'] || {},
-            context: frontmatter['context'] || {},
+            params: params,
+            context: context_config,
             body: body.strip,
-            format: frontmatter.dig('params', 'format') || 'markdown',
-            output: frontmatter.dig('params', 'output') || 'stdio',
-            cache: frontmatter.dig('params', 'output') == 'cache',
+            format: params['format'] || 'markdown',
+            output: params['output'] || 'stdio',
+            cache: params['output'] == 'cache',
             metadata: frontmatter['metadata'] || {}
           }
         rescue => e

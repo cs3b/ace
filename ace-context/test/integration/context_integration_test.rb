@@ -20,10 +20,10 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/project.md"), <<~MARKDOWN
       ---
       description: Project preset
-      params:
-        output: cache
-        embed_itself: true
       context:
+        params:
+          output: cache
+        embed_document_source: true
         files:
           - "*.md"
         exclude:
@@ -57,9 +57,9 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/preset1.md"), <<~MARKDOWN
       ---
       description: First preset
-      params:
-        output: stdio
       context:
+        params:
+          output: stdio
         files: ["*.txt"]
       ---
       First preset
@@ -69,9 +69,9 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/preset2.md"), <<~MARKDOWN
       ---
       description: Second preset
-      params:
-        output: cache
       context:
+        params:
+          output: cache
         files: ["*.md"]
       ---
       Second preset
@@ -121,10 +121,10 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/test.md"), <<~MARKDOWN
       ---
       description: Test preset
-      params:
-        output: stdio
-        embed_itself: true
       context:
+        params:
+          output: stdio
+        embed_document_source: true
         files:
           - "*.txt"
       ---
@@ -154,10 +154,10 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/cmd.md"), <<~MARKDOWN
       ---
       description: Command preset
-      params:
-        output: stdio
-        timeout: 5
       context:
+        params:
+          output: stdio
+          timeout: 5
         commands:
           - echo "Integration test"
           - pwd
@@ -181,9 +181,8 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/preset1.md"), <<~MARKDOWN
       ---
       description: First
-      params:
-        embed_itself: true
       context:
+        embed_document_source: true
         files: ["file1.txt"]
       ---
       First
@@ -193,9 +192,8 @@ class ContextIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/context/presets/preset2.md"), <<~MARKDOWN
       ---
       description: Second
-      params:
-        embed_itself: true
       context:
+        embed_document_source: true
         files: ["file2.txt"]
       ---
       Second
