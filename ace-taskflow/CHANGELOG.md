@@ -5,6 +5,35 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2] - 2025-10-08
+
+### Fixed
+
+- **Test Isolation**: Fixed tests leaking artifacts to main project directory
+  - `IdeaCommand` now initialized inside `with_test_project` blocks to respect stubbed project root
+  - Prevents idea files from being created in `.ace-taskflow/v.0.9.0/ideas/` during test runs
+  - Fixed in `test_create_idea_with_git_commit` and `test_idea_with_llm_enhancement`
+
+- **Clipboard Tests**: Fixed 9 failing clipboard reader tests on macOS
+  - Stubbed `ClipboardReader.macos_clipboard_available?` to return false in tests
+  - Forces tests to use fallback `Clipboard` gem path they're designed to test
+  - Previously failed because macOS code path uses `Ace::Support::MacClipboard` instead
+
+- **Test Expectations**: Updated test assertions to match actual behavior
+  - Fixed retro command tests to expect title format (e.g., "Test retro 1") not slug format
+  - Fixed git commit test to use correct flag `--git-commit` instead of `--git`
+  - Updated assertion to expect committed file (clean status) not staged
+
+- **Warning Suppression**: Fixed Ruby 3.4 compatibility issue
+  - Replaced non-existent `Warning.silence` with `$VERBOSE = nil` pattern
+  - Applied to clipboard test constant redefinitions
+
+### Technical
+
+- All 700 tests now pass (0 failures, 0 errors, 83 skips)
+- Test isolation properly prevents pollution of main project directory
+- Clipboard tests work on all platforms through proper stubbing
+
 ## [0.10.1] - 2025-10-08
 
 ### Fixed

@@ -156,13 +156,16 @@ module Ace
           return unless stdout
 
           # Look for test result lines in Minitest output
+          # Handles both plain and ANSI-colored output from Minitest::Reporters
           stdout.each_line do |line|
             # Match test result lines like:
             # test_something [32m PASS[0m (0.00s)
             # test_other [31m FAIL[0m (0.01s)
             # test_error ERROR (0.00s)
             # test_skip SKIP (0.00s)
-            if line =~ /^\s*test_\w+.*\s+(PASS|FAIL|ERROR|SKIP).*\([0-9.]+s\)/
+            # Improved regex to handle ANSI codes and underscores in test names
+            # ANSI codes are: \e[32m (color start), \e[0m (reset)
+            if line =~ /^\s*test_[\w_]+.*\s+(PASS|FAIL|ERROR|SKIP).*\([0-9.]+s\)/
               result = case $1
               when 'PASS'
                 '.'

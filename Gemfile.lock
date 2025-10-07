@@ -55,7 +55,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.10.1)
+    ace-taskflow (0.10.2)
       ace-core (~> 0.9.0)
       ace-support-mac-clipboard (~> 0.1.0)
       clipboard (~> 1.3)
@@ -63,7 +63,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.1.1)
+    ace-test-runner (0.1.2)
       ace-core (~> 0.1)
       ace-test-support (~> 0.1)
       minitest (~> 5.0)
