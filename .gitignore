@@ -16,3 +16,5 @@ ace-*/coverage
 
 # ace-taskflow test artifacts
 ace-taskflow/.ace-taskflow/
+*.tmp
+*.diff
