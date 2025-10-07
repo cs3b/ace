@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.062
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -83,15 +83,15 @@ ace-llm-query someprovider "What is Ruby?"
 
 ### Success Criteria
 
-- [ ] **Flag Parsing**: `--model MODEL` option added to CLI OptionParser
-- [ ] **Model Resolution**: Flag value overrides positional model when both present
-- [ ] **Provider-only Compatibility**: Works with provider-only syntax (e.g., `google --model gemini-flash`)
-- [ ] **Alias Integration**: Works correctly with alias resolution
-- [ ] **Default Fallback**: Uses provider default when neither flag nor positional model specified
-- [ ] **Error Messaging**: Clear error when no model available from any source
-- [ ] **Ruby API Parity**: `QueryInterface.query()` supports `model:` parameter
-- [ ] **Backward Compatibility**: Existing usage patterns continue to work unchanged
-- [ ] **Help Documentation**: Banner and examples updated to show dual syntax
+- [x] **Flag Parsing**: `--model MODEL` option added to CLI OptionParser
+- [x] **Model Resolution**: Flag value overrides positional model when both present
+- [x] **Provider-only Compatibility**: Works with provider-only syntax (e.g., `google --model gemini-flash`)
+- [x] **Alias Integration**: Works correctly with alias resolution
+- [x] **Default Fallback**: Uses provider default when neither flag nor positional model specified
+- [x] **Error Messaging**: Clear error when no model available from any source
+- [x] **Ruby API Parity**: `QueryInterface.query()` supports `model:` parameter
+- [x] **Backward Compatibility**: Existing usage patterns continue to work unchanged
+- [x] **Help Documentation**: Banner and examples updated to show dual syntax
 
 ### Validation Questions
 
@@ -185,18 +185,18 @@ Enable users to specify LLM models via `--model` flag for improved flexibility, 
 
 ### Planning Steps
 
-* [ ] Review existing code patterns in ace-llm-query CLI
+* [x] Review existing code patterns in ace-llm-query CLI
   - Focus areas: OptionParser setup, model resolution flow, error handling patterns
   - Files: ace-llm/exe/ace-llm-query, query_interface.rb, provider_model_parser.rb
 
-* [ ] Design model resolution precedence logic
+* [x] Design model resolution precedence logic
   - Priority: --model flag > positional :MODEL > provider default
   - Edge cases: empty flag value, both specified, neither specified
   - Error scenarios: no model from any source
 
 ### Execution Steps
 
-- [ ] Add `--model` option to CLI OptionParser
+- [x] Add `--model` option to CLI OptionParser
   - Location: `ace-llm/exe/ace-llm-query:` `create_option_parser` method
   - Add after `--max-tokens` option
   - Store in `@options[:model]`
@@ -205,11 +205,11 @@ Enable users to specify LLM models via `--model` flag for improved flexibility, 
   > Assert: `ace-llm-query --help` shows `--model MODEL` option
   > Command: # Run: ace-llm-query --help | grep -A1 "model"
 
-- [ ] Initialize `model: nil` in `@options` hash
+- [x] Initialize `model: nil` in `@options` hash
   - Location: `QueryCLI#initialize` method (line ~26)
   - Add alongside other option defaults
 
-- [ ] Implement model resolution logic in `execute_query`
+- [x] Implement model resolution logic in `execute_query`
   - Location: After `parse_result` validation (line ~190)
   - Logic: `final_model = @options[:model] || parse_result.model`
   - Add validation: error if `final_model` is nil/empty
@@ -219,15 +219,15 @@ Enable users to specify LLM models via `--model` flag for improved flexibility, 
   > Assert: Flag overrides positional model
   > Command: # Run: ace-llm-query google:gemini-pro "test" --model gemini-flash --dry-run
 
-- [ ] Update `create_client` method signature
+- [x] Update `create_client` method signature
   - Change from using `parse_result.model` to accepting model parameter
   - Pass model to `@registry.get_client(provider, model: model, ...)`
 
-- [ ] Update CLI banner for dual syntax
+- [x] Update CLI banner for dual syntax
   - Location: `create_option_parser` banner (line ~98)
   - Show both: `PROVIDER[:MODEL]` and `PROVIDER --model MODEL`
 
-- [ ] Add `--model` usage examples to help text
+- [x] Add `--model` usage examples to help text
   - Location: Examples section in `create_option_parser` (line ~152)
   - Add 2-3 examples showing flag usage
   > TEST: Example Accuracy
@@ -235,13 +235,13 @@ Enable users to specify LLM models via `--model` flag for improved flexibility, 
   > Assert: Examples use correct syntax and are executable
   > Command: # Manually verify examples work
 
-- [ ] Add `model:` parameter to `QueryInterface.query` method
+- [x] Add `model:` parameter to `QueryInterface.query` method
   - Location: `ace-llm/lib/ace/llm/query_interface.rb:28`
   - Add to method signature with default `nil`
   - Implement same resolution logic as CLI
   - Update docstring to document new parameter
 
-- [ ] Test all usage scenarios manually
+- [x] Test all usage scenarios manually
   - Scenario 1: Flag overrides positional model
   - Scenario 2: Flag with provider-only syntax
   - Scenario 3: Alias with flag override
@@ -253,7 +253,7 @@ Enable users to specify LLM models via `--model` flag for improved flexibility, 
   > Assert: All 6 scenarios produce expected behavior
   > Command: # Run each scenario from behavioral spec
 
-- [ ] Update ace-llm/README.md with `--model` documentation
+- [x] Update ace-llm/README.md with `--model` documentation
   - Add section showing flag usage
   - Document priority order
   - Include examples with common use cases
@@ -282,13 +282,13 @@ Enable users to specify LLM models via `--model` flag for improved flexibility, 
 
 ## Acceptance Criteria
 
-- [ ] `--model MODEL` flag added to CLI and shows in help text
-- [ ] Flag value overrides positional model when both specified
-- [ ] Works with provider-only syntax (e.g., `google --model gemini-flash`)
-- [ ] Works with alias resolution (e.g., `gflash --model gemini-pro`)
-- [ ] Falls back to provider default when neither flag nor positional model specified
-- [ ] Clear error message when no model available from any source
-- [ ] `QueryInterface.query()` accepts `model:` parameter with same behavior
-- [ ] All existing usage patterns continue to work (backward compatibility)
-- [ ] Help text includes `--model` examples and documents priority
-- [ ] README.md updated with flag documentation
+- [x] `--model MODEL` flag added to CLI and shows in help text
+- [x] Flag value overrides positional model when both specified
+- [x] Works with provider-only syntax (e.g., `google --model gemini-flash`)
+- [x] Works with alias resolution (e.g., `gflash --model gemini-pro`)
+- [x] Falls back to provider default when neither flag nor positional model specified
+- [x] Clear error message when no model available from any source
+- [x] `QueryInterface.query()` accepts `model:` parameter with same behavior
+- [x] All existing usage patterns continue to work (backward compatibility)
+- [x] Help text includes `--model` examples and documents priority
+- [x] README.md updated with flag documentation
