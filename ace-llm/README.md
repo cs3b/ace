@@ -66,6 +66,11 @@ ace-llm-query gflash "List 5 tips" --format json --output tips.json
 # Override model with --model flag
 ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite
 ace-llm-query gflash "Quick test" --model gemini-pro  # Override alias model
+
+# Use --prompt flag for explicit prompt specification
+ace-llm-query google --prompt "What is Ruby?"
+ace-llm-query gflash --prompt prompt.txt --output response.md
+ace-llm-query google --prompt 'Query with "quotes" and $vars'  # Avoid escaping issues
 ```
 
 ## Configuration

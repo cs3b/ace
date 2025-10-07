@@ -32,7 +32,8 @@ module Ace
           force: false,
           debug: false,
           list_providers: false,
-          model: nil
+          model: nil,
+          prompt: nil
         }
         @registry = Molecules::ClientRegistry.new
       end
@@ -81,9 +82,12 @@ module Ace
         end
 
         @provider_model = remaining_args.shift
-        @prompt = remaining_args.join(" ")
+        positional_prompt = remaining_args.join(" ")
 
-        # If no prompt provided, show help for the provider
+        # Resolve prompt: --prompt flag > positional argument
+        @prompt = @options[:prompt] || positional_prompt
+
+        # If no prompt provided from any source, show help for the provider
         if @prompt.nil? || @prompt.empty?
           show_provider_help
           exit(0)
@@ -96,7 +100,8 @@ module Ace
 
       def create_option_parser
         OptionParser.new do |opts|
-          opts.banner = "Usage: ace-llm-query PROVIDER[:MODEL] PROMPT [options]\n" \
+          opts.banner = "Usage: ace-llm-query PROVIDER[:MODEL] [PROMPT] [options]\n" \
+                        "       ace-llm-query PROVIDER --prompt PROMPT [options]\n" \
                         "       ace-llm-query PROVIDER PROMPT --model MODEL [options]"
           opts.separator ""
           opts.separator "Query any LLM provider through a unified interface"
@@ -132,6 +137,10 @@ module Ace
             @options[:model] = model
           end
 
+          opts.on("--prompt PROMPT", "Prompt text (overrides positional PROMPT if both present)") do |prompt|
+            @options[:prompt] = prompt
+          end
+
           opts.on("--force", "Force overwrite existing files") do
             @options[:force] = true
           end
@@ -158,9 +167,11 @@ module Ace
           opts.separator "Examples:"
           opts.separator '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
           opts.separator '  ace-llm-query gflash "Quick question" # using alias'
+          opts.separator '  ace-llm-query google --prompt "What is Ruby?" # using --prompt flag'
           opts.separator '  ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite'
           opts.separator '  ace-llm-query gflash "test" --model gemini-pro # override alias model'
-          opts.separator '  ace-llm-query openai prompt.txt --output response.md'
+          opts.separator '  ace-llm-query openai --prompt prompt.txt --output response.md'
+          opts.separator '  ace-llm-query google --prompt "Query with $vars" # avoid escaping issues'
           opts.separator ""
           opts.separator "Providers: #{available_provider_names.join(', ')}"
           opts.separator ""

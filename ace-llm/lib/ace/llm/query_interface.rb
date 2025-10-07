@@ -23,10 +23,11 @@ module Ace
       # @param force [Boolean] Force overwrite output file (--force)
       # @param debug [Boolean] Enable debug output (--debug)
       # @param model [String, nil] Model name (overrides PROVIDER[:MODEL] if both present) (--model MODEL)
+      # @param prompt_override [String, nil] Prompt text (overrides positional prompt if both present) (--prompt PROMPT)
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
-      def self.query(provider_model, prompt,
+      def self.query(provider_model, prompt = nil,
                     output: nil,
                     format: "text",
                     temperature: nil,
@@ -35,7 +36,8 @@ module Ace
                     timeout: 30,
                     force: false,
                     debug: false,
-                    model: nil)
+                    model: nil,
+                    prompt_override: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -53,10 +55,18 @@ module Ace
           raise Error, "No model specified and no default available for #{parse_result.provider}"
         end
 
+        # Resolve final prompt: prompt_override parameter > positional prompt
+        final_prompt = prompt_override || prompt
+
+        # Validate that we have a prompt from some source
+        if final_prompt.nil? || final_prompt.empty?
+          raise Error, "No prompt specified. Use positional prompt or prompt_override: parameter"
+        end
+
         # Build messages array
         messages = []
         messages << { role: "system", content: system } if system && !system.empty?
-        messages << { role: "user", content: prompt }
+        messages << { role: "user", content: final_prompt }
 
         # Get client with timeout option
         client = registry.get_client(
