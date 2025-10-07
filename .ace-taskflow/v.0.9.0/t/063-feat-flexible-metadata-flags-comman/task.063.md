@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.063
 status: pending
-priority: high
 estimate: 4h
 dependencies: []
 ---
@@ -12,8 +11,8 @@ dependencies: []
 
 ### User Experience
 
-- **Input**: Users invoke `ace-taskflow task create` with either positional title or `--title` flag, plus optional metadata flags (`--status`, `--priority`, `--estimate`, `--dependencies`)
-- **Process**: System parses arguments correctly, handles `--help` flag gracefully, validates input, and creates task with specified metadata
+- **Input**: Users invoke `ace-taskflow task create` with either positional title or `--title` flag, plus optional metadata flags (`--status`, `--estimate`, `--dependencies`, or any arbitrary metadata via `--key value`)
+- **Process**: System parses arguments correctly, handles `--help` flag gracefully, validates input, and creates task with specified metadata (including arbitrary fields)
 - **Output**: Task created with user-specified metadata in frontmatter, confirmation message with task ID and path
 
 ### Expected Behavior
@@ -22,10 +21,11 @@ dependencies: []
 - `ace-taskflow task create --help` creates a task named "--help" instead of showing help
 - Only positional arguments supported for title (inflexible)
 - Limited metadata configuration at creation time
-- No way to set status, priority, estimate, or dependencies during creation
+- No way to set status, estimate, or dependencies during creation
+- No support for arbitrary/custom metadata fields
 
 **Desired Behavior:**
-Users can create tasks with full metadata control using flexible flag-based syntax:
+Users can create tasks with full metadata control using flexible flag-based syntax, including arbitrary custom fields:
 
 ```bash
 # Positional title (existing behavior - still works)
@@ -34,18 +34,23 @@ ace-taskflow task create 'Add caching layer'
 # Flag-based title (new)
 ace-taskflow task create --title 'Add caching layer'
 
-# With metadata flags (new)
+# With standard metadata flags (new)
 ace-taskflow task create --title 'Add caching' \
   --status pending \
-  --priority high \
   --estimate 3h \
   --dependencies 018,019
+
+# With arbitrary metadata fields (new - any --key value saved to metadata)
+ace-taskflow task create --title 'Add feature' \
+  --assignee john \
+  --category backend \
+  --sprint 5
 
 # Show help (currently broken - must fix)
 ace-taskflow task create --help
 
 # Mix positional and flags
-ace-taskflow task create 'My task' --priority critical --estimate 2d
+ace-taskflow task create 'My task' --estimate 2d --tags ui,refactor
 ```
 
 ### Interface Contract
@@ -55,25 +60,31 @@ ace-taskflow task create 'My task' --priority critical --estimate 2d
 ```bash
 ace-taskflow task create [TITLE] [OPTIONS]
 
-Options:
+Standard Options:
   --title TITLE           Task title (alternative to positional arg)
   --status STATUS         Initial status (pending, draft, in-progress, done, blocked)
-  --priority PRIORITY     Priority level (critical, high, medium, low)
   --estimate ESTIMATE     Effort estimate (e.g., 2h, 1d, TBD)
   --dependencies DEPS     Comma-separated dependency list (e.g., 018,019,020)
   --backlog              Create task in backlog
   --release VERSION      Create task in specific release
   -h, --help             Show help message
 
+Arbitrary Metadata:
+  --<key> <value>        Any other flag saved as metadata in frontmatter
+                         Examples: --assignee, --category, --sprint, --tags, etc.
+
 Examples:
   # Positional title
   ace-taskflow task create 'Implement feature X'
 
-  # Flag-based with metadata
-  ace-taskflow task create --title 'Fix bug Y' --priority critical --status pending
+  # Flag-based with standard metadata
+  ace-taskflow task create --title 'Fix bug Y' --status pending --estimate 2h
 
   # With dependencies
   ace-taskflow task create 'Write tests' --dependencies 041,042 --estimate 4h
+
+  # With arbitrary metadata
+  ace-taskflow task create --title 'Add auth' --assignee john --category backend
 
   # Help (must not create task!)
   ace-taskflow task create --help
@@ -121,9 +132,10 @@ Run 'ace-taskflow task create --help' for full usage
 - [ ] **--help flag works**: `ace-taskflow task create --help` shows help and does NOT create a task
 - [ ] **Positional title works**: Existing `ace-taskflow task create 'Title'` syntax continues to work (backwards compatible)
 - [ ] **--title flag works**: `ace-taskflow task create --title 'Title'` creates task correctly
-- [ ] **Metadata flags work**: All flags (`--status`, `--priority`, `--estimate`, `--dependencies`) set frontmatter correctly
+- [ ] **Standard metadata flags work**: Flags (`--status`, `--estimate`, `--dependencies`) set frontmatter correctly
+- [ ] **Arbitrary metadata works**: Any `--key value` flag (except reserved ones) saved to frontmatter metadata
 - [ ] **Dependencies parsed**: `--dependencies 018,019` creates array `[018, 019]` in frontmatter
-- [ ] **Error handling**: Invalid flags show clear error messages with `--help` suggestion
+- [ ] **Error handling**: Invalid flag syntax shows clear error messages with `--help` suggestion
 - [ ] **Backwards compatible**: All existing commands and tests pass without modification
 
 ### Validation Questions
@@ -131,6 +143,8 @@ Run 'ace-taskflow task create --help' for full usage
 - [ ] **Flag precedence**: If both positional title and `--title` flag provided, which wins? (Suggest: positional or show error)
 - [ ] **Status validation**: Should we validate status values (pending, draft, etc.) or allow any string?
 - [ ] **Dependency format**: Should we validate dependency references (e.g., task.018, 018, v.0.9.0+018)?
+- [ ] **Arbitrary metadata handling**: How to distinguish between reserved flags (--title, --status, etc.) and arbitrary metadata flags?
+- [ ] **Arbitrary metadata types**: Should we infer types (numbers, booleans, arrays) or store all as strings?
 - [ ] **Help integration**: Should each subcommand have its own `--help` or delegate to parent?
 
 ## Objective
