@@ -19,13 +19,13 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.9.0)
+    ace-llm-providers-cli (0.9.1)
       ace-llm (~> 0.9.0)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.9.1)
+    ace-llm (0.9.2)
       ace-core (~> 0.9.0)
       addressable (~> 2.8)
       faraday (~> 2.0)

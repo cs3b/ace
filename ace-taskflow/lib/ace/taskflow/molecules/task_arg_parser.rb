@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "optparse"
+
 module Ace
   module Taskflow
     module Molecules

@@ -11,7 +11,7 @@ module Ace
         end
 
         def test_version_is_correct
-          assert_equal "0.9.0", ::Ace::LLM::Providers::CLI::VERSION
+          assert_equal "0.9.1", ::Ace::LLM::Providers::CLI::VERSION
         end
 
         def test_module_exists

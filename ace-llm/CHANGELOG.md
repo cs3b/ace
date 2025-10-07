@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-10-07
+
+### Fixed
+- Fixed test file discovery by updating Rakefile to include both `test_*.rb` and `*_test.rb` patterns
+- Test count increased from 25 to 53 tests (discovered 28 previously missing tests)
+
 ## [0.9.1] - 2025-10-07
 
 ### Added
