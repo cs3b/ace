@@ -1,7 +1,0 @@
----
-timestamp: '2025-10-06T17:16:17+01:00'
-preset: ruby-atom
-model: google:gemini-2.5-flash
-has_context: true
-subject_size: 79
-prompt_size: 20295
