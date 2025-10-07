@@ -46,12 +46,12 @@ Context presets are defined as markdown files with YAML frontmatter in `.ace/con
 ```yaml
 ---
 description: Project documentation
-params:
-  output: cache           # Default output mode: stdio, cache, or file path
-  embed_itself: true      # Include file contents in output
-  max_size: 10485760     # Max file size (10MB)
-  timeout: 30            # Command timeout in seconds
 context:
+  params:
+    output: cache                  # Default output mode: stdio, cache, or file path
+    max_size: 10485760            # Max file size (10MB)
+    timeout: 30                   # Command timeout in seconds
+  embed_document_source: true     # Include file contents in output
   files:
     - README.md
     - docs/**/*.md
@@ -59,7 +59,7 @@ context:
     - git status --short
     - date
   diffs:
-    - origin/main...HEAD    # Git diff ranges
+    - origin/main...HEAD          # Git diff ranges
   exclude:
     - "**/node_modules/**"
     - "**/vendor/**"
@@ -69,6 +69,7 @@ context:
 
 Additional markdown content for this preset...
 ```
+
 
 ### Content Sources
 
@@ -202,10 +203,10 @@ Each preset can define its default output mode in the `params.output` field.
 
 ### Preset Structure
 
-Presets use YAML frontmatter with two main sections:
+Presets use YAML frontmatter with a unified `context:` section:
 
-1. **params** - Tool configuration (output, embed_itself, max_size, timeout)
-2. **context** - Content specification (files, commands, exclude)
+1. **context.params** - Tool configuration (output, max_size, timeout)
+2. **context** - Content specification (embed_document_source, files, commands, diffs, exclude)
 
 ## Development
 

@@ -41,8 +41,8 @@ module Ace
             )
           end
 
-          # Merge params into options for processing (support both context.params and top-level params)
-          params = preset.dig(:context, :params) || preset.dig(:context, 'params') || preset[:params] || {}
+          # Merge params into options for processing
+          params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
           merged_options = @options.merge(params)
 
           # Process the preset context configuration
@@ -195,8 +195,8 @@ module Ace
             # Use frontmatter as the main config
             config = frontmatter['context'] || frontmatter
 
-            # Merge params into options if present (support both context.params and top-level params)
-            params = config['params'] || frontmatter['params']
+            # Merge params into options if present
+            params = config['params']
             if params.is_a?(Hash)
               @options = @options.merge(params)
             end
@@ -313,8 +313,8 @@ module Ace
             # Use aggregate to handle glob patterns
             result = aggregator.aggregate(resolved_files)
 
-            # Add files to context if embed_itself is true
-            if options[:embed_itself] || options['embed_itself']
+            # Add files to context if embed_document_source is true
+            if context_config['embed_document_source']
               result[:files].each do |file_info|
                 context.add_file(file_info[:path], file_info[:content])
               end

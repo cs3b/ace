@@ -5,6 +5,44 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.3] - 2025-10-07
+
+### Fixed
+- **Incomplete migration from top-level params to context.params**
+  - PresetManager now correctly reads params from `context.params` location
+  - Previously only read from top-level `params:` (old structure)
+  - Fixes issue where `context.params.output` and other params were ignored
+- **File embedding not working with embed_document_source**
+  - ContextLoader now correctly checks `context.embed_document_source` flag
+  - Previously only checked deprecated `embed_itself` flag
+  - Fixes issue where files listed in `context.files` were not embedded in output
+
+### Changed
+- **Removed backward compatibility** (pre-1.0 breaking change)
+  - No longer supports top-level `params:` structure
+  - No longer supports `embed_itself` flag
+  - Only `context.params` and `embed_document_source` are supported
+  - All tests updated to use new structure exclusively
+
+### Migration Guide
+Old structure (no longer supported):
+```yaml
+params:
+  output: cache
+  embed_itself: true
+context:
+  files: [...]
+```
+
+New structure (required):
+```yaml
+context:
+  params:
+    output: cache
+  embed_document_source: true
+  files: [...]
+```
+
 ## [0.11.2] - 2025-10-06
 
 ### Changed
