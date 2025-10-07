@@ -18,7 +18,9 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
 
   def teardown
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
-    Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
+    Warning.silence do
+      Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
+    end
   end
 
   # Test that clipboard content is merged with provided content
@@ -99,8 +101,10 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
     mock = Module.new do
       define_singleton_method(:paste) { text_content }
     end
-    Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
-    Object.const_set(:Clipboard, mock)
+    Warning.silence do
+      Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
+      Object.const_set(:Clipboard, mock)
+    end
   end
 
   def mock_clipboard_files(file_paths)

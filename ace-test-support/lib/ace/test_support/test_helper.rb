@@ -60,6 +60,18 @@ module Ace
         $stdout = orig_stdout
         $stderr = orig_stderr
       end
+
+      # Capture only stdout and return as string (convenience wrapper)
+      def capture_stdout
+        require 'stringio'
+
+        original_stdout = $stdout
+        $stdout = StringIO.new
+        yield
+        $stdout.string
+      ensure
+        $stdout = original_stdout
+      end
     end
   end
 end
