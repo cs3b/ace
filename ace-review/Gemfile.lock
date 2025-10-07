@@ -1,13 +1,13 @@
 PATH
   remote: ../ace-context
   specs:
-    ace-context (0.9.0)
+    ace-context (0.11.2)
       ace-core (~> 0.9.0)
 
 PATH
   remote: ../ace-core
   specs:
-    ace-core (0.9.0)
+    ace-core (0.9.1)
 
 PATH
   remote: ../ace-nav
@@ -25,7 +25,7 @@ PATH
 PATH
   remote: .
   specs:
-    ace-review (0.9.6)
+    ace-review (0.9.7)
       ace-context (~> 0.9)
       ace-core (~> 0.9)
       ace-nav (~> 0.9)

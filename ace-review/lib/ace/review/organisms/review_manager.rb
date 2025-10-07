@@ -175,11 +175,18 @@ module Ace
 
           result = executor.execute(
             prompt: review_data[:prompt],
-            model: review_data[:model]
+            model: review_data[:model],
+            session_dir: session_dir
           )
 
           if result[:success]
-            save_review_output(result[:response], review_data, session_dir)
+            # LlmExecutor now saves directly to output_file
+            # Just return the result with output_file path
+            {
+              success: true,
+              output_file: result[:output_file],
+              message: "Review saved to #{result[:output_file]}"
+            }
           else
             result
           end

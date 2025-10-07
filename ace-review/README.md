@@ -2,7 +2,18 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.6
+**Version:** 0.9.7
+
+## Changes in 0.9.7
+
+- **ace-llm-query Integration Fixed**: Updated to work with ace-llm-query v0.9.1+ API
+  - Fixed command construction with proper `--prompt` flag (replaces non-existent `--file`)
+  - Added PROVIDER:MODEL positional argument as first parameter
+  - Review reports now saved directly to session directory via `--output` flag
+  - Added 10-minute timeout (`--timeout 600`) for long reviews
+  - Consistent markdown output via `--format markdown`
+  - Output filename pattern: `review-report-{model-short}.md` (e.g., `review-report-gemini-2.5-flash.md`)
+- **API Updates**: LlmExecutor now requires `session_dir:` parameter and returns `output_file` path
 
 ## Changes in 0.9.6
 
@@ -13,14 +24,6 @@ Automated review tool for the ACE framework. Provides preset-based analysis usin
   - Added support for `diffs:` key in subject/context configs
 - **Simplified Architecture**: Removed redundant atoms (git_extractor, file_reader)
 - **Enhanced Composition**: Can now combine files + commands + diffs + presets in unified configs
-
-## Changes in 0.9.5
-
-- **Storage Path Detection**: Fixed 3-tier priority (user config → ace-taskflow → `.cache/ace-review/sessions/`)
-- **No Hardcoded Defaults**: Removed hardcoded storage defaults that prevented smart detection
-- **Correct Fallback**: Changed from `./reviews` to `.cache/ace-review/sessions/` for consistency
-- **LLM Command Fix**: Fixed remaining `ace-llm` references to use `ace-llm-query` correctly
-- **Workflow Rename**: Simplified command from `/ace:review-code` to `/ace:review`
 
 ## Features
 
