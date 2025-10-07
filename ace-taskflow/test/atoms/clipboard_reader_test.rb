@@ -6,13 +6,23 @@ require_relative "../../lib/ace/taskflow/atoms/clipboard_reader"
 class ClipboardReaderTest < AceTaskflowTestCase
   def setup
     @original_clipboard = Clipboard
+    # Stub macos_clipboard_available? to force fallback to gem Clipboard
+    @original_macos_available = Ace::Taskflow::Atoms::ClipboardReader.singleton_method(:macos_clipboard_available?) rescue nil
+    Ace::Taskflow::Atoms::ClipboardReader.define_singleton_method(:macos_clipboard_available?) { false }
   end
 
   def teardown
     # Restore original Clipboard module
-    Warning.silence do
-      Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
+    old_verbose = $VERBOSE
+    $VERBOSE = nil
+    Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
+
+    # Restore macos_clipboard_available?
+    if @original_macos_available
+      Ace::Taskflow::Atoms::ClipboardReader.define_singleton_method(:macos_clipboard_available?, @original_macos_available)
     end
+  ensure
+    $VERBOSE = old_verbose
   end
 
   def test_read_text_content
@@ -170,10 +180,12 @@ class ClipboardReaderTest < AceTaskflowTestCase
     mock = Module.new do
       define_singleton_method(:paste) { content }
     end
-    Warning.silence do
-      Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
-      Object.const_set(:Clipboard, mock)
-    end
+    old_verbose = $VERBOSE
+    $VERBOSE = nil
+    Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
+    Object.const_set(:Clipboard, mock)
+  ensure
+    $VERBOSE = old_verbose
   end
 
   def mock_clipboard_error(error)
@@ -181,9 +193,11 @@ class ClipboardReaderTest < AceTaskflowTestCase
     mock = Module.new do
       define_singleton_method(:paste) { raise error }
     end
-    Warning.silence do
-      Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
-      Object.const_set(:Clipboard, mock)
-    end
+    old_verbose = $VERBOSE
+    $VERBOSE = nil
+    Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
+    Object.const_set(:Clipboard, mock)
+  ensure
+    $VERBOSE = old_verbose
   end
 end

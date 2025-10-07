@@ -74,6 +74,11 @@ module Ace
             # Store test names in options to pass to run_minitest_with_args
             options = options.merge(test_names_filter: test_names_to_run) if test_names_to_run.any?
 
+            # Setup Minitest::Reporters BEFORE loading test files
+            # This ensures the reporter is configured before Minitest initializes
+            require 'minitest/reporters'
+            Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new(io: $stdout)
+
             # Load the test files
             files_to_load.uniq.each do |file|
               file_path = File.expand_path(file)
@@ -207,11 +212,7 @@ module Ace
             args << "--name" << "/#{pattern}/"
           end
 
-          # Suppress Minitest's reporter output
-          # Use a minimal reporter that doesn't print anything
-          require 'minitest/reporters'
-          Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new(io: $stdout)
-
+          # Reporter already set up before loading test files
           # Run Minitest
           Minitest.run(args)
         end

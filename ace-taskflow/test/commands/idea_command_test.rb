@@ -5,7 +5,8 @@ require_relative "../../lib/ace/taskflow/commands/idea_command"
 
 class IdeaCommandTest < AceTaskflowTestCase
   def setup
-    @command = Ace::Taskflow::Commands::IdeaCommand.new
+    # Don't initialize @command here - it will use the real project root
+    # Instead, create it inside with_test_project blocks where stubbing is active
   end
 
   def test_create_simple_idea
@@ -53,6 +54,8 @@ class IdeaCommandTest < AceTaskflowTestCase
     with_test_project do |dir|
       # Initialize git repo for test
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::IdeaCommand.new
+
         `git init`
         `git config user.email "test@example.com"`
         `git config user.name "Test User"`
@@ -60,14 +63,15 @@ class IdeaCommandTest < AceTaskflowTestCase
         `git commit -m "Initial commit"`
 
         output = capture_stdout do
-          @command.execute(["Git committed idea", "--git"])
+          command.execute(["Git committed idea", "--git-commit"])
         end
 
         assert_match(/Idea captured/, output)
 
-        # Check git status
+        # --git-commit flag adds and commits the file, so status should be clean
         git_status = `git status --short`
-        assert_match(/A.*i\//, git_status) if git_status.length > 0
+        # File should be committed (no staged or untracked files related to ideas)
+        refute_match(/i\/.*\.md/, git_status)
       end
     end
   end
@@ -227,9 +231,11 @@ class IdeaCommandTest < AceTaskflowTestCase
   def test_idea_with_llm_enhancement
     with_test_project do |dir|
       Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::IdeaCommand.new
+
         # This would normally call LLM, but in tests we skip it
         output = capture_stdout do
-          @command.execute(["Enhance this idea", "--llm"])
+          command.execute(["Enhance this idea", "--llm"])
         end
 
         assert_match(/Idea captured/, output)

@@ -59,9 +59,9 @@ module Ace
           end.join("\n")
 
           assert_match(/Active Retrospective Notes/, output)
-          assert_match(/test-retro-1/, output)
-          assert_match(/test-retro-2/, output)
-          refute_match(/done-retro/, output)
+          assert_match(/Test retro 1/, output)
+          assert_match(/Test retro 2/, output)
+          refute_match(/Done retro/, output)
           assert_match(/Total: 2 retros/, output)
         end
 
@@ -73,8 +73,8 @@ module Ace
           assert_match(/Retrospective Notes/, output)
           assert_match(/Active:/, output)
           assert_match(/Done:/, output)
-          assert_match(/test-retro-1/, output)
-          assert_match(/done-retro/, output)
+          assert_match(/Test retro 1/, output)
+          assert_match(/Done retro/, output)
           assert_match(/Total: 3 retros/, output)
         end
 
@@ -84,8 +84,8 @@ module Ace
           end.join("\n")
 
           assert_match(/Done Retrospective Notes/, output)
-          assert_match(/done-retro/, output)
-          refute_match(/test-retro-1/, output)
+          assert_match(/Done retro/, output)
+          refute_match(/Test retro 1/, output)
           assert_match(/Total: 1 retro/, output)
         end
 
