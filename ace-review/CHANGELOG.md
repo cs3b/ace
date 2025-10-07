@@ -5,6 +5,27 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.7] - 2025-10-07
+
+### Fixed
+
+- **ace-llm-query integration**: Fixed command construction to work with updated ace-llm-query API
+  - Replaced non-existent `--file` flag with new `--prompt` flag (added in ace-llm v0.9.1)
+  - Added proper PROVIDER:MODEL positional argument as first parameter
+  - Added `--output` flag to save review reports directly to session directory
+  - Added `--timeout 600` for 10-minute timeout on long reviews
+  - Added `--format markdown` for consistent markdown output
+  - Output filename now uses model short name: `review-report-{model-short}.md`
+  - Example: `review-report-gemini-2.5-flash.md` for model `google:gemini-2.5-flash`
+
+### Changed
+
+- **LlmExecutor API**: Updated `execute` method to require `session_dir:` parameter
+  - Enables direct file output to session directory
+  - Returns `output_file` path in result hash
+- **ReviewManager**: Updated to pass `session_dir` to LlmExecutor
+  - Simplified result handling (no longer needs to save output separately)
+
 ## [0.9.6] - 2025-10-06
 
 ### Changed
