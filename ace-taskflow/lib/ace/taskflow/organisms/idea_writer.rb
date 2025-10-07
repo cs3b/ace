@@ -58,9 +58,11 @@ module Ace
 
           # Handle attachments if present
           if attachment_files.any?
-            # Path is directory - create it and copy files
+            # Path is directory - create it and save attachments
             FileUtils.mkdir_p(path)
-            attachment_result = Molecules::AttachmentManager.copy_files(
+
+            # Use save_attachments for all types (handles images, files, RTF, HTML)
+            attachment_result = Molecules::AttachmentManager.save_attachments(
               attachment_files,
               path
             )
@@ -70,7 +72,7 @@ module Ace
 
             # Warn about failed files
             attachment_result[:failed_files].each do |failure|
-              puts "Warning: #{failure[:path]} - #{failure[:error]}"
+              puts "Warning: #{failure[:filename]} - #{failure[:error]}"
             end
 
             # Write idea.md in directory
@@ -108,16 +110,32 @@ module Ace
         end
 
         def merge_content_with_clipboard(content, clipboard_result, options)
-          # If clipboard wasn't requested or failed, return original content
+          # If clipboard wasn't requested or failed, return original content with no attachments
           return [content, []] unless clipboard_result[:success]
 
-          # If clipboard has files, return them separately
-          if clipboard_result[:type] == :files
-            # Content + file attachments
-            return [content, clipboard_result[:files]]
+          clipboard_attachments = clipboard_result[:attachments] || []
+
+          # Handle rich clipboard (macOS with images, files, RTF, etc.)
+          if clipboard_result[:type] == :rich
+            # Rich clipboard with attachments
+            merged_text = if content.nil? || content.empty?
+                            clipboard_result[:content] || ""
+                          else
+                            clipboard_result[:content] ? "#{content}\n\n#{clipboard_result[:content]}" : content
+                          end
+            return [merged_text, clipboard_attachments]
           end
 
-          # Clipboard has text - merge with content
+          # Handle legacy file paths (text clipboard with file paths)
+          if clipboard_result[:type] == :files
+            # Convert file paths to attachment format for consistency
+            file_attachments = clipboard_result[:files].map do |file_path|
+              { type: :file, source_path: file_path, filename: File.basename(file_path) }
+            end
+            return [content, file_attachments]
+          end
+
+          # Clipboard has only text - merge with content
           if content.nil? || content.empty?
             # Use clipboard as sole content
             [clipboard_result[:content], []]
