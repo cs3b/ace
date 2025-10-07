@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.2] - 2025-10-07
 
 ### Fixed
-- Fixed test file discovery by updating Rakefile to include both `test_*.rb` and `*_test.rb` patterns
-- Test count increased from 25 to 53 tests (discovered 28 previously missing tests)
+- Standardized test file naming to follow project convention (`*_test.rb` suffix instead of `test_*` prefix)
+- Renamed `test_provider_config_validator.rb` → `provider_config_validator_test.rb`
+- Renamed `test_client_registry.rb` → `client_registry_test.rb`
+- Test count increased from 25 to 53 tests (all tests now properly discovered)
 
 ## [0.9.1] - 2025-10-07
 
