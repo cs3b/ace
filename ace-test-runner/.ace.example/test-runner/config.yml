@@ -1,0 +1,41 @@
+# ACE Test Runner Configuration Example
+# Copy to .ace/test-runner/config.yml to customize
+
+test:
+  # Reporter format: progress, progress-file, json
+  reporter: progress
+
+  # Report storage
+  report_dir: test-reports
+  save_reports: true
+
+  # Execution options
+  execution:
+    # Sequential groups mode: "subprocess" or "in-process"
+    # subprocess: Correct group header ordering (slightly slower)
+    # in-process: Faster, but headers appear after progress dots
+    sequential_groups_mode: subprocess
+
+  # Test organization patterns
+  patterns:
+    atoms: "test/unit/atoms/**/*_test.rb"
+    molecules: "test/unit/molecules/**/*_test.rb"
+    organisms: "test/unit/organisms/**/*_test.rb"
+    models: "test/unit/models/**/*_test.rb"
+    integration: "test/integration/**/*_test.rb"
+    system: "test/system/**/*_test.rb"
+
+  # Test groups
+  groups:
+    unit:
+      - atoms
+      - molecules
+      - organisms
+      - models
+    all:
+      - unit
+      - integration
+      - system
+    quick:
+      - atoms
+      - molecules

@@ -46,7 +46,17 @@ module Ace
             raise ArgumentError, "Cannot write to #{report_dir}. Check permissions"
           end
 
+          # Validate sequential_groups_mode if provided
+          if sequential_groups_mode && !%w[subprocess in-process].include?(sequential_groups_mode)
+            raise ArgumentError, "Unknown sequential_groups_mode '#{sequential_groups_mode}'. Valid modes: subprocess, in-process"
+          end
+
           true
+        end
+
+        def sequential_groups_mode
+          # Default to "subprocess" for correct visual output
+          @execution&.[](:sequential_groups_mode) || @execution&.dig("sequential_groups_mode") || "subprocess"
         end
 
         def formatter_class

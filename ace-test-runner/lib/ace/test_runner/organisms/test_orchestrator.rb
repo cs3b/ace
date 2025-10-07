@@ -275,7 +275,8 @@ module Ace
             verbose: @configuration.verbose,
             per_file: @configuration.per_file,
             profile: @configuration.profile,
-            group_fail_fast: @configuration.execution&.[](:group_fail_fast)
+            group_fail_fast: @configuration.execution&.[](:group_fail_fast),
+            sequential_groups_mode: @configuration.sequential_groups_mode
           }
         end
 

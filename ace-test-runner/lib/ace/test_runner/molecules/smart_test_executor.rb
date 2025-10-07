@@ -65,6 +65,12 @@ module Ace
           return :subprocess if options[:subprocess] || @force_mode == :subprocess
           return :direct if options[:direct] || @force_mode == :direct
 
+          # Check sequential_groups_mode config for sequential group execution
+          # This ensures correct group header ordering
+          if options[:sequential_groups_mode] == "subprocess"
+            return :subprocess
+          end
+
           # Use subprocess for line number filtering (file:line format)
           # This provides cleaner output without Minitest reporter duplication
           if files.any? { |f| f.match?(/:\d+$/) }
