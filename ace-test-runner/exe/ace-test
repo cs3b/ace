@@ -296,12 +296,9 @@ end
 begin
   exit_code = Ace::TestRunner.run(options)
 
-  # Use exit! for direct mode to skip at_exit handlers
-  if options[:direct]
-    exit! exit_code
-  else
-    exit exit_code
-  end
+  # Use exit! to skip at_exit handlers (prevents Minitest from auto-running again)
+  # This is necessary because in-process execution loads test files into the current process
+  exit! exit_code
 rescue Ace::TestRunner::Error => e
   puts "Error: #{e.message}"
   exit 1

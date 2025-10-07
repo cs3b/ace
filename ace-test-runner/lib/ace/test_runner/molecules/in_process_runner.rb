@@ -27,6 +27,7 @@ module Ace
 
           # Store original verbose setting
           original_verbose = $VERBOSE
+          original_mt_no_autorun = ENV['MT_NO_AUTORUN']
 
           begin
             $stdout = stdout_io
@@ -116,8 +117,12 @@ module Ace
             $stderr = original_stderr
             $VERBOSE = original_verbose
 
-            # Clean up
-            ENV.delete('MT_NO_AUTORUN')
+            # Restore original MT_NO_AUTORUN value
+            if original_mt_no_autorun
+              ENV['MT_NO_AUTORUN'] = original_mt_no_autorun
+            else
+              ENV.delete('MT_NO_AUTORUN')
+            end
           end
 
           end_time = Time.now
@@ -205,7 +210,7 @@ module Ace
           # Suppress Minitest's reporter output
           # Use a minimal reporter that doesn't print anything
           require 'minitest/reporters'
-          Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new($stdout)
+          Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new(io: $stdout)
 
           # Run Minitest
           Minitest.run(args)

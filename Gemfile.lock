@@ -63,7 +63,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.1.0)
+    ace-test-runner (0.1.1)
       ace-core (~> 0.1)
       ace-test-support (~> 0.1)
       minitest (~> 5.0)
@@ -73,7 +73,7 @@ PATH
 PATH
   remote: ace-test-support
   specs:
-    ace-test-support (0.9.0)
+    ace-test-support (0.9.1)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
