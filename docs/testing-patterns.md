@@ -183,6 +183,170 @@ Add to your CI pipeline:
     fi
 ```
 
+## Avoiding Exit Calls in Testable Code
+
+Commands that call `exit` will terminate the entire test process, preventing test completion and reporting. This manifests as:
+- Test runner stops mid-execution
+- No test summary is printed
+- `ace-test` reports "0 tests, 0 assertions"
+- Rake test fails with "Command failed with status (1)"
+
+### Pattern: Return Status Codes in Commands
+
+Commands should return status codes (0 for success, 1 for failure) and let the CLI entry point handle exit:
+
+```ruby
+# ❌ BAD - Terminates test process
+class MyCommand
+  def execute(args)
+    if args.include?("--help")
+      show_help
+      exit 0  # Kills tests!
+    end
+
+    do_work
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1  # Kills tests!
+  end
+end
+
+# ✅ GOOD - Returns status codes
+class MyCommand
+  def execute(args)
+    if args.include?("--help")
+      show_help
+      return 0
+    end
+
+    do_work
+    0
+  rescue => e
+    puts "Error: #{e.message}"
+    1
+  end
+end
+```
+
+### Pattern: Raise Exceptions in Organisms
+
+Organisms (business logic) should raise exceptions instead of calling exit:
+
+```ruby
+# ❌ BAD - Terminates test process
+class IdeaWriter
+  def write(content, options)
+    if content.nil? || content.strip.empty?
+      puts "Error: No content provided"
+      exit 1  # Kills tests!
+    end
+    # ...
+  end
+end
+
+# ✅ GOOD - Raises exceptions
+class IdeaWriter
+  class IdeaWriterError < StandardError; end
+
+  def write(content, options)
+    if content.nil? || content.strip.empty?
+      raise IdeaWriterError, "No content provided"
+    end
+    # ...
+  end
+end
+```
+
+### CLI Entry Point Pattern
+
+The CLI entry point (exe/ace-*) should handle status codes and exit only at the top level:
+
+```ruby
+#!/usr/bin/env ruby
+# exe/ace-taskflow
+
+require_relative "../lib/ace/taskflow"
+
+# CLI.start returns status code
+exit_code = Ace::Taskflow::CLI.start(ARGV)
+exit(exit_code || 0)
+```
+
+```ruby
+# lib/ace/taskflow/cli.rb
+class CLI
+  def self.start(args)
+    case args.shift
+    when "retro"
+      require_relative "commands/retro_command"
+      Commands::RetroCommand.new.execute(args)  # Returns status code
+    when "--help"
+      show_help
+      0  # Return status code
+    else
+      puts "Unknown command"
+      1  # Return status code
+    end
+  end
+end
+```
+
+### Testing Commands with Status Codes
+
+Test commands by asserting on their return values:
+
+```ruby
+def test_help_returns_success
+  output = capture_io do
+    exit_code = @command.execute(["--help"])
+    assert_equal 0, exit_code
+  end
+
+  assert_match(/Usage:/, output)
+end
+
+def test_error_returns_failure
+  output = capture_io do
+    exit_code = @command.execute(["invalid"])
+    assert_equal 1, exit_code
+  end
+
+  assert_match(/Error:/, output)
+end
+```
+
+### Testing Organisms with Exceptions
+
+Test organisms by asserting on raised exceptions:
+
+```ruby
+def test_raises_error_on_invalid_input
+  error = assert_raises(Ace::Taskflow::Organisms::IdeaWriterError) do
+    @writer.write("")
+  end
+
+  assert_match(/No content provided/, error.message)
+end
+```
+
+### Migration Strategy
+
+When refactoring commands with exit calls:
+
+1. **Identify exit calls**: `grep -r "exit [01]" lib/`
+2. **Refactor commands**: Replace `exit N` with `return N`
+3. **Refactor organisms**: Replace `exit N` with `raise CustomError`
+4. **Update CLI**: Return status codes, exit only at entry point
+5. **Update tests**: Assert on return values instead of SystemExit
+6. **Verify**: Run full test suite to ensure completion
+
+### Benefits
+
+1. **Test Completion**: Tests run to completion and report properly
+2. **Better Debugging**: Exceptions provide stack traces
+3. **Composability**: Commands can be called from other commands
+4. **Isolation**: Test failures don't affect other tests
+
 ## Summary
 
 - Extract external dependencies to protected methods
@@ -190,3 +354,5 @@ Add to your CI pipeline:
 - Profile tests regularly to catch performance regressions
 - Document patterns for team consistency
 - Only use subprocesses when true process isolation is required
+- **Never call exit in commands or organisms - return status codes and raise exceptions**
+- **Handle exit only at the CLI entry point (exe/ace-\*)**

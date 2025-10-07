@@ -3,4 +3,5 @@
 
 require_relative "../lib/ace/taskflow"
 
-Ace::Taskflow::CLI.start(ARGV)
+exit_code = Ace::Taskflow::CLI.start(ARGV)
+exit(exit_code || 0)

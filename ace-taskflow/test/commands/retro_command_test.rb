@@ -60,13 +60,12 @@ module Ace
         end
 
         def test_create_retro_requires_title
-          error = assert_raises(SystemExit) do
-            capture_io do
-              @command.execute(["create"])
-            end
+          output, _error = capture_io do
+            exit_code = @command.execute(["create"])
+            assert_equal 1, exit_code
           end
 
-          assert_equal 1, error.status
+          assert_match(/Usage: ace-taskflow retro create/, output)
         end
 
         def test_show_help

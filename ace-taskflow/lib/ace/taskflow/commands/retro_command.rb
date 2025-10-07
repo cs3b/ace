@@ -24,17 +24,18 @@ module Ace
             mark_retro_done(args)
           when "--help", "-h"
             show_help
+            0
           when nil
             puts "Usage: ace-taskflow retro <subcommand> [options]"
             puts "Run 'ace-taskflow retro --help' for more information"
-            exit 1
+            1
           else
             # Try to show specific retro by reference
             show_retro([subaction] + args)
           end
         rescue StandardError => e
           puts "Error: #{e.message}"
-          exit 1
+          1
         end
 
         private
@@ -71,7 +72,7 @@ module Ace
             puts "  --release <version>   Create in specific release"
             puts "  --current             Create in current/active release (default)"
             puts "  --backlog             Create in backlog"
-            exit 1
+            return 1
           end
 
           result = @manager.create_retro(title, context: context)
@@ -82,9 +83,10 @@ module Ace
             root_path = Dir.pwd
             relative_path = Atoms::PathFormatter.format_relative_path(result[:path], root_path)
             puts "Path: #{relative_path}"
+            0
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            1
           end
         end
 
@@ -94,7 +96,7 @@ module Ace
           unless reference
             puts "Usage: ace-taskflow retro show <reference>"
             puts "Example: ace-taskflow retro show ace-test-runner"
-            exit 1
+            return 1
           end
 
           context = parse_context(args)
@@ -102,9 +104,10 @@ module Ace
 
           if retro
             display_retro(retro)
+            0
           else
             puts "Retro '#{reference}' not found in #{context_name(context)}."
-            exit 1
+            1
           end
         end
 
@@ -114,7 +117,7 @@ module Ace
           unless reference
             puts "Usage: ace-taskflow retro done <reference>"
             puts "Example: ace-taskflow retro done ace-test-runner"
-            exit 1
+            return 1
           end
 
           context = parse_context(args)
@@ -127,9 +130,10 @@ module Ace
             relative_path = Atoms::PathFormatter.format_relative_path(result[:path], root_path)
             puts "Path: #{relative_path}"
             puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+            0
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            1
           end
         end
 

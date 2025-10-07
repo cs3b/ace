@@ -38,17 +38,17 @@ module Ace
           Commands::MigratePaths.run(args)
         when "config"
           show_config
-          exit 0
+          0
         when "--version", "-v"
           puts "ace-taskflow #{VERSION}"
-          exit 0
+          0
         when "--help", "-h", nil
           show_help
-          exit 0
+          0
         else
           puts "Unknown subcommand: #{subcommand}"
           show_help
-          exit 1
+          1
         end
       end
 

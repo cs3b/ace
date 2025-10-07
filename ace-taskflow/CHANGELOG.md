@@ -5,6 +5,33 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2025-10-08
+
+### Fixed
+
+- **Test Execution**: Fixed critical issue where tests would halt mid-execution and not report results
+  - Commands now return status codes instead of calling `exit` directly
+  - `RetrosCommand` and `RetroCommand` refactored to return 0 (success) or 1 (failure)
+  - `IdeaWriter` organism now raises `IdeaWriterError` exceptions instead of calling exit
+  - CLI entry point (`exe/ace-taskflow`) handles exit at top level only
+  - Tests now complete properly and report full results (700 tests vs 0 previously)
+  - Fixes issue where `ace-test` would report "0 tests, 0 assertions, 0 failures"
+
+### Changed
+
+- Command execution pattern: All commands should return status codes for testability
+- Organism error handling: Organisms raise exceptions that commands handle and convert to status codes
+- Test expectations: Updated tests to assert on return values and exceptions instead of `SystemExit`
+
+### Technical
+
+- Refactored `RetrosCommand#execute` to return status codes
+- Refactored `RetroCommand#execute` and all private methods to return status codes
+- Added `IdeaWriterError` exception class for organism-level errors
+- Updated `CLI.start` to return status codes instead of exiting
+- Updated test assertions for new status code pattern
+- Documented exit call anti-pattern in `docs/testing-patterns.md`
+
 ## [0.10.0] - 2025-10-07
 
 ### Added

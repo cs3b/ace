@@ -10,6 +10,8 @@ require_relative "../molecules/attachment_manager"
 module Ace
   module Taskflow
     module Organisms
+      class IdeaWriterError < StandardError; end
+
       class IdeaWriter
         def initialize(config = nil)
           @config = config || load_config
@@ -32,8 +34,7 @@ module Ace
 
           # Validate that we have some content or attachments
           if (merged_content.nil? || merged_content.strip.empty?) && attachment_files.empty?
-            puts "Error: No content provided. Use --note, positional argument, or --clipboard with content."
-            exit 1
+            raise IdeaWriterError, "No content provided. Use --note, positional argument, or --clipboard with content."
           end
 
           # Prepare initial metadata
@@ -108,8 +109,7 @@ module Ace
           result = Atoms::ClipboardReader.read
 
           unless result[:success]
-            puts "Error: #{result[:error]}"
-            exit 1
+            raise IdeaWriterError, result[:error]
           end
 
           result
