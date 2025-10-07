@@ -30,6 +30,12 @@ module Ace
             options
           )
 
+          # Validate that we have some content or attachments
+          if (merged_content.nil? || merged_content.strip.empty?) && attachment_files.empty?
+            puts "Error: No content provided. Use --note, positional argument, or --clipboard with content."
+            exit 1
+          end
+
           # Prepare initial metadata
           metadata = prepare_metadata(merged_content, options)
           metadata[:has_attachments] = attachment_files.any?
@@ -196,6 +202,9 @@ module Ace
         end
 
         def extract_title(content)
+          # Handle nil or empty content
+          return "untitled-idea" if content.nil? || content.strip.empty?
+
           # Take first 50 chars or up to first newline, whichever is shorter
           title = content.split("\n").first || content
           title = title[0..49] if title.length > 50

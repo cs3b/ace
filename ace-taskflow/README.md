@@ -23,10 +23,98 @@ gem install ace-taskflow
 Quickly capture ideas with automatic timestamping and organization:
 
 ```bash
-ace-taskflow idea "Add dark mode support to the application"
+# Capture text idea
+ace-taskflow idea create "Add dark mode support to the application"
+
+# Capture from clipboard (macOS with rich content support)
+ace-taskflow idea create --clipboard "Design review findings"
+# Automatically detects and saves images, files, HTML, RTF from clipboard
+
+# Capture with clipboard merge
+ace-taskflow idea create -gc --clipboard "Meeting notes"
+# Merges typed content with clipboard content
 ```
 
-Ideas are saved to the configured directory (default: `./ideas`) with timestamped filenames.
+Ideas are saved to the configured directory with timestamped filenames:
+- **Simple ideas**: Single `.md` file (e.g., `20251007-125830-dark-mode-support.md`)
+- **Rich ideas**: Directory with `idea.md` + attachments (e.g., `20251007-125830-design-review/`)
+
+#### Clipboard Support (macOS)
+
+When using `--clipboard` on macOS, ace-taskflow automatically detects and saves:
+- **Text**: Plain and rich text
+- **Images**: PNG, JPEG, TIFF formats
+- **Files**: Finder file copies (preserves original filenames)
+- **HTML/RTF**: Web content and formatted text
+
+Non-macOS platforms fall back to text-only clipboard support.
+
+### List Ideas
+
+Browse and filter ideas with flexible display options:
+
+```bash
+# List pending ideas (default - optimized for LLMs with paths)
+ace-taskflow ideas
+ace-taskflow ideas next
+
+# Human-friendly list (no paths, shows IDs for reference)
+ace-taskflow ideas --short
+
+# JSON output for programmatic use
+ace-taskflow ideas --format json
+
+# List all ideas including completed
+ace-taskflow ideas all
+
+# List only completed ideas
+ace-taskflow ideas done
+
+# Recent ideas (last 7 days)
+ace-taskflow ideas recent
+ace-taskflow ideas recent --days 3
+
+# Limit results
+ace-taskflow ideas --limit 10
+```
+
+#### Display Formats
+
+**Default (LLM-optimized)**: Shows file paths for direct access
+```
+• add documentation for new llm features
+  .ace-taskflow/v.0.9.0/ideas/20250925-005011-add-documentation-for-new-llm-features.md
+• design review findings 📎 3
+  .ace-taskflow/v.0.9.0/ideas/20251007-125830-design-review/idea.md
+```
+
+**--short (Human-friendly)**: Shows IDs without paths
+```
+• [20250925-005011] add documentation for new llm features
+• [20251007-125830] design review findings 📎 3
+```
+
+**--format json**: Structured output with metadata
+```json
+{
+  "release": "v.0.9.0",
+  "summary": {
+    "ideas": {"total": 31, "active": 23, "completed": 8}
+  },
+  "ideas": [
+    {
+      "id": "20251007-125830",
+      "title": "design review findings",
+      "type": "rich",
+      "path": ".ace-taskflow/v.0.9.0/ideas/20251007-125830-design-review/idea.md",
+      "attachments": 3,
+      "attachment_types": [".png", ".pdf"]
+    }
+  ]
+}
+```
+
+**Rich ideas**: Ideas with attachments are marked with 📎 icon and attachment count.
 
 ### Task Management
 

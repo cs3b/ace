@@ -63,6 +63,7 @@ The gem maps macOS Uniform Type Identifiers (UTIs) to Ruby symbols:
 | `public.jpeg` | `:image` | JPEG image |
 | `public.tiff` | `:image` | TIFF image |
 | `public.file-url` | `:files` | File paths from Finder |
+| `NSFilenamesPboardType` | `:files` | File paths from Finder (copy operation) |
 | `public.rtf` | `:rtf` | Rich Text Format |
 | `public.html` | `:html` | HTML content |
 
@@ -88,6 +89,8 @@ Parsed attachments follow this structure:
   filename: "report.pdf"
 }
 ```
+
+**Note**: When multiple files are copied from Finder, each file generates a separate attachment entry. The gem automatically handles both single and multiple file selections.
 
 #### Rich Text Attachment
 ```ruby

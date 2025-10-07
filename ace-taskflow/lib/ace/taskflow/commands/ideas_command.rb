@@ -92,7 +92,12 @@ module Ace
           if ideas.empty?
             puts "No ideas found for preset '#{preset_name}'."
           else
-            display_ideas_with_preset(ideas, preset_config, original_count, additional_filters[:limit])
+            # Check format option
+            if additional_filters[:format] == "json"
+              display_ideas_as_json(ideas, preset_config)
+            else
+              display_ideas_with_preset(ideas, preset_config, original_count, additional_filters[:limit], additional_filters[:short])
+            end
           end
         end
 
@@ -116,6 +121,12 @@ module Ace
             when "--verbose", "-v"
               filters[:verbose] = true
               i += 1
+            when "--short"
+              filters[:short] = true
+              i += 1
+            when "--format"
+              filters[:format] = args[i + 1] if i + 1 < args.length
+              i += 2
             # Legacy flag mappings to preset contexts
             when "--backlog"
               filters[:context] = "backlog"
@@ -192,7 +203,7 @@ module Ace
           all_ideas
         end
 
-        def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil)
+        def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil, short = false)
           # Display three-line header
           context = preset_config[:context] || 'current'
 
@@ -223,10 +234,10 @@ module Ace
             grouped.each do |context, context_ideas|
               puts ""
               puts "#{context} (#{context_ideas.length} ideas):"
-              context_ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false) }
+              context_ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false, short) }
             end
           else
-            ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false) }
+            ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false, short) }
           end
         end
 
@@ -244,17 +255,93 @@ module Ace
           puts @stats_formatter.format_stats_view(context: context)
         end
 
+        def display_ideas_as_json(ideas, preset_config)
+          require 'json'
+
+          context = preset_config[:context] || 'current'
+
+          # Get summary statistics
+          all_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+          done_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :done)
+          active_ideas = all_ideas - done_ideas
+
+          # Get release info
+          release_resolver = Molecules::ReleaseResolver.new(@root_path)
+          current_release = release_resolver.find_primary_active
+
+          output = {
+            release: current_release ? current_release[:name] : context,
+            summary: {
+              ideas: {
+                total: all_ideas.size,
+                active: active_ideas.size,
+                completed: done_ideas.size
+              }
+            },
+            ideas: ideas.map do |idea|
+              idea_json = {
+                id: idea[:id],
+                title: idea[:title],
+                type: idea[:is_directory] ? "rich" : "simple"
+              }
+
+              # Add path - point to idea.md for rich ideas
+              if idea[:path]
+                display_path = if idea[:is_directory]
+                  File.join(idea[:path], "idea.md")
+                else
+                  idea[:path]
+                end
+                idea_json[:path] = format_relative_path(display_path)
+              end
+
+              # Add attachment info for rich ideas
+              if idea[:attachments] && idea[:attachments].any?
+                idea_json[:attachments] = idea[:attachments].size
+                # Extract file extensions
+                extensions = idea[:attachments].map { |f| File.extname(f) }.uniq.sort
+                idea_json[:attachment_types] = extensions unless extensions.empty?
+              end
+
+              idea_json
+            end
+          }
+
+          puts JSON.pretty_generate(output)
+        end
 
 
 
 
-        def display_idea_line(idea, verbose)
-          puts "• [#{idea[:id]}] #{idea[:title]}"
 
-          # Always show path on second line
-          if idea[:path]
-            relative_path = format_relative_path(idea[:path])
-            puts "  #{relative_path}"
+        def display_idea_line(idea, verbose, short = false)
+          # Build title with attachment indicator
+          title = idea[:title]
+          if idea[:attachments] && idea[:attachments].any?
+            attachment_count = idea[:attachments].size
+            title = "#{title} 📎 #{attachment_count}"
+          end
+
+          # Show ID only when paths are hidden (--short mode)
+          if short
+            puts "• [#{idea[:id]}] #{title}"
+          else
+            puts "• #{title}"
+          end
+
+          # Show path unless --short flag is used
+          unless short
+            if idea[:path]
+              # For rich ideas (directories), point to idea.md file
+              display_path = if idea[:is_directory]
+                File.join(idea[:path], "idea.md")
+              else
+                idea[:path]
+              end
+
+              relative_path = format_relative_path(display_path)
+              puts "  #{relative_path}"
+            end
           end
 
           # Show timestamp only in verbose mode
@@ -296,7 +383,14 @@ module Ace
           puts "  --days <n>         Modify days for time-based presets"
           puts "  --limit <n>        Limit number of results displayed"
           puts "  --verbose, -v      Show detailed information"
+          puts "  --short            Hide file paths (human-friendly)"
+          puts "  --format <type>    Output format (json)"
           puts "  --stats            Show statistics for preset"
+          puts ""
+          puts "Display Formats:"
+          puts "  Default            Shows paths (optimized for LLMs)"
+          puts "  --short            Hides paths (optimized for humans)"
+          puts "  --format json      JSON output (programmatic use)"
           puts ""
           puts "Custom Presets:"
           puts "  Create YAML files in .ace/taskflow/presets/ to define custom presets"
