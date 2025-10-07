@@ -5,6 +5,24 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.4] - 2025-10-07
+
+### Changed
+- **Unified XML embedding format across all loading methods** (Breaking change)
+  - Preset loading now uses XML format when `embed_document_source: true`
+  - Files embedded as `<file path="...">content</file>` instead of markdown headers
+  - Commands embedded as `<command name="..." success="true">output</command>` instead of markdown sections
+  - Consistent format between protocol loading (`wfi://`) and preset loading (`--preset`)
+  - **Impact**: Better nesting support for markdown files, clearer boundaries for LLM agents
+  - **Migration**: If parsing preset output with `embed_document_source: true`, expect XML format instead of markdown headers
+
+### Fixed
+- **Preset loading formatter inconsistency**
+  - Presets with `embed_document_source: true` now trigger XML formatting
+  - Previously used markdown headers (### filename.md) while protocols used XML
+  - Now both methods use `<files>` and `<file>` tags consistently
+  - Default format is now `markdown-xml` when `embed_document_source: true`
+
 ## [0.11.3] - 2025-10-07
 
 ### Fixed
