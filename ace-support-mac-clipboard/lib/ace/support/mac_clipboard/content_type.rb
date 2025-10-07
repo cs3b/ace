@@ -19,6 +19,7 @@ module Ace
 
           # File URLs
           "public.file-url" => :files,
+          "NSFilenamesPboardType" => :files,
 
           # Rich text types
           "public.rtf" => :rtf,

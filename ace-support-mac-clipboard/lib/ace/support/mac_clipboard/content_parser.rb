@@ -26,15 +26,14 @@ module Ace
 
             case category
             when :files
-              relevant_utis.each do |uti|
-                file_urls = Reader.read_file_urls(pasteboard)
-                file_urls.each do |path|
-                  attachments << {
-                    type: :file,
-                    source_path: path,
-                    filename: File.basename(path)
-                  }
-                end
+              # Read file URLs once (works for both public.file-url and NSFilenamesPboardType)
+              file_urls = Reader.read_file_urls(pasteboard)
+              file_urls.each do |path|
+                attachments << {
+                  type: :file,
+                  source_path: path,
+                  filename: File.basename(path)
+                }
               end
 
             when :image

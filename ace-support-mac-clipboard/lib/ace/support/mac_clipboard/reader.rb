@@ -126,12 +126,62 @@ module Ace
 
         # Read file URLs from pasteboard
         def self.read_file_urls(pasteboard)
-          # Try reading public.file-url
+          # Try NSFilenamesPboardType first (Finder uses this for copied files)
+          file_paths = read_filenames_pboard_type(pasteboard)
+          return file_paths if file_paths.any?
+
+          # Fallback to public.file-url
+          file_paths = read_public_file_url(pasteboard)
+          return file_paths if file_paths.any?
+
+          []
+        rescue => e
+          STDERR.puts "Error reading file URLs: #{e.message}"
+          []
+        end
+
+        # Read file paths from NSFilenamesPboardType (used by Finder)
+        def self.read_filenames_pboard_type(pasteboard)
+          uti_str = create_nsstring("NSFilenamesPboardType")
+          return [] unless uti_str
+
+          # Get property list (NSArray of file path strings)
+          prop_list_sel = sel_registerName("propertyListForType:")
+          array_obj = objc_msgSend_id(pasteboard, prop_list_sel, uti_str)
+          return [] unless array_obj && !array_obj.null?
+
+          # Get count of files
+          count_sel = sel_registerName("count")
+          count = objc_msgSend_uint(array_obj, count_sel)
+          return [] if count.zero?
+
+          # Extract file paths
+          file_paths = []
+          count.times do |i|
+            obj_at_index_sel = sel_registerName("objectAtIndex:")
+            path_obj = objc_msgSend_uint64(array_obj, obj_at_index_sel, i)
+            next unless path_obj && !path_obj.null?
+
+            utf8_sel = sel_registerName("UTF8String")
+            cstr = objc_msgSend(path_obj, utf8_sel)
+            next if cstr.null?
+
+            path = cstr.read_string
+            file_paths << path if File.exist?(path)
+          end
+
+          file_paths
+        rescue => e
+          STDERR.puts "Error reading NSFilenamesPboardType: #{e.message}"
+          []
+        end
+
+        # Read file URL from public.file-url
+        def self.read_public_file_url(pasteboard)
           data = read_type(pasteboard, "public.file-url")
           return [] unless data
 
           # Parse URL from data
-          urls = []
           url_str = data.force_encoding("UTF-8").strip
 
           # Remove "file://" prefix if present
@@ -140,8 +190,7 @@ module Ace
           # URL decode
           url_str = URI.decode_www_form_component(url_str) rescue url_str
 
-          urls << url_str if File.exist?(url_str)
-          urls
+          File.exist?(url_str) ? [url_str] : []
         rescue => e
           []
         end
