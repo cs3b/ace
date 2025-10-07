@@ -23,6 +23,7 @@ Both commands use the same basic syntax:
 | `--system TEXT` | ✅ | ✅ | System prompt |
 | `--timeout SECONDS` | ✅ | ✅ | Request timeout |
 | `--model MODEL` | ❌ | ✅ | Override model (v0.9.1+) |
+| `--prompt PROMPT` | ❌ | ✅ | Explicit prompt (v0.9.2+) |
 | `--force, -f` | ✅ | ✅ | Force overwrite |
 | `--debug, -d` | ✅ | ✅ | Debug output |
 | `--help, -h` | ✅ | ✅ | Help message |
