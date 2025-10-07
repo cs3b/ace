@@ -200,7 +200,13 @@ module Ace
 
             # Process the config (loads embedded files from context.files)
             context = process_template_config(config)
-            context.metadata[:frontmatter] = frontmatter
+
+            # Replace metadata with original frontmatter (keep it unmodified)
+            # Convert string keys to symbols for consistency
+            context.metadata = {}
+            frontmatter.each do |key, value|
+              context.metadata[key.to_sym] = value
+            end
 
             # If embed_document_source is true, prepend the source file BEFORE embedded files
             if config['embed_document_source']
