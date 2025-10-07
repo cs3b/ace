@@ -172,8 +172,10 @@ module Ace
 
           # Extract and strip frontmatter if present
           frontmatter = {}
+          frontmatter_yaml = nil
           if template_content =~ /\A---\s*\n(.*?)\n---\s*\n/m
             frontmatter_text = $1
+            frontmatter_yaml = frontmatter_text  # Store original YAML for output
             begin
               require 'yaml'
               frontmatter = YAML.safe_load(frontmatter_text) || {}
@@ -182,6 +184,7 @@ module Ace
               template_content = template_content.sub(/\A---\s*\n.*?\n---\s*\n/m, '')
             rescue Psych::SyntaxError
               # Invalid YAML, ignore frontmatter
+              frontmatter_yaml = nil
             end
           end
 
@@ -207,6 +210,8 @@ module Ace
             frontmatter.each do |key, value|
               context.metadata[key.to_sym] = value
             end
+            # Store original YAML for output formatting
+            context.metadata[:frontmatter_yaml] = frontmatter_yaml if frontmatter_yaml
 
             # If embed_document_source is true, prepend the source file BEFORE embedded files
             if config['embed_document_source']

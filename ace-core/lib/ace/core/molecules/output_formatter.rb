@@ -46,12 +46,21 @@ module Ace
 
           # Add metadata if present
           if data[:metadata]
-            output << "## Metadata"
-            output << ""
-            data[:metadata].each do |key, value|
-              output << "- **#{key}**: #{value}"
+            # If we have original frontmatter YAML, output it as-is
+            if data[:metadata][:frontmatter_yaml]
+              output << "---"
+              output << data[:metadata][:frontmatter_yaml]
+              output << "---"
+              output << ""
+            else
+              # Otherwise use bulleted format
+              output << "## Metadata"
+              output << ""
+              data[:metadata].each do |key, value|
+                output << "- **#{key}**: #{value}"
+              end
+              output << ""
             end
-            output << ""
           end
 
           # Add files section
@@ -224,12 +233,21 @@ module Ace
 
           # Add metadata
           if data[:metadata]
-            output << "## Metadata"
-            output << ""
-            data[:metadata].each do |key, value|
-              output << "- **#{key}**: #{value}"
+            # If we have original frontmatter YAML, output it as-is
+            if data[:metadata][:frontmatter_yaml]
+              output << "---"
+              output << data[:metadata][:frontmatter_yaml]
+              output << "---"
+              output << ""
+            else
+              # Otherwise use bulleted format
+              output << "## Metadata"
+              output << ""
+              data[:metadata].each do |key, value|
+                output << "- **#{key}**: #{value}"
+              end
+              output << ""
             end
-            output << ""
           end
 
           # Add files as XML blocks

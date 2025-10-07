@@ -1,13 +1,13 @@
 PATH
   remote: ace-context
   specs:
-    ace-context (0.10.0)
+    ace-context (0.11.1)
       ace-core (~> 0.9.0)
 
 PATH
   remote: ace-core
   specs:
-    ace-core (0.9.0)
+    ace-core (0.9.1)
 
 PATH
   remote: ace-git-commit
