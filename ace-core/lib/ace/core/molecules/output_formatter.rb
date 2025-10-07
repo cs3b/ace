@@ -38,6 +38,11 @@ module Ace
         # @param data [Hash] Data to format
         # @return [String] Markdown formatted output
         def format_markdown(data)
+          # If we have source content (embed_document_source mode), use raw content + XML blocks format
+          if data[:content] && !data[:content].to_s.empty?
+            return format_embedded_source(data)
+          end
+
           output = []
 
           # Add header
@@ -226,6 +231,11 @@ module Ace
         # @param data [Hash] Data to format
         # @return [String] Markdown-XML formatted output
         def format_markdown_xml(data)
+          # If we have source content (embed_document_source mode), use raw content + XML blocks format
+          if data[:content] && !data[:content].to_s.empty?
+            return format_embedded_source(data)
+          end
+
           output = []
 
           output << "# Context"
@@ -344,6 +354,66 @@ module Ace
             'errors' => data[:errors],
             'stats' => data[:stats]
           }.compact
+        end
+
+        # Format with embedded source content (raw document + XML blocks)
+        # @param data [Hash] Data to format
+        # @return [String] Raw content with appended XML blocks
+        def format_embedded_source(data)
+          output = []
+
+          # Output raw source content (includes frontmatter and markdown body)
+          output << data[:content]
+          output << ""
+
+          # Append files as XML block
+          if data[:files] && !data[:files].empty?
+            output << "<files>"
+            data[:files].each do |file|
+              output << "<file path=\"#{escape_xml(file[:path])}\">"
+              output << file[:content]
+              output << "</file>"
+              output << ""
+            end
+            output << "</files>"
+            output << ""
+          end
+
+          # Append commands as XML block
+          if data[:commands] && !data[:commands].empty?
+            output << "<commands>"
+            data[:commands].each do |cmd|
+              success_attr = cmd[:success] ? 'true' : 'false'
+              output << "<command name=\"#{escape_xml(cmd[:command])}\" success=\"#{success_attr}\">"
+              output << cmd[:output] if cmd[:output]
+              if cmd[:error]
+                output << "<error>#{escape_xml(cmd[:error])}</error>"
+              end
+              output << "</command>"
+              output << ""
+            end
+            output << "</commands>"
+            output << ""
+          end
+
+          # Append diffs as XML block
+          if data[:diffs] && !data[:diffs].empty?
+            output << "<diffs>"
+            data[:diffs].each do |diff|
+              success_attr = diff[:success] ? 'true' : 'false'
+              output << "<diff range=\"#{escape_xml(diff[:range])}\" success=\"#{success_attr}\">"
+              output << diff[:output] if diff[:output]
+              if diff[:error]
+                output << "<error>#{escape_xml(diff[:error])}</error>"
+              end
+              output << "</diff>"
+              output << ""
+            end
+            output << "</diffs>"
+            output << ""
+          end
+
+          output.join("\n").strip
         end
 
         # Escape XML special characters

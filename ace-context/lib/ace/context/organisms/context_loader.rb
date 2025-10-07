@@ -213,23 +213,15 @@ module Ace
             # Store original YAML for output formatting
             context.metadata[:frontmatter_yaml] = frontmatter_yaml if frontmatter_yaml
 
-            # If embed_document_source is true, prepend the source file BEFORE embedded files
+            # If embed_document_source is true, store original document and keep embedded files separate
             if config['embed_document_source']
-              # Get current embedded files
-              embedded_files = context.files.dup
+              # Store original document (with frontmatter) as source content
+              context.content = File.read(path)
 
-              # Clear files array
-              context.instance_variable_set(:@files, [])
+              # context.files already has embedded files from process_template_config
+              # Don't add source to files array - it will be output as raw content
 
-              # Add source file FIRST
-              context.add_file(path, template_content)
-
-              # Then add embedded files
-              embedded_files.each do |file_info|
-                context.add_file(file_info[:path], file_info[:content])
-              end
-
-              # Re-format with all files in correct order
+              # Format and return
               format = config['format'] || @options[:format] || 'markdown-xml'
               return format_context(context, format)
             end
@@ -507,7 +499,8 @@ module Ace
             data = {
               files: context.files,
               metadata: context.metadata.dup,
-              commands: context.commands
+              commands: context.commands,
+              content: context.content
             }
 
             # Include preset_name at the top level for YAML format
