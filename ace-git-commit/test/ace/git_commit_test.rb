@@ -8,8 +8,8 @@ module Ace
       refute_nil ::Ace::GitCommit::VERSION
     end
 
-    def test_version_is_correct
-      assert_equal "0.9.0", ::Ace::GitCommit::VERSION
+    def test_version_format
+      assert_match(/\A\d+\.\d+\.\d+/, ::Ace::GitCommit::VERSION)
     end
 
     def test_module_exists

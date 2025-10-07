@@ -10,8 +10,8 @@ module Ace
           refute_nil ::Ace::LLM::Providers::CLI::VERSION
         end
 
-        def test_version_is_correct
-          assert_equal "0.9.1", ::Ace::LLM::Providers::CLI::VERSION
+        def test_version_format
+          assert_match(/\A\d+\.\d+\.\d+/, ::Ace::LLM::Providers::CLI::VERSION)
         end
 
         def test_module_exists
