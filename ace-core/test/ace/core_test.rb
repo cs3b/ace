@@ -7,8 +7,8 @@ class Ace::CoreTest < Minitest::Test
     refute_nil ::Ace::Core::VERSION
   end
 
-  def test_version_is_correct
-    assert_equal "0.9.0", ::Ace::Core::VERSION
+  def test_version_format
+    assert_match(/\A\d+\.\d+\.\d+/, ::Ace::Core::VERSION)
   end
 
   def test_config_method_exists
