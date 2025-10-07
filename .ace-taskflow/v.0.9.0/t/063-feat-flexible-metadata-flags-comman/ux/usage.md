@@ -4,12 +4,14 @@
 
 ## Overview
 
-Enhanced task creation in `ace-taskflow` with flexible metadata flags, fixing the critical `--help` bug and adding comprehensive flag support for all task frontmatter metadata. This feature makes task creation more intuitive and powerful by supporting both positional arguments and named flags.
+Enhanced task creation in `ace-taskflow` with flexible metadata flags, fixing the critical `--help` bug and adding comprehensive flag support for all task frontmatter metadata, including arbitrary custom fields. This feature makes task creation more intuitive and powerful by supporting both positional arguments and named flags.
 
 **Key Features:**
+
 - Fix: `--help` now shows help instead of creating a task named "--help"
 - `--title` flag as alternative to positional title argument
-- Metadata flags: `--status`, `--priority`, `--estimate`, `--dependencies`
+- Standard metadata flags: `--status`, `--estimate`, `--dependencies`
+- Arbitrary metadata: Any `--key value` flag saved to frontmatter (e.g., `--assignee`, `--category`, `--sprint`)
 - Full backwards compatibility with existing positional syntax
 - Clear error messages with helpful usage hints
 
@@ -26,9 +28,9 @@ ace-taskflow task create --help
 # No way to set metadata at creation time
 # Must manually edit task file after creation to set:
 # - status (defaults to 'pending')
-# - priority (defaults to 'medium')
 # - estimate (defaults to 'TBD')
 # - dependencies (defaults to empty array)
+# - custom metadata fields (assignee, category, etc.)
 
 # Limitations:
 - --help flag is broken (creates task)
@@ -36,6 +38,7 @@ ace-taskflow task create --help
 - No metadata configuration at creation
 - Must edit task file manually for metadata
 - No dependencies support during creation
+- No arbitrary/custom metadata support
 ```
 
 ## New Behavior (After)
@@ -51,29 +54,35 @@ ace-taskflow task create --help
 # Flag-based title (alternative syntax)
 ace-taskflow task create --title 'Add new feature'
 
-# Create with all metadata configured
+# Create with standard metadata configured
 ace-taskflow task create \
   --title 'Implement caching layer' \
   --status pending \
-  --priority high \
   --estimate 3h \
   --dependencies 018,019
 
+# Create with arbitrary metadata fields
+ace-taskflow task create \
+  --title 'Build API endpoint' \
+  --assignee john \
+  --category backend \
+  --sprint 5
+
 # Positional title with metadata
 ace-taskflow task create 'My task' \
-  --priority critical \
-  --estimate 2d
+  --estimate 2d \
+  --tags ui,refactor
 
 # New output includes metadata confirmation:
 Created task v.0.9.0+task.064
 Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/064-implement-caching-layer/task.064.md
-Status: pending | Priority: high | Estimate: 3h | Dependencies: [018, 019]
 
 # Improvements:
 - --help works correctly (no task created)
 - Flexible title syntax (positional OR --title)
-- Full metadata control at creation time
+- Full metadata control at creation time (standard + arbitrary fields)
 - Dependencies can be set immediately
+- Custom metadata fields supported (assignee, category, tags, etc.)
 - No manual file editing needed
 ```
 
@@ -88,15 +97,18 @@ ace-taskflow task create --help
 # Create simple task (backwards compatible)
 ace-taskflow task create 'My first task'
 
-# Create task with metadata
-ace-taskflow task create --title 'My task' --priority high
+# Create task with standard metadata
+ace-taskflow task create --title 'My task' --estimate 3h
+
+# Create task with arbitrary metadata
+ace-taskflow task create --title 'Feature X' --assignee alice --category frontend
 
 # Expected output:
 Created task v.0.9.0+task.065
 Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/065-my-task/task.065.md
 ```
 
-**Success criteria:** Task file created with specified metadata in frontmatter
+**Success criteria:** Task file created with specified metadata in frontmatter (both standard and custom fields)
 
 ## Command Interface
 
@@ -108,16 +120,25 @@ ace-taskflow task create [TITLE] [OPTIONS]
 
 ### Command Options
 
+#### Standard Options
+
 | Option | Short | Type | Description | Example |
 |--------|-------|------|-------------|---------|
 | `--title` | | string | Task title (alternative to positional) | `--title "My task"` |
 | `--status` | | string | Initial status (pending, draft, in-progress, done, blocked) | `--status draft` |
-| `--priority` | | string | Priority level (critical, high, medium, low) | `--priority high` |
 | `--estimate` | | string | Effort estimate | `--estimate 3h` |
 | `--dependencies` | | string | Comma-separated dependency list | `--dependencies 018,019` |
 | `--backlog` | | flag | Create task in backlog | `--backlog` |
 | `--release` | | string | Create task in specific release | `--release v.0.10.0` |
 | `--help` | `-h` | flag | Show help message | `--help` |
+
+#### Arbitrary Metadata
+
+| Pattern | Description | Examples |
+|---------|-------------|----------|
+| `--<key> <value>` | Any flag not in standard options saved as metadata | `--assignee john`<br>`--category backend`<br>`--sprint 5`<br>`--tags ui,refactor` |
+
+**Note:** All flags except the standard options above are treated as arbitrary metadata and saved directly to the task frontmatter.
 
 ## Usage Scenarios
 
@@ -126,11 +147,13 @@ ace-taskflow task create [TITLE] [OPTIONS]
 **Goal**: Create a simple task quickly using familiar positional syntax
 
 **Before** (still works!):
+
 ```bash
 ace-taskflow task create 'Implement user authentication'
 ```
 
 **After** (same result, new flag syntax available):
+
 ```bash
 # Option 1: Positional (original syntax)
 ace-taskflow task create 'Implement user authentication'
@@ -144,6 +167,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/066-implement-user-authentic
 ```
 
 **Benefits**:
+
 - No workflow changes needed
 - New flag syntax available when needed
 - Choose syntax that fits your use case
@@ -153,6 +177,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/066-implement-user-authentic
 **Goal**: Create a critical task with time estimate set immediately
 
 **Before** (required manual editing):
+
 ```bash
 # Step 1: Create task
 ace-taskflow task create 'Fix security vulnerability'
@@ -163,6 +188,7 @@ ace-taskflow task create 'Fix security vulnerability'
 ```
 
 **After** (one command):
+
 ```bash
 ace-taskflow task create \
   --title 'Fix security vulnerability' \
@@ -175,6 +201,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/067-fix-security-vulnerabili
 ```
 
 **Task file frontmatter:**
+
 ```yaml
 ---
 id: v.0.9.0+task.067
@@ -186,6 +213,7 @@ dependencies: []
 ```
 
 **Benefits**:
+
 - Saves 2 steps (open file, edit frontmatter)
 - Reduces errors from manual editing
 - Task ready to work on immediately
@@ -195,6 +223,7 @@ dependencies: []
 **Goal**: Create a task that depends on other tasks being completed first
 
 **Before** (not possible during creation):
+
 ```bash
 # Step 1: Create task
 ace-taskflow task create 'Write integration tests'
@@ -205,6 +234,7 @@ ace-taskflow task add-dependency 068 --depends-on 067
 ```
 
 **After** (dependencies at creation):
+
 ```bash
 ace-taskflow task create \
   --title 'Write integration tests' \
@@ -217,6 +247,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/068-write-integration-tests/
 ```
 
 **Task file frontmatter:**
+
 ```yaml
 ---
 id: v.0.9.0+task.068
@@ -228,6 +259,7 @@ dependencies: [066, 067]
 ```
 
 **Benefits**:
+
 - Dependencies set immediately
 - Task correctly marked as blocked until dependencies complete
 - No separate commands needed
@@ -237,6 +269,7 @@ dependencies: [066, 067]
 **Goal**: Create a draft task (not ready for execution yet)
 
 **Before** (manual file edit required):
+
 ```bash
 # Create with default status (pending)
 ace-taskflow task create 'Explore new architecture patterns'
@@ -245,6 +278,7 @@ ace-taskflow task create 'Explore new architecture patterns'
 ```
 
 **After** (draft status at creation):
+
 ```bash
 ace-taskflow task create \
   --title 'Explore new architecture patterns' \
@@ -257,6 +291,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/069-explore-new-architecture
 ```
 
 **Task file frontmatter:**
+
 ```yaml
 ---
 id: v.0.9.0+task.069
@@ -268,6 +303,7 @@ dependencies: []
 ```
 
 **Benefits**:
+
 - Clear status from creation
 - Won't appear in "next task" queries (draft excluded)
 - Ready for planning phase
@@ -277,6 +313,7 @@ dependencies: []
 **Goal**: Create a future task in backlog with all metadata configured
 
 **Before**:
+
 ```bash
 # Create in backlog (context flag works)
 ace-taskflow task create 'Add GraphQL API' --backlog
@@ -285,6 +322,7 @@ ace-taskflow task create 'Add GraphQL API' --backlog
 ```
 
 **After**:
+
 ```bash
 ace-taskflow task create \
   --title 'Add GraphQL API' \
@@ -299,6 +337,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/backlog/t/025-add-graphql-api/task.025
 ```
 
 **Benefits**:
+
 - Backlog tasks fully configured
 - Ready to move to active release when prioritized
 - No follow-up editing needed
@@ -308,6 +347,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/backlog/t/025-add-graphql-api/task.025
 **Goal**: Confirm that --help no longer creates a task
 
 **Before** (BUG):
+
 ```bash
 ace-taskflow task create --help
 
@@ -316,6 +356,7 @@ ace-taskflow task create --help
 ```
 
 **After** (FIXED):
+
 ```bash
 ace-taskflow task create --help
 
@@ -345,6 +386,7 @@ Examples:
 ```
 
 **Benefits**:
+
 - Critical bug fixed
 - Users can discover flags via --help
 - Proper CLI behavior
@@ -356,11 +398,13 @@ Examples:
 **Purpose**: Create a new task with optional metadata configuration
 
 **Syntax**:
+
 ```bash
 ace-taskflow task create [TITLE] [--title TITLE] [--status STATUS] [--priority PRIORITY] [--estimate ESTIMATE] [--dependencies DEPS] [--backlog | --release VERSION] [--help]
 ```
 
 **Parameters**:
+
 - `TITLE` (positional): Task title (optional if --title provided)
 
 **Options**:
@@ -423,10 +467,12 @@ ace-taskflow task create --help
 ```
 
 **Exit Codes**:
+
 - `0`: Success (task created OR help shown)
 - `1`: Error (missing title, invalid flag, etc.)
 
 **See Also**:
+
 - `ace-taskflow task show <reference>` - View task details
 - `ace-taskflow task start <reference>` - Start working on task
 - `ace-taskflow task add-dependency <ref> --depends-on <dep>` - Add dependency after creation
@@ -436,6 +482,7 @@ ace-taskflow task create --help
 ### Problem: "Task title is required" error
 
 **Symptom**:
+
 ```bash
 ace-taskflow task create --priority high
 # Error: Task title is required
@@ -445,6 +492,7 @@ ace-taskflow task create --priority high
 ```
 
 **Solution**:
+
 ```bash
 # Provide title as positional argument
 ace-taskflow task create 'My task' --priority high
@@ -456,6 +504,7 @@ ace-taskflow task create --title 'My task' --priority high
 ### Problem: "invalid option" error
 
 **Symptom**:
+
 ```bash
 ace-taskflow task create 'Task' --invalid-flag value
 # Error: invalid option: --invalid-flag
@@ -464,6 +513,7 @@ ace-taskflow task create 'Task' --invalid-flag value
 ```
 
 **Solution**:
+
 ```bash
 # Check available flags
 ace-taskflow task create --help
@@ -475,12 +525,14 @@ ace-taskflow task create 'Task' --priority high --estimate 2h
 ### Problem: Dependencies not parsed correctly
 
 **Symptom**:
+
 ```bash
 # Spaces around commas cause issues?
 ace-taskflow task create 'Task' --dependencies '018, 019, 020'
 ```
 
 **Solution**:
+
 ```bash
 # Spaces are handled correctly (trimmed automatically)
 ace-taskflow task create 'Task' --dependencies '018, 019, 020'
@@ -493,12 +545,14 @@ ace-taskflow task create 'Task' --dependencies '018,019,020'
 ### Problem: Both positional and --title provided
 
 **Symptom**:
+
 ```bash
 ace-taskflow task create 'Positional title' --title 'Flag title'
 # Which one wins?
 ```
 
 **Solution**:
+
 ```bash
 # Positional argument takes precedence
 # Task created with title: "Positional title"
@@ -614,6 +668,7 @@ ace-taskflow task create 'My task' --priority high
 ### Workflow Changes (Optional)
 
 **Old workflow** (still works):
+
 ```bash
 # Step 1: Create task
 ace-taskflow task create 'My task'
@@ -626,6 +681,7 @@ ace-taskflow task add-dependency XXX --depends-on YYY
 ```
 
 **New workflow** (recommended):
+
 ```bash
 # Single command with all metadata
 ace-taskflow task create \
@@ -636,6 +692,7 @@ ace-taskflow task create \
 ```
 
 **Benefits**:
+
 - Faster task creation
 - Fewer commands to remember
 - Less prone to errors
@@ -646,18 +703,21 @@ ace-taskflow task create \
 ### 1. Critical Bug Fixed
 
 The `--help` flag now works correctly:
+
 - Before: Created task named "--help"
 - After: Shows help text as expected
 
 ### 2. Flexible Title Syntax
 
 Choose the syntax that fits your workflow:
+
 - Positional: `ace-taskflow task create 'Title'`
 - Flag-based: `ace-taskflow task create --title 'Title'`
 
 ### 3. Immediate Metadata Configuration
 
 Set all task metadata during creation:
+
 - Status (pending, draft, in-progress, done, blocked)
 - Priority (critical, high, medium, low)
 - Estimate (2h, 1d, etc.)
@@ -666,6 +726,7 @@ Set all task metadata during creation:
 ### 4. Reduced Manual Editing
 
 No need to open and edit task files after creation:
+
 - Saves time and reduces errors
 - Task ready to work on immediately
 - Consistent metadata format
@@ -673,6 +734,7 @@ No need to open and edit task files after creation:
 ### 5. Better Dependency Management
 
 Dependencies can be set at creation time:
+
 - Tasks correctly marked as blocked
 - Prevents accidental execution
 - Clear task relationships from start
@@ -680,6 +742,7 @@ Dependencies can be set at creation time:
 ### 6. Full Backwards Compatibility
 
 All existing commands continue to work:
+
 - No workflow disruption
 - Gradual adoption of new features
 - No migration required
