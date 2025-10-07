@@ -50,8 +50,10 @@ module Ace
           context.metadata[:preset_name] = preset_name
           context.metadata[:output] = preset[:output]  # Store default output mode
 
-          # Re-format if format was specified
-          format = preset[:format] || params['format'] || params[:format] || merged_options[:format] || 'markdown'
+          # Determine format - use markdown-xml for embedded sources, markdown otherwise
+          context_config = preset[:context] || {}
+          default_format = context_config['embed_document_source'] ? 'markdown-xml' : 'markdown'
+          format = preset[:format] || params['format'] || params[:format] || merged_options[:format] || default_format
           format_context(context, format)
 
           context
@@ -342,9 +344,14 @@ module Ace
             end
           end
 
-          # Add preset body content if it exists
-          if preset[:body] && !preset[:body].empty?
-            context.metadata[:preset_content] = preset[:body]
+          # If embed_document_source is true, set content to trigger XML formatting
+          if context_config['embed_document_source'] && preset[:body] && !preset[:body].empty?
+            context.content = preset[:body]
+          else
+            # Add preset body to metadata (old behavior for non-embedded)
+            if preset[:body] && !preset[:body].empty?
+              context.metadata[:preset_content] = preset[:body]
+            end
           end
 
           context

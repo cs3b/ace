@@ -51,7 +51,7 @@ context:
     output: cache                  # Default output mode: stdio, cache, or file path
     max_size: 10485760            # Max file size (10MB)
     timeout: 30                   # Command timeout in seconds
-  embed_document_source: true     # Include file contents in output
+  embed_document_source: true     # Include file contents in output (uses XML format)
   files:
     - README.md
     - docs/**/*.md
@@ -68,6 +68,21 @@ context:
 # Project Context
 
 Additional markdown content for this preset...
+```
+
+When `embed_document_source: true`, files and commands are embedded using XML format:
+```xml
+<files>
+<file path="README.md">
+# Content here
+</file>
+</files>
+
+<commands>
+<command name="git status --short" success="true">
+M lib/file.rb
+</command>
+</commands>
 ```
 
 
