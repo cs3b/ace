@@ -172,9 +172,9 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/066-implement-user-authentic
 - New flag syntax available when needed
 - Choose syntax that fits your use case
 
-### Scenario 2: Task with High Priority and Estimate
+### Scenario 2: Task with Estimate and Custom Metadata
 
-**Goal**: Create a critical task with time estimate set immediately
+**Goal**: Create a task with time estimate and custom urgency field set immediately
 
 **Before** (required manual editing):
 
@@ -183,8 +183,8 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/066-implement-user-authentic
 ace-taskflow task create 'Fix security vulnerability'
 
 # Step 2: Manually edit task file to set:
-# priority: critical
 # estimate: 2h
+# urgency: high
 ```
 
 **After** (one command):
@@ -192,8 +192,8 @@ ace-taskflow task create 'Fix security vulnerability'
 ```bash
 ace-taskflow task create \
   --title 'Fix security vulnerability' \
-  --priority critical \
-  --estimate 2h
+  --estimate 2h \
+  --urgency high
 
 # Output:
 Created task v.0.9.0+task.067
@@ -206,9 +206,9 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/067-fix-security-vulnerabili
 ---
 id: v.0.9.0+task.067
 status: pending
-priority: critical
 estimate: 2h
 dependencies: []
+urgency: high
 ---
 ```
 
@@ -217,6 +217,7 @@ dependencies: []
 - Saves 2 steps (open file, edit frontmatter)
 - Reduces errors from manual editing
 - Task ready to work on immediately
+- Custom metadata (urgency) configured at creation
 
 ### Scenario 3: Task with Dependencies
 
@@ -266,7 +267,7 @@ dependencies: [066, 067]
 
 ### Scenario 4: Draft Task for Future Planning
 
-**Goal**: Create a draft task (not ready for execution yet)
+**Goal**: Create a draft task (not ready for execution yet) with custom metadata
 
 **Before** (manual file edit required):
 
@@ -274,7 +275,7 @@ dependencies: [066, 067]
 # Create with default status (pending)
 ace-taskflow task create 'Explore new architecture patterns'
 
-# Manually edit to set status: draft
+# Manually edit to set status: draft and add research phase
 ```
 
 **After** (draft status at creation):
@@ -283,7 +284,7 @@ ace-taskflow task create 'Explore new architecture patterns'
 ace-taskflow task create \
   --title 'Explore new architecture patterns' \
   --status draft \
-  --priority low
+  --phase research
 
 # Output:
 Created task v.0.9.0+task.069
@@ -296,9 +297,9 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/069-explore-new-architecture
 ---
 id: v.0.9.0+task.069
 status: draft
-priority: low
 estimate: TBD
 dependencies: []
+phase: research
 ---
 ```
 
@@ -307,6 +308,7 @@ dependencies: []
 - Clear status from creation
 - Won't appear in "next task" queries (draft excluded)
 - Ready for planning phase
+- Custom metadata (phase) for workflow tracking
 
 ### Scenario 5: Task in Backlog with Metadata
 
@@ -318,7 +320,7 @@ dependencies: []
 # Create in backlog (context flag works)
 ace-taskflow task create 'Add GraphQL API' --backlog
 
-# Manually edit to set priority and estimate
+# Manually edit to set estimate and team assignment
 ```
 
 **After**:
@@ -327,9 +329,10 @@ ace-taskflow task create 'Add GraphQL API' --backlog
 ace-taskflow task create \
   --title 'Add GraphQL API' \
   --backlog \
-  --priority medium \
   --estimate 8h \
-  --status draft
+  --status draft \
+  --team backend \
+  --type feature
 
 # Output:
 Created task backlog+task.025
@@ -341,6 +344,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/backlog/t/025-add-graphql-api/task.025
 - Backlog tasks fully configured
 - Ready to move to active release when prioritized
 - No follow-up editing needed
+- Custom metadata (team, type) configured from start
 
 ### Scenario 6: Verifying Help Works (Bug Fix)
 
