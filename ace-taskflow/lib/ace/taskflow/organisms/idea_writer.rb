@@ -4,6 +4,8 @@ require "fileutils"
 require "time"
 require_relative "../molecules/git_executor"
 require_relative "../molecules/idea_enhancer"
+require_relative "../atoms/clipboard_reader"
+require_relative "../molecules/attachment_manager"
 
 module Ace
   module Taskflow
@@ -18,15 +20,26 @@ module Ace
           # Merge options with config defaults
           options = merge_options_with_config(options)
 
+          # Process clipboard if requested
+          clipboard_result = process_clipboard(options)
+
+          # Merge content with clipboard
+          merged_content, attachment_files = merge_content_with_clipboard(
+            content,
+            clipboard_result,
+            options
+          )
+
           # Prepare initial metadata
-          metadata = prepare_metadata(content, options)
+          metadata = prepare_metadata(merged_content, options)
+          metadata[:has_attachments] = attachment_files.any?
           debug_log("Initial metadata after prepare: #{metadata.inspect}")
 
           # Enhance content if requested (this may update metadata with suggested filename)
           enhanced_content = if should_enhance?(options)
-                               enhance_idea(content, metadata)
+                               enhance_idea(merged_content, metadata)
                              else
-                               content
+                               merged_content
                              end
 
           # If we have a suggested filename from LLM, use it as the title for file naming
@@ -40,13 +53,36 @@ module Ace
 
           debug_log("Final metadata title for filename: #{metadata[:title]}")
 
-          # Generate file path and ensure directory exists
+          # Generate file path (directory if attachments, file otherwise)
           path = generate_path(metadata)
-          ensure_directory_exists(path)
 
-          # Format and write the idea
-          formatted_content = format_idea(enhanced_content, metadata)
-          File.write(path, formatted_content)
+          # Handle attachments if present
+          if attachment_files.any?
+            # Path is directory - create it and copy files
+            FileUtils.mkdir_p(path)
+            attachment_result = Molecules::AttachmentManager.copy_files(
+              attachment_files,
+              path
+            )
+
+            # Add file references to content
+            enhanced_content += attachment_result[:references]
+
+            # Warn about failed files
+            attachment_result[:failed_files].each do |failure|
+              puts "Warning: #{failure[:path]} - #{failure[:error]}"
+            end
+
+            # Write idea.md in directory
+            idea_file = File.join(path, "idea.md")
+            formatted_content = format_idea(enhanced_content, metadata)
+            File.write(idea_file, formatted_content)
+          else
+            # No attachments - write flat file
+            ensure_directory_exists(path)
+            formatted_content = format_idea(enhanced_content, metadata)
+            File.write(path, formatted_content)
+          end
 
           # Commit to git if requested
           if should_commit?(options)
@@ -57,6 +93,40 @@ module Ace
         end
 
         private
+
+        def process_clipboard(options)
+          return { success: false } unless options[:clipboard]
+
+          result = Atoms::ClipboardReader.read
+
+          unless result[:success]
+            puts "Error: #{result[:error]}"
+            exit 1
+          end
+
+          result
+        end
+
+        def merge_content_with_clipboard(content, clipboard_result, options)
+          # If clipboard wasn't requested or failed, return original content
+          return [content, []] unless clipboard_result[:success]
+
+          # If clipboard has files, return them separately
+          if clipboard_result[:type] == :files
+            # Content + file attachments
+            return [content, clipboard_result[:files]]
+          end
+
+          # Clipboard has text - merge with content
+          if content.nil? || content.empty?
+            # Use clipboard as sole content
+            [clipboard_result[:content], []]
+          else
+            # Append clipboard text to content
+            merged = "#{content}\n\n#{clipboard_result[:content]}"
+            [merged, []]
+          end
+        end
 
         def load_config
           require "yaml"
@@ -171,6 +241,7 @@ module Ace
           merged = defaults.dup
           merged[:git_commit] = options[:git_commit] unless options[:git_commit].nil?
           merged[:llm_enhance] = options[:llm_enhance] unless options[:llm_enhance].nil?
+          merged[:clipboard] = options[:clipboard] unless options[:clipboard].nil?
           merged[:location] = options[:location] if options[:location]
 
           # Preserve metadata fields if provided
@@ -178,6 +249,7 @@ module Ace
           merged[:timestamp] = options[:timestamp] if options[:timestamp]
           merged[:author] = options[:author] if options[:author]
           merged[:tags] = options[:tags] if options[:tags]
+          merged[:note] = options[:note] if options[:note]
 
           merged
         end

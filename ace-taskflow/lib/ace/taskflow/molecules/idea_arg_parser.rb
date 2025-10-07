@@ -8,9 +8,11 @@ module Ace
       class IdeaArgParser
         # Parse idea capture options
         # @param args [Array<String>] Command arguments
-        # @return [Hash] Parsed options with :content, :location, :git_commit, :llm_enhance
+        # @return [Hash] Parsed options with :content, :note, :clipboard, :location, :git_commit, :llm_enhance
         def self.parse_capture_options(args)
           options = {
+            note: nil,
+            clipboard: false,
             content: "",
             location: nil,
             git_commit: nil,
@@ -22,6 +24,13 @@ module Ace
           while i < args.length
             arg = args[i]
             case arg
+            when "--note", "-n"
+              # Explicit note flag - takes precedence over positional args
+              options[:note] = args[i + 1]
+              i += 2
+            when "--clipboard", "-c"
+              options[:clipboard] = true
+              i += 1
             when "--backlog"
               options[:location] = "backlog"
               i += 1
@@ -49,7 +58,14 @@ module Ace
             end
           end
 
-          options[:content] = content_parts.join(" ")
+          # Content priority: --note > positional args
+          # (clipboard content will be merged later by IdeaWriter if --clipboard is set)
+          if options[:note]
+            options[:content] = options[:note]
+          else
+            options[:content] = content_parts.join(" ")
+          end
+
           options
         end
 

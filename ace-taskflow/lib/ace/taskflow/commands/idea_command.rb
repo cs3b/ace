@@ -4,6 +4,7 @@ require_relative "../organisms/idea_writer"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/idea_loader"
+require_relative "../molecules/idea_arg_parser"
 require_relative "../models/idea"
 require_relative "../atoms/path_formatter"
 require 'stringio'
@@ -128,16 +129,19 @@ module Ace
         end
 
         def create_idea(args)
-          # Parse options for idea capture
-          options = parse_capture_options(args)
+          # Parse options for idea capture using IdeaArgParser
+          options = Molecules::IdeaArgParser.parse_capture_options(args)
 
-          if options[:content].empty?
+          # Check if content is provided (either via --note, positional, or --clipboard)
+          if options[:content].empty? && !options[:clipboard]
             puts "Usage: ace-taskflow idea create <content> [options]"
             puts "Options:"
-            puts "  --backlog          Create in backlog"
-            puts "  --release <name>   Create in specific release"
-            puts "  --git-commit, -gc  Auto-commit the idea file"
-            puts "  --llm-enhance, -llm Enhance with LLM suggestions"
+            puts "  --note <text>, -n    Explicit note text (takes precedence)"
+            puts "  --clipboard, -c      Read content from clipboard"
+            puts "  --backlog            Create in backlog"
+            puts "  --release <name>     Create in specific release"
+            puts "  --git-commit, -gc    Auto-commit the idea file"
+            puts "  --llm-enhance, -llm  Enhance with LLM suggestions"
             exit 1
           end
 
@@ -225,52 +229,9 @@ module Ace
           end
         end
 
-        def parse_capture_options(args)
-          options = {
-            content: "",
-            location: nil,
-            git_commit: nil,
-            llm_enhance: nil
-          }
-
-          content_parts = []
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            when "--backlog"
-              options[:location] = "backlog"
-              i += 1
-            when "--release", "-r"
-              options[:location] = args[i + 1]
-              i += 2
-            when "--current"
-              options[:location] = "current"
-              i += 1
-            when "--git-commit", "-gc"
-              options[:git_commit] = true
-              i += 1
-            when "--no-git-commit"
-              options[:git_commit] = false
-              i += 1
-            when "--llm-enhance", "-llm"
-              options[:llm_enhance] = true
-              i += 1
-            when "--no-llm-enhance"
-              options[:llm_enhance] = false
-              i += 1
-            else
-              content_parts << arg
-              i += 1
-            end
-          end
-
-          options[:content] = content_parts.join(" ")
-          options
-        end
-
+        # Delegated to IdeaArgParser - keeping for backward compatibility
         def parse_options(args)
-          parse_capture_options(args)
+          Molecules::IdeaArgParser.parse_capture_options(args)
         end
 
         def determine_location(options)
@@ -397,8 +358,10 @@ module Ace
           puts "  (none)             Show next idea from active release"
           puts "  <partial-name>     Show idea matching partial name"
           puts "  create <content>   Capture new idea"
-          puts "    --backlog        Create in backlog"
-          puts "    --release <name> Create in specific release"
+          puts "    --note <text>, -n   Explicit note text (takes precedence)"
+          puts "    --clipboard, -c     Read content from clipboard"
+          puts "    --backlog           Create in backlog"
+          puts "    --release <name>    Create in specific release"
           puts "    --git-commit, -gc   Auto-commit the idea file"
           puts "    --no-git-commit     Don't commit (overrides config)"
           puts "    --llm-enhance, -llm Enhance with LLM suggestions"
@@ -429,6 +392,9 @@ module Ace
           puts "  ace-taskflow idea"
           puts "  ace-taskflow idea caching"
           puts "  ace-taskflow idea create 'Add caching layer'"
+          puts "  ace-taskflow idea create --note 'Explicit text'"
+          puts "  ace-taskflow idea create --clipboard"
+          puts "  ace-taskflow idea create 'Main context' --clipboard"
           puts "  ace-taskflow idea create 'Future feature' --backlog"
           puts "  ace-taskflow idea create 'Bug fix' --release v.0.9.1"
           puts "  ace-taskflow idea create 'New feature' --git-commit"

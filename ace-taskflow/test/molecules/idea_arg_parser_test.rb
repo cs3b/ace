@@ -273,4 +273,99 @@ class IdeaArgParserTest < Minitest::Test
 
     assert_equal "backlog", result
   end
+
+  # Tests for --note flag
+  def test_parse_capture_options_with_note_flag
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "--note", "Explicit note text"
+    ])
+
+    assert_equal "Explicit note text", result[:content]
+    assert_equal "Explicit note text", result[:note]
+    refute result[:clipboard]
+  end
+
+  def test_parse_capture_options_with_note_short_flag
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "-n", "Short form note"
+    ])
+
+    assert_equal "Short form note", result[:content]
+    assert_equal "Short form note", result[:note]
+  end
+
+  def test_parse_capture_options_note_overrides_positional
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "Ignored positional", "--note", "This takes precedence"
+    ])
+
+    assert_equal "This takes precedence", result[:content]
+    assert_equal "This takes precedence", result[:note]
+  end
+
+  def test_parse_capture_options_note_with_other_flags
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "--note", "My idea",
+      "--git-commit",
+      "--backlog"
+    ])
+
+    assert_equal "My idea", result[:content]
+    assert_equal "My idea", result[:note]
+    assert_equal true, result[:git_commit]
+    assert_equal "backlog", result[:location]
+  end
+
+  # Tests for --clipboard flag
+  def test_parse_capture_options_with_clipboard_flag
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "--clipboard"
+    ])
+
+    assert_equal true, result[:clipboard]
+    assert_equal "", result[:content]
+  end
+
+  def test_parse_capture_options_with_clipboard_short_flag
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "-c"
+    ])
+
+    assert_equal true, result[:clipboard]
+  end
+
+  def test_parse_capture_options_clipboard_with_positional
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "Main", "idea", "--clipboard"
+    ])
+
+    assert_equal "Main idea", result[:content]
+    assert_equal true, result[:clipboard]
+  end
+
+  def test_parse_capture_options_clipboard_with_note
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "--note", "Main context", "--clipboard"
+    ])
+
+    assert_equal "Main context", result[:content]
+    assert_equal "Main context", result[:note]
+    assert_equal true, result[:clipboard]
+  end
+
+  def test_parse_capture_options_clipboard_with_all_flags
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "--note", "Design proposal",
+      "--clipboard",
+      "--git-commit",
+      "--llm-enhance",
+      "--backlog"
+    ])
+
+    assert_equal "Design proposal", result[:content]
+    assert_equal true, result[:clipboard]
+    assert_equal true, result[:git_commit]
+    assert_equal true, result[:llm_enhance]
+    assert_equal "backlog", result[:location]
+  end
 end
