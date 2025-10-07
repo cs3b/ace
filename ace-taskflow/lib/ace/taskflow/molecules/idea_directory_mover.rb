@@ -8,27 +8,29 @@ module Ace
     module Molecules
       # Handles atomic move of idea files to done/ subdirectory
       class IdeaDirectoryMover
-        # Move an idea file to done/ subdirectory atomically
-        # @param idea_path [String] Full path to the idea file
+        # Move an idea file or directory to done/ subdirectory atomically
+        # @param idea_path [String] Full path to the idea file or directory
         # @param timestamp [Time] Optional completion timestamp
         # @return [Hash] Result with :success, :new_path, and :message
         def move_to_done(idea_path, timestamp = Time.now)
           return { success: false, message: "Idea path not provided" } unless idea_path
-          return { success: false, message: "Idea file not found: #{idea_path}" } unless File.exist?(idea_path)
+          return { success: false, message: "Idea not found: #{idea_path}" } unless File.exist?(idea_path) || Dir.exist?(idea_path)
 
-          # Get idea directory and filename
+          is_directory = Dir.exist?(idea_path) && !File.file?(idea_path)
+
+          # Get parent directory and name
           idea_dir = File.dirname(idea_path)
-          idea_filename = File.basename(idea_path)
+          idea_name = File.basename(idea_path)
 
           # Create done directory if it doesn't exist
           done_dir = File.join(idea_dir, "done")
           FileUtils.mkdir_p(done_dir) unless File.directory?(done_dir)
 
           # Target path in done directory
-          target_path = File.join(done_dir, idea_filename)
+          target_path = File.join(done_dir, idea_name)
 
           # Check if target already exists
-          if File.exist?(target_path)
+          if File.exist?(target_path) || Dir.exist?(target_path)
             return {
               success: false,
               message: "Target already exists in done/: #{target_path}"
@@ -37,9 +39,16 @@ module Ace
 
           begin
             # Update idea frontmatter before moving
-            update_idea_completion_metadata(idea_path, timestamp)
+            if is_directory
+              # Update idea.md inside directory
+              idea_file = File.join(idea_path, "idea.md")
+              update_idea_completion_metadata(idea_file, timestamp) if File.exist?(idea_file)
+            else
+              # Update flat file
+              update_idea_completion_metadata(idea_path, timestamp)
+            end
 
-            # Perform atomic move
+            # Perform atomic move (works for both files and directories)
             FileUtils.mv(idea_path, target_path)
 
             {
@@ -50,17 +59,17 @@ module Ace
           rescue StandardError => e
             {
               success: false,
-              message: "Failed to move idea file: #{e.message}"
+              message: "Failed to move idea: #{e.message}"
             }
           end
         end
 
-        # Move an idea file back from done/ subdirectory
-        # @param idea_path [String] Full path to the idea file in done/
+        # Move an idea file or directory back from done/ subdirectory
+        # @param idea_path [String] Full path to the idea file or directory in done/
         # @return [Hash] Result with :success, :new_path, and :message
         def restore_from_done(idea_path)
           return { success: false, message: "Idea path not provided" } unless idea_path
-          return { success: false, message: "Idea file not found: #{idea_path}" } unless File.exist?(idea_path)
+          return { success: false, message: "Idea not found: #{idea_path}" } unless File.exist?(idea_path) || Dir.exist?(idea_path)
 
           # Verify idea is in done/ directory
           unless idea_path.include?("/done/")
@@ -70,16 +79,18 @@ module Ace
             }
           end
 
-          # Get idea filename and determine restoration path
+          is_directory = Dir.exist?(idea_path) && !File.file?(idea_path)
+
+          # Get idea name and determine restoration path
           done_dir = File.dirname(idea_path)
           parent_dir = File.dirname(done_dir)
-          idea_filename = File.basename(idea_path)
+          idea_name = File.basename(idea_path)
 
           # Target path in parent directory
-          target_path = File.join(parent_dir, idea_filename)
+          target_path = File.join(parent_dir, idea_name)
 
           # Check if target already exists
-          if File.exist?(target_path)
+          if File.exist?(target_path) || Dir.exist?(target_path)
             return {
               success: false,
               message: "Target already exists: #{target_path}"
@@ -88,7 +99,12 @@ module Ace
 
           begin
             # Update idea status back to pending
-            update_idea_status(idea_path, "pending")
+            if is_directory
+              idea_file = File.join(idea_path, "idea.md")
+              update_idea_status(idea_file, "pending") if File.exist?(idea_file)
+            else
+              update_idea_status(idea_path, "pending")
+            end
 
             # Perform atomic move
             FileUtils.mv(idea_path, target_path)
@@ -101,7 +117,7 @@ module Ace
           rescue StandardError => e
             {
               success: false,
-              message: "Failed to restore idea file: #{e.message}"
+              message: "Failed to restore idea: #{e.message}"
             }
           end
         end

@@ -16,13 +16,23 @@ module Ace
           title = sanitize_title(metadata[:title])
           directory = idea_directory
 
-          filename = if title && !title.empty?
-                       "#{timestamp}-#{title}.md"
-                     else
-                       "#{timestamp}-idea.md"
-                     end
-
-          File.join(directory, filename)
+          # If has_attachments, generate directory path instead of file path
+          if metadata[:has_attachments]
+            dirname = if title && !title.empty?
+                        "#{timestamp}-#{title}"
+                      else
+                        "#{timestamp}-idea"
+                      end
+            File.join(directory, dirname)
+          else
+            # Standard flat file naming
+            filename = if title && !title.empty?
+                         "#{timestamp}-#{title}.md"
+                       else
+                         "#{timestamp}-idea.md"
+                       end
+            File.join(directory, filename)
+          end
         end
 
         private

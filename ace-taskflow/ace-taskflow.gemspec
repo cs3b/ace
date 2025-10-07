@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "ace-core", "~> 0.9.0"
+  spec.add_dependency "clipboard", "~> 1.3"
 
   # No development dependencies - managed in root Gemfile
 end
