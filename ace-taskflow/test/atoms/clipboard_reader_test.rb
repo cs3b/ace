@@ -10,7 +10,9 @@ class ClipboardReaderTest < AceTaskflowTestCase
 
   def teardown
     # Restore original Clipboard module
-    Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
+    Warning.silence do
+      Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
+    end
   end
 
   def test_read_text_content
@@ -168,8 +170,10 @@ class ClipboardReaderTest < AceTaskflowTestCase
     mock = Module.new do
       define_singleton_method(:paste) { content }
     end
-    Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
-    Object.const_set(:Clipboard, mock)
+    Warning.silence do
+      Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
+      Object.const_set(:Clipboard, mock)
+    end
   end
 
   def mock_clipboard_error(error)
@@ -177,7 +181,9 @@ class ClipboardReaderTest < AceTaskflowTestCase
     mock = Module.new do
       define_singleton_method(:paste) { raise error }
     end
-    Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
-    Object.const_set(:Clipboard, mock)
+    Warning.silence do
+      Object.send(:remove_const, :Clipboard) if defined?(Clipboard)
+      Object.const_set(:Clipboard, mock)
+    end
   end
 end

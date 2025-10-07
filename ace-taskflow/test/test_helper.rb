@@ -3,15 +3,16 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "ace/test_support"
+require_relative "support/test_factory"
 
-# Alias for convenience
-AceTaskflowTestCase = Ace::TestSupport::BaseTestCase
+# Base test case for ace-taskflow tests
+class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
+  # Make TestFactory module methods available as instance methods
+  def with_test_project(&block)
+    TestFactory.with_test_directory(&block)
+  end
 
-# Add with_test_project helper for backward compatibility
-module Minitest
-  class Test
-    def with_test_project(&block)
-      with_temp_dir(&block)
-    end
+  def with_clean_project(&block)
+    TestFactory.with_clean_project(&block)
   end
 end
