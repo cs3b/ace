@@ -5,6 +5,21 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.8] - 2025-10-07
+
+### Changed
+
+- **Workflow documentation updated** for ace-context v0.9.6+ integration
+  - Updated `review.wf.md` to reflect unified YAML schema
+  - Removed references to deprecated `patterns:` key
+  - Added comprehensive configuration schema section documenting `files:`, `diffs:`, `commands:`, `presets:`
+  - Enhanced common scenarios with file-based review examples
+  - Added "Review Specific Files" and "Compose Multiple Sources" scenarios
+  - Improved troubleshooting section with "No code to review" → use `files:` guidance
+  - Updated preset file examples to show proper YAML structure
+  - Added simple string shortcuts documentation (staged, working, pr)
+  - Updated all command examples to use correct YAML keys
+
 ## [0.9.7] - 2025-10-07
 
 ### Fixed

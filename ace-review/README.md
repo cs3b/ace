@@ -2,7 +2,15 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.7
+**Version:** 0.9.8
+
+## Changes in 0.9.8
+
+- **Workflow Documentation Updated**: Updated `review.wf.md` for ace-context v0.9.6+ integration
+  - Added comprehensive configuration schema section documenting unified YAML keys
+  - Enhanced examples showing `files:`, `diffs:`, `commands:`, and `presets:` usage
+  - Improved troubleshooting guidance for common configuration issues
+  - All command examples now use correct ace-context schema
 
 ## Changes in 0.9.7
 
@@ -76,6 +84,49 @@ ace-review --list-prompts
 ace-review --preset pr --auto-execute
 ```
 
+## Subject and Context Configuration
+
+Since v0.9.6, ace-review uses ace-context for unified content aggregation. Both `--subject` and `--context` accept YAML configuration with these keys:
+
+```yaml
+# ✅ CORRECT: Use these keys
+files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
+diffs: ["origin/main...HEAD", "HEAD~5..HEAD"]  # Git diff ranges
+commands: ["git log --oneline -5"]       # Shell commands to execute
+presets: [project, architecture]         # ace-context preset names
+```
+
+### Examples
+
+```bash
+# Review specific files
+ace-review --subject 'files: ["lib/ace/review/**/*.rb"]' --auto-execute
+
+# Review git diff range
+ace-review --subject 'diffs: ["origin/main...HEAD"]' --auto-execute
+
+# Review with context from presets
+ace-review \
+  --subject 'diffs: ["HEAD~5..HEAD"]' \
+  --context 'presets: [project]' \
+  --auto-execute
+
+# Compose multiple sources
+ace-review \
+  --subject 'files: ["new-feature/**/*.rb"], diffs: ["HEAD~3..HEAD"]' \
+  --context 'presets: [project], files: ["docs/architecture.md"]' \
+  --auto-execute
+```
+
+### Simple Shortcuts
+
+For `--subject`, you can use simple string shortcuts:
+- `staged` → staged changes
+- `working` → unstaged changes
+- `pr` → changes vs tracking branch
+- `HEAD~1..HEAD` → git range (auto-detected)
+- `lib/**/*.rb` → file pattern (auto-detected)
+
 ## Configuration
 
 ### Main Configuration
@@ -103,6 +154,7 @@ Create preset files in `.ace/review/presets/`:
 ```yaml
 # .ace/review/presets/team-review.yml
 description: "Team-specific review criteria"
+
 prompt_composition:
   base: "prompt://base/system"
   format: "prompt://format/detailed"
@@ -112,12 +164,16 @@ prompt_composition:
     - "prompt://project/focus/team/standards"  # Custom team focus
   guidelines:
     - "prompt://guidelines/tone"
+
+# Context: background information for the review
 context:
-  files:
-    - "docs/team-guidelines.md"
+  presets: [project]                      # Load project preset
+  files: ["docs/team-guidelines.md"]      # Team-specific docs
+
+# Subject: what to review
 subject:
-  commands:
-    - "git diff HEAD~1..HEAD"
+  diffs: ["HEAD~1..HEAD"]                 # Recent changes
+  files: ["lib/**/*.rb"]                  # Ruby files
 ```
 
 ## Prompt System
@@ -189,6 +245,8 @@ ace-review [options]
 
 Options:
 - `--preset <name>` - Use specific preset (default: pr)
+- `--subject <config>` - What to review (YAML config, git range, keyword, or file pattern)
+- `--context <config>` - Background information (YAML config or preset name)
 - `--output-dir <path>` - Custom output directory
 - `--output <file>` - Specific output file path
 - `--model <model>` - Override LLM model
@@ -197,6 +255,8 @@ Options:
 - `--list-presets` - List available presets
 - `--list-prompts` - List available prompt modules
 - `--verbose` - Enable verbose output
+- `--[no-]save-session` - Save session files (default: true)
+- `--session-dir <dir>` - Custom session directory
 
 Advanced options for prompt composition:
 - `--prompt-base <module>` - Override base prompt
