@@ -1,5 +1,13 @@
-File: docs/architecture.md
-----------------------------------------
+# Context
+
+## Metadata
+
+
+## Files
+
+### docs/architecture.md
+
+```
 # ACE - System Architecture
 
 ## Overview
@@ -166,12 +174,11 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 *For detailed architectural decisions, see [docs/decisions.md](decisions.md)*
 
 
+```
 
+### README.md
 
-================================================================================
-
-File: README.md
-----------------------------------------
+```
 # ACE (Agent Coding Environment) - Monorepo
 
 **Version:** 0.9.0+ | **Architecture:** Modular Ruby Gems | **Status:** Active Development
@@ -439,3 +446,4 @@ ACE is designed for AI-assisted development and works seamlessly with:
 ---
 
 **ACE: Making AI-assisted development as simple as `gem install ace-*`**
+```
