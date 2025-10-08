@@ -71,11 +71,17 @@ ace-your-gem/
 │           ├── organisms/  # Business orchestration
 │           ├── models/     # Data structures
 │           └── version.rb
-├── test/
+├── test/                   # FLAT structure (not nested!)
 │   ├── test_helper.rb
-│   └── (test files matching lib structure)
+│   ├── atoms/              # Test atoms: *_test.rb
+│   ├── molecules/          # Test molecules: *_test.rb
+│   ├── organisms/          # Test organisms: *_test.rb
+│   ├── models/             # Test models: *_test.rb
+│   └── integration/        # Integration tests: *_test.rb
 ├── exe/
 │   └── ace-your-gem       # Executable script
+├── bin/
+│   └── test               # Test runner for workspace context
 ├── ace-your-gem.gemspec
 ├── Rakefile
 └── README.md
@@ -180,7 +186,63 @@ argument-hint: "[file-path]"
 Process the file using ace-your-gem functionality.
 ```
 
+## Development Binstubs
+
+Create a development binstub in `bin/` for running your gem with workspace context:
+
+```ruby
+# bin/ace-your-gem
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "pathname"
+
+# Find the ace-meta root directory
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+
+# Set the Gemfile location
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+# Load bundler
+require "bundler/setup"
+
+# Now require and run the actual executable
+load ace_meta_root.join("ace-your-gem/exe/ace-your-gem").to_s
+```
+
+Make it executable: `chmod +x bin/ace-your-gem`
+
+**Usage**: Run `bin/ace-your-gem` from workspace root instead of `bundle exec ace-your-gem`
+
 ## Testing
+
+### Flat Test Structure
+
+**IMPORTANT**: All ACE gems use a **flat test structure** that mirrors ATOM layers:
+
+```
+test/
+├── test_helper.rb
+├── your_gem_test.rb         # Main module test
+├── atoms/
+│   └── parser_test.rb       # Suffix naming: *_test.rb
+├── molecules/
+│   └── loader_test.rb
+├── organisms/
+│   └── processor_test.rb
+├── models/
+│   └── result_test.rb
+└── integration/
+    └── cli_test.rb
+```
+
+**Key conventions:**
+- ✅ Flat structure: `test/atoms/`, not `test/ace/your_gem/atoms/`
+- ✅ Suffix naming: `parser_test.rb`, not `test_parser.rb`
+- ✅ Layer directories match ATOM architecture
+- ✅ Integration tests in separate `integration/` directory
+
+See `docs/testing-patterns.md` for complete testing guide.
 
 ### Setup
 
@@ -188,6 +250,11 @@ Process the file using ace-your-gem functionality.
 # test/test_helper.rb
 require 'ace/test_support'
 require 'ace/your_gem'
+
+# Load all components
+require 'ace/your_gem/atoms/parser'
+require 'ace/your_gem/molecules/loader'
+# ... etc
 
 class YourGemTestCase < AceTestCase
 end
@@ -236,6 +303,38 @@ end
 - Mock external services
 - Test edge cases and error paths
 
+### Workspace Test Suite
+
+Add your gem to the workspace test suite to run alongside other ACE gems:
+
+```yaml
+# .ace/test/suite.yml
+test_suite:
+  packages:
+    # ... existing gems ...
+
+    - name: ace-your-gem
+      path: ace-your-gem
+      group: tools
+      priority: 3
+```
+
+**Test Groups:**
+- `foundation` (priority 1-2): ace-core, ace-test-support, ace-test-runner
+- `tools` (priority 3): All other ace-* gems
+
+**Run workspace tests:**
+```bash
+# Run all tests
+ace-test
+
+# Run specific gem
+ace-test ace-your-gem
+
+# Run with verbose output
+ace-test --verbose
+```
+
 ## Quick Start
 
 ### Create New Gem
@@ -249,7 +348,8 @@ cd "ace-$GEM_NAME"
 
 # Create structure
 mkdir -p lib/ace/$GEM_NAME/{atoms,molecules,organisms,models}
-mkdir -p test/fixtures exe .ace.example/$GEM_NAME
+mkdir -p test/{atoms,molecules,organisms,models,integration,fixtures}
+mkdir -p exe bin .ace.example/$GEM_NAME
 
 # Create executable
 cat > exe/ace-$GEM_NAME << 'EOF'
