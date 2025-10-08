@@ -5,6 +5,16 @@ All notable changes to ace-test-runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-10-08
+
+### Added
+
+- **Smoke Test Pattern**: Added support for root-level smoke tests
+  - New pattern: `smoke: "test/*_test.rb"` for basic sanity checks
+  - Added to `unit` test group as first item
+  - Enables discovery of module-level tests (e.g., `core_test.rb`, `nav_test.rb`)
+  - Updated documentation and example configurations
+
 ## [0.1.4] - 2025-10-08
 
 ### Changed

@@ -20,6 +20,16 @@ test:
 
   # Test file patterns (optional - has good defaults)
   # patterns:
-  #   all: "test/**/*_test.rb"
-  #   unit: "test/unit/**/*_test.rb"
+  #   smoke: "test/*_test.rb"          # Root-level smoke tests
+  #   atoms: "test/atoms/**/*_test.rb"
+  #   molecules: "test/molecules/**/*_test.rb"
+  #   organisms: "test/organisms/**/*_test.rb"
+  #   models: "test/models/**/*_test.rb"
   #   integration: "test/integration/**/*_test.rb"
+  #   system: "test/system/**/*_test.rb"
+  #
+  # Test groups (optional - has good defaults)
+  # groups:
+  #   unit: [smoke, atoms, molecules, organisms, models]
+  #   all: [unit, integration, system]
+  #   quick: [atoms, molecules]

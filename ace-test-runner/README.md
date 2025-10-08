@@ -68,6 +68,7 @@ failure_limits:
 
 # Test patterns
 patterns:
+  smoke: 'test/*_test.rb'  # Root-level smoke tests
   atoms: 'test/{unit/,}atoms/**/*_test.rb'
   molecules: 'test/{unit/,}molecules/**/*_test.rb'
   organisms: 'test/{unit/,}organisms/**/*_test.rb'
@@ -77,7 +78,7 @@ patterns:
 
 # Test groups
 groups:
-  unit: [atoms, molecules, organisms, models]
+  unit: [smoke, atoms, molecules, organisms, models]
   all: [unit, integration, system]
   quick: [atoms, molecules]
 
@@ -124,20 +125,26 @@ Finished in 0.45s
 }
 ```
 
-### Configuration
+### Test Organization
 
-Configure via `.ace/test.yml`:
+Tests can be organized using patterns and groups:
 
-```yaml
-test:
-  format: ai
-  report_dir: test-reports
-  save_reports: true
-  fail_fast: false
-  verbose: false
-  patterns:
-    - test/**/*_test.rb
-    - spec/**/*_spec.rb
+- **smoke**: Root-level tests (e.g., `test/*_test.rb`) for basic sanity checks
+- **atoms**: Pure function tests in `test/atoms/`
+- **molecules**: Composed operation tests in `test/molecules/`
+- **organisms**: Business logic tests in `test/organisms/`
+- **models**: Data structure tests in `test/models/`
+- **integration**: Integration tests in `test/integration/`
+- **system**: System tests in `test/system/`
+
+Run specific test groups:
+
+```bash
+ace-test smoke        # Root-level smoke tests only
+ace-test atoms        # Atom tests only
+ace-test unit         # All unit tests (smoke + atoms + molecules + organisms + models)
+ace-test integration  # Integration tests only
+ace-test all          # All tests (default)
 ```
 
 ### Report Structure
