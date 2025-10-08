@@ -1,3 +1,16 @@
+---
+id: v.0.9.0+task.059
+status: pending
+priority: P2
+estimate: 2 days
+dependencies: []
+tags:
+  - migration
+  - ace-gem
+  - search
+  - refactoring
+---
+
 # Task 059: Migrate search tool to ace-search gem
 
 ## Core Requirements
@@ -528,15 +541,6 @@ After successful migration and validation:
   - **Mitigation**: Profile load time, use lazy loading where possible
   - **Monitoring**: Benchmark startup time (target < 100ms)
   - **Thresholds**: Startup must be < 150ms, search execution within 5% of ripgrep direct
-
-## Metadata
-
-- **ID**: v.0.9.0+task.059
-- **Status**: pending
-- **Priority**: P2
-- **Estimate**: 2 days
-- **Dependencies**: None
-- **Tags**: #migration #ace-gem #search #refactoring
 
 ## Notes
 
