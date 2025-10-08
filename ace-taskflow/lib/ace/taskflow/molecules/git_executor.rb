@@ -23,7 +23,7 @@ module Ace
         # @param message [String] Commit message
         # @return [Result] Operation result
         def execute_commit(file_path, message)
-          return Result.new(false, nil, "File does not exist: #{file_path}") unless File.exist?(file_path)
+          return Result.new(false, nil, "File does not exist: #{file_path}") unless file_exists?(file_path)
 
           # Check if we're in a git repository
           unless git_repository?
@@ -39,6 +39,13 @@ module Ace
           commit_result
         rescue => e
           Result.new(false, nil, "Git operation failed: #{e.message}")
+        end
+
+        protected
+
+        # Protected methods for easier testing with stubs
+        def file_exists?(path)
+          File.exist?(path)
         end
 
         private

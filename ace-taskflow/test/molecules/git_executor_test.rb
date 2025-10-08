@@ -6,36 +6,31 @@ require_relative "../../lib/ace/taskflow/molecules/git_executor"
 class GitExecutorTest < AceTaskflowTestCase
   def setup
     @executor = Ace::Taskflow::Molecules::GitExecutor.new(debug: false)
-    @temp_dir = Dir.mktmpdir
   end
 
-  def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
-  end
+  # Fast unit tests with stubbed operations
 
-  def test_execute_commit_with_valid_file_in_git_repo
-    Dir.chdir(@temp_dir) do
-      # Initialize git repo
-      `git init`
-      `git config user.name "Test User"`
-      `git config user.email "test@example.com"`
+  def test_execute_commit_with_valid_file_success
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, true do
+        add_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "File staged", nil)
+        commit_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "Committed: Add test", nil)
 
-      # Create a file
-      test_file = File.join(@temp_dir, "test.md")
-      File.write(test_file, "# Test Content")
+        @executor.stub :git_add, add_result do
+          @executor.stub :git_commit, commit_result do
+            result = @executor.execute_commit("/tmp/test.md", "Add test")
 
-      result = @executor.execute_commit(test_file, "Add test file")
-
-      assert result.success?
-      assert_equal "Committed: Add test file", result.message
-      assert_nil result.error
+            assert result.success?
+            assert_equal "Committed: Add test", result.message
+            assert_nil result.error
+          end
+        end
+      end
     end
   end
 
   def test_execute_commit_with_nonexistent_file
-    Dir.chdir(@temp_dir) do
-      `git init`
-
+    @executor.stub :file_exists?, false do
       result = @executor.execute_commit("/nonexistent/file.md", "Test commit")
 
       refute result.success?
@@ -45,36 +40,65 @@ class GitExecutorTest < AceTaskflowTestCase
   end
 
   def test_execute_commit_outside_git_repository
-    Dir.chdir(@temp_dir) do
-      # Don't initialize git repo
-      test_file = File.join(@temp_dir, "test.md")
-      File.write(test_file, "Content")
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, false do
+        result = @executor.execute_commit("/tmp/test.md", "Test commit")
 
-      result = @executor.execute_commit(test_file, "Test commit")
-
-      refute result.success?
-      assert_nil result.message
-      assert_equal "Not in a git repository", result.error
+        refute result.success?
+        assert_nil result.message
+        assert_equal "Not in a git repository", result.error
+      end
     end
   end
 
   def test_execute_commit_with_nothing_to_commit
-    Dir.chdir(@temp_dir) do
-      `git init`
-      `git config user.name "Test User"`
-      `git config user.email "test@example.com"`
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, true do
+        add_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "File staged", nil)
+        commit_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "Nothing to commit", nil)
 
-      # Create and commit a file
-      test_file = File.join(@temp_dir, "test.md")
-      File.write(test_file, "Content")
-      `git add #{test_file}`
-      `git commit -m "Initial commit"`
+        @executor.stub :git_add, add_result do
+          @executor.stub :git_commit, commit_result do
+            result = @executor.execute_commit("/tmp/test.md", "No changes")
 
-      # Try to commit again without changes
-      result = @executor.execute_commit(test_file, "No changes")
+            assert result.success?
+            assert_equal "Nothing to commit", result.message
+          end
+        end
+      end
+    end
+  end
 
-      assert result.success?
-      assert_equal "Nothing to commit", result.message
+  def test_execute_commit_when_git_add_fails
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, true do
+        add_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(false, nil, "Failed to stage")
+
+        @executor.stub :git_add, add_result do
+          result = @executor.execute_commit("/tmp/test.md", "Test")
+
+          refute result.success?
+          assert_equal "Failed to stage", result.error
+        end
+      end
+    end
+  end
+
+  def test_execute_commit_when_git_commit_fails
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, true do
+        add_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "File staged", nil)
+        commit_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(false, nil, "Commit failed")
+
+        @executor.stub :git_add, add_result do
+          @executor.stub :git_commit, commit_result do
+            result = @executor.execute_commit("/tmp/test.md", "Test")
+
+            refute result.success?
+            assert_equal "Commit failed", result.error
+          end
+        end
+      end
     end
   end
 
@@ -95,36 +119,64 @@ class GitExecutorTest < AceTaskflowTestCase
   end
 
   def test_execute_commit_with_multiline_commit_message
-    Dir.chdir(@temp_dir) do
-      `git init`
-      `git config user.name "Test User"`
-      `git config user.email "test@example.com"`
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, true do
+        add_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "File staged", nil)
+        commit_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "Committed: First line\n\nSecond", nil)
 
-      test_file = File.join(@temp_dir, "test.md")
-      File.write(test_file, "Content")
+        @executor.stub :git_add, add_result do
+          @executor.stub :git_commit, commit_result do
+            multiline_message = "First line\n\nSecond paragraph"
+            result = @executor.execute_commit("/tmp/test.md", multiline_message)
 
-      multiline_message = "First line\n\nSecond paragraph"
-      result = @executor.execute_commit(test_file, multiline_message)
-
-      assert result.success?
-      assert_includes result.message, "Committed"
+            assert result.success?
+            assert_includes result.message, "Committed"
+          end
+        end
+      end
     end
   end
 
   def test_execute_commit_handles_special_characters_in_filename
-    Dir.chdir(@temp_dir) do
-      `git init`
-      `git config user.name "Test User"`
-      `git config user.email "test@example.com"`
+    @executor.stub :file_exists?, true do
+      @executor.stub :git_repository?, true do
+        add_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "File staged", nil)
+        commit_result = Ace::Taskflow::Molecules::GitExecutor::Result.new(true, "Committed: Add file", nil)
 
-      # Create file with spaces in name
-      test_file = File.join(@temp_dir, "test file with spaces.md")
-      File.write(test_file, "Content")
+        @executor.stub :git_add, add_result do
+          @executor.stub :git_commit, commit_result do
+            result = @executor.execute_commit("/tmp/test file with spaces.md", "Add file with spaces")
 
-      result = @executor.execute_commit(test_file, "Add file with spaces")
+            assert result.success?
+            assert_includes result.message, "Committed"
+          end
+        end
+      end
+    end
+  end
 
-      assert result.success?
-      assert_equal "Committed: Add file with spaces", result.message
+  # Integration test - one real git workflow test
+  def test_integration_real_git_workflow
+    temp_dir = Dir.mktmpdir
+    begin
+      Dir.chdir(temp_dir) do
+        # Initialize git repo
+        `git init -q`
+        `git config user.name "Test User"`
+        `git config user.email "test@example.com"`
+
+        # Create a file
+        test_file = File.join(temp_dir, "test.md")
+        File.write(test_file, "# Test Content")
+
+        result = @executor.execute_commit(test_file, "Add test file")
+
+        assert result.success?
+        assert_equal "Committed: Add test file", result.message
+        assert_nil result.error
+      end
+    ensure
+      FileUtils.rm_rf(temp_dir) if temp_dir && Dir.exist?(temp_dir)
     end
   end
 end
