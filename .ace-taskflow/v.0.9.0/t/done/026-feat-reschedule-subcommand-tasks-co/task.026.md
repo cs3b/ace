@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.026
 status: done
-priority: medium
 estimate: 3h
 dependencies: []
 sort: 31

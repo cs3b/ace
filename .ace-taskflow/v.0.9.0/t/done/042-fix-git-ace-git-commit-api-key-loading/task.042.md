@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.042
 status: done
-priority: high
 estimate: 30 minutes
 dependencies: []
 ---

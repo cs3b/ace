@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.051
 status: done
-priority: high
 estimate: 6-8h
 dependencies: []
 review_completed: 2025-10-03

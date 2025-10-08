@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.010
 status: done
-priority: high
 estimate: 8h
 dependencies: [ace-core, ace-test-support]
 ---

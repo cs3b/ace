@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.030
 status: done
-priority: high
 estimate: 1h
 dependencies: []
 sort: 997

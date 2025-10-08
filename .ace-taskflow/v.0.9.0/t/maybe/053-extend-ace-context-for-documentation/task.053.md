@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.053
 status: draft
-priority: medium
 estimate: TBD
 dependencies: []
 ---
