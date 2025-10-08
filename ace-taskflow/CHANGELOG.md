@@ -5,6 +5,16 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] - 2025-10-08
+
+### Fixed
+
+- **Idea Create Error Handling**: Improved error handling for `--current` flag when no active release exists
+  - When `--current` flag is explicitly provided but no active release is found, displays clear error message
+  - Error message suggests creating a release with `ace-taskflow release create` or omitting `--current` to save to backlog
+  - Prevents silent fallback to backlog when user explicitly requests current release
+  - Note: The `--current` flag path resolution was already working correctly (fixed in v0.9.0)
+
 ## [0.11.1] - 2025-10-08
 
 ### Fixed
