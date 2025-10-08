@@ -4,6 +4,7 @@ require_relative "../organisms/task_manager"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/task_filter"
 require_relative "../molecules/dependency_tree_visualizer"
+require_relative "../molecules/task_arg_parser"
 require 'stringio'
 require_relative "../models/task"
 require_relative "../atoms/path_formatter"
@@ -146,37 +147,27 @@ module Ace
         end
 
         def create_task(args)
-          # Parse options
-          title_parts = []
-          context = "current"
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            when "--backlog"
-              context = "backlog"
-              i += 1
-            when "--release"
-              context = args[i + 1]
-              i += 2
-            else
-              title_parts << arg
-              i += 1
-            end
-          end
-
-          title = title_parts.join(" ")
-
-          if title.empty?
-            puts "Usage: ace-taskflow task create <title> [options]"
-            puts "Options:"
-            puts "  --backlog          Create in backlog"
-            puts "  --release <name>   Create in specific release"
+          # Parse options using new OptionParser-based method
+          begin
+            options = Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+          rescue OptionParser::InvalidOption => e
+            puts "Error: #{e.message}"
+            puts "\nUsage: ace-taskflow task create [TITLE] [options]"
+            puts "Run 'ace-taskflow task create --help' for full usage"
             exit 1
           end
 
-          result = @manager.create_task(title, context: context)
+          title = options[:title]
+
+          if title.nil? || title.empty?
+            puts "Error: Task title is required"
+            puts "\nUsage: ace-taskflow task create <title> [options]"
+            puts "   or: ace-taskflow task create --title 'Task title' [options]"
+            puts "\nRun 'ace-taskflow task create --help' for full usage"
+            exit 1
+          end
+
+          result = @manager.create_task(title, context: options[:context], metadata: options[:metadata])
 
           if result[:success]
             puts result[:message]
@@ -468,9 +459,14 @@ module Ace
           puts "  (none)             Show next task from active release"
           puts "  <reference>        Show specific task"
           puts "    --tree           Show task dependency tree"
-          puts "  create <title>     Create new task"
+          puts "  create [TITLE]     Create new task"
+          puts "    --title TITLE    Task title (alternative to positional)"
+          puts "    --status STATUS  Initial status (pending, draft, in-progress, done, blocked)"
+          puts "    --estimate EST   Effort estimate (e.g., 2h, 1d, TBD)"
+          puts "    --dependencies DEPS  Comma-separated dependency list (e.g., 018,019)"
           puts "    --backlog        Create in backlog"
           puts "    --release <name> Create in specific release"
+          puts "    -h, --help       Show create command help"
           puts "  start <reference>  Mark task as in-progress"
           puts "  done <reference>   Mark task as completed"
           puts "  move <ref> <target> Move task to different context"
@@ -498,6 +494,8 @@ module Ace
           puts "  ace-taskflow task 019 --path         # Show path for task 019"
           puts "  ace-taskflow task 019 --content      # Show full content for task 019"
           puts "  ace-taskflow task create 'Add caching layer'"
+          puts "  ace-taskflow task create --title 'Fix bug' --status draft --estimate 2h"
+          puts "  ace-taskflow task create 'Write tests' --dependencies 041,042"
           puts "  ace-taskflow task start 019"
           puts "  ace-taskflow task done 019"
           puts "  ace-taskflow task move backlog+025 v.0.10.0"
