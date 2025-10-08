@@ -24,7 +24,7 @@
 | `release-manager` | Release management | `current` |
 | `task-manager` | Task management | `--filter` |
 
-**💡 Tip**: Use `search` for all searching and `nav-path file <filename>` instead of `find`.
+**💡 Tip**: Use `ace-search` for all searching and `nav-path file <filename>` instead of `find`.
 
 ## Persona Cheat-sheets
 

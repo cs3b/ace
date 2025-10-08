@@ -315,8 +315,8 @@ ace-taskflow tasks needs-review
 ace-taskflow tasks --status draft
 ace-taskflow tasks --status pending
 
-# Alternative: use grep to find tasks with needs_review flag
-grep -r "needs_review: true" .ace-taskflow/*/t/
+# Alternative: use ace-search to find tasks with needs_review flag
+cd .ace-taskflow && ace-search "needs_review: true" --content
 ```
 
 ### Review Workflow Patterns
@@ -381,13 +381,13 @@ review-task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/rename-co
 
 # Check for missing rename scope:
 # 1. Find all directories with old name
-find . -type d -name "*old_name*" | grep -v ".git"
+ace-search "*old_name*" --file | grep -v ".git"
 
-# 2. Find all files with old name  
-find . -type f -name "*old_name*" | grep -v ".git"
+# 2. Find all files with old name
+ace-search "*old_name*" --file | grep -v ".git"
 
 # 3. Find all code references
-grep -r "old_name" . --include="*.rb" --include="*.py" --include="*.js" --include="*.md"
+ace-search "old_name" --content --glob "**/*.{rb,py,js,md}"
 
 # Update task to include:
 # - Library directory renames (lib/old_name/ → lib/new_name/)

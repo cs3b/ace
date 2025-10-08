@@ -186,12 +186,11 @@ git-log
 ```bash
 # Validate file existence
 ls /path/to/file
-find . -name "filename" -type f
-grep -r "pattern" directory/
+ace-search "filename" --file
+cd directory/ && ace-search "pattern" --content
 
-# Use targeted file reading
-grep -n "pattern" file.md
-sed -n '10,20p' file.md
+# Use targeted file reading with context
+ace-search "pattern" --content --context 3
 ```
 
 ### XML Packaging for Multi-File Analysis
@@ -338,9 +337,9 @@ timeout 60 command_here
 
 ```bash
 # Always verify before operations
-find . -name "target-file.md" -type f
+ace-search "target-file.md" --file
 ls -la expected/directory/
-grep -r "search-pattern" .
+ace-search "search-pattern" --content
 ```
 
 ### 2. Task Completion Accuracy
@@ -499,7 +498,7 @@ echo $API_KEY
 git-status
 
 # File system validation
-find . -name "*.md" -type f | head -10
+ace-search "*.md" --file --max-results 10
 ls -la dev-taskflow/current/
 
 # Dependency verification

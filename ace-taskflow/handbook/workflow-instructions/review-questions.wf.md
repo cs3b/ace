@@ -27,8 +27,8 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
    ace-taskflow tasks --status pending
 
    # You'll need to check task files manually for needs_review: true flag
-   # Or use grep to find tasks with the flag:
-   grep -r "needs_review: true" .ace-taskflow/*/t/
+   # Or use ace-search to find tasks with the flag:
+   cd .ace-taskflow && ace-search "needs_review: true" --content
    ```
 
    **Selection Strategy:**
@@ -229,7 +229,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
    **For Multiple Tasks:**
    ```bash
    # Generate review queue (find tasks with needs_review flag)
-   grep -r "needs_review: true" .ace-taskflow/*/t/ | cut -d: -f1 > review-queue.txt
+   cd .ace-taskflow && ace-search "needs_review: true" --content --files-with-matches > ../review-queue.txt
 
    # Process each task systematically
    for task in $(cat review-queue.txt); do
@@ -327,7 +327,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 ### Common Issues:
 
 **"No tasks need review"**
-- Run `ace-taskflow tasks needs-review` (preset) or `grep -r "needs_review: true" .ace-taskflow/*/t/`
+- Run `ace-taskflow tasks needs-review` (preset) or `cd .ace-taskflow && ace-search "needs_review: true" --content`
 - Check if reviews were already completed
 - Look for tasks with questions but missing flag
 
