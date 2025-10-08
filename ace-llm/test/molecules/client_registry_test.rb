@@ -3,9 +3,9 @@
 require "minitest/autorun"
 require "tempfile"
 require "tmpdir"
-require_relative "../lib/ace/llm/molecules/client_registry"
-require_relative "../lib/ace/llm/molecules/provider_loader"
-require_relative "../lib/ace/llm/atoms/provider_config_validator"
+require_relative "../../lib/ace/llm/molecules/client_registry"
+require_relative "../../lib/ace/llm/molecules/provider_loader"
+require_relative "../../lib/ace/llm/atoms/provider_config_validator"
 
 module Ace
   module LLM

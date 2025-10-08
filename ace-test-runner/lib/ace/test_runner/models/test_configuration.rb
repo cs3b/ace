@@ -46,17 +46,25 @@ module Ace
             raise ArgumentError, "Cannot write to #{report_dir}. Check permissions"
           end
 
-          # Validate sequential_groups_mode if provided
-          if sequential_groups_mode && !%w[subprocess in-process].include?(sequential_groups_mode)
-            raise ArgumentError, "Unknown sequential_groups_mode '#{sequential_groups_mode}'. Valid modes: subprocess, in-process"
+          # Validate execution_mode if provided
+          if execution_mode && !%w[grouped all-at-once].include?(execution_mode)
+            raise ArgumentError, "Unknown execution_mode '#{execution_mode}'. Valid modes: grouped, all-at-once"
           end
 
           true
         end
 
-        def sequential_groups_mode
-          # Default to "subprocess" for correct visual output
-          @execution&.[](:sequential_groups_mode) || @execution&.dig("sequential_groups_mode") || "subprocess"
+        def execution_mode
+          # Default to "all-at-once" for simple, fast execution
+          @execution&.[](:mode) || @execution&.dig("mode") || "all-at-once"
+        end
+
+        def group_isolation
+          # Default to true for better isolation in grouped mode
+          # Use fetch to handle false values correctly (|| would treat false as falsy)
+          mode = @execution&.[](:group_isolation)
+          mode = @execution&.dig("group_isolation") if mode.nil?
+          mode.nil? ? true : mode
         end
 
         def formatter_class

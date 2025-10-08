@@ -65,9 +65,9 @@ module Ace
           return :subprocess if options[:subprocess] || @force_mode == :subprocess
           return :direct if options[:direct] || @force_mode == :direct
 
-          # Check sequential_groups_mode config for sequential group execution
-          # This ensures correct group header ordering
-          if options[:sequential_groups_mode] == "subprocess"
+          # Check group_isolation config for sequential group execution
+          # true = subprocess for better isolation
+          if options[:group_isolation] == true
             return :subprocess
           end
 
