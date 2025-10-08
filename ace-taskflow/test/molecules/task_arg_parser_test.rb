@@ -147,4 +147,147 @@ class TaskArgParserTest < Minitest::Test
     assert_nil result[:task_ref]
     assert_nil result[:depends_on_ref]
   end
+
+  # Tests for parse_create_args_with_optparse
+
+  def test_parse_create_args_with_optparse_positional_title_only
+    args = ["Add", "feature"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Add feature", result[:title]
+    assert_equal "current", result[:context]
+    assert_equal({}, result[:metadata])
+  end
+
+  def test_parse_create_args_with_optparse_title_flag_only
+    args = ["--title", "Add feature"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Add feature", result[:title]
+    assert_equal "current", result[:context]
+    assert_equal({}, result[:metadata])
+  end
+
+  def test_parse_create_args_with_optparse_title_with_status
+    args = ["--title", "Task", "--status", "draft"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Task", result[:title]
+    assert_equal "draft", result[:metadata][:status]
+  end
+
+  def test_parse_create_args_with_optparse_title_with_estimate
+    args = ["--title", "Task", "--estimate", "2h"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Task", result[:title]
+    assert_equal "2h", result[:metadata][:estimate]
+  end
+
+  def test_parse_create_args_with_optparse_dependencies_parsed
+    args = ["--title", "Task", "--dependencies", "018,019,020"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal ["018", "019", "020"], result[:metadata][:dependencies]
+  end
+
+  def test_parse_create_args_with_optparse_dependencies_with_spaces
+    args = ["--title", "Task", "--dependencies", "018, 019, 020"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal ["018", "019", "020"], result[:metadata][:dependencies]
+  end
+
+  def test_parse_create_args_with_optparse_backlog_flag
+    args = ["--title", "Task", "--backlog"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "backlog", result[:context]
+  end
+
+  def test_parse_create_args_with_optparse_release_flag
+    args = ["--title", "Task", "--release", "v.0.10.0"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "v.0.10.0", result[:context]
+  end
+
+  def test_parse_create_args_with_optparse_all_metadata_flags
+    args = ["--title", "Task", "--status", "draft", "--estimate", "3h", "--dependencies", "018,019"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Task", result[:title]
+    assert_equal "draft", result[:metadata][:status]
+    assert_equal "3h", result[:metadata][:estimate]
+    assert_equal ["018", "019"], result[:metadata][:dependencies]
+  end
+
+  def test_parse_create_args_with_optparse_positional_title_with_metadata
+    args = ["My", "task", "--status", "draft"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "My task", result[:title]
+    assert_equal "draft", result[:metadata][:status]
+  end
+
+  def test_parse_create_args_with_optparse_positional_precedence
+    # When both positional and --title are provided, positional wins
+    args = ["Positional", "--title", "Flag"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Positional", result[:title]
+  end
+
+  def test_parse_create_args_with_optparse_empty_args
+    args = []
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_nil result[:title]
+    assert_equal "current", result[:context]
+    assert_equal({}, result[:metadata])
+  end
+
+  def test_parse_create_args_with_optparse_special_chars_in_title
+    args = ["--title", "Fix: bug #42 [urgent]"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Fix: bug #42 [urgent]", result[:title]
+  end
+
+  def test_parse_create_args_with_optparse_help_flag_exits
+    args = ["--help"]
+
+    # Capture stdout to verify help is shown
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    begin
+      assert_raises(SystemExit) do
+        Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+      end
+
+      output = $stdout.string
+      assert_includes output, "Usage: ace-taskflow task create"
+    ensure
+      $stdout = original_stdout
+    end
+  end
+
+  def test_parse_create_args_with_optparse_help_short_flag_exits
+    args = ["-h"]
+
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    begin
+      assert_raises(SystemExit) do
+        Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+      end
+
+      output = $stdout.string
+      assert_includes output, "Usage: ace-taskflow task create"
+    ensure
+      $stdout = original_stdout
+    end
+  end
 end

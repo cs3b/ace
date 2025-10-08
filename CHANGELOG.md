@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+#### ace-taskflow
+* **Flexible Task Creation Flags**: Added comprehensive flag support for `ace-taskflow task create`
+  * `--title TITLE` - Alternative to positional title argument
+  * `--status STATUS` - Set initial task status (pending, draft, in-progress, done, blocked)
+  * `--estimate ESTIMATE` - Set effort estimate (e.g., 2h, 1d, TBD)
+  * `--dependencies DEPS` - Set comma-separated dependency list (e.g., 018,019)
+  * `-h, --help` - Show detailed help for task creation
+  * Backwards compatible with existing positional title syntax
+  * Metadata flags written directly to task frontmatter
+
+### Fixed
+
+#### ace-taskflow
+* **Critical Bug**: Fixed `ace-taskflow task create --help` creating a task named "--help" instead of showing help
+  * Implemented proper OptionParser-based argument parsing
+  * Help flag now correctly displays usage information and exits without creating a task
+
 ## [0.6.0] - 2025-08-05
 
 ### Added

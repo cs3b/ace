@@ -125,6 +125,14 @@ Create and manage tasks with descriptive paths:
 ace-taskflow task create "Implement user authentication"
 # Creates: .ace-taskflow/v.0.9.0/t/035-feat-user-authentication/task.035.md
 
+# Create with metadata flags
+ace-taskflow task create --title "Fix bug" --status draft --estimate 2h
+ace-taskflow task create "Write tests" --dependencies 041,042 --estimate 4h
+
+# Create in different contexts
+ace-taskflow task create "Future feature" --backlog
+ace-taskflow task create "Hotfix" --release v.0.10.0
+
 # List and navigate tasks
 ace-taskflow task list
 ace-taskflow task          # Get next task

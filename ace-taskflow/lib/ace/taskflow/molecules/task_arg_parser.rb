@@ -74,6 +74,65 @@ module Ace
             depends_on_ref: depends_on_ref
           }
         end
+
+        # Parse task create arguments with OptionParser (new flexible version)
+        # @param args [Array<String>] Command arguments
+        # @return [Hash] Parsed options with :title, :context, and :metadata
+        # @raise [SystemExit] Exits with 0 if --help flag provided
+        def self.parse_create_args_with_optparse(args)
+          options = {
+            title: nil,
+            context: "current",
+            metadata: {}
+          }
+
+          positional_args = []
+
+          parser = OptionParser.new do |opts|
+            opts.banner = "Usage: ace-taskflow task create [TITLE] [options]"
+
+            opts.on("--title TITLE", "Task title") do |title|
+              options[:title] = title
+            end
+
+            opts.on("--status STATUS", "Initial status (pending, draft, in-progress, done, blocked)") do |status|
+              options[:metadata][:status] = status
+            end
+
+            opts.on("--estimate ESTIMATE", "Effort estimate (e.g., 2h, 1d, TBD)") do |estimate|
+              options[:metadata][:estimate] = estimate
+            end
+
+            opts.on("--dependencies DEPS", "Comma-separated dependency list (e.g., 018,019)") do |deps|
+              options[:metadata][:dependencies] = deps.split(',').map(&:strip)
+            end
+
+            opts.on("--backlog", "Create task in backlog") do
+              options[:context] = "backlog"
+            end
+
+            opts.on("--release VERSION", "Create task in specific release") do |version|
+              options[:context] = version
+            end
+
+            opts.on("-h", "--help", "Show this help message") do
+              puts opts
+              exit 0
+            end
+          end
+
+          # Parse known options, leaving unknown args in positional_args
+          parser.order!(args) do |non_option|
+            positional_args << non_option
+          end
+
+          # Positional title takes precedence (backwards compatibility)
+          if !positional_args.empty?
+            options[:title] = positional_args.join(" ")
+          end
+
+          options
+        end
       end
     end
   end
