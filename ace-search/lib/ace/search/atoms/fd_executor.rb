@@ -2,6 +2,7 @@
 
 require "open3"
 require "shellwords"
+require "timeout"
 
 module Ace
   module Search
@@ -17,10 +18,12 @@ module Ace
         # @return [Hash] Command result with success status and output
         def execute(pattern = nil, options = {})
           command = build_command(pattern, options)
-          timeout = options.fetch(:timeout, 120)
+          timeout_seconds = options.fetch(:timeout, 120)
 
           begin
-            stdout, stderr, status = Open3.capture3(command, timeout: timeout)
+            stdout, stderr, status = Timeout.timeout(timeout_seconds) do
+              Open3.capture3(command)
+            end
 
             {
               success: status.success?,
@@ -32,7 +35,7 @@ module Ace
           rescue Timeout::Error
             {
               success: false,
-              error: "Command timed out after #{timeout} seconds",
+              error: "Command timed out after #{timeout_seconds} seconds",
               exit_code: -1
             }
           rescue => e
