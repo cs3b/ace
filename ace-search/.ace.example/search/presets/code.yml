@@ -1,0 +1,22 @@
+# Code Search Preset
+#
+# Search only in code files, excluding common non-code directories
+
+name: code
+description: Search code files only
+
+# File patterns
+glob: "*.{rb,js,ts,py,go,java,c,cpp,h,hpp,rs,swift,kt}"
+
+# Exclusions
+exclude:
+  - "vendor/**/*"
+  - "node_modules/**/*"
+  - "coverage/**/*"
+  - "tmp/**/*"
+  - "dist/**/*"
+  - "build/**/*"
+  - ".git/**/*"
+
+# Case sensitivity for code
+case_insensitive: false
