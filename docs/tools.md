@@ -21,12 +21,12 @@ ace-test test/file.rb:42                # Run test at specific line
 ace-test --max-display 3                # Show only first 3 failures
 
 # Task management
+ace-taskflow task create "Add feature"              # Create task with positional title
+ace-taskflow task create --title "Fix bug" --status draft --estimate 2h  # Create with metadata
 ace-taskflow task 019                   # Find and show task by number
-ace-taskflow task v.0.9.0+047           # Find by full task ID
 ace-taskflow task show 019              # Show task details
 ace-taskflow task done 019              # Mark complete & move to done/
 ace-taskflow tasks all                  # All tasks in current release
-ace-taskflow tasks all-releases         # All tasks across all releases
 
 # Git commits
 ace-git-commit                          # Generate commit for all changes
