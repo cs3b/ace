@@ -148,6 +148,9 @@ module Ace
           # Determine target location
           location = determine_location(options)
 
+          # Check if --current was explicitly provided
+          explicit_current = options[:location] == "current"
+
           # Update config with location
           config = @config.dup
           if location == "backlog"
@@ -162,13 +165,19 @@ module Ace
               exit 1
             end
           else
-            # Active release (default)
+            # Active release (default or explicit --current)
             resolver = Molecules::ReleaseResolver.new(@root_path)
             primary = resolver.find_primary_active
             if primary
               config["directory"] = File.join(primary[:path], "ideas")
             else
-              # Fall back to backlog if no active release
+              # If --current was explicitly provided but no release exists, error
+              if explicit_current
+                puts "Error: No current release found."
+                puts "Use 'ace-taskflow release create' to create a release, or omit --current to save to backlog."
+                exit 1
+              end
+              # Fall back to backlog if no active release (implicit/default behavior)
               config["directory"] = File.join(@root_path, "backlog", "ideas")
             end
           end

@@ -121,13 +121,12 @@ module Ace
 
           # Check for stats only (other formatters handled after filtering)
           if additional_filters[:stats]
-            show_statistics_for_preset(preset_name, additional_filters)
-            return
+            return show_statistics_for_preset(preset_name, additional_filters)
           end
 
           # Apply preset with additional filters
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return unless preset_config
+          return 1 unless preset_config
 
           # Override context if provided via legacy flags
           if additional_filters[:context]
@@ -211,7 +210,7 @@ module Ace
           if tasks.empty?
             puts ""
             puts "No tasks found for preset '#{preset_config[:name]}'."
-            return
+            return 0
           end
 
           # Check if grouping is needed
@@ -226,11 +225,13 @@ module Ace
           else
             tasks.each { |task| display_task_line(task) }
           end
+
+          0
         end
 
         def show_statistics_for_preset(preset_name, additional_filters = {})
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return unless preset_config
+          return 1 unless preset_config
 
           # Override context if provided via legacy flags
           if additional_filters[:context]
@@ -240,6 +241,7 @@ module Ace
           end
 
           puts @stats_formatter.format_stats_view(context: context)
+          0
         end
 
         def display_task_line(task_data)
@@ -476,13 +478,14 @@ module Ace
           if tasks.empty?
             puts ""
             puts "No tasks found for preset '#{preset_config[:name]}'."
-            return
+            return 0
           end
 
           # Get ALL tasks for complete dependency visualization
           all_tasks = @manager.list_tasks(context: "all")
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
+          0
         end
 
         def display_paths_with_preset(tasks, preset_config, original_count = nil, limit = nil)
@@ -499,7 +502,7 @@ module Ace
           if tasks.empty?
             puts ""
             puts "No tasks found for preset '#{preset_config[:name]}'."
-            return
+            return 0
           end
 
           # Use project root, not .ace-taskflow root
@@ -510,6 +513,8 @@ module Ace
               puts relative_path
             end
           end
+
+          0
         end
 
         def display_list_with_preset(tasks, preset_config, original_count = nil, limit = nil)
@@ -526,13 +531,15 @@ module Ace
           if tasks.empty?
             puts ""
             puts "No tasks found for preset '#{preset_config[:name]}'."
-            return
+            return 0
           end
 
           tasks.each do |task|
             ref = task[:task_number] || task[:id]
             puts "#{ref} #{task[:title]}"
           end
+
+          0
         end
       end
     end
