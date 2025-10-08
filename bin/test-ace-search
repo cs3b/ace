@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Run ace-search tests from workspace root
+require "pathname"
+
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+ace_search_root = ace_meta_root.join("ace-search")
+
+# Set the Gemfile location
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+# Add lib and test to load path
+$LOAD_PATH.unshift ace_search_root.join("lib")
+$LOAD_PATH.unshift ace_search_root.join("test")
+
+# Load bundler
+require "bundler/setup"
+
+# Find all test files
+test_files = Dir.glob(ace_search_root.join("test/**/*test*.rb"))
+
+# Load test helper
+require "test_helper"
+
+# Load all test files
+test_files.each do |file|
+  require file
+end
