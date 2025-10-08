@@ -22,6 +22,7 @@ defaults:
 
 # Test file patterns - standard flat ATOM structure
 patterns:
+  smoke: "test/*_test.rb"
   atoms: "test/atoms/**/*_test.rb"
   molecules: "test/molecules/**/*_test.rb"
   organisms: "test/organisms/**/*_test.rb"
@@ -34,6 +35,7 @@ patterns:
 # Test groups
 groups:
   unit:
+    - smoke
     - atoms
     - molecules
     - organisms
