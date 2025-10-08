@@ -58,6 +58,7 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers support
 - **ace-git-commit**: Smart git commit generation with LLM integration
+- **ace-search**: Unified file and content search with intelligent DWIM pattern matching
 
 ### Workflows (.wf.md)
 
@@ -73,9 +74,11 @@ Self-contained instruction documents for AI agents:
 
 Specialized single-purpose agents for focused tasks:
 
-- Located in `dev-handbook/.integrations/claude/agents/`
+- Located in gem-specific `handbook/agents/` directories (e.g., `ace-search/handbook/agents/`)
+- Legacy location: `dev-handbook/.integrations/claude/agents/`
 - Exposed via `.claude/agents/` symlinks
 - Designed for delegation and composition
+- Examples: `search` (single ace-search execution), `research` (multi-search analysis)
 
 ### Guides
 
@@ -152,7 +155,6 @@ Development patterns and best practices:
 ### Planned Migrations
 
 - **ace-handbook**: Workflows, guides, and templates as a gem
-- **ace-search**: Unified file and content search across codebases
 - **ace-review**: Code review automation and synthesis
 
 ### Vision
