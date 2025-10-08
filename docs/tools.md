@@ -9,6 +9,7 @@
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged` |
+| **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
 
 ## Quick Examples
 
@@ -31,6 +32,12 @@ ace-taskflow tasks all                  # All tasks in current release
 # Git commits
 ace-git-commit                          # Generate commit for all changes
 ace-git-commit --staged                 # Commit only staged files
+
+# Search
+ace-search "TODO"                       # Auto-detect: search content
+ace-search "*.rb" --file                # Find Ruby files
+ace-search "class.*Manager" --content   # Regex content search
+ace-search "config" --staged            # Search only staged files
 
 # Navigation and context
 ace-context project --output stdio      # Load context to stdout
