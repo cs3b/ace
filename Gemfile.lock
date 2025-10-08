@@ -47,6 +47,12 @@ PATH
       ace-nav (~> 0.9)
 
 PATH
+  remote: ace-search
+  specs:
+    ace-search (0.1.0)
+      ace-core (~> 0.9)
+
+PATH
   remote: ace-support-mac-clipboard
   specs:
     ace-support-mac-clipboard (0.1.0)
@@ -153,6 +159,7 @@ DEPENDENCIES
   ace-llm-providers-cli!
   ace-nav!
   ace-review!
+  ace-search!
   ace-support-mac-clipboard!
   ace-taskflow!
   ace-test-runner!
