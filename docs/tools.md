@@ -10,6 +10,7 @@
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged` |
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
+| **ace-review** | Code review | `ace-review --preset pr`, `ace-review --auto-execute` |
 
 ## Quick Examples
 
@@ -38,6 +39,12 @@ ace-search "TODO"                       # Auto-detect: search content
 ace-search "*.rb" --file                # Find Ruby files
 ace-search "class.*Manager" --content   # Regex content search
 ace-search "config" --staged            # Search only staged files
+
+# Code review
+ace-review --preset pr                  # Review PR changes
+ace-review --preset security --auto-execute  # Security review with LLM
+ace-review --subject 'diffs: ["HEAD~5..HEAD"]'  # Review specific range
+ace-review --list-presets               # Show available presets
 
 # Navigation and context
 ace-context project --output stdio      # Load context to stdout
