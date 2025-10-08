@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Run tests from workspace root with proper Gemfile context
+require "pathname"
+
+# Find the ace-meta root directory
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.parent.realpath
+ace_search_root = Pathname.new(__FILE__).dirname.parent.realpath
+
+# Set the Gemfile location
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+# Load bundler
+require "bundler/setup"
+
+# Add lib and test to load path
+$LOAD_PATH.unshift ace_search_root.join("lib")
+$LOAD_PATH.unshift ace_search_root.join("test")
+
+# Run tests
+require "rake"
+Rake.application.init
+Rake.application.load_rakefile
+Rake.application["test"].invoke
