@@ -11,7 +11,7 @@ module Ace
     def self.config
       @config ||= begin
         base_config = Ace::Core.config
-        base_config.dig("ace", "search") || default_config
+        base_config.get("ace", "search") || default_config
       end
     end
 
