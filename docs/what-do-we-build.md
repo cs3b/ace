@@ -15,10 +15,10 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers (Claude, Codex, OpenCode)
 - **ace-git-commit**: Smart git commit generation with LLM integration
 - **ace-search**: Unified file and content search with intelligent DWIM pattern matching
+- **ace-review**: Preset-based code review with LLM-powered analysis and prompt composition
 
 ## Coming Soon
 
-- **ace-review**: Code review automation and synthesis
 - **ace-handbook**: Workflows, guides, and templates as a gem
 
 ## The Vision
