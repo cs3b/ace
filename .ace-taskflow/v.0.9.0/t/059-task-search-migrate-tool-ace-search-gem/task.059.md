@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.059
 status: pending
-priority: P2
 estimate: 2 days
 dependencies: []
 tags:
@@ -20,6 +19,7 @@ Migrate the legacy search tool from dev-tools/exe/search to a new ace-search gem
 ### Behavioral Specification
 
 The system should provide a search capability packaged as an ace-search Ruby gem that:
+
 1. Maintains exact CLI interface compatibility with dev-tools/exe/search (except editor integration)
 2. Follows ACE gem architecture patterns (ATOM structure)
 3. Leverages ace-core for configuration and shared utilities
@@ -31,6 +31,7 @@ The system should provide a search capability packaged as an ace-search Ruby gem
 ### User Experience
 
 Users will continue using the search command with identical syntax and behavior:
+
 ```bash
 # These commands should work exactly as before
 search "pattern" --type content
@@ -42,6 +43,7 @@ search --files "controller" # matches paths like app/controllers/user_controller
 ```
 
 Key improvements:
+
 - File search now matches full paths, not just filenames
 - Configuration supports all CLI flags as defaults
 - Presets organized in separate files for better maintainability
@@ -49,6 +51,7 @@ Key improvements:
 ### Interface Contract
 
 #### Inputs
+
 - Pattern: Search string or regex pattern (for files: matches paths and names)
 - Options: All existing CLI flags must be preserved (except editor-related)
   - Type flags: `-t`, `-f`, `-c`, `--files`, `--content`
@@ -61,11 +64,13 @@ Key improvements:
   - All flags can be set as defaults in configuration
 
 #### Outputs
+
 - Search results in text, JSON, or YAML format
 - File paths with clickable terminal links (file:line format)
 - Configuration status (when using config subcommand)
 
 #### Processing
+
 1. Parse command-line arguments
 2. Apply presets and configuration
 3. Execute search using ripgrep/fd
@@ -75,10 +80,10 @@ Key improvements:
 
 ## Planning Steps
 
-* [x] Analyze existing search tool structure (695 lines in exe/search)
-* [x] Identify all dependencies and components to migrate
-* [x] Map current structure to ACE gem patterns
-* [x] Define migration strategy preserving CLI compatibility
+- [x] Analyze existing search tool structure (695 lines in exe/search)
+- [x] Identify all dependencies and components to migrate
+- [x] Map current structure to ACE gem patterns
+- [x] Define migration strategy preserving CLI compatibility
 
 ## Execution Steps
 
@@ -159,18 +164,21 @@ Key improvements:
 The migration follows the ACE gem architecture with ATOM pattern:
 
 **Pattern Selection**: Standard ATOM architecture (Atoms → Molecules → Organisms → Models)
+
 - **Atoms**: Pure functions for ripgrep/fd execution, pattern parsing, result parsing
 - **Molecules**: Preset management, git scope filtering, DWIM analysis, time filtering, fzf integration
 - **Organisms**: Unified searcher orchestration, result formatting, result aggregation
 - **Models**: SearchResult, SearchOptions, SearchPreset data structures
 
 **Integration with Existing Architecture**:
+
 - Leverages ace-core for configuration cascade (.ace/search/)
 - Uses ace-core atoms (YamlParser, FileReader, DeepMerger) where applicable
 - Follows same directory structure as other ace-* gems
 - Integrates with ace-test-support for testing
 
 **Impact on System Design**:
+
 - Enables standalone installation (`gem install ace-search`)
 - Provides reusable search components for other gems
 - Maintains backward compatibility via executable naming
@@ -179,30 +187,36 @@ The migration follows the ACE gem architecture with ATOM pattern:
 ### Technology Stack
 
 **Core Dependencies**:
+
 - ace-core (~> 0.9) - Configuration cascade and utilities
 - Ruby standard library (json, yaml, optparse, set)
 - No additional gem dependencies beyond ace-core
 
 **External Tools** (runtime dependencies):
+
 - ripgrep (rg) - Content search backend
 - fd - File search backend
 - git - For git scope filtering
 - fzf (optional) - Interactive selection
 
 **Development Dependencies**:
+
 - ace-test-support (~> 0.9) - Testing infrastructure
 - minitest - Test framework (via ace-test-support)
 
 **Version Compatibility**:
+
 - Ruby >= 2.7 (matches ace-core requirement)
 - Works with Ruby 3.0, 3.1, 3.2, 3.3
 
 **Performance Implications**:
+
 - No performance regression - still uses ripgrep/fd directly
 - Configuration caching via ace-core improves startup time
 - Modular structure allows selective loading
 
 **Security Considerations**:
+
 - Input validation via ace-core path validation
 - Command injection prevention in executor atoms
 - Safe YAML loading via ace-core
@@ -210,6 +224,7 @@ The migration follows the ACE gem architecture with ATOM pattern:
 ### Implementation Strategy
 
 **Step-by-step Approach**:
+
 1. Create gem skeleton with proper structure
 2. Port atoms layer (pure functions, no dependencies)
 3. Port molecules layer (composed operations)
@@ -221,12 +236,14 @@ The migration follows the ACE gem architecture with ATOM pattern:
 9. Document and validate
 
 **Rollback Considerations**:
+
 - Legacy search tool remains in dev-tools during transition
 - Symlink can be removed if issues arise
 - No data migration required (stateless tool)
 - Easy to revert by removing ace-search from Gemfile
 
 **Testing Strategy**:
+
 - Unit tests for all atoms (pure functions, 100% coverage target)
 - Integration tests for molecules (file I/O, external commands)
 - End-to-end CLI tests (full command execution)
@@ -234,6 +251,7 @@ The migration follows the ACE gem architecture with ATOM pattern:
 - Test matrix across Ruby versions in CI
 
 **Performance Monitoring**:
+
 - Benchmark against legacy tool (must be equal or better)
 - Monitor startup time (target < 100ms)
 - Track search execution time (should match ripgrep/fd directly)
@@ -275,10 +293,12 @@ The migration follows the ACE gem architecture with ATOM pattern:
 ### Dependencies
 
 New dependencies:
+
 - ace-core ~> 0.9 - Required for configuration and utilities
 - ace-test-support ~> 0.9 - Development only, for testing
 
 Compatibility verification:
+
 - Both gems are part of the ACE ecosystem and follow same versioning
 - No conflicts with existing dependencies
 - Ruby 2.7+ requirement aligns with ecosystem
@@ -288,6 +308,7 @@ Compatibility verification:
 ### Create
 
 **Gem Structure**:
+
 - ace-search/ace-search.gemspec
   - Purpose: Gem specification and metadata
   - Key components: Dependencies, executables, version
@@ -304,6 +325,7 @@ Compatibility verification:
   - Dependencies: None
 
 **Atoms Layer** (pure functions):
+
 - ace-search/lib/ace/search/atoms/ripgrep_executor.rb
   - Purpose: Execute ripgrep commands safely
   - Key components: Command building, safe execution, output capture
@@ -330,6 +352,7 @@ Compatibility verification:
   - Migrated from: dev-tools/lib/coding_agent_tools/atoms/search/tool_availability_checker.rb
 
 **Molecules Layer** (composed operations):
+
 - ace-search/lib/ace/search/molecules/preset_manager.rb
   - Purpose: Load and manage search presets from .ace/search/presets/
   - Key components: Preset loading, validation, merging with options
@@ -356,6 +379,7 @@ Compatibility verification:
   - Migrated from: dev-tools/lib/coding_agent_tools/molecules/search/fzf_integrator.rb
 
 **Organisms Layer** (business logic):
+
 - ace-search/lib/ace/search/organisms/unified_searcher.rb
   - Purpose: Main search orchestration
   - Key components: Search execution, result aggregation, format handling
@@ -372,6 +396,7 @@ Compatibility verification:
   - Migrated from: dev-tools/lib/coding_agent_tools/organisms/search/result_aggregator.rb
 
 **Models Layer** (data structures):
+
 - ace-search/lib/ace/search/models/search_result.rb
   - Purpose: Represent a single search result
   - Key components: file, line, column, text attributes
@@ -388,12 +413,14 @@ Compatibility verification:
   - Migrated from: dev-tools/lib/coding_agent_tools/models/search/search_preset.rb
 
 **Executable**:
+
 - ace-search/exe/ace-search
   - Purpose: Main CLI entry point with full compatibility
   - Key components: Argument parsing, command dispatch, output formatting
   - Migrated from: dev-tools/exe/search (simplified, editor integration removed)
 
 **Configuration**:
+
 - ace-search/.ace.example/search/config.yml
   - Purpose: Example configuration showing all supported defaults
   - Key components: defaults section, preset directory configuration
@@ -405,6 +432,7 @@ Compatibility verification:
   - Dependencies: None (example preset)
 
 **Tests**:
+
 - ace-search/test/test_helper.rb
   - Purpose: Test setup and shared utilities
   - Key components: AceTestCase inheritance, common fixtures
@@ -431,6 +459,7 @@ Compatibility verification:
   - Dependencies: test_helper, run_subprocess from ace-test-support
 
 **Documentation**:
+
 - ace-search/README.md
   - Purpose: Comprehensive usage guide
   - Key components: Installation, usage examples, configuration guide
@@ -546,13 +575,15 @@ After successful migration and validation:
 
 This migration represents a significant architectural improvement, moving from a monolithic dev-tools structure to a modular gem-based approach.
 
-### Key Changes from Original:
+### Key Changes from Original
+
 1. **Removed editor integration**: Terminal already handles file:line clicking, making in-tool editor integration redundant. Users can rely on their terminal emulator's ability to open files at specific lines.
 2. **Improved file search**: Now matches full paths (e.g., "controller" matches `app/controllers/user_controller.rb`), not just filenames.
 3. **Better configuration**: Any CLI flag can be set as a default in config (e.g., `case_insensitive: true`, `max_results: 100`).
 4. **Organized presets**: Moved from single config file to separate files in `.ace/search/presets/` directory for better maintainability.
 
-### Benefits of migration:
+### Benefits of migration
+
 1. **Modularity**: Clean separation of concerns following ATOM pattern
 2. **Reusability**: Can be installed as standalone gem
 3. **Maintainability**: Better test coverage with ace-test-support
@@ -560,3 +591,4 @@ This migration represents a significant architectural improvement, moving from a
 5. **Standards**: Follows established ACE gem patterns
 
 The migration should be done incrementally with careful testing at each step to ensure no functionality is lost (except intentionally removed editor integration).
+

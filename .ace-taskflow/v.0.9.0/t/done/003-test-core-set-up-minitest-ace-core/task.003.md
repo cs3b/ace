@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.003
 status: done
-priority: high
 estimate: 4h
 dependencies: [v.0.9.0+task.001, v.0.9.0+task.002]
 ---

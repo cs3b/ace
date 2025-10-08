@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.058
 status: done
-priority: medium
 estimate: 4h
 dependencies: []
 completed_at: 2025-10-07T19:45:00Z

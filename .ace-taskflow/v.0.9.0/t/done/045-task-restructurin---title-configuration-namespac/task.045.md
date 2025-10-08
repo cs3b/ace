@@ -1,7 +1,6 @@
 ---
 id: v.0.9.0+task.045
 status: done
-priority: high
 estimate: 4 hours
 dependencies: ["v.0.9.0+task.008"]
 ---
