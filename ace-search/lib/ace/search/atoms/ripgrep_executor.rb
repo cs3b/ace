@@ -2,6 +2,7 @@
 
 require "open3"
 require "shellwords"
+require "timeout"
 
 module Ace
   module Search
@@ -19,11 +20,12 @@ module Ace
           return {success: false, error: "Pattern cannot be nil or empty"} if pattern.nil? || pattern.empty?
 
           command = build_command(pattern, options)
-          timeout = options.fetch(:timeout, 120)
+          timeout_seconds = options.fetch(:timeout, 120)
 
-          stdout, stderr, status = nil, nil, nil
           begin
-            stdout, stderr, status = Open3.capture3(command, timeout: timeout)
+            stdout, stderr, status = Timeout.timeout(timeout_seconds) do
+              Open3.capture3(command)
+            end
 
             {
               success: status.success?,
@@ -35,7 +37,7 @@ module Ace
           rescue Timeout::Error
             {
               success: false,
-              error: "Command timed out after #{timeout} seconds",
+              error: "Command timed out after #{timeout_seconds} seconds",
               exit_code: -1
             }
           rescue => e
