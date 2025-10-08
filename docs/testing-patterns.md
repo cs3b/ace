@@ -1,5 +1,45 @@
 # Testing Patterns for ACE
 
+## Test Organization
+
+### Flat Directory Structure
+
+All ACE gems use a **flat test directory structure** that mirrors the ATOM architecture:
+
+```
+test/
+├── test_helper.rb
+├── search_test.rb              # Main module test
+├── atoms/
+│   ├── pattern_analyzer_test.rb
+│   ├── result_parser_test.rb
+│   └── tool_checker_test.rb
+├── molecules/
+│   ├── preset_manager_test.rb
+│   └── git_scope_filter_test.rb
+├── organisms/
+│   ├── unified_searcher_test.rb
+│   └── result_formatter_test.rb
+├── models/
+│   └── search_result_test.rb
+└── integration/
+    └── cli_integration_test.rb
+```
+
+**Key conventions:**
+- ✅ Flat structure: `test/atoms/`, not `test/ace/search/atoms/`
+- ✅ Suffix naming: `pattern_analyzer_test.rb`, not `test_pattern_analyzer.rb`
+- ✅ Layer directories match ATOM architecture
+- ✅ Integration tests in separate `integration/` directory
+
+**Benefits:**
+- Easier to navigate and find tests
+- Matches layer boundaries clearly
+- Consistent across all ACE gems
+- Less nesting = simpler paths
+
+See `ace-taskflow/test/` for reference implementation.
+
 ## Testing ENV-Dependent Classes
 
 When testing classes that depend on environment variables, use the protected method pattern for parallel-safe, fast tests.
