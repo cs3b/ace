@@ -49,6 +49,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-search
+      path: ace-search
+      group: tools
+      priority: 3
+
   # Test command options
   test_options:
     format: compact
