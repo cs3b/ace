@@ -5,6 +5,15 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.9] - 2025-10-08
+
+### Changed
+
+- **Test Structure Migration**: Migrated to flat ATOM structure
+  - From: `test/ace/review/molecules/`
+  - To: `test/molecules/`
+  - Aligns with standardized test organization across all ACE packages
+
 ## [0.9.8] - 2025-10-07
 
 ### Changed

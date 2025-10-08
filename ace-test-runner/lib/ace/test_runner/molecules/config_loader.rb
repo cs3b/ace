@@ -3,6 +3,12 @@
 require "yaml"
 require "ostruct"
 
+begin
+  require "ace/core"
+rescue LoadError
+  # ace-core not available, will use fallback config loading
+end
+
 module Ace
   module TestRunner
     module Molecules
@@ -93,6 +99,21 @@ module Ace
         private
 
         def find_and_load_config
+          # Try ace-core configuration cascade first
+          if defined?(Ace::Core::ConfigDiscovery)
+            discovery = Ace::Core::ConfigDiscovery.new
+            DEFAULT_CONFIG_PATHS.each do |rel_path|
+              # Strip .ace/ prefix since ConfigDiscovery searches .ace directories automatically
+              search_path = rel_path.sub(/^\.ace\//, '')
+              config_file = discovery.find_config_file(search_path)
+              if config_file && File.exist?(config_file)
+                puts "Loading configuration from: #{config_file}" if ENV["DEBUG"]
+                return load_from_file(config_file)
+              end
+            end
+          end
+
+          # Fallback to current directory only
           config_file = DEFAULT_CONFIG_PATHS.find { |path| File.exist?(path) }
           return nil unless config_file
 

@@ -37,6 +37,8 @@ module Ace
           if @configuration.failure_limits
             formatter_options[:max_failures_to_display] = @configuration.failure_limits[:max_display]
           end
+          # Disable group headers in on_test_complete to avoid duplicates with on_group_start/complete
+          formatter_options[:show_groups] = false
           @formatter = @configuration.formatter_class.new(formatter_options)
         end
 
@@ -47,6 +49,8 @@ module Ace
 
           # Check if sequential group execution should be used
           if should_execute_sequentially?
+            # Use default "all" group if no target specified in grouped mode
+            @configuration.target ||= "all"
             return run_sequential_groups(start_time)
           end
 
@@ -259,11 +263,14 @@ module Ace
         end
 
         def should_execute_sequentially?
-          # Execute sequentially if target is a group (not a pattern or file)
-          return false unless @configuration.target
+          # Only use sequential groups if execution_mode is "grouped"
+          return false unless @configuration.execution_mode == "grouped"
 
-          target_str = @configuration.target.to_s
-          target_sym = @configuration.target.to_sym
+          # If no target specified, default to "all" group for grouped mode
+          target = @configuration.target || "all"
+
+          target_str = target.to_s
+          target_sym = target.to_sym
 
           # Check both string and symbol keys for compatibility
           @configuration.groups&.key?(target_str) || @configuration.groups&.key?(target_sym)
@@ -276,7 +283,7 @@ module Ace
             per_file: @configuration.per_file,
             profile: @configuration.profile,
             group_fail_fast: @configuration.execution&.[](:group_fail_fast),
-            sequential_groups_mode: @configuration.sequential_groups_mode
+            group_isolation: @configuration.group_isolation
           }
         end
 
@@ -389,7 +396,8 @@ module Ace
             fail_fast: @configuration.fail_fast,
             verbose: @configuration.verbose,
             per_file: @configuration.per_file,  # Allow per-file execution if needed for debugging
-            profile: @configuration.profile      # Add profile option for verbose timing
+            profile: @configuration.profile,      # Add profile option for verbose timing
+            group_isolation: @configuration.group_isolation  # Pass through for execution mode selection
           }
 
           # Always use execute_with_progress for consistent interface

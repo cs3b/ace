@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2025-10-08
+
+### Changed
+
+- **Test Structure Reorganization**: Reorganized tests with proper ATOM categorization
+  - Moved `test/ace/llm_providers_cli_test.rb` → `test/llm_providers_cli_test.rb`
+  - Created `test/molecules/` for CLI provider tests
+  - Created `test/edge/` for edge case tests (new pattern)
+  - Created `test/integration/` for provider registration tests
+  - Fixed require paths to match new structure
+  - Aligns with standardized flat ATOM structure across all ACE packages
+
 ## [0.9.2] - 2025-10-07
 
 ### Changed

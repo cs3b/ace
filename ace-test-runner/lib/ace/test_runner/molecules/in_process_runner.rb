@@ -74,10 +74,34 @@ module Ace
             # Store test names in options to pass to run_minitest_with_args
             options = options.merge(test_names_filter: test_names_to_run) if test_names_to_run.any?
 
+            # Clear previously loaded test classes to avoid accumulation between groups
+            # This is crucial for in-process execution where tests from previous groups
+            # would otherwise be re-run in subsequent groups
+            Minitest::Runnable.runnables.clear
+
             # Setup Minitest::Reporters BEFORE loading test files
-            # This ensures the reporter is configured before Minitest initializes
+            # For in-process mode, we need to handle reporter state carefully
+            # because Minitest::Reporters.use! only works properly on first call
             require 'minitest/reporters'
-            Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new(io: $stdout)
+
+            # Create a fresh reporter for this group
+            reporter = Minitest::Reporters::DefaultReporter.new(io: $stdout)
+
+            # If this isn't the first group, we need to replace the existing reporter
+            if Minitest.reporter && Minitest.reporter.reporters
+              $stdout.flush
+              Minitest.reporter.reporters.clear
+              Minitest.reporter.reporters << reporter
+              # Reset reporter state for the new group
+              reporter.start_time = nil
+              # NOTE: Known limitation - progress dots don't show for subsequent groups
+              # in in-process mode. This appears to be a Minitest::Reporters limitation
+              # where some internal state prevents proper output after the first run.
+              # Test counts and results are still accurate.
+            else
+              # First group - use the standard setup
+              Minitest::Reporters.use! reporter
+            end
 
             # Load the test files
             files_to_load.uniq.each do |file|

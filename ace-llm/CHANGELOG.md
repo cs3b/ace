@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4] - 2025-10-08
+
+### Changed
+
+- **Test Structure Reorganization**: Reorganized tests for consistency
+  - Moved `test/ace/llm_test.rb` → `test/llm_test.rb`
+  - Moved `test/client_registry_test.rb` → `test/molecules/`
+  - Moved `test/provider_config_validator_test.rb` → `test/atoms/`
+  - Fixed require paths to match new structure
+  - Aligns with standardized flat ATOM structure across all ACE packages
+
 ## [0.9.3] - 2025-10-07
 
 ### Changed

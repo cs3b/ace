@@ -5,6 +5,14 @@ All notable changes to ace-git-commit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-10-08
+
+### Changed
+
+- **Test Structure Reorganization**: Reorganized tests for consistency
+  - Moved `test/ace/git_commit_test.rb` → `test/git_commit_test.rb`
+  - Aligns with standardized flat ATOM structure across all ACE packages
+
 ## [0.9.1] - 2025-10-07
 
 ### Changed

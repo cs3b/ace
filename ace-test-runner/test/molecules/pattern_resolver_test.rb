@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../test_helper"
+require_relative "../test_helper"
 require "ace/test_runner/molecules/pattern_resolver"
 require "ace/test_runner/models/test_configuration"
 
