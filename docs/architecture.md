@@ -59,6 +59,7 @@ Modular Ruby gems providing focused CLI functionality:
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers support
 - **ace-git-commit**: Smart git commit generation with LLM integration
 - **ace-search**: Unified file and content search with intelligent DWIM pattern matching
+- **ace-review**: Preset-based code review with LLM-powered analysis and prompt composition
 
 ### Workflows (.wf.md)
 
@@ -155,7 +156,6 @@ Development patterns and best practices:
 ### Planned Migrations
 
 - **ace-handbook**: Workflows, guides, and templates as a gem
-- **ace-review**: Code review automation and synthesis
 
 ### Vision
 
