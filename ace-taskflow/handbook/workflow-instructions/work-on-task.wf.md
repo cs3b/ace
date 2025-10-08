@@ -432,7 +432,7 @@ When working with temporary files:
 1. Check for alternative project documentation:
 
    ```bash
-   find . -name "README*" -o -name "*architecture*" -o -name "*blueprint*"
+   ace-search "README*|*architecture*|*blueprint*" --file
    ```
 
 2. Load available context documents partially

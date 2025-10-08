@@ -131,14 +131,11 @@ Create a detailed implementation plan for a task that already has a validated be
      - Configuration file references
    - Use systematic search commands:
      ```bash
-     # Find all directories with the old name
-     find . -type d -name "*old_name*" | grep -v ".git"
-
-     # Find all files with the old name
-     find . -type f -name "*old_name*" | grep -v ".git"
+     # Find all directories and files with the old name
+     ace-search "*old_name*" --file | grep -v ".git"
 
      # Find all code references
-     grep -r "old_name" . --include="*.rb" --include="*.py" --include="*.js" --include="*.md"
+     ace-search "old_name" --content --glob "**/*.{rb,py,js,md}"
      ```
    - Document the complete renaming scope to avoid partial migrations
 

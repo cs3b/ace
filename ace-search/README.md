@@ -115,6 +115,54 @@ Key improvements:
 - Configuration supports all CLI flags as defaults
 - Presets in separate files for better organization
 
+## Claude Code Agent Integration
+
+ace-search includes two specialized agents for AI-assisted code discovery:
+
+### 1. Search Agent (Tool Wrapper)
+
+**Purpose**: Execute single ace-search commands with intelligent defaults
+
+**Location**: `ace-search/handbook/agents/search.ag.md`
+
+**Features**:
+- DWIM mode auto-detection (file vs content)
+- Scope control and filtering
+- Git integration (staged/tracked/changed)
+- Structured response formatting
+
+**Usage**:
+```bash
+@search "TaskManager"  # Single focused search
+```
+
+### 2. Research Agent (Autonomous Orchestrator)
+
+**Purpose**: Plan and execute multi-search investigations to answer research goals
+
+**Location**: `ace-search/handbook/agents/research.ag.md`
+
+**Features**:
+- Multi-step search planning (files → structure → details → usage)
+- Adaptive strategy based on results
+- Synthesized reports with findings
+- Pattern and architecture analysis
+
+**Usage**:
+```bash
+@research "How is authentication implemented?"  # Complex investigation
+```
+
+### Agent Locations
+
+Both agents are available at:
+- **Source**: `ace-search/handbook/agents/{search,research}.ag.md`
+- **Symlinks**: `.claude/agents/{search,research}.ag.md` (optional, for Claude Code integration)
+
+**When to use which:**
+- Use `@search` for single queries: "Find all TODO comments"
+- Use `@research` for complex questions: "How does the task system work?"
+
 ## License
 
 Part of the ACE (Agent Coding Environment) toolkit.
