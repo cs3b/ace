@@ -1,0 +1,42 @@
+# ACE Search Configuration
+#
+# Any CLI flag can be set as a default here (use underscore for dashes)
+# Configuration cascade: defaults → ~/.ace/search/config.yml → ./.ace/search/config.yml → CLI flags
+
+ace:
+  search:
+    # Pattern matching defaults
+    case_insensitive: false     # -i, --case-insensitive
+    whole_word: false           # -w, --whole-word
+    multiline: false            # -U, --multiline
+
+    # Output defaults
+    max_results: null           # --max-results NUM
+    context: 0                  # -C, --context NUM (or -A/-B for before/after)
+    files_with_matches: false   # -l, --files-with-matches
+    hidden: false               # --hidden
+
+    # Search type
+    type: auto                  # -t, --type (file/content/hybrid/auto)
+
+    # Exclusions (default excludes for done/archived tasks)
+    exclude:
+      - ".ace-taskflow/done/**/*"
+      - "dev-taskflow/done/**/*"
+      - "dev-taskflow/current/*/tasks/x/*"
+      - "vendor/**/*"
+      - "node_modules/**/*"
+      - "coverage/**/*"
+      - "tmp/**/*"
+
+    # Inclusions (optional, empty by default)
+    include: []
+
+    # Git scope (optional: staged, tracked, changed)
+    # scope: null
+
+    # Glob patterns (optional)
+    # glob: "*.rb"
+
+    # Preset directory (relative to .ace/search/)
+    preset_dir: "presets"
