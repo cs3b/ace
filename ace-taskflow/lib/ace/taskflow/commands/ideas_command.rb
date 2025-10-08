@@ -63,13 +63,12 @@ module Ace
 
           # Check for special flags
           if additional_filters[:stats]
-            show_statistics_for_preset(preset_name, additional_filters)
-            return
+            return show_statistics_for_preset(preset_name, additional_filters)
           end
 
           # Apply preset with additional filters
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return unless preset_config
+          return 1 unless preset_config
 
           # Add preset name to config for scope determination
           preset_config[:name] = preset_name
@@ -91,6 +90,7 @@ module Ace
           # Display ideas
           if ideas.empty?
             puts "No ideas found for preset '#{preset_name}'."
+            return 0
           else
             # Check format option
             if additional_filters[:format] == "json"
@@ -239,11 +239,13 @@ module Ace
           else
             ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false, short) }
           end
+
+          0
         end
 
         def show_statistics_for_preset(preset_name, additional_filters = {})
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return unless preset_config
+          return 1 unless preset_config
 
           # Override context if provided via legacy flags
           if additional_filters[:context]
@@ -253,6 +255,7 @@ module Ace
           end
 
           puts @stats_formatter.format_stats_view(context: context)
+          0
         end
 
         def display_ideas_as_json(ideas, preset_config)
@@ -308,6 +311,7 @@ module Ace
           }
 
           puts JSON.pretty_generate(output)
+          0
         end
 
 

@@ -5,6 +5,19 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2025-10-08
+
+### Fixed
+
+- **Exit Code Handling**: Fixed TypeError when executing tasks and ideas commands
+  - `TasksCommand` display methods now return proper Integer exit codes (0 for success, 1 for errors)
+  - Fixed `display_tasks_with_preset`, `display_tree_with_preset`, `display_paths_with_preset`, `display_list_with_preset`
+  - Fixed `show_statistics_for_preset` to return exit codes
+  - Fixed `execute_with_preset` to propagate exit codes from display methods
+  - `IdeasCommand` display methods now return proper Integer exit codes
+  - Fixed `display_ideas_with_preset`, `display_ideas_as_json`, `show_statistics_for_preset`
+  - Resolves `TypeError: no implicit conversion of Array into Integer` when calling `exit(exit_code)`
+
 ## [0.10.2] - 2025-10-08
 
 ### Fixed
