@@ -14,11 +14,10 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Whe
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol support
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers (Claude, Codex, OpenCode)
 - **ace-git-commit**: Smart git commit generation with LLM integration
+- **ace-search**: Unified file and content search with intelligent DWIM pattern matching
 
 ## Coming Soon
 
-- **ace-search**: Unified file and content search across codebases
-- **ace-git**: Enhanced git operations and smart commit generation
 - **ace-review**: Code review automation and synthesis
 - **ace-handbook**: Workflows, guides, and templates as a gem
 
