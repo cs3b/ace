@@ -1,0 +1,244 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require "json"
+require "set"
+require_relative "../lib/ace/search"
+
+# Load all components
+require_relative "../lib/ace/search/atoms/ripgrep_executor"
+require_relative "../lib/ace/search/atoms/fd_executor"
+require_relative "../lib/ace/search/atoms/pattern_analyzer"
+require_relative "../lib/ace/search/atoms/result_parser"
+require_relative "../lib/ace/search/atoms/tool_checker"
+
+require_relative "../lib/ace/search/molecules/preset_manager"
+require_relative "../lib/ace/search/molecules/git_scope_filter"
+require_relative "../lib/ace/search/molecules/dwim_analyzer"
+require_relative "../lib/ace/search/molecules/time_filter"
+require_relative "../lib/ace/search/molecules/fzf_integrator"
+
+require_relative "../lib/ace/search/organisms/unified_searcher"
+require_relative "../lib/ace/search/organisms/result_formatter"
+require_relative "../lib/ace/search/organisms/result_aggregator"
+
+require_relative "../lib/ace/search/models/search_result"
+require_relative "../lib/ace/search/models/search_options"
+require_relative "../lib/ace/search/models/search_preset"
+
+# Load configuration defaults
+config = Ace::Search.config
+default_excludes = config["exclude"] || []
+
+options = {
+  type: config["type"]&.to_sym || :auto,
+  format: :text,
+  max_results: config["max_results"],
+  case_insensitive: config["case_insensitive"] || false,
+  whole_word: config["whole_word"] || false,
+  multiline: config["multiline"] || false,
+  context: config["context"] || 0,
+  interactive: false,
+  preset: nil,
+  since: nil,
+  before: nil,
+  scope: nil,
+  glob: config["glob"],
+  include: config["include"] || [],
+  exclude: default_excludes,
+  hidden: config["hidden"] || false,
+  files_with_matches: config["files_with_matches"] || false
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: ace-search [options] PATTERN"
+  opts.separator ""
+  opts.separator "Search across the codebase with intelligent pattern matching"
+  opts.separator ""
+  opts.separator "Options:"
+
+  # Search type options
+  opts.on("-t", "--type TYPE", %w[file content hybrid auto],
+    "Search type (file, content, hybrid, auto)") do |t|
+    options[:type] = t.to_sym
+  end
+
+  opts.on("-f", "--files", "Search for files only") do
+    options[:type] = :file
+  end
+
+  opts.on("-c", "--content", "Search in file content only") do
+    options[:type] = :content
+  end
+
+  # Pattern matching options
+  opts.on("-i", "--case-insensitive", "Case insensitive search") do
+    options[:case_insensitive] = true
+  end
+
+  opts.on("-w", "--whole-word", "Match whole words only") do
+    options[:whole_word] = true
+  end
+
+  opts.on("-U", "--multiline", "Enable multiline matching") do
+    options[:multiline] = true
+  end
+
+  opts.on("--hidden", "Include hidden files and directories") do
+    options[:hidden] = true
+  end
+
+  # Context options
+  opts.on("-A", "--after NUM", Integer, "Show NUM lines after match") do |n|
+    options[:after_context] = n
+  end
+
+  opts.on("-B", "--before NUM", Integer, "Show NUM lines before match") do |n|
+    options[:before_context] = n
+  end
+
+  opts.on("-C", "--context NUM", Integer, "Show NUM lines of context") do |n|
+    options[:context] = n
+  end
+
+  # File filtering options
+  opts.on("-g", "--glob PATTERN", "File glob pattern to include") do |glob|
+    options[:glob] = glob
+  end
+
+  opts.on("--include PATHS", "Include only these paths/globs (comma-separated)") do |paths|
+    options[:include] ||= []
+    options[:include].concat(paths.split(",").map(&:strip))
+  end
+
+  opts.on("-e", "--exclude PATHS", "Exclude paths/globs (comma-separated)") do |paths|
+    if paths.downcase == "none"
+      options[:exclude] = []
+    else
+      options[:exclude] ||= []
+      options[:exclude].concat(paths.split(",").map(&:strip))
+    end
+  end
+
+  opts.on("--since TIME", "Files modified since TIME") do |time|
+    options[:since] = time
+  end
+
+  opts.on("--before TIME", "Files modified before TIME") do |time|
+    options[:before] = time
+  end
+
+  # Git scope options
+  opts.on("--staged", "Search staged files only") do
+    options[:scope] = :staged
+  end
+
+  opts.on("--tracked", "Search tracked files only") do
+    options[:scope] = :tracked
+  end
+
+  opts.on("--changed", "Search changed files only") do
+    options[:scope] = :changed
+  end
+
+  # Output options
+  opts.on("--json", "Output in JSON format") do
+    options[:format] = :json
+  end
+
+  opts.on("--yaml", "Output in YAML format") do
+    options[:format] = :yaml
+  end
+
+  opts.on("-l", "--files-with-matches", "Only print filenames") do
+    options[:files_with_matches] = true
+  end
+
+  opts.on("--max-results NUM", Integer, "Limit number of results") do |n|
+    options[:max_results] = n
+  end
+
+  # Interactive options
+  opts.on("--fzf", "Use fzf for interactive selection") do
+    options[:interactive] = true
+  end
+
+  # Preset options
+  opts.on("-p", "--preset NAME", "Use search preset") do |name|
+    options[:preset] = name
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit 0
+  end
+
+  opts.on("--version", "Show version") do
+    puts "ace-search #{Ace::Search::VERSION}"
+    exit 0
+  end
+end
+
+pattern = nil
+begin
+  parser.parse!(ARGV)
+  pattern = ARGV.join(" ")
+rescue OptionParser::InvalidOption => e
+  puts "Error: #{e.message}"
+  puts parser
+  exit 1
+end
+
+if pattern.nil? || pattern.empty?
+  puts "Error: No search pattern provided"
+  puts parser
+  exit 1
+end
+
+begin
+  # Apply preset if specified
+  if options[:preset]
+    preset_manager = Ace::Search::Molecules::PresetManager.new
+    options = preset_manager.merge_with_options(options[:preset], options)
+  end
+
+  # Execute search
+  searcher = Ace::Search::Organisms::UnifiedSearcher.new
+  result = searcher.search(pattern, options)
+
+  unless result[:success]
+    $stderr.puts "Error: #{result[:error]}"
+    exit 1
+  end
+
+  # Apply interactive selection if requested
+  if options[:interactive] && Ace::Search::Atoms::ToolChecker.fzf_available?
+    result[:results] = Ace::Search::Organisms::FzfIntegrator.select(result[:results], options)
+  end
+
+  # Format and output results
+  if options[:format] == :text
+    puts Ace::Search::Organisms::ResultFormatter.format_summary(
+      result[:results],
+      mode: result[:mode],
+      pattern: pattern,
+      glob: options[:glob],
+      scope: options[:scope]
+    )
+    puts ""
+  end
+
+  output = Ace::Search::Organisms::ResultFormatter.format(
+    result[:results],
+    format: options[:format],
+    options: options
+  )
+  puts output
+
+  exit 0
+rescue => e
+  $stderr.puts "Error: #{e.message}"
+  $stderr.puts e.backtrace if ENV["DEBUG"]
+  exit 1
+end
