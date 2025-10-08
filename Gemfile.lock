@@ -49,7 +49,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.1.0)
+    ace-search (0.9.0)
       ace-core (~> 0.9)
 
 PATH
