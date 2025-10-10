@@ -2,65 +2,61 @@
 
 ## Overview
 
-ace-docs is a universal documentation management tool that enables any markdown document to self-describe its purpose, update requirements, and validation rules through frontmatter. It provides intelligent change detection, automatic content generation, and rule-based validation.
+ace-docs is a documentation analysis and metadata management tool that supports iterative agent/human collaboration for keeping docs current. It provides deterministic data gathering and analysis, while preserving human/agent control over actual content updates.
+
+## What Are Managed Documents?
+
+Documents become "managed" by ace-docs through two methods:
+
+1. **Explicit Management**: Any markdown file with ace-docs frontmatter
+2. **Configuration-based**: Documents matching type patterns in `.ace/docs/config.yml`
 
 ## Key Features
 
-- **Self-describing documents** via frontmatter configuration
-- **Automatic discovery** of all managed documents
-- **Intelligent change analysis** using LLM summarization
-- **Metadata tracking** with freshness indicators
-- **Rule validation** for content consistency
-- **Auto-generation** of dynamic sections
+- **Document discovery** via frontmatter or configuration patterns
+- **Change analysis** using full git diff with LLM relevance filtering
+- **Metadata management** for frontmatter updates
+- **Validation hierarchy** with global, type, and document-level rules
+- **Workflow support** providing data for agent/human decisions
 
 ## Command Structure
 
-### Status Check (Default)
-Show the status of all managed documents:
+### Discovery and Status
 ```bash
-ace-docs
-# or explicitly:
-ace-docs status
-```
-
-### Filtered Status Views
-```bash
+ace-docs                              # Show status of all managed documents
+ace-docs discover                     # Find and list all managed documents
 ace-docs status --type context        # Show only context documents
 ace-docs status --needs-update        # Show documents needing updates
-ace-docs status --type guide --needs-update  # Combine filters
 ```
 
 ### Change Analysis
-Generate intelligent diff analysis for documents:
+Analyze repository changes with intelligent filtering:
 ```bash
 ace-docs diff                          # All documents needing updates
 ace-docs diff docs/architecture.md    # Specific document
-ace-docs diff --preset project        # Documents in preset
+ace-docs diff --all                   # All managed documents
 ace-docs diff --since "7 days ago"    # Custom timeframe
+ace-docs diff --exclude-renames       # Ignore file renames
+ace-docs diff --exclude-moves         # Ignore file moves
 ```
 
-### Update Metadata
-Update frontmatter fields:
+**Note**: Always uses `git diff -w` (ignore whitespace) and provides full diff. The LLM analyzes and filters relevance based on each document's purpose.
+
+### Metadata Management
+Update frontmatter fields only (no content changes):
 ```bash
 ace-docs update docs/tools.md --set last-updated=today
 ace-docs update --preset project --set last-checked=today
 ace-docs update docs/guide.md --set version=2.0.0
 ```
 
-### Sync Content
-Synchronize auto-generated sections:
+### Validation
+Check documents against rules at different levels:
 ```bash
-ace-docs sync docs/tools.md           # Sync specific document
-ace-docs sync --auto                  # Sync all auto-generate sections
-ace-docs sync docs/decisions.md --with-llm  # Use LLM for enhancement
-```
-
-### Validate Documents
-Check documents against their declared rules:
-```bash
-ace-docs validate                     # Validate all documents
-ace-docs validate docs/*.md           # Validate pattern
-ace-docs validate --type guide        # Validate by type
+ace-docs validate                     # All validation types
+ace-docs validate --syntax            # Linter-based syntax checks
+ace-docs validate --semantic          # LLM-based semantic validation
+ace-docs validate docs/*.md --all     # Specific pattern, all checks
 ```
 
 ## Usage Scenarios
@@ -119,22 +115,34 @@ $ ace-docs validate docs/architecture.md
 ✓ No duplicate content detected
 ```
 
-### Scenario 3: Auto-Generate Tool Documentation
-**Goal**: Keep tools.md updated with latest commands
+### Scenario 3: Iterative Documentation Update
+**Goal**: Keep documentation current through agent/human collaboration
 
 ```bash
-# Sync auto-generated sections
-$ ace-docs sync docs/tools.md
+# Check what needs updating
+$ ace-docs status --needs-update
 
-Syncing auto-generated sections for docs/tools.md:
-- Regenerating tools table from gemspecs...
-  Found 15 ace-* gems with executables
-- Updating command examples...
-✓ Document synchronized
+⚠ docs/tools.md     context  2025-10-01 (9d ago) - needs update
+⚠ docs/decisions.md context  2025-09-25 (15d ago) - needs update
 
-# Validate after sync
-$ ace-docs validate docs/tools.md
-✓ All validation rules pass
+# Generate change analysis
+$ ace-docs diff docs/tools.md
+
+Analyzing changes since 2025-10-01...
+Using git diff -w to capture all changes
+LLM filtering for relevance to tools documentation...
+Analysis saved to: .cache/ace-docs/diff-20251010-145030.md
+
+# Agent/human reads analysis and updates document iteratively
+# This preserves control over content while using tool intelligence
+
+# After manual updates, update metadata
+$ ace-docs update docs/tools.md --set last-updated=today
+
+# Validate the updated document
+$ ace-docs validate docs/tools.md --all
+✓ Syntax validation passed (markdownlint)
+✓ Semantic validation passed (guide compliance)
 ```
 
 ### Scenario 4: Bulk Metadata Update
@@ -197,20 +205,19 @@ ace-docs status --needs-update
 # 2. Generate comprehensive diff
 ace-docs diff --needs-update
 
-# 3. Read analysis
+# 3. Read and analyze changes
 cat .cache/ace-docs/diff-*.md
+# The diff contains full git diff -w output with LLM analysis
 
-# 4. Update documents based on analysis
-# (Manual or automated updates)
+# 4. Iteratively update documents
+# Agent/human reads analysis and updates each document
+# This maintains control over content decisions
 
-# 5. Sync auto-generated content
-ace-docs sync --auto
-
-# 6. Update metadata
+# 5. Update metadata after changes
 ace-docs update --needs-update --set last-updated=today
 
-# 7. Final validation
-ace-docs validate --preset project
+# 6. Final validation
+ace-docs validate --all
 ```
 
 ## Frontmatter Configuration
@@ -229,11 +236,14 @@ update:
   frequency: weekly         # daily|weekly|monthly|on-change
   last-updated: 2025-10-10
   last-checked: 2025-10-10
-  sources:                  # What to monitor for changes
-    - git-commits: "feat:"  # Monitor commits with prefix
-    - changelog: ALL        # Monitor changelogs
-    - files: "ace-*/lib/**" # Monitor file patterns
-    - adrs: active          # Monitor ADRs
+
+  # NOTE: ace-docs always analyzes the FULL git diff -w
+  # The 'focus' field below helps LLM prioritize what's most relevant
+  focus:                    # Hints for LLM relevance filtering
+    - commits: "feat:"      # Pay attention to feature commits
+    - changelogs: true      # Prioritize changelog entries
+    - paths: "ace-*/lib/**" # Focus on library changes
+    - adrs: active          # Consider active ADRs
 
 # Context requirements
 context:
@@ -255,12 +265,121 @@ rules:
 ---
 ```
 
+## Document Types Configuration
+
+Document types define categories of documentation with shared characteristics. Configure them in `.ace/docs/config.yml`:
+
+```yaml
+# .ace/docs/config.yml
+document_types:
+  # Core context documents
+  context:
+    paths:
+      - "docs/*.md"              # Glob pattern for discovery
+      - "!docs/archive/**"       # Exclude patterns
+    defaults:
+      update_frequency: weekly
+      max_lines: 150
+      required_sections:
+        - overview
+        - scope
+
+  # Development guides
+  guide:
+    paths:
+      - "dev-handbook/guides/**/*.md"
+      - "**/*.g.md"              # Extension-based pattern
+    defaults:
+      update_frequency: monthly
+      max_lines: 500
+      validation:
+        - syntax: markdownlint
+        - semantic: guide-compliance
+
+  # Workflow instructions
+  workflow:
+    paths:
+      - "**/*.wf.md"             # Extension pattern
+      - "dev-handbook/workflow-instructions/**/*.md"
+    defaults:
+      update_frequency: on-change
+      auto_generate:
+        - template-refs: from-embedded
+
+  # API documentation
+  api:
+    paths:
+      - "*/docs/api/*.md"
+      - "*/api-docs/**/*.md"
+    defaults:
+      update_frequency: on-change
+      auto_generate:
+        - endpoints: from-routes
+        - schemas: from-models
+```
+
+### Type Discovery Process
+
+1. **Explicit frontmatter** (highest priority):
+   - Document has `doc-type: guide` in frontmatter
+   - Overrides any configuration-based type
+
+2. **Configuration patterns** (automatic):
+   - Document path matches type patterns in config
+   - First matching pattern wins
+
+3. **Unmanaged** (no type):
+   - No frontmatter and no pattern match
+   - Not tracked by ace-docs
+
+## Validation Rules Configuration
+
+Validation rules cascade through three levels:
+
+```yaml
+# .ace/docs/validation.yml - Global rules
+global_rules:
+  max_lines: 1000              # Default maximum
+  required_frontmatter:
+    - doc-type
+    - purpose
+  linters:
+    markdown: markdownlint
+    yaml: yamllint
+  semantic_validation:
+    guide_reference: "dev-handbook/guides/documentation-standards.md"
+
+# Type-specific rules (in config.yml)
+document_types:
+  context:
+    defaults:
+      max_lines: 150           # Override global
+      no_duplicate_from:
+        - "docs/what-do-we-build.md"
+        - "docs/blueprint.md"
+
+# Document-specific rules (in frontmatter)
+---
+doc-type: guide
+rules:
+  max_lines: 800               # Override type default
+  custom_validation: special-guide-rules
+---
+```
+
+### Rule Precedence
+
+1. Document frontmatter (highest priority)
+2. Type-specific defaults
+3. Global rules (lowest priority)
+
 ## Integration with Other Tools
 
 - **ace-context**: Loads project context for change analysis
 - **ace-llm-query**: Provides intelligent summarization of changes
 - **Workflows**: Deterministic operations for agent orchestration
 - **Git**: Analyzes commit history and file changes
+- **Linters**: Delegates syntax validation to external tools
 
 ## Output Files
 
