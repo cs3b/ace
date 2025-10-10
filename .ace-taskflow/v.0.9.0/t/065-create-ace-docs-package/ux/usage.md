@@ -2,7 +2,34 @@
 
 ## Overview
 
-ace-docs is a documentation analysis and metadata management tool that supports iterative agent/human collaboration for keeping docs current. It provides deterministic data gathering and analysis, while preserving human/agent control over actual content updates.
+ace-docs is a complete documentation management solution that combines:
+- **Deterministic CLI tools** for data gathering and analysis
+- **Intelligent workflows** for orchestrated updates
+- **Claude integration** for guided documentation maintenance
+
+It supports iterative agent/human collaboration while preserving control over content decisions.
+
+## Complete Solution Architecture
+
+ace-docs provides a complete documentation management solution through:
+
+1. **Deterministic Tools**: CLI commands for data gathering and analysis
+   - `ace-docs status`: Check document freshness
+   - `ace-docs diff`: Generate change analysis
+   - `ace-docs update`: Modify frontmatter metadata
+   - `ace-docs validate`: Check compliance with rules
+
+2. **Intelligent Workflows**: Orchestrated processes for iterative updates
+   - `update-docs.wf.md`: Guides through complete update cycle
+   - Maintains proper order to prevent duplication
+   - Integrates with ace-llm-query for intelligent analysis
+
+3. **Claude Integration**: `/update-docs` command for guided maintenance
+   - Triggers the complete workflow
+   - Provides interactive guidance through updates
+   - Ensures all documents stay current
+
+This combination ensures documents stay current while maintaining human/agent control over content decisions.
 
 ## What Are Managed Documents?
 
@@ -220,6 +247,58 @@ ace-docs update --needs-update --set last-updated=today
 ace-docs validate --all
 ```
 
+### Scenario 7: Using /update-docs Claude Command
+**Goal**: Complete documentation update cycle with guided workflow
+
+```claude
+/update-docs
+
+# The workflow will:
+# 1. Check documentation status using ace-docs
+# 2. Generate intelligent change analysis
+# 3. Guide you through updates in order:
+#    - what-do-we-build.md (vision)
+#    - blueprint.md (structure)
+#    - architecture.md (technical)
+#    - tools.md (commands)
+#    - decisions.md (ADRs)
+# 4. Update metadata and validate
+
+# Example interaction:
+Checking documentation status...
+⚠ 3 documents need updating
+
+Generating change analysis...
+Analysis saved to: .cache/ace-docs/diff-20251010-160000.md
+
+Starting iterative update process...
+[1/5] Updating docs/what-do-we-build.md
+  Recent changes: Added ace-docs to capabilities
+  Suggested updates: Add to "Current Capabilities" section
+
+  [Agent updates document based on analysis...]
+
+[2/5] Updating docs/blueprint.md
+  Recent changes: New ace-docs directory structure
+  Suggested updates: Add ace-docs/ to repository structure
+
+  [Agent updates document...]
+
+[3/5] Updating docs/architecture.md
+  Recent changes: New documentation management component
+  Suggested updates: Add ace-docs to Component Types section
+
+  [Continue through all documents...]
+
+Updating metadata...
+✓ All documents updated with current dates
+
+Final validation...
+✓ All documents pass validation
+
+Documentation update complete!
+```
+
 ## Frontmatter Configuration
 
 Example frontmatter for a managed document:
@@ -372,6 +451,33 @@ rules:
 1. Document frontmatter (highest priority)
 2. Type-specific defaults
 3. Global rules (lowest priority)
+
+## Workflow Integration
+
+### The update-docs Workflow
+
+The `ace-docs/handbook/workflow-instructions/update-docs.wf.md` workflow orchestrates the complete documentation update cycle:
+
+1. **Status Check**: Identifies documents needing updates using `ace-docs status`
+2. **Change Analysis**: Generates comprehensive diff with LLM filtering via `ace-docs diff`
+3. **Guided Updates**: Steps through documents in proper order to prevent duplication
+4. **Metadata Management**: Updates frontmatter after changes using `ace-docs update`
+5. **Validation**: Ensures all rules are satisfied with `ace-docs validate`
+
+### Claude Command Integration
+
+The `/update-docs` command provides a seamless entry point:
+- Triggers the complete workflow automatically
+- Provides interactive guidance through each document
+- Ensures proper update order (vision → structure → technical → tools → decisions)
+- Maintains iterative control with agent/human collaboration
+
+### Integration Points
+
+- **With existing workflows**: Can replace manual git-based analysis in update-context-docs.wf.md
+- **With ace-context**: Loads project context for comprehensive awareness
+- **With ace-llm-query**: Analyzes changes for relevance to each document
+- **With version control**: Uses `git diff -w` for complete change detection
 
 ## Integration with Other Tools
 
