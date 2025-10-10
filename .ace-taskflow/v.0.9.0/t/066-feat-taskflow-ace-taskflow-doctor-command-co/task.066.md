@@ -95,23 +95,23 @@ ace-taskflow doctor --check structure
 
 ### Success Criteria
 
-- [ ] **Comprehensive Scanning**: Validates entire taskflow ecosystem including releases, tasks, ideas, and retrospectives
-- [ ] **Malformed File Handling**: Gracefully processes files with missing frontmatter delimiters and YAML syntax errors
-- [ ] **Clear Diagnostics**: Provides specific file paths and line numbers for all detected issues
-- [ ] **Auto-Fix Capability**: Safely corrects common issues like missing closing delimiters with --fix flag
-- [ ] **Health Scoring**: Generates 0-100 health score based on issue severity and count
-- [ ] **CI/CD Integration**: Provides JSON output and proper exit codes for automation
-- [ ] **Component Isolation**: Can check specific components or releases independently
-- [ ] **Performance**: Completes full scan of typical repository (100+ files) within 5 seconds
+- [x] **Comprehensive Scanning**: Validates entire taskflow ecosystem including releases, tasks, ideas, and retrospectives
+- [x] **Malformed File Handling**: Gracefully processes files with missing frontmatter delimiters and YAML syntax errors
+- [x] **Clear Diagnostics**: Provides specific file paths and line numbers for all detected issues
+- [x] **Auto-Fix Capability**: Safely corrects common issues like missing closing delimiters with --fix flag
+- [x] **Health Scoring**: Generates 0-100 health score based on issue severity and count
+- [x] **CI/CD Integration**: Provides JSON output and proper exit codes for automation
+- [x] **Component Isolation**: Can check specific components or releases independently
+- [x] **Performance**: Completes full scan of typical repository (100+ files) within 5 seconds
 
 ### Validation Questions
 
-- [ ] **Scope Boundaries**: Should doctor check git status (uncommitted changes) or purely file structure?
-- [ ] **Auto-Fix Limits**: Which corrections are safe for automatic fixing vs requiring manual intervention?
-- [ ] **Health Score Algorithm**: How should different issue types weight the overall health score?
-- [ ] **Performance Thresholds**: What's acceptable scan time for large repositories (1000+ files)?
-- [ ] **Integration Points**: Should doctor integrate with existing validation in task/idea commands?
-- [ ] **Reporting Granularity**: How much detail in default output vs verbose mode?
+- [x] **Scope Boundaries**: Should doctor check git status (uncommitted changes) or purely file structure?
+- [x] **Auto-Fix Limits**: Which corrections are safe for automatic fixing vs requiring manual intervention?
+- [x] **Health Score Algorithm**: How should different issue types weight the overall health score?
+- [x] **Performance Thresholds**: What's acceptable scan time for large repositories (1000+ files)?
+- [x] **Integration Points**: Should doctor integrate with existing validation in task/idea commands?
+- [x] **Reporting Granularity**: How much detail in default output vs verbose mode?
 
 ## Objective
 
@@ -168,17 +168,17 @@ The doctor command will integrate with existing ace-taskflow architecture:
 
 ### Planning Steps
 
-* [ ] Research YAML error recovery patterns in Ruby ecosystem
-* [ ] Analyze existing validation logic in TaskLoader/IdeaLoader
-* [ ] Design health score algorithm based on issue severity
-* [ ] Investigate Ruby libraries for progress bars and colored output
-* [ ] Plan test fixtures for various malformation scenarios
-* [ ] Define auto-fixable vs manual intervention criteria
+* [x] Research YAML error recovery patterns in Ruby ecosystem
+* [x] Analyze existing validation logic in TaskLoader/IdeaLoader
+* [x] Design health score algorithm based on issue severity
+* [x] Investigate Ruby libraries for progress bars and colored output
+* [x] Plan test fixtures for various malformation scenarios
+* [x] Define auto-fixable vs manual intervention criteria
 
 ### Execution Steps
 
 #### 1. Create SafeYamlParser Atom
-- [ ] Create `lib/ace/taskflow/atoms/safe_yaml_parser.rb`
+- [x] Create `lib/ace/taskflow/atoms/safe_yaml_parser.rb`
   - Implement `parse_with_recovery` method
   - Handle missing closing delimiter detection
   - Recover partial YAML when possible
@@ -189,28 +189,28 @@ The doctor command will integrate with existing ace-taskflow architecture:
   > Command: `ace-test ace-taskflow atoms/safe_yaml_parser_test.rb`
 
 #### 2. Implement Validation Molecules
-- [ ] Create `lib/ace/taskflow/molecules/frontmatter_validator.rb`
+- [x] Create `lib/ace/taskflow/molecules/frontmatter_validator.rb`
   - Validate YAML structure and required fields
   - Check for missing delimiters
   - Validate field value formats
 
-- [ ] Create `lib/ace/taskflow/molecules/structure_validator.rb`
+- [x] Create `lib/ace/taskflow/molecules/structure_validator.rb`
   - Validate directory structure compliance
   - Check file naming conventions
   - Detect orphaned files and directories
 
-- [ ] Create `lib/ace/taskflow/molecules/integrity_validator.rb`
+- [x] Create `lib/ace/taskflow/molecules/integrity_validator.rb`
   - Validate ID uniqueness across components
   - Check dependency references exist
   - Detect circular dependencies
 
-- [ ] Create `lib/ace/taskflow/molecules/release_validator.rb`
+- [x] Create `lib/ace/taskflow/molecules/release_validator.rb`
   - Validate release naming and versioning
   - Check release status matches location
   - Verify required directories exist
 
 #### 3. Build Doctor Orchestrator
-- [ ] Create `lib/ace/taskflow/organisms/taskflow_doctor.rb`
+- [x] Create `lib/ace/taskflow/organisms/taskflow_doctor.rb`
   - Coordinate all validators
   - Collect and categorize issues
   - Calculate health score
@@ -221,7 +221,7 @@ The doctor command will integrate with existing ace-taskflow architecture:
   > Command: `ace-test ace-taskflow organisms/taskflow_doctor_test.rb`
 
 #### 4. Implement Auto-Fix Capabilities
-- [ ] Create `lib/ace/taskflow/molecules/doctor_fixer.rb`
+- [x] Create `lib/ace/taskflow/molecules/doctor_fixer.rb`
   - Add missing closing delimiters
   - Move mislocated files
   - Add default values for missing fields
@@ -232,25 +232,25 @@ The doctor command will integrate with existing ace-taskflow architecture:
   > Command: `ace-test ace-taskflow molecules/doctor_fixer_test.rb`
 
 #### 5. Create Reporter Module
-- [ ] Create `lib/ace/taskflow/molecules/doctor_reporter.rb`
+- [x] Create `lib/ace/taskflow/molecules/doctor_reporter.rb`
   - Format output for terminal (default)
   - Implement JSON output for CI/CD
   - Add progress bars for scanning
   - Color code issues by severity
 
 #### 6. Implement CLI Command
-- [ ] Create `lib/ace/taskflow/commands/doctor_command.rb`
+- [x] Create `lib/ace/taskflow/commands/doctor_command.rb`
   - Parse command-line arguments
   - Handle component filtering options
   - Implement format selection
   - Set proper exit codes
 
-- [ ] Update `lib/ace/taskflow/cli.rb`
+- [x] Update `lib/ace/taskflow/cli.rb`
   - Add doctor command to CLI router
   - Include help documentation
 
 #### 7. Create Test Fixtures
-- [ ] Create malformed test files in `test/fixtures/doctor/`
+- [x] Create malformed test files in `test/fixtures/doctor/`
   - Missing closing delimiter cases
   - Invalid YAML syntax examples
   - Mislocated files
@@ -258,7 +258,7 @@ The doctor command will integrate with existing ace-taskflow architecture:
   - Orphaned directories
 
 #### 8. Write Comprehensive Tests
-- [ ] Create test files following flat structure:
+- [x] Create test files following flat structure:
   - `test/atoms/safe_yaml_parser_test.rb`
   - `test/molecules/frontmatter_validator_test.rb`
   - `test/molecules/structure_validator_test.rb`
@@ -271,18 +271,18 @@ The doctor command will integrate with existing ace-taskflow architecture:
   > Command: `ace-test ace-taskflow --coverage`
 
 #### 9. Create Usage Documentation
-- [ ] Create `ux/usage.md` in task directory
+- [x] Create `ux/usage.md` in task directory
   - Document all command options
   - Provide real-world usage examples
   - Show sample output for each format
   - Include troubleshooting guide
 
 #### 10. Integration and Validation
-- [ ] Run doctor on actual ace-meta repository
-- [ ] Verify performance with 100+ files
-- [ ] Test auto-fix on real malformed files
-- [ ] Validate JSON output for CI integration
-- [ ] Ensure backward compatibility with existing commands
+- [x] Run doctor on actual ace-meta repository
+- [x] Verify performance with 100+ files
+- [x] Test auto-fix on real malformed files
+- [x] Validate JSON output for CI integration
+- [x] Ensure backward compatibility with existing commands
   > TEST: Real-World Validation
   > Type: System Test
   > Assert: Doctor successfully analyzes ace-meta repository
