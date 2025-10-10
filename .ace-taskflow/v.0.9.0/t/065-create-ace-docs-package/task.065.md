@@ -96,7 +96,7 @@ ace-docs validate [FILE|PATTERN] [--syntax|--semantic|--all]
 
 ## Objective
 
-Create a universal documentation management tool that enables any markdown document to be self-managed through descriptive frontmatter. This eliminates manual documentation maintenance by providing intelligent change detection, automatic section generation, and rule-based validation.
+Create a complete documentation management solution combining deterministic tooling (ace-docs CLI) with intelligent workflow orchestration. This provides both the data gathering/analysis tools AND the guided workflow for iterative documentation updates, ensuring documents stay current through agent/human collaboration. The solution eliminates manual documentation maintenance while preserving control over content decisions.
 
 ## Scope of Work
 
@@ -115,8 +115,10 @@ Create a universal documentation management tool that enables any markdown docum
 - Caching of analysis results for performance
 
 ### Interface Scope
-- CLI commands: status, diff, update, sync, validate
+- CLI commands: discover, status, diff, update, validate
 - Frontmatter schema for document self-description
+- Workflow orchestration via update-docs.wf.md
+- Claude command integration: /update-docs
 - Output formats: status tables, diff reports, validation results
 - Integration with workflows through deterministic operations
 
@@ -134,6 +136,13 @@ Create a universal documentation management tool that enables any markdown docum
 - Document rule compliance checks
 - Change relevance filtering
 - Test scenarios for all commands
+
+#### Workflow Components
+- update-docs.wf.md workflow instruction for orchestrated updates
+- Claude command integration (.claude/commands/update-docs.md)
+- Iterative update process orchestration
+- Integration with existing update-context-docs workflow
+- Complete solution documentation showing tool+workflow usage
 
 ## Out of Scope
 
@@ -282,18 +291,6 @@ The frontmatter will use a hierarchical YAML structure with:
   # Runs validation checks on documents
   ```
 
-- [ ] Create sync manager organism
-  ```ruby
-  # lib/ace/docs/organisms/sync_manager.rb
-  # Auto-generates sections from code
-  ```
-
-- [ ] Implement sync command
-  ```ruby
-  # lib/ace/docs/commands/sync_command.rb
-  # Syncs auto-generated content
-  ```
-
 - [ ] Create CLI entry point
   ```ruby
   # exe/ace-docs
@@ -315,15 +312,31 @@ The frontmatter will use a hierarchical YAML structure with:
   - README.md with usage examples
   - docs/usage.md with detailed command documentation
 
-- [ ] Update workflow to use ace-docs
-  - Modify update-context-docs.wf.md to leverage ace-docs commands
-  - Create new update-docs.wf.md in ace-docs package
+- [ ] Create update-docs workflow instruction
+  ```markdown
+  # ace-docs/handbook/workflow-instructions/update-docs.wf.md
+  # Orchestrates ace-docs tools for iterative documentation updates
+  # - Uses ace-docs status to identify stale documents
+  # - Generates change analysis with ace-docs diff
+  # - Guides through ordered updates to prevent duplication
+  # - Updates metadata with ace-docs update
+  # - Validates with ace-docs validate
+  ```
 
 - [ ] Create Claude command integration
   ```markdown
   # .claude/commands/update-docs.md
-  # Command to trigger documentation update workflow
+  ---
+  description: Update documentation with ace-docs
+  ---
+  Update project documentation using ace-docs tools.
+  Read and follow: ace-docs/handbook/workflow-instructions/update-docs.wf.md
   ```
+
+- [ ] Integrate with existing workflows
+  - Update update-context-docs.wf.md to reference ace-docs approach
+  - Create migration guide for users transitioning to ace-docs
+  - Document workflow+tool complete solution approach
 
 ## Test Case Planning
 
