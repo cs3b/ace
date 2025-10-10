@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.066
-status: in-progress
+status: done
 priority: medium
 estimate: 8-12h
 dependencies: []
