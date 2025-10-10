@@ -17,36 +17,49 @@ dependencies: []
 
 ### Expected Behavior
 
-The ace-docs tool provides a universal documentation management system that works with any markdown document through self-describing frontmatter. Each document declares its purpose, update triggers, and context requirements, making the system infinitely extensible.
+The ace-docs tool provides documentation analysis and metadata management, supporting iterative agent/human collaboration for keeping docs current. It discovers documents through frontmatter and configuration patterns, then provides intelligence for update decisions.
 
 Key behaviors:
-- Auto-discovers all markdown files with ace-docs frontmatter
-- Tracks document freshness based on configured update frequencies
-- Analyzes repository changes relevant to each document's declared sources
-- Provides intelligent change summaries using LLM analysis
-- Updates frontmatter metadata (dates, versions, etc.)
-- Validates documents against their declared rules (max-lines, required sections, no-duplicates)
-- Supports auto-generation of sections from code (tools from gemspecs, decisions from ADRs)
+- **Document Discovery**:
+  - Finds documents with ace-docs frontmatter (explicit management)
+  - Discovers documents matching type patterns in `.ace/docs/config.yml` (configuration-based)
+- **Change Analysis** (deterministic data gathering):
+  - Always analyzes full git diff with `-w` flag (ignore whitespace)
+  - Provides complete diff to LLM for relevance filtering
+  - Supports options: `--exclude-renames`, `--exclude-moves`
+  - Returns structured analysis for agent/human to act upon
+- **Metadata Management**:
+  - Updates frontmatter fields (dates, versions, custom fields)
+  - No automatic content updates - preserves human/agent control
+- **Validation Hierarchy**:
+  - Global rules in `.ace/docs/validation.yml`
+  - Type-specific rules in configuration
+  - Document-specific overrides in frontmatter
+  - Delegates to linters for syntax, LLM for semantic validation
 
 ### Interface Contract
 
 ```bash
 # CLI Interface
 ace-docs                                    # Show status of all managed documents
+ace-docs discover                          # Find and list all managed documents
 ace-docs status [--type TYPE] [--needs-update]  # Filtered status views
 
-ace-docs diff [FILE|--preset PRESET|--needs-update] [--since DATE]
-# Generates change analysis saved to .cache/ace-docs/diff-{timestamp}.md
+ace-docs diff [FILE|--all|--needs-update] [--since DATE] [--exclude-renames] [--exclude-moves]
+# Analyzes changes using git diff -w, saves to .cache/ace-docs/diff-{timestamp}.md
+# Always provides full diff, LLM filters relevance based on document purpose
 
-ace-docs update FILE --set KEY=VALUE       # Update document frontmatter
+ace-docs update FILE --set KEY=VALUE       # Update document frontmatter only
 ace-docs update --preset PRESET --set KEY=VALUE  # Bulk frontmatter updates
 
-ace-docs sync FILE [--auto] [--with-llm]   # Sync auto-generated sections
-ace-docs validate [FILE|PATTERN]           # Validate document rules
+ace-docs validate [FILE|PATTERN] [--syntax|--semantic|--all]
+# --syntax: Use linters (markdownlint, etc.)
+# --semantic: Use LLM with guide context
+# --all: Both syntax and semantic validation
 
 # Output formats
 # Status: Tabular display with icons (✓ ⚠ ✗) and freshness indicators
-# Diff: Structured markdown with changes grouped by impact area
+# Diff: Structured markdown with LLM-analyzed changes for human/agent action
 # Validation: Pass/fail with specific rule violations
 ```
 
@@ -155,9 +168,9 @@ The ace-docs package will follow the established ATOM architecture pattern used 
 ### Frontmatter Schema Design
 The frontmatter will use a hierarchical YAML structure with:
 - Required fields: doc-type, purpose
-- Optional update configuration: frequency, sources, last-updated
+- Optional update configuration: frequency, focus (for LLM relevance hints), last-updated
 - Context requirements: preset, includes, excludes
-- Content rules: max-lines, sections, no-duplicate-from, auto-generate
+- Content rules: max-lines, sections, no-duplicate-from
 
 ## Implementation Plan
 
