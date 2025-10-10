@@ -248,53 +248,55 @@ ace-docs validate --all
 ```
 
 ### Scenario 7: Using /update-docs Claude Command
-**Goal**: Complete documentation update cycle with guided workflow
+**Goal**: Update documentation based on input list/preset/type
 
 ```claude
-/update-docs
+/update-docs --preset project
+# or
+/update-docs docs/architecture.md docs/tools.md
+# or
+/update-docs --type context
 
 # The workflow will:
-# 1. Check documentation status using ace-docs
-# 2. Generate intelligent change analysis
-# 3. Guide you through updates in order:
-#    - what-do-we-build.md (vision)
-#    - blueprint.md (structure)
-#    - architecture.md (technical)
-#    - tools.md (commands)
-#    - decisions.md (ADRs)
-# 4. Update metadata and validate
+# 1. Generate intelligent change analysis
+#    (exits early if no changes detected)
+# 2. Guide through updates one by one for input docs
+# 3. Update metadata after changes
+# 4. Present summary of what changed
 
 # Example interaction:
-Checking documentation status...
-⚠ 3 documents need updating
+Loading context and document status...
 
-Generating change analysis...
+Generating change analysis for 3 documents...
 Analysis saved to: .cache/ace-docs/diff-20251010-160000.md
 
-Starting iterative update process...
-[1/5] Updating docs/what-do-we-build.md
-  Recent changes: Added ace-docs to capabilities
-  Suggested updates: Add to "Current Capabilities" section
+Changes detected. Starting iterative update process...
+
+[1/3] Updating docs/architecture.md
+  Recent changes: New ace-docs component added
+  Suggested updates: Add to Component Types section
 
   [Agent updates document based on analysis...]
+  ✓ Updated
 
-[2/5] Updating docs/blueprint.md
-  Recent changes: New ace-docs directory structure
-  Suggested updates: Add ace-docs/ to repository structure
+[2/3] Updating docs/tools.md
+  Recent changes: New ace-docs commands
+  Suggested updates: Add ace-docs to tools table
 
   [Agent updates document...]
+  ✓ Updated
 
-[3/5] Updating docs/architecture.md
-  Recent changes: New documentation management component
-  Suggested updates: Add ace-docs to Component Types section
-
-  [Continue through all documents...]
+[3/3] Updating docs/decisions.md
+  No significant changes for this document
+  ⏭ Skipped
 
 Updating metadata...
-✓ All documents updated with current dates
+✓ Updated 2 documents with current dates
 
-Final validation...
-✓ All documents pass validation
+Summary of changes:
+- docs/architecture.md: Added ace-docs to components
+- docs/tools.md: Added ace-docs commands
+- docs/decisions.md: No updates needed
 
 Documentation update complete!
 ```
@@ -456,20 +458,29 @@ rules:
 
 ### The update-docs Workflow
 
-The `ace-docs/handbook/workflow-instructions/update-docs.wf.md` workflow orchestrates the complete documentation update cycle:
+The `ace-docs/handbook/workflow-instructions/update-docs.wf.md` workflow orchestrates documentation updates:
 
-1. **Status Check**: Identifies documents needing updates using `ace-docs status`
-2. **Change Analysis**: Generates comprehensive diff with LLM filtering via `ace-docs diff`
-3. **Guided Updates**: Steps through documents in proper order to prevent duplication
-4. **Metadata Management**: Updates frontmatter after changes using `ace-docs update`
-5. **Validation**: Ensures all rules are satisfied with `ace-docs validate`
+**Frontmatter context loading:**
+- Loads document status automatically via context
+- Accepts input variables (docs list, preset, or type)
+
+**Workflow steps:**
+1. **Change Analysis**: Generates comprehensive diff with LLM filtering (exits if no changes)
+2. **Guided Updates**: Iterates through input documents one by one
+3. **Metadata Management**: Updates frontmatter after changes
+4. **Summary**: Presents what was changed
+
+**Flexible input support:**
+- `--preset project`: Update project preset documents
+- `--type context`: Update all context type documents
+- `docs/file1.md docs/file2.md`: Update specific documents
 
 ### Claude Command Integration
 
 The `/update-docs` command provides a seamless entry point:
 - Triggers the complete workflow automatically
 - Provides interactive guidance through each document
-- Ensures proper update order (vision → structure → technical → tools → decisions)
+- Works with any document list, preset, or type
 - Maintains iterative control with agent/human collaboration
 
 ### Integration Points

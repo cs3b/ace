@@ -316,11 +316,12 @@ The frontmatter will use a hierarchical YAML structure with:
   ```markdown
   # ace-docs/handbook/workflow-instructions/update-docs.wf.md
   # Orchestrates ace-docs tools for iterative documentation updates
-  # - Uses ace-docs status to identify stale documents
-  # - Generates change analysis with ace-docs diff
-  # - Guides through ordered updates to prevent duplication
+  # - Context loads document status via frontmatter
+  # - Accepts flexible input: docs list, preset, or type
+  # - Generates change analysis with ace-docs diff (exits if no changes)
+  # - Guides through updates one by one
   # - Updates metadata with ace-docs update
-  # - Validates with ace-docs validate
+  # - Presents summary of changes
   ```
 
 - [ ] Create Claude command integration
