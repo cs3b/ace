@@ -33,6 +33,9 @@ module Ace
         when "retros"
           require_relative "commands/retros_command"
           Commands::RetrosCommand.new.execute(args)
+        when "doctor"
+          require_relative "commands/doctor_command"
+          Commands::DoctorCommand.new.execute(args)
         when "migrate-paths"
           require_relative "cli/migrate_paths"
           Commands::MigratePaths.run(args)
@@ -90,6 +93,9 @@ module Ace
         puts "Retrospective Management:"
         puts "  retro    - Operations on single retrospective notes"
         puts "  retros   - Browse and list multiple retrospective notes"
+        puts ""
+        puts "System Maintenance:"
+        puts "  doctor   - Run health checks and auto-fix issues"
         puts ""
         puts "Configuration:"
         puts "  config   - Show current configuration"
