@@ -3,6 +3,7 @@
 require "yaml"
 require_relative "../molecules/document_loader"
 require_relative "../models/document"
+require_relative "../atoms/type_inferrer"
 
 module Ace
   module Docs
@@ -245,6 +246,35 @@ module Ace
                   },
                   content: content
                 )
+              elsif doc && !doc.managed?
+                # Document has partial frontmatter but missing doc-type or purpose
+                # Augment it with inferred values
+                augmented_frontmatter = doc.frontmatter.dup
+
+                # Infer doc-type using priority hierarchy
+                inferred_type = Atoms::TypeInferrer.resolve(
+                  path,
+                  pattern_type: type_name,
+                  frontmatter_type: augmented_frontmatter["doc-type"]
+                )
+                augmented_frontmatter["doc-type"] ||= inferred_type if inferred_type
+
+                # Infer purpose if missing
+                augmented_frontmatter["purpose"] ||= infer_purpose_from_content(doc)
+
+                # Merge defaults for update config if needed
+                if augmented_frontmatter["update"]
+                  augmented_frontmatter["update"] = defaults.merge(augmented_frontmatter["update"])
+                else
+                  augmented_frontmatter["update"] = defaults
+                end
+
+                # Create new document with augmented frontmatter
+                doc = Models::Document.new(
+                  path: doc.path,
+                  frontmatter: augmented_frontmatter,
+                  content: doc.content
+                )
               end
 
               @documents << doc if doc
@@ -297,6 +327,31 @@ module Ace
             .gsub("\x00STAR\x00", "[^/]*")        # * matches within a single directory
 
           Regexp.new(regex_str)
+        end
+
+        def infer_purpose_from_content(document)
+          # Try to extract purpose from document content or metadata
+
+          # 1. Check if frontmatter has 'name' field (common in workflow files)
+          if document.frontmatter["name"]
+            name = document.frontmatter["name"]
+            return "#{name} workflow instruction"
+          end
+
+          # 2. Check if frontmatter has 'description' field
+          if document.frontmatter["description"]
+            return document.frontmatter["description"]
+          end
+
+          # 3. Try to extract from first H1 heading
+          if document.content && document.content =~ /^#\s+(.+)$/
+            heading = $1.strip
+            return heading unless heading.empty?
+          end
+
+          # 4. Fallback to filename-based description
+          filename = File.basename(document.path, ".*")
+          "#{filename.gsub(/[-_]/, ' ').capitalize} documentation"
         end
       end
     end
