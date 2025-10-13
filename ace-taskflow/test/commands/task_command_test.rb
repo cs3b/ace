@@ -16,7 +16,8 @@ class TaskCommandTest < AceTaskflowTestCase
         end
 
         # Should select the in-progress task (prioritized over pending)
-        assert_match(/v\.0\.9\.0\+002/, output)
+        # Note: qualified_reference shows short form (v.0.9.0+002), full id shows long form (v.0.9.0+task.002)
+        assert_match(/v\.0\.9\.0\+(task\.)?002/, output)
         assert_match(/in-progress|🟡/, output)
       end
     end

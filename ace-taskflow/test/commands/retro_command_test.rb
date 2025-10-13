@@ -48,7 +48,7 @@ module Ace
           assert_match(/test-retro/, output)
 
           # Verify file was created
-          retro_files = Dir.glob(".ace-taskflow/v.0.9.0/retro/*.md")
+          retro_files = Dir.glob(".ace-taskflow/v.0.9.0/retros/*.md")
           assert_equal 1, retro_files.length
           assert_match(/test-retro/, retro_files.first)
 
