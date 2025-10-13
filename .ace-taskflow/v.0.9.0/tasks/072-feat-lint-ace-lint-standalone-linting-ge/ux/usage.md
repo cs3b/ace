@@ -19,17 +19,22 @@ ace-lint is a standalone linting gem that provides comprehensive validation for 
 ## Installation
 
 ```bash
-# Via Bundler (when available as gem)
+# Via gem install (when published)
 gem install ace-lint
 
-# Or add to Gemfile
-gem 'ace-lint'
-gem 'kramdown', '~> 2.0'
-gem 'kramdown-parser-gfm', '~> 1.0'
+# Or in workspace: add to root Gemfile
+gem 'ace-lint', path: 'ace-lint'
 bundle install
+
+# Dependencies (automatically installed via gemspec)
+# - kramdown (~> 2.0)
+# - kramdown-parser-gfm (~> 1.0)
+# - psych (Ruby built-in)
 
 # No Node.js or Python dependencies required!
 ```
+
+**Note**: kramdown dependencies are specified in `ace-lint.gemspec`, not in the project root Gemfile.
 
 ## Quick Start (5 minutes)
 
@@ -570,8 +575,7 @@ end
 # GitHub Actions example
 - name: Validate documentation
   run: |
-    gem install ace-lint
-    gem install kramdown kramdown-parser-gfm
+    gem install ace-lint  # Dependencies auto-installed via gemspec
     ace-lint docs/**/*.md
 ```
 
@@ -591,7 +595,7 @@ gem install ace-lint              # Ruby
 **After** (Ruby-only with ace-lint):
 ```bash
 # Single language dependency
-gem install ace-lint kramdown kramdown-parser-gfm
+gem install ace-lint  # kramdown deps auto-installed via gemspec
 
 # Consistent Ruby environment
 # Simpler CI/CD setup
