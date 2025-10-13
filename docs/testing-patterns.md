@@ -1,3 +1,14 @@
+---
+update:
+  update_frequency: weekly
+  max_lines: 150
+  required_sections:
+  - overview
+  - scope
+  frequency: weekly
+  last-updated: '2025-10-08'
+---
+
 # Testing Patterns for ACE
 
 ## Test Organization

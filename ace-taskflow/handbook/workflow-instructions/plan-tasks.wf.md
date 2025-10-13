@@ -3,6 +3,11 @@ name: plan-tasks
 allowed-tools: Bash, Read, Task
 description: Plan implementation for multiple draft tasks in sequence
 argument-hint: "[task-id-pattern]"
+doc-type: workflow
+purpose: plan-tasks workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-10-02'
 ---
 
 # Plan Multiple Tasks Workflow

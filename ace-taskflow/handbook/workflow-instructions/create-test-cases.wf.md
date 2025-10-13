@@ -2,7 +2,12 @@
 name: create-test-cases
 description: Generate structured test cases for features and code changes
 allowed-tools: Read, Write, Edit, Bash
-argument-hint: ""
+argument-hint: ''
+doc-type: workflow
+purpose: create-test-cases workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-10-02'
 ---
 
 # Create Test Cases Workflow Instruction

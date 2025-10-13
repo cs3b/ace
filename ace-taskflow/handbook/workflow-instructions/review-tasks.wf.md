@@ -3,6 +3,11 @@ name: review-tasks
 allowed-tools: Bash, Read, Task
 description: Review multiple tasks in sequence and aggregate findings
 argument-hint: "[task-id-pattern]"
+doc-type: workflow
+purpose: review-tasks workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-10-03'
 ---
 
 # Review Multiple Tasks Workflow
