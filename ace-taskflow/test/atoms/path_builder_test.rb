@@ -2,53 +2,74 @@
 
 require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/atoms/path_builder"
+require "ostruct"
 
 class PathBuilderTest < AceTaskflowTestCase
   def setup
     @builder = Ace::Taskflow::Atoms::PathBuilder
     @root = "/path/to/.ace-taskflow"
+    @mock_config = OpenStruct.new(task_dir: "t")
+  end
+
+  # Helper to run tests with stubbed config
+  def with_config(&block)
+    @builder.stub :config, @mock_config, &block
   end
 
   def test_build_task_path_without_slug
-    result = @builder.build_task_path(@root, "v.0.9.0", "001")
+    with_config do
+      result = @builder.build_task_path(@root, "v.0.9.0", "001")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/001", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/001", result
+    end
   end
 
   def test_build_task_path_with_slug
-    result = @builder.build_task_path(@root, "v.0.9.0", "025", "feat-taskflow-idea")
+    with_config do
+      result = @builder.build_task_path(@root, "v.0.9.0", "025", "feat-taskflow-idea")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/025-feat-taskflow-idea", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/025-feat-taskflow-idea", result
+    end
   end
 
   def test_build_task_path_pads_task_number
-    result = @builder.build_task_path(@root, "v.0.9.0", 5, "fix-bug")
+    with_config do
+      result = @builder.build_task_path(@root, "v.0.9.0", 5, "fix-bug")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/005-fix-bug", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/005-fix-bug", result
+    end
   end
 
   def test_build_task_path_in_backlog
-    result = @builder.build_task_path(@root, "backlog", "042", "feature-x")
+    with_config do
+      result = @builder.build_task_path(@root, "backlog", "042", "feature-x")
 
-    assert_equal "/path/to/.ace-taskflow/backlog/t/042-feature-x", result
+      assert_equal "/path/to/.ace-taskflow/backlog/t/042-feature-x", result
+    end
   end
 
   def test_build_task_file_path_without_slug
-    result = @builder.build_task_file_path(@root, "v.0.9.0", "001")
+    with_config do
+      result = @builder.build_task_file_path(@root, "v.0.9.0", "001")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/001/task.md", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/001/task.md", result
+    end
   end
 
   def test_build_task_file_path_with_slug
-    result = @builder.build_task_file_path(@root, "v.0.9.0", "025", nil, "feat-idea")
+    with_config do
+      result = @builder.build_task_file_path(@root, "v.0.9.0", "025", nil, "feat-idea")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/025-feat-idea/task.025.md", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/025-feat-idea/task.025.md", result
+    end
   end
 
   def test_build_task_file_path_with_custom_filename
-    result = @builder.build_task_file_path(@root, "v.0.9.0", "001", "custom.md")
+    with_config do
+      result = @builder.build_task_file_path(@root, "v.0.9.0", "001", "custom.md")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/001/custom.md", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/001/custom.md", result
+    end
   end
 
   def test_build_release_path_active
@@ -88,31 +109,39 @@ class PathBuilderTest < AceTaskflowTestCase
   end
 
   def test_extract_task_number_from_old_format
-    path = "/path/to/.ace-taskflow/v.0.9.0/t/019/task.md"
-    result = @builder.extract_task_number(path)
+    with_config do
+      path = "/path/to/.ace-taskflow/v.0.9.0/t/019/task.md"
+      result = @builder.extract_task_number(path)
 
-    assert_equal "019", result
+      assert_equal "019", result
+    end
   end
 
   def test_extract_task_number_from_new_format
-    path = "/path/to/.ace-taskflow/v.0.9.0/t/025-feat-idea/task.025.md"
-    result = @builder.extract_task_number(path)
+    with_config do
+      path = "/path/to/.ace-taskflow/v.0.9.0/t/025-feat-idea/task.025.md"
+      result = @builder.extract_task_number(path)
 
-    assert_equal "025", result
+      assert_equal "025", result
+    end
   end
 
   def test_extract_task_number_from_directory_path
-    path = "/path/to/.ace-taskflow/v.0.9.0/t/042-fix-bug/"
-    result = @builder.extract_task_number(path)
+    with_config do
+      path = "/path/to/.ace-taskflow/v.0.9.0/t/042-fix-bug/"
+      result = @builder.extract_task_number(path)
 
-    assert_equal "042", result
+      assert_equal "042", result
+    end
   end
 
   def test_extract_task_number_returns_nil_for_invalid_path
-    path = "/path/to/some/random/directory"
-    result = @builder.extract_task_number(path)
+    with_config do
+      path = "/path/to/some/random/directory"
+      result = @builder.extract_task_number(path)
 
-    assert_nil result
+      assert_nil result
+    end
   end
 
   def test_extract_release_from_path
@@ -214,15 +243,19 @@ class PathBuilderTest < AceTaskflowTestCase
   end
 
   def test_build_task_path_handles_integer_task_number
-    result = @builder.build_task_path(@root, "v.0.9.0", 42)
+    with_config do
+      result = @builder.build_task_path(@root, "v.0.9.0", 42)
 
-    # Integers are converted to strings without zero-padding
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/42", result
+      # Integers are converted to strings without zero-padding
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/42", result
+    end
   end
 
   def test_build_task_path_handles_string_task_number
-    result = @builder.build_task_path(@root, "v.0.9.0", "042")
+    with_config do
+      result = @builder.build_task_path(@root, "v.0.9.0", "042")
 
-    assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/042", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/t/042", result
+    end
   end
 end

@@ -30,7 +30,11 @@ module Ace
           return standard_result if standard_result[:errors].empty?
 
           # Attempt recovery if standard parsing failed
-          recover_frontmatter(content)
+          recovery_result = recover_frontmatter(content)
+
+          # If recovery succeeded (has frontmatter), return it
+          # Otherwise return the standard error result
+          recovery_result[:frontmatter].empty? ? standard_result : recovery_result
         end
 
         # Attempt to fix common frontmatter issues
@@ -47,7 +51,8 @@ module Ace
             inferred_end = infer_frontmatter_end(content)
             if inferred_end
               # Insert closing delimiter
-              fixed_content = content[0...inferred_end] + "\n---\n" + content[inferred_end..-1]
+              # inferred_end already accounts for trailing newlines, so just insert ---\n
+              fixed_content = content[0...inferred_end] + "---\n" + content[inferred_end..-1]
               return fixed_content
             end
           end
@@ -159,30 +164,38 @@ module Ace
         end
 
         def self.infer_frontmatter_end(content)
-          lines = content.split("\n")
+          lines = content.split("\n", -1) # -1 keeps trailing empty strings
 
-          # Skip the opening ---
-          start_index = 1
+          # Calculate position by tracking cumulative length
+          position = 0
 
           # Look for common markers that indicate content start
           lines.each_with_index do |line, i|
-            next if i < start_index
+            # Skip opening ---
+            if i == 0
+              position += line.length + 1 # Skip "---\n"
+              next
+            end
 
             # Check for markdown headers (content likely starts here)
-            return content.index("\n#{line}") if line.start_with?("#")
+            return position if line.match?(/^#+\s/)
 
             # Check for blank line followed by content
             if line.strip.empty? && i + 1 < lines.length
               next_line = lines[i + 1]
-              if next_line.start_with?("#") || next_line.start_with?("*") || next_line.start_with?("-")
-                return content.index("\n#{line}")
+              if next_line.match?(/^#+\s/) || next_line.start_with?("*") || next_line.start_with?("-")
+                # Return position before the blank line (blank line should not be part of YAML)
+                return position
               end
             end
 
             # Check for obvious non-YAML content
             if line.include?("```") || line.start_with?(">") || line.match?(/^\d+\./)
-              return content.index("\n#{line}")
+              return position
             end
+
+            # Move position forward
+            position += line.length + 1 # +1 for newline
           end
 
           nil
