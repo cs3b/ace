@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
+## 0.3.0 - 2025-10-13
+
+### Changed
+
+* **BREAKING**: Configuration structure changed to support multiple tool configs
+  - General config: `.ace/lint/config.yml`
+  - Kramdown config: `.ace/lint/kramdown.yml` (flat structure, no nesting)
+  - Future tool configs: `.ace/lint/yaml.yml`, etc.
+* **BREAKING**: Removed custom ConfigLoader - now uses ace-core config cascade
+* Configuration loaded via `Ace::Core.config.get('ace', 'lint', 'kramdown')`
+* README updated with comprehensive configuration documentation
+* Removed invented CONFIGURATION.md file (not used by other ace-* gems)
+
+### Added
+
+* Added ace-core dependency (~> 0.9) for config management
+* Added `Ace::Lint.kramdown_config` method for tool-specific config
+* Configuration examples in `.ace.example/lint/` directory
+* Documentation for multi-tool config pattern
+
+### Fixed
+
+* Config loading now follows standard ace-* gem patterns
+* No more hardcoded config file paths
+* Proper config cascade: defaults → user home → project → CLI options
+
 ## 0.2.0 - 2025-10-13
 
 ### Changed
@@ -78,7 +104,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 * Dependencies: kramdown ~> 2.4, kramdown-parser-gfm ~> 1.1, thor ~> 1.3, colorize ~> 1.1
 * Ruby version requirement: >= 3.1.0
-* Follows ace-* gem conventions and ATOM pattern
+* Follows ace-\* gem conventions and ATOM pattern
 * RuboCop compliant with auto-corrections applied
 
 

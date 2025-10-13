@@ -32,17 +32,21 @@ module Ace
         # @param options [Hash] Kramdown options
         # @return [Hash] Result with :success, :formatted_content, :errors
         def self.format_content(content, options: {})
-          # Load kramdown configuration from .ace/lint/kramdown.yml
-          config = Atoms::ConfigLoader.load
+          # Load kramdown configuration from ace-core config cascade
+          # Config location: .ace/lint/kramdown.yml
+          kramdown_config = Ace::Lint.kramdown_config
 
-          # Merge: config file < default options < CLI options
+          # Convert string keys to symbols (kramdown expects symbols)
+          kramdown_opts = kramdown_config.transform_keys(&:to_sym)
+
+          # Merge: config file < formatting defaults < CLI options
           default_options = {
-            line_width: config[:line_width] || 120,
+            line_width: kramdown_opts[:line_width] || 120,
             remove_block_html_tags: false,
             remove_span_html_tags: false
           }
 
-          merged_options = default_options.merge(options)
+          merged_options = kramdown_opts.merge(default_options).merge(options)
           Atoms::KramdownParser.format(content, options: merged_options)
         end
 

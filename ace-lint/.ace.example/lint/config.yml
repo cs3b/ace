@@ -1,0 +1,5 @@
+# ace-lint general configuration
+# Place this in .ace/lint/config.yml in your project
+
+# General ace-lint settings (currently using defaults)
+# Future: enable/disable specific linters, custom rules, etc.
