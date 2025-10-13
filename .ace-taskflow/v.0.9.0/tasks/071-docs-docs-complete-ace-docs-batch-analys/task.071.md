@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.071
-status: draft
+status: pending
 priority: high
 estimate: 12-16h
 dependencies: []
@@ -279,58 +279,850 @@ ace-lint/ (NEW GEM)
 - Integration tests with real git repositories (test fixtures)
 - ace-lint tested with mock external linter subprocess calls
 
-## Implementation Plan (Preliminary)
+## Technical Approach
 
-### Phase 1: Command Refactoring (Foundation)
-- Extract DiffCommand, UpdateCommand, ValidateCommand from exe/ace-docs
-- Create test/commands/ directory structure
-- Write comprehensive command tests with mocked dependencies
-- Update Thor CLI to delegate to command classes
+### Architecture Pattern
 
-### Phase 2: ace-lint Gem Creation
-- Create ace-lint gem with ATOM structure
-- Implement linter adapters (markdownlint, yamllint)
-- Add detection logic and graceful fallbacks
-- Comprehensive test suite with mocked subprocess calls
-- CLI implementation with lint, format, fix commands
+**ATOM Architecture Application:**
+- **Atoms**: `FrontmatterParser` (existing), `TimeRangeCalculator` (new), `DiffFilterer` (new)
+- **Molecules**: `TimeRangeFinder`, `DiffAnalyzer`, `ReportFormatter`, `ChangeDetector` (extend existing)
+- **Organisms**: `DocumentRegistry` (extend existing), ace-lint `LinterOrchestrator`
+- **Commands**: `AnalyzeCommand` (new), extract inline commands to classes
+- **Models**: `Document` (existing), `AnalysisReport` (new), `LintResult` (new)
 
-### Phase 3: Batch Analysis Implementation
-- Create AnalyzeCommand with document selection logic
-- Implement TimeRangeFinder molecule for oldest date detection
-- Create DiffAnalyzer molecule for LLM integration
-- Implement ReportFormatter for markdown generation
-- Build CompactDiffPrompt for LLM prompting
+**Integration Pattern:**
+- ace-docs uses ace-lint as a subprocess (not gem dependency)
+- ace-docs uses ace-llm-query as subprocess for LLM calls
+- Both gems follow shared ATOM architecture
+- Configuration cascade via ace-core
 
-### Phase 4: Integration and Workflow Updates
-- Update ValidateCommand to delegate to ace-lint
-- Update update-docs.wf.md for batch analysis flow
-- Create example analysis reports for documentation
-- Integration tests for full analyze → update → validate flow
+**Key Architectural Decisions:**
+1. Commands extracted from Thor CLI for testability
+2. LLM integration via subprocess (no tight coupling)
+3. External linter adapters with graceful fallbacks
+4. Deterministic data gathering + LLM intelligence separation
 
-### Test Coverage Targets
-- Command classes: 90%+ coverage
-- ace-lint adapters: 80%+ (external dependencies)
-- LLM integration: 85%+ (mocked calls)
-- Overall: 85%+ across both gems
+### Technology Stack
 
-### Estimated Timeline
-- Phase 1 (Foundation): 2-3 hours
-- Phase 2 (ace-lint): 4-6 hours
-- Phase 3 (Analysis): 4-6 hours
-- Phase 4 (Integration): 2-3 hours
+**Core Dependencies:**
+- **Ruby**: 3.1+ (existing ace-* standard)
+- **ace-core**: Configuration management (~> 0.1)
+- **Thor**: CLI framework (~> 1.3, existing)
+- **yaml**: YAML parsing (~> 0.3, existing)
+- **colorize**: Terminal colors (~> 1.1, existing)
+- **terminal-table**: Table formatting (~> 3.0, existing)
 
-**Total: 12-18 hours**
+**Subprocess Integrations:**
+- **ace-llm-query**: LLM calls (installed, via bin/ace-llm-query)
+- **markdownlint**: Optional Node.js markdown linter
+- **yamllint**: Optional Python YAML linter
+- **git**: Required for diff generation
 
-## Risk Analysis (Preliminary)
+**Development Dependencies:**
+- **ace-test-support**: Shared testing infrastructure
+- **minitest**: Test framework (~> 5.19)
+- **simplecov**: Code coverage (~> 0.22)
+
+### Implementation Strategy
+
+**Phase Structure:**
+1. **Foundation** (Command Extraction): Refactor CLI for testability
+2. **ace-lint Creation**: Build reusable linting gem from scratch
+3. **Batch Analysis**: Implement analyze command with LLM integration
+4. **Integration**: Connect all pieces, update workflows
+
+**Testing Strategy:**
+- Mock subprocess calls (ace-llm-query, external linters) using ace-test-support helpers
+- Fixture-based testing with sample diffs and expected reports
+- Integration tests with real git repositories (test/fixtures/sample-repo/)
+- Test coverage target: 85%+ overall, 90%+ for commands
+
+**Rollback Considerations:**
+- New files can be safely removed without affecting existing functionality
+- Existing commands (status, diff, update, validate) remain unchanged
+- ace-lint as separate gem allows independent rollback
+- No database migrations or data changes required
+
+## File Modifications
+
+### Create
+
+**ace-docs New Files:**
+
+- `lib/ace/docs/commands/analyze_command.rb`
+  - Purpose: Batch analysis command implementation
+  - Key components: Document selection, time range detection, LLM analysis orchestration
+
+- `lib/ace/docs/molecules/time_range_finder.rb`
+  - Purpose: Find oldest last-updated date from document list
+  - Key components: Date extraction, comparison, fallback logic
+
+- `lib/ace/docs/molecules/diff_analyzer.rb`
+  - Purpose: LLM integration for diff compaction
+  - Key components: Subprocess call to ace-llm-query, response parsing, error handling
+
+- `lib/ace/docs/molecules/report_formatter.rb`
+  - Purpose: Format analysis results as markdown
+  - Key components: Impact level organization, metadata header, change statistics
+
+- `lib/ace/docs/atoms/time_range_calculator.rb`
+  - Purpose: Calculate time ranges from dates
+  - Key components: Date parsing, range calculation, formatting
+
+- `lib/ace/docs/atoms/diff_filterer.rb`
+  - Purpose: Filter diff content (remove test files, etc.)
+  - Key components: Path filtering, hunk analysis
+
+- `lib/ace/docs/models/analysis_report.rb`
+  - Purpose: Data model for analysis reports
+  - Key components: Metadata, changes, statistics, serialization
+
+- `lib/ace/docs/prompts/compact_diff_prompt.rb`
+  - Purpose: Build LLM prompts for diff compaction
+  - Key components: System prompt, task description, output format instructions
+
+**ace-docs Test Files:**
+
+- `test/commands/analyze_command_test.rb`
+  - Purpose: Test analyze command with mocked dependencies
+
+- `test/molecules/time_range_finder_test.rb`
+  - Purpose: Test time range detection logic
+
+- `test/molecules/diff_analyzer_test.rb`
+  - Purpose: Test LLM integration with mocked subprocess
+
+- `test/molecules/report_formatter_test.rb`
+  - Purpose: Test markdown report generation
+
+- `test/atoms/time_range_calculator_test.rb`
+  - Purpose: Test time range calculations
+
+- `test/atoms/diff_filterer_test.rb`
+  - Purpose: Test diff filtering logic
+
+- `test/models/analysis_report_test.rb`
+  - Purpose: Test analysis report model
+
+- `test/prompts/compact_diff_prompt_test.rb`
+  - Purpose: Test prompt generation
+
+- `test/fixtures/sample-repo/` (directory)
+  - Purpose: Test git repository with sample commits for integration tests
+
+**ace-lint New Gem (Complete Structure):**
+
+- `ace-lint/` (root directory)
+  - Purpose: New standalone linting gem
+
+- `ace-lint/ace-lint.gemspec`
+  - Purpose: Gem specification with dependencies
+
+- `ace-lint/lib/ace/lint.rb`
+  - Purpose: Main entry point and autoloading
+
+- `ace-lint/lib/ace/lint/version.rb`
+  - Purpose: Version constant
+
+- `ace-lint/lib/ace/lint/atoms/command_detector.rb`
+  - Purpose: Detect available external linter commands
+
+- `ace-lint/lib/ace/lint/atoms/output_parser.rb`
+  - Purpose: Parse linter output into structured format
+
+- `ace-lint/lib/ace/lint/molecules/markdown_linter.rb`
+  - Purpose: Markdown linting via markdownlint adapter
+
+- `ace-lint/lib/ace/lint/molecules/yaml_linter.rb`
+  - Purpose: YAML linting via yamllint adapter
+
+- `ace-lint/lib/ace/lint/molecules/frontmatter_linter.rb`
+  - Purpose: Frontmatter schema validation (built-in)
+
+- `ace-lint/lib/ace/lint/organisms/linter_orchestrator.rb`
+  - Purpose: Coordinate linting across multiple linters
+
+- `ace-lint/lib/ace/lint/models/lint_result.rb`
+  - Purpose: Data model for lint results
+
+- `ace-lint/lib/ace/lint/adapters/markdownlint_adapter.rb`
+  - Purpose: Adapter for markdownlint subprocess calls
+
+- `ace-lint/lib/ace/lint/adapters/yamllint_adapter.rb`
+  - Purpose: Adapter for yamllint subprocess calls
+
+- `ace-lint/lib/ace/lint/commands/lint_command.rb`
+  - Purpose: Lint command implementation
+
+- `ace-lint/exe/ace-lint`
+  - Purpose: CLI executable
+
+- `ace-lint/bin/ace-lint`
+  - Purpose: Development binstub for workspace
+
+- `ace-lint/test/test_helper.rb`
+  - Purpose: Test setup and helpers
+
+- `ace-lint/test/atoms/command_detector_test.rb`
+- `ace-lint/test/atoms/output_parser_test.rb`
+- `ace-lint/test/molecules/markdown_linter_test.rb`
+- `ace-lint/test/molecules/yaml_linter_test.rb`
+- `ace-lint/test/molecules/frontmatter_linter_test.rb`
+- `ace-lint/test/organisms/linter_orchestrator_test.rb`
+- `ace-lint/test/models/lint_result_test.rb`
+- `ace-lint/test/adapters/markdownlint_adapter_test.rb`
+- `ace-lint/test/adapters/yamllint_adapter_test.rb`
+- `ace-lint/test/commands/lint_command_test.rb`
+- `ace-lint/test/integration/cli_integration_test.rb`
+
+- `ace-lint/.ace.example/lint/config.yml`
+  - Purpose: Example configuration file
+
+- `ace-lint/README.md`
+  - Purpose: Gem documentation
+
+- `ace-lint/CHANGELOG.md`
+  - Purpose: Version history
+
+### Modify
+
+**ace-docs Existing Files:**
+
+- `ace-docs/exe/ace-docs`
+  - Changes: Add `analyze` command, extract inline command logic to command classes
+  - Impact: Improve testability, maintain backward compatibility
+  - Integration points: Commands delegated to new command classes
+
+- `ace-docs/lib/ace/docs/molecules/change_detector.rb`
+  - Changes: Extend with LLM analysis option, refactor for reuse by analyze command
+  - Impact: Add optional LLM compaction without breaking existing diff command
+  - Integration points: Used by both diff and analyze commands
+
+- `ace-docs/lib/ace/docs/commands/status_command.rb`
+  - Changes: Minor refactoring if needed for consistency with new command pattern
+  - Impact: Ensure consistent command interface across all commands
+  - Integration points: None (already extracted)
+
+- `ace-docs/test/test_helper.rb`
+  - Changes: Add helpers for mocking subprocess calls (ace-llm-query, ace-lint)
+  - Impact: Enable testing of subprocess integrations
+  - Integration points: Used by all test files testing subprocess calls
+
+- `ace-docs/README.md`
+  - Changes: Add documentation for analyze command and ace-lint integration
+  - Impact: Update user-facing documentation
+  - Integration points: Reference ace-lint gem
+
+**Workspace Files:**
+
+- `.ace/test/suite.yml`
+  - Changes: Add ace-lint to test suite
+  - Impact: Include ace-lint in workspace test runs
+  - Integration points: ace-test-runner
+
+- `bin/ace-lint` (new)
+  - Changes: Create development binstub for ace-lint
+  - Impact: Allow running ace-lint from workspace root
+  - Integration points: Bundle setup
+
+- `Gemfile`
+  - Changes: Add ace-lint to development dependencies (path: "ace-lint")
+  - Impact: Make ace-lint available in workspace
+  - Integration points: Bundle
+
+### Delete
+
+**No Files to Delete:**
+- All changes are additive
+- Existing functionality preserved
+- No deprecated components removed
+
+## Test Case Planning
+
+### Test Scenarios
+
+**Happy Path Scenarios:**
+
+1. **Analyze documents needing updates**
+   - Input: `ace-docs analyze --needs-update`
+   - Expected: Markdown report generated with changes organized by impact
+   - Test: Mock 3 documents with stale dates, verify report structure
+
+2. **Analyze specific files**
+   - Input: `ace-docs analyze docs/arch.md docs/tools.md`
+   - Expected: Report for those 2 files only
+   - Test: Verify document selection and time range detection
+
+3. **Lint markdown with markdownlint available**
+   - Input: `ace-lint docs/test.md --fix`
+   - Expected: Markdownlint runs, fixes applied, success reported
+   - Test: Mock markdownlint subprocess, verify command construction
+
+4. **Lint with external linters unavailable**
+   - Input: `ace-lint docs/test.md`
+   - Expected: Graceful fallback to basic validation, warning message
+   - Test: Mock command detection failure, verify fallback behavior
+
+**Edge Case Scenarios:**
+
+1. **No documents match criteria**
+   - Input: `ace-docs analyze --type nonexistent`
+   - Expected: Clear error message with suggestions
+   - Test: Verify error handling and exit code 1
+
+2. **No changes detected in time range**
+   - Input: `ace-docs analyze --since "1 week ago"`
+   - Expected: "No changes detected" message, exit code 2
+   - Test: Mock empty git diff output
+
+3. **Very large diff (>100K lines)**
+   - Input: `ace-docs analyze` with massive codebase changes
+   - Expected: Warning about context limits, analysis attempted
+   - Test: Mock large diff, verify warning message
+
+4. **Document with future last-updated date**
+   - Input: Document frontmatter has `last-updated: 2099-12-31`
+   - Expected: Flag as suspicious, exclude from analysis
+   - Test: Verify date validation and exclusion logic
+
+5. **Multiple documents with different staleness**
+   - Input: Mix of current, stale, and outdated documents
+   - Expected: Use oldest update date for time range
+   - Test: Verify time range finder selects oldest date
+
+**Error Condition Scenarios:**
+
+1. **LLM unavailable (ace-llm-query not found)**
+   - Input: `ace-docs analyze --needs-update`
+   - Expected: Clear error "ace-llm-query not found", exit code 3
+   - Test: Mock command not found error
+
+2. **LLM API failure (timeout, rate limit)**
+   - Input: `ace-docs analyze --needs-update`
+   - Expected: Error with retry suggestion, exit code 3
+   - Test: Mock subprocess failure with various error codes
+
+3. **Git repository not found**
+   - Input: Run in non-git directory
+   - Expected: Clear error "Not a git repository", exit code 4
+   - Test: Mock git command failure
+
+4. **Invalid time range format**
+   - Input: `ace-docs analyze --since "invalid date"`
+   - Expected: Error with valid format examples
+   - Test: Verify date parsing error handling
+
+**Integration Point Scenarios:**
+
+1. **Full analyze → update → validate flow**
+   - Steps: Generate analysis, update documents, run ace-lint validation
+   - Expected: Complete workflow succeeds, all tools cooperate
+   - Test: Integration test with real git repo and mocked LLM
+
+2. **ace-lint subprocess from ace-docs validate**
+   - Input: `ace-docs validate docs/test.md`
+   - Expected: ace-lint called correctly, results parsed
+   - Test: Mock ace-lint subprocess, verify argument passing
+
+3. **ace-llm-query subprocess from diff analyzer**
+   - Input: DiffAnalyzer calls LLM with prompt
+   - Expected: Prompt constructed correctly, response parsed
+   - Test: Mock ace-llm-query with various responses
+
+### Test Type Categorization
+
+**Unit Tests (High Priority):**
+- TimeRangeCalculator atom (pure date math)
+- DiffFilterer atom (pure string filtering)
+- TimeRangeFinder molecule (date selection logic)
+- ReportFormatter molecule (markdown generation)
+- AnalysisReport model (data structure)
+- CompactDiffPrompt (prompt construction)
+- ace-lint CommandDetector atom (command checking)
+- ace-lint OutputParser atom (output parsing)
+
+**Integration Tests (Medium Priority):**
+- AnalyzeCommand with mocked LLM and git
+- DiffAnalyzer with mocked ace-llm-query subprocess
+- Markdownlint/Yamllint adapters with mocked subprocesses
+- LinterOrchestrator coordinating multiple linters
+- Full CLI integration (ace-docs analyze + ace-lint)
+
+**End-to-End Tests (Context Dependent):**
+- Complete workflow: analyze → update → validate
+- Real git repository with sample commits
+- ace-lint running on actual markdown files (with fallback mocking)
+
+**Performance Tests (If Applicable):**
+- Large diff handling (100K+ lines)
+- Multiple document analysis (50+ documents)
+- LLM response time impact
+
+### Test Coverage Expectations
+
+- **Commands**: 90%+ coverage (critical user-facing)
+- **Molecules/Organisms**: 85%+ coverage (core business logic)
+- **Atoms**: 95%+ coverage (pure functions, easy to test)
+- **Models**: 80%+ coverage (data structures)
+- **Adapters**: 75%+ coverage (external dependencies, mocked)
+- **Overall**: 85%+ across both gems
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Review existing ace-docs codebase structure
+  - Understand current command pattern (inline in exe/ace-docs)
+  - Analyze existing molecules (ChangeDetector, DocumentLoader, FrontmatterManager)
+  - Review test structure and helpers
+  - Document integration points
+
+* [ ] Research ace-llm-query subprocess interface
+  - Test command: `ace-llm-query "test prompt" --model default`
+  - Document expected input/output format
+  - Identify error codes and messages
+  - Plan prompt construction approach
+
+* [ ] Research external linter availability and interfaces
+  - Check markdownlint CLI: `markdownlint --version` (if available)
+  - Check yamllint CLI: `yamllint --version` (if available)
+  - Document command-line arguments and output formats
+  - Plan graceful fallback strategy when not available
+
+* [ ] Design LLM prompt template for diff compaction
+  - Define system prompt (remove noise, keep relevant changes)
+  - Plan diff formatting for LLM context
+  - Define output format (markdown with impact levels)
+  - Consider context window limits (100K lines warning threshold)
+
+* [ ] Design analysis report markdown format
+  - Define YAML frontmatter structure (generated, since, documents list)
+  - Plan impact-level sections (HIGH/MEDIUM/LOW)
+  - Design change description format (component, files, relevance)
+  - Plan statistics section (commits, files, lines, relevant changes)
+
+* [ ] Design ace-lint gem structure and API
+  - Plan ATOM architecture (atoms, molecules, organisms, models)
+  - Define linter adapter interface (detect, run, parse)
+  - Design CLI command structure (lint, format, fix options)
+  - Plan configuration cascade via ace-core
+
+### Execution Steps
+
+**Phase 1: Foundation (Command Extraction) - 2-3 hours**
+
+- [ ] Create `test/commands/` directory in ace-docs
+  > TEST: Directory Creation
+  > Type: Pre-condition Check
+  > Assert: Directory exists and is empty
+  > Command: test -d ace-docs/test/commands && [ -z "$(ls -A ace-docs/test/commands)" ]
+
+- [ ] Extract DiffCommand from exe/ace-docs to lib/ace/docs/commands/diff_command.rb
+  - Move diff logic from CLI to DiffCommand class
+  - Add execute method returning status code (0 success, 1 failure)
+  - Update CLI to delegate: `Commands::DiffCommand.new(options).execute`
+
+- [ ] Extract UpdateCommand from exe/ace-docs to lib/ace/docs/commands/update_command.rb
+  - Move update logic from CLI to UpdateCommand class
+  - Add execute method returning status code
+  - Update CLI to delegate: `Commands::UpdateCommand.new(options).execute`
+
+- [ ] Extract ValidateCommand from exe/ace-docs to lib/ace/docs/commands/validate_command.rb
+  - Move validate logic from CLI to ValidateCommand class
+  - Add execute method returning status code
+  - Update CLI to delegate: `Commands::ValidateCommand.new(options).execute`
+
+- [ ] Create command tests with mocked dependencies
+  - test/commands/diff_command_test.rb
+  - test/commands/update_command_test.rb
+  - test/commands/validate_command_test.rb
+  - Mock registry, molecules, subprocess calls
+  > TEST: Command Tests Pass
+  > Type: Action Validation
+  > Assert: All command tests pass (3 test files, ~15 tests total)
+  > Command: cd ace-docs && bundle exec rake test TEST=test/commands/*_test.rb
+
+- [ ] Update exe/ace-docs to delegate all commands to command classes
+  - Verify backward compatibility: `ace-docs status` still works
+  - Verify return codes: Commands return 0 or 1
+  > TEST: CLI Backward Compatibility
+  > Type: Integration Validation
+  > Assert: Existing commands work identically
+  > Command: cd ace-docs && bundle exec ace-docs status && bundle exec ace-docs diff --help
+
+**Phase 2: ace-lint Gem Creation - 4-6 hours**
+
+- [ ] Create ace-lint gem directory structure
+  - Run: `mkdir -p ace-lint/{lib/ace/lint/{atoms,molecules,organisms,models,adapters,commands},exe,bin,test/{atoms,molecules,organisms,models,adapters,commands,integration,fixtures},.ace.example/lint}`
+  - Create ace-lint.gemspec based on ace-docs.gemspec template
+  - Create lib/ace/lint.rb with autoloading
+  - Create lib/ace/lint/version.rb with VERSION = "0.1.0"
+  > TEST: Gem Structure Created
+  > Type: Pre-condition Check
+  > Assert: All directories exist, gemspec valid
+  > Command: test -f ace-lint/ace-lint.gemspec && ruby -c ace-lint/ace-lint.gemspec
+
+- [ ] Implement CommandDetector atom (ace-lint/lib/ace/lint/atoms/command_detector.rb)
+  - Method: `detect(command_name)` returns true/false
+  - Use `which` command to check availability
+  - Cache results for performance
+  - Test with mocked `which` subprocess
+
+- [ ] Implement OutputParser atom (ace-lint/lib/ace/lint/atoms/output_parser.rb)
+  - Method: `parse_markdownlint(output)` returns structured errors
+  - Method: `parse_yamllint(output)` returns structured errors
+  - Handle various output formats (JSON, plain text)
+  - Test with fixture output samples
+
+- [ ] Implement MarkdownlintAdapter (ace-lint/lib/ace/lint/adapters/markdownlint_adapter.rb)
+  - Method: `lint(file_path, options)` calls markdownlint subprocess
+  - Method: `fix(file_path)` calls markdownlint with --fix
+  - Return LintResult model
+  - Handle command not found gracefully
+  - Test with mocked subprocess
+
+- [ ] Implement YamllintAdapter (ace-lint/lib/ace/lint/adapters/yamllint_adapter.rb)
+  - Method: `lint(file_path, options)` calls yamllint subprocess
+  - Return LintResult model
+  - Handle command not found gracefully
+  - Test with mocked subprocess
+
+- [ ] Implement MarkdownLinter molecule (ace-lint/lib/ace/lint/molecules/markdown_linter.rb)
+  - Use MarkdownlintAdapter if available
+  - Fallback to basic validation (frontmatter present, valid markdown structure)
+  - Return warnings when external linter unavailable
+  - Test both adapter and fallback paths
+
+- [ ] Implement YamlLinter molecule (ace-lint/lib/ace/lint/molecules/yaml_linter.rb)
+  - Use YamllintAdapter if available
+  - Fallback to Ruby YAML.parse validation
+  - Return warnings when external linter unavailable
+
+- [ ] Implement FrontmatterLinter molecule (ace-lint/lib/ace/lint/molecules/frontmatter_linter.rb)
+  - Validate YAML structure (parseable)
+  - Check required fields (configurable)
+  - Validate field types
+  - No external dependencies (built-in)
+
+- [ ] Implement LintResult model (ace-lint/lib/ace/lint/models/lint_result.rb)
+  - Fields: file_path, valid, errors[], warnings[], linter_used
+  - Methods: to_h, to_s, success?, has_warnings?
+  - Test serialization and methods
+
+- [ ] Implement LinterOrchestrator organism (ace-lint/lib/ace/lint/organisms/linter_orchestrator.rb)
+  - Coordinate multiple linters for a file
+  - Aggregate results into single LintResult
+  - Handle linter selection based on file type
+  - Test with mocked linters
+
+- [ ] Implement LintCommand (ace-lint/lib/ace/lint/commands/lint_command.rb)
+  - Accept file paths and options
+  - Orchestrate linting via LinterOrchestrator
+  - Format output (colorized, table format)
+  - Return status code (0 all pass, 1 failures)
+  - Test with mocked orchestrator
+
+- [ ] Create exe/ace-lint CLI executable
+  - Thor-based CLI similar to ace-docs
+  - Commands: lint [FILES...] [OPTIONS]
+  - Options: --fix, --type [markdown|yaml|frontmatter]
+  - Delegate to LintCommand
+
+- [ ] Create bin/ace-lint development binstub
+  - Similar to other ace-* binstubs
+  - Set BUNDLE_GEMFILE to workspace Gemfile
+  - Load exe/ace-lint
+  > TEST: ace-lint CLI Works
+  > Type: Integration Validation
+  > Assert: CLI runs, help displays, basic lint works
+  > Command: cd ace-lint && bundle exec ace-lint --help && bundle exec ace-lint test/fixtures/sample.md
+
+- [ ] Write comprehensive ace-lint test suite
+  - All atom tests (command_detector, output_parser)
+  - All molecule tests (markdown_linter, yaml_linter, frontmatter_linter)
+  - Adapter tests with mocked subprocesses
+  - Organism tests with mocked molecules
+  - Command tests with mocked orchestrator
+  - Integration test (end-to-end CLI)
+  > TEST: ace-lint Tests Pass
+  > Type: Action Validation
+  > Assert: All tests pass, coverage >80%
+  > Command: cd ace-lint && bundle exec rake test
+
+- [ ] Update workspace Gemfile to include ace-lint
+  - Add: `gem "ace-lint", path: "ace-lint"`
+  - Run: `bundle install`
+
+- [ ] Add ace-lint to workspace test suite (.ace/test/suite.yml)
+  - Add to `tools` group with priority 3
+  > TEST: Workspace Integration
+  > Type: Integration Validation
+  > Assert: ace-lint runs in workspace test suite
+  > Command: ace-test ace-lint
+
+- [ ] Create ace-lint README.md with usage examples
+  - Installation instructions
+  - Command reference
+  - Configuration guide
+  - Graceful fallback explanation
+
+**Phase 3: Batch Analysis Implementation - 4-6 hours**
+
+- [ ] Implement TimeRangeCalculator atom (ace-docs/lib/ace/docs/atoms/time_range_calculator.rb)
+  - Method: `calculate_since(date)` formats date for git
+  - Method: `parse_date(string)` handles various formats
+  - Method: `format_human(date)` for display ("2 weeks ago")
+  - Test with various date formats
+
+- [ ] Implement DiffFilterer atom (ace-docs/lib/ace/docs/atoms/diff_filterer.rb)
+  - Method: `filter_paths(diff, exclude_patterns)` removes test files, etc.
+  - Method: `estimate_size(diff)` counts lines
+  - Test with sample diffs
+
+- [ ] Implement TimeRangeFinder molecule (ace-docs/lib/ace/docs/molecules/time_range_finder.rb)
+  - Method: `find_oldest_update(documents)` returns oldest last-updated date
+  - Handle documents without last-updated (use default)
+  - Exclude documents with suspicious/future dates
+  - Return formatted since parameter for git
+  - Test with various document combinations
+
+- [ ] Implement CompactDiffPrompt (ace-docs/lib/ace/docs/prompts/compact_diff_prompt.rb)
+  - Method: `build(diff, documents)` constructs LLM prompt
+  - System prompt: "Compact this diff - remove noise, keep relevant details"
+  - Include document list and types for context
+  - Specify output format (markdown with impact levels)
+  - Test prompt structure and content
+
+- [ ] Implement DiffAnalyzer molecule (ace-docs/lib/ace/docs/molecules/diff_analyzer.rb)
+  - Method: `analyze(diff, documents, options)` calls LLM
+  - Use Open3.capture3 to call ace-llm-query subprocess
+  - Build prompt via CompactDiffPrompt
+  - Parse LLM response (expect markdown)
+  - Handle errors (command not found, API failure, timeout)
+  - Test with mocked subprocess (various responses and errors)
+
+- [ ] Implement AnalysisReport model (ace-docs/lib/ace/docs/models/analysis_report.rb)
+  - Fields: generated, since, documents[], compacted_changes, statistics
+  - Methods: to_markdown, save_to_cache(cache_dir), to_h
+  - Generate YAML frontmatter + markdown body
+  - Test serialization and file writing
+
+- [ ] Implement ReportFormatter molecule (ace-docs/lib/ace/docs/molecules/report_formatter.rb)
+  - Method: `format(analysis_result, documents)` creates AnalysisReport
+  - Parse LLM response into structured format
+  - Organize by impact level (HIGH/MEDIUM/LOW)
+  - Add metadata header and statistics footer
+  - Test formatting with sample LLM responses
+
+- [ ] Extend ChangeDetector molecule (ace-docs/lib/ace/docs/molecules/change_detector.rb)
+  - Add method: `generate_batch_diff(documents, since, options)`
+  - Combine with existing diff generation logic
+  - Support exclude-renames, exclude-moves options
+  - Test batch diff generation
+
+- [ ] Implement AnalyzeCommand (ace-docs/lib/ace/docs/commands/analyze_command.rb)
+  - Parse options: --needs-update, --type, --freshness, --since, etc.
+  - Select documents via DocumentRegistry
+  - Determine time range via TimeRangeFinder
+  - Generate diff via ChangeDetector
+  - Check diff size, warn if >100K lines
+  - Analyze diff via DiffAnalyzer (LLM call)
+  - Format report via ReportFormatter
+  - Save report to .cache/ace-docs/analysis-{timestamp}.md
+  - Display summary (documents, period, report path)
+  - Return status code (0 success, 1 no docs, 2 no changes, 3 LLM error, 4 git error)
+  - Test with mocked dependencies
+
+- [ ] Add analyze command to exe/ace-docs CLI
+  - Add Thor desc and options
+  - Delegate to Commands::AnalyzeCommand.new(options).execute
+  > TEST: Analyze Command Works
+  > Type: Integration Validation
+  > Assert: Command runs, generates report (with mocked LLM)
+  > Command: cd ace-docs && bundle exec ace-docs analyze --help && bundle exec ace-docs analyze test/fixtures/sample.md --dry-run
+
+- [ ] Create test fixtures for analyze command
+  - test/fixtures/sample-repo/ with git history
+  - Sample documents with various staleness levels
+  - Sample LLM responses for different scenarios
+  - Sample expected reports
+
+- [ ] Write comprehensive analyze tests
+  - test/commands/analyze_command_test.rb (mocked dependencies)
+  - test/molecules/time_range_finder_test.rb
+  - test/molecules/diff_analyzer_test.rb (mocked subprocess)
+  - test/molecules/report_formatter_test.rb
+  - test/models/analysis_report_test.rb
+  - test/prompts/compact_diff_prompt_test.rb
+  - test/integration/analyze_integration_test.rb (end-to-end with mocks)
+  > TEST: Analyze Tests Pass
+  > Type: Action Validation
+  > Assert: All analyze-related tests pass
+  > Command: cd ace-docs && bundle exec rake test TEST=test/commands/analyze_command_test.rb TEST=test/molecules/*_test.rb TEST=test/models/analysis_report_test.rb
+
+**Phase 4: Integration and Finalization - 2-3 hours**
+
+- [ ] Update ValidateCommand to delegate to ace-lint
+  - Replace inline validation logic with subprocess call to ace-lint
+  - Pass files and options to ace-lint
+  - Parse ace-lint output and format for display
+  - Handle ace-lint not available (graceful error)
+  - Test with mocked ace-lint subprocess
+
+- [ ] Update test_helper.rb with subprocess mocking helpers
+  - Helper: `stub_subprocess(command, output, exit_code)`
+  - Helper: `mock_ace_llm_query(response)`
+  - Helper: `mock_ace_lint(result)`
+  - Document usage in comments
+
+- [ ] Create integration test for full workflow
+  - test/integration/full_workflow_test.rb
+  - Steps: analyze (mocked LLM) → update → validate (mocked ace-lint)
+  - Verify data flows correctly between commands
+  - Test error handling at each step
+  > TEST: Full Workflow Integration
+  > Type: End-to-End Validation
+  > Assert: Complete workflow succeeds with mocked external dependencies
+  > Command: cd ace-docs && bundle exec rake test TEST=test/integration/full_workflow_test.rb
+
+- [ ] Update ace-docs README.md
+  - Add analyze command documentation
+  - Add ace-lint integration section
+  - Update usage examples
+  - Add batch analysis workflow example
+
+- [ ] Verify test coverage across both gems
+  - Run: `cd ace-docs && bundle exec rake test:coverage`
+  - Run: `cd ace-lint && bundle exec rake test:coverage`
+  - Verify: ace-docs >85%, ace-lint >80%, commands >90%
+  > TEST: Coverage Targets Met
+  > Type: Quality Gate
+  > Assert: Test coverage meets targets
+  > Command: cd ace-docs && bundle exec rake test && cd ../ace-lint && bundle exec rake test
+
+- [ ] Run full workspace test suite
+  - Ensure both gems pass all tests
+  - Verify no regressions in other gems
+  > TEST: Workspace Tests Pass
+  > Type: Integration Validation
+  > Assert: All ace-* gems pass tests
+  > Command: ace-test
+
+- [ ] Create example analysis report in ux/ directory
+  - ux/example-analysis-report.md
+  - Show realistic analysis output
+  - Demonstrate impact levels and organization
+
+- [ ] Final verification of ux/usage.md
+  - Ensure all commands documented match implementation
+  - Verify examples are accurate
+  - Check troubleshooting section is complete
+  > TEST: Documentation Accuracy
+  > Type: Manual Validation
+  > Assert: All commands in usage.md match implementation
+  > Command: diff <(grep -E "^ace-docs|^ace-lint" .ace-taskflow/v.0.9.0/tasks/071*/ux/usage.md) <(ace-docs help && ace-lint help)
+
+## Risk Assessment
 
 ### Technical Risks
-- **LLM API failures**: Fail fast with clear error message (no fallback complexity)
-- **Large diff context**: Warn user, potentially chunk diffs in future enhancement
-- **External linter availability**: Graceful fallbacks to basic validation in ace-lint
-- **Git history complexity**: Handle renames, merges carefully in diff generation
 
-### Mitigation Strategies
-- Comprehensive error messages with recovery suggestions
-- Clear validation of prerequisites (git repo, ace-llm-query available)
-- Detailed logging for debugging LLM integration issues
-- Extensive test coverage with edge cases and error conditions
+- **Risk**: LLM API failures (rate limits, timeouts, service unavailable)
+  - **Probability**: Medium
+  - **Impact**: High (analyze command unusable)
+  - **Mitigation**:
+    - Clear error messages with suggestions ("Try again in 5 minutes")
+    - Fail fast (no fallback to raw diff - keeps scope clean)
+    - Document retry strategies in usage.md
+  - **Rollback**: Remove analyze command, keep existing diff command
+
+- **Risk**: Very large diffs exceed LLM context limits (>100K lines)
+  - **Probability**: Low-Medium
+  - **Impact**: Medium (analysis fails or truncated)
+  - **Mitigation**:
+    - Warn user when diff size >100K lines
+    - Suggest using --exclude-renames, --exclude-moves, or --since options
+    - Document workarounds in troubleshooting section
+  - **Rollback**: Graceful failure with clear error message
+
+- **Risk**: External linter availability varies across environments
+  - **Probability**: High
+  - **Impact**: Low (graceful fallbacks planned)
+  - **Mitigation**:
+    - CommandDetector checks availability at runtime
+    - Graceful fallback to basic validation
+    - Clear warnings when external linters not available
+    - Documentation explains optional vs. required linters
+  - **Rollback**: ace-lint still works with basic validation only
+
+- **Risk**: Git history complexity (large merges, renames, rebases)
+  - **Probability**: Medium
+  - **Impact**: Medium (diff may be noisy or confusing)
+  - **Mitigation**:
+    - Support --exclude-renames and --exclude-moves flags
+    - DiffFilterer atom can pre-filter obvious noise
+    - LLM prompt instructs to remove noise
+    - Test with complex git histories in fixtures
+  - **Rollback**: Users can use --since to limit scope
+
+### Integration Risks
+
+- **Risk**: ace-llm-query not installed or misconfigured
+  - **Probability**: Low (already in workspace)
+  - **Impact**: High (analyze command fails)
+  - **Mitigation**:
+    - Check for ace-llm-query availability before analysis
+    - Clear error: "ace-llm-query not found. Install ace-llm gem."
+    - Document prerequisite in README
+  - **Monitoring**: Command not found error in subprocess call
+
+- **Risk**: Subprocess call overhead impacts performance
+  - **Probability**: Low
+  - **Impact**: Low (single subprocess call per operation)
+  - **Mitigation**:
+    - Single LLM call per analyze operation (efficient)
+    - Cache analysis results for re-use
+    - No subprocess calls in hot paths (atoms/models)
+  - **Monitoring**: Add timing logs in DiffAnalyzer
+
+- **Risk**: ace-lint and ace-docs version compatibility
+  - **Probability**: Low (both in same mono-repo)
+  - **Impact**: Low (subprocess interface is simple)
+  - **Mitigation**:
+    - Simple CLI interface (stable contract)
+    - Version checking not required (subprocess call)
+    - Both gems developed and tested together
+  - **Monitoring**: Integration tests cover ace-lint calls
+
+### Performance Risks
+
+- **Risk**: LLM response time impacts UX (can be 5-30 seconds)
+  - **Mitigation**:
+    - Display progress: "Compacting changes with LLM..."
+    - Set reasonable expectations in documentation
+    - Single call per operation (no repeated calls)
+  - **Monitoring**: Log LLM call duration
+  - **Thresholds**: Warn if >60 seconds
+
+- **Risk**: Large document sets (50+ documents) slow analysis
+  - **Mitigation**:
+    - Single git diff for all documents (efficient)
+    - Single LLM call (not per-document)
+    - Time range detection is O(n) documents
+  - **Monitoring**: Log document count and analysis time
+  - **Thresholds**: Warn if >100 documents
+
+## Acceptance Criteria
+
+- [ ] **Batch Analysis Command**: `ace-docs analyze` accepts file lists, filter options (--needs-update, --type, --freshness)
+- [ ] **Automatic Time Range**: Determines analysis period from oldest last-updated date in document list
+- [ ] **LLM Compaction**: Sends full codebase diff to ace-llm-query, receives compact markdown report with noise removed
+- [ ] **Structured Report**: Markdown report organized by impact level (HIGH/MEDIUM/LOW) with file references and document relevance
+- [ ] **Cache Management**: Analysis saved to `.cache/ace-docs/analysis-{timestamp}.md` with YAML frontmatter metadata
+- [ ] **Workflow Ready**: Report format enables smooth document-by-document iteration in workflows (clear sections, relevance mapping)
+- [ ] **Metadata Updates**: `ace-docs update` command accepts multiple files for batch frontmatter updates
+- [ ] **ace-lint Integration**: Validation delegates to ace-lint tool via subprocess
+- [ ] **Reusable Linting**: ace-lint usable independently by other ace-* gems and from command line
+- [ ] **Graceful Fallbacks**: ace-lint works with basic validation when external linters unavailable (with warnings)
+- [ ] **Error Handling**: Clear error messages for all failure scenarios (no docs, no changes, LLM error, git error)
+- [ ] **Test Coverage**: >85% overall, >90% for commands, all tests passing
+- [ ] **Documentation**: README and ux/usage.md complete with examples, troubleshooting, and configuration guides
