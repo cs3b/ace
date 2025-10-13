@@ -12,9 +12,8 @@ module Ace
         # @param slug_part [String] Optional descriptive slug part (e.g., "feat-taskflow-idea")
         # @param config [Configuration] Optional configuration object
         # @return [String] The complete path to the task directory
-        def self.build_task_path(root, context, task_number, slug_part = nil, config = nil)
-          config ||= Ace::Taskflow.configuration
-          task_dir = config.task_dir
+        def self.build_task_path(root, context, task_number, slug_part = nil, config_param = nil)
+          task_dir = (config_param || config).task_dir
 
           task_dir_name = if slug_part
             "#{task_number.to_s.rjust(3, '0')}-#{slug_part}"
@@ -32,10 +31,10 @@ module Ace
         # @param slug_part [String] Optional descriptive slug part
         # @param config [Configuration] Optional configuration object
         # @return [String] The complete path to the task file
-        def self.build_task_file_path(root, context, task_number, filename = nil, slug_part = nil, config = nil)
+        def self.build_task_file_path(root, context, task_number, filename = nil, slug_part = nil, config_param = nil)
           # Use new naming convention: task.NNN.md when slug is present
           actual_filename = filename || (slug_part ? "task.#{task_number.to_s.rjust(3, '0')}.md" : "task.md")
-          File.join(build_task_path(root, context, task_number, slug_part, config), actual_filename)
+          File.join(build_task_path(root, context, task_number, slug_part, config_param), actual_filename)
         end
 
         # Build release path
@@ -74,9 +73,8 @@ module Ace
         # @param path [String] The file or directory path
         # @param config [Configuration] Optional configuration object
         # @return [String, nil] The task number or nil if not found
-        def self.extract_task_number(path, config = nil)
-          config ||= Ace::Taskflow.configuration
-          task_dir = config.task_dir
+        def self.extract_task_number(path, config_param = nil)
+          task_dir = (config_param || config).task_dir
 
           # Match patterns like:
           # - /tasks/019/ (new format)
@@ -153,6 +151,15 @@ module Ace
             $1
           else
             nil
+          end
+        end
+
+        class << self
+          protected
+
+          # Get configuration - extracted for test stubbing
+          def config
+            Ace::Taskflow.configuration
           end
         end
       end
