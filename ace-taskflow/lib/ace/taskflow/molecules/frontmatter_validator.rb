@@ -78,7 +78,7 @@ module Ace
             :idea
           when /release\.md$/
             :release
-          when /\/#{Regexp.escape(task_dir)}\//, /task\.\d+\.md$/
+          when /\/#{Regexp.escape(task_dir)}\/.*task\.\d{3,}.*\.md$/
             :task
           else
             :unknown
