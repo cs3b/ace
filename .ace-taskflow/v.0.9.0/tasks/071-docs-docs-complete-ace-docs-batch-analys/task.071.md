@@ -4,7 +4,85 @@ status: pending
 priority: high
 estimate: 8-10h
 dependencies: [v.0.9.0+task.072]
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Configuration System Issues (Lessons from task.072)
+
+Task.072 revealed critical configuration mistakes that must not be repeated in ace-docs:
+
+- [ ] **Config Loading Pattern**: Does ace-docs use ace-core's config cascade or hardcoded paths?
+  - **Current situation**: `.ace.example/docs/config.yml` exists but no config loading code in `lib/ace/docs.rb`
+  - **Research conducted**: Checked ace-docs/lib/ - no ConfigLoader or Ace::Core.config usage found
+  - **Similar to task.072**: ace-lint initially used hardcoded paths instead of ace-core
+  - **Suggested approach**: Add `Ace::Docs.config` method using `Ace::Core.config.get('ace', 'docs')`
+  - **Why needs human input**: Confirm this is a missing feature that should be implemented in task.071
+
+- [ ] **Config File Structure**: Should ace-docs config be nested under `ace: { docs: {...} }` or flat?
+  - **Current situation**: `.ace.example/docs/config.yml` has flat structure (document_types at root)
+  - **Research conducted**: ace-lint uses flat structure for tool-specific configs (kramdown.yml)
+  - **Pattern from task.072**: Tool configs are flat, general configs have nesting
+  - **Suggested structure**: Keep flat - this is the main docs config (like kramdown.yml for ace-lint)
+  - **Why needs human input**: Confirm the flat structure is correct for ace-docs
+
+- [ ] **ace-core Dependency**: Does ace-docs gemspec list ace-core as a dependency?
+  - **Research needed**: Check ace-docs/ace-docs.gemspec for ace-core dependency
+  - **From task.072**: ace-lint needed to add `spec.add_dependency "ace-core", "~> 0.9"`
+  - **Suggested action**: Verify ace-core dependency exists, add if missing
+  - **Why needs human input**: Confirm if this is already correct or needs fixing
+
+- [ ] **Example Config Location**: Should examples be in gem root or `.ace.example/`?
+  - **Current situation**: ace-docs has `.ace.example/docs/config.yml`
+  - **From task.072**: ace-lint has `.ace.example/lint/kramdown.yml` (inside gem directory)
+  - **Pattern**: Examples go in gem's `.ace.example/` directory
+  - **Suggested action**: Current location is correct - no change needed
+  - **Why needs human input**: Confirm understanding is correct
+
+### [MEDIUM] LLM Configuration Questions
+
+- [ ] **LLM Model Selection**: Config file specifies `model: "default"` - is this correct?
+  - **Current config**: `.ace.example/docs/config.yml` line 92: `model: "default"`
+  - **Research conducted**: ace-llm-query uses ace-llm config for provider/model selection
+  - **Suggested default**: Use "default" and let ace-llm-query handle model selection
+  - **Why needs human input**: Confirm this delegation pattern is intentional
+
+- [ ] **Temperature Setting**: Config specifies `temperature: 0.3` for analysis - correct?
+  - **Current config**: `.ace.example/docs/config.yml` line 93: `temperature: 0.3`
+  - **Use case**: Diff compaction (remove noise, keep relevant changes)
+  - **Research conducted**: Lower temperature (0.3) good for deterministic tasks
+  - **Suggested value**: 0.3 is appropriate for compaction
+  - **Why needs human input**: Confirm this is the desired temperature
+
+### [MEDIUM] Validation Delegation Questions
+
+- [ ] **External Linter Configuration**: Config references markdownlint/yamllint - how should this work with ace-lint?
+  - **Current config**: Lines 77-79 specify `linters: { markdown: markdownlint, yaml: yamllint }`
+  - **From task.072**: ace-lint handles markdown/yaml linting with these external tools
+  - **Integration approach**: ace-docs validates by calling `ace-lint` subprocess
+  - **Suggested action**: Keep config, delegate to ace-lint in ValidateCommand
+  - **Why needs human input**: Confirm ace-docs config should reference ace-lint, not external tools directly
+
+- [ ] **Validation Rule Cascade**: How do global_rules interact with document type defaults?
+  - **Current config**: Lines 71-81 have `global_rules`, lines 6-68 have type-specific defaults
+  - **Behavior question**: Do type defaults override globals, or merge with them?
+  - **Suggested behavior**: Merge with type-specific overriding globals (standard cascade)
+  - **Why needs human input**: Confirm the intended rule priority/merging behavior
+
+### [LOW] Documentation and Testing
+
+- [ ] **Config Documentation**: Should README.md have a Configuration section like ace-lint?
+  - **From task.072**: ace-lint README has comprehensive Configuration section
+  - **Current situation**: No config docs in task.071 specification
+  - **Suggested action**: Add Configuration section to README explaining cascade and options
+  - **Why needs human input**: Confirm this should be part of task.071 deliverables
+
+- [ ] **Config Loading Tests**: Should there be tests for `Ace::Docs.config` method?
+  - **From task.072**: ace-lint has `reset_config!` method for testing
+  - **Current situation**: No config testing mentioned in task.071 test plan
+  - **Suggested action**: Add unit tests for config loading and cascade behavior
+  - **Why needs human input**: Confirm testing approach for config system
 
 # Complete ace-docs with batch analysis and ace-lint integration
 
