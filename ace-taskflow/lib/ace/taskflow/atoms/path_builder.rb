@@ -41,12 +41,14 @@ module Ace
         # Build release path
         # @param root [String] The root directory
         # @param release_name [String] The release name (e.g., v.0.9.0)
-        # @param status [String] The release status (backlog, active, done)
+        # @param status [String] The release status (backlog, pending, active, done)
         # @return [String] The complete path to the release directory
         def self.build_release_path(root, release_name, status = "active")
           case status
           when "backlog"
             File.join(root, "backlog", release_name)
+          when "pending"
+            File.join(root, "pending", release_name)
           when "done"
             File.join(root, "done", release_name)
           when "active"
@@ -98,10 +100,12 @@ module Ace
 
         # Determine context from path
         # @param path [String] The file or directory path
-        # @return [String] The context (backlog, active release, or done)
+        # @return [String] The context (backlog, pending, active release, or done)
         def self.extract_context(path)
           if path.include?("/backlog/")
             "backlog"
+          elsif path.include?("/pending/")
+            "pending"
           elsif path.include?("/done/")
             "done"
           else

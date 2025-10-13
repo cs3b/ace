@@ -42,6 +42,11 @@ module Ace
         config.dig("directories", "backlog") || "backlog"
       end
 
+      # Get pending directory name
+      def pending_dir
+        config.dig("directories", "pending") || "pending"
+      end
+
       # Get active release selection strategy
       def active_strategy
         config["active_strategy"] || "lowest"

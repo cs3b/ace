@@ -31,6 +31,9 @@ taskflow:
     # Backlog directory - default: "backlog"
     backlog: "backlog"
 
+    # Pending directory - default: "pending"
+    pending: "pending"
+
     # Retrospectives - default: "retros" (plural)
     # Note: Legacy "retro" (singular) is automatically interpreted as "retros"
     retros: "retros"

@@ -16,7 +16,7 @@ module Ace
         def validate_all
           issues = []
           stats = {
-            releases: { active: 0, backlog: 0, done: 0 },
+            releases: { active: 0, backlog: 0, pending: 0, done: 0 },
             tasks: { total: 0, mislocated: 0 },
             ideas: { total: 0, mislocated: 0 },
             retros: { total: 0 },
@@ -96,7 +96,7 @@ module Ace
           end
 
           # Check for standard directories
-          %w[backlog done].each do |dir|
+          %w[backlog pending done].each do |dir|
             path = File.join(@root_path, dir)
             unless Dir.exist?(path)
               issues << { type: :warning, message: "Missing standard directory: #{dir}/", location: @root_path }
@@ -124,6 +124,14 @@ module Ace
           if Dir.exist?(backlog_dir)
             Dir.glob(File.join(backlog_dir, "v.*")).each do |release_dir|
               validate_release_internal(release_dir, :backlog, issues, stats)
+            end
+          end
+
+          # Check pending releases
+          pending_dir = File.join(@root_path, "pending")
+          if Dir.exist?(pending_dir)
+            Dir.glob(File.join(pending_dir, "v.*")).each do |release_dir|
+              validate_release_internal(release_dir, :pending, issues, stats)
             end
           end
 
@@ -313,7 +321,7 @@ module Ace
             /^v\.\d+\.\d+\.\d+\/ideas\/(done\/)?(\d{8}(-\d{6})?-[\w-]+\.md|\d{8}(-\d{6})?-[\w-]+\/.*)/,
             /^v\.\d+\.\d+\.\d+\/docs\/.*\.md$/,
             /^v\.\d+\.\d+\.\d+\/retros\/.*\.md$/,
-            /^(backlog|done)\/v\.\d+\.\d+\.\d+\/.*/,
+            /^(backlog|pending|done)\/v\.\d+\.\d+\.\d+\/.*/,
             /^backlog\/(ideas|tasks)\/.*/
           ]
 

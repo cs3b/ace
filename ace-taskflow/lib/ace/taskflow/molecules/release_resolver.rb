@@ -13,7 +13,7 @@ module Ace
           @root_path = root_path || default_root_path
         end
 
-        # Find all releases across backlog, active, and done
+        # Find all releases across backlog, pending, active, and done
         # @return [Array<Hash>] Array of release info hashes
         def find_all
           releases = []
@@ -30,6 +30,15 @@ module Ace
             Dir.glob(File.join(backlog_path, "v.*")).each do |path|
               next unless File.directory?(path)
               releases << build_release_info(path, "backlog")
+            end
+          end
+
+          # Find pending releases
+          pending_path = File.join(root_path, "pending")
+          if File.directory?(pending_path)
+            Dir.glob(File.join(pending_path, "v.*")).each do |path|
+              next unless File.directory?(path)
+              releases << build_release_info(path, "pending")
             end
           end
 
@@ -81,7 +90,7 @@ module Ace
         end
 
         # Resolve a context string to a release path
-        # @param context [String] Context string (current, backlog, v.X.Y.Z)
+        # @param context [String] Context string (current, backlog, pending, v.X.Y.Z)
         # @return [String, nil] Resolved path or nil
         def resolve_context(context)
           case context
@@ -90,6 +99,8 @@ module Ace
             primary ? primary[:path] : nil
           when "backlog"
             File.join(root_path, "backlog")
+          when "pending"
+            File.join(root_path, "pending")
           else
             # Try to find as a release
             release = find_release(context)
