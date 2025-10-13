@@ -12,12 +12,12 @@ dependencies: []
 
 ### User Experience
 - **Input**: File paths (markdown, YAML, or documents with frontmatter), options for lint type, fix mode
-- **Process**: Runs appropriate linters (external or built-in), validates syntax and structure, optionally applies fixes
+- **Process**: Runs Ruby-based linters, validates syntax and structure, optionally applies fixes
 - **Output**: Validation results (pass/fail) with detailed errors/warnings, auto-fixed files (if --fix used)
 
 ### Expected Behavior
 
-The ace-lint tool provides standalone linting capabilities for markdown, YAML, and frontmatter validation that can be used by ace-docs and other ace-* gems.
+The ace-lint tool provides standalone linting capabilities for markdown, YAML, and frontmatter validation that can be used by ace-docs and other ace-* gems. **Ruby-only dependencies** - no Node.js or Python required.
 
 **Document Validation:**
 - Accepts one or more file paths: `ace-lint docs/file1.md docs/file2.md`
@@ -26,17 +26,17 @@ The ace-lint tool provides standalone linting capabilities for markdown, YAML, a
 - Reports errors and warnings with line numbers and descriptions
 - Supports auto-fix mode: `ace-lint --fix docs/file.md`
 
-**External Linter Integration:**
-- Detects availability of markdownlint (Node.js) for markdown files
-- Detects availability of yamllint (Python) for YAML files
-- Uses external linters when available for comprehensive validation
-- Falls back gracefully to basic built-in validation when external linters not found
-- Displays clear warnings when falling back to basic validation
+**Ruby-Based Validation (Core Features):**
+- **Markdown**: Uses kramdown + kramdown-parser-gfm (Ruby gems) for parsing and validation
+- **YAML**: Uses Ruby's built-in Psych (YAML parser) for syntax validation
+- **Frontmatter**: Validates YAML structure, required fields, field types using Ruby YAML parsing
+- **Formatting**: kramdown formatter for consistent markdown styling
+- **Zero external dependencies**: No Node.js (markdownlint) or Python (yamllint) required
 
-**Built-in Validation (Graceful Fallbacks):**
-- Markdown: Checks frontmatter presence, basic structure validation
-- YAML: Uses Ruby YAML.parse for syntax validation
-- Frontmatter: Validates YAML structure, required fields, field types (no external dependencies)
+**Optional External Tools (Security Only):**
+- **Gitleaks**: Secrets scanning (optional, graceful fallback if not installed)
+- Displays clear warnings when external security tools not available
+- Core linting never depends on external tools
 
 **Output Formatting:**
 - Colorized terminal output (green for pass, red for fail, yellow for warnings)
@@ -51,17 +51,17 @@ The ace-lint tool provides standalone linting capabilities for markdown, YAML, a
 ace-lint docs/architecture.md
 # Output:
 # Linting: docs/architecture.md
-#   ✓ Markdown syntax valid
+#   ✓ Markdown syntax valid (kramdown)
 #   ✓ Frontmatter schema valid
 # Validated: 1 document - Passed
 
-# Lint with auto-fix
+# Lint with auto-fix/format
 ace-lint docs/file.md --fix
 # Output:
 # Linting: docs/file.md
 #   ✓ Markdown syntax valid
-#   ⚠ Fixed 2 formatting issues
-# Validated: 1 document - Passed with fixes
+#   ⚠ Formatted with kramdown
+# Validated: 1 document - Passed with formatting
 
 # Lint multiple files
 ace-lint docs/*.md
@@ -76,7 +76,7 @@ ace-lint docs/*.md
 ace-lint config.yml --type yaml
 # Output:
 # Linting: config.yml
-#   ✓ YAML syntax valid
+#   ✓ YAML syntax valid (Psych)
 # Validated: 1 document - Passed
 
 # Format documents
@@ -96,11 +96,12 @@ ace-lint --help
 ```
 
 **Error Handling:**
-- External linter not found: Display warning, fall back to basic validation
 - File not found: Clear error message with file path
 - Invalid file type: Error with supported types list
 - Parsing errors: Display line number and error description
 - Permission errors: Clear error message about file access
+- Invalid YAML: Psych exception with line number
+- Invalid markdown: kramdown parsing errors with context
 
 **Edge Cases:**
 - Empty files: Validate as valid (unless frontmatter required)
@@ -112,44 +113,45 @@ ace-lint --help
 ### Success Criteria
 
 - [ ] **CLI Interface**: `ace-lint [FILES...] [OPTIONS]` command available with --fix, --format, --type options
-- [ ] **External Linter Detection**: Automatically detects markdownlint and yamllint availability
-- [ ] **Graceful Fallbacks**: Works without external linters using built-in basic validation with clear warnings
-- [ ] **Markdown Validation**: Validates markdown syntax via markdownlint (if available) or basic checks (built-in)
-- [ ] **YAML Validation**: Validates YAML syntax via yamllint (if available) or Ruby YAML.parse (built-in)
-- [ ] **Frontmatter Validation**: Validates frontmatter schema, required fields, field types (always built-in, no external dependency)
-- [ ] **Auto-fix Support**: `--fix` flag applies automatic fixes when supported by external linters
+- [ ] **Ruby-Only Stack**: Uses only Ruby gems (kramdown, kramdown-parser-gfm, Psych) - no Node.js or Python
+- [ ] **Markdown Validation**: Validates markdown syntax via kramdown parser with GFM support
+- [ ] **YAML Validation**: Validates YAML syntax via Ruby's Psych parser
+- [ ] **Frontmatter Validation**: Validates frontmatter schema, required fields, field types using Psych
+- [ ] **Auto-fix/Format Support**: `--fix` flag applies kramdown formatting to markdown files
 - [ ] **Colorized Output**: Terminal output uses colors (green/red/yellow) for clear status indication
 - [ ] **Exit Codes**: Returns 0 for success, 1 for failures (proper subprocess integration)
 - [ ] **Reusable Design**: Can be called as subprocess by ace-docs and other ace-* gems
 - [ ] **Error Messages**: Clear, actionable error messages with file paths and line numbers
+- [ ] **Optional Security**: Gitleaks integration for secrets scanning (optional, not required)
 
 ### Validation Questions
 
 - [ ] **Configuration**: Should ace-lint support configuration files (.ace/lint/config.yml) or rely only on command-line options?
 - [ ] **Required Fields**: Should frontmatter required fields be hardcoded or configurable per project?
-- [ ] **External Linter Versions**: Should we validate minimum versions for markdownlint/yamllint or accept any version?
+- [ ] **Kramdown Options**: Which kramdown options should be configurable (line_width, hard_wrap, etc.)?
 - [ ] **Performance**: Should we parallelize validation of multiple files or process sequentially?
 - [ ] **Output Format**: Should we support JSON output format for machine parsing in addition to human-readable terminal output?
 - [ ] **Severity Levels**: Should warnings vs errors be distinguishable (warnings don't fail validation)?
+- [ ] **Link Validation**: Should we include markdown link validation like the legacy system?
 
 ## Objective
 
-Create a standalone, reusable linting gem that provides comprehensive markdown, YAML, and frontmatter validation with optional external linter integration. The gem should be usable by ace-docs for validation delegation and by other ace-* gems that need document linting capabilities. Focus on graceful degradation when external linters are unavailable.
+Create a standalone, reusable linting gem that provides comprehensive markdown, YAML, and frontmatter validation using **Ruby-only dependencies**. The gem should be usable by ace-docs for validation delegation and by other ace-* gems that need document linting capabilities. Follow the proven patterns from the legacy dev-tools code-lint implementation.
 
 ## Scope of Work
 
 ### User Experience Scope
 - Command-line interface for file validation
-- Auto-fix capabilities (when external linters support it)
+- Auto-fix/formatting capabilities via kramdown
 - Clear, colorized terminal output
-- Graceful fallback when external linters unavailable
+- Ruby-only stack (no Node.js or Python required)
 
 ### System Behavior Scope
-- Markdown linting via markdownlint adapter (optional)
-- YAML linting via yamllint adapter (optional)
-- Frontmatter validation (always built-in)
-- External command detection and availability checking
-- Subprocess integration for external linters
+- Markdown linting via kramdown + kramdown-parser-gfm (Ruby gems)
+- YAML linting via Psych (Ruby built-in)
+- Frontmatter validation via Psych
+- Optional gitleaks integration for security scanning
+- Subprocess callable interface for other gems
 
 ### Interface Scope
 - CLI: `ace-lint [FILES...] [OPTIONS]`
@@ -161,35 +163,40 @@ Create a standalone, reusable linting gem that provides comprehensive markdown, 
 
 #### Behavioral Specifications
 - CLI command interface with all options
-- External linter detection and fallback logic
+- Ruby-based validation logic (kramdown, Psych)
 - Validation result format and output structure
 - Error handling and edge case behaviors
 
 #### Validation Artifacts
-- Test scenarios for all linter types (external and built-in)
-- Fallback behavior validation (when external linters missing)
+- Test scenarios for all linter types (kramdown, Psych)
 - Integration test scenarios (subprocess calls from other gems)
+- Kramdown formatting tests
 
 #### Workflow Components
 - Usage documentation (ux/usage.md)
 - Example validation outputs for different scenarios
-- Configuration examples (if configuration is included)
+- Configuration examples (kramdown options, frontmatter schema)
 
 ## Out of Scope
 
+- ❌ **Node.js Dependencies**: No markdownlint or other Node.js tools
+- ❌ **Python Dependencies**: No yamllint or other Python tools
 - ❌ **Semantic Validation**: Deep LLM-based content validation (future enhancement)
-- ❌ **Custom Rules**: User-defined linting rules or plugins (use external linters' config files)
+- ❌ **Custom Rules**: User-defined linting rules or plugins
 - ❌ **IDE Integration**: Editor plugins or language server protocol support
 - ❌ **Continuous Monitoring**: Watch mode or file system monitoring
 - ❌ **Multi-Repository**: Cross-repository linting or aggregated reporting
-- ❌ **Auto-Installation**: Automatically installing markdownlint or yamllint (user responsibility)
 
 ## References
 
 - Parent task: .ace-taskflow/v.0.9.0/tasks/071-docs-docs-complete-ace-docs-batch-analys/task.071.md (Phase 2: ace-lint Gem Creation)
-- External linters:
-  - markdownlint: https://github.com/DavidAnson/markdownlint
-  - yamllint: https://github.com/adrienverge/yamllint
+- Legacy implementation: _legacy/dev-tools/lib/coding_agent_tools/cli/commands/code_lint/ (proven Ruby-based patterns)
+- Ruby gems:
+  - kramdown: https://github.com/gettalong/kramdown
+  - kramdown-parser-gfm: https://github.com/kramdown/parser-gfm
+  - Psych: Ruby built-in YAML parser
+- Optional external tools:
+  - gitleaks: https://github.com/gitleaks/gitleaks (secrets scanning)
 - Related gems:
   - ace-docs (will use ace-lint for validation delegation)
   - ace-core (configuration management)
