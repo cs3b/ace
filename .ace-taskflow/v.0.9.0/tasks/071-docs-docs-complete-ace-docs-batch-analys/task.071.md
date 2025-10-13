@@ -2,8 +2,8 @@
 id: v.0.9.0+task.071
 status: pending
 priority: high
-estimate: 12-16h
-dependencies: []
+estimate: 8-10h
+dependencies: [v.0.9.0+task.072]
 ---
 
 # Complete ace-docs with batch analysis and ace-lint integration
@@ -209,13 +209,15 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 - ❌ **Real-time Analysis**: Continuous monitoring or watch mode
 - ❌ **Multi-Repository**: Cross-repository analysis and documentation management
 - ❌ **Semantic Validation**: Deep LLM-based semantic accuracy checking (future enhancement)
+- ❌ **ace-lint Implementation**: ace-lint gem creation moved to separate task (v.0.9.0+task.072) - this task focuses on ace-docs batch analysis only
 
 ## References
 
 - Task: .ace-taskflow/v.0.9.0/tasks/done/065-create-ace-docs-package/task.065.md
+- Dependency: .ace-taskflow/v.0.9.0/tasks/072-feat-lint-ace-lint-standalone-linting-ge/task.072.md (ace-lint gem - must complete first)
 - Ideas:
   - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-auto-generation-feature.md (OUT OF SCOPE)
-  - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-external-linter-integration.md (IN SCOPE via ace-lint)
+  - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-external-linter-integration.md (MOVED TO TASK 072)
   - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-llm-diff-summaries.md (IN SCOPE as analyze command)
   - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-llm-integration.md (PARTIAL - analysis only, not semantic validation)
 - Workflow: ace-docs/handbook/workflow-instructions/update-docs.wf.md
@@ -327,9 +329,10 @@ ace-lint/ (NEW GEM)
 
 **Phase Structure:**
 1. **Foundation** (Command Extraction): Refactor CLI for testability
-2. **ace-lint Creation**: Build reusable linting gem from scratch
-3. **Batch Analysis**: Implement analyze command with LLM integration
-4. **Integration**: Connect all pieces, update workflows
+2. **Batch Analysis**: Implement analyze command with LLM integration
+3. **Integration**: Connect with ace-lint (task 072), update workflows
+
+**Note**: ace-lint gem creation moved to separate task (v.0.9.0+task.072) which must complete before this task's integration phase.
 
 **Testing Strategy:**
 - Mock subprocess calls (ace-llm-query, external linters) using ace-test-support helpers
@@ -410,79 +413,7 @@ ace-lint/ (NEW GEM)
 - `test/fixtures/sample-repo/` (directory)
   - Purpose: Test git repository with sample commits for integration tests
 
-**ace-lint New Gem (Complete Structure):**
-
-- `ace-lint/` (root directory)
-  - Purpose: New standalone linting gem
-
-- `ace-lint/ace-lint.gemspec`
-  - Purpose: Gem specification with dependencies
-
-- `ace-lint/lib/ace/lint.rb`
-  - Purpose: Main entry point and autoloading
-
-- `ace-lint/lib/ace/lint/version.rb`
-  - Purpose: Version constant
-
-- `ace-lint/lib/ace/lint/atoms/command_detector.rb`
-  - Purpose: Detect available external linter commands
-
-- `ace-lint/lib/ace/lint/atoms/output_parser.rb`
-  - Purpose: Parse linter output into structured format
-
-- `ace-lint/lib/ace/lint/molecules/markdown_linter.rb`
-  - Purpose: Markdown linting via markdownlint adapter
-
-- `ace-lint/lib/ace/lint/molecules/yaml_linter.rb`
-  - Purpose: YAML linting via yamllint adapter
-
-- `ace-lint/lib/ace/lint/molecules/frontmatter_linter.rb`
-  - Purpose: Frontmatter schema validation (built-in)
-
-- `ace-lint/lib/ace/lint/organisms/linter_orchestrator.rb`
-  - Purpose: Coordinate linting across multiple linters
-
-- `ace-lint/lib/ace/lint/models/lint_result.rb`
-  - Purpose: Data model for lint results
-
-- `ace-lint/lib/ace/lint/adapters/markdownlint_adapter.rb`
-  - Purpose: Adapter for markdownlint subprocess calls
-
-- `ace-lint/lib/ace/lint/adapters/yamllint_adapter.rb`
-  - Purpose: Adapter for yamllint subprocess calls
-
-- `ace-lint/lib/ace/lint/commands/lint_command.rb`
-  - Purpose: Lint command implementation
-
-- `ace-lint/exe/ace-lint`
-  - Purpose: CLI executable
-
-- `ace-lint/bin/ace-lint`
-  - Purpose: Development binstub for workspace
-
-- `ace-lint/test/test_helper.rb`
-  - Purpose: Test setup and helpers
-
-- `ace-lint/test/atoms/command_detector_test.rb`
-- `ace-lint/test/atoms/output_parser_test.rb`
-- `ace-lint/test/molecules/markdown_linter_test.rb`
-- `ace-lint/test/molecules/yaml_linter_test.rb`
-- `ace-lint/test/molecules/frontmatter_linter_test.rb`
-- `ace-lint/test/organisms/linter_orchestrator_test.rb`
-- `ace-lint/test/models/lint_result_test.rb`
-- `ace-lint/test/adapters/markdownlint_adapter_test.rb`
-- `ace-lint/test/adapters/yamllint_adapter_test.rb`
-- `ace-lint/test/commands/lint_command_test.rb`
-- `ace-lint/test/integration/cli_integration_test.rb`
-
-- `ace-lint/.ace.example/lint/config.yml`
-  - Purpose: Example configuration file
-
-- `ace-lint/README.md`
-  - Purpose: Gem documentation
-
-- `ace-lint/CHANGELOG.md`
-  - Purpose: Version history
+**Note**: ace-lint gem files moved to separate task v.0.9.0+task.072
 
 ### Modify
 
@@ -513,22 +444,7 @@ ace-lint/ (NEW GEM)
   - Impact: Update user-facing documentation
   - Integration points: Reference ace-lint gem
 
-**Workspace Files:**
-
-- `.ace/test/suite.yml`
-  - Changes: Add ace-lint to test suite
-  - Impact: Include ace-lint in workspace test runs
-  - Integration points: ace-test-runner
-
-- `bin/ace-lint` (new)
-  - Changes: Create development binstub for ace-lint
-  - Impact: Allow running ace-lint from workspace root
-  - Integration points: Bundle setup
-
-- `Gemfile`
-  - Changes: Add ace-lint to development dependencies (path: "ace-lint")
-  - Impact: Make ace-lint available in workspace
-  - Integration points: Bundle
+**Note**: Workspace integration for ace-lint handled in task v.0.9.0+task.072
 
 ### Delete
 
@@ -711,6 +627,8 @@ ace-lint/ (NEW GEM)
 
 **Phase 1: Foundation (Command Extraction) - 2-3 hours**
 
+**Note**: Phase 2 (ace-lint Gem Creation) has been moved to separate task v.0.9.0+task.072 which must complete before starting Phase 3 of this task.
+
 - [ ] Create `test/commands/` directory in ace-docs
   > TEST: Directory Creation
   > Type: Pre-condition Check
@@ -750,123 +668,7 @@ ace-lint/ (NEW GEM)
   > Assert: Existing commands work identically
   > Command: cd ace-docs && bundle exec ace-docs status && bundle exec ace-docs diff --help
 
-**Phase 2: ace-lint Gem Creation - 4-6 hours**
-
-- [ ] Create ace-lint gem directory structure
-  - Run: `mkdir -p ace-lint/{lib/ace/lint/{atoms,molecules,organisms,models,adapters,commands},exe,bin,test/{atoms,molecules,organisms,models,adapters,commands,integration,fixtures},.ace.example/lint}`
-  - Create ace-lint.gemspec based on ace-docs.gemspec template
-  - Create lib/ace/lint.rb with autoloading
-  - Create lib/ace/lint/version.rb with VERSION = "0.1.0"
-  > TEST: Gem Structure Created
-  > Type: Pre-condition Check
-  > Assert: All directories exist, gemspec valid
-  > Command: test -f ace-lint/ace-lint.gemspec && ruby -c ace-lint/ace-lint.gemspec
-
-- [ ] Implement CommandDetector atom (ace-lint/lib/ace/lint/atoms/command_detector.rb)
-  - Method: `detect(command_name)` returns true/false
-  - Use `which` command to check availability
-  - Cache results for performance
-  - Test with mocked `which` subprocess
-
-- [ ] Implement OutputParser atom (ace-lint/lib/ace/lint/atoms/output_parser.rb)
-  - Method: `parse_markdownlint(output)` returns structured errors
-  - Method: `parse_yamllint(output)` returns structured errors
-  - Handle various output formats (JSON, plain text)
-  - Test with fixture output samples
-
-- [ ] Implement MarkdownlintAdapter (ace-lint/lib/ace/lint/adapters/markdownlint_adapter.rb)
-  - Method: `lint(file_path, options)` calls markdownlint subprocess
-  - Method: `fix(file_path)` calls markdownlint with --fix
-  - Return LintResult model
-  - Handle command not found gracefully
-  - Test with mocked subprocess
-
-- [ ] Implement YamllintAdapter (ace-lint/lib/ace/lint/adapters/yamllint_adapter.rb)
-  - Method: `lint(file_path, options)` calls yamllint subprocess
-  - Return LintResult model
-  - Handle command not found gracefully
-  - Test with mocked subprocess
-
-- [ ] Implement MarkdownLinter molecule (ace-lint/lib/ace/lint/molecules/markdown_linter.rb)
-  - Use MarkdownlintAdapter if available
-  - Fallback to basic validation (frontmatter present, valid markdown structure)
-  - Return warnings when external linter unavailable
-  - Test both adapter and fallback paths
-
-- [ ] Implement YamlLinter molecule (ace-lint/lib/ace/lint/molecules/yaml_linter.rb)
-  - Use YamllintAdapter if available
-  - Fallback to Ruby YAML.parse validation
-  - Return warnings when external linter unavailable
-
-- [ ] Implement FrontmatterLinter molecule (ace-lint/lib/ace/lint/molecules/frontmatter_linter.rb)
-  - Validate YAML structure (parseable)
-  - Check required fields (configurable)
-  - Validate field types
-  - No external dependencies (built-in)
-
-- [ ] Implement LintResult model (ace-lint/lib/ace/lint/models/lint_result.rb)
-  - Fields: file_path, valid, errors[], warnings[], linter_used
-  - Methods: to_h, to_s, success?, has_warnings?
-  - Test serialization and methods
-
-- [ ] Implement LinterOrchestrator organism (ace-lint/lib/ace/lint/organisms/linter_orchestrator.rb)
-  - Coordinate multiple linters for a file
-  - Aggregate results into single LintResult
-  - Handle linter selection based on file type
-  - Test with mocked linters
-
-- [ ] Implement LintCommand (ace-lint/lib/ace/lint/commands/lint_command.rb)
-  - Accept file paths and options
-  - Orchestrate linting via LinterOrchestrator
-  - Format output (colorized, table format)
-  - Return status code (0 all pass, 1 failures)
-  - Test with mocked orchestrator
-
-- [ ] Create exe/ace-lint CLI executable
-  - Thor-based CLI similar to ace-docs
-  - Commands: lint [FILES...] [OPTIONS]
-  - Options: --fix, --type [markdown|yaml|frontmatter]
-  - Delegate to LintCommand
-
-- [ ] Create bin/ace-lint development binstub
-  - Similar to other ace-* binstubs
-  - Set BUNDLE_GEMFILE to workspace Gemfile
-  - Load exe/ace-lint
-  > TEST: ace-lint CLI Works
-  > Type: Integration Validation
-  > Assert: CLI runs, help displays, basic lint works
-  > Command: cd ace-lint && bundle exec ace-lint --help && bundle exec ace-lint test/fixtures/sample.md
-
-- [ ] Write comprehensive ace-lint test suite
-  - All atom tests (command_detector, output_parser)
-  - All molecule tests (markdown_linter, yaml_linter, frontmatter_linter)
-  - Adapter tests with mocked subprocesses
-  - Organism tests with mocked molecules
-  - Command tests with mocked orchestrator
-  - Integration test (end-to-end CLI)
-  > TEST: ace-lint Tests Pass
-  > Type: Action Validation
-  > Assert: All tests pass, coverage >80%
-  > Command: cd ace-lint && bundle exec rake test
-
-- [ ] Update workspace Gemfile to include ace-lint
-  - Add: `gem "ace-lint", path: "ace-lint"`
-  - Run: `bundle install`
-
-- [ ] Add ace-lint to workspace test suite (.ace/test/suite.yml)
-  - Add to `tools` group with priority 3
-  > TEST: Workspace Integration
-  > Type: Integration Validation
-  > Assert: ace-lint runs in workspace test suite
-  > Command: ace-test ace-lint
-
-- [ ] Create ace-lint README.md with usage examples
-  - Installation instructions
-  - Command reference
-  - Configuration guide
-  - Graceful fallback explanation
-
-**Phase 3: Batch Analysis Implementation - 4-6 hours**
+**Phase 2: Batch Analysis Implementation - 4-6 hours**
 
 - [ ] Implement TimeRangeCalculator atom (ace-docs/lib/ace/docs/atoms/time_range_calculator.rb)
   - Method: `calculate_since(date)` formats date for git
@@ -960,7 +762,9 @@ ace-lint/ (NEW GEM)
   > Assert: All analyze-related tests pass
   > Command: cd ace-docs && bundle exec rake test TEST=test/commands/analyze_command_test.rb TEST=test/molecules/*_test.rb TEST=test/models/analysis_report_test.rb
 
-**Phase 4: Integration and Finalization - 2-3 hours**
+**Phase 3: Integration and Finalization - 2-3 hours**
+
+**Prerequisites**: Task v.0.9.0+task.072 (ace-lint gem) must be completed before starting this phase.
 
 - [ ] Update ValidateCommand to delegate to ace-lint
   - Replace inline validation logic with subprocess call to ace-lint
@@ -1120,9 +924,10 @@ ace-lint/ (NEW GEM)
 - [ ] **Cache Management**: Analysis saved to `.cache/ace-docs/analysis-{timestamp}.md` with YAML frontmatter metadata
 - [ ] **Workflow Ready**: Report format enables smooth document-by-document iteration in workflows (clear sections, relevance mapping)
 - [ ] **Metadata Updates**: `ace-docs update` command accepts multiple files for batch frontmatter updates
-- [ ] **ace-lint Integration**: Validation delegates to ace-lint tool via subprocess
-- [ ] **Reusable Linting**: ace-lint usable independently by other ace-* gems and from command line
-- [ ] **Graceful Fallbacks**: ace-lint works with basic validation when external linters unavailable (with warnings)
+- [ ] **ace-lint Integration**: Validation delegates to ace-lint tool via subprocess (requires task 072 completion)
+- [ ] **Command Extraction**: All CLI commands extracted to testable command classes
 - [ ] **Error Handling**: Clear error messages for all failure scenarios (no docs, no changes, LLM error, git error)
 - [ ] **Test Coverage**: >85% overall, >90% for commands, all tests passing
 - [ ] **Documentation**: README and ux/usage.md complete with examples, troubleshooting, and configuration guides
+
+**Note**: ace-lint gem creation (items removed above) moved to task v.0.9.0+task.072
