@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-08'
+  last-updated: '2025-10-13'
 ---
 
 # ACE Gem Development Guide
@@ -122,10 +122,38 @@ end
 
 ## Configuration
 
-### Example Configuration (.ace.example)
+### Configuration Pattern Overview
+
+**CRITICAL**: All ace-* gems MUST use ace-core's config cascade system. Never use hardcoded file paths or custom config loaders.
+
+**Config Cascade**: `./.ace/{gem}/ → ~/.ace/{gem}/ → defaults`
+
+### Configuration Directory Structure
+
+```
+.ace/
+└── your-gem/
+    ├── config.yml         # General gem settings (optional)
+    └── tool.yml           # Tool-specific config (if gem has multiple tools)
+```
+
+**Example Configs** (in gem directory):
+```
+ace-your-gem/
+└── .ace.example/
+    └── your-gem/
+        ├── config.yml     # Example general config
+        └── tool.yml       # Example tool config
+```
+
+### Configuration File Patterns
+
+#### Single-Purpose Gems (Simple Config)
+
+For gems with one main configuration:
 
 ```yaml
-# .ace.example/your-gem/config.yml
+# .ace/your-gem/config.yml (user's project or home directory)
 ace:
   your_gem:
     features:
@@ -134,24 +162,248 @@ ace:
       timeout: 30
 ```
 
+#### Multi-Tool Gems (Separate Configs)
+
+For gems supporting multiple tools (like ace-lint):
+
+```yaml
+# .ace/lint/config.yml (general ace-lint settings)
+ace:
+  lint:
+    enabled_linters:
+      - markdown
+      - yaml
+
+# .ace/lint/kramdown.yml (kramdown tool config - FLAT structure)
+input: GFM
+line_width: 120
+auto_ids: false
+hard_wrap: false
+parse_block_html: true
+parse_span_html: true
+```
+
+**Key Pattern**: Tool-specific configs use **flat structure** (no `ace:` nesting).
+
 ### Loading Configuration
+
+#### Simple Config Loading
 
 ```ruby
 # lib/ace/your_gem.rb
 module Ace
   module YourGem
+    class Error < StandardError; end
+
+    # Load configuration using ace-core config cascade
+    # Follows ace-* pattern: ./.ace/your-gem/config.yml → ~/.ace/your-gem/config.yml
+    # @return [Hash] Configuration hash
     def self.config
       @config ||= begin
         base_config = Ace::Core.config
         base_config.get('ace', 'your_gem') || default_config
+      rescue StandardError => e
+        warn "Warning: Could not load ace-your-gem config: #{e.message}"
+        default_config
       end
     end
 
+    # Default configuration when no config file exists
+    # @return [Hash] Default configuration
     def self.default_config
-      { 'features' => { 'verbose' => false }, 'processing' => { 'timeout' => 30 } }
+      {
+        'features' => { 'verbose' => false },
+        'processing' => { 'timeout' => 30 }
+      }
+    end
+
+    # Reset config cache (useful for testing)
+    def self.reset_config!
+      @config = nil
     end
   end
 end
+```
+
+#### Multi-Tool Config Loading
+
+For gems with multiple tool configs:
+
+```ruby
+# lib/ace/your_gem.rb
+module Ace
+  module YourGem
+    # Load general gem configuration
+    def self.config
+      @config ||= begin
+        base_config = Ace::Core.config
+        base_config.get('ace', 'your_gem') || {}
+      rescue StandardError => e
+        warn "Warning: Could not load config: #{e.message}"
+        {}
+      end
+    end
+
+    # Load tool-specific configuration
+    # Config location: .ace/your-gem/tool.yml
+    # @return [Hash] Tool configuration
+    def self.tool_config
+      @tool_config ||= begin
+        base_config = Ace::Core.config
+        base_config.get('ace', 'your_gem', 'tool') || default_tool_config
+      rescue StandardError => e
+        warn "Warning: Could not load tool config: #{e.message}"
+        default_tool_config
+      end
+    end
+
+    def self.default_tool_config
+      {
+        'option1' => 'default',
+        'option2' => true
+      }
+    end
+
+    # Reset config cache (useful for testing)
+    def self.reset_config!
+      @config = nil
+      @tool_config = nil
+    end
+  end
+end
+```
+
+### Using Config in Code
+
+```ruby
+# lib/ace/your_gem/molecules/processor.rb
+module Ace::YourGem::Molecules
+  class Processor
+    def initialize(options = {})
+      config = Ace::YourGem.config
+
+      # Merge: config file < CLI options
+      @verbose = options[:verbose] || config['features']['verbose']
+      @timeout = options[:timeout] || config['processing']['timeout']
+    end
+  end
+end
+```
+
+### Configuration Best Practices
+
+#### ✅ DO:
+- Use `Ace::Core.config.get('ace', 'your_gem')` for loading
+- Add `ace-core` dependency to gemspec: `spec.add_dependency "ace-core", "~> 0.9"`
+- Provide sensible defaults in `default_config` method
+- Create example configs in `.ace.example/your-gem/`
+- Document all config options in README Configuration section
+- Add `reset_config!` method for testing
+- Handle loading errors gracefully with warnings
+
+#### ❌ DON'T:
+- **Never** use hardcoded file paths: `File.expand_path('~/.ace/your-gem/config.yml')`
+- **Never** create custom ConfigLoader classes
+- **Never** put config files in project root: `.your-gem.yml`
+- **Never** skip example configs in `.ace.example/`
+- **Never** create `CONFIGURATION.md` (use README Configuration section)
+
+### Example Config Documentation (README)
+
+Add to your gem's README.md:
+
+```markdown
+## Configuration
+
+ace-your-gem uses the ace-core config cascade system.
+
+### Config Files
+
+- **Main config**: `.ace/your-gem/config.yml` - General settings
+
+### Config Cascade
+
+Configuration loaded in order (later overrides earlier):
+
+1. Default configuration (built-in)
+2. User configuration (`~/.ace/your-gem/config.yml`)
+3. Project configuration (`./.ace/your-gem/config.yml`)
+4. CLI options
+
+### Configuration Options
+
+Create `.ace/your-gem/config.yml`:
+
+\```yaml
+ace:
+  your_gem:
+    features:
+      verbose: false    # Enable verbose output
+    processing:
+      timeout: 30       # Processing timeout in seconds
+\```
+
+See `.ace.example/your-gem/config.yml` for full example.
+
+### Common Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `features.verbose` | `false` | Enable verbose output |
+| `processing.timeout` | `30` | Processing timeout (seconds) |
+```
+
+### Configuration Testing
+
+```ruby
+# test/your_gem_test.rb
+class YourGemTest < YourGemTestCase
+  def setup
+    Ace::YourGem.reset_config!  # Reset between tests
+  end
+
+  def test_default_config
+    config = Ace::YourGem.config
+    assert_equal false, config['features']['verbose']
+    assert_equal 30, config['processing']['timeout']
+  end
+
+  def test_config_loading_error
+    # Test graceful handling when config loading fails
+    Ace::Core.stub :config, proc { raise "Config error" } do
+      config = Ace::YourGem.config
+      assert_equal Ace::YourGem.default_config, config
+    end
+  end
+end
+```
+
+### Anti-Patterns to Avoid
+
+Based on real implementation mistakes:
+
+```ruby
+# ❌ WRONG: Hardcoded paths
+CONFIG_PATHS = [
+  '.ace/your-gem/config.yml',
+  File.expand_path('~/.ace/your-gem/config.yml')
+].freeze
+
+# ❌ WRONG: Custom config loader
+class ConfigLoader
+  def self.load
+    CONFIG_PATHS.each do |path|
+      return YAML.load_file(path) if File.exist?(path)
+    end
+  end
+end
+
+# ❌ WRONG: Project root config file
+config_file = '.your-gem.yml'
+
+# ✅ CORRECT: Use ace-core
+base_config = Ace::Core.config
+base_config.get('ace', 'your_gem') || default_config
 ```
 
 ## CLI Implementation
