@@ -158,11 +158,12 @@ module Ace
           end
 
           # Check for done subdirectory in tasks
-          task_done_dir = File.join(release_path, "t", "done")
+          config = Ace::Taskflow.configuration
+          task_done_dir = File.join(release_path, config.task_dir, "done")
           unless Dir.exist?(task_done_dir)
             issues << {
               type: :info,
-              message: "Missing t/done/ directory for completed tasks",
+              message: "Missing #{config.task_dir}/done/ directory for completed tasks",
               location: release_path
             }
           end

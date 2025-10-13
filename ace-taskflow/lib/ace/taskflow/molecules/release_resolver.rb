@@ -109,7 +109,8 @@ module Ace
         # @return [Hash] Statistics about the release
         def get_statistics(release_path)
           require_relative "../atoms/yaml_parser"
-          task_path = File.join(release_path, "t")
+          config = Ace::Taskflow.configuration
+          task_path = File.join(release_path, config.task_dir)
           return default_statistics unless File.directory?(task_path)
 
           stats = default_statistics

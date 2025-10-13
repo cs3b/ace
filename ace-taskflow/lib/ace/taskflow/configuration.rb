@@ -111,11 +111,12 @@ module Ace
         # Create root directory
         FileUtils.mkdir_p(root_directory)
 
-        # Create standard directories
-        FileUtils.mkdir_p(File.join(root_directory, "backlog"))
-        FileUtils.mkdir_p(File.join(root_directory, "backlog", "ideas"))
-        FileUtils.mkdir_p(File.join(root_directory, "backlog", "t"))
-        FileUtils.mkdir_p(File.join(root_directory, "done"))
+        # Create standard directories using configured names
+        config_obj = self.class.new
+        FileUtils.mkdir_p(File.join(root_directory, config_obj.backlog_dir))
+        FileUtils.mkdir_p(File.join(root_directory, config_obj.backlog_dir, "ideas"))
+        FileUtils.mkdir_p(File.join(root_directory, config_obj.backlog_dir, config_obj.task_dir))
+        FileUtils.mkdir_p(File.join(root_directory, config_obj.done_dir))
 
         # Create initial .ace/taskflow/config.yml if not exists
         taskflow_dir = File.join(Dir.pwd, ".ace", "taskflow")

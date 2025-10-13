@@ -254,9 +254,11 @@ module Ace
         end
 
         def check_tasks
+          config = Ace::Taskflow.configuration
+          task_dir = config.task_dir
           # Find all task files
-          task_files = Dir.glob(File.join(@root_path, "**/t/**/task.*.md"))
-            .concat(Dir.glob(File.join(@root_path, "**/t/**/*.md")))
+          task_files = Dir.glob(File.join(@root_path, "**", task_dir, "**", "task.*.md"))
+            .concat(Dir.glob(File.join(@root_path, "**", task_dir, "**", "*.md")))
             .uniq
 
           task_files.each do |file|
@@ -349,16 +351,17 @@ module Ace
         end
 
         def find_release_path(release_name)
+          config = Ace::Taskflow.configuration
           # Look in active releases
           active_path = File.join(@root_path, release_name)
           return active_path if Dir.exist?(active_path)
 
           # Look in backlog
-          backlog_path = File.join(@root_path, "backlog", release_name)
+          backlog_path = File.join(@root_path, config.backlog_dir, release_name)
           return backlog_path if Dir.exist?(backlog_path)
 
           # Look in done
-          done_path = File.join(@root_path, "done", release_name)
+          done_path = File.join(@root_path, config.done_dir, release_name)
           return done_path if Dir.exist?(done_path)
 
           nil

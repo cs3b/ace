@@ -466,9 +466,10 @@ module Ace
         end
 
         def task_id_exists?(context_path, task_id)
+          config = Ace::Taskflow.configuration
           # Check both active and done directories for existing task IDs
           dirs = [
-            File.join(context_path, "t"),
+            File.join(context_path, config.task_dir),
             File.join(context_path, "done")
           ]
 
