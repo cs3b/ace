@@ -1,23 +1,7 @@
-# Kramdown Configuration for ace-lint
-# This file configures kramdown parser and formatter behavior
-# Documentation: https://kramdown.gettalong.org/options.html
-
-# Parser input format (GFM = GitHub Flavored Markdown)
+# Test kramdown configuration
 input: GFM
-
-# Line width for formatting (--fix, --format commands)
 line_width: 120
-
-# Generate anchor IDs for headings (e.g., # Heading {#heading})
-# Set to false for clean markdown without IDs
 auto_ids: false
-
-# Hard wrap lines at line_width
-# Set to false for soft wrapping (recommended)
 hard_wrap: false
-
-# Parse block-level HTML tags
 parse_block_html: true
-
-# Parse span-level HTML tags
 parse_span_html: true
