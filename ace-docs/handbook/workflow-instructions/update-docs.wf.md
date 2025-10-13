@@ -141,6 +141,46 @@ Generate summary of updates:
 - Any validation issues
 - Documents skipped/deferred
 
+## Document-Specific Guidelines
+
+### Tool Documentation (tools.md, reference docs)
+
+When updating tool documentation and command references:
+
+**Best Practices for Examples:**
+- Only include meaningful, practical examples that demonstrate real usage
+- Skip trivial commands like `--version`, `--help`, `-h`, `-v`
+- Show actual usage that demonstrates the tool's purpose
+- Aim for 2-4 practical examples per tool
+- Focus on common use cases and workflows
+
+**Example - Good:**
+```bash
+# Analyze documents needing updates
+ace-docs status --needs-update
+
+# Update specific document metadata
+ace-docs update docs/api.md --set last-updated=today
+```
+
+**Example - Skip:**
+```bash
+ace-docs --version      # Trivial, not useful
+ace-docs -h             # Help text, not practical usage
+```
+
+### Context Documents (what-do-we-build.md, architecture.md, etc.)
+
+For core context documents with specific requirements (line limits, update order, duplication prevention), see the specialized workflow:
+
+`dev-handbook/workflow-instructions/update-context-docs.wf.md`
+
+This workflow provides:
+- Specific update order to prevent duplication
+- Target line counts for each document
+- Content ownership rules
+- Cross-document validation
+
 ## Error Handling
 
 - **Missing frontmatter**: Suggest adding ace-docs frontmatter
