@@ -15,20 +15,20 @@ module Ace
           Dir.chdir(@test_dir)
 
           # Create basic structure
-          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retro")
-          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retro/done")
+          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros")
+          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros/done")
 
           # Create test retros
           File.write(
-            ".ace-taskflow/v.0.9.0/retro/2025-10-02-test-retro-1.md",
+            ".ace-taskflow/v.0.9.0/retros/2025-10-02-test-retro-1.md",
             "# Reflection: Test 1\n\nContent"
           )
           File.write(
-            ".ace-taskflow/v.0.9.0/retro/2025-10-01-test-retro-2.md",
+            ".ace-taskflow/v.0.9.0/retros/2025-10-01-test-retro-2.md",
             "# Reflection: Test 2\n\nContent"
           )
           File.write(
-            ".ace-taskflow/v.0.9.0/retro/done/2025-09-30-done-retro.md",
+            ".ace-taskflow/v.0.9.0/retros/done/2025-09-30-done-retro.md",
             "# Reflection: Done\n\nContent"
           )
 
@@ -91,8 +91,8 @@ module Ace
 
         def test_empty_list
           # Remove all retros
-          FileUtils.rm_rf(".ace-taskflow/v.0.9.0/retro")
-          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retro")
+          FileUtils.rm_rf(".ace-taskflow/v.0.9.0/retros")
+          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros")
 
           output = capture_io do
             @command.execute([])

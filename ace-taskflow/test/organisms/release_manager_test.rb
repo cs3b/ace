@@ -265,8 +265,8 @@ class ReleaseManagerTest < AceTaskflowTestCase
     end
 
     FileUtils.mkdir_p(release_dir)
-    FileUtils.mkdir_p(File.join(release_dir, "t"))
-    FileUtils.mkdir_p(File.join(release_dir, "i"))
+    FileUtils.mkdir_p(File.join(release_dir, "tasks"))
+    FileUtils.mkdir_p(File.join(release_dir, "ideas"))
     FileUtils.mkdir_p(File.join(release_dir, "docs"))
 
     # Create .active marker for active releases
@@ -285,7 +285,7 @@ class ReleaseManagerTest < AceTaskflowTestCase
       # Create sample tasks
       2.times do |i|
         task_num = sprintf("%03d", i + 1)
-        task_dir = File.join(release_dir, "t", task_num)
+        task_dir = File.join(release_dir, "tasks", "#{task_num}-test-task")
         FileUtils.mkdir_p(task_dir)
 
         task_status = all_done ? "done" : (i == 0 ? "done" : "pending")

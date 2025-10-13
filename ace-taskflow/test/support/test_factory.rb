@@ -240,8 +240,8 @@ module TestFactory
                    end
 
     FileUtils.mkdir_p(release_path)
-    FileUtils.mkdir_p(File.join(release_path, "t"))
-    FileUtils.mkdir_p(File.join(release_path, "i"))
+    FileUtils.mkdir_p(File.join(release_path, "tasks"))
+    FileUtils.mkdir_p(File.join(release_path, "ideas"))
     FileUtils.mkdir_p(File.join(release_path, "docs"))
 
     # Create .active marker for active releases
@@ -273,7 +273,7 @@ module TestFactory
   # @param spec [Hash] Task specification: {num: "001", status: "pending", priority: "medium", ...}
   def self.create_task(release_path, version, spec)
     task_num = spec[:num] || spec[:number] || "001"
-    task_dir = File.join(release_path, "t", task_num)
+    task_dir = File.join(release_path, "tasks", task_num)
     FileUtils.mkdir_p(task_dir)
 
     task_metadata = {
