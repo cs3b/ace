@@ -11,7 +11,7 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_task_from_file
     with_test_project do |dir|
       Dir.chdir(dir) do
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "001", "task.001.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "001", "task.001.md")
         task = @loader.load_task(task_file)
 
         assert task

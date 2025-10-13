@@ -55,9 +55,9 @@ module TestFactory
   def self.sample_release_structure(version = "v.0.9.0")
     {
       "#{version}/release.md" => release_content(version),
-      "#{version}/t/001/task.md" => sample_task_content(id: "#{version}+task.001"),
-      "#{version}/t/002/task.md" => sample_task_content(id: "#{version}+task.002", status: "in-progress"),
-      "#{version}/t/003/task.md" => sample_task_content(id: "#{version}+task.003", status: "done"),
+      "#{version}/tasks/001/task.md" => sample_task_content(id: "#{version}+task.001"),
+      "#{version}/tasks/002/task.md" => sample_task_content(id: "#{version}+task.002", status: "in-progress"),
+      "#{version}/tasks/003/task.md" => sample_task_content(id: "#{version}+task.003", status: "done"),
       "#{version}/i/001.md" => sample_idea_content
     }
   end
@@ -100,7 +100,12 @@ module TestFactory
     # Create .ace/taskflow/config.yml for config discovery
     config_dir = File.join(base_dir, ".ace", "taskflow")
     FileUtils.mkdir_p(config_dir)
-    File.write(File.join(config_dir, "config.yml"), "root: .ace-taskflow\n")
+    File.write(File.join(config_dir, "config.yml"), <<~CONFIG)
+      taskflow:
+        root: .ace-taskflow
+        directories:
+          tasks: tasks
+    CONFIG
 
     # Create standard structure in .ace-taskflow
     %w[v.0.9.0 backlog done].each do |dir|
@@ -145,7 +150,7 @@ module TestFactory
   def self.create_task_structure(base_dir, release, count)
     count.times do |i|
       task_num = sprintf("%03d", i + 1)
-      task_dir = File.join(base_dir, release, "t", task_num)
+      task_dir = File.join(base_dir, release, "tasks", task_num)
       FileUtils.mkdir_p(task_dir)
 
       status = case i

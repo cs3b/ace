@@ -24,10 +24,10 @@ class TaskManagerTest < AceTaskflowTestCase
   def test_find_next_task_skips_blocked
     with_test_project do |dir|
       # Mark task 002 (in-progress) and 003 (pending) as blocked
-      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "002", "task.002.md")
+      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "002", "task.002.md")
       File.write(task_002, File.read(task_002).gsub(/status: in-progress/, "status: blocked"))
 
-      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "003", "task.003.md")
+      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.md")
       File.write(task_003, File.read(task_003).gsub(/status: pending/, "status: blocked"))
 
       Dir.chdir(dir) do
@@ -52,8 +52,8 @@ class TaskManagerTest < AceTaskflowTestCase
         assert_equal "v.0.9.0+task.011", result[:task_id]
 
         # Verify file was created (directory includes slug: "011-task-new-title")
-        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "011-*", "*.md")).first
-        assert task_file, "Task file should exist in t/011-* directory"
+        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "011-*", "*.md")).first
+        assert task_file, "Task file should exist in tasks/011-* directory"
         assert File.exist?(task_file)
       end
     end
@@ -69,7 +69,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert result[:success]
 
         # Verify file was updated
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "003", "task.003.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.md")
         content = File.read(task_file)
         assert_match(/status: in-progress/, content)
       end

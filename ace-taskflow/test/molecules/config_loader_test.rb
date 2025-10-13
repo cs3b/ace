@@ -10,7 +10,7 @@ class ConfigLoaderTest < AceTaskflowTestCase
         config = Ace::Taskflow::Molecules::ConfigLoader.load
 
         assert_equal ".ace-taskflow", config["root"]
-        assert_equal "t", config["task_dir"]
+        assert_equal "tasks", config.dig("directories", "tasks")
         assert_equal "lowest", config["active_strategy"]
         assert_equal true, config["allow_multiple_active"]
       end
