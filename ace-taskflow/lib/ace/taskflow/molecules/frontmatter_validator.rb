@@ -65,11 +65,9 @@ module Ace
           config ||= Ace::Taskflow.configuration
 
           # Get configured directory names
-          task_dir = config.task_dir       # e.g., "tasks"
-          retro_dir = config.retro_dir     # e.g., "retros"
-
-          # For ideas, use "ideas" at release level (config.ideas_dir is global path "backlog/ideas")
-          ideas_dir_name = "ideas"
+          task_dir = config.task_dir                   # e.g., "tasks"
+          retro_dir = config.retro_dir                 # e.g., "retros"
+          ideas_dir_name = config.release_ideas_subdir # e.g., "ideas" (subdirectory within releases)
 
           # Check directory structure first (more reliable than filename)
           # Directory patterns use configured names

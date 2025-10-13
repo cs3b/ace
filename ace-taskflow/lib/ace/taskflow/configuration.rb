@@ -32,6 +32,12 @@ module Ace
         config.dig("directories", "ideas") || "backlog/ideas"
       end
 
+      # Get release ideas subdirectory name (for use within release directories)
+      # This extracts just the subdirectory name, separate from the full ideas_dir path
+      def release_ideas_subdir
+        config.dig("directories", "release_ideas") || "ideas"
+      end
+
       # Get done directory name
       def done_dir
         config.dig("directories", "done") || "done"

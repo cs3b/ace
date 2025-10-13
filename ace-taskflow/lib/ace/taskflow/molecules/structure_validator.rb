@@ -68,7 +68,7 @@ module Ace
           validate_task_structure(File.join(release_path, config.task_dir), issues, stats)
 
           # Check idea structure
-          validate_idea_structure(File.join(release_path, "ideas"), issues, stats)
+          validate_idea_structure(File.join(release_path, config.release_ideas_subdir), issues, stats)
 
           {
             valid: issues.none? { |i| i[:type] == :error },
@@ -162,7 +162,7 @@ module Ace
         def check_release_directories(release_dir, issues, stats)
           config = Ace::Taskflow.configuration
           # Standard directories for a release (using configured names)
-          subdirs = [config.task_dir, "ideas", "docs", config.retro_dir]
+          subdirs = [config.task_dir, config.release_ideas_subdir, "docs", config.retro_dir]
           subdirs.each do |subdir|
             path = File.join(release_dir, subdir)
             unless Dir.exist?(path)
