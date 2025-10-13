@@ -191,7 +191,7 @@ module Ace
           # Release counts
           if components[:structure] && components[:structure][:releases]
             s = components[:structure][:releases]
-            output << "  Releases: #{s[:active]} active | #{s[:backlog]} backlog | #{s[:done]} done"
+            output << "  Releases: #{s[:active]} active | #{s[:backlog]} backlog | #{s[:pending] || 0} pending | #{s[:done]} done"
           end
 
           # Active release tasks and ideas with status breakdown

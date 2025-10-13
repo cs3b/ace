@@ -19,6 +19,7 @@ module Ace
           stats = {
             active: 0,
             backlog: 0,
+            pending: 0,
             done: 0,
             total: 0,
             with_errors: 0
@@ -49,7 +50,7 @@ module Ace
         # @param stats [Hash] Stats hash to update
         def validate_release(release, issues, stats)
           stats[:total] += 1
-          stats[release[:status]] += 1 if [:active, :backlog, :done].include?(release[:status])
+          stats[release[:status]] += 1 if [:active, :backlog, :pending, :done].include?(release[:status])
 
           # Check version format
           unless release[:name].match?(/^v\.\d+\.\d+\.\d+$/)
@@ -199,6 +200,14 @@ module Ace
                 location: release[:path]
               }
             end
+          when :pending
+            unless actual_location == :pending
+              issues << {
+                type: :error,
+                message: "Pending release #{release[:name]} is in #{actual_location} directory",
+                location: release[:path]
+              }
+            end
           when :done
             unless actual_location == :done
               issues << {
@@ -213,6 +222,8 @@ module Ace
         def determine_actual_location(path)
           if path.include?("/backlog/")
             :backlog
+          elsif path.include?("/pending/")
+            :pending
           elsif path.include?("/done/")
             :done
           else
