@@ -1,13 +1,19 @@
 # Configuration
 
-ace-lint supports project-wide configuration via a `.ace-lint.yml` file.
+ace-lint follows the standard ace-* configuration pattern with explicit configuration files in `.ace/lint/`.
 
 ## Quick Start
 
-Create `.ace-lint.yml` in your project root:
+Create `.ace/lint/kramdown.yml` in your project root:
 
 ```yaml
-# Line width for markdown formatting (default: 120)
+# Kramdown Configuration for ace-lint
+# Documentation: https://kramdown.gettalong.org/options.html
+
+# Parser input format
+input: GFM
+
+# Line width for formatting (default: 120)
 line_width: 120
 
 # Generate anchor IDs for headings (default: false)
@@ -15,6 +21,10 @@ auto_ids: false
 
 # Hard wrap lines (default: false)
 hard_wrap: false
+
+# Parse HTML tags
+parse_block_html: true
+parse_span_html: true
 ```
 
 ## Configuration Options
@@ -64,12 +74,14 @@ hard_wrap: false  # Soft wrap (recommended)
 
 ## Configuration File Locations
 
-ace-lint looks for configuration in these locations (in order):
+ace-lint follows the ace-* standard and looks for configuration in these locations (in order):
 
-1. `.ace-lint.yml`
-2. `.ace-lint.yaml`
+1. `.ace/lint/kramdown.yml` (project-level, recommended)
+2. `.ace/lint/kramdown.yaml` (alternative extension)
+3. `~/.ace/lint/kramdown.yml` (user-level)
+4. `~/.ace/lint/kramdown.yaml` (alternative extension)
 
-The first file found is used.
+The first file found is used. This follows the same pattern as other ace-* gems (e.g., `.ace/llm/providers/*.yml`).
 
 ## Override via CLI
 
@@ -87,11 +99,15 @@ ace-lint file.md --fix --line-width 80
 
 ### For Documentation Projects
 
+`.ace/lint/kramdown.yml`:
 ```yaml
 # Clean markdown without anchor IDs
+input: GFM
 line_width: 120
 auto_ids: false
 hard_wrap: false
+parse_block_html: true
+parse_span_html: true
 ```
 
 ### For GitHub Wikis
@@ -114,19 +130,32 @@ hard_wrap: true
 
 ## Complete Example
 
-`.ace-lint.yml` for ace-meta project:
+`.ace/lint/kramdown.yml` for ace-meta project:
 
 ```yaml
-# ace-lint configuration for ace-meta project
+# Kramdown Configuration for ace-lint
+# This file configures kramdown parser and formatter behavior
+# Documentation: https://kramdown.gettalong.org/options.html
 
-# Line width for markdown formatting
+# Parser input format (GFM = GitHub Flavored Markdown)
+input: GFM
+
+# Line width for formatting (--fix, --format commands)
 line_width: 120
 
-# Don't generate anchor IDs (keeps markdown clean)
+# Generate anchor IDs for headings (e.g., # Heading {#heading})
+# Set to false for clean markdown without IDs
 auto_ids: false
 
-# Don't hard wrap lines
+# Hard wrap lines at line_width
+# Set to false for soft wrapping (recommended)
 hard_wrap: false
+
+# Parse block-level HTML tags
+parse_block_html: true
+
+# Parse span-level HTML tags
+parse_span_html: true
 ```
 
 ## Verification

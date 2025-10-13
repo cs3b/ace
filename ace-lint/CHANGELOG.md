@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
+## 0.2.0 - 2025-10-13
+
+### Changed
+
+* **BREAKING**: Configuration moved from `.ace-lint.yml` to `.ace/lint/kramdown.yml`
+* ConfigLoader now follows ace-* pattern with standard `.ace/` directory structure
+* Configuration is now explicit - users see and edit kramdown settings directly
+* All kramdown options now visible in config file (no hidden defaults)
+
+### Added
+
+* Configuration cascade: `.ace/lint/kramdown.yml` (project) → `~/.ace/lint/kramdown.yml` (user)
+* Full kramdown configuration support in `.ace/lint/kramdown.yml`
+* Updated CONFIGURATION.md with proper ace-* patterns and examples
+
+### Fixed
+
+* Removed `.ace-lint.yml` files (wrong location)
+* Config now follows same pattern as other ace-* gems (e.g., `.ace/llm/providers/*.yml`)
+
 ## 0.1.3 - 2025-10-13
 
 ### Fixed
