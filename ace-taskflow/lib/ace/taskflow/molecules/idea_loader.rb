@@ -81,12 +81,16 @@ module Ace
 
           # Count in active releases
           @release_resolver.find_active.each do |release|
-            idea_dir = File.join(release[:path], "ideas")
+            ideas_subdir = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
+            # Extract just the last part if it's a nested path
+            ideas_dirname = ideas_subdir.split("/").last
+            idea_dir = File.join(release[:path], ideas_dirname)
             counts[release[:name]] = count_ideas_in_directory(idea_dir)
           end
 
           # Count in backlog
-          backlog_dir = File.join(@root_path, "backlog", "ideas")
+          ideas_dir_config = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
+          backlog_dir = File.join(@root_path, ideas_dir_config)
           counts["backlog"] = count_ideas_in_directory(backlog_dir)
 
           counts
@@ -164,23 +168,27 @@ module Ace
         end
 
         def determine_idea_directory(context)
+          ideas_dir_config = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
+          # Extract just the last part if it's a nested path for release-specific ideas
+          ideas_dirname = ideas_dir_config.split("/").last
+
           case context
           when "current", "active", nil
             # Find active release
             release = @release_resolver.find_primary_active
             if release
-              File.join(release[:path], "ideas")
+              File.join(release[:path], ideas_dirname)
             else
               # Fall back to backlog if no active release
-              File.join(@root_path, "backlog", "ideas")
+              File.join(@root_path, ideas_dir_config)
             end
           when "backlog"
-            File.join(@root_path, "backlog", "ideas")
+            File.join(@root_path, ideas_dir_config)
           when /^v\.\d+\.\d+\.\d+/
             # Specific release
             release = @release_resolver.find_release(context)
             if release
-              File.join(release[:path], "ideas")
+              File.join(release[:path], ideas_dirname)
             else
               nil
             end
@@ -188,7 +196,7 @@ module Ace
             # Try to find as release name
             release = @release_resolver.find_release(context)
             if release
-              File.join(release[:path], "ideas")
+              File.join(release[:path], ideas_dirname)
             else
               nil
             end
@@ -244,8 +252,9 @@ module Ace
 
         def extract_context_from_path(path)
           relative = Pathname.new(path).relative_path_from(Pathname.new(@root_path)).to_s
+          backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
 
-          if relative.start_with?("backlog/")
+          if relative.start_with?("#{backlog_dir}/")
             "backlog"
           elsif relative =~ /^v\.\d+\.\d+\.\d+/
             relative.split("/").first

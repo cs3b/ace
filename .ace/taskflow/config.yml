@@ -9,6 +9,8 @@ taskflow:
   root: ".ace-taskflow"
 
   # Task directory structure
+  # All directory names can be customized to match your project's structure
+  # Changes here will be respected throughout the ace-taskflow system
   directories:
     # Note: 'root' moved to top-level taskflow.root (above)
     # Old format taskflow.directories.root is deprecated but still supported
@@ -16,16 +18,21 @@ taskflow:
     # Active release directory
     active: "v.%{version}"
 
-    # Task subdirectory
+    # Task subdirectory - default: "t"
     tasks: "t"
 
-    # Ideas/backlog directory
+    # Ideas/backlog directory - default: "backlog/ideas"
+    # Supports nested paths (e.g., "backlog/ideas")
     ideas: "backlog/ideas"
 
-    # Completed tasks
+    # Completed tasks - default: "done"
     done: "done"
 
-    # Retrospectives
+    # Backlog directory - default: "backlog"
+    backlog: "backlog"
+
+    # Retrospectives - default: "retros" (plural)
+    # Note: Legacy "retro" (singular) is automatically interpreted as "retros"
     retros: "retros"
 
   # Task file naming
