@@ -1,3 +1,14 @@
+---
+update:
+  update_frequency: weekly
+  max_lines: 150
+  required_sections:
+  - overview
+  - scope
+  frequency: weekly
+  last-updated: '2025-09-24'
+---
+
 # Project Blueprint: ACE (Agent Coding Environment)
 
 ## What is a Blueprint?
@@ -48,4 +59,3 @@ AI agents should ignore these during normal operations:
 - `node_modules/**/*` # Node.js dependencies
 - `*.bak` # Backup files
 - `docs/context/cached/**/*` # Legacy cached context files
-

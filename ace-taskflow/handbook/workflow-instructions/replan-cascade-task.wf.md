@@ -1,3 +1,12 @@
+---
+update:
+  update_frequency: on-change
+  auto_generate:
+  - template-refs: from-embedded
+  frequency: on-change
+  last-updated: '2025-09-25'
+---
+
 # Replan Cascade Task Workflow Instruction
 
 **Goal:** Review and update downstream tasks after completing a task with dependencies, implementing manual dependency impact analysis with robust graph traversal and controlled cascade operations.

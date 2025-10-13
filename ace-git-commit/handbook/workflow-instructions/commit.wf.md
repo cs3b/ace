@@ -1,8 +1,14 @@
 ---
 name: commit
 allowed-tools: Bash, Read
-description: Create well-structured Git commits using ace-git-commit's LLM-powered message generation
+description: Create well-structured Git commits using ace-git-commit's LLM-powered
+  message generation
 argument-hint: "[intention]"
+doc-type: workflow
+purpose: commit workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-09-26'
 ---
 
 # Commit Workflow

@@ -4,12 +4,16 @@ purpose: Update documentation with ace-docs tool orchestration
 context: documentation-management
 parameters:
   input:
-    description: "Documents to update - can be specific files, preset, type, or 'all'"
+    description: Documents to update - can be specific files, preset, type, or 'all'
     required: false
-    default: "needs-update"
+    default: needs-update
   options:
-    description: "Additional options for filtering or processing"
+    description: Additional options for filtering or processing
     required: false
+doc-type: workflow
+update:
+  frequency: on-change
+  last-updated: '2025-10-13'
 ---
 
 # Update Documentation with ace-docs

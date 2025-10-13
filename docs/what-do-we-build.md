@@ -1,3 +1,14 @@
+---
+update:
+  update_frequency: weekly
+  max_lines: 150
+  required_sections:
+  - overview
+  - scope
+  frequency: weekly
+  last-updated: '2025-10-08'
+---
+
 # ACE (Agent Coding Environment)
 
 ## What We Build
@@ -28,4 +39,3 @@ Every development capability becomes an installable Ruby gem. Prompts, agents, a
 ---
 
 *ACE: Making AI-assisted development as simple as `gem install`.*
-

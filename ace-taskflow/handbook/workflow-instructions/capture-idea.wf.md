@@ -1,3 +1,12 @@
+---
+update:
+  update_frequency: on-change
+  auto_generate:
+  - template-refs: from-embedded
+  frequency: on-change
+  last-updated: '2025-09-24'
+---
+
 # Capture Idea Workflow Instruction
 
 ## Goal

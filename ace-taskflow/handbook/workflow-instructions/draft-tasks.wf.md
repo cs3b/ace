@@ -3,6 +3,11 @@ name: draft-tasks
 allowed-tools: Bash, Read, Task
 description: Create multiple draft tasks from idea files in sequence
 argument-hint: "[idea-pattern]"
+doc-type: workflow
+purpose: draft-tasks workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-10-02'
 ---
 
 # Draft Multiple Tasks Workflow

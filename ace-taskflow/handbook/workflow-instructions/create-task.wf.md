@@ -1,15 +1,22 @@
 ---
-description: Create complete task from plan (draft behavioral spec + implementation planning + commit)
+description: Create complete task from plan (draft behavioral spec + implementation
+  planning + commit)
 context:
   params:
     output: cache
   embed_document_source: true
   files:
-    - wfi://draft-task
-    - wfi://plan-task
-    - wfi://commit
+  - wfi://draft-task
+  - wfi://plan-task
+  - wfi://commit
 variables:
-  plan_description: "Plan text, behavioral requirements, or Claude Code plan results"
+  plan_description: Plan text, behavioral requirements, or Claude Code plan results
+doc-type: workflow
+purpose: Create complete task from plan (draft behavioral spec + implementation planning
+  + commit)
+update:
+  frequency: on-change
+  last-updated: '2025-10-06'
 ---
 
 # Create Task

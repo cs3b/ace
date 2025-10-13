@@ -2,7 +2,12 @@
 name: fix-tests
 description: Systematically diagnose and fix failing automated tests
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob
-argument-hint: ""
+argument-hint: ''
+doc-type: workflow
+purpose: fix-tests workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-10-02'
 ---
 
 # Fix Tests Workflow Instruction

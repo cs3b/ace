@@ -3,6 +3,11 @@ name: work-on-tasks
 allowed-tools: Bash, Read, Task
 description: Execute work on multiple pending tasks in sequence
 argument-hint: "[task-id-pattern]"
+doc-type: workflow
+purpose: work-on-tasks workflow instruction
+update:
+  frequency: on-change
+  last-updated: '2025-10-02'
 ---
 
 # Work on Multiple Tasks Workflow

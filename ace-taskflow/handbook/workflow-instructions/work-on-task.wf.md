@@ -1,3 +1,12 @@
+---
+update:
+  update_frequency: on-change
+  auto_generate:
+  - template-refs: from-embedded
+  frequency: on-change
+  last-updated: '2025-10-08'
+---
+
 # Work on Task Workflow Instruction
 
 **Goal:** Initiate and guide the step-by-step implementation of a specific task, using the detailed plan embedded directly within the task's definition file.

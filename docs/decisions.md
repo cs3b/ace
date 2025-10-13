@@ -1,3 +1,14 @@
+---
+update:
+  update_frequency: weekly
+  max_lines: 150
+  required_sections:
+  - overview
+  - scope
+  frequency: weekly
+  last-updated: '2025-09-22'
+---
+
 # Project Decisions
 
 This document provides actionable decisions from Architecture Decision Records (ADRs) that directly affect how AI agents and developers should work with this codebase.
