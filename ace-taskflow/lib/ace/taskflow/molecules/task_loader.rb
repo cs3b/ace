@@ -2,6 +2,7 @@
 
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
+require_relative "../configuration"
 
 module Ace
   module Taskflow
@@ -12,6 +13,7 @@ module Ace
 
         def initialize(root_path = nil)
           @root_path = root_path || default_root_path
+          @config = Configuration.new
         end
 
         # Load a single task file
@@ -54,7 +56,7 @@ module Ace
         # @return [Array<Hash>] Array of task data
         def load_tasks_from_context(context_path)
           tasks = []
-          task_dir = File.join(context_path, "t")
+          task_dir = File.join(context_path, @config.task_dir)
 
           return tasks unless File.directory?(task_dir)
 
@@ -76,7 +78,7 @@ module Ace
           end
 
           # Also load tasks from done/ subdirectory
-          done_dir = File.join(task_dir, "done")
+          done_dir = File.join(task_dir, @config.done_dir)
           if File.directory?(done_dir)
             Dir.glob(File.join(done_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
               # Find .md files in the task folder
@@ -315,7 +317,7 @@ module Ace
         # @param number [String] The task number
         # @return [String, nil] The task directory path or nil if not found
         def find_task_directory(context_path, number)
-          task_base = File.join(context_path, "t")
+          task_base = File.join(context_path, @config.task_dir)
           padded_number = number.to_s.rjust(3, '0')
 
           # First try in main t/ directory
@@ -334,7 +336,7 @@ module Ace
           return unpadded_dir if File.directory?(unpadded_dir)
 
           # Now try in done/ subdirectory
-          done_base = File.join(task_base, "done")
+          done_base = File.join(task_base, @config.done_dir)
           if File.directory?(done_base)
             # Try old format in done/
             old_format_done_dir = File.join(done_base, padded_number)
