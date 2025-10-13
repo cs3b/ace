@@ -49,8 +49,10 @@ module Ace
 
         # Find document by path
         def find_by_path(path)
-          absolute_path = File.absolute_path(path)
-          @documents.find { |doc| File.absolute_path(doc.path) == absolute_path }
+          return nil unless File.exist?(path)
+
+          real_path = File.realpath(path)
+          @documents.find { |doc| File.exist?(doc.path) && File.realpath(doc.path) == real_path }
         end
 
         # Get document types configuration
