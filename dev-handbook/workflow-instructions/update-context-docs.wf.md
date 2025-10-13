@@ -2,6 +2,10 @@
 
 **Goal:** Analyze repository changes and update the core context documents ensuring they remain accurate, focused, and free of duplication.
 
+> **Note:** This workflow can now be enhanced with the `ace-docs` tool for automated document management.
+> See `ace-docs/handbook/workflow-instructions/update-docs.wf.md` for the tooling-based approach.
+> Use `/update-docs` command for the automated workflow.
+
 ## Prerequisites
 
 * Write access to context documents in `docs/` directory

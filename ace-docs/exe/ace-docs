@@ -1,0 +1,227 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "thor"
+require_relative "../lib/ace/docs"
+
+module Ace
+  module Docs
+    class CLI < Thor
+      desc "status", "Show status of all managed documents"
+      option :type, desc: "Filter by document type"
+      option :needs_update, type: :boolean, desc: "Show only documents needing update"
+      option :freshness, desc: "Filter by freshness status (current/stale/outdated)"
+      def status
+        require_relative "../lib/ace/docs/commands/status_command"
+        Commands::StatusCommand.new(options).execute
+      rescue StandardError => e
+        error_exit("Error showing status", e)
+      end
+
+      desc "discover", "Find and list all managed documents"
+      def discover
+        require_relative "../lib/ace/docs/organisms/document_registry"
+        registry = Organisms::DocumentRegistry.new
+        documents = registry.all
+
+        if documents.empty?
+          puts "No managed documents found."
+          return
+        end
+
+        puts "Found #{documents.size} managed documents:"
+        documents.each do |doc|
+          puts "  #{doc.relative_path || doc.path} (#{doc.doc_type})"
+        end
+      rescue StandardError => e
+        error_exit("Error discovering documents", e)
+      end
+
+      desc "diff [FILE]", "Analyze changes for documents"
+      option :all, type: :boolean, desc: "Analyze all managed documents"
+      option :needs_update, type: :boolean, desc: "Analyze documents needing update"
+      option :since, desc: "Date or commit to diff from"
+      option :exclude_renames, type: :boolean, desc: "Exclude renamed files"
+      option :exclude_moves, type: :boolean, desc: "Exclude moved files"
+      def diff(file = nil)
+        require_relative "../lib/ace/docs/organisms/document_registry"
+        require_relative "../lib/ace/docs/molecules/change_detector"
+
+        registry = Organisms::DocumentRegistry.new
+
+        # Determine which documents to analyze
+        documents = if file
+                      doc = registry.find_by_path(file)
+                      error_exit("Document not found: #{file}") unless doc
+                      [doc]
+                    elsif options[:all]
+                      registry.all
+                    elsif options[:needs_update]
+                      registry.needing_update
+                    else
+                      registry.needing_update
+                    end
+
+        if documents.empty?
+          puts "No documents to analyze."
+          return
+        end
+
+        puts "Analyzing changes for #{documents.size} document(s)..."
+
+        # Generate diff analysis
+        diff_options = {
+          include_renames: !options[:exclude_renames],
+          include_moves: !options[:exclude_moves]
+        }
+
+        result = if documents.size == 1
+                   Molecules::ChangeDetector.get_diff_for_document(
+                     documents.first,
+                     since: options[:since],
+                     options: diff_options
+                   )
+                 else
+                   Molecules::ChangeDetector.get_diff_for_documents(
+                     documents,
+                     since: options[:since],
+                     options: diff_options
+                   )
+                 end
+
+        # Save to cache
+        cache_file = Molecules::ChangeDetector.save_diff_to_cache(result)
+        puts "Analysis saved to: #{cache_file}"
+
+        # Display summary
+        if result[:document_diffs]
+          with_changes = result[:documents_with_changes]
+          puts "Documents with changes: #{with_changes}/#{result[:total_documents]}"
+        elsif result[:has_changes]
+          puts "Changes detected for #{File.basename(result[:document_path])}"
+        else
+          puts "No changes detected."
+        end
+      rescue StandardError => e
+        error_exit("Error analyzing changes", e)
+      end
+
+      desc "update FILE", "Update document frontmatter"
+      option :set, type: :hash, desc: "Fields to update (e.g., --set last-updated=today)"
+      option :preset, desc: "Update all documents matching preset"
+      def update(file = nil)
+        require_relative "../lib/ace/docs/organisms/document_registry"
+        require_relative "../lib/ace/docs/molecules/frontmatter_manager"
+
+        registry = Organisms::DocumentRegistry.new
+
+        # Determine which documents to update
+        documents = if options[:preset]
+                      # TODO: Implement preset-based selection
+                      registry.all.select { |d| d.context_preset == options[:preset] }
+                    elsif file
+                      doc = registry.find_by_path(file)
+                      error_exit("Document not found: #{file}") unless doc
+                      [doc]
+                    else
+                      error_exit("Please specify a file or --preset")
+                    end
+
+        if documents.empty?
+          puts "No documents to update."
+          return
+        end
+
+        # Update frontmatter
+        updated_count = 0
+        documents.each do |doc|
+          if Molecules::FrontmatterManager.update_document(doc, options[:set] || {})
+            updated_count += 1
+            puts "Updated: #{doc.display_name}"
+          end
+        end
+
+        puts "Updated frontmatter for #{updated_count} document(s)"
+      rescue StandardError => e
+        error_exit("Error updating documents", e)
+      end
+
+      desc "validate [FILE|PATTERN]", "Validate documents against rules"
+      option :syntax, type: :boolean, desc: "Run syntax validation using linters"
+      option :semantic, type: :boolean, desc: "Run semantic validation using LLM"
+      option :all, type: :boolean, desc: "Run all validation types"
+      def validate(pattern = nil)
+        require_relative "../lib/ace/docs/organisms/document_registry"
+        require_relative "../lib/ace/docs/organisms/validator"
+
+        registry = Organisms::DocumentRegistry.new
+
+        # Determine documents to validate
+        documents = if pattern
+                      if File.exist?(pattern)
+                        doc = registry.find_by_path(pattern)
+                        doc ? [doc] : []
+                      else
+                        # Treat as glob pattern
+                        registry.all.select { |d| File.fnmatch(pattern, d.path) }
+                      end
+                    else
+                      registry.all
+                    end
+
+        if documents.empty?
+          puts "No documents to validate."
+          return
+        end
+
+        # Determine validation types
+        run_syntax = options[:syntax] || options[:all]
+        run_semantic = options[:semantic] || options[:all]
+        run_all = !options[:syntax] && !options[:semantic]
+
+        validator = Organisms::Validator.new(registry)
+
+        documents.each do |doc|
+          puts "Validating: #{doc.display_name}"
+
+          results = validator.validate_document(
+            doc,
+            syntax: run_syntax || run_all,
+            semantic: run_semantic || run_all
+          )
+
+          if results[:valid]
+            puts "  ✓ Valid".green
+          else
+            puts "  ✗ Invalid".red
+            results[:errors].each do |error|
+              puts "    - #{error}".red
+            end
+          end
+
+          results[:warnings].each do |warning|
+            puts "    ⚠ #{warning}".yellow
+          end
+        end
+      rescue StandardError => e
+        error_exit("Error validating documents", e)
+      end
+
+      desc "version", "Show ace-docs version"
+      def version
+        puts "ace-docs version #{Ace::Docs::VERSION}"
+      end
+
+      private
+
+      def error_exit(message, exception = nil)
+        puts "Error: #{message}".red
+        puts "  #{exception.message}".red if exception && ENV["DEBUG"]
+        puts "  #{exception.backtrace.join("\n  ")}".red if exception && ENV["TRACE"]
+        exit 1
+      end
+    end
+  end
+end
+
+Ace::Docs::CLI.start(ARGV)
