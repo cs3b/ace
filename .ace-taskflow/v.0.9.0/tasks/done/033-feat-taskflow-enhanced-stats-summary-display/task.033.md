@@ -2,7 +2,7 @@
 id: v.0.9.0+task.033
 status: done
 estimate: 3 days
-dependencies: [task.032]
+dependencies: []
 ---
 
 # Add enhanced stats and summary display to ace-taskflow

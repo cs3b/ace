@@ -2,7 +2,7 @@
 id: v.0.9.0+task.043
 status: done
 estimate: 45 minutes
-dependencies: [task.042]
+dependencies: []
 ---
 
 # Refactor env loading to centralize in ace-core without ENV pollution

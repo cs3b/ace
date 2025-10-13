@@ -2,7 +2,7 @@
 id: v.0.9.0+task.040
 status: done
 estimate: 4h
-dependencies: [task.034]
+dependencies: []
 ---
 
 # Implemented dependency-aware sorting and tree visualization for ace-taskflow

@@ -2,7 +2,7 @@
 id: v.0.9.0+task.038
 status: done
 estimate: 15m
-dependencies: [task.021]
+dependencies: []
 ---
 
 # Create proper binstub for ace-llm-query

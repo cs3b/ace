@@ -2,7 +2,7 @@
 id: v.0.9.0+task.036
 status: done
 estimate: 30m
-dependencies: [task.021]
+dependencies: []
 ---
 
 # Fix ace-llm-query executable to follow standard pattern

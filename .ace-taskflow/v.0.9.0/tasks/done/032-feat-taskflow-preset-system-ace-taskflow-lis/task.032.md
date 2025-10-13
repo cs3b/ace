@@ -2,7 +2,7 @@
 id: v.0.9.0+task.032
 status: done
 estimate: 1 week
-dependencies: [task.031]
+dependencies: []
 ---
 
 # Implement preset system for ace-taskflow listings

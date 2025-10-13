@@ -2,7 +2,7 @@
 id: v.0.9.0+task.041
 status: done
 estimate: 2 days
-dependencies: [task.033, task.040]
+dependencies: []
 ---
 
 # Implement move-to-done and reschedule features for ace-taskflow

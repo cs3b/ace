@@ -2,7 +2,7 @@
 id: v.0.9.0+task.035
 status: done
 estimate: 2 days
-dependencies: [task.021]
+dependencies: []
 ---
 
 # Implement configuration-based provider architecture for ace-llm
