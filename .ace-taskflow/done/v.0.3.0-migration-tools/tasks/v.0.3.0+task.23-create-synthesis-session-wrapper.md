@@ -1,7 +1,7 @@
 ---
 
 id: v.0.3.0+task.23
-status: completed
+status: done
 priority: medium
 estimate: 6h
 dependencies: [v.0.3.0+task.18, v.0.3.0+task.21]

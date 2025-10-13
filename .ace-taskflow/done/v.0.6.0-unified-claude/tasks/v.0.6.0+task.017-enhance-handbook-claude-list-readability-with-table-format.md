@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.017
-status: completed
+status: done
 priority: high
 estimate: 3h
 dependencies: []

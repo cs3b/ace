@@ -161,12 +161,13 @@ module Ace
         end
 
         def format_group_name(name)
-          # Capitalize and format group names
+          # Format group names - keep original directory names intact
           case name
           when nil, ""
             "Root"
           else
-            name.to_s.split("_").map(&:capitalize).join(" ")
+            # Just return the directory name as-is (don't capitalize)
+            name.to_s
           end
         end
       end

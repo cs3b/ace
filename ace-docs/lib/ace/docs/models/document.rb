@@ -177,13 +177,27 @@ module Ace
           @path ? File.basename(@path) : "untitled.md"
         end
 
-        # Get relative path from project root
+        # Get relative path from current directory
         def relative_path
           return nil unless @path
 
-          if @path.start_with?(Dir.pwd)
-            @path.sub("#{Dir.pwd}/", "")
-          else
+          begin
+            require 'pathname'
+            # Try to get a nice relative path from current directory
+            pwd_path = Pathname.new(Dir.pwd)
+            file_path = Pathname.new(@path)
+
+            # If file is under current directory or we can compute relative path
+            relative = file_path.relative_path_from(pwd_path).to_s
+
+            # If relative path goes up too many levels, just use absolute
+            if relative.start_with?("../../../")
+              @path
+            else
+              relative
+            end
+          rescue
+            # If we can't compute relative path, use absolute
             @path
           end
         end

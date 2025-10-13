@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.044
-status: completed
+status: done
 estimate: 2h
 dependencies: []
 completed_at: 2025-09-29

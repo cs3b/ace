@@ -15,6 +15,8 @@ module Ace
           @config_path = config_path || find_config_path
           @config = load_configuration
           @documents = []
+          # Store the project root (where config was found) for document discovery
+          @project_root = @config_path ? File.dirname(File.dirname(File.dirname(@config_path))) : Dir.pwd
           discover_documents
         end
 
@@ -92,8 +94,22 @@ module Ace
             "ace-docs.yaml"
           ]
 
+          # Start from current directory and walk up to find config
+          current_dir = Dir.pwd
+
+          while current_dir && current_dir != "/" && current_dir != File.dirname(current_dir)
+            config_locations.each do |location|
+              path = File.join(current_dir, location)
+              return path if File.exist?(path)
+            end
+
+            # Move up one directory
+            current_dir = File.dirname(current_dir)
+          end
+
+          # Also check home directory as last resort
           config_locations.each do |location|
-            path = File.join(Dir.pwd, location)
+            path = File.join(Dir.home, location)
             return path if File.exist?(path)
           end
 
@@ -158,7 +174,7 @@ module Ace
 
         def discover_explicit_documents
           # Search for all markdown files in the project
-          all_md_files = Dir.glob(File.join(Dir.pwd, "**/*.md"))
+          all_md_files = Dir.glob(File.join(@project_root, "**/*.md"))
 
           # Load those with ace-docs frontmatter
           all_md_files.each do |path|
@@ -181,39 +197,63 @@ module Ace
             paths = type_config["paths"] || []
             defaults = type_config["defaults"] || {}
 
+            # Separate inclusion and exclusion patterns
+            include_patterns = []
+            exclude_patterns = []
+
             paths.each do |pattern|
-              matching_files = Dir.glob(File.join(Dir.pwd, pattern))
-
-              matching_files.each do |path|
-                next if ignored_path?(path)
-                next if @documents.any? { |d| d.path == path }
-
-                # Load the document
-                doc = Molecules::DocumentLoader.load_file(path)
-
-                # If it doesn't have frontmatter, check if we should track it anyway
-                if doc.nil? && File.exist?(path) && path.end_with?(".md")
-                  # Create a minimal document for tracking
-                  content = File.read(path)
-                  doc = Models::Document.new(
-                    path: path,
-                    frontmatter: {
-                      "doc-type" => type_name,
-                      "purpose" => "Auto-discovered #{type_name} document",
-                      "update" => defaults
-                    },
-                    content: content
-                  )
-                end
-
-                @documents << doc if doc
+              if pattern.start_with?("!")
+                # Exclusion pattern (remove the !)
+                exclude_patterns << pattern[1..]
+              else
+                # Inclusion pattern
+                include_patterns << pattern
               end
+            end
+
+            # First collect all matching files from inclusion patterns
+            all_matching_files = []
+            include_patterns.each do |pattern|
+              matching_files = Dir.glob(File.join(@project_root, pattern))
+              all_matching_files.concat(matching_files)
+            end
+
+            # Then filter out excluded files
+            exclude_patterns.each do |pattern|
+              excluded_files = Dir.glob(File.join(@project_root, pattern))
+              all_matching_files -= excluded_files
+            end
+
+            # Process the final list of files
+            all_matching_files.uniq.each do |path|
+              next if ignored_path?(path)
+              next if @documents.any? { |d| d.path == path }
+
+              # Load the document
+              doc = Molecules::DocumentLoader.load_file(path)
+
+              # If it doesn't have frontmatter, check if we should track it anyway
+              if doc.nil? && File.exist?(path) && path.end_with?(".md")
+                # Create a minimal document for tracking
+                content = File.read(path)
+                doc = Models::Document.new(
+                  path: path,
+                  frontmatter: {
+                    "doc-type" => type_name,
+                    "purpose" => "Auto-discovered #{type_name} document",
+                    "update" => defaults
+                  },
+                  content: content
+                )
+              end
+
+              @documents << doc if doc
             end
           end
         end
 
         def ignored_path?(path)
-          # Ignore certain directories and files
+          # Start with default ignored patterns
           ignored_patterns = [
             %r{/\.git/},
             %r{/node_modules/},
@@ -224,7 +264,39 @@ module Ace
             %r{/\.ace-taskflow/done/}
           ]
 
+          # Add patterns from config if available
+          if @config && @config["ignore"]
+            config_patterns = @config["ignore"].map do |pattern|
+              # Convert glob patterns to regex
+              # Remove leading ! for negation patterns (handle separately)
+              if pattern.start_with?("!")
+                nil  # Skip negation patterns here
+              else
+                glob_to_regex(pattern)
+              end
+            end.compact
+            ignored_patterns.concat(config_patterns)
+          end
+
           ignored_patterns.any? { |pattern| path.match?(pattern) }
+        end
+
+        def glob_to_regex(glob_pattern)
+          # Convert glob pattern to regex
+          # First replace the glob wildcards with placeholders
+          regex_str = glob_pattern
+            .gsub("**", "\x00DOUBLESTAR\x00")
+            .gsub("*", "\x00STAR\x00")
+
+          # Escape special regex characters
+          regex_str = regex_str.gsub(/([.+?^${}()\[\]\\|])/) { |m| "\\#{m}" }
+
+          # Now replace the placeholders with regex equivalents
+          regex_str = regex_str
+            .gsub("\x00DOUBLESTAR\x00", ".*")     # ** matches any characters including /
+            .gsub("\x00STAR\x00", "[^/]*")        # * matches within a single directory
+
+          Regexp.new(regex_str)
         end
       end
     end

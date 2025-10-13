@@ -1,7 +1,7 @@
 ---
 
 id: v.0.3.0+task.25
-status: obsolete
+status: blocked
 priority: high
 estimate: 8h
 dependencies: [v.0.3.0+task.09, v.0.3.0+task.14]

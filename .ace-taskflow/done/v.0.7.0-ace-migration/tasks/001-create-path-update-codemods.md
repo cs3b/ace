@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.001
-status: completed
+status: done
 priority: high
 estimate: 4h
 actual: 1h
