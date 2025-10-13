@@ -19,7 +19,7 @@ taskflow:
     active: "v.%{version}"
 
     # Task subdirectory - default: "t"
-    tasks: "t"
+    tasks: "tasks"
 
     # Ideas/backlog directory - default: "backlog/ideas"
     # Supports nested paths (e.g., "backlog/ideas")

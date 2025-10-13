@@ -151,7 +151,15 @@ module Ace
             taskflow_section["directories"]["root"]
           end
 
-          config["task_dir"] = taskflow_section["task_dir"] if taskflow_section["task_dir"]
+          # Extract directory configuration (support both old flat and new nested formats)
+          if taskflow_section["directories"]
+            config["directories"] = taskflow_section["directories"]
+            # Also set task_dir for backward compatibility
+            config["task_dir"] = taskflow_section["directories"]["tasks"] if taskflow_section["directories"]["tasks"]
+          elsif taskflow_section["task_dir"]
+            config["task_dir"] = taskflow_section["task_dir"]
+          end
+
           config["active_strategy"] = taskflow_section["active_strategy"] if taskflow_section["active_strategy"]
           config["allow_multiple_active"] = taskflow_section["allow_multiple_active"] unless taskflow_section["allow_multiple_active"].nil?
 

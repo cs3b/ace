@@ -19,27 +19,27 @@ module Ace
 
       # Get task directory name
       def task_dir
-        config["task_dir"] || "t"
+        config.dig("directories", "tasks") || config["task_dir"] || "t"
       end
 
       # Get retrospectives directory name
       def retro_dir
-        config.dig("taskflow", "directories", "retros") || "retros"
+        config.dig("directories", "retros") || "retros"
       end
 
       # Get ideas directory name
       def ideas_dir
-        config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
+        config.dig("directories", "ideas") || "backlog/ideas"
       end
 
       # Get done directory name
       def done_dir
-        config.dig("taskflow", "directories", "done") || "done"
+        config.dig("directories", "done") || "done"
       end
 
       # Get backlog directory name
       def backlog_dir
-        config.dig("taskflow", "directories", "backlog") || "backlog"
+        config.dig("directories", "backlog") || "backlog"
       end
 
       # Get active release selection strategy
