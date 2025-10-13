@@ -306,6 +306,26 @@ end
 - **Performance**: Timeout long-running linters
 - **Platform Issues**: Handle platform-specific tool availability
 
+## Test Coverage & Command Architecture
+
+### Missing Test Coverage
+The current implementation needs comprehensive test coverage for:
+- `test/commands/diff_command_test.rb` - Test the diff command functionality
+- `test/commands/update_command_test.rb` - Test the update command
+- `test/commands/validate_command_test.rb` - Test validation with linters
+
+### Command Refactoring
+Currently, commands are implemented inline in `exe/ace-docs`. These should be refactored into separate command classes for better testability and maintainability:
+- Move diff logic to `lib/ace/docs/commands/diff_command.rb`
+- Move update logic to `lib/ace/docs/commands/update_command.rb`
+- Move validate logic to `lib/ace/docs/commands/validate_command.rb`
+
+This refactoring will:
+- Enable proper unit testing of command logic
+- Support mocking of external linter calls
+- Allow for easier extension and modification
+- Follow the pattern established by StatusCommand
+
 ## Related Ideas
 
 - Integration with CI/CD pipelines for automated checking
