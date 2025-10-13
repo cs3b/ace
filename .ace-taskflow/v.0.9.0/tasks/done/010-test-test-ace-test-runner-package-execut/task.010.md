@@ -2,7 +2,7 @@
 id: v.0.9.0+task.010
 status: done
 estimate: 8h
-dependencies: [ace-core, ace-test-support]
+dependencies: []
 ---
 
 # Create ace-test-runner Package for Test Execution and Reporting

@@ -2,7 +2,7 @@
 id: v.0.9.0+task.037
 status: done
 estimate: 1h
-dependencies: [task.021]
+dependencies: []
 ---
 
 # Add .env cascade loading support to ace-llm

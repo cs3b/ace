@@ -1,3 +1,10 @@
+---
+id: v.0.9.0+task.056
+status: done
+priority: P2
+estimate: 2-3h
+---
+
 # Task 056: Add informative output to ace-git-commit
 
 ## Status
