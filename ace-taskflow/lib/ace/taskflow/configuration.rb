@@ -22,6 +22,11 @@ module Ace
         config["task_dir"] || "t"
       end
 
+      # Get retrospectives directory name
+      def retro_dir
+        config.dig("taskflow", "directories", "retros") || "retros"
+      end
+
       # Get active release selection strategy
       def active_strategy
         config["active_strategy"] || "lowest"
