@@ -32,6 +32,8 @@ jobs:
           - ace-git-commit
           - ace-llm
           - ace-llm-providers-cli
+          - ace-search
+          - ace-docs
 
     steps:
       - name: Checkout code

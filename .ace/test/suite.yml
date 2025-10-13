@@ -54,6 +54,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-docs
+      path: ace-docs
+      group: tools
+      priority: 3
+
   # Test command options
   test_options:
     format: compact
