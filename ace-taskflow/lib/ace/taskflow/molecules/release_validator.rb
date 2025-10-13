@@ -124,10 +124,11 @@ module Ace
         end
 
         def validate_release_directories(release_path, release_name, issues)
+          config = Ace::Taskflow.configuration
           # Required directories
           required_dirs = {
-            "t" => "tasks directory",
-            "ideas" => "ideas directory"
+            config.task_dir => "tasks directory",
+            config.release_ideas_subdir => "ideas directory"
           }
 
           required_dirs.each do |dir, description|
@@ -159,7 +160,10 @@ module Ace
           end
 
           # Check for done subdirectory in tasks
-          config = Ace::Taskflow.configuration
+          # Note: config already initialized in validate_release_directories, but re-initializing for clarity
+          unless config
+            config = Ace::Taskflow.configuration
+          end
           task_done_dir = File.join(release_path, config.task_dir, "done")
           unless Dir.exist?(task_done_dir)
             issues << {
@@ -170,11 +174,11 @@ module Ace
           end
 
           # Check for done subdirectory in ideas
-          idea_done_dir = File.join(release_path, "ideas", "done")
+          idea_done_dir = File.join(release_path, config.release_ideas_subdir, "done")
           unless Dir.exist?(idea_done_dir)
             issues << {
               type: :info,
-              message: "Missing ideas/done/ directory for completed ideas",
+              message: "Missing #{config.release_ideas_subdir}/done/ directory for completed ideas",
               location: release_path
             }
           end
