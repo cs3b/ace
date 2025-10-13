@@ -367,20 +367,23 @@ module Ace
         def detect_component_type(file)
           # Get configured directory names
           config = Ace::Taskflow.configuration
-          retro_dir = config.retro_dir
-          ideas_dir = config.ideas_dir
-          task_dir = config.task_dir
+          task_dir = config.task_dir       # e.g., "tasks"
+          retro_dir = config.retro_dir     # e.g., "retros"
+
+          # For ideas, use "ideas" at release level (config.ideas_dir is global path "backlog/ideas")
+          ideas_dir_name = "ideas"
 
           # Check directory structure first (more reliable than filename)
           # Directory patterns use configured names
           case file
           when /\/#{Regexp.escape(retro_dir)}\//
             :retro
-          when /\/#{Regexp.escape(ideas_dir.split('/').last)}\//
+          when /\/#{ideas_dir_name}\//
             :idea
           when /release\.md$/
             :release
           when /\/#{Regexp.escape(task_dir)}\/.*task\.\d{3,}.*\.md$/
+            # Must be in tasks/ directory AND match filename pattern
             :task
           else
             :unknown
