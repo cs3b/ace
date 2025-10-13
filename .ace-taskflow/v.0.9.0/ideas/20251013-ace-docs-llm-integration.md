@@ -214,6 +214,48 @@ Saved to cache with analysis
 - **Audit Trail**: Log all LLM interactions
 - **Compliance**: Ensure GDPR/HIPAA compliance for content handling
 
+## Command Architecture Refactoring
+
+### Current State
+The diff, update, and validate commands are currently implemented inline in `exe/ace-docs` as Thor methods. This makes them difficult to test and extend with LLM capabilities.
+
+### Proposed Refactoring
+Extract commands into separate classes following the Command pattern:
+
+```ruby
+# lib/ace/docs/commands/diff_command.rb
+module Ace::Docs::Commands
+  class DiffCommand < BaseCommand
+    def initialize(options = {})
+      @llm_analyzer = LLMAnalyzer.new if options[:intelligent]
+      super
+    end
+
+    def execute
+      # Command logic with LLM integration points
+    end
+  end
+end
+```
+
+Similar structure for:
+- `lib/ace/docs/commands/update_command.rb`
+- `lib/ace/docs/commands/validate_command.rb`
+
+### Benefits of Refactoring
+- **Testability**: Each command can be unit tested with mocked dependencies
+- **LLM Integration**: Easier to inject LLM capabilities into command flow
+- **Maintainability**: Single responsibility for each command class
+- **Extensibility**: Commands can be subclassed or decorated with additional features
+
+### Required Test Coverage
+After refactoring, create comprehensive tests:
+- `test/commands/diff_command_test.rb` - Including LLM integration tests
+- `test/commands/update_command_test.rb` - Test metadata update logic
+- `test/commands/validate_command_test.rb` - Test semantic validation
+
+This refactoring is a prerequisite for full LLM integration as it provides clean injection points for AI capabilities.
+
 ## Related Ideas
 
 - Integration with ace-review for documentation reviews
