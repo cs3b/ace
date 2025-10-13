@@ -159,10 +159,10 @@ module Ace
             end
           end
 
-          # Check for release.md file
-          release_file = File.join(release_dir, "release.md")
-          unless File.exist?(release_file)
-            issues << { type: :warning, message: "Missing release.md file", location: release_dir }
+          # Check for release descriptor file (any .md in release root)
+          release_files = Dir.glob(File.join(release_dir, "*.md")).select { |f| File.file?(f) && File.dirname(f) == release_dir }
+          if release_files.empty?
+            issues << { type: :warning, message: "Missing release descriptor file (*.md in release root)", location: release_dir }
           end
         end
 
@@ -305,7 +305,7 @@ module Ace
         def expected_file_location?(relative_path)
           # Define expected file patterns
           patterns = [
-            /^v\.\d+\.\d+\.\d+\/release\.md$/,
+            /^v\.\d+\.\d+\.\d+\/[^\/]+\.md$/,  # Any .md file in release root
             /^v\.\d+\.\d+\.\d+\/t\/\d{3}(-[\w-]+)?\/.*\.md$/,
             /^v\.\d+\.\d+\.\d+\/ideas\/(done\/)?(\d{8}(-\d{6})?-[\w-]+\.md|\d{8}(-\d{6})?-[\w-]+\/.*)/,
             /^v\.\d+\.\d+\.\d+\/docs\/.*\.md$/,

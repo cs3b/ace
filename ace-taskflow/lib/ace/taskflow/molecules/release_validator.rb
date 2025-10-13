@@ -61,16 +61,21 @@ module Ace
             stats[:with_errors] += 1
           end
 
-          # Check release.md file
-          release_file = File.join(release[:path], "release.md")
-          unless File.exist?(release_file)
+          # Check for release descriptor file (any .md in release root)
+          release_files = Dir.glob(File.join(release[:path], "*.md")).select { |f| File.file?(f) && File.dirname(f) == release[:path] }
+          if release_files.empty?
             issues << {
               type: :warning,
-              message: "Missing release.md file",
+              message: "Missing release descriptor file",
               location: release[:path]
             }
+          elsif release_files.size == 1
+            # Single file - validate it regardless of name
+            validate_release_file(release_files.first, release, issues)
           else
-            validate_release_file(release_file, release, issues)
+            # Multiple files - prefer release.md or RELEASE.md, fallback to first
+            preferred = release_files.find { |f| File.basename(f).match?(/^(release|RELEASE)\.md$/) }
+            validate_release_file(preferred || release_files.first, release, issues)
           end
 
           # Check required directories
