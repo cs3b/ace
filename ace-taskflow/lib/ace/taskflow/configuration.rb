@@ -27,6 +27,21 @@ module Ace
         config.dig("taskflow", "directories", "retros") || "retros"
       end
 
+      # Get ideas directory name
+      def ideas_dir
+        config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
+      end
+
+      # Get done directory name
+      def done_dir
+        config.dig("taskflow", "directories", "done") || "done"
+      end
+
+      # Get backlog directory name
+      def backlog_dir
+        config.dig("taskflow", "directories", "backlog") || "backlog"
+      end
+
       # Get active release selection strategy
       def active_strategy
         config["active_strategy"] || "lowest"
