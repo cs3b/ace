@@ -1,0 +1,101 @@
+# ace-docs configuration file
+# Place this file at .ace/docs/config.yml in your project
+
+# Document type definitions
+# Each type can have glob patterns for automatic discovery
+document_types:
+  # Core context documents
+  context:
+    paths:
+      - "docs/*.md"              # Core documentation
+    defaults:
+      update_frequency: weekly
+      max_lines: 150
+      required_sections:
+        - overview
+        - scope
+
+  # Development guides
+  guide:
+    paths:
+      - "**/*.g.md"              # Extension-based pattern
+    defaults:
+      update_frequency: monthly
+      max_lines: 500
+      validation:
+        - syntax: markdownlint
+        - semantic: guide-compliance
+
+  # Workflow instructions
+  workflow:
+    paths:
+      - "**/*.wf.md"             # Extension pattern
+    defaults:
+      update_frequency: on-change
+      auto_generate:
+        - template-refs: from-embedded
+
+  # API documentation
+  api:
+    paths:
+      - "*/docs/api/*.md"
+      - "*/api-docs/**/*.md"
+    defaults:
+      update_frequency: on-change
+      auto_generate:
+        - endpoints: from-routes
+        - schemas: from-models
+
+  # Templates
+  template:
+    paths:
+      - "**/*.template.md"
+    defaults:
+      update_frequency: on-change
+      max_lines: 200
+
+  # Reference documentation
+  reference:
+    paths:
+      - "*/docs/reference/*.md"
+      - "reference/**/*.md"
+    defaults:
+      update_frequency: monthly
+      max_lines: 1000
+
+# Global validation rules
+# These apply to all documents unless overridden
+global_rules:
+  max_lines: 1000              # Default maximum lines
+  required_frontmatter:
+    - doc-type
+    - purpose
+  linters:
+    markdown: markdownlint
+    yaml: yamllint
+  semantic_validation:
+    guide_reference: "dev-handbook/guides/documentation-standards.md"
+
+# Cache configuration
+cache:
+  directory: ".cache/ace-docs"
+  diff_retention_days: 30
+  analysis_retention_days: 7
+
+# LLM integration settings
+llm:
+  provider: "ace-llm-query"    # Use ace-llm-query for analysis
+  model: "default"              # Use default model from ace-llm config
+  temperature: 0.3              # Lower temperature for deterministic analysis
+
+# Ignored paths
+# These paths will never be considered for management
+ignore:
+  - "**/node_modules/**"
+  - "**/vendor/**"
+  - "**/.git/**"
+  - "**/tmp/**"
+  - "**/coverage/**"
+  - "**/_legacy/**"
+  - "**/.ace-taskflow/done/**"
+  - "dev-handbook/**"

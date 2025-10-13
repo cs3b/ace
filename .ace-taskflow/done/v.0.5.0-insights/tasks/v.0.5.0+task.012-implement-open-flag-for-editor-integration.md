@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.012
-status: completed
+status: done
 priority: medium
 estimate: 4h
 dependencies: ["v.0.5.0+task.006"]
