@@ -53,7 +53,7 @@ jobs:
       - name: Run tests for ${{ matrix.package }}
         run: |
           cd ${{ matrix.package }}
-          bundle exec rake test
+          bundle exec rake ci
         env:
           RAILS_ENV: test
           BUNDLE_PATH: ../vendor/bundle
