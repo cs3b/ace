@@ -26,7 +26,12 @@ module Ace
           stats: "📊",
           search: "🔍",
           fix: "🔧",
-          score: "📈"
+          score: "📈",
+          draft: "⚫",
+          pending: "⚪",
+          in_progress: "🟡",
+          done: "🟢",
+          blocked: "🔴"
         }.freeze
 
         def self.format_results(results, format: :terminal, verbose: false, colors: true)
@@ -183,22 +188,44 @@ module Ace
         def self.format_system_stats(components, colors)
           output = []
 
-          if components[:structure]
-            s = components[:structure]
-            if s[:releases]
-              output << "  Releases: #{s[:releases][:active]} active | #{s[:releases][:backlog]} backlog | #{s[:releases][:done]} done"
+          # Release counts
+          if components[:structure] && components[:structure][:releases]
+            s = components[:structure][:releases]
+            output << "  Releases: #{s[:active]} active | #{s[:backlog]} backlog | #{s[:done]} done"
+          end
+
+          # Active release tasks and ideas with status breakdown
+          if components[:active_stats]
+            stats = components[:active_stats]
+
+            # Tasks line with status icons
+            if stats[:tasks]
+              task_parts = []
+              task_parts << "#{ICONS[:draft] || '⚫'} #{stats[:tasks][:by_status]['draft'] || 0}"
+              task_parts << "#{ICONS[:pending] || '⚪'} #{stats[:tasks][:by_status]['pending'] || 0}"
+              task_parts << "#{ICONS[:in_progress] || '🟡'} #{stats[:tasks][:by_status]['in-progress'] || 0}"
+              task_parts << "#{ICONS[:done] || '🟢'} #{stats[:tasks][:by_status]['done'] || 0}"
+              blocked = (stats[:tasks][:by_status]['blocked'] || 0) + (stats[:tasks][:by_status]['skipped'] || 0)
+              task_parts << "#{ICONS[:blocked] || '🔴'} #{blocked}"
+
+              completion = stats[:tasks][:total] > 0 ? ((stats[:tasks][:by_status]['done'] || 0).to_f / stats[:tasks][:total] * 100).round : 0
+              output << "  Tasks: #{task_parts.join(' | ')} • #{stats[:tasks][:total]} total • #{completion}% complete"
             end
-            if s[:tasks]
-              output << "  Tasks: #{s[:tasks][:total]} total"
-            end
-            if s[:ideas]
-              output << "  Ideas: #{s[:ideas][:total]} total"
+
+            # Ideas line with status icons
+            if stats[:ideas]
+              idea_parts = []
+              idea_parts << "💡 #{stats[:ideas][:by_status]['new'] || 0}"
+              idea_parts << "✅ #{stats[:ideas][:by_status]['done'] || 0}"
+
+              output << "  Ideas: #{idea_parts.join(' | ')} • #{stats[:ideas][:total]} total"
             end
           end
 
+          # Files scanned summary
           if components[:integrity]
             i = components[:integrity]
-            output << "  Components validated: #{i[:tasks]} tasks, #{i[:ideas]} ideas, #{i[:releases]} releases"
+            output << "  Files scanned: #{i[:tasks]} tasks, #{i[:ideas]} ideas, #{i[:releases]} releases"
           end
 
           output

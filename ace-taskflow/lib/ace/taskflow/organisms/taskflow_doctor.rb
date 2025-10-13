@@ -80,6 +80,9 @@ module Ace
           # Check structure
           run_structure_check if should_check?(:structure)
 
+          # Collect active release statistics
+          collect_active_stats
+
           # Check frontmatter in all files
           run_frontmatter_check if should_check?(:frontmatter)
 
@@ -131,6 +134,50 @@ module Ace
         def should_check?(check_type)
           return true unless options[:check]
           options[:check].to_sym == check_type
+        end
+
+        def collect_active_stats
+          require_relative "../organisms/task_manager"
+          require_relative "../molecules/idea_loader"
+          require_relative "../molecules/release_resolver"
+
+          # Initialize with the same root_path used by doctor
+          task_manager = Organisms::TaskManager.new(@root_path)
+          idea_loader = Molecules::IdeaLoader.new(@root_path)
+          release_resolver = Molecules::ReleaseResolver.new(@root_path)
+
+          # Get primary active release for statistics
+          active_release = release_resolver.find_primary_active
+          return unless active_release
+
+          # Use release name as context (e.g., "v.0.9.0")
+          context = active_release[:name]
+
+          # Get task statistics for active release
+          task_stats = task_manager.get_statistics(context: context)
+
+          # Get idea statistics for active release
+          ideas = idea_loader.load_all(context: context, include_content: false, scope: :all)
+          idea_stats = {
+            total: ideas.size,
+            by_status: {}
+          }
+
+          ideas.each do |idea|
+            status = if idea[:path] && idea[:path].include?("/done/")
+                      "done"
+                     else
+                      idea[:status] || "new"
+                     end
+            idea_stats[:by_status][status] ||= 0
+            idea_stats[:by_status][status] += 1
+          end
+
+          # Store in stats
+          @stats[:components][:active_stats] = {
+            tasks: task_stats,
+            ideas: idea_stats
+          }
         end
 
         def run_structure_check
