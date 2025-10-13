@@ -1,7 +1,7 @@
 ---
 id: v.0.9.0+task.056
 status: done
-priority: P2
+priority: medium
 estimate: 2-3h
 ---
 

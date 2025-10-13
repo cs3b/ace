@@ -1,6 +1,7 @@
 ---
 id: v.0.9.0+task.032
 status: done
+priority: medium
 estimate: 1 week
 dependencies: []
 ---

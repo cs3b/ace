@@ -1,6 +1,7 @@
 ---
 id: v.0.9.0+task.018
 status: done
+priority: medium
 estimate: 2d
 dependencies: []
 ---

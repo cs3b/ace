@@ -1,6 +1,7 @@
 ---
 id: v.0.9.0+task.019
 status: done
+priority: medium
 estimate: 3d
 dependencies: [v.0.9.0+task.006]
 ---
