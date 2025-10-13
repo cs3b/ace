@@ -2,6 +2,7 @@
 
 require "ace/core"
 require_relative "taskflow/version"
+require_relative "taskflow/configuration"
 require_relative "taskflow/cli"
 
 module Ace
