@@ -148,38 +148,12 @@ module Ace
           number = parsed[:number]
 
           # Resolve context to path
-          context_path = if context == "current"
-            # Find primary active release
-            require_relative "release_resolver"
-            resolver = ReleaseResolver.new(root_path)
-            primary = resolver.find_primary_active
-            primary ? primary[:path] : nil
-          elsif context == "backlog"
-            File.join(root_path, "backlog")
-          else
-            # Try to find as release
-            require_relative "release_resolver"
-            resolver = ReleaseResolver.new(root_path)
-            release = resolver.find_release(context)
-            release ? release[:path] : nil
-          end
-
+          context_path = resolve_context_to_path(context)
           return nil unless context_path
 
-          # Try to find the task directory (supports both old and new formats)
-          task_dir = find_task_directory(context_path, number)
-          return nil unless task_dir && File.directory?(task_dir)
-
-          md_files = Dir.glob(File.join(task_dir, "*.md"))
-          return nil if md_files.empty?
-
-          # Find the task file - the one with YAML frontmatter containing task metadata
-          task_file = md_files.find do |file|
-            has_task_frontmatter?(file)
-          end
-
-          # Load the task file if found
-          load_task(task_file) if task_file
+          # Load all tasks from context and find by number
+          all_tasks = load_tasks_from_context(context_path)
+          all_tasks.find { |t| t[:task_number] == number }
         end
 
         # Update task status
@@ -289,6 +263,27 @@ module Ace
         end
 
         private
+
+        # Resolve context string to a file system path
+        # @param context [String] Context identifier (current, backlog, or release name)
+        # @return [String, nil] Resolved path or nil if not found
+        def resolve_context_to_path(context)
+          if context == "current"
+            # Find primary active release
+            require_relative "release_resolver"
+            resolver = ReleaseResolver.new(root_path)
+            primary = resolver.find_primary_active
+            primary ? primary[:path] : nil
+          elsif context == "backlog"
+            File.join(root_path, "backlog")
+          else
+            # Try to find as release
+            require_relative "release_resolver"
+            resolver = ReleaseResolver.new(root_path)
+            release = resolver.find_release(context)
+            release ? release[:path] : nil
+          end
+        end
 
         def default_root_path
           File.join(Dir.pwd, ".ace-taskflow")
