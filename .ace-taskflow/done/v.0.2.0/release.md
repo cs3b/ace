@@ -9,3 +9,15 @@ status: done
 This release has been completed and archived.
 
 **Note**: This release includes content from both the main synapse release and the synapse-tools variant, which have been merged together.
+
+## Goals
+
+(No goals documented)
+
+## Tasks
+
+(No tasks documented)
+
+## Timeline
+
+(No timeline documented)
