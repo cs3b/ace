@@ -61,16 +61,25 @@ module Ace
 
         private
 
-        def self.detect_component_type(file_path)
+        def self.detect_component_type(file_path, config = nil)
+          config ||= Ace::Taskflow.configuration
+
+          # Get configured directory names
+          retro_dir = config.retro_dir
+          ideas_dir = config.ideas_dir
+          task_dir = config.task_dir
+
+          # Check directory structure first (more reliable than filename)
+          # Directory patterns use configured names
           case file_path
-          when /\/t\/.*\.md$/, /task\.\d+\.md$/
-            :task
-          when /\/ideas\/.*\.md$/
-            :idea
-          when /\/retros\/.*\.md$/
+          when /\/#{Regexp.escape(retro_dir)}\//
             :retro
+          when /\/#{Regexp.escape(ideas_dir.split('/').last)}\//
+            :idea
           when /release\.md$/
             :release
+          when /\/#{Regexp.escape(task_dir)}\//, /task\.\d+\.md$/
+            :task
           else
             :unknown
           end
@@ -100,7 +109,7 @@ module Ace
           end
 
           # Validate ID format
-          if frontmatter["id"] && !frontmatter["id"].match?(/^v\.\d+\.\d+\.\d+\+task\.\d+$/)
+          if frontmatter["id"] && !frontmatter["id"].to_s.match?(/^v\.\d+\.\d+\.\d+\+task\.\d+$/)
             issues << { type: :warning, message: "Non-standard ID format: #{frontmatter["id"]} (expected format: v.X.Y.Z+task.NNN)", file: file_path }
           end
 
