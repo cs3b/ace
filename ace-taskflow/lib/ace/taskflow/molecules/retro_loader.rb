@@ -115,20 +115,22 @@ module Ace
 
         # Resolve retro directory for given context
         def resolve_retro_directory(context)
+          retro_dirname = @config.dig("taskflow", "directories", "retros") || "retros"
+
           case context
           when "current", "active", nil
             # Find active release
             primary = @release_resolver.find_primary_active
-            primary ? File.join(primary[:path], "retro") : nil
+            primary ? File.join(primary[:path], retro_dirname) : nil
           when "backlog"
-            File.join(@root_path, "backlog", "retro")
+            File.join(@root_path, "backlog", retro_dirname)
           when "all"
             # For "all", return root; caller will need to iterate releases
             @root_path
           else
             # Try to resolve as release
             release = @release_resolver.find_release(context)
-            release ? File.join(release[:path], "retro") : nil
+            release ? File.join(release[:path], retro_dirname) : nil
           end
         end
 
