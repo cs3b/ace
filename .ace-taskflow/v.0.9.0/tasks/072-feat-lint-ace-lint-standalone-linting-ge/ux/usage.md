@@ -4,17 +4,17 @@
 
 ## Overview
 
-ace-lint is a standalone linting gem that provides comprehensive validation for markdown, YAML, and frontmatter documents. It integrates with external linters (markdownlint, yamllint) when available and gracefully falls back to built-in validation when they're not installed.
+ace-lint is a standalone linting gem that provides comprehensive validation for markdown, YAML, and frontmatter documents using **Ruby-only dependencies**. No Node.js or Python required. It follows proven patterns from the legacy dev-tools code-lint implementation.
 
 **Key Features:**
-- Validates markdown syntax and formatting
-- Validates YAML structure and syntax
+- **Ruby-Only Stack**: Uses kramdown + kramdown-parser-gfm for markdown, Psych for YAML
+- Validates markdown syntax and formatting via kramdown parser
+- Validates YAML structure and syntax via Ruby's built-in Psych
 - Validates frontmatter schema, required fields, and field types
-- Auto-fix support for markdown and YAML (via external linters)
-- Graceful fallbacks to built-in validation when external linters unavailable
+- Auto-fix/format support via kramdown formatter
 - Clear, colorized terminal output
 - Subprocess-callable interface for reuse by other ace-* gems
-- Zero required external dependencies (all optional with fallbacks)
+- Zero required external dependencies
 
 ## Installation
 
@@ -24,11 +24,11 @@ gem install ace-lint
 
 # Or add to Gemfile
 gem 'ace-lint'
+gem 'kramdown', '~> 2.0'
+gem 'kramdown-parser-gfm', '~> 1.0'
 bundle install
 
-# Optional external linters (for best results)
-npm install -g markdownlint-cli  # Markdown validation
-pip install yamllint              # YAML validation
+# No Node.js or Python dependencies required!
 ```
 
 ## Quick Start (5 minutes)
@@ -41,7 +41,7 @@ ace-lint docs/architecture.md
 
 # Expected output:
 Linting: docs/architecture.md
-  ✓ Markdown syntax valid
+  ✓ Markdown syntax valid (kramdown)
   ✓ Frontmatter schema valid
 Validated: 1 document - Passed
 ```
@@ -62,7 +62,7 @@ ace-lint docs/*.md
 # Validate specific file type
 ace-lint config.yml --type yaml
 
-# Auto-fix issues (when external linters support it)
+# Auto-fix/format issues with kramdown
 ace-lint docs/file.md --fix
 
 # Format documents
@@ -73,16 +73,16 @@ ace-lint docs/*.md --format
 
 | Option | Short | Description | Example |
 |--------|-------|-------------|---------|
-| `--fix` | `-f` | Auto-fix issues when possible | `ace-lint file.md --fix` |
-| `--format` | | Format documents | `ace-lint file.md --format` |
+| `--fix` | `-f` | Auto-format with kramdown | `ace-lint file.md --fix` |
+| `--format` | | Format documents with kramdown | `ace-lint file.md --format` |
 | `--type TYPE` | `-t` | Specify validation type | `ace-lint file.md --type markdown` |
 | `--help` | `-h` | Show help message | `ace-lint --help` |
 | `--version` | `-v` | Show version | `ace-lint --version` |
 
 **Validation Types:**
-- `markdown`: Markdown syntax and structure
-- `yaml`: YAML syntax and structure
-- `frontmatter`: Frontmatter schema and required fields
+- `markdown`: Markdown syntax via kramdown + kramdown-parser-gfm
+- `yaml`: YAML syntax via Psych (Ruby built-in)
+- `frontmatter`: Frontmatter schema via Psych
 
 ## Common Scenarios
 
@@ -106,25 +106,25 @@ Validated: 3 documents - All passed
 
 **Next Steps**: Commit the validated files with confidence
 
-### Scenario 2: Fix Markdown Formatting Issues
+### Scenario 2: Format Markdown with Kramdown
 
-**Goal**: Automatically fix common markdown formatting issues
+**Goal**: Automatically format markdown files for consistent styling
 
 **Commands**:
 ```bash
-# Run with auto-fix
+# Run with auto-fix/format
 ace-lint docs/readme.md --fix
 
 # Expected output:
 Linting: docs/readme.md
   ✓ Markdown syntax valid
-  ⚠ Fixed 3 formatting issues:
-    - Line 15: Added blank line before list
-    - Line 23: Fixed heading increment
-    - Line 45: Removed trailing spaces
-Validated: 1 document - Passed with fixes
+  ⚠ Formatted with kramdown:
+    - Normalized heading styles
+    - Fixed list formatting
+    - Applied consistent line wrapping
+Validated: 1 document - Passed with formatting
 
-# File is automatically updated with fixes applied
+# File is automatically updated with kramdown formatting applied
 ```
 
 **Next Steps**: Review the changes and commit
@@ -135,35 +135,36 @@ Validated: 1 document - Passed with fixes
 
 **Commands**:
 ```bash
-# Validate YAML file
+# Validate YAML file with Psych
 ace-lint .ace/config.yml --type yaml
 
 # Expected output:
 Linting: .ace/config.yml
-  ✓ YAML syntax valid
+  ✓ YAML syntax valid (Psych)
 Validated: 1 document - Passed
 ```
 
-### Scenario 4: Validation Without External Linters
+### Scenario 4: Pure Ruby Validation (No External Tools)
 
-**Goal**: Validate documents when markdownlint/yamllint are not installed
+**Goal**: Validate documents using only Ruby dependencies
 
 **Commands**:
 ```bash
-# Run on system without external linters
+# Run on any system with Ruby installed
 ace-lint docs/guide.md
 
 # Expected output:
 Linting: docs/guide.md
-  ⚠ markdownlint not found - using built-in validation
-  ✓ Basic markdown structure valid
-  ✓ Frontmatter present and parseable
-Validated: 1 document - Passed (basic validation)
+  ✓ Markdown syntax valid (kramdown + GFM)
+  ✓ Frontmatter present and valid (Psych)
+  ✓ Required fields validated
+Validated: 1 document - Passed
 
-# Exit code: 0 (still succeeds with fallback)
+# Exit code: 0
+# No Node.js (markdownlint) or Python (yamllint) needed!
 ```
 
-**Note**: Install markdownlint via `npm install -g markdownlint-cli` for comprehensive validation
+**Note**: All core linting uses Ruby gems only
 
 ### Scenario 5: Batch Validation with Mixed Results
 
@@ -177,8 +178,8 @@ ace-lint docs/architecture.md docs/invalid.md docs/tools.md
 # Expected output:
 Linting: docs/architecture.md ✓
 Linting: docs/invalid.md ✗
-  - Line 15: Missing required frontmatter field 'doc-type'
-  - Line 23: Invalid YAML syntax in frontmatter
+  - Line 1: Missing required frontmatter
+  - Line 15: Invalid YAML syntax in frontmatter (Psych::SyntaxError)
 Linting: docs/tools.md ✓
 Validated: 3 documents - 2 passed, 1 failed
 
@@ -225,53 +226,56 @@ frontmatter:
     purpose: string
     priority: string
 
-# External linter detection
-linters:
-  markdownlint:
-    enabled: true
-    fallback_warning: true
-  yamllint:
-    enabled: true
-    fallback_warning: true
+# Kramdown formatting options
+kramdown:
+  line_width: 120
+  hard_wrap: false
+  auto_ids: true
+  gfm_quirks: [:paragraph_end, :no_auto_typographic]
+  syntax_highlighter: rouge
 
 # File size limits
 limits:
   max_file_size_mb: 10
   warn_threshold_mb: 5
+
+# Optional security scanning
+security:
+  gitleaks:
+    enabled: true  # Only if gitleaks installed
+    scan_secrets: true
 ```
 
 ### Global Configuration
 
 Place in `~/.ace/lint/config.yml` for user-wide defaults (optional).
 
-### External Linter Configuration
+### Kramdown Configuration
 
-Configure external linters using their own config files:
+All kramdown parser and formatter options are supported:
 
-**markdownlint** (`.markdownlintrc`):
-```json
-{
-  "default": true,
-  "MD013": false,
-  "MD033": false
-}
-```
-
-**yamllint** (`.yamllint`):
 ```yaml
-extends: default
-rules:
-  line-length:
-    max: 120
-  indentation:
-    spaces: 2
+kramdown:
+  # Parser options
+  input: GFM  # Use GitHub Flavored Markdown
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: :as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+
+  # Formatter options
+  line_width: 120
+  remove_block_html_tags: false
+  remove_span_html_tags: false
 ```
 
 ## Complete Command Reference
 
 ### `ace-lint [FILES...] [OPTIONS]`
 
-**Purpose**: Validate markdown, YAML, and frontmatter documents
+**Purpose**: Validate markdown, YAML, and frontmatter documents using Ruby-only tools
 
 **Syntax**:
 ```bash
@@ -284,8 +288,8 @@ ace-lint file1.md file2.md [OPTIONS]
 **Options**:
 | Flag | Type | Description | Default |
 |------|------|-------------|---------|
-| `--fix` | boolean | Auto-fix issues when possible | false |
-| `--format` | boolean | Format documents | false |
+| `--fix` | boolean | Auto-format with kramdown | false |
+| `--format` | boolean | Format documents with kramdown | false |
 | `--type TYPE` | string | Validation type (markdown/yaml/frontmatter) | auto-detect |
 | `--help` | boolean | Show help message | |
 | `--version` | boolean | Show version | |
@@ -293,21 +297,21 @@ ace-lint file1.md file2.md [OPTIONS]
 **Examples**:
 
 ```bash
-# Example 1: Basic validation
+# Example 1: Basic validation with kramdown
 ace-lint docs/guide.md
 # Output:
 # Linting: docs/guide.md
-#   ✓ Markdown syntax valid
-#   ✓ Frontmatter schema valid
+#   ✓ Markdown syntax valid (kramdown)
+#   ✓ Frontmatter schema valid (Psych)
 # Validated: 1 document - Passed
 
-# Example 2: Auto-fix issues
+# Example 2: Auto-format with kramdown
 ace-lint docs/guide.md --fix
 # Output:
 # Linting: docs/guide.md
 #   ✓ Markdown syntax valid
-#   ⚠ Fixed 2 issues
-# Validated: 1 document - Passed with fixes
+#   ⚠ Formatted with kramdown
+# Validated: 1 document - Passed with formatting
 
 # Example 3: Multiple files
 ace-lint docs/*.md
@@ -317,11 +321,11 @@ ace-lint docs/*.md
 # Linting: docs/blueprint.md ✓
 # Validated: 3 documents - All passed
 
-# Example 4: YAML validation
+# Example 4: YAML validation with Psych
 ace-lint config.yml --type yaml
 # Output:
 # Linting: config.yml
-#   ✓ YAML syntax valid
+#   ✓ YAML syntax valid (Psych)
 # Validated: 1 document - Passed
 ```
 
@@ -333,62 +337,56 @@ ace-lint config.yml --type yaml
 
 ### Markdown Validation
 
-**With markdownlint (preferred)**:
-- Comprehensive syntax checking
-- Style rule enforcement
-- Auto-fix support for many issues
-- Customizable via `.markdownlintrc`
+**Using kramdown + kramdown-parser-gfm (Ruby gems)**:
+- Comprehensive syntax checking via kramdown parser
+- GitHub Flavored Markdown support via kramdown-parser-gfm
+- Auto-format support with kramdown formatter
+- Customizable via kramdown options
 
-**Without markdownlint (fallback)**:
-- Basic structure validation
-- Frontmatter presence check
-- Heading hierarchy verification
-- Warning displayed about using fallback
+**Features**:
+- Parse and validate markdown structure
+- Detect heading hierarchy issues
+- Validate list formatting
+- Check code block syntax
+- Normalize formatting with --fix
 
 ### YAML Validation
 
-**With yamllint (preferred)**:
+**Using Psych (Ruby built-in)**:
 - Comprehensive syntax checking
-- Style rule enforcement
-- Customizable via `.yamllint`
-
-**Without yamllint (fallback)**:
-- Ruby YAML.parse validation
-- Basic syntax error detection
-- Warning displayed about using fallback
+- Native Ruby YAML parser
+- Detailed error messages with line numbers
+- No external dependencies required
 
 ### Frontmatter Validation
 
-**Always Built-in** (no external dependency):
+**Using Psych (Ruby built-in)**:
 - YAML syntax validation
 - Required fields checking
 - Field type validation
 - Schema compliance
+- Custom validation rules
 
 ## Troubleshooting
 
-### Problem: External linter not found
+### Problem: Kramdown parse error
 
 **Symptom**:
 ```
-⚠ markdownlint not found - using built-in validation
+✗ Kramdown::Error: Failed to parse markdown
 ```
 
 **Solution**:
 ```bash
-# Install markdownlint globally
-npm install -g markdownlint-cli
+# Check file encoding
+file docs/problematic.md
+# Output: docs/problematic.md: UTF-8 Unicode text
 
-# Verify installation
-which markdownlint
-# Output: /usr/local/bin/markdownlint
+# If not UTF-8, convert:
+iconv -f ISO-8859-1 -t UTF-8 file.md > file_utf8.md
 
-# Or install yamllint
-pip install yamllint
-
-# Verify installation
-which yamllint
-# Output: /usr/local/bin/yamllint
+# Or check for special characters:
+cat -A docs/problematic.md | head -20
 ```
 
 ### Problem: Missing required frontmatter field
@@ -409,22 +407,25 @@ purpose: Usage documentation
 # Document Title
 ```
 
-### Problem: Invalid YAML in frontmatter
+### Problem: Invalid YAML in frontmatter (Psych error)
 
 **Symptom**:
 ```
-✗ Line 5: Invalid YAML syntax - expected ':' after key
+✗ Line 5: Psych::SyntaxError: (<unknown>): mapping values are not allowed in this context
 ```
 
 **Solution**:
 ```yaml
 # Fix YAML syntax
 ---
-# Incorrect (missing colon)
-doc-type guide
+# Incorrect (colon in unquoted string)
+doc-type: How-To: Guide
 
-# Correct
-doc-type: guide
+# Correct (quoted string)
+doc-type: "How-To: Guide"
+
+# Or (alternative format)
+doc-type: How-To Guide
 ---
 ```
 
@@ -464,24 +465,39 @@ sudo ace-lint /path/to/file.md
 
 ## Best Practices
 
-### 1. Install External Linters for Best Results
+### 1. Ruby-Only Stack Benefits
 
-While ace-lint works without external linters, installing them provides comprehensive validation:
+ace-lint uses only Ruby dependencies - no Node.js or Python required:
 
 ```bash
-# Markdown validation
-npm install -g markdownlint-cli
+# Check what's installed
+gem list | grep -E "kramdown|psych"
+# kramdown (2.4.0)
+# kramdown-parser-gfm (1.1.0)
+# psych (5.1.0)  # Built into Ruby
 
-# YAML validation
-pip install yamllint
+# No need for:
+# npm install -g markdownlint-cli
+# pip install yamllint
 ```
 
-### 2. Configure External Linters
+**Benefits**:
+- Simpler installation (Ruby only)
+- Consistent with ace-* gem ecosystem
+- No cross-language version conflicts
+- Works in any Ruby environment
 
-Create configuration files to customize validation rules:
+### 2. Configure Kramdown for Your Project
 
-- `.markdownlintrc` - Markdown rules
-- `.yamllint` - YAML rules
+Create `.ace/lint/config.yml` to customize kramdown behavior:
+
+```yaml
+kramdown:
+  line_width: 120  # Match your project's line width
+  hard_wrap: false # Preserve soft wrapping
+  auto_ids: true   # Generate heading IDs
+  gfm_quirks: [:paragraph_end, :no_auto_typographic]
+```
 
 ### 3. Run Before Committing
 
@@ -499,10 +515,10 @@ fi
 
 ### 4. Use Auto-fix Regularly
 
-Auto-fix common formatting issues automatically:
+Auto-format with kramdown before manual review:
 
 ```bash
-# Fix before manual review
+# Format before review
 ace-lint docs/*.md --fix
 git diff  # Review changes
 git add docs/*.md
@@ -513,7 +529,7 @@ git add docs/*.md
 Include YAML configuration files in validation:
 
 ```bash
-# Validate all YAML configs
+# Validate all YAML configs with Psych
 ace-lint .ace/**/*.yml --type yaml
 ```
 
@@ -555,42 +571,45 @@ end
 - name: Validate documentation
   run: |
     gem install ace-lint
-    npm install -g markdownlint-cli
+    gem install kramdown kramdown-parser-gfm
     ace-lint docs/**/*.md
 ```
 
-## Benefits Over Manual Validation
+## Benefits Over External Tools
 
-**Before** (manual validation):
+**Before** (Node.js/Python dependencies):
 ```bash
-# Check each file manually
-markdownlint docs/file1.md
-markdownlint docs/file2.md
-# Check frontmatter separately
-# Parse YAML manually
-# Check required fields manually
+# Multiple language dependencies
+npm install -g markdownlint-cli  # Node.js
+pip install yamllint              # Python
+gem install ace-lint              # Ruby
+
+# Cross-language version conflicts possible
+# Complex CI/CD setup
 ```
 
-**After** (with ace-lint):
+**After** (Ruby-only with ace-lint):
 ```bash
-# Single command validates everything
-ace-lint docs/*.md
-# - Markdown syntax ✓
-# - YAML frontmatter ✓
-# - Required fields ✓
-# - Automatic fallbacks ✓
+# Single language dependency
+gem install ace-lint kramdown kramdown-parser-gfm
+
+# Consistent Ruby environment
+# Simpler CI/CD setup
+# Native Psych for YAML (built into Ruby)
 ```
 
 **Improvements:**
 - Single unified interface for all validation types
-- Automatic detection and graceful fallbacks
+- Ruby-only stack (no Node.js or Python)
 - Consistent output format
 - Reusable across ace-* gems
-- Zero required dependencies (all optional)
+- Proven patterns from legacy code-lint implementation
 
 ## See Also
 
 - ace-docs: Documentation management (uses ace-lint for validation)
 - ace-core: Configuration management
-- markdownlint: External markdown linter (optional)
-- yamllint: External YAML linter (optional)
+- kramdown: Ruby markdown parser (https://kramdown.gettalong.org/)
+- kramdown-parser-gfm: GFM support for kramdown
+- Psych: Ruby's built-in YAML parser
+- Legacy code-lint: _legacy/dev-tools/lib/coding_agent_tools/cli/commands/code_lint/
