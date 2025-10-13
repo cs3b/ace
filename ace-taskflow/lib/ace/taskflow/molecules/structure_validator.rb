@@ -63,8 +63,9 @@ module Ace
           # Check required directories
           check_release_directories(release_path, issues, stats)
 
+          config = Ace::Taskflow.configuration
           # Check task structure
-          validate_task_structure(File.join(release_path, "t"), issues, stats)
+          validate_task_structure(File.join(release_path, config.task_dir), issues, stats)
 
           # Check idea structure
           validate_idea_structure(File.join(release_path, "ideas"), issues, stats)
@@ -151,8 +152,10 @@ module Ace
         end
 
         def check_release_directories(release_dir, issues, stats)
-          # Standard directories for a release
-          %w[t ideas docs retros].each do |subdir|
+          config = Ace::Taskflow.configuration
+          # Standard directories for a release (using configured names)
+          subdirs = [config.task_dir, "ideas", "docs", config.retro_dir]
+          subdirs.each do |subdir|
             path = File.join(release_dir, subdir)
             unless Dir.exist?(path)
               issues << { type: :info, message: "Missing directory: #{subdir}/", location: release_dir }

@@ -42,7 +42,8 @@ module Ace
         def migrate_context(context_path, results = nil)
           results ||= { migrated: [], skipped: [], errors: [], total: 0 }
 
-          task_dir = File.join(context_path, "t")
+          config = Ace::Taskflow.configuration
+          task_dir = File.join(context_path, config.task_dir)
           return results unless File.directory?(task_dir)
 
           # Find all task directories
@@ -78,6 +79,7 @@ module Ace
         private
 
         def contexts_to_migrate
+          config = Ace::Taskflow.configuration
           contexts = []
 
           # Active releases
@@ -86,7 +88,7 @@ module Ace
           end
 
           # Backlog
-          backlog_path = File.join(@root_path, "backlog")
+          backlog_path = File.join(@root_path, config.backlog_dir)
           if File.directory?(backlog_path)
             contexts << backlog_path
 
@@ -97,7 +99,7 @@ module Ace
           end
 
           # Done releases
-          done_path = File.join(@root_path, "done")
+          done_path = File.join(@root_path, config.done_dir)
           if File.directory?(done_path)
             Dir.glob(File.join(done_path, "v.*")).each do |release_path|
               contexts << release_path if File.directory?(release_path)
