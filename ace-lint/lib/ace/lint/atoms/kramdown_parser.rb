@@ -13,12 +13,10 @@ module Ace
         # @param options [Hash] Kramdown options
         # @return [Hash] Result with :success, :document, :errors, :warnings
         def self.parse(content, options: {})
+          # Minimal defaults - let kramdown use its defaults
+          # Users can override via .ace/lint/config.yml
           default_options = {
-            input: 'GFM', # Use GitHub Flavored Markdown
-            hard_wrap: false,
-            auto_ids: false, # Don't generate anchor IDs
-            parse_block_html: true,
-            parse_span_html: true
+            input: 'GFM' # Use GitHub Flavored Markdown
           }
 
           merged_options = default_options.merge(options)

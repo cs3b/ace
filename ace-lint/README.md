@@ -37,9 +37,13 @@ gem install ace-lint
 
 ## Quick Start
 
-Validate a markdown file:
+Validate a markdown file (lint is the default command):
 
 ```bash
+# Short form (recommended)
+ace-lint docs/architecture.md
+
+# Or explicit
 ace-lint lint docs/architecture.md
 ```
 
@@ -52,25 +56,89 @@ Validated: 1 file
 ✓ All files passed
 ```
 
+## Configuration
+
+ace-lint uses the ace-core config cascade system for configuration:
+
+### Config Files
+
+- **General config**: `.ace/lint/config.yml` - General ace-lint settings (currently empty/defaults)
+- **Kramdown config**: `.ace/lint/kramdown.yml` - Kramdown parser and formatter options
+
+### Config Cascade
+
+Configuration is loaded in this order (later overrides earlier):
+
+1. Default configuration (built-in)
+2. User configuration (`~/.ace/lint/kramdown.yml`)
+3. Project configuration (`./.ace/lint/kramdown.yml`)
+4. CLI options (`--line-width`, etc.)
+
+### Kramdown Configuration
+
+Create `.ace/lint/kramdown.yml` in your project:
+
+```yaml
+# Kramdown configuration for ace-lint
+# Documentation: https://kramdown.gettalong.org/options.html
+
+# Parser input format (GFM = GitHub Flavored Markdown)
+input: GFM
+
+# Line width for formatting (--fix, --format commands)
+line_width: 120
+
+# Generate anchor IDs for headings
+# Set to false for clean markdown without {#anchor-id} tags
+auto_ids: false
+
+# Hard wrap lines at line_width
+# Set to false for soft wrapping (recommended)
+hard_wrap: false
+
+# Parse block-level HTML tags
+parse_block_html: true
+
+# Parse span-level HTML tags
+parse_span_html: true
+```
+
+See `.ace.example/lint/kramdown.yml` for the full example configuration.
+
+### Configuration Options
+
+Common kramdown options:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `input` | `GFM` | Input format (GFM = GitHub Flavored Markdown) |
+| `line_width` | `120` | Line width for formatting |
+| `auto_ids` | `false` | Generate anchor IDs for headings |
+| `hard_wrap` | `false` | Hard wrap lines at line_width |
+| `parse_block_html` | `true` | Parse block-level HTML tags |
+| `parse_span_html` | `true` | Parse span-level HTML tags |
+
+For all kramdown options, see: https://kramdown.gettalong.org/options.html
+
 ## Usage
 
 ### Basic Commands
 
 ```bash
-# Lint single file
-ace-lint lint docs/file.md
+# Lint single file (lint is the default command)
+ace-lint docs/file.md
 
 # Lint multiple files
-ace-lint lint docs/*.md
+ace-lint docs/*.md
 
 # Lint YAML files
-ace-lint lint config.yml --type yaml
+ace-lint config.yml --type yaml
 
 # Auto-format markdown with kramdown
-ace-lint lint docs/file.md --fix
+ace-lint docs/file.md --fix
 
 # Show help
-ace-lint lint --help
+ace-lint --help
 
 # Show version
 ace-lint version
@@ -97,19 +165,19 @@ ace-lint version
 
 ```bash
 # Validate all markdown files
-ace-lint lint docs/*.md
+ace-lint docs/*.md
 
 # Format markdown files
-ace-lint lint docs/*.md --fix
+ace-lint docs/*.md --fix
 
 # Validate YAML configuration
-ace-lint lint .ace/config.yml --type yaml
+ace-lint .ace/config.yml --type yaml
 
 # Validate frontmatter
-ace-lint lint docs/guide.md --type frontmatter
+ace-lint docs/guide.md --type frontmatter
 
 # Quiet mode (only show summary)
-ace-lint lint docs/*.md --quiet
+ace-lint docs/*.md --quiet
 ```
 
 ## Features
