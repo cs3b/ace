@@ -1,6 +1,7 @@
 ---
 id: v.0.9.0+task.061
 status: done
+priority: medium
 estimate: 3-5h
 dependencies: []
 created: 2025-10-06
