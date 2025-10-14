@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.71] - 2025-10-14
+
+### Added
+
+- **ADR Archive System**: Created `docs/decisions/archive/` directory structure for preserving historical ADRs
+  - Archive README documenting deprecation rationale and migration context
+  - Clear separation between active and obsolete architectural decisions
+
+- **Six New ADRs**: Documented current gem patterns discovered during mono-repo analysis
+  - ADR-016: Handbook Directory Architecture (gem/handbook/ pattern)
+  - ADR-017: Flat Test Structure (test/{atoms,molecules,organisms,models}/)
+  - ADR-018: Thor CLI Commands Pattern (lib/ace/gem/commands/)
+  - ADR-019: Configuration Architecture (ace-core config cascade)
+  - ADR-020: Semantic Versioning and CHANGELOG (Keep a Changelog format)
+  - ADR-021: Standardized Rakefile (Rake::TestTask with CI compatibility)
+
+### Changed
+
+- **ADR-003 & ADR-004**: Added evolution sections documenting transition from centralized `dev-handbook/templates/` to distributed `gem/handbook/` pattern
+- **ADR-013**: Updated scope to clarify naming convention principles still apply while Zeitwerk-specific inflections are legacy-only
+- **docs/decisions.md**: Updated summary to reflect current active ADRs and archived decisions
+
+### Technical
+
+- **Archived Legacy ADRs**: Moved 4 obsolete ADRs to archive with deprecation notices
+  - ADR-006: CI-Aware VCR Configuration (VCR not used in current gems)
+  - ADR-007: Zeitwerk Autoloading (current gems use explicit requires)
+  - ADR-008: Observability with dry-monitor (not used in current gems)
+  - ADR-009: Centralized CLI Error Reporting (superseded by Thor patterns)
+- **ADR-011**: Updated ATOM architecture examples to reflect current gem structure
+- **ADR-015**: Documented completion of mono-repo migration with 15+ production gems
+
 ## [0.9.70] - 2025-10-14
 
 ### Added
