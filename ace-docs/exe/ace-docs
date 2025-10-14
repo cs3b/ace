@@ -44,106 +44,32 @@ module Ace
       option :exclude_renames, type: :boolean, desc: "Exclude renamed files"
       option :exclude_moves, type: :boolean, desc: "Exclude moved files"
       def diff(file = nil)
-        require_relative "../lib/ace/docs/organisms/document_registry"
-        require_relative "../lib/ace/docs/molecules/change_detector"
-
-        registry = Organisms::DocumentRegistry.new
-
-        # Determine which documents to analyze
-        documents = if file
-                      doc = registry.find_by_path(file)
-                      error_exit("Document not found: #{file}") unless doc
-                      [doc]
-                    elsif options[:all]
-                      registry.all
-                    elsif options[:needs_update]
-                      registry.needing_update
-                    else
-                      registry.needing_update
-                    end
-
-        if documents.empty?
-          puts "No documents to analyze."
-          return
-        end
-
-        puts "Analyzing changes for #{documents.size} document(s)..."
-
-        # Generate diff analysis
-        diff_options = {
-          include_renames: !options[:exclude_renames],
-          include_moves: !options[:exclude_moves]
-        }
-
-        result = if documents.size == 1
-                   Molecules::ChangeDetector.get_diff_for_document(
-                     documents.first,
-                     since: options[:since],
-                     options: diff_options
-                   )
-                 else
-                   Molecules::ChangeDetector.get_diff_for_documents(
-                     documents,
-                     since: options[:since],
-                     options: diff_options
-                   )
-                 end
-
-        # Save to cache
-        cache_file = Molecules::ChangeDetector.save_diff_to_cache(result)
-        puts "Analysis saved to: #{cache_file}"
-
-        # Display summary
-        if result[:document_diffs]
-          with_changes = result[:documents_with_changes]
-          puts "Documents with changes: #{with_changes}/#{result[:total_documents]}"
-        elsif result[:has_changes]
-          puts "Changes detected for #{File.basename(result[:document_path])}"
-        else
-          puts "No changes detected."
-        end
-      rescue StandardError => e
-        error_exit("Error analyzing changes", e)
+        require_relative "../lib/ace/docs/commands/diff_command"
+        exit_code = Commands::DiffCommand.new(options).execute(file)
+        exit(exit_code) if exit_code != 0
       end
 
       desc "update FILE", "Update document frontmatter"
       option :set, type: :hash, desc: "Fields to update (e.g., --set last-updated=today)"
       option :preset, desc: "Update all documents matching preset"
       def update(file = nil)
-        require_relative "../lib/ace/docs/organisms/document_registry"
-        require_relative "../lib/ace/docs/molecules/frontmatter_manager"
+        require_relative "../lib/ace/docs/commands/update_command"
+        exit_code = Commands::UpdateCommand.new(options).execute(file)
+        exit(exit_code) if exit_code != 0
+      end
 
-        registry = Organisms::DocumentRegistry.new
-
-        # Determine which documents to update
-        documents = if options[:preset]
-                      # TODO: Implement preset-based selection
-                      registry.all.select { |d| d.context_preset == options[:preset] }
-                    elsif file
-                      doc = registry.find_by_path(file)
-                      error_exit("Document not found: #{file}") unless doc
-                      [doc]
-                    else
-                      error_exit("Please specify a file or --preset")
-                    end
-
-        if documents.empty?
-          puts "No documents to update."
-          return
-        end
-
-        # Update frontmatter
-        updated_count = 0
-        documents.each do |doc|
-          if Molecules::FrontmatterManager.update_document(doc, options[:set] || {})
-            updated_count += 1
-            puts "Updated: #{doc.display_name}"
-          end
-        end
-
-        puts "Updated frontmatter for #{updated_count} document(s)"
-      rescue StandardError => e
-        error_exit("Error updating documents", e)
+      desc "analyze [FILES...]", "Batch analyze documents with LLM compaction"
+      option :needs_update, type: :boolean, desc: "Analyze documents needing updates"
+      option :type, desc: "Filter by document type"
+      option :freshness, desc: "Filter by freshness (current/stale/outdated)"
+      option :since, desc: "Override time range (e.g., '1 week ago')"
+      option :exclude_renames, type: :boolean, desc: "Exclude renamed files from diff"
+      option :exclude_moves, type: :boolean, desc: "Exclude moved files from diff"
+      option :output, desc: "Output format: compact|detailed (default: compact)"
+      def analyze(*files)
+        require_relative "../lib/ace/docs/commands/analyze_command"
+        exit_code = Commands::AnalyzeCommand.new(options).execute(*files)
+        exit(exit_code) if exit_code != 0
       end
 
       desc "validate [FILE|PATTERN]", "Validate documents against rules"
@@ -151,60 +77,9 @@ module Ace
       option :semantic, type: :boolean, desc: "Run semantic validation using LLM"
       option :all, type: :boolean, desc: "Run all validation types"
       def validate(pattern = nil)
-        require_relative "../lib/ace/docs/organisms/document_registry"
-        require_relative "../lib/ace/docs/organisms/validator"
-
-        registry = Organisms::DocumentRegistry.new
-
-        # Determine documents to validate
-        documents = if pattern
-                      if File.exist?(pattern)
-                        doc = registry.find_by_path(pattern)
-                        doc ? [doc] : []
-                      else
-                        # Treat as glob pattern
-                        registry.all.select { |d| File.fnmatch(pattern, d.path) }
-                      end
-                    else
-                      registry.all
-                    end
-
-        if documents.empty?
-          puts "No documents to validate."
-          return
-        end
-
-        # Determine validation types
-        run_syntax = options[:syntax] || options[:all]
-        run_semantic = options[:semantic] || options[:all]
-        run_all = !options[:syntax] && !options[:semantic]
-
-        validator = Organisms::Validator.new(registry)
-
-        documents.each do |doc|
-          puts "Validating: #{doc.display_name}"
-
-          results = validator.validate_document(
-            doc,
-            syntax: run_syntax || run_all,
-            semantic: run_semantic || run_all
-          )
-
-          if results[:valid]
-            puts "  ✓ Valid".green
-          else
-            puts "  ✗ Invalid".red
-            results[:errors].each do |error|
-              puts "    - #{error}".red
-            end
-          end
-
-          results[:warnings].each do |warning|
-            puts "    ⚠ #{warning}".yellow
-          end
-        end
-      rescue StandardError => e
-        error_exit("Error validating documents", e)
+        require_relative "../lib/ace/docs/commands/validate_command"
+        exit_code = Commands::ValidateCommand.new(options).execute(pattern)
+        exit(exit_code) if exit_code != 0
       end
 
       desc "version", "Show ace-docs version"

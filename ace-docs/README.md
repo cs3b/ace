@@ -9,10 +9,13 @@ ace-docs is a comprehensive documentation management solution that combines dete
 - **Document Discovery**: Automatically finds markdown files with ace-docs frontmatter
 - **Freshness Tracking**: Shows last-updated dates and identifies stale documents
 - **Change Analysis**: Generates relevant change summaries using git diff
+- **Batch Analysis**: LLM-powered diff compaction for efficient documentation updates
 - **Metadata Management**: Updates frontmatter fields (dates, versions) accurately
 - **Rule Validation**: Enforces max-lines, required sections, and no-duplicate rules
+- **ace-lint Integration**: Delegates syntax validation to ace-lint when available
 - **LLM Integration**: Uses ace-llm-query for intelligent change summarization
 - **Context Integration**: Leverages ace-context for project awareness
+- **Configuration Cascade**: Uses ace-core config system for flexible settings
 
 ## Installation
 
@@ -71,7 +74,23 @@ ace-docs diff docs/architecture.md
 ace-docs diff --all
 ```
 
-### 4. Update metadata
+### 4. Batch analysis with LLM compaction
+
+```bash
+# Analyze documents needing updates with LLM compaction
+ace-docs analyze --needs-update
+
+# Analyze specific documents
+ace-docs analyze docs/architecture.md docs/tools.md
+
+# Analyze with custom time range
+ace-docs analyze --needs-update --since "1 week ago"
+
+# Filter by document type or freshness
+ace-docs analyze --type guide --freshness stale
+```
+
+### 5. Update metadata
 
 ```bash
 # Update single document
@@ -81,14 +100,20 @@ ace-docs update docs/tools.md --set last-updated=today
 ace-docs update --preset project --set last-checked=today
 ```
 
-### 5. Validate documents
+### 6. Validate documents
 
 ```bash
-# Validate all documents
+# Validate all documents (delegates to ace-lint if available)
 ace-docs validate
 
 # Validate specific pattern
 ace-docs validate "docs/*.md" --all
+
+# Run syntax validation only
+ace-docs validate --syntax
+
+# Run semantic validation with LLM
+ace-docs validate --semantic
 ```
 
 ## Configuration
