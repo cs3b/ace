@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-09-22'
+  last-updated: '2025-10-14'
 ---
 
 # Project Decisions
@@ -45,13 +45,23 @@ This document provides actionable decisions from Architecture Decision Records (
 ### Mono-Repo Migration to ace-* Gems
 **Decision**: Migrate from multi-repository submodule architecture to mono-repo with modular ace-* Ruby gems.
 **Impact**: When working with the codebase:
-- All new functionality goes into appropriate ace-* gems at the repository root
+- All new functionality goes into appropriate ace-* gems at the repository root (15+ gems completed)
 - Follow ATOM architecture (atoms/, molecules/, organisms/, models/) in each gem
 - Use the root Gemfile for development dependencies
 - Run commands with `bundle exec` during development
-- Configuration uses .ace/ cascade with nearest/deepest wins
-- Legacy dev-* directories are being migrated incrementally
+- Configuration uses .ace/ cascade with nearest/deepest wins (see docs/ace-gems.g.md)
+- Legacy dev-tools mostly migrated; dev-handbook migrating to ace-handbook gem
 **Details**: [ADR-015](decisions/ADR-015-mono-repo-ace-gems-migration.md)
+
+### ACE Gem Configuration Patterns
+**Decision**: All ace-* gems use ace-core's config cascade with standardized .ace/ directory structure.
+**Impact**: When creating or modifying gems:
+- NEVER use hardcoded config paths or custom config loaders
+- Use `Ace::Core.config.get('ace', 'gem_name')` for loading configuration
+- Place example configs in `.ace.example/gem-name/` within gem directory
+- Support both flat structure (main configs) and nested structure (general configs)
+- Refer to docs/ace-gems.g.md for complete configuration patterns
+**Example**: ace-lint uses `.ace/lint/kramdown.yml` (flat, tool-specific) and `.ace/lint/config.yml` (nested, general)
 
 ## Development Tool Decisions
 
