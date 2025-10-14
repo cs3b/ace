@@ -397,7 +397,15 @@ Validated: 1 document - Passed with fixes
 
 ### Standalone Validation Tool
 
-ace-lint is a separate gem used by ace-docs and other ace-* packages:
+ace-lint is a separate gem used by ace-docs and other ace-* packages. ace-docs delegates validation to ace-lint's public interface (library or CLI).
+
+**Integration Method**: Check ace-lint documentation for preferred integration:
+- **Library API** (preferred if available): `require 'ace/lint'` and use public classes/methods
+- **CLI Subprocess** (fallback): Call `ace-lint` command via subprocess
+
+**Key Decision**: Use ace-lint's public interface, not direct calls to external linters (markdownlint/yamllint). ace-lint orchestrates those tools internally.
+
+### Usage Examples
 
 ```bash
 # Lint specific files
@@ -424,13 +432,18 @@ ace-lint config.yml --type yaml
 
 **Graceful Fallbacks**: If external linters (markdownlint, yamllint) are not installed, ace-lint provides basic validation without them.
 
+**Note**: Remove external linter references from ace-docs config. ace-lint handles linter configuration and execution.
+
 ## Configuration
 
 ### Project Configuration
 
-Create `.ace/docs/config.yml`:
+Create `.ace/docs/config.yml` (FLAT structure - main config for ace-docs):
+
+**Note**: ace-docs uses FLAT config structure (no `ace:` nesting) as it's the primary config for this single-purpose gem. Config is loaded via `Ace::Docs.config` using ace-core's config cascade system.
 
 ```yaml
+# FLAT structure - direct configuration keys
 document_types:
   guide:
     paths:
@@ -451,22 +464,44 @@ global_rules:
   required_frontmatter:
     - doc-type
     - purpose
+
+# Validation rules merge with type-specific overriding globals
+validation:
+  merge_strategy: type_overrides_global
 ```
+
+**Config Cascade**: `./.ace/docs/config.yml` → `~/.ace/docs/config.yml` → built-in defaults
+
+For detailed configuration options, see `ace-docs/docs/config.md`.
 
 ### LLM Configuration
 
-Configure via ace-llm-query (ace-docs uses it as subprocess):
+**Recommended**: Use ace-llm-query defaults. Only configure if you need to override.
+
+ace-docs delegates to ace-llm-query for LLM calls. Configuration is optional in ace-docs config:
+
+```yaml
+# .ace/docs/config.yml (optional LLM settings)
+llm:
+  # model: "gflash"     # Commented out - uses ace-llm-query default
+  temperature: 0.3      # For deterministic diff compaction
+```
+
+**Key Decision**: Model selection is delegated to ace-llm-query. Only specify `model` if you need a different model than the ace-llm-query default.
+
+To configure ace-llm-query globally:
 
 ```bash
-# Set default model
-export ACE_LLM_MODEL=gpt-4
+# Check current default
+ace-llm-query --show-config
 
-# Or use configuration file
+# Set default model (optional)
 cat > ~/.ace/llm/config.yml <<EOF
-default_model: claude-3.5-sonnet
-temperature: 0.3
+default_model: gflash  # or claude-3.5-sonnet, gpt-4, etc.
 EOF
 ```
+
+**Temperature**: ace-docs uses 0.3 for deterministic compaction (removes noise consistently).
 
 ## Troubleshooting
 

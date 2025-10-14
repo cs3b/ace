@@ -277,8 +277,10 @@ module Ace
         end
 
         def check_retros
-          # Find all retro files
-          retro_files = Dir.glob(File.join(@root_path, "**/retros/**/*.md"))
+          # Find all retro files using configured directory name
+          config = Ace::Taskflow.configuration
+          retro_dir = config.retro_dir
+          retro_files = Dir.glob(File.join(@root_path, "**", retro_dir, "**/*.md"))
             .reject { |f| f.include?("/.git/") }
 
           retro_files.each do |file|
