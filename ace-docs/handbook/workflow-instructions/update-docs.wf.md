@@ -169,6 +169,22 @@ ace-docs --version      # Trivial, not useful
 ace-docs -h             # Help text, not practical usage
 ```
 
+### Architecture Decision Records (ADRs)
+
+For ADR lifecycle management (creation, evolution, archival, scope updates):
+
+**Creating new ADRs:**
+`ace-docs/handbook/workflow-instructions/create-adr.wf.md`
+
+**Maintaining existing ADRs:**
+`ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md`
+
+ADR maintenance includes:
+- Evolution documentation when patterns change
+- Archival of obsolete decisions
+- Scope updates for partially outdated decisions
+- Synchronization with `docs/decisions.md` summary
+
 ### Context Documents (what-do-we-build.md, architecture.md, etc.)
 
 For core context documents with specific requirements (line limits, update order, duplication prevention), see the specialized workflow:
