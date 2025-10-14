@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.73] - 2025-10-14
+
+### Added
+
+- Task reference parsing improvements with ID-based search in ace-taskflow
+- Support for v.0.9.0+task.070 reference format in ace-taskflow
+
+### Fixed
+
+- Task lookup for done tasks - simple references (072, task.072) now work correctly
+- ace-taskflow now finds tasks in done directory by searching on ID field instead of path extraction
+
+### Changed
+
+- Upgraded ace-taskflow to v0.11.5
+
 ## [0.9.72] - 2025-10-14
 
 ### Added
