@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.74] - 2025-10-14
+
+### Added
+
+- **ace-docs v0.3.0**: Batch analysis command with LLM-powered diff compaction
+  - New `ace-docs analyze` command for intelligent documentation analysis
+  - LLM compaction via ace-llm-query subprocess integration
+  - Automatic time range detection from document staleness
+  - Markdown reports organized by impact level (HIGH/MEDIUM/LOW)
+  - Cache management with timestamped analysis reports
+  - Command architecture refactoring with extracted command classes (DiffCommand, UpdateCommand, ValidateCommand, AnalyzeCommand)
+  - ace-lint integration for validation delegation
+  - Configuration system integrated with ace-core config cascade
+
+### Fixed
+
+- Task 071 file corruption - restored full task content (1134 lines) from git history after edit tool corruption reduced it to 5 lines
+
+### Technical
+
+- Created retrospective documenting broken task file edits pattern and proposing YAML-aware frontmatter update solutions
+- Restored and updated task 071 with proper completion status and achievement summary
+
 ## [0.9.73] - 2025-10-14
 
 ### Added
