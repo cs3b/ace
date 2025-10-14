@@ -2,8 +2,27 @@
 
 ## Status
 
-Accepted
+**Deprecated - Archived (October 2025)**
+
+Original Status: Accepted
 Date: 2025-06-08
+
+## Deprecation Notice
+
+**This ADR is archived and no longer applicable to the current codebase.**
+
+- **Archived**: October 14, 2025
+- **Reason**: ErrorReporter module is only used in legacy `_legacy/dev-tools`. Current ace-* gems (v0.9.0+) use Thor CLI patterns.
+- **Current Practice**: Thor CLI commands handle errors with standard Ruby exception patterns (see ADR-018: Thor CLI Commands Pattern)
+- **Context**: This decision applied to the legacy dev-tools before the mono-repo migration (ADR-015) and adoption of Thor framework
+
+For current CLI error handling, see:
+- **ADR-018**: Thor CLI Commands Pattern - standardized error handling in Thor commands
+- **ace-lint/lib/ace/lint/commands/lint_command.rb**: Example of current error handling pattern
+
+---
+
+**Original ADR (for historical reference):**
 
 ## Context
 

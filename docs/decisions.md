@@ -60,30 +60,39 @@ This document provides actionable decisions from Architecture Decision Records (
 - Use `Ace::Core.config.get('ace', 'gem_name')` for loading configuration
 - Place example configs in `.ace.example/gem-name/` within gem directory
 - Support both flat structure (main configs) and nested structure (general configs)
-- Refer to docs/ace-gems.g.md for complete configuration patterns
-**Example**: ace-lint uses `.ace/lint/kramdown.yml` (flat, tool-specific) and `.ace/lint/config.yml` (nested, general)
+**Details**: [ADR-019](decisions/ADR-019-configuration-architecture.md)
+
+## Gem Architecture Patterns
+
+### Handbook Directory Architecture
+**Decision**: All gems include `handbook/` with `agents/` and `workflow-instructions/` subdirectories for AI integration.
+**Impact**: When creating gems:
+- Include `handbook/agents/*.ag.md` for single-purpose, composable agents
+- Include `handbook/workflow-instructions/*.wf.md` for complete, self-contained workflows
+- Symlink to `.claude/agents/` for Claude Code integration
+**Details**: [ADR-016](decisions/ADR-016-handbook-directory-architecture.md)
+
+### Flat Test Structure
+**Decision**: Tests must use flat structure mirroring ATOM layers: `test/{atoms,molecules,organisms,models,commands}/`
+**Impact**: Use `test/atoms/` NOT `test/ace/gem/atoms/` - flat structure only. Simplifies navigation and maintains consistency.
+**Details**: [ADR-017](decisions/ADR-017-flat-test-structure.md)
+
+### Thor CLI Commands Pattern
+**Decision**: All CLI gems use Thor with `lib/ace/gem/commands/` directory for command classes.
+**Impact**: Create command classes in `commands/`, use `cli.rb` as Thor entry point, test in `test/commands/`. Commands return exit codes (0/1).
+**Details**: [ADR-018](decisions/ADR-018-thor-cli-commands-pattern.md)
+
+### Semantic Versioning and CHANGELOG
+**Decision**: All gems must follow semantic versioning and maintain CHANGELOG.md in Keep a Changelog format.
+**Impact**: Update CHANGELOG.md with every change, bump versions according to semver (MAJOR for breaking, MINOR for features, PATCH for fixes).
+**Details**: [ADR-020](decisions/ADR-020-semantic-versioning-changelog.md)
+
+### Standardized Rakefile
+**Decision**: All gems use standardized Rakefile with Rake::TestTask and CI compatibility.
+**Impact**: Include `task :spec => :test` for CI, set `default: :test`, use standard test file pattern.
+**Details**: [ADR-021](decisions/ADR-021-standardized-rakefile.md)
 
 ## Development Tool Decisions
-
-### CI-Aware VCR Configuration
-**Decision**: VCR cassettes must be environment-aware with CI detection and appropriate recording modes.
-**Impact**: When writing tests with external API calls, ensure VCR is configured to detect CI environments. Use `new_episodes` mode locally and `none` in CI.
-**Details**: [ADR-006](decisions/ADR-006-CI-Aware-VCR-Configuration.t.md)
-
-### Zeitwerk Autoloading
-**Decision**: Use Zeitwerk for all Ruby autoloading with proper inflections for acronyms (CLI, HTTP, API, JSON, etc.).
-**Impact**: Follow file naming conventions strictly. Use snake_case filenames that match class names. Configure inflections for technical acronyms in the Zeitwerk setup.
-**Details**: [ADR-007](decisions/ADR-007-Zeitwerk-for-Autoloading.t.md)
-
-### Observability with dry-monitor
-**Decision**: Implement observability using dry-monitor's publish/subscribe pattern with a central Notifications instance.
-**Impact**: When adding new features that need monitoring, publish events through the Notifications instance. Subscribe to events for logging, metrics, or debugging.
-**Details**: [ADR-008](decisions/ADR-008-Observability-with-dry-monitor.t.md)
-
-### Centralized CLI Error Reporting
-**Decision**: Use a centralized ErrorReporter module for all CLI error handling with debug flag support.
-**Impact**: Never print errors directly to stdout/stderr in CLI commands. Always route errors through ErrorReporter for consistent formatting and debug support.
-**Details**: [ADR-009](decisions/ADR-009-Centralized-CLI-Error-Reporting.t.md)
 
 ### HTTP Client Strategy
 **Decision**: Use Faraday as the standard HTTP client with retry middleware and observability integration.
@@ -106,13 +115,23 @@ This document provides actionable decisions from Architecture Decision Records (
 
 ### Class Naming Conventions
 **Decision**: Preserve established technical acronyms in class names (JSONFormatter, HTTPClient, APICredentials) while using CamelCase for domain terms.
-**Impact**: When naming classes, keep technical acronyms uppercase (HTTP, API, JSON, LLM). Use CamelCase for domain-specific terms (LlmModelInfo, not LLMModelInfo).
+**Impact**: When naming classes, keep technical acronyms uppercase (HTTP, API, JSON). Use CamelCase for domain-specific terms (LlmModelInfo, not LLMModelInfo). Note: Zeitwerk-specific inflections are legacy; current gems use explicit requires.
 **Details**: [ADR-013](decisions/ADR-013-Class-Naming-Conventions-and-Zeitwerk-Inflections.t.md)
 
 ### LLM Integration Architecture
 **Decision**: Use hybrid approach for LLM context sizes: API-first with static fallback mappings.
 **Impact**: When integrating with LLM providers, first attempt to get context size from API. Maintain static mappings as fallback for providers without API support.
 **Details**: [ADR-014](decisions/ADR-014-LLM-Integration-Architecture.t.md)
+
+## Archived Decisions
+
+The following decisions are **archived** as they apply only to legacy `_legacy/dev-tools`:
+- **ADR-006**: CI-Aware VCR Configuration (VCR not used in current gems)
+- **ADR-007**: Zeitwerk Autoloading (current gems use explicit requires)
+- **ADR-008**: Observability with dry-monitor (not used in current gems)
+- **ADR-009**: Centralized CLI Error Reporting (superseded by ADR-018 Thor patterns)
+
+See `docs/decisions/archive/README.md` for details on archived decisions.
 
 ## Decision History
 

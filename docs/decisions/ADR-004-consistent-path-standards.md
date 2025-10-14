@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Accepted - Evolved to Gem Handbook Pattern (see ADR-016)
+Date: 2025-06-30
+Evolution: October 2025
 
 ## Context
 
@@ -113,3 +115,92 @@ end
 - [ADR-002: XML Template Embedding Architecture](./ADR-002-xml-template-embedding-architecture.md)
 - [ADR-003: Template Directory Separation](./ADR-003-template-directory-separation.md)
 - Task 40: Implement Universal Document Embedding System
+
+## Evolution: Gem Handbook Pattern (October 2025)
+
+### Current State
+
+The original path standards focused on `dev-handbook/templates/` and `dev-handbook/guides/` have evolved with the mono-repo migration (ADR-015) into a **gem-specific handbook pattern**:
+
+```
+ace-gem/
+└── handbook/
+    ├── agents/                        # .ag.md files
+    │   └── process.ag.md
+    └── workflow-instructions/          # .wf.md files
+        └── your-workflow.wf.md
+```
+
+### Key Path Pattern Changes
+
+1. **From Central to Distributed**:
+   - Old: `dev-handbook/templates/**/*.template.md`
+   - New: `ace-gem/handbook/workflow-instructions/**/*.wf.md`
+
+2. **From Templates to Workflows**:
+   - Old: Simple templates embedded in workflows
+   - New: Self-contained workflows with embedded templates (ADR-001)
+
+3. **New Agent Pattern**:
+   - Format: `ace-gem/handbook/agents/**/*.ag.md`
+   - Purpose: Single-purpose, composable agents
+
+4. **Integration Symlinks**:
+   - Pattern: `.claude/agents/` → `gem/handbook/agents/`
+   - Purpose: Claude Code integration
+
+### Current Path Standards (October 2025)
+
+**For Gem Development:**
+- Workflows: `{gem-name}/handbook/workflow-instructions/*.wf.md`
+- Agents: `{gem-name}/handbook/agents/*.ag.md`
+- Integration: `.claude/agents/{agent-name}.ag.md` (symlink)
+
+**For Discovery:**
+- Protocol: `wfi://{gem-name}/{workflow-name}` via ace-nav
+- Command: `ace-nav wfi://ace-docs/update-docs`
+
+**Path Validation:**
+```ruby
+# Current validation (per gem)
+def validate_workflow_path(path)
+  unless path.match?(%r{^[\w-]+/handbook/workflow-instructions/[\w-]+\.wf\.md$})
+    raise "Invalid workflow path: #{path}"
+  end
+end
+
+def validate_agent_path(path)
+  unless path.match?(%r{^[\w-]+/handbook/agents/[\w-]+\.ag\.md$})
+    raise "Invalid agent path: #{path}"
+  end
+end
+```
+
+### Relationship to Original Decision
+
+The **principles remain valid**:
+- ✅ Always relative to project root
+- ✅ Consistent path format per document type
+- ✅ No absolute paths
+- ✅ Automated validation
+
+The **implementation evolved**:
+- From: Central `dev-handbook/templates/` with `.template.md`
+- To: Distributed `gem/handbook/` with `.wf.md` and `.ag.md`
+- Reason: Better modularity, gem-specific workflows, installable patterns
+
+### Examples in Production
+
+**ace-docs paths:**
+```
+ace-docs/handbook/workflow-instructions/update-docs.wf.md
+.claude/agents/update-docs.ag.md → ace-docs/handbook/agents/update-docs.ag.md
+```
+
+**ace-taskflow paths:**
+```
+ace-taskflow/handbook/workflow-instructions/draft-task.wf.md
+ace-taskflow/handbook/agents/task-finder.ag.md
+```
+
+See **ADR-016: Handbook Directory Architecture** for complete details of current pattern.

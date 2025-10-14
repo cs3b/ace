@@ -2,8 +2,27 @@
 
 ## Status
 
-Accepted
+**Deprecated - Archived (October 2025)**
+
+Original Status: Accepted
 Date: 2025-06-07
+
+## Deprecation Notice
+
+**This ADR is archived and no longer applicable to the current codebase.**
+
+- **Archived**: October 14, 2025
+- **Reason**: VCR HTTP mocking is only used in legacy `_legacy/dev-tools`. Current ace-* gems (v0.9.0+) do not use VCR.
+- **Current Practice**: ace-llm uses Faraday directly without VCR mocking (see ADR-010: HTTP Client Strategy with Faraday)
+- **Context**: This decision applied to the legacy dev-tools testing infrastructure before the mono-repo migration (ADR-015)
+
+For current HTTP client patterns, see:
+- **ADR-010**: HTTP Client Strategy with Faraday
+- **ace-llm/lib/ace/llm/atoms/http_client.rb**: Current HTTP client implementation
+
+---
+
+**Original ADR (for historical reference):**
 
 ## Context
 

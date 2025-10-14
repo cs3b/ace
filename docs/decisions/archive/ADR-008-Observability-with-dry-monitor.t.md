@@ -2,8 +2,28 @@
 
 ## Status
 
-Accepted
+**Deprecated - Archived (October 2025)**
+
+Original Status: Accepted
 Date: 2025-06-08
+
+## Deprecation Notice
+
+**This ADR is archived and no longer applicable to the current codebase.**
+
+- **Archived**: October 14, 2025
+- **Reason**: dry-monitor pub/sub system is only used in legacy `_legacy/dev-tools`. Current ace-* gems (v0.9.0+) do not use dry-monitor.
+- **Current Practice**: No centralized observability system in current ace-* gems; standard Ruby logging patterns used instead
+- **Context**: This decision applied to the legacy dev-tools before the mono-repo migration (ADR-015)
+
+For current patterns:
+- **Standard Ruby logging**: Individual gems use standard logger when needed
+- **Thor CLI patterns**: ADR-018 for CLI error handling
+- **Simple, focused gems**: Each gem handles its own logging needs
+
+---
+
+**Original ADR (for historical reference):**
 
 ## Context
 

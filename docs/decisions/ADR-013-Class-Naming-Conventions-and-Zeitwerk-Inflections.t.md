@@ -2,8 +2,19 @@
 
 ## Status
 
-Accepted
+Accepted - Principles Apply, Zeitwerk-Specific Parts Legacy Only
 Date: 2025-06-25
+Evolution: October 2025
+
+## Scope Note (October 2025)
+
+**Current Relevance**: The **naming convention principles** in this ADR still apply to current ace-* gems. The **Zeitwerk-specific inflections** are legacy-only (see ADR-007 archive).
+
+**Current gems** (ace-llm, ace-core, etc.) use **explicit requires** instead of Zeitwerk autoloading, but the class naming conventions for technical acronyms (HTTPClient, APICredentials, JSONFormatter) remain best practice.
+
+---
+
+**Original Context:**
 
 ## Context
 
