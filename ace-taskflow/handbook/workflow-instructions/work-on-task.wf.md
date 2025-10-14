@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-08'
+  last-updated: '2025-10-14'
 ---
 
 # Work on Task Workflow Instruction
@@ -26,7 +26,7 @@ update:
 For experienced users, here's the condensed workflow:
 
 1. **Read linked documents** - Load project context and workflow instructions
-2. **Select task** - Use `ace-taskflow task` to get next task or specify task path
+2. **Select task** - Use `ace-taskflow task` (next) or `ace-taskflow task <ref>` (specific)
 3. **Mark in-progress** - Update task status to `in-progress`
 4. **Execute plan** - Work through planning and execution steps autonomously
 5. **Validate completion** - Verify all subtasks and acceptance criteria are done
@@ -34,29 +34,24 @@ For experienced users, here's the condensed workflow:
 
 ## Detailed Process Steps
 
-1. **Select Task File:**
-   * Use automated task selection tool:
+1. **Select Task:**
+   * Use `ace-taskflow task` command to get task by reference or next available:
 
      ```bash
-     # Get next task to work on
+     # Get next task to work on (auto-selects based on priority/dependencies)
      ace-taskflow task
+
+     # Or specify task by any reference format:
+     ace-taskflow task 071           # Task number
+     ace-taskflow task task.071      # Task ID format
+     ace-taskflow task v.0.9.0+071   # Full task reference
      ```
 
-   * Alternatively, manually select by listing available tasks:
-
-     ```bash
-     # Find current release directory with context
-     ls --long .ace-taskflow/$(ace-taskflow release --path)/
-
-     # List available tasks with status filtering
-     ace-taskflow tasks --status pending --current
-     ```
-
-   * Review task metadata to select appropriate task:
-     * Check `status: pending` (not yet started)
-     * Verify `dependencies: []` are met
-     * Consider `priority: high/medium/low`
-   * Provide the full path to the selected task file
+   * The command automatically:
+     * Finds and displays task details
+     * Returns task file path
+     * Validates task exists and is accessible
+   * No manual directory scanning or release path lookup needed
 
 2. **Load Task & Validate Plan:**
    * Load the content of the selected task `.md` file
@@ -287,8 +282,8 @@ When working with temporary files:
 1. Check dependency task status:
 
    ```bash
-   # Find and check dependency tasks
-   ace-taskflow tasks --status pending --current
+   # Check specific dependency task (listed in task metadata)
+   ace-taskflow task <dependency-task-ref>
    ```
 
 2. Verify required tools are available:
@@ -616,7 +611,8 @@ When errors occur during task execution:
 
 ## Usage Example
 >
-> "Work on task using: ace-taskflow task 3" or "ace-taskflow task v.0.3.0+003"
+> "Work on next task: ace-taskflow task"
+> "Work on specific task: ace-taskflow task 071" or "ace-taskflow task task.071" or "ace-taskflow task v.0.9.0+071"
 
 ---
 
