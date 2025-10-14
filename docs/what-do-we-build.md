@@ -1,32 +1,34 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 150
+  max_lines: 100
   required_sections:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-08'
+  last-updated: '2025-10-14'
 ---
 
 # ACE (Agent Coding Environment)
 
 ## What We Build
 
-ACE packages development capabilities as Ruby gems for AI coding assistants. Whether it's a tool, a workflow, or a template - ACE turns it into a reusable gem that works seamlessly with Claude Code, Codex, OpenCode, and other AI development environments.
+ACE packages development capabilities as Ruby gems for AI coding assistants. Each gem includes CLI tools, agents, and workflows - making it a complete, reusable capability. Whether it's documentation management, code review, or task orchestration - ACE turns it into an installable gem that works with Claude Code, Codex, OpenCode, and other AI environments.
 
 ## Current Capabilities
 
 - **ace-core**: Configuration management and shared utilities
 - **ace-context**: Project context loading with smart caching
+- **ace-docs**: Documentation management with frontmatter-based tracking
+- **ace-git-commit**: Smart git commit generation with LLM integration
+- **ace-lint**: Code quality linting (markdown, YAML, frontmatter)
+- **ace-llm**: Multi-provider AI model integration with CLI-based providers
+- **ace-nav**: Resource discovery and navigation with wfi:// protocol
+- **ace-review**: Preset-based code review with LLM-powered analysis
+- **ace-search**: Unified file and content search with intelligent pattern matching
+- **ace-taskflow**: Task, release, and idea management with presets
 - **ace-test-runner**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
-- **ace-taskflow**: Task, release, and idea management with presets, move-to-done, and rescheduling
-- **ace-nav**: Resource discovery and navigation with wfi:// protocol support
-- **ace-llm**: Multi-provider AI model integration with CLI-based providers (Claude, Codex, OpenCode)
-- **ace-git-commit**: Smart git commit generation with LLM integration
-- **ace-search**: Unified file and content search with intelligent DWIM pattern matching
-- **ace-review**: Preset-based code review with LLM-powered analysis and prompt composition
 
 ## Coming Soon
 
