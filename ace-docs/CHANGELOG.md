@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-10-15
+
+### Added
+
+- **Frontmatter Initialization**: `ace-docs update` now creates frontmatter on files without it
+  - Auto-infers `doc-type` from file path (README.md → reference, *.wf.md → workflow, etc.)
+  - Requires `purpose` field for new frontmatter
+  - Seamless workflow: initialize and update in single command
+
+### Fixed
+
+- **YAML Formatting**: Removed duplicate `---` markers in frontmatter output
+- **Update Command**: Now handles files without existing frontmatter
+
+### Changed
+
+- **Documentation**: Comprehensive updates to usage.md
+  - Added `version` command documentation
+  - Detailed `analyze` command section with all options
+  - Enhanced `validate` command with `--semantic` flag documentation
+  - Fixed `update` command syntax examples (--set key:value)
+  - Updated configuration section with LLM and ace-lint settings
+  - Enhanced troubleshooting with analyze-specific issues
+  - Added complete workflow examples
+
 ## [0.3.0] - 2025-10-14
 
 ### Added
