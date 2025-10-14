@@ -5,6 +5,22 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.5] - 2025-10-14
+
+### Added
+
+- Improve task reference parsing and loading with ID-based search
+- Support v.0.9.0+task.070 reference format
+
+### Fixed
+
+- Fix task lookup for done tasks by searching on ID field instead of path-based extraction
+- Enable simple references (072, task.072) to find tasks in done directory
+
+### Technical
+
+- Update work-on-task instructions for task selection
+
 ## [0.11.4] - 2025-10-14
 
 ### Added
