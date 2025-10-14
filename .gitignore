@@ -1,1 +1,22 @@
+node_modules
+doc-dependencies*
+# Environment configuration
+.env
+.coding-agent/.env
+.coding-agent/.env.sample
+node_modules
+.lint*.md
+
+# Cache, tmp and backup files
+.cache
+*.bak
+tmp
+tmp/
+**/test-reports
+ace-*/coverage
+coverage
+
+# ace-taskflow test artifacts
+ace-taskflow/.ace-taskflow/
+*.tmp
 *.diff
