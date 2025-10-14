@@ -1,177 +1,158 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 150
+  max_lines: 200
   required_sections:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-08'
+  last-updated: '2025-10-14'
 ---
 
 # ACE - System Architecture
 
 ## Overview
 
-ACE (Agent Coding Environment) is a mono-repo ecosystem of modular Ruby gems that provide a deterministic CLI surface for AI-assisted software development. Both human developers and AI agents use the same tools through consistent interfaces.
+ACE (Agent Coding Environment) is a mono-repo ecosystem of modular Ruby gems that provide a deterministic CLI surface
+for AI-assisted software development. Both human developers and AI agents use the same tools through consistent
+interfaces.
 
-## Core Architecture Principles
+## Core Principles
 
-- **Mono-Repo Structure**: All ace-* gems at repository root with shared dependencies
-- **ATOM Pattern**: Consistent architecture across all gems (Atoms, Molecules, Organisms, Models)
-- **Configuration Cascade**: Hierarchical .ace/ configuration with nearest-wins resolution
-- **Zero-Dependency Core**: ace-core uses only Ruby standard library
-- **AI-Native Design**: Deterministic commands designed for autonomous agent execution
+* **Mono-Repo**: All ace-\* gems at root with shared dependencies
+* **ATOM Pattern**: Consistent architecture (Atoms, Molecules, Organisms, Models)
+* **Config Cascade**: `.ace/` hierarchy, nearest-wins resolution
+* **Zero-Dependency Core**: ace-core uses only Ruby stdlib
+* **AI-Native**: Deterministic commands for autonomous execution
 
-## Repository Organization
-
-The mono-repo contains modular ace-* gems and legacy components being migrated. Each gem follows the ATOM architecture pattern with consistent directory structure. For detailed file organization and navigation, see [blueprint.md](blueprint.md).
+Mono-repo contains modular gems; each follows ATOM with consistent structure. See [blueprint.md](blueprint.md) for
+organization.
 
 ## ATOM Architecture Pattern
 
-All ace-* gems follow the ATOM pattern for consistent, testable code organization:
+All ace-\* gems follow the ATOM pattern for consistent, testable code organization:
 
 ### Atoms (Pure Functions)
 
-- No side effects or external dependencies
-- Single, well-defined purpose
-- Examples: `yaml_parser`, `deep_merger`, `path_expander`
+* No side effects or external dependencies
+* Single, well-defined purpose
+* Examples: `yaml_parser`, `deep_merger`, `path_expander`
 
 ### Molecules (Composed Operations)
 
-- Combine atoms to perform specific operations
-- May have controlled side effects (file I/O)
-- Examples: `yaml_loader`, `config_finder`, `context_chunker`
+* Combine atoms to perform specific operations
+* May have controlled side effects (file I/O)
+* Examples: `yaml_loader`, `config_finder`, `context_chunker`
 
 ### Organisms (Business Logic)
 
-- Orchestrate molecules to implement features
-- Handle complex workflows and coordination
-- Examples: `config_resolver`, `context_loader`, `test_orchestrator`
+* Orchestrate molecules to implement features
+* Handle complex workflows and coordination
+* Examples: `config_resolver`, `context_loader`, `test_orchestrator`
 
 ### Models (Data Structures)
 
-- Pure data carriers with no business logic
-- Immutable value objects preferred
-- Examples: `config`, `context_data`, `test_result`
+* Pure data carriers with no business logic
+* Immutable value objects preferred
+* Examples: `config`, `context_data`, `test_result`
+
+### Implementation
+
+All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `commands/` for Thor CLI.
+Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, not nested).
 
 ## Component Types
 
-### Tools (ace-* gems)
+### Tools (ace-\* gems)
 
 Modular Ruby gems providing focused CLI functionality:
 
-- **ace-core**: Configuration management foundation
-- **ace-context**: Project context loading
-- **ace-test-runner**: Test execution and reporting
-- **ace-test-support**: Shared testing infrastructure
-- **ace-taskflow**: Task, release, and idea management with presets, move-to-done, and rescheduling
-- **ace-nav**: Resource discovery and navigation with wfi:// protocol support
-- **ace-llm**: Multi-provider AI model integration with CLI-based providers support
-- **ace-git-commit**: Smart git commit generation with LLM integration
-- **ace-search**: Unified file and content search with intelligent DWIM pattern matching
-- **ace-review**: Preset-based code review with LLM-powered analysis and prompt composition
+* **ace-core**: Configuration management foundation
+* **ace-context**: Project context loading with protocol support
+* **ace-docs**: Documentation management with frontmatter-based tracking
+* **ace-git-commit**: Smart git commit generation with LLM integration
+* **ace-lint**: Code quality linting (markdown, YAML, frontmatter)
+* **ace-llm**: Multi-provider AI model integration with CLI-based providers
+* **ace-nav**: Resource discovery and navigation with wfi:// protocol
+* **ace-review**: Preset-based code review with LLM-powered analysis
+* **ace-search**: Unified file and content search with DWIM pattern matching
+* **ace-taskflow**: Task, release, and idea management with presets
+* **ace-test-runner**: Test execution and reporting
+* **ace-test-support**: Shared testing infrastructure
+
+All gems follow ATOM architecture with `handbook/` for agents/workflows. See [ace-gems.g.md](ace-gems.g.md) for
+development guide.
 
 ### Workflows (.wf.md)
 
-Self-contained instruction documents for AI agents:
+Self-contained instruction documents for complete processes:
 
-- Migrating to `ace-taskflow/handbook/workflow-instructions/`
-- Legacy location: `dev-handbook/workflow-instructions/`
-- Include all necessary context and templates
-- Follow ADR-001 self-containment principle
-- Discoverable via ace-nav wfi:// protocol
+* **Location**: `gem/handbook/workflow-instructions/*.wf.md`
+* **Structure**: Frontmatter (purpose, params, tools) + complete instructions + embedded templates
+* **Principle**: ADR-001 self-containment - include all context inline
+* **Discovery**: `ace-nav wfi://workflow-name`
+* **Use when**: Multi-step process, decision points, context management
 
 ### Agents (.ag.md)
 
-Specialized single-purpose agents for focused tasks:
+Single-purpose, composable agents for focused actions:
 
-- Located in gem-specific `handbook/agents/` directories (e.g., `ace-search/handbook/agents/`)
-- Legacy location: `dev-handbook/.integrations/claude/agents/`
-- Exposed via `.claude/agents/` symlinks
-- Designed for delegation and composition
-- Examples: `search` (single ace-search execution), `research` (multi-search analysis)
+* **Location**: `gem/handbook/agents/*.ag.md`, symlinked to `.claude/agents/`
+* **Design**: Single responsibility, minimal state, standardized responses
+* **Use when**: Single command execution, composable operations
+* **Examples**: `ace-search` has `search.ag.md` (execute search), `research.ag.md` (multi-search analysis)
 
 ### Guides
 
 Development patterns and best practices:
 
-- Located in `dev-handbook/guides/`
-- Reference documentation for humans and agents
-- Standards and conventions
+* Located in `dev-handbook/guides/`
+* Reference documentation for humans and agents
+* Standards and conventions
 
-## AI Integration Architecture
+### Handbook Organization
 
-### Claude Code Integration
+Each gem includes `handbook/` for AI integration:
 
-- **Commands**: `.claude/commands/` maps workflows to slash commands
-- **Agents**: `.claude/agents/` provides agent access via Task tool
-- **Deterministic CLI**: All tools provide predictable, parseable output
-- **wfi:// Protocol**: Direct workflow access via ace-nav integration
+    gem/handbook/
+    ├── agents/*.ag.md              # Single-purpose, composable
+    └── workflow-instructions/*.wf.md  # Complete, self-contained
 
-### Platform Compatibility
+**Agent vs Workflow**: Agents for single actions, workflows for multi-step processes. Both use frontmatter and
+standardized formats.
 
-- Commands work identically for humans and agents
-- Platform-agnostic design (Claude Code, Codex, OpenCode)
-- Future MCP (Model Context Protocol) support planned
+## AI Integration
 
-### Agent Delegation Pattern
-
-1. User invokes command or agent
-2. Agent analyzes task requirements
-3. Delegates to specialized subagents as needed
-4. Aggregates results and reports back
+* **Commands**: `.claude/commands/` maps workflows to slash commands
+* **Agents**: `.claude/agents/` provides agent access; frontmatter defines capabilities
+* **Deterministic CLI**: Predictable, parseable output for autonomous execution
+* **wfi:// Protocol**: Direct workflow access via ace-nav
+* **Delegation Pattern**: Agents delegate to specialized subagents, aggregate results
 
 ## Key Architectural Decisions
 
-### Mono-Repo Migration (ADR-015)
+**ADR-015 Mono-Repo**: Migrated from submodules to mono-repo; each capability as focused ace-\* gem; simplified
+dependencies.
 
-- Migrated from multi-repository submodules to mono-repo
-- Each capability packaged as focused ace-* gem
-- Simplified dependency management and testing
+**ADR-011 ATOM Pattern**: Clean separation of concerns; consistent across gems; testable structure.
 
-### ATOM Architecture (ADR-011)
+**ADR-001 Workflow Self-Containment**: Include all templates inline; no external dependencies except core docs; reliable
+autonomous execution.
 
-- Enforces clean separation of concerns
-- Consistent patterns across all gems
-- Testable, maintainable code structure
+**Configuration Cascade**: `.ace/` searched current→home; nearest wins; project-specific settings.
 
-### Workflow Self-Containment (ADR-001)
+**Zero-Dependency Core**: ace-core uses only Ruby stdlib; stable foundation; reduces conflicts.
 
-- Workflows include all necessary templates
-- No external dependencies except core docs
-- Enables reliable autonomous execution
+## Security & Quality
 
-### Configuration Cascade
+* Path validation, input sanitization, comprehensive test coverage
+* CI/CD with GitHub Actions matrix testing across Ruby versions
+* Deterministic, predictable command output
 
-- `.ace/` directories searched from current to home
-- Nearest configuration wins (deepest in tree)
-- Enables project-specific settings without modification
+## Future Vision
 
-### Zero-Dependency Core
+**ace-handbook gem**: Workflows, guides, templates as installable gem. Every capability becomes a gem with embedded
+prompts, agents, workflows - instantly available via `gem install ace-*`.
 
-- ace-core uses only Ruby standard library
-- Provides stable foundation for all other gems
-- Reduces dependency conflicts and complexity
+*For detailed decisions, see [docs/decisions.md](decisions.md)*
 
-## Security & Quality Principles
-
-- **Path Validation**: Multi-layer validation for file operations
-- **Input Sanitization**: Clean all user inputs before processing
-- **Test Coverage**: Comprehensive test suites using ace-test-support
-- **CI/CD Integration**: GitHub Actions matrix testing across Ruby versions
-- **Deterministic Output**: Consistent, predictable command results
-
-## Future Architecture
-
-### Planned Migrations
-
-- **ace-handbook**: Workflows, guides, and templates as a gem
-
-### Vision
-
-Every development capability becomes an installable Ruby gem. Prompts, agents, and workflows are embedded within thematic gems, making them instantly available through `gem install ace-*`.
-
----
-
-*For detailed architectural decisions, see [docs/decisions.md](decisions.md)*

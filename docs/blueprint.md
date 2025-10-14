@@ -1,7 +1,7 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 150
+  max_lines: 100
   required_sections:
   - overview
   - scope
