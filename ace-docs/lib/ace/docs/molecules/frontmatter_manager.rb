@@ -91,6 +91,9 @@ module Ace
         def self.format_document(frontmatter, content)
           yaml_content = frontmatter.to_yaml.strip
 
+          # Remove leading --- from YAML output if present
+          yaml_content = yaml_content.sub(/^---\n/, '')
+
           # Build document with frontmatter
           [
             "---",
