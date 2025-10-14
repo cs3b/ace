@@ -60,37 +60,36 @@ Capture individual or team observations, learnings, and ideas for improvement du
      - Review user input requirements and corrections
      - Note tool result issues (large output, truncation, token limits)
 
-2. **Identify Target Location:**
-   - Determine where to save the retro using current release context:
+2. **Create Retro File:**
 
-     ```bash
-     # Find the current/latest release directory
-     RELEASE_DIR=$(ls -d /Users/mc/Ps/ace-meta/.ace-taskflow/v.*/ 2>/dev/null | tail -1)
+   Use the ace-taskflow CLI to create the retro file with automatic location resolution:
 
-     if [ -n "$RELEASE_DIR" ]; then
-         # Save in the current release's retro folder
-         RETRO_DIR="${RELEASE_DIR}retro"
-         mkdir -p "$RETRO_DIR"
-         RETRO_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
-     else
-         # Fallback: No release found, use project-level retros
-         RETRO_DIR="/Users/mc/Ps/ace-meta/retros"
-         mkdir -p "$RETRO_DIR"
-         RETRO_PATH="$RETRO_DIR/$(date +%Y-%m-%d)-<topic-slug>.md"
-     fi
+   ```bash
+   # Create retro file - tool automatically determines location
+   ace-taskflow retro create "topic-slug"
 
-     # Example: For ace-test-runner fixes on 2025-09-30
-     # Path would be: .ace-taskflow/v.0.9.0/retro/2025-09-30-ace-test-runner-fixes.md
-     ```
+   # Examples:
+   ace-taskflow retro create "ace-test-runner-fixes"
+   ace-taskflow retro create "oauth-integration-challenges"
+   ace-taskflow retro create "sprint-23-learnings"
+   ```
 
-   **Important:** Reflections should always go in the current release's `retro/` folder when a release exists. Only use a project-level retros folder as a fallback.
+   The command automatically:
+   - Finds the current active release
+   - Uses the configured retro directory (default: `retros/`)
+   - Creates file: `.ace-taskflow/<release>/<retro-dir>/YYYY-MM-DD-topic-slug.md`
+   - Applies the standard template from this workflow
+   - Opens file in your editor for content addition
+
+   **Configuration**: The retro directory name can be customized in `.ace/taskflow/config.yml`:
+   ```yaml
+   taskflow:
+     directories:
+       retros: "reflections"  # default: "retros"
+   ```
 
 
-3. **Create Reflection Structure:**
-
-   Use the retro template:
-
-4. **Gather Reflection Content:**
+3. **Gather Reflection Content:**
 
    **For Self-Review Session:**
    - Review recent git commits
@@ -107,7 +106,9 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - What patterns emerged?
    - What knowledge was gained?
 
-5. **Populate Retro:**
+4. **Populate Retro Sections:**
+
+   The template includes these key sections - fill each with meaningful insights:
 
    **Example Content Generation:**
 
@@ -153,15 +154,11 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - Schedule regular security reviews
    ```
 
-6. **Review and Save:**
+5. **Review and Finalize:**
    - Ensure all sections have meaningful content
    - Remove empty sections if not applicable
-   - Save file using the path determined in Step 2:
-     ```bash
-     # Save to the determined location (from Step 2)
-     # E.g.: .ace-taskflow/v.0.9.0/retro/2025-09-30-ace-test-runner-fixes.md
-     echo "Saving retro to: $RETRO_PATH"
-     ```
+   - Save the file (it's already in the correct location from step 2)
+   - Verify with: `ace-taskflow retros` to see your new retro listed
 
 ## Conversation Analysis Process
 
@@ -329,7 +326,7 @@ Focus on new skills, tools, or concepts mastered during the work.
 - Retro created with meaningful content
 - Insights captured for future reference
 - Action items clearly defined
-- File saved in current release's retro/ folder (or project retros/ as fallback)
+- File saved in current release's configured retro directory (default: retros/)
 - Learning documented for team benefit
 
 ## Best Practices
@@ -347,7 +344,7 @@ Focus on new skills, tools, or concepts mastered during the work.
 - Make it a blame session
 - Be vague or generic
 - Skip the action items
-- Forget to save file
+- Leave sections empty without removing them
 - Write novels - keep it focused
 
 ## Common Patterns

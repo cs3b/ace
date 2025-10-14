@@ -185,10 +185,23 @@ ace-taskflow retros --done
 ```
 
 Retrospective notes follow the done pattern similar to ideas:
-- **Active retros**: Stored in `.ace-taskflow/<release>/retro/`
-- **Done retros**: Moved to `.ace-taskflow/<release>/retro/done/`
-- Default listing excludes done retros (cleaner view)
-- Use `--all` or `--done` flags to include completed retros
+- **Active retros**: Stored in `.ace-taskflow/<release>/retros/` (configurable)
+- **Done retros**: Moved to `.ace-taskflow/<release>/retros/done/`
+- **Default listing**: Excludes done retros for cleaner view
+- **Show all**: Use `--all` or `--done` flags to include completed retros
+
+#### Configuring Retro Directory
+
+Customize the retro directory name in `.ace/taskflow/config.yml`:
+
+```yaml
+taskflow:
+  directories:
+    retros: "reflections"  # or any name you prefer
+```
+
+**Default**: `retros`
+**Applies to**: All releases, doctor validation, and CLI commands
 
 ### Release Management (Coming Soon)
 

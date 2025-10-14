@@ -44,7 +44,7 @@ user-provided release scope into actionable tasks.
    
    * This automatically creates:
      - Release directory: `.ace-taskflow/backlog/v.X.Y.Z-codename/`
-     - All standard subdirectories from template (t/, ideas/, docs/, retro/, researches/, user-experience/, etc.)
+     - All standard subdirectories from template (tasks/, ideas/, docs/, retros/, researches/, user-experience/, etc.)
      - Initial `release-overview.md` file with basic structure
 
 3. **Rename Overview to README.md**
