@@ -5,6 +5,45 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.4] - 2025-10-14
+
+### Added
+
+- Standardize Rakefile test commands and add CI fallback
+- Improve usability and add markdown style checks
+- Add support for pending release directory
+
+### Fixed
+
+- Fix 17 atom test failures with architecture-compliant patterns
+- Load configuration.rb to resolve NoMethodError
+- Make directory names configurable in validators
+
+### Changed
+
+- Consolidate retro directory and update workflows
+- Standardize directory names for retros and tasks
+- Update task directory configuration
+- Extract context resolution and task loading logic
+- Use configuration for task directory paths
+- Respect configured directory names for component type detection
+
+### Technical
+
+- Update usage.md with resolved configuration decisions
+
+## [0.11.3] - 2025-10-14
+
+### Fixed
+
+- **Work-on-Task Workflow**: Simplified task selection and eliminated unnecessary complexity
+  - Removed manual directory scanning and release path lookups
+  - Updated workflow to use `ace-taskflow task <ref>` for all task lookups
+  - Command now handles all reference formats: `071`, `task.071`, `v.0.9.0+071`
+  - Removed unnecessary task listing commands from dependency checking
+  - Clearer usage examples showing all supported reference formats
+  - Agents no longer struggle to find tasks - single command handles everything
+
 ## [0.11.2] - 2025-10-08
 
 ### Fixed
