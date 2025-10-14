@@ -1,8 +1,29 @@
-# ace-docs configuration file
+# Configuration for ace-docs
+# This file uses FLAT structure for tool-specific config
+# as per ace-gems.g.md standards
 # Place this file at .ace/docs/config.yml in your project
 
+# Cache directory for analysis reports
+cache_dir: .cache/ace-docs
+
+# Analysis settings for LLM integration
+llm_temperature: 0.3  # Lower for deterministic compaction
+# llm_model: gflash   # Override default if needed (commented to use ace-llm-query defaults)
+
+# Maximum diff lines before warning (context limit)
+max_diff_lines_warning: 100000
+
+# Validation settings
+validation_enabled: true
+ace_lint_path: ace-lint  # Path to ace-lint executable
+
+# Document freshness thresholds (in days)
+default_freshness_days:
+  current: 14    # Documents updated within 2 weeks
+  stale: 30      # Documents updated within 1 month
+  outdated: 60   # Documents older than 2 months
+
 # Document type definitions
-# Each type can have glob patterns for automatic discovery
 document_types:
   # Core context documents
   context:
@@ -24,9 +45,6 @@ document_types:
     defaults:
       update_frequency: monthly
       max_lines: 500
-      validation:
-        - syntax: markdownlint
-        - semantic: guide-compliance
 
   # Workflow instructions
   workflow:
@@ -37,17 +55,6 @@ document_types:
       update_frequency: on-change
       auto_generate:
         - template-refs: from-embedded
-
-  # API documentation
-  api:
-    paths:
-      - "*/docs/api/*.md"
-      - "*/api-docs/**/*.md"
-    defaults:
-      update_frequency: on-change
-      auto_generate:
-        - endpoints: from-routes
-        - schemas: from-models
 
   # Templates
   template:
@@ -67,33 +74,14 @@ document_types:
       update_frequency: monthly
       max_lines: 1000
 
-# Global validation rules
-# These apply to all documents unless overridden
+# Global validation rules (merged with type-specific, type wins)
 global_rules:
   max_lines: 1000              # Default maximum lines
   required_frontmatter:
     - doc-type
     - purpose
-  linters:
-    markdown: markdownlint
-    yaml: yamllint
-  semantic_validation:
-    guide_reference: "dev-handbook/guides/documentation-standards.md"
-
-# Cache configuration
-cache:
-  directory: ".cache/ace-docs"
-  diff_retention_days: 30
-  analysis_retention_days: 7
-
-# LLM integration settings
-llm:
-  provider: "ace-llm-query"    # Use ace-llm-query for analysis
-  model: "default"              # Use default model from ace-llm config
-  temperature: 0.3              # Lower temperature for deterministic analysis
 
 # Ignored paths
-# These paths will never be considered for management
 ignore:
   - "**/node_modules/**"
   - "**/vendor/**"

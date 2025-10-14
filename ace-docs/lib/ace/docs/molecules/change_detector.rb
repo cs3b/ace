@@ -67,6 +67,16 @@ module Ace
           }
         end
 
+        # Generate batch diff for analysis
+        # @param documents [Array<Document>] Documents to analyze
+        # @param since [String] Time range for diff
+        # @param options [Hash] Options for diff generation
+        # @return [String] Raw git diff
+        def self.generate_batch_diff(documents, since, options = {})
+          # Generate the full codebase diff for the time period
+          generate_git_diff(since, options)
+        end
+
         # Save diff analysis to cache file
         # @param diff_result [Hash] Diff analysis result
         # @return [String] Path to saved file

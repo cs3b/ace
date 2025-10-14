@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "docs/version"
+require "ace/core" # For config cascade
 
 module Ace
   module Docs
@@ -11,6 +12,45 @@ module Ace
     # change analysis, and intelligent updates
     def self.root
       File.expand_path("../..", __dir__)
+    end
+
+    # Get configuration using ace-core config cascade
+    # @return [Hash] Configuration hash with defaults merged
+    def self.config
+      @config ||= begin
+        loaded_config = Ace::Core.config.get("ace", "docs") || {}
+        default_config.merge(loaded_config)
+      end
+    end
+
+    # Default configuration values
+    # @return [Hash] Default configuration
+    def self.default_config
+      {
+        # Cache settings
+        "cache_dir" => ".cache/ace-docs",
+
+        # Analysis settings
+        "llm_temperature" => 0.3,
+        "llm_model" => nil, # Use ace-llm-query defaults
+        "max_diff_lines_warning" => 100_000,
+
+        # Validation settings
+        "validation_enabled" => true,
+        "ace_lint_path" => "ace-lint",
+
+        # Document settings
+        "default_freshness_days" => {
+          "current" => 14,
+          "stale" => 30,
+          "outdated" => 60
+        }
+      }
+    end
+
+    # Reset configuration (primarily for testing)
+    def self.reset_config!
+      @config = nil
     end
   end
 end
