@@ -148,10 +148,12 @@ See `.ace.example/docs/config.yml` for complete configuration options.
 ## Frontmatter Schema
 
 Required fields:
+
 - `doc-type`: Document type (context, guide, template, workflow, reference, api)
 - `purpose`: Description of the document's purpose
 
 Optional fields:
+
 - `update.frequency`: Update frequency (daily, weekly, monthly, on-change)
 - `update.last-updated`: Last update date
 - `update.focus`: Hints for LLM relevance filtering
@@ -163,6 +165,7 @@ Optional fields:
 ## Commands
 
 ### status
+
 Show document freshness and update status
 
 ```bash
@@ -173,6 +176,7 @@ ace-docs status [OPTIONS]
 ```
 
 ### discover
+
 Find and list all managed documents
 
 ```bash
@@ -180,6 +184,7 @@ ace-docs discover
 ```
 
 ### diff
+
 Analyze repository changes
 
 ```bash
@@ -192,6 +197,7 @@ ace-docs diff [FILE] [OPTIONS]
 ```
 
 ### update
+
 Update document frontmatter
 
 ```bash
@@ -201,6 +207,7 @@ ace-docs update FILE [OPTIONS]
 ```
 
 ### validate
+
 Validate documents against rules
 
 ```bash
@@ -275,4 +282,5 @@ bundle exec rake install
 
 ## Contributing
 
-Bug reports and pull requests are welcome at https://github.com/ace-meta/ace-docs
+Bug reports and pull requests are welcome at <https://github.com/ace-meta/ace-docs>
+
