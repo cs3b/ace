@@ -1,3 +1,10 @@
+---
+update:
+  last-updated: '2025-10-14'
+purpose: Overview and quick start guide for ace-docs
+doc-type: reference
+---
+
 # ace-docs
 
 Documentation management system with frontmatter, change analysis, and intelligent updates.
