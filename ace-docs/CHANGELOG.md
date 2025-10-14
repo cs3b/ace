@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-10-14
+
+### Added
+
+- **Batch Analysis Command**: New `ace-docs analyze` command for LLM-powered documentation analysis
+  - Accepts file lists and filter options (--needs-update, --type, --freshness)
+  - Automatic time range detection from document staleness
+  - LLM compaction via ace-llm-query subprocess integration
+  - Markdown reports organized by impact level (HIGH/MEDIUM/LOW)
+  - Cache management with timestamped analysis reports
+  - Support for exclude-renames and exclude-moves options
+
+- **Command Architecture Refactoring**: Extracted all CLI commands to testable classes
+  - DiffCommand, UpdateCommand, ValidateCommand, AnalyzeCommand
+  - Improved separation of concerns and testability
+  - Return proper exit codes for all commands
+
+- **ace-lint Integration**: Validation now delegates to ace-lint when available
+  - Subprocess integration with graceful fallback
+  - Parse and display ace-lint output properly
+
+- **Configuration System**: Integrated with ace-core config cascade
+  - Added Ace::Docs.config method with defaults
+  - Flat configuration structure following ACE standards
+  - Example config with all available settings
+
+### Changed
+
+- **CLI Structure**: Refactored to delegate all commands to separate command classes
+- **Documentation**: Updated README with batch analysis examples and new features
+
+### Technical
+
+- Added comprehensive ATOM architecture components (atoms, molecules, models)
+- TimeRangeCalculator and DiffFilterer atoms for date and diff handling
+- TimeRangeFinder, DiffAnalyzer, ReportFormatter molecules
+- AnalysisReport model for structured report data
+- CompactDiffPrompt for LLM prompt generation
+
 ## [0.2.0] - 2025-10-14
 
 ### Added
