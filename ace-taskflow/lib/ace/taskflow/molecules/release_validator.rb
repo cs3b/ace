@@ -143,9 +143,10 @@ module Ace
           end
 
           # Optional but recommended directories
+          config = Ace::Taskflow.configuration
           optional_dirs = {
             "docs" => "documentation directory",
-            "retros" => "retrospectives directory"
+            config.retro_dir => "retrospectives directory"
           }
 
           optional_dirs.each do |dir, description|
