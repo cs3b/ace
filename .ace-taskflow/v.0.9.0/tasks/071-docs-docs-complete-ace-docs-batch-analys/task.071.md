@@ -4,91 +4,154 @@ status: pending
 priority: high
 estimate: 8-10h
 dependencies: [v.0.9.0+task.072]
-needs_review: true
+review_completed: 2025-10-14
+reviewed_by: User
 ---
 
-## Review Questions (Pending Human Input)
+## Review Completion Summary
+
+**Date**: 2025-10-14
+**Reviewed by**: User
+**Questions Resolved**: 10 (4 HIGH, 4 MEDIUM, 2 LOW)
+**Implementation Readiness**: ✅ Ready for implementation
+
+**Key Decisions Made**:
+- ace-docs will use ace-core config cascade with `Ace::Docs.config` method
+- Tool-specific configs use FLAT structure (no `ace:` nesting) - documented in ace-gems.g.md
+- Mono-repo Gemfile provides local gems; binstubs use bundle for context - documented in ace-gems.g.md
+- Example configs location standardized: `.ace.example/{gem-name}/` - documented in ace-gems.g.md
+- Each gem should have `docs/config.md` for detailed config, README mentions defaults only - documented in ace-gems.g.md
+- LLM model uses default from ace-llm-query (can be commented out in config)
+- Temperature: 0.3 for deterministic compaction
+- ace-docs validates by delegating to ace-lint public interface
+- Validation rules merge with type-specific overriding globals
+
+## Review Questions (Resolved)
 
 ### [HIGH] Configuration System Issues (Lessons from task.072)
 
 Task.072 revealed critical configuration mistakes that must not be repeated in ace-docs:
 
-- [ ] **Config Loading Pattern**: Does ace-docs use ace-core's config cascade or hardcoded paths?
-  - **Current situation**: `.ace.example/docs/config.yml` exists but no config loading code in `lib/ace/docs.rb`
-  - **Research conducted**: Checked ace-docs/lib/ - no ConfigLoader or Ace::Core.config usage found
-  - **Similar to task.072**: ace-lint initially used hardcoded paths instead of ace-core
-  - **Suggested approach**: Add `Ace::Docs.config` method using `Ace::Core.config.get('ace', 'docs')`
-  - **Why needs human input**: Confirm this is a missing feature that should be implemented in task.071
+### ✅ [RESOLVED] Config Loading Pattern
+- **Original Priority**: HIGH
+- **Decision**: Add `Ace::Docs.config` method using `Ace::Core.config.get('ace', 'docs')`
+- **Rationale**: Follows established ACE pattern and avoids hardcoded paths mistake from task.072
+- **Implementation Notes**:
+  - Create `Ace::Docs.config` method using ace-core's config cascade
+  - Add `Ace::Docs.default_config` for fallback values
+  - Add `Ace::Docs.reset_config!` for testing
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **Config File Structure**: Should ace-docs config be nested under `ace: { docs: {...} }` or flat?
-  - **Current situation**: `.ace.example/docs/config.yml` has flat structure (document_types at root)
-  - **Research conducted**: ace-lint uses flat structure for tool-specific configs (kramdown.yml)
-  - **Pattern from task.072**: Tool configs are flat, general configs have nesting
-  - **Suggested structure**: Keep flat - this is the main docs config (like kramdown.yml for ace-lint)
-  - **Why needs human input**: Confirm the flat structure is correct for ace-docs
+### ✅ [RESOLVED] Config File Structure
+- **Original Priority**: HIGH
+- **Decision**: Use FLAT structure for tool-specific and main config files (no `ace:` nesting)
+- **Rationale**: Consistent with ace-lint pattern; main/tool configs are flat, only general gem configs have nesting
+- **Implementation Notes**:
+  - Keep `.ace.example/docs/config.yml` with flat structure
+  - Document this rule in `docs/ace-gems.g.md` as standard pattern
+  - Update ace-gems guide to clarify: tool configs = flat, general configs = nested
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **ace-core Dependency**: Does ace-docs gemspec list ace-core as a dependency?
-  - **Research needed**: Check ace-docs/ace-docs.gemspec for ace-core dependency
-  - **From task.072**: ace-lint needed to add `spec.add_dependency "ace-core", "~> 0.9"`
-  - **Suggested action**: Verify ace-core dependency exists, add if missing
-  - **Why needs human input**: Confirm if this is already correct or needs fixing
+### ✅ [RESOLVED] ace-core Dependency
+- **Original Priority**: HIGH
+- **Decision**: ace-core is already available via mono-repo Gemfile; document this pattern
+- **Rationale**: Mono-repo Gemfile provides all gems locally; binstubs (bin/ace-*) use bundler for proper context
+- **Implementation Notes**:
+  - No action needed for ace-docs specifically
+  - Document in `docs/ace-gems.g.md` how mono-repo development works
+  - Explain binstub pattern for workspace context
+  - Clarify when gemspec dependencies matter (gem installation) vs development (Gemfile)
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **Example Config Location**: Should examples be in gem root or `.ace.example/`?
-  - **Current situation**: ace-docs has `.ace.example/docs/config.yml`
-  - **From task.072**: ace-lint has `.ace.example/lint/kramdown.yml` (inside gem directory)
-  - **Pattern**: Examples go in gem's `.ace.example/` directory
-  - **Suggested action**: Current location is correct - no change needed
-  - **Why needs human input**: Confirm understanding is correct
+### ✅ [RESOLVED] Example Config Location
+- **Original Priority**: HIGH
+- **Decision**: Example configs belong in `.ace.example/{gem-name}/` within gem directory
+- **Rationale**: Keeps examples with the gem they document; consistent pattern across all ACE gems
+- **Implementation Notes**:
+  - Current ace-docs location is correct: `.ace.example/docs/config.yml`
+  - Document this as standard rule in `docs/ace-gems.g.md`
+  - Pattern: `ace-{gem}/.ace.example/{gem}/config.yml`
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-### [MEDIUM] LLM Configuration Questions
+### ✅ [RESOLVED] LLM Model Selection
+- **Original Priority**: MEDIUM
+- **Decision**: Use ace-llm-query defaults; only specify model if explicitly needed
+- **Rationale**: ace-llm-query has sensible defaults; avoids config duplication
+- **Implementation Notes**:
+  - Config file can comment out model with example: `# model: "gflash"  # Override default`
+  - Only set model value if explicitly needed for this use case
+  - Let ace-llm-query handle default model selection
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **LLM Model Selection**: Config file specifies `model: "default"` - is this correct?
-  - **Current config**: `.ace.example/docs/config.yml` line 92: `model: "default"`
-  - **Research conducted**: ace-llm-query uses ace-llm config for provider/model selection
-  - **Suggested default**: Use "default" and let ace-llm-query handle model selection
-  - **Why needs human input**: Confirm this delegation pattern is intentional
+### ✅ [RESOLVED] Temperature Setting
+- **Original Priority**: MEDIUM
+- **Decision**: Use temperature 0.3 for diff compaction
+- **Rationale**: Lower temperature appropriate for deterministic tasks like noise removal
+- **Implementation Notes**:
+  - Set `temperature: 0.3` in config for analysis operations
+  - This balances creativity with consistency for compaction tasks
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **Temperature Setting**: Config specifies `temperature: 0.3` for analysis - correct?
-  - **Current config**: `.ace.example/docs/config.yml` line 93: `temperature: 0.3`
-  - **Use case**: Diff compaction (remove noise, keep relevant changes)
-  - **Research conducted**: Lower temperature (0.3) good for deterministic tasks
-  - **Suggested value**: 0.3 is appropriate for compaction
-  - **Why needs human input**: Confirm this is the desired temperature
+### ✅ [RESOLVED] External Linter Configuration
+- **Original Priority**: MEDIUM
+- **Decision**: Delegate to ace-lint public interface; use subprocess or library call
+- **Rationale**: ace-lint handles linter orchestration; ace-docs shouldn't duplicate this logic
+- **Implementation Notes**:
+  - Check ace-lint documentation for public API
+  - Use ace-lint's public interface (prefer library over subprocess if available)
+  - Pass files to ace-lint and let it handle external tool coordination
+  - Remove external tool references from ace-docs config if ace-lint handles them
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-### [MEDIUM] Validation Delegation Questions
+### ✅ [RESOLVED] Validation Rule Cascade
+- **Original Priority**: MEDIUM
+- **Decision**: Merge global_rules with type-specific rules; type-specific overrides globals
+- **Rationale**: Standard cascade pattern; allows global defaults with per-type customization
+- **Implementation Notes**:
+  - Merge behavior: global_rules → type-specific rules (later wins)
+  - Type-specific rules can override individual global settings
+  - Use ace-core's DeepMerger for consistent merging logic
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **External Linter Configuration**: Config references markdownlint/yamllint - how should this work with ace-lint?
-  - **Current config**: Lines 77-79 specify `linters: { markdown: markdownlint, yaml: yamllint }`
-  - **From task.072**: ace-lint handles markdown/yaml linting with these external tools
-  - **Integration approach**: ace-docs validates by calling `ace-lint` subprocess
-  - **Suggested action**: Keep config, delegate to ace-lint in ValidateCommand
-  - **Why needs human input**: Confirm ace-docs config should reference ace-lint, not external tools directly
+### ✅ [RESOLVED] Config Documentation Structure
+- **Original Priority**: LOW
+- **Decision**: Each gem has `docs/config.md` for detailed config; README mentions defaults only
+- **Rationale**: Separates detailed documentation from quick-start README; consistent across all gems
+- **Implementation Notes**:
+  - Create `ace-docs/docs/config.md` with full configuration reference
+  - README Configuration section: brief overview + link to docs/config.md
+  - Document this pattern in `docs/ace-gems.g.md` as standard rule
+  - Pattern applies to all ACE gems going forward
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
-- [ ] **Validation Rule Cascade**: How do global_rules interact with document type defaults?
-  - **Current config**: Lines 71-81 have `global_rules`, lines 6-68 have type-specific defaults
-  - **Behavior question**: Do type defaults override globals, or merge with them?
-  - **Suggested behavior**: Merge with type-specific overriding globals (standard cascade)
-  - **Why needs human input**: Confirm the intended rule priority/merging behavior
-
-### [LOW] Documentation and Testing
-
-- [ ] **Config Documentation**: Should README.md have a Configuration section like ace-lint?
-  - **From task.072**: ace-lint README has comprehensive Configuration section
-  - **Current situation**: No config docs in task.071 specification
-  - **Suggested action**: Add Configuration section to README explaining cascade and options
-  - **Why needs human input**: Confirm this should be part of task.071 deliverables
-
-- [ ] **Config Loading Tests**: Should there be tests for `Ace::Docs.config` method?
-  - **From task.072**: ace-lint has `reset_config!` method for testing
-  - **Current situation**: No config testing mentioned in task.071 test plan
-  - **Suggested action**: Add unit tests for config loading and cascade behavior
-  - **Why needs human input**: Confirm testing approach for config system
+### ✅ [RESOLVED] Config Loading Tests
+- **Original Priority**: LOW
+- **Decision**: Add standard config loading tests following ACE pattern
+- **Rationale**: Ensures config cascade works correctly; standard practice across all ACE gems
+- **Implementation Notes**:
+  - Add `Ace::Docs.reset_config!` method for test isolation
+  - Test default config loading
+  - Test config cascade behavior
+  - Test error handling when config loading fails
+  - Follow patterns from ace-lint and other ACE gems
+- **Resolved by**: User
+- **Date**: 2025-10-14
 
 # Complete ace-docs with batch analysis and ace-lint integration
 
 ## Behavioral Specification
 
 ### User Experience
+
 - **Input**: List of document files OR filter criteria (--needs-update, --type guide, --freshness stale)
 - **Process**: Single command generates complete markdown analysis report of codebase changes, compacted by LLM to remove noise while preserving details
 - **Output**: Markdown report saved to `.cache/ace-docs/analysis-{timestamp}.md` containing organized, relevant changes for documentation updates
@@ -98,12 +161,14 @@ Task.072 revealed critical configuration mistakes that must not be repeated in a
 The ace-docs tool provides batch analysis capabilities that simplify documentation workflows:
 
 **Document Discovery and Selection:**
+
 - Accepts explicit file list: `ace-docs analyze file1.md file2.md file3.md`
 - Accepts filter criteria: `ace-docs analyze --needs-update`, `--type guide`, `--freshness stale`
 - Discovers documents automatically based on selection criteria
 - Determines time range from oldest last-updated date in selected documents
 
 **Batch Change Analysis:**
+
 - Generates single git diff for entire codebase from determined time range
 - Sends diff to LLM with system prompt: "Compact this diff - remove noise, keep relevant details"
 - LLM removes test files, formatting changes, minor refactors while preserving significant changes
@@ -111,6 +176,7 @@ The ace-docs tool provides batch analysis capabilities that simplify documentati
 - Saves report to `.cache/ace-docs/analysis-{timestamp}.md` with metadata header
 
 **Workflow Integration:**
+
 - Workflow reads the cached markdown report
 - Iterates through each document from original list
 - References report sections while updating each document
@@ -118,6 +184,7 @@ The ace-docs tool provides batch analysis capabilities that simplify documentati
 - Validation delegated to separate `ace-lint` tool
 
 **Linting Integration:**
+
 - ace-docs validation delegates to ace-lint for syntax checking
 - ace-lint is standalone gem used by multiple ace-* packages
 - Supports markdown, YAML, frontmatter validation
@@ -198,12 +265,14 @@ ace-lint [FILES...] [OPTIONS]
 ```
 
 **Error Handling:**
+
 - No documents match criteria: Exit with clear message explaining filter criteria
 - No changes detected: Exit with message "No changes in specified period"
 - LLM unavailable: Fail with clear error message (no fallback to raw diff)
 - Invalid time range: Report error and suggest valid formats
 
 **Edge Cases:**
+
 - Multiple documents with different staleness levels: Use oldest update date for time range
 - Documents with future dates: Flag as suspicious and exclude from analysis
 - Very large diffs (>100K lines): Warn about potential LLM context limits, consider chunking
@@ -238,6 +307,7 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 ## Scope of Work
 
 ### User Experience Scope
+
 - Batch analysis command that processes multiple documents in one operation
 - Automatic time range detection from document staleness
 - LLM-compacted change reports that remove noise while preserving details
@@ -246,6 +316,7 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 - Validation delegation to standalone ace-lint gem
 
 ### System Behavior Scope
+
 - Document discovery via existing registry mechanisms
 - Git diff generation for determined time ranges
 - LLM integration via ace-llm-query subprocess calls
@@ -254,6 +325,7 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 - Integration with ace-lint for validation
 
 ### Interface Scope
+
 - CLI commands: analyze (new), update, validate (refactored)
 - Markdown report format with YAML frontmatter metadata
 - ace-lint CLI: lint, format, validate with pluggable linters
@@ -262,18 +334,21 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 ### Deliverables
 
 #### Behavioral Specifications
+
 - Batch analysis command specification with all options
 - LLM prompt template for diff compaction
 - Markdown report format with impact-level organization
 - ace-lint command specification and validation rules
 
 #### Validation Artifacts
+
 - Analysis report examples for different document types
 - Time range calculation validation
 - LLM response parsing and error handling
 - ace-lint validation rule specifications
 
 #### Workflow Components
+
 - update-docs.wf.md updated to use batch analysis approach
 - Analysis report reading and iteration patterns
 - Batch metadata update workflows
@@ -305,12 +380,14 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 ## Technical Research (Preliminary)
 
 ### Architecture Pattern
+
 - ace-docs follows ATOM architecture (atoms, molecules, organisms, models, commands)
 - ace-lint follows same ATOM pattern as separate gem
 - LLM integration via ace-llm-query subprocess (not library dependency)
 - Commands extracted from Thor CLI into separate command classes for testability
 
 ### Key Components
+
 ```
 ace-docs/
 ├── lib/ace/docs/
@@ -338,6 +415,7 @@ ace-lint/ (NEW GEM)
 ```
 
 ### Technology Stack
+
 - Ruby 3.x standard for all ace-* gems
 - ace-llm-query subprocess for LLM calls (no direct API dependency)
 - Git CLI commands for diff generation
@@ -345,6 +423,7 @@ ace-lint/ (NEW GEM)
 - External linters: markdownlint (Node.js), yamllint (Python) - optional with graceful fallbacks
 
 ### LLM Integration Strategy
+
 - Single LLM call per analyze operation (cost-effective)
 - Temperature: 0.3 (deterministic compaction)
 - Model: Configurable via ace-llm-query (default: gpt-4 or claude-3.5-sonnet)
@@ -353,6 +432,7 @@ ace-lint/ (NEW GEM)
 - Error handling: Fail fast if LLM unavailable (no fallback to raw diff)
 
 ### Testing Approach
+
 - Mock ace-llm-query subprocess calls in tests
 - Fixture-based testing with sample diffs and reports
 - Command classes testable independently from CLI
@@ -364,6 +444,7 @@ ace-lint/ (NEW GEM)
 ### Architecture Pattern
 
 **ATOM Architecture Application:**
+
 - **Atoms**: `FrontmatterParser` (existing), `TimeRangeCalculator` (new), `DiffFilterer` (new)
 - **Molecules**: `TimeRangeFinder`, `DiffAnalyzer`, `ReportFormatter`, `ChangeDetector` (extend existing)
 - **Organisms**: `DocumentRegistry` (extend existing), ace-lint `LinterOrchestrator`
@@ -371,12 +452,14 @@ ace-lint/ (NEW GEM)
 - **Models**: `Document` (existing), `AnalysisReport` (new), `LintResult` (new)
 
 **Integration Pattern:**
+
 - ace-docs uses ace-lint as a subprocess (not gem dependency)
 - ace-docs uses ace-llm-query as subprocess for LLM calls
 - Both gems follow shared ATOM architecture
 - Configuration cascade via ace-core
 
 **Key Architectural Decisions:**
+
 1. Commands extracted from Thor CLI for testability
 2. LLM integration via subprocess (no tight coupling)
 3. External linter adapters with graceful fallbacks
@@ -385,6 +468,7 @@ ace-lint/ (NEW GEM)
 ### Technology Stack
 
 **Core Dependencies:**
+
 - **Ruby**: 3.1+ (existing ace-* standard)
 - **ace-core**: Configuration management (~> 0.1)
 - **Thor**: CLI framework (~> 1.3, existing)
@@ -393,12 +477,14 @@ ace-lint/ (NEW GEM)
 - **terminal-table**: Table formatting (~> 3.0, existing)
 
 **Subprocess Integrations:**
+
 - **ace-llm-query**: LLM calls (installed, via bin/ace-llm-query)
 - **markdownlint**: Optional Node.js markdown linter
 - **yamllint**: Optional Python YAML linter
 - **git**: Required for diff generation
 
 **Development Dependencies:**
+
 - **ace-test-support**: Shared testing infrastructure
 - **minitest**: Test framework (~> 5.19)
 - **simplecov**: Code coverage (~> 0.22)
@@ -406,6 +492,7 @@ ace-lint/ (NEW GEM)
 ### Implementation Strategy
 
 **Phase Structure:**
+
 1. **Foundation** (Command Extraction): Refactor CLI for testability
 2. **Batch Analysis**: Implement analyze command with LLM integration
 3. **Integration**: Connect with ace-lint (task 072), update workflows
@@ -413,12 +500,14 @@ ace-lint/ (NEW GEM)
 **Note**: ace-lint gem creation moved to separate task (v.0.9.0+task.072) which must complete before this task's integration phase.
 
 **Testing Strategy:**
+
 - Mock subprocess calls (ace-llm-query, external linters) using ace-test-support helpers
 - Fixture-based testing with sample diffs and expected reports
 - Integration tests with real git repositories (test/fixtures/sample-repo/)
 - Test coverage target: 85%+ overall, 90%+ for commands
 
 **Rollback Considerations:**
+
 - New files can be safely removed without affecting existing functionality
 - Existing commands (status, diff, update, validate) remain unchanged
 - ace-lint as separate gem allows independent rollback
@@ -527,6 +616,7 @@ ace-lint/ (NEW GEM)
 ### Delete
 
 **No Files to Delete:**
+
 - All changes are additive
 - Existing functionality preserved
 - No deprecated components removed
@@ -626,6 +716,7 @@ ace-lint/ (NEW GEM)
 ### Test Type Categorization
 
 **Unit Tests (High Priority):**
+
 - TimeRangeCalculator atom (pure date math)
 - DiffFilterer atom (pure string filtering)
 - TimeRangeFinder molecule (date selection logic)
@@ -636,6 +727,7 @@ ace-lint/ (NEW GEM)
 - ace-lint OutputParser atom (output parsing)
 
 **Integration Tests (Medium Priority):**
+
 - AnalyzeCommand with mocked LLM and git
 - DiffAnalyzer with mocked ace-llm-query subprocess
 - Markdownlint/Yamllint adapters with mocked subprocesses
@@ -643,11 +735,13 @@ ace-lint/ (NEW GEM)
 - Full CLI integration (ace-docs analyze + ace-lint)
 
 **End-to-End Tests (Context Dependent):**
+
 - Complete workflow: analyze → update → validate
 - Real git repository with sample commits
 - ace-lint running on actual markdown files (with fallback mocking)
 
 **Performance Tests (If Applicable):**
+
 - Large diff handling (100K+ lines)
 - Multiple document analysis (50+ documents)
 - LLM response time impact
@@ -665,37 +759,37 @@ ace-lint/ (NEW GEM)
 
 ### Planning Steps
 
-* [ ] Review existing ace-docs codebase structure
+- [ ] Review existing ace-docs codebase structure
   - Understand current command pattern (inline in exe/ace-docs)
   - Analyze existing molecules (ChangeDetector, DocumentLoader, FrontmatterManager)
   - Review test structure and helpers
   - Document integration points
 
-* [ ] Research ace-llm-query subprocess interface
+- [ ] Research ace-llm-query subprocess interface
   - Test command: `ace-llm-query "test prompt" --model default`
   - Document expected input/output format
   - Identify error codes and messages
   - Plan prompt construction approach
 
-* [ ] Research external linter availability and interfaces
+- [ ] Research external linter availability and interfaces
   - Check markdownlint CLI: `markdownlint --version` (if available)
   - Check yamllint CLI: `yamllint --version` (if available)
   - Document command-line arguments and output formats
   - Plan graceful fallback strategy when not available
 
-* [ ] Design LLM prompt template for diff compaction
+- [ ] Design LLM prompt template for diff compaction
   - Define system prompt (remove noise, keep relevant changes)
   - Plan diff formatting for LLM context
   - Define output format (markdown with impact levels)
   - Consider context window limits (100K lines warning threshold)
 
-* [ ] Design analysis report markdown format
+- [ ] Design analysis report markdown format
   - Define YAML frontmatter structure (generated, since, documents list)
   - Plan impact-level sections (HIGH/MEDIUM/LOW)
   - Design change description format (component, files, relevance)
   - Plan statistics section (commits, files, lines, relevant changes)
 
-* [ ] Design ace-lint gem structure and API
+- [ ] Design ace-lint gem structure and API
   - Plan ATOM architecture (atoms, molecules, organisms, models)
   - Define linter adapter interface (detect, run, parse)
   - Design CLI command structure (lint, format, fix options)

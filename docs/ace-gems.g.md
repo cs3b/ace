@@ -185,6 +185,37 @@ parse_span_html: true
 
 **Key Pattern**: Tool-specific configs use **flat structure** (no `ace:` nesting).
 
+#### Config Structure Rules
+
+**IMPORTANT**: Understanding when to use flat vs. nested config structure:
+
+- ✅ **FLAT structure** (no `ace:` nesting):
+  - Main/primary config for single-purpose gems (e.g., `.ace/docs/config.yml` for ace-docs)
+  - Tool-specific configs (e.g., `.ace/lint/kramdown.yml` for kramdown linter)
+  - Direct tool configuration that maps to tool options
+
+- ✅ **NESTED structure** (`ace: { gem: {...} }`):
+  - General gem settings when gem has multiple tools/configs
+  - Configuration loaded via `Ace::Core.config.get('ace', 'gem_name')`
+
+**Examples**:
+```yaml
+# FLAT - ace-docs main config (.ace/docs/config.yml)
+document_types:
+  guide:
+    update_frequency: monthly
+
+# FLAT - ace-lint tool config (.ace/lint/kramdown.yml)
+input: GFM
+line_width: 120
+
+# NESTED - ace-lint general config (.ace/lint/config.yml)
+ace:
+  lint:
+    enabled_linters:
+      - markdown
+```
+
 ### Loading Configuration
 
 #### Simple Config Loading
@@ -296,19 +327,29 @@ end
 - Use `Ace::Core.config.get('ace', 'your_gem')` for loading
 - Add `ace-core` dependency to gemspec: `spec.add_dependency "ace-core", "~> 0.9"`
 - Provide sensible defaults in `default_config` method
-- Create example configs in `.ace.example/your-gem/`
-- Document all config options in README Configuration section
+- Create example configs in `.ace.example/your-gem/` within gem directory
+- Create detailed config docs in `docs/config.md`
+- Add brief config overview in README with link to docs/config.md
 - Add `reset_config!` method for testing
 - Handle loading errors gracefully with warnings
+- Use FLAT structure for main/tool configs, NESTED for general gem configs
 
 #### ❌ DON'T:
 - **Never** use hardcoded file paths: `File.expand_path('~/.ace/your-gem/config.yml')`
 - **Never** create custom ConfigLoader classes
 - **Never** put config files in project root: `.your-gem.yml`
 - **Never** skip example configs in `.ace.example/`
-- **Never** create `CONFIGURATION.md` (use README Configuration section)
+- **Never** put detailed config in README (use docs/config.md instead)
+- **Never** create `CONFIGURATION.md` at root (use `docs/config.md`)
 
-### Example Config Documentation (README)
+### Configuration Documentation Pattern
+
+**IMPORTANT**: Each ACE gem should have two levels of configuration documentation:
+
+1. **README.md Configuration Section** - Brief overview with defaults
+2. **docs/config.md** - Comprehensive configuration reference
+
+#### README.md Configuration Section (Brief)
 
 Add to your gem's README.md:
 
@@ -317,40 +358,88 @@ Add to your gem's README.md:
 
 ace-your-gem uses the ace-core config cascade system.
 
-### Config Files
+**Quick Start**: Default configuration works out of the box. For customization, see [docs/config.md](docs/config.md).
 
-- **Main config**: `.ace/your-gem/config.yml` - General settings
+### Default Settings
+
+- Verbose mode: disabled
+- Timeout: 30 seconds
+- Config location: `.ace/your-gem/config.yml`
 
 ### Config Cascade
 
 Configuration loaded in order (later overrides earlier):
 
-1. Default configuration (built-in)
-2. User configuration (`~/.ace/your-gem/config.yml`)
-3. Project configuration (`./.ace/your-gem/config.yml`)
+1. Built-in defaults
+2. User config (`~/.ace/your-gem/config.yml`)
+3. Project config (`./.ace/your-gem/config.yml`)
 4. CLI options
 
-### Configuration Options
+For detailed configuration options, see [docs/config.md](docs/config.md).
+```
 
-Create `.ace/your-gem/config.yml`:
+#### docs/config.md (Comprehensive)
+
+Create detailed configuration reference in `docs/config.md`:
+
+```markdown
+# Configuration Reference
+
+Complete guide for configuring ace-your-gem.
+
+## Configuration Files
+
+- **Main config**: `.ace/your-gem/config.yml` - General settings
+- **Example**: `.ace.example/your-gem/config.yml` - Reference implementation
+
+## Configuration Options
+
+### Full Configuration Example
 
 \```yaml
 ace:
   your_gem:
     features:
       verbose: false    # Enable verbose output
+      debug: false      # Enable debug logging
     processing:
       timeout: 30       # Processing timeout in seconds
+      parallel: true    # Enable parallel processing
 \```
 
-See `.ace.example/your-gem/config.yml` for full example.
+### Options Reference
 
-### Common Options
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `features.verbose` | boolean | `false` | Enable verbose output |
+| `features.debug` | boolean | `false` | Enable debug logging |
+| `processing.timeout` | integer | `30` | Processing timeout (seconds) |
+| `processing.parallel` | boolean | `true` | Enable parallel processing |
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `features.verbose` | `false` | Enable verbose output |
-| `processing.timeout` | `30` | Processing timeout (seconds) |
+## Configuration Patterns
+
+### Development vs Production
+
+\```yaml
+# Development (.ace/your-gem/config.yml)
+ace:
+  your_gem:
+    features:
+      verbose: true
+      debug: true
+
+# Production (~/.ace/your-gem/config.yml)
+ace:
+  your_gem:
+    features:
+      verbose: false
+      debug: false
+\```
+
+## Troubleshooting
+
+**Config not loading**: Verify file location and YAML syntax
+**Unexpected values**: Check config cascade order
 ```
 
 ### Configuration Testing
@@ -476,6 +565,49 @@ load ace_meta_root.join("ace-your-gem/exe/ace-your-gem").to_s
 Make it executable: `chmod +x bin/ace-your-gem`
 
 **Usage**: Run `bin/ace-your-gem` from workspace root instead of `bundle exec ace-your-gem`
+
+### Mono-Repo Development Pattern
+
+**IMPORTANT**: Understanding ACE mono-repo gem dependencies:
+
+#### Gemfile vs Gemspec Dependencies
+
+- **Gemfile** (workspace root): Provides ALL ace-* gems locally during development
+  - All gems available without individual installation
+  - Workspace context with proper load paths
+  - Used by binstubs via `bundle exec` or `bundler/setup`
+
+- **Gemspec**: Declares dependencies for gem installation (via `gem install`)
+  - Still add `spec.add_dependency "ace-core", "~> 0.9"` etc.
+  - Required when gem is installed outside mono-repo
+  - Documents external dependencies
+
+#### Development Workflow
+
+```bash
+# All gems available via workspace Gemfile
+cd ace-meta
+
+# Run any tool via binstub (uses workspace context)
+bin/ace-docs status          # ✅ Works - uses bundler/setup
+bin/ace-lint file.md         # ✅ Works - uses bundler/setup
+
+# Or use bundle exec from gem directory
+cd ace-docs
+bundle exec ace-docs status  # ✅ Works - uses root Gemfile
+
+# Individual gem install NOT needed for development
+# gem install ace-docs       # ❌ Not needed in mono-repo
+```
+
+#### Why This Matters
+
+- **Development**: Workspace Gemfile provides everything
+- **Testing**: Binstubs ensure proper workspace context
+- **Installation**: Gemspec dependencies matter for `gem install`
+- **CI/CD**: Uses workspace Gemfile for integration testing
+
+**Rule**: Always test with binstubs (`bin/ace-*`) to ensure workspace context is correct.
 
 ## Testing
 
