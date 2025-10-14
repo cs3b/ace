@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.12.0] - 2025-10-14
+## [0.9.70] - 2025-10-14
 
 ### Added
 
 #### Meta-Project Workflows
+
+* **ACE Update Changelog Workflow**: Created workflow for main project CHANGELOG updates
+  * File: `.ace/handbook/workflow-instructions/ace-update-changelog.wf.md`
+  * Automatic versioning from current release with patch increment
+  * Claude command: `/ace-update-changelog [description]`
 
 * **ACE Bump Version Workflow**: Created comprehensive workflow instruction for semantic version bumping
   * File: `.ace/handbook/workflow-instructions/ace-bump-version.wf.md`
@@ -21,61 +26,73 @@ All notable changes to this project will be documented in this file.
   * Comprehensive troubleshooting with one-liner solutions
   * Claude command: `/ace-bump-version [package-name] [bump-level]`
 
-#### ACE Ecosystem - Foundation Packages (October 2025)
+#### ACE Ecosystem - Complete Foundation (October 2025)
+
+This release represents the complete mono-repo migration from legacy dev-tools to modular ace-* gems, establishing the foundation for AI-assisted development.
 
 **Core Infrastructure**
 
-* **ace-core** (v0.9.0 - October 5, 2025): Shared utilities and configuration for ACE ecosystem
+* **ace-core** (v0.9.0-v0.9.3): Shared utilities and configuration for ACE ecosystem
   * ConfigFinder with cascade resolution (project → user → defaults)
   * OutputFormatter supporting markdown, XML, and markdown-XML formats
   * PathResolver for cross-platform path handling
+  * Environment variable cascade loading
   * Foundation library used by all ACE packages
-  * Updated: v0.9.1 (git diff formatting), v0.9.2 (version test improvements), v0.9.3 (test reorganization)
 
-* **ace-context** (v0.9.0 - October 5, 2025): Project context loading with protocol support
+* **ace-context** (v0.9.0-v0.11.4): Project context loading with protocol support
   * Protocol handlers: `wfi://` (workflows), `guide://`, `tmpl://` (templates), `adr://` (ADRs)
   * Preset system with YAML configuration
   * Document source embedding for LLM context
-  * Git diff integration added in v0.9.6
-  * XML embedding format standardization in v0.11.4
+  * Smart caching for performance optimization
+  * Git diff integration for change analysis
+  * XML embedding format standardization
 
-* **ace-nav** (v0.9.0 - October 5, 2025): Protocol-based navigation and discovery system
+* **ace-nav** (v0.9.0-v0.9.3): Protocol-based navigation and discovery system
   * Unified access to workflows, guides, templates, ADRs
   * Subdirectory pattern matching
   * Auto-list mode for protocol discovery
-  * Updated: v0.9.2 (version improvements), v0.9.3 (test migration to ATOM structure)
+  * Standard configuration patterns
 
 **Workflow and Task Management**
 
-* **ace-taskflow** (v0.9.0 - September 24, 2025): Task and release management (migrated from dev-taskflow)
+* **ace-taskflow** (v0.9.0-v0.11.3): Comprehensive task and release management
   * Task and idea management with timestamped organization
   * Descriptive task paths with semantic directory names
   * Retrospective and release management
   * Configuration cascade system
-  * Major updates:
-    - v0.10.0: Rich clipboard support for ideas (macOS) with ace-support-mac-clipboard
-    - v0.10.1: Test execution fixes and exit code handling
-    - v0.10.2: Test isolation improvements
-    - v0.11.0: Flexible metadata flags for task creation (--title, --status, --estimate, --dependencies)
-    - v0.11.1, v0.11.2, v0.11.3: Various bug fixes and workflow improvements
+  * Release command with directory structure support
+  * Preset system for flexible task listing
+  * Enhanced stats and summary displays
+  * Dependency-aware sorting
+  * Move-to-done and reschedule functionality
+  * Batch operations support
+  * Idea, feature, roadmap, and testing workflow migrations
+  * Retrospective and review package creation
+  * Doctor command for configuration validation
+  * Rich clipboard support for ideas (macOS) with ace-support-mac-clipboard
+  * Flexible metadata flags for task creation (--title, --status, --estimate, --dependencies)
+  * Pending release direct support
+  * Test isolation improvements preventing directory pollution
+  * 700+ comprehensive tests covering all ATOM layers
 
 **Development Tools**
 
-* **ace-git-commit** (v0.9.0 - October 5, 2025): LLM-powered conventional commits
+* **ace-git-commit** (v0.9.0-v0.9.2): LLM-powered conventional commits
   * Automatic commit message generation via Gemini 2.0 Flash Lite
   * Monorepo-friendly (stages all changes by default)
   * Direct message support with `-m` flag
   * Intention-based generation with `-i` flag
-  * Updated: v0.9.1 (version test improvements), v0.9.2 (test reorganization)
+  * Informative output for commit operations
+  * Proper API key loading with environment cascade
 
-* **ace-review** (v0.9.0 - October 5, 2025): Code review with LLM assistance
+* **ace-review** (v0.9.0-v0.9.9): Code review with LLM assistance
   * Dynamic storage paths for organized review sessions
-  * ace-context integration for comprehensive context loading (v0.9.4+)
+  * ace-context integration for comprehensive context loading
   * Simplified single-command CLI
-  * ace-core ConfigFinder integration (v0.9.3)
-  * Multiple patch releases: v0.9.1 through v0.9.9 with incremental improvements
+  * ace-core ConfigFinder integration
+  * Multiple incremental improvements for stability
 
-* **ace-search** (v0.9.0 - October 8, 2025): Unified project-aware search tool
+* **ace-search** (v0.9.0): Unified project-aware search tool
   * Complete migration from legacy dev-tools/exe/search to standalone gem
   * DWIM (Do What I Mean) query analysis with intelligent mode detection
   * Preset-based search configurations
@@ -84,41 +101,54 @@ All notable changes to this project will be documented in this file.
   * fzf integration for interactive result selection
   * Full ATOM architecture: atoms, molecules, organisms, models
   * Default exclusions for archived tasks with override options
+  * Sequential group execution support
 
-* **ace-llm** (v0.9.0 - October 5, 2025): Multi-provider LLM client abstraction
+* **ace-llm** (v0.9.0-v0.9.4): Multi-provider LLM client abstraction
   * Support for Anthropic, OpenAI, Gemini, and local models
   * Streaming response support
   * Model aliases (glite, gflash, sonnet, etc.)
   * Provider plugin architecture
-  * Updated: v0.9.1 (--prompt flag), v0.9.2-v0.9.4 (various improvements and test reorganization)
+  * Configuration-based provider selection
+  * Environment cascade loading support
+  * Proper binstubs for ace-llm-query
+  * --model and --prompt flags for CLI usage
+
+* **ace-llm-providers-cli** (v0.9.0): CLI-specific LLM providers
+  * Local model support via CLI interfaces
+  * Provider plugin architecture
+  * Integration with ace-llm core
 
 **Code Quality and Documentation**
 
-* **ace-lint** (v0.1.0 - October 13, 2025): Multi-tool linting orchestration
+* **ace-lint** (v0.1.0-v0.3.0): Multi-tool linting orchestration
   * Kramdown markdown linting with style checks
   * Autofix support for common issues
-  * ace-core configuration integration (v0.2.0, v0.3.0)
+  * ace-core configuration integration
   * Support for multiple tool configurations
   * Configuration cascade: `.ace/lint/config.yml`, `.ace/lint/kramdown.yml`
 
-* **ace-docs** (v0.9.0 - October 10, 2025): Documentation management system
+* **ace-docs** (v0.9.0): Documentation management system
   * Frontmatter-based document discovery
   * Change analysis and validation against rules
   * Update workflow orchestration
   * Batch processing capabilities for multiple documents
   * Iterative agent/human collaboration support
+  * Migration documentation for repository restructuring
 
 **Testing Infrastructure**
 
-* **ace-test-runner** (v0.9.0 - October 1, 2025): Test execution and reporting
+* **ace-test-runner** (v0.9.0-v0.9.10+): Test execution and reporting
   * Minitest integration with intelligent test discovery
   * Configurable reporters (progress, documentation, minimal)
   * Smoke test pattern support for root-level files
   * Failure limits and fast-fail modes
   * Output control and debugging options
-  * Updated: v0.9.1+ with various improvements
+  * Rich developer experience with enhanced reporting
+  * Comprehensive gem test coverage
+  * Critical edge case testing
+  * Performance optimization and profiling support
 
-* **ace-test-support** (v0.9.0 - October 1, 2025): Shared test utilities and helpers
+* **ace-test-support** (v0.9.0): Shared test utilities and helpers
   * Common test helpers and assertion extensions
   * Project scaffolding utilities for tests
   * Fixture management
@@ -126,18 +156,13 @@ All notable changes to this project will be documented in this file.
 
 **Support Libraries**
 
-* **ace-support-mac-clipboard** (v0.9.0 - October 7, 2025): macOS clipboard integration
+* **ace-support-mac-clipboard** (v0.9.0): macOS clipboard integration
   * NSPasteboard FFI bridge to AppKit
   * Rich content support (images: PNG, JPEG, TIFF)
   * HTML and RTF formatted content preservation
   * File copy detection from Finder with original filenames
   * Platform detection with graceful fallback to text-only on non-macOS
   * Used by ace-taskflow for rich idea creation
-
-* **ace-llm-providers-cli** (v0.9.0 - October 5, 2025): CLI-specific LLM providers
-  * Local model support via CLI interfaces
-  * Provider plugin architecture
-  * Integration with ace-llm core
 
 ### Changed
 
@@ -159,13 +184,18 @@ All notable changes to this project will be documented in this file.
 * YAML-based configuration files with package-specific namespaces
 * Standardized config structure: `.ace/[package]/config.yml`
 * Cross-package config consistency
+* Configuration namespace restructuring for clarity
 
 **Testing Standards**
 * Comprehensive test coverage requirements across all packages
-* ace-taskflow alone: 700+ tests covering all ATOM layers
 * Test isolation patterns preventing directory pollution
 * Exit code handling standardization for CLI tools
 * Version test improvements (regex validation vs exact matching)
+
+**Mono-Repo Workspace**
+* Root Gemfile workspace setup for coordinated development
+* Shared dependencies across all ace-* gems
+* Simplified development workflow with unified tooling
 
 #### Legacy System Migration
 
@@ -187,15 +217,16 @@ All notable changes to this project will be documented in this file.
 #### Ecosystem Stabilization (October 2025)
 
 **Cross-Package Integration**
-* ace-review + ace-context integration for comprehensive context loading (v0.9.4+)
-* ace-lint + ace-core configuration cascade integration (v0.3.0)
-* ace-taskflow test execution fixes preventing mid-execution halts (v0.10.1)
-* ace-context XML embedding format consistency across all loading methods (v0.11.4)
-* ace-review + ace-llm API compatibility updates (v0.9.8+)
+* ace-review + ace-context integration for comprehensive context loading
+* ace-lint + ace-core configuration cascade integration
+* ace-taskflow test execution fixes preventing mid-execution halts
+* ace-context XML embedding format consistency across all loading methods
+* ace-review + ace-llm API compatibility updates
+* ace-git-commit API key loading with proper environment cascade
 
 **Test Infrastructure Fixes**
-* Test isolation preventing directory pollution in main project (ace-taskflow v0.10.2)
-* Minitest result parsing and summary display accuracy (ace-test-runner v0.9.1+)
+* Test isolation preventing directory pollution in main project (ace-taskflow)
+* Minitest result parsing and summary display accuracy (ace-test-runner)
 * Exit code handling across all CLI tools (proper Integer returns vs SystemExit)
 * Clipboard tests compatibility across platforms with proper stubbing
 * Version test improvements preventing failures on every version bump
@@ -205,27 +236,138 @@ All notable changes to this project will be documented in this file.
 * Config discovery improvements with proper cascade handling
 * Glob pattern support in configuration files
 * Regex anchor fixes in YAML config detection
+* Directory reference consistency across all tools
 
-## [0.11.0] - 2025-10-08
+**ace-taskflow Specific**
+* Fixed `ace-taskflow task create --help` creating a task named "--help"
+* Current release detection improvements
+* Retrospective directory naming corrections
+* Pending release direct support fixes
+
+## [0.8.1] - 2025-09-19
 
 ### Added
 
-#### ace-taskflow
-* **Flexible Task Creation Flags**: Added comprehensive flag support for `ace-taskflow task create`
-  * `--title TITLE` - Alternative to positional title argument
-  * `--status STATUS` - Set initial task status (pending, draft, in-progress, done, blocked)
-  * `--estimate ESTIMATE` - Set effort estimate (e.g., 2h, 1d, TBD)
-  * `--dependencies DEPS` - Set comma-separated dependency list (e.g., 018,019)
-  * `-h, --help` - Show detailed help for task creation
-  * Backwards compatible with existing positional title syntax
-  * Metadata flags written directly to task frontmatter
+#### Testing Framework Migration
+
+* **Minitest Framework**: Complete migration from RSpec to Minitest
+  * Modern testing best practices with behavior-focused approach
+  * Comprehensive testing guide documenting patterns and strategies
+  * Fast CLI integration tests without VCR overhead
+  * Balanced mocking strategy testing real behavior
+  * Minitest + Aruba + VCR combination for comprehensive coverage
+
+#### Test Infrastructure
+
+* **Test Suite Organization**
+  * Established test directory structure (test/unit, test/integration, test/cassettes)
+  * Configured Minitest with proper test_helper.rb
+  * Setup Aruba for CLI testing with in-process launcher
+  * Configured VCR for HTTP boundary testing
+  * Created test helper utilities for common patterns
+
+* **Comprehensive Test Migration**
+  * Migrated atoms unit tests with focus on critical behaviors
+  * Migrated models unit tests with data validation patterns
+  * Migrated molecules unit tests emphasizing composition
+  * Migrated organisms unit tests for business logic
+  * Migrated ecosystems unit tests for workflow coordination
+  * Fast CLI integration tests for basic command validation
+  * Complex integration tests for major command scenarios
+
+#### Architecture Improvements
+
+* **ATOM Layer Refinement**
+  * Refactored constants, middlewares, and integrations to proper ATOM layers
+  * Comprehensive atom structure refactoring for ace_tools
+  * Consolidate duplicate PathResolver implementations
+  * Convert stateless classes to modules for Ruby idiom
+  * Standardize return patterns and clarify architecture documentation
+
+#### Developer Experience
+
+* **Enhanced Test Reporting**
+  * Agent-friendly test reporter with clear output
+  * Enhanced report generation with file:line paths
+  * Profiling support for performance optimization
+  * Editor integration removal with simple file:line format
+  * Optimized test performance with fast execution
+
+#### Security and Quality
+
+* **Security Hardening**
+  * Fixed shell injection vulnerabilities in security validator
+  * Replace broad exception handling with specific exception types
+  * Improved error handling and validation
+
+* **CLI Provider Support**
+  * Enabled Claude Code and Codex CLI providers for llm-query
+  * Configuration-based provider architecture
+  * Enhanced LLM integration capabilities
+
+### Changed
+
+* **Testing Philosophy**: Shifted from 1:1 RSpec conversion to behavior-focused testing
+  * Testing important behaviors rather than implementation details
+  * Creating maintainable test suite with confidence over brittleness
+  * Establishing patterns that make tests easy to write and understand
+  * Balancing test isolation with realistic behavior testing
+  * Optimizing for both developer experience and CI performance
+
+* **Architecture Documentation**: Updated architecture guide to reflect ATOM patterns and testing framework changes
 
 ### Fixed
 
-#### ace-taskflow
-* **Critical Bug**: Fixed `ace-taskflow task create --help` creating a task named "--help" instead of showing help
-  * Implemented proper OptionParser-based argument parsing
-  * Help flag now correctly displays usage information and exits without creating a task
+* **Test Reliability**: Systematic resolution of failing unit tests
+* **Path Resolution**: Fixed multiple path handling and resolution issues
+* **Performance**: Optimized slow atom tests with profiling fixes
+
+## [0.7.1] - 2025-09-16
+
+### Added
+
+#### ACE Migration
+
+* **Complete Project Renaming**: Comprehensive migration from old naming conventions to ACE-based structure
+  * Renamed all submodule paths from `dev-*` to `.ace/*` structure
+  * Renamed Ruby gem from `CodingAgentTools` to `AceTools`
+  * Updated module namespace from `CodingAgentTools` to `AceTools`
+  * Systematic codemod-based migration ensuring completeness
+
+#### Path Structure Changes
+
+* **New Directory Organization**:
+  * `.ace/tools/` - Development tools and utilities
+  * `.ace/handbook/` - Workflow instructions and guides
+  * `.ace/taskflow/` - Task and release management
+  * `.ace/local/` - Local project customizations
+
+#### Module and Gem Renaming
+
+* **Systematic Renaming**:
+  * `CodingAgentTools` → `AceTools` (Ruby module)
+  * `coding_agent_tools` → `ace_tools` (Ruby files)
+  * `coding-agent-tools` → `ace-tools` (gem name)
+  * Updated gem executable: `coding-agent-tools` → `ace-tools`
+
+### Changed
+
+* **Codebase Migration**: 5,796 path occurrences updated across 967 files
+* **Module References**: 2,991 module/gem occurrences updated across 645 files
+* **Total Scope**: Over 1,000+ files systematically updated with codemods
+
+#### Migration Tools
+
+* Created path update codemods for all file types
+* Created Ruby module renaming codemods
+* Created file/directory renaming scripts
+* Created verification scripts for completeness
+
+### Fixed
+
+* **Migration Verification**: Comprehensive search-based verification ensuring no references missed
+* **Test Suite**: All tests updated and passing after migration
+* **Documentation**: Complete documentation update reflecting new structure
 
 ## [0.6.0] - 2025-08-05
 
