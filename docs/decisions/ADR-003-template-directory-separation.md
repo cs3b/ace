@@ -2,8 +2,9 @@
 
 ## Status
 
-Accepted
+Accepted - Evolved to Gem Handbook Pattern (see ADR-016)
 Date: 2025-06-30
+Evolution: October 2025
 
 ## Context
 
@@ -189,3 +190,48 @@ dev-handbook/guides/
 ```
 
 This architectural decision establishes clear separation of concerns between reusable templates and instructional content, enabling better organization, discoverability, and automated template management while supporting the self-contained workflow architecture.
+
+## Evolution: Gem Handbook Pattern (October 2025)
+
+### Current State
+
+The original `dev-handbook/templates/` pattern has evolved with the mono-repo migration (ADR-015) into a **gem-specific handbook pattern**:
+
+```
+ace-gem/
+└── handbook/
+    ├── agents/                        # Single-purpose agents (.ag.md)
+    │   └── process.ag.md
+    └── workflow-instructions/          # Complete workflows (.wf.md)
+        └── your-workflow.wf.md
+```
+
+### Key Changes
+
+1. **Distribution**: Templates now distributed within each gem's `handbook/` directory
+2. **Workflows**: Complete `.wf.md` files replace simple templates (ADR-001 self-containment)
+3. **Agents**: New `.ag.md` format for single-purpose, composable agents
+4. **Integration**: Workflows symlinked to `.claude/agents/` for Claude Code integration
+5. **Discovery**: `ace-nav wfi://` protocol enables workflow discovery
+
+### Examples in Production Gems
+
+- **ace-docs**: `handbook/workflow-instructions/update-docs.wf.md`
+- **ace-search**: `handbook/agents/{search,research}.ag.md`
+- **ace-taskflow**: Multiple workflows for task management
+- **ace-git-commit**: `handbook/workflow-instructions/commit.wf.md`
+
+### Relationship to Original Decision
+
+The **principles remain valid**:
+- ✅ Clear purpose distinction (workflows vs guides)
+- ✅ Categorical organization (by gem functionality)
+- ✅ Consistent naming (`.wf.md`, `.ag.md` suffixes)
+- ✅ Centralized per-gem location for discovery
+
+The **implementation evolved**:
+- From: Central `dev-handbook/templates/` directory
+- To: Distributed `gem/handbook/` directories per gem
+- Reason: Better modularity, gem-specific context, installable workflows
+
+See **ADR-016: Handbook Directory Architecture** for complete details of current pattern.

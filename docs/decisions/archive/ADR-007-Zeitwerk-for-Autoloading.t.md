@@ -2,8 +2,27 @@
 
 ## Status
 
-Accepted
+**Deprecated - Archived (October 2025)**
+
+Original Status: Accepted
 Date: 2025-06-08
+
+## Deprecation Notice
+
+**This ADR is archived and no longer applicable to the current codebase.**
+
+- **Archived**: October 14, 2025
+- **Reason**: Zeitwerk autoloading is only used in legacy `_legacy/dev-tools`. Current ace-* gems (v0.9.0+) use explicit `require_relative` statements.
+- **Current Practice**: ace-llm and other ace-* gems use explicit requires for clarity and simplicity
+- **Context**: This decision applied to the legacy dev-tools before the mono-repo migration (ADR-015)
+
+For current autoloading approach, see:
+- **ace-llm/lib/ace/llm.rb**: Example of explicit requires pattern
+- **ADR-013**: Class Naming Conventions (principles still apply, Zeitwerk-specific inflections obsolete)
+
+---
+
+**Original ADR (for historical reference):**
 
 ## Context
 

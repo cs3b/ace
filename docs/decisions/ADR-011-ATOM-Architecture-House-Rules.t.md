@@ -24,7 +24,7 @@ This architectural decision establishes clear "house rules" for component classi
 
 We establish the following classification rules for components in the ATOM architecture:
 
-### Models (`lib/coding_agent_tools/models/`)
+### Models (`lib/ace/gem/models/`)
 **Definition**: Pure data carriers with no behavior or external dependencies
 **Characteristics**:
 - Plain Old Ruby Objects (POROs), typically implemented as `Struct` or simple classes
@@ -34,11 +34,11 @@ We establish the following classification rules for components in the ATOM archi
 - Act as value objects or data transfer objects
 
 **Examples**:
-- `Models::LlmModelInfo` - Metadata about language models (provider, name, context_window, etc.)
-- `Models::Task` - Task representation with attributes like id, status, priority
-- `Models::LLMResponse` - API response data containers
+- `Ace::Llm::Models::ModelInfo` - LLM metadata (provider, name, context_window)
+- `Ace::Taskflow::Models::Task` - Task representation with id, status, priority
+- `Ace::Review::Models::ReviewResult` - Code review results container
 
-### Molecules (`lib/coding_agent_tools/molecules/`)
+### Molecules (`lib/ace/gem/molecules/`)
 **Definition**: Behavior-oriented helpers that perform focused operations
 **Characteristics**:
 - Simple compositions of Atoms that form meaningful, reusable operations
@@ -48,12 +48,11 @@ We establish the following classification rules for components in the ATOM archi
 - Reusable across different contexts
 
 **Examples**:
-- `Molecules::ExecutableWrapper` - Centralizes CLI script execution logic
-- `Molecules::APICredentials` - Manages authentication details and credential logic
-- `Molecules::HTTPRequestBuilder` - Constructs HTTP requests from parameters
-- `Molecules::APIResponseParser` - Processes and validates API responses
+- `Ace::Lint::Molecules::KramdownLinter` - Markdown validation logic
+- `Ace::Search::Molecules::PatternMatcher` - Search pattern processing
+- `Ace::Context::Molecules::Chunker` - Context chunking logic
 
-### Organisms (`lib/coding_agent_tools/organisms/`)
+### Organisms (`lib/ace/gem/organisms/`)
 **Definition**: Complex components that orchestrate Molecules and Atoms for business functions
 **Characteristics**:
 - Perform specific business-related functions or features
@@ -63,9 +62,9 @@ We establish the following classification rules for components in the ATOM archi
 - Represent cohesive business capabilities
 
 **Examples**:
-- `Organisms::GoogleClient` - Orchestrates API communication with Google Gemini
-- `Organisms::LMStudioClient` - Manages local LLM interactions and configuration
-- `Organisms::PromptProcessor` - Coordinates prompt preparation, processing, and parsing
+- `Ace::Llm::Organisms::ProviderClient` - Orchestrates LLM API communication
+- `Ace::Review::Organisms::CodeReviewer` - Coordinates review workflow
+- `Ace::Context::Organisms::ContextLoader` - Manages context assembly
 
 ### Classification Decision Tree
 
@@ -84,6 +83,37 @@ When creating a new component, follow this decision process:
    - Coordinates multiple components for business goals
    - May manage state and complex workflows
    - Represents significant business capabilities
+
+### Additional Directories (October 2025 Update)
+
+**Commands (`lib/ace/gem/commands/`):**
+- Thor CLI command classes implementing user-facing functionality
+- Each command class handles specific CLI subcommand
+- Coordinates Organisms and Molecules to implement CLI behavior
+- Examples: `Ace::Lint::Commands::LintCommand`, `Ace::Docs::Commands::StatusCommand`
+
+**CLI Entry Point (`lib/ace/gem/cli.rb`):**
+- Thor-based CLI class that registers all commands
+- Single entry point for gem's executable
+- Maps CLI arguments to command classes
+
+### Test Structure (October 2025 Standard)
+
+**Requirement**: Tests must use **flat structure** mirroring ATOM layers:
+
+```
+test/
+├── atoms/              # Test pure functions
+├── molecules/          # Test composed operations
+├── organisms/          # Test business logic
+├── models/             # Test data structures
+├── commands/           # Test CLI commands
+├── integration/        # Test end-to-end workflows
+├── fixtures/           # Test data
+└── test_helper.rb      # Shared setup
+```
+
+**Critical**: Use `test/atoms/` NOT `test/ace/gem/atoms/` - flat structure only.
 
 ## Consequences
 
