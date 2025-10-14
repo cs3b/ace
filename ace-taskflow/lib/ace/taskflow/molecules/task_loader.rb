@@ -144,16 +144,26 @@ module Ace
           parsed = Atoms::TaskReferenceParser.parse(reference)
           return nil unless parsed
 
-          context = parsed[:context]
-          number = parsed[:number]
+          # Determine search scope
+          if parsed[:qualified]
+            # Qualified reference: search specific context only
+            context_path = resolve_context_to_path(parsed[:context])
+            return nil unless context_path
+            tasks = load_tasks_from_context(context_path)
+          else
+            # Simple reference: search globally across all tasks
+            tasks = load_all_tasks
+          end
 
-          # Resolve context to path
-          context_path = resolve_context_to_path(context)
-          return nil unless context_path
+          # Create a simple context resolver for normalization
+          resolver = ContextResolver.new(@root_path)
+          canonical_id = Atoms::TaskReferenceParser.normalize_to_canonical_id(reference, resolver)
 
-          # Load all tasks from context and find by number
-          all_tasks = load_tasks_from_context(context_path)
-          all_tasks.find { |t| t[:task_number] == number }
+          # Search by ID field (primary) or by task_number (fallback for compatibility)
+          tasks.find do |t|
+            t[:id] == canonical_id ||
+            (t[:task_number] == parsed[:number] && t[:id]&.include?(parsed[:context]))
+          end
         end
 
         # Update task status
@@ -348,6 +358,27 @@ module Ace
           end
 
           nil
+        end
+      end
+
+      # Simple context resolver for normalizing task references
+      class ContextResolver
+        def initialize(root_path)
+          @root_path = root_path
+        end
+
+        def resolve_context(context)
+          case context
+          when "current", "active"
+            require_relative "release_resolver"
+            resolver = ReleaseResolver.new(@root_path)
+            primary = resolver.find_primary_active
+            primary ? primary[:name] : context
+          when "backlog"
+            "backlog"
+          else
+            context
+          end
         end
       end
     end

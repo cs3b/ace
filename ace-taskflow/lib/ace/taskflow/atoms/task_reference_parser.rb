@@ -6,7 +6,8 @@ module Ace
       # Pure function to parse qualified task references (v.0.9.0+018, backlog+025)
       class TaskReferenceParser
         # Regular expression for qualified task references
-        QUALIFIED_REFERENCE_PATTERN = /^([\w\.-]+)\+(\d+)$/
+        # Supports: v.0.9.0+018, v.0.9.0+task.018, backlog+025, backlog+task.025
+        QUALIFIED_REFERENCE_PATTERN = /^([\w\.-]+)\+(?:task\.)?(\d+)$/
 
         # Regular expression for simple task references
         SIMPLE_REFERENCE_PATTERN = /^(?:task\.)?(\d+)$/
@@ -150,6 +151,29 @@ module Ace
           end
 
           references.uniq
+        end
+
+        # Normalize a reference to canonical ID format
+        # @param reference [String] The task reference to normalize
+        # @param context_resolver [#resolve_context] Object that can resolve "current" to actual release
+        # @return [String, nil] Canonical ID (e.g., "v.0.9.0+task.072") or nil if invalid
+        def self.normalize_to_canonical_id(reference, context_resolver)
+          parsed = parse(reference)
+          return nil unless parsed
+
+          # Resolve context to actual release name
+          context = if parsed[:context] == "current"
+            # Ask the resolver for the actual current release
+            resolved = context_resolver.resolve_context(parsed[:context])
+            resolved || parsed[:context]
+          else
+            parsed[:context]
+          end
+
+          # Build canonical ID: context+task.number
+          # Ensure number is zero-padded to 3 digits
+          padded_number = parsed[:number].to_s.rjust(3, '0')
+          "#{context}+task.#{padded_number}"
         end
       end
     end
