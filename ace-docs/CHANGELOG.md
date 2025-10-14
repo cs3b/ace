@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-10-15
+
+### Fixed
+
+- **Date to Commit Resolution**: Fixed critical bug where `diff` command couldn't resolve dates to git commit SHAs
+  - `git diff 2025-10-14..HEAD` (bad revision) → now resolves to proper commit SHA
+  - Added `resolve_since_to_commit()` to convert dates to commit references
+  - Uses parent of first commit since date for inclusive diffs
+
+- **Git Root Path Resolution**: All git commands now execute from repository root
+  - Fixes path resolution issues when running from subdirectories
+  - Added `git_root` helper with proper `chdir` handling
+
+- **Folder Structure for Diff Sessions**: Each diff now gets organized session folder
+  - Structure: `.cache/ace-docs/diff-{timestamp}/`
+  - Contains: `repo-diff.patch` (raw diff), `analysis.md` (report), `metadata.yml` (session info)
+  - Better artifact organization for large diffs
+
 ## [0.3.1] - 2025-10-15
 
 ### Added
