@@ -22,6 +22,23 @@ ace-docs is a documentation management system that uses YAML frontmatter to trac
 
 ## Commands
 
+### version Command
+
+Display the current version of ace-docs.
+
+```bash
+ace-docs version
+```
+
+**Output:**
+- Version number in format: `ace-docs version X.Y.Z`
+
+**Examples:**
+```bash
+# Check installed version
+ace-docs version
+```
+
 ### status Command
 
 Display the status of all managed documents with freshness indicators.
@@ -69,6 +86,64 @@ ace-docs discover
 # Discover all managed documents
 ace-docs discover
 ```
+
+### analyze Command
+
+**NEW in v0.3.0** - Batch analyze documents with LLM-powered diff compaction for efficient documentation updates.
+
+```bash
+ace-docs analyze [FILES...] [OPTIONS]
+```
+
+**Arguments:**
+- `FILES...` - Specific files to analyze (optional)
+
+**Options:**
+- `--needs-update` - Analyze only documents needing updates (default if no files specified)
+- `--type TYPE` - Filter by document type (guide, context, workflow, etc.)
+- `--freshness STATUS` - Filter by freshness (current, stale, outdated)
+- `--since DATE` - Override automatic time range (e.g., '1 week ago', '2025-01-01')
+- `--exclude-renames` - Exclude renamed files from diff analysis
+- `--exclude-moves` - Exclude moved files from diff analysis
+- `--output FORMAT` - Output format: compact|detailed (default: compact)
+
+**Output:**
+- Analysis report saved to `.cache/ace-docs/analysis-{timestamp}.md`
+- Report includes:
+  - YAML frontmatter with metadata (generated date, time range, document list)
+  - LLM-compacted change summary organized by impact level
+  - Relevant changes with noise removed
+  - Statistics (commits, files changed, relevant changes)
+
+**Examples:**
+```bash
+# Analyze all documents needing updates
+ace-docs analyze --needs-update
+
+# Analyze specific documents
+ace-docs analyze docs/architecture.md docs/tools.md
+
+# Analyze with custom time range
+ace-docs analyze --needs-update --since "2 weeks ago"
+
+# Analyze by document type
+ace-docs analyze --type guide --freshness stale
+
+# Exclude renames and moves for cleaner diffs
+ace-docs analyze --all --exclude-renames --exclude-moves
+```
+
+**How It Works:**
+1. Determines time range from oldest `last-updated` date in selected documents
+2. Generates git diff for the entire codebase from that time range
+3. Sends diff to LLM (via ace-llm-query) for noise removal and compaction
+4. Returns organized markdown report with relevant changes only
+5. Saves to cache for workflow integration
+
+**Error Messages:**
+- "No documents match the specified criteria" - No documents found with given filters
+- "No changes detected in the specified period" - No git changes in time range
+- LLM errors will show clear messages with suggestions
 
 ### diff Command
 
@@ -120,7 +195,7 @@ ace-docs update FILE [OPTIONS]
 - `FILE` - Document file to update
 
 **Options:**
-- `--set KEY=VALUE` - Fields to update (can be used multiple times)
+- `--set key:value` - Fields to update (can be used multiple times)
 - `--preset PRESET` - Update all documents matching preset
 
 **Supported Fields:**
@@ -132,13 +207,13 @@ ace-docs update FILE [OPTIONS]
 **Examples:**
 ```bash
 # Update last-updated date
-ace-docs update docs/guide.md --set last-updated=today
+ace-docs update docs/guide.md --set last-updated:today
 
 # Update multiple fields
-ace-docs update docs/api.md --set last-updated=today --set version=2.0
+ace-docs update docs/api.md --set last-updated:today --set version:2.0
 
 # Bulk update by preset
-ace-docs update --preset standard --set last-checked=today
+ace-docs update --preset standard --set last-checked:today
 ```
 
 ### validate Command
@@ -153,24 +228,33 @@ ace-docs validate [FILE|PATTERN] [OPTIONS]
 - `FILE|PATTERN` - Specific file or glob pattern (optional)
 
 **Options:**
-- `--syntax` - Run syntax validation only
-- `--semantic` - Run semantic validation only
+- `--syntax` - Run syntax validation using linters (delegates to ace-lint when available)
+- `--semantic` - **NEW in v0.3.0** - Run semantic validation using LLM
 - `--all` - Run all validation types (default)
 
 **Validation Checks:**
-- Required frontmatter fields
-- Maximum line count limits
-- Required document sections
-- Custom validation rules
+
+**Syntax Validation (--syntax):**
+- Delegates to ace-lint for markdown, YAML, and frontmatter validation
+- Checks required frontmatter fields
+- Validates maximum line count limits
+- Checks required document sections
+- Custom validation rules from configuration
+
+**Semantic Validation (--semantic):**
+- LLM-powered semantic analysis
+- Checks for content accuracy and relevance
+- Validates document purpose alignment
 
 **Output:**
-- Pass/fail status for each document
+- ✓ Valid / warnings count for each document
 - Specific rule violations
 - Warnings for non-critical issues
+- ace-lint output when available
 
 **Examples:**
 ```bash
-# Validate all documents
+# Validate all documents (syntax + semantic)
 ace-docs validate
 
 # Validate specific document
@@ -181,6 +265,12 @@ ace-docs validate "**/*.g.md"
 
 # Run only syntax validation
 ace-docs validate --syntax
+
+# Run only semantic validation with LLM
+ace-docs validate --semantic
+
+# Validate with both
+ace-docs validate docs/guide.md --all
 ```
 
 ## Configuration
@@ -188,7 +278,39 @@ ace-docs validate --syntax
 ace-docs can be configured via `.ace/docs/config.yml`:
 
 ```yaml
+# Cache directory for analysis and diff reports (v0.3.0+)
+cache_dir: .cache/ace-docs
+
+# LLM integration settings for analyze command (v0.3.0+)
+llm_temperature: 0.3        # Lower for deterministic compaction (default: 0.3)
+# llm_model: gflash         # Override default (uses ace-llm-query defaults)
+
+# Warning threshold for large diffs (v0.3.0+)
+max_diff_lines_warning: 100000  # Warn when diff exceeds this size
+
+# Validation settings (v0.3.0+)
+validation_enabled: true
+ace_lint_path: ace-lint     # Path to ace-lint executable
+
+# Document freshness thresholds in days
+default_freshness_days:
+  current: 14     # Documents updated within 2 weeks
+  stale: 30       # Documents updated within 1 month
+  outdated: 60    # Documents older than 2 months
+
+# Document type definitions
 document_types:
+  context:
+    paths:
+      - "docs/*.md"
+      - "!docs/archive/**"    # Exclude archived
+    defaults:
+      update_frequency: weekly
+      max_lines: 150
+      required_sections:
+        - overview
+        - scope
+
   guide:
     paths:
       - "**/*.g.md"
@@ -197,18 +319,28 @@ document_types:
       update_frequency: monthly
       max_lines: 500
 
-  api:
+  workflow:
     paths:
-      - "*/docs/api/*.md"
+      - "**/*.wf.md"
     defaults:
       update_frequency: on-change
 
+# Global validation rules (merged with type-specific, type wins)
 global_rules:
   max_lines: 1000
   required_frontmatter:
     - doc-type
     - purpose
+
+# Ignored paths
+ignore:
+  - "**/node_modules/**"
+  - "**/vendor/**"
+  - "**/.git/**"
+  - "**/tmp/**"
 ```
+
+See `.ace.example/docs/config.yml` in the ace-docs gem for the complete configuration reference.
 
 ## Frontmatter Schema
 
@@ -312,6 +444,34 @@ jobs:
 
 ### Complete Workflow Example
 
+**Using the NEW analyze command (v0.3.0+) for efficient batch updates:**
+
+```bash
+# 1. Check current status
+ace-docs status --needs-update
+
+# 2. Batch analyze with LLM compaction
+ace-docs analyze --needs-update
+
+# 3. Review the analysis report
+cat .cache/ace-docs/analysis-*.md
+
+# 4. Update document content based on analysis
+$EDITOR docs/guide.md
+
+# 5. Update frontmatter
+ace-docs update docs/guide.md --set last-updated:today
+
+# 6. Validate the updated document
+ace-docs validate docs/guide.md --all
+
+# 7. Commit changes
+git add docs/guide.md
+git commit -m "docs: Update guide with latest changes"
+```
+
+**Traditional workflow (using diff instead of analyze):**
+
 ```bash
 # 1. Check current status
 ace-docs status
@@ -326,7 +486,7 @@ cat .cache/ace-docs/diff-*.md
 $EDITOR docs/guide.md
 
 # 5. Update frontmatter
-ace-docs update docs/guide.md --set last-updated=today
+ace-docs update docs/guide.md --set last-updated:today
 
 # 6. Validate the document
 ace-docs validate docs/guide.md
@@ -347,7 +507,7 @@ ace-docs diff --type guide --since "30 days ago"
 
 # Bulk update last-checked date
 for file in $(ace-docs discover | grep guide | awk '{print $1}'); do
-  ace-docs update $file --set last-checked=today
+  ace-docs update $file --set last-checked:today
 done
 
 # Validate all updated documents
@@ -377,6 +537,18 @@ ace-llm-query --prompt "Summarize documentation changes" < .cache/ace-docs/diff-
 - Check that `doc-type` and `purpose` fields are present
 - Verify file paths match configuration patterns
 
+**Analyze command returns "No changes detected":**
+- Check the time range being used (based on `last-updated` dates)
+- Try using `--since` to specify a longer time range
+- Verify git repository has commits in the specified period
+- Check if the specific documents have changes in that time range
+
+**LLM errors during analyze:**
+- Verify ace-llm-query is installed and accessible
+- Check LLM API credentials are configured
+- Try again if rate limited (error message will indicate this)
+- For very large diffs (>100K lines), use `--exclude-renames` or `--exclude-moves`
+
 **Diff shows no changes:**
 - Check the `--since` date parameter
 - Verify git repository is initialized
@@ -386,6 +558,12 @@ ace-llm-query --prompt "Summarize documentation changes" < .cache/ace-docs/diff-
 - Review validation rules in frontmatter
 - Check global rules in `.ace/docs/config.yml`
 - Use `--syntax` or `--semantic` to isolate issues
+- If ace-lint is not available, install it or validation will use basic checks only
+
+**ace-lint integration issues:**
+- Verify ace-lint gem is installed: `gem list ace-lint`
+- Check ace_lint_path in configuration points to correct executable
+- ace-lint will gracefully degrade if external linters (markdownlint, yamllint) are not available
 
 **Frontmatter parsing errors:**
 - Validate YAML syntax
@@ -403,13 +581,14 @@ TRACE=1 ace-docs diff  # Even more verbose
 
 ## Best Practices
 
-1. **Regular Updates**: Run `ace-docs status` weekly to identify stale documentation
-2. **Automated Validation**: Include `ace-docs validate` in CI/CD pipelines
-3. **Consistent Frontmatter**: Use templates for new documents
-4. **Change Analysis**: Review diffs before major releases
-5. **Bulk Operations**: Use `--preset` for consistent updates across document sets
-6. **Version Tracking**: Update version fields for significant changes
-7. **Context Integration**: Leverage ace-context for comprehensive project awareness
+1. **Use Batch Analysis**: Leverage `ace-docs analyze` for efficient LLM-powered change summaries (v0.3.0+)
+2. **Regular Updates**: Run `ace-docs status` weekly to identify stale documentation
+3. **Automated Validation**: Include `ace-docs validate` in CI/CD pipelines
+4. **Consistent Frontmatter**: Use templates for new documents
+5. **Change Analysis**: Review analysis reports before major releases
+6. **Bulk Operations**: Use `--preset` for consistent updates across document sets
+7. **Version Tracking**: Update version fields for significant changes
+8. **Context Integration**: Leverage ace-context for comprehensive project awareness
 
 ## See Also
 
