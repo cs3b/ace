@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.72] - 2025-10-14
+
+### Added
+
+- **ADR Lifecycle Management in ace-docs**: Comprehensive workflow infrastructure for Architecture Decision Records
+  - Created `ace-docs/handbook/workflow-instructions/create-adr.wf.md` (325 lines)
+  - Created `ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md` (599 lines)
+  - Embedded templates for ADR creation, deprecation notices, evolution sections, and archive README
+  - Cross-references between workflows for complete lifecycle management
+  - Real examples and decision criteria from October 2025 archival session
+
+- **Claude Commands for ADR Management**: Organized thin command wrappers
+  - Created `.claude/commands/ace/create-adr.md`
+  - Created `.claude/commands/ace/maintain-adrs.md`
+  - Organized ADR commands under `ace/` namespace for clarity
+
+### Changed
+
+- **ace-docs v0.2.0**: Bumped minor version for ADR workflow features
+  - Updated `update-docs.wf.md` with ADR section referencing new workflows
+  - Updated `.claude/commands/create-adr.md` to reference new ace-docs location
+
+### Technical
+
+- Removed old standalone `.claude/commands/create-adr.md` (consolidated into ace/ directory)
+- ace-docs CHANGELOG updated with 0.2.0 release notes
+
 ## [0.9.71] - 2025-10-14
 
 ### Added
