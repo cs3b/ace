@@ -3,6 +3,7 @@
 require "open3"
 require "date"
 require "fileutils"
+require "yaml"
 
 module Ace
   module Docs
@@ -77,21 +78,39 @@ module Ace
           generate_git_diff(since, options)
         end
 
-        # Save diff analysis to cache file
+        # Save diff analysis to cache folder with session structure
         # @param diff_result [Hash] Diff analysis result
-        # @return [String] Path to saved file
+        # @return [String] Path to saved analysis file
         def self.save_diff_to_cache(diff_result)
           cache_dir = ".cache/ace-docs"
-          FileUtils.mkdir_p(cache_dir)
-
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-          filename = "diff-#{timestamp}.md"
-          filepath = File.join(cache_dir, filename)
+          session_dir = File.join(cache_dir, "diff-#{timestamp}")
 
+          FileUtils.mkdir_p(session_dir)
+
+          # Save raw git diff
+          if diff_result[:diff] && !diff_result[:diff].empty?
+            raw_diff_path = File.join(session_dir, "repo-diff.patch")
+            File.write(raw_diff_path, diff_result[:diff])
+          end
+
+          # Save formatted analysis report
+          analysis_path = File.join(session_dir, "analysis.md")
           content = format_diff_for_saving(diff_result)
-          File.write(filepath, content)
+          File.write(analysis_path, content)
 
-          filepath
+          # Save metadata
+          metadata_path = File.join(session_dir, "metadata.yml")
+          metadata = {
+            "generated" => diff_result[:timestamp],
+            "since" => diff_result[:since],
+            "document_count" => diff_result[:total_documents] || 1,
+            "has_changes" => diff_result[:has_changes] || (diff_result[:documents_with_changes] || 0) > 0,
+            "options" => diff_result[:options] || {}
+          }
+          File.write(metadata_path, metadata.to_yaml)
+
+          analysis_path
         end
 
         # Check if files have been renamed or moved
@@ -99,9 +118,10 @@ module Ace
         # @return [Array<Hash>] List of renamed/moved files
         def self.detect_renames(since: nil)
           since_param = since || default_since_date
-          cmd = "git diff --name-status --diff-filter=R #{since_param}..HEAD"
+          since_ref = resolve_since_to_commit(since_param)
+          cmd = "git diff --name-status --diff-filter=R #{since_ref}..HEAD"
 
-          stdout, stderr, status = Open3.capture3(cmd)
+          stdout, stderr, status = Open3.capture3(cmd, chdir: git_root)
           return [] unless status.success?
 
           renames = []
@@ -160,6 +180,9 @@ module Ace
         end
 
         def self.generate_git_diff(since, options = {})
+          # Resolve since to a commit SHA
+          since_ref = resolve_since_to_commit(since)
+
           # Build git diff command with -w flag (ignore whitespace)
           cmd_parts = ["git", "diff", "-w"]
 
@@ -172,18 +195,53 @@ module Ace
             cmd_parts << "--no-renames"
           end
 
-          # Add since parameter
-          cmd_parts << "#{since}..HEAD"
+          # Add since parameter with resolved commit
+          cmd_parts << "#{since_ref}..HEAD"
 
           # Add path filters if specified
           if options[:paths]
+            cmd_parts << "--"
             cmd_parts.concat(Array(options[:paths]))
           end
 
           cmd = cmd_parts.join(" ")
-          stdout, _stderr, status = Open3.capture3(cmd)
+          stdout, _stderr, status = Open3.capture3(cmd, chdir: git_root)
 
           status.success? ? stdout : ""
+        end
+
+        def self.resolve_since_to_commit(since)
+          # If it looks like a commit SHA, use as-is
+          return since if since =~ /^[0-9a-f]{7,40}$/i
+
+          # It's a date - find the first commit since that date
+          cmd = "git log --since=\"#{since}\" --format=%H --reverse --all"
+          stdout, _stderr, status = Open3.capture3(cmd, chdir: git_root)
+
+          if status.success? && !stdout.strip.empty?
+            first_commit = stdout.strip.split("\n").first
+
+            # Get parent of first commit to include all changes since date
+            parent_cmd = "git rev-parse #{first_commit}~1 2>/dev/null"
+            parent_stdout, _, parent_status = Open3.capture3(parent_cmd, chdir: git_root)
+
+            if parent_status.success? && !parent_stdout.strip.empty?
+              return parent_stdout.strip
+            else
+              # First commit has no parent (initial commit), use it directly
+              return first_commit
+            end
+          end
+
+          # Fallback: use date string and let git handle it
+          since
+        end
+
+        def self.git_root
+          @git_root ||= begin
+            stdout, _, status = Open3.capture3("git rev-parse --show-toplevel")
+            status.success? ? stdout.strip : Dir.pwd
+          end
         end
 
         def self.filter_relevant_changes(diff_content, document)
