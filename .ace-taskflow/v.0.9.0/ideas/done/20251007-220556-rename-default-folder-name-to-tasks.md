@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-15T01:08:27+01:00
+---
+
 # Idea
 
 rename default folder name to tasks
