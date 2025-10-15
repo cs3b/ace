@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-15T01:18:10+01:00
+---
+
 # ace-docs Auto-Generation Feature
 
 ## Description

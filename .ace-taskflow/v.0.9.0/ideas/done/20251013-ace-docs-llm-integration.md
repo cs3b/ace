@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-15T01:18:25+01:00
+---
+
 # Full LLM Integration for ace-docs
 
 ## Description

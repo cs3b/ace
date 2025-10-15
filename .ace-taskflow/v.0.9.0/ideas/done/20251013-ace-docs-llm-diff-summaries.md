@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-15T01:18:21+01:00
+---
+
 # LLM Query Integration for Intelligent Diff Summaries
 
 ## Description

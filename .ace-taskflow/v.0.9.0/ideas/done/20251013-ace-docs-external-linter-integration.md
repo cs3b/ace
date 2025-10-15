@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-15T01:18:16+01:00
+---
+
 # External Linter Integration for ace-docs Syntax Validation
 
 ## Description
