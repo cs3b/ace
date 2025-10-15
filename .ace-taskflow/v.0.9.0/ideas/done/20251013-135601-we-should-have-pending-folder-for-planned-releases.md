@@ -1,13 +1,15 @@
+---
+status: done
+completed_at: 2025-10-15T01:08:18+01:00
+---
+
 # Idea
 
-# we use hardcoded retro in codebase somewhere -> fi...
+# we should have pending folder for planned releases...
 
 ## Description
 
-we use hardcoded retro in codebase somewhere -> find and fix
-
-/Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/retro/2025-10-13-ace-docs-batch-analysis-task-creation.md
-/Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/retro/2025-10-13-ace-lint-config-system-lessons.md
+we should have pending folder for planned releases - anything that is not yet current nor the backlog anymore
 
 ## Implementation Approach
 
@@ -29,8 +31,8 @@ _[This section will be enhanced with LLM integration]_
 ## Context
 
 - Location: active
-- Created: 2025-10-13 17:06:16
+- Created: 2025-10-13 13:56:01
 
 
 ---
-Captured: 2025-10-13 17:06:16
+Captured: 2025-10-13 13:56:01

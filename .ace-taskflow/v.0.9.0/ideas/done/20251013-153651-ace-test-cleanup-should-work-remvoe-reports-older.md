@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-15T01:08:23+01:00
+---
+
 # Idea
 
 # ace-test cleanup should work remvoe reports older ...
