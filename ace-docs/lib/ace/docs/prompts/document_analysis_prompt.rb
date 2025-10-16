@@ -12,36 +12,23 @@ module Ace
         # @param document [Document] The document to analyze changes for
         # @param diff [String] The filtered git diff (already filtered by subject.diff.filters)
         # @param since [String] Time period for the diff
-        # @param cache_dir [String, nil] Optional cache directory for context.md
-        # @return [Hash] Hash with :system, :user prompts, :context_md, :diff_stats
+        # @param cache_dir [String, nil] Optional cache directory (unused but kept for compatibility)
+        # @return [Hash] Hash with :system, :user prompts, :diff_stats
         def self.build(document, diff, since: nil, cache_dir: nil)
-          # Load base instructions (no placeholders)
+          # Load base instructions
           base_instructions = load_user_prompt_template
-
-          # Create context.md = frontmatter + base instructions
-          # Frontmatter embeds ONLY the document being analyzed
-          context_md = create_context_markdown(base_instructions, document)
-
-          # Save context.md to cache
-          if cache_dir && Dir.exist?(cache_dir)
-            File.write(File.join(cache_dir, "context.md"), context_md)
-          end
-
-          # Load via ace-context (returns instructions + embedded document)
-          embedded_content = load_context_md(context_md) || base_instructions
 
           # Build document-specific sections to append
           diff_stats = calculate_diff_stats(diff)
           doc_section = build_document_section(document, since, diff_stats)
           diff_section = build_diff_section(diff, document)
 
-          # Final prompt = embedded content + document section + diff section
-          final_user_prompt = [embedded_content, doc_section, diff_section].join("\n\n")
+          # Final prompt = base instructions + document metadata + diff
+          final_user_prompt = [base_instructions, doc_section, diff_section].join("\n\n")
 
           {
             system: load_system_prompt,
             user: final_user_prompt,
-            context_md: context_md,
             diff_stats: diff_stats
           }
         end
@@ -180,46 +167,21 @@ module Ace
 
 
 
-        # Create context.md with frontmatter and base instructions
-        # @param base_instructions [String] The base prompt instructions
-        # @param document [Document] The document being analyzed
-        # @return [String] Complete context.md content
-        def self.create_context_markdown(base_instructions, document)
-          # Simple: just embed the document being analyzed
-          frontmatter = {
-            "files" => [document.path],
-            "format" => "markdown-xml"
-          }
-
-          # context.md = frontmatter + base instructions
-          "---\n#{YAML.dump(frontmatter)}---\n\n#{base_instructions}"
-        end
-
         # Build document-specific section to append
-        # @param document [Document] The document being analyzed
+        # @param document [Document] The document configuration (defines filters)
         # @param since [String] Time period for analysis
         # @param diff_stats [Hash] Diff statistics
         # @return [String] Document section content
         def self.build_document_section(document, since, diff_stats)
-          doc_path = document.respond_to?(:relative_path) ? document.relative_path : document.path
-          doc_type = document.doc_type || "document"
-          purpose = document.purpose || "(not specified)"
-          keywords = document.context_keywords
-          preset = document.context_preset
-
-          context_info = []
-          context_info << "**Context Keywords**: #{keywords.join(', ')}" if keywords && !keywords.empty?
-          context_info << "**Context Preset**: #{preset}" if preset && !preset.empty?
-          context_section = context_info.empty? ? "" : "\n#{context_info.join("\n")}\n"
+          filters = document.subject_diff_filters || []
+          filters_list = filters.empty? ? "No filters (all changes)" : filters.map { |f| "- `#{f}`" }.join("\n")
 
           <<~SECTION
-            ## Document Being Analyzed
+            ## Analysis Context
 
-            **Path**: #{doc_path}
-            **Type**: #{doc_type}
-            **Purpose**: #{purpose}
-            #{context_section}
             **Analyzing changes**: since #{since || 'recent'}
+            **Filters applied**:
+            #{filters_list}
 
             ## Diff Statistics
 
@@ -251,33 +213,12 @@ module Ace
           SECTION
         end
 
-        # Load context.md via ace-context (embeds files as XML)
-        # @param context_md [String] The context.md content
-        # @return [String, nil] Final prompt with embedded files or nil if unavailable
-        def self.load_context_md(context_md)
-          begin
-            require "ace/context"
-
-            result = Ace::Context.load_auto(context_md, format: "markdown-xml")
-            result.content
-          rescue LoadError
-            warn "ace-context not available - context embedding disabled" if Ace::Docs.debug?
-            nil
-          rescue StandardError => e
-            warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
-            nil
-          end
-        end
-
-
         # Make helper methods accessible
         private_class_method :load_user_prompt_template
         private_class_method :fallback_user_template
         private_class_method :calculate_diff_stats
-        private_class_method :create_context_markdown
         private_class_method :build_document_section
         private_class_method :build_diff_section
-        private_class_method :load_context_md
       end
     end
   end

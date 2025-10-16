@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2025-10-16
+
+### Changed
+
+- Refactored `ace-docs analyze` from document-centric to general-purpose change analyzer
+  - Removed document embedding and ace-context integration from analysis workflow
+  - Simplified analysis prompts to focus on diff summarization without doc-update assumptions
+  - Updated system prompt to output general change analysis instead of doc recommendations
+
+### Technical
+
+- Removed `create_context_markdown` and `load_context_md` methods from DocumentAnalysisPrompt
+- Cleaned up metadata to remove context_saved references
+- Simplified prompt structure for better performance and clarity
+
 ## [0.4.1] - 2025-10-16
 
 ### Added
