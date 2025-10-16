@@ -100,7 +100,7 @@ module Ace
 
           # Save raw git diff
           if diff_result[:diff] && !diff_result[:diff].empty?
-            raw_diff_path = File.join(session_dir, "repo-diff.patch")
+            raw_diff_path = File.join(session_dir, "repo-diff.diff")
             File.write(raw_diff_path, diff_result[:diff])
           end
 

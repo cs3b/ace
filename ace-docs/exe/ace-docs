@@ -37,18 +37,6 @@ module Ace
         error_exit("Error discovering documents", e)
       end
 
-      desc "diff [FILE]", "Analyze changes for documents"
-      option :all, type: :boolean, desc: "Analyze all managed documents"
-      option :needs_update, type: :boolean, desc: "Analyze documents needing update"
-      option :since, desc: "Date or commit to diff from"
-      option :exclude_renames, type: :boolean, desc: "Exclude renamed files"
-      option :exclude_moves, type: :boolean, desc: "Exclude moved files"
-      def diff(file = nil)
-        require_relative "../lib/ace/docs/commands/diff_command"
-        exit_code = Commands::DiffCommand.new(options).execute(file)
-        exit(exit_code) if exit_code != 0
-      end
-
       desc "update FILE", "Update document frontmatter"
       option :set, type: :hash, desc: "Fields to update (e.g., --set last-updated=today)"
       option :preset, desc: "Update all documents matching preset"
@@ -58,17 +46,13 @@ module Ace
         exit(exit_code) if exit_code != 0
       end
 
-      desc "analyze [FILES...]", "Batch analyze documents with LLM compaction"
-      option :needs_update, type: :boolean, desc: "Analyze documents needing updates"
-      option :type, desc: "Filter by document type"
-      option :freshness, desc: "Filter by freshness (current/stale/outdated)"
-      option :since, desc: "Override time range (e.g., '1 week ago')"
+      desc "analyze FILE", "Analyze changes for a document with LLM"
+      option :since, desc: "Date or commit to analyze from"
       option :exclude_renames, type: :boolean, desc: "Exclude renamed files from diff"
       option :exclude_moves, type: :boolean, desc: "Exclude moved files from diff"
-      option :output, desc: "Output format: compact|detailed (default: compact)"
-      def analyze(*files)
+      def analyze(file)
         require_relative "../lib/ace/docs/commands/analyze_command"
-        exit_code = Commands::AnalyzeCommand.new(options).execute(*files)
+        exit_code = Commands::AnalyzeCommand.new(options).execute(file)
         exit(exit_code) if exit_code != 0
       end
 
