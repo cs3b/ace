@@ -1,16 +1,45 @@
 # frozen_string_literal: true
 
+require "open3"
+
 module Ace
   module Docs
     module Prompts
       # Builds prompts for analyzing changes relevant to a specific document
       class DocumentAnalysisPrompt
-        # Build a prompt for analyzing changes for a specific document
+        # Build prompts for analyzing changes for a specific document
         # @param document [Document] The document to analyze changes for
         # @param diff [String] The filtered git diff (already filtered by subject.diff.filters)
         # @param since [String] Time period for the diff
-        # @return [String] Complete prompt for LLM
+        # @return [Hash] Hash with :system and :user prompts
         def self.build(document, diff, since: nil)
+          {
+            system: load_system_prompt,
+            user: build_user_prompt(document, diff, since)
+          }
+        end
+
+        # Load system prompt via ace-nav protocol
+        # @return [String] System prompt content
+        def self.load_system_prompt
+          stdout, stderr, status = Open3.capture3("ace-nav", "prompt://document-analysis.system", "--content")
+
+          if status.success?
+            stdout.strip
+          else
+            # Fallback to embedded prompt if ace-nav fails
+            fallback_system_prompt
+          end
+        rescue StandardError
+          fallback_system_prompt
+        end
+
+        # Build user prompt with document context and diff
+        # @param document [Document] The document to analyze
+        # @param diff [String] The git diff content
+        # @param since [String] Time period
+        # @return [String] User prompt
+        def self.build_user_prompt(document, diff, since)
           # Extract document metadata
           doc_type = document.doc_type || "document"
           purpose = document.purpose || "(not specified)"
@@ -33,10 +62,6 @@ module Ace
           time_desc = since ? "since #{since}" : "recent changes"
 
           <<~PROMPT
-            # Task: Analyze Code Changes for Documentation Update
-
-            You are analyzing code changes to determine what needs to be updated in a specific documentation file.
-
             ## Document Information
 
             **Path**: #{doc_path}
@@ -45,7 +70,7 @@ module Ace
 
             #{context_desc}
 
-            ## Subject (What Changed)
+            ## Changes to Analyze
 
             The following git diff shows changes #{time_desc}.
 
@@ -54,50 +79,22 @@ module Ace
             ```diff
             #{diff}
             ```
+          PROMPT
+        end
 
-            ## Your Task
+        # Fallback system prompt if ace-nav unavailable
+        # @return [String] Embedded system prompt
+        def self.fallback_system_prompt
+          <<~PROMPT
+            You are analyzing code changes to determine what needs to be updated in documentation.
 
-            Analyze these changes and provide a detailed report that answers:
+            Provide a markdown report with:
+            - Summary (2-3 sentences)
+            - Changes Detected (organized by HIGH/MEDIUM/LOW priority)
+            - Recommended Updates (specific sections with reasoning)
+            - Additional Notes
 
-            1. **What changed?**
-               - List the key changes in the codebase
-               - Focus on changes relevant to this document's purpose
-
-            2. **What needs updating?**
-               - Identify specific sections/content that should be updated
-               - Explain why each update is needed
-               - Consider the document type and purpose
-
-            3. **Priority assessment:**
-               - HIGH: Breaking changes, new features, removed functionality
-               - MEDIUM: Behavioral changes, new options, interface modifications
-               - LOW: Performance improvements, minor enhancements
-
-            ## Output Format
-
-            Provide a markdown report with these sections:
-
-            ### Summary
-            Brief overview of the changes (2-3 sentences)
-
-            ### Changes Detected
-            List changes organized by priority (HIGH/MEDIUM/LOW):
-            - Component/file changed
-            - What changed
-            - Impact on documentation
-
-            ### Recommended Updates
-            For each section of the document that needs updating:
-            - Section name
-            - What to update
-            - Why (what changed that necessitates this update)
-
-            ### Additional Notes
-            Any other observations or recommendations for this document
-
-            ## Response
-
-            Please provide the analysis in markdown format following the structure above.
+            Focus on relevance to the document's purpose and be specific about what needs updating and why.
           PROMPT
         end
 

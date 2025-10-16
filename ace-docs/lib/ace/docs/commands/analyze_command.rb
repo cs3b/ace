@@ -138,16 +138,17 @@ module Ace
         end
 
         def analyze_with_llm(document, diff, since)
-          # Build prompt
-          prompt = Prompts::DocumentAnalysisPrompt.build(document, diff, since: since)
+          # Build prompts (returns hash with :system and :user)
+          prompts = Prompts::DocumentAnalysisPrompt.build(document, diff, since: since)
 
           # Determine model (use config or default to gflash)
           model = Ace::Docs.config["llm_model"] || "gflash"
 
-          # Call LLM via QueryInterface
+          # Call LLM via QueryInterface with system prompt
           result = Ace::LLM::QueryInterface.query(
             model,
-            prompt,
+            prompts[:user],
+            system: prompts[:system],
             temperature: 0.3,
             timeout: 60
           )
@@ -157,6 +158,8 @@ module Ace
             analysis: result[:text],
             model: result[:model],
             provider: result[:provider],
+            system_prompt: prompts[:system],
+            user_prompt: prompts[:user],
             timestamp: Time.now.utc.iso8601
           }
         rescue StandardError => e
@@ -178,6 +181,18 @@ module Ace
           diff_path = File.join(session_dir, "repo-diff.diff")
           File.write(diff_path, diff_result[:diff])
 
+          # Save system prompt
+          if analysis[:system_prompt]
+            system_prompt_path = File.join(session_dir, "prompt-system.md")
+            File.write(system_prompt_path, format_prompt(analysis[:system_prompt], "System Prompt"))
+          end
+
+          # Save user prompt
+          if analysis[:user_prompt]
+            user_prompt_path = File.join(session_dir, "prompt-user.md")
+            File.write(user_prompt_path, format_prompt(analysis[:user_prompt], "User Prompt"))
+          end
+
           # Save LLM analysis
           analysis_path = File.join(session_dir, "analysis.md")
           File.write(analysis_path, format_analysis(document, analysis, since))
@@ -192,11 +207,28 @@ module Ace
             "has_changes" => diff_result[:has_changes],
             "filters_applied" => diff_result[:options][:paths] || [],
             "llm_model" => analysis[:model],
-            "llm_provider" => analysis[:provider]
+            "llm_provider" => analysis[:provider],
+            "prompts_saved" => {
+              "system" => analysis[:system_prompt] ? "prompt-system.md" : nil,
+              "user" => analysis[:user_prompt] ? "prompt-user.md" : nil
+            }.compact
           }
           File.write(metadata_path, metadata.to_yaml)
 
           analysis_path
+        end
+
+        def format_prompt(prompt_content, prompt_type)
+          <<~MARKDOWN
+            # #{prompt_type}
+
+            **Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
+            **Source**: #{prompt_type == "System Prompt" ? "ace-nav prompt://document-analysis.system" : "Generated from document context"}
+
+            ---
+
+            #{prompt_content}
+          MARKDOWN
         end
 
         def format_analysis(document, analysis, since)
