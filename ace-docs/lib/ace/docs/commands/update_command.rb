@@ -37,7 +37,6 @@ module Ace
 
         def select_documents(file)
           if @options[:preset]
-            # TODO: Implement preset-based selection
             @registry.all.select { |d| d.context_preset == @options[:preset] }
           elsif file
             # Try to find in registry first (existing doc with frontmatter)

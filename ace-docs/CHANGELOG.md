@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2025-10-16
+
+### Added
+
+- **Subject Diff Filtering**: Filter git diffs by relevant document paths via `ace-docs.subject.diff.filters` frontmatter
+  - Configure which files/directories each document cares about
+  - Uses git native path filtering for efficiency (git diff -- path1 path2)
+  - Dramatically reduces diff noise for documentation review
+  - Example: README.md only shows changes in ace-docs/ and CHANGELOG.md
+
+- **Semantic Validation**: LLM-powered documentation accuracy validation
+  - New `validate --semantic` flag for content validation
+  - Checks if content matches stated purpose, identifies contradictions
+  - Uses ace-llm-query subprocess with gflash model (temperature 0.3)
+  - Returns specific issues and inconsistencies found
+  - Example: `ace-docs validate docs/architecture.md --semantic`
+
+- **ace-docs Namespace Structure**: Unified configuration organization
+  - New `ace-docs:` namespace for all ace-docs configuration (subject, context, rules)
+  - Aligns with ace-review's subject/context architecture pattern
+  - Fields: `ace-docs.subject.diff.filters`, `ace-docs.context.keywords`, `ace-docs.context.preset`, `ace-docs.rules`
+  - Backward compatible: old `update.focus.paths` format still supported via fallback
+
+### Changed
+
+- **Document Model**: Added ace-docs namespace accessors
+  - `subject_diff_filters()` - Extract filters with legacy format fallback
+  - `context_keywords()` - Extract LLM relevance hints
+  - `ace_docs_config()` - Access full ace-docs namespace
+
+- **ChangeDetector**: Integrated subject diff filtering
+  - `get_diff_for_document()` now uses `subject_diff_filters` for path filtering
+  - `get_diff_for_documents()` applies filters per-document
+  - Removed obsolete `filter_relevant_changes()` method
+
+- **Validator**: Implemented semantic validation
+  - `validate_semantic()` now calls ace-llm-query subprocess
+  - Builds semantic validation prompt from document metadata
+  - Parses LLM response for validation status and issues
+  - Graceful error handling for missing ace-llm-query
+
+### Fixed
+
+- Removed stale TODO comment from `update_command.rb` (preset selection already implemented)
+
+### Documentation
+
+- Updated README.md with ace-docs namespace schema and examples
+- Created comprehensive usage guide in task 073
+- Created validation scenario VS-073-001 for subject diff filtering
+
 ## [0.3.2] - 2025-10-15
 
 ### Fixed
