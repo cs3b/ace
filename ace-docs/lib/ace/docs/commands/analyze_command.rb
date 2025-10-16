@@ -2,134 +2,227 @@
 
 require_relative "../organisms/document_registry"
 require_relative "../molecules/change_detector"
-require_relative "../molecules/time_range_finder"
-require_relative "../molecules/diff_analyzer"
-require_relative "../molecules/report_formatter"
-require_relative "../atoms/diff_filterer"
+require_relative "../prompts/document_analysis_prompt"
 require "colorize"
+
+# Try to load ace-llm
+begin
+  require "ace/llm"
+rescue LoadError
+  # Will be handled with clear error message during execution
+end
 
 module Ace
   module Docs
     module Commands
-      # Command for batch document analysis with LLM
+      # Command for analyzing changes relevant to a specific document
       class AnalyzeCommand
         def initialize(options = {})
           @options = options
           @registry = Organisms::DocumentRegistry.new
-          @time_finder = Molecules::TimeRangeFinder.new
-          @analyzer = Molecules::DiffAnalyzer.new
-          @formatter = Molecules::ReportFormatter.new
         end
 
         # Execute the analyze command
-        # @param files [Array<String>] Specific files to analyze
-        # @return [Integer] Exit code (0 success, 1 no docs, 2 no changes, 3 LLM error, 4 git error)
-        def execute(*files)
-          documents = select_documents(files)
-
-          if documents.empty?
-            puts "No documents match the specified criteria.".yellow
-            puts "Try: --needs-update, --type guide, or specify files directly"
+        # @param file [String] Document path to analyze
+        # @return [Integer] Exit code (0 success, 1 no doc, 2 no changes, 3 LLM error)
+        def execute(file)
+          # Validate file argument
+          unless file
+            puts "Error: Please specify a document to analyze".red
+            puts "Usage: ace-docs analyze FILE"
+            puts "Example: ace-docs analyze README.md"
             return 1
           end
 
-          puts "Analyzing changes for #{documents.size} document(s)..."
+          # Load document
+          document = @registry.find_by_path(file)
+
+          unless document
+            puts "Error: Document not found or not managed by ace-docs: #{file}".red
+            puts "Ensure the file has ace-docs frontmatter (doc-type, purpose)"
+            return 1
+          end
+
+          puts "Analyzing changes for: #{document.display_name}".cyan
+          puts "Document type: #{document.doc_type}" if document.doc_type
+          puts "Purpose: #{document.purpose}" if document.purpose
+
+          # Show subject filters if present
+          filters = document.subject_diff_filters
+          if filters && !filters.empty?
+            puts "\nSubject filters (tracking changes in):".yellow
+            filters.each { |f| puts "  - #{f}" }
+          else
+            puts "\nNo subject filters defined (tracking all changes)".yellow
+          end
 
           # Determine time range
-          time_range = @time_finder.determine_range(documents, @options[:since])
-          puts "Analyzing changes since: #{time_range}"
+          since = determine_since(document)
+          puts "\nAnalyzing changes since: #{since}".cyan
 
-          # Generate diff
-          diff = generate_diff(documents, time_range)
+          # Generate filtered diff
+          puts "Generating git diff...".cyan
+          diff_result = Molecules::ChangeDetector.get_diff_for_document(
+            document,
+            since: since,
+            options: build_diff_options
+          )
 
-          if diff.nil? || diff.strip.empty?
+          # Check if there are changes
+          unless diff_result[:has_changes]
             puts "No changes detected in the specified period.".green
+            puts "The document may already be up to date."
             return 2
           end
 
-          # Check diff size
-          if Atoms::DiffFilterer.exceeds_limit?(diff, Ace::Docs.config["max_diff_lines_warning"])
-            diff_stats = Atoms::DiffFilterer.count_changes(diff)
-            puts "Warning: Large diff (#{diff_stats[:total_changes]} changes in #{diff_stats[:files]} files)".yellow
-            puts "Consider using --exclude-renames, --exclude-moves, or --since to reduce scope"
-          end
+          diff = diff_result[:diff]
+          puts "Changes detected (#{count_diff_lines(diff)} lines)".green
 
-          # Analyze with LLM
-          puts "Compacting changes with LLM analysis..."
-          analysis_result = @analyzer.analyze(diff, documents, @options)
-
-          unless analysis_result[:success]
-            puts "Error: #{analysis_result[:error]}".red
+          # Check if ace-llm is available
+          unless defined?(Ace::LLM)
+            puts "\nError: ace-llm gem not available".red
+            puts "Install it with: gem install ace-llm"
+            puts "\nOr add to your Gemfile:"
+            puts "  gem 'ace-llm'"
             return 3
           end
 
-          # Format and save report
-          report = @formatter.format(
-            analysis_result,
-            documents,
-            since: time_range,
-            diff_stats: Atoms::DiffFilterer.count_changes(diff)
-          )
+          # Analyze with LLM
+          puts "\nAnalyzing changes with LLM...".cyan
+          analysis = analyze_with_llm(document, diff, since)
 
-          report_path = report.save_to_cache
-          puts "Analysis report saved to: #{report_path}".green
+          unless analysis[:success]
+            puts "Error: #{analysis[:error]}".red
+            return 3
+          end
 
-          display_summary(report)
+          # Save results to cache
+          puts "\nSaving analysis results...".cyan
+          cache_path = save_to_cache(document, diff_result, analysis, since)
+          puts "Analysis saved to: #{cache_path}".green
+
+          # Display summary
+          display_summary(analysis)
+
           0
         rescue StandardError => e
           puts "Error during analysis: #{e.message}".red
           puts e.backtrace.join("\n") if ENV["DEBUG"]
-          4
+          3
         end
 
         private
 
-        def select_documents(files)
-          if files && !files.empty?
-            # Specific files provided
-            files.map { |f| @registry.find_by_path(f) }.compact
-          elsif @options[:needs_update]
-            @registry.needing_update
-          elsif @options[:type]
-            @registry.all.select { |d| d.doc_type == @options[:type] }
-          elsif @options[:freshness]
-            @registry.all.select { |d| d.freshness_status == @options[:freshness].to_sym }
-          else
-            # Default to documents needing updates
-            @registry.needing_update
+        def determine_since(document)
+          # Use explicit --since option if provided
+          return @options[:since] if @options[:since]
+
+          # Use document's last-updated date if available
+          if document.last_updated
+            return document.last_updated.strftime("%Y-%m-%d")
           end
+
+          # Default to 7 days ago
+          (Date.today - 7).strftime("%Y-%m-%d")
         end
 
-        def generate_diff(documents, time_range)
-          diff_options = {
+        def build_diff_options
+          {
             include_renames: !@options[:exclude_renames],
             include_moves: !@options[:exclude_moves]
           }
-
-          begin
-            Molecules::ChangeDetector.generate_batch_diff(documents, time_range, diff_options)
-          rescue StandardError => e
-            raise "Failed to generate git diff: #{e.message}"
-          end
         end
 
-        def display_summary(report)
+        def count_diff_lines(diff)
+          diff.lines.count
+        end
+
+        def analyze_with_llm(document, diff, since)
+          # Build prompt
+          prompt = Prompts::DocumentAnalysisPrompt.build(document, diff, since: since)
+
+          # Determine model (use config or default to gflash)
+          model = Ace::Docs.config["llm_model"] || "gflash"
+
+          # Call LLM via QueryInterface
+          result = Ace::LLM::QueryInterface.query(
+            model,
+            prompt,
+            temperature: 0.3,
+            timeout: 60
+          )
+
+          {
+            success: true,
+            analysis: result[:text],
+            model: result[:model],
+            provider: result[:provider],
+            timestamp: Time.now.utc.iso8601
+          }
+        rescue StandardError => e
+          {
+            success: false,
+            error: e.message,
+            timestamp: Time.now.utc.iso8601
+          }
+        end
+
+        def save_to_cache(document, diff_result, analysis, since)
+          cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
+          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+          session_dir = File.join(cache_dir, "analyze-#{timestamp}")
+
+          FileUtils.mkdir_p(session_dir)
+
+          # Save raw diff with .diff extension
+          diff_path = File.join(session_dir, "repo-diff.diff")
+          File.write(diff_path, diff_result[:diff])
+
+          # Save LLM analysis
+          analysis_path = File.join(session_dir, "analysis.md")
+          File.write(analysis_path, format_analysis(document, analysis, since))
+
+          # Save metadata
+          metadata_path = File.join(session_dir, "metadata.yml")
+          metadata = {
+            "document_path" => document.path,
+            "document_type" => document.doc_type,
+            "generated" => analysis[:timestamp],
+            "since" => since,
+            "has_changes" => diff_result[:has_changes],
+            "filters_applied" => diff_result[:options][:paths] || [],
+            "llm_model" => analysis[:model],
+            "llm_provider" => analysis[:provider]
+          }
+          File.write(metadata_path, metadata.to_yaml)
+
+          analysis_path
+        end
+
+        def format_analysis(document, analysis, since)
+          <<~MARKDOWN
+            # Documentation Analysis Report
+
+            **Document**: #{document.relative_path || document.path}
+            **Type**: #{document.doc_type}
+            **Purpose**: #{document.purpose}
+            **Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
+            **Period**: Changes since #{since}
+            **Model**: #{analysis[:model]} (#{analysis[:provider]})
+
+            ---
+
+            #{analysis[:analysis]}
+          MARKDOWN
+        end
+
+        def display_summary(analysis)
           puts "\n" + "="*60
-          puts "Analysis Summary".bold
+          puts "Analysis Complete".bold.green
           puts "="*60
-          puts "Documents analyzed: #{report.documents.size}"
-          puts "Period: #{report.since}"
-          puts "Generated: #{report.generated}"
-
-          if report.statistics && report.statistics.any?
-            puts "\nChange Statistics:"
-            report.statistics.each do |key, value|
-              next if key == "analysis_timestamp"
-              puts "  #{key.capitalize.gsub('_', ' ')}: #{value}"
-            end
-          end
-
-          puts "\nRun 'cat #{Ace::Docs.config["cache_dir"]}/analysis-*.md' to view the full report"
+          puts "\nModel: #{analysis[:model]} (#{analysis[:provider]})"
+          puts "\nThe analysis has been saved to the cache directory."
+          puts "Review the analysis.md file for detailed recommendations."
         end
       end
     end
