@@ -21,18 +21,21 @@ module Ace
           # Determine the since parameter
           since_param = determine_since(document, since)
 
-          # Get the git diff
-          diff_content = generate_git_diff(since_param, options)
+          # Extract subject diff filters from document and merge into options
+          filters = document.subject_diff_filters
+          if filters && !filters.empty?
+            options = options.merge(paths: filters)
+          end
 
-          # Filter for relevance to this document
-          relevant_diff = filter_relevant_changes(diff_content, document)
+          # Get the git diff (now with path filtering if subject.diff.filters present)
+          diff_content = generate_git_diff(since_param, options)
 
           {
             document_path: document.path,
             document_type: document.doc_type,
             since: since_param,
-            diff: relevant_diff,
-            has_changes: !relevant_diff.strip.empty?,
+            diff: diff_content,
+            has_changes: !diff_content.strip.empty?,
             timestamp: Time.now.iso8601,
             options: options
           }
@@ -44,17 +47,24 @@ module Ace
         # @param options [Hash] Options for diff generation
         # @return [Hash] Combined diff results
         def self.get_diff_for_documents(documents, since: nil, options: {})
-          # Get global diff once
+          # Get document-specific diffs with subject filtering
           since_param = since || default_since_date
-          diff_content = generate_git_diff(since_param, options)
 
-          # Map to document-specific results
           document_diffs = documents.map do |doc|
-            relevant_diff = filter_relevant_changes(diff_content, doc)
+            # Extract subject diff filters for this document
+            doc_options = options.dup
+            filters = doc.subject_diff_filters
+            if filters && !filters.empty?
+              doc_options = doc_options.merge(paths: filters)
+            end
+
+            # Get filtered diff for this document
+            diff_content = generate_git_diff(since_param, doc_options)
+
             {
               document: doc,
-              diff: relevant_diff,
-              has_changes: !relevant_diff.strip.empty?
+              diff: diff_content,
+              has_changes: !diff_content.strip.empty?
             }
           end
 
@@ -242,20 +252,6 @@ module Ace
             stdout, _, status = Open3.capture3("git rev-parse --show-toplevel")
             status.success? ? stdout.strip : Dir.pwd
           end
-        end
-
-        def self.filter_relevant_changes(diff_content, document)
-          # Get focus hints from document
-          focus = document.focus_hints
-
-          # For now, return full diff for LLM to analyze
-          # In future, could pre-filter based on focus paths
-          if focus["paths"]
-            # Could filter diff to only include specified paths
-            # But for now, let LLM handle the relevance filtering
-          end
-
-          diff_content
         end
 
         def self.format_diff_for_saving(diff_result)

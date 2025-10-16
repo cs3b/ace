@@ -84,8 +84,75 @@ module Ace
         end
 
         def validate_semantic(document)
-          # TODO: Integrate with ace-llm-query
-          { errors: [], warnings: [] }
+          require "open3"
+
+          # Build semantic validation prompt
+          keywords = document.context_keywords.any? ? document.context_keywords.join(", ") : "(none specified)"
+
+          prompt = <<~PROMPT
+            Validate this documentation for semantic accuracy and relevance.
+
+            Document Type: #{document.doc_type}
+            Purpose: #{document.purpose}
+            Keywords: #{keywords}
+
+            Content:
+            #{document.content}
+
+            Check for:
+            - Content matches stated purpose
+            - Information is accurate and up-to-date
+            - No contradictions or inconsistencies
+            - Appropriate depth for document type
+
+            Respond with:
+            VALID or INVALID on first line
+            Then list any issues as bullet points starting with "-"
+          PROMPT
+
+          # Call ace-llm-query subprocess
+          stdout, stderr, status = Open3.capture3(
+            "ace-llm-query",
+            "--model", "gflash",
+            "--temperature", "0.3",
+            stdin_data: prompt
+          )
+
+          if !status.success?
+            error_msg = if stderr.include?("not found")
+              "Semantic validation unavailable (ace-llm-query not found). Install ace-llm gem to enable."
+            else
+              "Semantic validation failed: #{stderr.strip}"
+            end
+            return { errors: [error_msg], warnings: [] }
+          end
+
+          # Parse LLM response
+          errors = []
+          warnings = []
+
+          if stdout.match?(/INVALID/i)
+            # Extract issues from response
+            # Skip the first line (VALID/INVALID) and collect issue lines
+            lines = stdout.strip.split("\n")
+            lines.each_with_index do |line, idx|
+              next if idx == 0 # Skip VALID/INVALID line
+              next if line.strip.empty?
+
+              if line.start_with?("-")
+                errors << line.sub(/^-\s*/, "").strip
+              end
+            end
+
+            # If no issues were extracted but marked INVALID, add generic error
+            if errors.empty?
+              errors << "Content validation failed - semantic issues detected"
+            end
+          end
+
+          { errors: errors, warnings: warnings }
+        rescue Errno::ENOENT
+          { errors: ["Semantic validation unavailable (ace-llm-query not found). Install ace-llm gem."], warnings: [] }
         end
       end
     end

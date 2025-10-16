@@ -22,6 +22,9 @@ module Ace
           @context_config = @frontmatter["context"] || {}
           @rules = @frontmatter["rules"] || {}
           @metadata = @frontmatter["metadata"] || {}
+
+          # Extract ace-docs namespace configuration
+          @ace_docs_config = @frontmatter["ace-docs"] || {}
         end
 
         # Check if document is managed by ace-docs
@@ -135,8 +138,37 @@ module Ace
           @update_config["focus"] || {}
         end
 
+        # Get the ace-docs configuration namespace
+        def ace_docs_config
+          @ace_docs_config
+        end
+
+        # Get subject diff filters with backward compatibility
+        # Tries new format first, falls back to legacy format
+        def subject_diff_filters
+          # Try new format first
+          filters = @ace_docs_config.dig("subject", "diff", "filters")
+          return filters if filters && !filters.empty?
+
+          # Fall back to legacy format
+          legacy = @update_config.dig("focus", "paths")
+          return legacy if legacy && !legacy.empty?
+
+          []
+        end
+
+        # Get context keywords for LLM analysis
+        def context_keywords
+          @ace_docs_config.dig("context", "keywords") || []
+        end
+
         # Get the context preset
         def context_preset
+          # Try new ace-docs namespace first
+          preset = @ace_docs_config.dig("context", "preset")
+          return preset if preset
+
+          # Fall back to legacy format
           @context_config["preset"]
         end
 
