@@ -13,41 +13,34 @@ module Ace
         # @param diff [String] The filtered git diff (already filtered by subject.diff.filters)
         # @param since [String] Time period for the diff
         # @param cache_dir [String, nil] Optional cache directory for context.md
-        # @return [Hash] Hash with :system, :user prompts, and :context_md
+        # @return [Hash] Hash with :system, :user prompts, :context_md, :diff_stats
         def self.build(document, diff, since: nil, cache_dir: nil)
-          # Load user prompt template
-          template = load_user_prompt_template
+          # Load base instructions (no placeholders)
+          base_instructions = load_user_prompt_template
 
-          # Calculate diff statistics
-          diff_stats = calculate_diff_stats(diff)
+          # Create context.md = frontmatter + base instructions
+          # Frontmatter embeds ONLY the document being analyzed
+          context_md = create_context_markdown(base_instructions, document)
 
-          # Extract anchors from document
-          doc_anchors = extract_anchors(document)
-
-          # Find related documents
-          related_docs = find_related_docs(document)
-          target_docs = [document.path] + related_docs
-
-          # Build anchors map for all target docs
-          anchors_map = build_anchors_map([document.path] + related_docs.take(3))
-
-          # Fill template placeholders
-          filled_template = fill_template(template, document, diff, since, diff_stats, target_docs, anchors_map)
-
-          # Create context.md with frontmatter
-          context_md = create_context_markdown(document, filled_template, related_docs)
-
-          # Save context.md to cache if directory provided
+          # Save context.md to cache
           if cache_dir && Dir.exist?(cache_dir)
             File.write(File.join(cache_dir, "context.md"), context_md)
           end
 
-          # Load context via ace-context (embeds files as XML)
-          final_user_prompt = load_context_md(context_md)
+          # Load via ace-context (returns instructions + embedded document)
+          embedded_content = load_context_md(context_md) || base_instructions
+
+          # Build document-specific sections to append
+          diff_stats = calculate_diff_stats(diff)
+          doc_section = build_document_section(document, since, diff_stats)
+          diff_section = build_diff_section(diff, document)
+
+          # Final prompt = embedded content + document section + diff section
+          final_user_prompt = [embedded_content, doc_section, diff_section].join("\n\n")
 
           {
             system: load_system_prompt,
-            user: final_user_prompt || filled_template, # Fallback to template if ace-context unavailable
+            user: final_user_prompt,
             context_md: context_md,
             diff_stats: diff_stats
           }
@@ -172,35 +165,6 @@ module Ace
           PROMPT
         end
 
-        # Extract section anchors from a document
-        # @param document [Document] The document to extract anchors from
-        # @return [String] Formatted anchor map
-        def self.extract_anchors(document)
-          return "" unless document.path && File.exist?(document.path)
-
-          content = File.read(document.path)
-          anchors = []
-          current_h2 = nil
-          current_h3 = nil
-
-          content.each_line do |line|
-            if line =~ /^##\s+(.+)$/
-              current_h2 = $1.strip
-              current_h3 = nil
-              anchors << "  - ## #{current_h2}"
-            elsif line =~ /^###\s+(.+)$/
-              current_h3 = $1.strip
-              anchors << "    - ### #{current_h3}"
-            elsif line =~ /^####\s+(.+)$/
-              h4 = $1.strip
-              anchors << "      - #### #{h4}"
-            end
-          end
-
-          return "(No section structure found)" if anchors.empty?
-
-          anchors.join("\n")
-        end
 
         # Calculate diff statistics
         # @param diff [String] The git diff content
@@ -214,128 +178,77 @@ module Ace
           }
         end
 
-        # Find related documents based on document type and path
+
+
+        # Create context.md with frontmatter and base instructions
+        # @param base_instructions [String] The base prompt instructions
         # @param document [Document] The document being analyzed
-        # @return [Array<String>] List of related document paths
-        def self.find_related_docs(document)
-          related = []
+        # @return [String] Complete context.md content
+        def self.create_context_markdown(base_instructions, document)
+          # Simple: just embed the document being analyzed
+          frontmatter = {
+            "files" => [document.path],
+            "format" => "markdown-xml"
+          }
 
-          # Add CHANGELOG if it exists
-          related << "CHANGELOG.md" if File.exist?("CHANGELOG.md")
-
-          # Based on document type, add relevant docs
-          case document.doc_type
-          when "reference", "readme"
-            related << "docs/usage.md" if File.exist?("docs/usage.md")
-            related << "docs/api.md" if File.exist?("docs/api.md")
-          when "guide", "tutorial"
-            related << "README.md" if File.exist?("README.md")
-          when "architecture"
-            related << "docs/design/*.md" if Dir.glob("docs/design/*.md").any?
-          when "workflow"
-            # Add other workflow docs
-            Dir.glob("handbook/workflow-instructions/*.wf.md").each { |f| related << f }
-          end
-
-          # Look for docs that mention this document
-          # (Simple implementation - can be enhanced)
-
-          related.uniq.reject { |path| path == document.path }
+          # context.md = frontmatter + base instructions
+          "---\n#{YAML.dump(frontmatter)}---\n\n#{base_instructions}"
         end
 
-        # Build anchors map for multiple documents
-        # @param doc_paths [Array<String>] List of document paths
-        # @return [String] Formatted anchors map
-        def self.build_anchors_map(doc_paths)
-          map = []
-
-          doc_paths.each do |path|
-            next unless File.exist?(path)
-
-            map << "\n### #{path}\n"
-            content = File.read(path)
-
-            content.each_line do |line|
-              if line =~ /^##\s+(.+)$/
-                map << "  - ## #{$1.strip}"
-              elsif line =~ /^###\s+(.+)$/
-                map << "    - ### #{$1.strip}"
-              elsif line =~ /^####\s+(.+)$/
-                map << "      - #### #{$1.strip}"
-              end
-            end
-          end
-
-          map.empty? ? "(No section structures found)" : map.join("\n")
-        end
-
-        # Fill template placeholders with actual values
-        # @param template [String] The template with placeholders
+        # Build document-specific section to append
         # @param document [Document] The document being analyzed
-        # @param diff [String] The git diff
-        # @param since [String] Time period
+        # @param since [String] Time period for analysis
         # @param diff_stats [Hash] Diff statistics
-        # @param target_docs [Array<String>] List of target documents
-        # @param anchors_map [String] Formatted anchors map
-        # @return [String] Filled template
-        def self.fill_template(template, document, diff, since, diff_stats, target_docs, anchors_map)
-          # Extract document metadata
+        # @return [String] Document section content
+        def self.build_document_section(document, since, diff_stats)
           doc_path = document.respond_to?(:relative_path) ? document.relative_path : document.path
           doc_type = document.doc_type || "document"
           purpose = document.purpose || "(not specified)"
           keywords = document.context_keywords
           preset = document.context_preset
+
+          context_info = []
+          context_info << "**Context Keywords**: #{keywords.join(', ')}" if keywords && !keywords.empty?
+          context_info << "**Context Preset**: #{preset}" if preset && !preset.empty?
+          context_section = context_info.empty? ? "" : "\n#{context_info.join("\n")}\n"
+
+          <<~SECTION
+            ## Document Being Analyzed
+
+            **Path**: #{doc_path}
+            **Type**: #{doc_type}
+            **Purpose**: #{purpose}
+            #{context_section}
+            **Analyzing changes**: since #{since || 'recent'}
+
+            ## Diff Statistics
+
+            - Total hunks: #{diff_stats[:hunks_total]}
+            - Files changed: #{diff_stats[:files_changed]}
+            - Insertions: +#{diff_stats[:insertions]}
+            - Deletions: -#{diff_stats[:deletions]}
+          SECTION
+        end
+
+        # Build diff section to append
+        # @param diff [String] The git diff content
+        # @param document [Document] The document being analyzed
+        # @return [String] Diff section content
+        def self.build_diff_section(diff, document)
           filters = document.subject_diff_filters
-
-          # Build target documents list
-          target_list = target_docs.map { |path| "- #{path}" }.join("\n")
-
-          # Build time period description
-          time_period = since ? "since #{since}" : "recent"
-
-          # Build filters note
           filters_note = if filters && !filters.empty?
-                           "\n**Note**: This diff has been filtered to show only changes in:\n" +
-                           filters.map { |f| "- `#{f}`" }.join("\n")
+                           "\n**Filtered to show only:**\n" + filters.map { |f| "- `#{f}`" }.join("\n") + "\n"
                          else
                            ""
                          end
 
-          # Fill all placeholders
-          template
-            .gsub("{document_path}", doc_path)
-            .gsub("{document_type}", doc_type)
-            .gsub("{document_purpose}", purpose)
-            .gsub("{context_keywords}", keywords && !keywords.empty? ? keywords.join(", ") : "(none)")
-            .gsub("{context_preset}", preset || "(none)")
-            .gsub("{target_documents_list}", target_list)
-            .gsub("{anchors_map}", anchors_map)
-            .gsub("{hunks_total}", diff_stats[:hunks_total].to_s)
-            .gsub("{files_changed}", diff_stats[:files_changed].to_s)
-            .gsub("{insertions}", diff_stats[:insertions].to_s)
-            .gsub("{deletions}", diff_stats[:deletions].to_s)
-            .gsub("{time_period}", time_period)
-            .gsub("{subject_filters_note}", filters_note)
-            .gsub("{diff_content}", diff)
-        end
-
-        # Create context.md with frontmatter and filled template
-        # @param document [Document] The document being analyzed
-        # @param filled_template [String] Template with placeholders filled
-        # @param related_docs [Array<String>] List of related document paths
-        # @return [String] Complete context.md content
-        def self.create_context_markdown(document, filled_template, related_docs)
-          # Build frontmatter
-          files = [document.path] + related_docs.take(3) # Limit to avoid too large context
-
-          frontmatter = {
-            "files" => files.compact,
-            "embed_document_source" => true,
-            "format" => "markdown-xml"
-          }
-
-          # Create context.md
-          "---\n#{YAML.dump(frontmatter)}---\n\n#{filled_template}"
+          <<~SECTION
+            ## Git Diff to Analyze
+            #{filters_note}
+            ```diff
+            #{diff}
+            ```
+          SECTION
         end
 
         # Load context.md via ace-context (embeds files as XML)
@@ -356,92 +269,14 @@ module Ace
           end
         end
 
-        # Create context configuration for ace-context
-        # @param document [Document] The document to analyze
-        # @return [Hash] Context configuration
-        def self.create_context_config(document)
-          # Build context configuration to load related files
-          config = {
-            "files" => [],
-            "format" => "markdown-xml",
-            "embed_document_source" => false
-          }
-
-          # Add the document itself if it exists
-          if document.path && File.exist?(document.path)
-            config["files"] << document.path
-          end
-
-          # Add related files based on context preset or keywords
-          # TODO: Future enhancement - intelligently discover related files
-          # based on document.context_keywords or document.context_preset
-
-          config
-        end
-
-        # Load context using ace-context
-        # @param config [Hash] Context configuration
-        # @param cache_dir [String, nil] Optional cache directory to write context.yml
-        # @return [String, nil] Loaded context content or nil if unavailable
-        def self.load_context(config, cache_dir: nil)
-          # Write context.yml to cache directory if provided
-          if cache_dir && Dir.exist?(cache_dir)
-            context_yml_path = File.join(cache_dir, "context.yml")
-            File.write(context_yml_path, YAML.dump(config))
-          end
-
-          # Skip context loading if no files specified
-          return nil if config["files"].nil? || config["files"].empty?
-
-          # Try to load context via ace-context
-          begin
-            require "ace/context"
-
-            result = Ace::Context.load_auto(YAML.dump(config), format: "markdown-xml")
-            result.content
-          rescue LoadError
-            # ace-context not available
-            warn "ace-context not available - context embedding disabled" if Ace::Docs.debug?
-            nil
-          rescue StandardError => e
-            # Context loading failed
-            warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
-            nil
-          end
-        end
-
-        private_class_method def self.build_context_description(keywords, preset)
-          parts = []
-
-          if keywords && !keywords.empty?
-            parts << "**Context Keywords**: #{keywords.join(', ')}"
-          end
-
-          if preset && !preset.empty?
-            parts << "**Context Preset**: #{preset}"
-          end
-
-          return "" if parts.empty?
-
-          "\n## Document Context\n\n#{parts.join("\n")}\n"
-        end
-
-        private_class_method def self.build_filters_description(filters)
-          return "" if filters.nil? || filters.empty?
-
-          "\n**Note**: This diff has been filtered to show only changes in:\n" +
-          filters.map { |f| "- `#{f}`" }.join("\n") + "\n"
-        end
 
         # Make helper methods accessible
         private_class_method :load_user_prompt_template
         private_class_method :fallback_user_template
-        private_class_method :extract_anchors
         private_class_method :calculate_diff_stats
-        private_class_method :find_related_docs
-        private_class_method :build_anchors_map
-        private_class_method :fill_template
         private_class_method :create_context_markdown
+        private_class_method :build_document_section
+        private_class_method :build_diff_section
         private_class_method :load_context_md
       end
     end
