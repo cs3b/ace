@@ -1,6 +1,14 @@
 ---
-update:
+ace-docs:
   last-updated: '2025-10-14'
+  context:
+    preset: project 
+  subject:
+    diff:
+      filters:
+        - CHANGELOG.md 
+        - ace-docs/**/*.rb 
+        - ace-docs/**/*.md 
 purpose: Overview and quick start guide for ace-docs
 doc-type: reference
 ---
@@ -159,15 +167,26 @@ Required fields:
 - `doc-type`: Document type (context, guide, template, workflow, reference, api)
 - `purpose`: Description of the document's purpose
 
-Optional fields:
+Optional `ace-docs:` namespace fields:
 
-- `update.frequency`: Update frequency (daily, weekly, monthly, on-change)
-- `update.last-updated`: Last update date
-- `update.focus`: Hints for LLM relevance filtering
-- `context.preset`: ace-context preset to use
-- `rules.max-lines`: Maximum document length
-- `rules.sections`: Required sections
-- `rules.no-duplicate-from`: Avoid duplication from specified documents
+**Update tracking:**
+- `ace-docs.frequency`: Update frequency (daily, weekly, monthly, on-change)
+- `ace-docs.last-updated`: Last update date
+
+**Subject configuration (what we're analyzing):**
+- `ace-docs.subject.diff.filters`: Array of paths to filter in git diffs (aligns with ace-review)
+- `ace-docs.subject.files`: Array of raw files to include (future feature)
+
+**Context configuration (information for understanding):**
+- `ace-docs.context.keywords`: Array of LLM relevance keywords (for future use)
+- `ace-docs.context.preset`: ace-context preset to use (e.g., "project", "architecture")
+
+**Validation rules:**
+- `ace-docs.rules.max-lines`: Maximum document length
+- `ace-docs.rules.sections`: Required sections array
+- `ace-docs.rules.no-duplicate-from`: Avoid duplication from specified documents
+
+**Note**: Legacy `update.`, `context.`, and `rules.` fields at root level are deprecated but supported via backward compatibility fallback.
 
 ## Commands
 
