@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.75] - 2025-10-16
+
+### Changed
+
+- **ace-docs v0.4.2**: Refactored analyze command to general-purpose change analyzer
+  - Removed document embedding and ace-context integration from analysis workflow
+  - Simplified prompts to focus on diff summarization without doc-update assumptions
+  - Updated system prompt for general change analysis instead of doc recommendations
+  - Cleaned up internal architecture (removed create_context_markdown, load_context_md)
+  - Net reduction: 126 lines of code for better performance and clarity
+
 ## [0.9.74] - 2025-10-14
 
 ### Added
