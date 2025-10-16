@@ -144,8 +144,8 @@ module Ace
         end
 
         def analyze_with_llm(document, diff, since, session_dir: nil)
-          # Build prompts (returns hash with :system, :user, and :context_config)
-          # Pass session_dir so context.yml can be saved
+          # Build prompts (returns hash with :system, :user, :context_md, :diff_stats)
+          # Pass session_dir so context.md can be saved
           prompts = Prompts::DocumentAnalysisPrompt.build(
             document,
             diff,
@@ -172,7 +172,8 @@ module Ace
             provider: result[:provider],
             system_prompt: prompts[:system],
             user_prompt: prompts[:user],
-            context_config: prompts[:context_config],
+            context_md: prompts[:context_md],
+            diff_stats: prompts[:diff_stats],
             timestamp: Time.now.utc.iso8601
           }
         rescue StandardError => e
@@ -206,7 +207,13 @@ module Ace
           analysis_path = File.join(session_dir, "analysis.md")
           File.write(analysis_path, format_analysis(document, analysis, since))
 
-          # Save metadata (including context_config if present)
+          # Save diff statistics
+          if analysis[:diff_stats]
+            diff_stats_path = File.join(session_dir, "diff-stats.yml")
+            File.write(diff_stats_path, analysis[:diff_stats].to_yaml)
+          end
+
+          # Save metadata (including context.md reference if present)
           metadata_path = File.join(session_dir, "metadata.yml")
           metadata = {
             "document_path" => document.path,
@@ -221,7 +228,8 @@ module Ace
               "system" => analysis[:system_prompt] ? "prompt-system.md" : nil,
               "user" => analysis[:user_prompt] ? "prompt-user.md" : nil
             }.compact,
-            "context_config_saved" => analysis[:context_config] ? "context.yml" : nil
+            "context_saved" => analysis[:context_md] ? "context.md" : nil,
+            "diff_stats_saved" => analysis[:diff_stats] ? "diff-stats.yml" : nil
           }
           File.write(metadata_path, metadata.to_yaml)
 

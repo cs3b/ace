@@ -12,8 +12,9 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.3.2)
+    ace-docs (0.4.1)
       ace-core (~> 0.1)
+      ace-llm (~> 0.1)
       colorize (~> 1.1)
       fileutils (~> 1.7)
       terminal-table (~> 3.0)
