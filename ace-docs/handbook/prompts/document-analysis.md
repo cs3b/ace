@@ -1,51 +1,53 @@
-# Document Analysis
+# Document Analysis Instructions
 
-Analyze the following code changes to determine what needs to be updated in project documentation.
+You are analyzing code changes to determine what documentation needs to be updated.
 
-## Document Information
+## Your Task
 
-**Path**: {document_path}
-**Type**: {document_type}
-**Purpose**: {document_purpose}
-**Context Keywords**: {context_keywords}
-**Context Preset**: {context_preset}
+Review the embedded files (provided as XML tags below) and the git diff that follows. Identify all documentation that needs updating based on the code changes shown in the diff.
 
-## Target Documents
+## Analysis Requirements
 
-The following documents should be checked for impacts from these changes:
+**Coverage Tracking:**
+- Count total diff hunks in the provided diff
+- Track which hunks map to documentation updates
+- Track which hunks are ambiguous or don't require documentation
+- Report metrics in your Self-check section
 
-{target_documents_list}
+**Cross-Document Analysis:**
+- Check the primary document being analyzed
+- Check all related documents provided in the "Related Documents to Check" section
+- Check for impacts on:
+  - Usage guides (docs/usage.md, docs/guides/*.md)
+  - Workflow documentation (handbook/workflow-instructions/*.wf.md)
+  - CI examples and configuration
+  - Architecture and design documents
 
-## Document Anchors
+**Evidence Requirements:**
+- Every recommendation must include evidence
+- Use format: `file.rb:L10-L25` or `file.rb::@@ -45,6 +47,9 @@`
+- Reference exact file paths and line ranges from the diff
 
-Below is the section structure for each target document. Use these **exact anchors** when proposing updates.
+**Anchor Precision:**
+- Use exact section anchors when proposing updates
+- Format: `## Section → ### Subsection → #### Detail`
+- Extract anchors from the embedded file content
+- If a section doesn't exist, propose: `[NEW] ## Section Title`
 
-{anchors_map}
+**Schema Consistency:**
+- Compare configuration examples across files
+- Flag namespace mismatches (old vs new formats)
+- Propose migration paths with before/after YAML blocks
 
-## Diff Statistics
+**Development Infrastructure:**
+- If diff includes test files, recommend Development section updates
+- If dependencies change, recommend installation/setup updates
+- If CI config changes, recommend CI documentation updates
 
-- **Total hunks**: {hunks_total}
-- **Files changed**: {files_changed}
-- **Insertions**: +{insertions}
-- **Deletions**: -{deletions}
+## Output Quality Standards
 
-## Changes to Analyze
-
-The following git diff shows changes {time_period}.
-
-{subject_filters_note}
-
-```diff
-{diff_content}
-```
-
-## Analysis Acceptance Criteria
-
-**Required for valid analysis:**
-- Do NOT claim "all changes mapped successfully" unless: `hunks_mapped + hunks_ambiguous == hunks_total`
-- Every Recommended Update MUST include Evidence column with file:line or file::hunk_header
-- Every section reference MUST use exact anchors from the Anchors Map above
-- Report MUST check ALL target documents listed above, not just the primary document
-- Identify cross-document impacts (usage guides, workflows, CI examples)
-- Flag schema/namespace inconsistencies if configuration examples appear in diff
-- Recommend test/development documentation updates if test files or dependencies change
+- Each change description: ≤ 2 lines
+- Recommended Updates table: max 8 rows per document
+- All diff hunks accounted for (mapped or marked ambiguous)
+- Evidence provided for every recommendation
+- Exact anchors used for all section references
