@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-10-16
+
+### Added
+
+- **Unified Analyze Command**: Replaced separate diff/analyze commands with single focused analyze command
+  - Real LLM-powered analysis (not just formatted diff)
+  - Uses `Ace::LLM::QueryInterface` directly (no subprocess overhead)
+  - Extracts subject.diff.filters from frontmatter automatically
+  - Uses document context (keywords, preset, type, purpose) for intelligent analysis
+  - Generates structured recommendations: Summary, Changes by Priority, Recommended Updates
+
+- **ace-nav Protocol Integration**: Externalized prompts using ace-nav protocol
+  - System prompt: `handbook/prompts/document-analysis.system.md`
+  - Loadable via `ace-nav prompt://document-analysis.system --content`
+  - Users can override at project (`.ace/`) or user (`~/.ace/`) level
+  - Protocol configuration in `.ace.example/nav/protocols/prompt-sources/ace-docs.yml`
+
+- **Prompt Transparency**: Both prompts saved to analyze cache
+  - `prompt-system.md` - System prompt sent to LLM
+  - `prompt-user.md` - User prompt with document context
+  - Full reproducibility and debugging support
+  - Metadata tracks which prompts were used
+
+### Changed
+
+- **File Extensions**: Renamed `.patch` → `.diff` for git diff files
+- **Prompt Architecture**: Split into system + user prompts
+  - System prompt: Role, instructions, output format
+  - User prompt: Document metadata, context, diff content
+  - Better LLM behavior (system prompts weighted differently)
+
+- **Cache Structure**: New analyze session format
+  ```
+  .cache/ace-docs/analyze-{timestamp}/
+    ├── repo-diff.diff        # Filtered raw diff
+    ├── prompt-system.md      # System prompt used
+    ├── prompt-user.md        # User prompt used
+    ├── analysis.md           # LLM analysis
+    └── metadata.yml          # Session info + prompt references
+  ```
+
+### Removed
+
+- **Old diff Command**: Removed misleading diff command (created "analysis.md" with just formatted diff)
+- **Old analyze Command**: Removed incomplete batch analyze command
+- **Obsolete Molecules**: Removed `diff_analyzer.rb`, `report_formatter.rb`, `time_range_finder.rb`
+
+### Technical
+
+- Added `ace-llm` as runtime dependency
+- Simplified codebase: 307 insertions, 561 deletions (net reduction)
+- Consistent with ace-review and ace-git-commit prompt patterns
+
 ## [0.3.3] - 2025-10-16
 
 ### Added
