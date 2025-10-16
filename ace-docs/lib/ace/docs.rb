@@ -52,5 +52,11 @@ module Ace
     def self.reset_config!
       @config = nil
     end
+
+    # Check if debug mode is enabled
+    # @return [Boolean] True if debug mode is enabled
+    def self.debug?
+      ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
+    end
   end
 end

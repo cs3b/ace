@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "yaml"
 
 module Ace
   module Docs
@@ -11,11 +12,17 @@ module Ace
         # @param document [Document] The document to analyze changes for
         # @param diff [String] The filtered git diff (already filtered by subject.diff.filters)
         # @param since [String] Time period for the diff
-        # @return [Hash] Hash with :system and :user prompts
-        def self.build(document, diff, since: nil)
+        # @param cache_dir [String, nil] Optional cache directory for context.yml
+        # @return [Hash] Hash with :system, :user prompts, and :context_config
+        def self.build(document, diff, since: nil, cache_dir: nil)
+          # Create context configuration and load context
+          context_config = create_context_config(document)
+          context_content = load_context(context_config, cache_dir: cache_dir)
+
           {
             system: load_system_prompt,
-            user: build_user_prompt(document, diff, since)
+            user: build_user_prompt(document, diff, since, context: context_content),
+            context_config: context_config
           }
         end
 
@@ -38,8 +45,9 @@ module Ace
         # @param document [Document] The document to analyze
         # @param diff [String] The git diff content
         # @param since [String] Time period
+        # @param context [String, nil] Optional embedded context from ace-context
         # @return [String] User prompt
-        def self.build_user_prompt(document, diff, since)
+        def self.build_user_prompt(document, diff, since, context: nil)
           # Extract document metadata
           doc_type = document.doc_type || "document"
           purpose = document.purpose || "(not specified)"
@@ -61,6 +69,13 @@ module Ace
           # Build time description
           time_desc = since ? "since #{since}" : "recent changes"
 
+          # Build context section if provided
+          context_section = if context && !context.strip.empty?
+                              "\n## Context\n\n#{context}\n"
+                            else
+                              ""
+                            end
+
           <<~PROMPT
             ## Document Information
 
@@ -69,7 +84,7 @@ module Ace
             **Purpose**: #{purpose}
 
             #{context_desc}
-
+            #{context_section}
             ## Changes to Analyze
 
             The following git diff shows changes #{time_desc}.
@@ -98,6 +113,60 @@ module Ace
           PROMPT
         end
 
+        # Create context configuration for ace-context
+        # @param document [Document] The document to analyze
+        # @return [Hash] Context configuration
+        def self.create_context_config(document)
+          # Build context configuration to load related files
+          config = {
+            "files" => [],
+            "format" => "markdown-xml",
+            "embed_document_source" => false
+          }
+
+          # Add the document itself if it exists
+          if document.path && File.exist?(document.path)
+            config["files"] << document.path
+          end
+
+          # Add related files based on context preset or keywords
+          # TODO: Future enhancement - intelligently discover related files
+          # based on document.context_keywords or document.context_preset
+
+          config
+        end
+
+        # Load context using ace-context
+        # @param config [Hash] Context configuration
+        # @param cache_dir [String, nil] Optional cache directory to write context.yml
+        # @return [String, nil] Loaded context content or nil if unavailable
+        def self.load_context(config, cache_dir: nil)
+          # Write context.yml to cache directory if provided
+          if cache_dir && Dir.exist?(cache_dir)
+            context_yml_path = File.join(cache_dir, "context.yml")
+            File.write(context_yml_path, YAML.dump(config))
+          end
+
+          # Skip context loading if no files specified
+          return nil if config["files"].nil? || config["files"].empty?
+
+          # Try to load context via ace-context
+          begin
+            require "ace/context"
+
+            result = Ace::Context.load_auto(YAML.dump(config), format: "markdown-xml")
+            result.content
+          rescue LoadError
+            # ace-context not available
+            warn "ace-context not available - context embedding disabled" if Ace::Docs.debug?
+            nil
+          rescue StandardError => e
+            # Context loading failed
+            warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
+            nil
+          end
+        end
+
         private_class_method def self.build_context_description(keywords, preset)
           parts = []
 
@@ -120,6 +189,10 @@ module Ace
           "\n**Note**: This diff has been filtered to show only changes in:\n" +
           filters.map { |f| "- `#{f}`" }.join("\n") + "\n"
         end
+
+        # Make helper methods accessible
+        private_class_method :create_context_config
+        private_class_method :load_context
       end
     end
   end
