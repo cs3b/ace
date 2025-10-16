@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.073
-status: pending
+status: done
 priority: high
 estimate: 4-6h
 dependencies: []
+completed: 2025-10-16
 ---
 
 # Complete documented ace-docs features (subject/context architecture, semantic validation)
