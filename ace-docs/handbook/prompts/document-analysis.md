@@ -1,53 +1,47 @@
-# Document Analysis Instructions
+# Change Analysis Instructions
 
-You are analyzing code changes to determine what documentation needs to be updated.
+You are analyzing git changes to produce a comprehensive change summary.
 
 ## Your Task
 
-Review the embedded files (provided as XML tags below) and the git diff that follows. Identify all documentation that needs updating based on the code changes shown in the diff.
+Review the git diff provided below and identify all significant changes. Categorize them by priority and provide clear, actionable analysis.
 
 ## Analysis Requirements
 
 **Coverage Tracking:**
 - Count total diff hunks in the provided diff
-- Track which hunks map to documentation updates
-- Track which hunks are ambiguous or don't require documentation
+- Track which hunks represent significant changes
+- Track which hunks are trivial or ambiguous
 - Report metrics in your Self-check section
 
-**Cross-Document Analysis:**
-- Check the primary document being analyzed
-- Check all related documents provided in the "Related Documents to Check" section
-- Check for impacts on:
-  - Usage guides (docs/usage.md, docs/guides/*.md)
-  - Workflow documentation (handbook/workflow-instructions/*.wf.md)
-  - CI examples and configuration
-  - Architecture and design documents
-
 **Evidence Requirements:**
-- Every recommendation must include evidence
+- Every change you identify must include evidence from the diff
 - Use format: `file.rb:L10-L25` or `file.rb::@@ -45,6 +47,9 @@`
-- Reference exact file paths and line ranges from the diff
+- Reference exact file paths and line ranges
 
-**Anchor Precision:**
-- Use exact section anchors when proposing updates
-- Format: `## Section → ### Subsection → #### Detail`
-- Extract anchors from the embedded file content
-- If a section doesn't exist, propose: `[NEW] ## Section Title`
+**Priority Assessment:**
+- **HIGH**: Breaking changes, new features, removed functionality, API changes
+- **MEDIUM**: Behavioral changes, new options, interface modifications, significant refactoring
+- **LOW**: Performance improvements, minor enhancements, internal refactoring with no user impact
 
-**Schema Consistency:**
-- Compare configuration examples across files
-- Flag namespace mismatches (old vs new formats)
-- Propose migration paths with before/after YAML blocks
-
-**Development Infrastructure:**
-- If diff includes test files, recommend Development section updates
-- If dependencies change, recommend installation/setup updates
-- If CI config changes, recommend CI documentation updates
+**Completeness:**
+- Account for all diff hunks (either mapped to changes or marked as ambiguous/trivial)
+- If you can't map a hunk to a significant change, explain why in the ambiguous_list
+- Ensure your metrics add up: `hunks_mapped + hunks_ambiguous` should equal `hunks_total`
 
 ## Output Quality Standards
 
 - Each change description: ≤ 2 lines
-- Recommended Updates table: max 8 rows per document
 - All diff hunks accounted for (mapped or marked ambiguous)
-- Evidence provided for every recommendation
-- Exact anchors used for all section references
+- Evidence provided for every change identified
+- Clear priority assignments based on impact
+- Complete coverage metrics in Self-check section
+
+## What to Exclude
+
+- Whitespace-only changes
+- Code formatting changes with no semantic impact
+- Comment updates (unless they indicate important changes)
+- Trivial refactoring with no behavioral changes
+
+Mark these as ambiguous in your coverage tracking rather than listing them as changes.
