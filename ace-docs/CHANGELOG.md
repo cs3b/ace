@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-10-16
+
+### Added
+
+- **Enhanced System Prompt**: Improved prompt engineering following best practices
+  - Added ACE Documentation Diff Analyzer role definition
+  - Self-check requirement for unmapped diff hunks
+  - Uncertainty handling and guardrails against hallucination
+  - Table format for Recommended Updates section
+  - Output length constraints (≤ 2 lines per change)
+  - Prompt versioning (v1.1 — 2025-10-16)
+  - Concrete example showing expected output format
+
+- **User Prompt Template**: New documentation file `handbook/prompts/document-analysis.md`
+  - Documents prompt structure with examples
+  - Explains XML embedding format for context
+  - Shows ace-context integration patterns
+
+- **ace-context Integration**: Optional structured context embedding
+  - Uses `Ace::Context.load_auto()` with markdown-xml format
+  - Embeds document and related files using XML tags (`<file path="...">`)
+  - Creates `context.yml` configuration in analyze cache directory
+  - Graceful fallback when ace-context unavailable (optional dependency)
+
+### Changed
+
+- **Cache Structure**: Now includes `context.yml` for full reproducibility
+  ```
+  .cache/ace-docs/analyze-{timestamp}/
+    ├── repo-diff.diff        # Filtered raw diff
+    ├── context.yml           # ace-context configuration (NEW)
+    ├── prompt-system.md      # System prompt used
+    ├── prompt-user.md        # User prompt with embedded context
+    ├── analysis.md           # LLM analysis
+    └── metadata.yml          # Session info + context config reference
+  ```
+
+- **Prompt Builder**: Modified `DocumentAnalysisPrompt.build()` to accept `cache_dir` parameter
+- **Analyze Command**: Creates session directory before LLM analysis for context.yml generation
+
+### Technical
+
+- Added `Ace::Docs.debug?` method for debug mode detection
+- Enhanced metadata.yml to track context configuration
+- ace-context is optional (graceful degradation when unavailable)
+
 ## [0.4.0] - 2025-10-16
 
 ### Added
