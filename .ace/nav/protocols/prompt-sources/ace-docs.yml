@@ -1,0 +1,34 @@
+---
+# Prompt Sources Protocol Configuration for ace-docs gem
+# This enables prompt discovery from the installed ace-docs gem
+
+name: ace-docs
+type: gem
+description: Documentation analysis prompts from ace-docs gem
+priority: 10
+
+# Configuration for prompt discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/prompts)
+  relative_path: handbook/prompts
+
+  # Pattern for finding prompt files (supports both *.md and *.prompt.md)
+  pattern: "*.md"
+
+  # Enable discovery
+  enabled: true
+
+# Categories of prompts available
+categories:
+  - document-analysis  # System prompts for documentation analysis
+
+# Notes for users
+notes: |
+  ace-docs provides prompts for documentation analysis:
+  - document-analysis.system: Main system prompt for analyzing code changes
+    and determining documentation updates
+
+  Use prompt:// URIs to reference these prompts in your analysis configurations.
+  Users can override by creating:
+    - .ace/handbook/prompts/document-analysis.system.md (project)
+    - ~/.ace/handbook/prompts/document-analysis.system.md (user)
