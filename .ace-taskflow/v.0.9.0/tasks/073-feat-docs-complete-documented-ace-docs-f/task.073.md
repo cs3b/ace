@@ -6,26 +6,27 @@ estimate: 4-6h
 dependencies: []
 ---
 
-# Complete documented ace-docs features (focus paths, semantic validation)
+# Complete documented ace-docs features (subject/context architecture, semantic validation)
 
 ## Behavioral Specification
 
 ### User Experience
 
-- **Input**: Document frontmatter with `update.focus.paths` array specifying files/directories to track, plus `--semantic` flag for validation
+- **Input**: Document frontmatter with `ace-docs.subject.diff.filters` array specifying files/directories to track, plus `--semantic` flag for validation
 - **Process**: Users configure which codebase paths are relevant to each document, then run `ace-docs diff` to see only changes in those paths, or `ace-docs validate --semantic` for LLM-powered content validation
-- **Output**: Filtered git diffs showing only relevant changes, semantic validation results with accuracy/consistency feedback, updated documentation reflecting correct frontmatter structure
+- **Output**: Filtered git diffs showing only relevant changes, semantic validation results with accuracy/consistency feedback, updated documentation reflecting ace-docs namespace structure
 
 ### Expected Behavior
 
-**Focus Path Filtering (Primary Feature):**
+**Subject Diff Filtering (Primary Feature):**
 
-When a user adds `update.focus.paths` to document frontmatter (e.g., `paths: ["ace-docs/", "CHANGELOG.md"]`), running `ace-docs diff` on that document should:
+When a user adds `ace-docs.subject.diff.filters` to document frontmatter (e.g., `filters: ["ace-docs/", "CHANGELOG.md"]`), running `ace-docs diff` on that document should:
 - Generate git diff filtered to only the specified paths
 - Use git's native path filtering (efficient, accurate)
 - Show changes only in ace-docs/ directory and CHANGELOG.md file
 - Reduce noise by excluding unrelated codebase changes
 - Work with existing `--since`, `--exclude-renames`, `--exclude-moves` flags
+- Align with ace-review's subject/context architecture pattern
 
 **Semantic Validation:**
 
@@ -36,37 +37,47 @@ When a user runs `ace-docs validate docs/file.md --semantic`:
 - Validate appropriate depth for document type
 - Return clear validation results with specific issues listed
 
-**Documentation Corrections:**
+**Documentation Updates:**
 
-- Update usage.md to show correct frontmatter structure with `focus.keywords` and `focus.paths`
-- Fix README.md to list both fields separately
-- Provide clear examples of path filtering use cases
+- Update usage.md to show ace-docs namespace structure with subject and context
+- Update README.md frontmatter field descriptions
+- Provide clear examples of subject diff filtering use cases
+- Align terminology with ace-review's subject/context pattern
 - Remove outdated TODO comments from codebase
 
 ### Interface Contract
 
 ```bash
-# Document frontmatter configuration
+# Document frontmatter configuration (new ace-docs namespace structure)
 ---
-update:
+doc-type: reference
+purpose: Overview and quick start guide for ace-docs
+ace-docs:
+  frequency: weekly
   last-updated: '2025-10-14'
-  focus:
-    keywords:                    # LLM relevance hints (existing, for future use)
+  subject:
+    diff:
+      filters:                   # Git diff path filters (aligns with ace-review)
+        - "ace-docs/"            # Include directory
+        - "CHANGELOG.md"         # Include specific file
+        - "dev-handbook/guides/" # Include another directory
+    files: []                    # Optional: raw files to include
+  context:
+    keywords:                    # LLM relevance hints (for future use)
       - implementation
       - architecture
-    paths:                       # Git diff path filters (NEW - being connected)
-      - "ace-docs/"              # Include directory
-      - "CHANGELOG.md"           # Include specific file
-      - "dev-handbook/guides/"   # Include another directory
+    preset: "project"            # ace-context preset
+  rules:
+    max-lines: 200
+    sections: ["overview", "scope"]
 ---
 
 # CLI Commands
 
-# Diff with path filtering (behavior changes - now actually filters!)
+# Diff with path filtering (NEW - uses subject.diff.filters!)
 ace-docs diff README.md
-# Expected: Shows only changes in paths specified in README.md frontmatter
-# Current behavior: Ignores focus.paths, shows all changes
-# NEW behavior: Uses git diff -- path1 path2 to filter
+# Expected: Shows only changes in paths specified in subject.diff.filters
+# Uses git diff <since>..HEAD -- path1 path2 to filter
 
 # Semantic validation (stub → real implementation)
 ace-docs validate docs/architecture.md --semantic
@@ -93,88 +104,101 @@ ace-docs validate --syntax            # Still works (delegates to ace-lint)
 **Error Handling:**
 
 - Missing ace-llm-query: Clear error with installation instructions
-- Invalid paths in focus.paths: Git handles gracefully (no matches = empty diff)
+- Invalid paths in subject.diff.filters: Git handles gracefully (no matches = empty diff)
 - LLM API failures: Report timeout/rate limit with retry suggestion
-- Document without focus.paths: Defaults to full repository diff (backward compatible)
+- Document without subject.diff.filters: Defaults to full repository diff (backward compatible)
+- Old update.focus.paths format: Backward compatible fallback support
 
 **Edge Cases:**
 
-- Empty focus.paths array: Treated same as missing (full repo diff)
+- Empty subject.diff.filters array: Treated same as missing (full repo diff)
 - Paths that don't exist: Git returns empty diff (not an error)
 - Multiple documents with different paths: Each filters independently
 - Path patterns (wildcards): Supported by git natively (e.g., "*.md")
+- Legacy focus.paths format: Falls back gracefully for backward compatibility
 
 ### Success Criteria
 
-- [ ] **Focus Path Filtering Works**: `ace-docs diff` on document with `focus.paths` shows only changes in specified paths
-- [ ] **Backward Compatible**: Documents without `focus.paths` still get full repository diffs
+- [ ] **Subject Diff Filtering Works**: `ace-docs diff` on document with `subject.diff.filters` shows only changes in specified paths
+- [ ] **Backward Compatible**: Documents without subject.diff.filters (or using old focus.paths) still work
 - [ ] **Git Native Filtering**: Uses `git diff <since>..HEAD -- path1 path2` for efficiency
 - [ ] **Semantic Validation Functional**: `--semantic` flag calls ace-llm-query and returns validation results
-- [ ] **Documentation Accurate**: usage.md and README.md show correct frontmatter structure with examples
+- [ ] **Documentation Accurate**: usage.md and README.md show correct ace-docs namespace structure with examples
+- [ ] **Architecture Alignment**: Consistent with ace-review's subject/context pattern
 - [ ] **Clean Codebase**: Stale TODO comments removed, code matches documentation
 
 ### Validation Questions
 
-- [ ] **Scope Clarity**: Should focus.keywords also be implemented for LLM analysis, or just document the structure?
+- [ ] **Scope Clarity**: Should context.keywords also be implemented for LLM analysis, or just document the structure?
 - [ ] **Model Selection**: Which LLM model for semantic validation (gflash for speed vs stronger model for accuracy)?
 - [ ] **Temperature**: What temperature for semantic validation (0.3 deterministic vs 0.7 creative)?
 - [ ] **Batch Validation**: Should semantic validation work with multiple files, or one at a time?
 
 ## Objective
 
-Complete the documented-but-unimplemented features from task.071 that users expect based on current documentation. The primary need is focus path filtering to reduce diff noise by showing only changes in files/directories relevant to each document (e.g., README.md only cares about ace-docs/ and CHANGELOG.md changes, not test file changes).
+Align ace-docs with ace-review's subject/context architecture pattern and complete the documented-but-unimplemented features from task.071. The primary need is subject diff filtering to reduce diff noise by showing only changes in files/directories relevant to each document (e.g., README.md only cares about ace-docs/ and CHANGELOG.md changes, not test file changes). Use the `ace-docs:` namespace for all configuration to avoid conflicts.
 
 ## Scope of Work
 
 ### User Experience Scope
 
-- **Focus Path Filtering**: Configure and use path-based diff filtering via frontmatter
+- **Subject Diff Filtering**: Configure and use path-based diff filtering via `ace-docs.subject.diff.filters`
 - **Semantic Validation**: Run LLM-powered validation on document content
-- **Documentation Accuracy**: Correct examples and explanations in usage.md and README.md
+- **Documentation Accuracy**: Update examples with ace-docs namespace structure
+- **Architecture Alignment**: Consistent subject/context pattern matching ace-review
 - **Code Quality**: Remove misleading TODOs and connect existing infrastructure
 
 ### System Behavior Scope
 
-- Connect existing `document.focus_hints["paths"]` to git diff path filtering
+- Introduce `ace-docs:` namespace for all ace-docs configuration
+- Connect `ace-docs.subject.diff.filters` to git diff path filtering
+- Move context-related config to `ace-docs.context` (keywords, preset)
 - Implement semantic validation by calling ace-llm-query subprocess
-- Update frontmatter documentation structure (split focus into keywords/paths)
+- Maintain backward compatibility with old `update.focus.paths` format
 - Clean up 4 TODO comments identified in codebase scan
 
 ### Interface Scope
 
-- `ace-docs diff` command behavior (filtered output when focus.paths present)
+- `ace-docs diff` command behavior (filtered output when subject.diff.filters present)
 - `ace-docs validate --semantic` command behavior (LLM validation results)
-- Frontmatter schema documentation (focus.keywords and focus.paths)
+- Frontmatter schema documentation (ace-docs namespace with subject/context)
 - Error messages and edge case handling
+- Backward compatibility with old frontmatter format
 
 ### Deliverables
 
 #### Behavioral Specifications
 
-- Focus path filtering user flow and examples
+- Subject diff filtering user flow and examples
 - Semantic validation request/response flow
-- Updated frontmatter structure with both fields documented
+- Updated frontmatter structure with ace-docs namespace
+- Subject/context architecture alignment with ace-review
 - Error handling and edge case behaviors
+- Backward compatibility strategy
 
 #### Validation Artifacts
 
-- Test examples showing path filtering working
+- **Validation Scenario VS-073-001** (`qa/ace-docs-readme.vs.md`): Comprehensive test specification with automated validation script
+- Test examples showing subject diff filtering working
 - Semantic validation examples with pass/fail cases
 - Documentation verification (examples match implementation)
+- Backward compatibility verification
 
 #### Workflow Components
 
-- `ux/usage.md` with updated frontmatter examples
-- Focus path filtering usage patterns
+- `ux/usage.md` with updated ace-docs namespace examples
+- Subject diff filtering usage patterns
 - Semantic validation workflow examples
 
 ## Out of Scope
 
-- ❌ **Focus Keywords Implementation**: Document structure but don't connect to LLM (future enhancement)
+- ❌ **Context Keywords Implementation**: Document structure but don't connect to LLM (future enhancement)
+- ❌ **Migration Guide**: Not needed - backward compatibility handles old format automatically
 - ❌ **Comprehensive Test Suite**: Task 071 deferred testing, this continues that pattern
 - ❌ **Advanced Path Patterns**: Beyond git's native glob support (e.g., regex)
 - ❌ **Semantic Auto-Fix**: Validation only, no content modification suggestions
 - ❌ **Batch Semantic Validation**: One file at a time (performance consideration)
+- ❌ **subject.files Implementation**: Structure documented but functionality deferred
 
 ## References
 
@@ -189,10 +213,17 @@ Complete the documented-but-unimplemented features from task.071 that users expe
 
 ### Architecture Pattern
 
-The implementation connects existing infrastructure that was built but never wired together:
-- **Document model** already reads `focus_hints["paths"]` (document.rb:134-136)
+**Alignment with ace-review**: Both tools now use consistent subject/context pattern:
+- **subject**: What we're analyzing (diff filters, files)
+- **context**: Information for understanding (keywords, presets)
+
+**Implementation strategy**:
+- Introduce `ace-docs:` namespace in document model to read new structure
+- Connect `ace-docs.subject.diff.filters` to git diff path filtering
+- Move `context.preset` under `ace-docs.context` namespace
+- Maintain backward compatibility with old `update.focus.paths` format
 - **Git diff filtering** already supports `options[:paths]` (change_detector.rb:202-205)
-- **Connection missing**: `get_diff_for_document` never merges focus paths into options
+- **Connection needed**: Extract subject.diff.filters and merge into options
 
 Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM architecture without introducing new layers.
 
@@ -211,26 +242,33 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
 
 ### Implementation Strategy
 
-**Phase 1: Focus Path Filtering (2h)**
-1. Modify `get_diff_for_document()` to extract and merge focus paths
-2. Remove obsolete `filter_relevant_changes()` method
-3. Test with real document containing focus.paths
+**Phase 1: Document Model ace-docs Namespace (2h)**
+1. Add ace-docs namespace accessor methods to Document model
+2. Add `subject_diff_filters()` to extract `ace-docs.subject.diff.filters`
+3. Add `context_keywords()` to extract `ace-docs.context.keywords`
+4. Move `context_preset()` to read from `ace-docs.context.preset`
+5. Implement backward compatibility fallback for `update.focus.paths`
 
-**Phase 2: Semantic Validation (1.5h)**
+**Phase 2: Subject Diff Filtering (1.5h)**
+1. Modify `get_diff_for_document()` to use `document.subject_diff_filters`
+2. Remove obsolete `filter_relevant_changes()` method
+3. Test with real document containing ace-docs.subject.diff.filters
+
+**Phase 3: Semantic Validation (1.5h)**
 1. Implement `validate_semantic()` in Validator organism
-2. Build LLM prompt for semantic validation
+2. Build LLM prompt for semantic validation using context.keywords
 3. Parse LLM response for VALID/INVALID and issues
 4. Handle errors gracefully (missing ace-llm-query, API failures)
 
-**Phase 3: Documentation (1h)**
-1. Update usage.md frontmatter structure examples
-2. Update README.md to list both focus fields
-3. Create ux/usage.md with path filtering examples
+**Phase 4: Documentation (1h)**
+1. Update ux/usage.md with ace-docs namespace examples
+2. Update README.md frontmatter descriptions (already started by user)
+3. Update task.073.md with new architecture (this document)
 4. Clean up TODO comments
 
-**Phase 4: Testing (0.5h)**
-1. Manual test with ace-docs/README.md
-2. Verify backward compatibility
+**Phase 5: Testing (0.5h)**
+1. Manual test with ace-docs/README.md (already has new frontmatter)
+2. Verify backward compatibility with old format
 3. Test semantic validation with sample document
 
 ## File Modifications
@@ -238,23 +276,39 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
 ### Create
 
 - `.ace-taskflow/v.0.9.0/tasks/073-feat-docs-complete-documented-ace-docs-f/ux/usage.md`
-  - Purpose: User-facing documentation for focus path filtering feature
-  - Key components: Frontmatter examples, diff command usage, troubleshooting
+  - Purpose: User-facing documentation for subject diff filtering feature
+  - Key components: ace-docs namespace examples, subject/context structure, usage scenarios
   - Dependencies: None
+
+- `.ace-taskflow/v.0.9.0/tasks/073-feat-docs-complete-documented-ace-docs-f/qa/ace-docs-readme.vs.md`
+  - Purpose: Validation scenario for subject diff filtering (VS-073-001)
+  - Key components: Test specification, verification steps, automated validation script
+  - Dependencies: Requires ace-docs/README.md with ace-docs.subject.diff.filters configured
+  - **Critical**: Must pass before task completion
 
 ### Modify
 
+- `ace-docs/lib/ace/docs/models/document.rb`
+  - Changes:
+    - Add `ace_docs_config` accessor for `ace-docs:` namespace
+    - Add `subject_diff_filters()` method
+    - Add `context_keywords()` method
+    - Update `context_preset()` to read from ace-docs.context.preset
+    - Implement backward compatibility for `update.focus.paths`
+  - Impact: Introduces ace-docs namespace with subject/context structure
+  - Integration points: Used by all commands and organisms
+
 - `ace-docs/lib/ace/docs/molecules/change_detector.rb`
   - Changes:
-    - Line 18-28: Add focus path extraction and merge into options
+    - Line 18-28: Use `document.subject_diff_filters` instead of focus_hints
     - Line 247-259: Remove `filter_relevant_changes()` method (obsolete)
-  - Impact: Enables path filtering, simplifies code
+  - Impact: Enables subject diff filtering, simplifies code
   - Integration points: Called by DiffCommand, AnalyzeCommand
 
 - `ace-docs/lib/ace/docs/organisms/validator.rb`
   - Changes:
     - Line 86-89: Replace stub with LLM subprocess call
-    - Add prompt building logic (30-40 lines)
+    - Add prompt building logic using context.keywords (30-40 lines)
     - Add response parsing logic (15-20 lines)
   - Impact: Makes --semantic flag functional
   - Integration points: Called by ValidateCommand
@@ -265,17 +319,19 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
   - Impact: Code quality cleanup
   - Integration points: None
 
-- `ace-docs/docs/usage.md`
+- `.ace-taskflow/v.0.9.0/tasks/073-.../ux/usage.md`
   - Changes:
-    - Line 359-361: Replace incorrect focus structure with keywords+paths
-    - Add explanation of focus.paths feature (20-30 lines)
-    - Add path filtering examples (3-5 scenarios)
-  - Impact: Documentation accuracy
+    - Complete rewrite with ace-docs namespace examples
+    - Update all frontmatter examples to use ace-docs structure
+    - Update subject/context terminology throughout
+  - Impact: Documentation accuracy, user guidance
   - Integration points: User documentation
 
 - `ace-docs/README.md`
   - Changes:
-    - Line 166: Split into two separate field descriptions
+    - Update frontmatter schema section (line 160-172)
+    - Update examples to use ace-docs namespace
+    - Note: User has already started this update
   - Impact: Documentation accuracy
   - Integration points: User documentation
 
@@ -289,10 +345,10 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
 
 **Happy Path Scenarios:**
 
-1. **Focus path filtering with multiple paths**
-   - Input: Document with `focus.paths: ["ace-docs/", "CHANGELOG.md"]`
+1. **Subject diff filtering with multiple paths**
+   - Input: Document with `ace-docs.subject.diff.filters: ["ace-docs/", "CHANGELOG.md"]`
    - Expected: Diff shows only changes in those paths
-   - Test: Create test document, run ace-docs diff, verify output
+   - Test: Use ace-docs/README.md (already has new frontmatter), verify output
 
 2. **Semantic validation pass**
    - Input: Well-written document matching its purpose
@@ -306,25 +362,30 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
 
 **Edge Case Scenarios:**
 
-1. **Document without focus.paths**
-   - Input: Document with no focus.paths field
+1. **Document without subject.diff.filters**
+   - Input: Document with no ace-docs.subject.diff.filters field
    - Expected: Full repository diff (backward compatible)
    - Test: Verify default behavior unchanged
 
-2. **Empty focus.paths array**
-   - Input: `focus.paths: []`
+2. **Empty subject.diff.filters array**
+   - Input: `ace-docs.subject.diff.filters: []`
    - Expected: Full repository diff
    - Test: Verify treated same as missing
 
-3. **Non-existent paths in focus.paths**
-   - Input: `focus.paths: ["nonexistent/"]`
+3. **Non-existent paths in subject.diff.filters**
+   - Input: `ace-docs.subject.diff.filters: ["nonexistent/"]`
    - Expected: Empty diff (git handles gracefully)
    - Test: Verify no error thrown
 
 4. **Path patterns with wildcards**
-   - Input: `focus.paths: ["*.md"]`
+   - Input: `ace-docs.subject.diff.filters: ["*.md"]`
    - Expected: Git expands wildcards, shows matching files
    - Test: Verify git's glob support works
+
+5. **Legacy focus.paths format (backward compatibility)**
+   - Input: Document with old `update.focus.paths: ["ace-docs/"]`
+   - Expected: Falls back to old format, filtering works
+   - Test: Verify backward compatibility
 
 **Error Condition Scenarios:**
 
@@ -338,29 +399,31 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
    - Expected: Error message suggesting retry
    - Test: Mock subprocess failure with timeout
 
-3. **Invalid focus.paths structure**
-   - Input: `focus.paths: "string instead of array"`
+3. **Invalid subject.diff.filters structure**
+   - Input: `ace-docs.subject.diff.filters: "string instead of array"`
    - Expected: Graceful handling or clear error
    - Test: Verify type checking
 
 **Integration Point Scenarios:**
 
-1. **Focus paths with --since flag**
-   - Input: Document with focus.paths + --since "1 week ago"
+1. **Subject diff filters with --since flag**
+   - Input: Document with subject.diff.filters + --since "1 week ago"
    - Expected: Filtered diff for specified time range
    - Test: Verify flags combine correctly
 
-2. **Focus paths with --exclude-renames**
-   - Input: Document with focus.paths + --exclude-renames
+2. **Subject diff filters with --exclude-renames**
+   - Input: Document with subject.diff.filters + --exclude-renames
    - Expected: Both filters apply
    - Test: Verify options merge correctly
 
 ### Test Type Categorization
 
 **Unit Tests (High Priority):**
-- ChangeDetector.get_diff_for_document with focus.paths present/absent
+- Document.subject_diff_filters() with new and legacy formats
+- Document.context_keywords() extraction
+- ChangeDetector.get_diff_for_document with subject.diff.filters present/absent
 - Validator.validate_semantic with mocked subprocess
-- Path extraction from document.focus_hints["paths"]
+- Backward compatibility fallback logic
 
 **Integration Tests (Medium Priority):**
 - Full diff command with path filtering end-to-end
@@ -391,16 +454,51 @@ This task continues the pattern from task 071 of **deferring comprehensive test 
 
 ### Execution Steps
 
-- [ ] **Step 1: Implement focus path filtering in ChangeDetector**
+- [ ] **Step 1: Add ace-docs namespace to Document model**
+  - Add accessor methods to document.rb:
+    ```ruby
+    # Get the ace-docs configuration namespace
+    def ace_docs_config
+      @frontmatter["ace-docs"] || {}
+    end
+
+    # Get subject diff filters (with backward compatibility)
+    def subject_diff_filters
+      # Try new format first
+      filters = ace_docs_config.dig("subject", "diff", "filters")
+      return filters if filters && !filters.empty?
+
+      # Fall back to legacy format
+      legacy = @update_config.dig("focus", "paths")
+      return legacy if legacy && !legacy.empty?
+
+      []
+    end
+
+    # Get context keywords
+    def context_keywords
+      ace_docs_config.dig("context", "keywords") || []
+    end
+
+    # Update context_preset to read from ace-docs namespace
+    def context_preset
+      ace_docs_config.dig("context", "preset")
+    end
+    ```
+  > TEST: Document Model Methods
+  > Type: Unit Test
+  > Assert: Accessors extract correct values from ace-docs namespace
+
+- [ ] **Step 2: Implement subject diff filtering in ChangeDetector**
   - Modify `get_diff_for_document()` method (line 18):
     ```ruby
     def self.get_diff_for_document(document, since: nil, options: {})
       return empty_diff_result unless document.path
 
-      # Extract focus paths from document and merge into options
-      focus_paths = document.focus_hints["paths"]
-      if focus_paths && !focus_paths.empty?
-        options = options.merge(paths: focus_paths)
+      # Extract subject diff filters from document and merge into options
+      filters = document.subject_diff_filters
+      if filters && !filters.empty?
+        options = options.merge(paths: filters)
       end
 
       # Determine the since parameter
@@ -421,16 +519,16 @@ This task continues the pattern from task 071 of **deferring comprehensive test 
       }
     end
     ```
-  > TEST: Path Filtering Works
+  > TEST: Subject Diff Filtering Works
   > Type: Integration Validation
   > Assert: Diff filtered to specified paths
-  > Command: ace-docs diff ace-docs/README.md (after adding focus.paths)
+  > Command: ace-docs diff ace-docs/README.md
 
-- [ ] **Step 2: Remove obsolete filter_relevant_changes method**
+- [ ] **Step 3: Remove obsolete filter_relevant_changes method**
   - Delete lines 247-259 in change_detector.rb
   - Method is no longer needed (git does the filtering)
 
-- [ ] **Step 3: Implement semantic validation in Validator**
+- [ ] **Step 4: Implement semantic validation in Validator**
   - Replace stub at validator.rb:86-89 with full implementation:
     ```ruby
     def validate_semantic(document)
@@ -489,41 +587,50 @@ This task continues the pattern from task 071 of **deferring comprehensive test 
   > Assert: Returns validation results
   > Command: ace-docs validate ace-docs/README.md --semantic
 
-- [ ] **Step 4: Clean up stale TODO comments**
+- [ ] **Step 5: Clean up stale TODO comments**
   - Remove TODO at update_command.rb:40 (feature already works)
   - Update TODO at validator.rb:82 to note delegation to ace-lint
 
-- [ ] **Step 5: Create ux/usage.md documentation**
-  - Create `.ace-taskflow/v.0.9.0/tasks/073-feat-docs-complete-documented-ace-docs-f/ux/usage.md`
-  - Document frontmatter structure with focus.keywords and focus.paths
-  - Provide 3-5 real-world examples of path filtering
+- [ ] **Step 6: Update ux/usage.md documentation**
+  - Update `.ace-taskflow/v.0.9.0/tasks/073-feat-docs-complete-documented-ace-docs-f/ux/usage.md`
+  - Rewrite with ace-docs namespace structure
+  - Update all frontmatter examples to use ace-docs.subject.diff.filters
+  - Update terminology from focus to subject/context
+  - Provide 3-5 real-world examples
   - Include troubleshooting section
 
-- [ ] **Step 6: Update usage.md frontmatter documentation**
-  - Fix lines 359-361 to show correct structure
-  - Add explanation of focus.paths feature
-  - Provide path filtering examples
+- [ ] **Step 7: Update README.md frontmatter documentation**
+  - Update frontmatter schema section (line 160-172)
+  - Document ace-docs namespace structure
+  - List ace-docs.subject.diff.filters
+  - List ace-docs.context (keywords, preset)
+  - List ace-docs.rules (max-lines, sections)
+  - Note: User has already updated the frontmatter in README.md
 
-- [ ] **Step 7: Update README.md frontmatter reference**
-  - Split line 166 into two separate field descriptions:
-    - `update.focus.keywords`: LLM relevance keywords
-    - `update.focus.paths`: Git diff path filters
-
-- [ ] **Step 8: Manual testing**
-  - Test focus path filtering:
-    - Update ace-docs/README.md with `focus.paths: ["ace-docs/", "CHANGELOG.md"]`
+- [ ] **Step 8: Run validation scenario**
+  - Execute validation scenario: `qa/ace-docs-readme.vs.md`
+  - Run automated validation script included in VS-073-001
+  - Verify all 5 verification steps pass:
+    1. Frontmatter extraction
+    2. Command execution
+    3. Metadata contains filter paths
+    4. Included files match filters
+    5. Excluded files don't appear
+  - Test subject diff filtering:
+    - ace-docs/README.md already has new frontmatter with subject.diff.filters
     - Run `ace-docs diff ace-docs/README.md`
-    - Verify only shows changes in those paths
+    - Verify only shows changes in specified paths
   - Test semantic validation:
     - Run `ace-docs validate ace-docs/README.md --semantic`
     - Verify returns validation results
   - Test backward compatibility:
-    - Run diff on document without focus.paths
-    - Verify still shows full repository diff
-  > TEST: Manual Validation Complete
+    - Create test document with old `update.focus.paths` format
+    - Run diff and verify fallback works
+    - Verify still shows filtered diff
+  > TEST: Validation Scenario VS-073-001 PASSED
   > Type: End-to-End Validation
-  > Assert: All features working as expected
-  > Command: Manual verification checklist
+  > Assert: All features working as expected per qa/ace-docs-readme.vs.md
+  > Command: Follow validation scenario steps
 
 - [ ] **Step 9: Version bump to 0.3.3**
   - Update ace-docs/lib/ace/docs/version.rb: VERSION = "0.3.3"
@@ -566,9 +673,13 @@ This task continues the pattern from task 071 of **deferring comprehensive test 
 
 ## Acceptance Criteria
 
-- [ ] **Focus Path Filtering Works**: Document with focus.paths filters git diff correctly
-- [ ] **Backward Compatible**: Documents without focus.paths still get full diffs
+- [ ] **ace-docs Namespace Implemented**: Document model reads from ace-docs: namespace
+- [ ] **Subject Diff Filtering Works**: Document with ace-docs.subject.diff.filters filters git diff correctly
+- [ ] **Backward Compatible**: Documents with old update.focus.paths format still work via fallback
+- [ ] **Context Structure Aligned**: ace-docs.context matches ace-review's context pattern
 - [ ] **Semantic Validation Functional**: --semantic flag calls LLM and returns results
-- [ ] **Documentation Complete**: usage.md, README.md, and ux/usage.md all accurate
+- [ ] **Documentation Complete**: task.073.md, ux/usage.md, and README.md all use ace-docs namespace
+- [ ] **Architecture Alignment**: Consistent subject/context pattern with ace-review
 - [ ] **Code Quality**: All TODO comments cleaned up
+- [ ] **Validation Scenario Passed**: VS-073-001 (qa/ace-docs-readme.vs.md) passes all verification steps
 - [ ] **Manual Testing Passed**: All test scenarios verified working

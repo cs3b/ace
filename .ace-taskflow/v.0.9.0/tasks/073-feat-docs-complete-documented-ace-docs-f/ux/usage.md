@@ -1,40 +1,59 @@
-# Focus Path Filtering and Semantic Validation - Usage Guide
+# Subject Diff Filtering and Semantic Validation - Usage Guide
 
 ## Overview
 
 This document describes two enhanced features for ace-docs:
 
-1. **Focus Path Filtering**: Filter git diffs to show only changes in relevant files/directories
+1. **Subject Diff Filtering**: Filter git diffs to show only changes in relevant files/directories
 2. **Semantic Validation**: LLM-powered validation of documentation accuracy and consistency
 
-These features complete documented functionality from task 071 that was built but never connected.
+These features complete documented functionality from task 071 and align ace-docs with ace-review's subject/context architecture pattern.
 
-## Focus Path Filtering
+## Frontmatter Structure: ace-docs Namespace
 
-### What It Does
+All ace-docs configuration now lives under the `ace-docs:` namespace to avoid conflicts with other tools and provide clear organization.
 
-When you specify `focus.paths` in a document's frontmatter, `ace-docs diff` will only show git changes in those specific files or directories. This dramatically reduces noise when tracking documentation updates.
-
-### Frontmatter Structure
+### Complete Structure
 
 ```yaml
 ---
 doc-type: reference
 purpose: Overview and quick start guide for ace-docs
-update:
+ace-docs:
+  frequency: weekly
   last-updated: '2025-10-14'
-  focus:
+  subject:
+    diff:
+      filters:                   # Git diff path filters (what we're analyzing)
+        - "ace-docs/"            # Include entire directory
+        - "CHANGELOG.md"         # Include specific file
+        - "dev-handbook/guides/" # Include another directory
+    files: []                    # Optional: raw files to include (future feature)
+  context:
     keywords:                    # LLM relevance hints (for future use)
       - implementation
       - architecture
-    paths:                       # Git diff path filters (NEW feature)
-      - "ace-docs/"              # Include entire directory
-      - "CHANGELOG.md"           # Include specific file
-      - "dev-handbook/guides/"   # Include another directory
+    preset: "project"            # ace-context preset to use
+  rules:
+    max-lines: 200
+    sections: ["overview", "scope"]
 ---
 ```
 
-**Note:** The `focus.keywords` field documents keywords for future LLM analysis but isn't currently used. Only `focus.paths` is functional.
+### Key Concepts
+
+- **`ace-docs:`** - Namespace for all ace-docs configuration
+- **`subject:`** - What we're analyzing (the diff filters, files)
+- **`context:`** - Information for understanding (keywords, presets)
+- **`rules:`** - Validation rules (max lines, required sections)
+
+This structure aligns with ace-review's subject/context pattern, making the two tools consistent.
+
+## Subject Diff Filtering
+
+### What It Does
+
+When you specify `ace-docs.subject.diff.filters` in a document's frontmatter, `ace-docs diff` will only show git changes in those specific files or directories. This dramatically reduces noise when tracking documentation updates.
 
 ### Usage Scenarios
 
@@ -47,12 +66,16 @@ update:
 ---
 doc-type: reference
 purpose: Overview and quick start guide for ace-docs
-update:
+ace-docs:
   last-updated: '2025-10-14'
-  focus:
-    paths:
-      - "ace-docs/"
-      - "CHANGELOG.md"
+  context:
+    preset: project
+  subject:
+    diff:
+      filters:
+        - "ace-docs/**/*.rb"
+        - "ace-docs/**/*.md"
+        - "CHANGELOG.md"
 ---
 ```
 
@@ -72,13 +95,20 @@ ace-docs diff ace-docs/README.md
 ---
 doc-type: architecture
 purpose: System architecture and design decisions
-update:
-  focus:
-    paths:
-      - "ace-core/"
-      - "ace-docs/"
-      - "ace-taskflow/"
-      - "docs/decisions/"
+ace-docs:
+  frequency: weekly
+  subject:
+    diff:
+      filters:
+        - "ace-core/"
+        - "ace-docs/"
+        - "ace-taskflow/"
+        - "docs/decisions/"
+  context:
+    preset: architecture
+    keywords:
+      - ATOM pattern
+      - mono-repo
 ---
 ```
 
@@ -98,10 +128,11 @@ ace-docs diff docs/architecture.md --since "1 month ago"
 ---
 doc-type: workflow
 purpose: Document update workflow instructions
-update:
-  focus:
-    paths:
-      - "dev-handbook/workflow-instructions/"
+ace-docs:
+  subject:
+    diff:
+      filters:
+        - "dev-handbook/workflow-instructions/"
 ---
 ```
 
@@ -119,31 +150,34 @@ ace-docs diff dev-handbook/workflow-instructions/update-docs.wf.md
 **Setup**:
 ```yaml
 ---
-update:
-  focus:
-    paths:
-      - "*.md"              # All markdown files in root
-      - "docs/**/*.md"      # All markdown files in docs subdirectories
+doc-type: guide
+purpose: Documentation standards guide
+ace-docs:
+  subject:
+    diff:
+      filters:
+        - "*.md"              # All markdown files in root
+        - "docs/**/*.md"      # All markdown files in docs subdirectories
 ---
 ```
 
 **Command**:
 ```bash
-ace-docs diff docs/README.md
+ace-docs diff docs/standards.md
 ```
 
 **Result**: Git's native glob support expands wildcards, showing all matching markdown files.
 
-#### Scenario 5: Backward compatibility (no focus.paths)
+#### Scenario 5: Backward compatibility (no subject.diff.filters)
 
-**Goal**: Document without focus.paths should still work
+**Goal**: Document without subject.diff.filters should still work
 
 **Setup**:
 ```yaml
 ---
 doc-type: guide
 purpose: General development guide
-update:
+ace-docs:
   last-updated: '2025-10-14'
 ---
 ```
@@ -158,7 +192,7 @@ ace-docs diff docs/guide.md
 ### Command Reference
 
 ```bash
-# Basic diff with path filtering
+# Basic diff with subject filtering
 ace-docs diff <document-path>
 
 # Combine with time range
@@ -170,14 +204,14 @@ ace-docs diff <document-path> --exclude-renames
 # Combine with move exclusion
 ace-docs diff <document-path> --exclude-moves
 
-# Analyze all documents (each uses its own focus.paths)
+# Analyze all documents (each uses its own subject.diff.filters)
 ace-docs diff --all
 
-# Analyze documents needing updates (with their focus.paths)
+# Analyze documents needing updates (with their subject.diff.filters)
 ace-docs diff --needs-update
 ```
 
-**Internal Implementation**: The command extracts `focus.paths` from frontmatter and passes them to `git diff <since>..HEAD -- path1 path2 path3`. Git handles all the filtering natively.
+**Internal Implementation**: The command extracts `ace-docs.subject.diff.filters` from frontmatter and passes them to `git diff <since>..HEAD -- path1 path2 path3`. Git handles all the filtering natively.
 
 ### Tips and Best Practices
 
@@ -189,13 +223,13 @@ ace-docs diff --needs-update
 - All paths are relative to git repository root
 - Don't use `./` or `../` prefix
 
-**Empty or Missing focus.paths**:
-- Empty array `paths: []` - treated as missing (full diff)
+**Empty or Missing subject.diff.filters**:
+- Empty array `filters: []` - treated as missing (full diff)
 - Missing field entirely - full diff (backward compatible)
 
 **Combining Multiple Filters**:
-- Frontmatter `focus.paths` + `--exclude-renames` - both apply
-- Frontmatter `focus.paths` + `--since` - both apply
+- Frontmatter `subject.diff.filters` + `--exclude-renames` - both apply
+- Frontmatter `subject.diff.filters` + `--since` - both apply
 - Path filtering is additive (includes all specified paths)
 
 ### Troubleshooting
@@ -216,20 +250,24 @@ git log --since="1 week ago" --oneline -- ace-docs/ CHANGELOG.md
 
 **Solution**: Quote paths in YAML
 ```yaml
-paths:
-  - "path with spaces/"
-  - "file with spaces.md"
+subject:
+  diff:
+    filters:
+      - "path with spaces/"
+      - "file with spaces.md"
 ```
 
 **Problem**: Want to see changes in multiple unrelated paths
 
-**Solution**: That's what focus.paths is for! Just list all paths:
+**Solution**: That's what subject.diff.filters is for! Just list all paths:
 ```yaml
-paths:
-  - "ace-core/"
-  - "ace-docs/"
-  - "docs/"
-  - "CHANGELOG.md"
+subject:
+  diff:
+    filters:
+      - "ace-core/"
+      - "ace-docs/"
+      - "docs/"
+      - "CHANGELOG.md"
 ```
 
 ## Semantic Validation
@@ -276,10 +314,11 @@ Install ace-llm gem to enable semantic validation
 ### How It Works
 
 1. Reads document content, type, and purpose from frontmatter
-2. Calls `ace-llm-query` subprocess with validation prompt
-3. Uses gflash model (fast, cost-effective) at temperature 0.3 (deterministic)
-4. Parses response for VALID/INVALID and issue list
-5. Returns results to user
+2. Uses context.keywords if present to inform LLM analysis
+3. Calls `ace-llm-query` subprocess with validation prompt
+4. Uses gflash model (fast, cost-effective) at temperature 0.3 (deterministic)
+5. Parses response for VALID/INVALID and issue list
+6. Returns results to user
 
 ### Performance Considerations
 
@@ -306,20 +345,8 @@ Install ace-llm gem to enable semantic validation
 
 ### Before (< v0.3.3)
 
+**Old structure (confusing terminology)**:
 ```yaml
-# Old structure (keywords as array directly)
-update:
-  focus:
-    - implementation
-    - architecture
-```
-
-**Problem**: `focus.paths` didn't work (documented but unimplemented)
-
-### After (>= v0.3.3)
-
-```yaml
-# New structure (split into keywords and paths)
 update:
   focus:
     keywords:
@@ -327,36 +354,106 @@ update:
       - architecture
     paths:
       - "ace-docs/"
-      - "CHANGELOG.md"
+```
+
+**Problems**:
+- Generic `update:` key could conflict with other tools
+- Unclear what "focus" means (subject or context?)
+- Not aligned with ace-review's architecture
+
+### After (>= v0.3.3)
+
+**New structure (clear, namespaced)**:
+```yaml
+ace-docs:
+  subject:
+    diff:
+      filters:
+        - "ace-docs/"
+  context:
+    keywords:
+      - implementation
+      - architecture
 ```
 
 **Benefits**:
-- `focus.paths` now functional (filters diffs)
-- `focus.keywords` documented for future use
-- Backward compatible (missing focus.paths = full diff)
+- Namespaced to `ace-docs:` - no conflicts
+- Clear semantics: subject = what we analyze, context = info for understanding
+- Aligned with ace-review's subject/context pattern
+- Backward compatible (old format still works via fallback)
+
+### Automatic Fallback
+
+No migration needed! Old `update.focus.paths` format continues to work:
+
+```yaml
+# Old format (deprecated but supported)
+update:
+  focus:
+    paths:
+      - "ace-docs/"
+```
+
+The Document model checks for the new format first, then falls back to the old format if not found. This ensures existing documents continue to work without changes.
+
+## Alignment with ace-review
+
+Both ace-docs and ace-review now use consistent subject/context terminology:
+
+**ace-review** (code review):
+```yaml
+subject:
+  files: ["lib/**/*.rb"]         # Files to review
+  diffs: ["origin/main...HEAD"]  # Diff ranges to review
+  commands: ["git log -5"]       # Commands to run
+
+context:
+  files: ["README.md"]            # Context files for understanding
+  presets: ["project"]            # Context presets
+```
+
+**ace-docs** (documentation management):
+```yaml
+ace-docs:
+  subject:
+    diff:
+      filters: ["ace-docs/"]     # Paths to filter in diff
+    files: []                    # Raw files (future feature)
+
+  context:
+    keywords: ["architecture"]   # LLM relevance hints
+    preset: "project"            # Context preset
+```
+
+**Common Pattern**:
+- `subject:` = What we're analyzing/reviewing
+- `context:` = Information to understand the subject
+
+This consistency makes it easier to work with both tools and understand their configurations.
 
 ## Command Cheat Sheet
 
 ```bash
-# Focus path filtering
-ace-docs diff <doc> # Uses focus.paths from frontmatter
-ace-docs diff <doc> --since "1 week ago"  # With time range
-ace-docs diff --all  # All docs (each with own paths)
+# Subject diff filtering
+ace-docs diff <doc>                          # Uses subject.diff.filters from frontmatter
+ace-docs diff <doc> --since "1 week ago"     # With time range
+ace-docs diff --all                          # All docs (each with own filters)
 
 # Semantic validation
-ace-docs validate <doc> --semantic  # LLM validation only
-ace-docs validate <doc> --all       # Syntax + semantic
-ace-docs validate --syntax          # Syntax only (fast)
+ace-docs validate <doc> --semantic           # LLM validation only
+ace-docs validate <doc> --all                # Syntax + semantic
+ace-docs validate --syntax                   # Syntax only (fast)
 
-# Update frontmatter with focus paths
-ace-docs update <doc> --set "focus.paths:['gem/', 'CHANGELOG.md']"
+# Update frontmatter with ace-docs namespace
+ace-docs update <doc> --set "ace-docs.subject.diff.filters:['gem/', 'CHANGELOG.md']"
+ace-docs update <doc> --set "ace-docs.context.preset:project"
 ```
 
 ## Troubleshooting
 
 ### General Issues
 
-**Q: How do I know if focus.paths is working?**
+**Q: How do I know if subject.diff.filters is working?**
 
 A: Check the session metadata:
 ```bash
@@ -366,9 +463,9 @@ cat .cache/ace-docs/diff-*/metadata.yml
 #   :paths: ["ace-docs/", "CHANGELOG.md"]
 ```
 
-**Q: Can I use focus.paths with ace-docs analyze?**
+**Q: Can I use subject.diff.filters with ace-docs analyze?**
 
-A: Not yet. The analyze command generates full repository diffs for LLM analysis. Focus paths work with the `diff` command only.
+A: Not yet. The analyze command generates full repository diffs for LLM analysis. Subject filters work with the `diff` command only.
 
 **Q: What if git diff returns no changes for my paths?**
 
@@ -376,6 +473,10 @@ A: This is normal if there are truly no changes in those paths. Verify:
 ```bash
 git log --since="1 week ago" --oneline -- your/path/here
 ```
+
+**Q: Does the old update.focus.paths format still work?**
+
+A: Yes! The Document model provides backward compatibility. However, we recommend migrating to the new `ace-docs.subject.diff.filters` structure for clarity and consistency.
 
 ### Semantic Validation Issues
 
@@ -395,3 +496,97 @@ bundle install
 **Q: LLM validation returned unexpected results**
 
 A: Semantic validation uses AI, so results may vary. Review the issues it identifies - they often highlight real problems. If consistently wrong, report the issue.
+
+## Examples
+
+### Example 1: README with Subject Filters
+
+File: `ace-docs/README.md`
+
+```yaml
+---
+doc-type: reference
+purpose: Overview and quick start guide for ace-docs
+ace-docs:
+  last-updated: '2025-10-14'
+  context:
+    preset: project
+  subject:
+    diff:
+      filters:
+        - "CHANGELOG.md"
+        - "ace-docs/**/*.rb"
+        - "ace-docs/**/*.md"
+---
+```
+
+**Usage**:
+```bash
+ace-docs diff ace-docs/README.md
+# Shows only changes in CHANGELOG.md and ace-docs/ directory
+```
+
+### Example 2: Architecture Doc with Keywords
+
+File: `docs/architecture.md`
+
+```yaml
+---
+doc-type: architecture
+purpose: System architecture and ATOM pattern
+ace-docs:
+  frequency: weekly
+  subject:
+    diff:
+      filters:
+        - "ace-*/lib/**/*.rb"
+        - "docs/decisions/"
+  context:
+    preset: architecture
+    keywords:
+      - ATOM pattern
+      - mono-repo structure
+      - configuration cascade
+---
+```
+
+**Usage**:
+```bash
+# Diff with subject filtering
+ace-docs diff docs/architecture.md
+
+# Semantic validation using context keywords
+ace-docs validate docs/architecture.md --semantic
+```
+
+### Example 3: Legacy Format (Backward Compatible)
+
+File: `docs/legacy-doc.md`
+
+```yaml
+---
+doc-type: guide
+purpose: Development guide
+update:
+  frequency: monthly
+  focus:
+    paths:
+      - "dev-handbook/"
+---
+```
+
+**Usage**:
+```bash
+ace-docs diff docs/legacy-doc.md
+# Still works! Falls back to update.focus.paths
+```
+
+## Summary
+
+**Key Takeaways**:
+1. All ace-docs config now under `ace-docs:` namespace
+2. Use `subject.diff.filters` to filter diffs to relevant paths
+3. Use `context.keywords` and `context.preset` for LLM context
+4. Aligned with ace-review's subject/context pattern
+5. Backward compatible with old `update.focus.paths` format
+6. Semantic validation optional via `--semantic` flag
