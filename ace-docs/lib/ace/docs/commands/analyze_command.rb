@@ -87,9 +87,15 @@ module Ace
             return 3
           end
 
+          # Create session directory for analysis
+          cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
+          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+          session_dir = File.join(cache_dir, "analyze-#{timestamp}")
+          FileUtils.mkdir_p(session_dir)
+
           # Analyze with LLM
           puts "\nAnalyzing changes with LLM...".cyan
-          analysis = analyze_with_llm(document, diff, since)
+          analysis = analyze_with_llm(document, diff, since, session_dir: session_dir)
 
           unless analysis[:success]
             puts "Error: #{analysis[:error]}".red
@@ -98,7 +104,7 @@ module Ace
 
           # Save results to cache
           puts "\nSaving analysis results...".cyan
-          cache_path = save_to_cache(document, diff_result, analysis, since)
+          cache_path = save_to_cache(document, diff_result, analysis, since, session_dir: session_dir)
           puts "Analysis saved to: #{cache_path}".green
 
           # Display summary
@@ -137,9 +143,15 @@ module Ace
           diff.lines.count
         end
 
-        def analyze_with_llm(document, diff, since)
-          # Build prompts (returns hash with :system and :user)
-          prompts = Prompts::DocumentAnalysisPrompt.build(document, diff, since: since)
+        def analyze_with_llm(document, diff, since, session_dir: nil)
+          # Build prompts (returns hash with :system, :user, and :context_config)
+          # Pass session_dir so context.yml can be saved
+          prompts = Prompts::DocumentAnalysisPrompt.build(
+            document,
+            diff,
+            since: since,
+            cache_dir: session_dir
+          )
 
           # Determine model (use config or default to gflash)
           model = Ace::Docs.config["llm_model"] || "gflash"
@@ -160,6 +172,7 @@ module Ace
             provider: result[:provider],
             system_prompt: prompts[:system],
             user_prompt: prompts[:user],
+            context_config: prompts[:context_config],
             timestamp: Time.now.utc.iso8601
           }
         rescue StandardError => e
@@ -170,12 +183,8 @@ module Ace
           }
         end
 
-        def save_to_cache(document, diff_result, analysis, since)
-          cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
-          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-          session_dir = File.join(cache_dir, "analyze-#{timestamp}")
-
-          FileUtils.mkdir_p(session_dir)
+        def save_to_cache(document, diff_result, analysis, since, session_dir:)
+          # session_dir is already created in execute method
 
           # Save raw diff with .diff extension
           diff_path = File.join(session_dir, "repo-diff.diff")
@@ -197,7 +206,7 @@ module Ace
           analysis_path = File.join(session_dir, "analysis.md")
           File.write(analysis_path, format_analysis(document, analysis, since))
 
-          # Save metadata
+          # Save metadata (including context_config if present)
           metadata_path = File.join(session_dir, "metadata.yml")
           metadata = {
             "document_path" => document.path,
@@ -211,7 +220,8 @@ module Ace
             "prompts_saved" => {
               "system" => analysis[:system_prompt] ? "prompt-system.md" : nil,
               "user" => analysis[:user_prompt] ? "prompt-user.md" : nil
-            }.compact
+            }.compact,
+            "context_config_saved" => analysis[:context_config] ? "context.yml" : nil
           }
           File.write(metadata_path, metadata.to_yaml)
 
