@@ -30,6 +30,15 @@ module Ace
         loader.load_multiple_presets(preset_names)
       end
 
+      # Inspect configuration of presets without loading files or executing commands
+      # @param preset_names [Array<String>] Names of presets to inspect
+      # @param options [Hash] Additional options
+      # @return [Models::ContextData] Configuration as YAML
+      def inspect_config(preset_names, options = {})
+        loader = Organisms::ContextLoader.new(options)
+        loader.inspect_config(preset_names)
+      end
+
       # List available presets
       # @return [Array<Hash>] List of available presets
       def list_presets

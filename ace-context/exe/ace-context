@@ -9,14 +9,24 @@ options = {
   max_size: 1_048_576,
   timeout: 30,
   debug: false,
-  output: nil  # Will be determined from preset or CLI
+  output: nil,  # Will be determined from preset or CLI
+  presets: [],  # Array to collect multiple presets
+  inspect_config: false  # Configuration inspection mode
 }
 
 parser = OptionParser.new do |opts|
   opts.banner = "Usage: ace-context [PRESET] [options]"
 
-  opts.on("-p", "--preset NAME", "Load context from preset") do |p|
-    options[:preset] = p
+  opts.on("-p", "--preset NAME", "Load context from preset (can be used multiple times)") do |p|
+    options[:presets] << p
+  end
+
+  opts.on("--presets NAMES", "Load multiple presets (comma-separated list)") do |presets|
+    options[:presets].concat(presets.split(',').map(&:strip))
+  end
+
+  opts.on("--inspect-config", "Show merged configuration without loading files or executing commands") do
+    options[:inspect_config] = true
   end
 
   opts.on("-l", "--list", "--list-presets", "List available presets") do
@@ -50,6 +60,9 @@ parser = OptionParser.new do |opts|
     puts "Examples:"
     puts "  ace-context                          # Load default preset"
     puts "  ace-context project                  # Load project preset"
+    puts "  ace-context -p base -p custom        # Load and merge multiple presets"
+    puts "  ace-context --presets base,team      # Load multiple presets (comma-separated)"
+    puts "  ace-context -p base --inspect-config # Show merged config without execution"
     puts "  ace-context project --output stdio   # Output to stdout"
     puts "  ace-context project --output cache   # Save to cache"
     puts "  ace-context project --output ./custom.md  # Save to file"
@@ -86,10 +99,30 @@ if options[:list]
 end
 
 # Determine input (preset name, file path, or protocol)
-input = options[:preset] || ARGV[0] || 'default'
+# Handle configuration inspection mode
+if options[:inspect_config]
+  # Inspect configuration mode
+  preset_names = if options[:presets].any?
+                   options[:presets]
+                 elsif ARGV[0]
+                   [ARGV[0]]
+                 else
+                   ['default']
+                 end
 
-# Load the context (auto-detect: preset, file, protocol, or inline YAML)
-context = Ace::Context.load_auto(input, options)
+  context = Ace::Context.inspect_config(preset_names, options)
+elsif options[:presets].any?
+  # Multi-preset mode
+  context = Ace::Context.load_multiple_presets(options[:presets], options)
+elsif ARGV[0]
+  # Single input from argument
+  input = ARGV[0]
+  context = Ace::Context.load_auto(input, options)
+else
+  # Default preset
+  input = 'default'
+  context = Ace::Context.load_auto(input, options)
+end
 
 # Handle errors
 if context.metadata[:error]

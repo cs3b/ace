@@ -2,6 +2,8 @@
 
 require 'ace/core'
 require 'yaml'
+require 'set'
+require_relative '../atoms/preset_validator'
 
 module Ace
   module Context
@@ -12,6 +14,7 @@ module Ace
 
         def initialize
           @presets = load_presets
+          @preset_cache = {}  # Cache for composed presets during single execution
         end
 
         def list_presets
@@ -27,7 +30,176 @@ module Ace
           @presets.key?(name.to_s)
         end
 
+        # Load a preset with composition support
+        # Returns fully composed preset data with all dependent presets merged
+        def load_preset_with_composition(name, visited = Set.new)
+          # Check circular dependency
+          validation = Atoms::PresetValidator.check_circular_dependency(name, visited.to_a)
+          unless validation[:success]
+            return {
+              error: validation[:error],
+              success: false
+            }
+          end
+
+          # Check if preset exists
+          preset = get_preset(name)
+          unless preset
+            return {
+              error: "Preset '#{name}' not found",
+              success: false
+            }
+          end
+
+          # Mark this preset as visited
+          new_visited = visited.dup.add(name)
+
+          # Extract preset references
+          preset_refs = Atoms::PresetValidator.extract_preset_references(preset)
+
+          # If no references, return preset as-is
+          if preset_refs.empty?
+            preset[:success] = true
+            return preset
+          end
+
+          # Load all referenced presets recursively
+          composed_presets = []
+          errors = []
+
+          preset_refs.each do |ref_name|
+            composed = load_preset_with_composition(ref_name, new_visited)
+            if composed[:success]
+              composed_presets << composed
+            else
+              errors << composed[:error]
+            end
+          end
+
+          # If there were errors loading dependencies, return error
+          if errors.any?
+            return {
+              error: "Failed to load preset dependencies: #{errors.join(', ')}",
+              success: false,
+              partial_presets: composed_presets
+            }
+          end
+
+          # Merge all composed presets with current preset
+          # Order: dependencies first, then current preset
+          merged = merge_preset_data(composed_presets + [preset])
+          merged[:success] = true
+          merged[:composed] = true
+          merged[:composed_from] = preset_refs + [name]
+
+          merged
+        end
+
         private
+
+        # Merge multiple preset data structures
+        # Arrays are concatenated and deduplicated (first occurrence wins)
+        # Scalars follow "last wins" strategy
+        def merge_preset_data(presets)
+          return presets.first if presets.size == 1
+
+          merged = {
+            description: nil,
+            params: {},
+            context: {},
+            body: '',
+            format: nil,
+            output: nil,
+            cache: false,
+            metadata: {}
+          }
+
+          presets.each do |preset|
+            # Merge context configuration
+            if preset[:context]
+              context = preset[:context]
+
+              # Merge params (scalar override)
+              if context['params']
+                merged[:context]['params'] ||= {}
+                merged[:context]['params'].merge!(context['params'])
+              end
+
+              # Merge files array (deduplicate)
+              if context['files']
+                merged[:context]['files'] ||= []
+                merged[:context]['files'].concat(context['files'])
+              end
+
+              # Merge commands array (deduplicate)
+              if context['commands']
+                merged[:context]['commands'] ||= []
+                merged[:context]['commands'].concat(context['commands'])
+              end
+
+              # Copy other context keys
+              context.each do |key, value|
+                next if %w[params files commands].include?(key)
+                merged[:context][key] = value
+              end
+            end
+
+            # Scalar overrides (last wins)
+            merged[:description] = preset[:description] if preset[:description]
+            merged[:format] = preset[:format] if preset[:format]
+            merged[:output] = preset[:output] if preset[:output]
+            merged[:cache] = preset[:cache] if preset[:cache]
+
+            # Merge params at root level (for backward compatibility)
+            if preset[:params]
+              merged[:params].merge!(preset[:params])
+            end
+
+            # Concatenate body content
+            if preset[:body] && !preset[:body].empty?
+              merged[:body] += "\n\n" unless merged[:body].empty?
+              merged[:body] += preset[:body]
+            end
+
+            # Deep merge metadata
+            if preset[:metadata]
+              merged[:metadata] = deep_merge_hash(merged[:metadata], preset[:metadata])
+            end
+          end
+
+          # Deduplicate arrays
+          if merged[:context]['files']
+            merged[:context]['files'].uniq!
+          end
+
+          if merged[:context]['commands']
+            merged[:context]['commands'].uniq!
+          end
+
+          merged
+        end
+
+        # Deep merge two hashes (similar to ContextMerger but simpler)
+        def deep_merge_hash(hash1, hash2)
+          merged = hash1.dup
+
+          hash2.each do |key, value2|
+            if merged.key?(key)
+              value1 = merged[key]
+              merged[key] = if value1.is_a?(Hash) && value2.is_a?(Hash)
+                              deep_merge_hash(value1, value2)
+                            elsif value1.is_a?(Array) && value2.is_a?(Array)
+                              (value1 + value2).uniq
+                            else
+                              value2  # Last wins
+                            end
+            else
+              merged[key] = value2
+            end
+          end
+
+          merged
+        end
 
         def load_presets
           presets = {}
