@@ -33,11 +33,14 @@ module Ace
         end
 
         def load_preset(preset_name)
-          preset = @preset_manager.get_preset(preset_name)
-          unless preset
+          # Use composition-aware loading
+          preset = @preset_manager.load_preset_with_composition(preset_name)
+
+          # Handle errors from composition loading
+          unless preset[:success]
             return Models::ContextData.new(
               preset_name: preset_name,
-              metadata: { error: "Preset '#{preset_name}' not found" }
+              metadata: { error: preset[:error] }
             )
           end
 
@@ -49,6 +52,12 @@ module Ace
           context = load_from_preset_config(preset, merged_options)
           context.metadata[:preset_name] = preset_name
           context.metadata[:output] = preset[:output]  # Store default output mode
+
+          # Add composition metadata if preset was composed
+          if preset[:composed]
+            context.metadata[:composed] = true
+            context.metadata[:composed_from] = preset[:composed_from]
+          end
 
           # Determine format - use markdown-xml for embedded sources, markdown otherwise
           context_config = preset[:context] || {}
@@ -92,26 +101,92 @@ module Ace
 
         def load_multiple_presets(preset_names)
           contexts = []
+          warnings = []
 
           preset_names.each do |preset_name|
-            preset = @preset_manager.get_preset(preset_name)
-            if preset
-              merged_options = @options.merge(preset[:params] || {})
+            # Use composition-aware loading for each preset
+            preset = @preset_manager.load_preset_with_composition(preset_name)
+
+            if preset[:success]
+              params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
+              merged_options = @options.merge(params)
               context = load_from_preset_config(preset, merged_options)
               context.metadata[:preset_name] = preset_name
+
+              # Add composition metadata if preset was composed
+              if preset[:composed]
+                context.metadata[:composed] = true
+                context.metadata[:composed_from] = preset[:composed_from]
+              end
+
               contexts << context
             else
-              # Add error but continue
-              error_context = Models::ContextData.new(
-                preset_name: preset_name,
-                metadata: { error: "Preset '#{preset_name}' not found" }
-              )
-              contexts << error_context
+              # Log warning but continue with other presets
+              warnings << "Warning: #{preset[:error]}"
+              warn "Warning: #{preset[:error]}" if @options[:debug]
             end
           end
 
+          # If no successful presets loaded, return error
+          if contexts.empty?
+            error_context = Models::ContextData.new(
+              metadata: {
+                error: "No valid presets loaded",
+                warnings: warnings
+              }
+            )
+            return error_context
+          end
+
           # Merge all contexts
-          merge_contexts(contexts)
+          merged = merge_contexts(contexts)
+          merged.metadata[:warnings] = warnings if warnings.any?
+
+          merged
+        end
+
+        # Inspect configuration without loading files or executing commands
+        # Returns a ContextData with just the merged configuration as YAML
+        def inspect_config(preset_names)
+          require 'yaml'
+
+          # Load all presets with composition
+          presets = []
+          warnings = []
+
+          preset_names.each do |preset_name|
+            preset = @preset_manager.load_preset_with_composition(preset_name)
+            if preset[:success]
+              presets << preset
+            else
+              warnings << preset[:error]
+            end
+          end
+
+          # If no successful presets, return error
+          if presets.empty?
+            context = Models::ContextData.new
+            context.metadata[:error] = "No valid presets loaded"
+            context.metadata[:warnings] = warnings
+            return context
+          end
+
+          # Merge configurations (just the config, not content)
+          merged_config = merge_preset_configurations(presets)
+
+          # Add warnings if any
+          merged_config[:warnings] = warnings if warnings.any?
+
+          # Format as YAML
+          yaml_output = YAML.dump(merged_config)
+
+          # Create context with YAML content
+          context = Models::ContextData.new
+          context.content = yaml_output
+          context.metadata[:inspect_mode] = true
+          context.metadata[:preset_names] = preset_names
+
+          context
         end
 
         def load_multiple(inputs)
@@ -358,6 +433,55 @@ module Ace
         end
 
         private
+
+        # Merge preset configurations (just config data, not content)
+        def merge_preset_configurations(presets)
+          merged = {
+            'description' => nil,
+            'context' => {
+              'params' => {},
+              'files' => [],
+              'commands' => []
+            }
+          }
+
+          presets.each do |preset|
+            # Merge description (last wins)
+            merged['description'] = preset[:description] if preset[:description]
+
+            # Merge context configuration
+            if preset[:context]
+              context = preset[:context]
+
+              # Merge params
+              if context['params']
+                merged['context']['params'].merge!(context['params'])
+              end
+
+              # Merge files
+              if context['files']
+                merged['context']['files'].concat(context['files'])
+              end
+
+              # Merge commands
+              if context['commands']
+                merged['context']['commands'].concat(context['commands'])
+              end
+
+              # Copy other context keys (embed_document_source, etc.)
+              context.each do |key, value|
+                next if %w[params files commands presets].include?(key)
+                merged['context'][key] = value
+              end
+            end
+          end
+
+          # Deduplicate arrays
+          merged['context']['files'].uniq!
+          merged['context']['commands'].uniq!
+
+          merged
+        end
 
         def merge_contexts(contexts)
           # Convert ContextData objects to hashes for merging
