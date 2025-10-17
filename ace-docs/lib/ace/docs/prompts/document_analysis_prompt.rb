@@ -12,23 +12,39 @@ module Ace
         # @param document [Document] The document to analyze changes for
         # @param diff [String] The filtered git diff (already filtered by subject.diff.filters)
         # @param since [String] Time period for the diff
-        # @param cache_dir [String, nil] Optional cache directory (unused but kept for compatibility)
-        # @return [Hash] Hash with :system, :user prompts, :diff_stats
+        # @param cache_dir [String, nil] Optional cache directory for context.md
+        # @return [Hash] Hash with :system, :user prompts, :context_md, :diff_stats
         def self.build(document, diff, since: nil, cache_dir: nil)
           # Load base instructions
           base_instructions = load_user_prompt_template
 
-          # Build document-specific sections to append
-          diff_stats = calculate_diff_stats(diff)
-          doc_section = build_document_section(document, since, diff_stats)
-          diff_section = build_diff_section(diff, document)
+          # Save diff to file FIRST (so context.md can reference it)
+          diff_file_path = nil
+          if cache_dir && Dir.exist?(cache_dir)
+            diff_file_path = File.join(cache_dir, "repo-diff.diff")
+            File.write(diff_file_path, diff)
+          end
 
-          # Final prompt = base instructions + document metadata + diff
-          final_user_prompt = [base_instructions, doc_section, diff_section].join("\n\n")
+          # Create context.md = frontmatter + instructions + scope section
+          # diff_file_path is absolute path for ace-context
+          context_md = create_context_markdown(base_instructions, document, since,
+                                                diff_file: diff_file_path)
+
+          # Save context.md to cache
+          if cache_dir && Dir.exist?(cache_dir)
+            File.write(File.join(cache_dir, "context.md"), context_md)
+          end
+
+          # Load via ace-context (returns instructions + embedded context + diff)
+          embedded_content = load_context_md(context_md, document: document, cache_dir: cache_dir) || base_instructions
+
+          # Calculate diff stats for metadata
+          diff_stats = calculate_diff_stats(diff)
 
           {
             system: load_system_prompt,
-            user: final_user_prompt,
+            user: embedded_content,
+            context_md: context_md,
             diff_stats: diff_stats
           }
         end
@@ -167,58 +183,121 @@ module Ace
 
 
 
-        # Build document-specific section to append
-        # @param document [Document] The document configuration (defines filters)
+        # Create context.md with frontmatter, instructions, and scope section
+        # @param base_instructions [String] The base prompt instructions
+        # @param document [Document] The document configuration
         # @param since [String] Time period for analysis
-        # @param diff_stats [Hash] Diff statistics
-        # @return [String] Document section content
-        def self.build_document_section(document, since, diff_stats)
+        # @param diff_file [String, nil] Relative path to diff file (e.g., "repo-diff.diff")
+        # @return [String] Complete context.md content
+        def self.create_context_markdown(base_instructions, document, since, diff_file: nil)
+          # Build frontmatter for ace-context
+          # Note: preset will be loaded separately and merged, not included here
+          context_config = {
+            "params" => { "format" => "markdown-xml" },
+            "embed_document_source" => true
+          }
+
+          # Add diff file to files array if provided
+          if diff_file
+            context_config["files"] = [diff_file]
+          end
+
+          frontmatter = { "context" => context_config }
+
+          # Build analysis scope section
+          scope_section = build_analysis_scope_section(document, since)
+
+          # context.md = frontmatter + base instructions + scope section
+          # YAML.dump adds opening --- but not closing, we add closing ---
+          "#{YAML.dump(frontmatter).strip}\n---\n\n#{base_instructions}\n\n#{scope_section}"
+        end
+
+        # Build analysis scope section explaining context vs subject
+        # @param document [Document] The document configuration
+        # @param since [String] Time period for analysis
+        # @return [String] Analysis scope section
+        def self.build_analysis_scope_section(document, since)
+          preset = document.context_preset
+          keywords = document.context_keywords
           filters = document.subject_diff_filters || []
-          filters_list = filters.empty? ? "No filters (all changes)" : filters.map { |f| "- `#{f}`" }.join("\n")
+
+          context_desc = if preset && !preset.empty?
+                          "- Loaded from preset: `#{preset}`"
+                        elsif keywords && !keywords.empty?
+                          "- Keywords: #{keywords.map { |k| "`#{k}`" }.join(", ")}"
+                        else
+                          "- No context files specified"
+                        end
+
+          filters_desc = if filters.empty?
+                          "- All repository changes (no filters)"
+                        else
+                          filters.map { |f| "- `#{f}`" }.join("\n")
+                        end
 
           <<~SECTION
-            ## Analysis Context
+            ## Analysis Scope
 
-            **Analyzing changes**: since #{since || 'recent'}
-            **Filters applied**:
-            #{filters_list}
+            **Context files** (for understanding the codebase):
+            #{context_desc}
 
-            ## Diff Statistics
+            **Subject of analysis** (git diff filtered to):
+            #{filters_desc}
 
-            - Total hunks: #{diff_stats[:hunks_total]}
-            - Files changed: #{diff_stats[:files_changed]}
-            - Insertions: +#{diff_stats[:insertions]}
-            - Deletions: -#{diff_stats[:deletions]}
+            **Time range**: Changes since #{since || 'recent'}
           SECTION
         end
 
-        # Build diff section to append
-        # @param diff [String] The git diff content
-        # @param document [Document] The document being analyzed
-        # @return [String] Diff section content
-        def self.build_diff_section(diff, document)
-          filters = document.subject_diff_filters
-          filters_note = if filters && !filters.empty?
-                           "\n**Filtered to show only:**\n" + filters.map { |f| "- `#{f}`" }.join("\n") + "\n"
-                         else
-                           ""
-                         end
+        # Load context.md via ace-context (embeds files as XML)
+        # Loads preset separately if specified, then merges with diff content
+        # @param context_md [String] The context.md content
+        # @param document [Document] The document configuration (for preset info)
+        # @param cache_dir [String, nil] Directory containing context.md and referenced files
+        # @return [String, nil] Final prompt with embedded files or nil if unavailable
+        def self.load_context_md(context_md, document:, cache_dir: nil)
+          begin
+            require "ace/context"
 
-          <<~SECTION
-            ## Git Diff to Analyze
-            #{filters_note}
-            ```diff
-            #{diff}
-            ```
-          SECTION
+            # Load preset context if specified
+            preset_content = nil
+            preset = document.context_preset
+            if preset && !preset.empty?
+              preset_result = Ace::Context.load_preset(preset)
+              preset_content = preset_result.content if preset_result
+            end
+
+            # Load diff context from context.md
+            diff_content = if cache_dir
+                            context_file = File.join(cache_dir, "context.md")
+                            result = Ace::Context.load_file(context_file)
+                            result.content
+                          else
+                            result = Ace::Context.load_auto(context_md)
+                            result.content
+                          end
+
+            # Merge preset and diff content
+            if preset_content && !preset_content.empty?
+              "#{preset_content}\n\n#{diff_content}"
+            else
+              diff_content
+            end
+          rescue LoadError
+            warn "ace-context not available - context embedding disabled" if Ace::Docs.debug?
+            nil
+          rescue StandardError => e
+            warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
+            nil
+          end
         end
 
         # Make helper methods accessible
         private_class_method :load_user_prompt_template
         private_class_method :fallback_user_template
         private_class_method :calculate_diff_stats
-        private_class_method :build_document_section
-        private_class_method :build_diff_section
+        private_class_method :create_context_markdown
+        private_class_method :build_analysis_scope_section
+        private_class_method :load_context_md
       end
     end
   end

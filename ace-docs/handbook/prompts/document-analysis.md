@@ -4,9 +4,19 @@ You are analyzing git changes to produce a comprehensive change summary.
 
 ## Your Task
 
-Review the git diff provided below and identify all significant changes. Categorize them by priority and provide clear, actionable analysis.
+You will receive:
+1. **Context files** (embedded as XML tags) - for understanding the codebase
+2. **Git diff** (in diff format) - the subject of your analysis
+
+Review the diff and identify all significant changes. Use the context files to understand the broader codebase structure and conventions.
 
 ## Analysis Requirements
+
+**Using Context Files:**
+- Context files provide background information about the codebase
+- They are embedded as XML tags (e.g., `<file path="...">...</file>`)
+- Use them to understand conventions, architecture, and related code
+- They are NOT the subject of analysis - focus your analysis on the diff
 
 **Coverage Tracking:**
 - Count total diff hunks in the provided diff

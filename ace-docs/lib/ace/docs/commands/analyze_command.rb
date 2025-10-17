@@ -144,7 +144,7 @@ module Ace
         end
 
         def analyze_with_llm(document, diff, since, session_dir: nil)
-          # Build prompts (returns hash with :system, :user, :diff_stats)
+          # Build prompts (returns hash with :system, :user, :context_md, :diff_stats)
           prompts = Prompts::DocumentAnalysisPrompt.build(
             document,
             diff,
@@ -171,6 +171,7 @@ module Ace
             provider: result[:provider],
             system_prompt: prompts[:system],
             user_prompt: prompts[:user],
+            context_md: prompts[:context_md],
             diff_stats: prompts[:diff_stats],
             timestamp: Time.now.utc.iso8601
           }
@@ -184,10 +185,7 @@ module Ace
 
         def save_to_cache(document, diff_result, analysis, since, session_dir:)
           # session_dir is already created in execute method
-
-          # Save raw diff with .diff extension
-          diff_path = File.join(session_dir, "repo-diff.diff")
-          File.write(diff_path, diff_result[:diff])
+          # Note: repo-diff.diff is already saved by DocumentAnalysisPrompt.build
 
           # Save system prompt
           if analysis[:system_prompt]
@@ -226,6 +224,7 @@ module Ace
               "system" => analysis[:system_prompt] ? "prompt-system.md" : nil,
               "user" => analysis[:user_prompt] ? "prompt-user.md" : nil
             }.compact,
+            "context_saved" => analysis[:context_md] ? "context.md" : nil,
             "diff_stats_saved" => analysis[:diff_stats] ? "diff-stats.yml" : nil
           }
           File.write(metadata_path, metadata.to_yaml)
