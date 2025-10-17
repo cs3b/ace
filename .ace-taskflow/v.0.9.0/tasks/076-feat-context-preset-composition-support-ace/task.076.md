@@ -11,9 +11,9 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Users provide preset composition via YAML configuration `presets:` array or CLI flags `-p`/`--presets`
+- **Input**: Users provide preset composition via YAML configuration `presets:` array or CLI flags `-p`/`--presets`, with optional `--inspect-config` for configuration inspection
 - **Process**: System loads and merges presets in order, deduplicating arrays and overriding scalars
-- **Output**: Unified context with all preset configurations merged intelligently
+- **Output**: Unified context with all preset configurations merged intelligently, or just the merged configuration when inspecting
 
 ### Expected Behavior
 
@@ -33,11 +33,23 @@ ace-context --preset base --preset specialized
 # CLI Interface - Comma-separated list
 ace-context --presets base,project-specific,team-config
 
+# CLI Interface - Configuration inspection
+ace-context -p base --inspect-config           # Shows base preset config
+ace-context -p base -p team --inspect-config   # Shows merged config
+ace-context --presets base,team --inspect-config # Alternative syntax
+
 # Expected outputs
+# Normal mode:
 # - Loads base preset first
 # - Merges project-specific on top
 # - Deduplicates any repeated files/commands
-# - Returns unified context
+# - Returns unified context with embedded files and command results
+
+# Inspect mode (--inspect-config):
+# - Shows merged configuration only in YAML format
+# - No file loading or command execution
+# - Single preset: shows its configuration directly
+# - Multiple presets: shows merged configuration
 
 # Error conditions
 ace-context -p nonexistent
@@ -68,6 +80,7 @@ context:
 
 - [ ] **Preset Composition in Config**: Users can define `presets:` array in YAML that loads and merges multiple presets
 - [ ] **CLI Multi-Preset Support**: Users can pass multiple presets via `-p` flags or `--presets` comma-separated list
+- [ ] **Configuration Inspection**: `--inspect-config` flag shows merged configuration without loading files or executing commands
 - [ ] **Intelligent Merging**: Arrays are concatenated and deduplicated, scalars follow "last wins" strategy
 - [ ] **Order Preservation**: Presets are loaded and merged in the order specified
 - [ ] **Error Resilience**: System continues processing valid presets even if one fails to load
@@ -146,7 +159,9 @@ The implementation follows the existing ATOM architecture pattern in ace-context
 - `ace-context/exe/ace-context`
   - Modify OptionParser to accept multiple `-p` flags
   - Add support for comma-separated `--presets` option
+  - Add `--inspect-config` flag for configuration-only output
   - Collect all preset arguments before loading
+  - Implement config inspection mode that skips file/command processing
 
 - `ace-core/lib/ace/core/molecules/context_merger.rb`
   - Enhance array deduplication to preserve order
@@ -185,14 +200,15 @@ The implementation follows the existing ATOM architecture pattern in ace-context
 
 ### Execution Steps
 
-- [ ] Step 1: Extend CLI to accept multiple preset arguments
+- [ ] Step 1: Extend CLI to accept multiple preset arguments and inspection mode
   - Modify OptionParser to collect multiple `-p` values into array
   - Add comma-split support for `--presets` option
-  - Pass preset array to Context.load_auto
+  - Add `--inspect-config` boolean flag
+  - Pass preset array and inspect flag to Context.load_auto
   > TEST: CLI Argument Collection
   > Type: Unit Test
-  > Assert: Multiple -p flags collected into array
-  > Command: ruby -e "require './ace-context/exe/ace-context'; puts ARGV" -- -p base -p custom
+  > Assert: Multiple -p flags and --inspect-config collected correctly
+  > Command: ruby -e "require './ace-context/exe/ace-context'; puts ARGV" -- -p base -p custom --inspect-config
 
 - [ ] Step 2: Create preset validator atom
   - Implement preset existence checking
@@ -230,7 +246,17 @@ The implementation follows the existing ATOM architecture pattern in ace-context
   > Assert: Arrays deduplicated, scalars overridden correctly
   > Command: ruby test/molecules/context_merger_test.rb
 
-- [ ] Step 6: Create example composed presets
+- [ ] Step 6: Implement configuration inspection mode
+  - Add config-only output path in ContextLoader
+  - Skip file loading when inspect flag is set
+  - Skip command execution when inspect flag is set
+  - Format merged config as YAML for output
+  > TEST: Config Inspection Output
+  > Type: Integration Test
+  > Assert: --inspect-config returns only YAML config, no file content
+  > Command: ace-context -p base -p team --inspect-config | head -20
+
+- [ ] Step 7: Create example composed presets
   - Create base preset with minimal configuration
   - Create extending presets that compose base
   - Document composition patterns in examples
@@ -239,7 +265,7 @@ The implementation follows the existing ATOM architecture pattern in ace-context
   > Assert: Example presets load and compose correctly
   > Command: ace-context -p base -p extended --debug
 
-- [ ] Step 7: Add comprehensive test coverage
+- [ ] Step 8: Add comprehensive test coverage
   - Unit tests for validator, merger enhancements
   - Integration tests for full composition flow
   - Edge case tests (missing presets, circular deps)
@@ -295,8 +321,10 @@ The implementation follows the existing ATOM architecture pattern in ace-context
 - [ ] Users can define `presets:` array in preset YAML configuration
 - [ ] CLI accepts multiple presets via `-p` flags
 - [ ] CLI accepts comma-separated preset list via `--presets`
+- [ ] CLI provides `--inspect-config` flag for viewing merged configuration only
 - [ ] Arrays are merged with deduplication (first occurrence kept)
 - [ ] Scalars follow "last wins" override pattern
+- [ ] Configuration inspection shows merged YAML without loading files or running commands
 - [ ] Circular dependencies are detected and reported
 - [ ] Missing presets generate warnings but don't stop processing
 - [ ] All existing single-preset workflows continue to work
