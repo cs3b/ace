@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.076
-status: draft
+status: pending
 priority: medium
 estimate: 6-8h
 dependencies: []
@@ -108,8 +108,203 @@ Enable modular and composable context configurations by allowing presets to buil
 - ❌ **Performance Optimization**: Caching strategies for loaded presets
 - ❌ **Future Enhancements**: Preset inheritance, conditional includes, or template variables
 
+## Technical Approach
+
+### Architecture Pattern
+The implementation follows the existing ATOM architecture pattern in ace-context:
+- **Atoms**: Array deduplication, preset validation
+- **Molecules**: PresetManager enhancements for loading and merging
+- **Organisms**: ContextLoader orchestration of multi-preset loading
+- **Models**: ContextData unchanged, represents merged output
+
+### Technology Stack
+- Ruby standard library only (following ace-core principles)
+- Existing ace-core merger utilities for deduplication
+- OptionParser for CLI argument handling
+- YAML for preset configuration parsing
+
+### Implementation Strategy
+1. Extend PresetManager to support recursive preset loading
+2. Add preset composition detection in preset YAML parsing
+3. Implement CLI argument collection for multiple presets
+4. Enhance ContextLoader with multi-preset orchestration
+5. Leverage existing ContextMerger for intelligent merging
+
+## File Modifications
+
+### Modify
+- `ace-context/lib/ace/context/molecules/preset_manager.rb`
+  - Add `load_preset_with_composition` method
+  - Implement recursive preset loading with circular dependency detection
+  - Track loaded presets to prevent duplicates
+
+- `ace-context/lib/ace/context/organisms/context_loader.rb`
+  - Enhance `load_from_preset_config` to handle preset arrays
+  - Add preset composition processing before file/command loading
+  - Implement proper merge ordering
+
+- `ace-context/exe/ace-context`
+  - Modify OptionParser to accept multiple `-p` flags
+  - Add support for comma-separated `--presets` option
+  - Collect all preset arguments before loading
+
+- `ace-core/lib/ace/core/molecules/context_merger.rb`
+  - Enhance array deduplication to preserve order
+  - Ensure scalar override follows "last wins" pattern
+  - Add preset source tracking for debugging
+
+### Create
+- `ace-context/lib/ace/context/atoms/preset_validator.rb`
+  - Validate preset existence
+  - Check for circular dependencies
+  - Report missing presets
+
+- `ace-context/test/molecules/preset_composition_test.rb`
+  - Test recursive preset loading
+  - Test circular dependency detection
+  - Test merge ordering
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze current preset loading flow in PresetManager
+  - Understand how presets are currently discovered and loaded
+  - Map the data flow from YAML to ContextData
+  - Identify integration points for composition
+
+* [ ] Research circular dependency detection patterns
+  - Simple visited set tracking
+  - Maximum recursion depth as safety net
+  - Clear error reporting for circular references
+
+* [ ] Design merge ordering strategy
+  - Document exact precedence rules
+  - Plan array deduplication approach
+  - Define scalar override behavior
+
+### Execution Steps
+
+- [ ] Step 1: Extend CLI to accept multiple preset arguments
+  - Modify OptionParser to collect multiple `-p` values into array
+  - Add comma-split support for `--presets` option
+  - Pass preset array to Context.load_auto
+  > TEST: CLI Argument Collection
+  > Type: Unit Test
+  > Assert: Multiple -p flags collected into array
+  > Command: ruby -e "require './ace-context/exe/ace-context'; puts ARGV" -- -p base -p custom
+
+- [ ] Step 2: Create preset validator atom
+  - Implement preset existence checking
+  - Add circular dependency detection with visited set
+  - Create clear error messages for invalid presets
+  > TEST: Circular Dependency Detection
+  > Type: Unit Test
+  > Assert: Circular references detected and reported
+  > Command: ruby test/atoms/preset_validator_test.rb
+
+- [ ] Step 3: Enhance PresetManager for composition
+  - Add `presets:` array parsing in load_preset_from_file
+  - Implement recursive loading with dependency tracking
+  - Cache loaded presets to avoid reprocessing
+  > TEST: Recursive Preset Loading
+  > Type: Integration Test
+  > Assert: Nested presets loaded in correct order
+  > Command: ruby test/molecules/preset_manager_test.rb
+
+- [ ] Step 4: Update ContextLoader for multi-preset support
+  - Detect preset arrays in configuration
+  - Load dependent presets before current preset
+  - Apply proper merge ordering (dependencies first)
+  > TEST: Preset Composition Loading
+  > Type: Integration Test
+  > Assert: Presets merged with correct precedence
+  > Command: ruby test/organisms/context_loader_test.rb
+
+- [ ] Step 5: Enhance ContextMerger for ordered deduplication
+  - Preserve first occurrence during array deduplication
+  - Implement "last wins" for scalar values
+  - Add source tracking for debugging
+  > TEST: Merge Behavior Validation
+  > Type: Unit Test
+  > Assert: Arrays deduplicated, scalars overridden correctly
+  > Command: ruby test/molecules/context_merger_test.rb
+
+- [ ] Step 6: Create example composed presets
+  - Create base preset with minimal configuration
+  - Create extending presets that compose base
+  - Document composition patterns in examples
+  > TEST: Example Preset Validation
+  > Type: End-to-End Test
+  > Assert: Example presets load and compose correctly
+  > Command: ace-context -p base -p extended --debug
+
+- [ ] Step 7: Add comprehensive test coverage
+  - Unit tests for validator, merger enhancements
+  - Integration tests for full composition flow
+  - Edge case tests (missing presets, circular deps)
+  > TEST: Full Test Suite
+  > Type: Test Suite Execution
+  > Assert: All tests pass with >90% coverage
+  > Command: cd ace-context && bundle exec rake test
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Infinite recursion from circular preset references
+  - **Probability:** Medium
+  - **Impact:** High (stack overflow, process crash)
+  - **Mitigation:** Visited set tracking, maximum depth limit (e.g., 10 levels)
+  - **Rollback:** Disable preset composition, revert to single preset loading
+
+- **Risk:** Performance degradation with deep preset hierarchies
+  - **Probability:** Low
+  - **Impact:** Low (slightly slower startup)
+  - **Mitigation:** Preset caching during single execution
+  - **Monitoring:** Add timing logs in debug mode
+
+### Integration Risks
+- **Risk:** Breaking existing single-preset workflows
+  - **Probability:** Low
+  - **Impact:** High (breaks existing usage)
+  - **Mitigation:** Ensure backward compatibility, single preset works as before
+  - **Monitoring:** Test existing preset loading thoroughly
+
+## Test Planning
+
+### Unit Tests
+- Preset validator atom (circular detection, validation)
+- CLI argument parsing (multiple -p flags, comma-separated)
+- Merger enhancements (deduplication, scalar override)
+
+### Integration Tests
+- Full preset composition flow
+- Recursive loading with multiple levels
+- Error handling for missing/invalid presets
+- Merge precedence validation
+
+### Edge Cases
+- Empty presets array
+- Duplicate presets in composition
+- Missing preset references
+- Circular dependency chains
+- Maximum nesting depth
+
+## Acceptance Criteria
+
+- [ ] Users can define `presets:` array in preset YAML configuration
+- [ ] CLI accepts multiple presets via `-p` flags
+- [ ] CLI accepts comma-separated preset list via `--presets`
+- [ ] Arrays are merged with deduplication (first occurrence kept)
+- [ ] Scalars follow "last wins" override pattern
+- [ ] Circular dependencies are detected and reported
+- [ ] Missing presets generate warnings but don't stop processing
+- [ ] All existing single-preset workflows continue to work
+- [ ] Comprehensive test coverage (>90%) for new functionality
+
 ## References
 
 - Original idea: .ace-taskflow/v.0.9.0/docs/ideas/076-20251017-121339-ace-context-add-presets-options-to-the-config-sam.md
 - Current preset structure: .ace/context/presets/*.md
 - ace-context implementation: ace-context/lib/ace/context/
+- Usage documentation: .ace-taskflow/v.0.9.0/tasks/076-feat-context-preset-composition-support-ace/ux/usage.md
