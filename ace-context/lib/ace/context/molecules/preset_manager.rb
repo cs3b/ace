@@ -176,6 +176,23 @@ module Ace
             merged[:context]['commands'].uniq!
           end
 
+          # Extract all merged params to root level (maintains backward compatibility)
+          # This ensures params like output, format, timeout, max_size are accessible at root
+          if merged[:context]['params']
+            merged_params = merged[:context]['params']
+
+            # Store params hash at root level
+            merged[:params] = merged_params
+
+            # Extract ALL param keys to root level
+            merged_params.each do |key, value|
+              merged[key.to_sym] = value
+            end
+
+            # Derive cache boolean from output param
+            merged[:cache] = (merged_params['output'] == 'cache')
+          end
+
           merged
         end
 
@@ -233,7 +250,7 @@ module Ace
           context_config = frontmatter['context'] || {}
           params = context_config['params'] || {}
 
-          {
+          preset_data = {
             description: frontmatter['description'] || "#{File.basename(file, '.md')} preset",
             params: params,
             context: context_config,
@@ -243,6 +260,16 @@ module Ace
             cache: params['output'] == 'cache',
             metadata: frontmatter['metadata'] || {}
           }
+
+          # Extract all params to root level (for backward compatibility and consistency)
+          params.each do |key, value|
+            preset_data[key.to_sym] = value
+          end
+
+          # Re-derive cache from output param (in case it was set via params extraction)
+          preset_data[:cache] = (params['output'] == 'cache')
+
+          preset_data
         rescue => e
           warn "Error loading preset from #{file}: #{e.message}"
           nil
