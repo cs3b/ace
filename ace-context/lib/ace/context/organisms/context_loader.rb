@@ -112,6 +112,7 @@ module Ace
               merged_options = @options.merge(params)
               context = load_from_preset_config(preset, merged_options)
               context.metadata[:preset_name] = preset_name
+              context.metadata[:output] = preset[:output]  # Store preset's output mode
 
               # Add composition metadata if preset was composed
               if preset[:composed]
