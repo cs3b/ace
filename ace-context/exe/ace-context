@@ -111,9 +111,11 @@ if options[:inspect_config]
                  end
 
   context = Ace::Context.inspect_config(preset_names, options)
+  input = preset_names.join('-')  # For cache filename generation
 elsif options[:presets].any?
   # Multi-preset mode
   context = Ace::Context.load_multiple_presets(options[:presets], options)
+  input = options[:presets].join('-')  # For cache filename generation
 elsif ARGV[0]
   # Single input from argument
   input = ARGV[0]
