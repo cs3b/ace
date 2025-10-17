@@ -5,6 +5,21 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2025-10-17
+
+### Added
+- Preset composition support via `presets:` array in YAML configuration
+- CLI accepts multiple presets via `-p` flags or `--presets` comma-separated list
+- Configuration inspection mode with `--inspect-config` flag
+- Intelligent merging: arrays deduplicated, scalars follow "last wins" pattern
+- Circular dependency detection for preset references
+- Example composed presets (base, development, team)
+
+### Fixed
+- Extract all params to root level in preset composition
+- Store preset output mode in metadata for multi-preset loading
+- Cache filename generation for multi-preset mode
+
 ## [0.12.0] - 2025-10-14
 
 ### Added
