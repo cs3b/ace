@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.76] - 2025-10-17
+
+### Added
+
+- **ace-context v0.13.0**: Preset composition support
+  - Presets can reference other presets via `presets:` array in YAML configuration
+  - CLI accepts multiple presets via `-p` flags or `--presets` comma-separated list
+  - New `--inspect-config` flag to view merged configuration without execution
+  - Intelligent merging with array deduplication and scalar "last wins" override
+  - Circular dependency detection for preset references
+  - Example composed presets: base, development, team
+
+### Fixed
+
+- **ace-context v0.13.0**: Preset composition parameter handling
+  - Extract all params to root level in preset composition
+  - Store preset output mode in metadata for multi-preset loading
+  - Cache filename generation for multi-preset mode
+
 ## [0.9.75] - 2025-10-16
 
 ### Changed
