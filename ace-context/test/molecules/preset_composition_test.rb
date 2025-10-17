@@ -162,4 +162,91 @@ class PresetCompositionTest < AceTestCase
     assert_includes result[:context]["files"], "file2.md"
     assert_includes result[:context]["files"], "file4.md"
   end
+
+  def test_params_extracted_to_root_level
+    # Create preset with params in context.params
+    File.write(
+      File.join(@presets_dir, "with_params.md"),
+      <<~PRESET
+        ---
+        description: Preset with params
+        context:
+          params:
+            output: cache
+            format: yaml
+            timeout: 60
+            max_size: 2097152
+          files:
+            - file1.md
+        ---
+        Content
+      PRESET
+    )
+
+    @preset_manager = Ace::Context::Molecules::PresetManager.new
+    result = @preset_manager.load_preset_with_composition("with_params")
+
+    assert result[:success]
+
+    # Params should be extracted to root level
+    assert_equal 'cache', result[:output]
+    assert_equal 'yaml', result[:format]
+    assert_equal 60, result[:timeout]
+    assert_equal 2097152, result[:max_size]
+
+    # Cache should be derived from output
+    assert_equal true, result[:cache]
+
+    # Params should also be in params hash
+    assert_equal 'cache', result[:params]['output']
+    assert_equal 60, result[:params]['timeout']
+  end
+
+  def test_composed_preset_params_extracted_to_root
+    # Create base with params
+    File.write(
+      File.join(@presets_dir, "base_params.md"),
+      <<~PRESET
+        ---
+        description: Base with params
+        context:
+          params:
+            output: stdio
+            timeout: 30
+          files:
+            - file1.md
+        ---
+        Base
+      PRESET
+    )
+
+    # Create extending preset that overrides params
+    File.write(
+      File.join(@presets_dir, "extended_params.md"),
+      <<~PRESET
+        ---
+        description: Extended with param overrides
+        context:
+          presets:
+            - base_params
+          params:
+            output: cache
+            timeout: 120
+            max_size: 5242880
+        ---
+        Extended
+      PRESET
+    )
+
+    @preset_manager = Ace::Context::Molecules::PresetManager.new
+    result = @preset_manager.load_preset_with_composition("extended_params")
+
+    assert result[:success]
+
+    # Merged params should be extracted to root (last wins)
+    assert_equal 'cache', result[:output]
+    assert_equal 120, result[:timeout]
+    assert_equal 5242880, result[:max_size]
+    assert_equal true, result[:cache]
+  end
 end
