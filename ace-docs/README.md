@@ -2,7 +2,7 @@
 ace-docs:
   last-updated: '2025-10-14'
   context:
-    preset: project 
+    preset: project-base
   subject:
     diff:
       filters:
@@ -170,18 +170,22 @@ Required fields:
 Optional `ace-docs:` namespace fields:
 
 **Update tracking:**
+
 - `ace-docs.frequency`: Update frequency (daily, weekly, monthly, on-change)
 - `ace-docs.last-updated`: Last update date
 
 **Subject configuration (what we're analyzing):**
+
 - `ace-docs.subject.diff.filters`: Array of paths to filter in git diffs (aligns with ace-review)
 - `ace-docs.subject.files`: Array of raw files to include (future feature)
 
 **Context configuration (information for understanding):**
+
 - `ace-docs.context.keywords`: Array of LLM relevance keywords (for future use)
 - `ace-docs.context.preset`: ace-context preset to use (e.g., "project", "architecture")
 
 **Validation rules:**
+
 - `ace-docs.rules.max-lines`: Maximum document length
 - `ace-docs.rules.sections`: Required sections array
 - `ace-docs.rules.no-duplicate-from`: Avoid duplication from specified documents
@@ -309,4 +313,3 @@ bundle exec rake install
 ## Contributing
 
 Bug reports and pull requests are welcome at <https://github.com/ace-meta/ace-docs>
-
