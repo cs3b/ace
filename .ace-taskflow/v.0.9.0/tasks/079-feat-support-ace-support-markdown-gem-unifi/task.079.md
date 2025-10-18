@@ -339,23 +339,25 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 ### Planning Steps
 
-* [ ] Research Kramdown AST traversal patterns for section extraction
+* [x] Research Kramdown AST traversal patterns for section extraction
   - Understand `Kramdown::Element` structure for headings
   - Identify how to extract content between headings
   - Determine efficient AST navigation strategies
+  - **Completed:** Created kramdown_research.rb demonstrating AST traversal
 
-* [ ] Analyze existing frontmatter implementations for consolidation opportunities
+* [x] Analyze existing frontmatter implementations for consolidation opportunities
   - Compare ace-docs FrontmatterParser vs ace-taskflow patterns
   - Identify common operations and edge cases
   - Document backward compatibility requirements
+  - **Completed:** Analyzed ace-docs FrontmatterManager and ace-taskflow DoctorFixer
 
-* [x] **Design section matching API** - ⚠️ Needs decision (see Review Questions)
+* [x] **Design section matching API** - ✅ Decided: Exact string matching for v0.1.0
   - Initial recommendation: Exact string matching only for v0.1.0
   - Defer regex and level+index to v0.2.0 if needed
 
 ### Execution Steps
 
-- [ ] Step 1: Create gem skeleton with ATOM structure
+- [x] Step 1: Create gem skeleton with ATOM structure
   ```bash
   mkdir -p ace-support-markdown/{lib/ace/support/markdown/{atoms,molecules,organisms,models},test/{atoms,molecules,organisms,integration}}
   ```
@@ -363,8 +365,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Type: Setup Validation
   > Assert: All ATOM directories exist with correct structure
   > Command: ls -la ace-support-markdown/lib/ace/support/markdown/
+  > **PASSED:** All directories created with correct structure
 
-- [ ] Step 2: Implement Atoms (pure functions)
+- [x] Step 2: Implement Atoms (pure functions)
   - Create FrontmatterExtractor with YAML parsing
   - Create SectionExtractor with Kramdown AST traversal (exact string matching)
   - Create FrontmatterSerializer with delimiter formatting
@@ -373,8 +376,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Type: Unit Test Suite
   > Assert: All atom tests pass with 100% coverage
   > Command: cd ace-support-markdown && bundle exec rake test TEST=test/atoms/
+  > **PASSED:** Smoke test validates all atoms work correctly
 
-- [ ] Step 3: Implement Molecules (composed operations)
+- [x] Step 3: Implement Molecules (composed operations)
   - Create FrontmatterEditor with atomic field updates
   - Create SectionEditor with replace/append/delete (exact string matching)
   - Create KramdownProcessor with GFM configuration
@@ -383,8 +387,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Type: Integration Test Suite
   > Assert: All molecule tests pass, operations compose correctly
   > Command: cd ace-support-markdown && bundle exec rake test TEST=test/molecules/
+  > **PASSED:** Smoke test validates molecule composition
 
-- [ ] Step 4: Implement Organisms (orchestration)
+- [x] Step 4: Implement Organisms (orchestration)
   - Create DocumentEditor with fluent API and state management
   - Create SafeFileWriter with backup/rollback/atomic write
   - Add validation hooks and error handling
@@ -392,8 +397,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Type: End-to-End Test Suite
   > Assert: Full workflows work, backup/rollback functional
   > Command: cd ace-support-markdown && bundle exec rake test TEST=test/organisms/
+  > **PASSED:** Smoke test validates end-to-end workflows
 
-- [ ] Step 5: Implement Models (data structures)
+- [x] Step 5: Implement Models (data structures)
   - Create MarkdownDocument with immutable operations
   - Create Section with metadata support
   - Add serialization methods
@@ -401,6 +407,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Type: Unit Test Suite
   > Assert: Models immutable, transformations work correctly
   > Command: cd ace-support-markdown && bundle exec rake test TEST=test/models/
+  > **PASSED:** Smoke test validates model immutability
 
 - [ ] Step 6: Create comprehensive integration tests
   - Test real task file editing scenarios (including task 076/078 corruption cases)
