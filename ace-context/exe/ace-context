@@ -16,7 +16,16 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: ace-context [PRESET] [options]"
+  opts.banner = "Usage: ace-context [INPUT] [options]"
+
+  opts.separator ""
+  opts.separator "INPUT can be:"
+  opts.separator "  - Preset name (e.g., 'project', 'base')"
+  opts.separator "  - File path (e.g., '/path/to/config.yml', './context.md')"
+  opts.separator "  - Protocol URL (e.g., 'wfi://workflow', 'guide://testing')"
+  opts.separator "  - Inline YAML (with files:, commands:, etc.)"
+  opts.separator ""
+  opts.separator "Options:"
 
   opts.on("-p", "--preset NAME", "Load context from preset (can be used multiple times)") do |p|
     options[:presets] << p
@@ -65,12 +74,15 @@ parser = OptionParser.new do |opts|
     puts "Examples:"
     puts "  ace-context                          # Load default preset"
     puts "  ace-context project                  # Load project preset"
+    puts "  ace-context /path/to/config.yml      # Load configuration file (auto-detected)"
+    puts "  ace-context ./context.md             # Load markdown with frontmatter (auto-detected)"
+    puts "  ace-context wfi://create-task        # Load via protocol URL"
     puts "  ace-context -p base -p custom        # Load and merge multiple presets"
     puts "  ace-context --presets base,team      # Load multiple presets (comma-separated)"
-    puts "  ace-context -f config.yml             # Load from file"
+    puts "  ace-context -f config.yml             # Explicitly load from file"
     puts "  ace-context -f config1.yml -f config2.md  # Load multiple files"
     puts "  ace-context -p base -f custom.yml    # Mix presets and files"
-    puts "  ace-context -f config.yml --inspect-config  # Inspect file configuration"
+    puts "  ace-context /path/to/config.yml --inspect-config  # Inspect file configuration"
     puts "  ace-context -p base --inspect-config # Show merged config without execution"
     puts "  ace-context project --output stdio   # Output to stdout"
     puts "  ace-context project --output cache   # Save to cache"

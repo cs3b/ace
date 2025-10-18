@@ -28,9 +28,13 @@ ace-context
 # Load specific preset
 ace-context project
 
-# Load configuration from file
-ace-context -f config.yml               # Load YAML configuration
-ace-context -f config.md                # Load markdown with frontmatter
+# Load configuration from file (positional argument - auto-detected)
+ace-context /path/to/config.yml         # Auto-detects as file
+ace-context ./custom-context.md         # Auto-detects as markdown file
+
+# Load configuration from file (explicit -f flag)
+ace-context -f config.yml               # Explicitly load YAML configuration
+ace-context -f config.md                # Explicitly load markdown with frontmatter
 ace-context -f config1.yml -f config2.md # Load multiple files
 
 # Mix presets and files
@@ -49,6 +53,22 @@ ace-context task://061                 # Load task context
 ace-context project --output stdio    # Output to terminal
 ace-context project --output cache    # Save to cache (default for some presets)
 ace-context project --output ./out.md # Save to specific file
+```
+
+### Input Auto-Detection
+
+The positional argument to `ace-context` supports automatic input type detection:
+
+- **File paths**: If the input exists as a file, it's loaded as configuration
+- **Preset names**: Simple names like 'project' or 'base' load from `.ace/context/presets/`
+- **Protocol URLs**: `wfi://`, `guide://`, `task://` are resolved via ace-nav
+- **Inline YAML**: Direct YAML configuration with `files:`, `commands:`, etc.
+
+```bash
+ace-context project                     # Detected as preset
+ace-context /path/to/config.yml         # Detected as file
+ace-context ./relative/path.md          # Detected as file
+ace-context wfi://workflow-name         # Detected as protocol
 ```
 
 ### Configuration
