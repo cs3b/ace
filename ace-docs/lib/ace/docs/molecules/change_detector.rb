@@ -15,30 +15,75 @@ module Ace
         # @param since [String, Date] Date or commit to diff from
         # @param options [Hash] Options for diff generation
         # @return [Hash] Diff result with content and metadata
+        #   For single subject: returns hash with :diff key containing single diff
+        #   For multi-subject: returns hash with :diffs key containing {name => content}
         def self.get_diff_for_document(document, since: nil, options: {})
           return empty_diff_result unless document.path
 
           # Determine the since parameter
           since_param = determine_since(document, since)
 
-          # Extract subject diff filters from document and merge into options
-          filters = document.subject_diff_filters
-          if filters && !filters.empty?
-            options = options.merge(paths: filters)
+          # Check if document has multi-subject configuration
+          if document.multi_subject?
+            # Generate separate diffs for each subject
+            diffs_hash = get_diffs_for_subjects(document, since_param, options)
+
+            {
+              document_path: document.path,
+              document_type: document.doc_type,
+              since: since_param,
+              diffs: diffs_hash,
+              multi_subject: true,
+              has_changes: diffs_hash.values.any? { |diff| !diff.strip.empty? },
+              timestamp: Time.now.iso8601,
+              options: options
+            }
+          else
+            # Single subject - backward compatible behavior
+            filters = document.subject_diff_filters
+            if filters && !filters.empty?
+              options = options.merge(paths: filters)
+            end
+
+            diff_content = generate_git_diff(since_param, options)
+
+            {
+              document_path: document.path,
+              document_type: document.doc_type,
+              since: since_param,
+              diff: diff_content,
+              multi_subject: false,
+              has_changes: !diff_content.strip.empty?,
+              timestamp: Time.now.iso8601,
+              options: options
+            }
+          end
+        end
+
+        # Generate diffs for multiple subjects
+        # @param document [Document] The document with multi-subject configuration
+        # @param since [String] Date or commit to diff from
+        # @param options [Hash] Base options for diff generation
+        # @return [Hash] Hash mapping subject names to diff content {name => diff_string}
+        def self.get_diffs_for_subjects(document, since, options = {})
+          subject_configs = document.subject_configurations
+
+          result = {}
+          subject_configs.each do |subject|
+            name = subject[:name]
+            filters = subject[:filters]
+
+            # Build options for this subject
+            subject_options = options.merge(paths: filters)
+
+            # Generate diff for this subject
+            diff_content = generate_git_diff(since, subject_options)
+
+            # Store diff (even if empty - caller can decide whether to keep)
+            result[name] = diff_content
           end
 
-          # Get the git diff (now with path filtering if subject.diff.filters present)
-          diff_content = generate_git_diff(since_param, options)
-
-          {
-            document_path: document.path,
-            document_type: document.doc_type,
-            since: since_param,
-            diff: diff_content,
-            has_changes: !diff_content.strip.empty?,
-            timestamp: Time.now.iso8601,
-            options: options
-          }
+          result
         end
 
         # Get combined diff for multiple documents

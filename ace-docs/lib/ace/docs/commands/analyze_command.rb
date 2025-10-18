@@ -47,20 +47,30 @@ module Ace
           puts "Document type: #{document.doc_type}" if document.doc_type
           puts "Purpose: #{document.purpose}" if document.purpose
 
-          # Show subject filters if present
-          filters = document.subject_diff_filters
-          if filters && !filters.empty?
-            puts "\nSubject filters (tracking changes in):".yellow
-            filters.each { |f| puts "  - #{f}" }
+          # Show subject configuration
+          if document.multi_subject?
+            subjects = document.subject_configurations
+            puts "\nSubjects configured:".yellow
+            subjects.each do |subject|
+              filter_desc = subject[:filters].join(", ")
+              puts "  - #{subject[:name]}: #{filter_desc}"
+            end
           else
-            puts "\nNo subject filters defined (tracking all changes)".yellow
+            # Single subject - show filters if present
+            filters = document.subject_diff_filters
+            if filters && !filters.empty?
+              puts "\nSubject filters (tracking changes in):".yellow
+              filters.each { |f| puts "  - #{f}" }
+            else
+              puts "\nNo subject filters defined (tracking all changes)".yellow
+            end
           end
 
           # Determine time range
           since = determine_since(document)
           puts "\nAnalyzing changes since: #{since}".cyan
 
-          # Generate filtered diff
+          # Generate filtered diff(s)
           puts "Generating git diff...".cyan
           diff_result = Molecules::ChangeDetector.get_diff_for_document(
             document,
@@ -75,8 +85,20 @@ module Ace
             return 2
           end
 
-          diff = diff_result[:diff]
-          puts "Changes detected (#{count_diff_lines(diff)} lines)".green
+          # Display diff statistics
+          if diff_result[:multi_subject]
+            # Multi-subject: show stats for each subject
+            diffs_hash = diff_result[:diffs]
+            diffs_hash.each do |subject_name, diff_content|
+              next if diff_content.strip.empty?
+              lines = count_diff_lines(diff_content)
+              puts "  ✓ #{subject_name}: #{lines} lines changed".green
+            end
+          else
+            # Single subject
+            diff = diff_result[:diff]
+            puts "Changes detected (#{count_diff_lines(diff)} lines)".green
+          end
 
           # Check if ace-llm is available
           unless defined?(Ace::LLM)
@@ -95,7 +117,9 @@ module Ace
 
           # Analyze with LLM
           puts "\nAnalyzing changes with LLM...".cyan
-          analysis = analyze_with_llm(document, diff, since, session_dir: session_dir)
+          # Pass the appropriate diff format (single string or hash of diffs)
+          diff_for_analysis = diff_result[:multi_subject] ? diff_result[:diffs] : diff_result[:diff]
+          analysis = analyze_with_llm(document, diff_for_analysis, since, session_dir: session_dir)
 
           unless analysis[:success]
             puts "Error: #{analysis[:error]}".red

@@ -10,7 +10,7 @@ module Ace
       class DocumentAnalysisPrompt
         # Build prompts for analyzing changes for a specific document
         # @param document [Document] The document to analyze changes for
-        # @param diff [String] The filtered git diff (already filtered by subject.diff.filters)
+        # @param diff [String, Hash] Either single diff string or hash of {subject_name => diff_string}
         # @param since [String] Time period for the diff
         # @param cache_dir [String, nil] Optional cache directory for context.md
         # @return [Hash] Hash with :system, :user prompts, :context_md, :diff_stats
@@ -18,28 +18,45 @@ module Ace
           # Load base instructions
           base_instructions = load_user_prompt_template
 
-          # Save diff to file FIRST (so context.md can reference it)
-          diff_file_path = nil
-          if cache_dir && Dir.exist?(cache_dir)
-            diff_file_path = File.join(cache_dir, "repo-diff.diff")
-            File.write(diff_file_path, diff)
+          # Handle both single diff and multi-subject diffs
+          diff_files = []
+          if diff.is_a?(Hash)
+            # Multi-subject: save each diff with subject name
+            if cache_dir && Dir.exist?(cache_dir)
+              diff.each do |subject_name, diff_content|
+                next if diff_content.strip.empty?  # Skip empty diffs
+
+                diff_file_path = File.join(cache_dir, "#{subject_name}.diff")
+                File.write(diff_file_path, diff_content)
+                # Store relative path for context.md
+                diff_files << "#{subject_name}.diff"
+              end
+            end
+          else
+            # Single diff: backward compatible behavior
+            if cache_dir && Dir.exist?(cache_dir)
+              diff_file_path = File.join(cache_dir, "repo-diff.diff")
+              File.write(diff_file_path, diff)
+              diff_files << "repo-diff.diff"
+            end
           end
 
           # Create context.md = frontmatter + instructions + scope section
-          # diff_file_path is absolute path for ace-context
+          # Use relative paths for diff files
           context_md = create_context_markdown(base_instructions, document, since,
-                                                diff_file: diff_file_path)
+                                                diff_files: diff_files)
 
           # Save context.md to cache
           if cache_dir && Dir.exist?(cache_dir)
             File.write(File.join(cache_dir, "context.md"), context_md)
           end
 
-          # Load via ace-context (returns instructions + embedded context + diff)
+          # Load via ace-context (returns instructions + embedded context + diffs)
           embedded_content = load_context_md(context_md, document: document, cache_dir: cache_dir) || base_instructions
 
           # Calculate diff stats for metadata
-          diff_stats = calculate_diff_stats(diff)
+          all_diffs = diff.is_a?(Hash) ? diff.values.join("\n") : diff
+          diff_stats = calculate_diff_stats(all_diffs)
 
           {
             system: load_system_prompt,
@@ -187,9 +204,9 @@ module Ace
         # @param base_instructions [String] The base prompt instructions
         # @param document [Document] The document configuration
         # @param since [String] Time period for analysis
-        # @param diff_file [String, nil] Relative path to diff file (e.g., "repo-diff.diff")
+        # @param diff_files [Array<String>] Array of relative paths to diff files
         # @return [String] Complete context.md content
-        def self.create_context_markdown(base_instructions, document, since, diff_file: nil)
+        def self.create_context_markdown(base_instructions, document, since, diff_files: [])
           # Start with base context config
           context_config = {
             "params" => { "format" => "markdown-xml" },
@@ -200,10 +217,10 @@ module Ace
           doc_context = document.ace_docs_config&.dig("context") || document.context_config || {}
           context_config = context_config.merge(doc_context)
 
-          # Add diff file to files array (append to existing files if any)
-          if diff_file
+          # Add diff files to files array (append to existing files if any)
+          if diff_files && !diff_files.empty?
             context_config["files"] ||= []
-            context_config["files"] << diff_file
+            context_config["files"].concat(diff_files)
           end
 
           frontmatter = { "context" => context_config }

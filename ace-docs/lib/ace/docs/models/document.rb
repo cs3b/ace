@@ -145,6 +145,7 @@ module Ace
 
         # Get subject diff filters with backward compatibility
         # Tries new format first, falls back to legacy format
+        # @return [Array<String>] Flat array of path filters for single subject
         def subject_diff_filters
           # Try new format first
           filters = @ace_docs_config.dig("subject", "diff", "filters")
@@ -155,6 +156,46 @@ module Ace
           return legacy if legacy && !legacy.empty?
 
           []
+        end
+
+        # Check if document has multi-subject configuration
+        # @return [Boolean] True if subject is an array of hashes
+        def multi_subject?
+          subject_config = @ace_docs_config["subject"]
+          subject_config.is_a?(Array)
+        end
+
+        # Get structured subject configurations for multi-subject support
+        # @return [Array<Hash>] Array of {name: String, filters: Array<String>}
+        # Returns single subject for backward compatibility if not multi-subject
+        def subject_configurations
+          subject_config = @ace_docs_config["subject"]
+
+          if subject_config.is_a?(Array)
+            # Multi-subject format: array of single-key hashes
+            # [ { "code" => { "diff" => { "filters" => [...] } } }, { "docs" => {...} } ]
+            subject_config.map do |subject_hash|
+              # Each item should be a hash with one key (the subject name)
+              name = subject_hash.keys.first
+              config = subject_hash[name] || {}
+              filters = config.dig("diff", "filters") || []
+
+              {
+                name: name,
+                filters: filters
+              }
+            end.reject { |s| s[:filters].empty? }
+          elsif subject_config.is_a?(Hash) && subject_config.key?("diff")
+            # Single subject format (backward compatibility)
+            # { "diff" => { "filters" => [...] } }
+            filters = subject_config.dig("diff", "filters") || []
+            return [] if filters.empty?
+
+            [{ name: "default", filters: filters }]
+          else
+            # No valid subject configuration
+            []
+          end
         end
 
         # Get context keywords for LLM analysis

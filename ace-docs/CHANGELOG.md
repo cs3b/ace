@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Multi-subject configuration support** for categorizing different types of changes
+  - Define multiple subjects in document frontmatter (e.g., code, config, docs)
+  - Each subject generates its own diff file (code.diff, config.diff, docs.diff)
+  - Maintains backward compatibility with single-subject configuration
+  - Improved dual-mode analysis prompts for separating code from docs/config changes
+
+- New analysis prompts in `handbook/prompts/`:
+  - `ace-change-analyzer.system.md` - Dual analysis system prompt (v3.0)
+  - `ace-change-analyzer.user.md` - User instructions for dual analysis
+
+### Changed
+
+- Document model now supports both single and multi-subject configurations
+  - Added `multi_subject?` method to check for multi-subject configuration
+  - Added `subject_configurations` method returning structured subject data
+  - Single subject returns `{ name: "default", filters: [...] }`
+
+- ChangeDetector enhanced for multiple diff generation
+  - New `get_diffs_for_subjects` method generates separate diffs per subject
+  - Returns hash of `{subject_name => diff_content}` for multi-subject
+  - Single subject behavior unchanged for backward compatibility
+
+- DocumentAnalysisPrompt updated to handle multiple diff files
+  - Accepts either single diff string or hash of diffs
+  - Saves each diff with subject name (e.g., "code.diff", "docs.diff")
+  - Adds all diff files to context.md files array
+
+- AnalyzeCommand improved display for multi-subject
+  - Shows configured subjects with their filters
+  - Displays diff statistics per subject
+  - Clear progress messages for multi-subject processing
+
+### Documentation
+
+- Updated README.md with multi-subject configuration examples
+- Added multi-subject example to `.ace.example/docs/config.yml`
+- Example usage in ace-docs README.md frontmatter
+
 ## [0.4.3] - 2025-10-18
 
 ### Fixed
