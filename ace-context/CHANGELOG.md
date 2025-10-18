@@ -5,6 +5,14 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.2] - 2025-10-18
+
+### Fixed
+- `load_file_as_preset` now extracts markdown body content after frontmatter for proper formatting
+- File paths always resolve from project root (forced `base_dir` to `project_root` in merged options)
+- Body content included in preset_data structure for content formatting
+- Files embedded as XML when `embed_document_source` is true (calls `format_context`)
+
 ## [0.14.1] - 2025-10-18
 
 ### Fixed
