@@ -13,7 +13,7 @@ parameters:
 doc-type: workflow
 update:
   frequency: on-change
-  last-updated: '2025-10-13'
+  last-updated: '2025-10-18'
 ---
 
 # Update Documentation with ace-docs
@@ -22,15 +22,37 @@ Orchestrate ace-docs tools for iterative documentation updates through agent/hum
 
 ## Quick Start
 
+### Specific File Update (Direct Path)
+
+When updating a specific document, go straight to analysis:
+
 ```bash
-# Update all documents needing updates
+# Analyze specific document immediately
+ace-docs analyze docs/api.md
+
+# Review the analysis report
+cat .cache/ace-docs/analyze-*/analysis.md
+
+# Update document based on recommendations
+ace-docs update docs/api.md --set last-updated=today
+```
+
+### Bulk Update (Status Check First)
+
+When updating multiple documents or checking what needs updates:
+
+```bash
+# Check which documents need updates
 ace-docs status --needs-update
+
+# Analyze all documents needing updates
 ace-docs analyze --needs-update
+
 # Review analysis report and update documents
 cat .cache/ace-docs/analyze-*/analysis.md
 ace-docs update [file] --set last-updated=today
 
-# Update specific type
+# Or filter by type
 ace-docs status --type guide
 ace-docs analyze --all --type guide
 ```
@@ -39,22 +61,41 @@ ace-docs analyze --all --type guide
 
 Accept flexible input for document selection:
 
+### Direct Analysis (Skip Status Check)
+
+When specific file(s) are provided, the workflow proceeds directly to analysis:
+
 1. **Specific documents**: List of file paths
    - `docs/api.md handbook/guide.md`
+   - Goes straight to `ace-docs analyze [files]`
+
+### Status-First (Check What Needs Updates)
+
+When using filters or bulk operations, the workflow starts with status check:
+
 2. **Preset selection**: Use configured preset
    - `--preset standard`
 3. **Type filtering**: Update by document type
    - `--type guide`
 4. **Status-based**: Documents needing update
-   - `--needs-update` (default)
+   - `--needs-update` (default when no files specified)
 5. **All documents**: Process everything
    - `--all`
 
+**Decision Rule**: If specific file paths are provided → skip to analysis. Otherwise → start with status check.
+
 ## Workflow Steps
 
-### 1. Load Document Status
+### Decision Point: Specific File or Bulk Operation?
 
-Check current state of managed documents:
+**If specific file(s) provided** → Skip to Step 2 (Analyze Documents)
+**If bulk/filter operation** → Start at Step 1 (Load Document Status)
+
+### 1. Load Document Status (Bulk Operations Only)
+
+**Skip this step if specific file(s) were provided.**
+
+For bulk operations, check current state of managed documents:
 
 ```bash
 ace-docs status [options]
@@ -68,7 +109,7 @@ Review the table showing:
 
 If no documents match criteria, exit with message.
 
-### 2. Analyze Documents
+### 2. Analyze Documents (Always Required)
 
 Generate LLM-powered analysis for selected documents:
 
@@ -303,9 +344,23 @@ Workflow exits when:
 
 ## Usage Examples
 
-### Update stale guides
+### Update specific document (Direct Path)
 ```bash
-# Find stale guide documents
+# When you know exactly which document to update
+# Skip status check and go straight to analysis
+ace-docs analyze ace-docs/README.md
+
+# Review the analysis report
+cat .cache/ace-docs/analyze-*/analysis.md
+
+# Update document based on recommendations
+# [Review analysis.md and update content]
+ace-docs update ace-docs/README.md --set last-updated=today
+```
+
+### Update stale guides (Bulk Operation)
+```bash
+# Start with status check for bulk operations
 ace-docs status --type guide --freshness stale
 
 # Analyze changes and generate recommendations
@@ -332,8 +387,19 @@ ace-docs validate $(git diff --name-only -- '*.md')
 ```
 
 ### Analyze and update workflow
+
+#### For specific file (direct):
 ```bash
-# Full workflow for updating documents
+# Direct analysis when you know the file
+ace-docs analyze docs/architecture.md
+cat .cache/ace-docs/analyze-*/analysis.md
+# Review recommendations and update document
+ace-docs update docs/architecture.md --set last-updated=today
+```
+
+#### For bulk updates (status-first):
+```bash
+# Check what needs updating first
 ace-docs status --needs-update
 ace-docs analyze --needs-update
 cat .cache/ace-docs/analyze-*/analysis.md
