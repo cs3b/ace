@@ -8,17 +8,17 @@ ace-docs:
       - CHANGELOG.md 
   subject:
     - code:
-      diff:
-        filters:
-          - ace-docs/**/*.rb 
+        diff:
+          filters:
+            - ace-docs/**/*.rb 
     - config:
-      diff:
-        filters:
-          - ace-docs/**/*.md 
+        diff:
+          filters:
+            - ace-docs/**/*.md 
     - docs:
-      diff:
-        filters:
-          - ace-docs/.ace.example/*.md 
+        diff:
+          filters:
+            - ace-docs/.ace.example/*.md 
 purpose: Overview and quick start guide for ace-docs
 doc-type: reference
 ---
@@ -187,9 +187,11 @@ Optional `ace-docs:` namespace fields:
 **Subject configuration (what we're analyzing):**
 
 Single subject format:
+
 - `ace-docs.subject.diff.filters`: Array of paths to filter in git diffs
 
 Multi-subject format (for categorizing changes):
+
 ```yaml
 ace-docs:
   subject:
