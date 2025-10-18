@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2025-10-18
+
+### Fixed
+
+- Save prompts (prompt-system.md, prompt-user.md) before calling LLM instead of after
+  - Ensures prompts available for debugging even if LLM call fails
+  - Can reproduce exact inputs sent to LLM
+  - Matches pattern for context.md and repo-diff.diff (already saved early)
+
 ## [0.4.2] - 2025-10-16
 
 ### Changed
