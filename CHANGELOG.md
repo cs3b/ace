@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.77] - 2025-10-18
+
+### Added
+
+- **ace-context v0.14.0**: File configuration loading support
+  - New `-f/--file` CLI option to load configuration from YAML or markdown files
+  - Support for multiple file loading with `-f file1.yml -f file2.md`
+  - Mix presets and files: `ace-context -p base -f custom.yml`
+  - Files can reference and compose with existing presets via `presets:` key
+  - Positional argument now auto-detects input type (preset, file, protocol, inline YAML)
+  - New API methods: `load_file_as_preset` and `load_multiple_inputs`
+  - Comprehensive test coverage for file loading functionality
+
+### Changed
+
+- **ace-context**: Improved CLI help message and documentation
+  - Updated banner from `[PRESET]` to `[INPUT]` to reflect all supported types
+  - Added clear description of supported input types in help message
+  - Enhanced documentation with input auto-detection section
+  - Added examples showing file paths as positional arguments
+
 ## [0.9.76] - 2025-10-17
 
 ### Added
