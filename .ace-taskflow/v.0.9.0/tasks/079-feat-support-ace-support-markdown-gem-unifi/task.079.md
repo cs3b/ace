@@ -4,38 +4,29 @@ status: pending
 priority: high
 estimate: 3-4 weeks
 dependencies: []
-needs_review: true
+needs_review: false
 ---
 
 # Create ace-support-markdown gem for unified markdown editing
 
-## Review Questions (Pending Human Input)
+## Design Decisions (Resolved 2025-10-18)
 
-### [HIGH] Critical Design Decisions
+### v0.1.0 Scope
 
-- [ ] **Section Matching API Design**: Which matching strategies should v0.1.0 support?
-  - **Research conducted**: Analyzed codebase for section usage patterns
-  - **Current usage**: Task files use exact heading strings (e.g., "## References", "## Implementation Plan")
-  - **Similar patterns**: ace-docs uses exact string matching for frontmatter fields
-  - **Suggested default**: Start with exact string matching only (simplest, covers 95% of use cases)
-  - **Future enhancement**: Add regex and level+index in v0.2.0 if needed
-  - **Why needs human input**: Trade-off between v0.1.0 simplicity vs API completeness
+- [x] **Section Matching API Design**: ✅ **DECIDED** - Exact string matching only
+  - Covers 95% of current use cases
+  - Simplest implementation for v0.1.0
+  - Regex and level+index patterns deferred to v0.2.0 if needed
 
-- [ ] **Backward Compatibility Strategy**: How aggressively should we deprecate existing APIs?
-  - **Research conducted**: Checked ace-docs and ace-taskflow usage patterns
-  - **Current state**: FrontmatterManager used in 5 places, DoctorFixer in 3 places
-  - **Migration effort**: Estimated 2-3 hours per gem
-  - **Suggested default**: Keep deprecated wrappers for 2 releases (v0.9.0, v0.10.0), remove in v0.11.0
-  - **Why needs human input**: Balance between clean code and migration burden on users
+- [x] **Backward Compatibility Strategy**: ✅ **NOT NEEDED** - Direct migration, no deprecation period
+  - Pre-1.0 release - no external users
+  - Direct replacement of existing implementations in ace-docs and ace-taskflow
+  - Clean migration without legacy wrapper code
 
-### [MEDIUM] Enhancement Questions
-
-- [ ] **Validation Schema Support**: Should v0.1.0 include JSON Schema validation or defer to v0.2.0?
-  - **Research conducted**: Checked if ace-docs currently uses schema validation
-  - **Current state**: ace-docs has hardcoded validation rules in FrontmatterParser
-  - **Complexity**: Adding JSON Schema support adds 1-2 days to timeline
-  - **Suggested default**: Defer to v0.2.0, use hardcoded validation in v0.1.0 (matches current patterns)
-  - **Why needs human input**: Timeline vs feature completeness trade-off
+- [x] **Validation Schema Support**: ✅ **DEFERRED** - Hardcoded validation in v0.1.0
+  - Matches current ace-docs patterns
+  - JSON Schema validation moved to task 079.2 for v0.2.0
+  - Keeps v0.1.0 focused on core functionality and corruption prevention
 
 ## Behavioral Specification
 
@@ -129,14 +120,17 @@ builder.to_markdown
   - **Rationale**: Already in use, pure Ruby (no C dependencies), proven GFM support
   - **CommonMarker evaluation**: Deferred - no evidence of performance issues in current usage
 
-- [x] **Section Matching**: ⚠️ **NEEDS DECISION** - See Review Questions above
-  - Initial research suggests exact string matching sufficient for v0.1.0
+- [x] **Section Matching**: ✅ **RESOLVED** - Exact string matching for v0.1.0
+  - Decision: Exact string matching covers 95% of use cases
+  - Future enhancement deferred to v0.2.0
 
-- [x] **Validation Schemas**: ⚠️ **NEEDS DECISION** - See Review Questions above
-  - Research suggests deferring to v0.2.0 matches current patterns
+- [x] **Validation Schemas**: ✅ **RESOLVED** - Deferred to task 079.2 (v0.2.0)
+  - v0.1.0 uses hardcoded validation (matches current patterns)
+  - JSON Schema support tracked in separate task
 
-- [x] **Backward Compatibility**: ⚠️ **NEEDS DECISION** - See Review Questions above
-  - Research shows 2-release deprecation period is reasonable
+- [x] **Backward Compatibility**: ✅ **RESOLVED** - Not needed (pre-1.0)
+  - Direct migration without deprecation wrappers
+  - Clean implementation without legacy code
 
 ## Objective
 
@@ -325,14 +319,10 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 **ace-docs:**
 - `ace-docs/lib/ace/docs/molecules/frontmatter_manager.rb`
-  - Changes: Replace implementation with ace-support-markdown FrontmatterEditor
+  - Changes: Replace implementation with ace-support-markdown DocumentEditor
   - Impact: Consolidate duplicate code, safer updates
   - Integration points: Delegate to DocumentEditor
-
-- `ace-docs/lib/ace/docs/atoms/frontmatter_parser.rb`
-  - Changes: Deprecate in favor of ace-support-markdown FrontmatterExtractor
-  - Impact: Eliminate duplication
-  - Migration strategy: Keep wrapper for backward compatibility (deprecation period TBD in review questions)
+  - Migration: Direct replacement (pre-1.0, no backward compatibility needed)
 
 - `ace-docs/ace-docs.gemspec`
   - Changes: Add dependency `ace-support-markdown ~> 0.1`
@@ -340,7 +330,10 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 ### Delete
 
-*None - will deprecate rather than delete for backward compatibility (deprecation timeline TBD in review questions)*
+**ace-docs:**
+- `ace-docs/lib/ace/docs/atoms/frontmatter_parser.rb` - Replaced by ace-support-markdown FrontmatterExtractor
+  - Impact: Eliminates duplicate YAML parsing logic
+  - Migration: Direct replacement, no backward compatibility needed (pre-1.0)
 
 ## Implementation Plan
 
@@ -439,8 +432,8 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Command: cd ace-taskflow && bundle exec rake test
 
 - [ ] Step 9: Migrate ace-docs to use new API
-  - Update FrontmatterManager to delegate to new gem
-  - Add deprecated wrappers for FrontmatterParser (deprecation period TBD)
+  - Replace FrontmatterManager with DocumentEditor
+  - Delete FrontmatterParser (direct replacement, no deprecation needed)
   - Add ace-support-markdown dependency
   > TEST: ace-docs Test Suite
   > Type: Regression Test Suite
@@ -472,11 +465,11 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   - **Mitigation:** Profile with real ACE task files, optimize hot paths
   - **Monitoring:** Add benchmarks in CI, set performance thresholds (<50ms for sections)
 
-- **Risk:** Backward compatibility breaks existing workflows
-  - **Probability:** Medium → Low (deprecation wrappers planned)
-  - **Impact:** High (breaks ace-taskflow, ace-docs)
-  - **Mitigation:** Keep deprecated wrappers (period TBD in review questions), extensive regression testing
-  - **Rollback:** Maintain existing implementations until migration proven stable
+- **Risk:** Migration breaks existing workflows
+  - **Probability:** Low (controlled pre-1.0 environment)
+  - **Impact:** Medium (breaks ace-taskflow, ace-docs temporarily)
+  - **Mitigation:** Extensive regression testing, controlled migration
+  - **Rollback:** Git revert if issues found during testing
 
 ### Integration Risks
 
@@ -535,26 +528,22 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 - [ ] CHANGELOG.md with v0.1.0 release notes
 - [ ] Review questions answered before implementation start
 
-## Review Summary
+## Implementation Readiness
 
-**Review Date:** 2025-10-18
+**Status:** ✅ **READY TO IMPLEMENT** (2025-10-18)
 
-**Questions Generated:** 3 total (2 HIGH, 1 MEDIUM)
-
-**Critical Blockers:**
-- Section Matching API design (affects v0.1.0 scope)
-- Backward compatibility strategy (affects migration timeline)
-
-**Implementation Readiness:** ⚠️ **Blocked on 2 HIGH priority decisions**
-
-**Recommended Next Steps:**
-1. Answer HIGH priority review questions above
-2. Finalize section matching strategy for v0.1.0
-3. Confirm deprecation timeline for backward compatibility
-4. Proceed with Phase 1 implementation (Core Foundation)
+**Design Decisions Finalized:**
+- ✅ Section matching: Exact string only for v0.1.0
+- ✅ Backward compatibility: Not needed (pre-1.0 direct migration)
+- ✅ Validation: Hardcoded rules in v0.1.0, JSON Schema deferred to task 079.2
 
 **Research Completed:**
 - ✅ Kramdown version compatibility verified (2.4 compatible with ace-llm's 2.0)
 - ✅ Current usage patterns analyzed (exact string matching covers 95% of cases)
 - ✅ Migration scope quantified (5 places in ace-docs, 3 in ace-taskflow)
 - ✅ Corruption root causes documented (tasks 076 and 078)
+
+**Next Steps:**
+1. Execute Planning Steps (Kramdown AST research)
+2. Proceed with Phase 1 implementation (Core Foundation)
+3. Follow implementation plan through to migration and testing
