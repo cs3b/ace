@@ -173,6 +173,32 @@ module Ace
                   end
                 end
 
+                # Handle preset composition if file references presets
+                preset_refs = config['presets'] || config[:presets]
+                if preset_refs && !preset_refs.empty?
+                  # Load all referenced presets first
+                  preset_contexts = []
+                  preset_refs.each do |preset_name|
+                    preset = @preset_manager.load_preset_with_composition(preset_name)
+                    if preset[:success]
+                      preset_contexts << { context: preset[:context] }
+                    else
+                      warnings << "Failed to load preset '#{preset_name}' from file #{input}"
+                    end
+                  end
+
+                  # Merge all presets + file config (file config last = file wins)
+                  # Order: preset1, preset2, ..., file config
+                  if preset_contexts.any?
+                    merged = @preset_manager.send(:merge_preset_data, preset_contexts + [{ context: config }])
+                    config = merged[:context]
+                  end
+
+                  # Remove presets key from final config
+                  config.delete('presets')
+                  config.delete(:presets)
+                end
+
                 configs << {
                   success: true,
                   context: config,
@@ -607,22 +633,32 @@ module Ace
           preset_names = file_data[:presets] || []
           return file_data if preset_names.empty?
 
-          # Load each referenced preset and merge
+          # Load all referenced presets first
           base_context = file_data[:context]
           composed_from = [file_data[:name]]
+          preset_contexts = []
 
           preset_names.each do |preset_name|
             preset = @preset_manager.load_preset_with_composition(preset_name)
             if preset[:success]
-              # Merge preset into base context
-              preset_context = preset[:context]
-              base_context = @preset_manager.send(:merge_preset_data, preset_context, base_context)
+              preset_contexts << { context: preset[:context] }
               composed_from << preset_name
               composed_from.concat(preset[:composed_from]) if preset[:composed_from]
             else
               warn "Warning: Failed to load preset '#{preset_name}' referenced in file" if @options[:debug]
             end
           end
+
+          # Merge all presets + file context (file context last = file wins)
+          # Order: preset1, preset2, ..., file context
+          if preset_contexts.any?
+            merged = @preset_manager.send(:merge_preset_data, preset_contexts + [{ context: base_context }])
+            base_context = merged[:context]
+          end
+
+          # Remove presets key from context (it's metadata, already processed)
+          base_context.delete('presets')
+          base_context.delete(:presets)
 
           file_data[:context] = base_context
           file_data[:composed] = true
