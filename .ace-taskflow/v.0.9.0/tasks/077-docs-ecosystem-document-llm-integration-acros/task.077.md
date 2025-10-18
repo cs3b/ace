@@ -1,5 +1,5 @@
 ---
-id: v.0.9.0+task.076
+id: v.0.9.0+task.077
 status: draft
 priority: medium
 estimate: TBD
@@ -137,7 +137,7 @@ Create comprehensive documentation for LLM integration across the ACE ecosystem,
 
 ## References
 
-- Source Idea: `.ace-taskflow/v.0.9.0/docs/ideas/076-20250925-005011-add-documentation-for-new-llm-features.md`
+- Source Idea: `.ace-taskflow/v.0.9.0/docs/ideas/077-20250925-005011-add-documentation-for-new-llm-features.md`
 - Related ADRs:
   - [ADR-012](../../docs/decisions/ADR-012-Dynamic-Provider-System-Architecture.t.md) - Dynamic Provider System
   - [ADR-014](../../docs/decisions/ADR-014-LLM-Integration-Architecture.t.md) - LLM Integration Architecture
