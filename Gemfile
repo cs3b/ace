@@ -12,6 +12,7 @@ gem 'ace-nav', path: 'ace-nav'
 gem 'ace-review', path: 'ace-review'
 gem 'ace-search', path: 'ace-search'
 gem 'ace-support-mac-clipboard', path: 'ace-support-mac-clipboard'
+gem 'ace-support-markdown', path: 'ace-support-markdown'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
