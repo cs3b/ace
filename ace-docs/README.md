@@ -7,10 +7,18 @@ ace-docs:
     files:
       - CHANGELOG.md 
   subject:
-    diff:
-      filters:
-        - ace-docs/**/*.rb 
-        - ace-docs/**/*.md 
+    - code:
+      diff:
+        filters:
+          - ace-docs/**/*.rb 
+    - config:
+      diff:
+        filters:
+          - ace-docs/**/*.md 
+    - docs:
+      diff:
+        filters:
+          - ace-docs/.ace.example/*.md 
 purpose: Overview and quick start guide for ace-docs
 doc-type: reference
 ---
@@ -178,8 +186,29 @@ Optional `ace-docs:` namespace fields:
 
 **Subject configuration (what we're analyzing):**
 
-- `ace-docs.subject.diff.filters`: Array of paths to filter in git diffs (aligns with ace-review)
-- `ace-docs.subject.files`: Array of raw files to include (future feature)
+Single subject format:
+- `ace-docs.subject.diff.filters`: Array of paths to filter in git diffs
+
+Multi-subject format (for categorizing changes):
+```yaml
+ace-docs:
+  subject:
+    - code:
+        diff:
+          filters:
+            - "**/*.rb"
+    - config:
+        diff:
+          filters:
+            - "**/*.yml"
+            - "**/*.yaml"
+    - docs:
+        diff:
+          filters:
+            - "**/*.md"
+```
+
+When using multi-subject configuration, ace-docs generates separate diff files for each subject (e.g., code.diff, config.diff, docs.diff), allowing for focused analysis of different types of changes.
 
 **Context configuration (information for understanding):**
 

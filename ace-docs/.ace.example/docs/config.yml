@@ -13,6 +13,38 @@ llm_temperature: 0.3  # Lower for deterministic compaction
 # Maximum diff lines before warning (context limit)
 max_diff_lines_warning: 100000
 
+# Multi-subject configuration example
+# Define multiple subjects to categorize changes separately
+# Place this in document frontmatter under ace-docs: section
+#
+# Example multi-subject configuration:
+#   ace-docs:
+#     context:
+#       files:
+#         - CHANGELOG.md
+#     subject:
+#       - code:
+#           diff:
+#             filters:
+#               - "**/*.rb"
+#       - config:
+#           diff:
+#             filters:
+#               - "**/*.yml"
+#               - "**/*.yaml"
+#       - docs:
+#           diff:
+#             filters:
+#               - "**/*.md"
+#
+# Single subject configuration (backward compatible):
+#   ace-docs:
+#     subject:
+#       diff:
+#         filters:
+#           - "**/*.rb"
+#           - "**/*.md"
+
 # Validation settings
 validation_enabled: true
 ace_lint_path: ace-lint  # Path to ace-lint executable
