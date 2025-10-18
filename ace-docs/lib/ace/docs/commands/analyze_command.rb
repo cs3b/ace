@@ -190,13 +190,16 @@ module Ace
           # Determine model (use config or default to gflash)
           model = Ace::Docs.config["llm_model"] || "gflash"
 
+          # Get timeout from config (default is 300 seconds from default_config)
+          timeout = Ace::Docs.config["llm_timeout"]
+
           # Call LLM via QueryInterface with system prompt
           result = Ace::LLM::QueryInterface.query(
             model,
             prompts[:user],
             system: prompts[:system],
             temperature: 0.3,
-            timeout: 60
+            timeout: timeout
           )
 
           {

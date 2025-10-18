@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2025-10-18
+
+### Fixed
+
+- **LLM timeout issue in analyze command** - Requests no longer timeout after 60 seconds
+  - Added configurable `llm_timeout` setting with default of 300 seconds (5 minutes)
+  - Timeout can be customized in `.ace/docs/config.yml`
+  - Prevents `Net::ReadTimeout` errors for complex document analyses
+  - Example config updated with timeout documentation
+
+### Added
+
+- New configuration option `llm_timeout` in seconds (default: 300)
+
 ## [0.4.5] - 2025-10-18
 
 ### Changed
