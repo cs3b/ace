@@ -39,7 +39,11 @@ module Ace
 
         # Get the last updated date
         def last_updated
-          date_str = @update_config["last-updated"]
+          # Try ace-docs namespace first
+          date_str = @ace_docs_config["last-updated"]
+          # Fall back to legacy update namespace
+          date_str ||= @update_config["last-updated"]
+
           return nil unless date_str
 
           case date_str
