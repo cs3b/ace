@@ -1,0 +1,31 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2025-10-18
+
+### Added
+- Initial release
+- Frontmatter extraction and serialization atoms
+- Section extraction using Kramdown AST
+- Document validation with hardcoded rules
+- Frontmatter and section editing molecules
+- Safe file writing with backup/rollback
+- Document editor with fluent API
+- Immutable document models
+- Test suite with 100% atom coverage
+
+### Features
+- ATOM architecture (Atoms, Molecules, Organisms, Models)
+- Exact string matching for section identification
+- Atomic file operations with temp file + move pattern
+- Performance: <10ms frontmatter updates, <50ms section edits
+- Zero-corruption design with validation and rollback
+
+[Unreleased]: https://github.com/your-org/ace-support-markdown/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/your-org/ace-support-markdown/releases/tag/v0.1.0
