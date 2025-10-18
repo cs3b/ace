@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2025-10-18
+
+### Changed
+
+- **Optimized workflow for specific file updates** in update-docs.wf.md
+  - Workflow now skips status check when specific files are provided, going directly to analysis
+  - Added clear decision logic: specific files → direct analysis, bulk operations → status-first
+  - Restructured Quick Start section with two distinct paths (Direct Path vs Status-First)
+  - Updated Workflow Steps with conditional flow - Step 1 (Status Check) marked as "Bulk Operations Only"
+  - Enhanced Usage Examples with dedicated "Update specific document (Direct Path)" example
+  - Improved efficiency for common use case: `/ace:update-docs ace-docs/README.md`
+
 ## [0.4.4] - 2025-10-18
 
 ### Fixed
