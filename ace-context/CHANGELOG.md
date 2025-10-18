@@ -5,6 +5,14 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.1] - 2025-10-18
+
+### Fixed
+- Preset composition merge order in file loading - presets now properly override each other in sequence before file config applies
+- `inspect_config` now handles preset composition when files reference presets via `presets:` key
+- `compose_file_with_presets` now merges all presets together first, then applies file config last (file config correctly wins over all presets)
+- Correct argument format for `merge_preset_data` calls - wrapped contexts in preset structures
+
 ## [0.14.0] - 2025-10-18
 
 ### Added
