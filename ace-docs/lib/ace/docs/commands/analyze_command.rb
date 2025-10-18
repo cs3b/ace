@@ -152,6 +152,17 @@ module Ace
             cache_dir: session_dir
           )
 
+          # Save prompts BEFORE calling LLM (for debugging even if LLM fails)
+          if session_dir
+            # Save system prompt
+            system_prompt_path = File.join(session_dir, "prompt-system.md")
+            File.write(system_prompt_path, format_prompt(prompts[:system], "System Prompt"))
+
+            # Save user prompt
+            user_prompt_path = File.join(session_dir, "prompt-user.md")
+            File.write(user_prompt_path, format_prompt(prompts[:user], "User Prompt"))
+          end
+
           # Determine model (use config or default to gflash)
           model = Ace::Docs.config["llm_model"] || "gflash"
 
@@ -185,19 +196,7 @@ module Ace
 
         def save_to_cache(document, diff_result, analysis, since, session_dir:)
           # session_dir is already created in execute method
-          # Note: repo-diff.diff is already saved by DocumentAnalysisPrompt.build
-
-          # Save system prompt
-          if analysis[:system_prompt]
-            system_prompt_path = File.join(session_dir, "prompt-system.md")
-            File.write(system_prompt_path, format_prompt(analysis[:system_prompt], "System Prompt"))
-          end
-
-          # Save user prompt
-          if analysis[:user_prompt]
-            user_prompt_path = File.join(session_dir, "prompt-user.md")
-            File.write(user_prompt_path, format_prompt(analysis[:user_prompt], "User Prompt"))
-          end
+          # Note: repo-diff.diff, context.md, and prompts are already saved by analyze_with_llm
 
           # Save LLM analysis
           analysis_path = File.join(session_dir, "analysis.md")
@@ -221,10 +220,10 @@ module Ace
             "llm_model" => analysis[:model],
             "llm_provider" => analysis[:provider],
             "prompts_saved" => {
-              "system" => analysis[:system_prompt] ? "prompt-system.md" : nil,
-              "user" => analysis[:user_prompt] ? "prompt-user.md" : nil
-            }.compact,
-            "context_saved" => analysis[:context_md] ? "context.md" : nil,
+              "system" => "prompt-system.md",
+              "user" => "prompt-user.md"
+            },
+            "context_saved" => "context.md",
             "diff_stats_saved" => analysis[:diff_stats] ? "diff-stats.yml" : nil
           }
           File.write(metadata_path, metadata.to_yaml)

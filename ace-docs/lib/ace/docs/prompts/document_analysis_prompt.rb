@@ -190,16 +190,20 @@ module Ace
         # @param diff_file [String, nil] Relative path to diff file (e.g., "repo-diff.diff")
         # @return [String] Complete context.md content
         def self.create_context_markdown(base_instructions, document, since, diff_file: nil)
-          # Build frontmatter for ace-context
-          # Note: preset will be loaded separately and merged, not included here
+          # Start with base context config
           context_config = {
             "params" => { "format" => "markdown-xml" },
             "embed_document_source" => true
           }
 
-          # Add diff file to files array if provided
+          # Merge document's context configuration (supports new ace-docs namespace and legacy format)
+          doc_context = document.ace_docs_config&.dig("context") || document.context_config || {}
+          context_config = context_config.merge(doc_context)
+
+          # Add diff file to files array (append to existing files if any)
           if diff_file
-            context_config["files"] = [diff_file]
+            context_config["files"] ||= []
+            context_config["files"] << diff_file
           end
 
           frontmatter = { "context" => context_config }
@@ -249,39 +253,24 @@ module Ace
         end
 
         # Load context.md via ace-context (embeds files as XML)
-        # Loads preset separately if specified, then merges with diff content
+        # ace-context v0.14.0+ processes presets from frontmatter via load_file_as_preset
         # @param context_md [String] The context.md content
-        # @param document [Document] The document configuration (for preset info)
+        # @param document [Document] The document configuration (unused, kept for compatibility)
         # @param cache_dir [String, nil] Directory containing context.md and referenced files
         # @return [String, nil] Final prompt with embedded files or nil if unavailable
         def self.load_context_md(context_md, document:, cache_dir: nil)
           begin
             require "ace/context"
 
-            # Load preset context if specified
-            preset_content = nil
-            preset = document.context_preset
-            if preset && !preset.empty?
-              preset_result = Ace::Context.load_preset(preset)
-              preset_content = preset_result.content if preset_result
-            end
+            # Load context.md - ace-context processes presets and files from frontmatter
+            result = if cache_dir
+                      context_file = File.join(cache_dir, "context.md")
+                      Ace::Context.load_file_as_preset(context_file)
+                    else
+                      Ace::Context.load_auto(context_md)
+                    end
 
-            # Load diff context from context.md
-            diff_content = if cache_dir
-                            context_file = File.join(cache_dir, "context.md")
-                            result = Ace::Context.load_file(context_file)
-                            result.content
-                          else
-                            result = Ace::Context.load_auto(context_md)
-                            result.content
-                          end
-
-            # Merge preset and diff content
-            if preset_content && !preset_content.empty?
-              "#{preset_content}\n\n#{diff_content}"
-            else
-              diff_content
-            end
+            result.content
           rescue LoadError
             warn "ace-context not available - context embedding disabled" if Ace::Docs.debug?
             nil
