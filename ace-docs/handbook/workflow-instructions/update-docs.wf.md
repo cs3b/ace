@@ -25,13 +25,14 @@ Orchestrate ace-docs tools for iterative documentation updates through agent/hum
 ```bash
 # Update all documents needing updates
 ace-docs status --needs-update
-ace-docs diff --needs-update
-# Review changes and update documents
+ace-docs analyze --needs-update
+# Review analysis report and update documents
+cat .cache/ace-docs/analyze-*/analysis.md
 ace-docs update [file] --set last-updated=today
 
 # Update specific type
 ace-docs status --type guide
-ace-docs diff --all --type guide
+ace-docs analyze --all --type guide
 ```
 
 ## Input Handling
@@ -67,12 +68,12 @@ Review the table showing:
 
 If no documents match criteria, exit with message.
 
-### 2. Analyze Changes
+### 2. Analyze Documents
 
-Generate change analysis for selected documents:
+Generate LLM-powered analysis for selected documents:
 
 ```bash
-ace-docs diff [file|--all|--needs-update] [options]
+ace-docs analyze [file|--all|--needs-update] [options]
 ```
 
 Options:
@@ -80,9 +81,27 @@ Options:
 - `--exclude-renames`: Skip renamed files
 - `--exclude-moves`: Skip moved files
 
-The diff is saved to `.cache/ace-docs/diff-{timestamp}.md`
+The analysis is saved to `.cache/ace-docs/analyze-{timestamp}/analysis.md`
+
+**Note**: The analyze directory contains additional files (context.md, *.diff, prompts) for debugging purposes only. The workflow uses `analysis.md` as the primary output.
 
 **Decision Point**: If no changes detected, exit workflow.
+
+### 2.5 Review Analysis Report
+
+Read the generated analysis report:
+
+```bash
+cat .cache/ace-docs/analyze-*/analysis.md
+```
+
+The report contains:
+- **Summary**: Overview of changes affecting the document
+- **Changes Detected**: Categorized by priority (HIGH/MEDIUM/LOW)
+- **Recommended Updates**: Specific sections to update with reasoning
+- **Additional Notes**: Context and patterns to consider
+
+Use these LLM recommendations to guide your document updates in the next step.
 
 ### 3. Review and Update Documents
 
@@ -93,11 +112,12 @@ For each document with changes:
 - Review frontmatter configuration
 - Note update focus areas if specified
 
-#### b. Analyze Relevant Changes
-Using the generated diff:
-- Filter changes relevant to document purpose
-- Consider focus hints in frontmatter
-- Identify sections needing updates
+#### b. Apply Analysis Recommendations
+Using the analysis.md report:
+- Focus on HIGH priority changes first
+- Review specific "Recommended Updates" for the document
+- Consider the reasoning provided for each recommendation
+- Maintain document style while incorporating changes
 
 #### c. Update Document Content
 **Agent/Human Decision**: Based on changes:
@@ -202,7 +222,8 @@ This workflow provides:
 - **Missing frontmatter**: Suggest adding ace-docs frontmatter
 - **Validation failures**: Report specific issues, continue with other docs
 - **Git errors**: Check repository state, suggest fixes
-- **LLM unavailable**: Fall back to basic diff without summarization
+- **LLM unavailable**: The analyze command will fail - it requires LLM for generating recommendations
+- **Empty analysis**: Check if document has subject configuration and if changes exist in the time period
 
 ## Integration Points
 
@@ -212,11 +233,13 @@ Load project context for documentation:
 ace-context load --preset docs
 ```
 
-### With ace-llm-query
-For intelligent change summarization:
-```bash
-ace-llm-query --prompt "Summarize changes relevant to: [purpose]" < diff.md
-```
+### With LLM Analysis
+The `ace-docs analyze` command automatically integrates with LLM for intelligent change analysis. The `analysis.md` output provides:
+- Prioritized changes (HIGH/MEDIUM/LOW)
+- Specific recommendations for document updates
+- Context-aware reasoning
+
+No manual LLM integration is needed - it's built into the analyze command.
 
 ### With git workflow
 After updates, commit changes:
@@ -245,6 +268,24 @@ document_types:
       update_frequency: on-change
 ```
 
+### Multi-Subject Configuration
+Configure multiple subjects in document frontmatter for categorized analysis:
+```yaml
+ace-docs:
+  subject:
+    - code:
+        diff:
+          filters: ["**/*.rb", "**/*.js"]
+    - config:
+        diff:
+          filters: ["**/*.yml", "**/*.yaml"]
+    - docs:
+        diff:
+          filters: ["**/*.md"]
+```
+
+The `analyze` command will generate separate diffs for each subject, providing more focused analysis.
+
 ### Global Rules
 ```yaml
 global_rules:
@@ -267,11 +308,14 @@ Workflow exits when:
 # Find stale guide documents
 ace-docs status --type guide --freshness stale
 
-# Analyze changes
-ace-docs diff --type guide --freshness stale
+# Analyze changes and generate recommendations
+ace-docs analyze --type guide --freshness stale
 
-# Update each document
-# [Review and update content]
+# Review the analysis report
+cat .cache/ace-docs/analyze-*/analysis.md
+
+# Update each document based on recommendations
+# [Review analysis.md and update content]
 ace-docs update guide1.md --set last-updated=today
 ```
 
@@ -285,6 +329,16 @@ ace-docs update --preset standard --set version=2.0
 ```bash
 # Validate all changed documents
 ace-docs validate $(git diff --name-only -- '*.md')
+```
+
+### Analyze and update workflow
+```bash
+# Full workflow for updating documents
+ace-docs status --needs-update
+ace-docs analyze --needs-update
+cat .cache/ace-docs/analyze-*/analysis.md
+# Review recommendations and update documents
+ace-docs update [file] --set last-updated=today
 ```
 
 ## Notes
