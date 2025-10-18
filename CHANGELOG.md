@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.78] - 2025-10-18
+
+### Changed
+
+- **ace-docs v0.4.5**: Optimized update-docs workflow for specific file updates
+  - Workflow now skips status check when specific files are provided, going directly to analysis
+  - Clear decision logic: specific files → direct analysis, bulk operations → status-first
+  - Restructured Quick Start section with two distinct paths (Direct Path vs Status-First)
+  - Conditional workflow steps - Step 1 (Status Check) marked as "Bulk Operations Only"
+  - Enhanced usage examples with dedicated "Update specific document" example
+  - Improved efficiency for common use case: `/ace:update-docs ace-docs/README.md`
+
 ## [0.9.77] - 2025-10-18
 
 ### Added
