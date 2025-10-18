@@ -1,6 +1,6 @@
 ---
 ace-docs:
-  last-updated: '2025-10-14'
+  last-updated: '2025-10-18'
   context:
     presets: 
       - project-base
@@ -33,14 +33,16 @@ ace-docs is a comprehensive documentation management solution that combines dete
 
 - **Document Discovery**: Automatically finds markdown files with ace-docs frontmatter
 - **Freshness Tracking**: Shows last-updated dates and identifies stale documents
-- **Change Analysis**: Generates relevant change summaries using git diff
-- **Batch Analysis**: LLM-powered diff compaction for efficient documentation updates
+- **LLM-Powered Analysis**: New `analyze` command for intelligent documentation change analysis
+- **Multi-Subject Support**: Generate separate diffs for code, config, and docs categories
+- **Change Analysis**: Generates relevant change summaries using git diff with multi-subject filtering
 - **Metadata Management**: Updates frontmatter fields (dates, versions) accurately
 - **Rule Validation**: Enforces max-lines, required sections, and no-duplicate rules
+- **Semantic Validation**: LLM-powered content validation for accuracy and relevance
 - **ace-lint Integration**: Delegates syntax validation to ace-lint when available
-- **LLM Integration**: Uses ace-llm-query for intelligent change summarization
-- **Context Integration**: Leverages ace-context for project awareness
+- **Context Integration**: Leverages ace-context for project awareness and embedding
 - **Configuration Cascade**: Uses ace-core config system for flexible settings
+- **ADR Management**: Comprehensive workflows for Architecture Decision Records lifecycle
 
 ## Installation
 
@@ -99,17 +101,20 @@ ace-docs diff docs/architecture.md
 ace-docs diff --all
 ```
 
-### 4. Batch analysis with LLM compaction
+### 4. Analyze changes with LLM
 
 ```bash
-# Analyze documents needing updates with LLM compaction
+# Analyze specific document with LLM-powered analysis
+ace-docs analyze docs/architecture.md
+
+# Analyze documents needing updates
 ace-docs analyze --needs-update
 
-# Analyze specific documents
-ace-docs analyze docs/architecture.md docs/tools.md
-
 # Analyze with custom time range
-ace-docs analyze --needs-update --since "1 week ago"
+ace-docs analyze docs/tools.md --since "1 week ago"
+
+# Analyze all documents
+ace-docs analyze --all
 
 # Filter by document type or freshness
 ace-docs analyze --type guide --freshness stale
@@ -146,6 +151,11 @@ ace-docs validate --semantic
 Create `.ace/docs/config.yml` in your project:
 
 ```yaml
+# Cache and processing settings
+cache_dir: .cache/ace-docs     # Directory for analysis cache
+llm_temperature: 0.3            # LLM temperature for analysis
+
+# Document type configuration
 document_types:
   context:
     paths:
@@ -161,12 +171,18 @@ document_types:
       update_frequency: monthly
       max_lines: 500
 
+# Global validation rules
 global_rules:
   max_lines: 1000
   required_frontmatter:
     - doc-type
     - purpose
+
+# Integration settings
+ace_lint_path: ace-lint        # Path to ace-lint executable
 ```
+
+Configuration uses ace-core's cascade system - settings are searched from current directory up to home directory, with nearest configuration winning.
 
 See `.ace.example/docs/config.yml` for complete configuration options.
 
@@ -246,9 +262,30 @@ Find and list all managed documents
 ace-docs discover
 ```
 
+### analyze
+
+LLM-powered documentation analysis with multi-subject support
+
+```bash
+ace-docs analyze [FILE] [OPTIONS]
+  --all                 # Analyze all managed documents
+  --needs-update        # Analyze documents needing update
+  --since DATE          # Date or commit to analyze from
+  --type TYPE           # Filter by document type
+  --freshness STATUS    # Filter by freshness status
+  --exclude-renames     # Exclude renamed files from diff
+  --exclude-moves       # Exclude moved files from diff
+```
+
+The analyze command:
+- Generates separate diffs for each configured subject (code, config, docs)
+- Creates an LLM-powered analysis report with recommendations
+- Saves results to `.cache/ace-docs/analyze-{timestamp}/`
+- Outputs: `analysis.md`, subject diff files, context, and prompts
+
 ### diff
 
-Analyze repository changes
+Generate repository change diffs
 
 ```bash
 ace-docs diff [FILE] [OPTIONS]
@@ -280,6 +317,14 @@ ace-docs validate [FILE|PATTERN] [OPTIONS]
   --all                 # Run all validation types
 ```
 
+### version
+
+Display ace-docs version
+
+```bash
+ace-docs version
+```
+
 ## Integration
 
 ### With Workflows
@@ -305,14 +350,14 @@ context:
 
 ### With ace-llm-query
 
-Change analysis uses LLM for intelligent summarization:
+The analyze command uses LLM for intelligent documentation analysis:
 
 ```bash
-# Diff analysis automatically uses ace-llm-query
-ace-docs diff --needs-update
+# Analyze command automatically uses ace-llm-query
+ace-docs analyze --needs-update
 
-# Results saved with LLM-analyzed relevance
-cat .cache/ace-docs/diff-*.md
+# Results saved with LLM-powered recommendations
+cat .cache/ace-docs/analyze-*/analysis.md
 ```
 
 ## Architecture
