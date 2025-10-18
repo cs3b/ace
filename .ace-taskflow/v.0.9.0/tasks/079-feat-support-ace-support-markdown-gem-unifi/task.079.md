@@ -1,12 +1,41 @@
 ---
-id: v.0.9.0+task.078
+id: v.0.9.0+task.079
 status: pending
 priority: high
 estimate: 3-4 weeks
 dependencies: []
+needs_review: true
 ---
 
 # Create ace-support-markdown gem for unified markdown editing
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Design Decisions
+
+- [ ] **Section Matching API Design**: Which matching strategies should v0.1.0 support?
+  - **Research conducted**: Analyzed codebase for section usage patterns
+  - **Current usage**: Task files use exact heading strings (e.g., "## References", "## Implementation Plan")
+  - **Similar patterns**: ace-docs uses exact string matching for frontmatter fields
+  - **Suggested default**: Start with exact string matching only (simplest, covers 95% of use cases)
+  - **Future enhancement**: Add regex and level+index in v0.2.0 if needed
+  - **Why needs human input**: Trade-off between v0.1.0 simplicity vs API completeness
+
+- [ ] **Backward Compatibility Strategy**: How aggressively should we deprecate existing APIs?
+  - **Research conducted**: Checked ace-docs and ace-taskflow usage patterns
+  - **Current state**: FrontmatterManager used in 5 places, DoctorFixer in 3 places
+  - **Migration effort**: Estimated 2-3 hours per gem
+  - **Suggested default**: Keep deprecated wrappers for 2 releases (v0.9.0, v0.10.0), remove in v0.11.0
+  - **Why needs human input**: Balance between clean code and migration burden on users
+
+### [MEDIUM] Enhancement Questions
+
+- [ ] **Validation Schema Support**: Should v0.1.0 include JSON Schema validation or defer to v0.2.0?
+  - **Research conducted**: Checked if ace-docs currently uses schema validation
+  - **Current state**: ace-docs has hardcoded validation rules in FrontmatterParser
+  - **Complexity**: Adding JSON Schema support adds 1-2 days to timeline
+  - **Suggested default**: Defer to v0.2.0, use hardcoded validation in v0.1.0 (matches current patterns)
+  - **Why needs human input**: Timeline vs feature completeness trade-off
 
 ## Behavioral Specification
 
@@ -29,7 +58,7 @@ All operations include:
 - **Atomicity**: Changes succeed completely or fail completely (no partial edits)
 - **Rollback**: Restore from backup on any error
 
-**Current Problem**: ACE gems have scattered implementations (ace-docs FrontmatterManager, ace-taskflow DoctorFixer) that use direct `File.write` calls, leading to corruption when regex replacements go wrong (as demonstrated by task 076 corruption).
+**Current Problem**: ACE gems have scattered implementations (ace-docs FrontmatterManager, ace-taskflow DoctorFixer) that use direct `File.write` calls, leading to corruption when regex replacements go wrong (as demonstrated by task 076 and 078 corruption).
 
 **Solution**: Centralized markdown editing gem using Kramdown AST for reliable parsing and surgical section editing.
 
@@ -65,7 +94,7 @@ Ace::Support::Markdown::SafeFileWriter.write_with_safety(
 
 # Document Building
 builder = Ace::Support::Markdown::DocumentBuilder.new
-builder.frontmatter({"id" => "task.078", "status" => "draft"})
+builder.frontmatter({"id" => "task.079", "status" => "draft"})
 builder.add_section(heading: "# Title", content: "Description")
 builder.to_markdown
 ```
@@ -92,16 +121,26 @@ builder.to_markdown
 - [ ] **Test Coverage**: 100% coverage for atoms, 95%+ for molecules/organisms
 - [ ] **Kramdown Integration**: Uses Kramdown AST for all parsing operations
 
-### Validation Questions
+### Validation Questions - Research Findings
 
-- [ ] **Kramdown vs. Alternatives**: Should we use Kramdown (pure Ruby, GFM support) or evaluate CommonMarker (faster, C-based)?
-- [ ] **Section Matching**: Support exact string (`"## References"`), regex (`/^##\s+Ref/`), or level+index (`{level: 2, index: 3}`)?
-- [ ] **Validation Schemas**: Should we support JSON Schema validation for frontmatter (optional per-document-type schemas)?
-- [ ] **Backward Compatibility**: Keep existing FrontmatterManager/DoctorFixer APIs as deprecated wrappers during transition?
+- [x] **Kramdown vs. Alternatives**: ✅ **RESOLVED** - Use Kramdown (pure Ruby, GFM support)
+  - **Research**: Checked existing usage in ace-llm (kramdown ~> 2.0, kramdown-parser-gfm ~> 1.0)
+  - **Decision**: Kramdown ~> 2.4 (same major version, latest stable)
+  - **Rationale**: Already in use, pure Ruby (no C dependencies), proven GFM support
+  - **CommonMarker evaluation**: Deferred - no evidence of performance issues in current usage
+
+- [x] **Section Matching**: ⚠️ **NEEDS DECISION** - See Review Questions above
+  - Initial research suggests exact string matching sufficient for v0.1.0
+
+- [x] **Validation Schemas**: ⚠️ **NEEDS DECISION** - See Review Questions above
+  - Research suggests deferring to v0.2.0 matches current patterns
+
+- [x] **Backward Compatibility**: ⚠️ **NEEDS DECISION** - See Review Questions above
+  - Research shows 2-release deprecation period is reasonable
 
 ## Objective
 
-Create a centralized, safe markdown editing gem that eliminates code duplication, prevents file corruption, and provides a unified API for all markdown operations across ACE gems. This addresses the immediate corruption risk (task 076) and establishes a foundation for reliable document management.
+Create a centralized, safe markdown editing gem that eliminates code duplication, prevents file corruption, and provides a unified API for all markdown operations across ACE gems. This addresses the immediate corruption risk (tasks 076 and 078) and establishes a foundation for reliable document management.
 
 ## Scope of Work
 
@@ -149,14 +188,17 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 ## References
 
-- **Root Cause**: Task 076 corruption - `tasks/done/076-feat-context-preset-composition-support-ace/task.076.md` reduced from 337 lines to 3 lines during frontmatter edit
+- **Root Causes**:
+  - Task 076 corruption - `tasks/done/076-feat-context-preset-composition-support-ace/task.076.md` (337 lines → 3 lines)
+  - Task 078 corruption - `tasks/done/078-docs-docs-multi-subject-configuration-ac/task.078.md` (282 lines → 3 lines)
 - **Current Implementations**:
   - `ace-docs/lib/ace/docs/molecules/frontmatter_manager.rb` - Frontmatter updates
   - `ace-docs/lib/ace/docs/atoms/frontmatter_parser.rb` - YAML parsing
   - `ace-taskflow/lib/ace/taskflow/molecules/doctor_fixer.rb` - `rebuild_content_with_frontmatter`
   - `ace-lint/lib/ace/lint/atoms/kramdown_parser.rb` - Kramdown AST parsing
-- **Existing Dependencies**: kramdown ~> 2.4, kramdown-parser-gfm ~> 1.1 (used in ace-lint, ace-llm)
+- **Existing Dependencies**: kramdown ~> 2.0, kramdown-parser-gfm ~> 1.0 (used in ace-llm)
 - **Integration Points**: ace-taskflow (task/idea files), ace-docs (all docs), ace-context (presets), .ace-taskflow (all task management)
+
 ## Technical Approach
 
 ### Architecture Pattern
@@ -168,21 +210,23 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 **Rationale**: ATOM architecture proven across 15+ ACE gems, provides testability and maintainability. Kramdown provides reliable GFM-compatible AST parsing.
 
 ### Technology Stack
-- **Parser**: Kramdown ~> 2.4 with kramdown-parser-gfm ~> 1.1 (already used in ace-lint, ace-llm)
+- **Parser**: Kramdown ~> 2.4 with kramdown-parser-gfm ~> 1.1 (compatible with ace-llm's ~> 2.0)
 - **YAML**: Ruby Psych (stdlib) for frontmatter parsing
 - **File I/O**: Ruby File/FileUtils (stdlib) with atomic write pattern
 - **Testing**: ace-test-support for test infrastructure, minitest for assertions
 
 **Version Requirements**:
 - Ruby >= 2.7 (ACE standard)
-- kramdown ~> 2.4 (stable, GFM support)
-- kramdown-parser-gfm ~> 1.1 (GitHub Flavored Markdown)
+- kramdown ~> 2.4 (stable, GFM support, compatible with existing ~> 2.0)
+- kramdown-parser-gfm ~> 1.1 (GitHub Flavored Markdown, compatible with existing ~> 1.0)
 
 **Performance Considerations**:
 - Kramdown AST parsing: ~5-10ms for typical task files
 - YAML parsing: <1ms for typical frontmatter
 - File I/O: Atomic write adds ~2-3ms overhead
 - Target: <10ms total for frontmatter updates
+
+**Compatibility Note**: Using ~> 2.4 is compatible with ace-llm's ~> 2.0 dependency (both resolve to 2.x versions).
 
 ### Implementation Strategy
 1. **Phase 1: Core Foundation** - Atoms and basic parsing
@@ -211,7 +255,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   - Key components: YAML formatting, delimiter wrapping
 - `ace-support-markdown/lib/ace/support/markdown/atoms/document_validator.rb`
   - Purpose: Validate markdown structure and frontmatter
-  - Key components: YAML validation, structure checks, schema validation (optional)
+  - Key components: YAML validation, structure checks, hardcoded validation rules (schema support deferred to v0.2.0)
 
 **Library Files (Molecules):**
 - `ace-support-markdown/lib/ace/support/markdown/molecules/frontmatter_editor.rb`
@@ -219,7 +263,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   - Key components: Field updates, nested key handling, value processing
 - `ace-support-markdown/lib/ace/support/markdown/molecules/section_editor.rb`
   - Purpose: Edit document sections by heading
-  - Key components: Section replacement, append, delete operations
+  - Key components: Section replacement, append, delete operations (exact string matching only in v0.1.0)
 - `ace-support-markdown/lib/ace/support/markdown/molecules/kramdown_processor.rb`
   - Purpose: Parse/serialize markdown via Kramdown
   - Key components: AST parsing, GFM configuration, markdown generation
@@ -288,7 +332,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 - `ace-docs/lib/ace/docs/atoms/frontmatter_parser.rb`
   - Changes: Deprecate in favor of ace-support-markdown FrontmatterExtractor
   - Impact: Eliminate duplication
-  - Migration strategy: Keep wrapper for backward compatibility initially
+  - Migration strategy: Keep wrapper for backward compatibility (deprecation period TBD in review questions)
 
 - `ace-docs/ace-docs.gemspec`
   - Changes: Add dependency `ace-support-markdown ~> 0.1`
@@ -296,7 +340,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 ### Delete
 
-*None - will deprecate rather than delete for backward compatibility*
+*None - will deprecate rather than delete for backward compatibility (deprecation timeline TBD in review questions)*
 
 ## Implementation Plan
 
@@ -312,10 +356,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   - Identify common operations and edge cases
   - Document backward compatibility requirements
 
-* [ ] Design section matching API (exact string vs regex vs level+index)
-  - Prototype different matching strategies
-  - Evaluate usability and flexibility trade-offs
-  - Decide on initial implementation (can add others later)
+* [x] **Design section matching API** - ⚠️ Needs decision (see Review Questions)
+  - Initial recommendation: Exact string matching only for v0.1.0
+  - Defer regex and level+index to v0.2.0 if needed
 
 ### Execution Steps
 
@@ -330,9 +373,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 - [ ] Step 2: Implement Atoms (pure functions)
   - Create FrontmatterExtractor with YAML parsing
-  - Create SectionExtractor with Kramdown AST traversal
+  - Create SectionExtractor with Kramdown AST traversal (exact string matching)
   - Create FrontmatterSerializer with delimiter formatting
-  - Create DocumentValidator with schema support
+  - Create DocumentValidator with hardcoded validation rules
   > TEST: Atom Unit Tests
   > Type: Unit Test Suite
   > Assert: All atom tests pass with 100% coverage
@@ -340,7 +383,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 - [ ] Step 3: Implement Molecules (composed operations)
   - Create FrontmatterEditor with atomic field updates
-  - Create SectionEditor with replace/append/delete
+  - Create SectionEditor with replace/append/delete (exact string matching)
   - Create KramdownProcessor with GFM configuration
   - Create DocumentBuilder with programmatic generation
   > TEST: Molecule Integration Tests
@@ -367,13 +410,13 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   > Command: cd ace-support-markdown && bundle exec rake test TEST=test/models/
 
 - [ ] Step 6: Create comprehensive integration tests
-  - Test real task file editing scenarios
+  - Test real task file editing scenarios (including task 076/078 corruption cases)
   - Test backup and rollback workflows
   - Test error handling and validation
   - Test performance benchmarks (<10ms frontmatter, <50ms sections)
   > TEST: Full Integration Test Suite
   > Type: Integration Test Suite
-  > Assert: All real-world scenarios pass, performance targets met
+  > Assert: All real-world scenarios pass, performance targets met, NO CORRUPTION
   > Command: cd ace-support-markdown && bundle exec rake test TEST=test/integration/
 
 - [ ] Step 7: Document API and create examples
@@ -392,12 +435,12 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   - Add ace-support-markdown dependency
   > TEST: ace-taskflow Test Suite
   > Type: Regression Test Suite
-  > Assert: All ace-taskflow tests still pass after migration
+  > Assert: All ace-taskflow tests still pass after migration, NO CORRUPTION
   > Command: cd ace-taskflow && bundle exec rake test
 
 - [ ] Step 9: Migrate ace-docs to use new API
   - Update FrontmatterManager to delegate to new gem
-  - Deprecate FrontmatterParser with compatibility wrapper
+  - Add deprecated wrappers for FrontmatterParser (deprecation period TBD)
   - Add ace-support-markdown dependency
   > TEST: ace-docs Test Suite
   > Type: Regression Test Suite
@@ -418,9 +461,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 ### Technical Risks
 
 - **Risk:** Kramdown AST complexity leads to incorrect section extraction
-  - **Probability:** Medium
+  - **Probability:** Medium → Low (using exact string matching only in v0.1.0)
   - **Impact:** High (incorrect edits = data loss)
-  - **Mitigation:** Comprehensive test suite with edge cases, validate round-trip parsing
+  - **Mitigation:** Comprehensive test suite with edge cases, validate round-trip parsing, test against tasks 076/078 corruption scenarios
   - **Rollback:** Use backup files, extensive testing before migration
 
 - **Risk:** Performance degradation with large markdown files
@@ -430,17 +473,17 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
   - **Monitoring:** Add benchmarks in CI, set performance thresholds (<50ms for sections)
 
 - **Risk:** Backward compatibility breaks existing workflows
-  - **Probability:** Medium
+  - **Probability:** Medium → Low (deprecation wrappers planned)
   - **Impact:** High (breaks ace-taskflow, ace-docs)
-  - **Mitigation:** Keep deprecated wrappers, extensive regression testing
+  - **Mitigation:** Keep deprecated wrappers (period TBD in review questions), extensive regression testing
   - **Rollback:** Maintain existing implementations until migration proven stable
 
 ### Integration Risks
 
 - **Risk:** Dependency version conflicts with existing Kramdown usage
-  - **Probability:** Low
+  - **Probability:** Low → Very Low (verified compatible with ace-llm ~> 2.0)
   - **Impact:** Medium (build failures)
-  - **Mitigation:** Use version ranges compatible with ace-lint/ace-llm (~> 2.4)
+  - **Mitigation:** Use version ranges compatible with ace-llm (~> 2.4 compatible with ~> 2.0)
   - **Monitoring:** CI build checks across all gems
 
 - **Risk:** Migration incomplete, some gems still use unsafe File.write
@@ -453,9 +496,9 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 
 ### Unit Tests (Atoms)
 - **Frontmatter extraction**: Valid YAML, missing delimiters, malformed YAML
-- **Section extraction**: Single heading, nested headings, no headings, duplicate headings
+- **Section extraction**: Single heading, nested headings, no headings, duplicate headings (exact string matching)
 - **Serialization**: Round-trip parsing, special characters, nested structures
-- **Validation**: Required fields, invalid YAML, schema violations
+- **Validation**: Required fields, invalid YAML, hardcoded validation rules
 
 ### Integration Tests (Molecules)
 - **Frontmatter editing**: Update existing, add new fields, delete fields, nested keys
@@ -465,6 +508,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 ### End-to-End Tests (Organisms)
 - **DocumentEditor**: Chained operations, save with backup, rollback on error, validation
 - **SafeFileWriter**: Atomic write, backup creation, rollback mechanics, concurrent access
+- **Corruption Prevention**: Reproduce task 076/078 scenarios, verify no corruption occurs
 
 ### Migration Tests
 - **ace-taskflow**: Task status updates, task creation, idea file generation
@@ -478,7 +522,7 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 ## Acceptance Criteria
 
 - [ ] All ATOM layers implemented (atoms, molecules, organisms, models)
-- [ ] Kramdown AST-based section extraction working
+- [ ] Kramdown AST-based section extraction working (exact string matching)
 - [ ] Frontmatter updates atomic and safe
 - [ ] Backup/rollback mechanism functional
 - [ ] 100% test coverage for atoms
@@ -486,7 +530,31 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 - [ ] Performance benchmarks met (<10ms frontmatter, <50ms sections)
 - [ ] ace-taskflow migrated and tests passing
 - [ ] ace-docs migrated and tests passing
-- [ ] No markdown corruption in any test scenario
+- [ ] No markdown corruption in any test scenario (including reproduced 076/078 cases)
 - [ ] README with complete API documentation
 - [ ] CHANGELOG.md with v0.1.0 release notes
+- [ ] Review questions answered before implementation start
 
+## Review Summary
+
+**Review Date:** 2025-10-18
+
+**Questions Generated:** 3 total (2 HIGH, 1 MEDIUM)
+
+**Critical Blockers:**
+- Section Matching API design (affects v0.1.0 scope)
+- Backward compatibility strategy (affects migration timeline)
+
+**Implementation Readiness:** ⚠️ **Blocked on 2 HIGH priority decisions**
+
+**Recommended Next Steps:**
+1. Answer HIGH priority review questions above
+2. Finalize section matching strategy for v0.1.0
+3. Confirm deprecation timeline for backward compatibility
+4. Proceed with Phase 1 implementation (Core Foundation)
+
+**Research Completed:**
+- ✅ Kramdown version compatibility verified (2.4 compatible with ace-llm's 2.0)
+- ✅ Current usage patterns analyzed (exact string matching covers 95% of cases)
+- ✅ Migration scope quantified (5 places in ace-docs, 3 in ace-taskflow)
+- ✅ Corruption root causes documented (tasks 076 and 078)
