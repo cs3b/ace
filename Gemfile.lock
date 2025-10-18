@@ -81,6 +81,13 @@ PATH
       ffi (~> 1.15)
 
 PATH
+  remote: ace-support-markdown
+  specs:
+    ace-support-markdown (0.1.0)
+      kramdown (~> 2.4)
+      kramdown-parser-gfm (~> 1.1)
+
+PATH
   remote: ace-taskflow
   specs:
     ace-taskflow (0.11.5)
@@ -142,7 +149,6 @@ GEM
       net-http (>= 0.5.0)
     ffi (1.17.2)
     ffi (1.17.2-arm64-darwin)
-    ffi (1.17.2-x86_64-darwin)
     fileutils (1.7.3)
     json (2.14.1)
     kramdown (2.5.1)
@@ -179,8 +185,6 @@ GEM
 
 PLATFORMS
   arm64-darwin-24
-  ruby
-  x86_64-darwin
 
 DEPENDENCIES
   ace-context!
@@ -194,6 +198,7 @@ DEPENDENCIES
   ace-review!
   ace-search!
   ace-support-mac-clipboard!
+  ace-support-markdown!
   ace-taskflow!
   ace-test-runner!
   ace-test-support!
