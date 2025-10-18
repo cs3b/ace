@@ -20,3 +20,6 @@ coverage
 ace-taskflow/.ace-taskflow/
 *.tmp
 *.diff
+
+# git - worktree 
+.ace-worktrees
