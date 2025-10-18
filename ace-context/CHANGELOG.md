@@ -5,6 +5,22 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2025-10-18
+
+### Added
+- File configuration loading via `-f/--file` CLI option
+- Support for YAML files and markdown with frontmatter as configuration sources
+- Multiple file loading with `-f file1.yml -f file2.md`
+- Mix presets and files: `ace-context -p base -f custom.yml`
+- Files can reference and compose with existing presets via `presets:` key
+- New public API methods: `load_file_as_preset` and `load_multiple_inputs`
+- Comprehensive file loading tests
+
+### Changed
+- Enhanced `inspect_config` to handle both presets and files
+- Updated CLI help with file loading examples
+- Expanded documentation with file configuration section
+
 ## [0.13.0] - 2025-10-17
 
 ### Added
