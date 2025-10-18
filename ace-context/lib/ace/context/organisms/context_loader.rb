@@ -148,32 +148,61 @@ module Ace
 
         # Inspect configuration without loading files or executing commands
         # Returns a ContextData with just the merged configuration as YAML
-        def inspect_config(preset_names)
+        def inspect_config(inputs)
           require 'yaml'
 
-          # Load all presets with composition
-          presets = []
+          # Load all inputs (presets and files) with composition
+          configs = []
           warnings = []
 
-          preset_names.each do |preset_name|
-            preset = @preset_manager.load_preset_with_composition(preset_name)
-            if preset[:success]
-              presets << preset
+          inputs.each do |input|
+            # Auto-detect if it's a file or preset
+            if File.exist?(input)
+              # Load as file
+              begin
+                # Read file and parse config
+                content = File.read(input)
+                config = {}
+
+                if input.match?(/\.ya?ml$/i)
+                  config = YAML.safe_load(content, aliases: true, permitted_classes: [Symbol]) || {}
+                elsif has_frontmatter?(input)
+                  if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
+                    frontmatter = YAML.safe_load($1, aliases: true, permitted_classes: [Symbol]) || {}
+                    config = frontmatter['context'] || frontmatter
+                  end
+                end
+
+                configs << {
+                  success: true,
+                  context: config,
+                  name: File.basename(input),
+                  source_file: input
+                }
+              rescue => e
+                warnings << "Failed to load file #{input}: #{e.message}"
+              end
             else
-              warnings << preset[:error]
+              # Load as preset
+              preset = @preset_manager.load_preset_with_composition(input)
+              if preset[:success]
+                configs << preset
+              else
+                warnings << preset[:error]
+              end
             end
           end
 
-          # If no successful presets, return error
-          if presets.empty?
+          # If no successful configs, return error
+          if configs.empty?
             context = Models::ContextData.new
-            context.metadata[:error] = "No valid presets loaded"
+            context.metadata[:error] = "No valid inputs loaded"
             context.metadata[:warnings] = warnings
             return context
           end
 
           # Merge configurations (just the config, not content)
-          merged_config = merge_preset_configurations(presets)
+          merged_config = merge_preset_configurations(configs)
 
           # Add warnings if any
           merged_config[:warnings] = warnings if warnings.any?
@@ -185,7 +214,7 @@ module Ace
           context = Models::ContextData.new
           context.content = yaml_output
           context.metadata[:inspect_mode] = true
-          context.metadata[:preset_names] = preset_names
+          context.metadata[:inputs] = inputs
 
           context
         end
@@ -201,6 +230,70 @@ module Ace
 
           # Merge all contexts
           merge_contexts(contexts)
+        end
+
+        # Load multiple inputs (presets and files) and merge them
+        # Maintains order of specification to allow proper override semantics
+        def load_multiple_inputs(preset_names, file_paths, options = {})
+          contexts = []
+          warnings = []
+
+          # Process presets
+          preset_names.each do |preset_name|
+            # Use composition-aware loading for each preset
+            preset = @preset_manager.load_preset_with_composition(preset_name)
+
+            if preset[:success]
+              params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
+              merged_options = @options.merge(params)
+              context = load_from_preset_config(preset, merged_options)
+              context.metadata[:preset_name] = preset_name
+              context.metadata[:source_type] = 'preset'
+              context.metadata[:output] = preset[:output]  # Store preset's output mode
+
+              # Add composition metadata if preset was composed
+              if preset[:composed]
+                context.metadata[:composed] = true
+                context.metadata[:composed_from] = preset[:composed_from]
+              end
+
+              contexts << context
+            else
+              # Log warning but continue with other inputs
+              warnings << "Warning: #{preset[:error]}"
+              warn "Warning: #{preset[:error]}" if @options[:debug]
+            end
+          end
+
+          # Process files
+          file_paths.each do |file_path|
+            begin
+              context = load_file_as_preset(file_path)
+              context.metadata[:source_type] = 'file'
+              context.metadata[:source_path] = file_path
+              contexts << context
+            rescue => e
+              warnings << "Warning: Failed to load file #{file_path}: #{e.message}"
+              warn "Warning: Failed to load file #{file_path}: #{e.message}" if @options[:debug]
+            end
+          end
+
+          # Return error if all inputs failed
+          if contexts.empty? && warnings.any?
+            return Models::ContextData.new.tap do |c|
+              c.metadata[:error] = "Failed to load any inputs"
+              c.metadata[:errors] = warnings
+              c.content = warnings.join("\n")
+            end
+          end
+
+          # Merge all contexts (with proper order for overrides)
+          merged_context = merge_contexts(contexts)
+
+          # Add warnings to metadata if any
+          merged_context.metadata[:warnings] = warnings if warnings.any?
+
+          merged_context
         end
 
         def load_auto(input)
@@ -433,7 +526,118 @@ module Ace
           context
         end
 
+        # Load a file and treat it as a preset-like configuration
+        # Supports YAML files and markdown with frontmatter
+        def load_file_as_preset(path)
+          unless File.exist?(path)
+            return Models::ContextData.new.tap do |c|
+              c.metadata[:error] = "File not found: #{path}"
+              c.content = "Error: File not found: #{path}"
+            end
+          end
+
+          content = File.read(path)
+          config = {}
+
+          # Check if it's a YAML file
+          if path.match?(/\.ya?ml$/i)
+            begin
+              yaml_content = YAML.safe_load(content, aliases: true, permitted_classes: [Symbol])
+              config = yaml_content.is_a?(Hash) ? yaml_content : {}
+            rescue Psych::SyntaxError => e
+              return Models::ContextData.new.tap do |c|
+                c.metadata[:error] = "Invalid YAML in #{path}: #{e.message}"
+                c.content = "Error: Invalid YAML: #{e.message}"
+              end
+            end
+          elsif has_frontmatter?(path)
+            # Extract frontmatter from markdown file
+            if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
+              frontmatter_yaml = $1
+              begin
+                frontmatter = YAML.safe_load(frontmatter_yaml, aliases: true, permitted_classes: [Symbol])
+                frontmatter = {} unless frontmatter.is_a?(Hash)
+
+                # Use context key if present, otherwise use frontmatter directly
+                config = frontmatter['context'] || frontmatter
+              rescue Psych::SyntaxError => e
+                return Models::ContextData.new.tap do |c|
+                  c.metadata[:error] = "Invalid YAML frontmatter in #{path}: #{e.message}"
+                  c.content = "Error: Invalid YAML frontmatter: #{e.message}"
+                end
+              end
+            end
+          else
+            # Not a YAML file or markdown with frontmatter - treat as plain file
+            return load_file(path)
+          end
+
+          # Extract params and merge into options
+          params = config['params'] || config[:params] || {}
+          merged_options = @options.merge(params)
+
+          # Build a preset-like structure
+          preset_data = {
+            success: true,
+            context: config,
+            output: config['output'] || config[:output] || params['output'] || params[:output],
+            name: File.basename(path, '.*'),
+            source_file: path
+          }
+
+          # Check for preset composition in file
+          if config['presets'] || config[:presets]
+            preset_data[:presets] = Array(config['presets'] || config[:presets])
+            # Load with composition
+            preset_data = compose_file_with_presets(preset_data)
+          end
+
+          # Load from the preset-like config
+          context = load_from_preset_config(preset_data, merged_options)
+          context.metadata[:loaded_from_file] = true
+          context.metadata[:file_path] = path
+          context.metadata[:source_type] = 'file'
+          context.metadata[:output] = preset_data[:output] if preset_data[:output]
+
+          context
+        end
+
+        # Compose a file configuration with referenced presets
+        def compose_file_with_presets(file_data)
+          preset_names = file_data[:presets] || []
+          return file_data if preset_names.empty?
+
+          # Load each referenced preset and merge
+          base_context = file_data[:context]
+          composed_from = [file_data[:name]]
+
+          preset_names.each do |preset_name|
+            preset = @preset_manager.load_preset_with_composition(preset_name)
+            if preset[:success]
+              # Merge preset into base context
+              preset_context = preset[:context]
+              base_context = @preset_manager.send(:merge_preset_data, preset_context, base_context)
+              composed_from << preset_name
+              composed_from.concat(preset[:composed_from]) if preset[:composed_from]
+            else
+              warn "Warning: Failed to load preset '#{preset_name}' referenced in file" if @options[:debug]
+            end
+          end
+
+          file_data[:context] = base_context
+          file_data[:composed] = true
+          file_data[:composed_from] = composed_from.uniq
+          file_data
+        end
+
         private
+
+        # Check if a file has YAML frontmatter
+        def has_frontmatter?(path)
+          return false unless File.exist?(path)
+          content = File.read(path, 100) rescue ""  # Read only beginning
+          content.start_with?("---\n") || content.start_with?("---\r\n")
+        end
 
         # Merge preset configurations (just config data, not content)
         def merge_preset_configurations(presets)

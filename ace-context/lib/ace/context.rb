@@ -30,13 +30,13 @@ module Ace
         loader.load_multiple_presets(preset_names)
       end
 
-      # Inspect configuration of presets without loading files or executing commands
-      # @param preset_names [Array<String>] Names of presets to inspect
+      # Inspect configuration of presets/files without loading files or executing commands
+      # @param inputs [Array<String>] Names of presets or paths to files to inspect
       # @param options [Hash] Additional options
       # @return [Models::ContextData] Configuration as YAML
-      def inspect_config(preset_names, options = {})
+      def inspect_config(inputs, options = {})
         loader = Organisms::ContextLoader.new(options)
-        loader.inspect_config(preset_names)
+        loader.inspect_config(inputs)
       end
 
       # List available presets
@@ -71,6 +71,25 @@ module Ace
       def load_multiple(inputs, options = {})
         loader = Organisms::ContextLoader.new(options)
         loader.load_multiple(inputs)
+      end
+
+      # Load multiple inputs (presets and files) and merge them
+      # @param preset_names [Array<String>] Names of presets to load
+      # @param file_paths [Array<String>] Paths to configuration files
+      # @param options [Hash] Additional options
+      # @return [Models::ContextData] Merged context data
+      def load_multiple_inputs(preset_names, file_paths, options = {})
+        loader = Organisms::ContextLoader.new(options)
+        loader.load_multiple_inputs(preset_names, file_paths, options)
+      end
+
+      # Load a file as a preset-like configuration
+      # @param path [String] Path to configuration file (YAML or markdown with frontmatter)
+      # @param options [Hash] Additional options
+      # @return [Models::ContextData] Loaded context data
+      def load_file_as_preset(path, options = {})
+        loader = Organisms::ContextLoader.new(options)
+        loader.load_file_as_preset(path)
       end
 
       # Write context output to file with optional chunking

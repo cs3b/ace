@@ -28,6 +28,18 @@ ace-context
 # Load specific preset
 ace-context project
 
+# Load configuration from file
+ace-context -f config.yml               # Load YAML configuration
+ace-context -f config.md                # Load markdown with frontmatter
+ace-context -f config1.yml -f config2.md # Load multiple files
+
+# Mix presets and files
+ace-context -p base -f custom.yml       # Combine preset with file config
+ace-context -p base -f config.yml -p extended # Mix in any order
+
+# Inspect configuration without execution
+ace-context -f config.yml --inspect-config # View merged configuration
+
 # Load via protocol (ace-nav integration)
 ace-context wfi://create-task          # Load workflow
 ace-context guide://testing            # Load guide
@@ -84,6 +96,49 @@ M lib/file.rb
 </command>
 </commands>
 ```
+
+### File Configuration
+
+In addition to presets, ace-context can load configuration directly from files using the `-f` option:
+
+**YAML Configuration** (config.yml):
+```yaml
+description: Custom configuration
+context:
+  files:
+    - README.md
+    - "docs/**/*.md"
+  commands:
+    - echo "Custom command"
+  params:
+    output: cache
+    format: markdown-xml
+```
+
+**Markdown with Frontmatter** (config.md):
+```markdown
+---
+description: Configuration with preset composition
+context:
+  files:
+    - custom-file.md
+  presets:         # Reference and compose with existing presets
+    - base
+    - project
+  params:
+    output: stdio
+---
+
+# Additional Context
+
+Any markdown content here becomes part of the context...
+```
+
+Files can:
+- Define the same configuration structure as presets
+- Reference and compose with existing presets via `presets:` key
+- Override parameters with `params:`
+- Be combined with presets: `ace-context -p base -f custom.yml`
 
 
 ### Content Sources
@@ -179,6 +234,21 @@ require 'ace/context'
 # Load a preset
 context = Ace::Context.load_preset('project')
 puts context.content
+
+# Load configuration from file
+context = Ace::Context.load_file_as_preset('/path/to/config.yml')
+puts context.content
+
+# Load multiple inputs (presets and files)
+context = Ace::Context.load_multiple_inputs(
+  ['base', 'project'],           # Presets
+  ['/path/to/custom.yml']         # Files
+)
+puts context.content
+
+# Inspect configuration without loading content
+context = Ace::Context.inspect_config(['base', '/path/to/config.yml'])
+puts context.content  # Returns YAML of merged configuration
 
 # Load via protocol
 context = Ace::Context.load_auto('wfi://create-task')

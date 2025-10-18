@@ -11,6 +11,7 @@ options = {
   debug: false,
   output: nil,  # Will be determined from preset or CLI
   presets: [],  # Array to collect multiple presets
+  files: [],    # Array to collect file paths
   inspect_config: false  # Configuration inspection mode
 }
 
@@ -23,6 +24,10 @@ parser = OptionParser.new do |opts|
 
   opts.on("--presets NAMES", "Load multiple presets (comma-separated list)") do |presets|
     options[:presets].concat(presets.split(',').map(&:strip))
+  end
+
+  opts.on("-f", "--file FILE", "Load context from file (YAML or markdown with frontmatter, can be used multiple times)") do |file|
+    options[:files] << file
   end
 
   opts.on("--inspect-config", "Show merged configuration without loading files or executing commands") do
@@ -62,6 +67,10 @@ parser = OptionParser.new do |opts|
     puts "  ace-context project                  # Load project preset"
     puts "  ace-context -p base -p custom        # Load and merge multiple presets"
     puts "  ace-context --presets base,team      # Load multiple presets (comma-separated)"
+    puts "  ace-context -f config.yml             # Load from file"
+    puts "  ace-context -f config1.yml -f config2.md  # Load multiple files"
+    puts "  ace-context -p base -f custom.yml    # Mix presets and files"
+    puts "  ace-context -f config.yml --inspect-config  # Inspect file configuration"
     puts "  ace-context -p base --inspect-config # Show merged config without execution"
     puts "  ace-context project --output stdio   # Output to stdout"
     puts "  ace-context project --output cache   # Save to cache"
@@ -102,20 +111,25 @@ end
 # Handle configuration inspection mode
 if options[:inspect_config]
   # Inspect configuration mode
-  preset_names = if options[:presets].any?
-                   options[:presets]
-                 elsif ARGV[0]
-                   [ARGV[0]]
-                 else
-                   ['default']
-                 end
+  inputs = []
+  inputs.concat(options[:presets]) if options[:presets].any?
+  inputs.concat(options[:files]) if options[:files].any?
+  inputs << ARGV[0] if ARGV[0] && inputs.empty?
+  inputs << 'default' if inputs.empty?
 
-  context = Ace::Context.inspect_config(preset_names, options)
-  input = preset_names.join('-')  # For cache filename generation
-elsif options[:presets].any?
-  # Multi-preset mode
-  context = Ace::Context.load_multiple_presets(options[:presets], options)
-  input = options[:presets].join('-')  # For cache filename generation
+  context = Ace::Context.inspect_config(inputs, options)
+  input = inputs.join('-')  # For cache filename generation
+elsif options[:presets].any? || options[:files].any?
+  # Multi-input mode (presets and/or files)
+  inputs = []
+
+  # Maintain order of specification by processing both arrays
+  # This allows mixing: -p preset1 -f file1 -p preset2
+  context = Ace::Context.load_multiple_inputs(options[:presets], options[:files], options)
+
+  # Create input string for cache filename
+  all_inputs = options[:presets] + options[:files].map { |f| File.basename(f, '.*') }
+  input = all_inputs.join('-')
 elsif ARGV[0]
   # Single input from argument
   input = ARGV[0]
