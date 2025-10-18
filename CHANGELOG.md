@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.79] - 2025-10-18
+
+### Fixed
+
+- **ace-docs v0.4.6**: LLM timeout issue in analyze command
+  - Added configurable `llm_timeout` setting with default of 300 seconds (5 minutes)
+  - Prevents `Net::ReadTimeout` errors during complex document analyses
+  - Timeout can be customized via `.ace/docs/config.yml`
+  - Resolves issue where analyses taking >60 seconds would fail
+
 ## [0.9.78] - 2025-10-18
 
 ### Changed
