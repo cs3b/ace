@@ -259,8 +259,9 @@ module Ace
             cmd_parts.concat(Array(options[:paths]))
           end
 
-          cmd = cmd_parts.join(" ")
-          stdout, _stderr, status = Open3.capture3(cmd, chdir: git_root)
+          # Pass arguments directly to git (no shell expansion)
+          # This ensures glob patterns are handled by git in the correct directory
+          stdout, _stderr, status = Open3.capture3(*cmd_parts, chdir: git_root)
 
           status.success? ? stdout : ""
         end

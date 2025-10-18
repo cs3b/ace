@@ -28,8 +28,8 @@ module Ace
 
                 diff_file_path = File.join(cache_dir, "#{subject_name}.diff")
                 File.write(diff_file_path, diff_content)
-                # Store relative path for context.md
-                diff_files << "#{subject_name}.diff"
+                # Store absolute path for ace-context (it resolves relative to context.md location)
+                diff_files << diff_file_path
               end
             end
           else
@@ -37,7 +37,8 @@ module Ace
             if cache_dir && Dir.exist?(cache_dir)
               diff_file_path = File.join(cache_dir, "repo-diff.diff")
               File.write(diff_file_path, diff)
-              diff_files << "repo-diff.diff"
+              # Store absolute path for ace-context
+              diff_files << diff_file_path
             end
           end
 
@@ -240,7 +241,6 @@ module Ace
         def self.build_analysis_scope_section(document, since)
           preset = document.context_preset
           keywords = document.context_keywords
-          filters = document.subject_diff_filters || []
 
           context_desc = if preset && !preset.empty?
                           "- Loaded from preset: `#{preset}`"
@@ -250,11 +250,24 @@ module Ace
                           "- No context files specified"
                         end
 
-          filters_desc = if filters.empty?
-                          "- All repository changes (no filters)"
-                        else
-                          filters.map { |f| "- `#{f}`" }.join("\n")
-                        end
+          # Handle both multi-subject and single-subject configurations
+          if document.multi_subject?
+            subject_configs = document.subject_configurations
+            if subject_configs.empty?
+              filters_desc = "- All repository changes (no filters)"
+            else
+              filters_desc = subject_configs.map do |subj|
+                "- `#{subj[:name]}`: #{subj[:filters].join(", ")}"
+              end.join("\n")
+            end
+          else
+            filters = document.subject_diff_filters || []
+            filters_desc = if filters.empty?
+                            "- All repository changes (no filters)"
+                          else
+                            filters.map { |f| "- `#{f}`" }.join("\n")
+                          end
+          end
 
           <<~SECTION
             ## Analysis Scope
