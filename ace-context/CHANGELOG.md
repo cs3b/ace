@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced `inspect_config` to handle both presets and files
 - Updated CLI help with file loading examples
 - Expanded documentation with file configuration section
+- Improved CLI help message to clarify positional argument accepts multiple input types (preset, file, protocol, inline YAML)
+- Added input auto-detection documentation to README
 
 ## [0.13.0] - 2025-10-17
 
