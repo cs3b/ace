@@ -564,6 +564,7 @@ module Ace
 
           content = File.read(path)
           config = {}
+          body = nil  # Will contain markdown body if file has frontmatter
 
           # Check if it's a YAML file
           if path.match?(/\.ya?ml$/i)
@@ -578,8 +579,9 @@ module Ace
             end
           elsif has_frontmatter?(path)
             # Extract frontmatter from markdown file
-            if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
+            if content.match(/\A---\s*\n(.*?)\n---\s*\n(.*)\z/m)
               frontmatter_yaml = $1
+              body = $2  # Extract body content after frontmatter
               begin
                 frontmatter = YAML.safe_load(frontmatter_yaml, aliases: true, permitted_classes: [Symbol])
                 frontmatter = {} unless frontmatter.is_a?(Hash)
@@ -601,6 +603,8 @@ module Ace
           # Extract params and merge into options
           params = config['params'] || config[:params] || {}
           merged_options = @options.merge(params)
+          # Ensure base_dir is always project root for file path resolution
+          merged_options[:base_dir] = project_root
 
           # Build a preset-like structure
           preset_data = {
@@ -608,7 +612,8 @@ module Ace
             context: config,
             output: config['output'] || config[:output] || params['output'] || params[:output],
             name: File.basename(path, '.*'),
-            source_file: path
+            source_file: path,
+            body: body || ""  # Include body from markdown or empty string
           }
 
           # Check for preset composition in file
@@ -624,6 +629,12 @@ module Ace
           context.metadata[:file_path] = path
           context.metadata[:source_type] = 'file'
           context.metadata[:output] = preset_data[:output] if preset_data[:output]
+
+          # Format context with files if embed_document_source is true
+          if config['embed_document_source']
+            format = config['params']&.[]('format') || config['format'] || merged_options[:format] || 'markdown-xml'
+            return format_context(context, format)
+          end
 
           context
         end
