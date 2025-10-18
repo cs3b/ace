@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2025-10-18
+
+### Fixed
+
+- Critical shell expansion bug in ChangeDetector causing incorrect glob pattern matching
+- Date resolution to check ace-docs namespace before legacy update namespace
+- Multi-subject handling in build_analysis_scope_section to prevent TypeError
+- Diff file paths now use absolute paths for proper ace-context loading
+
+### Changed
+
+- Updated workflow instructions (update-docs.wf.md) to use `analyze` instead of deprecated `diff` command
+- Workflow now emphasizes analysis.md as primary output for LLM recommendations
+- Added documentation for multi-subject configuration in workflows
+
 ### Added
 
 - **Multi-subject configuration support** for categorizing different types of changes

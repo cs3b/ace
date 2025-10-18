@@ -14,11 +14,11 @@ ace-docs:
     - config:
         diff:
           filters:
-            - ace-docs/**/*.md 
+            - ace-docs/.ace.example/*.md 
     - docs:
         diff:
           filters:
-            - ace-docs/.ace.example/*.md 
+            - ace-docs/**/*.md 
 purpose: Overview and quick start guide for ace-docs
 doc-type: reference
 ---
