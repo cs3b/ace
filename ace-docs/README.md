@@ -2,11 +2,13 @@
 ace-docs:
   last-updated: '2025-10-14'
   context:
-    preset: project-base
+    presets: 
+      - project-base
+    files:
+      - CHANGELOG.md 
   subject:
     diff:
       filters:
-        - CHANGELOG.md 
         - ace-docs/**/*.rb 
         - ace-docs/**/*.md 
 purpose: Overview and quick start guide for ace-docs
