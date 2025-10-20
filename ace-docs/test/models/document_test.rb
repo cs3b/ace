@@ -6,9 +6,9 @@ require "tempfile"
 module Ace
   module Docs
     class DocumentTest < AceTestCase
-  def setup
-    @registry = Ace::Docs::DocumentRegistry.new
-  end
+      def setup
+        @registry = DocumentRegistry.new
+      end
 
   def test_multi_subject_detection_returns_true_for_array
     # Create document with multi-subject configuration (array)
