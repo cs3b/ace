@@ -106,20 +106,15 @@ module Ace
         end
 
         def test_detect_renames
-          # Create a file and commit it
-          File.write("old_name.md", "Content")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Add file'", out: File::NULL, err: File::NULL)
+          # Mock git to return rename information
+          mock_rename_output = "R100\told_name.md\tnew_name.md\n"
+          ChangeDetector.stub :execute_git_command, mock_rename_output do
+            renames = ChangeDetector.detect_renames(since: "HEAD~1")
 
-          # Rename the file
-          system("git mv old_name.md new_name.md", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Rename file'", out: File::NULL, err: File::NULL)
-
-          renames = ChangeDetector.detect_renames(since: "HEAD~1")
-
-          assert_equal 1, renames.size
-          assert_equal "old_name.md", renames.first[:old]
-          assert_equal "new_name.md", renames.first[:new]
+            assert_equal 1, renames.size
+            assert_equal "old_name.md", renames.first[:old]
+            assert_equal "new_name.md", renames.first[:new]
+          end
         end
 
         def test_diff_with_exclude_renames_option
@@ -303,16 +298,6 @@ module Ace
         end
 
         def test_get_diff_for_document_multi_subject_with_changes
-          # Create files with changes
-          File.write("lib/test.rb", "class Test\nend")
-          File.write("README.md", "# README\nDocs")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Add files'", out: File::NULL, err: File::NULL)
-
-          # Modify files
-          File.write("lib/test.rb", "class Test\n  def hello\n  end\nend")
-          File.write("README.md", "# README\nUpdated docs")
-
           document = Models::Document.new(
             path: "test.md",
             frontmatter: {
@@ -339,47 +324,68 @@ module Ace
             }
           )
 
-          result = ChangeDetector.get_diff_for_document(document)
+          # Mock git to return different diffs based on paths
+          ChangeDetector.stub :execute_git_command, ->(cmd) {
+            if cmd.to_s.include?("lib/**/*.rb")
+              "diff --git a/lib/test.rb b/lib/test.rb\n+  def hello\n+  end"
+            elsif cmd.to_s.include?("**/*.md")
+              "diff --git a/README.md b/README.md\n+Updated docs"
+            else
+              ""
+            end
+          } do
+            result = ChangeDetector.get_diff_for_document(document)
 
-          assert result[:has_changes]
-          assert result[:multi_subject]
+            assert result[:has_changes]
+            assert result[:multi_subject]
 
-          # Check code diff contains ruby changes
-          assert result[:diffs]["code"].include?("lib/test.rb"), "Code diff should include ruby file"
-          assert result[:diffs]["code"].include?("def hello"), "Code diff should show method addition"
+            # Check code diff contains ruby changes
+            assert result[:diffs]["code"].include?("lib/test.rb"), "Code diff should include ruby file"
+            assert result[:diffs]["code"].include?("def hello"), "Code diff should show method addition"
 
-          # Check docs diff contains markdown changes
-          assert result[:diffs]["docs"].include?("README.md"), "Docs diff should include markdown file"
-          assert result[:diffs]["docs"].include?("Updated docs"), "Docs diff should show content change"
+            # Check docs diff contains markdown changes
+            assert result[:diffs]["docs"].include?("README.md"), "Docs diff should include markdown file"
+            assert result[:diffs]["docs"].include?("Updated docs"), "Docs diff should show content change"
+          end
         end
 
         def test_get_diffs_for_subjects
-          # Create test files
-          File.write("app.rb", "puts 'app'")
-          File.write("config.yml", "key: value")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Add files'", out: File::NULL, err: File::NULL)
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "reference",
+              "purpose" => "Test",
+              "ace-docs" => {
+                "subject" => [
+                  { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
+                  { "config" => { "diff" => { "filters" => ["**/*.yml"] } } }
+                ]
+              }
+            }
+          )
 
-          # Modify files
-          File.write("app.rb", "puts 'modified app'")
-          File.write("config.yml", "key: new_value")
+          # Mock git to return different diffs based on file paths
+          ChangeDetector.stub :execute_git_command, ->(cmd) {
+            if cmd.to_s.include?("**/*.rb")
+              "diff --git a/app.rb b/app.rb\n+modified app"
+            elsif cmd.to_s.include?("**/*.yml")
+              "diff --git a/config.yml b/config.yml\n+new_value"
+            else
+              ""
+            end
+          } do
+            diffs = ChangeDetector.get_diffs_for_subjects(document, "HEAD", {})
 
-          subjects = [
-            { name: "code", filters: ["**/*.rb"] },
-            { name: "config", filters: ["**/*.yml"] }
-          ]
+            assert_equal 2, diffs.keys.length
+            assert diffs.key?("code")
+            assert diffs.key?("config")
 
-          diffs = ChangeDetector.get_diffs_for_subjects(subjects, "HEAD", {})
+            assert diffs["code"].include?("app.rb")
+            assert diffs["code"].include?("modified app")
 
-          assert_equal 2, diffs.keys.length
-          assert diffs.key?("code")
-          assert diffs.key?("config")
-
-          assert diffs["code"].include?("app.rb")
-          assert diffs["code"].include?("modified app")
-
-          assert diffs["config"].include?("config.yml")
-          assert diffs["config"].include?("new_value")
+            assert diffs["config"].include?("config.yml")
+            assert diffs["config"].include?("new_value")
+          end
         end
 
         def test_save_diff_to_cache_multi_subject
