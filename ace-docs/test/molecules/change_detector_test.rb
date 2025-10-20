@@ -279,6 +279,201 @@ module Ace
           refute result[:has_changes]
           assert_empty result[:diff]
         end
+
+        def test_get_diff_for_document_multi_subject
+          # Create a document with multi-subject configuration
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "reference",
+              "purpose" => "Test multi-subject",
+              "ace-docs" => {
+                "subject" => [
+                  {
+                    "code" => {
+                      "diff" => {
+                        "filters" => ["**/*.rb"]
+                      }
+                    }
+                  },
+                  {
+                    "docs" => {
+                      "diff" => {
+                        "filters" => ["**/*.md"]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          )
+
+          # Add some changes to test
+          File.write("test.rb", "# Ruby file\nputs 'hello'")
+          File.write("doc.md", "# Doc file\nContent")
+          system("git add .", out: File::NULL, err: File::NULL)
+
+          result = ChangeDetector.get_diff_for_document(document)
+
+          assert_equal "test.md", result[:document_path]
+          assert result[:multi_subject], "Should be marked as multi-subject"
+          assert_kind_of Hash, result[:diffs], "Diffs should be a hash for multi-subject"
+          assert result[:diffs].key?("code"), "Should have code subject diff"
+          assert result[:diffs].key?("docs"), "Should have docs subject diff"
+        end
+
+        def test_get_diff_for_document_multi_subject_with_changes
+          # Create files with changes
+          File.write("lib/test.rb", "class Test\nend")
+          File.write("README.md", "# README\nDocs")
+          system("git add .", out: File::NULL, err: File::NULL)
+          system("git commit -m 'Add files'", out: File::NULL, err: File::NULL)
+
+          # Modify files
+          File.write("lib/test.rb", "class Test\n  def hello\n  end\nend")
+          File.write("README.md", "# README\nUpdated docs")
+
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "reference",
+              "purpose" => "Test",
+              "ace-docs" => {
+                "subject" => [
+                  {
+                    "code" => {
+                      "diff" => {
+                        "filters" => ["lib/**/*.rb"]
+                      }
+                    }
+                  },
+                  {
+                    "docs" => {
+                      "diff" => {
+                        "filters" => ["**/*.md"]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          )
+
+          result = ChangeDetector.get_diff_for_document(document)
+
+          assert result[:has_changes]
+          assert result[:multi_subject]
+
+          # Check code diff contains ruby changes
+          assert result[:diffs]["code"].include?("lib/test.rb"), "Code diff should include ruby file"
+          assert result[:diffs]["code"].include?("def hello"), "Code diff should show method addition"
+
+          # Check docs diff contains markdown changes
+          assert result[:diffs]["docs"].include?("README.md"), "Docs diff should include markdown file"
+          assert result[:diffs]["docs"].include?("Updated docs"), "Docs diff should show content change"
+        end
+
+        def test_get_diffs_for_subjects
+          # Create test files
+          File.write("app.rb", "puts 'app'")
+          File.write("config.yml", "key: value")
+          system("git add .", out: File::NULL, err: File::NULL)
+          system("git commit -m 'Add files'", out: File::NULL, err: File::NULL)
+
+          # Modify files
+          File.write("app.rb", "puts 'modified app'")
+          File.write("config.yml", "key: new_value")
+
+          subjects = [
+            { name: "code", filters: ["**/*.rb"] },
+            { name: "config", filters: ["**/*.yml"] }
+          ]
+
+          diffs = ChangeDetector.get_diffs_for_subjects(subjects, "HEAD", {})
+
+          assert_equal 2, diffs.keys.length
+          assert diffs.key?("code")
+          assert diffs.key?("config")
+
+          assert diffs["code"].include?("app.rb")
+          assert diffs["code"].include?("modified app")
+
+          assert diffs["config"].include?("config.yml")
+          assert diffs["config"].include?("new_value")
+        end
+
+        def test_save_diff_to_cache_multi_subject
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "reference",
+              "purpose" => "Test",
+              "ace-docs" => {
+                "subject" => [
+                  { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
+                  { "docs" => { "diff" => { "filters" => ["**/*.md"] } } }
+                ]
+              }
+            }
+          )
+
+          cache_dir = File.join(@temp_dir, ".cache", "ace-docs", "test-session")
+          FileUtils.mkdir_p(cache_dir)
+
+          # Create test diffs
+          diffs = {
+            "code" => "diff --git a/test.rb b/test.rb\n+puts 'hello'",
+            "docs" => "diff --git a/README.md b/README.md\n+# Title"
+          }
+
+          saved_paths = ChangeDetector.save_diff_to_cache(
+            document,
+            { diffs: diffs, multi_subject: true },
+            cache_dir
+          )
+
+          # Check that multiple diff files were saved
+          assert_equal 2, saved_paths.length
+          assert saved_paths.any? { |p| p.end_with?("code.diff") }
+          assert saved_paths.any? { |p| p.end_with?("docs.diff") }
+
+          # Verify content
+          code_diff_path = saved_paths.find { |p| p.end_with?("code.diff") }
+          docs_diff_path = saved_paths.find { |p| p.end_with?("docs.diff") }
+
+          assert File.exist?(code_diff_path)
+          assert File.exist?(docs_diff_path)
+          assert_equal diffs["code"], File.read(code_diff_path).strip
+          assert_equal diffs["docs"], File.read(docs_diff_path).strip
+        end
+
+        def test_backward_compat_single_subject
+          # Test that single subject still works as before
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "guide",
+              "purpose" => "Test",
+              "ace-docs" => {
+                "subject" => {
+                  "diff" => {
+                    "filters" => ["**/*.rb", "**/*.md"]
+                  }
+                }
+              }
+            }
+          )
+
+          File.write("test.rb", "puts 'test'")
+          system("git add .", out: File::NULL, err: File::NULL)
+
+          result = ChangeDetector.get_diff_for_document(document)
+
+          refute result[:multi_subject], "Should not be multi-subject"
+          assert_kind_of String, result[:diff], "Diff should be a string for single subject"
+          assert result[:has_changes]
+          assert result[:diff].include?("test.rb")
+        end
       end
     end
   end
