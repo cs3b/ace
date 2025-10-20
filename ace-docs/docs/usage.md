@@ -89,7 +89,7 @@ ace-docs discover
 
 ### analyze Command
 
-**NEW in v0.3.0** - Batch analyze documents with LLM-powered diff compaction for efficient documentation updates.
+**NEW in v0.4.3** - LLM-powered documentation analysis with multi-subject diff support for targeted change analysis.
 
 ```bash
 ace-docs analyze [FILES...] [OPTIONS]
@@ -99,50 +99,68 @@ ace-docs analyze [FILES...] [OPTIONS]
 - `FILES...` - Specific files to analyze (optional)
 
 **Options:**
+- `--all` - Analyze all managed documents
 - `--needs-update` - Analyze only documents needing updates (default if no files specified)
 - `--type TYPE` - Filter by document type (guide, context, workflow, etc.)
 - `--freshness STATUS` - Filter by freshness (current, stale, outdated)
 - `--since DATE` - Override automatic time range (e.g., '1 week ago', '2025-01-01')
 - `--exclude-renames` - Exclude renamed files from diff analysis
 - `--exclude-moves` - Exclude moved files from diff analysis
-- `--output FORMAT` - Output format: compact|detailed (default: compact)
+
+**Multi-Subject Support:**
+Documents can define multiple subjects to generate separate diffs for different categories:
+- Each subject generates its own diff file (e.g., code.diff, config.diff, docs.diff)
+- Allows focused analysis of specific change types
+- Reduces noise by separating concerns
 
 **Output:**
-- Analysis report saved to `.cache/ace-docs/analysis-{timestamp}.md`
-- Report includes:
-  - YAML frontmatter with metadata (generated date, time range, document list)
-  - LLM-compacted change summary organized by impact level
-  - Relevant changes with noise removed
-  - Statistics (commits, files changed, relevant changes)
+- Session directory: `.cache/ace-docs/analyze-{timestamp}/`
+- Files generated:
+  - `analysis.md` - LLM-powered analysis report with recommendations
+  - Subject diff files (when multi-subject configured):
+    - `code.diff` - Code changes only
+    - `config.diff` - Configuration changes
+    - `docs.diff` - Documentation changes
+  - Or single `repo-diff.diff` for single-subject documents
+  - `context.md` - Combined context with embedded diffs
+  - `prompt-system.md` - System prompt used for analysis
+  - `prompt-user.md` - User prompt with full context
+  - `metadata.yml` - Session metadata
 
 **Examples:**
 ```bash
+# Analyze specific document with multi-subject support
+ace-docs analyze docs/architecture.md
+
 # Analyze all documents needing updates
 ace-docs analyze --needs-update
 
-# Analyze specific documents
-ace-docs analyze docs/architecture.md docs/tools.md
-
 # Analyze with custom time range
-ace-docs analyze --needs-update --since "2 weeks ago"
+ace-docs analyze docs/tools.md --since "2 weeks ago"
 
 # Analyze by document type
 ace-docs analyze --type guide --freshness stale
 
-# Exclude renames and moves for cleaner diffs
+# Analyze all documents, excluding renames
 ace-docs analyze --all --exclude-renames --exclude-moves
 ```
 
 **How It Works:**
-1. Determines time range from oldest `last-updated` date in selected documents
-2. Generates git diff for the entire codebase from that time range
-3. Sends diff to LLM (via ace-llm-query) for noise removal and compaction
-4. Returns organized markdown report with relevant changes only
-5. Saves to cache for workflow integration
+1. Determines time range from document's `last-updated` date or --since option
+2. For multi-subject documents:
+   - Generates separate git diff for each subject's filters
+   - Creates individual diff files (code.diff, config.diff, etc.)
+3. For single-subject documents:
+   - Generates one diff with all configured filters
+   - Creates repo-diff.diff file
+4. Builds context with ace-context integration, embedding all diffs
+5. Sends to LLM for intelligent analysis and recommendations
+6. Saves comprehensive session data for review and iteration
 
 **Error Messages:**
 - "No documents match the specified criteria" - No documents found with given filters
 - "No changes detected in the specified period" - No git changes in time range
+- "Request timeout" - LLM service timeout, try again or use different model
 - LLM errors will show clear messages with suggestions
 
 ### diff Command
@@ -275,20 +293,24 @@ ace-docs validate docs/guide.md --all
 
 ## Configuration
 
-ace-docs can be configured via `.ace/docs/config.yml`:
+ace-docs uses ace-core's configuration cascade system. Configuration is searched from current directory up to home directory, with nearest configuration winning.
+
+### Global Configuration
+
+Create `.ace/docs/config.yml` in your project:
 
 ```yaml
-# Cache directory for analysis and diff reports (v0.3.0+)
+# Cache directory for analysis and diff reports
 cache_dir: .cache/ace-docs
 
-# LLM integration settings for analyze command (v0.3.0+)
-llm_temperature: 0.3        # Lower for deterministic compaction (default: 0.3)
+# LLM integration settings for analyze command
+llm_temperature: 0.3        # Lower for deterministic analysis (default: 0.3)
 # llm_model: gflash         # Override default (uses ace-llm-query defaults)
 
-# Warning threshold for large diffs (v0.3.0+)
+# Warning threshold for large diffs
 max_diff_lines_warning: 100000  # Warn when diff exceeds this size
 
-# Validation settings (v0.3.0+)
+# Validation settings
 validation_enabled: true
 ace_lint_path: ace-lint     # Path to ace-lint executable
 
@@ -340,49 +362,157 @@ ignore:
   - "**/tmp/**"
 ```
 
+### Multi-Subject Configuration in Documents
+
+Documents can configure multiple subjects for targeted diff analysis. Add to your document's frontmatter:
+
+```yaml
+---
+ace-docs:
+  subject:
+    - code:
+        diff:
+          filters:
+            - "lib/**/*.rb"
+            - "test/**/*.rb"
+    - config:
+        diff:
+          filters:
+            - "**/*.yml"
+            - "**/*.yaml"
+            - ".ace/**/*"
+    - docs:
+        diff:
+          filters:
+            - "**/*.md"
+            - "!**/node_modules/**"
+---
+```
+
+This generates separate diff files:
+- `code.diff` - Only Ruby source and test files
+- `config.diff` - YAML configuration files
+- `docs.diff` - Markdown documentation
+
+### Single Subject Configuration (Backward Compatible)
+
+Traditional single-subject configuration still works:
+
+```yaml
+---
+ace-docs:
+  subject:
+    diff:
+      filters:
+        - "**/*.rb"
+        - "**/*.md"
+---
+```
+
+This generates a single `repo-diff.diff` file with all changes.
+
 See `.ace.example/docs/config.yml` in the ace-docs gem for the complete configuration reference.
 
 ## Frontmatter Schema
 
-Required frontmatter for ace-docs managed documents:
+### Required Fields
+
+All ace-docs managed documents must have:
 
 ```yaml
 ---
 doc-type: guide                    # Required: document type
 purpose: Brief description          # Required: document purpose
+---
+```
 
-# Optional update configuration
+### ace-docs Namespace (Recommended)
+
+The `ace-docs` namespace provides enhanced configuration with backward compatibility:
+
+```yaml
+---
+ace-docs:
+  # Update tracking
+  last-updated: '2025-10-18'       # ISO date format
+  last-checked: '2025-10-18'       # Last review date
+  frequency: weekly                # daily, weekly, monthly, on-change
+
+  # Multi-subject configuration (NEW in v0.4.3)
+  subject:
+    - code:                        # Named subject for code changes
+        diff:
+          filters:
+            - "lib/**/*.rb"
+            - "test/**/*.rb"
+    - config:                      # Configuration changes
+        diff:
+          filters:
+            - "**/*.yml"
+            - ".ace/**/*"
+    - docs:                        # Documentation changes
+        diff:
+          filters:
+            - "**/*.md"
+
+  # Context configuration for ace-context integration
+  context:
+    preset: project                # ace-context preset to use
+    files:                        # Additional files to include
+      - CHANGELOG.md
+      - docs/architecture.md
+    keywords:                     # LLM relevance keywords
+      - architecture
+      - implementation
+
+  # Validation rules
+  rules:
+    max-lines: 500                # Maximum line count
+    sections:                     # Required sections
+      - Overview
+      - Usage
+    no-duplicate-from:           # Avoid duplication
+      - README.md
+
+doc-type: guide
+purpose: Comprehensive usage guide
+---
+```
+
+### Legacy Format (Backward Compatible)
+
+The root-level format is still supported but deprecated:
+
+```yaml
+---
+doc-type: guide                    # Required
+purpose: Brief description          # Required
+
+# Legacy update configuration (deprecated, use ace-docs namespace)
 update:
-  frequency: weekly                 # daily, weekly, monthly, on-change
-  last-updated: 2024-10-01         # ISO date format
-  last-checked: 2024-10-10         # Last review date
-  focus:                           # LLM relevance hints
+  frequency: weekly
+  last-updated: 2024-10-01
+  last-checked: 2024-10-10
+  focus:                           # Legacy: use ace-docs.context.keywords
     - implementation
     - architecture
 
-# Optional context requirements
+# Legacy context (deprecated, use ace-docs.context)
 context:
-  preset: standard                 # ace-context preset name
-  includes:                        # Additional files to include
+  preset: standard
+  includes:
     - docs/*.md
-  excludes:                        # Files to exclude
+  excludes:
     - test/**/*
 
-# Optional validation rules
+# Legacy rules (deprecated, use ace-docs.rules)
 rules:
-  max-lines: 500                   # Maximum line count
-  sections:                        # Required sections
+  max-lines: 500
+  sections:
     - Overview
     - Usage
-    - Examples
-  no-duplicate-from:              # Avoid duplication from these files
-    - README.md
-    - CONTRIBUTING.md
-  auto-generate:                  # Sections to auto-generate
-    - tools-index
-    - decision-log
 
-# Optional metadata
+# Optional metadata (not deprecated)
 metadata:
   version: 1.0.0
   author: Team Name
@@ -391,6 +521,18 @@ metadata:
     - guide
 ---
 ```
+
+### Migration Path
+
+To migrate from legacy to ace-docs namespace:
+
+1. Move `update.*` fields to `ace-docs.*`
+2. Move `context.*` to `ace-docs.context.*`
+3. Move `rules.*` to `ace-docs.rules.*`
+4. Convert `update.focus` to `ace-docs.context.keywords`
+5. Add multi-subject configuration if needed
+
+The system automatically handles both formats with ace-docs namespace taking precedence.
 
 ## Workflow Integration
 
@@ -444,17 +586,57 @@ jobs:
 
 ### Complete Workflow Example
 
-**Using the NEW analyze command (v0.3.0+) for efficient batch updates:**
+**Multi-Subject Analysis Workflow (NEW in v0.4.3):**
+
+```bash
+# 1. Configure document with multi-subject in frontmatter
+cat docs/architecture.md
+# ---
+# ace-docs:
+#   subject:
+#     - code:
+#         diff:
+#           filters: ["lib/**/*.rb"]
+#     - docs:
+#         diff:
+#           filters: ["**/*.md"]
+# ---
+
+# 2. Analyze with multi-subject support
+ace-docs analyze docs/architecture.md
+
+# 3. Review generated diff files
+ls .cache/ace-docs/analyze-*/
+# code.diff    - Ruby code changes only
+# docs.diff    - Documentation changes only
+# analysis.md  - LLM analysis with recommendations
+
+# 4. Review the targeted analysis
+cat .cache/ace-docs/analyze-*/analysis.md
+
+# 5. Update document based on specific subject changes
+$EDITOR docs/architecture.md
+
+# 6. Update frontmatter
+ace-docs update docs/architecture.md --set last-updated:today
+
+# 7. Validate and commit
+ace-docs validate docs/architecture.md --all
+git add docs/architecture.md
+git commit -m "docs: Update architecture with code and doc changes"
+```
+
+**Standard Workflow (Single Subject):**
 
 ```bash
 # 1. Check current status
 ace-docs status --needs-update
 
-# 2. Batch analyze with LLM compaction
+# 2. Analyze with LLM-powered recommendations
 ace-docs analyze --needs-update
 
 # 3. Review the analysis report
-cat .cache/ace-docs/analysis-*.md
+cat .cache/ace-docs/analyze-*/analysis.md
 
 # 4. Update document content based on analysis
 $EDITOR docs/guide.md
@@ -464,32 +646,6 @@ ace-docs update docs/guide.md --set last-updated:today
 
 # 6. Validate the updated document
 ace-docs validate docs/guide.md --all
-
-# 7. Commit changes
-git add docs/guide.md
-git commit -m "docs: Update guide with latest changes"
-```
-
-**Traditional workflow (using diff instead of analyze):**
-
-```bash
-# 1. Check current status
-ace-docs status
-
-# 2. Analyze changes for stale documents
-ace-docs diff --needs-update
-
-# 3. Review the diff report
-cat .cache/ace-docs/diff-*.md
-
-# 4. Update document content manually
-$EDITOR docs/guide.md
-
-# 5. Update frontmatter
-ace-docs update docs/guide.md --set last-updated:today
-
-# 6. Validate the document
-ace-docs validate docs/guide.md
 
 # 7. Commit changes
 git add docs/guide.md
@@ -570,29 +726,64 @@ ace-llm-query --prompt "Summarize documentation changes" < .cache/ace-docs/diff-
 - Ensure proper `---` delimiters
 - Check for invalid date formats
 
+**Multi-subject configuration issues:**
+- Verify subject is an array with named hash entries (e.g., `- code:`)
+- Each subject name must be unique within the document
+- Check filter patterns match actual file paths using `git ls-files`
+- Test filters individually: `git diff --name-only -- "pattern"`
+- If no diff generated for a subject, verify files exist matching the filters
+
+**Multi-subject diff not generating:**
+- Ensure using `ace-docs.subject` array format, not single object
+- Check that filters use git-compatible glob patterns
+- Verify time range includes changes for filtered files
+- Use `--since` to expand time range if needed
+- Check session directory for individual diff files
+
 ### Debug Mode
 
 Enable debug output with environment variable:
 
 ```bash
 DEBUG=1 ace-docs status
+DEBUG=1 ace-docs analyze docs/file.md  # Shows subject processing
 TRACE=1 ace-docs diff  # Even more verbose
+```
+
+To debug multi-subject filters:
+```bash
+# Test if files match your filter patterns
+git ls-files | grep -E "lib/.*\.rb"
+
+# Check what changes exist for a filter
+git diff --name-only HEAD~10 -- "lib/**/*.rb"
+
+# Verify multi-subject configuration is parsed
+DEBUG=1 ace-docs analyze docs/file.md 2>&1 | grep -i subject
 ```
 
 ## Best Practices
 
-1. **Use Batch Analysis**: Leverage `ace-docs analyze` for efficient LLM-powered change summaries (v0.3.0+)
-2. **Regular Updates**: Run `ace-docs status` weekly to identify stale documentation
-3. **Automated Validation**: Include `ace-docs validate` in CI/CD pipelines
-4. **Consistent Frontmatter**: Use templates for new documents
-5. **Change Analysis**: Review analysis reports before major releases
-6. **Bulk Operations**: Use `--preset` for consistent updates across document sets
-7. **Version Tracking**: Update version fields for significant changes
-8. **Context Integration**: Leverage ace-context for comprehensive project awareness
+1. **Use Multi-Subject Analysis**: Configure multiple subjects for targeted diff analysis (v0.4.3+)
+2. **Leverage LLM Analysis**: Use `ace-docs analyze` for intelligent recommendations
+3. **Regular Updates**: Run `ace-docs status` weekly to identify stale documentation
+4. **Automated Validation**: Include `ace-docs validate --all` in CI/CD pipelines
+5. **Use ace-docs Namespace**: Migrate to `ace-docs.*` frontmatter for enhanced features
+6. **Change Analysis**: Review analysis reports before major releases
+7. **Bulk Operations**: Use `--preset` for consistent updates across document sets
+8. **Version Tracking**: Update version fields for significant changes
+9. **Context Integration**: Leverage ace-context for comprehensive project awareness
+10. **ADR Management**: Use dedicated workflows for Architecture Decision Records:
+    - Create ADRs: See `ace-docs/handbook/workflow-instructions/create-adr.wf.md`
+    - Maintain ADRs: See `ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md`
 
 ## See Also
 
 - [README.md](../README.md) - Overview and quick start
-- [update-docs.wf.md](../handbook/workflow-instructions/update-docs.wf.md) - Workflow orchestration
+- [update-docs.wf.md](../handbook/workflow-instructions/update-docs.wf.md) - Documentation update workflow
+- [create-adr.wf.md](../handbook/workflow-instructions/create-adr.wf.md) - ADR creation workflow
+- [maintain-adrs.wf.md](../handbook/workflow-instructions/maintain-adrs.wf.md) - ADR maintenance workflow
+- [ace-change-analyzer.system.md](../handbook/prompts/ace-change-analyzer.system.md) - Dual analysis prompt
 - [ace-context](../../ace-context/README.md) - Context management
-- [ace-llm-query](../../ace-llm/README.md) - LLM integration for analysis
+- [ace-llm](../../ace-llm/README.md) - LLM integration for analysis
+- [ace-core](../../ace-core/README.md) - Configuration cascade system
