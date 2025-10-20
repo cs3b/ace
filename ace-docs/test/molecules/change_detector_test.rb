@@ -10,26 +10,7 @@ module Ace
   module Docs
     module Molecules
       class ChangeDetectorTest < AceTestCase
-        def setup
-          @temp_dir = Dir.mktmpdir("ace-docs-test")
-          @original_dir = Dir.pwd
-          Dir.chdir(@temp_dir)
-
-          # Initialize a git repository for testing
-          system("git init", out: File::NULL, err: File::NULL)
-          system("git config user.email 'test@example.com'", out: File::NULL, err: File::NULL)
-          system("git config user.name 'Test User'", out: File::NULL, err: File::NULL)
-
-          # Create an initial commit
-          File.write("initial.md", "# Initial file\n\nContent")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Initial commit'", out: File::NULL, err: File::NULL)
-        end
-
-        def teardown
-          Dir.chdir(@original_dir)
-          FileUtils.rm_rf(@temp_dir) if @temp_dir
-        end
+        # No setup/teardown needed - we mock git operations
 
         def test_get_diff_for_document_with_no_changes
           document = Models::Document.new(
@@ -40,20 +21,18 @@ module Ace
             }
           )
 
-          result = ChangeDetector.get_diff_for_document(document)
+          # Mock git to return empty diff (no changes)
+          ChangeDetector.stub :execute_git_command, "" do
+            result = ChangeDetector.get_diff_for_document(document)
 
-          assert_equal "test.md", result[:document_path]
-          assert_equal "guide", result[:document_type]
-          refute result[:has_changes]
-          assert_empty result[:diff]
+            assert_equal "test.md", result[:document_path]
+            assert_equal "guide", result[:document_type]
+            refute result[:has_changes]
+            assert_empty result[:diff]
+          end
         end
 
         def test_get_diff_for_document_with_changes
-          # Make a change after initial commit
-          File.write("test.md", "# Test Document\n\nNew content")
-          system("git add test.md", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Add test document'", out: File::NULL, err: File::NULL)
-
           document = Models::Document.new(
             path: "test.md",
             frontmatter: {
@@ -65,14 +44,15 @@ module Ace
             }
           )
 
-          # Make another change to create a diff
-          File.write("test.md", "# Test Document\n\nUpdated content\n\nMore content")
+          # Mock git to return a diff showing changes
+          mock_diff = "diff --git a/test.md b/test.md\n+Updated content\n+More content"
+          ChangeDetector.stub :execute_git_command, mock_diff do
+            result = ChangeDetector.get_diff_for_document(document, since: "HEAD~1")
 
-          result = ChangeDetector.get_diff_for_document(document, since: "HEAD~1")
-
-          assert_equal "test.md", result[:document_path]
-          assert result[:has_changes]
-          assert result[:diff].include?("test.md")
+            assert_equal "test.md", result[:document_path]
+            assert result[:has_changes]
+            assert result[:diff].include?("test.md")
+          end
         end
 
         def test_get_diff_for_documents
