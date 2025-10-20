@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "ace/docs/organisms/document_registry"
 require "tempfile"
 
-class DocumentTest < AceTestCase
+module Ace
+  module Docs
+    class DocumentTest < AceTestCase
   def setup
     @registry = Ace::Docs::DocumentRegistry.new
   end
@@ -197,5 +198,7 @@ class DocumentTest < AceTestCase
   ensure
     file&.close
     file&.unlink
+  end
+end
   end
 end
