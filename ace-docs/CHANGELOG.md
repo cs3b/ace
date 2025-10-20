@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.7] - 2025-10-20
+
+### Added
+
+- **Comprehensive test coverage for multi-subject configuration**
+  - Added 4 unit tests for Document model multi-subject parsing
+  - Added 5 integration tests for ChangeDetector multi-diff generation
+  - Added 7 tests for DocumentAnalysisPrompt multi-subject handling
+  - All tests ensure backward compatibility with single-subject format
+
+### Documentation
+
+- **Example documents for multi-subject configuration**
+  - Created detailed multi-subject example showing code/config/docs separation
+  - Created single-subject example with migration guide
+  - Both examples include comprehensive usage instructions and best practices
+
+### Technical
+
+- Enhanced analyze command and multi-subject support documentation in usage.md
+- Updated README with new analyze command and features documentation
+
 ## [0.4.6] - 2025-10-18
 
 ### Fixed

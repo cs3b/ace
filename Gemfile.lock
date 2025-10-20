@@ -12,7 +12,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.4.6)
+    ace-docs (0.4.7)
       ace-core (~> 0.1)
       ace-llm (~> 0.1)
       colorize (~> 1.1)
