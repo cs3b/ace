@@ -335,8 +335,8 @@ module Ace
             content: "# Test"
           )
 
-          # Mock LLM to raise error
-          @validator.stub :call_llm_for_validation, ->(_) { raise Ace::LLM::Error, "not found" } do
+          # Mock LLM to raise error (generic StandardError since Ace::LLM might not be loaded)
+          @validator.stub :call_llm_for_validation, ->(_) { raise StandardError, "not found" } do
             result = @validator.validate_document(document, syntax: false, semantic: true)
 
             refute result[:valid]

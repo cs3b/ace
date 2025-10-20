@@ -112,15 +112,14 @@ module Ace
           begin
             response = call_llm_for_validation(prompt)
             stdout = response[:text]
-          rescue Ace::LLM::Error => e
-            error_msg = if e.message.include?("not found") || e.message.include?("No model specified")
+          rescue StandardError => e
+            # Handle all errors (including when Ace::LLM is not loaded)
+            error_msg = if e.message.include?("not found") || e.message.include?("No model specified") || e.message.include?("uninitialized constant")
               "Semantic validation unavailable (ace-llm configuration issue). Check ace-llm setup."
             else
-              "Semantic validation failed: #{e.message}"
+              "Semantic validation error: #{e.message}"
             end
             return { errors: [error_msg], warnings: [] }
-          rescue StandardError => e
-            return { errors: ["Semantic validation error: #{e.message}"], warnings: [] }
           end
 
           # Parse LLM response
