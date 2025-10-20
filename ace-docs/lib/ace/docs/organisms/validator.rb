@@ -84,8 +84,6 @@ module Ace
         end
 
         def validate_semantic(document)
-          require "open3"
-
           # Build semantic validation prompt
           keywords = document.context_keywords.any? ? document.context_keywords.join(", ") : "(none specified)"
 
@@ -110,21 +108,19 @@ module Ace
             Then list any issues as bullet points starting with "-"
           PROMPT
 
-          # Call ace-llm-query subprocess
-          stdout, stderr, status = Open3.capture3(
-            "ace-llm-query",
-            "--model", "gflash",
-            "--temperature", "0.3",
-            stdin_data: prompt
-          )
-
-          if !status.success?
-            error_msg = if stderr.include?("not found")
-              "Semantic validation unavailable (ace-llm-query not found). Install ace-llm gem to enable."
+          # Call LLM using Ruby API
+          begin
+            response = call_llm_for_validation(prompt)
+            stdout = response[:text]
+          rescue Ace::LLM::Error => e
+            error_msg = if e.message.include?("not found") || e.message.include?("No model specified")
+              "Semantic validation unavailable (ace-llm configuration issue). Check ace-llm setup."
             else
-              "Semantic validation failed: #{stderr.strip}"
+              "Semantic validation failed: #{e.message}"
             end
             return { errors: [error_msg], warnings: [] }
+          rescue StandardError => e
+            return { errors: ["Semantic validation error: #{e.message}"], warnings: [] }
           end
 
           # Parse LLM response
@@ -151,8 +147,17 @@ module Ace
           end
 
           { errors: errors, warnings: warnings }
-        rescue Errno::ENOENT
-          { errors: ["Semantic validation unavailable (ace-llm-query not found). Install ace-llm gem."], warnings: [] }
+        end
+
+        # Call LLM for validation (protected for testing)
+        # @param prompt [String] The validation prompt
+        # @return [Hash] Response with :text key
+        def call_llm_for_validation(prompt)
+          Ace::LLM::QueryInterface.query(
+            "gflash",
+            prompt,
+            temperature: 0.3
+          )
         end
       end
     end

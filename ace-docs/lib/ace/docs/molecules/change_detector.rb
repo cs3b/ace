@@ -176,8 +176,8 @@ module Ace
           since_ref = resolve_since_to_commit(since_param)
           cmd = "git diff --name-status --diff-filter=R #{since_ref}..HEAD"
 
-          stdout, stderr, status = Open3.capture3(cmd, chdir: git_root)
-          return [] unless status.success?
+          stdout = execute_git_command(cmd)
+          return [] if stdout.strip.empty?
 
           renames = []
           stdout.each_line do |line|
@@ -261,9 +261,7 @@ module Ace
 
           # Pass arguments directly to git (no shell expansion)
           # This ensures glob patterns are handled by git in the correct directory
-          stdout, _stderr, status = Open3.capture3(*cmd_parts, chdir: git_root)
-
-          status.success? ? stdout : ""
+          execute_git_command(cmd_parts)
         end
 
         def self.resolve_since_to_commit(since)
@@ -272,16 +270,16 @@ module Ace
 
           # It's a date - find the first commit since that date
           cmd = "git log --since=\"#{since}\" --format=%H --reverse --all"
-          stdout, _stderr, status = Open3.capture3(cmd, chdir: git_root)
+          stdout = execute_git_command(cmd)
 
-          if status.success? && !stdout.strip.empty?
+          if !stdout.strip.empty?
             first_commit = stdout.strip.split("\n").first
 
             # Get parent of first commit to include all changes since date
             parent_cmd = "git rev-parse #{first_commit}~1 2>/dev/null"
-            parent_stdout, _, parent_status = Open3.capture3(parent_cmd, chdir: git_root)
+            parent_stdout = execute_git_command(parent_cmd)
 
-            if parent_status.success? && !parent_stdout.strip.empty?
+            if !parent_stdout.strip.empty?
               return parent_stdout.strip
             else
               # First commit has no parent (initial commit), use it directly
@@ -350,6 +348,18 @@ module Ace
           end
 
           content.join("\n")
+        end
+
+        # Execute git command (protected for testing)
+        # @param cmd [String, Array] Git command to execute
+        # @return [String] Command output or empty string on failure
+        def self.execute_git_command(cmd)
+          if cmd.is_a?(Array)
+            stdout, _stderr, status = Open3.capture3(*cmd, chdir: git_root)
+          else
+            stdout, _stderr, status = Open3.capture3(cmd, chdir: git_root)
+          end
+          status.success? ? stdout : ""
         end
       end
     end

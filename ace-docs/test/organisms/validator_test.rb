@@ -233,12 +233,14 @@ module Ace
             content: "# Test"
           )
 
-          result = @validator.validate_document(document, syntax: false, semantic: true)
+          # Mock LLM call to return VALID response
+          @validator.stub :call_llm_for_validation, { text: "VALID\n" } do
+            result = @validator.validate_document(document, syntax: false, semantic: true)
 
-          assert result[:valid]
-          # Semantic validation is TODO, so should return empty results for now
-          assert_empty result[:errors]
-          assert_empty result[:warnings]
+            assert result[:valid]
+            assert_empty result[:errors]
+            assert_empty result[:warnings]
+          end
         end
 
         def test_validate_neither_syntax_nor_semantic
@@ -297,6 +299,93 @@ module Ace
           assert result[:errors].any? { |e| e.include?("Missing required frontmatter") }
           assert result[:errors].any? { |e| e.include?("Exceeds max lines") }
           assert result[:errors].any? { |e| e.include?("Missing required sections") }
+        end
+
+        def test_validate_semantic_detects_issues
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "guide",
+              "purpose" => "Test document"
+            },
+            content: "# Test"
+          )
+
+          # Mock LLM to return INVALID with issues
+          invalid_response = {
+            text: "INVALID\n- Content doesn't match purpose\n- Missing examples"
+          }
+
+          @validator.stub :call_llm_for_validation, invalid_response do
+            result = @validator.validate_document(document, syntax: false, semantic: true)
+
+            refute result[:valid]
+            assert_includes result[:errors], "Content doesn't match purpose"
+            assert_includes result[:errors], "Missing examples"
+          end
+        end
+
+        def test_validate_semantic_handles_llm_error
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "guide",
+              "purpose" => "Test document"
+            },
+            content: "# Test"
+          )
+
+          # Mock LLM to raise error
+          @validator.stub :call_llm_for_validation, ->(_) { raise Ace::LLM::Error, "not found" } do
+            result = @validator.validate_document(document, syntax: false, semantic: true)
+
+            refute result[:valid]
+            assert result[:errors].any? { |e| e.include?("Semantic validation unavailable") }
+          end
+        end
+
+        def test_validate_semantic_handles_generic_error
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "guide",
+              "purpose" => "Test document"
+            },
+            content: "# Test"
+          )
+
+          # Mock LLM to raise generic error
+          @validator.stub :call_llm_for_validation, ->(_) { raise StandardError, "Network timeout" } do
+            result = @validator.validate_document(document, syntax: false, semantic: true)
+
+            refute result[:valid]
+            assert result[:errors].any? { |e| e.include?("Semantic validation error") }
+            assert result[:errors].any? { |e| e.include?("Network timeout") }
+          end
+        end
+
+        def test_validate_semantic_invalid_without_issues
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "guide",
+              "purpose" => "Test document"
+            },
+            content: "# Test"
+          )
+
+          # Mock LLM to return INVALID but no bullet points
+          invalid_response = {
+            text: "INVALID\nSome other text without bullets"
+          }
+
+          @validator.stub :call_llm_for_validation, invalid_response do
+            result = @validator.validate_document(document, syntax: false, semantic: true)
+
+            refute result[:valid]
+            # Should have generic error when INVALID but no issues extracted
+            assert result[:errors].any? { |e| e.include?("Content validation failed - semantic issues detected") }
+          end
         end
       end
     end
