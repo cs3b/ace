@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.80] - 2025-10-20
+
+### Added
+
+- **ace-docs multi-subject configuration**: Comprehensive test coverage and documentation
+  - Added 16 tests for multi-subject functionality (Document model, ChangeDetector, DocumentAnalysisPrompt)
+  - Created example documents demonstrating multi-subject and single-subject configurations
+  - Implemented complete multi-subject configuration feature for categorizing changes
+
+### Changed
+
+- **Task management improvements**
+  - Completed task.078 for ace-docs multi-subject configuration
+  - Focused task.074 on high-value cross-document consistency analysis
+
+### Technical
+
+- ace-docs version bumped to 0.4.7 with comprehensive changelog
+- Enhanced documentation for ace-docs analyze command and multi-subject support
+- Updated README documentation with new analyze command features
+
 ## [0.9.79] - 2025-10-18
 
 ### Fixed
