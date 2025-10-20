@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ace/docs/organisms/document_registry"
 require "tempfile"
 
 class DocumentTest < AceTestCase
