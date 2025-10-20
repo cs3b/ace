@@ -1,2 +1,2 @@
 # README
-Docs
+Updated docs
