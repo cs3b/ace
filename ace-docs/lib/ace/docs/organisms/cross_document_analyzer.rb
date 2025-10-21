@@ -1,11 +1,17 @@
 # frozen_string_literal: true
 
-require 'shellwords'
 require 'fileutils'
 require 'json'
 require_relative '../organisms/document_registry'
 require_relative '../prompts/consistency_prompt'
 require_relative '../models/consistency_report'
+
+# Try to load ace-llm
+begin
+  require 'ace/llm'
+rescue LoadError
+  # Will be handled with clear error message during execution
+end
 
 module Ace
   module Docs
@@ -89,66 +95,38 @@ module Ace
         # Execute LLM query with the prompts
         def execute_llm_query(prompts)
           # Check if ace-llm is available
-          unless command_exists?('ace-llm-query')
-            raise "ace-llm-query not found. Please install ace-llm gem: gem install ace-llm"
+          unless defined?(Ace::LLM)
+            raise "ace-llm gem not available. Please install it with: gem install ace-llm"
           end
 
           # Determine timeout based on document count
           timeout = determine_timeout
 
-          # Build the full prompt
-          full_prompt = build_full_prompt(prompts)
+          # Determine model (use config or default)
+          model = @options[:model] || Ace::Docs.config["llm_model"] || "gflash"
 
-          # Create a temporary file for the prompt (to handle large prompts)
-          require 'tempfile'
-          prompt_file = Tempfile.new(['consistency_prompt', '.txt'])
+          puts "Executing LLM query (model: #{model}, timeout: #{timeout}s)..." if @options[:verbose]
 
           begin
-            prompt_file.write(full_prompt)
-            prompt_file.close
+            # Call LLM via QueryInterface with system prompt
+            result = Ace::LLM::QueryInterface.query(
+              model,
+              prompts[:user],
+              system: prompts[:system],
+              temperature: 0.3,  # Lower temperature for more consistent analysis
+              timeout: timeout
+            )
 
-            # Execute ace-llm-query
-            command = build_llm_command(prompt_file.path, timeout)
-
-            puts "Executing LLM query (timeout: #{timeout}s)..." if @options[:verbose]
-
-            output = `#{command} 2>&1`
-            exit_status = $?.exitstatus
-
-            if exit_status != 0
-              raise "LLM query failed with exit code #{exit_status}: #{output}"
+            # Check if the query was successful
+            unless result[:success]
+              raise "LLM query failed: #{result[:error] || 'Unknown error'}"
             end
 
-            # Extract JSON from the response
-            extract_json_from_response(output)
-          ensure
-            prompt_file.unlink
+            # Return the response content
+            result[:response]
+          rescue StandardError => e
+            raise "LLM query error: #{e.message}"
           end
-        end
-
-        # Build the full prompt combining system and user prompts
-        def build_full_prompt(prompts)
-          <<~PROMPT
-            SYSTEM:
-            #{prompts[:system]}
-
-            USER:
-            #{prompts[:user]}
-          PROMPT
-        end
-
-        # Build the ace-llm-query command
-        def build_llm_command(prompt_file, timeout)
-          model = @options[:model] || 'gpt-4'
-
-          # Build command parts
-          cmd_parts = ['ace-llm-query']
-          cmd_parts << "--file #{Shellwords.escape(prompt_file)}"
-          cmd_parts << "--model #{Shellwords.escape(model)}"
-          cmd_parts << "--timeout #{timeout}"
-          cmd_parts << "--temperature 0.3"  # Lower temperature for more consistent analysis
-
-          cmd_parts.join(' ')
         end
 
         # Determine timeout based on document count
@@ -167,21 +145,6 @@ module Ace
           end
         end
 
-        # Extract JSON from LLM response
-        def extract_json_from_response(response)
-          # Try to find JSON in the response
-          # LLM might wrap it in markdown code blocks
-          json_match = response.match(/```json\s*(.*?)\s*```/m) ||
-                      response.match(/```\s*(.*?)\s*```/m) ||
-                      response.match(/(\{.*\})/m)
-
-          if json_match
-            json_match[1]
-          else
-            response
-          end
-        end
-
         # Cache the report to filesystem
         def cache_report(report)
           cache_dir = '.cache/ace-docs'
@@ -193,11 +156,6 @@ module Ace
           File.write(cache_file, report.to_markdown)
 
           puts "Report saved to: #{cache_file}" if @options[:verbose]
-        end
-
-        # Check if a command exists
-        def command_exists?(cmd)
-          system("which #{cmd} > /dev/null 2>&1")
         end
       end
     end
