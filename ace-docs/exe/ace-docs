@@ -66,6 +66,25 @@ module Ace
         exit(exit_code) if exit_code != 0
       end
 
+      desc "analyze-consistency [PATTERN]", "Analyze cross-document consistency"
+      option :terminology, type: :boolean, desc: "Check terminology conflicts only"
+      option :duplicates, type: :boolean, desc: "Find duplicate content only"
+      option :versions, type: :boolean, desc: "Check version consistency only"
+      option :all, type: :boolean, desc: "All analysis types (default)"
+      option :threshold, type: :numeric, desc: "Similarity threshold for duplicates (default: 70)"
+      option :output, desc: "Output format (markdown|json|text)", default: "markdown"
+      option :save, type: :boolean, desc: "Save report to cache directory"
+      option :model, desc: "LLM model to use (default: gpt-4)"
+      option :timeout, type: :numeric, desc: "LLM timeout in seconds"
+      option :strict, type: :boolean, desc: "Exit with code 1 if issues found"
+      option :verbose, type: :boolean, desc: "Show verbose output"
+      option :debug, type: :boolean, desc: "Show debug output"
+      def analyze_consistency(pattern = nil)
+        require_relative "../lib/ace/docs/commands/analyze_consistency_command"
+        exit_code = Commands::AnalyzeConsistencyCommand.new(options).execute(pattern)
+        exit(exit_code) if exit_code != 0
+      end
+
       desc "version", "Show ace-docs version"
       def version
         puts "ace-docs version #{Ace::Docs::VERSION}"
