@@ -143,9 +143,12 @@ module Ace
             }
           )
 
-          result = ChangeDetector.get_diff_for_document(document)
+          # Mock git to avoid real git operations
+          ChangeDetector.stub :execute_git_command, "" do
+            result = ChangeDetector.get_diff_for_document(document)
 
-          assert_equal "2024-09-15", result[:since]
+            assert_equal "2024-09-15", result[:since]
+          end
         end
 
         def test_determine_since_with_explicit_date
@@ -157,9 +160,12 @@ module Ace
             }
           )
 
-          result = ChangeDetector.get_diff_for_document(document, since: Date.new(2024, 10, 1))
+          # Mock git to avoid real git operations
+          ChangeDetector.stub :execute_git_command, "" do
+            result = ChangeDetector.get_diff_for_document(document, since: Date.new(2024, 10, 1))
 
-          assert_equal "2024-10-01", result[:since]
+            assert_equal "2024-10-01", result[:since]
+          end
         end
 
         def test_determine_since_with_string
@@ -171,9 +177,12 @@ module Ace
             }
           )
 
-          result = ChangeDetector.get_diff_for_document(document, since: "HEAD~5")
+          # Mock git to avoid real git operations
+          ChangeDetector.stub :execute_git_command, "" do
+            result = ChangeDetector.get_diff_for_document(document, since: "HEAD~5")
 
-          assert_equal "HEAD~5", result[:since]
+            assert_equal "HEAD~5", result[:since]
+          end
         end
 
         def test_format_diff_for_saving_single_document
