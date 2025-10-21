@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-10-21
+
 ### Added
 
 - **Cross-document consistency analysis command** (`analyze-consistency`)
@@ -14,24 +16,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Identifies duplicate content with configurable similarity threshold
   - Finds version number inconsistencies
   - Suggests content consolidation opportunities
-  - LLM-powered semantic analysis using ace-llm-query
+  - LLM-powered semantic analysis using ace-llm Ruby library
   - Multiple output formats: markdown, json, text
   - Caching support for historical comparison
   - Configurable analysis focus (--terminology, --duplicates, --versions)
   - Strict mode for CI/CD integration (exit code 1 if issues found)
 
-### New Files
+### Fixed
 
-- `lib/ace/docs/prompts/consistency_prompt.rb` - Builds LLM prompts for analysis
-- `lib/ace/docs/models/consistency_report.rb` - Parses and formats analysis results
-- `lib/ace/docs/organisms/cross_document_analyzer.rb` - Orchestrates analysis workflow
-- `lib/ace/docs/commands/analyze_consistency_command.rb` - CLI command implementation
+- Use ace-llm Ruby library directly instead of subprocess for better performance
+- Test failures and improved test performance
 
-### Documentation
+### Technical
 
-- Updated README with comprehensive consistency analysis examples
-- Added architecture diagram in task docs folder showing data flow
-- Documented common use cases for consistency checking
+- New prompts module for consistency analysis
+- New models for consistency report handling
+- New organisms for cross-document analysis orchestration
+- New command implementation for analyze-consistency
+- Updated README with comprehensive examples
+- Added architecture documentation with flow diagrams
 
 ## [0.4.7] - 2025-10-20
 
