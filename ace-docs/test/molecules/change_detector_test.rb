@@ -67,20 +67,15 @@ module Ace
             frontmatter: { "doc-type" => "api", "purpose" => "Second doc" }
           )
 
-          # Make changes
-          File.write("doc1.md", "# Doc 1\n\nContent")
-          File.write("doc2.md", "# Doc 2\n\nContent")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Add documents'", out: File::NULL, err: File::NULL)
+          # Mock git to return diffs for both documents
+          mock_diff = "diff --git a/doc1.md b/doc1.md\n+Updated content"
+          ChangeDetector.stub :execute_git_command, mock_diff do
+            result = ChangeDetector.get_diff_for_documents([doc1, doc2], since: "HEAD~1")
 
-          # Make more changes
-          File.write("doc1.md", "# Doc 1\n\nUpdated content")
-
-          result = ChangeDetector.get_diff_for_documents([doc1, doc2], since: "HEAD~1")
-
-          assert_equal 2, result[:total_documents]
-          assert result[:documents_with_changes] >= 0
-          assert_equal 2, result[:document_diffs].size
+            assert_equal 2, result[:total_documents]
+            assert result[:documents_with_changes] >= 0
+            assert_equal 2, result[:document_diffs].size
+          end
         end
 
         def test_save_diff_to_cache
@@ -118,29 +113,22 @@ module Ace
         end
 
         def test_diff_with_exclude_renames_option
-          # Create and rename a file
-          File.write("file.md", "Content")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Add file'", out: File::NULL, err: File::NULL)
-
-          system("git mv file.md renamed.md", out: File::NULL, err: File::NULL)
-          File.write("other.md", "Other content")
-          system("git add .", out: File::NULL, err: File::NULL)
-          system("git commit -m 'Rename and add'", out: File::NULL, err: File::NULL)
-
           document = Models::Document.new(
             path: "renamed.md",
             frontmatter: { "doc-type" => "guide", "purpose" => "Test" }
           )
 
-          # Test with renames excluded
-          result = ChangeDetector.get_diff_for_document(
-            document,
-            since: "HEAD~1",
-            options: { include_renames: false }
-          )
+          # Mock git to return empty diff
+          ChangeDetector.stub :execute_git_command, "" do
+            # Test with renames excluded
+            result = ChangeDetector.get_diff_for_document(
+              document,
+              since: "HEAD~1",
+              options: { include_renames: false }
+            )
 
-          assert_equal false, result[:options][:include_renames]
+            assert_equal false, result[:options][:include_renames]
+          end
         end
 
         def test_determine_since_uses_document_last_updated
@@ -283,18 +271,16 @@ module Ace
             }
           )
 
-          # Add some changes to test
-          File.write("test.rb", "# Ruby file\nputs 'hello'")
-          File.write("doc.md", "# Doc file\nContent")
-          system("git add .", out: File::NULL, err: File::NULL)
+          # Mock git to return empty diffs for both subjects
+          ChangeDetector.stub :execute_git_command, "" do
+            result = ChangeDetector.get_diff_for_document(document)
 
-          result = ChangeDetector.get_diff_for_document(document)
-
-          assert_equal "test.md", result[:document_path]
-          assert result[:multi_subject], "Should be marked as multi-subject"
-          assert_kind_of Hash, result[:diffs], "Diffs should be a hash for multi-subject"
-          assert result[:diffs].key?("code"), "Should have code subject diff"
-          assert result[:diffs].key?("docs"), "Should have docs subject diff"
+            assert_equal "test.md", result[:document_path]
+            assert result[:multi_subject], "Should be marked as multi-subject"
+            assert_kind_of Hash, result[:diffs], "Diffs should be a hash for multi-subject"
+            assert result[:diffs].key?("code"), "Should have code subject diff"
+            assert result[:diffs].key?("docs"), "Should have docs subject diff"
+          end
         end
 
         def test_get_diff_for_document_multi_subject_with_changes
@@ -433,15 +419,16 @@ module Ace
             }
           )
 
-          File.write("test.rb", "puts 'test'")
-          system("git add .", out: File::NULL, err: File::NULL)
+          # Mock git to return diff with test.rb changes
+          mock_diff = "diff --git a/test.rb b/test.rb\n+puts 'test'"
+          ChangeDetector.stub :execute_git_command, mock_diff do
+            result = ChangeDetector.get_diff_for_document(document)
 
-          result = ChangeDetector.get_diff_for_document(document)
-
-          refute result[:multi_subject], "Should not be multi-subject"
-          assert_kind_of String, result[:diff], "Diff should be a string for single subject"
-          assert result[:has_changes]
-          assert result[:diff].include?("test.rb")
+            refute result[:multi_subject], "Should not be multi-subject"
+            assert_kind_of String, result[:diff], "Diff should be a string for single subject"
+            assert result[:has_changes]
+            assert result[:diff].include?("test.rb")
+          end
         end
       end
     end
