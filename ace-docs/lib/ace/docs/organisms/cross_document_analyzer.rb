@@ -137,11 +137,11 @@ module Ace
 
           case doc_count
           when 0..10
-            60
+            600   # 10 minutes minimum
           when 11..50
-            120
+            900   # 15 minutes for medium sets
           else
-            180
+            1200  # 20 minutes for large sets
           end
         end
 
