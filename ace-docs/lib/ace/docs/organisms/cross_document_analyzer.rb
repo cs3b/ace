@@ -2,6 +2,8 @@
 
 require 'fileutils'
 require 'json'
+require 'yaml'
+require 'colorize'
 require_relative '../organisms/document_registry'
 require_relative '../prompts/consistency_prompt'
 require_relative '../models/consistency_report'
@@ -39,7 +41,17 @@ module Ace
             )
           end
 
+          # Create session directory for analysis
+          cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
+          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+          session_dir = File.join(cache_dir, "analyze-consistency-#{timestamp}")
+          FileUtils.mkdir_p(session_dir)
+
           puts "Analyzing #{documents.count} documents for consistency issues..." if @options[:verbose]
+          puts "Session directory: #{session_dir}" if @options[:verbose]
+
+          # Save document list
+          save_document_list(documents, session_dir)
 
           # Prepare document content
           document_data = prepare_document_data(documents)
@@ -48,14 +60,24 @@ module Ace
           prompt_builder = Prompts::ConsistencyPrompt.new
           prompts = prompt_builder.build(document_data, @options)
 
+          # Save prompts
+          save_prompts(prompts, session_dir)
+
           # Execute LLM query
           response = execute_llm_query(prompts)
+
+          # Save LLM response
+          save_llm_response(response, session_dir)
 
           # Parse response into report
           report = Models::ConsistencyReport.parse(response, documents.count)
 
-          # Cache results if requested
-          cache_report(report) if @options[:save]
+          # Save report and metadata
+          save_report(report, session_dir)
+          save_metadata(documents, pattern, session_dir)
+
+          # Display session info
+          puts "\nAnalysis saved to: #{session_dir}".green
 
           report
         end
@@ -145,17 +167,85 @@ module Ace
           end
         end
 
-        # Cache the report to filesystem
-        def cache_report(report)
-          cache_dir = '.cache/ace-docs'
-          FileUtils.mkdir_p(cache_dir)
+        # Save document list to session directory
+        def save_document_list(documents, session_dir)
+          document_list = documents.map do |doc|
+            {
+              path: doc.path,
+              type: doc.doc_type,
+              purpose: doc.purpose,
+              last_updated: doc.last_updated
+            }
+          end
 
-          timestamp = Time.now.strftime('%Y%m%d-%H%M%S')
-          cache_file = File.join(cache_dir, "consistency-#{timestamp}.md")
+          document_list_path = File.join(session_dir, "documents.json")
+          File.write(document_list_path, JSON.pretty_generate(document_list))
+        end
 
-          File.write(cache_file, report.to_markdown)
+        # Save prompts to session directory
+        def save_prompts(prompts, session_dir)
+          # Save system prompt
+          system_prompt_path = File.join(session_dir, "prompt-system.md")
+          File.write(system_prompt_path, format_prompt(prompts[:system], "System Prompt"))
 
-          puts "Report saved to: #{cache_file}" if @options[:verbose]
+          # Save user prompt
+          user_prompt_path = File.join(session_dir, "prompt-user.md")
+          File.write(user_prompt_path, format_prompt(prompts[:user], "User Prompt"))
+        end
+
+        # Format prompt for saving
+        def format_prompt(content, title)
+          <<~PROMPT
+            # #{title}
+
+            Generated: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}
+
+            ---
+
+            #{content}
+          PROMPT
+        end
+
+        # Save LLM response to session directory
+        def save_llm_response(response, session_dir)
+          response_path = File.join(session_dir, "llm-response.json")
+
+          # Try to parse as JSON for pretty formatting
+          begin
+            parsed = JSON.parse(response)
+            File.write(response_path, JSON.pretty_generate(parsed))
+          rescue JSON::ParserError
+            # If not JSON, save as plain text
+            File.write(response_path, response)
+          end
+        end
+
+        # Save report to session directory
+        def save_report(report, session_dir)
+          # Save markdown report
+          report_path = File.join(session_dir, "report.md")
+          File.write(report_path, report.to_markdown)
+
+          # Save JSON report
+          report_json_path = File.join(session_dir, "report.json")
+          File.write(report_json_path, report.to_json)
+        end
+
+        # Save metadata to session directory
+        def save_metadata(documents, pattern, session_dir)
+          metadata = {
+            "analysis_type" => "consistency",
+            "generated_at" => Time.now.iso8601,
+            "document_count" => documents.count,
+            "pattern" => pattern,
+            "options" => @options,
+            "session_dir" => session_dir,
+            "ace_docs_version" => Ace::Docs::VERSION
+          }
+
+          metadata_path = File.join(session_dir, "metadata.yml")
+          require 'yaml'
+          File.write(metadata_path, metadata.to_yaml)
         end
       end
     end
