@@ -15,6 +15,18 @@ module Ace
           @original_dir = Dir.pwd
           Dir.chdir(@temp_dir)
 
+          # Create config to prevent registry from walking up and to discover test documents
+          FileUtils.mkdir_p(".ace/docs")
+          File.write(".ace/docs/config.yml", <<~YAML)
+            document_types:
+              guide:
+                paths:
+                  - "*.md"
+              api:
+                paths:
+                  - "*.md"
+          YAML
+
           # Create test documents
           create_test_documents
         end
@@ -32,13 +44,13 @@ module Ace
             command.execute
           end.first
 
-          assert output.include?("Document Status")
+          assert output.include?("Managed Documents")
           assert output.include?("guide1.md")
           assert output.include?("guide")
         end
 
         def test_status_command_with_type_filter
-          command = StatusCommand.new({ "type" => "api" })
+          command = StatusCommand.new({ type: "api" })
 
           output = capture_io do
             command.execute
@@ -49,7 +61,7 @@ module Ace
         end
 
         def test_status_command_with_needs_update_filter
-          command = StatusCommand.new({ "needs_update" => true })
+          command = StatusCommand.new({ needs_update: true })
 
           output = capture_io do
             command.execute
@@ -60,7 +72,7 @@ module Ace
         end
 
         def test_status_command_with_freshness_filter
-          command = StatusCommand.new({ "freshness" => "current" })
+          command = StatusCommand.new({ freshness: "current" })
 
           output = capture_io do
             command.execute
@@ -80,7 +92,7 @@ module Ace
             command.execute
           end.first
 
-          assert output.include?("No documents found")
+          assert output.include?("No managed documents found")
         end
 
         private

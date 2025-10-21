@@ -2,14 +2,11 @@
 
 require "test_helper"
 require "tempfile"
+require "ace/docs/molecules/document_loader"
 
 module Ace
   module Docs
     class DocumentTest < AceTestCase
-      def setup
-        @registry = DocumentRegistry.new
-      end
-
   def test_multi_subject_detection_returns_true_for_array
     # Create document with multi-subject configuration (array)
     content = <<~MARKDOWN
@@ -36,7 +33,7 @@ module Ace
     file.write(content)
     file.rewind
 
-    doc = @registry.load_document(file.path)
+    doc = Molecules::DocumentLoader.load_file(file.path)
 
     assert doc.multi_subject?, "Document should detect multi-subject configuration"
   ensure
@@ -66,7 +63,7 @@ module Ace
     file.write(content)
     file.rewind
 
-    doc = @registry.load_document(file.path)
+    doc = Molecules::DocumentLoader.load_file(file.path)
 
     refute doc.multi_subject?, "Document should not detect multi-subject for hash configuration"
   ensure
@@ -105,7 +102,7 @@ module Ace
     file.write(content)
     file.rewind
 
-    doc = @registry.load_document(file.path)
+    doc = Molecules::DocumentLoader.load_file(file.path)
     configs = doc.subject_configurations
 
     assert_equal 3, configs.length, "Should have 3 subject configurations"
@@ -147,7 +144,7 @@ module Ace
     file.write(content)
     file.rewind
 
-    doc = @registry.load_document(file.path)
+    doc = Molecules::DocumentLoader.load_file(file.path)
     configs = doc.subject_configurations
 
     assert_equal 1, configs.length, "Should have 1 subject configuration"
@@ -186,15 +183,19 @@ module Ace
     file.write(content)
     file.rewind
 
-    doc = @registry.load_document(file.path)
+    doc = Molecules::DocumentLoader.load_file(file.path)
     configs = doc.subject_configurations
 
-    # Should include all subjects, even with empty filters
-    assert_equal 3, configs.length, "Should have all 3 subjects"
+    # Should only include subjects with non-empty filters (design decision)
+    assert_equal 2, configs.length, "Should have 2 subjects with filters"
 
-    # Check that config subject has empty filters
+    # Verify config subject with empty filters is excluded
     config_subject = configs.find { |c| c[:name] == "config" }
-    assert_equal [], config_subject[:filters], "Config subject should have empty filters array"
+    assert_nil config_subject, "Config subject with empty filters should be excluded"
+
+    # Verify the remaining subjects
+    assert configs.any? { |c| c[:name] == "code" }
+    assert configs.any? { |c| c[:name] == "docs" }
   ensure
     file&.close
     file&.unlink
