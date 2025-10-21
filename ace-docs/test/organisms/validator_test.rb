@@ -10,8 +10,8 @@ module Ace
     module Organisms
       class ValidatorTest < AceTestCase
         def setup
-          @registry = DocumentRegistry.new
-          @validator = Validator.new(@registry)
+          # Registry is never used by Validator, pass nil to avoid expensive DocumentRegistry.new
+          @validator = Validator.new(nil)
         end
 
         def test_validate_document_with_valid_document
