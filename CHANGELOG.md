@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.82] - 2025-10-23
+
+### Fixed
+
+- **ace-docs analyze-consistency simplified**: Major refactoring for cleaner implementation
+  - Now uses ace-llm's native `output:` option to save reports directly
+  - Removed redundant report processing and duplicate file generation
+  - Fixed cache directory to use git root path (prevents nested directories)
+  - Eliminated unnecessary ConsistencyReport parsing - displays LLM response directly
+  - Cleaner session directory with only essential files
+
+### Changed
+
+- **ace-docs version bumped to 0.5.2**: Simplified analyze-consistency implementation
+
 ## [0.9.81] - 2025-10-21
 
 ### Added
