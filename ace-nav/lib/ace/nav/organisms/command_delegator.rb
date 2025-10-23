@@ -64,12 +64,17 @@ module Ace
         # @param options [Hash] CLI options to pass through
         # @param protocol_config [Hash] Protocol configuration
         # @return [Array<String>] Command parts as array for safe execution
+        #
+        # @note Template parsing limitation: Currently uses simple space-splitting which works
+        #   for standard templates like "ace-taskflow task %{ref}". Complex templates with
+        #   quoted strings or multiple spaces may not parse correctly. Future enhancement
+        #   could use Shellwords.split() for more robust parsing.
         def build_command(template, reference, options, protocol_config)
           # Substitute reference in template
           command_string = template.gsub("%{ref}", reference)
 
           # Start with base command parts (split by spaces for simple cases)
-          # Note: This handles simple templates like "ace-taskflow task %{ref}"
+          # Simple splitting is sufficient for current v1 templates
           command_parts = command_string.split(" ")
 
           # Add pass-through options

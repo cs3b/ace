@@ -50,60 +50,79 @@ class TaskProtocolIntegrationTest < Minitest::Test
     cli = Ace::Nav::Cli.new
 
     # Test that delegation succeeds (exit code 0)
-    # Note: system() outputs directly to stdout, can't be captured with capture_io
-    assert_raises(SystemExit) do
-      capture_io do  # Suppress output during test
-        cli.run(["task://083"])
-      end
+    # Note: system() outputs directly to stdout, suppress with capture_io
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://083"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_task_protocol_delegation_with_full_reference
     cli = Ace::Nav::Cli.new
 
-    assert_raises(SystemExit) do
-      capture_io { cli.run(["task://v.0.9.0+task.083"]) }
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://v.0.9.0+task.083"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_path_option
     cli = Ace::Nav::Cli.new
 
-    assert_raises(SystemExit) do
-      capture_io { cli.run(["task://083", "--path"]) }
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://083", "--path"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_content_option
     cli = Ace::Nav::Cli.new
 
-    assert_raises(SystemExit) do
-      capture_io { cli.run(["task://083", "--content"]) }
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://083", "--content"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_tree_option
     cli = Ace::Nav::Cli.new
 
-    assert_raises(SystemExit) do
-      capture_io { cli.run(["task://083", "--tree"]) }
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://083", "--tree"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_backlog_reference
     cli = Ace::Nav::Cli.new
 
-    assert_raises(SystemExit) do
-      capture_io { cli.run(["task://backlog+025"]) }
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://backlog+025"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_prefixed_reference
     cli = Ace::Nav::Cli.new
 
-    assert_raises(SystemExit) do
-      capture_io { cli.run(["task://task.083"]) }
+    exit_code = nil
+    capture_io do
+      exit_code = cli.run(["task://task.083"])
     end
+
+    assert_equal 0, exit_code
   end
 
   def test_cmd_protocol_check_in_navigation_engine

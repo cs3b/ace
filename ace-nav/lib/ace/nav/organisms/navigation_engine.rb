@@ -79,7 +79,6 @@ module Ace
 
         # Get all discovered protocols
         def discovered_protocols
-          config_loader = Molecules::ConfigLoader.new
           config_loader.discovered_protocols
         end
 
@@ -87,7 +86,6 @@ module Ace
         # @param protocol_name [String] The protocol name to check
         # @return [Boolean] true if protocol delegates to external command
         def cmd_protocol?(protocol_name)
-          config_loader = Molecules::ConfigLoader.new
           config_loader.protocol_type(protocol_name) == "cmd"
         end
 
@@ -141,6 +139,12 @@ module Ace
           # Build target path
           filename = File.basename(template.path)
           File.join(project_handbook, subdir, filename)
+        end
+
+        # Access the config_loader from protocol_scanner
+        # Reuses the same ConfigLoader instance across all protocol operations
+        def config_loader
+          @protocol_scanner.instance_variable_get(:@config_loader)
         end
       end
     end
