@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.084
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 1h
 dependencies: []
 ---
 
@@ -114,6 +114,202 @@ Enable the `/ace:load-context` slash command to leverage the full flexibility of
 - ❌ **New Context File Formats**: Not adding support for new formats beyond what ace-context already handles
 - ❌ **Context Caching Changes**: Not modifying how context is cached or stored
 - ❌ **Preset Management**: Not adding preset creation/editing capabilities
+
+## Technical Approach
+
+### Current Implementation Analysis
+
+**File:** `.claude/commands/ace/load-context.md`
+
+**Problem:**
+- Line 22: `$preset: project` - Variable name assumes preset only
+- Line 26: `ace-context --preset $preset` - Hardcoded `--preset` flag forces preset-only interpretation
+- Line 5: `argument-hint: [preset]` - Documentation suggests presets only
+
+**Root Cause:**
+The command explicitly passes `--preset` flag to `ace-context`, which prevents the CLI's built-in input detection from working. The `ace-context` tool already has intelligent input type detection when called without explicit flags.
+
+**Solution:**
+Remove the `--preset` flag and let `ace-context` handle input detection automatically. Update variable naming and documentation to reflect flexible input support.
+
+### Architecture Pattern
+
+This is a **documentation/configuration task** modifying a Claude Code slash command wrapper:
+
+- **Pattern**: Passthrough command wrapper with minimal transformation
+- **Integration**: Leverages existing `ace-context` CLI capabilities without modification
+- **Impact**: Zero impact on `ace-context` implementation; only changes command wrapper
+
+### Technology Stack
+
+**No new dependencies required:**
+- Uses existing `ace-context` CLI tool (already supports file paths, presets, protocols)
+- Bash execution via Claude Code's Bash tool
+- Read tool for displaying loaded context
+- All functionality exists; just enabling it through the wrapper
+
+### Implementation Strategy
+
+**Single File Modification:**
+1. Update `.claude/commands/ace/load-context.md`
+2. Change variable name from `$preset` to `$input` for clarity
+3. Remove `--preset` flag from `ace-context` invocation
+4. Update metadata (argument-hint, description) to reflect flexible input
+5. Test with preset, file path, and protocol inputs
+
+**Backward Compatibility:**
+- Default behavior unchanged (`project` preset when no argument)
+- Existing preset usage works identically
+- No breaking changes to command interface
+
+**Error Handling:**
+- Errors come from `ace-context` CLI (already handles file not found, preset not found, permission errors)
+- Command wrapper passes through errors unchanged
+- No additional error handling needed in wrapper
+
+## File Modifications
+
+### Modify
+
+- `.claude/commands/ace/load-context.md`
+  - **Changes**:
+    - Line 5: Update `argument-hint: [preset]` to `argument-hint: [preset|file-path|protocol]`
+    - Line 4: Update description to mention file path and protocol support
+    - Line 22: Change `$preset: project` to `$input: project` (variable rename for clarity)
+    - Line 26: Change `ace-context --preset $preset` to `ace-context $input`
+    - Line 35-41: Update Response Template to reflect flexible input (optional)
+  - **Impact**: Enables flexible input detection by removing hardcoded `--preset` flag
+  - **Integration points**: No code integration; pure configuration change
+
+### Create
+
+- `.ace-taskflow/v.0.9.0/tasks/084-task-context-enable-file-path-arguments-ace/ux/usage.md` ✅ **CREATED**
+  - **Purpose**: User-facing usage documentation with examples
+  - **Key components**: Command syntax, scenarios, error handling, migration guide
+  - **Dependencies**: None (standalone documentation)
+
+## Implementation Plan
+
+### Execution Steps
+
+- [ ] **Update slash command variable naming**
+  - Change `$preset` to `$input` on line 22 for semantic accuracy
+  - Reflects that input can be preset, file, or protocol
+  > TEST: Variable Usage Check
+  > Type: Pre-condition Check
+  > Assert: Variable name is semantically accurate and consistent throughout file
+  > Command: grep -n '\$input' .claude/commands/ace/load-context.md
+
+- [ ] **Remove hardcoded --preset flag**
+  - Change line 26 from `ace-context --preset $preset` to `ace-context $input`
+  - This enables ace-context's built-in input detection
+  > TEST: Command Syntax Verification
+  > Type: Action Validation
+  > Assert: Command no longer forces preset interpretation
+  > Command: grep -n 'ace-context' .claude/commands/ace/load-context.md | grep -v '\-\-preset'
+
+- [ ] **Update command metadata for flexible input**
+  - Line 5: Change `argument-hint: [preset]` to `argument-hint: [preset|file-path|protocol]`
+  - Line 4: Update description to mention file path and protocol support
+  > TEST: Metadata Accuracy Check
+  > Type: Documentation Validation
+  > Assert: Metadata accurately describes command capabilities
+  > Command: grep -A 2 'argument-hint' .claude/commands/ace/load-context.md
+
+- [ ] **Test with preset input**
+  - Invoke `/ace:load-context project`
+  - Verify default preset loading works
+  > TEST: Backward Compatibility - Preset
+  > Type: Integration Test
+  > Assert: Preset loading works as before (backward compatible)
+  > Command: /ace:load-context project
+  > Expected: Context loaded from project preset
+
+- [ ] **Test with relative file path**
+  - Create test context file: `.ace-taskflow/v.0.9.0/test-context.md`
+  - Invoke `/ace:load-context .ace-taskflow/v.0.9.0/test-context.md`
+  - Verify file path loading works
+  > TEST: New Capability - Relative Path
+  > Type: Feature Validation
+  > Assert: Relative file paths are loaded correctly
+  > Command: /ace:load-context .ace-taskflow/v.0.9.0/test-context.md
+  > Expected: Context loaded from file
+
+- [ ] **Test with absolute file path**
+  - Invoke `/ace:load-context /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/test-context.md`
+  - Verify absolute path loading works
+  > TEST: New Capability - Absolute Path
+  > Type: Feature Validation
+  > Assert: Absolute file paths are loaded correctly
+  > Command: /ace:load-context /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/test-context.md
+  > Expected: Context loaded from file
+
+- [ ] **Test error handling - file not found**
+  - Invoke `/ace:load-context ./nonexistent.md`
+  - Verify clear error message
+  > TEST: Error Handling - Missing File
+  > Type: Error Case Validation
+  > Assert: Clear error message when file doesn't exist
+  > Command: /ace:load-context ./nonexistent.md
+  > Expected: Error message indicating file not found
+
+- [ ] **Test error handling - preset not found**
+  - Invoke `/ace:load-context nonexistent-preset`
+  - Verify clear error message with preset suggestion
+  > TEST: Error Handling - Missing Preset
+  > Type: Error Case Validation
+  > Assert: Clear error message when preset doesn't exist
+  > Command: /ace:load-context nonexistent-preset
+  > Expected: Error message suggesting --list-presets
+
+- [ ] **Clean up test files**
+  - Remove `.ace-taskflow/v.0.9.0/test-context.md` if created
+  > TEST: Cleanup Verification
+  > Type: Post-condition Check
+  > Assert: No test artifacts remain
+  > Command: ls .ace-taskflow/v.0.9.0/test-context.md 2>&1 | grep -q "No such file"
+
+- [ ] **Update README.md if needed**
+  - Check if `/ace:load-context` is documented in README.md
+  - Update description to reflect file path support if documented
+  > TEST: Documentation Completeness
+  > Type: Documentation Validation
+  > Assert: README reflects new capabilities if command is documented
+  > Command: grep -A 2 'ace:load-context' README.md
+
+## Acceptance Criteria
+
+- [ ] **AC1**: `/ace:load-context project` works unchanged (backward compatibility)
+- [ ] **AC2**: `/ace:load-context ./path/to/file.md` successfully loads file-based context
+- [ ] **AC3**: `/ace:load-context /absolute/path/to/file.yml` successfully loads file-based context
+- [ ] **AC4**: Clear error messages for file not found vs preset not found scenarios
+- [ ] **AC5**: Command metadata (argument-hint, description) accurately describes capabilities
+- [ ] **AC6**: UX/usage documentation created with comprehensive examples
+- [ ] **AC7**: All embedded tests in Implementation Plan pass
+
+## Risk Assessment
+
+### Technical Risks
+
+- **Risk:** Breaking existing preset usage
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** ace-context auto-detection prioritizes presets; test with common preset names
+  - **Rollback:** Revert to `ace-context --preset $preset` if issues detected
+
+- **Risk:** Input detection ambiguity (preset vs file)
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** ace-context has robust detection (checks for path separators, protocols); users can use `./` prefix to force file
+  - **Rollback:** No rollback needed; users can use explicit path notation
+
+### Integration Risks
+
+- **Risk:** Unexpected ace-context behavior with new input types
+  - **Probability:** Very Low
+  - **Impact:** Low
+  - **Mitigation:** ace-context already supports this; we're just enabling existing functionality
+  - **Monitoring:** Test with multiple input types during implementation
 
 ## References
 
