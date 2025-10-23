@@ -1,60 +1,59 @@
 # frozen_string_literal: true
 
-require "open3"
+require "ace/git_diff"
 
 module Ace
   module GitCommit
     module Atoms
       # GitExecutor handles low-level git command execution
+      # Now delegates to ace-git-diff for command execution
       class GitExecutor
         # Execute a git command and return output
         # @param args [Array<String>] Git command arguments
-        # @param capture_stderr [Boolean] Whether to capture stderr
+        # @param capture_stderr [Boolean] Whether to capture stderr (ignored, always captured)
         # @return [String] Command output
         # @raise [GitError] If command fails
         def execute(*args, capture_stderr: false)
           cmd = ["git"] + args
+          result = Ace::GitDiff::Atoms::CommandExecutor.execute(*cmd)
 
-          if capture_stderr
-            output, error, status = Open3.capture3(*cmd)
-            unless status.success?
-              raise GitError, "Git command failed: #{cmd.join(' ')}\nError: #{error}"
-            end
-            output + error
+          unless result[:success]
+            error_msg = "Git command failed: #{cmd.join(' ')}"
+            error_msg += "\nError: #{result[:error]}" if result[:error] && !result[:error].empty?
+            raise GitError, error_msg
+          end
+
+          # Combine output and error if capture_stderr is true
+          if capture_stderr && result[:error] && !result[:error].empty?
+            result[:output] + result[:error]
           else
-            output, status = Open3.capture2(*cmd)
-            unless status.success?
-              raise GitError, "Git command failed: #{cmd.join(' ')}"
-            end
-            output
+            result[:output]
           end
         end
 
         # Check if we're in a git repository
         # @return [Boolean] True if in a git repo
         def in_repository?
-          execute("rev-parse", "--git-dir")
-          true
-        rescue GitError
-          false
+          Ace::GitDiff::Atoms::CommandExecutor.in_git_repo?
         end
 
         # Get repository root
         # @return [String] Repository root path
         def repository_root
-          execute("rev-parse", "--show-toplevel").strip
+          Ace::GitDiff::Atoms::CommandExecutor.repo_root
         end
 
         # Check if there are any changes
         # @return [Boolean] True if there are changes
         def has_changes?
-          !execute("status", "--porcelain").strip.empty?
+          Ace::GitDiff::Atoms::CommandExecutor.has_unstaged_changes? ||
+            Ace::GitDiff::Atoms::CommandExecutor.has_staged_changes?
         end
 
         # Check if there are staged changes
         # @return [Boolean] True if there are staged changes
         def has_staged_changes?
-          !execute("diff", "--cached", "--name-only").strip.empty?
+          Ace::GitDiff::Atoms::CommandExecutor.has_staged_changes?
         end
       end
     end
