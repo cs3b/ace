@@ -25,7 +25,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.10.0)
+    ace-git-commit (0.11.0)
       ace-core (~> 0.9.0)
       ace-git-diff (~> 0.1.0)
       ace-llm (~> 0.9.0)
