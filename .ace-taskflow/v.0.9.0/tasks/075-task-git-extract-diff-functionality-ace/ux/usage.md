@@ -60,39 +60,33 @@ ace-git-diff
 
 # Specific diff range
 ace-git-diff HEAD~5..HEAD
+ace-git-diff origin/main...HEAD
 
 # Date-based diff
-ace-git-diff --since "2025-01-01"
-ace-git-diff --since 7d
-
-# Special types
-ace-git-diff --type staged    # Only staged changes
-ace-git-diff --type working   # Only working directory changes
-ace-git-diff --type pr         # PR changes (tracking...HEAD)
+ace-git-diff --since "2025-01-01"    # Absolute date
+ace-git-diff --since 7d               # Relative (7 days)
+ace-git-diff --since "1 week ago"     # Human-friendly
 ```
 
 ### Output Formats
 
 ```bash
-# Filtered (default) - applies exclude patterns from config
-ace-git-diff --format filtered
+# diff (default) - filtered diff output
+ace-git-diff                          # Default format
+ace-git-diff --format diff            # Explicit
 
-# Raw - no filtering, show everything
-ace-git-diff --format raw
-
-# Compact - LLM-optimized, minimal noise
-ace-git-diff --format compact
+# summary - LLM-powered markdown summary
+ace-git-diff --format summary
 ```
 
 ### Command Options
 
 | Option | Short | Description | Example |
 |--------|-------|-------------|---------|
-| `--format FORMAT` | `-f` | Output format (filtered, raw, compact) | `--format raw` |
-| `--type TYPE` | `-t` | Diff type (staged, working, pr) | `--type staged` |
+| `--format FORMAT` | `-f` | Output format (diff or summary) | `--format summary` |
 | `--since DATE` | `-s` | Show changes since date/duration | `--since 7d` |
-| `--paths PATTERNS` | `-p` | Include only matching paths | `--paths "lib/**/*.rb"` |
-| `--exclude PATTERNS` | `-e` | Exclude matching paths | `--exclude "test/**/*"` |
+| `--paths PATTERNS` | `-p` | Include only matching paths (glob) | `--paths "lib/**/*.rb"` |
+| `--exclude PATTERNS` | `-e` | Exclude matching paths (glob) | `--exclude "test/**/*"` |
 | `--config PATH` | `-c` | Load config from path | `--config .ace/diff/config.yml` |
 | `--help` | `-h` | Show help message | `--help` |
 | `--version` | `-v` | Show version | `--version` |
@@ -133,7 +127,7 @@ diff --git a/lib/ace/git_diff/atoms/command_executor.rb b/lib/ace/git_diff/atoms
 **Commands**:
 ```bash
 # Show all changes since branching from origin/main
-ace-git-diff --type pr
+ace-git-diff origin/main...HEAD
 ```
 
 **Expected Output**:
@@ -152,14 +146,17 @@ new file mode 100644
 
 **Next Steps**: Use output to write PR description or create PR with `gh pr create`
 
-### Scenario 3: Get Unfiltered Diff for Debugging
+### Scenario 3: Override Global Exclusions for Debugging
 
-**Goal**: See ALL changes including test files, lock files, and generated code
+**Goal**: See specific files that are normally excluded (like test files)
 
 **Commands**:
 ```bash
-# Bypass all filtering to see raw git diff
-ace-git-diff --format raw
+# Override global excludes to see test files
+ace-git-diff --exclude ""  # Empty excludes = no filtering
+
+# Or bypass ace-git-diff entirely for raw git
+git diff HEAD~1
 ```
 
 **Expected Output**:
@@ -175,7 +172,7 @@ diff --git a/test/atoms/command_executor_test.rb b/test/atoms/command_executor_t
 ...
 ```
 
-**Next Steps**: Analyze specific files that were excluded by default filtering
+**Next Steps**: Analyze specific files to understand full scope of changes
 
 ### Scenario 4: Review Recent Changes in Specific Directory
 
@@ -205,27 +202,36 @@ diff --git a/lib/ace/git_diff/molecules/diff_generator.rb b/lib/ace/git_diff/mol
 
 **Next Steps**: Use this to update documentation or write release notes
 
-### Scenario 5: Get Compact Diff for LLM Analysis
+### Scenario 5: Get Summary for LLM Analysis
 
-**Goal**: Generate LLM-optimized diff with minimal noise for AI code review
+**Goal**: Generate high-level markdown summary of changes for quick review
 
 **Commands**:
 ```bash
-# Compact format removes noise while preserving all relevant changes
-ace-git-diff --format compact --type pr
+# Summary format uses LLM to analyze and categorize changes
+ace-git-diff origin/main...HEAD --format summary
 ```
 
 **Expected Output**:
-```diff
-# Compact output focuses on meaningful changes
-# File headers simplified, redundant context removed
-lib/ace/git_diff/atoms/command_executor.rb: +3 lines (error handling)
-lib/ace/git_diff/molecules/diff_generator.rb: +8 lines (special type support)
-lib/ace/git_diff/organisms/diff_orchestrator.rb: +15 lines (workflow)
-Total: 3 files, 26 additions, 0 deletions
+```markdown
+# Change Summary
+
+HIGH Impact:
+- lib/ace/git_diff.rb: Created new gem for unified diff functionality
+- ace-review/preset.yml: Added diff: key support for consistent configuration
+
+MEDIUM Impact:
+- lib/ace/git_diff/atoms/command_executor.rb: Added error handling (+3 lines)
+- lib/ace/git_diff/molecules/diff_generator.rb: Added special type support (+8 lines)
+
+LOW Impact:
+- CHANGELOG.md: Documented version 0.1.0
+- README.md: Added usage examples
+
+Files changed: 15 | Additions: 450 | Deletions: 120
 ```
 
-**Next Steps**: Pass to LLM for code review or commit message generation
+**Next Steps**: Use summary for PR description, release notes, or code review prep
 
 ## Configuration
 
@@ -258,7 +264,6 @@ exclude_renames: false      # Include file renames (false = show renames)
 exclude_moves: false        # Include moved files (false = show moves)
 
 # Output defaults
-format: filtered          # Default: filtered (removes excluded patterns)
 max_lines: 10000         # Prevent huge diffs
 ```
 
@@ -274,7 +279,6 @@ exclude_patterns:
   - "**/.DS_Store"
   - "**/.env"
 
-format: filtered
 exclude_whitespace: true
 ```
 
@@ -332,7 +336,8 @@ ace-docs:
 pr:
   subject:
     diff:
-      type: pr  # Automatically uses ace-git-diff configuration
+      ranges: ["origin/main...HEAD"]  # Explicit git range
+      # Global exclude patterns applied automatically
 ```
 
 **ace-context** (context preset):
@@ -340,7 +345,7 @@ pr:
 context:
   diff:
     ranges: ["origin/main...HEAD"]
-    format: raw
+    exclude_patterns: []  # Override to include all files
 ```
 
 ### Fallback to Commands
