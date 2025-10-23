@@ -33,7 +33,7 @@ module Ace
         # Analysis settings
         "llm_temperature" => 0.3,
         "llm_timeout" => 600, # Timeout in seconds (10 minutes minimum)
-        "llm_model" => nil, # Use ace-llm-query defaults
+        "llm_model" => "glite", # Default to glite (fast model)
         "max_diff_lines_warning" => 100_000,
 
         # Validation settings

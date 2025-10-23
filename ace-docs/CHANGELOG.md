@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2025-10-23
+
+### Fixed
+
+- **Simplified analyze-consistency implementation**: Major refactoring for cleaner design
+  - Now uses ace-llm's native `output:` option to save report directly as `report.md`
+  - Removed redundant report processing and ConsistencyReport parsing
+  - Eliminated duplicate file generation (no more separate `llm-response.json` and `report.json`)
+  - Report is displayed directly as returned by LLM without reformatting
+- **Fixed cache directory path**: Now uses git root for absolute paths
+  - Prevents nested `.cache/ace-docs/.cache/ace-docs/...` directory creation
+  - Cache directory is always created from project root regardless of where command is run
+  - Consistent path handling across all commands
+
+### Changed
+
+- **Cleaner session directory**: Simplified output structure
+  - Only saves `report.md` (the actual LLM response)
+  - Removed redundant `save_report` and `save_llm_response` methods
+  - Less files, clearer purpose
+
 ## [0.5.1] - 2025-10-21
 
 ### Fixed

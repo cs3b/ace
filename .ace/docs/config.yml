@@ -85,7 +85,7 @@ cache:
 # LLM integration settings
 llm:
   provider: "ace-llm-query"    # Use ace-llm-query for analysis
-  model: "gpro"              # Use default model from ace-llm config
+  model: "glite"              # Use default model from ace-llm config
   temperature: 0.3              # Lower temperature for deterministic analysis
 
 # Ignored paths

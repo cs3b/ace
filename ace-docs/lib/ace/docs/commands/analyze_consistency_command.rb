@@ -35,15 +35,15 @@ module Ace
             # Run analysis
             report = analyzer.analyze(pattern)
 
-            # The report is now just a string from the LLM
-            # Check if it's nil or empty
-            if report.nil? || report.to_s.strip.empty?
+            # The report is now a path to the saved file
+            # Check if it's nil or file doesn't exist
+            if report.nil? || !File.exist?(report)
               puts "No analysis results returned.".yellow
               return 1
             end
 
-            # Display the report (it's already a string from LLM)
-            puts report
+            # Display where the report was saved
+            puts "Report saved to: #{report}".cyan
 
             # Simple completion message
             puts "\n✅ Analysis complete".green

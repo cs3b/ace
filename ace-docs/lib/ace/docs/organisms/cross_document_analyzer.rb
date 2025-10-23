@@ -81,7 +81,7 @@ module Ace
           # Display session info
           puts "\nAnalysis saved to: #{session_dir}".green
 
-          # Return the response directly (no parsing needed)
+          # Return the report path
           response
         end
 
@@ -127,7 +127,11 @@ module Ace
           timeout = determine_timeout
 
           # Determine model (use config or default)
-          model = @options[:model] || Ace::Docs.config["llm_model"] || "gflash"
+          # Check both llm_model and llm.model in config
+          model = @options[:model] ||
+                  Ace::Docs.config["llm_model"] ||
+                  Ace::Docs.config.dig("llm", "model") ||
+                  "glite"  # Default to glite (fast model)
 
           puts "Executing LLM query (model: #{model}, timeout: #{timeout}s)..." if @options[:verbose]
 
@@ -152,8 +156,8 @@ module Ace
               raise "LLM query failed to return text content"
             end
 
-            # Return the response content (already saved by ace-llm)
-            result[:text]
+            # Return the report path (not the content)
+            report_path
           rescue StandardError => e
             raise "#{e.message}"
           end
