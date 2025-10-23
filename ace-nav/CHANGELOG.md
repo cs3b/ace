@@ -5,6 +5,35 @@ All notable changes to ace-nav will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.10.1] - 2025-10-23
+
+### Added
+- Implement task:// protocol for command delegation with unified navigation interface
+
+### Changed
+- Improve command parsing robustness using Shellwords.split for proper quote handling
+- Fix encapsulation by exposing config_loader via public accessor in ProtocolScanner
+
+## [0.10.0] - 2025-10-23
+
+### Added
+- **task:// Protocol Support**: New command delegation protocol for navigating tasks via ace-taskflow
+  - Delegates `task://` URIs to `ace-taskflow task` commands
+  - Supports all ace-taskflow reference formats (018, task.018, v.0.9.0+task.018, backlog+025)
+  - Pass-through support for --path, --content, and --tree options
+  - New `CommandDelegator` organism for cmd-type protocol handling
+  - Added `protocol_type` method to `ConfigLoader` for distinguishing cmd vs file protocols
+  - Added `cmd_protocol?` method to `NavigationEngine`
+  - Added `--path` option to CLI for consistency with ace-taskflow
+
+### Changed
+- **CLI Composability**: Refactored CLI to return exit codes instead of calling exit() directly
+  - Improves testability and composability of CLI methods
+  - Entry point now handles exit with returned codes
+- **Performance Optimization**: ConfigLoader now reused from ProtocolScanner to avoid creating new instances
+
 ## [0.9.3] - 2025-10-08
 
 ### Changed

@@ -3,6 +3,7 @@
 require "optparse"
 require "fileutils"
 require_relative "organisms/navigation_engine"
+require_relative "organisms/command_delegator"
 
 module Ace
   module Nav
@@ -19,10 +20,10 @@ module Ace
         # Check for standalone options that don't require a path/URI
         if @options[:help]
           show_help
-          return
+          return 0
         elsif @options[:sources]
           show_sources
-          return
+          return 0
         end
 
         # Get the path/URI argument
@@ -30,7 +31,7 @@ module Ace
 
         unless path_or_uri
           show_help
-          return
+          return 0
         end
 
         # Execute based on options
@@ -38,7 +39,7 @@ module Ace
       rescue StandardError => e
         puts "Error: #{e.message}"
         puts e.backtrace if @options[:verbose]
-        exit 1
+        1
       end
 
       private
@@ -48,6 +49,10 @@ module Ace
           opts.banner = "Usage: ace-nav <path-or-uri> [options]"
           opts.separator ""
           opts.separator "Options:"
+
+          opts.on("--path", "Display resource path") do
+            @options[:path] = true
+          end
 
           opts.on("--content", "Display resource content") do
             @options[:content] = true
@@ -88,6 +93,16 @@ module Ace
       end
 
       def execute(path_or_uri)
+        # Check if this is a cmd-type protocol (command delegation)
+        if path_or_uri.include?("://")
+          protocol = path_or_uri.split("://").first
+          if @engine.cmd_protocol?(protocol)
+            # Delegate to external command and return exit code
+            delegator = Organisms::CommandDelegator.new
+            return delegator.delegate(path_or_uri, @options)
+          end
+        end
+
         # Check if it's a protocol-only URI (e.g., "tmpl://")
         # and automatically treat it as a list operation with wildcard
         if path_or_uri.match?(/^\w+:\/\/$/)
@@ -103,11 +118,12 @@ module Ace
         end
 
         if @options[:create]
-          create_resource(path_or_uri)
+          return create_resource(path_or_uri)
         elsif @options[:list]
           list_resources(path_or_uri)
+          return 0  # List operations always succeed
         else
-          resolve_resource(path_or_uri)
+          return resolve_resource(path_or_uri)
         end
       end
 
@@ -164,10 +180,11 @@ module Ace
 
         if result[:error]
           puts "Error: #{result[:error]}"
-          exit 1
+          return 1
         else
           puts "Created: #{result[:created]}"
           puts "From: #{result[:from]}" if @options[:verbose]
+          return 0
         end
       end
 
@@ -189,13 +206,15 @@ module Ace
 
         if result.nil?
           puts "Resource not found: #{uri}"
-          exit 1
+          return 1
         elsif @options[:verbose] && result.is_a?(Hash)
           require "json"
           puts JSON.pretty_generate(result)
         else
           puts result
         end
+
+        0
       end
     end
   end

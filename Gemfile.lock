@@ -58,7 +58,7 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.9.3)
+    ace-nav (0.10.1)
       ace-core (~> 0.1)
 
 PATH
@@ -91,7 +91,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.12.1)
+    ace-taskflow (0.13.0)
       ace-core (~> 0.9.0)
       ace-support-mac-clipboard (~> 0.1.0)
       ace-support-markdown (~> 0.1)
