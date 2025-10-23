@@ -253,9 +253,9 @@ exclude_patterns:
   - "docs/archive/**/*"
 
 # Default diff options
-ignore_whitespace: true    # Skip whitespace-only changes
-exclude_renames: false      # Include file renames
-detect_moves: true         # Detect moved files
+exclude_whitespace: true   # Skip whitespace-only changes
+exclude_renames: false      # Include file renames (false = show renames)
+exclude_moves: false        # Include moved files (false = show moves)
 
 # Output defaults
 format: filtered          # Default: filtered (removes excluded patterns)
@@ -275,7 +275,7 @@ exclude_patterns:
   - "**/.env"
 
 format: filtered
-ignore_whitespace: true
+exclude_whitespace: true
 ```
 
 ### Configuration Cascade
