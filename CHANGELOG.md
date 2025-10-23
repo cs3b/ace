@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.87] - 2025-10-23
+
+### Documentation
+
+- **ace-support-markdown v0.1.1**: Enhanced README with real-world examples
+  - Added 6 comprehensive examples (390+ lines) based on production usage
+  - Covers task management, documentation updates, error handling, batch operations
+  - All examples extracted from actual ace-taskflow and ace-docs implementations
+
 ## [0.9.86] - 2025-10-23
 
 ### Changed

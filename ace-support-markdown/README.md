@@ -253,6 +253,396 @@ Test coverage:
 - Edge case validation
 - Performance benchmarks
 
+## Real-World Examples
+
+### Example 1: Task Management System (from ace-taskflow)
+
+**Scenario**: Auto-fixing task status when files are in wrong directory
+
+```ruby
+# Fix task status with automatic backup and validation
+def fix_task_status(file_path, new_status)
+  editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
+  editor.update_frontmatter("status" => new_status)
+
+  result = editor.save!(backup: true, validate: true)
+
+  if result[:success]
+    puts "✓ Updated status to '#{new_status}'"
+    puts "  Backup created: #{result[:backup_path]}"
+  else
+    puts "✗ Failed: #{result[:errors].join(', ')}"
+    editor.rollback  # Restore from backup
+  end
+end
+
+# Usage
+fix_task_status("tasks/042-implement-feature/task.042.md", "done")
+```
+
+**Output:**
+```
+✓ Updated status to 'done'
+  Backup created: tasks/042-implement-feature/task.042.md.backup.20251023_143025_456
+```
+
+### Example 2: Documentation Updates (from ace-docs)
+
+**Scenario**: Bulk update documentation with nested frontmatter and special values
+
+```ruby
+# Update documentation metadata across multiple files
+def update_documentation_metadata(documents, updates)
+  results = { success: 0, failed: 0, errors: [] }
+
+  documents.each do |doc_path|
+    begin
+      editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(doc_path)
+
+      # Process special values and nested keys
+      processed_updates = {
+        "update.last-updated" => "today",        # Converts to YYYY-MM-DD
+        "update.frequency" => updates[:frequency],
+        "metadata.version" => updates[:version]
+      }
+
+      editor.update_frontmatter(processed_updates)
+      result = editor.save!(backup: true, validate_before: false)
+
+      if result[:success]
+        results[:success] += 1
+      else
+        results[:failed] += 1
+        results[:errors] << { path: doc_path, errors: result[:errors] }
+      end
+    rescue StandardError => e
+      results[:failed] += 1
+      results[:errors] << { path: doc_path, errors: [e.message] }
+    end
+  end
+
+  results
+end
+
+# Usage
+docs = Dir.glob("docs/**/*.md")
+result = update_documentation_metadata(docs, frequency: "weekly", version: "1.0")
+puts "Updated: #{result[:success]}, Failed: #{result[:failed]}"
+```
+
+### Example 3: Complex Multi-Section Operations
+
+**Scenario**: Update task with multiple sections and frontmatter changes
+
+```ruby
+# Complete task update with validation
+def complete_task_with_summary(task_path, completion_notes)
+  editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(task_path)
+
+  # Update frontmatter
+  editor.update_frontmatter({
+    "status" => "done",
+    "completed_at" => "today",
+    "needs_review" => false
+  })
+
+  # Add completion summary section
+  summary = <<~MARKDOWN
+    **Status**: ✅ **COMPLETE** - #{Time.now.strftime('%Y-%m-%d')}
+
+    ### What Was Delivered
+    #{completion_notes}
+
+    ### Validation
+    - All tests passing
+    - Code review approved
+    - Documentation updated
+  MARKDOWN
+
+  editor.add_section("Task Completion Summary", summary, level: 2)
+
+  # Update acceptance criteria (append checkmarks)
+  editor.append_to_section("Acceptance Criteria", "\n✅ All criteria met")
+
+  # Save with validation rules
+  result = editor.save!(
+    backup: true,
+    validate_before: true,
+    rules: {
+      required_fields: ["id", "status", "completed_at"],
+      enums: { "status" => ["pending", "in-progress", "done"] }
+    }
+  )
+
+  if result[:success]
+    puts "✓ Task completed successfully"
+    puts "  Backup: #{result[:backup_path]}"
+  else
+    puts "✗ Validation failed: #{result[:errors].join(', ')}"
+    editor.rollback
+  end
+end
+
+# Usage
+completion_notes = <<~NOTES
+- Implemented core feature with ATOM architecture
+- Added 35 tests with 100% coverage
+- Updated documentation and CHANGELOG
+NOTES
+
+complete_task_with_summary("tasks/079-feature/task.079.md", completion_notes)
+```
+
+### Example 4: Safe File Writing with Custom Validation
+
+**Scenario**: Create new file with content validation
+
+```ruby
+# Create new task file with custom validation
+def create_validated_task(task_number, title, template)
+  file_path = "tasks/#{task_number}-#{title.downcase.gsub(/\s+/, '-')}/task.#{task_number}.md"
+
+  # Build content from template
+  content = template % {
+    task_id: "v.1.0+task.#{task_number}",
+    title: title,
+    created_at: Time.now.strftime('%Y-%m-%d')
+  }
+
+  # Custom validator ensures required sections exist
+  validator = ->(content) {
+    errors = []
+    errors << "Missing '## Objective' section" unless content.include?("## Objective")
+    errors << "Missing '## Acceptance Criteria' section" unless content.include?("## Acceptance Criteria")
+    errors << "Task ID must match format" unless content.match?(/id: v\.\d+\.\d+\+task\.\d+/)
+    errors
+  }
+
+  # Write with validation
+  result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+    file_path,
+    content,
+    backup: true,
+    validate: true,
+    validator: validator
+  )
+
+  if result[:success]
+    puts "✓ Created: #{file_path}"
+  else
+    puts "✗ Validation failed: #{result[:errors].join(', ')}"
+  end
+end
+
+# Usage
+template = <<~TEMPLATE
+---
+id: %{task_id}
+status: draft
+created_at: %{created_at}
+---
+
+# %{title}
+
+## Objective
+
+[Task objective here]
+
+## Acceptance Criteria
+
+- [ ] Criterion 1
+- [ ] Criterion 2
+TEMPLATE
+
+create_validated_task("080", "Implement New Feature", template)
+```
+
+### Example 5: Error Handling and Recovery
+
+**Scenario**: Robust error handling with rollback
+
+```ruby
+# Safe update with comprehensive error handling
+def safe_update_with_recovery(file_path, updates)
+  editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
+  original_backup = nil
+
+  begin
+    # Pre-flight validation
+    unless editor.valid?(rules: { required_fields: ["id", "status"] })
+      return { success: false, error: "Document invalid before update" }
+    end
+
+    # Apply updates
+    editor.update_frontmatter(updates)
+
+    # Validate changes before save
+    validation = editor.validate(rules: {
+      required_fields: ["id", "status", "priority"],
+      enums: { "status" => ["pending", "in-progress", "done"] }
+    })
+
+    unless validation[:valid]
+      return {
+        success: false,
+        error: "Validation failed",
+        errors: validation[:errors],
+        warnings: validation[:warnings]
+      }
+    end
+
+    # Save with backup
+    result = editor.save!(backup: true, validate_before: true)
+
+    if result[:success]
+      original_backup = result[:backup_path]
+      { success: true, backup: original_backup }
+    else
+      editor.rollback
+      { success: false, error: "Save failed", errors: result[:errors] }
+    end
+
+  rescue Ace::Support::Markdown::ValidationError => e
+    editor.rollback if original_backup
+    { success: false, error: "Validation error: #{e.message}" }
+
+  rescue Ace::Support::Markdown::FileOperationError => e
+    editor.rollback if original_backup
+    { success: false, error: "File operation error: #{e.message}" }
+
+  rescue StandardError => e
+    editor.rollback if original_backup
+    { success: false, error: "Unexpected error: #{e.message}" }
+  end
+end
+
+# Usage with retry logic
+def update_with_retry(file_path, updates, max_retries: 3)
+  max_retries.times do |attempt|
+    result = safe_update_with_recovery(file_path, updates)
+
+    if result[:success]
+      puts "✓ Updated successfully (attempt #{attempt + 1})"
+      return true
+    else
+      puts "✗ Attempt #{attempt + 1} failed: #{result[:error]}"
+      sleep 0.1 * (attempt + 1)  # Exponential backoff
+    end
+  end
+
+  puts "✗ All retry attempts failed"
+  false
+end
+
+# Usage
+updates = { "status" => "in-progress", "priority" => "high" }
+update_with_retry("tasks/042-feature/task.042.md", updates)
+```
+
+### Example 6: Batch Operations with Progress Tracking
+
+**Scenario**: Process multiple files with progress reporting
+
+```ruby
+# Batch update with progress tracking and error collection
+def batch_update_tasks(task_files, updates)
+  results = {
+    total: task_files.length,
+    succeeded: 0,
+    failed: 0,
+    errors: [],
+    backups: []
+  }
+
+  task_files.each_with_index do |file_path, idx|
+    progress = "#{idx + 1}/#{task_files.length}"
+
+    begin
+      editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
+      editor.update_frontmatter(updates)
+
+      result = editor.save!(backup: true, validate: true)
+
+      if result[:success]
+        results[:succeeded] += 1
+        results[:backups] << result[:backup_path]
+        puts "[#{progress}] ✓ #{File.basename(file_path)}"
+      else
+        results[:failed] += 1
+        results[:errors] << {
+          file: file_path,
+          errors: result[:errors]
+        }
+        puts "[#{progress}] ✗ #{File.basename(file_path)}: #{result[:errors].join(', ')}"
+      end
+
+    rescue StandardError => e
+      results[:failed] += 1
+      results[:errors] << {
+        file: file_path,
+        errors: [e.message]
+      }
+      puts "[#{progress}] ✗ #{File.basename(file_path)}: #{e.message}"
+    end
+  end
+
+  # Print summary
+  puts "\n" + "=" * 60
+  puts "BATCH UPDATE SUMMARY"
+  puts "=" * 60
+  puts "Total: #{results[:total]}"
+  puts "Succeeded: #{results[:succeeded]} ✓"
+  puts "Failed: #{results[:failed]} ✗"
+  puts "\nBackups created: #{results[:backups].length}"
+
+  if results[:errors].any?
+    puts "\nErrors:"
+    results[:errors].each do |error|
+      puts "  - #{error[:file]}: #{error[:errors].join(', ')}"
+    end
+  end
+
+  results
+end
+
+# Usage
+task_files = Dir.glob("tasks/**/task.*.md")
+updates = { "updated_at" => "today", "version" => "1.0" }
+result = batch_update_tasks(task_files, updates)
+
+# Cleanup old backups (keep last 5 for each file)
+if result[:succeeded] > 0
+  task_files.each do |file_path|
+    Ace::Support::Markdown::Organisms::SafeFileWriter.cleanup_backups(file_path, keep: 5)
+  end
+  puts "\n✓ Cleaned up old backups (kept last 5 per file)"
+end
+```
+
+**Output:**
+```
+[1/12] ✓ task.042.md
+[2/12] ✓ task.043.md
+[3/12] ✗ task.044.md: Missing required field: id
+[4/12] ✓ task.045.md
+...
+
+============================================================
+BATCH UPDATE SUMMARY
+============================================================
+Total: 12
+Succeeded: 10 ✓
+Failed: 2 ✗
+
+Backups created: 10
+
+Errors:
+  - tasks/044-broken/task.044.md: Missing required field: id
+  - tasks/051-invalid/task.051.md: YAML syntax error
+
+✓ Cleaned up old backups (kept last 5 per file)
+```
+
 ## Migration from Existing Code
 
 **From ace-docs FrontmatterManager:**
