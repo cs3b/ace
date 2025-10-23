@@ -29,7 +29,7 @@ require 'ace/support/markdown'
 editor = Ace::Support::Markdown::Organisms::DocumentEditor.new("task.md")
 editor.update_frontmatter({"status" => "done", "updated_at" => "today"})
 editor.replace_section("References", "- New reference")
-result = editor.save!(backup: true, validate: true)
+result = editor.save!(backup: true, validate_before: true)
 
 # Build new document
 builder = Ace::Support::Markdown::Molecules::DocumentBuilder.new
@@ -262,17 +262,23 @@ Test coverage:
 ```ruby
 # Fix task status with automatic backup and validation
 def fix_task_status(file_path, new_status)
+  # Use DocumentEditor (Organism layer) for high-level file operations
+  # This abstracts away the complexity of parsing, updating, and writing
   editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
   editor.update_frontmatter("status" => new_status)
 
-  result = editor.save!(backup: true, validate: true)
+  # Always validate before save to catch errors early
+  # Pre-flight validation is cheaper than rollback operations
+  result = editor.save!(backup: true, validate_before: true)
 
   if result[:success]
     puts "✓ Updated status to '#{new_status}'"
     puts "  Backup created: #{result[:backup_path]}"
   else
     puts "✗ Failed: #{result[:errors].join(', ')}"
-    editor.rollback  # Restore from backup
+    # Rollback restores from the automatically-created backup
+    # This ensures files are never left in a corrupted state
+    editor.rollback
   end
 end
 
@@ -293,13 +299,15 @@ fix_task_status("tasks/042-implement-feature/task.042.md", "done")
 ```ruby
 # Update documentation metadata across multiple files
 def update_documentation_metadata(documents, updates)
+  # Track results for batch operation visibility
   results = { success: 0, failed: 0, errors: [] }
 
   documents.each do |doc_path|
     begin
       editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(doc_path)
 
-      # Process special values and nested keys
+      # Use dot notation for nested YAML keys (e.g., "update.last-updated")
+      # Special values like "today" are automatically converted to YYYY-MM-DD format
       processed_updates = {
         "update.last-updated" => "today",        # Converts to YYYY-MM-DD
         "update.frequency" => updates[:frequency],
@@ -307,6 +315,8 @@ def update_documentation_metadata(documents, updates)
       }
 
       editor.update_frontmatter(processed_updates)
+      # Skip validation for batch operations to improve performance
+      # We trust the input data and prefer speed over safety checks
       result = editor.save!(backup: true, validate_before: false)
 
       if result[:success]
@@ -316,6 +326,8 @@ def update_documentation_metadata(documents, updates)
         results[:errors] << { path: doc_path, errors: result[:errors] }
       end
     rescue StandardError => e
+      # Catch any unexpected errors to prevent batch operation from failing completely
+      # StandardError captures all runtime errors while allowing system signals through
       results[:failed] += 1
       results[:errors] << { path: doc_path, errors: [e.message] }
     end
@@ -337,16 +349,19 @@ puts "Updated: #{result[:success]}, Failed: #{result[:failed]}"
 ```ruby
 # Complete task update with validation
 def complete_task_with_summary(task_path, completion_notes)
+  # DocumentEditor supports fluent interface - chain multiple operations
   editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(task_path)
 
-  # Update frontmatter
+  # Update multiple frontmatter fields atomically
+  # All changes are applied together to prevent partial updates
   editor.update_frontmatter({
     "status" => "done",
     "completed_at" => "today",
     "needs_review" => false
   })
 
-  # Add completion summary section
+  # Add new section with dynamic content
+  # Level 2 (##) ensures proper hierarchy in document structure
   summary = <<~MARKDOWN
     **Status**: ✅ **COMPLETE** - #{Time.now.strftime('%Y-%m-%d')}
 
@@ -361,10 +376,12 @@ def complete_task_with_summary(task_path, completion_notes)
 
   editor.add_section("Task Completion Summary", summary, level: 2)
 
-  # Update acceptance criteria (append checkmarks)
+  # Append to existing section without replacing content
+  # This preserves original acceptance criteria while adding completion status
   editor.append_to_section("Acceptance Criteria", "\n✅ All criteria met")
 
-  # Save with validation rules
+  # Custom validation rules ensure data integrity
+  # Enums catch typos in status values before writing to disk
   result = editor.save!(
     backup: true,
     validate_before: true,
@@ -402,14 +419,17 @@ complete_task_with_summary("tasks/079-feature/task.079.md", completion_notes)
 def create_validated_task(task_number, title, template)
   file_path = "tasks/#{task_number}-#{title.downcase.gsub(/\s+/, '-')}/task.#{task_number}.md"
 
-  # Build content from template
+  # Build content from template using Ruby's sprintf-style interpolation
+  # This ensures consistent formatting across all task files
   content = template % {
     task_id: "v.1.0+task.#{task_number}",
     title: title,
     created_at: Time.now.strftime('%Y-%m-%d')
   }
 
-  # Custom validator ensures required sections exist
+  # Custom validator as a lambda for domain-specific validation rules
+  # Returns array of errors (empty array means valid)
+  # This pattern allows flexible, project-specific validation logic
   validator = ->(content) {
     errors = []
     errors << "Missing '## Objective' section" unless content.include?("## Objective")
@@ -418,7 +438,8 @@ def create_validated_task(task_number, title, template)
     errors
   }
 
-  # Write with validation
+  # SafeFileWriter for new file creation with validation
+  # validate: true triggers the custom validator before writing
   result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
     file_path,
     content,
@@ -466,17 +487,20 @@ create_validated_task("080", "Implement New Feature", template)
 def safe_update_with_recovery(file_path, updates)
   editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
   original_backup = nil
+  success_flag = false
 
   begin
-    # Pre-flight validation
+    # Pre-flight validation catches issues before making any changes
+    # Fail fast to avoid unnecessary work on invalid documents
     unless editor.valid?(rules: { required_fields: ["id", "status"] })
       return { success: false, error: "Document invalid before update" }
     end
 
-    # Apply updates
+    # Apply updates in memory (no disk writes yet)
     editor.update_frontmatter(updates)
 
-    # Validate changes before save
+    # Validate changes before committing to disk
+    # This ensures updates don't violate business rules
     validation = editor.validate(rules: {
       required_fields: ["id", "status", "priority"],
       enums: { "status" => ["pending", "in-progress", "done"] }
@@ -491,28 +515,34 @@ def safe_update_with_recovery(file_path, updates)
       }
     end
 
-    # Save with backup
+    # Atomic write with automatic backup creation
     result = editor.save!(backup: true, validate_before: true)
 
     if result[:success]
       original_backup = result[:backup_path]
+      success_flag = true  # Mark operation as successful
       { success: true, backup: original_backup }
     else
-      editor.rollback
       { success: false, error: "Save failed", errors: result[:errors] }
     end
 
+  # Rescue specific errors first for targeted error handling
+  # This allows appropriate responses based on error type
   rescue Ace::Support::Markdown::ValidationError => e
-    editor.rollback if original_backup
     { success: false, error: "Validation error: #{e.message}" }
 
   rescue Ace::Support::Markdown::FileOperationError => e
-    editor.rollback if original_backup
     { success: false, error: "File operation error: #{e.message}" }
 
+  # Catch all other runtime errors as a safety net
+  # StandardError captures application errors but not system signals (SIGINT, etc.)
   rescue StandardError => e
-    editor.rollback if original_backup
     { success: false, error: "Unexpected error: #{e.message}" }
+
+  ensure
+    # Rollback only if backup exists and operation didn't succeed
+    # Using ensure guarantees cleanup even if control flow is interrupted
+    editor.rollback if original_backup && !success_flag
   end
 end
 
@@ -546,6 +576,8 @@ update_with_retry("tasks/042-feature/task.042.md", updates)
 ```ruby
 # Batch update with progress tracking and error collection
 def batch_update_tasks(task_files, updates)
+  # Collect comprehensive metrics for batch operations
+  # This allows post-processing analysis and retry strategies
   results = {
     total: task_files.length,
     succeeded: 0,
@@ -561,14 +593,18 @@ def batch_update_tasks(task_files, updates)
       editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
       editor.update_frontmatter(updates)
 
-      result = editor.save!(backup: true, validate: true)
+      # Each file operation is independent - failures don't stop the batch
+      # Backups protect against partial failures in the batch
+      result = editor.save!(backup: true, validate_before: true)
 
       if result[:success]
         results[:succeeded] += 1
+        # Track backups for potential cleanup or rollback of entire batch
         results[:backups] << result[:backup_path]
         puts "[#{progress}] ✓ #{File.basename(file_path)}"
       else
         results[:failed] += 1
+        # Collect errors for analysis - don't halt batch on single failure
         results[:errors] << {
           file: file_path,
           errors: result[:errors]
@@ -577,6 +613,8 @@ def batch_update_tasks(task_files, updates)
       end
 
     rescue StandardError => e
+      # Isolate failures - one corrupt file doesn't fail entire batch
+      # Continue processing remaining files for maximum throughput
       results[:failed] += 1
       results[:errors] << {
         file: file_path,
@@ -667,6 +705,43 @@ File.write(file_path, new_content)
 # After
 SafeFileWriter.write(file_path, new_content, backup: true, validate: true)
 ```
+
+## Maintaining Documentation
+
+To ensure README examples stay in sync with the API:
+
+### Automated Validation
+
+The test suite includes **README example validation** (`test/integration/readme_examples_test.rb`):
+
+```bash
+# Run all tests including README examples
+bundle exec rake test
+
+# Run only README example tests
+bundle exec ruby test/integration/readme_examples_test.rb
+```
+
+These tests extract patterns from the README examples and verify they work against the actual API. If the API changes, the tests will fail, alerting you to update the documentation.
+
+### When Making API Changes
+
+1. **Update the implementation** in `lib/`
+2. **Update relevant tests** in `test/`
+3. **Update README examples** to reflect new API
+4. **Run test suite** - README example tests will catch mismatches
+5. **Update CHANGELOG.md** with the changes
+
+### Adding New Examples
+
+When adding examples to the README:
+
+1. Add the example code to README.md
+2. Add a corresponding test case in `test/integration/readme_examples_test.rb`
+3. Ensure the test validates the example's behavior
+4. Run the test suite to verify
+
+This ensures all documentation examples remain executable and accurate as the gem evolves.
 
 ## Development
 
