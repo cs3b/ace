@@ -84,7 +84,7 @@ PATH
 PATH
   remote: ace-support-markdown
   specs:
-    ace-support-markdown (0.1.1)
+    ace-support-markdown (0.1.2)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
 
