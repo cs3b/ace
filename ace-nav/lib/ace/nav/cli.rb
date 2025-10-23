@@ -20,10 +20,10 @@ module Ace
         # Check for standalone options that don't require a path/URI
         if @options[:help]
           show_help
-          return
+          return 0
         elsif @options[:sources]
           show_sources
-          return
+          return 0
         end
 
         # Get the path/URI argument
@@ -31,7 +31,7 @@ module Ace
 
         unless path_or_uri
           show_help
-          return
+          return 0
         end
 
         # Execute based on options
@@ -39,7 +39,7 @@ module Ace
       rescue StandardError => e
         puts "Error: #{e.message}"
         puts e.backtrace if @options[:verbose]
-        exit 1
+        1
       end
 
       private
@@ -97,10 +97,9 @@ module Ace
         if path_or_uri.include?("://")
           protocol = path_or_uri.split("://").first
           if @engine.cmd_protocol?(protocol)
-            # Delegate to external command
+            # Delegate to external command and return exit code
             delegator = Organisms::CommandDelegator.new
-            exit_code = delegator.delegate(path_or_uri, @options)
-            exit(exit_code)
+            return delegator.delegate(path_or_uri, @options)
           end
         end
 
@@ -119,11 +118,12 @@ module Ace
         end
 
         if @options[:create]
-          create_resource(path_or_uri)
+          return create_resource(path_or_uri)
         elsif @options[:list]
           list_resources(path_or_uri)
+          return 0  # List operations always succeed
         else
-          resolve_resource(path_or_uri)
+          return resolve_resource(path_or_uri)
         end
       end
 
@@ -180,10 +180,11 @@ module Ace
 
         if result[:error]
           puts "Error: #{result[:error]}"
-          exit 1
+          return 1
         else
           puts "Created: #{result[:created]}"
           puts "From: #{result[:from]}" if @options[:verbose]
+          return 0
         end
       end
 
@@ -205,13 +206,15 @@ module Ace
 
         if result.nil?
           puts "Resource not found: #{uri}"
-          exit 1
+          return 1
         elsif @options[:verbose] && result.is_a?(Hash)
           require "json"
           puts JSON.pretty_generate(result)
         else
           puts result
         end
+
+        0
       end
     end
   end
