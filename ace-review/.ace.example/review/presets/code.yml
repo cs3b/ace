@@ -14,5 +14,7 @@ prompt_composition:
 context: "project"
 
 subject:
-  commands:
-    - "git diff HEAD~3..HEAD"
+  # Use diff key for consistent filtering via ace-git-diff
+  diff:
+    ranges:
+      - "HEAD~3..HEAD"
