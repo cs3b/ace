@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-24T00:12:09+01:00
+---
+
 # Idea
 
 # ace-context and /ace:load-context should take argu...
