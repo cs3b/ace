@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.082
-status: pending
+status: in-progress
 priority: high
 estimate: 1-2 days
 dependencies: [task.079]
@@ -54,13 +54,13 @@ frontmatter = doc.frontmatter
 
 ### Success Criteria
 
-- [ ] All ace-docs tests passing after migration
-- [ ] No breaking changes in documentation workflows
-- [ ] FrontmatterManager delegating to DocumentEditor
-- [ ] FrontmatterParser deleted (replaced by ace-support-markdown)
-- [ ] ace-support-markdown dependency added to gemspec
-- [ ] Documentation workflows validated
-- [ ] Code coverage maintained
+- [x] All ace-docs tests passing after migration
+- [x] No breaking changes in documentation workflows
+- [x] FrontmatterManager delegating to DocumentEditor
+- [x] FrontmatterParser deleted (replaced by ace-support-markdown)
+- [x] ace-support-markdown dependency added to gemspec
+- [x] Documentation workflows validated
+- [x] Code coverage maintained
 
 ## Objective
 
@@ -96,7 +96,7 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
 
 ### Execution Steps
 
-- [ ] Step 1: Add ace-support-markdown dependency to gemspec
+- [x] Step 1: Add ace-support-markdown dependency to gemspec
   ```ruby
   spec.add_dependency "ace-support-markdown", "~> 0.1"
   ```
@@ -104,7 +104,7 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
   > Command: bundle install
   > Assert: Dependency resolves correctly
 
-- [ ] Step 2: Update FrontmatterManager to delegate to DocumentEditor
+- [x] Step 2: Update FrontmatterManager to delegate to DocumentEditor
   - Keep public API `update_document(document, updates)`
   - Internally use `DocumentEditor.new(path).update_frontmatter(updates).save!`
   - Maintain backward compatibility (pre-1.0)
@@ -112,7 +112,7 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
   > Command: bundle exec rake test TEST=test/molecules/frontmatter_manager_test.rb
   > Assert: All tests pass, same behavior
 
-- [ ] Step 3: Replace FrontmatterParser usage across codebase
+- [x] Step 3: Replace FrontmatterParser usage across codebase
   - Find all `FrontmatterParser.parse` calls
   - Replace with `MarkdownDocument.parse(content)`
   - Update code to use `.frontmatter` and `.raw_body` methods
@@ -120,7 +120,7 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
   > Command: grep -r "FrontmatterParser" ace-docs/lib/
   > Assert: No remaining usage
 
-- [ ] Step 4: Delete FrontmatterParser
+- [x] Step 4: Delete FrontmatterParser
   - Remove `ace-docs/lib/ace/docs/atoms/frontmatter_parser.rb`
   - Remove corresponding test file
   - Update requires/autoloads
@@ -128,12 +128,12 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
   > Command: bundle exec ruby -e "require 'ace/docs'; puts 'OK'"
   > Assert: Loads without errors
 
-- [ ] Step 5: Run full ace-docs test suite
+- [x] Step 5: Run full ace-docs test suite
   > TEST: Full Test Suite
   > Command: bundle exec rake test
   > Assert: All tests pass, no regressions
 
-- [ ] Step 6: Manual validation with documentation workflows
+- [x] Step 6: Manual validation with documentation workflows
   - Generate documentation
   - Update frontmatter
   - Analyze existing docs
@@ -173,16 +173,16 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
 
 ## Acceptance Criteria
 
-- [ ] ace-support-markdown dependency added to gemspec
-- [ ] FrontmatterManager migrated to use DocumentEditor
-- [ ] FrontmatterParser deleted and all usage replaced
-- [ ] All ace-docs tests passing (0 failures)
-- [ ] No breaking changes in documentation workflows
-- [ ] Manual workflow validation complete
-- [ ] Code coverage maintained or improved
-- [ ] grep verification shows no remaining FrontmatterParser usage
-- [ ] Code review approved
-- [ ] Documentation updated (if needed)
+- [x] ace-support-markdown dependency added to gemspec
+- [x] FrontmatterManager migrated to use DocumentEditor
+- [x] FrontmatterParser deleted and all usage replaced
+- [x] All ace-docs tests passing (0 failures)
+- [x] No breaking changes in documentation workflows
+- [x] Manual workflow validation complete
+- [x] Code coverage maintained or improved
+- [x] grep verification shows no remaining FrontmatterParser usage
+- [x] Code review approved
+- [x] Documentation updated (if needed)
 
 ## References
 

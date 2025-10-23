@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 require "date"
-require_relative "../atoms/frontmatter_parser"
+require "ace/support/markdown"
 
 module Ace
   module Docs
     module Molecules
       # Updates document frontmatter fields
+      # Now delegates to ace-support-markdown's DocumentEditor for safe operations
       class FrontmatterManager
         # Update frontmatter fields in a document
         # @param document [Document] Document to update
@@ -15,18 +16,15 @@ module Ace
         def self.update_document(document, updates)
           return false unless document.path && File.exist?(document.path)
 
-          # Read current content
-          content = File.read(document.path)
-          parsed = Atoms::FrontmatterParser.parse(content)
+          # Process updates to handle special values and nested keys
+          processed_updates = process_updates(updates)
 
-          # Update frontmatter
-          updated_frontmatter = update_frontmatter(parsed[:frontmatter], updates)
+          # Use DocumentEditor for safe, atomic updates with backup
+          editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(document.path)
+          editor.update_frontmatter(processed_updates)
+          result = editor.save!(backup: true, validate_before: false)
 
-          # Write back to file
-          new_content = format_document(updated_frontmatter, parsed[:content])
-          File.write(document.path, new_content)
-
-          true
+          result[:success]
         rescue StandardError => e
           warn "Error updating #{document.path}: #{e.message}"
           false
@@ -42,38 +40,26 @@ module Ace
 
         private
 
-        def self.update_frontmatter(frontmatter, updates)
-          updated = frontmatter.dup
+        def self.process_updates(updates)
+          processed = {}
 
           updates.each do |key, value|
-            # Handle nested keys with dots (e.g., "update.last-updated")
-            if key.include?(".")
-              parts = key.split(".")
-              target = updated
-              parts[0...-1].each do |part|
-                target[part] ||= {}
-                target = target[part]
-              end
-              target[parts.last] = process_value(value)
-            else
-              # Handle special key mappings
-              case key
-              when "last-updated", "last_updated"
-                updated["update"] ||= {}
-                updated["update"]["last-updated"] = process_value(value)
-              when "last-checked", "last_checked"
-                updated["update"] ||= {}
-                updated["update"]["last-checked"] = process_value(value)
-              when "version"
-                updated["metadata"] ||= {}
-                updated["metadata"]["version"] = value
-              else
-                updated[key] = process_value(value)
-              end
-            end
+            # Handle special key mappings (convert to dot notation for DocumentEditor)
+            mapped_key = case key
+                        when "last-updated", "last_updated"
+                          "update.last-updated"
+                        when "last-checked", "last_checked"
+                          "update.last-checked"
+                        when "version"
+                          "metadata.version"
+                        else
+                          key
+                        end
+
+            processed[mapped_key] = process_value(value)
           end
 
-          updated
+          processed
         end
 
         def self.process_value(value)
@@ -86,22 +72,6 @@ module Ace
           else
             value
           end
-        end
-
-        def self.format_document(frontmatter, content)
-          yaml_content = frontmatter.to_yaml.strip
-
-          # Remove leading --- from YAML output if present
-          yaml_content = yaml_content.sub(/^---\n/, '')
-
-          # Build document with frontmatter
-          [
-            "---",
-            yaml_content,
-            "---",
-            "",
-            content.strip
-          ].join("\n")
         end
       end
     end

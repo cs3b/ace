@@ -15,6 +15,7 @@ PATH
     ace-docs (0.5.3)
       ace-core (~> 0.1)
       ace-llm (~> 0.1)
+      ace-support-markdown (~> 0.1)
       colorize (~> 1.1)
       fileutils (~> 1.7)
       terminal-table (~> 3.0)
