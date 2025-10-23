@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.88] - 2025-10-23
+
+### Documentation
+
+- **ace-support-markdown v0.1.2**: Improved README examples with educational comments and automated validation
+  - Added "why" explanations to all 6 real-world examples clarifying patterns and best practices
+  - Refactored Example 5 to use cleaner begin/rescue/ensure pattern with success flag
+  - Added automated README example validation (`test/integration/readme_examples_test.rb`)
+  - Created comprehensive CONTRIBUTING.md (221 lines) with API sync guidelines
+  - Added "Maintaining Documentation" section documenting sync strategy
+  - Fixed API parameter documentation (`validate: true` → `validate_before: true`)
+  - 8 new test cases ensure documentation stays in sync with code evolution
+
 ## [0.9.87] - 2025-10-23
 
 ### Documentation
