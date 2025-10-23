@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "time"
+require "ace/support/markdown"
 require_relative "../molecules/git_executor"
 require_relative "../molecules/idea_enhancer"
 require_relative "../atoms/clipboard_reader"
@@ -85,12 +86,22 @@ module Ace
             # Write idea.md in directory
             idea_file = File.join(path, "idea.md")
             formatted_content = format_idea(enhanced_content, metadata)
-            File.write(idea_file, formatted_content)
+            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              idea_file,
+              formatted_content,
+              backup: true,
+              validate: false  # Ideas may not follow strict markdown structure
+            )
           else
             # No attachments - write flat file
             ensure_directory_exists(path)
             formatted_content = format_idea(enhanced_content, metadata)
-            File.write(path, formatted_content)
+            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              path,
+              formatted_content,
+              backup: true,
+              validate: false  # Ideas may not follow strict markdown structure
+            )
           end
 
           # Commit to git if requested

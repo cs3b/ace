@@ -93,6 +93,7 @@ PATH
     ace-taskflow (0.11.5)
       ace-core (~> 0.9.0)
       ace-support-mac-clipboard (~> 0.1.0)
+      ace-support-markdown (~> 0.1)
       clipboard (~> 1.3)
 
 PATH
