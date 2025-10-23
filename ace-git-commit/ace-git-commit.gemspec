@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'ace-core', '~> 0.9.0'
+  spec.add_dependency 'ace-git-diff', '~> 0.1.0'
   spec.add_dependency 'ace-llm', '~> 0.9.0'
 
   # Development dependencies managed in root Gemfile
