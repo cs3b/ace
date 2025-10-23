@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.86] - 2025-10-23
+
+### Changed
+
+- **ace-docs v0.6.0**: Migrated frontmatter handling to ace-support-markdown
+  - Replaced custom FrontmatterParser with unified MarkdownDocument.parse API
+  - FrontmatterManager now delegates to DocumentEditor for atomic writes with automatic backup
+  - Eliminated 605 lines of duplicate code (implementation + tests)
+  - Zero breaking changes - maintains full backward compatibility
+  - Completes task.082 migration
+
 ## [0.9.85] - 2025-10-23
 
 ### Changed
