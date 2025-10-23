@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-23T22:01:00+01:00
+---
+
 # Idea
 
 ⏺ Bash(ace-nav wfi://work-on-task)
