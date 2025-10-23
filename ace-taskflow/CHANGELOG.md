@@ -5,6 +5,14 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **task:// Protocol Configuration**: Added `.ace.example/nav/protocols/task.yml` for ace-nav integration
+  - Enables `ace-nav task://083` to delegate to `ace-taskflow task 083`
+  - Provides unified navigation interface across all ACE resources
+  - Configuration supports all task reference formats and options (--path, --content, --tree)
+
 ## [0.12.1] - 2025-10-23
 
 ### Added

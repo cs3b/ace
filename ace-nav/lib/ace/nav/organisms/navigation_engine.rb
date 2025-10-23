@@ -83,6 +83,14 @@ module Ace
           config_loader.discovered_protocols
         end
 
+        # Check if a protocol is cmd-type (command delegation)
+        # @param protocol_name [String] The protocol name to check
+        # @return [Boolean] true if protocol delegates to external command
+        def cmd_protocol?(protocol_name)
+          config_loader = Molecules::ConfigLoader.new
+          config_loader.protocol_type(protocol_name) == "cmd"
+        end
+
         private
 
         def format_as_list(resources)

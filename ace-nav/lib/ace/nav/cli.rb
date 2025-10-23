@@ -3,6 +3,7 @@
 require "optparse"
 require "fileutils"
 require_relative "organisms/navigation_engine"
+require_relative "organisms/command_delegator"
 
 module Ace
   module Nav
@@ -49,6 +50,10 @@ module Ace
           opts.separator ""
           opts.separator "Options:"
 
+          opts.on("--path", "Display resource path") do
+            @options[:path] = true
+          end
+
           opts.on("--content", "Display resource content") do
             @options[:content] = true
           end
@@ -88,6 +93,17 @@ module Ace
       end
 
       def execute(path_or_uri)
+        # Check if this is a cmd-type protocol (command delegation)
+        if path_or_uri.include?("://")
+          protocol = path_or_uri.split("://").first
+          if @engine.cmd_protocol?(protocol)
+            # Delegate to external command
+            delegator = Organisms::CommandDelegator.new
+            exit_code = delegator.delegate(path_or_uri, @options)
+            exit(exit_code)
+          end
+        end
+
         # Check if it's a protocol-only URI (e.g., "tmpl://")
         # and automatically treat it as a list operation with wildcard
         if path_or_uri.match?(/^\w+:\/\/$/)
