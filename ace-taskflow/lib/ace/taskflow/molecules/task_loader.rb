@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/support/markdown"
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
 require_relative "../configuration"
@@ -178,8 +179,15 @@ module Ace
           # Update status in frontmatter
           updated_content = content.sub(/^status:\s*.+$/m, "status: #{new_status}")
 
-          File.write(task_path, updated_content)
-          true
+          # Use SafeFileWriter for atomic write with backup
+          # Note: Validation disabled since we're doing our own frontmatter manipulation
+          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            task_path,
+            updated_content,
+            backup: true,
+            validate: false
+          )
+          result[:success]
         rescue StandardError
           false
         end
@@ -217,8 +225,15 @@ module Ace
             end
           end
 
-          File.write(task_path, updated_content)
-          true
+          # Use SafeFileWriter for atomic write with backup
+          # Note: Validation disabled since we're doing our own frontmatter manipulation
+          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            task_path,
+            updated_content,
+            backup: true,
+            validate: false
+          )
+          result[:success]
         rescue StandardError
           false
         end

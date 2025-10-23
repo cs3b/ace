@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task File Corruption Prevention**: Fixed incomplete ace-support-markdown integration in task_loader.rb
+  - `update_task_status` and `update_task_dependencies` now use SafeFileWriter for atomic writes with backups
+  - Previously these methods used raw `File.write`, which could corrupt task files if interrupted
+  - All file write operations in ace-taskflow now use SafeFileWriter for data protection
+  - Backup files (*.backup.*) are created automatically before modifications
+
 ## [0.13.0] - 2025-10-23
 
 ### Added
