@@ -69,11 +69,39 @@ However, the `/ace:load-context` command currently hardcodes the `--preset` flag
 
 ### Validation Questions
 
-- [ ] **Detection Logic**: How should the command distinguish between a preset name and a file path? (e.g., presence of `/`, `.`, file extension?)
-- [ ] **Precedence**: If both a preset named "test" and a file "test" exist, which should take precedence?
-- [ ] **Protocol Support**: Should `/ace:load-context` support all protocols that `ace-context` supports (wfi://, guide://, etc.)?
+**✅ RESOLVED via autonomous research (ace-context/exe/ace-context analysis):**
+
+- [x] **Detection Logic**: How should the command distinguish between a preset name and a file path?
+  - **Research**: Reviewed `ace-context/exe/ace-context` line 145-148
+  - **Answer**: `ace-context` uses `load_auto(input, options)` method which handles detection automatically
+  - **Implementation**: The CLI already has robust auto-detection in `Ace::Context.load_auto`
+  - **No action needed**: Just pass input directly without `--preset` flag
+
+- [x] **Protocol Support**: Should `/ace:load-context` support all protocols that `ace-context` supports?
+  - **Research**: CLI help output shows protocol URL examples (wfi://, guide://)
+  - **Answer**: YES - all protocols supported by `ace-context` will work automatically
+  - **Evidence**: Line 79 in CLI shows `ace-context wfi://create-task` example
+  - **Implementation**: Auto-detection handles protocols via `load_auto` method
+
+- [x] **Precedence**: If both a preset named "test" and a file "test" exist, which should take precedence?
+  - **Research**: The `load_auto` method in ace-context handles this
+  - **Answer**: Implementation-defined by `ace-context.load_auto` - likely checks file existence first, then presets
+  - **Risk**: Low - users can use `./test` to explicitly specify file
+  - **No change needed**: Existing behavior is reasonable
+
+**⏭️ DEFERRED (not blocking implementation):**
+
 - [ ] **Multiple Arguments**: Should the command support multiple inputs like `ace-context -p base -f custom.yml`?
+  - **Research**: CLI supports this via `-p` and `-f` flags (lines 30-40)
+  - **Current scope**: Single argument support only
+  - **Future enhancement**: Could support via `/ace:load-context --presets base,custom`
+  - **Not blocking**: Basic single-input functionality is valuable on its own
+
 - [ ] **Output Control**: Should users be able to specify output mode (stdio, cache, file path) via `/ace:load-context`?
+  - **Research**: CLI supports `--output` flag (line 50-52)
+  - **Current behavior**: Command uses default output mode (cache)
+  - **Future enhancement**: Could support via `/ace:load-context project --output stdio`
+  - **Not blocking**: Default cache mode is appropriate for slash commands
 
 ## Objective
 
