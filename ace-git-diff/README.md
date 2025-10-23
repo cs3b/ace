@@ -148,6 +148,55 @@ Follows ACE's ATOM architecture pattern:
 - **Organisms**: Business logic (DiffOrchestrator, IntegrationHelper)
 - **Models**: Data structures (DiffResult, DiffConfig)
 
+## Security
+
+ace-git-diff is designed with security as a priority:
+
+### Command Injection Protection
+
+All git commands are executed using `Open3.capture3` with **array arguments**, not shell strings. This prevents command injection attacks:
+
+```ruby
+# Safe: Arguments passed as array elements
+Open3.capture3("git", "diff", user_provided_arg)
+
+# NOT used: Shell string interpolation (unsafe)
+# `git diff #{user_provided_arg}`  # ❌ Never used
+```
+
+Arguments are passed directly to the git binary without shell interpretation, making it impossible to inject additional commands.
+
+### Timeout Protection
+
+All git operations have a 30-second timeout to prevent hanging on:
+- Network issues (fetching from slow remotes)
+- Stuck git operations (corrupted repos)
+- Malicious inputs designed to cause delays
+
+Operations exceeding the timeout return a clear error message.
+
+### Path Validation
+
+User-provided paths are validated to prevent:
+- Directory traversal attacks (`../` patterns rejected)
+- Absolute path exploits (only relative paths allowed)
+- Invalid glob patterns
+
+### Configuration Security
+
+- Configuration files are read-only YAML with no code execution
+- No `eval` or dynamic code execution anywhere in the codebase
+- Pattern matching uses safe glob-to-regex conversion
+
+### Recommended Practices
+
+When using ace-git-diff in your application:
+
+1. **Validate inputs**: Always validate user-provided ranges and paths
+2. **Use global config**: Define allowed patterns in `.ace/diff/config.yml`
+3. **Limit ranges**: Restrict diff ranges to prevent large operations
+4. **Monitor timeouts**: Log and alert on timeout errors
+
 ## Contributing
 
 See the main ACE repository for contribution guidelines.
