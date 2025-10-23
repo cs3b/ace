@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-10-21
+
+### Fixed
+
+- **Critical bug in analyze-consistency command**: Fixed LLM response handling
+  - Changed from checking non-existent `result[:success]` to using `result[:text]` directly
+  - Now uses ace-llm's native `output:` option to save responses immediately
+  - Prevents loss of LLM compute when errors occur
+  - Response saved to `llm-response.json` before any validation
+- **Removed unnecessary document copying**: Uses real file paths instead of copying to temp files
+  - Session directory now only contains metadata and prompts, not document copies
+  - ace-context loads documents directly from their actual locations
+  - Cleaner session directory structure and better path references in analysis
+- **Better error messages**: Shows actual API errors instead of generic "Unknown error"
+- **Added progress indicators**: Shows detailed progress during analysis phases
+
 ## [0.5.0] - 2025-10-21
 
 ### Added

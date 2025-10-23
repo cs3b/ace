@@ -32,6 +32,7 @@ module Ace
         # @return [ConsistencyReport] analysis results
         def analyze(pattern = nil)
           # Load documents
+          puts "Loading documents..." if @options[:verbose]
           documents = load_documents(pattern)
 
           if documents.empty?
@@ -47,29 +48,36 @@ module Ace
           session_dir = File.join(cache_dir, "analyze-consistency-#{timestamp}")
           FileUtils.mkdir_p(session_dir)
 
-          puts "Analyzing #{documents.count} documents for consistency issues..." if @options[:verbose]
-          puts "Session directory: #{session_dir}" if @options[:verbose]
+          puts "Analyzing #{documents.count} documents for consistency issues...".cyan
+          puts "Session directory: #{session_dir}".yellow
 
           # Save document list
+          puts "Saving document list..." if @options[:verbose]
           save_document_list(documents, session_dir)
 
-          # Prepare document content
-          document_data = prepare_document_data(documents)
+          # Prepare document paths (no need to load content, ace-context will do it)
+          puts "Preparing document paths..." if @options[:verbose]
+          document_data = prepare_document_paths(documents)
+          puts "  Documents to analyze: #{document_data.size}" if @options[:verbose]
 
           # Build prompts
+          puts "Building analysis prompts..." if @options[:verbose]
           prompt_builder = Prompts::ConsistencyPrompt.new
-          prompts = prompt_builder.build(document_data, @options)
+          prompts = prompt_builder.build(document_data, @options, session_dir: session_dir)
 
           # Save prompts
+          puts "Saving prompts to session directory..." if @options[:verbose]
           save_prompts(prompts, session_dir)
 
           # Execute LLM query
-          response = execute_llm_query(prompts)
+          puts "\nExecuting LLM analysis..." if @options[:verbose]
+          puts "This may take a few minutes for large document sets..." if documents.count > 10
+          response = execute_llm_query(prompts, session_dir)
 
-          # Save LLM response
-          save_llm_response(response, session_dir)
+          # Response is already saved to llm-response.json by ace-llm's output option
 
           # Parse response into report
+          puts "Parsing analysis results..." if @options[:verbose]
           report = Models::ConsistencyReport.parse(response, documents.count)
 
           # Save report and metadata
@@ -97,25 +105,24 @@ module Ace
           end
         end
 
-        # Prepare document data for analysis
-        def prepare_document_data(documents)
-          document_data = {}
+        # Prepare document paths for analysis
+        def prepare_document_paths(documents)
+          # Just return a hash of paths to empty string (ace-context will load the actual content)
+          # This maintains compatibility with the prompt builder interface
+          document_paths = {}
 
           documents.each do |doc|
-            content = if File.exist?(doc.path)
-                       File.read(doc.path)
-                     else
-                       ""
-                     end
-
-            document_data[doc.path] = content
+            # Only include files that actually exist
+            if File.exist?(doc.path)
+              document_paths[doc.path] = "" # Empty content, ace-context will load it
+            end
           end
 
-          document_data
+          document_paths
         end
 
         # Execute LLM query with the prompts
-        def execute_llm_query(prompts)
+        def execute_llm_query(prompts, session_dir)
           # Check if ace-llm is available
           unless defined?(Ace::LLM)
             raise "ace-llm gem not available. Please install it with: gem install ace-llm"
@@ -130,24 +137,30 @@ module Ace
           puts "Executing LLM query (model: #{model}, timeout: #{timeout}s)..." if @options[:verbose]
 
           begin
-            # Call LLM via QueryInterface with system prompt
+            # Determine output path for saving response
+            response_path = File.join(session_dir, "llm-response.json")
+
+            # Call LLM via QueryInterface with native output saving
             result = Ace::LLM::QueryInterface.query(
               model,
               prompts[:user],
               system: prompts[:system],
               temperature: 0.3,  # Lower temperature for more consistent analysis
-              timeout: timeout
+              timeout: timeout,
+              output: response_path,  # Save response immediately
+              format: "json",  # Save as JSON format
+              force: true  # Overwrite if exists
             )
 
-            # Check if the query was successful
-            unless result[:success]
-              raise "LLM query failed: #{result[:error] || 'Unknown error'}"
+            # Check if we got a valid result
+            unless result && result[:text]
+              raise "LLM query failed to return text content"
             end
 
             # Return the response content
-            result[:response]
+            result[:text]
           rescue StandardError => e
-            raise "LLM query error: #{e.message}"
+            raise "#{e.message}"
           end
         end
 
