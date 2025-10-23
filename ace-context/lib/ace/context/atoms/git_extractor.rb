@@ -1,17 +1,28 @@
 # frozen_string_literal: true
 
 require "open3"
+require "ace/git_diff"
 
 module Ace
   module Context
     module Atoms
       # Pure functions for extracting git information
+      # Delegates diff operations to ace-git-diff for consistency
       module GitExtractor
+        # Custom error class for git extraction failures
+        class GitExtractorError < StandardError; end
+
         class << self
           # Execute a git diff command
+          # Delegates to ace-git-diff for consistent filtering and configuration
           def git_diff(range_or_target = "origin/main...HEAD")
-            result = execute_git_command("git", "diff", range_or_target)
-            result[:success] ? result[:output] : ""
+            result = Ace::GitDiff::Organisms::DiffOrchestrator.generate(
+              ranges: [range_or_target]
+            )
+            result.content
+          rescue StandardError => e
+            handle_error("git_diff", range_or_target, e)
+            ""
           end
 
           # Get git log for a range
@@ -21,15 +32,23 @@ module Ace
           end
 
           # Get staged changes
+          # Delegates to ace-git-diff for consistent filtering
           def staged_diff
-            result = execute_git_command("git", "diff", "--cached")
-            result[:success] ? result[:output] : ""
+            result = Ace::GitDiff::Organisms::DiffOrchestrator.staged
+            result.content
+          rescue StandardError => e
+            handle_error("staged_diff", "staged changes", e)
+            ""
           end
 
           # Get working directory changes
+          # Delegates to ace-git-diff for consistent filtering
           def working_diff
-            result = execute_git_command("git", "diff")
-            result[:success] ? result[:output] : ""
+            result = Ace::GitDiff::Organisms::DiffOrchestrator.working
+            result.content
+          rescue StandardError => e
+            handle_error("working_diff", "working changes", e)
+            ""
           end
 
           # Get list of changed files
@@ -71,6 +90,9 @@ module Ace
           end
 
           # Extract diff with detailed result information
+          # Uses direct git command for detailed error reporting
+          # Note: This method provides raw error details, unlike other diff methods
+          # which delegate to ace-git-diff and handle errors gracefully
           def extract_diff(range_or_target)
             result = execute_git_command("git", "diff", range_or_target)
             {
@@ -102,6 +124,23 @@ module Ace
               error: e.message,
               exit_code: -1
             }
+          end
+
+          # Handle delegation errors with better context
+          # @param method [String] Method name that failed
+          # @param context [String] What was being requested
+          # @param error [StandardError] The error that occurred
+          def handle_error(method, context, error)
+            message = "GitExtractor.#{method} failed for '#{context}': #{error.message}"
+
+            # Show error details in debug mode
+            if ENV["DEBUG"]
+              warn message
+              warn error.backtrace.first(3).join("\n") if error.backtrace
+            end
+
+            # In non-debug mode, only warn on specific error types
+            warn message if error.is_a?(Ace::GitDiff::Error) rescue false
           end
         end
       end

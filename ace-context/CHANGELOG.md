@@ -5,6 +5,19 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2025-10-23
+
+### Changed
+- Integrated with ace-git-diff for unified diff operations
+- GitExtractor now delegates all diff methods to ace-git-diff
+- `git_diff()`, `staged_diff()`, `working_diff()` now use ace-git-diff for consistent filtering
+- Added ace-git-diff (~> 0.1.0) as runtime dependency
+- Example preset configs updated to show diff: key usage
+
+### Technical
+- Maintains full backward compatibility for all public APIs
+- extract_diff() still uses direct git command for detailed error reporting
+
 ## [0.14.2] - 2025-10-18
 
 ### Fixed

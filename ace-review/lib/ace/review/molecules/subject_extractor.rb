@@ -70,8 +70,32 @@ module Ace
           context_config = {}
 
           # Map 'diff' to 'diffs' for ace-context
+          # Supports both old format (string) and new format (hash with ranges)
           if config["diff"]
-            context_config["diffs"] = [config["diff"]]
+            diff_config = config["diff"]
+            if diff_config.is_a?(Hash)
+              # New format: diff: { ranges: [...], paths: [...] }
+              # Validate that at least one of ranges or since is present
+              unless diff_config["ranges"] || diff_config["since"]
+                raise ArgumentError, "diff config must specify 'ranges' or 'since' when using hash format"
+              end
+
+              # Validate ranges format if present
+              if diff_config["ranges"]
+                unless diff_config["ranges"].is_a?(Array)
+                  raise ArgumentError, "diff 'ranges' must be an array, got #{diff_config['ranges'].class}"
+                end
+              end
+
+              # Extract ranges for context
+              context_config["diffs"] = diff_config["ranges"] if diff_config["ranges"]
+            elsif diff_config.is_a?(String)
+              # Old format: diff: "origin/main...HEAD"
+              context_config["diffs"] = [diff_config]
+            else
+              # Fallback: wrap in array
+              context_config["diffs"] = [diff_config]
+            end
           end
 
           # Copy compatible keys

@@ -3,6 +3,7 @@
 require "test_helper"
 require "ace/docs/molecules/change_detector"
 require "ace/docs/models/document"
+require "ace/git_diff"
 require "tmpdir"
 require "fileutils"
 
@@ -21,8 +22,9 @@ module Ace
             }
           )
 
-          # Mock git to return empty diff (no changes)
-          ChangeDetector.stub :execute_git_command, "" do
+          # Mock ace-git-diff to return empty diff (no changes)
+          empty_result = Ace::GitDiff::Models::DiffResult.empty
+          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, empty_result do
             result = ChangeDetector.get_diff_for_document(document)
 
             assert_equal "test.md", result[:document_path]
@@ -44,9 +46,14 @@ module Ace
             }
           )
 
-          # Mock git to return a diff showing changes
+          # Mock ace-git-diff to return a diff showing changes
           mock_diff = "diff --git a/test.md b/test.md\n+Updated content\n+More content"
-          ChangeDetector.stub :execute_git_command, mock_diff do
+          mock_result = Ace::GitDiff::Models::DiffResult.new(
+            content: mock_diff,
+            stats: { additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3 },
+            files: ["test.md"]
+          )
+          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, mock_result do
             result = ChangeDetector.get_diff_for_document(document, since: "HEAD~1")
 
             assert_equal "test.md", result[:document_path]
@@ -319,14 +326,27 @@ module Ace
             }
           )
 
-          # Mock git to return different diffs based on paths
-          ChangeDetector.stub :execute_git_command, ->(cmd) {
-            if cmd.to_s.include?("lib/**/*.rb")
-              "diff --git a/lib/test.rb b/lib/test.rb\n+  def hello\n+  end"
-            elsif cmd.to_s.include?("**/*.md")
-              "diff --git a/README.md b/README.md\n+Updated docs"
+          # Mock ace-git-diff to return different diffs based on paths
+          code_diff = "diff --git a/lib/test.rb b/lib/test.rb\n+  def hello\n+  end"
+          docs_diff = "diff --git a/README.md b/README.md\n+Updated docs"
+
+          call_count = 0
+          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, ->(options) {
+            call_count += 1
+            if call_count == 1 || (options[:paths] && options[:paths].include?("lib/**/*.rb"))
+              Ace::GitDiff::Models::DiffResult.new(
+                content: code_diff,
+                stats: { additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3 },
+                files: ["lib/test.rb"]
+              )
+            elsif call_count == 2 || (options[:paths] && options[:paths].include?("**/*.md"))
+              Ace::GitDiff::Models::DiffResult.new(
+                content: docs_diff,
+                stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
+                files: ["README.md"]
+              )
             else
-              ""
+              Ace::GitDiff::Models::DiffResult.empty
             end
           } do
             result = ChangeDetector.get_diff_for_document(document)
@@ -359,14 +379,24 @@ module Ace
             }
           )
 
-          # Mock git to return different diffs based on file paths
-          ChangeDetector.stub :execute_git_command, ->(cmd) {
-            if cmd.to_s.include?("**/*.rb")
-              "diff --git a/app.rb b/app.rb\n+modified app"
-            elsif cmd.to_s.include?("**/*.yml")
-              "diff --git a/config.yml b/config.yml\n+new_value"
+          # Mock ace-git-diff to return different diffs based on file paths
+          call_count = 0
+          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, ->(options) {
+            call_count += 1
+            if call_count == 1 || (options[:paths] && options[:paths].include?("**/*.rb"))
+              Ace::GitDiff::Models::DiffResult.new(
+                content: "diff --git a/app.rb b/app.rb\n+modified app",
+                stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
+                files: ["app.rb"]
+              )
+            elsif call_count == 2 || (options[:paths] && options[:paths].include?("**/*.yml"))
+              Ace::GitDiff::Models::DiffResult.new(
+                content: "diff --git a/config.yml b/config.yml\n+new_value",
+                stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
+                files: ["config.yml"]
+              )
             else
-              ""
+              Ace::GitDiff::Models::DiffResult.empty
             end
           } do
             diffs = ChangeDetector.get_diffs_for_subjects(document, "HEAD", {})
