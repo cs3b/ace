@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.85] - 2025-10-23
+
+### Changed
+
+- **ace-taskflow v0.12.0**: Migrated to ace-support-markdown for safe file operations
+  - DoctorFixer, TaskManager, and IdeaWriter now use SafeFileWriter and DocumentEditor
+  - Eliminates file corruption risk through atomic writes and automatic backups
+  - All 725 tests passing with no regressions
+  - Completes task.081 migration
+
 ## [0.9.84] - 2025-10-23
 
 ### Changed
