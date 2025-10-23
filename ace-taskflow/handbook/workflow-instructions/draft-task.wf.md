@@ -102,33 +102,29 @@ Create high-level behavioral specifications that define WHAT the system should d
    * Avoid adding implementation details
 
 8. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
-   * **IMPORTANT**: When task is created from idea files, ALWAYS move them to current release:
+   * **IMPORTANT**: When task is created from idea files, ALWAYS mark them as done:
    * Track all source idea files used for this draft task:
      * List all idea files referenced during behavioral specification
      * Note: Multiple idea files may be combined into one task
    * For EACH source idea file:
-     * Extract task number from created task path: `echo "$TASK_PATH" | grep -oE "task\.([0-9]{3})" | cut -d. -f2`
-     * Get current release path: `RELEASE_PATH=$(ace-taskflow release | grep "Path:" | awk '{print $2}')`
-     * Create destination directory if needed: `mkdir -p "$RELEASE_PATH/docs/ideas"`
-     * Build destination filename: `$TASK_NUM-$(basename "$IDEA_FILE_PATH")`
-       * For multiple files with same task: Use same prefix for all (e.g., `040-017-idea.md`, `040-018-idea.md`)
-     * Execute file movement: `git mv "$IDEA_FILE_PATH" "$RELEASE_PATH/docs/ideas/$DESTINATION_FILENAME"`
+     * Mark idea as done using ace-taskflow: `ace-taskflow idea done <idea-reference>`
+       * This moves the idea to `ideas/done/` subdirectory in its current location
+       * Updates idea frontmatter with completion status and timestamp
    * Update task references:
      * Update the task file's References section with new idea file locations
      * Ensure all moved files are properly tracked
    * Commit the movements:
-     * Use `git-commit` to commit all idea file movements together
-     * Clear commit message: "Move idea files to current release for task $TASK_NUM"
+     * Use `ace-git-commit` to commit all idea file movements together
+     * Clear commit message: "Mark source ideas as done after creating task"
    * **Validation Requirements:**
-     * [ ] All source idea files moved to current release
+     * [ ] All source idea files marked as done and moved to ideas/done/
      * [ ] Task references updated to new locations
      * [ ] Git movements committed
    * Error handling:
-     * If ace-taskflow release create fails: Create files in backlog/drafts/ instead
-     * If git mv fails: Report error and manual intervention needed
+     * If ace-taskflow idea done fails: Report error and manual intervention needed
    * Success indicators:
-     * Report each file movement: "Moved: [old-path] -> [new-path]"
-     * Confirm all source ideas organized: "All X idea files moved to current release"
+     * Report each file movement: "Idea marked as done: [idea-reference]"
+     * Confirm all source ideas organized: "All X idea files marked as done"
 
 9. **Ensure Draft Creation Completion**
    * Verify all behavioral specifications are captured:
@@ -189,8 +185,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 * No implementation details mixed with behavioral requirements
 * Clear handoff to implementation planning phase
 * **REQUIRED when drafting from ideas:**
-  * All source idea files moved to current release docs/ideas/ directory
-  * Task number prefixes added to moved idea files
+  * All source idea files marked as done and moved to ideas/done/ directory
   * Task references updated to new idea file locations
   * Git movements properly committed
 
