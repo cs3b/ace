@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.89] - 2025-10-23
+
+### Changed
+
+- **ace-taskflow v0.12.1**: Standardized idea file organization in draft workflows
+  - Updated draft-task and draft-tasks workflows to use `ace-taskflow idea done` command
+  - Replaced manual git operations with standardized command interface
+  - Fixed idea file paths from `docs/ideas/` to `ideas/done/` throughout documentation
+  - Simplified workflow complexity (removed 21 lines of manual operations)
+
 ## [0.9.88] - 2025-10-23
 
 ### Documentation
