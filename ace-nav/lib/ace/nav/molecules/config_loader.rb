@@ -101,6 +101,14 @@ module Ace
           @source_registry.sources_for_protocol(protocol)
         end
 
+        # Get the type of a protocol (cmd or file)
+        # @param protocol_name [String] The protocol name (e.g., "task", "wfi")
+        # @return [String] Protocol type: "cmd" for command delegation, "file" for file-based (default)
+        def protocol_type(protocol_name)
+          protocol_config = load_protocol_config(protocol_name)
+          protocol_config["type"] || "file"
+        end
+
         private
 
         def discover_project_protocol_dirs

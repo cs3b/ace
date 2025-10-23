@@ -91,12 +91,26 @@ ace-nav 'wfi://*test*' --list        # Test-related workflows
 
 ### Task Navigation
 
+The `task://` protocol delegates to `ace-taskflow task` commands, providing unified navigation across all ACE resources.
+
 ```bash
-# Find tasks
-ace-nav task://018                   # Task by number
-ace-nav 'task://*nav*' --list       # Tasks matching pattern
-ace-nav task://018 --content        # Task content
+# Basic task navigation
+ace-nav task://083                   # Show task summary
+ace-nav task://083 --path            # Get task file path
+ace-nav task://083 --content         # Show full task content
+ace-nav task://083 --tree            # Show task dependencies
+
+# All ace-taskflow reference formats supported
+ace-nav task://018                   # Task in current context
+ace-nav task://task.018              # Prefixed format
+ace-nav task://v.0.9.0+task.018      # Specific release
+ace-nav task://backlog+025           # Backlog tasks
+
+# Shell integration
+nvim $(ace-nav task://083 --path)    # Open task in editor
 ```
+
+**Note:** Pattern listing (`task://*nav*`) requires `ace-taskflow tasks` enhancement (future release).
 
 ## Configuration
 
