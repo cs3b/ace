@@ -233,6 +233,88 @@ Files changed: 15 | Additions: 450 | Deletions: 120
 
 **Next Steps**: Use summary for PR description, release notes, or code review prep
 
+## Understanding Output Formats
+
+ace-git-diff provides two output formats to suit different needs:
+
+### `diff` Format (Default)
+
+**What it is:** Standard git diff format with filtering applied
+
+**How it works:**
+1. Generates git diff from specified range/time
+2. Applies `exclude_patterns` from global config
+3. Skips whitespace-only changes (if configured)
+4. Outputs filtered diff in standard format
+
+**When to use:**
+- Reviewing changes in detail
+- Passing to other tools expecting diff format
+- Code review workflows
+- Default for most use cases
+
+**Example output:**
+```diff
+diff --git a/lib/foo.rb b/lib/foo.rb
+--- a/lib/foo.rb
++++ b/lib/foo.rb
+@@ -10,3 +10,6 @@
++  def new_method
++    # implementation
++  end
+```
+
+**Key point:** Still shows full diff content, just filters which files are included
+
+---
+
+### `summary` Format
+
+**What it is:** LLM-powered markdown summary of changes
+
+**How it works:**
+1. Generates filtered diff (same as `diff` format)
+2. Sends to LLM (via ace-llm) with analysis prompt
+3. LLM categorizes changes by impact level
+4. Returns structured markdown summary
+
+**When to use:**
+- Quick overview of many changes
+- Release notes generation
+- PR descriptions
+- Communicating changes to non-technical stakeholders
+
+**Example output:**
+```markdown
+# Change Summary
+
+HIGH Impact:
+- lib/foo.rb: Added new public API method
+- config/routes.yml: Changed routing structure
+
+MEDIUM Impact:
+- lib/bar.rb: Updated internal helper method
+
+Files changed: 8 | Additions: 150 | Deletions: 45
+```
+
+**Key point:** Not a diff anymore - it's a human-readable summary of what changed
+
+---
+
+### Choosing Between Formats
+
+| Need | Format | Why |
+|------|--------|-----|
+| Detailed code review | `diff` | See exact changes line by line |
+| Quick status check | `summary` | Get high-level overview fast |
+| Tool input (ace-docs, ace-review) | `diff` | Tools expect diff format |
+| PR description | `summary` | Communicate intent clearly |
+| Release notes | `summary` | Categorized by impact |
+| Debugging specific issue | `diff` | See precise code changes |
+
+**Default:** When in doubt, use `diff` (default) - it's more versatile and can be processed by other tools.
+
 ## Configuration
 
 ### Project Configuration
@@ -416,9 +498,8 @@ ace-git-diff [range] [options]
 
 | Flag | Short | Type | Description | Default |
 |------|-------|------|-------------|---------|
-| `--format` | `-f` | string | Output format: filtered, raw, compact | filtered |
-| `--type` | `-t` | string | Diff type: staged, working, pr | auto-detect |
-| `--since` | `-s` | string | Date or duration (e.g., "2025-01-01", "7d") | none |
+| `--format` | `-f` | string | Output format: diff or summary | diff |
+| `--since` | `-s` | string | Date or duration (e.g., "2025-01-01", "7d", "1 week ago") | none |
 | `--paths` | `-p` | array | Path patterns to include (glob) | all |
 | `--exclude` | `-e` | array | Path patterns to exclude (glob) | from config |
 | `--config` | `-c` | string | Config file path | .ace/diff/config.yml |
@@ -432,17 +513,17 @@ ace-git-diff [range] [options]
 ace-git-diff
 # Output: Filtered diff of unstaged changes OR branch vs origin/main
 
-# Example 2: Specific range with filtering
-ace-git-diff HEAD~10..HEAD --format filtered
-# Output: Last 10 commits, test files excluded
+# Example 2: Specific range with default filtering
+ace-git-diff HEAD~10..HEAD
+# Output: Last 10 commits, test files excluded (via global config)
 
-# Example 3: Raw diff of staged changes
-ace-git-diff --type staged --format raw
-# Output: Unfiltered staged changes including all files
+# Example 3: Time-based with path filtering
+ace-git-diff --since "1 week ago" --paths "lib/**/*.rb"
+# Output: Ruby library changes from last week
 
-# Example 4: Compact diff for specific paths
-ace-git-diff --paths "lib/**/*.rb" "ace-*/lib/**/*.rb" --format compact
-# Output: LLM-optimized diff of Ruby library files only
+# Example 4: Summary format for specific paths
+ace-git-diff --paths "lib/**/*.rb" "ace-*/lib/**/*.rb" --format summary
+# Output: LLM-powered markdown summary of Ruby library changes
 
 # Example 5: Recent changes excluding specific directories
 ace-git-diff --since 3d --exclude "docs/**/*" "test/**/*"
@@ -510,7 +591,7 @@ cat .ace/diff/config.yml
 # Incorrect: "test/*" (only matches top-level)
 
 # Test pattern matching
-ace-git-diff --exclude "test/**/*" --format filtered
+ace-git-diff --exclude "test/**/*"
 ```
 
 ### Problem: Configuration not being used
@@ -544,8 +625,8 @@ echo "max_lines: 1000" >> .ace/diff/config.yml
 # Use more specific path filters
 ace-git-diff --paths "lib/ace/git_diff/**/*.rb"
 
-# Use compact format for large diffs
-ace-git-diff --format compact
+# Use summary format for large diffs (LLM condensed)
+ace-git-diff --format summary
 
 # Check if you're diffing against the wrong base
 git log --oneline -20  # Verify your branch structure
@@ -556,9 +637,8 @@ git log --oneline -20  # Verify your branch structure
 1. **Configure Once, Use Everywhere**: Set up `.ace/diff/config.yml` at project start for consistent behavior across all ACE tools
 
 2. **Use Format Appropriately**:
-   - `filtered`: Default for human review (excludes noise)
-   - `raw`: Debugging and verification (see everything)
-   - `compact`: LLM analysis and summaries (optimized for AI)
+   - `diff`: Default for human review and tool processing (filtered by config)
+   - `summary`: LLM-powered high-level overview (for quick understanding)
 
 3. **Leverage Smart Defaults**: Run `ace-git-diff` without arguments during development - it shows what you need based on git state
 
@@ -581,8 +661,9 @@ git diff --cached | grep -v "test/" | grep -v ".lock"
 
 **To**:
 ```bash
-ace-git-diff --type staged
-# Filtering handled by configuration
+# For staged changes, use git diff directly or configure .ace/diff/config.yml
+git diff --cached  # Or let ace-git-diff detect unstaged/staged automatically
+# Filtering handled by global configuration
 ```
 
 ### Migrating ace-docs Document Frontmatter
@@ -619,7 +700,7 @@ pr:
 pr:
   subject:
     diff:
-      type: pr  # Simpler and consistent
+      ranges: ["origin/main...HEAD"]  # Explicit and consistent
       # Global exclude patterns applied automatically
 ```
 
