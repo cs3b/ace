@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2025-10-23
+
+### Fixed
+
+- **Configuration reading**: Now properly respects config file settings
+  - Reads `llm.model` from config.yml in addition to `llm_model`
+  - Configuration cascade now works correctly with nested config values
+  - Model selection respects user configuration instead of ignoring it
+- **Performance dramatically improved**: Changed default model from gflash to glite
+  - Reduced analysis time from 2m28s to ~4-10s for typical document sets
+  - Default model changed to "glite" for better performance
+  - Still allows override via --model CLI option
+- **Output handling**: Only displays report path, not content
+  - Returns report file path instead of content from execute_llm_query
+  - Prevents duplicate output to stdout
+  - Cleaner command output showing only where report was saved
+
 ## [0.5.2] - 2025-10-23
 
 ### Fixed
