@@ -1,6 +1,6 @@
 # Idea
 
-# there is huge overhead between ace-docs and ace-co...
+# there is huge overhead between ace-docs and ace-co
 
 ## Description
 
@@ -28,6 +28,6 @@ _[This section will be enhanced with LLM integration]_
 - Location: active
 - Created: 2025-10-18 16:33:09
 
-
 ---
 Captured: 2025-10-18 16:33:09
+

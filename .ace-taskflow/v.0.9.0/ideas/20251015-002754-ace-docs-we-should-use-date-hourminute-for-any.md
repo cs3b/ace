@@ -1,10 +1,16 @@
+---
+sort: 50.0
+---
+
 # Idea
 
-# ace-docs -> we should use date hour:minute for any...
+# ace-docs -> we should use date hour:minute for any
 
 ## Description
 
 ace-docs -> we should use date hour:minute for any timestamps in documetns and also in changelogs (as we do multiple releases in the day)
+
+additonal we have ensure we do not delete the frontmatter after updating the docs -> this happened with ace-docs/README.md (it have frontmatter and it doesn't ? )
 
 ## Implementation Approach
 
@@ -28,6 +34,6 @@ _[This section will be enhanced with LLM integration]_
 - Location: active
 - Created: 2025-10-15 00:27:54
 
-
 ---
 Captured: 2025-10-15 00:27:54
+
