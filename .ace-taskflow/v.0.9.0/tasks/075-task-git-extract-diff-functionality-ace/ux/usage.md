@@ -1,330 +1,664 @@
-# ace-git-diff Usage Documentation
+# ace-git-diff Usage Guide
+
+## Document Type: How-To Guide + Reference
 
 ## Overview
 
-`ace-git-diff` provides consistent, configurable git diff operations across the entire ACE ecosystem. Configure diff behavior once for your project and have it apply consistently across all ace-* tools.
+`ace-git-diff` is a unified git diff utility that provides consistent diff behavior across all ACE tools. It extracts and consolidates git diff functionality from ace-context and ace-docs into a single, configurable gem.
 
-### Key Features
-- **Global configuration**: One `.ace/diff/config.yml` for the entire project
-- **User-controlled filtering**: No hardcoded patterns - you decide what to exclude
-- **Flexible usage**: Use `diff:` key for consistency or `commands:` for custom needs
-- **Smart caching**: Avoid redundant git operations with configurable TTL
-- **Multiple formats**: Raw, filtered, analyzed, or JSON output
+**Key Features:**
+- **Unified Configuration**: Configure diff behavior once in `.ace/diff/config.yml` for all ACE tools
+- **No Hardcoded Patterns**: All exclude patterns are user-configurable
+- **Smart Filtering**: Raw, filtered, or compact output formats
+- **Smart Defaults**: Automatically shows unstaged changes or branch diffs
+- **Fast Execution**: No caching needed - diffs generate in <500ms
+- **Flexible Integration**: Use `diff:` key for consistency or `commands:` for custom needs
 
-## Command Structure
-
-### CLI Commands
+## Installation
 
 ```bash
-# Basic usage (interactive mode)
-ace-git-diff
+# Add to Gemfile
+gem 'ace-git-diff', '~> 0.1.0'
 
-# Configuration-based
-ace-git-diff --config path/to/config.yml
+# Or install directly
+gem install ace-git-diff
 
-# Range and time-based diffs
-ace-git-diff HEAD~5..HEAD            # Commit range
-ace-git-diff --since "2025-01-01"   # Date-based
-ace-git-diff --since 7d              # Relative time (7 days)
-
-# Special diff types
-ace-git-diff --type staged           # Staged changes only
-ace-git-diff --type working          # Working directory changes
-ace-git-diff --type pr               # Pull request changes
-
-# Path filtering
-ace-git-diff --paths "lib/**/*.rb"   # Include only matching paths
-ace-git-diff --exclude "test/**/*"   # Exclude patterns
-ace-git-diff --filter-noise          # Apply default noise filtering
-
-# Output formats
-ace-git-diff --format json           # JSON structured output
-ace-git-diff --format analyzed       # Include statistics and analysis
-ace-git-diff --format raw            # Unfiltered git diff output
+# Verify installation
+ace-git-diff --version
 ```
 
-## Usage Scenarios
+## Quick Start (5 minutes)
 
-### Scenario 1: Initial Project Setup
-**Goal**: Set up consistent diff filtering for your entire project team.
+Get started with the most basic usage:
 
 ```bash
-# 1. Create project-wide diff configuration
-cat > .ace/diff/config.yml << 'EOF'
+# Show diff with smart defaults
+# (unstaged changes OR branch vs origin/main)
+ace-git-diff
+
+# Expected output:
+diff --git a/lib/example.rb b/lib/example.rb
+--- a/lib/example.rb
++++ b/lib/example.rb
+@@ -10,3 +10,4 @@ class Example
+   def method
+     # changes here
+   end
++  # new code
+ end
+```
+
+**Success criteria**: You see filtered diff output (test files and lock files excluded by default)
+
+## Command Interface
+
+### Basic Usage
+
+```bash
+# Smart defaults based on git state
+ace-git-diff
+
+# Specific diff range
+ace-git-diff HEAD~5..HEAD
+
+# Date-based diff
+ace-git-diff --since "2025-01-01"
+ace-git-diff --since 7d
+
+# Special types
+ace-git-diff --type staged    # Only staged changes
+ace-git-diff --type working   # Only working directory changes
+ace-git-diff --type pr         # PR changes (tracking...HEAD)
+```
+
+### Output Formats
+
+```bash
+# Filtered (default) - applies exclude patterns from config
+ace-git-diff --format filtered
+
+# Raw - no filtering, show everything
+ace-git-diff --format raw
+
+# Compact - LLM-optimized, minimal noise
+ace-git-diff --format compact
+```
+
+### Command Options
+
+| Option | Short | Description | Example |
+|--------|-------|-------------|---------|
+| `--format FORMAT` | `-f` | Output format (filtered, raw, compact) | `--format raw` |
+| `--type TYPE` | `-t` | Diff type (staged, working, pr) | `--type staged` |
+| `--since DATE` | `-s` | Show changes since date/duration | `--since 7d` |
+| `--paths PATTERNS` | `-p` | Include only matching paths | `--paths "lib/**/*.rb"` |
+| `--exclude PATTERNS` | `-e` | Exclude matching paths | `--exclude "test/**/*"` |
+| `--config PATH` | `-c` | Load config from path | `--config .ace/diff/config.yml` |
+| `--help` | `-h` | Show help message | `--help` |
+| `--version` | `-v` | Show version | `--version` |
+
+## Common Scenarios
+
+### Scenario 1: Review Unstaged Changes (Filtered)
+
+**Goal**: See what changes you've made, excluding test files and noise
+
+**Commands**:
+```bash
+# Shows unstaged changes with default filtering
+ace-git-diff
+```
+
+**Expected Output**:
+```diff
+diff --git a/lib/ace/git_diff/atoms/command_executor.rb b/lib/ace/git_diff/atoms/command_executor.rb
+--- a/lib/ace/git_diff/atoms/command_executor.rb
++++ b/lib/ace/git_diff/atoms/command_executor.rb
+@@ -15,6 +15,9 @@ module Ace
+         def execute_git_command(*command_parts)
+           stdout, stderr, status = Open3.capture3(*command_parts)
++          # Add error handling
++          raise GitError, stderr unless status.success?
++
+           {
+             success: status.success?,
+```
+
+**Next Steps**: Stage relevant changes with `git add`
+
+### Scenario 2: Review PR Changes Before Creating PR
+
+**Goal**: See all changes between your branch and origin/main before creating a pull request
+
+**Commands**:
+```bash
+# Show all changes since branching from origin/main
+ace-git-diff --type pr
+```
+
+**Expected Output**:
+```diff
+diff --git a/lib/ace/git_diff.rb b/lib/ace/git_diff.rb
+new file mode 100644
+--- /dev/null
++++ b/lib/ace/git_diff.rb
+@@ -0,0 +1,42 @@
++# frozen_string_literal: true
++
++require "ace/core"
++require "ace/git_diff/version"
+...
+```
+
+**Next Steps**: Use output to write PR description or create PR with `gh pr create`
+
+### Scenario 3: Get Unfiltered Diff for Debugging
+
+**Goal**: See ALL changes including test files, lock files, and generated code
+
+**Commands**:
+```bash
+# Bypass all filtering to see raw git diff
+ace-git-diff --format raw
+```
+
+**Expected Output**:
+```diff
+diff --git a/Gemfile.lock b/Gemfile.lock
+--- a/Gemfile.lock
++++ b/Gemfile.lock
+@@ -15,7 +15,7 @@ GEM
+-    ace-core (0.9.0)
++    ace-core (0.9.1)
+...
+diff --git a/test/atoms/command_executor_test.rb b/test/atoms/command_executor_test.rb
+...
+```
+
+**Next Steps**: Analyze specific files that were excluded by default filtering
+
+### Scenario 4: Review Recent Changes in Specific Directory
+
+**Goal**: See only changes to library code since last week
+
+**Commands**:
+```bash
+# Show filtered changes in lib/ from last 7 days
+ace-git-diff --since 7d --paths "lib/**/*.rb"
+```
+
+**Expected Output**:
+```diff
+diff --git a/lib/ace/git_diff/molecules/diff_generator.rb b/lib/ace/git_diff/molecules/diff_generator.rb
+--- a/lib/ace/git_diff/molecules/diff_generator.rb
++++ b/lib/ace/git_diff/molecules/diff_generator.rb
+@@ -23,6 +23,12 @@ module Ace
+           # Generate diff with options
+           def generate(ranges, options = {})
++            # Handle special types
++            case options[:type]
++            when :staged
++              return staged_diff
++            when :working
++              return working_diff
+```
+
+**Next Steps**: Use this to update documentation or write release notes
+
+### Scenario 5: Get Compact Diff for LLM Analysis
+
+**Goal**: Generate LLM-optimized diff with minimal noise for AI code review
+
+**Commands**:
+```bash
+# Compact format removes noise while preserving all relevant changes
+ace-git-diff --format compact --type pr
+```
+
+**Expected Output**:
+```diff
+# Compact output focuses on meaningful changes
+# File headers simplified, redundant context removed
+lib/ace/git_diff/atoms/command_executor.rb: +3 lines (error handling)
+lib/ace/git_diff/molecules/diff_generator.rb: +8 lines (special type support)
+lib/ace/git_diff/organisms/diff_orchestrator.rb: +15 lines (workflow)
+Total: 3 files, 26 additions, 0 deletions
+```
+
+**Next Steps**: Pass to LLM for code review or commit message generation
+
+## Configuration
+
+### Project Configuration
+
+Create `.ace/diff/config.yml` in your project root:
+
+```yaml
+# Project-wide diff configuration
+# All ACE tools will use these settings
+
+# Default exclude patterns (fully customizable, not hardcoded!)
 exclude_patterns:
+  # Common patterns (modify for your project)
   - "test/**/*"
   - "spec/**/*"
   - "**/*.lock"
   - "vendor/**/*"
   - "node_modules/**/*"
   - "coverage/**/*"
+  - "**/fixtures/**/*"
+  # Project-specific additions
   - "tmp/**/*"
   - "**/*.generated.rb"
+  - "docs/archive/**/*"
 
-ignore_whitespace: true
-exclude_renames: false
-detect_moves: true
+# Default diff options
+ignore_whitespace: true    # Skip whitespace-only changes
+exclude_renames: false      # Include file renames
+detect_moves: true         # Detect moved files
 
-cache: true
-cache_ttl: 300
-EOF
-
-# 2. Test configuration with ace-git-diff
-ace-git-diff --since 7d
-
-# 3. All ace-* tools now use these settings automatically
+# Output defaults
+format: filtered          # Default: filtered (removes excluded patterns)
+max_lines: 10000         # Prevent huge diffs
 ```
 
-### Scenario 2: Code Review Workflow
-**Goal**: Review PR changes with consistent filtering across tools.
+### Global Configuration
 
-```bash
-# Using ace-review with the new diff: key
-cat > .ace/review/presets/pr.yml << 'EOF'
-pr:
-  subject:
-    diff:           # Uses ace-git-diff with global config
-      type: pr
-      # Automatically excludes test files, vendor, etc.
-EOF
-
-# Run review - excludes patterns are applied automatically
-ace-review --preset pr
-
-# Or use ace-git-diff directly for the same result
-ace-git-diff --type pr --format analyzed
-```
-
-### Scenario 3: Documentation Updates
-**Goal**: Check what code changes need documentation updates.
+Place in `~/.ace/diff/config.yml` for user-wide defaults:
 
 ```yaml
-# In document frontmatter (.md files)
----
+# User-wide defaults across all projects
+
+exclude_patterns:
+  - "**/*.log"
+  - "**/.DS_Store"
+  - "**/.env"
+
+format: filtered
+ignore_whitespace: true
+```
+
+### Configuration Cascade
+
+ace-git-diff uses ace-core's configuration cascade with **complete override** (no merging):
+
+1. **Global**: `~/.ace/diff/config.yml` (user defaults)
+2. **Project**: `.ace/diff/config.yml` (project-specific)
+3. **Instance**: Command-line options (per-command)
+
+**Important**: Instance config **completely replaces** global config, no array merging.
+
+**Example**:
+```yaml
+# Global config
+exclude_patterns:
+  - "test/**/*"
+  - "spec/**/*"
+
+# Project config
+exclude_patterns:
+  - "tmp/**/*"
+
+# Result: ONLY "tmp/**/*" is excluded
+# (Global patterns are NOT merged)
+```
+
+To keep global patterns AND add project-specific ones, explicitly list both:
+```yaml
+# Project config
+exclude_patterns:
+  - "test/**/*"      # Include global pattern explicitly
+  - "spec/**/*"      # Include global pattern explicitly
+  - "tmp/**/*"       # Add project-specific pattern
+```
+
+## Integration with ACE Tools
+
+### Using `diff:` Key in ACE Gems
+
+The consistent way to use ace-git-diff across ACE tools:
+
+**ace-docs** (document frontmatter):
+```yaml
 ace-docs:
   subject:
     diff:
-      paths: ["lib/ace/docs/**/*.rb"]
+      paths: ["lib/**/*.rb"]
       since: 7d
-      # Global exclude patterns applied automatically
----
 ```
 
-```bash
-# Run documentation analysis - uses ace-git-diff internally
-ace-docs analyze README.md
-
-# Or check diff directly
-ace-git-diff --paths "lib/ace/docs/**/*.rb" --since 7d
-```
-
-### Scenario 4: Custom Git Commands (Escape Hatch)
-**Goal**: Need specific git options not covered by diff: configuration.
-
+**ace-review** (preset configuration):
 ```yaml
-# In any ace-* gem config
-subject:
-  commands:    # Still supported for special cases
-    - "git diff --stat origin/main...HEAD"
-    - "git log --oneline -10"
-    - "git diff --name-status"
+pr:
+  subject:
+    diff:
+      type: pr  # Automatically uses ace-git-diff configuration
 ```
 
-### Scenario 5: Override Global Settings
-**Goal**: Need raw, unfiltered diff for specific use case.
-
-```bash
-# Command-line override
-ace-git-diff --format raw --no-filter
-
-# Or in configuration
+**ace-context** (context preset):
+```yaml
 context:
   diff:
     ranges: ["origin/main...HEAD"]
     format: raw
-    exclude_patterns: []  # Override global exclusions
 ```
 
-### Scenario 6: Debugging Diff Issues
-**Goal**: Understand what's being filtered and why.
+### Fallback to Commands
 
-```bash
-# Show what would be excluded
-ace-git-diff --dry-run --verbose
-
-# Compare filtered vs raw
-ace-git-diff --since 1d --format filtered > filtered.diff
-ace-git-diff --since 1d --format raw > raw.diff
-diff filtered.diff raw.diff
-
-# Check cache status
-ace-git-diff --cache-status
-```
-
-## Command Reference
-
-### ace-git-diff
-
-Generate git diffs with consistent project-wide configuration.
-
-**Syntax:**
-```bash
-ace-git-diff [RANGE] [OPTIONS]
-```
-
-**Arguments:**
-- `RANGE`: Git commit range (e.g., `HEAD~5..HEAD`, `main...feature`)
-
-**Options:**
-- `--config PATH`: Load specific configuration file
-- `--since TIME`: Changes since time (e.g., "2025-01-01", "7d", "2h")
-- `--type TYPE`: Special diff types (staged, working, pr)
-- `--paths PATTERN`: Include only matching paths (glob patterns)
-- `--exclude PATTERN`: Exclude paths (can be used multiple times)
-- `--filter-noise`: Apply default noise filtering
-- `--format FORMAT`: Output format (raw, filtered, analyzed, json)
-- `--no-cache`: Skip cache, force fresh diff
-- `--cache-ttl SECONDS`: Override cache TTL
-- `--verbose`: Show filtering decisions
-- `--dry-run`: Show what would be done without executing
-
-**Internal Implementation:**
-- Uses `git diff` with safe command execution (Open3.capture3)
-- Applies configuration cascade: Global → Gem → Instance
-- Caches results to `.cache/ace-git-diff/` with TTL
-- Filters patterns using Ruby glob matching
-
-### Configuration via diff: key
-
-Use in any ace-* gem configuration or preset.
-
-**Syntax:**
+For custom needs, still use `commands:` approach:
 ```yaml
-subject:
-  diff:
-    type: STRING        # Special types: pr, staged, working
-    ranges:             # Explicit commit ranges
-      - STRING
-    since: STRING       # Time-based: "7d", "2025-01-01"
-    paths:              # Include patterns
-      - GLOB
-    exclude_patterns:   # Override global excludes
-      - GLOB
-    format: STRING      # Output format
-```
-
-## Tips and Best Practices
-
-### 1. Start with Conservative Excludes
-Begin with a minimal exclude list and add patterns as needed:
-```yaml
-exclude_patterns:
-  - "**/*.lock"      # Lock files rarely need review
-  - "vendor/**/*"    # Third-party code
-  - "node_modules/**/*"  # Dependencies
-```
-
-### 2. Use Project-Specific Patterns
-Add patterns specific to your project:
-```yaml
-exclude_patterns:
-  - "**/*.generated.rb"  # Generated code
-  - "db/schema.rb"        # Auto-generated schema
-  - "public/assets/**/*"  # Compiled assets
-```
-
-### 3. Leverage Caching for Performance
-For expensive diff operations:
-```yaml
-cache: true
-cache_ttl: 600  # Cache for 10 minutes
-```
-
-### 4. Override When Needed
-Global config is the default, but you can always override:
-```bash
-# Quick override from command line
-ace-git-diff --exclude "" --format raw  # No exclusions
-
-# Or in specific gem config
-diff:
-  exclude_patterns: []  # Clear all excludes for this context
-```
-
-### 5. Debug Filtering Issues
-When diffs seem wrong:
-```bash
-# See what's being filtered
-ace-git-diff --verbose --dry-run
-
-# Compare with raw git
-git diff HEAD~1 | wc -l
-ace-git-diff HEAD~1 --format raw | wc -l
-```
-
-## Migration Notes
-
-### From ace-context
-```yaml
-# Before
-diffs:
-  - origin/main...HEAD
-
-# After
-diff:
-  ranges: ["origin/main...HEAD"]
-```
-
-### From ace-docs
-```yaml
-# Before
-subject:
-  diff:
-    filters: ["lib/**/*.rb"]
-
-# After
-subject:
-  diff:
-    paths: ["lib/**/*.rb"]
-    # Global excludes applied automatically
-```
-
-### From ace-review
-```yaml
-# Before
+# When you need specific git options
 subject:
   commands:
-    - "git diff origin/main...HEAD"
-
-# After (Option 1: Use diff:)
-subject:
-  diff:
-    type: pr
-
-# After (Option 2: Keep commands:)
-subject:
-  commands:  # Still works!
-    - "git diff origin/main...HEAD"
+    - "git diff --stat origin/main...HEAD"
+    - "git log --oneline -10"
 ```
+
+## Ruby API
+
+### Direct Usage
+
+```ruby
+require 'ace/git_diff'
+
+# Generate diff with options
+diff = Ace::GitDiff.generate(
+  ranges: ["origin/main...HEAD"],
+  paths: ["lib/**/*.rb"],
+  exclude: ["test/**/*"],
+  format: :filtered
+)
+
+puts diff
+```
+
+### From Configuration
+
+```ruby
+# Load from YAML config
+config = YAML.load_file(".ace/diff/config.yml")
+diff = Ace::GitDiff.from_config(config["diff"])
+```
+
+### Integration Helpers
+
+```ruby
+# For ace-docs
+diff = Ace::GitDiff.for_ace_docs(document)
+
+# For ace-review
+diff = Ace::GitDiff.for_ace_review(preset)
+
+# For ace-context
+diff = Ace::GitDiff.for_ace_context(config)
+```
+
+## Complete Command Reference
+
+### Main Command: `ace-git-diff`
+
+Generate git diffs with configurable filtering and formatting.
+
+**Syntax**:
+```bash
+ace-git-diff [range] [options]
+```
+
+**Parameters**:
+- `range`: Git range (e.g., HEAD~5..HEAD, origin/main...HEAD) - optional
+
+**Options**:
+
+| Flag | Short | Type | Description | Default |
+|------|-------|------|-------------|---------|
+| `--format` | `-f` | string | Output format: filtered, raw, compact | filtered |
+| `--type` | `-t` | string | Diff type: staged, working, pr | auto-detect |
+| `--since` | `-s` | string | Date or duration (e.g., "2025-01-01", "7d") | none |
+| `--paths` | `-p` | array | Path patterns to include (glob) | all |
+| `--exclude` | `-e` | array | Path patterns to exclude (glob) | from config |
+| `--config` | `-c` | string | Config file path | .ace/diff/config.yml |
+| `--help` | `-h` | boolean | Show help message | false |
+| `--version` | `-v` | boolean | Show version | false |
+
+**Examples**:
+
+```bash
+# Example 1: Default behavior (smart defaults)
+ace-git-diff
+# Output: Filtered diff of unstaged changes OR branch vs origin/main
+
+# Example 2: Specific range with filtering
+ace-git-diff HEAD~10..HEAD --format filtered
+# Output: Last 10 commits, test files excluded
+
+# Example 3: Raw diff of staged changes
+ace-git-diff --type staged --format raw
+# Output: Unfiltered staged changes including all files
+
+# Example 4: Compact diff for specific paths
+ace-git-diff --paths "lib/**/*.rb" "ace-*/lib/**/*.rb" --format compact
+# Output: LLM-optimized diff of Ruby library files only
+
+# Example 5: Recent changes excluding specific directories
+ace-git-diff --since 3d --exclude "docs/**/*" "test/**/*"
+# Output: Last 3 days of changes, excluding docs and tests
+```
+
+**Exit Codes**:
+- `0`: Success
+- `1`: General error (git command failed, invalid options)
+- `2`: Configuration error (invalid config file)
+
+**See Also**:
+- `git diff` - Underlying git command
+- `ace-context` - Context loading with diffs
+- `ace-review` - Code review with diffs
 
 ## Troubleshooting
 
-### Diffs Include Unwanted Files
-1. Check global config: `cat .ace/diff/config.yml`
-2. Verify patterns: `ace-git-diff --verbose`
-3. Add excludes: Update `exclude_patterns` in config
+### Problem: "No changes to show"
 
-### Diffs Missing Expected Files
-1. Check path filters: Ensure `paths:` patterns match
-2. Verify no over-exclusion: Review `exclude_patterns`
-3. Use `--format raw` to see unfiltered diff
+**Symptom**: ace-git-diff runs but shows no output
 
-### Cache Issues
-1. Clear cache: `rm -rf .cache/ace-git-diff/`
-2. Disable cache: `ace-git-diff --no-cache`
-3. Reduce TTL: `cache_ttl: 60` for 1-minute cache
+**Solution**:
+```bash
+# Check git status
+git status
 
-### Performance Problems
-1. Enable caching: `cache: true` in config
-2. Use path filters: Limit diff scope with `paths:`
-3. Increase cache TTL for stable branches
+# Try raw format to see if filtering is hiding changes
+ace-git-diff --format raw
+
+# Check if you're excluding everything
+ace-git-diff --exclude ""  # Temporarily disable excludes
+```
+
+### Problem: "Command not found: ace-git-diff"
+
+**Symptom**: Shell reports command not found
+
+**Solution**:
+```bash
+# Verify installation
+gem list | grep ace-git-diff
+
+# Install if missing
+gem install ace-git-diff
+
+# Check if gem bin path is in PATH
+gem environment
+
+# Add to PATH if needed (fish shell)
+fish_add_path ~/.local/share/mise/shims
+```
+
+### Problem: Diff includes unwanted test files
+
+**Symptom**: Output shows test files despite configuration
+
+**Solution**:
+```bash
+# Check current config
+cat .ace/diff/config.yml
+
+# Verify exclude patterns are correct (glob syntax)
+# Correct:   "test/**/*"
+# Incorrect: "test/*" (only matches top-level)
+
+# Test pattern matching
+ace-git-diff --exclude "test/**/*" --format filtered
+```
+
+### Problem: Configuration not being used
+
+**Symptom**: Config changes don't take effect
+
+**Solution**:
+```bash
+# Verify config file location
+ls -la .ace/diff/config.yml
+
+# Check if config is valid YAML
+ruby -ryaml -e "YAML.load_file('.ace/diff/config.yml')"
+
+# Explicitly specify config path
+ace-git-diff --config .ace/diff/config.yml
+
+# Check configuration cascade (instance overrides project)
+# If using --exclude flag, it REPLACES config completely
+```
+
+### Problem: Diff too large / slow performance
+
+**Symptom**: Command hangs or produces enormous output
+
+**Solution**:
+```bash
+# Limit output with max_lines in config
+echo "max_lines: 1000" >> .ace/diff/config.yml
+
+# Use more specific path filters
+ace-git-diff --paths "lib/ace/git_diff/**/*.rb"
+
+# Use compact format for large diffs
+ace-git-diff --format compact
+
+# Check if you're diffing against the wrong base
+git log --oneline -20  # Verify your branch structure
+```
+
+## Best Practices
+
+1. **Configure Once, Use Everywhere**: Set up `.ace/diff/config.yml` at project start for consistent behavior across all ACE tools
+
+2. **Use Format Appropriately**:
+   - `filtered`: Default for human review (excludes noise)
+   - `raw`: Debugging and verification (see everything)
+   - `compact`: LLM analysis and summaries (optimized for AI)
+
+3. **Leverage Smart Defaults**: Run `ace-git-diff` without arguments during development - it shows what you need based on git state
+
+4. **Customize Exclude Patterns**: Start with defaults, then tune for your project's specific needs (generated files, build artifacts, etc.)
+
+5. **Complete Override Pattern**: Remember config doesn't merge - if you override `exclude_patterns`, list ALL patterns you want
+
+6. **Integration Over Commands**: Use `diff:` key in ACE tools for consistency; fall back to `commands:` only for special cases
+
+7. **Path Filtering**: Use `--paths` to focus on specific areas rather than generating full diff then filtering manually
+
+## Migration Notes
+
+### Migrating from Direct Git Commands
+
+**From**:
+```bash
+git diff --cached | grep -v "test/" | grep -v ".lock"
+```
+
+**To**:
+```bash
+ace-git-diff --type staged
+# Filtering handled by configuration
+```
+
+### Migrating ace-docs Document Frontmatter
+
+**From**:
+```yaml
+ace-docs:
+  subject:
+    diff:
+      filters: ["lib/**/*.rb"]
+```
+
+**To**:
+```yaml
+ace-docs:
+  subject:
+    diff:
+      paths: ["lib/**/*.rb"]
+      # Inherits global exclude patterns automatically
+```
+
+### Migrating ace-review Presets
+
+**From**:
+```yaml
+pr:
+  subject:
+    commands:
+      - "git diff origin/main...HEAD"
+```
+
+**To**:
+```yaml
+pr:
+  subject:
+    diff:
+      type: pr  # Simpler and consistent
+      # Global exclude patterns applied automatically
+```
+
+### Migrating ace-context Presets
+
+**From**:
+```yaml
+context:
+  diffs:
+    - "origin/main...HEAD"
+```
+
+**To**:
+```yaml
+context:
+  diff:
+    ranges: ["origin/main...HEAD"]
+    # Can now use all ace-git-diff options
+```
+
+## What Makes ace-git-diff Different
+
+### Problem It Solves
+
+**Before ace-git-diff**:
+- Each ACE gem had its own git diff logic (duplication)
+- Hardcoded exclude patterns in source code (no customization)
+- Different filtering behavior across tools (inconsistent)
+- No central place to configure project-wide diff preferences
+
+**After ace-git-diff**:
+- Single source of git diff functionality (DRY)
+- Fully configurable exclude patterns (user control)
+- Consistent filtering across all ACE tools (predictable)
+- Global configuration with cascade (configure once)
+
+### Key Benefits
+
+1. **Consistency**: Same configuration = same results across ace-docs, ace-review, ace-context, and ace-git-commit
+
+2. **User Control**: No hardcoded constants - customize everything in config files
+
+3. **Simplicity**: One gem to maintain, one configuration to learn
+
+4. **Performance**: No caching needed - fast enough for all use cases (<500ms)
+
+5. **Flexibility**: Use `diff:` for consistency or `commands:` for power-user scenarios
