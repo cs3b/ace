@@ -8,7 +8,9 @@ gemspec
 # Use local versions of ace gems during development
 gem "ace-core", path: "../ace-core" if File.exist?("../ace-core")
 gem "ace-context", path: "../ace-context" if File.exist?("../ace-context")
+gem "ace-git-diff", path: "../ace-git-diff" if File.exist?("../ace-git-diff")
 gem "ace-nav", path: "../ace-nav" if File.exist?("../ace-nav")
+gem "ace-test-runner", path: "../ace-test-runner", group: :test if File.exist?("../ace-test-runner")
 gem "ace-test-support", path: "../ace-test-support", group: :test if File.exist?("../ace-test-support")
 
 group :development do
