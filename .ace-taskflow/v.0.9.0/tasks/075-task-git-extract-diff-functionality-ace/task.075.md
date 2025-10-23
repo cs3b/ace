@@ -161,22 +161,20 @@ ace-git-diff --config path/to/config.yml  # Load from config
 
 # Range and time-based
 ace-git-diff HEAD~5..HEAD             # Commit range
-ace-git-diff --since "2025-01-01"    # Date-based
-ace-git-diff --since 7d               # Relative time
+ace-git-diff origin/main...HEAD       # Branch comparison
+ace-git-diff --since "2025-01-01"    # Date-based (absolute)
+ace-git-diff --since 7d               # Relative time (7 days ago)
+ace-git-diff --since "1 week ago"     # Human-friendly time
 
-# Special types
-ace-git-diff --type staged            # Staged changes
-ace-git-diff --type working           # Working directory
-ace-git-diff --type pr                # PR changes (tracking...HEAD)
+# Filtering by path patterns
+ace-git-diff --paths "lib/**/*.rb"    # Include only these patterns
+ace-git-diff --exclude "test/**/*"    # Exclude these patterns
+ace-git-diff origin/main...HEAD --paths "ace-*/lib/**/*.rb"  # Multi-gem
 
-# Filtering
-ace-git-diff --paths "lib/**/*.rb" --exclude "test/**/*"
-ace-git-diff --format raw             # No filtering (bypass config)
-
-# Output formats (diff format only, NO JSON)
-ace-git-diff --format filtered        # Apply exclude patterns (default)
-ace-git-diff --format compact         # LLM-optimized (minimal noise)
-ace-git-diff --format raw             # Unfiltered
+# Output formats (diff or summary)
+ace-git-diff                          # Default: filtered diff output
+ace-git-diff --format diff            # Explicit: filtered diff output
+ace-git-diff --format summary         # LLM-powered markdown summary
 ```
 
 #### Ruby API
@@ -229,7 +227,6 @@ exclude_renames: false      # Include file renames (false = show renames)
 exclude_moves: false        # Include moved files (false = show moves)
 
 # Output defaults
-format: filtered          # Default: filtered (removes excluded patterns)
 max_lines: 10000         # Prevent huge diffs
 ```
 
@@ -238,17 +235,21 @@ max_lines: 10000         # Prevent huge diffs
 ```yaml
 # Simple usage in any ace-* gem configuration
 subject:
-  diff:                   # Just 'diff:', not 'git_diff:'
-    type: pr             # Special type: pr, staged, working
-    paths:               # Optional: additional path filters
+  diff:
+    ranges:              # Explicit git commit ranges
+      - "origin/main...HEAD"
+    paths:               # Include only these patterns (glob)
       - "lib/**/*.rb"
+    since: "7d"          # Or use time-based filtering
+    exclude_patterns:    # Override global excludes (optional)
+      - "tmp/**/*"
 
 # The global config is automatically applied!
 
 # Alternative: Still support raw commands when needed
 subject:
   commands:              # Escape hatch for custom needs
-    - "git diff --name-only HEAD~1"
+    - "git diff origin/main...HEAD -- lib/"
     - "git log --oneline -5"
 ```
 
@@ -288,18 +289,19 @@ pr:
       - "git diff origin/main...HEAD"
       - "git log origin/main..HEAD --oneline"
 
-# After Option 1: Use consistent diff configuration
+# After: Use consistent diff configuration
 pr:
   subject:
-    diff:              # Simple and consistent
-      type: pr
+    diff:
+      ranges: ["origin/main...HEAD"]  # Explicit range
       # Global exclude patterns applied automatically!
 
-# After Option 2: Keep commands for complex needs
+# Alternative: Keep commands for complex needs
 pr:
   subject:
     commands:          # When you need specific git options
       - "git diff --stat origin/main...HEAD"
+      - "git log --oneline -10"
 ```
 
 #### ace-context Migration
@@ -333,8 +335,9 @@ context:
 - [ ] Include comprehensive test coverage
 - [ ] Add example `.ace.example/diff/config.yml` with sensible defaults
 - [ ] Document migration path showing both `diff:` and `commands:` options
-- [ ] Support output formats: raw, filtered, compact (NO JSON, NO caching)
+- [ ] Support output formats: diff (default, filtered), summary (LLM-powered)
 - [ ] CLI smart defaults: unstaged changes OR branch diff with origin/main
+- [ ] NO caching (diff generation is fast <500ms)
 
 ## Implementation Notes
 
