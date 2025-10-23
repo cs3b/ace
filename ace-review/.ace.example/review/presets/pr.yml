@@ -12,6 +12,13 @@ prompt_composition:
 context: "project"
 
 subject:
-  commands:
-    - "git diff origin/main...HEAD"
-    - "git log origin/main..HEAD --oneline"
+  # New: Use diff key for consistent filtering via ace-git-diff
+  # Respects global .ace/diff/config.yml configuration
+  diff:
+    ranges:
+      - "origin/main...HEAD"
+
+  # Alternative: Use commands for custom git operations
+  # commands:
+  #   - "git diff origin/main...HEAD"
+  #   - "git log origin/main..HEAD --oneline"

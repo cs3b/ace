@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.93] - 2025-10-23
+
+### Changed
+
+- **ace-context v0.15.0**: Full integration with ace-git-diff
+  - GitExtractor delegates all diff operations to ace-git-diff
+  - `git_diff()`, `staged_diff()`, `working_diff()` use ace-git-diff for consistent filtering
+  - Example presets updated to show diff: key usage
+  - All 80 tests passing
+
+- **ace-docs v0.6.0**: ChangeDetector integration with ace-git-diff
+  - `generate_git_diff()` now delegates to ace-git-diff
+  - Updated test mocks to work with DiffResult objects
+  - All ChangeDetector tests passing (17 tests, 66 assertions)
+  - Example configs updated with diff filtering notes
+
+- **ace-review v0.11.0**: SubjectExtractor supports new diff: format
+  - Handles new `diff: { ranges: [...], paths: [...] }` configuration
+  - All 8 example presets updated to use diff: key instead of commands:
+  - Maintains backward compatibility with old diff: string format
+  - Delegates to ace-context which now uses ace-git-diff
+
+### Technical
+
+- All three gems now use ace-git-diff for unified diff operations
+- Global `.ace/diff/config.yml` configuration applies across all gems
+- Consistent filtering behavior with user-configurable patterns
+- Complete task 075 integration work
+
+## [0.9.92] - 2025-10-23
+
+### Added
+
+- **ace-git-diff v0.1.0**: NEW - Unified git diff functionality for ACE ecosystem
+  - Extracted and consolidated git diff logic from ace-context and ace-docs
+  - User-configurable exclude patterns via `.ace/diff/config.yml` (no hardcoded constants)
+  - ATOM architecture: 4 atoms, 3 molecules, 2 organisms, 2 models
+  - CLI with smart defaults, `--output` flag for saving to file, and improved help
+  - Configuration cascade: Global → Project → Instance (complete override)
+  - Support for date/time resolution ("7d", "1 week ago", "2025-01-01")
+  - Comprehensive test coverage (65 tests, 100% passing)
+  - Integration helpers for ace-docs, ace-review, ace-context, ace-git-commit
+
+### Changed
+
+- **ace-git-commit v0.11.0**: Integrated with ace-git-diff for unified git command execution
+  - GitExecutor now delegates to ace-git-diff's CommandExecutor for all git operations
+  - Added ace-git-diff (~> 0.1.0) as runtime dependency
+  - Maintains full backward compatibility for all public APIs
+  - Analysis logic (detect_scope, analyze_diff) remains in ace-git-commit
+
 ## [0.9.91] - 2025-10-23
 
 ### Added

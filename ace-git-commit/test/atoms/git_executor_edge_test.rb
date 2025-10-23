@@ -2,66 +2,72 @@
 
 require_relative "../test_helper"
 require "tmpdir"
-require "open3"
 
 class GitExecutorEdgeTest < TestCase
   def setup
     @git = Ace::GitCommit::Atoms::GitExecutor.new
+    @cmd_executor = Ace::GitDiff::Atoms::CommandExecutor
   end
 
   # Most edge cases can be tested with mocks
   def test_handles_detached_head_state
-    Open3.stub :capture2, mock_capture2_success(".git\n") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
 
-    Open3.stub :capture2, mock_capture2_success("/repo/path\n") do
+    @cmd_executor.stub :repo_root, "/repo/path" do
       root = @git.repository_root
       assert_equal "/repo/path", root
     end
   end
 
   def test_handles_empty_repository
-    Open3.stub :capture2, mock_capture2_success(".git\n") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
 
-    Open3.stub :capture2, mock_capture2_success("/repo/path\n") do
+    @cmd_executor.stub :repo_root, "/repo/path" do
       root = @git.repository_root
       assert_equal "/repo/path", root
     end
 
-    Open3.stub :capture2, mock_capture2_success("") do
-      refute @git.has_changes?
+    @cmd_executor.stub :has_unstaged_changes?, false do
+      @cmd_executor.stub :has_staged_changes?, false do
+        refute @git.has_changes?
+      end
     end
   end
 
   def test_handles_repository_with_untracked_files
-    Open3.stub :capture2, mock_capture2_success("?? untracked.txt\n") do
-      assert @git.has_changes?
+    @cmd_executor.stub :has_unstaged_changes?, true do
+      @cmd_executor.stub :has_staged_changes?, false do
+        assert @git.has_changes?
+      end
     end
   end
 
   def test_handles_repository_with_staged_changes
-    Open3.stub :capture2, mock_capture2_success("staged.txt\n") do
+    @cmd_executor.stub :has_staged_changes?, true do
       assert @git.has_staged_changes?
     end
   end
 
   def test_handles_repository_with_modified_files
-    Open3.stub :capture2, mock_capture2_success(" M tracked.txt\n") do
-      assert @git.has_changes?
+    @cmd_executor.stub :has_unstaged_changes?, true do
+      @cmd_executor.stub :has_staged_changes?, false do
+        assert @git.has_changes?
+      end
     end
   end
 
   def test_handles_non_git_directory
-    Open3.stub :capture2, mock_capture2_failure("fatal: not a git repository\n", 128) do
+    @cmd_executor.stub :in_git_repo?, false do
       refute @git.in_repository?
     end
   end
 
   def test_handles_git_command_failure
-    Open3.stub :capture2, mock_capture2_failure("fatal: invalid command\n", 128) do
+    @cmd_executor.stub :execute, { success: false, output: "", error: "fatal: invalid command\n" } do
       assert_raises(Ace::GitCommit::GitError) do
         @git.execute("invalid-command")
       end
@@ -69,56 +75,56 @@ class GitExecutorEdgeTest < TestCase
   end
 
   def test_handles_repository_in_subdirectory
-    Open3.stub :capture2, mock_capture2_success(".git\n") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
 
-    Open3.stub :capture2, mock_capture2_success("/repo\n") do
+    @cmd_executor.stub :repo_root, "/repo" do
       root = @git.repository_root
       assert_equal "/repo", root
     end
   end
 
   def test_handles_bare_repository
-    Open3.stub :capture2, mock_capture2_success(".") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
   end
 
   def test_handles_repository_with_gitignore
-    Open3.stub :capture2, mock_capture2_success(".git\n") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
   end
 
   def test_handles_repository_with_unicode_filenames
-    Open3.stub :capture2, mock_capture2_success("café.txt\n") do
+    @cmd_executor.stub :has_staged_changes?, true do
       assert @git.has_staged_changes?
     end
   end
 
   def test_handles_repository_with_spaces_in_filenames
-    Open3.stub :capture2, mock_capture2_success("file with spaces.txt\n") do
+    @cmd_executor.stub :has_staged_changes?, true do
       assert @git.has_staged_changes?
     end
   end
 
   def test_handles_very_large_repository
-    # Simulate many files in git status
-    many_files = (0...100).map { |i| "?? file#{i}.txt\n" }.join
-    Open3.stub :capture2, mock_capture2_success(many_files) do
-      assert @git.has_changes?
+    @cmd_executor.stub :has_unstaged_changes?, true do
+      @cmd_executor.stub :has_staged_changes?, false do
+        assert @git.has_changes?
+      end
     end
   end
 
   def test_handles_repository_with_submodules
-    Open3.stub :capture2, mock_capture2_success(".git\n") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
   end
 
   def test_handles_worktree_directory
-    Open3.stub :capture2, mock_capture2_success(".git\n") do
+    @cmd_executor.stub :in_git_repo?, true do
       assert @git.in_repository?
     end
   end

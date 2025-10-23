@@ -1,0 +1,64 @@
+# ace-git-diff configuration example
+# Copy to .ace/diff/config.yml in your project root to customize
+
+# Default exclude patterns (user-configurable, not hardcoded!)
+# These patterns are applied when generating diffs across all ACE tools
+exclude_patterns:
+  # Test directories
+  - "test/**/*"
+  - "spec/**/*"
+  - "**/fixtures/**/*"
+
+  # Dependencies and build artifacts
+  - "**/*.lock"
+  - "vendor/**/*"
+  - "node_modules/**/*"
+  - "coverage/**/*"
+  - ".bundle/**/*"
+
+  # Version control
+  - ".git/**/*"
+  - ".gitignore"
+  - ".gitattributes"
+  - ".gitkeep"
+
+  # Temporary and cache files
+  - "tmp/**/*"
+  - ".cache/**/*"
+  - "**/*.bak"
+  - "**/*.swp"
+  - "**/*.swo"
+  - "**/*~"
+
+  # System files
+  - "**/.DS_Store"      # macOS
+  - "**/Thumbs.db"      # Windows
+  - "**/*.lnk"          # Windows shortcuts
+  - "**/.Spotlight-V100"  # macOS
+  - "**/.Trashes"       # macOS
+
+  # IDE and editor files
+  - ".vscode/**/*"
+  - ".idea/**/*"
+  - "**/*.iml"
+  - ".project"
+  - ".classpath"
+  - ".settings/**/*"
+  - "*.sublime-*"
+
+  # Add your project-specific patterns here
+  # - "docs/archive/**/*"
+  # - "**/*.generated.rb"
+
+# Default diff options
+exclude_whitespace: true   # Skip whitespace-only changes
+exclude_renames: false      # Include file renames (false = show renames)
+exclude_moves: false        # Include moved files (false = show moves)
+
+# Output defaults
+max_lines: 10000         # Prevent huge diffs from overwhelming output
+
+# Note: Configuration follows complete override pattern
+# If you set exclude_patterns in a more specific config (project or instance),
+# it will COMPLETELY REPLACE this list, not merge with it.
+# To keep these defaults, explicitly include them in your project config.
