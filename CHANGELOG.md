@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.93] - 2025-10-23
+
+### Changed
+
+- **ace-context v0.15.0**: Full integration with ace-git-diff
+  - GitExtractor delegates all diff operations to ace-git-diff
+  - `git_diff()`, `staged_diff()`, `working_diff()` use ace-git-diff for consistent filtering
+  - Example presets updated to show diff: key usage
+  - All 80 tests passing
+
+- **ace-docs v0.6.0**: ChangeDetector integration with ace-git-diff
+  - `generate_git_diff()` now delegates to ace-git-diff
+  - Updated test mocks to work with DiffResult objects
+  - All ChangeDetector tests passing (17 tests, 66 assertions)
+  - Example configs updated with diff filtering notes
+
+- **ace-review v0.11.0**: SubjectExtractor supports new diff: format
+  - Handles new `diff: { ranges: [...], paths: [...] }` configuration
+  - All 8 example presets updated to use diff: key instead of commands:
+  - Maintains backward compatibility with old diff: string format
+  - Delegates to ace-context which now uses ace-git-diff
+
+### Technical
+
+- All three gems now use ace-git-diff for unified diff operations
+- Global `.ace/diff/config.yml` configuration applies across all gems
+- Consistent filtering behavior with user-configurable patterns
+- Complete task 075 integration work
+
 ## [0.9.92] - 2025-10-23
 
 ### Added
