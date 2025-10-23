@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-10-23
+
 ### Added
 - **task:// Protocol Configuration**: Added `.ace.example/nav/protocols/task.yml` for ace-nav integration
   - Enables `ace-nav task://083` to delegate to `ace-taskflow task 083`
