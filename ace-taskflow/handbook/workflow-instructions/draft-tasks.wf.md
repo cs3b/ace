@@ -89,10 +89,8 @@ ace-taskflow idea done [idea-reference]
 ```
 
 **Note:** `ace-taskflow idea done` automatically:
-- Moves idea file to current release docs/ideas/ directory
-- Adds task number prefix to filename
-- Updates task references
-- Creates git commit
+- Moves idea file to ideas/done/ subdirectory in its current location
+- Updates idea frontmatter with completion status and timestamp
 
 **2.4 Error Handling:**
 
@@ -172,7 +170,7 @@ Provide comprehensive summary including:
 
 - All idea files processed (or failures documented)
 - Draft tasks created with `status: draft`
-- Idea files moved to release docs/ideas/ (or warnings issued)
+- Idea files marked as done and moved to ideas/done/ (or warnings issued)
 - Comprehensive summary report generated
 - Documentation validation passes (or issues reported)
 - Clear next steps provided
