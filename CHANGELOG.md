@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.91] - 2025-10-23
+
+### Added
+
+- **ace-nav v0.10.1**: Enhanced task:// protocol with improved robustness
+  - Implemented task:// protocol for command delegation with unified navigation interface
+  - Added comprehensive test coverage for task protocol integration
+
+### Changed
+
+- **ace-nav v0.10.1**: Code quality improvements
+  - Improved command parsing robustness using Shellwords.split for proper quote handling
+  - Fixed encapsulation by exposing config_loader via public accessor in ProtocolScanner
+
 ## [0.9.90] - 2025-10-23
 
 ### Added
