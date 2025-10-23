@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.085
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 4h
 dependencies: []
 ---
 
@@ -173,6 +173,277 @@ Enable developers to search entire projects regardless of their current working 
 - Edge case handling (symlinks, spaces, special characters)
 - Backward compatibility verification
 - User acceptance criteria for project root detection
+
+## Technical Approach
+
+### Architecture Pattern
+
+The implementation follows the ATOM architecture pattern established in ace-search:
+
+- **Atom** (Path resolution): Create `SearchPathResolver` atom for project root detection
+- **Molecule** (Path handling): Extend existing path-handling molecules or keep logic minimal
+- **Organism** (Unchanged): `UnifiedSearcher` receives resolved search path via options
+- **CLI** (Modified): Parse second positional argument, call resolver, pass to searcher
+
+**Integration with Existing Architecture:**
+- Leverages `Ace::Core::Molecules::ProjectRootFinder` (already a dependency)
+- No changes to search execution logic in `UnifiedSearcher`
+- Minimal changes to `RipgrepExecutor` and `FdExecutor` (path options already supported)
+- CLI layer handles all path resolution before delegating to organisms
+
+**Impact on System Design:**
+- Single responsibility: path resolution separated from search execution
+- Testable: path resolution can be unit tested independently
+- Backward compatible: default behavior change only, all options still work
+- Configuration-aware: respects `PROJECT_ROOT_PATH` env var
+
+### Technology Stack
+
+**Libraries/Frameworks:**
+- `Ace::Core::Molecules::ProjectRootFinder` (existing dependency via ace-core ~> 0.9)
+- Ruby stdlib: `File`, `Dir`, `Pathname` for path operations
+- No new external dependencies required
+
+**Version Compatibility:**
+- ace-core ~> 0.9 (already in gemspec)
+- Ruby >= 2.7.0 (already required)
+
+**Performance Implications:**
+- `ProjectRootFinder` uses caching, negligible overhead
+- Path resolution happens once before search execution
+- No impact on search performance itself
+
+**Security Considerations:**
+- Path validation to prevent directory traversal attacks
+- Respect file system permissions (handled by ripgrep/fd)
+- No execution of user-provided paths, only read access
+
+### Implementation Strategy
+
+**Step-by-step Approach:**
+1. Create `SearchPathResolver` atom with 4-step resolution logic
+2. Modify CLI to parse second positional argument
+3. Integrate resolver in CLI before searcher invocation
+4. Pass resolved path to `UnifiedSearcher` via `options[:search_path]`
+5. Update executors to use `options[:search_path]` if provided
+6. Add integration tests for all path scenarios
+7. Update documentation and usage examples
+
+**Rollback Considerations:**
+- Changes are additive (new atom, CLI modifications)
+- Can revert by removing atom and CLI changes
+- No database or state changes to roll back
+- Feature flag not needed (behavioral change is the goal)
+
+**Testing Strategy:**
+- Unit tests for `SearchPathResolver` (all 4 resolution steps)
+- Integration tests for CLI with various path arguments
+- Backward compatibility tests (existing usage still works)
+- Edge case tests (symlinks, spaces, non-existent paths)
+
+**Performance Monitoring:**
+- Benchmark path resolution overhead (<1ms expected)
+- Verify search performance unchanged
+- Monitor for regressions in CI
+
+## File Modifications
+
+### Create
+
+- `ace-search/lib/ace/search/atoms/search_path_resolver.rb`
+  - Purpose: Resolve search path using 4-step priority algorithm
+  - Key components:
+    - `resolve(explicit_path = nil)` - Main resolution method
+    - 4-step priority: explicit → env → project_root → current_dir
+    - Path validation and error handling
+  - Dependencies: `Ace::Core::Molecules::ProjectRootFinder`
+
+- `ace-search/test/atoms/search_path_resolver_test.rb`
+  - Purpose: Unit tests for SearchPathResolver
+  - Key components:
+    - Test each resolution step independently
+    - Test priority ordering
+    - Test path validation
+    - Test edge cases (symlinks, spaces, etc.)
+  - Dependencies: test_helper, SearchPathResolver
+
+- `.ace-taskflow/v.0.9.0/tasks/085-task-search-ace-search-should-default-sear/ux/usage.md`
+  - Purpose: Document new CLI usage patterns for user reference
+  - Key components:
+    - Command syntax examples
+    - Search path argument usage
+    - Common scenarios with explicit paths
+    - Migration from current behavior
+  - Dependencies: None (documentation)
+
+### Modify
+
+- `ace-search/exe/ace-search`
+  - Changes: Parse second positional argument as search_path
+  - Current (line 186): `pattern = ARGV.join(" ")`
+  - New logic:
+    ```ruby
+    # Parse positional arguments: pattern [search_path]
+    pattern = ARGV.shift
+    search_path = ARGV.shift # May be nil
+
+    # Resolve search path using SearchPathResolver
+    resolved_path = Ace::Search::Atoms::SearchPathResolver.resolve(search_path)
+    options[:search_path] = resolved_path
+    ```
+  - Impact: Changes how ARGV is parsed, adds path resolution before search
+  - Integration points: Calls new SearchPathResolver atom
+
+- `ace-search/lib/ace/search/atoms/ripgrep_executor.rb` (lines 112-118)
+  - Changes: Use `options[:search_path]` instead of hardcoded `["."]`
+  - Current:
+    ```ruby
+    paths = if options[:search_path]
+      [options[:search_path]]
+    elsif options[:paths]
+      options[:paths]
+    else
+      ["."]
+    end
+    ```
+  - New: Keep same logic, but default will come from CLI (already resolved)
+  - Impact: No functional change, but receives resolved path from CLI
+  - Integration points: Receives `options[:search_path]` from UnifiedSearcher
+
+- `ace-search/lib/ace/search/atoms/fd_executor.rb` (similar changes)
+  - Changes: Ensure it uses `options[:search_path]` consistently
+  - Impact: Same pattern as ripgrep_executor
+  - Integration points: Receives `options[:search_path]` from UnifiedSearcher
+
+- `ace-search/test/integration/cli_integration_test.rb`
+  - Changes: Add tests for search path argument
+  - New test cases:
+    - `test_default_searches_project_root`
+    - `test_explicit_path_argument_current_dir`
+    - `test_explicit_path_argument_specific_dir`
+    - `test_env_variable_project_root_path`
+    - `test_fallback_to_current_dir_when_no_project`
+  - Impact: Increases test coverage for new functionality
+  - Integration points: Tests exe/ace-search with various arguments
+
+- `ace-search/README.md`
+  - Changes: Update usage examples to show optional search path
+  - Impact: User documentation reflects new capability
+  - Integration points: None (documentation)
+
+- `ace-search/CHANGELOG.md`
+  - Changes: Add entry for this feature under next version
+  - Impact: Track feature addition
+  - Integration points: None (documentation)
+
+### Delete
+
+None - this is an additive feature with no obsolete code.
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze current path handling in ripgrep_executor and fd_executor
+  - Verify current `:search_path` option support
+  - Identify any edge cases in path handling
+  - Document current behavior for comparison
+
+* [ ] Research path resolution edge cases
+  - How should relative paths be resolved? (from cwd)
+  - What happens with symlinks? (follow by default)
+  - How to handle paths with spaces? (proper escaping)
+  - What about non-existent paths? (pass to rg/fd, they handle it)
+
+* [ ] Design SearchPathResolver API
+  - Input: `explicit_path` (optional string)
+  - Output: resolved absolute path (string)
+  - Error handling: return current dir on failures, not exceptions
+  - Caching: leverage ProjectRootFinder's built-in caching
+
+### Execution Steps
+
+- [ ] Create SearchPathResolver atom with 4-step resolution logic
+  > TEST: Path Resolution Priority
+  > Type: Unit Test
+  > Assert: Resolver follows priority: explicit → env → project_root → current_dir
+  > Command: bundle exec ruby -Itest test/atoms/search_path_resolver_test.rb
+
+- [ ] Implement unit tests for SearchPathResolver
+  - Test explicit path (absolute and relative)
+  - Test PROJECT_ROOT_PATH env variable
+  - Test project root detection via ProjectRootFinder
+  - Test fallback to current directory
+  - Test priority ordering (explicit overrides env, etc.)
+  - Test edge cases (symlinks, spaces, non-existent paths)
+  > TEST: SearchPathResolver Unit Tests
+  > Type: Unit Test Suite
+  > Assert: All path resolution scenarios pass
+  > Command: bundle exec ruby -Itest test/atoms/search_path_resolver_test.rb
+
+- [ ] Modify exe/ace-search to parse second positional argument
+  - Change ARGV parsing from `ARGV.join(" ")` to `ARGV.shift` for pattern
+  - Extract second argument as `search_path`
+  - Call `SearchPathResolver.resolve(search_path)`
+  - Store result in `options[:search_path]`
+  > TEST: CLI Argument Parsing
+  > Type: Integration Test
+  > Assert: CLI correctly parses pattern and optional search_path
+  > Command: bundle exec ruby -Itest test/integration/cli_integration_test.rb -n test_explicit_path_argument
+
+- [ ] Verify ripgrep_executor and fd_executor use search_path option
+  - Confirm existing `:search_path` option is respected
+  - No code changes needed if already supported
+  - Add comments if clarification needed
+  > TEST: Executor Path Usage
+  > Type: Code Review
+  > Assert: Both executors properly use options[:search_path]
+  > Command: grep -A 10 "search_path" ace-search/lib/ace/search/atoms/*_executor.rb
+
+- [ ] Add integration tests for CLI with search path argument
+  - Test default (no arg) searches project root
+  - Test explicit `./` searches current directory
+  - Test explicit `src/` searches specific subdirectory
+  - Test `PROJECT_ROOT_PATH` env variable
+  - Test fallback when no project root found
+  > TEST: CLI Search Path Integration
+  > Type: Integration Test Suite
+  > Assert: All search path scenarios work end-to-end
+  > Command: bundle exec ruby -Itest test/integration/cli_integration_test.rb
+
+- [ ] Create UX/usage documentation
+  - Document command syntax with optional search_path
+  - Provide examples for common scenarios
+  - Explain migration from current behavior
+  - Include troubleshooting tips
+  > TEST: Documentation Completeness
+  > Type: Manual Review
+  > Assert: Usage doc covers all CLI patterns from behavioral spec
+  > Command: cat .ace-taskflow/v.0.9.0/tasks/085-*/ux/usage.md
+
+- [ ] Run full test suite to verify backward compatibility
+  > TEST: Backward Compatibility
+  > Type: Full Test Suite
+  > Assert: All existing tests pass without modification
+  > Command: cd ace-search && bundle exec rake test
+
+- [ ] Update README and CHANGELOG
+  - Add search path feature to README usage section
+  - Document in CHANGELOG under [Unreleased]
+  > TEST: Documentation Updated
+  > Type: Manual Review
+  > Assert: README and CHANGELOG reflect new feature
+  > Command: git diff ace-search/README.md ace-search/CHANGELOG.md
+
+## Acceptance Criteria
+
+- [ ] **Default Project Root**: `ace-search "pattern"` from subdirectory searches entire project
+- [ ] **Explicit Path Override**: `ace-search "pattern" ./` searches current directory only
+- [ ] **Env Variable Support**: `PROJECT_ROOT_PATH=<path> ace-search "pattern"` uses env path
+- [ ] **Fallback Gracefully**: Searches current dir when no project root detected
+- [ ] **All Flags Work**: Existing `--glob`, `--include`, `--exclude` flags function correctly
+- [ ] **Tests Pass**: All new and existing tests pass
+- [ ] **Documentation Complete**: README, CHANGELOG, and UX docs updated
 
 ## Out of Scope
 
