@@ -5,6 +5,19 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2025-10-23
+
+### Changed
+- Integrated with ace-git-diff for unified diff operations
+- SubjectExtractor now handles new diff: format with ranges
+- All example presets updated to use diff: key instead of commands:
+- Added ace-git-diff (~> 0.1.0) as runtime dependency
+- Delegates to ace-context which now uses ace-git-diff
+
+### Technical
+- Maintains backward compatibility with old diff: string format
+- Supports both diff: { ranges: [...] } and legacy diff: "range" formats
+
 ## [0.10.0] - 2025-10-14
 
 ### Added
