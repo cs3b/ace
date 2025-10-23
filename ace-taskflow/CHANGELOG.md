@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2025-10-24
+
 ### Fixed
 
 - **Task File Corruption Prevention**: Fixed incomplete ace-support-markdown integration in task_loader.rb
