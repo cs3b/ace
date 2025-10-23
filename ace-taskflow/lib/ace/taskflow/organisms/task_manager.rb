@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "ace/support/markdown"
 require_relative "../molecules/task_loader"
 require_relative "../molecules/task_filter"
 require_relative "../molecules/release_resolver"
@@ -104,7 +105,12 @@ module Ace
 
             # Generate task content
             content = generate_task_template(task_id, title, metadata)
-            File.write(task_file, content)
+            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              task_file,
+              content,
+              backup: true,
+              validate: true
+            )
 
             {
               success: true,
@@ -462,7 +468,12 @@ module Ace
         def update_task_id_in_file(file_path, new_id)
           content = File.read(file_path)
           updated = content.sub(/^id:\s*.+$/m, "id: #{new_id}")
-          File.write(file_path, updated)
+          Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            file_path,
+            updated,
+            backup: true,
+            validate: true
+          )
         end
 
         def task_id_exists?(context_path, task_id)

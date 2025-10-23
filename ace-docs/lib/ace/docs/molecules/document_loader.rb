@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/frontmatter_parser"
+require "ace/support/markdown"
 require_relative "../models/document"
 
 module Ace
@@ -16,15 +16,15 @@ module Ace
           return nil unless path.end_with?(".md")
 
           content = File.read(path)
-          parsed = Atoms::FrontmatterParser.parse(content)
+          doc = Ace::Support::Markdown::Models::MarkdownDocument.parse(content, file_path: path)
 
           # Only create document if it has frontmatter
-          return nil if parsed[:frontmatter].empty?
+          return nil if doc.frontmatter.empty?
 
           Models::Document.new(
             path: path,
-            frontmatter: parsed[:frontmatter],
-            content: parsed[:content]
+            frontmatter: doc.frontmatter,
+            content: doc.raw_body
           )
         rescue StandardError => e
           warn "Error loading document #{path}: #{e.message}"
@@ -68,7 +68,10 @@ module Ace
           return false unless path.end_with?(".md")
 
           content = File.read(path)
-          Atoms::FrontmatterParser.has_valid_frontmatter?(content)
+          doc = Ace::Support::Markdown::Models::MarkdownDocument.parse(content)
+
+          # Check if has doc-type field (ace-docs requirement)
+          !doc.frontmatter.empty? && doc.frontmatter["doc-type"]
         rescue StandardError
           false
         end

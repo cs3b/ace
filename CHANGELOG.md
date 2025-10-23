@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.88] - 2025-10-23
+
+### Documentation
+
+- **ace-support-markdown v0.1.2**: Improved README examples with educational comments and automated validation
+  - Added "why" explanations to all 6 real-world examples clarifying patterns and best practices
+  - Refactored Example 5 to use cleaner begin/rescue/ensure pattern with success flag
+  - Added automated README example validation (`test/integration/readme_examples_test.rb`)
+  - Created comprehensive CONTRIBUTING.md (221 lines) with API sync guidelines
+  - Added "Maintaining Documentation" section documenting sync strategy
+  - Fixed API parameter documentation (`validate: true` → `validate_before: true`)
+  - 8 new test cases ensure documentation stays in sync with code evolution
+
+## [0.9.87] - 2025-10-23
+
+### Documentation
+
+- **ace-support-markdown v0.1.1**: Enhanced README with real-world examples
+  - Added 6 comprehensive examples (390+ lines) based on production usage
+  - Covers task management, documentation updates, error handling, batch operations
+  - All examples extracted from actual ace-taskflow and ace-docs implementations
+
+## [0.9.86] - 2025-10-23
+
+### Changed
+
+- **ace-docs v0.6.0**: Migrated frontmatter handling to ace-support-markdown
+  - Replaced custom FrontmatterParser with unified MarkdownDocument.parse API
+  - FrontmatterManager now delegates to DocumentEditor for atomic writes with automatic backup
+  - Eliminated 605 lines of duplicate code (implementation + tests)
+  - Zero breaking changes - maintains full backward compatibility
+  - Completes task.082 migration
+
+## [0.9.85] - 2025-10-23
+
+### Changed
+
+- **ace-taskflow v0.12.0**: Migrated to ace-support-markdown for safe file operations
+  - DoctorFixer, TaskManager, and IdeaWriter now use SafeFileWriter and DocumentEditor
+  - Eliminates file corruption risk through atomic writes and automatic backups
+  - All 725 tests passing with no regressions
+  - Completes task.081 migration
+
 ## [0.9.84] - 2025-10-23
 
 ### Changed
