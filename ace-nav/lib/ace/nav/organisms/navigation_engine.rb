@@ -144,7 +144,7 @@ module Ace
         # Access the config_loader from protocol_scanner
         # Reuses the same ConfigLoader instance across all protocol operations
         def config_loader
-          @protocol_scanner.instance_variable_get(:@config_loader)
+          @protocol_scanner.config_loader
         end
       end
     end
