@@ -92,7 +92,7 @@ module Ace
           def self.create_backup(file_path)
             raise FileOperationError, "File not found: #{file_path}" unless File.exist?(file_path)
 
-            timestamp = Time.now.strftime("%Y%m%d_%H%M%S")
+            timestamp = Time.now.strftime("%Y%m%d_%H%M%S_%L")
             backup_path = "#{file_path}.backup.#{timestamp}"
 
             FileUtils.cp(file_path, backup_path)
