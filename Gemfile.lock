@@ -58,7 +58,7 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.10.0)
+    ace-nav (0.10.1)
       ace-core (~> 0.1)
 
 PATH
