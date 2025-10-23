@@ -5,14 +5,14 @@ require_relative "lib/ace/support/markdown/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-support-markdown"
   spec.version = Ace::Support::Markdown::VERSION
-  spec.authors = ["ACE Team"]
-  spec.email = ["ace@example.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Safe markdown editing with frontmatter support for ACE gems"
   spec.description = "Provides safe, atomic markdown file operations with frontmatter extraction, section editing, and validation. Prevents file corruption through backup/rollback mechanisms."
-  spec.homepage = "https://github.com/your-org/ace-support-markdown"
+  spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
