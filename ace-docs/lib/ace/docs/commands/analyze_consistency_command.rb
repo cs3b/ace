@@ -35,22 +35,17 @@ module Ace
             # Run analysis
             report = analyzer.analyze(pattern)
 
-            # Check if we have documents
-            if report.document_count == 0
-              puts "No documents found to analyze.".yellow
-              puts "Ensure documents have ace-docs frontmatter." if pattern
+            # The report is now just a string from the LLM
+            # Check if it's nil or empty
+            if report.nil? || report.to_s.strip.empty?
+              puts "No analysis results returned.".yellow
               return 1
             end
 
-            # Display or save report
-            handle_output(report)
+            # Display the report (it's already a string from LLM)
+            puts report
 
-            # Return success/failure based on issues found
-            if @options[:strict] && report.has_issues?
-              puts "\n⚠️  Consistency issues found (strict mode)".yellow
-              return 1
-            end
-
+            # Simple completion message
             puts "\n✅ Analysis complete".green
             0
           rescue StandardError => e
@@ -115,61 +110,8 @@ module Ace
           areas.empty? ? ['all types'] : areas
         end
 
-        # Handle output of the report
-        def handle_output(report)
-          # Format based on output option
-          case @options[:output]
-          when 'json'
-            puts report.to_json
-          when 'text', 'markdown'
-            display_markdown_report(report)
-          else
-            puts "Unknown output format: #{@options[:output]}".red
-            display_markdown_report(report)
-          end
-        end
-
-        # Display markdown report with colors
-        def display_markdown_report(report)
-          lines = report.to_markdown.split("\n")
-
-          lines.each do |line|
-            case line
-            when /^#\s+/
-              puts line.cyan.bold
-            when /^##\s+/
-              puts line.yellow.bold
-            when /^###\s+/
-              puts line.white.bold
-            when /^\*\*Recommendation\*\*:/
-              puts line.green
-            when /^Generated:|^Documents analyzed:|^Issues found:/
-              puts line.light_black
-            when /^✅/
-              puts line.green
-            when /^⚠️/
-              puts line.yellow
-            when /^```/
-              puts line.light_black
-            else
-              puts line
-            end
-          end
-
-          # Show summary
-          puts "\n" + "="*60
-          puts "Summary:".cyan.bold
-          puts "  Documents analyzed: #{report.document_count}"
-          puts "  Total issues found: #{report.total_issues}"
-
-          if report.total_issues > 0
-            puts "  Issue breakdown:".yellow
-            puts "    - Terminology conflicts: #{report.terminology_conflicts.size}" if report.terminology_conflicts.any?
-            puts "    - Duplicate content: #{report.duplicate_content.size}" if report.duplicate_content.any?
-            puts "    - Version inconsistencies: #{report.version_inconsistencies.size}" if report.version_inconsistencies.any?
-            puts "    - Consolidation opportunities: #{report.consolidation_opportunities.size}" if report.consolidation_opportunities.any?
-          end
-        end
+        # Removed handle_output and display_markdown_report methods
+        # The report is now just a string from LLM that we display directly
       end
     end
   end

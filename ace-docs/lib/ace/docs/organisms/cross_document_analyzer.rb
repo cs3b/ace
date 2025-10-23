@@ -36,14 +36,13 @@ module Ace
           documents = load_documents(pattern)
 
           if documents.empty?
-            return Models::ConsistencyReport.new(
-              document_count: 0,
-              generated_at: Time.now
-            )
+            puts "No documents found to analyze.".yellow
+            return nil
           end
 
-          # Create session directory for analysis
-          cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
+          # Get git root for proper cache directory
+          git_root = `git rev-parse --show-toplevel`.strip
+          cache_dir = File.join(git_root, Ace::Docs.config["cache_dir"] || ".cache/ace-docs")
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
           session_dir = File.join(cache_dir, "analyze-consistency-#{timestamp}")
           FileUtils.mkdir_p(session_dir)
@@ -74,20 +73,16 @@ module Ace
           puts "This may take a few minutes for large document sets..." if documents.count > 10
           response = execute_llm_query(prompts, session_dir)
 
-          # Response is already saved to llm-response.json by ace-llm's output option
+          # Response is already saved to report.md by ace-llm's output option
 
-          # Parse response into report
-          puts "Parsing analysis results..." if @options[:verbose]
-          report = Models::ConsistencyReport.parse(response, documents.count)
-
-          # Save report and metadata
-          save_report(report, session_dir)
+          # Save metadata for reference
           save_metadata(documents, pattern, session_dir)
 
           # Display session info
           puts "\nAnalysis saved to: #{session_dir}".green
 
-          report
+          # Return the response directly (no parsing needed)
+          response
         end
 
         private
@@ -138,7 +133,7 @@ module Ace
 
           begin
             # Determine output path for saving response
-            response_path = File.join(session_dir, "llm-response.json")
+            report_path = File.join(session_dir, "report.md")
 
             # Call LLM via QueryInterface with native output saving
             result = Ace::LLM::QueryInterface.query(
@@ -147,8 +142,8 @@ module Ace
               system: prompts[:system],
               temperature: 0.3,  # Lower temperature for more consistent analysis
               timeout: timeout,
-              output: response_path,  # Save response immediately
-              format: "json",  # Save as JSON format
+              output: report_path,  # Save response directly as report
+              format: "text",  # Save as text/markdown format
               force: true  # Overwrite if exists
             )
 
@@ -157,7 +152,7 @@ module Ace
               raise "LLM query failed to return text content"
             end
 
-            # Return the response content
+            # Return the response content (already saved by ace-llm)
             result[:text]
           rescue StandardError => e
             raise "#{e.message}"
