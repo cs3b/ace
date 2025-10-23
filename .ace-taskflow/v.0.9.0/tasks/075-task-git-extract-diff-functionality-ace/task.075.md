@@ -4,7 +4,164 @@ status: pending
 priority: medium
 estimate: 12-16h
 dependencies: []
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+
+- [ ] **ace-git-commit dependency**: Should ace-git-diff extract/use ace-git-commit's DiffAnalyzer functionality?
+  - **Research conducted**: Found ace-git-commit/lib/ace/git_commit/molecules/diff_analyzer.rb with git diff logic
+  - **Current functionality**: DiffAnalyzer has methods like `get_staged_diff`, `get_all_diff`, `analyze_diff` (line counts), `detect_scope`
+  - **Similar to**: ace-context's GitExtractor and ace-docs' ChangeDetector
+  - **Suggested approach**: Extract common functionality to ace-git-diff, have ace-git-commit depend on it
+  - **Why needs human input**: Decision on whether to refactor ace-git-commit or keep separate for now
+  - **Impact**: If yes, ace-git-commit becomes a dependent gem (increases scope)
+
+- [ ] **Backward compatibility strategy**: How do we handle migration for existing gems?
+  - **Research conducted**: Reviewed current usage in ace-docs, ace-review, ace-context
+  - **Current patterns**:
+    - ace-docs: Uses `subject.diff.filters` in frontmatter
+    - ace-review: Uses `subject.commands` with raw git diff commands
+    - ace-context: Uses `diffs: ["range"]` array format
+  - **Suggested approach**: Dual support - keep old keys working, add new `diff:` key
+  - **Migration timeline options**:
+    1. Immediate (v0.1.0): Support both, deprecation warnings on old keys
+    2. Gradual (v0.1.0-0.2.0): Support both, no warnings until v0.2.0
+    3. Long-term (v0.1.0-1.0.0): Support both until v1.0.0
+  - **Why needs human input**: Choose deprecation timeline and whether to show warnings
+  - **Impact**: Affects user experience and adoption friction
+
+- [ ] **Hardcoded patterns migration**: What's the process for users with custom exclusions today?
+  - **Research conducted**: Found hardcoded DEFAULT_EXCLUDE_PATTERNS in ace-docs/atoms/diff_filterer.rb
+  - **Current hardcoded patterns**: test/, spec/, coverage/, tmp/, vendor/, node_modules/, .git/, *.lock files
+  - **User pain point**: No way to customize these patterns currently
+  - **Suggested approach**:
+    1. Ship with same defaults in `.ace.example/diff/config.yml`
+    2. Document how to override in project `.ace/diff/config.yml`
+    3. Add `--no-default-excludes` CLI flag for power users
+  - **Why needs human input**: Should defaults be more or less aggressive than current hardcoded ones?
+  - **Impact**: Could surprise users if defaults change behavior
+
+### [MEDIUM] Integration Questions
+
+- [ ] **ace-git-commit DiffAnalyzer integration**: Keep separate or consolidate?
+  - **Research conducted**: ace-git-commit has overlap but different focus (commit message generation)
+  - **Overlap**: Both execute git diff commands, parse output
+  - **Difference**: DiffAnalyzer focuses on commit context (scope detection), ace-git-diff focuses on filtering/caching
+  - **Option 1**: Make ace-git-commit depend on ace-git-diff for basic diff operations
+  - **Option 2**: Keep separate, accept some duplication for different use cases
+  - **Option 3**: Extract only git command execution to ace-git-diff, keep analysis separate
+  - **Why needs human input**: Architecture decision on gem boundaries
+  - **Default assumption**: Option 2 (keep separate initially) to reduce risk
+
+- [ ] **Configuration cascade precedence**: Should instance options completely override or merge with global config?
+  - **Research conducted**: ace-core supports configuration cascade with nearest-wins
+  - **Current pattern**: Gems use `Ace::Core.config.get('ace', 'gem_name')`
+  - **Question**: If global config has `exclude_patterns: [A, B]` and instance has `exclude_patterns: [C]`, should result be:
+    1. `[C]` (complete override)
+    2. `[A, B, C]` (merge)
+    3. Configurable per-key (some merge, some override)
+  - **Similar patterns**: ace-lint merges some configs, overrides others
+  - **Why needs human input**: UX decision on configuration behavior
+  - **Default assumption**: Complete override (simpler mental model, explicit control)
+
+- [ ] **Cache invalidation strategy**: What should invalidate cached diffs?
+  - **Research conducted**: Current implementations don't cache, regenerate each time
+  - **Invalidation triggers to consider**:
+    1. New commits (check `git rev-parse HEAD`)
+    2. Staged changes (check `git diff --cached` output)
+    3. TTL expiration (time-based, default 5 minutes)
+    4. Config changes (harder to detect)
+  - **Performance impact**: Diffs can be slow for large repos (>1s for 10k+ files)
+  - **Suggested approach**: Invalidate on HEAD change + TTL, warn if config changed
+  - **Why needs human input**: Balance between performance and correctness
+  - **Default assumption**: Invalidate on HEAD change + 5 minute TTL (documented)
+
+### [LOW] Enhancement Questions
+
+- [ ] **Output format options**: What formats beyond raw/filtered/analyzed/json should we support?
+  - **Research conducted**: Current implementations only output raw diff text
+  - **Potential formats**:
+    - `raw`: Unfiltered git diff
+    - `filtered`: With exclude patterns applied
+    - `analyzed`: With statistics (files, lines changed)
+    - `json`: Structured data
+    - `compact`: LLM-focused (seen in ace-docs CompactDiffPrompt)
+    - `stat`: Just file names and line counts (like `git diff --stat`)
+  - **Why needs human input**: Which formats are valuable enough to implement in v0.1.0?
+  - **Default assumption**: raw, filtered, analyzed, json for v0.1.0; defer compact/stat
+
+- [ ] **CLI interactive mode behavior**: What should ace-git-diff prompt for when run with no arguments?
+  - **Research conducted**: Other ace-* gems like ace-review show preset selection
+  - **Potential prompts**:
+    1. Diff type (staged, working, pr, range)
+    2. Output format
+    3. Filter options
+  - **Alternative**: Show usage help instead
+  - **Why needs human input**: UX preference for CLI discoverability
+  - **Default assumption**: Show usage help with examples (simpler, less surprising)
+
+## Review Findings
+
+### Research Summary
+
+**Existing Git Diff Implementations Found:**
+1. **ace-context/lib/ace/context/atoms/git_extractor.rb** (110 lines)
+   - Pure functions for git operations
+   - Safe command execution with Open3.capture3
+   - Methods: git_diff, git_log, staged_diff, working_diff, changed_files
+   - Good extraction candidate
+
+2. **ace-docs/lib/ace/docs/atoms/diff_filterer.rb** (131 lines)
+   - **Contains hardcoded DEFAULT_EXCLUDE_PATTERNS** (lines 10-23)
+   - Pattern filtering and diff parsing
+   - Statistics counting (additions, deletions, files)
+   - Good extraction candidate
+
+3. **ace-docs/lib/ace/docs/molecules/change_detector.rb** (367 lines)
+   - Complex date-to-commit resolution
+   - Multi-subject diff generation
+   - Path filtering and rename detection
+   - Partial extraction candidate (some logic is docs-specific)
+
+4. **ace-git-commit/lib/ace/git_commit/molecules/diff_analyzer.rb** (111 lines)
+   - **Not mentioned in task but has overlap**
+   - Diff analysis for commit messages
+   - Scope detection logic
+   - Should be evaluated for consolidation
+
+5. **ace-review/lib/ace/review/molecules/subject_extractor.rb** (103 lines)
+   - Already delegates to ace-context for diffs
+   - Good pattern for other gems to follow
+   - Minimal changes needed
+
+**Key Findings:**
+- ✅ Task correctly identifies main extraction targets (GitExtractor, ChangeDetector, DiffFilterer)
+- ⚠️ Task doesn't mention ace-git-commit's DiffAnalyzer (potential overlap)
+- ✅ Hardcoded patterns problem accurately described in task
+- ✅ Configuration approach (`.ace/diff/config.yml`) aligns with ace-core patterns
+- ✅ File modification list is comprehensive
+
+### Completeness Analysis
+
+**Well-Specified:**
+- ✅ Clear value proposition (consistency through global config)
+- ✅ ATOM architecture structure defined
+- ✅ Configuration examples provided
+- ✅ Migration path documented
+- ✅ File creation list is detailed
+- ✅ Test strategy outlined
+
+**Needs Clarification:**
+- ⚠️ ace-git-commit overlap not addressed
+- ⚠️ Backward compatibility timeline undefined
+- ⚠️ Cache invalidation strategy needs detail
+- ⚠️ Configuration merge vs override behavior unspecified
+
+**Implementation Readiness:**
+With the review questions answered, this task is **ready for implementation** with reasonable defaults. The core architecture is sound and extraction targets are clear.
 
 # Extract git diff functionality to ace-git-diff gem
 
