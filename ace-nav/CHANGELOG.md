@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-10-23
+
 ### Added
 - **task:// Protocol Support**: New command delegation protocol for navigating tasks via ace-taskflow
   - Delegates `task://` URIs to `ace-taskflow task` commands
@@ -16,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `protocol_type` method to `ConfigLoader` for distinguishing cmd vs file protocols
   - Added `cmd_protocol?` method to `NavigationEngine`
   - Added `--path` option to CLI for consistency with ace-taskflow
+
+### Changed
+- **CLI Composability**: Refactored CLI to return exit codes instead of calling exit() directly
+  - Improves testability and composability of CLI methods
+  - Entry point now handles exit with returned codes
+- **Performance Optimization**: ConfigLoader now reused from ProtocolScanner to avoid creating new instances
 
 ## [0.9.3] - 2025-10-08
 
