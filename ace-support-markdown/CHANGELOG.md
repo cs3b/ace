@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-10-23
+
+### Documentation
+
+- **Enhanced README with comprehensive real-world examples** (390+ lines)
+  - Example 1: Task management system (auto-fixing with backup/validation)
+  - Example 2: Documentation updates (bulk operations, nested frontmatter)
+  - Example 3: Complex multi-section operations (complete task workflow)
+  - Example 4: Safe file writing with custom validation
+  - Example 5: Error handling and recovery (rollback, retry logic)
+  - Example 6: Batch operations with progress tracking
+  - All examples based on actual ace-taskflow and ace-docs implementations
+  - Demonstrates error handling patterns, validation rules, and safety features
+
 ## [0.1.0] - 2025-10-18
 
 ### Added
