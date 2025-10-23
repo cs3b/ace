@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2025-10-23
+
+### Added
+- Implement task:// protocol for command delegation with unified navigation interface
+
+### Changed
+- Improve command parsing robustness using Shellwords.split for proper quote handling
+- Fix encapsulation by exposing config_loader via public accessor in ProtocolScanner
+
 ## [0.10.0] - 2025-10-23
 
 ### Added
