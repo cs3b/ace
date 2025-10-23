@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-10-23
+
+### Changed
+- Integrated with ace-git-diff for unified diff operations
+- ChangeDetector now delegates generate_git_diff() to ace-git-diff
+- Added ace-git-diff (~> 0.1.0) as runtime dependency
+- Example configs updated with diff filtering notes
+
+### Fixed
+- Updated test mocks to work with ace-git-diff DiffResult objects
+- All ChangeDetector tests passing (17 tests, 66 assertions)
+
 ## [0.5.3] - 2025-10-23
 
 ### Fixed
