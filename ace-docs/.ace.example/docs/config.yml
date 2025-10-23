@@ -2,6 +2,10 @@
 # This file uses FLAT structure for tool-specific config
 # as per ace-gems.g.md standards
 # Place this file at .ace/docs/config.yml in your project
+#
+# Note: Diff filtering is now handled by ace-git-diff
+# Configure global diff settings at .ace/diff/config.yml
+# Individual documents can specify paths/filters in their frontmatter
 
 # Cache directory for analysis reports
 cache_dir: .cache/ace-docs

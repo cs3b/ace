@@ -4,11 +4,13 @@ require "open3"
 require "date"
 require "fileutils"
 require "yaml"
+require "ace/git_diff"
 
 module Ace
   module Docs
     module Molecules
       # Analyzes git history and file changes for documents
+      # Delegates diff operations to ace-git-diff for consistency
       class ChangeDetector
         # Get git diff for a document since a specific date or commit
         # @param document [Document] The document to analyze
@@ -235,33 +237,19 @@ module Ace
         end
 
         def self.generate_git_diff(since, options = {})
-          # Resolve since to a commit SHA
-          since_ref = resolve_since_to_commit(since)
+          # Delegate to ace-git-diff for consistent filtering and configuration
+          diff_options = {
+            since: since,
+            paths: options[:paths],
+            exclude_renames: !options[:include_renames],
+            detect_moves: options[:include_moves]
+          }
 
-          # Build git diff command with -w flag (ignore whitespace)
-          cmd_parts = ["git", "diff", "-w"]
-
-          # Add filters based on options
-          unless options[:include_renames]
-            cmd_parts << "--diff-filter=ACMTUXB"  # Exclude R (renames)
-          end
-
-          unless options[:include_moves]
-            cmd_parts << "--no-renames"
-          end
-
-          # Add since parameter with resolved commit
-          cmd_parts << "#{since_ref}..HEAD"
-
-          # Add path filters if specified
-          if options[:paths]
-            cmd_parts << "--"
-            cmd_parts.concat(Array(options[:paths]))
-          end
-
-          # Pass arguments directly to git (no shell expansion)
-          # This ensures glob patterns are handled by git in the correct directory
-          execute_git_command(cmd_parts)
+          result = Ace::GitDiff::Organisms::DiffOrchestrator.generate(diff_options)
+          result.content
+        rescue StandardError => e
+          warn "ace-git-diff failed: #{e.message}" if ENV["DEBUG"]
+          ""
         end
 
         def self.resolve_since_to_commit(since)

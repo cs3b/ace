@@ -1,8 +1,9 @@
 PATH
   remote: ace-context
   specs:
-    ace-context (0.14.2)
+    ace-context (0.15.0)
       ace-core (~> 0.9.0)
+      ace-git-diff (~> 0.1.0)
 
 PATH
   remote: ace-core
@@ -14,6 +15,7 @@ PATH
   specs:
     ace-docs (0.5.3)
       ace-core (~> 0.1)
+      ace-git-diff (~> 0.1)
       ace-llm (~> 0.1)
       ace-support-markdown (~> 0.1)
       colorize (~> 1.1)
