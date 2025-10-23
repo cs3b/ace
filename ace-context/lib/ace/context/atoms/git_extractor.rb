@@ -9,6 +9,9 @@ module Ace
       # Pure functions for extracting git information
       # Delegates diff operations to ace-git-diff for consistency
       module GitExtractor
+        # Custom error class for git extraction failures
+        class GitExtractorError < StandardError; end
+
         class << self
           # Execute a git diff command
           # Delegates to ace-git-diff for consistent filtering and configuration
@@ -18,7 +21,7 @@ module Ace
             )
             result.content
           rescue StandardError => e
-            warn "ace-git-diff failed: #{e.message}" if ENV["DEBUG"]
+            handle_error("git_diff", range_or_target, e)
             ""
           end
 
@@ -34,7 +37,7 @@ module Ace
             result = Ace::GitDiff::Organisms::DiffOrchestrator.staged
             result.content
           rescue StandardError => e
-            warn "ace-git-diff staged failed: #{e.message}" if ENV["DEBUG"]
+            handle_error("staged_diff", "staged changes", e)
             ""
           end
 
@@ -44,7 +47,7 @@ module Ace
             result = Ace::GitDiff::Organisms::DiffOrchestrator.working
             result.content
           rescue StandardError => e
-            warn "ace-git-diff working failed: #{e.message}" if ENV["DEBUG"]
+            handle_error("working_diff", "working changes", e)
             ""
           end
 
@@ -121,6 +124,23 @@ module Ace
               error: e.message,
               exit_code: -1
             }
+          end
+
+          # Handle delegation errors with better context
+          # @param method [String] Method name that failed
+          # @param context [String] What was being requested
+          # @param error [StandardError] The error that occurred
+          def handle_error(method, context, error)
+            message = "GitExtractor.#{method} failed for '#{context}': #{error.message}"
+
+            # Show error details in debug mode
+            if ENV["DEBUG"]
+              warn message
+              warn error.backtrace.first(3).join("\n") if error.backtrace
+            end
+
+            # In non-debug mode, only warn on specific error types
+            warn message if error.is_a?(Ace::GitDiff::Error) rescue false
           end
         end
       end

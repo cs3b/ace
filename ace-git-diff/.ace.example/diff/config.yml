@@ -16,12 +16,35 @@ exclude_patterns:
   - "coverage/**/*"
   - ".bundle/**/*"
 
+  # Version control
+  - ".git/**/*"
+  - ".gitignore"
+  - ".gitattributes"
+  - ".gitkeep"
+
   # Temporary and cache files
   - "tmp/**/*"
   - ".cache/**/*"
   - "**/*.bak"
   - "**/*.swp"
-  - "**/.DS_Store"
+  - "**/*.swo"
+  - "**/*~"
+
+  # System files
+  - "**/.DS_Store"      # macOS
+  - "**/Thumbs.db"      # Windows
+  - "**/*.lnk"          # Windows shortcuts
+  - "**/.Spotlight-V100"  # macOS
+  - "**/.Trashes"       # macOS
+
+  # IDE and editor files
+  - ".vscode/**/*"
+  - ".idea/**/*"
+  - "**/*.iml"
+  - ".project"
+  - ".classpath"
+  - ".settings/**/*"
+  - "*.sublime-*"
 
   # Add your project-specific patterns here
   # - "docs/archive/**/*"

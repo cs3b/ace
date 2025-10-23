@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "timeout"
 
 module Ace
   module GitDiff
@@ -13,13 +14,26 @@ module Ace
           # @param command_parts [Array<String>] Command parts to execute
           # @return [Hash] Result with output, error, and success status
           def execute(*command_parts)
-            stdout, stderr, status = Open3.capture3(*command_parts)
+            # Using Timeout to prevent hanging on network issues or stuck git operations
+            # Git operations should typically complete within 30 seconds for most repositories
+            Timeout.timeout(30) do
+              # Using Open3.capture3 to avoid shell injection
+              # Arguments are passed directly as array elements, not through shell
+              stdout, stderr, status = Open3.capture3(*command_parts)
 
+              {
+                success: status.success?,
+                output: stdout,
+                error: stderr,
+                exit_code: status.exitstatus
+              }
+            end
+          rescue Timeout::Error
             {
-              success: status.success?,
-              output: stdout,
-              error: stderr,
-              exit_code: status.exitstatus
+              success: false,
+              output: "",
+              error: "Command timed out after 30 seconds: #{command_parts.join(' ')}",
+              exit_code: -1
             }
           rescue StandardError => e
             {
