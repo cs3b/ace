@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "ace/support/markdown"
 require_relative "../atoms/safe_yaml_parser"
 
 module Ace
@@ -80,7 +81,19 @@ module Ace
           fixed_content = Atoms::SafeYamlParser.fix_frontmatter(content)
 
           if content != fixed_content
-            apply_fix(file_path, fixed_content, "Added missing closing '---' delimiter")
+            if @dry_run
+              log_fix(file_path, "Would add missing closing '---' delimiter")
+              @fixed_count += 1
+            else
+              Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+                file_path,
+                fixed_content,
+                backup: true,
+                validate: true
+              )
+              log_fix(file_path, "Added missing closing '---' delimiter")
+              @fixed_count += 1
+            end
             true
           else
             @skipped_count += 1
@@ -169,19 +182,20 @@ module Ace
         def fix_task_status(file_path, new_status)
           return false unless File.exist?(file_path)
 
-          content = File.read(file_path)
-          result = Atoms::SafeYamlParser.parse_with_recovery(content)
+          begin
+            editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
+            editor.update_frontmatter("status" => new_status)
 
-          # Update status in frontmatter
-          if result[:frontmatter].is_a?(Hash)
-            result[:frontmatter]["status"] = new_status
+            if @dry_run
+              log_fix(file_path, "Would update status to '#{new_status}'")
+            else
+              editor.save!(backup: true, validate: true)
+              log_fix(file_path, "Updated status to '#{new_status}'")
+            end
 
-            # Rebuild content with updated frontmatter
-            new_content = rebuild_content_with_frontmatter(result[:frontmatter], result[:content])
-
-            apply_fix(file_path, new_content, "Updated status to '#{new_status}'")
+            @fixed_count += 1
             true
-          else
+          rescue StandardError => e
             @skipped_count += 1
             false
           end
@@ -190,20 +204,21 @@ module Ace
         def fix_missing_field(file_path, field_name)
           return false unless File.exist?(file_path)
 
-          content = File.read(file_path)
-          result = Atoms::SafeYamlParser.parse_with_recovery(content)
-
-          # Add missing field with default value
-          if result[:frontmatter].is_a?(Hash)
+          begin
+            editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(file_path)
             default_value = get_default_value(field_name)
-            result[:frontmatter][field_name] = default_value
+            editor.update_frontmatter(field_name => default_value)
 
-            # Rebuild content with updated frontmatter
-            new_content = rebuild_content_with_frontmatter(result[:frontmatter], result[:content])
+            if @dry_run
+              log_fix(file_path, "Would add missing field '#{field_name}' with default value")
+            else
+              editor.save!(backup: true, validate: true)
+              log_fix(file_path, "Added missing field '#{field_name}' with default value")
+            end
 
-            apply_fix(file_path, new_content, "Added missing field '#{field_name}' with default value")
+            @fixed_count += 1
             true
-          else
+          rescue StandardError => e
             @skipped_count += 1
             false
           end
@@ -214,15 +229,6 @@ module Ace
           fix_missing_field(file_path, item_name)
         end
 
-        def rebuild_content_with_frontmatter(frontmatter, body_content)
-          yaml_content = YAML.dump(frontmatter).strip
-
-          # Remove the leading "---" that YAML.dump adds
-          yaml_content = yaml_content.sub(/^---\n/, "")
-
-          # Rebuild the content
-          "---\n#{yaml_content}\n---\n#{body_content}"
-        end
 
         def get_default_value(field_name)
           # Default values for common fields
@@ -270,15 +276,13 @@ module Ace
           if @dry_run
             log_fix(file_path, "Would apply: #{description}")
           else
-            # Backup original file
-            backup_path = "#{file_path}.doctor-backup"
-            File.write(backup_path, File.read(file_path))
-
-            # Write fixed content
-            File.write(file_path, new_content)
-
-            # Remove backup if successful
-            File.delete(backup_path)
+            # Use SafeFileWriter for all file writes
+            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              file_path,
+              new_content,
+              backup: true,
+              validate: false # Don't validate for non-markdown operations
+            )
 
             log_fix(file_path, description)
           end

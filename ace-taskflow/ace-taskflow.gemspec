@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-core", "~> 0.9.0"
   spec.add_dependency "clipboard", "~> 1.3"
   spec.add_dependency "ace-support-mac-clipboard", "~> 0.1.0"
+  spec.add_dependency "ace-support-markdown", "~> 0.1"
 
   # No development dependencies - managed in root Gemfile
 end

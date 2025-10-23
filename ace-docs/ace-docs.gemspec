@@ -35,6 +35,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency "ace-core", "~> 0.1"
   spec.add_dependency "ace-llm", "~> 0.1"
+  spec.add_dependency "ace-support-markdown", "~> 0.1"
   spec.add_dependency "thor", "~> 1.3"
   spec.add_dependency "yaml", "~> 0.3"
   spec.add_dependency "colorize", "~> 1.1"
