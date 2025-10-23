@@ -74,7 +74,7 @@ module Ace
       option :threshold, type: :numeric, desc: "Similarity threshold for duplicates (default: 70)"
       option :output, desc: "Output format (markdown|json|text)", default: "markdown"
       option :save, type: :boolean, desc: "Save report to cache directory"
-      option :model, desc: "LLM model to use (default: gpt-4)"
+      option :model, desc: "LLM model to use (default: gflash)"
       option :timeout, type: :numeric, desc: "LLM timeout in seconds"
       option :strict, type: :boolean, desc: "Exit with code 1 if issues found"
       option :verbose, type: :boolean, desc: "Show verbose output"

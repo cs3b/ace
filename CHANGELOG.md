@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.81] - 2025-10-21
+
+### Added
+
+- **ace-docs cross-document consistency analysis**: Completed implementation (task.074)
+  - LLM-powered analysis to detect terminology conflicts, duplicate content, version inconsistencies
+  - Native ace-llm integration using Ruby library interface (not subprocess)
+  - Session directory with full inspection capability (prompts, response, report)
+  - ace-context integration for better document separation with XML embedding
+  - Multiple output formats (markdown, json, text) with configurable thresholds
+
+### Fixed
+
+- **ace-docs analyze-consistency critical bugs**:
+  - Fixed LLM response handling (changed from non-existent `result[:success]` to `result[:text]`)
+  - Implemented ace-llm's native `output:` option to prevent loss of compute
+  - Removed unnecessary document copying (now uses real file paths directly)
+  - Added better error messages showing actual API errors
+  - Added progress indicators throughout analysis phases
+
+### Changed
+
+- **ace-docs version bumped to 0.5.1**: Bug fixes for analyze-consistency command
+
 ## [0.9.80] - 2025-10-20
 
 ### Added

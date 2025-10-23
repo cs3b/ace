@@ -1,5 +1,15 @@
 # frozen_string_literal: true
 
+require 'yaml'
+require 'fileutils'
+
+# Try to load ace-context for better document embedding
+begin
+  require 'ace/context'
+rescue LoadError
+  # Will work without ace-context but with less optimal formatting
+end
+
 module Ace
   module Docs
     module Prompts
@@ -8,11 +18,19 @@ module Ace
         # Build the complete prompt for consistency analysis
         # @param documents [Hash] hash of { path => content } for documents to analyze
         # @param options [Hash] analysis options
+        # @param session_dir [String, nil] session directory for saving context.md
         # @return [Hash] { system: String, user: String } prompts
-        def build(documents, options = {})
+        def build(documents, options = {}, session_dir: nil)
+          # Use ace-context if available for better document separation
+          user_content = if defined?(Ace::Context) && session_dir
+                          build_with_context(documents, options, session_dir)
+                        else
+                          user_prompt(documents, options)
+                        end
+
           {
             system: system_prompt,
-            user: user_prompt(documents, options)
+            user: user_content
           }
         end
 
@@ -201,6 +219,66 @@ module Ace
           end
 
           areas.empty? ? ['all issue types'] : areas
+        end
+
+        # Build user prompt with ace-context for better document separation
+        def build_with_context(documents, options, session_dir)
+          # Use the actual document paths directly (no copying needed)
+          doc_files = documents.keys.map { |path| File.expand_path(path) }
+
+          # Create context.md with frontmatter and instructions
+          threshold = options[:threshold] || 70
+          focus_areas = build_focus_areas(options)
+
+          # Build context configuration
+          context_config = {
+            "params" => { "format" => "markdown-xml" },
+            "embed_document_source" => true,
+            "files" => doc_files
+          }
+
+          # Create frontmatter
+          frontmatter = { "context" => context_config }
+
+          # Build instructions
+          instructions = <<~INSTRUCTIONS
+            # Cross-Document Consistency Analysis
+
+            Analyze these #{documents.count} documents for consistency issues.
+
+            ## Analysis Parameters
+
+            - Similarity threshold for duplicates: #{threshold}%
+            - Focus areas: #{focus_areas.join(', ')}
+            #{options[:pattern] ? "- Pattern filter: #{options[:pattern]}" : ''}
+
+            ## Instructions
+
+            1. Scan all documents for the four types of consistency issues
+            2. Apply the similarity threshold of #{threshold}% for duplicate detection
+            3. Provide specific, actionable recommendations for each issue
+            4. Include file paths and line references where applicable
+            5. Return results in the exact JSON format specified
+
+            ## Documents
+
+            The following documents are embedded below using XML tags:
+          INSTRUCTIONS
+
+          # Create context.md
+          context_md_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{instructions}"
+          context_md_path = File.join(session_dir, "context.md")
+          File.write(context_md_path, context_md_content)
+
+          # Load via ace-context to get XML-embedded documents
+          begin
+            result = Ace::Context.load_file_as_preset(context_md_path)
+            result.content
+          rescue StandardError => e
+            warn "ace-context embedding failed: #{e.message}, falling back to direct format" if Ace::Docs.debug?
+            # Fallback to regular prompt if ace-context fails
+            user_prompt(documents, options)
+          end
         end
       end
     end
