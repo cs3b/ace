@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.84] - 2025-10-23
+
+### Changed
+
+- **Documentation terminology standardization**: Consistent tool naming across all docs
+  - Standardized to `ace-review` (not `code-review`)
+  - Standardized to `ace-test` (not `ace-test-runner`)
+  - Standardized to `ace-git-commit` (not `git-commit`)
+  - Standardized to `ace-llm-query` (not `llm-query`)
+
+### Technical
+
+- **Removed duplicate workflow**: Deleted `ace-taskflow/handbook/workflow-instructions/review-code.wf.md`
+  - Duplicate of `ace-review/handbook/workflow-instructions/review.wf.md`
+  - Updated `ace-taskflow/handbook/README.md` to reference ace-review gem
+- **Simplified ADR maintenance workflow**: Removed redundant deprecation notice instructions
+  - Now references embedded template instead of duplicating content
+
+## [0.9.83] - 2025-10-23
+
+### Fixed
+
+- **ace-docs configuration and performance fixes**: Critical improvements to analyze-consistency
+  - Fixed configuration reading to properly respect `llm.model` from config.yml
+  - Changed default model from gflash to glite (4-10s vs 2m28s performance improvement)
+  - Fixed output handling to only display report path, not content
+  - Now respects user configuration instead of ignoring it
+
+### Changed
+
+- **ace-docs version bumped to 0.5.3**: Configuration and performance fixes
+
 ## [0.9.82] - 2025-10-23
 
 ### Fixed
