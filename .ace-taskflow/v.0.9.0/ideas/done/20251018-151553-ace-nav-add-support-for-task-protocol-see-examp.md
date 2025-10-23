@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-23T22:01:05+01:00
+---
+
 # Idea
 
 # ace-nav -> add support for task protocol see examp...
