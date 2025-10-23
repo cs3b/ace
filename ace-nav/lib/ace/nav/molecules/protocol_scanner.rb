@@ -11,6 +11,8 @@ module Ace
     module Molecules
       # Scans for protocol resources using registered sources
       class ProtocolScanner
+        attr_reader :config_loader
+
         def initialize(gem_resolver: nil, path_normalizer: nil, config_loader: nil)
           @gem_resolver = gem_resolver || Atoms::GemResolver.new
           @path_normalizer = path_normalizer || Atoms::PathNormalizer.new

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "shellwords"
 require_relative "../molecules/config_loader"
 
 module Ace
@@ -65,17 +66,14 @@ module Ace
         # @param protocol_config [Hash] Protocol configuration
         # @return [Array<String>] Command parts as array for safe execution
         #
-        # @note Template parsing limitation: Currently uses simple space-splitting which works
-        #   for standard templates like "ace-taskflow task %{ref}". Complex templates with
-        #   quoted strings or multiple spaces may not parse correctly. Future enhancement
-        #   could use Shellwords.split() for more robust parsing.
+        # @note Template parsing uses Shellwords.split() for robust parsing of command
+        #   templates, properly handling quoted strings and complex argument patterns.
         def build_command(template, reference, options, protocol_config)
           # Substitute reference in template
           command_string = template.gsub("%{ref}", reference)
 
-          # Start with base command parts (split by spaces for simple cases)
-          # Simple splitting is sufficient for current v1 templates
-          command_parts = command_string.split(" ")
+          # Parse command using Shellwords for robust handling of quotes and spaces
+          command_parts = Shellwords.split(command_string)
 
           # Add pass-through options
           pass_through_options = protocol_config["pass_through_options"] || []
