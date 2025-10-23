@@ -41,7 +41,7 @@ This provides:
 
 ### What NOT TO DO:
 - ❌ Use Read tool on individual source files (do not run git show and git diff directly - only run ace-review)
-- ❌ Manually run llm-query (handled by --auto-execute)
+- ❌ Manually run ace-llm-query (handled by --auto-execute)
 - ❌ Create tasks (user's responsibility after reviewing reports)
 - ❌ Skip the context loading step
 
@@ -224,7 +224,7 @@ cat .ace/review/presets/ruby-atom.yml
 - ✅ Context properly configured (optional but recommended)
 - ✅ Command executed with `--auto-execute`
 - ✅ Review report generated and saved to session directory
-- ✅ No manual llm-query execution needed
+- ✅ No manual ace-llm-query execution needed
 
 ## Summary
 

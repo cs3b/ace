@@ -108,7 +108,7 @@ user-provided release scope into actionable tasks.
    * Commit roadmap changes separately with message:
 
      ```bash
-     git-commit -i "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
+     ace-git-commit -i "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
 
 8. **Validate Release Structure**
@@ -131,7 +131,7 @@ user-provided release scope into actionable tasks.
    * Display the following git command for the user:
 
      ```bash
-     git-commit -i "scaffold release v.X.Y.Z-codename with initial structure and tasks"
+     ace-git-commit -i "scaffold release v.X.Y.Z-codename with initial structure and tasks"
      ```
 
    * Do **not** run the command automatically

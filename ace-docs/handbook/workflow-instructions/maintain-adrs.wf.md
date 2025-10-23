@@ -173,30 +173,7 @@ Use the embedded template below. Update with each new archival.
 
 ### 3. Add Deprecation Notice to ADR
 
-At the top of the ADR file, after the status line, add:
-
-```markdown
-## Status
-
-**Deprecated - Archived (Month Year)**
-
-Original Status: Accepted
-Date: YYYY-MM-DD
-
-## Deprecation Notice
-
-**This ADR is archived and no longer applicable to the current codebase.**
-
-- **Archived**: YYYY-MM-DD
-- **Reason**: [Specific reason - pattern not used, technology obsolete, etc.]
-- **Current Practice**: [Pointer to current approach or relevant ADR]
-- **Context**: [When/why this originally applied]
-
-For current patterns, see:
-- **ADR-XXX**: [New relevant ADR]
-- **Documentation**: [Link to current docs]
-
----
+At the top of the ADR file, after the status line, use the deprecation notice template embedded below (see `tmpl://decisions/deprecation-notice`).
 
 **Original ADR (for historical reference):**
 ```

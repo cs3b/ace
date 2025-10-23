@@ -8,7 +8,7 @@ The ace-taskflow gem provides integrated workflow management capabilities, combi
 
 ## Workflow Instructions
 
-The `workflow-instructions/` directory contains 12 core workflows for task and release management:
+The `workflow-instructions/` directory contains 11 core workflows for task and release management:
 
 ### Task Workflows
 - **work-on-task.wf.md** - Execute tasks with embedded implementation plans
@@ -25,8 +25,9 @@ The `workflow-instructions/` directory contains 12 core workflows for task and r
 ### Supporting Workflows
 - **capture-idea.wf.md** - Capture and enhance raw ideas
 - **create-reflection-note.wf.md** - Document lessons and insights
-- **review-code.wf.md** - Perform code reviews
 - **review-questions.wf.md** - Review and address project questions
+
+Note: Code review workflows are provided by the `ace-review` gem at `ace-review/handbook/workflow-instructions/review.wf.md`
 
 ## Command Reference
 
