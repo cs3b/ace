@@ -285,6 +285,21 @@ bundle install
 bundle exec rake test
 ```
 
+## Platform Support
+
+This gem supports the following platforms:
+- **macOS**: Apple Silicon (arm64-darwin) and Intel (x86_64-darwin)
+- **Linux**: x86_64-linux
+- **Ruby**: Generic ruby platform
+
+**Ruby Version**: >= 3.2.0 (tested on 3.3 & 3.4)
+
+If you encounter platform-specific bundle issues, the lockfile includes all common platforms. If you need additional platform support:
+
+```bash
+bundle lock --add-platform <your-platform>
+```
+
 ## Contributing
 
 This gem is part of the ACE (AI-assisted Coding Environment) meta-project.
