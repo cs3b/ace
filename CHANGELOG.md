@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.90] - 2025-10-23
+
+### Added
+
+- **ace-nav v0.10.0**: task:// protocol support with command delegation
+  - New `CommandDelegator` organism for cmd-type protocol handling
+  - Delegates `task://` URIs to `ace-taskflow task` commands
+  - Supports all ace-taskflow reference formats (018, task.018, v.0.9.0+task.018, backlog+025)
+  - Pass-through support for --path, --content, and --tree options
+  - Added `protocol_type` method to `ConfigLoader` for distinguishing cmd vs file protocols
+  - Added `cmd_protocol?` method to `NavigationEngine`
+  - Added `--path` option to CLI for consistency with ace-taskflow
+
+- **ace-taskflow v0.13.0**: task:// protocol configuration for ace-nav integration
+  - Added `.ace.example/nav/protocols/task.yml` protocol configuration
+  - Enables unified navigation interface across all ACE resources
+  - Configuration supports all task reference formats and options
+
+### Changed
+
+- **ace-nav**: CLI refactored to return exit codes instead of calling exit() directly
+  - Improves testability and composability of CLI methods
+  - Entry point now handles exit with returned codes
+  - Integration tests updated to check return values
+
+- **ace-nav**: ConfigLoader optimization for performance
+  - Reuses ConfigLoader instance from ProtocolScanner
+  - Eliminates unnecessary object instantiation on every protocol check
+
 ## [0.9.89] - 2025-10-23
 
 ### Changed
