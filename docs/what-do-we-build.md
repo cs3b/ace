@@ -27,7 +27,7 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Eac
 - **ace-review**: Preset-based code review with LLM-powered analysis
 - **ace-search**: Unified file and content search with intelligent pattern matching
 - **ace-taskflow**: Task, release, and idea management with presets
-- **ace-test-runner**: Test execution and CI integration
+- **ace-test**: Test execution and CI integration
 - **ace-test-support**: Testing infrastructure and helpers
 
 ## Coming Soon

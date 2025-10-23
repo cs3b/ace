@@ -77,7 +77,7 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-review**: Preset-based code review with LLM-powered analysis
 * **ace-search**: Unified file and content search with DWIM pattern matching
 * **ace-taskflow**: Task, release, and idea management with presets
-* **ace-test-runner**: Test execution and reporting
+* **ace-test**: Test execution and reporting
 * **ace-test-support**: Shared testing infrastructure
 
 All gems follow ATOM architecture with `handbook/` for agents/workflows. See [ace-gems.g.md](ace-gems.g.md) for
