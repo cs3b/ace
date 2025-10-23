@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-24T00:48:56+01:00
+---
+
 # Idea
 
 # ace-search do not search in whole project by defau...
