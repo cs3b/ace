@@ -82,6 +82,12 @@ module Ace
           pattern = options[:pattern] || ""
 
           filters = []
+          # Show search path first if available
+          if options[:search_path]
+            # Convert to absolute path for display
+            display_path = File.expand_path(options[:search_path])
+            filters << "path: #{display_path}"
+          end
           filters << "mode: #{mode}" if mode
           filters << "pattern: \"#{pattern}\"" if pattern && !pattern.empty?
           filters << "glob: #{options[:glob]}" if options[:glob]
