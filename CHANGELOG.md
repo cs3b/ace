@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.95] - 2025-10-24
+
+### Added
+- **ace-context v0.16.0**: File path and protocol arguments support for ace:load-context command
+  - New workflow file `handbook/workflow-instructions/load-context.wf.md` with flexible input support
+  - wfi:// protocol source registrations for workflow discovery
+  - Support for preset names, file paths, and protocol URLs in context loading
+
+### Changed
+- **ace-context v0.16.0**: Compacted load-context workflow from 127 to 98 lines (23% reduction)
+  - Converted error handling to scannable table format
+  - Merged redundant sections for improved readability
+
+### Technical
+- **ace-context v0.16.0**: Updated README and documentation examples for flexible input
+  - Updated slash command to thin interface pattern (delegates to wfi://load-context)
+
 ## [0.9.94] - 2025-10-24
 
 ### Technical
