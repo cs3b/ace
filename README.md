@@ -72,8 +72,10 @@ bundle install
 ### Usage Examples
 
 ```bash
-# Load project context
+# Load project context (preset, file path, or protocol)
 ace-context project
+ace-context ./docs/custom-context.md
+ace-context wfi://load-context
 
 # List available presets
 ace-context --list
@@ -159,9 +161,9 @@ Each gem has its own README in its directory.
 
 This repository includes native Claude Code integration through `.claude/commands/`:
 
-- `/ace:load-context` - Load project context
-- `/ace:work-on-task` - Work on a task
-- `/ace:commit` - Smart commit changes
+- `/ace:load-context [preset|file-path|protocol]` - Load project context from presets, files, or protocols
+- `/ace:work-on-task [task-id]` - Work on a task
+- `/ace:commit [intention]` - Smart commit changes
 - `/ace:draft-release` - Draft a release
 
 Simply type the command in Claude Code to execute workflows.
