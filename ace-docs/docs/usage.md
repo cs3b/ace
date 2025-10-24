@@ -372,18 +372,18 @@ ace-docs:
   subject:
     - code:
         diff:
-          filters:
+          paths:
             - "lib/**/*.rb"
             - "test/**/*.rb"
     - config:
         diff:
-          filters:
+          paths:
             - "**/*.yml"
             - "**/*.yaml"
             - ".ace/**/*"
     - docs:
         diff:
-          filters:
+          paths:
             - "**/*.md"
             - "!**/node_modules/**"
 ---
@@ -403,7 +403,7 @@ Traditional single-subject configuration still works:
 ace-docs:
   subject:
     diff:
-      filters:
+      paths:
         - "**/*.rb"
         - "**/*.md"
 ---
@@ -442,17 +442,17 @@ ace-docs:
   subject:
     - code:                        # Named subject for code changes
         diff:
-          filters:
+          paths:
             - "lib/**/*.rb"
             - "test/**/*.rb"
     - config:                      # Configuration changes
         diff:
-          filters:
+          paths:
             - "**/*.yml"
             - ".ace/**/*"
     - docs:                        # Documentation changes
         diff:
-          filters:
+          paths:
             - "**/*.md"
 
   # Context configuration for ace-context integration
@@ -596,10 +596,10 @@ cat docs/architecture.md
 #   subject:
 #     - code:
 #         diff:
-#           filters: ["lib/**/*.rb"]
+#           paths: ["lib/**/*.rb"]
 #     - docs:
 #         diff:
-#           filters: ["**/*.md"]
+#           paths: ["**/*.md"]
 # ---
 
 # 2. Analyze with multi-subject support

@@ -89,9 +89,9 @@ ace-review --preset pr --auto-execute
 Since v0.9.6, ace-review uses ace-context for unified content aggregation. Both `--subject` and `--context` accept YAML configuration with these keys:
 
 ```yaml
-# ✅ CORRECT: Use these keys
+# ✅ CORRECT: Use these keys (both diff: and diffs: work identically)
 files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
-diffs: ["origin/main...HEAD", "HEAD~5..HEAD"]  # Git diff ranges
+diff: {ranges: ["origin/main...HEAD"]}   # Git diff via ace-git-diff
 commands: ["git log --oneline -5"]       # Shell commands to execute
 presets: [project, architecture]         # ace-context preset names
 ```
@@ -103,17 +103,17 @@ presets: [project, architecture]         # ace-context preset names
 ace-review --subject 'files: ["lib/ace/review/**/*.rb"]' --auto-execute
 
 # Review git diff range
-ace-review --subject 'diffs: ["origin/main...HEAD"]' --auto-execute
+ace-review --subject 'diff: {ranges: ["origin/main...HEAD"]}' --auto-execute
 
 # Review with context from presets
 ace-review \
-  --subject 'diffs: ["HEAD~5..HEAD"]' \
+  --subject 'diff: {ranges: ["HEAD~5..HEAD"]}' \
   --context 'presets: [project]' \
   --auto-execute
 
 # Compose multiple sources
 ace-review \
-  --subject 'files: ["new-feature/**/*.rb"], diffs: ["HEAD~3..HEAD"]' \
+  --subject 'files: ["new-feature/**/*.rb"], diff: {ranges: ["HEAD~3..HEAD"]}' \
   --context 'presets: [project], files: ["docs/architecture.md"]' \
   --auto-execute
 ```
@@ -172,7 +172,7 @@ context:
 
 # Subject: what to review
 subject:
-  diffs: ["HEAD~1..HEAD"]                 # Recent changes
+  diff: {ranges: ["HEAD~1..HEAD"]}        # Recent changes
   files: ["lib/**/*.rb"]                  # Ruby files
 ```
 

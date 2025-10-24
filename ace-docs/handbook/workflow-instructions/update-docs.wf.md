@@ -316,13 +316,13 @@ ace-docs:
   subject:
     - code:
         diff:
-          filters: ["**/*.rb", "**/*.js"]
+          paths: ["**/*.rb", "**/*.js"]
     - config:
         diff:
-          filters: ["**/*.yml", "**/*.yaml"]
+          paths: ["**/*.yml", "**/*.yaml"]
     - docs:
         diff:
-          filters: ["**/*.md"]
+          paths: ["**/*.md"]
 ```
 
 The `analyze` command will generate separate diffs for each subject, providing more focused analysis.

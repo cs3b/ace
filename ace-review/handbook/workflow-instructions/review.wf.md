@@ -59,7 +59,7 @@ This provides:
 ace-review \
   --preset ruby-atom \
   --context 'presets: [project]' \
-  --subject 'diffs: ["8e7882c~1..HEAD", "origin/main...HEAD"]' \
+  --subject 'diff: {ranges: ["8e7882c~1..HEAD", "origin/main...HEAD"]}' \
   --add-focus 'scope/tests,scope/docs' \
   --model "google:gemini-2.5-flash" \
   --auto-execute
@@ -85,14 +85,14 @@ ace-review \
 Both `--subject` and `--context` accept unified YAML configuration:
 
 ```yaml
-# ✅ CORRECT: Use these keys
+# ✅ CORRECT: Use these keys (both diff: and diffs: work identically)
 files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
-diffs: ["origin/main...HEAD", "HEAD~5..HEAD"]  # Git diff ranges
+diff: {ranges: ["origin/main...HEAD"]}   # Git diff via ace-git-diff (NEW)
 commands: ["git log --oneline -5"]       # Shell commands to execute
 presets: [project, architecture]         # ace-context preset names
 
-# ❌ WRONG: Don't use 'patterns:' (removed in v0.9.6)
-patterns: ["lib/**/*.rb"]  # No longer supported
+# ❌ DEPRECATED: Old array format (still works but not recommended)
+diffs: ["origin/main...HEAD"]            # Use diff: {ranges: [...]} instead
 ```
 
 **Simple String Shortcuts** (for `--subject`):
@@ -119,7 +119,7 @@ ace-review --help           # Full command documentation
 ace-review --preset pr --auto-execute
 
 # Explicit: review changes vs main branch
-ace-review --preset pr --subject 'diffs: ["origin/main...HEAD"]' --auto-execute
+ace-review --preset pr --subject 'diff: {ranges: ["origin/main...HEAD"]}' --auto-execute
 ```
 
 ### Pre-Commit Check
@@ -128,7 +128,7 @@ ace-review --preset pr --subject 'diffs: ["origin/main...HEAD"]' --auto-execute
 ace-review --preset code --subject staged --auto-execute
 
 # Or explicitly
-ace-review --preset code --subject 'diffs: ["staged"]' --auto-execute
+ace-review --preset code --subject 'diff: {ranges: ["staged"]}' --auto-execute
 ```
 
 ### Review Specific Files
@@ -156,7 +156,7 @@ ace-review --preset ruby-atom \
 ```bash
 # Review files + diffs with full context
 ace-review --preset code \
-  --subject 'files: ["new-feature/**/*.rb"], diffs: ["HEAD~5..HEAD"]' \
+  --subject 'files: ["new-feature/**/*.rb"], diff: {ranges: ["HEAD~5..HEAD"]}' \
   --context 'presets: [project], files: ["docs/architecture.md"]' \
   --auto-execute
 ```
@@ -170,9 +170,10 @@ When review parameters are complex, store them in a preset file:
 description: "Review changes across main repo and submodules"
 
 subject:
-  diffs:
-    - "8e7882c~1..HEAD"                    # Main repo: specific commit range
-    - "origin/main...HEAD"                 # All changes vs main
+  diff:
+    ranges:
+      - "8e7882c~1..HEAD"                  # Main repo: specific commit range
+      - "origin/main...HEAD"               # All changes vs main
   files:
     - "docs/CHANGELOG.md"                  # Include changelog
 
@@ -197,11 +198,11 @@ ace-review --preset multi-repo --auto-execute
 
 | Issue | Solution |
 |-------|----------|
-| "No code to review" | Use `files:` not `patterns:` → `--subject 'files: ["lib/**/*.rb"]'` |
+| "No code to review" | Use `diff: {ranges: [...]}` → `--subject 'diff: {ranges: ["origin/main...HEAD"]}'` |
 | "Preset not found" | Run `ace-review --list-presets` to see available presets |
 | "Git diff empty" | Check git range: `git log origin/main...HEAD` |
 | "LLM timeout" | Narrow the review scope or use faster model |
-| "Invalid git range" | Verify range exists: `git diff HEAD~5..HEAD` |
+| "Invalid git range" | Verify range exists: `git diff origin/main...HEAD` |
 
 ### Debug Mode
 ```bash
@@ -220,7 +221,7 @@ cat .ace/review/presets/ruby-atom.yml
 
 - ✅ Available presets and prompts listed
 - ✅ Appropriate preset or configuration selected
-- ✅ Subject correctly specified using `files:`, `diffs:`, or keywords
+- ✅ Subject correctly specified using `files:`, `diff:`, or keywords
 - ✅ Context properly configured (optional but recommended)
 - ✅ Command executed with `--auto-execute`
 - ✅ Review report generated and saved to session directory
@@ -231,7 +232,7 @@ cat .ace/review/presets/ruby-atom.yml
 1. **Discovery**: Run `ace-review --list-presets` and `--list-prompts`
 2. **Configure**: Choose preset and specify subject/context
    - Use `files:` for file patterns
-   - Use `diffs:` for git ranges
+   - Use `diff: {ranges: [...]}` for git ranges (delegates to ace-git-diff)
    - Use `presets:` for ace-context presets
    - Compose multiple sources as needed
 3. **Execute**: Single command with `--auto-execute`
@@ -239,7 +240,8 @@ cat .ace/review/presets/ruby-atom.yml
 
 **Remember**:
 - This workflow generates review reports only
-- Use `files:` not `patterns:` for file patterns (v0.9.6+)
+- Use `diff: {ranges: [...]}` for git diffs (delegates to ace-git-diff)
+- Both `diff:` and `diffs:` keys work identically
 - All content extraction delegated to ace-context for unified aggregation
 - Task creation is the user's responsibility after reviewing reports
 

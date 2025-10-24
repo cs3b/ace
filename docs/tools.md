@@ -59,7 +59,7 @@ ace-search "config" --staged            # Search only staged files
 # Code review
 ace-review --preset pr                  # Review PR changes
 ace-review --preset security --auto-execute  # Security review with LLM
-ace-review --subject 'diffs: ["HEAD~5..HEAD"]'  # Review specific range
+ace-review --subject 'diff: {ranges: ["origin/main...HEAD"]}'  # Review vs main branch
 
 # Navigation and context
 ace-context project --output stdio      # Load context to stdout

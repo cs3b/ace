@@ -183,13 +183,19 @@ context:
     - date
 ```
 
-**Diffs**: Include git diff output for code review
+**Diffs**: Include git diff output for code review (delegates to ace-git-diff)
 ```yaml
 context:
-  diffs:
-    - origin/main...HEAD      # Changes in current branch
-    - HEAD~5..HEAD           # Last 5 commits
-    - --cached               # Staged changes
+  # Both diff: and diffs: keys work identically
+  diff:
+    ranges:
+      - origin/main...HEAD   # Changes in current branch
+      - HEAD~5..HEAD        # Last 5 commits
+    paths: ["lib/**/*.rb"]   # Optional: filter by paths
+
+  # Legacy format (deprecated):
+  # diffs:
+  #   - origin/main...HEAD
 ```
 
 **Presets**: Include other ace-context presets
@@ -227,7 +233,7 @@ context:
   files:
     - "lib/new-feature/**/*.rb"
     - wfi://draft-task           # Protocol reference
-  diffs: ["origin/main...HEAD"]
+  diff: {ranges: ["origin/main...HEAD"]}
   commands: ["git log -5 --oneline"]
 ```
 
