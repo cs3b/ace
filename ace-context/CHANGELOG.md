@@ -5,6 +5,23 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2025-10-24
+
+### Added
+- Enable file path and protocol arguments for ace:load-context command
+- New workflow file `handbook/workflow-instructions/load-context.wf.md` with flexible input support
+- Source registrations for wfi:// protocol discovery (ace-context.yml)
+- Support for preset names, file paths, and protocol URLs in context loading
+
+### Changed
+- Compact load-context workflow from 127 to 98 lines (23% reduction)
+- Convert error handling to scannable table format
+- Merge redundant sections for improved readability
+
+### Technical
+- Update README and documentation examples for flexible input
+- Update slash command to thin interface pattern (delegates to wfi://load-context)
+
 ## [0.15.1] - 2025-10-24
 
 ### Fixed
