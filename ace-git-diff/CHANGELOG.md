@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-10-24
+
+### Fixed
+- Address PR #3 review issues for ace-git-diff integration
+
+### Technical
+- Standardize diff/diffs API documentation to ace-git-diff format
+
 ## [0.1.0] - 2025-01-23
 
 ### Added
