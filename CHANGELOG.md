@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.94] - 2025-10-24
+
+### Technical
+- Patch release: Documentation standardization for diff/diffs API
+  - **ace-git-diff v0.1.1**: Standardized diff/diffs API documentation
+  - **ace-context v0.15.1**: Updated README with unified diff format and deprecated legacy array format
+  - **ace-docs v0.6.1**: Changed `filters:` to `paths:` for consistency with ace-git-diff
+  - **ace-review v0.11.1**: Updated README and workflow instructions with standardized diff format
+
 ## [0.9.93] - 2025-10-23
 
 ### Changed
