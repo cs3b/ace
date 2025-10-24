@@ -1,7 +1,6 @@
 ---
 update:
   update_frequency: on-change
-  frequency: on-change
   last-updated: '2025-10-24'
 ---
 
@@ -120,7 +119,7 @@ Read the whole file from: [$contextFilePath]
 > `/ace:load-context .ace-taskflow/v.0.9.0/context/task-084.md`
 > "Load task-specific context file"
 
-> `/ace:load-context /Users/mc/Ps/ace-meta/.ace/context.yml`
+> `/ace:load-context /path/to/your/project/context.yml`
 > "Load context from absolute path"
 
 > `/ace:load-context wfi://workflow-name`
