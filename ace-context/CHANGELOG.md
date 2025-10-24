@@ -5,6 +5,15 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] - 2025-10-24
+
+### Fixed
+- Address PR #3 review issues for ace-git-diff integration
+
+### Technical
+- Standardize diff/diffs API documentation to ace-git-diff format
+- Update changelog and version documentation
+
 ## [0.15.0] - 2025-10-23
 
 ### Changed
