@@ -83,7 +83,7 @@ puts result.summary  # "15 files, +450 -120"
 
 ## Integration with ACE Tools
 
-Use the `diff:` key in ACE gem configurations:
+Use the `diff:` key in ACE gem configurations. Both `diff:` and `diffs:` keys work identically:
 
 **ace-docs**:
 ```yaml
