@@ -8,13 +8,11 @@ update:
 
 ## Purpose
 
-Load project context into the current session from flexible input sources: preset names, file paths, or protocol URLs.
+Load project context from flexible input sources: preset names, file paths, or protocol URLs.
 
 ## Prerequisites
 
 - The `ace-context` tool is available (from ace-context gem)
-- Context presets configured in `.ace/context/*.md` files (for preset usage)
-- Or direct context files available (for file path usage)
 
 ## Variables
 
@@ -30,10 +28,10 @@ Run `ace-context` with the provided input. The tool automatically detects the in
 ace-context $input
 ```
 
-**Input type detection** (handled by ace-context):
-- **Preset names**: Simple names without path separators (e.g., `project`, `base`)
-- **File paths**: Paths with `/`, `./`, `../`, or file extensions (e.g., `./context.md`, `/full/path/file.yml`)
-- **Protocol URLs**: URLs with `://` pattern (e.g., `wfi://workflow-name`, `guide://testing`)
+**Input type detection:**
+- **Presets**: Simple names without path separators (e.g., `project`, `base`)
+- **Files**: Paths with `/`, `./`, `../`, or file extensions (e.g., `./context.md`, `/absolute/path.yml`)
+- **Protocols**: URLs with `://` pattern (e.g., `wfi://workflow-name`, `guide://testing`)
 
 ### 2. Read the Generated Context
 
@@ -55,29 +53,33 @@ Analyze the loaded context and prepare a concise summary covering:
 - Project structure and organization
 - Available tools and workflows
 
-## Success Criteria
+## Usage
 
-- Context is successfully loaded from the specified input
-- Full cached context file has been read completely (not just sampled)
-- Clear understanding of project purpose, architecture, and conventions
-- Ready to work with project-specific context
+**Presets** - Standard project context, team-shared configurations:
+> `/ace:load-context`
+> "Load default project context"
+
+> `/ace:load-context base`
+> "Load base preset"
+
+**Files** - Task-specific context, custom one-off requirements:
+> `/ace:load-context .ace-taskflow/v.0.9.0/context/task-084.md`
+> "Load task-specific context file"
+
+> `/ace:load-context /path/to/your/project/context.yml`
+> "Load context from absolute path"
+
+**Protocols** - Workflow-embedded context, dynamic discovery:
+> `/ace:load-context wfi://workflow-name`
+> "Load context via protocol"
 
 ## Error Handling
 
-**File not found:**
-- Error message will indicate the file path that doesn't exist
-- Verify the file path is correct
-- Check if file exists: `ls -la <file-path>`
-
-**Preset not found:**
-- Error message will suggest using `ace-context --list` to see available presets
-- Verify preset name spelling
-- Check available presets: `ace-context --list`
-
-**Permission errors:**
-- Error message will indicate permission denied
-- Check file permissions: `ls -la <file-path>`
-- Fix permissions if needed: `chmod +r <file-path>`
+| Error | Check | Fix |
+|-------|-------|-----|
+| File not found | Verify path: `ls -la <file-path>` | Check path is correct |
+| Preset not found | List presets: `ace-context --list` | Verify preset name spelling |
+| Permission denied | Check perms: `ls -la <file-path>` | Fix permissions: `chmod +r <file-path>` |
 
 ## Response Template
 
@@ -88,39 +90,9 @@ Read the whole file from: [$contextFilePath]
 
 **Understanding Achieved:** [Summary of project purpose, structure, and conventions]
 
-## Common Patterns
+## Success Criteria
 
-### When to Use Different Input Types
-
-**Preset names** (e.g., `project`, `base`):
-- Standard project context at session start
-- Team-shared context configurations
-- Commonly used context combinations
-
-**File paths** (e.g., `./task-context.md`, `/full/path/context.yml`):
-- Task-specific context during workflows
-- Custom one-off context requirements
-- Experimenting with new context configurations
-- Loading context from different projects (absolute paths)
-
-**Protocol URLs** (e.g., `wfi://workflow-name`):
-- Workflow-embedded context
-- Guide-based context loading
-- Dynamic context discovery
-
-### Usage Examples
-
-> `/ace:load-context`
-> "Load default project context"
-
-> `/ace:load-context base`
-> "Load base preset"
-
-> `/ace:load-context .ace-taskflow/v.0.9.0/context/task-084.md`
-> "Load task-specific context file"
-
-> `/ace:load-context /path/to/your/project/context.yml`
-> "Load context from absolute path"
-
-> `/ace:load-context wfi://workflow-name`
-> "Load context via protocol"
+- Context is successfully loaded from the specified input
+- Full cached context file has been read completely (not just sampled)
+- Clear understanding of project purpose, architecture, and conventions
+- Ready to work with project-specific context
