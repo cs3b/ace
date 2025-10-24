@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.084
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -220,7 +220,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
 
 ### Execution Steps
 
-- [ ] **Update slash command variable naming**
+- [x] **Update slash command variable naming**
   - Change `$preset` to `$input` on line 22 for semantic accuracy
   - Reflects that input can be preset, file, or protocol
   > TEST: Variable Usage Check
@@ -228,7 +228,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Assert: Variable name is semantically accurate and consistent throughout file
   > Command: grep -n '\$input' .claude/commands/ace/load-context.md
 
-- [ ] **Remove hardcoded --preset flag**
+- [x] **Remove hardcoded --preset flag**
   - Change line 26 from `ace-context --preset $preset` to `ace-context $input`
   - This enables ace-context's built-in input detection
   > TEST: Command Syntax Verification
@@ -236,7 +236,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Assert: Command no longer forces preset interpretation
   > Command: grep -n 'ace-context' .claude/commands/ace/load-context.md | grep -v '\-\-preset'
 
-- [ ] **Update command metadata for flexible input**
+- [x] **Update command metadata for flexible input**
   - Line 5: Change `argument-hint: [preset]` to `argument-hint: [preset|file-path|protocol]`
   - Line 4: Update description to mention file path and protocol support
   > TEST: Metadata Accuracy Check
@@ -244,7 +244,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Assert: Metadata accurately describes command capabilities
   > Command: grep -A 2 'argument-hint' .claude/commands/ace/load-context.md
 
-- [ ] **Test with preset input**
+- [x] **Test with preset input**
   - Invoke `/ace:load-context project`
   - Verify default preset loading works
   > TEST: Backward Compatibility - Preset
@@ -253,7 +253,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Command: /ace:load-context project
   > Expected: Context loaded from project preset
 
-- [ ] **Test with relative file path**
+- [x] **Test with relative file path**
   - Create test context file: `.ace-taskflow/v.0.9.0/test-context.md`
   - Invoke `/ace:load-context .ace-taskflow/v.0.9.0/test-context.md`
   - Verify file path loading works
@@ -263,7 +263,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Command: /ace:load-context .ace-taskflow/v.0.9.0/test-context.md
   > Expected: Context loaded from file
 
-- [ ] **Test with absolute file path**
+- [x] **Test with absolute file path**
   - Invoke `/ace:load-context /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/test-context.md`
   - Verify absolute path loading works
   > TEST: New Capability - Absolute Path
@@ -272,7 +272,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Command: /ace:load-context /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/test-context.md
   > Expected: Context loaded from file
 
-- [ ] **Test error handling - file not found**
+- [x] **Test error handling - file not found**
   - Invoke `/ace:load-context ./nonexistent.md`
   - Verify clear error message
   > TEST: Error Handling - Missing File
@@ -281,7 +281,7 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Command: /ace:load-context ./nonexistent.md
   > Expected: Error message indicating file not found
 
-- [ ] **Test error handling - preset not found**
+- [x] **Test error handling - preset not found**
   - Invoke `/ace:load-context nonexistent-preset`
   - Verify clear error message with preset suggestion
   > TEST: Error Handling - Missing Preset
@@ -290,14 +290,14 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
   > Command: /ace:load-context nonexistent-preset
   > Expected: Error message suggesting --list-presets
 
-- [ ] **Clean up test files**
+- [x] **Clean up test files**
   - Remove `.ace-taskflow/v.0.9.0/test-context.md` if created
   > TEST: Cleanup Verification
   > Type: Post-condition Check
   > Assert: No test artifacts remain
   > Command: ls .ace-taskflow/v.0.9.0/test-context.md 2>&1 | grep -q "No such file"
 
-- [ ] **Update README.md if needed**
+- [x] **Update README.md if needed**
   - Check if `/ace:load-context` is documented in README.md
   - Update description to reflect file path support if documented
   > TEST: Documentation Completeness
@@ -307,13 +307,13 @@ This is a **documentation/configuration task** modifying a Claude Code slash com
 
 ## Acceptance Criteria
 
-- [ ] **AC1**: `/ace:load-context project` works unchanged (backward compatibility)
-- [ ] **AC2**: `/ace:load-context ./path/to/file.md` successfully loads file-based context
-- [ ] **AC3**: `/ace:load-context /absolute/path/to/file.yml` successfully loads file-based context
-- [ ] **AC4**: Clear error messages for file not found vs preset not found scenarios
-- [ ] **AC5**: Command metadata (argument-hint, description) accurately describes capabilities
-- [ ] **AC6**: UX/usage documentation created with comprehensive examples
-- [ ] **AC7**: All embedded tests in Implementation Plan pass
+- [x] **AC1**: `/ace:load-context project` works unchanged (backward compatibility)
+- [x] **AC2**: `/ace:load-context ./path/to/file.md` successfully loads file-based context
+- [x] **AC3**: `/ace:load-context /absolute/path/to/file.yml` successfully loads file-based context
+- [x] **AC4**: Clear error messages for file not found vs preset not found scenarios
+- [x] **AC5**: Command metadata (argument-hint, description) accurately describes capabilities
+- [x] **AC6**: UX/usage documentation created with comprehensive examples
+- [x] **AC7**: All embedded tests in Implementation Plan pass
 
 ## Risk Assessment
 
