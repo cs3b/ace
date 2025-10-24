@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.085
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
@@ -96,14 +96,14 @@ $ ace-search "config" --include "src/,lib/" --exclude "test/"
 
 ### Success Criteria
 
-- [ ] **Default Project Root Search**: When run from any subdirectory without `SEARCH_PATH` argument, searches from project root
-- [ ] **Project Root Detection**: Uses `Ace::Core::Molecules::ProjectRootFinder` to locate root via markers (.git, Gemfile, etc.)
-- [ ] **ENV Variable Support**: Respects `PROJECT_ROOT_PATH` environment variable when set
-- [ ] **Optional Path Override**: Second positional argument overrides default search location
-- [ ] **Relative Path Handling**: Include/exclude/glob patterns relative to the search directory
-- [ ] **Backward Compatibility**: All existing flags and options continue to work
-- [ ] **Graceful Fallback**: Falls back to current directory when no project root detected
-- [ ] **Error Messages**: Clear error messages for invalid paths or patterns
+- [x] **Default Project Root Search**: When run from any subdirectory without `SEARCH_PATH` argument, searches from project root
+- [x] **Project Root Detection**: Uses `Ace::Core::Molecules::ProjectRootFinder` to locate root via markers (.git, Gemfile, etc.)
+- [x] **ENV Variable Support**: Respects `PROJECT_ROOT_PATH` environment variable when set
+- [x] **Optional Path Override**: Second positional argument overrides default search location
+- [x] **Relative Path Handling**: Include/exclude/glob patterns relative to the search directory
+- [x] **Backward Compatibility**: All existing flags and options continue to work
+- [x] **Graceful Fallback**: Falls back to current directory when no project root detected
+- [x] **Error Messages**: Clear error messages for invalid paths or patterns
 
 ### Validation Questions
 
@@ -344,18 +344,18 @@ None - this is an additive feature with no obsolete code.
 
 ### Planning Steps
 
-* [ ] Analyze current path handling in ripgrep_executor and fd_executor
+* [x] Analyze current path handling in ripgrep_executor and fd_executor
   - Verify current `:search_path` option support
   - Identify any edge cases in path handling
   - Document current behavior for comparison
 
-* [ ] Research path resolution edge cases
+* [x] Research path resolution edge cases
   - How should relative paths be resolved? (from cwd)
   - What happens with symlinks? (follow by default)
   - How to handle paths with spaces? (proper escaping)
   - What about non-existent paths? (pass to rg/fd, they handle it)
 
-* [ ] Design SearchPathResolver API
+* [x] Design SearchPathResolver API
   - Input: `explicit_path` (optional string)
   - Output: resolved absolute path (string)
   - Error handling: return current dir on failures, not exceptions
@@ -363,13 +363,13 @@ None - this is an additive feature with no obsolete code.
 
 ### Execution Steps
 
-- [ ] Create SearchPathResolver atom with 4-step resolution logic
+- [x] Create SearchPathResolver atom with 4-step resolution logic
   > TEST: Path Resolution Priority
   > Type: Unit Test
   > Assert: Resolver follows priority: explicit → env → project_root → current_dir
   > Command: bundle exec ruby -Itest test/atoms/search_path_resolver_test.rb
 
-- [ ] Implement unit tests for SearchPathResolver
+- [x] Implement unit tests for SearchPathResolver
   - Test explicit path (absolute and relative)
   - Test PROJECT_ROOT_PATH env variable
   - Test project root detection via ProjectRootFinder
@@ -381,7 +381,7 @@ None - this is an additive feature with no obsolete code.
   > Assert: All path resolution scenarios pass
   > Command: bundle exec ruby -Itest test/atoms/search_path_resolver_test.rb
 
-- [ ] Modify exe/ace-search to parse second positional argument
+- [x] Modify exe/ace-search to parse second positional argument
   - Change ARGV parsing from `ARGV.join(" ")` to `ARGV.shift` for pattern
   - Extract second argument as `search_path`
   - Call `SearchPathResolver.resolve(search_path)`
@@ -391,7 +391,7 @@ None - this is an additive feature with no obsolete code.
   > Assert: CLI correctly parses pattern and optional search_path
   > Command: bundle exec ruby -Itest test/integration/cli_integration_test.rb -n test_explicit_path_argument
 
-- [ ] Verify ripgrep_executor and fd_executor use search_path option
+- [x] Verify ripgrep_executor and fd_executor use search_path option
   - Confirm existing `:search_path` option is respected
   - No code changes needed if already supported
   - Add comments if clarification needed
@@ -400,7 +400,7 @@ None - this is an additive feature with no obsolete code.
   > Assert: Both executors properly use options[:search_path]
   > Command: grep -A 10 "search_path" ace-search/lib/ace/search/atoms/*_executor.rb
 
-- [ ] Add integration tests for CLI with search path argument
+- [x] Add integration tests for CLI with search path argument
   - Test default (no arg) searches project root
   - Test explicit `./` searches current directory
   - Test explicit `src/` searches specific subdirectory
@@ -411,7 +411,7 @@ None - this is an additive feature with no obsolete code.
   > Assert: All search path scenarios work end-to-end
   > Command: bundle exec ruby -Itest test/integration/cli_integration_test.rb
 
-- [ ] Create UX/usage documentation
+- [x] Create UX/usage documentation
   - Document command syntax with optional search_path
   - Provide examples for common scenarios
   - Explain migration from current behavior
@@ -421,13 +421,13 @@ None - this is an additive feature with no obsolete code.
   > Assert: Usage doc covers all CLI patterns from behavioral spec
   > Command: cat .ace-taskflow/v.0.9.0/tasks/085-*/ux/usage.md
 
-- [ ] Run full test suite to verify backward compatibility
+- [x] Run full test suite to verify backward compatibility
   > TEST: Backward Compatibility
   > Type: Full Test Suite
   > Assert: All existing tests pass without modification
   > Command: cd ace-search && bundle exec rake test
 
-- [ ] Update README and CHANGELOG
+- [x] Update README and CHANGELOG
   - Add search path feature to README usage section
   - Document in CHANGELOG under [Unreleased]
   > TEST: Documentation Updated
@@ -437,13 +437,13 @@ None - this is an additive feature with no obsolete code.
 
 ## Acceptance Criteria
 
-- [ ] **Default Project Root**: `ace-search "pattern"` from subdirectory searches entire project
-- [ ] **Explicit Path Override**: `ace-search "pattern" ./` searches current directory only
-- [ ] **Env Variable Support**: `PROJECT_ROOT_PATH=<path> ace-search "pattern"` uses env path
-- [ ] **Fallback Gracefully**: Searches current dir when no project root detected
-- [ ] **All Flags Work**: Existing `--glob`, `--include`, `--exclude` flags function correctly
-- [ ] **Tests Pass**: All new and existing tests pass
-- [ ] **Documentation Complete**: README, CHANGELOG, and UX docs updated
+- [x] **Default Project Root**: `ace-search "pattern"` from subdirectory searches entire project
+- [x] **Explicit Path Override**: `ace-search "pattern" ./` searches current directory only
+- [x] **Env Variable Support**: `PROJECT_ROOT_PATH=<path> ace-search "pattern"` uses env path
+- [x] **Fallback Gracefully**: Searches current dir when no project root detected
+- [x] **All Flags Work**: Existing `--glob`, `--include`, `--exclude` flags function correctly
+- [x] **Tests Pass**: All new and existing tests pass
+- [x] **Documentation Complete**: README, CHANGELOG, and UX docs updated
 
 ## Out of Scope
 
