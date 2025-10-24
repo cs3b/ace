@@ -4,6 +4,7 @@ Unified search tool for codebases with intelligent pattern matching and configur
 
 ## Features
 
+- **Project-Wide Search by Default**: Searches entire project from root, regardless of current directory
 - **Intelligent DWIM Mode**: Automatically detects whether you're searching for files or content
 - **Dual Backend**: Uses ripgrep for content search and fd for file search
 - **Git-Aware**: Search only staged, tracked, or changed files
@@ -12,6 +13,7 @@ Unified search tool for codebases with intelligent pattern matching and configur
 - **Path-Aware File Search**: Matches full paths, not just filenames
 - **Interactive Mode**: fzf integration for result selection
 - **Multiple Output Formats**: Text (with clickable links), JSON, and YAML
+- **Flexible Search Scope**: Optional search path argument to limit scope when needed
 
 ## Installation
 
@@ -32,8 +34,14 @@ bundle install
 ## Quick Start
 
 ```bash
-# Search for content
+# Search entire project (from root, regardless of current directory)
 ace-search "TODO"
+
+# Search in current directory only
+ace-search "TODO" ./
+
+# Search specific directory
+ace-search "TODO" src/
 
 # Search for files
 ace-search --files "controller"

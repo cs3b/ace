@@ -12,6 +12,7 @@ require_relative "../lib/ace/search/atoms/fd_executor"
 require_relative "../lib/ace/search/atoms/pattern_analyzer"
 require_relative "../lib/ace/search/atoms/result_parser"
 require_relative "../lib/ace/search/atoms/tool_checker"
+require_relative "../lib/ace/search/atoms/search_path_resolver"
 
 require_relative "../lib/ace/search/molecules/preset_manager"
 require_relative "../lib/ace/search/molecules/git_scope_filter"
@@ -52,7 +53,7 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: ace-search [options] PATTERN"
+  opts.banner = "Usage: ace-search [options] PATTERN [SEARCH_PATH]"
   opts.separator ""
   opts.separator "Search across the codebase with intelligent pattern matching"
   opts.separator ""
@@ -181,9 +182,13 @@ parser = OptionParser.new do |opts|
 end
 
 pattern = nil
+search_path_arg = nil
 begin
   parser.parse!(ARGV)
-  pattern = ARGV.join(" ")
+
+  # Parse positional arguments: PATTERN [SEARCH_PATH]
+  pattern = ARGV.shift
+  search_path_arg = ARGV.shift  # May be nil
 rescue OptionParser::InvalidOption => e
   puts "Error: #{e.message}"
   puts parser
@@ -195,6 +200,10 @@ if pattern.nil? || pattern.empty?
   puts parser
   exit 1
 end
+
+# Resolve search path using 4-step priority
+resolver = Ace::Search::Atoms::SearchPathResolver.new
+options[:search_path] = resolver.resolve(search_path_arg)
 
 begin
   # Apply preset if specified
