@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-10-24
+
+### Technical
+- Standardize diff/diffs API documentation to ace-git-diff format
+- Update usage documentation to use `paths:` instead of `filters:` for consistency
+- Update workflow instructions with standardized diff format
+
 ## [0.6.0] - 2025-10-23
 
 ### Changed
