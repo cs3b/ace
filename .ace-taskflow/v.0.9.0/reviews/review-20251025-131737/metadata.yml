@@ -1,7 +1,0 @@
----
-timestamp: '2025-10-25T13:17:37+01:00'
-preset: pr
-model: google:gemini-2.0-flash-thinking-exp-01-21
-has_context: true
-subject_size: 18207
-prompt_size: 30012
