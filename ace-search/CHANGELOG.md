@@ -7,17 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-10-25
+
 ### Added
 - Project-wide search by default: `ace-search` now searches entire project from root regardless of current directory
 - Optional search path argument: `ace-search "pattern" [SEARCH_PATH]` to limit scope when needed
 - SearchPathResolver atom with 4-step resolution: explicit path → PROJECT_ROOT_PATH env → project root detection → current directory fallback
 - Support for `PROJECT_ROOT_PATH` environment variable to override project root detection
 - Integration with `Ace::Core::Molecules::ProjectRootFinder` for automatic project root detection
+- Display search path in output context for transparency
+
+### Fixed
+- Fixed search_path propagation through UnifiedSearcher option builders (critical bug)
+- Fixed inconsistent search results when running from different directories
+- Execute ripgrep/fd from search directory using chdir for correct .gitignore processing
 
 ### Changed
 - **BEHAVIOR CHANGE**: Default search scope is now project-wide instead of current directory
   - To maintain old behavior (search current directory only), use: `ace-search "pattern" ./`
 - CLI banner updated to show optional SEARCH_PATH argument: `ace-search [options] PATTERN [SEARCH_PATH]`
+
+### Technical
+- Add comprehensive DEBUG output for troubleshooting search path resolution
 
 ## [0.10.0] - 2025-10-14
 
