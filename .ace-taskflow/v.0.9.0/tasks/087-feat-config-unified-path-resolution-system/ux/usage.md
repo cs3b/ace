@@ -38,37 +38,48 @@ PathExpander.expand("./relative")
 
 ### `PathExpander.expand_with_context(path:, context: {})` - Context-Aware Resolution
 
-**Purpose**: Resolve paths with awareness of config file location and project root
+**Purpose**: Resolve paths with awareness of source document location and project root
 
-**Context Parameters**:
-- `config_file_dir`: Directory containing the config file (for ./ ../ resolution)
-- `project_root`: Project root directory (for project-relative resolution)
+**Context Parameters** (both required):
+- `project_root`: Project root directory (for project-relative resolution) - **REQUIRED**
+- `source_dir`: Directory containing the source document (config, workflow, template, prompt) - **REQUIRED**
+
+**Validation**: Raises `ArgumentError` if either `project_root` or `source_dir` is missing from context
 
 **Usage**:
 ```ruby
-# Config-relative path (starts with ./ or ../)
+# Source-relative path (starts with ./ or ../)
 PathExpander.expand_with_context(
   path: "./handbook/agents/",
-  context: { config_file_dir: "/project/.ace/nav" }
+  context: {
+    project_root: "/project",
+    source_dir: "/project/.ace/nav"
+  }
 )
 # => "/project/.ace/nav/handbook/agents/"
 
 # Project-relative path (no ./ prefix)
 PathExpander.expand_with_context(
   path: "ace-docs/README.md",
-  context: { project_root: "/project" }
+  context: {
+    project_root: "/project",
+    source_dir: "/project/.ace/nav"
+  }
 )
 # => "/project/ace-docs/README.md"
 
-# Parent directory reference
+# Parent directory reference from workflow file
 PathExpander.expand_with_context(
   path: "../templates/task.md",
-  context: { config_file_dir: "/project/.ace/nav/protocols" }
+  context: {
+    project_root: "/project",
+    source_dir: "/project/.ace/nav/protocols"
+  }
 )
 # => "/project/.ace/nav/templates/task.md"
 ```
 
-**When to use**: When loading config files and need to resolve relative paths correctly.
+**When to use**: When loading any document (config, workflow, template, prompt) that contains path references that need context-aware resolution.
 
 ### `PathExpander.protocol?(path)` - Protocol Detection
 
@@ -109,9 +120,9 @@ PathExpander.register_protocol_resolver(MyProtocolResolver)
 
 ## Usage Scenarios
 
-### Scenario 1: Config File Loading (ace-nav, ace-docs, ace-taskflow)
+### Scenario 1: Document Loading (ace-nav, ace-docs, ace-taskflow)
 
-**Goal**: Load config files with paths that should resolve relative to the config file location
+**Goal**: Load documents (config files, workflows, templates) with paths that should resolve relative to the source document location
 
 **Command**: Load protocol sources from config file
 ```ruby
@@ -124,34 +135,39 @@ PathExpander.register_protocol_resolver(MyProtocolResolver)
 config_data = YAML.load_file(config_path)
 source_path = config_data['path']
 
-# Resolve relative to config file directory
+# Resolve relative to source document directory
 resolved_path = PathExpander.expand_with_context(
   path: source_path,
   context: {
-    config_file_dir: File.dirname(config_path),
-    project_root: Ace::Core::Molecules::ProjectRootFinder.find
+    project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+    source_dir: File.dirname(config_path)
   }
 )
 # => "/project/.ace/nav/handbook/workflow-instructions/"
 ```
 
-**Expected Output**: Absolute path resolved correctly from config file location
+**Expected Output**: Absolute path resolved correctly from source document location
 
 ### Scenario 2: Project-Relative Paths (ace-docs, ace-context)
 
 **Goal**: Reference documents relative to project root without ./ prefix
 
-**Command**: Load documentation files
+**Command**: Load documentation files from preset configuration
 ```ruby
-# In preset configuration:
+# In preset configuration file at /project/.ace/context/presets/project.yml:
 # files:
 #   - "docs/architecture.md"
 #   - "ace-docs/README.md"
 
+project_root = Ace::Core::Molecules::ProjectRootFinder.find
+
 preset_config['files'].each do |file_path|
   resolved_path = PathExpander.expand_with_context(
     path: file_path,
-    context: { project_root: Ace::Core::Molecules::ProjectRootFinder.find }
+    context: {
+      project_root: project_root,
+      source_dir: File.dirname(preset_file_path)
+    }
   )
   # Load file from resolved_path
 end
@@ -167,17 +183,22 @@ end
 
 **Command**: Load workflow via protocol
 ```ruby
-# In context preset:
+# In context preset at /project/.ace/context/presets/base.yml:
 # sources:
 #   - "wfi://load-context"
 #   - "guide://testing"
+
+project_root = Ace::Core::Molecules::ProjectRootFinder.find
 
 # In ContextLoader (after ace-nav registration):
 preset_config['sources'].each do |source_uri|
   if PathExpander.protocol?(source_uri)
     result = PathExpander.expand_with_context(
       path: source_uri,
-      context: {}
+      context: {
+        project_root: project_root,
+        source_dir: File.dirname(preset_file_path)
+      }
     )
     if result[:success]
       # Load from result[:path]
@@ -214,7 +235,38 @@ templates_path = PathExpander.expand_with_context(
 
 **Expected Output**: Paths with expanded environment variables
 
-### Scenario 5: Error Handling - Protocol Without Resolver
+### Scenario 5: Error Handling - Missing Context
+
+**Goal**: Validation error when required context fields are missing
+
+**Command**: Attempt to use without proper context
+```ruby
+# Missing both fields - raises ArgumentError
+begin
+  PathExpander.expand_with_context(
+    path: "./relative/path",
+    context: {}
+  )
+rescue ArgumentError => e
+  puts e.message
+  # => "PathExpander requires both 'project_root' and 'source_dir' in context"
+end
+
+# Missing one field - also raises ArgumentError
+begin
+  PathExpander.expand_with_context(
+    path: "./relative/path",
+    context: { project_root: "/project" }
+  )
+rescue ArgumentError => e
+  puts e.message
+  # => "PathExpander requires both 'project_root' and 'source_dir' in context"
+end
+```
+
+**Expected Output**: Clear validation error guiding user to provide required context
+
+### Scenario 5b: Error Handling - Protocol Without Resolver
 
 **Goal**: Graceful error when protocol used but ace-nav not loaded
 
@@ -222,7 +274,10 @@ templates_path = PathExpander.expand_with_context(
 ```ruby
 result = PathExpander.expand_with_context(
   path: "wfi://setup",
-  context: {}
+  context: {
+    project_root: "/project",
+    source_dir: "/project/.ace/context"
+  }
 )
 
 if result.is_a?(Hash) && !result[:success]
@@ -233,22 +288,22 @@ end
 
 **Expected Output**: Clear error message guiding user to solution
 
-### Scenario 6: Mixed Path Types in Config
+### Scenario 6: Mixed Path Types in Document
 
-**Goal**: Handle config files with multiple path format styles
+**Goal**: Handle documents with multiple path format styles
 
-**Command**: Process various path formats
+**Command**: Process various path formats from a config file
 ```ruby
-# Config with mixed paths:
+# Config file at /project/.ace/nav/config.yml with mixed paths:
 # paths:
-#   - "./local/file.md"           # Config-relative
+#   - "./local/file.md"           # Source-relative
 #   - "docs/global.md"            # Project-relative
 #   - "wfi://setup"               # Protocol
 #   - "$HOME/.ace/custom.md"      # Env var
 
 context = {
-  config_file_dir: "/project/.ace/nav",
-  project_root: "/project"
+  project_root: "/project",
+  source_dir: "/project/.ace/nav"
 }
 
 config['paths'].each do |path|
@@ -268,6 +323,29 @@ end
 
 **Expected Output**: All path types resolve correctly
 
+### Scenario 7: CLI Argument Path Resolution
+
+**Goal**: Resolve paths from CLI arguments where there's no source document
+
+**Command**: Process CLI path argument
+```ruby
+# User runs: ace-context ./presets/custom.yml
+# No source document, so use current working directory as source_dir
+
+cli_path = ARGV[0]  # => "./presets/custom.yml"
+
+resolved_path = PathExpander.expand_with_context(
+  path: cli_path,
+  context: {
+    project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+    source_dir: Dir.pwd
+  }
+)
+# => "/current/working/dir/presets/custom.yml"
+```
+
+**Expected Output**: CLI paths resolve relative to current directory when no source document exists
+
 ## Command Reference
 
 ### Ruby API
@@ -282,8 +360,8 @@ Ace::Core::Atoms::PathExpander.expand(path)
 Ace::Core::Atoms::PathExpander.expand_with_context(
   path: string,
   context: {
-    config_file_dir: string,    # Optional
-    project_root: string         # Optional
+    project_root: string,    # REQUIRED - Project root directory
+    source_dir: string       # REQUIRED - Source document directory (or Dir.pwd for CLI)
   }
 )
 ```
@@ -325,17 +403,17 @@ Ace::Core::Atoms::PathExpander.register_protocol_resolver(AceNavResolver)
 
 ## Tips and Best Practices
 
-### Config File Path Resolution
+### Document Path Resolution
 
-**DO**: Use ./ prefix for paths relative to config file
+**DO**: Use ./ prefix for paths relative to source document
 ```ruby
 # In .ace/nav/protocols/source.yml
-path: ./handbook/agents/  # ✅ Resolves from config file dir
+path: ./handbook/agents/  # ✅ Resolves from source document directory
 ```
 
 **DON'T**: Use ./ for project-relative paths
 ```ruby
-path: ./ace-docs/README.md  # ❌ Resolves from config dir, not project
+path: ./ace-docs/README.md  # ❌ Resolves from source dir, not project
 path: ace-docs/README.md    # ✅ Resolves from project root
 ```
 
@@ -372,19 +450,33 @@ path = PathExpander.expand("$PROJECT_ROOT/docs")
 
 ### Context Provision
 
-**DO**: Always provide context when loading config files
+**DO**: Always provide both required context fields
 ```ruby
+# When loading from a document (config, workflow, template)
 context = {
-  config_file_dir: File.dirname(config_path),
-  project_root: Ace::Core::Molecules::ProjectRootFinder.find
+  project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+  source_dir: File.dirname(document_path)
 }
 PathExpander.expand_with_context(path: path, context: context)
+
+# When processing CLI arguments (no source document)
+context = {
+  project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+  source_dir: Dir.pwd
+}
+PathExpander.expand_with_context(path: cli_arg, context: context)
 ```
 
-**DON'T**: Use expand_with_context without context
+**DON'T**: Use expand_with_context without required fields
 ```ruby
-# ❌ Context is empty, falls back to less reliable resolution
+# ❌ Missing required fields - will raise ArgumentError
 PathExpander.expand_with_context(path: "./file.md", context: {})
+
+# ❌ Only one field provided - will raise ArgumentError
+PathExpander.expand_with_context(
+  path: "./file.md",
+  context: { project_root: "/project" }
+)
 ```
 
 ## Troubleshooting
@@ -402,12 +494,32 @@ require 'ace/nav'
 
 ### Paths resolve to wrong location
 
-**Issue**: Config-relative paths resolving from wrong directory
+**Issue**: Source-relative paths resolving from wrong directory
 
-**Solution**: Always provide `config_file_dir` in context
+**Solution**: Always provide `source_dir` in context
 ```ruby
 context = {
-  config_file_dir: File.dirname(config_file_path)  # ✅ Explicit config dir
+  project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+  source_dir: File.dirname(source_document_path)  # ✅ Explicit source dir
+}
+```
+
+### ArgumentError: PathExpander requires both fields
+
+**Issue**: Missing required context fields
+
+**Solution**: Always provide both `project_root` and `source_dir`
+```ruby
+# ✅ Correct - both fields provided
+context = {
+  project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+  source_dir: File.dirname(document_path)
+}
+
+# For CLI arguments with no source document, use Dir.pwd
+context = {
+  project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+  source_dir: Dir.pwd
 }
 ```
 
@@ -427,14 +539,17 @@ PathExpander.expand("$MY_VAR/path")  # Will expand if set
 
 **Legacy**:
 ```ruby
-path = File.expand_path(relative_path, config_dir)
+path = File.expand_path(relative_path, source_dir)
 ```
 
 **New**:
 ```ruby
 path = PathExpander.expand_with_context(
   path: relative_path,
-  context: { config_file_dir: config_dir }
+  context: {
+    project_root: Ace::Core::Molecules::ProjectRootFinder.find,
+    source_dir: source_dir
+  }
 )
 ```
 
