@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2025-10-25
+
+### Added
+- Centralized DebugLogger module for unified debug output formatting
+- Path validation warnings for non-existent explicit search paths
+- Comprehensive troubleshooting guide in README
+- DEBUG environment variable documentation with example output
+
+### Technical
+- Edge case test coverage for SearchPathResolver (symlinks, non-existent paths, relative paths)
+- Improved debug output consistency across executors
+- 21 additional test cases (17 DebugLogger, 4 edge cases)
+
 ## [0.11.0] - 2025-10-25
 
 ### Added
