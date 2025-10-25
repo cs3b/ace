@@ -42,17 +42,11 @@ module Ace
               options[:location] = "current"
               i += 1
             when "--maybe"
-              # Check for mutual exclusivity
-              if options[:subdirectory] == "anyday"
-                raise ArgumentError, "Cannot use both --maybe and --anyday flags"
-              end
+              validate_subdirectory_exclusivity(options[:subdirectory], "maybe")
               options[:subdirectory] = "maybe"
               i += 1
             when "--anyday"
-              # Check for mutual exclusivity
-              if options[:subdirectory] == "maybe"
-                raise ArgumentError, "Cannot use both --maybe and --anyday flags"
-              end
+              validate_subdirectory_exclusivity(options[:subdirectory], "anyday")
               options[:subdirectory] = "anyday"
               i += 1
             when "--git-commit", "-gc"
@@ -152,6 +146,23 @@ module Ace
             "backlog"
           else
             default_location
+          end
+        end
+
+        # Private helper methods
+        class << self
+          private
+
+          # Validate that subdirectory flags are mutually exclusive
+          # @param current [String, nil] Currently set subdirectory
+          # @param new_value [String] New subdirectory being set
+          # @raise [ArgumentError] if flags are mutually exclusive
+          def validate_subdirectory_exclusivity(current, new_value)
+            if current && current != new_value
+              # Sort flags alphabetically for consistent error message
+              flags = [current, new_value].sort
+              raise ArgumentError, "Cannot use both --#{flags[0]} and --#{flags[1]} flags"
+            end
           end
         end
       end

@@ -134,6 +134,22 @@ module Ace
 
         private
 
+        # Determine idea status from path and metadata
+        # Uses directory inspection instead of string matching for robustness
+        def determine_idea_status(idea)
+          # First check if status is explicitly set and not "new"
+          return idea[:status] if idea[:status] && idea[:status] != "new"
+
+          # Determine status from path by checking parent directory name
+          if idea[:path]
+            parent_dir = File.basename(File.dirname(idea[:path]))
+            return parent_dir if IdeaLoader::SCOPE_SUBDIRECTORIES.include?(parent_dir)
+          end
+
+          # Default to "new" for pending ideas
+          "new"
+        end
+
         def get_release_info(context)
           # Resolve context to release
           release = case context
@@ -226,16 +242,8 @@ module Ace
           }
 
           ideas.each do |idea|
-            # Determine status based on path
-            status = if idea[:path] && idea[:path].include?("/done/")
-                      "done"
-                     elsif idea[:path] && idea[:path].include?("/maybe/")
-                      "maybe"
-                     elsif idea[:path] && idea[:path].include?("/anyday/")
-                      "anyday"
-                     else
-                      idea[:status] || "new"
-                     end
+            # Determine status based on path and metadata
+            status = determine_idea_status(idea)
             stats[:by_status][status] ||= 0
             stats[:by_status][status] += 1
           end
@@ -278,8 +286,8 @@ module Ace
             parts << "#{icon} #{count}"
           end
 
-          # Add unknown statuses (exclude new, maybe, anyday, and done which are already handled)
-          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || ["done", "maybe", "anyday"].include?(s) }
+          # Add unknown statuses (exclude new and scope subdirectories which are already handled)
+          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || IdeaLoader::SCOPE_SUBDIRECTORIES.include?(s) }
           unknown_count = unknown_statuses.values.sum
           parts << "❓ #{unknown_count}" if unknown_count > 0
 

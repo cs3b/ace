@@ -368,4 +368,75 @@ class IdeaArgParserTest < Minitest::Test
     assert_equal true, result[:llm_enhance]
     assert_equal "backlog", result[:location]
   end
+
+  # Tests for --maybe flag
+  def test_parse_capture_options_with_maybe_flag
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "Uncertain idea", "--maybe"
+    ])
+
+    assert_equal "Uncertain idea", result[:content]
+    assert_equal "maybe", result[:subdirectory]
+  end
+
+  def test_parse_capture_options_maybe_with_other_flags
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "Future feature",
+      "--maybe",
+      "--backlog",
+      "--git-commit"
+    ])
+
+    assert_equal "Future feature", result[:content]
+    assert_equal "maybe", result[:subdirectory]
+    assert_equal "backlog", result[:location]
+    assert_equal true, result[:git_commit]
+  end
+
+  # Tests for --anyday flag
+  def test_parse_capture_options_with_anyday_flag
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "Low priority task", "--anyday"
+    ])
+
+    assert_equal "Low priority task", result[:content]
+    assert_equal "anyday", result[:subdirectory]
+  end
+
+  def test_parse_capture_options_anyday_with_other_flags
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+      "Someday feature",
+      "--anyday",
+      "--release", "v.1.0.0",
+      "--llm-enhance"
+    ])
+
+    assert_equal "Someday feature", result[:content]
+    assert_equal "anyday", result[:subdirectory]
+    assert_equal "v.1.0.0", result[:location]
+    assert_equal true, result[:llm_enhance]
+  end
+
+  # Test mutual exclusivity of --maybe and --anyday
+  def test_maybe_and_anyday_are_mutually_exclusive
+    error = assert_raises(ArgumentError) do
+      Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+        "Test idea", "--maybe", "--anyday"
+      ])
+    end
+
+    # Error message is alphabetically sorted: anyday before maybe
+    assert_match(/Cannot use both --anyday and --maybe flags/, error.message)
+  end
+
+  def test_anyday_and_maybe_are_mutually_exclusive_reverse_order
+    error = assert_raises(ArgumentError) do
+      Ace::Taskflow::Molecules::IdeaArgParser.parse_capture_options([
+        "Test idea", "--anyday", "--maybe"
+      ])
+    end
+
+    # Error message is alphabetically sorted: anyday before maybe
+    assert_match(/Cannot use both --anyday and --maybe flags/, error.message)
+  end
 end

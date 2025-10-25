@@ -9,6 +9,9 @@ module Ace
   module Taskflow
     module Molecules
       class IdeaLoader
+        # Scope-specific subdirectories for organizing ideas
+        SCOPE_SUBDIRECTORIES = %w[done maybe anyday].freeze
+
         def initialize(root_path = nil)
           @root_path = root_path || ConfigLoader.find_root
           @config = ConfigLoader.load
@@ -27,30 +30,17 @@ module Ace
             ideas.concat(pending_ideas)
           end
 
-          # Load done ideas from done/ subdirectory (for :done and :all scopes)
-          if [:done, :all].include?(scope)
-            done_dir = File.join(idea_dir, "done")
-            if Dir.exist?(done_dir)
-              done_ideas = load_ideas_from_directory(done_dir, include_content)
-              ideas.concat(done_ideas)
-            end
-          end
-
-          # Load maybe ideas from maybe/ subdirectory (for :maybe and :all scopes)
-          if [:maybe, :all].include?(scope)
-            maybe_dir = File.join(idea_dir, "maybe")
-            if Dir.exist?(maybe_dir)
-              maybe_ideas = load_ideas_from_directory(maybe_dir, include_content)
-              ideas.concat(maybe_ideas)
-            end
-          end
-
-          # Load anyday ideas from anyday/ subdirectory (for :anyday and :all scopes)
-          if [:anyday, :all].include?(scope)
-            anyday_dir = File.join(idea_dir, "anyday")
-            if Dir.exist?(anyday_dir)
-              anyday_ideas = load_ideas_from_directory(anyday_dir, include_content)
-              ideas.concat(anyday_ideas)
+          # Load ideas from scope-specific subdirectories
+          {
+            done: [:done, :all],
+            maybe: [:maybe, :all],
+            anyday: [:anyday, :all]
+          }.each do |subdir_name, valid_scopes|
+            if valid_scopes.include?(scope)
+              subdir_path = File.join(idea_dir, subdir_name.to_s)
+              if Dir.exist?(subdir_path)
+                ideas.concat(load_ideas_from_directory(subdir_path, include_content))
+              end
             end
           end
 
@@ -131,7 +121,7 @@ module Ace
             next unless Dir.exist?(path)
             # Skip scope subdirectories
             basename = File.basename(path)
-            next if ["done", "maybe", "anyday"].include?(basename)
+            next if SCOPE_SUBDIRECTORIES.include?(basename)
 
             idea_file = File.join(path, "idea.md")
             if File.exist?(idea_file)
@@ -291,14 +281,14 @@ module Ace
 
           # Count directory-based ideas (directories with idea.md)
           dir_count = Dir.glob(File.join(dir, "*"))
-            .select { |path| Dir.exist?(path) && !["done", "maybe", "anyday"].include?(File.basename(path)) }
+            .select { |path| Dir.exist?(path) && !SCOPE_SUBDIRECTORIES.include?(File.basename(path)) }
             .count { |path| File.exist?(File.join(path, "idea.md")) }
 
           main_count = flat_count + dir_count
 
-          # Count ideas in scope subdirectories (done, maybe, anyday)
+          # Count ideas in scope subdirectories
           subdirs_count = 0
-          ["done", "maybe", "anyday"].each do |subdir_name|
+          SCOPE_SUBDIRECTORIES.each do |subdir_name|
             subdir = File.join(dir, subdir_name)
             next unless Dir.exist?(subdir)
 
