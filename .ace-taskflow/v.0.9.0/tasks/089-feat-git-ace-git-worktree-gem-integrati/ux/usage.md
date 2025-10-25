@@ -89,18 +89,22 @@ Clean up references to worktrees that have been manually deleted.
 
 ## Usage Scenarios
 
-### Scenario 1: Creating a Task-Aware Worktree
+### Scenario 1: Creating a Task-Aware Worktree (Full Workflow)
 
-**Goal:** Create an isolated development environment for task 081
+**Goal:** Create an isolated development environment for task 081 with automatic status tracking
 
 **Commands:**
 ```bash
-# Create worktree for task 081
+# Create worktree for task 081 (with automatic status update)
 ace-git-worktree create --task 081
 
 # Expected output:
 # Fetching task metadata from ace-taskflow...
 # Task found: v.0.9.0+task.081 - Fix authentication bug
+# Updating task status to in-progress...
+# Adding worktree metadata to task...
+# Committing task changes...
+#   Commit: chore(task-081): mark as in-progress, creating worktree
 # Creating worktree at: .ace-wt/task.081
 # Creating branch: 081-fix-authentication-bug
 # Trusting mise.toml...
@@ -108,16 +112,38 @@ ace-git-worktree create --task 081
 #
 # Path: /Users/mc/Ps/myproject/.ace-wt/task.081
 # Branch: 081-fix-authentication-bug
+# Task Status: in-progress
 ```
 
 **What happens internally:**
 1. Tool queries `ace-taskflow task 081` to get task metadata
-2. Extracts task ID, title, and generates slug
-3. Creates directory using configured format: `.ace-wt/task.081`
-4. Creates branch using configured format: `081-fix-authentication-bug`
-5. Runs `git worktree add .ace-wt/task.081 -b 081-fix-authentication-bug`
-6. Detects `mise.toml` and runs `mise trust` in worktree directory
-7. Outputs paths for AI agent consumption
+2. Updates task status to `in-progress` via `ace-taskflow task start 081`
+3. Adds worktree metadata to task frontmatter:
+   ```yaml
+   status: in-progress
+   worktree:
+     branch: "081-fix-authentication-bug"
+     path: ".ace-wt/task.081"
+     created_at: "2025-10-25 14:30:00"
+   ```
+4. Commits task changes to main branch
+5. Creates directory using configured format: `.ace-wt/task.081`
+6. Creates branch using configured format: `081-fix-authentication-bug`
+7. Runs `git worktree add .ace-wt/task.081 -b 081-fix-authentication-bug`
+8. Detects `mise.toml` and runs `mise trust` in worktree directory
+9. Outputs paths for AI agent consumption
+
+**Alternative: Manual control over workflow:**
+```bash
+# Skip automatic status update and commit
+ace-git-worktree create --task 081 --no-status-update --no-commit
+
+# Or update status but skip commit
+ace-git-worktree create --task 081 --no-commit
+
+# Or use custom commit message
+ace-git-worktree create --task 081 --commit-message "feat: starting work on authentication fix"
+```
 
 ### Scenario 2: Traditional Worktree Creation
 
@@ -214,7 +240,35 @@ ace-git-worktree create --task 999
 # Exit code: 1
 ```
 
-### Scenario 6: Dry Run Before Creation
+### Scenario 6: Task Completion Workflow (Future Enhancement)
+
+**Goal:** Complete work on a task and clean up worktree
+
+**Commands:**
+```bash
+# When work is complete in the worktree
+cd .ace-wt/task.081
+git add .
+git commit -m "fix: resolved authentication issue"
+git push
+
+# Create PR (using gh or GitHub web UI)
+gh pr create --title "Fix authentication bug" --body "Fixes #081"
+
+# After PR is merged, on main branch
+ace-taskflow task done 081
+ace-git-worktree remove 081
+
+# Expected behavior (future):
+# - Task status updated to done
+# - Worktree metadata removed from task
+# - Task moved to done/ directory
+# - Worktree removed from filesystem
+```
+
+**Note:** This workflow will be enhanced in future versions to automate the cleanup process.
+
+### Scenario 7: Dry Run Before Creation
 
 **Goal:** Preview what will be created before executing
 
@@ -248,14 +302,20 @@ ace-git-worktree create <branch-name> [options]
 - `--path <path>` - Custom worktree root path (default: from config)
 - `--no-mise-trust` - Skip automatic mise trust
 - `--dry-run` - Preview without creating
+- `--no-status-update` - Skip marking task as in-progress (task mode only)
+- `--no-commit` - Skip committing task changes (task mode only)
+- `--commit-message <msg>` - Custom commit message for task update (task mode only)
 
 **Input/Output:**
 - Input: Task ID or branch name via CLI arguments
-- Output: Worktree path and branch name to stdout
+- Output: Worktree path, branch name, and task status to stdout
 - Exit code: 0 on success, 1 on error
 
 **Internal implementation:**
 - Uses `ace-taskflow task <id>` to fetch metadata
+- Updates task status via `ace-taskflow task start <id>` (unless disabled)
+- Updates task frontmatter with worktree metadata
+- Commits changes via `ace-git-commit` (unless disabled)
 - Executes `git worktree add` command
 - Runs `mise trust` if mise.toml detected
 - Parses configuration from `.ace/git/worktree.yml`
@@ -375,6 +435,12 @@ git:
 
       # Branch naming: {id}, {task_id}, {release}, {slug}
       branch_format: "{id}-{slug}"         # Results in: 081-fix-bug
+
+      # Workflow automation (new)
+      auto_mark_in_progress: true    # Auto-update task status to in-progress
+      auto_commit_task: true          # Auto-commit task changes before creating worktree
+      commit_message_format: "chore(task-{id}): mark as in-progress, creating worktree"
+      add_worktree_metadata: true    # Add worktree info to task frontmatter
 
     # Cleanup policies
     cleanup:
