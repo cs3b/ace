@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2025-10-25
+
+### Fixed
+- **Task Sorting**: Correct task sorting logic for string/symbol keys in preset configurations
+  - Tasks were displayed in reverse order when using `ace-taskflow tasks next` command
+  - Fixed apply_preset_sorting to handle both string and symbol keys from YAML configs
+  - Added comprehensive tests for ascending and descending sort orders
+
 ## [0.13.1] - 2025-10-24
 
 ### Fixed
