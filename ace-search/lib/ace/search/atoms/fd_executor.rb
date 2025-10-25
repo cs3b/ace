@@ -3,6 +3,7 @@
 require "open3"
 require "shellwords"
 require "timeout"
+require_relative "debug_logger"
 
 module Ace
   module Search
@@ -20,10 +21,10 @@ module Ace
           command = build_command(pattern, options)
           timeout_seconds = options.fetch(:timeout, 120)
 
-          # Debug output if DEBUG env var is set
-          if ENV["DEBUG"]
-            $stderr.puts "DEBUG fd command: #{command}"
-            $stderr.puts "DEBUG fd chdir: #{options[:search_path] || '(current directory)'}"
+          # Debug output
+          DebugLogger.section("FdExecutor") do
+            DebugLogger.log("Command: #{command}")
+            DebugLogger.log("Will chdir to: #{options[:search_path] || '(current directory)'}")
           end
 
           begin
