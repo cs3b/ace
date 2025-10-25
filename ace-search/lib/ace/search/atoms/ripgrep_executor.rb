@@ -24,8 +24,16 @@ module Ace
 
           # Debug output if DEBUG env var is set
           if ENV["DEBUG"]
-            $stderr.puts "DEBUG ripgrep command: #{command}"
-            $stderr.puts "DEBUG ripgrep chdir: #{options[:search_path] || '(current directory)'}"
+            $stderr.puts "=" * 60
+            $stderr.puts "DEBUG: RipgrepExecutor"
+            $stderr.puts "  options[:search_path] = #{options[:search_path].inspect}"
+            $stderr.puts "  Current Dir.pwd = #{Dir.pwd}"
+            $stderr.puts "  Command: #{command}"
+
+            search_dir_debug = options[:search_path] || "."
+            $stderr.puts "  Will chdir to: #{search_dir_debug}"
+            $stderr.puts "  Absolute chdir: #{File.expand_path(search_dir_debug)}"
+            $stderr.puts "=" * 60
           end
 
           begin
