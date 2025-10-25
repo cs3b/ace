@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2025-10-25
+
+### Changed
+- Implement code review suggestions for clarity and documentation
+- Add design rationale comment to SearchPathResolver explaining ENV var validation
+- Add upgrade note in README linking to Troubleshooting section
+- Document DebugLogger threading context and caching behavior
+- Condense CLI warning message for non-existent paths
+
 ## [0.11.1] - 2025-10-25
 
 ### Added
