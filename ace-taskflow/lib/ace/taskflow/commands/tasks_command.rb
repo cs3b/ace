@@ -189,10 +189,17 @@ module Ace
         def apply_preset_sorting(tasks, preset_config)
           sort_config = preset_config[:sort] || { by: :sort, ascending: true }
 
+          # Handle both string and symbol keys
+          sort_by = sort_config[:by] || sort_config["by"] || :sort
+          sort_by = sort_by.to_sym if sort_by.is_a?(String)
+          ascending = sort_config[:ascending]
+          ascending = sort_config["ascending"] if ascending.nil?
+          ascending = true if ascending.nil?
+
           Molecules::TaskFilter.sort_tasks(
             tasks,
-            sort_config[:by],
-            sort_config[:ascending]
+            sort_by,
+            ascending
           )
         end
 

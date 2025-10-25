@@ -197,4 +197,39 @@ class TaskFilterTest < AceTaskflowTestCase
     assert_equal "task.003", result[1][:id]
     assert_equal "task.001", result[2][:id]
   end
+
+  def test_sort_tasks_by_sort_field_ascending_order
+    # Test case for the bug where tasks were displayed in reverse order
+    tasks_with_sort = [
+      { id: "v.0.9.0+task.089", status: "pending", sort: 998 },
+      { id: "v.0.9.0+task.088", status: "pending", sort: 995 },
+      { id: "v.0.9.0+task.087", status: "pending", sort: 996 },
+      { id: "v.0.9.0+task.086", status: "pending", sort: 997 }
+    ]
+
+    result = @filter.sort_tasks(tasks_with_sort, :sort, true, false)
+
+    # Should be sorted in ascending order by sort value
+    assert_equal "v.0.9.0+task.088", result[0][:id], "Task 088 (sort: 995) should be first"
+    assert_equal "v.0.9.0+task.087", result[1][:id], "Task 087 (sort: 996) should be second"
+    assert_equal "v.0.9.0+task.086", result[2][:id], "Task 086 (sort: 997) should be third"
+    assert_equal "v.0.9.0+task.089", result[3][:id], "Task 089 (sort: 998) should be fourth"
+  end
+
+  def test_sort_tasks_by_sort_field_descending_order
+    tasks_with_sort = [
+      { id: "v.0.9.0+task.089", status: "pending", sort: 998 },
+      { id: "v.0.9.0+task.088", status: "pending", sort: 995 },
+      { id: "v.0.9.0+task.087", status: "pending", sort: 996 },
+      { id: "v.0.9.0+task.086", status: "pending", sort: 997 }
+    ]
+
+    result = @filter.sort_tasks(tasks_with_sort, :sort, false, false)
+
+    # Should be sorted in descending order by sort value
+    assert_equal "v.0.9.0+task.089", result[0][:id], "Task 089 (sort: 998) should be first when descending"
+    assert_equal "v.0.9.0+task.086", result[1][:id], "Task 086 (sort: 997) should be second when descending"
+    assert_equal "v.0.9.0+task.087", result[2][:id], "Task 087 (sort: 996) should be third when descending"
+    assert_equal "v.0.9.0+task.088", result[3][:id], "Task 088 (sort: 995) should be fourth when descending"
+  end
 end
