@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.97] - 2025-10-25
+
+### Added
+- **ace-search v0.11.1**: Enhanced debugging and validation capabilities
+  - Centralized DebugLogger module for unified debug output formatting
+  - Path validation warnings for non-existent explicit search paths
+  - Comprehensive troubleshooting guide in README
+  - DEBUG environment variable documentation with example output
+
+### Changed
+- **ace-search v0.11.2**: Implement code review suggestions for clarity and documentation
+  - Add design rationale comment to SearchPathResolver explaining ENV var validation
+  - Add upgrade note in README linking to Troubleshooting section
+  - Document DebugLogger threading context and caching behavior
+  - Condense CLI warning message for non-existent paths
+
+### Technical
+- **ace-search v0.11.1**: Edge case test coverage for SearchPathResolver (symlinks, non-existent paths, relative paths)
+  - Improved debug output consistency across executors
+  - 21 additional test cases (17 DebugLogger, 4 edge cases)
+
+## [0.9.96] - 2025-10-25
+
+### Added
+- **ace-search v0.11.0**: Project-wide search by default with optional search path argument
+  - SearchPathResolver atom with 4-step priority resolution (explicit → env → project root → fallback)
+  - Optional SEARCH_PATH positional argument in CLI
+  - Display search path in output context for transparency
+  - Support for PROJECT_ROOT_PATH environment variable
+
+### Fixed
+- **ace-search v0.11.0**: Fixed inconsistent search results from different directories
+  - Execute ripgrep/fd from search directory using chdir for correct .gitignore processing
+  - Fixed search_path propagation through UnifiedSearcher option builders
+
+### Changed
+- **ace-search v0.11.0**: BEHAVIOR CHANGE - Default search scope now project-wide instead of current directory
+  - Use `ace-search "pattern" ./` to maintain old behavior (current directory only)
+
 ## [0.9.95] - 2025-10-24
 
 ### Added

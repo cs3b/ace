@@ -5,6 +5,53 @@ All notable changes to ace-search will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.11.2] - 2025-10-25
+
+### Changed
+- Implement code review suggestions for clarity and documentation
+- Add design rationale comment to SearchPathResolver explaining ENV var validation
+- Add upgrade note in README linking to Troubleshooting section
+- Document DebugLogger threading context and caching behavior
+- Condense CLI warning message for non-existent paths
+
+## [0.11.1] - 2025-10-25
+
+### Added
+- Centralized DebugLogger module for unified debug output formatting
+- Path validation warnings for non-existent explicit search paths
+- Comprehensive troubleshooting guide in README
+- DEBUG environment variable documentation with example output
+
+### Technical
+- Edge case test coverage for SearchPathResolver (symlinks, non-existent paths, relative paths)
+- Improved debug output consistency across executors
+- 21 additional test cases (17 DebugLogger, 4 edge cases)
+
+## [0.11.0] - 2025-10-25
+
+### Added
+- Project-wide search by default: `ace-search` now searches entire project from root regardless of current directory
+- Optional search path argument: `ace-search "pattern" [SEARCH_PATH]` to limit scope when needed
+- SearchPathResolver atom with 4-step resolution: explicit path → PROJECT_ROOT_PATH env → project root detection → current directory fallback
+- Support for `PROJECT_ROOT_PATH` environment variable to override project root detection
+- Integration with `Ace::Core::Molecules::ProjectRootFinder` for automatic project root detection
+- Display search path in output context for transparency
+
+### Fixed
+- Fixed search_path propagation through UnifiedSearcher option builders (critical bug)
+- Fixed inconsistent search results when running from different directories
+- Execute ripgrep/fd from search directory using chdir for correct .gitignore processing
+
+### Changed
+- **BEHAVIOR CHANGE**: Default search scope is now project-wide instead of current directory
+  - To maintain old behavior (search current directory only), use: `ace-search "pattern" ./`
+- CLI banner updated to show optional SEARCH_PATH argument: `ace-search [options] PATTERN [SEARCH_PATH]`
+
+### Technical
+- Add comprehensive DEBUG output for troubleshooting search path resolution
+
 ## [0.10.0] - 2025-10-14
 
 ### Added
