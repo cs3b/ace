@@ -210,6 +210,40 @@ module Ace
           # HOME directory should exist
           assert @resolver.send(:valid_path?, "~")
         end
+
+        # Edge case tests
+
+        def test_resolve_with_symlink_path
+          require 'tmpdir'
+          Dir.mktmpdir do |tmpdir|
+            real_dir = File.join(tmpdir, "real")
+            link_dir = File.join(tmpdir, "link")
+            Dir.mkdir(real_dir)
+            File.symlink(real_dir, link_dir)
+
+            # Resolver should return the symlink path as-is (not resolve it)
+            result = @resolver.resolve(link_dir)
+            assert_equal link_dir, result
+          end
+        end
+
+        def test_resolve_nonexistent_explicit_path_returns_as_is
+          # Should return the path even if it doesn't exist
+          # (validation happens at CLI level, not in resolver)
+          nonexistent = "/does/not/exist/#{rand(100000)}"
+          result = @resolver.resolve(nonexistent)
+          assert_equal nonexistent, result
+        end
+
+        def test_resolve_relative_path_with_dots
+          result = @resolver.resolve("../../parent")
+          assert_equal "../../parent", result
+        end
+
+        def test_resolve_path_with_trailing_slash
+          result = @resolver.resolve("./src/")
+          assert_equal "./src/", result
+        end
       end
     end
   end
