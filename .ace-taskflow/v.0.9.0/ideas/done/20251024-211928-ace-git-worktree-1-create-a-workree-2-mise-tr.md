@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-25T10:52:20+01:00
+---
+
 # Idea
 
 # ace-git-worktree -> 1. create a workree 2. mise tr...
