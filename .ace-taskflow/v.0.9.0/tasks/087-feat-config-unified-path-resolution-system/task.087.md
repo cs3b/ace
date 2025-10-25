@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.087
-status: draft
+status: pending
 priority: medium
 estimate: 2-3 days
 dependencies: []
+sort: 996
 ---
 
 # Create unified path resolution system for ACE config files and parameters
@@ -223,9 +224,298 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 - ❌ **Path Transformation**: Hooks for custom path processing
 - ❌ **IDE Integration**: Language server support for path completion
 
+## Implementation Plan
+
+### Validation Question Decisions
+
+**Q1: Ambiguous Path Resolution** - How should `docs/file.md` be resolved?
+- **Decision: Option A** - Always project-relative unless starts with ./ or ../
+- **Rationale**: Consistent with current ace-* gem behavior (ace-docs, ace-taskflow use project-relative), predictable, follows ADR-004 standards
+- **Impact**: Users can rely on simple paths being project-relative, config-relative needs explicit ./ prefix
+
+**Q2: Protocol Dependency** - Should PathExpander require ace-nav?
+- **Decision: Option C** - Plugin system - register protocol resolver if available
+- **Rationale**: Keeps ace-core lightweight, allows ace-nav to be optional, extensible for future protocol handlers
+- **Impact**: PathExpander detects protocols but delegates to registered resolver (ace-nav when available)
+
+**Q3: Error Handling Philosophy** - Strict mode vs permissive mode?
+- **Decision: Option B** - Permissive - try multiple resolution strategies
+- **Rationale**: Better UX - users don't need to know exact path format, graceful degradation when ace-nav not available
+- **Impact**: Multiple resolution attempts logged but not fatal, clear error messages guide users
+
+**Q4: Caching Strategy** - Should PathExpander cache resolved paths?
+- **Decision: Option A** - No caching - always resolve fresh
+- **Rationale**: Simple, safe, resolution is fast (<5ms), caching adds complexity without significant benefit
+- **Impact**: Clean architecture, no cache invalidation concerns, relies on ace-nav's protocol caching for expensive operations
+
+### Technical Approach
+
+**Architecture Pattern:**
+- Enhance existing `Ace::Core::Atoms::PathExpander` module with new methods
+- Maintain module pattern (not class) - pure functions without state
+- Add protocol detection and delegation capability
+- Keep existing `expand()` method for backward compatibility
+
+**Integration Strategy:**
+- PathExpander detects protocol URIs (via pattern matching `protocol://`)
+- Protocol resolution delegates to registered resolver (ace-nav when loaded)
+- If no resolver registered: return clear error message
+- Non-protocol paths: expand normally (env vars, tilde, relative)
+
+**Technology Stack:**
+- Ruby stdlib: `Pathname`, `File`, `Dir`
+- Pattern matching: Regex for protocol detection (`%r{^[a-z]+://}`)
+- Dependency injection: Protocol resolver registry (optional ace-nav integration)
+- No new gem dependencies required
+
+### Tool Selection
+
+| Criteria | Built-in Ruby | External Gem (pathname-plus) | Selected |
+|----------|---------------|------------------------------|----------|
+| Path manipulation | stdlib Pathname | Enhanced features | **stdlib** |
+| Env var expansion | ENV, gsub | Built-in | **stdlib** |
+| Protocol detection | Regex | Not applicable | **Regex** |
+| Performance | Excellent | Good | **stdlib** |
+| Dependencies | None | Additional gem | **stdlib** |
+
+**Selection Rationale:**
+- Use Ruby stdlib exclusively - no new dependencies
+- PathExpander already uses Pathname successfully
+- Regex sufficient for protocol pattern detection
+- Keep ace-core lightweight and portable
+
+### File Modifications
+
+**Modify:**
+- `ace-core/lib/ace/core/atoms/path_expander.rb`
+  - Add `expand_with_context(path:, context: {})` method
+  - Add `protocol?(path)` method for detection
+  - Add `register_protocol_resolver(resolver)` for ace-nav integration
+  - Add `resolve_protocol(uri)` for delegation
+  - Keep existing `expand(path)` unchanged for backward compatibility
+  - Changes: ~100 LOC added
+  - Impact: Extends existing module without breaking changes
+  - Integration: All ace-* gems can use enhanced path resolution
+
+**Create:**
+- `ace-core/test/atoms/path_expander_protocol_test.rb`
+  - Purpose: Test protocol detection and resolution
+  - Key components: Protocol pattern tests, resolver registration, delegation tests
+  - Dependencies: test_helper, minitest
+
+- `ace-core/test/atoms/path_expander_context_test.rb`
+  - Purpose: Test context-aware path resolution
+  - Key components: Config-relative tests, project-relative tests, precedence tests
+  - Dependencies: test_helper, minitest, tmpdir for fixtures
+
+- `ace-core/test/integration/path_expander_nav_integration_test.rb`
+  - Purpose: Test PathExpander + ace-nav integration
+  - Key components: Protocol resolution via ace-nav, fallback behavior
+  - Dependencies: ace-nav (optional), test_helper
+
+**Documentation Updates:**
+- `ace-core/README.md`
+  - Section: PathExpander usage examples
+  - Changes: Add protocol and context-aware examples
+
+- `docs/decisions/ADR-004-consistent-path-standards.md`
+  - Section: Evolution addendum
+  - Changes: Document PathExpander as implementation of path standards
+
+### Test Case Planning
+
+**Test Scenarios:**
+
+**1. Protocol Detection Tests (Unit):**
+- Detect valid protocols: `wfi://`, `guide://`, `tmpl://`, `task://`, `prompt://`
+- Reject invalid protocols: `xyz://`, `http://`, missing `://`
+- Handle edge cases: empty string, nil, protocol-only `wfi://`
+
+**2. Context-Aware Resolution Tests (Unit):**
+- Config-relative (`./`): Resolve relative to `config_file_dir` in context
+- Project-relative (no prefix): Resolve relative to `project_root` in context
+- Absolute paths: Return as-is with expansion
+- Parent references (`../`): Resolve correctly from config file location
+
+**3. Environment Variable Expansion Tests (Unit):**
+- `$VAR` format: `$HOME/docs` → `/Users/user/docs`
+- `${VAR}` format: `${PROJECT_ROOT}/config` → `/project/config`
+- Undefined vars: Leave as literal string or error (TBD)
+- Nested paths: `$HOME/projects/$PROJECT_NAME`
+
+**4. Protocol Resolution Tests (Integration):**
+- With ace-nav loaded: Successfully resolve `wfi://workflow-name`
+- Without ace-nav: Return helpful error message
+- Protocol not found: Clear error with suggestion
+- Circular references: Detect and prevent infinite loops
+
+**5. Precedence Tests (Unit):**
+- Absolute > Project-relative > Config-relative
+- Explicit context overrides defaults
+- Protocol resolution takes priority when pattern matches
+
+**6. Error Handling Tests (Unit):**
+- Invalid protocol: Clear error message
+- Unresolved protocol: Suggestion to check ace-nav
+- Missing context: Graceful fallback to project root
+- Nil/empty path: Return nil without error
+
+**7. Backward Compatibility Tests (Integration):**
+- Existing `expand(path)` behavior unchanged
+- All current ace-* gem uses continue to work
+- No breaking changes to existing path resolution
+
+**8. Performance Tests (Unit):**
+- Path expansion < 5ms for typical paths
+- Protocol detection < 1ms (regex pattern matching)
+- No performance regression vs current implementation
+
+**Test Prioritization:**
+- **High Priority:** Backward compatibility, protocol detection, context resolution, error handling
+- **Medium Priority:** Environment variable expansion, precedence rules, integration tests
+- **Low Priority:** Performance benchmarks, edge case combinations
+
+### Implementation Steps
+
+**Planning Steps:**
+
+* [ ] Review existing PathExpander usage across all ace-* gems
+  > TEST: Usage Audit Check
+  > Type: Pre-condition Check
+  > Assert: All current uses of PathExpander.expand() identified
+  > Command: grep -r "PathExpander" ace-*/lib --include="*.rb" | wc -l
+
+* [ ] Analyze ace-nav protocol resolution architecture
+  > TEST: Architecture Understanding
+  > Type: Pre-condition Check
+  > Assert: Protocol resolution entry points and patterns documented
+  > Command: # Review ace-nav/lib/ace/nav/molecules/resource_resolver.rb
+
+* [ ] Design protocol resolver registry interface
+  - Define callback signature for protocol resolvers
+  - Plan registration and lookup mechanism
+  - Document integration points for ace-nav
+
+**Execution Steps:**
+
+- [ ] Step 1: Enhance PathExpander with protocol detection
+  - Add `protocol?(path)` method using regex pattern
+  - Add protocol pattern constant (`PROTOCOL_PATTERN = %r{^[a-z]+://}`)
+  - Implement simple pattern matching logic
+  > TEST: Protocol Detection
+  > Type: Unit Test
+  > Assert: `protocol?("wfi://test")` returns true, `protocol?("./path")` returns false
+  > Command: ruby -I test ace-core/test/atoms/path_expander_protocol_test.rb
+
+- [ ] Step 2: Add protocol resolver registry
+  - Create class variable `@@protocol_resolver` (default nil)
+  - Add `register_protocol_resolver(resolver)` class method
+  - Add `resolve_protocol(uri)` that delegates to registered resolver
+  > TEST: Resolver Registration
+  > Type: Unit Test
+  > Assert: Resolver can be registered and protocol URIs delegate correctly
+  > Command: ruby -I test ace-core/test/atoms/path_expander_protocol_test.rb -n test_resolver_registration
+
+- [ ] Step 3: Implement `expand_with_context` method
+  - Accept `path:` and `context: {}` parameters
+  - Extract `config_file_dir` and `project_root` from context
+  - Implement resolution precedence logic
+  - Handle `./ ../` as config-relative
+  - Handle others as project-relative (default)
+  > TEST: Context Resolution
+  > Type: Unit Test
+  > Assert: Paths resolve correctly based on context
+  > Command: ruby -I test ace-core/test/atoms/path_expander_context_test.rb
+
+- [ ] Step 4: Add protocol resolution to expand_with_context
+  - Check if path matches protocol pattern
+  - If protocol and resolver registered: delegate
+  - If protocol but no resolver: return error hash
+  - If not protocol: proceed with normal expansion
+  > TEST: Protocol Integration
+  > Type: Integration Test
+  > Assert: Protocol paths delegate when resolver present, error when absent
+  > Command: ruby -I test ace-core/test/atoms/path_expander_protocol_test.rb -n test_protocol_resolution
+
+- [ ] Step 5: Write comprehensive test suite
+  - Create `path_expander_protocol_test.rb` (protocol detection tests)
+  - Create `path_expander_context_test.rb` (context-aware resolution tests)
+  - Create `path_expander_backward_compat_test.rb` (ensure no breaking changes)
+  - Add edge case coverage (nil, empty, whitespace, symlinks)
+  > TEST: Test Suite Coverage
+  > Type: Coverage Check
+  > Assert: 100% coverage for new PathExpander methods
+  > Command: cd ace-core && bundle exec rake test TESTOPTS="--name=/PathExpander/"
+
+- [ ] Step 6: Document PathExpander enhancements
+  - Update ace-core/README.md with usage examples
+  - Add inline documentation for new methods
+  - Document protocol resolver registration pattern
+  > TEST: Documentation Complete
+  > Type: Manual Check
+  > Assert: README contains clear examples of protocol and context usage
+  > Command: # Manual review of ace-core/README.md
+
+- [ ] Step 7: Create ace-nav integration example
+  - Write integration test showing ace-nav registration
+  - Document how ace-nav should register its resolver
+  - Test protocol resolution end-to-end
+  > TEST: ace-nav Integration
+  > Type: Integration Test
+  > Assert: ace-nav can register and resolve protocols via PathExpander
+  > Command: ruby -I test ace-core/test/integration/path_expander_nav_integration_test.rb
+
+- [ ] Step 8: Validate backward compatibility
+  - Run full ace-core test suite
+  - Run ace-nav test suite
+  - Run ace-docs, ace-context, ace-taskflow tests
+  - Ensure no breaking changes
+  > TEST: Backward Compatibility
+  > Type: Integration Test
+  > Assert: All existing tests pass, no regressions
+  > Command: bundle exec rake test
+
+### Risk Assessment
+
+**Technical Risks:**
+
+- **Risk:** Breaking changes to existing PathExpander usage
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Keep existing `expand()` method unchanged, add new methods only, comprehensive backward compatibility tests
+  - **Rollback:** Revert PathExpander changes, gems continue using original implementation
+
+- **Risk:** Protocol resolution performance impact
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Protocol detection via fast regex (< 1ms), delegation to ace-nav uses existing caching
+  - **Rollback:** Disable protocol detection if performance issues detected
+
+**Integration Risks:**
+
+- **Risk:** ace-nav integration complexity
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Simple callback interface, ace-nav optional (soft dependency), clear error messages when unavailable
+  - **Monitoring:** Integration test suite, manual testing of protocol resolution
+
+- **Risk:** Inconsistent path resolution across gems
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Centralized implementation in ace-core, comprehensive test coverage, migration guide for gems
+  - **Monitoring:** Integration tests across all ace-* gems
+
+**Performance Risks:**
+
+- **Risk:** Path resolution slower than current implementation
+  - **Mitigation:** No caching overhead (resolution is fast), regex pattern matching is O(1)
+  - **Monitoring:** Performance tests, benchmark comparisons
+  - **Thresholds:** < 5ms for typical paths, < 100ms with ace-nav protocol resolution
+
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251018-143836-in-ace-config-files-params-we-use-different-way.md`
 - Related: ace-core PathExpander atom (`ace-core/lib/ace/core/atoms/path_expander.rb`)
 - Related: ace-nav protocol resolution (`ace-nav/README.md`)
 - Related: ADR-004 Consistent Path Standards (`docs/decisions/ADR-004-consistent-path-standards.md`)
+- Related task: v.0.8.0+task.016 (PathResolver consolidation - completed)
