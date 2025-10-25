@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.96] - 2025-10-25
+
+### Added
+- **ace-search v0.11.0**: Project-wide search by default with optional search path argument
+  - SearchPathResolver atom with 4-step priority resolution (explicit → env → project root → fallback)
+  - Optional SEARCH_PATH positional argument in CLI
+  - Display search path in output context for transparency
+  - Support for PROJECT_ROOT_PATH environment variable
+
+### Fixed
+- **ace-search v0.11.0**: Fixed inconsistent search results from different directories
+  - Execute ripgrep/fd from search directory using chdir for correct .gitignore processing
+  - Fixed search_path propagation through UnifiedSearcher option builders
+
+### Changed
+- **ace-search v0.11.0**: BEHAVIOR CHANGE - Default search scope now project-wide instead of current directory
+  - Use `ace-search "pattern" ./` to maintain old behavior (current directory only)
+
 ## [0.9.95] - 2025-10-24
 
 ### Added
