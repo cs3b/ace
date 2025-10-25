@@ -117,6 +117,7 @@ module Ace
           rg_opts[:hidden] = options[:hidden] if options[:hidden]
           rg_opts[:files_with_matches] = options[:files_with_matches] if options[:files_with_matches]
           rg_opts[:max_count] = options[:max_results] if options[:max_results]
+          rg_opts[:search_path] = options[:search_path] if options[:search_path]
 
           rg_opts
         end
@@ -128,6 +129,7 @@ module Ace
           fd_opts[:hidden] = options[:hidden] if options[:hidden]
           fd_opts[:max_results] = options[:max_results] if options[:max_results]
           fd_opts[:exclude] = options[:exclude] if options[:exclude]
+          fd_opts[:search_path] = options[:search_path] if options[:search_path]
 
           fd_opts
         end

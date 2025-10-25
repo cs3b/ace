@@ -4,6 +4,8 @@ Unified search tool for codebases with intelligent pattern matching and configur
 
 ## Features
 
+- **Project-Wide Search by Default**: Searches entire project from root, regardless of current directory
+  > **Note for upgrading users**: Default search behavior changed in `v0.11.0`. See the [Troubleshooting](#troubleshooting) guide for details.
 - **Intelligent DWIM Mode**: Automatically detects whether you're searching for files or content
 - **Dual Backend**: Uses ripgrep for content search and fd for file search
 - **Git-Aware**: Search only staged, tracked, or changed files
@@ -12,6 +14,7 @@ Unified search tool for codebases with intelligent pattern matching and configur
 - **Path-Aware File Search**: Matches full paths, not just filenames
 - **Interactive Mode**: fzf integration for result selection
 - **Multiple Output Formats**: Text (with clickable links), JSON, and YAML
+- **Flexible Search Scope**: Optional search path argument to limit scope when needed
 
 ## Installation
 
@@ -32,8 +35,14 @@ bundle install
 ## Quick Start
 
 ```bash
-# Search for content
+# Search entire project (from root, regardless of current directory)
 ace-search "TODO"
+
+# Search in current directory only
+ace-search "TODO" ./
+
+# Search specific directory
+ace-search "TODO" src/
 
 # Search for files
 ace-search --files "controller"
@@ -77,6 +86,99 @@ case_insensitive: false
 ## Usage
 
 See the [usage guide](../../.ace-taskflow/v.0.9.0/t/059-task-search-migrate-tool-ace-search-gem/ux/usage.md) for comprehensive documentation.
+
+## Troubleshooting
+
+### Different results after upgrading to v0.11.0?
+
+**Symptom**: Search finds different files or more/fewer results after upgrade
+
+**Cause**: v0.11.0 changed default search scope from current directory to project root
+
+**Solutions**:
+- **Maintain old behavior**: Add `./` argument: `ace-search "pattern" ./`
+- **Embrace new behavior**: Remove any `cd` commands in scripts
+- **Verify behavior**: Use `DEBUG=1` to see which directory is being searched
+
+### Search path not detected correctly?
+
+**Symptom**: Searches wrong directory or can't find project root
+
+**Debugging**:
+```bash
+DEBUG=1 ace-search "pattern"  # Shows resolved search path
+```
+
+**Solutions**:
+- **Set explicitly**: `ace-search "pattern" /specific/path`
+- **Override detection**: `PROJECT_ROOT_PATH=/path ace-search "pattern"`
+- **Check project markers**: Ensure `.git`, `Gemfile`, or other markers exist in project root
+
+### No results found?
+
+**Common causes**:
+1. **Pattern needs escaping**: Use quotes for patterns with spaces or special characters
+   ```bash
+   ace-search "pattern with spaces"
+   ace-search "special.*regex"
+   ```
+
+2. **Files excluded by .gitignore**: ace-search respects `.gitignore` files
+   ```bash
+   ace-search "pattern" --hidden  # Include hidden files
+   ```
+
+3. **Search path incorrect**: Verify with `DEBUG=1`
+
+4. **Wrong search mode**: Force content search with `--content` flag
+
+### Warning about non-existent path?
+
+**Symptom**: `Warning: Search path '/path' does not exist`
+
+**Cause**: You provided an explicit search path that doesn't exist (likely a typo)
+
+**Solutions**:
+- Check the spelling of the path
+- Use tab-completion for paths
+- Verify the path exists: `ls /the/path`
+
+## Debugging
+
+ace-search supports debug output via the `DEBUG` environment variable:
+
+```bash
+# Show search path resolution and command execution
+DEBUG=1 ace-search "pattern"
+```
+
+**Debug output shows**:
+- Resolved search path (absolute)
+- Current working directory
+- Actual ripgrep/fd command being executed
+- Directory where command executes (chdir)
+
+**Example output**:
+```
+============================================================
+DEBUG: CLI Search Path Resolution
+DEBUG: Resolved search path: "/Users/you/project"
+DEBUG: Current directory: /Users/you/project/subdirectory
+============================================================
+DEBUG: RipgrepExecutor
+DEBUG: options[:search_path] = "/Users/you/project"
+DEBUG: Current Dir.pwd = /Users/you/project/subdirectory
+DEBUG: Command: rg --color=never --line-number pattern .
+DEBUG: Will chdir to: /Users/you/project
+DEBUG: Absolute chdir: /Users/you/project
+============================================================
+```
+
+**Use cases**:
+- Verify project root detection is working correctly
+- Debug unexpected search results
+- Troubleshoot path resolution issues
+- Understand how search scope is determined
 
 ## Architecture
 

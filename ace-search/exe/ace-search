@@ -12,6 +12,8 @@ require_relative "../lib/ace/search/atoms/fd_executor"
 require_relative "../lib/ace/search/atoms/pattern_analyzer"
 require_relative "../lib/ace/search/atoms/result_parser"
 require_relative "../lib/ace/search/atoms/tool_checker"
+require_relative "../lib/ace/search/atoms/search_path_resolver"
+require_relative "../lib/ace/search/atoms/debug_logger"
 
 require_relative "../lib/ace/search/molecules/preset_manager"
 require_relative "../lib/ace/search/molecules/git_scope_filter"
@@ -52,7 +54,7 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: ace-search [options] PATTERN"
+  opts.banner = "Usage: ace-search [options] PATTERN [SEARCH_PATH]"
   opts.separator ""
   opts.separator "Search across the codebase with intelligent pattern matching"
   opts.separator ""
@@ -181,9 +183,13 @@ parser = OptionParser.new do |opts|
 end
 
 pattern = nil
+search_path_arg = nil
 begin
   parser.parse!(ARGV)
-  pattern = ARGV.join(" ")
+
+  # Parse positional arguments: PATTERN [SEARCH_PATH]
+  pattern = ARGV.shift
+  search_path_arg = ARGV.shift  # May be nil
 rescue OptionParser::InvalidOption => e
   puts "Error: #{e.message}"
   puts parser
@@ -194,6 +200,27 @@ if pattern.nil? || pattern.empty?
   puts "Error: No search pattern provided"
   puts parser
   exit 1
+end
+
+# Resolve search path using 4-step priority
+resolver = Ace::Search::Atoms::SearchPathResolver.new
+resolved_path = resolver.resolve(search_path_arg)
+
+# Validate explicit paths (warn if non-existent)
+if search_path_arg && search_path_arg.strip != "" && resolved_path != "."
+  expanded_path = File.expand_path(resolved_path)
+  unless Dir.exist?(expanded_path)
+    $stderr.puts "Warning: Search path '#{resolved_path}' not found (resolved to: #{expanded_path})."
+    $stderr.puts "         The underlying search tool may return errors or no results."
+  end
+end
+
+options[:search_path] = resolved_path
+
+# Debug output
+Ace::Search::Atoms::DebugLogger.section("CLI Search Path Resolution") do
+  Ace::Search::Atoms::DebugLogger.log("Resolved search path: #{options[:search_path].inspect}")
+  Ace::Search::Atoms::DebugLogger.log("Current directory: #{Dir.pwd}")
 end
 
 begin
@@ -224,7 +251,8 @@ begin
       mode: result[:mode],
       pattern: pattern,
       glob: options[:glob],
-      scope: options[:scope]
+      scope: options[:scope],
+      search_path: options[:search_path]
     )
     puts ""
   end
