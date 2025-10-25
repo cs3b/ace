@@ -13,17 +13,26 @@ sort: 998
 
 ### User Experience
 
-**Primary Use Case: Task-Aware Worktree Creation**
+**Primary Use Case: Task-Aware Worktree Creation with Status Tracking**
 
 - **Input**: Task ID (e.g., `081`, `task.081`, `v.0.9.0+081`)
 - **Process**:
   1. User runs `ace-git-worktree create --task 081`
-  2. Gem queries ace-taskflow for task metadata (title, slug)
-  3. Creates worktree directory based on configured format (default: `.ace-wt/task.081/`)
-  4. Creates branch with task-based naming (default: `081-slug-of-the-task`)
-  5. Automatically trusts mise.toml if present
-  6. Displays confirmation with paths
-- **Output**: Working worktree ready for task development with mise environment trusted
+  2. Gem queries ace-taskflow for task metadata (title, slug, current status)
+  3. Updates task status to `in-progress` if not already (via `ace-taskflow task start`)
+  4. Adds worktree metadata to task frontmatter:
+     ```yaml
+     worktree:
+       branch: "081-fix-authentication-bug"
+       path: ".ace-wt/task.081"
+       created_at: "2025-10-25 14:30:00"
+     ```
+  5. Commits task changes to main branch with message: `chore(task-081): mark as in-progress, creating worktree`
+  6. Creates worktree directory based on configured format (default: `.ace-wt/task.081/`)
+  7. Creates branch with task-based naming (default: `081-slug-of-the-task`)
+  8. Automatically trusts mise.toml if present
+  9. Displays confirmation with paths and status
+- **Output**: Working worktree ready for task development with mise environment trusted, task marked as in-progress on main branch
 
 **Secondary Use Case: Traditional Worktree Creation**
 
@@ -40,13 +49,16 @@ sort: 998
 
 ### Expected Behavior
 
-The system provides a seamless workflow for creating isolated development environments for tasks:
+The system provides a seamless workflow for creating isolated development environments for tasks with integrated status tracking:
 
-1. **Task Integration**: When given a task ID, automatically fetch task metadata from ace-taskflow and use it to generate consistent directory and branch names
-2. **Configuration-Driven**: All naming conventions and paths driven by `.ace/git/worktree.yml` configuration using ace-core cascade
-3. **Mise Automation**: Detect mise.toml files in worktrees and automatically run `mise trust` to avoid manual trust steps
-4. **Deterministic Output**: Provide parseable output for AI agents to use worktree paths programmatically
-5. **ACE Integration**: Follow ACE gem patterns with ATOM architecture, Thor CLI, and handbook integration
+1. **Task Status Management**: Automatically mark tasks as in-progress when creating worktrees, maintaining accurate task state in the main branch
+2. **Task Integration**: When given a task ID, automatically fetch task metadata from ace-taskflow and use it to generate consistent directory and branch names
+3. **Worktree Metadata Tracking**: Add worktree information (branch, path, creation time) to task frontmatter for clear association between tasks and worktrees
+4. **Atomic Updates**: Commit task status and worktree metadata changes to main branch before creating worktree, ensuring consistent state
+5. **Configuration-Driven**: All naming conventions, paths, and workflow behaviors driven by `.ace/git/worktree.yml` configuration using ace-core cascade
+6. **Mise Automation**: Detect mise.toml files in worktrees and automatically run `mise trust` to avoid manual trust steps
+7. **Deterministic Output**: Provide parseable output for AI agents to use worktree paths programmatically
+8. **ACE Integration**: Follow ACE gem patterns with ATOM architecture, custom CLI router, and handbook integration
 
 ### Interface Contract
 
@@ -63,6 +75,9 @@ ace-git-worktree create --task <task-id>
   --path <custom-path>    # Override default root path
   --no-mise-trust         # Skip automatic mise trust
   --dry-run               # Show what would be created
+  --no-status-update      # Skip marking task as in-progress
+  --no-commit             # Skip committing task changes
+  --commit-message <msg>  # Custom commit message for task update
 
 # Traditional creation
 ace-git-worktree create <branch-name>
@@ -111,6 +126,12 @@ git:
       # branch_format: "task-{id}-{slug}" # task-081-slug-of-task
       # directory_format: "{id}"          # 081
 
+      # Workflow automation
+      auto_mark_in_progress: true    # Auto-update task status to in-progress
+      auto_commit_task: true          # Auto-commit task changes before creating worktree
+      commit_message_format: "chore(task-{id}): mark as in-progress, creating worktree"
+      add_worktree_metadata: true    # Add worktree info to task frontmatter
+
     # Cleanup policies
     cleanup:
       on_merge: false      # Auto-remove when branch merged
@@ -146,6 +167,9 @@ git:
 **Core Functionality:**
 - [ ] Task-aware worktree creation with `--task` flag
 - [ ] Integration with ace-taskflow for metadata lookup
+- [ ] Automatic task status update to in-progress (configurable)
+- [ ] Add worktree metadata to task frontmatter (branch, path, created_at)
+- [ ] Commit task changes before creating worktree (configurable)
 - [ ] Configurable naming conventions (directory_format, branch_format)
 - [ ] Automatic mise trust execution when mise.toml detected
 - [ ] Traditional branch-based worktree creation
@@ -160,6 +184,9 @@ git:
 - [ ] Support for custom root paths
 - [ ] Configurable task naming formats
 - [ ] Configurable mise trust behavior
+- [ ] Configurable workflow automation (auto_mark_in_progress, auto_commit_task)
+- [ ] Configurable commit message format for task updates
+- [ ] Configurable worktree metadata addition to tasks
 
 **Documentation & Integration:**
 - [ ] README.md with overview and quick start
@@ -258,9 +285,9 @@ Enable seamless, task-focused development workflows by providing deterministic C
 
 **ATOM Pattern Implementation:**
 - **Atoms**: Pure functions for git command execution, path manipulation, string slugification
-- **Molecules**: Worktree operations (create, list, remove), task metadata fetching, mise trust execution
-- **Organisms**: Orchestration of worktree creation with task integration, configuration-driven operations
-- **Models**: Data structures for WorktreeConfig, WorktreeInfo, TaskMetadata
+- **Molecules**: Worktree operations (create, list, remove), task metadata fetching, task status updating, task frontmatter updating, mise trust execution
+- **Organisms**: Orchestration of complete task-worktree workflow (status update, metadata tracking, commit, worktree creation), configuration-driven operations
+- **Models**: Data structures for WorktreeConfig, WorktreeInfo, TaskMetadata, WorktreeMetadata
 
 **Integration Points:**
 - ace-core: Configuration cascade via `Ace::Core.config.get('ace', 'git', 'worktree')`
@@ -393,6 +420,9 @@ ace-git-worktree/
 │   │   └── slug_generator.rb      # Task title to slug conversion
 │   ├── molecules/
 │   │   ├── task_fetcher.rb        # Fetch task metadata from ace-taskflow
+│   │   ├── task_status_updater.rb # Update task status to in-progress
+│   │   ├── task_metadata_writer.rb # Add worktree metadata to task frontmatter
+│   │   ├── task_committer.rb      # Commit task changes via ace-git-commit
 │   │   ├── worktree_creator.rb    # Core worktree creation logic
 │   │   ├── worktree_lister.rb     # List worktrees with task info
 │   │   ├── worktree_remover.rb    # Remove worktree operations
@@ -404,7 +434,8 @@ ace-git-worktree/
 │   ├── models/
 │   │   ├── worktree_config.rb     # Configuration model
 │   │   ├── worktree_info.rb       # Worktree information
-│   │   └── task_metadata.rb       # Task information
+│   │   ├── task_metadata.rb       # Task information
+│   │   └── worktree_metadata.rb   # Worktree metadata for task frontmatter
 │   └── commands/
 │       ├── create_command.rb
 │       ├── list_command.rb
@@ -422,6 +453,9 @@ ace-git-worktree/
 │   │   └── slug_generator_test.rb
 │   ├── molecules/
 │   │   ├── task_fetcher_test.rb
+│   │   ├── task_status_updater_test.rb
+│   │   ├── task_metadata_writer_test.rb
+│   │   ├── task_committer_test.rb
 │   │   ├── worktree_creator_test.rb
 │   │   ├── worktree_lister_test.rb
 │   │   ├── worktree_remover_test.rb
@@ -433,7 +467,8 @@ ace-git-worktree/
 │   ├── models/
 │   │   ├── worktree_config_test.rb
 │   │   ├── worktree_info_test.rb
-│   │   └── task_metadata_test.rb
+│   │   ├── task_metadata_test.rb
+│   │   └── worktree_metadata_test.rb
 │   ├── commands/
 │   │   ├── create_command_test.rb
 │   │   ├── list_command_test.rb
@@ -464,9 +499,12 @@ ace-git-worktree/
 - **atoms/git_command.rb**: Thin wrapper delegating to ace-git-diff CommandExecutor
 - **atoms/slug_generator.rb**: Convert task titles to URL-safe slugs for branch names
 - **molecules/task_fetcher.rb**: Execute `ace-taskflow task <id>` and parse output
+- **molecules/task_status_updater.rb**: Execute `ace-taskflow task start <id>` to update status
+- **molecules/task_metadata_writer.rb**: Update task file frontmatter with worktree metadata
+- **molecules/task_committer.rb**: Execute `ace-git-commit` to commit task changes
 - **molecules/worktree_creator.rb**: Execute git worktree add with error handling
 - **molecules/mise_trustor.rb**: Detect and trust mise.toml in worktree
-- **organisms/task_worktree_orchestrator.rb**: Coordinate task fetch + worktree creation + mise trust
+- **organisms/task_worktree_orchestrator.rb**: Coordinate complete workflow: status update + metadata + commit + worktree creation + mise trust
 - **commands/*_command.rb**: CLI command implementations returning exit codes
 - **cli.rb**: Route subcommands to command classes
 - **configuration.rb**: Load config via Ace::Core.config cascade
