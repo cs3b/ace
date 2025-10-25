@@ -229,6 +229,10 @@ module Ace
             # Determine status based on path
             status = if idea[:path] && idea[:path].include?("/done/")
                       "done"
+                     elsif idea[:path] && idea[:path].include?("/maybe/")
+                      "maybe"
+                     elsif idea[:path] && idea[:path].include?("/anyday/")
+                      "anyday"
                      else
                       idea[:status] || "new"
                      end
@@ -253,11 +257,15 @@ module Ace
         def format_ideas_line(idea_stats)
           parts = []
 
-          # Show pending ideas (new) and done ideas
+          # Show pending ideas (new), maybe, anyday, and done ideas
           new_count = idea_stats[:by_status]["new"] || 0
+          maybe_count = idea_stats[:by_status]["maybe"] || 0
+          anyday_count = idea_stats[:by_status]["anyday"] || 0
           done_count = idea_stats[:by_status]["done"] || 0
 
           parts << "💡 #{new_count}" if new_count > 0
+          parts << "🤔 #{maybe_count}" if maybe_count > 0
+          parts << "📅 #{anyday_count}" if anyday_count > 0
           parts << "✅ #{done_count}" if done_count > 0
 
           # Add other statuses from IDEA_STATUS_ORDER
@@ -270,8 +278,8 @@ module Ace
             parts << "#{icon} #{count}"
           end
 
-          # Add unknown statuses
-          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || s == "done" }
+          # Add unknown statuses (exclude new, maybe, anyday, and done which are already handled)
+          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || ["done", "maybe", "anyday"].include?(s) }
           unknown_count = unknown_statuses.values.sum
           parts << "❓ #{unknown_count}" if unknown_count > 0
 

@@ -34,7 +34,13 @@ module Ace
 
           # Check if preset is compatible with the requested type
           preset_type = preset[:type]
-          return nil if preset_type && preset_type != type.to_s
+          # If type is nil, only return universal presets (preset_type must be nil)
+          if type.nil?
+            return nil if preset_type
+          else
+            # If type is specified, return nil if preset_type exists and doesn't match
+            return nil if preset_type && preset_type != type.to_s
+          end
 
           preset.dup
         end
@@ -47,8 +53,10 @@ module Ace
           preset_type.nil? || preset_type == type.to_s
         end
 
-        def apply_preset(name, additional_filters = {})
-          preset = get_preset(name)
+        def apply_preset(name, additional_filters = {}, type = :tasks)
+          preset = get_preset(name, type)
+          # If no type-specific preset found, try universal presets (type: nil)
+          preset ||= get_preset(name, nil) if type
           return nil unless preset
 
           # Merge preset filters with additional filters

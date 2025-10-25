@@ -16,7 +16,8 @@ module Ace
             content: "",
             location: nil,
             git_commit: nil,
-            llm_enhance: nil
+            llm_enhance: nil,
+            subdirectory: nil
           }
 
           content_parts = []
@@ -39,6 +40,20 @@ module Ace
               i += 2
             when "--current"
               options[:location] = "current"
+              i += 1
+            when "--maybe"
+              # Check for mutual exclusivity
+              if options[:subdirectory] == "anyday"
+                raise ArgumentError, "Cannot use both --maybe and --anyday flags"
+              end
+              options[:subdirectory] = "maybe"
+              i += 1
+            when "--anyday"
+              # Check for mutual exclusivity
+              if options[:subdirectory] == "maybe"
+                raise ArgumentError, "Cannot use both --maybe and --anyday flags"
+              end
+              options[:subdirectory] = "anyday"
               i += 1
             when "--git-commit", "-gc"
               options[:git_commit] = true

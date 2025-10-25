@@ -36,6 +36,24 @@ module Ace
             end
           end
 
+          # Load maybe ideas from maybe/ subdirectory (for :maybe and :all scopes)
+          if [:maybe, :all].include?(scope)
+            maybe_dir = File.join(idea_dir, "maybe")
+            if Dir.exist?(maybe_dir)
+              maybe_ideas = load_ideas_from_directory(maybe_dir, include_content)
+              ideas.concat(maybe_ideas)
+            end
+          end
+
+          # Load anyday ideas from anyday/ subdirectory (for :anyday and :all scopes)
+          if [:anyday, :all].include?(scope)
+            anyday_dir = File.join(idea_dir, "anyday")
+            if Dir.exist?(anyday_dir)
+              anyday_ideas = load_ideas_from_directory(anyday_dir, include_content)
+              ideas.concat(anyday_ideas)
+            end
+          end
+
           ideas
         end
 
@@ -111,7 +129,9 @@ module Ace
           # Load directory-based ideas (directories containing idea.md)
           Dir.glob(File.join(dir, "*")).sort.each do |path|
             next unless Dir.exist?(path)
-            next if File.basename(path) == "done" # Skip done/ subdirectory
+            # Skip scope subdirectories
+            basename = File.basename(path)
+            next if ["done", "maybe", "anyday"].include?(basename)
 
             idea_file = File.join(path, "idea.md")
             if File.exist?(idea_file)
@@ -271,23 +291,25 @@ module Ace
 
           # Count directory-based ideas (directories with idea.md)
           dir_count = Dir.glob(File.join(dir, "*"))
-            .select { |path| Dir.exist?(path) && File.basename(path) != "done" }
+            .select { |path| Dir.exist?(path) && !["done", "maybe", "anyday"].include?(File.basename(path)) }
             .count { |path| File.exist?(File.join(path, "idea.md")) }
 
           main_count = flat_count + dir_count
 
-          # Also count ideas in done/ subdirectory
-          done_dir = File.join(dir, "done")
-          done_count = 0
-          if Dir.exist?(done_dir)
-            done_flat = Dir.glob(File.join(done_dir, "*.md")).count
-            done_dirs = Dir.glob(File.join(done_dir, "*"))
+          # Count ideas in scope subdirectories (done, maybe, anyday)
+          subdirs_count = 0
+          ["done", "maybe", "anyday"].each do |subdir_name|
+            subdir = File.join(dir, subdir_name)
+            next unless Dir.exist?(subdir)
+
+            subdir_flat = Dir.glob(File.join(subdir, "*.md")).count
+            subdir_dirs = Dir.glob(File.join(subdir, "*"))
               .select { |path| Dir.exist?(path) }
               .count { |path| File.exist?(File.join(path, "idea.md")) }
-            done_count = done_flat + done_dirs
+            subdirs_count += subdir_flat + subdir_dirs
           end
 
-          main_count + done_count
+          main_count + subdirs_count
         end
       end
     end
