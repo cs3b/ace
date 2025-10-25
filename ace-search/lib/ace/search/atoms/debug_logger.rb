@@ -5,6 +5,9 @@ module Ace
     module Atoms
       # Centralized debug logging for ace-search
       #
+      # NOTE: This logger caches the ENV["DEBUG"] state on first use for performance
+      # and is intended for single-threaded, short-lived CLI processes.
+      #
       # Usage:
       #   DebugLogger.log("message")
       #   DebugLogger.section("Title") do

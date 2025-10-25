@@ -5,6 +5,7 @@ Unified search tool for codebases with intelligent pattern matching and configur
 ## Features
 
 - **Project-Wide Search by Default**: Searches entire project from root, regardless of current directory
+  > **Note for upgrading users**: Default search behavior changed in `v0.11.0`. See the [Troubleshooting](#troubleshooting) guide for details.
 - **Intelligent DWIM Mode**: Automatically detects whether you're searching for files or content
 - **Dual Backend**: Uses ripgrep for content search and fd for file search
 - **Git-Aware**: Search only staged, tracked, or changed files
