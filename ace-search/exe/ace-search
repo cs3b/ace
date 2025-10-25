@@ -204,7 +204,19 @@ end
 
 # Resolve search path using 4-step priority
 resolver = Ace::Search::Atoms::SearchPathResolver.new
-options[:search_path] = resolver.resolve(search_path_arg)
+resolved_path = resolver.resolve(search_path_arg)
+
+# Validate explicit paths (warn if non-existent)
+if search_path_arg && search_path_arg.strip != "" && resolved_path != "."
+  expanded_path = File.expand_path(resolved_path)
+  unless Dir.exist?(expanded_path)
+    $stderr.puts "Warning: Search path '#{resolved_path}' does not exist"
+    $stderr.puts "         Resolved to: #{expanded_path}"
+    $stderr.puts "         Ripgrep/fd may return no results or errors"
+  end
+end
+
+options[:search_path] = resolved_path
 
 # Debug output
 Ace::Search::Atoms::DebugLogger.section("CLI Search Path Resolution") do

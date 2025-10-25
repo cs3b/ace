@@ -160,6 +160,22 @@ module Ace
         assert status.success?, "Help command should succeed"
         assert_match(/PATTERN \[SEARCH_PATH\]/, stdout, "Help should show optional SEARCH_PATH argument")
       end
+
+      def test_warns_on_nonexistent_explicit_path
+        skip_unless_rg_available
+
+        # Use a path that definitely doesn't exist
+        nonexistent_path = "/nonexistent/path/#{rand(100000)}"
+
+        stdout, stderr, status = Open3.capture3(
+          @exe_path, "test", nonexistent_path
+        )
+
+        # Should warn but not fail (ripgrep will handle the error)
+        assert_match(/Warning.*does not exist/, stderr, "Should warn about non-existent path")
+        assert_match(/Resolved to/, stderr, "Should show expanded path")
+        assert_match(/Ripgrep\/fd may return/, stderr, "Should explain consequences")
+      end
     end
   end
 end
