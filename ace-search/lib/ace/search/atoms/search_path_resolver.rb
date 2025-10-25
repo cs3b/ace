@@ -32,6 +32,9 @@ module Ace
           # Step 2: Check PROJECT_ROOT_PATH environment variable
           project_root_env = env_project_root
           if project_root_env && !project_root_env.empty?
+            # We validate the ENV var path to prevent a misconfigured environment
+            # from causing silent failures. We then fall back gracefully.
+            # (Explicit paths are trusted and not validated here)
             return project_root_env if valid_path?(project_root_env)
           end
 
