@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.086
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 12h
 dependencies: []
+sort: 997
 ---
 
 # Align infrastructure gem naming to ace-support-* pattern
@@ -185,3 +186,564 @@ This is a foundation-level improvement that benefits all current and future ACE 
   - All ace-* gems use ace-test-support in development
 - Documentation to update:
   - `docs/ace-gems.g.md` - Formalize naming convention rule
+
+## Technical Approach
+
+### Migration Strategy Selection
+
+After analyzing RubyGems ecosystem patterns and existing ACE monorepo structure, we will use a **coordinated multi-phase migration** approach:
+
+**Phase 1: Gem Creation and Publishing**
+- Create new `ace-support-core` and `ace-support-test-helpers` gems as siblings to existing gems
+- Publish to RubyGems with proper metadata
+- Initially coexist with old gems (no breaking changes yet)
+
+**Phase 2: Dependency Updates**
+- Update all 13 dependent gems to reference new gem names
+- Coordinate version bumps across ecosystem
+- Test compatibility in CI/CD
+
+**Phase 3: Deprecation and Documentation**
+- Mark old gems as deprecated in RubyGems metadata
+- Update all documentation and guides
+- Provide clear migration path for external users
+
+**Phase 4: Old Gem Retirement (Future)**
+- After grace period, archive old gem repositories
+- Keep old gems available on RubyGems but frozen
+
+### Architecture Pattern
+
+**Gem Structure Preservation:**
+- Internal module structure remains unchanged (`Ace::Core`, `Ace::TestSupport`)
+- Require paths stay backward compatible (`require 'ace/core'`)
+- ATOM architecture maintained (atoms/, molecules/, organisms/, models/)
+- Handbook integration patterns preserved
+
+**Naming Convention Formalization:**
+- `ace-*` gems: Functional capability gems WITH direct CLI tools (ace-search, ace-lint, ace-docs, etc.)
+- `ace-support-*` gems: Infrastructure and support gems WITHOUT direct CLI tools (libraries)
+- Document this pattern in `docs/ace-gems.g.md`
+
+**Backward Compatibility Strategy:**
+- Old gems become "shim gems" that depend on new gems
+- No code changes required for existing users
+- Only Gemfile updates needed during transition
+
+### Technology Stack
+
+**RubyGems Publishing:**
+- Use existing `gem push` workflow
+- Leverage RubyGems metadata for deprecation warnings
+- Version coordination: Bump all affected gems to v0.9.x during migration
+
+**Bundler Integration:**
+- Path-based gems during development (`gem "ace-support-core", path: "ace-support-core"`)
+- RubyGems dependencies for published versions
+- Update root Gemfile for workspace development
+
+**Testing Infrastructure:**
+- Existing ace-test-runner for validation
+- CI/CD matrix tests across all gems
+- Integration tests verify cross-gem compatibility
+
+### Implementation Strategy
+
+**Risk Mitigation:**
+1. Create new gems first (no breaking changes)
+2. Test new gems thoroughly before updating dependents
+3. Staged rollout: Update deps gem-by-gem with testing between
+4. Maintain old gems as shims for gradual migration
+5. Document rollback procedures at each phase
+
+**Version Strategy:**
+- New gems start at v0.9.0 (align with ecosystem)
+- Dependent gems bump patch version for dependency updates
+- Old gems frozen at current version with deprecation notice
+
+**Rollback Procedures:**
+- Phase 1: Simply don't publish new gems (no impact)
+- Phase 2: Revert dependency updates in affected gemspecs
+- Phase 3: Remove deprecation notices
+- All phases: Git tags for easy rollback points
+
+## Tool Selection
+
+No new tools required - using existing ACE ecosystem tooling:
+
+| Tool | Purpose | Rationale |
+|------|---------|-----------|
+| RubyGems | Package publishing and distribution | Standard Ruby gem distribution |
+| Bundler | Dependency management | Already in use for monorepo workspace |
+| ace-test-runner | Test execution across gems | Existing testing infrastructure |
+| ace-lint | Code quality validation | Already validating gem code |
+| Git tags | Version control and rollback | Standard practice for releases |
+
+**Selection Rationale:**
+- Zero new dependencies keeps migration simple
+- Leverage existing monorepo infrastructure
+- Standard Ruby ecosystem tools well-understood
+- CI/CD already configured for these tools
+
+## File Modifications
+
+### Create
+
+**New Gem Directories:**
+- `ace-support-core/` (copy of ace-core with renamed gemspec)
+  - Purpose: Renamed version of foundational configuration cascade gem
+  - Key components: Same ATOM structure, config cascade, zero dependencies
+  - Dependencies: None (stdlib only)
+
+- `ace-support-test-helpers/` (copy of ace-test-support with renamed gemspec)
+  - Purpose: Renamed version of shared test utilities
+  - Key components: Test helpers, base test cases, subprocess runner
+  - Dependencies: minitest, minitest-reporters
+
+### Modify
+
+**Gemspecs (13 dependent gems):**
+- `ace-context/ace-context.gemspec` - Change `ace-core` → `ace-support-core`
+- `ace-docs/ace-docs.gemspec` - Change `ace-core` → `ace-support-core`
+- `ace-git-commit/ace-git-commit.gemspec` - Change `ace-core` → `ace-support-core`
+- `ace-git-diff/ace-git-diff.gemspec` - Change `ace-core` → `ace-support-core`, `ace-test-support` → `ace-support-test-helpers` (dev)
+- `ace-lint/ace-lint.gemspec` - Change `ace-core` → `ace-support-core`
+- `ace-llm/ace-llm.gemspec` - Change `ace-core` → `ace-support-core`
+- `ace-nav/ace-nav.gemspec` - Change `ace-core` → `ace-support-core`, `ace-test-support` → `ace-support-test-helpers` (dev)
+- `ace-review/ace-review.gemspec` - Change `ace-core` → `ace-support-core`, `ace-test-support` → `ace-support-test-helpers` (dev)
+- `ace-search/ace-search.gemspec` - Change `ace-core` → `ace-support-core`, `ace-test-support` → `ace-support-test-helpers` (dev)
+- `ace-support-markdown/ace-support-markdown.gemspec` - Change `ace-test-support` → `ace-support-test-helpers` (dev)
+- `ace-taskflow/ace-taskflow.gemspec` - Change `ace-core` → `ace-support-core`
+- `ace-test-runner/ace-test-runner.gemspec` - Change `ace-core` → `ace-support-core`, `ace-test-support` → `ace-support-test-helpers`
+
+**Root Gemfile:**
+- Update path references: `gem "ace-support-core", path: "ace-support-core"`
+- Update path references: `gem "ace-support-test-helpers", path: "ace-support-test-helpers"`
+
+**Documentation (138+ files):**
+- `docs/ace-gems.g.md` - Add naming convention rule section
+- `README.md` - Update gem references
+- `CHANGELOG.md` - Document migration in root changelog
+- All gem README.md files - Update dependency examples
+- All gem CHANGELOG.md files - Document dependency updates
+- ADR-015 (mono-repo migration) - Update gem list
+- Task and idea files - Update references (138+ markdown files)
+
+**CI/CD:**
+- `.github/workflows/ci.yml` - Update gem matrix to include new names
+
+### Delete
+
+None immediately - old gems maintained as deprecated shims during transition period.
+
+### Rename (Comprehensive Migration)
+
+**Gem Directories:**
+- `ace-core/` → `ace-support-core/` (directory rename)
+  - Type: Complete gem directory
+  - Related renames:
+    - Gemspec: `ace-core.gemspec` → `ace-support-core.gemspec`
+    - Module structure: UNCHANGED (`Ace::Core` stays the same)
+    - Require path: UNCHANGED (`require 'ace/core'` stays the same)
+    - Executable: None (library only)
+  - Import updates: 13 gemspecs
+  - Documentation updates: 138+ markdown files
+
+- `ace-test-support/` → `ace-support-test-helpers/` (directory rename)
+  - Type: Complete gem directory
+  - Related renames:
+    - Gemspec: `ace-test-support.gemspec` → `ace-support-test-helpers.gemspec`
+    - Module structure: UNCHANGED (`Ace::TestSupport` stays the same)
+    - Require path: UNCHANGED (`require 'ace/test_support'` stays the same)
+    - Executable: None (library only)
+  - Import updates: 6 gemspecs (development dependencies)
+  - Documentation updates: 138+ markdown files
+
+**Internal Structure (NO CHANGES):**
+- `lib/ace/core/` - Module path stays the same
+- `lib/ace/test_support/` - Module path stays the same
+- All require statements in dependent gems - No changes needed
+- All module references (`Ace::Core`, `Ace::TestSupport`) - No changes needed
+
+## Risk Assessment
+
+### Technical Risks
+
+**Risk: Dependency Resolution Conflicts**
+- **Probability:** Medium
+- **Impact:** High
+- **Mitigation:** Staged rollout with testing between each gem update; use version pinning during transition
+- **Rollback:** Revert to previous gem versions via Git tags; bundler lock file provides safety net
+
+**Risk: RubyGems Publishing Issues**
+- **Probability:** Low
+- **Impact:** Medium
+- **Mitigation:** Test publishing in test environment first; verify gem metadata before production push
+- **Rollback:** RubyGems allows yanking recent gems (within 24 hours); keep old gems available
+
+**Risk: CI/CD Pipeline Failures**
+- **Probability:** Medium
+- **Impact:** Medium
+- **Mitigation:** Update CI configuration before publishing; test matrix locally first
+- **Rollback:** Revert CI config changes; old gems still available for testing
+
+### Integration Risks
+
+**Risk: External Projects Using Old Gem Names**
+- **Probability:** High (if any external users exist)
+- **Impact:** Medium
+- **Mitigation:** Maintain old gems as shim dependencies for extended period; clear migration documentation
+- **Monitoring:** Watch RubyGems download stats; check for GitHub issues
+
+**Risk: Documentation Out of Sync**
+- **Probability:** High (138+ files to update)
+- **Impact:** Low
+- **Mitigation:** Systematic search and replace; create validation checklist; use ace-docs for tracking
+- **Monitoring:** Regular documentation audits; search for old gem names
+
+### Performance Risks
+
+**Risk: Build/Test Time Increase**
+- **Probability:** Low
+- **Impact:** Low
+- **Mitigation:** No new dependencies added; same code structure preserved
+- **Monitoring:** Track CI/CD execution times
+- **Thresholds:** No more than 5% increase in test execution time
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] **Research Phase Completed:**
+  - Analyzed all 13 dependent gems and their dependency declarations
+  - Identified 138+ documentation files referencing old gem names
+  - Reviewed RubyGems migration patterns and deprecation strategies
+  - Confirmed backward compatibility approach (module names unchanged)
+
+* [ ] **Pre-Migration Validation:**
+  - Run full test suite to establish baseline (all gems green)
+  - Verify all gems publish successfully to RubyGems
+  - Document current version numbers for all affected gems
+  - Create Git tags for rollback points
+  > TEST: Pre-Migration Baseline
+  > Type: Pre-condition Check
+  > Assert: All 15+ gems have passing tests, current versions documented
+  > Command: ace-test --all && ace-taskflow release --version
+
+* [ ] **Create Migration Checklist:**
+  - Document all 13 gemspecs to update
+  - List all 138+ documentation files needing updates
+  - Plan version bump strategy for each gem
+  - Define success criteria for each phase
+  > TEST: Migration Scope Complete
+  > Type: Planning Validation
+  > Assert: All affected files identified and categorized by phase
+  > Command: grep -r "ace-core\|ace-test-support" . --include="*.gemspec" | wc -l
+
+### Execution Steps
+
+**Phase 1: Create and Publish New Gems**
+
+- [ ] **1.1: Create ace-support-core gem directory**
+  - Copy `ace-core/` to `ace-support-core/` maintaining all structure
+  - Update gemspec name from `ace-core` to `ace-support-core`
+  - Verify all paths in gemspec (spec.files, spec.require_paths)
+  - Keep module structure unchanged (`lib/ace/core/` stays as-is)
+  > TEST: Directory Structure Validation
+  > Type: Action Validation
+  > Assert: New directory exists with correct structure, gemspec valid
+  > Command: test -d ace-support-core && gem build ace-support-core/ace-support-core.gemspec
+
+- [ ] **1.2: Create ace-support-test-helpers gem directory**
+  - Copy `ace-test-support/` to `ace-support-test-helpers/` maintaining all structure
+  - Update gemspec name from `ace-test-support` to `ace-support-test-helpers`
+  - Verify all paths and dependencies in gemspec
+  - Keep module structure unchanged (`lib/ace/test_support/` stays as-is)
+  > TEST: Directory Structure Validation
+  > Type: Action Validation
+  > Assert: New directory exists with correct structure, gemspec valid
+  > Command: test -d ace-support-test-helpers && gem build ace-support-test-helpers/ace-support-test-helpers.gemspec
+
+- [ ] **1.3: Update root Gemfile workspace references**
+  - Add `gem "ace-support-core", path: "ace-support-core"`
+  - Add `gem "ace-support-test-helpers", path: "ace-support-test-helpers"`
+  - Run `bundle install` to update Gemfile.lock
+  - Verify both gems resolve correctly
+  > TEST: Bundler Resolution
+  > Type: Action Validation
+  > Assert: Bundle installs successfully, both new gems available
+  > Command: bundle install && bundle list | grep ace-support
+
+- [ ] **1.4: Test new gems in isolation**
+  - Run test suite for ace-support-core
+  - Run test suite for ace-support-test-helpers
+  - Verify no regressions from directory rename
+  - Check all require paths still work
+  > TEST: New Gem Test Suites
+  > Type: Integration Test
+  > Assert: All tests pass for both new gems
+  > Command: cd ace-support-core && bundle exec rake test && cd ../ace-support-test-helpers && bundle exec rake test
+
+- [ ] **1.5: Publish new gems to RubyGems**
+  - Set version to 0.9.0 in both new gems
+  - Build gems: `gem build ace-support-core.gemspec`
+  - Publish: `gem push ace-support-core-0.9.0.gem`
+  - Verify gems appear on RubyGems.org
+  - Test installation from RubyGems
+  > TEST: RubyGems Publication
+  > Type: Action Validation
+  > Assert: Both gems published and installable from RubyGems
+  > Command: gem install ace-support-core ace-support-test-helpers --version 0.9.0
+
+**Phase 2: Update Dependent Gems (Tier 1 - Foundation)**
+
+- [ ] **2.1: Update ace-test-runner dependencies**
+  - Change `ace-core` → `ace-support-core` in gemspec
+  - Change `ace-test-support` → `ace-support-test-helpers` in gemspec
+  - Run test suite to verify compatibility
+  - Bump version to 0.1.1 (patch for dependency update)
+  > TEST: ace-test-runner Compatibility
+  > Type: Integration Test
+  > Assert: All tests pass with new dependencies
+  > Command: cd ace-test-runner && bundle install && bundle exec rake test
+
+- [ ] **2.2: Update ace-nav dependencies**
+  - Change `ace-core` → `ace-support-core` in gemspec (runtime)
+  - Change `ace-test-support` → `ace-support-test-helpers` in gemspec (dev)
+  - Run test suite and command validation
+  - Bump version (patch update)
+  > TEST: ace-nav Compatibility
+  > Type: Integration Test
+  > Assert: All tests pass, ace-nav commands work
+  > Command: cd ace-nav && bundle exec rake test && ace-nav --version
+
+**Phase 2: Update Dependent Gems (Tier 2 - Core Tools)**
+
+- [ ] **2.3: Update ace-context dependencies**
+  - Change `ace-core` → `ace-support-core`
+  - Run integration tests for context loading
+  - Verify config cascade still works
+  > TEST: ace-context Config Cascade
+  > Type: Integration Test
+  > Assert: Context loading works with new dependency
+  > Command: cd ace-context && bundle exec rake test
+
+- [ ] **2.4: Update ace-git-commit dependencies**
+  - Change `ace-core` → `ace-support-core`
+  - Test LLM integration and config loading
+  - Verify commit generation works
+  > TEST: ace-git-commit Functionality
+  > Type: Integration Test
+  > Assert: Git commit commands work correctly
+  > Command: cd ace-git-commit && bundle exec rake test
+
+- [ ] **2.5: Update ace-git-diff dependencies**
+  - Change `ace-core` → `ace-support-core` (runtime)
+  - Change `ace-test-support` → `ace-support-test-helpers` (dev)
+  - Run test suite
+  > TEST: ace-git-diff Tests
+  > Type: Integration Test
+  > Assert: All tests pass
+  > Command: cd ace-git-diff && bundle exec rake test
+
+- [ ] **2.6: Update ace-llm dependencies**
+  - Change `ace-core` → `ace-support-core`
+  - Test provider integrations
+  - Verify API key loading from config cascade
+  > TEST: ace-llm Provider Integration
+  > Type: Integration Test
+  > Assert: LLM providers work with new dependency
+  > Command: cd ace-llm && bundle exec rake test
+
+**Phase 2: Update Dependent Gems (Tier 3 - Feature Gems)**
+
+- [ ] **2.7: Update ace-search dependencies**
+  - Change `ace-core` → `ace-support-core` (runtime)
+  - Change `ace-test-support` → `ace-support-test-helpers` (dev)
+  - Test search functionality and config loading
+  > TEST: ace-search Functionality
+  > Type: Integration Test
+  > Assert: Search commands work correctly
+  > Command: cd ace-search && bundle exec rake test && ace-search --version
+
+- [ ] **2.8: Update ace-lint dependencies**
+  - Change `ace-core` → `ace-support-core`
+  - Test linting across all supported formats
+  - Verify config cascade for lint rules
+  > TEST: ace-lint Linting
+  > Type: Integration Test
+  > Assert: Linting works for markdown, yaml, frontmatter
+  > Command: cd ace-lint && bundle exec rake test
+
+- [ ] **2.9: Update ace-docs dependencies**
+  - Change `ace-core` → `ace-support-core`
+  - Test documentation analysis and updates
+  - Verify frontmatter tracking
+  > TEST: ace-docs Functionality
+  > Type: Integration Test
+  > Assert: Documentation tools work correctly
+  > Command: cd ace-docs && bundle exec rake test
+
+- [ ] **2.10: Update ace-review dependencies**
+  - Change `ace-core` → `ace-support-core` (runtime)
+  - Change `ace-test-support` → `ace-support-test-helpers` (dev)
+  - Test review presets and LLM integration
+  > TEST: ace-review Functionality
+  > Type: Integration Test
+  > Assert: Code review commands work
+  > Command: cd ace-review && bundle exec rake test
+
+- [ ] **2.11: Update ace-taskflow dependencies**
+  - Change `ace-core` → `ace-support-core`
+  - Test task, release, idea management
+  - Verify all taskflow commands work
+  > TEST: ace-taskflow Functionality
+  > Type: Integration Test
+  > Assert: All taskflow commands work correctly
+  > Command: cd ace-taskflow && bundle exec rake test && ace-taskflow --version
+
+- [ ] **2.12: Update ace-support-markdown dependencies**
+  - Change `ace-test-support` → `ace-support-test-helpers` (dev only)
+  - Run test suite
+  > TEST: ace-support-markdown Tests
+  > Type: Integration Test
+  > Assert: All tests pass
+  > Command: cd ace-support-markdown && bundle exec rake test
+
+**Phase 2: Integration Validation**
+
+- [ ] **2.13: Run full ecosystem test suite**
+  - Execute ace-test-runner across all gems
+  - Verify CI/CD pipeline passes
+  - Check for any dependency resolution issues
+  - Validate cross-gem integration
+  > TEST: Ecosystem Integration
+  > Type: System Test
+  > Assert: All 15+ gems pass tests with new dependencies
+  > Command: ace-test --all && echo "All gems tested successfully"
+
+**Phase 3: Documentation and Deprecation**
+
+- [ ] **3.1: Update docs/ace-gems.g.md with naming convention**
+  - Add section: "Gem Naming Conventions"
+  - Document `ace-*` vs `ace-support-*` pattern
+  - Explain: gems without CLI tools should be `ace-support-*`
+  - Provide examples from ecosystem
+  > TEST: Documentation Completeness
+  > Type: Documentation Check
+  > Assert: Naming convention clearly documented with examples
+  > Command: grep -A 10 "Gem Naming Convention" docs/ace-gems.g.md
+
+- [ ] **3.2: Update all gem README.md files**
+  - Update dependency examples to use new gem names
+  - Add migration notes for external users
+  - Update installation instructions
+  - Review all 15+ gem README files
+  > TEST: README Updates Complete
+  > Type: Documentation Check
+  > Assert: All READMEs reference new gem names
+  > Command: grep -l "ace-support-core" ace-*/README.md | wc -l
+
+- [ ] **3.3: Update all gem CHANGELOG.md files**
+  - Add v0.9.x entries documenting dependency updates
+  - Note backward compatibility preservation
+  - Reference migration guide
+  > TEST: CHANGELOG Updates
+  > Type: Documentation Check
+  > Assert: All affected gems have CHANGELOG entries
+  > Command: grep -l "ace-support" ace-*/CHANGELOG.md | wc -l
+
+- [ ] **3.4: Update root README.md and CHANGELOG.md**
+  - Document the gem rename in ecosystem overview
+  - Add migration timeline to root CHANGELOG
+  - Update gem listing with new names
+  > TEST: Root Documentation
+  > Type: Documentation Check
+  > Assert: Root docs reflect new gem names
+  > Command: grep "ace-support-core" README.md CHANGELOG.md
+
+- [ ] **3.5: Update ADR-015 and other architecture docs**
+  - Update mono-repo ADR with new gem names
+  - Revise gem listings in architecture docs
+  - Update migration documentation
+  > TEST: Architecture Docs
+  > Type: Documentation Check
+  > Assert: ADRs and architecture docs current
+  > Command: grep "ace-support" docs/decisions/ADR-015*.md
+
+- [ ] **3.6: Bulk update task and idea files (138+ files)**
+  - Use search and replace for `ace-core` → `ace-support-core`
+  - Use search and replace for `ace-test-support` → `ace-support-test-helpers`
+  - Verify changes with grep validation
+  - Review sample files manually
+  > TEST: Task/Idea File Updates
+  > Type: Documentation Check
+  > Assert: No references to old gem names in task/idea files
+  > Command: ! grep -r "ace-core\|ace-test-support" .ace-taskflow --include="*.md" | grep -v "rename"
+
+- [ ] **3.7: Mark old gems as deprecated**
+  - Update ace-core gemspec with deprecation notice
+  - Update ace-test-support gemspec with deprecation notice
+  - Point to new gem names in descriptions
+  - Add post-install message with migration guidance
+  > TEST: Deprecation Notices
+  > Type: Documentation Check
+  > Assert: Old gems show clear deprecation messages
+  > Command: gem spec ace-core | grep -i deprecat
+
+**Phase 4: CI/CD and Publishing**
+
+- [ ] **4.1: Update GitHub Actions workflow**
+  - Add ace-support-core to CI gem matrix
+  - Add ace-support-test-helpers to CI gem matrix
+  - Verify all Ruby versions tested
+  - Remove old gem names after validation period
+  > TEST: CI Configuration
+  > Type: CI/CD Check
+  > Assert: CI tests all gems including new ones
+  > Command: grep "ace-support" .github/workflows/ci.yml
+
+- [ ] **4.2: Publish all updated gems**
+  - Build all updated gems with new dependencies
+  - Publish to RubyGems in dependency order
+  - Verify each gem installs correctly from RubyGems
+  - Tag releases in Git for all updated gems
+  > TEST: Publication Success
+  > Type: Action Validation
+  > Assert: All gems published and installable
+  > Command: gem install ace-context ace-search ace-lint ace-docs --version latest
+
+- [ ] **4.3: Create migration guide document**
+  - Document the migration timeline
+  - Provide upgrade instructions for users
+  - Include troubleshooting section
+  - Add FAQ for common migration issues
+  > TEST: Migration Guide Complete
+  > Type: Documentation Check
+  > Assert: Comprehensive migration guide exists
+  > Command: test -f docs/migrations/ace-support-gem-rename.md
+
+- [ ] **4.4: Final validation and smoke testing**
+  - Install all gems from RubyGems in fresh environment
+  - Run smoke tests for each gem's main functionality
+  - Verify no broken dependencies
+  - Test backward compatibility (old require paths work)
+  > TEST: End-to-End Validation
+  > Type: System Test
+  > Assert: All gems work correctly in production configuration
+  > Command: gem install ace-support-core ace-support-test-helpers && ruby -e "require 'ace/core'; puts Ace::Core::VERSION"
+
+## Acceptance Criteria
+
+- [x] **Planning Complete**: Comprehensive implementation plan with technical approach, file modifications, risk assessment, and execution steps
+- [ ] **New Gems Published**: Both `ace-support-core` and `ace-support-test-helpers` published to RubyGems with v0.9.0
+- [ ] **Ecosystem Updated**: All 13 dependent gems updated to reference new gem names and published
+- [ ] **Tests Pass**: All gem test suites pass with new dependencies (ace-test --all succeeds)
+- [ ] **Backward Compatibility**: Existing code using `require 'ace/core'` and `require 'ace/test_support'` works without modification
+- [ ] **Documentation Current**: All 138+ documentation files updated with new gem names
+- [ ] **Pattern Documented**: `docs/ace-gems.g.md` formalizes naming convention (ace-support-* for library-only gems)
+- [ ] **Migration Guide**: Clear upgrade instructions available for external users
+- [ ] **CI/CD Updated**: GitHub Actions workflow tests all gems with new names
+- [ ] **Deprecation Notices**: Old gems marked as deprecated with migration guidance
+- [ ] **No Breaking Changes**: Users can upgrade with only Gemfile changes (no code modifications required)
+- [ ] **Rollback Tested**: Rollback procedures documented and validated at each phase
