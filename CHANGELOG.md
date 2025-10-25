@@ -16,11 +16,33 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.98] - 2025-10-25
 
+### Added
+- **ace-taskflow v0.14.0**: Maybe and Anyday idea scopes for better idea organization
+  - New subdirectories: `ideas/maybe/` for uncertain ideas, `ideas/anyday/` for low-priority ideas
+  - Preset support: `ace-taskflow ideas maybe` and `ace-taskflow ideas anyday` commands
+  - Creation flags: `--maybe` and `--anyday` for `ace-taskflow idea create`
+  - Statistics display with emoji indicators: 💡 (pending), 🤔 (maybe), 📅 (anyday), ✅ (done)
+  - Example configurations in `.ace.example/taskflow/presets/maybe.yml` and `anyday.yml`
+
+### Changed
+- **ace-taskflow v0.14.0**: Code quality improvements from dual code reviews
+  - Extract SCOPE_SUBDIRECTORIES constant to centralize scope definitions
+  - Add PRESET_TO_SCOPE mapping for cleaner preset-to-scope resolution
+  - Improve status determination using dirname inspection instead of string matching
+  - Reduce code duplication in IdeaLoader with loop-based scope loading
+  - Add validate_subdirectory_exclusivity helper for mutual exclusivity checks
+
 ### Fixed
 - **ace-taskflow v0.13.2**: Task sorting issue in preset configurations
   - Tasks were displayed in reverse order when using `ace-taskflow tasks next` command
   - Fixed apply_preset_sorting to handle both string and symbol keys from YAML configs
   - Added comprehensive tests for ascending and descending sort orders
+
+### Technical
+- **ace-taskflow v0.14.0**: Enhanced test coverage and POSIX compliance
+  - Add comprehensive test coverage for --maybe/--anyday flag mutual exclusivity (6 new tests)
+  - Fix missing final newlines in IdeaWriter templates for POSIX compliance
+  - Clean up test artifacts and finalize task 088
 
 ## [0.9.97] - 2025-10-25
 
