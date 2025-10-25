@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.98] - 2025-10-25
+
+### Fixed
+- **ace-taskflow v0.13.2**: Task sorting issue in preset configurations
+  - Tasks were displayed in reverse order when using `ace-taskflow tasks next` command
+  - Fixed apply_preset_sorting to handle both string and symbol keys from YAML configs
+  - Added comprehensive tests for ascending and descending sort orders
+
 ## [0.9.97] - 2025-10-25
 
 ### Added
