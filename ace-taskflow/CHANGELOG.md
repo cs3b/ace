@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2025-10-25
+
+### Added
+- **Maybe and Anyday Idea Scopes**: Add support for organizing ideas by priority and timeline
+  - New subdirectories: `ideas/maybe/` for uncertain ideas, `ideas/anyday/` for low-priority ideas
+  - Preset support: `ace-taskflow ideas maybe` and `ace-taskflow ideas anyday`
+  - Creation flags: `--maybe` and `--anyday` for `ace-taskflow idea create`
+  - Statistics display with emoji indicators: 💡 (pending), 🤔 (maybe), 📅 (anyday), ✅ (done)
+  - Example configurations in `.ace.example/taskflow/presets/`
+
+### Changed
+- **Code Quality Improvements**: Refactored implementation based on code review recommendations
+  - Extract SCOPE_SUBDIRECTORIES constant to centralize scope definitions
+  - Add PRESET_TO_SCOPE mapping for cleaner preset resolution
+  - Improve status determination using dirname inspection instead of string matching
+  - Reduce code duplication in IdeaLoader with loop-based scope loading
+  - Add validate_subdirectory_exclusivity helper for mutual exclusivity checks
+
+### Technical
+- Clean up test artifacts and finalize task 088
+- Fix missing final newlines in IdeaWriter templates for POSIX compliance
+- Add comprehensive test coverage for --maybe/--anyday flag mutual exclusivity
+
 ## [0.13.2] - 2025-10-25
 
 ### Fixed
