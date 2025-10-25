@@ -1,0 +1,8 @@
+description: "Ideas in maybe subdirectory (might pursue)"
+type: "ideas"
+context: "current"
+filters: {}
+sort:
+  by: "created_at"
+  ascending: false
+display: {}

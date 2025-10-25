@@ -140,6 +140,8 @@ module Ace
             puts "  --clipboard, -c      Read content from clipboard"
             puts "  --backlog            Create in backlog"
             puts "  --release <name>     Create in specific release"
+            puts "  --maybe              Create in maybe/ subdirectory"
+            puts "  --anyday             Create in anyday/ subdirectory"
             puts "  --git-commit, -gc    Auto-commit the idea file"
             puts "  --llm-enhance, -llm  Enhance with LLM suggestions"
             exit 1
@@ -180,6 +182,11 @@ module Ace
               # Fall back to backlog if no active release (implicit/default behavior)
               config["directory"] = File.join(@root_path, "backlog", "ideas")
             end
+          end
+
+          # Append subdirectory if --maybe or --anyday flag was provided
+          if options[:subdirectory]
+            config["directory"] = File.join(config["directory"], options[:subdirectory])
           end
 
           # Capture the idea with options
@@ -371,6 +378,8 @@ module Ace
           puts "    --clipboard, -c     Read content from clipboard"
           puts "    --backlog           Create in backlog"
           puts "    --release <name>    Create in specific release"
+          puts "    --maybe             Create in maybe/ subdirectory"
+          puts "    --anyday            Create in anyday/ subdirectory"
           puts "    --git-commit, -gc   Auto-commit the idea file"
           puts "    --no-git-commit     Don't commit (overrides config)"
           puts "    --llm-enhance, -llm Enhance with LLM suggestions"
@@ -406,6 +415,8 @@ module Ace
           puts "  ace-taskflow idea create 'Main context' --clipboard"
           puts "  ace-taskflow idea create 'Future feature' --backlog"
           puts "  ace-taskflow idea create 'Bug fix' --release v.0.9.1"
+          puts "  ace-taskflow idea create 'Uncertain idea' --maybe"
+          puts "  ace-taskflow idea create 'Low priority' --anyday"
           puts "  ace-taskflow idea create 'New feature' --git-commit"
           puts "  ace-taskflow idea create 'Complex task' --llm-enhance --git-commit"
         end

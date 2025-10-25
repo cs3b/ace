@@ -1,0 +1,8 @@
+description: "Ideas in anyday subdirectory (no urgency)"
+type: "ideas"
+context: "current"
+filters: {}
+sort:
+  by: "created_at"
+  ascending: false
+display: {}

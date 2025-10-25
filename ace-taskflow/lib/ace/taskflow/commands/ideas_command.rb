@@ -28,8 +28,8 @@ module Ace
           if preset_name
             args.shift # Remove preset name from args
           else
-            # Default to 'next' preset for ideas (show only pending)
-            preset_name = 'next'
+            # Default to 'pending' preset for ideas (show only pending, not done/maybe/anyday)
+            preset_name = 'pending'
           end
 
           execute_with_preset(preset_name, args)
@@ -67,7 +67,7 @@ module Ace
           end
 
           # Apply preset with additional filters
-          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+          preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :ideas)
           return 1 unless preset_config
 
           # Add preset name to config for scope determination
@@ -159,9 +159,13 @@ module Ace
           # Determine scope based on preset name
           scope = case preset_name
           when 'next', 'pending'
-            :next
+            :next  # Show pending ideas (not done/maybe/anyday)
           when 'done'
             :done
+          when 'maybe'
+            :maybe
+          when 'anyday'
+            :anyday
           when 'all', 'all-releases'
             :all
           when 'recent'
@@ -244,7 +248,7 @@ module Ace
         end
 
         def show_statistics_for_preset(preset_name, additional_filters = {})
-          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+          preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :ideas)
           return 1 unless preset_config
 
           # Override context if provided via legacy flags
