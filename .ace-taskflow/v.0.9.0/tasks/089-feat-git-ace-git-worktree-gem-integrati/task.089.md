@@ -243,7 +243,7 @@ Enable seamless, task-focused development workflows by providing deterministic C
 ## References
 
 - Source Idea 1: `.ace-taskflow/v.0.9.0/ideas/done/20251024-211928-ace-git-worktree-1-create-a-workree-2-mise-tr.md`
-- Source Idea 2: `.ace-taskflow/backlog/ideas/done/20250926-152156-feat-git-worktree-pr-management.md`
+- Source Idea 2: `.ace-taskflow/v.0.9.0/ideas/done/20250926-152156-feat-git-worktree-pr-management.md`
 - ACE Gem Guide: `docs/ace-gems.g.md`
 - ATOM Architecture: `docs/architecture.md` (ADR-011)
 - Configuration: `docs/decisions.md` (ADR-019)
