@@ -32,17 +32,19 @@ All notable changes to this project will be documented in this file.
   - Reduce code duplication in IdeaLoader with loop-based scope loading
   - Add validate_subdirectory_exclusivity helper for mutual exclusivity checks
 
-### Fixed
-- **ace-taskflow v0.13.2**: Task sorting issue in preset configurations
-  - Tasks were displayed in reverse order when using `ace-taskflow tasks next` command
-  - Fixed apply_preset_sorting to handle both string and symbol keys from YAML configs
-  - Added comprehensive tests for ascending and descending sort orders
-
 ### Technical
 - **ace-taskflow v0.14.0**: Enhanced test coverage and POSIX compliance
   - Add comprehensive test coverage for --maybe/--anyday flag mutual exclusivity (6 new tests)
   - Fix missing final newlines in IdeaWriter templates for POSIX compliance
   - Clean up test artifacts and finalize task 088
+
+## [0.9.97] - 2025-10-25
+
+### Fixed
+- **ace-taskflow v0.13.2**: Task sorting issue in preset configurations
+  - Tasks were displayed in reverse order when using `ace-taskflow tasks next` command
+  - Fixed apply_preset_sorting to handle both string and symbol keys from YAML configs
+  - Added comprehensive tests for ascending and descending sort orders
 
 ## [0.9.97] - 2025-10-25
 
