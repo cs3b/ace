@@ -46,36 +46,75 @@ Users need a unified way to specify paths across all ACE tools and config files.
 ### Interface Contract
 
 ```ruby
-# Core API - PathExpander atom in ace-core
-module Ace::Core::Atoms::PathExpander
-  # Expand any path format to absolute path
-  # @param path [String] Path in any supported format
-  # @param context [Hash] Required context for resolution
-  #   - project_root: Project root directory (REQUIRED)
-  #   - source_dir: Directory containing the source document (REQUIRED)
-  #                 Use Dir.pwd for CLI arguments when no source document exists
-  # @return [String, Hash] Expanded absolute path, or Hash with error for protocols
-  # @raise [ArgumentError] if context missing required keys
-  def self.expand_with_context(path:, context:)
-    # Validates context has both required keys
-    # Implementation handles all formats
-  end
+# Core API - PathExpander class in ace-core
+# Instance-based API with automatic context inference
+module Ace::Core::Atoms
+  class PathExpander
+    attr_reader :source_dir, :project_root
 
-  # Check if path is a protocol URI
-  # @param path [String] Path to check
-  # @return [Boolean] true if protocol format detected
-  def self.protocol?(path)
-    path =~ %r{^[a-z]+://}
-  end
+    # Factory: Create expander for a source file (config, workflow, template, prompt)
+    # Automatically infers source_dir and project_root
+    # @param source_file [String] Path to source file
+    # @return [PathExpander] Instance with inferred context
+    def self.for_file(source_file)
+      new(
+        source_dir: File.dirname(File.expand_path(source_file)),
+        project_root: ProjectRootFinder.find
+      )
+    end
 
-  # Register a protocol resolver (e.g., ace-nav)
-  # @param resolver [Object] Resolver responding to #resolve(uri)
-  def self.register_protocol_resolver(resolver)
-    # Stores resolver for protocol URI delegation
+    # Factory: Create expander for CLI context (no source file)
+    # Uses current directory as source_dir
+    # @return [PathExpander] Instance with CLI context
+    def self.for_cli
+      new(
+        source_dir: Dir.pwd,
+        project_root: ProjectRootFinder.find
+      )
+    end
+
+    # Initialize with explicit context (advanced usage)
+    # @param source_dir [String] Source document directory (REQUIRED)
+    # @param project_root [String] Project root directory (REQUIRED)
+    # @raise [ArgumentError] if either parameter is nil
+    def initialize(source_dir:, project_root:)
+      # Validates and stores context
+    end
+
+    # Resolve path using instance context
+    # Handles: protocols, source-relative (./), project-relative, env vars
+    # @param path [String] Path to resolve
+    # @return [String, Hash] Resolved absolute path, or Hash with error for protocols
+    def resolve(path)
+      # Implementation handles all path formats
+    end
+
+    # === Class methods (utilities and backward compatibility) ===
+
+    # Check if path is a protocol URI
+    # @param path [String] Path to check
+    # @return [Boolean] true if protocol format detected
+    def self.protocol?(path)
+      path =~ %r{^[a-z]+://}
+    end
+
+    # Register a protocol resolver (e.g., ace-nav)
+    # @param resolver [Object] Resolver responding to #resolve(uri)
+    def self.register_protocol_resolver(resolver)
+      # Stores resolver for protocol URI delegation
+    end
+
+    # Legacy: Stateless path expansion (backward compatibility)
+    # Only expands tilde and environment variables
+    # @param path [String] Path to expand
+    # @return [String] Expanded path
+    def self.expand(path)
+      # Current implementation unchanged
+    end
   end
 end
 
-# Example usage in config files
+# Example usage with instance-based API
 # .ace/nav/protocols/wfi-sources/ace-nav.yml
 name: ace-nav
 type: directory
@@ -94,14 +133,16 @@ document_types:
 config_path = ".ace/nav/protocols/wfi-sources/ace-nav.yml"
 config = YAML.load_file(config_path)
 
-resolved_path = PathExpander.expand_with_context(
-  path: config['path'],
-  context: {
-    project_root: Ace::Core::Molecules::ProjectRootFinder.find,
-    source_dir: File.dirname(config_path)
-  }
-)
+# Create expander with inferred context
+expander = PathExpander.for_file(config_path)
+resolved_path = expander.resolve(config['path'])
 # => "/project/.ace/nav/protocols/wfi-sources/handbook/workflow-instructions/"
+
+# Resolve multiple paths from same config (context inferred once):
+config['document_types']['context']['paths'].each do |path|
+  resolved = expander.resolve(path)
+  # Use resolved path
+end
 ```
 
 **CLI integration:**
@@ -115,6 +156,18 @@ ace-context $HOME/.ace/presets/custom.yml         # Env var expansion
 # Same applies to config file paths
 ace-docs update wfi://draft-task                  # Protocol in CLI
 ace-docs update docs/architecture.md              # Project-relative in CLI
+```
+
+**CLI implementation pattern:**
+```ruby
+# In CLI command handler
+cli_path = ARGV[0]
+
+# Create expander for CLI context
+expander = PathExpander.for_cli
+
+# Resolve the path
+resolved = expander.resolve(cli_path)
 ```
 
 **Error Handling:**
@@ -134,14 +187,16 @@ ace-docs update docs/architecture.md              # Project-relative in CLI
 ### Success Criteria
 
 #### Behavioral Outcomes
-- [ ] **Unified Interface**: Single PathExpander atom handles all path formats consistently
-- [ ] **Required Context Validation**: ArgumentError raised when project_root or source_dir missing from context
+- [ ] **Instance-Based API**: PathExpander class with factory methods (for_file, for_cli)
+- [ ] **Automatic Context Inference**: source_dir and project_root inferred from source file
+- [ ] **Context Validation**: ArgumentError raised when source_dir or project_root nil in initialize
 - [ ] **Protocol Support**: wfi://, guide://, tmpl://, task://, prompt:// protocols resolve correctly
 - [ ] **Relative Path Resolution**: ./ and ../ paths resolve relative to source document location
 - [ ] **Project-Relative Paths**: Paths without ./ prefix resolve relative to project root
 - [ ] **Environment Variables**: $VAR and ${VAR} expand correctly in paths
 - [ ] **Cross-Gem Consistency**: All ace-* gems can use PathExpander for consistent behavior
-- [ ] **CLI Support**: Dir.pwd used as source_dir for CLI arguments with no source document
+- [ ] **CLI Support**: for_cli factory uses Dir.pwd as source_dir
+- [ ] **Backward Compatibility**: Class methods (expand, join, etc.) preserved for existing code
 
 #### User Experience Goals
 - [ ] **Predictable Resolution**: Clear, documented precedence rules for ambiguous paths
@@ -313,30 +368,37 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 
 **Modify:**
 - `ace-core/lib/ace/core/atoms/path_expander.rb`
-  - Add `expand_with_context(path:, context:)` method with required context validation
-  - Add context validation: raise ArgumentError if project_root or source_dir missing
-  - Add `protocol?(path)` method for detection
-  - Add `register_protocol_resolver(resolver)` for ace-nav integration
-  - Add `resolve_protocol(uri)` for delegation
-  - Keep existing `expand(path)` unchanged for backward compatibility
-  - Changes: ~120 LOC added (includes validation logic)
-  - Impact: Extends existing module without breaking changes, enforces correct usage
-  - Integration: All ace-* gems can use enhanced path resolution
+  - **Convert from module to class** (backward compatible via class methods)
+  - Add factory methods: `for_file(source_file)`, `for_cli()`
+  - Add instance method: `initialize(source_dir:, project_root:)` with validation
+  - Add instance method: `resolve(path)` - core resolution logic
+  - Add instance attributes: `source_dir`, `project_root` (readers)
+  - Keep existing module methods as class methods: `expand(path)`, `join(*parts)`, etc.
+  - Add class methods: `protocol?(path)`, `register_protocol_resolver(resolver)`
+  - Add protocol resolution logic within `resolve()` method
+  - Changes: ~150 LOC added (class structure, factory methods, instance methods)
+  - Impact: Major API addition, fully backward compatible, cleaner usage pattern
+  - Integration: All ace-* gems can adopt instance-based pattern while existing code works
 
 **Create:**
+- `ace-core/test/atoms/path_expander_test.rb`
+  - Purpose: Test instance-based PathExpander API
+  - Key components: Factory method tests (for_file, for_cli), resolve() method tests, instance state
+  - Dependencies: test_helper, minitest, tmpdir for fixtures
+
 - `ace-core/test/atoms/path_expander_protocol_test.rb`
   - Purpose: Test protocol detection and resolution
-  - Key components: Protocol pattern tests, resolver registration, delegation tests
+  - Key components: Protocol pattern tests (class method), resolver registration, delegation within resolve()
   - Dependencies: test_helper, minitest
 
-- `ace-core/test/atoms/path_expander_context_test.rb`
-  - Purpose: Test context-aware path resolution
-  - Key components: Config-relative tests, project-relative tests, precedence tests
-  - Dependencies: test_helper, minitest, tmpdir for fixtures
+- `ace-core/test/atoms/path_expander_backward_compat_test.rb`
+  - Purpose: Test backward compatibility of class methods
+  - Key components: expand(), join(), dirname(), basename(), etc. - ensure existing API unchanged
+  - Dependencies: test_helper, minitest
 
 - `ace-core/test/integration/path_expander_nav_integration_test.rb`
   - Purpose: Test PathExpander + ace-nav integration
-  - Key components: Protocol resolution via ace-nav, fallback behavior
+  - Key components: Protocol resolution via ace-nav using instance resolve(), fallback behavior
   - Dependencies: ace-nav (optional), test_helper
 
 **Documentation Updates:**
@@ -352,62 +414,72 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 
 **Test Scenarios:**
 
-**1. Context Validation Tests (Unit):**
-- Missing both fields: Raises ArgumentError with clear message
-- Missing project_root only: Raises ArgumentError
-- Missing source_dir only: Raises ArgumentError
-- Both fields present: Proceeds with resolution
-- Context with extra fields: Ignores extras, uses required fields
+**1. Factory Method Tests (Unit):**
+- `for_file(source_file)`: Creates instance with inferred source_dir and project_root
+- `for_cli()`: Creates instance with Dir.pwd as source_dir
+- Instance has correct `source_dir` and `project_root` attributes
+- Handles absolute and relative source_file paths correctly
+- Edge cases: source_file doesn't exist, nil source_file
 
-**2. Protocol Detection Tests (Unit):**
+**2. Context Validation Tests (Unit):**
+- `initialize(source_dir: nil, project_root: "/project")`: Raises ArgumentError
+- `initialize(source_dir: "/dir", project_root: nil)`: Raises ArgumentError
+- `initialize(source_dir: nil, project_root: nil)`: Raises ArgumentError
+- `initialize(source_dir: "/dir", project_root: "/project")`: Success
+- Error message clearly states both parameters required
+
+**3. Protocol Detection Tests (Unit - Class Methods):**
+- `PathExpander.protocol?("wfi://setup")`: Returns true
+- `PathExpander.protocol?("./path")`: Returns false
 - Detect valid protocols: `wfi://`, `guide://`, `tmpl://`, `task://`, `prompt://`
-- Reject invalid protocols: `xyz://`, `http://`, missing `://`
 - Handle edge cases: empty string, nil, protocol-only `wfi://`
 
-**3. Context-Aware Resolution Tests (Unit):**
-- Source-relative (`./`): Resolve relative to `source_dir` in context
-- Project-relative (no prefix): Resolve relative to `project_root` in context
-- Absolute paths: Return as-is with expansion
-- Parent references (`../`): Resolve correctly from source document location
-- CLI arguments: Using Dir.pwd as source_dir works correctly
+**4. Instance Resolution Tests (Unit):**
+- `resolve("./relative")`: Resolves relative to source_dir
+- `resolve("../parent")`: Resolves parent reference from source_dir
+- `resolve("docs/file.md")`: Resolves relative to project_root
+- `resolve("/absolute/path")`: Returns absolute path
+- `resolve("$HOME/path")`: Expands environment variables
+- `resolve("wfi://setup")`: Delegates to protocol resolver
 
-**4. Environment Variable Expansion Tests (Unit):**
+**5. Environment Variable Expansion Tests (Unit):**
 - `$VAR` format: `$HOME/docs` → `/Users/user/docs`
 - `${VAR}` format: `${PROJECT_ROOT}/config` → `/project/config`
 - Undefined vars: Leave as literal string or error (TBD)
 - Nested paths: `$HOME/projects/$PROJECT_NAME`
 
-**5. Protocol Resolution Tests (Integration):**
-- With ace-nav loaded: Successfully resolve `wfi://workflow-name`
+**6. Protocol Resolution Tests (Integration):**
+- With ace-nav loaded: Successfully resolve `wfi://workflow-name` via instance
 - Without ace-nav: Return helpful error message
 - Protocol not found: Clear error with suggestion
 - Circular references: Detect and prevent infinite loops
 
-**6. Precedence Tests (Unit):**
+**7. Precedence Tests (Unit):**
 - Absolute > Project-relative > Source-relative
-- Explicit context overrides defaults
+- Instance context used correctly
 - Protocol resolution takes priority when pattern matches
 
-**7. Error Handling Tests (Unit):**
-- Missing context fields: ArgumentError raised
+**8. Error Handling Tests (Unit):**
+- Missing context in initialize: ArgumentError raised
 - Invalid protocol: Clear error message
 - Unresolved protocol: Suggestion to check ace-nav
 - Nil/empty path: Return nil without error
 
-**8. Backward Compatibility Tests (Integration):**
-- Existing `expand(path)` behavior unchanged
+**9. Backward Compatibility Tests (Integration):**
+- Existing class methods unchanged: `expand()`, `join()`, `dirname()`, etc.
 - All current ace-* gem uses continue to work
-- No breaking changes to existing path resolution
+- No breaking changes to existing stateless path expansion
 
-**9. Performance Tests (Unit):**
-- Path expansion < 5ms for typical paths
+**10. Performance Tests (Unit):**
+- Instance creation < 1ms (factory methods)
+- Path resolution < 5ms for typical paths
 - Protocol detection < 1ms (regex pattern matching)
-- Context validation < 1ms (hash key checking)
+- Multiple resolve() calls on same instance: no overhead
 - No performance regression vs current implementation
 
 **Test Prioritization:**
-- **High Priority:** Context validation, backward compatibility, protocol detection, context resolution, error handling
-- **Medium Priority:** Environment variable expansion, precedence rules, integration tests, CLI argument handling
+- **High Priority:** Factory methods, context validation, instance resolution, backward compatibility
+- **Medium Priority:** Protocol detection, environment variable expansion, precedence rules, integration tests
 - **Low Priority:** Performance benchmarks, edge case combinations
 
 ### Implementation Steps
