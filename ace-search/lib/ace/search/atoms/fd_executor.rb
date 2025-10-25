@@ -20,9 +20,19 @@ module Ace
           command = build_command(pattern, options)
           timeout_seconds = options.fetch(:timeout, 120)
 
+          # Debug output if DEBUG env var is set
+          if ENV["DEBUG"]
+            $stderr.puts "DEBUG fd command: #{command}"
+            $stderr.puts "DEBUG fd chdir: #{options[:search_path] || '(current directory)'}"
+          end
+
           begin
+            # Change to search directory if specified, otherwise use current dir
+            # This ensures .gitignore, excludes, and includes are processed correctly
+            search_dir = options[:search_path] || "."
+
             stdout, stderr, status = Timeout.timeout(timeout_seconds) do
-              Open3.capture3(command)
+              Open3.capture3(command, chdir: search_dir)
             end
 
             {
@@ -110,8 +120,9 @@ module Ace
           end
 
           # Search paths
+          # When search_path is set, we use chdir in execute(), so search current dir
           paths = if options[:search_path]
-            [options[:search_path]]
+            ["."]  # Will chdir to search_path, then search current dir
           elsif options[:paths]
             options[:paths]
           else
