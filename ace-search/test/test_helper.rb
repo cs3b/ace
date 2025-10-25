@@ -10,6 +10,7 @@ require "ace/search/atoms/pattern_analyzer"
 require "ace/search/atoms/result_parser"
 require "ace/search/atoms/tool_checker"
 require "ace/search/atoms/search_path_resolver"
+require "ace/search/atoms/debug_logger"
 
 require "ace/search/molecules/preset_manager"
 require "ace/search/molecules/git_scope_filter"

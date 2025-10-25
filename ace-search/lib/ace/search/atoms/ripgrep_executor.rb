@@ -3,6 +3,7 @@
 require "open3"
 require "shellwords"
 require "timeout"
+require_relative "debug_logger"
 
 module Ace
   module Search
@@ -22,18 +23,15 @@ module Ace
           command = build_command(pattern, options)
           timeout_seconds = options.fetch(:timeout, 120)
 
-          # Debug output if DEBUG env var is set
-          if ENV["DEBUG"]
-            $stderr.puts "=" * 60
-            $stderr.puts "DEBUG: RipgrepExecutor"
-            $stderr.puts "  options[:search_path] = #{options[:search_path].inspect}"
-            $stderr.puts "  Current Dir.pwd = #{Dir.pwd}"
-            $stderr.puts "  Command: #{command}"
+          # Debug output
+          DebugLogger.section("RipgrepExecutor") do
+            DebugLogger.log("options[:search_path] = #{options[:search_path].inspect}")
+            DebugLogger.log("Current Dir.pwd = #{Dir.pwd}")
+            DebugLogger.log("Command: #{command}")
 
             search_dir_debug = options[:search_path] || "."
-            $stderr.puts "  Will chdir to: #{search_dir_debug}"
-            $stderr.puts "  Absolute chdir: #{File.expand_path(search_dir_debug)}"
-            $stderr.puts "=" * 60
+            DebugLogger.log("Will chdir to: #{search_dir_debug}")
+            DebugLogger.log("Absolute chdir: #{File.expand_path(search_dir_debug)}")
           end
 
           begin

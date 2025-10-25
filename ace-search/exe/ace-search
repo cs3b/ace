@@ -13,6 +13,7 @@ require_relative "../lib/ace/search/atoms/pattern_analyzer"
 require_relative "../lib/ace/search/atoms/result_parser"
 require_relative "../lib/ace/search/atoms/tool_checker"
 require_relative "../lib/ace/search/atoms/search_path_resolver"
+require_relative "../lib/ace/search/atoms/debug_logger"
 
 require_relative "../lib/ace/search/molecules/preset_manager"
 require_relative "../lib/ace/search/molecules/git_scope_filter"
@@ -205,10 +206,10 @@ end
 resolver = Ace::Search::Atoms::SearchPathResolver.new
 options[:search_path] = resolver.resolve(search_path_arg)
 
-# Debug output if DEBUG env var is set
-if ENV["DEBUG"]
-  $stderr.puts "DEBUG: Resolved search path: #{options[:search_path].inspect}"
-  $stderr.puts "DEBUG: Current directory: #{Dir.pwd}"
+# Debug output
+Ace::Search::Atoms::DebugLogger.section("CLI Search Path Resolution") do
+  Ace::Search::Atoms::DebugLogger.log("Resolved search path: #{options[:search_path].inspect}")
+  Ace::Search::Atoms::DebugLogger.log("Current directory: #{Dir.pwd}")
 end
 
 begin
