@@ -10,6 +10,18 @@ module Ace
   module Taskflow
     module Commands
       class IdeasCommand
+        # Mapping of preset names to idea scopes
+        PRESET_TO_SCOPE = {
+          'next' => :next,
+          'pending' => :next,
+          'done' => :done,
+          'maybe' => :maybe,
+          'anyday' => :anyday,
+          'all' => :all,
+          'all-releases' => :all,
+          'recent' => :recent
+        }.freeze
+
         def initialize
           @root_path = Molecules::ConfigLoader.find_root
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
@@ -156,23 +168,8 @@ module Ace
           context = preset_config[:context] || 'current'
           preset_name = preset_config[:name] || 'next'
 
-          # Determine scope based on preset name
-          scope = case preset_name
-          when 'next', 'pending'
-            :next  # Show pending ideas (not done/maybe/anyday)
-          when 'done'
-            :done
-          when 'maybe'
-            :maybe
-          when 'anyday'
-            :anyday
-          when 'all', 'all-releases'
-            :all
-          when 'recent'
-            :recent
-          else
-            :next  # Default to pending ideas only
-          end
+          # Determine scope based on preset name using mapping
+          scope = PRESET_TO_SCOPE.fetch(preset_name, :next)
 
           case context
           when 'all'
