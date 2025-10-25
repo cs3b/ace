@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-10-25T10:07:10+01:00
+---
+
 # Idea
 
 # ace-taskflow ideas should scan also the maybe and ...
