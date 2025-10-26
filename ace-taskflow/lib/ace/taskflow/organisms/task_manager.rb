@@ -50,9 +50,18 @@ module Ace
         # List tasks with optional filtering
         # @param context [String] Context to list from
         # @param filters [Hash] Filter criteria
+        # @param glob [Array<String>, nil] Optional glob patterns for loading
         # @return [Array<Hash>] Filtered tasks
-        def list_tasks(context: "current", filters: {})
-          # Resolve context to path
+        def list_tasks(context: "current", filters: {}, glob: nil)
+          # If glob patterns provided, use glob-based loading
+          if glob && !glob.empty?
+            context_path = resolve_context_path(context)
+            return [] unless context_path
+            tasks = @task_loader.load_tasks_with_glob(context_path, glob)
+            return Molecules::TaskFilter.apply_filters(tasks, filters)
+          end
+
+          # Otherwise use traditional context-based loading
           context_path = resolve_context_path(context)
           return [] unless context_path
 

@@ -166,6 +166,7 @@ module Ace
         def get_tasks_for_preset(preset_config)
           context = preset_config[:context] || 'current'
           filters_raw = preset_config[:filters] || {}
+          glob = preset_config[:glob]
 
           # Convert string keys to symbols for compatibility with TaskManager
           filters = {}
@@ -175,14 +176,14 @@ module Ace
 
           case context
           when 'all'
-            @manager.list_tasks(context: "all", filters: filters)
+            @manager.list_tasks(context: "all", filters: filters, glob: glob)
           when 'backlog'
-            @manager.list_tasks(context: "backlog", filters: filters)
+            @manager.list_tasks(context: "backlog", filters: filters, glob: glob)
           when 'current'
-            @manager.list_tasks(context: "current", filters: filters)
+            @manager.list_tasks(context: "current", filters: filters, glob: glob)
           else
             # Assume it's a specific release context
-            @manager.list_tasks(context: context, filters: filters)
+            @manager.list_tasks(context: context, filters: filters, glob: glob)
           end
         end
 

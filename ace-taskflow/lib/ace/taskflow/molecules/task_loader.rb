@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "set"
 require "ace/support/markdown"
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
@@ -130,6 +131,31 @@ module Ace
             Dir.glob(File.join(done_path, "v.*")).each do |release_path|
               next unless File.directory?(release_path)
               tasks.concat(load_tasks_from_context(release_path))
+            end
+          end
+
+          tasks
+        end
+
+        # Load tasks using glob patterns
+        # @param context_path [String] Base path for glob evaluation
+        # @param glob_patterns [Array<String>] Glob patterns to match
+        # @return [Array<Hash>] Array of matched tasks
+        def load_tasks_with_glob(context_path, glob_patterns)
+          tasks = []
+          matched_paths = Set.new
+
+          Array(glob_patterns).each do |pattern|
+            Dir.glob(File.join(context_path, pattern)).each do |path|
+              # Avoid duplicates
+              next if matched_paths.include?(path)
+              matched_paths.add(path)
+
+              # Load task if it's a .md file
+              if File.file?(path) && path.end_with?('.md')
+                task = load_task(path)
+                tasks << task if task
+              end
             end
           end
 

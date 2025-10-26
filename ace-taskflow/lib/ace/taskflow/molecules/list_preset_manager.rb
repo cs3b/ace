@@ -74,6 +74,7 @@ module Ace
             description: preset[:description],
             context: preset[:context] || 'current',
             filters: merged_filters,
+            glob: preset[:glob],
             sort: preset[:sort] || { by: :sort, ascending: true },
             display: preset[:display] || {},
             type: preset[:type] || 'tasks'
@@ -111,10 +112,15 @@ module Ace
 
           return nil unless data.is_a?(Hash)
 
+          # Load glob patterns - support both single string and array
+          glob = data.dig('filters', 'glob')
+          glob = [glob] if glob.is_a?(String)
+
           {
             description: data['description'] || "#{File.basename(file, '.yml')} preset",
             context: data['context'],
             filters: data['filters'] || {},
+            glob: glob,
             sort: data['sort'] || { by: :sort, ascending: true },
             display: data['display'] || {},
             type: data['type']

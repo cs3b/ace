@@ -18,12 +18,13 @@ taskflow:
     # Active release directory
     active: "v.%{version}"
 
-    # Task subdirectory - default: "t"
+    # Task subdirectory - default: "tasks"
     tasks: "tasks"
 
-    # Ideas/backlog directory - default: "backlog/ideas"
-    # Supports nested paths (e.g., "backlog/ideas")
-    ideas: "backlog/ideas"
+    # Ideas subdirectory - default: "ideas"
+    # Note: This is a folder name (NOT a path) - used in each release context
+    # Each release has its own ideas/ folder at the same level as tasks/
+    ideas: "ideas"
 
     # Completed tasks - default: "done"
     done: "done"
