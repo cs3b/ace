@@ -28,8 +28,8 @@ module Ace
           if preset_name
             args.shift # Remove preset name from args
           else
-            # Default to 'pending' preset for ideas (show only pending, not done/maybe/anyday)
-            preset_name = 'pending'
+            # Default to 'next' preset (shows pending + in-progress items, excluding maybe/anyday)
+            preset_name = 'next'
           end
 
           execute_with_preset(preset_name, args)
@@ -269,10 +269,10 @@ module Ace
                 type: idea[:is_directory] ? "rich" : "simple"
               }
 
-              # Add path - point to idea.md for rich ideas
+              # Add path - point to idea.s.md for rich ideas
               if idea[:path]
                 display_path = if idea[:is_directory]
-                  File.join(idea[:path], "idea.md")
+                  File.join(idea[:path], "idea.s.md")
                 else
                   idea[:path]
                 end
@@ -317,9 +317,9 @@ module Ace
           # Show path unless --short flag is used
           unless short
             if idea[:path]
-              # For rich ideas (directories), point to idea.md file
+              # For rich ideas (directories), point to idea.s.md file
               display_path = if idea[:is_directory]
-                File.join(idea[:path], "idea.md")
+                File.join(idea[:path], "idea.s.md")
               else
                 idea[:path]
               end

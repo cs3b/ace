@@ -1,5 +1,5 @@
-description: "Draft tasks"
-type: "tasks"
+description: "Draft items awaiting refinement"
+# Universal preset - works for both ideas and tasks
 context: "current"
 filters:
   glob: ["**/*.s.md"]

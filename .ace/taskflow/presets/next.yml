@@ -1,5 +1,5 @@
-description: "Next actionable tasks (pending + in-progress)"
-type: "tasks"
+description: "Next actionable items (pending + in-progress, excluding maybe/anyday)"
+# Universal preset - works for both ideas and tasks
 context: "current"
 filters:
   glob: ["*.s.md"]  # Top-level only, excludes subdirectories

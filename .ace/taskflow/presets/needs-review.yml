@@ -1,5 +1,5 @@
-description: "Tasks requiring review (needs_review flag set)"
-type: "tasks"
+description: "Items requiring review (needs_review flag set)"
+# Universal preset - works for both ideas and tasks
 context: "current"
 filters:
   glob: ["**/*.s.md"]

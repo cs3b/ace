@@ -1,8 +1,8 @@
-description: "Ideas in anyday subdirectory (no urgency)"
-type: "ideas"
+description: "Items with no urgency (anyday priority)"
+# Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["anyday/**/*.s.md"]
+  glob: ["anyday/**/*.s.md"]  # Keep glob for backward compatibility
 sort:
   by: "created_at"
   ascending: false
