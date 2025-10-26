@@ -70,8 +70,8 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
       ideas_presets = @manager.list_presets(:ideas)
       ideas_preset_names = ideas_presets.map { |p| p[:name] }
 
-      # next is tasks-specific, should not appear for ideas
-      refute_includes ideas_preset_names, "next"
+      # next is now universal, should appear for ideas
+      assert_includes ideas_preset_names, "next"
       # universal presets should appear
       assert_includes ideas_preset_names, "recent"
       assert_includes ideas_preset_names, "all"
@@ -86,7 +86,7 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
     end
 
     it "checks preset existence for ideas" do
-      refute @manager.preset_exists?("next", :ideas)
+      assert @manager.preset_exists?("next", :ideas)  # next is now universal
       assert @manager.preset_exists?("recent", :ideas)
       assert @manager.preset_exists?("all", :ideas)
       refute @manager.preset_exists?("nonexistent", :ideas)
@@ -120,10 +120,11 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
   end
 
   describe "type compatibility" do
-    it "returns nil for incompatible preset-type combinations" do
-      # next preset is tasks-only
-      assert_nil @manager.get_preset("next", :ideas)
-      assert_nil @manager.get_preset("next", :releases)
+    it "returns preset for universal presets regardless of type" do
+      # next preset is now universal - works for all types
+      refute_nil @manager.get_preset("next", :ideas)
+      refute_nil @manager.get_preset("next", :tasks)
+      refute_nil @manager.get_preset("next", :releases)  # universal means all types
     end
 
     it "returns preset for compatible type combinations" do
