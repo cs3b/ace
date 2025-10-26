@@ -7,28 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.14.0] - 2025-10-25
+## [0.14.0] - 2025-10-26
+
+### 🚨 Breaking Changes
+
+#### File Extension Migration
+- **All spec files now use `.s.md` extension** (specification markdown)
+  - Ideas: `*.md` → `*.s.md` (212 files migrated)
+  - Tasks: `task.*.md` → `task.*.s.md` (623 files migrated)
+  - Clear separation: `.s.md` = specifications, `.md` = documentation only
+
+#### API Changes
+- **`IdeaLoader#load_all` signature changed**:
+  - **Removed**: `scope` parameter
+  - **Added**: `glob` parameter (optional, defaults to `["**/*.s.md"]`)
+  - Example: `loader.load_all(context: "current", glob: ["maybe/**/*.s.md"])`
+- **Removed backward compatibility**: `PRESET_TO_SCOPE` constant deleted from IdeasCommand
+
+#### Configuration Changes
+- Simplified config: `ideas: "ideas"` (folder name only, not path)
+- Removed path-splitting logic duplication from configuration
+
+### Migration Guide
+
+For custom scripts using the API:
+```ruby
+# Before
+loader.load_all(context: "current", scope: :maybe)
+
+# After
+loader.load_all(context: "current", glob: ["maybe/**/*.s.md"])
+```
+
+For file references in custom scripts:
+```bash
+# Update any hardcoded .md extensions to .s.md
+# Ideas: 20251026-123456-title.md → 20251026-123456-title.s.md
+# Tasks: task.088.md → task.088.s.md
+```
+
+**Note**: All existing files have been automatically migrated. This only affects new integrations.
 
 ### Added
-- **Maybe and Anyday Idea Scopes**: Add support for organizing ideas by priority and timeline
+- **Glob-Based Preset System**: Eliminated configuration duplication with self-defining presets
+  - Presets now declare content via glob patterns that work universally across contexts
+  - Simplified patterns: `maybe/**/*.s.md` vs previous complex type-specific patterns
+  - Glob validation: Rejects dangerous characters and absolute paths
+  - Universal patterns work across backlog and all releases
+- **Maybe and Anyday Idea Scopes**: Support for organizing ideas by priority and timeline
   - New subdirectories: `ideas/maybe/` for uncertain ideas, `ideas/anyday/` for low-priority ideas
   - Preset support: `ace-taskflow ideas maybe` and `ace-taskflow ideas anyday`
   - Creation flags: `--maybe` and `--anyday` for `ace-taskflow idea create`
   - Statistics display with emoji indicators: 💡 (pending), 🤔 (maybe), 📅 (anyday), ✅ (done)
-  - Example configurations in `.ace.example/taskflow/presets/`
 
 ### Changed
+- **Architecture Improvements**:
+  - Added `determine_context_root()` to IdeaLoader - returns release/backlog root path
+  - Refactored `determine_idea_directory()` to use context_root + folder name
+  - Simplified `IdeaLoader#load_all` to only use glob-based loading
+  - Added glob support to TaskLoader with `load_tasks_with_glob()`
+  - Configuration simplified: folder names instead of paths
 - **Code Quality Improvements**: Refactored implementation based on code review recommendations
   - Extract SCOPE_SUBDIRECTORIES constant to centralize scope definitions
-  - Add PRESET_TO_SCOPE mapping for cleaner preset resolution
-  - Improve status determination using dirname inspection instead of string matching
+  - Improve status determination using dirname inspection
   - Reduce code duplication in IdeaLoader with loop-based scope loading
   - Add validate_subdirectory_exclusivity helper for mutual exclusivity checks
 
 ### Technical
+- Updated all 835 spec files to use `.s.md` extension
+- Updated test fixtures and assertions for new extension
+- Add glob pattern validation in ListPresetManager
 - Clean up test artifacts and finalize task 088
 - Fix missing final newlines in IdeaWriter templates for POSIX compliance
 - Add comprehensive test coverage for --maybe/--anyday flag mutual exclusivity
+- All 734 tests passing
 
 ## [0.13.2] - 2025-10-25
 
