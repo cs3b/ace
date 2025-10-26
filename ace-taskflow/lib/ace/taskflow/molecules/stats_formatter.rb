@@ -234,7 +234,7 @@ module Ace
                    end
 
           # Get ALL ideas including done for accurate stats
-          ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+          ideas = @idea_loader.load_all(context: context, include_content: false)
 
           stats = {
             total: ideas.size,
