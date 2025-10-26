@@ -1,3 +1,8 @@
+---
+status: pending
+priority: now
+---
+
 # Idea
 
 # create rebase workflow - to mind the changelog and...

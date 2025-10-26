@@ -1,3 +1,8 @@
+---
+status: pending
+priority: anyday
+---
+
 # Idea
 
 Add /ace:plan workflow to ace-taskflow -> that will output the plan in the session without modifying any filesystem

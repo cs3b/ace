@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Idea
 
 # bug in create-task workflow -> it didn't use ace-n...

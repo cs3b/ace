@@ -1,3 +1,8 @@
+---
+status: pending
+priority: anyday
+---
+
 # Idea
 
 # think about helpers for bumping version and updati...

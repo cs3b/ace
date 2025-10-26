@@ -1,3 +1,8 @@
+---
+status: pending
+priority: maybe
+---
+
 # Idea
 
 # ace-taskflow idea create :: allow to add --task -t...

@@ -1,3 +1,8 @@
+---
+status: pending
+priority: maybe
+---
+
 # Idea
 
 # agent that will take all my thoughs, very louse an...

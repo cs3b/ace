@@ -1,3 +1,8 @@
+---
+status: pending
+priority: now
+---
+
 # Idea
 
 improve the test summary - add test skipped, for ace-test and also for ace-test-suite (for every package and for summary)

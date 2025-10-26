@@ -1,3 +1,8 @@
+---
+status: pending
+priority: now
+---
+
 # Idea
 
 # ace-review should have a workflow for create-pr (i...

@@ -1,3 +1,8 @@
+---
+status: pending
+priority: maybe
+---
+
 # Idea
 
 --llm hooks in workflows - similar like in rspec - before every / particular |  after  every / particular 

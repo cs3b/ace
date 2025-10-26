@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Idea
 
 we have not info about what files have been commited or even that commit was successfull:

@@ -1,3 +1,8 @@
+---
+status: pending
+priority: anyday
+---
+
 # Idea
 
 # ace-git-commit - ensure that it will stash changes...
