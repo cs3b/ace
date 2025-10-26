@@ -1,3 +1,8 @@
+---
+status: pending
+priority: maybe
+---
+
 # Idea
 
  we should check for all dependencies at the beginning of tha process - if possible, eg.:│ │ Issue 2: Wrong Binary Check                                                                                  │ │

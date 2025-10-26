@@ -1,3 +1,8 @@
+---
+status: pending
+priority: anyday
+---
+
 # Idea
 
 ---

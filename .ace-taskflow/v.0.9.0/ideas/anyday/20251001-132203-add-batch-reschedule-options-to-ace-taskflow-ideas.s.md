@@ -1,3 +1,8 @@
+---
+status: pending
+priority: anyday
+---
+
 # Idea
 
 # add batch reschedule options to ace-taskflow ideas...

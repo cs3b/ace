@@ -1,3 +1,8 @@
+---
+status: pending
+priority: maybe
+---
+
 # Idea
 
 we should have for consistenty --current flag ⏺ Bash(ace-taskflow release --current)

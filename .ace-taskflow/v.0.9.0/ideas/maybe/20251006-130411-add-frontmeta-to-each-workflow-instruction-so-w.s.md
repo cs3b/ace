@@ -1,3 +1,8 @@
+---
+status: pending
+priority: maybe
+---
+
 # Idea
 
 Add frontmeta to each workflow instruction -> so we can load insturctions and all the context automatically

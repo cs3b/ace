@@ -1,3 +1,8 @@
+---
+status: pending
+priority: now
+---
+
 # Idea
 
  We need to handle the api errors and have fallback model for llm-query and in higher level like ace-git-commit  ⏺ Bash(ace-git-commit -i 'Migrate idea and feature management workflows to ace-taskflow - completed task 047')

@@ -1,3 +1,8 @@
+---
+status: pending
+priority: anyday
+---
+
 # Idea
 
 # We should have a ace-suite package with ace-suite ...

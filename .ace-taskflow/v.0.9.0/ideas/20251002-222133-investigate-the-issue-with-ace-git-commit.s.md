@@ -1,3 +1,8 @@
+---
+status: pending
+priority: now
+---
+
 # Idea
 
 Investigate the issue with ace-git-commit \

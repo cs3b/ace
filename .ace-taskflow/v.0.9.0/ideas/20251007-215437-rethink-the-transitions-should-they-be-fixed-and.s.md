@@ -1,3 +1,8 @@
+---
+status: pending
+priority: now
+---
+
 # Idea
 
 rethink the transitions - should they be fixed and configure very rigid
