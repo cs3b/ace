@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.087
-status: pending
+status: in-progress
 priority: medium
 estimate: 2-3 days
 dependencies: []
@@ -12,6 +12,7 @@ sort: 996
 ## Behavioral Specification
 
 ### User Experience
+
 - **Input**: Users provide paths in config files, CLI arguments, or YAML using various formats:
   - Relative to config file: `./handbook/agents/`, `../templates/file.md`
   - Relative to project root: `ace-docs/README.md`, `docs/architecture.md`
@@ -24,12 +25,14 @@ sort: 996
 ### Expected Behavior
 
 Users need a unified way to specify paths across all ACE tools and config files. Currently, different gems handle path resolution inconsistently:
+
 - ace-nav uses relative paths (`./handbook/`) in protocol source configs
 - ace-taskflow uses project-relative paths (`.ace-taskflow/`)
 - ace-docs references paths in frontmatter (`docs/*.md`)
 - Protocol resolution (wfi://, guide://) works in some contexts but not others
 
 **Desired behavior:**
+
 1. All ace-* gems should support the same path specification formats
 2. Path resolution should be handled by a single, well-tested atom in ace-core
 3. Protocol URIs should delegate to ace-nav when detected
@@ -38,6 +41,7 @@ Users need a unified way to specify paths across all ACE tools and config files.
 6. Graceful error handling with helpful messages
 
 **User experience goals:**
+
 - Write config files once, work everywhere
 - Mix path formats naturally based on use case
 - Predictable, consistent behavior across all ACE tools
@@ -146,6 +150,7 @@ end
 ```
 
 **CLI integration:**
+
 ```bash
 # All these should work consistently across ace-* gems
 ace-context wfi://load-context                    # Protocol resolution
@@ -159,6 +164,7 @@ ace-docs update docs/architecture.md              # Project-relative in CLI
 ```
 
 **CLI implementation pattern:**
+
 ```ruby
 # In CLI command handler
 cli_path = ARGV[0]
@@ -171,6 +177,7 @@ resolved = expander.resolve(cli_path)
 ```
 
 **Error Handling:**
+
 - **Missing context**: "PathExpander requires both 'project_root' and 'source_dir' in context" (ArgumentError)
 - **Invalid protocol**: "Unknown protocol 'xyz://'. Available: wfi, guide, tmpl, task, prompt"
 - **Protocol not resolved**: "Protocol 'wfi://missing' could not be resolved. Use 'ace-nav wfi://missing --list' to see available resources"
@@ -178,6 +185,7 @@ resolved = expander.resolve(cli_path)
 - **Ambiguous path**: (Optional) "Path 'docs/file.md' is ambiguous. Specify './docs/file.md' for source-relative or use project root notation"
 
 **Edge Cases:**
+
 - Protocol resolution fails (ace-nav not available): Fall back gracefully with clear error
 - Circular protocol references: Detect and report error
 - Symlinks in path: Follow symlinks during resolution
@@ -187,6 +195,7 @@ resolved = expander.resolve(cli_path)
 ### Success Criteria
 
 #### Behavioral Outcomes
+
 - [ ] **Instance-Based API**: PathExpander class with factory methods (for_file, for_cli)
 - [ ] **Automatic Context Inference**: source_dir and project_root inferred from source file
 - [ ] **Context Validation**: ArgumentError raised when source_dir or project_root nil in initialize
@@ -199,12 +208,14 @@ resolved = expander.resolve(cli_path)
 - [ ] **Backward Compatibility**: Class methods (expand, join, etc.) preserved for existing code
 
 #### User Experience Goals
+
 - [ ] **Predictable Resolution**: Clear, documented precedence rules for ambiguous paths
 - [ ] **Helpful Errors**: Error messages guide users to fix path issues
 - [ ] **Backward Compatible**: Existing config files continue to work
 - [ ] **Protocol Delegation**: Protocols delegate to ace-nav when available
 
 #### System Performance
+
 - [ ] **Fast Resolution**: Path expansion completes in < 5ms for typical paths
 - [ ] **Cached Protocols**: Protocol resolution uses ace-nav caching (< 100ms after initial scan)
 
@@ -235,18 +246,21 @@ resolved = expander.resolve(cli_path)
 **Why are we doing this?**
 
 Currently, ACE gems use inconsistent path resolution approaches, leading to:
+
 - Confusion for users writing config files
 - Duplication of path resolution logic across gems
 - Limited ability to use protocols in all contexts
 - Maintenance burden when path resolution needs change
 
 **User value:**
+
 - **Consistency**: Write paths once, work everywhere across ACE ecosystem
 - **Flexibility**: Choose the most natural path format for each use case
 - **Power**: Use protocols to reference resources without knowing their location
 - **Clarity**: Predictable, well-documented path resolution behavior
 
 **System value:**
+
 - **DRY**: Single source of truth for path resolution logic
 - **Testability**: Comprehensive test coverage in ace-core atom
 - **Maintainability**: Changes to resolution logic happen in one place
@@ -255,18 +269,21 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 ## Scope of Work
 
 ### User Experience Scope
+
 - **Config File Authoring**: All path specifications in .ace/ config files
 - **CLI Arguments**: Path arguments to ace-* commands
 - **Workflow Documents**: Path references in .wf.md and other embedded docs
 - **Cross-Gem Consistency**: Same path formats work across all ace-* gems
 
 ### System Behavior Scope
+
 - **Path Format Support**: ./, ../, project-relative, absolute, env vars, protocols
 - **Protocol Resolution**: Delegation to ace-nav for wfi://, guide://, etc.
 - **Context Awareness**: Resolution based on config file location or project root
 - **Error Reporting**: Clear, actionable error messages for invalid paths
 
 ### Interface Scope
+
 - **PathExpander Atom API**: Public interface in ace-core
 - **Integration Points**: How gems should call PathExpander
 - **Migration Guide**: How to update existing gems to use PathExpander
@@ -274,12 +291,14 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 ### Deliverables
 
 #### Behavioral Specifications
+
 - Path resolution precedence rules (documented in ace-core)
 - Protocol delegation behavior (when and how ace-nav is called)
 - Error handling contract (what errors, when, and what messages)
 - Usage examples for common scenarios
 
 #### Validation Artifacts
+
 - Test suite covering all path formats and edge cases
 - Integration tests showing cross-gem consistency
 - Performance benchmarks for path resolution
@@ -288,17 +307,20 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 ## Out of Scope
 
 ### Implementation Concerns (Reserved for Planning Phase)
+
 - ❌ **Code Organization**: Whether to use module, class, or singleton pattern
 - ❌ **File Structure**: Where to place PathExpander within ace-core
 - ❌ **Refactoring Strategy**: Order of gem updates to adopt PathExpander
 - ❌ **Performance Optimization**: Caching implementation details
 
 ### Technology Decisions (Reserved for Planning Phase)
+
 - ❌ **Testing Framework**: Minitest patterns for PathExpander tests
 - ❌ **Protocol Detection**: Regex vs parser approach for protocol URIs
 - ❌ **Gem Dependencies**: How ace-core should interact with ace-nav
 
 ### Future Enhancements (Not in Current Scope)
+
 - ❌ **Additional Protocols**: New protocol types beyond current set
 - ❌ **Remote Resources**: HTTP/HTTPS URL support
 - ❌ **Path Transformation**: Hooks for custom path processing
@@ -309,21 +331,25 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 ### Validation Question Decisions
 
 **Q1: Ambiguous Path Resolution** - How should `docs/file.md` be resolved?
+
 - **Decision: Option A** - Always project-relative unless starts with ./ or ../
 - **Rationale**: Consistent with current ace-* gem behavior (ace-docs, ace-taskflow use project-relative), predictable, follows ADR-004 standards
 - **Impact**: Users can rely on simple paths being project-relative, config-relative needs explicit ./ prefix
 
 **Q2: Protocol Dependency** - Should PathExpander require ace-nav?
+
 - **Decision: Option C** - Plugin system - register protocol resolver if available
 - **Rationale**: Keeps ace-core lightweight, allows ace-nav to be optional, extensible for future protocol handlers
 - **Impact**: PathExpander detects protocols but delegates to registered resolver (ace-nav when available)
 
 **Q3: Error Handling Philosophy** - Strict mode vs permissive mode?
+
 - **Decision: Option B** - Permissive - try multiple resolution strategies
 - **Rationale**: Better UX - users don't need to know exact path format, graceful degradation when ace-nav not available
 - **Impact**: Multiple resolution attempts logged but not fatal, clear error messages guide users
 
 **Q4: Caching Strategy** - Should PathExpander cache resolved paths?
+
 - **Decision: Option A** - No caching - always resolve fresh
 - **Rationale**: Simple, safe, resolution is fast (<5ms), caching adds complexity without significant benefit
 - **Impact**: Clean architecture, no cache invalidation concerns, relies on ace-nav's protocol caching for expensive operations
@@ -331,18 +357,21 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 ### Technical Approach
 
 **Architecture Pattern:**
+
 - Enhance existing `Ace::Core::Atoms::PathExpander` module with new methods
 - Maintain module pattern (not class) - pure functions without state
 - Add protocol detection and delegation capability
 - Keep existing `expand()` method for backward compatibility
 
 **Integration Strategy:**
+
 - PathExpander detects protocol URIs (via pattern matching `protocol://`)
 - Protocol resolution delegates to registered resolver (ace-nav when loaded)
 - If no resolver registered: return clear error message
 - Non-protocol paths: expand normally (env vars, tilde, relative)
 
 **Technology Stack:**
+
 - Ruby stdlib: `Pathname`, `File`, `Dir`
 - Pattern matching: Regex for protocol detection (`%r{^[a-z]+://}`)
 - Dependency injection: Protocol resolver registry (optional ace-nav integration)
@@ -359,6 +388,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 | Dependencies | None | Additional gem | **stdlib** |
 
 **Selection Rationale:**
+
 - Use Ruby stdlib exclusively - no new dependencies
 - PathExpander already uses Pathname successfully
 - Regex sufficient for protocol pattern detection
@@ -367,6 +397,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 ### File Modifications
 
 **Modify:**
+
 - `ace-core/lib/ace/core/atoms/path_expander.rb`
   - **Convert from module to class** (backward compatible via class methods)
   - Add factory methods: `for_file(source_file)`, `for_cli()`
@@ -381,6 +412,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
   - Integration: All ace-* gems can adopt instance-based pattern while existing code works
 
 **Create:**
+
 - `ace-core/test/atoms/path_expander_test.rb`
   - Purpose: Test instance-based PathExpander API
   - Key components: Factory method tests (for_file, for_cli), resolve() method tests, instance state
@@ -402,6 +434,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
   - Dependencies: ace-nav (optional), test_helper
 
 **Documentation Updates:**
+
 - `ace-core/README.md`
   - Section: PathExpander usage examples
   - Changes: Add protocol and context-aware examples
@@ -415,6 +448,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 **Test Scenarios:**
 
 **1. Factory Method Tests (Unit):**
+
 - `for_file(source_file)`: Creates instance with inferred source_dir and project_root
 - `for_cli()`: Creates instance with Dir.pwd as source_dir
 - Instance has correct `source_dir` and `project_root` attributes
@@ -422,6 +456,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 - Edge cases: source_file doesn't exist, nil source_file
 
 **2. Context Validation Tests (Unit):**
+
 - `initialize(source_dir: nil, project_root: "/project")`: Raises ArgumentError
 - `initialize(source_dir: "/dir", project_root: nil)`: Raises ArgumentError
 - `initialize(source_dir: nil, project_root: nil)`: Raises ArgumentError
@@ -429,12 +464,14 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 - Error message clearly states both parameters required
 
 **3. Protocol Detection Tests (Unit - Class Methods):**
+
 - `PathExpander.protocol?("wfi://setup")`: Returns true
 - `PathExpander.protocol?("./path")`: Returns false
 - Detect valid protocols: `wfi://`, `guide://`, `tmpl://`, `task://`, `prompt://`
 - Handle edge cases: empty string, nil, protocol-only `wfi://`
 
 **4. Instance Resolution Tests (Unit):**
+
 - `resolve("./relative")`: Resolves relative to source_dir
 - `resolve("../parent")`: Resolves parent reference from source_dir
 - `resolve("docs/file.md")`: Resolves relative to project_root
@@ -443,34 +480,40 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 - `resolve("wfi://setup")`: Delegates to protocol resolver
 
 **5. Environment Variable Expansion Tests (Unit):**
+
 - `$VAR` format: `$HOME/docs` → `/Users/user/docs`
 - `${VAR}` format: `${PROJECT_ROOT}/config` → `/project/config`
 - Undefined vars: Leave as literal string or error (TBD)
 - Nested paths: `$HOME/projects/$PROJECT_NAME`
 
 **6. Protocol Resolution Tests (Integration):**
+
 - With ace-nav loaded: Successfully resolve `wfi://workflow-name` via instance
 - Without ace-nav: Return helpful error message
 - Protocol not found: Clear error with suggestion
 - Circular references: Detect and prevent infinite loops
 
 **7. Precedence Tests (Unit):**
+
 - Absolute > Project-relative > Source-relative
 - Instance context used correctly
 - Protocol resolution takes priority when pattern matches
 
 **8. Error Handling Tests (Unit):**
+
 - Missing context in initialize: ArgumentError raised
 - Invalid protocol: Clear error message
 - Unresolved protocol: Suggestion to check ace-nav
 - Nil/empty path: Return nil without error
 
 **9. Backward Compatibility Tests (Integration):**
+
 - Existing class methods unchanged: `expand()`, `join()`, `dirname()`, etc.
 - All current ace-* gem uses continue to work
 - No breaking changes to existing stateless path expansion
 
 **10. Performance Tests (Unit):**
+
 - Instance creation < 1ms (factory methods)
 - Path resolution < 5ms for typical paths
 - Protocol detection < 1ms (regex pattern matching)
@@ -478,6 +521,7 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 - No performance regression vs current implementation
 
 **Test Prioritization:**
+
 - **High Priority:** Factory methods, context validation, instance resolution, backward compatibility
 - **Medium Priority:** Protocol detection, environment variable expansion, precedence rules, integration tests
 - **Low Priority:** Performance benchmarks, edge case combinations
@@ -486,19 +530,19 @@ Currently, ACE gems use inconsistent path resolution approaches, leading to:
 
 **Planning Steps:**
 
-* [ ] Review existing PathExpander usage across all ace-* gems
+- [ ] Review existing PathExpander usage across all ace-* gems
   > TEST: Usage Audit Check
   > Type: Pre-condition Check
   > Assert: All current uses of PathExpander.expand() identified
   > Command: grep -r "PathExpander" ace-*/lib --include="*.rb" | wc -l
 
-* [ ] Analyze ace-nav protocol resolution architecture
+- [ ] Analyze ace-nav protocol resolution architecture
   > TEST: Architecture Understanding
   > Type: Pre-condition Check
   > Assert: Protocol resolution entry points and patterns documented
   > Command: # Review ace-nav/lib/ace/nav/molecules/resource_resolver.rb
 
-* [ ] Design protocol resolver registry interface
+- [ ] Design protocol resolver registry interface
   - Define callback signature for protocol resolvers
   - Plan registration and lookup mechanism
   - Document integration points for ace-nav
