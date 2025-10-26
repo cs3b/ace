@@ -27,13 +27,13 @@ module Ace
         # @param root [String] The root directory
         # @param context [String] The context
         # @param task_number [String, Integer] The task number
-        # @param filename [String] Optional filename (defaults to "task.NNN.md" for new format)
+        # @param filename [String] Optional filename (defaults to "task.NNN.s.md" for new format)
         # @param slug_part [String] Optional descriptive slug part
         # @param config [Configuration] Optional configuration object
         # @return [String] The complete path to the task file
         def self.build_task_file_path(root, context, task_number, filename = nil, slug_part = nil, config_param = nil)
-          # Use new naming convention: task.NNN.md when slug is present
-          actual_filename = filename || (slug_part ? "task.#{task_number.to_s.rjust(3, '0')}.md" : "task.md")
+          # Use new naming convention: task.NNN.s.md when slug is present
+          actual_filename = filename || (slug_part ? "task.#{task_number.to_s.rjust(3, '0')}.s.md" : "task.s.md")
           File.join(build_task_path(root, context, task_number, slug_part, config_param), actual_filename)
         end
 

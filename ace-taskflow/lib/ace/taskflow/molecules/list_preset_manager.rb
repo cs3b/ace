@@ -116,10 +116,27 @@ module Ace
           glob = data.dig('filters', 'glob')
           glob = [glob] if glob.is_a?(String)
 
+          # Validate glob patterns
+          if glob
+            valid_globs = []
+            glob.each do |pattern|
+              if valid_glob?(pattern)
+                valid_globs << pattern
+              else
+                warn "Invalid glob pattern in #{file}: #{pattern.inspect}"
+              end
+            end
+            glob = valid_globs.empty? ? nil : valid_globs
+          end
+
+          # Extract filters and remove glob from it since it's stored separately
+          filters = (data['filters'] || {}).dup
+          filters.delete('glob')
+
           {
             description: data['description'] || "#{File.basename(file, '.yml')} preset",
             context: data['context'],
-            filters: data['filters'] || {},
+            filters: filters,
             glob: glob,
             sort: data['sort'] || { by: :sort, ascending: true },
             display: data['display'] || {},
@@ -128,6 +145,17 @@ module Ace
         rescue => e
           warn "Error loading preset from #{file}: #{e.message}"
           nil
+        end
+
+        def valid_glob?(pattern)
+          return false unless pattern.is_a?(String) && !pattern.empty?
+          # Disallow dangerous characters
+          return false if pattern =~ /[<>|]/
+          # Ensure it's a relative path (no absolute paths)
+          return false if pattern.start_with?('/')
+          true
+        rescue
+          false
         end
 
         def default_presets

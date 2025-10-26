@@ -19,6 +19,24 @@ module Ace
           @release_resolver = ReleaseResolver.new(@root_path)
         end
 
+        # Load all ideas matching the glob patterns
+        # @param context [String] The context to load from (default: "current")
+        #   - "current" or "active": Load from active release
+        #   - "backlog": Load from backlog directory
+        #   - "v.X.Y.Z": Load from specific release
+        # @param include_content [Boolean] Whether to include file content (default: false)
+        # @param glob [Array<String>, nil] Glob patterns to match (default: ["**/*.s.md"])
+        #   - Default `["**/*.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
+        #   - Use `["*.s.md"]` for top-level ideas only (excludes subdirectories)
+        #   - Use `["maybe/**/*.s.md"]` for ideas in maybe/ subdirectory only
+        #   - Patterns are relative to the ideas/ directory within the context
+        # @return [Array<Hash>] Array of idea hashes with keys: :id, :filename, :title, :path, :created_at, :context
+        # @example Load all ideas from current release
+        #   loader.load_all(context: "current")
+        # @example Load top-level ideas only (no subdirectories)
+        #   loader.load_all(context: "current", glob: ["*.s.md"])
+        # @example Load maybe ideas only
+        #   loader.load_all(context: "current", glob: ["maybe/**/*.s.md"])
         def load_all(context: "current", include_content: false, glob: nil)
           # Use glob-based loading (glob defaults to all .s.md files if not provided)
           glob ||= ["**/*.s.md"]

@@ -52,7 +52,7 @@ class PathBuilderTest < AceTaskflowTestCase
     with_config do
       result = @builder.build_task_file_path(@root, "v.0.9.0", "001")
 
-      assert_equal "/path/to/.ace-taskflow/v.0.9.0/tasks/001/task.md", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/tasks/001/task.s.md", result
     end
   end
 
