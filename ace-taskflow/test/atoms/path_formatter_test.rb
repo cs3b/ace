@@ -65,13 +65,13 @@ class PathFormatterTest < AceTaskflowTestCase
   end
 
   def test_format_display_path_smart_truncation_for_ace_taskflow
-    path = "/Users/developer/projects/myapp/.ace-taskflow/v.0.9.0/t/025-feat-idea/task.025.md"
+    path = "/Users/developer/projects/myapp/.ace-taskflow/v.0.9.0/t/025-feat-idea/task.025.s.md"
     # Relative path is 49 chars, so use max_length: 45 to trigger truncation
     result = @formatter.format_display_path(path, @root, max_length: 45)
 
     # Should keep the important parts
     assert result.include?(".ace-taskflow")
-    assert result.include?("task.025.md")
+    assert result.include?("task.025.s.md")
     assert result.include?("...")
   end
 

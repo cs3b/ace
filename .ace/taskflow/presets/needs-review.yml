@@ -2,6 +2,7 @@ description: "Tasks requiring review (needs_review flag set)"
 type: "tasks"
 context: "current"
 filters:
+  glob: ["**/*.s.md"]
   metadata:
     needs_review: true
 sort:

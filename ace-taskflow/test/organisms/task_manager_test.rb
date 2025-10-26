@@ -24,10 +24,10 @@ class TaskManagerTest < AceTaskflowTestCase
   def test_find_next_task_skips_blocked
     with_test_project do |dir|
       # Mark task 002 (in-progress) and 003 (pending) as blocked
-      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "002", "task.002.md")
+      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "002", "task.002.s.md")
       File.write(task_002, File.read(task_002).gsub(/status: in-progress/, "status: blocked"))
 
-      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.md")
+      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.s.md")
       File.write(task_003, File.read(task_003).gsub(/status: pending/, "status: blocked"))
 
       Dir.chdir(dir) do
@@ -69,7 +69,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert result[:success]
 
         # Verify file was updated
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.s.md")
         content = File.read(task_file)
         assert_match(/status: in-progress/, content)
       end
@@ -120,7 +120,7 @@ class TaskManagerTest < AceTaskflowTestCase
     skip "Test needs fix - will be reviewed in Phase 9"
     with_test_project do |dir|
       # Add dependencies to task 004 (needs quotes for YAML)
-      task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "004", "task.004.md")
+      task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "004", "task.004.s.md")
       content = File.read(task_file)
       File.write(task_file, content.gsub(/dependencies: \[\]/, 'dependencies: ["v.0.9.0+task.003"]'))
 
