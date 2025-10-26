@@ -12,6 +12,7 @@ parent_task: 088
 ## Behavioral Specification
 
 ### User Experience
+
 - **Input**: Users configure taskflow directory structure once in `.ace/taskflow/config.yml` with simple folder names (not paths)
 - **Process**: Users create presets using glob patterns that work universally across all contexts (backlog, releases)
 - **Output**: Consistent directory structure across all releases, self-defining presets without hardcoded mappings
@@ -19,17 +20,20 @@ parent_task: 088
 ### Expected Behavior
 
 **Configuration Simplicity:**
+
 - Main config defines folder names once: `ideas: "ideas"`, `tasks: "tasks"`
 - Same folder structure in every context (backlog/, v.0.9.0/, etc.)
 - No duplication of path logic between config and code
 
 **Universal Presets:**
+
 - Presets use glob patterns starting from ideas/ or tasks/ folders
 - Same preset works for both backlog and all releases
 - Globs self-define what they include (no hardcoded PRESET_TO_SCOPE mapping)
 - Context determines which release root to apply globs within
 
 **Example Directory Structure:**
+
 ```
 .ace-taskflow/
 ├── backlog/
@@ -53,6 +57,7 @@ parent_task: 088
 ### Interface Contract
 
 **Configuration File:**
+
 ```yaml
 # .ace/taskflow/config.yml
 taskflow:
@@ -66,6 +71,7 @@ taskflow:
 ```
 
 **Preset File:**
+
 ```yaml
 # .ace/taskflow/presets/maybe.yml
 description: "Maybe items (uncertain/might pursue)"
@@ -81,6 +87,7 @@ sort:
 ```
 
 **CLI Behavior:**
+
 ```bash
 # List maybe ideas in current release
 ace-taskflow ideas maybe
@@ -93,11 +100,13 @@ ace-taskflow list maybe --context current
 ```
 
 **Error Handling:**
+
 - Invalid glob pattern: Show clear error with example of valid pattern
 - Missing context directory: Fall back to backlog with warning
 - Empty glob results: Show "No items found matching pattern"
 
 **Edge Cases:**
+
 - No active release + context "current": Falls back to backlog
 - Glob matches both flat files and directory-based items: Loads both
 - Multiple glob patterns: Results are combined (union)
@@ -121,6 +130,7 @@ ace-taskflow list maybe --context current
 ## Objective
 
 Eliminate configuration duplication and hardcoded mappings by implementing a glob-based preset system where:
+
 1. Directory structure is defined once and consistently applied
 2. Presets self-define their content through glob patterns
 3. Same presets work universally across all contexts (backlog, releases)
@@ -130,18 +140,21 @@ This improves maintainability, extensibility, and user experience by making the 
 ## Scope of Work
 
 ### User Experience Scope
+
 - Configuration of taskflow directory structure
 - Creation of universal presets using glob patterns
 - Listing/filtering ideas and tasks across different contexts
 - Understanding how context resolution works
 
 ### System Behavior Scope
+
 - Config loading and directory name resolution
 - Preset loading with glob pattern support
 - Context resolution (current → active release, backlog → backlog dir)
 - Glob pattern evaluation within context root
 
 ### Interface Scope
+
 - Configuration file format (`.ace/taskflow/config.yml`)
 - Preset file format (`.ace/taskflow/presets/*.yml`)
 - CLI commands for listing ideas/tasks with presets
@@ -149,12 +162,14 @@ This improves maintainability, extensibility, and user experience by making the 
 ### Deliverables
 
 #### Behavioral Specifications
+
 - Configuration structure definition
 - Preset glob pattern syntax
 - Context resolution behavior
 - Error handling patterns
 
 #### Validation Artifacts
+
 - Test scenarios for glob pattern matching
 - Context resolution test cases
 - Backward compatibility validation
@@ -171,6 +186,7 @@ This improves maintainability, extensibility, and user experience by making the 
 ### Root Cause
 
 The configuration at `.ace/taskflow/config.yml` currently has:
+
 ```yaml
 taskflow:
   directories:
@@ -179,6 +195,7 @@ taskflow:
 ```
 
 This creates duplication because:
+
 1. The config mixes folder names (`tasks: "tasks"`) with paths (`ideas: "backlog/ideas"`)
 2. Code has to extract the last part: `ideas_dir_config.split("/").last → "ideas"`
 3. Actual structure shows each release has its own `ideas/` folder at the same level
@@ -202,25 +219,25 @@ This creates duplication because:
 
 ### Planning Steps
 
-* [ ] **Research Current Implementation**
+- [ ] **Research Current Implementation**
   - Review idea_loader.rb determine_idea_directory method (lines 180-214)
   - Review task_manager.rb for similar path construction logic
   - Document all places where `ideas_dir_config.split("/").last` is used
   - Analyze PRESET_TO_SCOPE mapping in ideas_command.rb and tasks_command.rb
 
-* [ ] **Design Glob Resolution Strategy**
+- [ ] **Design Glob Resolution Strategy**
   - Decision: Should globs be resolved from context root or from ideas/tasks subdir?
   - Recommended: Resolve from context root (backlog/, v.0.9.0/) for consistency
   - Pattern: `Dir.glob(File.join(context_root, glob_pattern))`
   - Example: `context_root = "/path/to/v.0.9.0"`, `glob = "ideas/maybe/**/*.md"`
   - Result: Matches `/path/to/v.0.9.0/ideas/maybe/**/*.md`
 
-* [ ] **Plan Backward Compatibility**
+- [ ] **Plan Backward Compatibility**
   - Existing presets without glob patterns should still work
   - Fall back to old scope-based loading if no glob present
   - Document migration path for users with custom configs
 
-* [ ] **Design Preset Type Handling**
+- [ ] **Design Preset Type Handling**
   - Decision: Keep `type:` field as optional metadata or remove?
   - Recommended: Make `type:` optional, determine from glob patterns
   - If glob includes "ideas/**" → ideas type
@@ -320,6 +337,7 @@ This creates duplication because:
 #### Phase 6: Update All Presets with Glob Patterns
 
 - [ ] Update `.ace/taskflow/presets/maybe.yml`
+
   ```yaml
   filters:
     glob:
@@ -328,6 +346,7 @@ This creates duplication because:
   ```
 
 - [ ] Update `.ace/taskflow/presets/anyday.yml`
+
   ```yaml
   filters:
     glob:
@@ -336,6 +355,7 @@ This creates duplication because:
   ```
 
 - [ ] Update `.ace/taskflow/presets/done.yml`
+
   ```yaml
   filters:
     glob:
@@ -344,6 +364,7 @@ This creates duplication because:
   ```
 
 - [ ] Update `.ace/taskflow/presets/all.yml`
+
   ```yaml
   filters:
     glob:
@@ -352,6 +373,7 @@ This creates duplication because:
   ```
 
 - [ ] Update `.ace/taskflow/presets/pending.yml` (or `next.yml`)
+
   ```yaml
   filters:
     glob:
@@ -385,17 +407,20 @@ This creates duplication because:
 ### Risk Analysis and Rollback
 
 **Technical Risks:**
+
 - Breaking existing user configs that depend on `ideas: "backlog/ideas"`
 - Glob patterns not matching expected files
 - Performance issues with complex glob patterns
 
 **Mitigation:**
+
 - Document migration path clearly in CHANGELOG
 - Add validation for glob patterns
 - Keep fallback logic for presets without globs
 - Comprehensive testing before release
 
 **Rollback Strategy:**
+
 - Config change is isolated and reversible
 - Can revert to old PRESET_TO_SCOPE mapping if needed
 - Glob support can be made optional feature flag

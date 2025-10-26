@@ -11,6 +11,8 @@ module Ace
     module Commands
       class IdeasCommand
         # Mapping of preset names to idea scopes
+        # NOTE: Kept for backward compatibility with presets that don't define glob patterns.
+        # New presets should use glob patterns instead of relying on this mapping.
         PRESET_TO_SCOPE = {
           'next' => :next,
           'pending' => :next,
@@ -167,20 +169,31 @@ module Ace
         def get_ideas_for_preset(preset_config)
           context = preset_config[:context] || 'current'
           preset_name = preset_config[:name] || 'next'
+          glob = preset_config[:glob]
 
-          # Determine scope based on preset name using mapping
-          scope = PRESET_TO_SCOPE.fetch(preset_name, :next)
-
-          case context
-          when 'all'
-            get_all_ideas_for_preset(scope)
-          when 'backlog'
-            @idea_loader.load_all(context: "backlog", include_content: false, scope: scope)
-          when 'current'
-            @idea_loader.load_all(context: "current", include_content: false, scope: scope)
+          # If glob patterns provided, use glob-based loading
+          if glob && !glob.empty?
+            case context
+            when 'all'
+              get_all_ideas_with_glob(glob)
+            else
+              @idea_loader.load_all(context: context, include_content: false, glob: glob)
+            end
           else
-            # Assume it's a specific release context
-            @idea_loader.load_all(context: context, include_content: false, scope: scope)
+            # Fall back to scope-based loading for backward compatibility
+            scope = PRESET_TO_SCOPE.fetch(preset_name, :next)
+
+            case context
+            when 'all'
+              get_all_ideas_for_preset(scope)
+            when 'backlog'
+              @idea_loader.load_all(context: "backlog", include_content: false, scope: scope)
+            when 'current'
+              @idea_loader.load_all(context: "current", include_content: false, scope: scope)
+            else
+              # Assume it's a specific release context
+              @idea_loader.load_all(context: context, include_content: false, scope: scope)
+            end
           end
         end
 
@@ -198,6 +211,26 @@ module Ace
 
           # Backlog
           backlog_ideas = @idea_loader.load_all(context: "backlog", include_content: false, scope: scope)
+          backlog_ideas.each { |idea| idea[:release] = "backlog" }
+          all_ideas.concat(backlog_ideas)
+
+          all_ideas
+        end
+
+        def get_all_ideas_with_glob(glob)
+          all_ideas = []
+          release_resolver = Molecules::ReleaseResolver.new(@root_path)
+
+          # Active releases
+          active_releases = release_resolver.find_active
+          active_releases.each do |release|
+            ideas = @idea_loader.load_all(context: release[:name], include_content: false, glob: glob)
+            ideas.each { |idea| idea[:release] = release[:name] }
+            all_ideas.concat(ideas)
+          end
+
+          # Backlog
+          backlog_ideas = @idea_loader.load_all(context: "backlog", include_content: false, glob: glob)
           backlog_ideas.each { |idea| idea[:release] = "backlog" }
           all_ideas.concat(backlog_ideas)
 

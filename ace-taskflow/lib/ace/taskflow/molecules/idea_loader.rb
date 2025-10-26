@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "set"
 require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
@@ -18,7 +19,13 @@ module Ace
           @release_resolver = ReleaseResolver.new(@root_path)
         end
 
-        def load_all(context: "current", include_content: false, scope: :next)
+        def load_all(context: "current", include_content: false, scope: :next, glob: nil)
+          # If glob patterns provided, use glob-based loading
+          if glob && !glob.empty?
+            return load_all_with_glob(context: context, include_content: include_content, glob: glob)
+          end
+
+          # Otherwise, use traditional scope-based loading (backward compatibility)
           idea_dir = determine_idea_directory(context)
           return [] unless idea_dir && Dir.exist?(idea_dir)
 
@@ -86,25 +93,56 @@ module Ace
 
         def count_by_context
           counts = {}
+          ideas_dirname = @config.dig("taskflow", "directories", "ideas") || "ideas"
 
           # Count in active releases
           @release_resolver.find_active.each do |release|
-            ideas_subdir = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
-            # Extract just the last part if it's a nested path
-            ideas_dirname = ideas_subdir.split("/").last
             idea_dir = File.join(release[:path], ideas_dirname)
             counts[release[:name]] = count_ideas_in_directory(idea_dir)
           end
 
           # Count in backlog
-          ideas_dir_config = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
-          backlog_dir = File.join(@root_path, ideas_dir_config)
-          counts["backlog"] = count_ideas_in_directory(backlog_dir)
+          backlog_context_root = determine_context_root("backlog")
+          backlog_idea_dir = File.join(backlog_context_root, ideas_dirname)
+          counts["backlog"] = count_ideas_in_directory(backlog_idea_dir)
 
           counts
         end
 
         private
+
+        # Load ideas using glob patterns
+        def load_all_with_glob(context:, include_content:, glob:)
+          context_root = determine_context_root(context)
+          return [] unless context_root && Dir.exist?(context_root)
+
+          ideas = []
+          matched_paths = Set.new
+
+          # Apply each glob pattern
+          Array(glob).each do |pattern|
+            Dir.glob(File.join(context_root, pattern)).each do |path|
+              # Avoid duplicates
+              next if matched_paths.include?(path)
+              matched_paths.add(path)
+
+              # Load idea from file or directory
+              if File.file?(path) && path.end_with?('.md')
+                idea = load_idea_file(path, include_content)
+                ideas << idea if idea
+              elsif Dir.exist?(path)
+                # Check if it's a directory-based idea (contains idea.md)
+                idea_file = File.join(path, "idea.md")
+                if File.exist?(idea_file)
+                  idea = load_idea_from_directory(path, include_content)
+                  ideas << idea if idea
+                end
+              end
+            end
+          end
+
+          ideas
+        end
 
         def load_ideas_from_directory(dir, include_content)
           ideas = []
@@ -177,40 +215,42 @@ module Ace
           idea_data
         end
 
-        def determine_idea_directory(context)
-          ideas_dir_config = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
-          # Extract just the last part if it's a nested path for release-specific ideas
-          ideas_dirname = ideas_dir_config.split("/").last
+        # Determine the context root directory (backlog or release)
+        # This is used for glob-based loading where patterns start from context root
+        def determine_context_root(context)
+          backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
 
           case context
           when "current", "active", nil
             # Find active release
             release = @release_resolver.find_primary_active
             if release
-              File.join(release[:path], ideas_dirname)
+              release[:path]
             else
               # Fall back to backlog if no active release
-              File.join(@root_path, ideas_dir_config)
+              File.join(@root_path, backlog_dir)
             end
           when "backlog"
-            File.join(@root_path, ideas_dir_config)
+            File.join(@root_path, backlog_dir)
           when /^v\.\d+\.\d+\.\d+/
             # Specific release
             release = @release_resolver.find_release(context)
-            if release
-              File.join(release[:path], ideas_dirname)
-            else
-              nil
-            end
+            release ? release[:path] : nil
           else
             # Try to find as release name
             release = @release_resolver.find_release(context)
-            if release
-              File.join(release[:path], ideas_dirname)
-            else
-              nil
-            end
+            release ? release[:path] : nil
           end
+        end
+
+        # Determine the ideas directory within a context
+        # This is used for scope-based loading (backward compatibility)
+        def determine_idea_directory(context)
+          context_root = determine_context_root(context)
+          return nil unless context_root
+
+          ideas_dirname = @config.dig("taskflow", "directories", "ideas") || "ideas"
+          File.join(context_root, ideas_dirname)
         end
 
         def load_idea_file(path, include_content)

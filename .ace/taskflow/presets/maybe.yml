@@ -1,7 +1,10 @@
 description: "Ideas in maybe subdirectory (might pursue)"
 type: "ideas"
 context: "current"
-filters: {}
+filters:
+  glob:
+    - "ideas/maybe/**/*.md"
+    - "tasks/maybe/**/task.*.md"
 sort:
   by: "created_at"
   ascending: false
