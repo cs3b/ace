@@ -19,48 +19,21 @@ module Ace
           @release_resolver = ReleaseResolver.new(@root_path)
         end
 
-        def load_all(context: "current", include_content: false, scope: :next, glob: nil)
-          # If glob patterns provided, use glob-based loading
-          if glob && !glob.empty?
-            return load_all_with_glob(context: context, include_content: include_content, glob: glob)
-          end
-
-          # Otherwise, use traditional scope-based loading (backward compatibility)
-          idea_dir = determine_idea_directory(context)
-          return [] unless idea_dir && Dir.exist?(idea_dir)
-
-          ideas = []
-
-          # Load pending ideas from main ideas/ directory (for :next and :all scopes)
-          if [:next, :all, :recent].include?(scope)
-            pending_ideas = load_ideas_from_directory(idea_dir, include_content)
-            ideas.concat(pending_ideas)
-          end
-
-          # Load ideas from scope-specific subdirectories
-          {
-            done: [:done, :all],
-            maybe: [:maybe, :all],
-            anyday: [:anyday, :all]
-          }.each do |subdir_name, valid_scopes|
-            if valid_scopes.include?(scope)
-              subdir_path = File.join(idea_dir, subdir_name.to_s)
-              if Dir.exist?(subdir_path)
-                ideas.concat(load_ideas_from_directory(subdir_path, include_content))
-              end
-            end
-          end
-
-          ideas
+        def load_all(context: "current", include_content: false, glob: nil)
+          # Use glob-based loading (glob defaults to all .s.md files if not provided)
+          glob ||= ["**/*.s.md"]
+          load_all_with_glob(context: context, include_content: include_content, glob: glob)
         end
 
         def find_next(context: "current")
-          ideas = load_all(context: context, include_content: false, scope: :next)
+          # Top-level ideas only (excludes subdirectories like maybe/, anyday/, done/)
+          ideas = load_all(context: context, include_content: false, glob: ["*.s.md"])
           ideas.first
         end
 
         def find_by_partial_name(partial, context: "current")
-          ideas = load_all(context: context, include_content: false, scope: :all)
+          # All ideas (including subdirectories)
+          ideas = load_all(context: context, include_content: false, glob: ["**/*.s.md"])
 
           # Find first idea where filename contains the partial string
           ideas.find do |idea|
@@ -127,7 +100,7 @@ module Ace
               matched_paths.add(path)
 
               # Load idea from file or directory
-              if File.file?(path) && path.end_with?('.md')
+              if File.file?(path) && path.end_with?('.s.md')
                 idea = load_idea_file(path, include_content)
                 ideas << idea if idea
               elsif Dir.exist?(path)
@@ -147,8 +120,8 @@ module Ace
         def load_ideas_from_directory(dir, include_content)
           ideas = []
 
-          # Load flat file ideas (*.md)
-          flat_files = Dir.glob(File.join(dir, "*.md")).sort
+          # Load flat file ideas (*.s.md)
+          flat_files = Dir.glob(File.join(dir, "*.s.md")).sort
           flat_files.each do |path|
             idea = load_idea_file(path, include_content)
             ideas << idea if idea
@@ -316,8 +289,8 @@ module Ace
         def count_ideas_in_directory(dir)
           return 0 unless Dir.exist?(dir)
 
-          # Count flat file ideas (*.md)
-          flat_count = Dir.glob(File.join(dir, "*.md")).count
+          # Count flat file ideas (*.s.md)
+          flat_count = Dir.glob(File.join(dir, "*.s.md")).count
 
           # Count directory-based ideas (directories with idea.md)
           dir_count = Dir.glob(File.join(dir, "*"))
@@ -332,7 +305,7 @@ module Ace
             subdir = File.join(dir, subdir_name)
             next unless Dir.exist?(subdir)
 
-            subdir_flat = Dir.glob(File.join(subdir, "*.md")).count
+            subdir_flat = Dir.glob(File.join(subdir, "*.s.md")).count
             subdir_dirs = Dir.glob(File.join(subdir, "*"))
               .select { |path| Dir.exist?(path) }
               .count { |path| File.exist?(File.join(path, "idea.md")) }

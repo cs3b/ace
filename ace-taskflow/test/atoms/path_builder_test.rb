@@ -60,7 +60,7 @@ class PathBuilderTest < AceTaskflowTestCase
     with_config do
       result = @builder.build_task_file_path(@root, "v.0.9.0", "025", nil, "feat-idea")
 
-      assert_equal "/path/to/.ace-taskflow/v.0.9.0/tasks/025-feat-idea/task.025.md", result
+      assert_equal "/path/to/.ace-taskflow/v.0.9.0/tasks/025-feat-idea/task.025.s.md", result
     end
   end
 
@@ -119,7 +119,7 @@ class PathBuilderTest < AceTaskflowTestCase
 
   def test_extract_task_number_from_new_format
     with_config do
-      path = "/path/to/.ace-taskflow/v.0.9.0/tasks/025-feat-idea/task.025.md"
+      path = "/path/to/.ace-taskflow/v.0.9.0/tasks/025-feat-idea/task.025.s.md"
       result = @builder.extract_task_number(path)
 
       assert_equal "025", result

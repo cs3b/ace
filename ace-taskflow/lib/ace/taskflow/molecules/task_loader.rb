@@ -65,8 +65,8 @@ module Ace
           # Iterate through task directories in main t/ directory
           # Supports both old format (t/001/) and new format (t/001-feat-taskflow/)
           Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "done" }.each do |task_folder|
-            # Find .md files in the task folder (not in subfolders)
-            md_files = Dir.glob(File.join(task_folder, "*.md"))
+            # Find .s.md files in the task folder (not in subfolders)
+            md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
             # Find the task file - the one with YAML frontmatter containing task metadata
             task_file = md_files.find do |file|
@@ -83,8 +83,8 @@ module Ace
           done_dir = File.join(task_dir, @config.done_dir)
           if File.directory?(done_dir)
             Dir.glob(File.join(done_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
-              # Find .md files in the task folder
-              md_files = Dir.glob(File.join(task_folder, "*.md"))
+              # Find .s.md files in the task folder
+              md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
               # Find the task file - the one with YAML frontmatter containing task metadata
               task_file = md_files.find do |file|
@@ -151,8 +151,8 @@ module Ace
               next if matched_paths.include?(path)
               matched_paths.add(path)
 
-              # Load task if it's a .md file
-              if File.file?(path) && path.end_with?('.md')
+              # Load task if it's a .s.md file
+              if File.file?(path) && path.end_with?('.s.md')
                 task = load_task(path)
                 tasks << task if task
               end

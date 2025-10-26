@@ -2,6 +2,7 @@ description: "Draft tasks"
 type: "tasks"
 context: "current"
 filters:
+  glob: ["**/*.s.md"]
   status:
     - "draft"
 sort:

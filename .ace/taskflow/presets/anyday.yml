@@ -2,9 +2,7 @@ description: "Ideas in anyday subdirectory (no urgency)"
 type: "ideas"
 context: "current"
 filters:
-  glob:
-    - "ideas/anyday/**/*.md"
-    - "tasks/anyday/**/task.*.md"
+  glob: ["anyday/**/*.s.md"]
 sort:
   by: "created_at"
   ascending: false

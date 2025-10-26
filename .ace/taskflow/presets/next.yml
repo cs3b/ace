@@ -2,6 +2,7 @@ description: "Next actionable tasks (pending + in-progress)"
 type: "tasks"
 context: "current"
 filters:
+  glob: ["*.s.md"]  # Top-level only, excludes subdirectories
   status:
     - "pending"
     - "in-progress"

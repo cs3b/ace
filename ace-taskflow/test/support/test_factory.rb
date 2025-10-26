@@ -55,10 +55,10 @@ module TestFactory
   def self.sample_release_structure(version = "v.0.9.0")
     {
       "#{version}/release.md" => release_content(version),
-      "#{version}/tasks/001/task.md" => sample_task_content(id: "#{version}+task.001"),
-      "#{version}/tasks/002/task.md" => sample_task_content(id: "#{version}+task.002", status: "in-progress"),
-      "#{version}/tasks/003/task.md" => sample_task_content(id: "#{version}+task.003", status: "done"),
-      "#{version}/i/001.md" => sample_idea_content
+      "#{version}/tasks/001/task.s.md" => sample_task_content(id: "#{version}+task.001"),
+      "#{version}/tasks/002/task.s.md" => sample_task_content(id: "#{version}+task.002", status: "in-progress"),
+      "#{version}/tasks/003/task.s.md" => sample_task_content(id: "#{version}+task.003", status: "done"),
+      "#{version}/i/001.s.md" => sample_idea_content
     }
   end
 
@@ -160,7 +160,7 @@ module TestFactory
                end
 
       File.write(
-        File.join(task_dir, "task.#{task_num}.md"),
+        File.join(task_dir, "task.#{task_num}.s.md"),
         sample_task_content(
           id: "#{release}+task.#{task_num}",
           status: status,
@@ -177,7 +177,7 @@ module TestFactory
     count.times do |i|
       idea_num = sprintf("%03d", i + 1)
       File.write(
-        File.join(ideas_dir, "#{idea_num}.md"),
+        File.join(ideas_dir, "#{idea_num}.s.md"),
         sample_idea_content("Idea #{idea_num}")
       )
     end
@@ -286,7 +286,7 @@ module TestFactory
     }
 
     File.write(
-      File.join(task_dir, "task.#{task_num}.md"),
+      File.join(task_dir, "task.#{task_num}.s.md"),
       sample_task_content(task_metadata)
     )
   end
@@ -320,7 +320,7 @@ module TestFactory
     count.times do |i|
       idea_num = sprintf("%03d", i + 1)
       File.write(
-        File.join(ideas_dir, "#{idea_num}.md"),
+        File.join(ideas_dir, "#{idea_num}.s.md"),
         sample_idea_content("Idea #{idea_num}")
       )
     end
