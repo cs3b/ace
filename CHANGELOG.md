@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.99] - 2025-10-26
+
+### Added
+- **ace-core v0.10.0**: Unified path resolution system with instance-based PathExpander API
+  - Factory methods for automatic context inference (`for_file`, `for_cli`)
+  - Instance-based `resolve()` method supporting all path types
+  - Protocol URI support (wfi://, guide://, tmpl://, task://, prompt://) via plugin system
+  - 76 comprehensive tests ensuring backward compatibility and new functionality
+  - Updated documentation with usage examples and path resolution rules
+
 ## [0.9.98] - 2025-10-25
 
 ### Fixed
