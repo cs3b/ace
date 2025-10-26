@@ -1,8 +1,8 @@
-description: "Ideas in maybe subdirectory (might pursue)"
-type: "ideas"
+description: "Items for future consideration (maybe priority)"
+# Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["maybe/**/*.s.md"]
+  glob: ["maybe/**/*.s.md"]  # Keep glob for backward compatibility
 sort:
   by: "created_at"
   ascending: false

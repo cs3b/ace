@@ -5,6 +5,7 @@ require "set"
 require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
+require_relative "../atoms/yaml_parser"
 
 module Ace
   module Taskflow
@@ -122,8 +123,8 @@ module Ace
                 idea = load_idea_file(path, include_content)
                 ideas << idea if idea
               elsif Dir.exist?(path)
-                # Check if it's a directory-based idea (contains idea.md)
-                idea_file = File.join(path, "idea.md")
+                # Check if it's a directory-based idea (contains idea.s.md)
+                idea_file = File.join(path, "idea.s.md")
                 if File.exist?(idea_file)
                   idea = load_idea_from_directory(path, include_content)
                   ideas << idea if idea
@@ -145,14 +146,14 @@ module Ace
             ideas << idea if idea
           end
 
-          # Load directory-based ideas (directories containing idea.md)
+          # Load directory-based ideas (directories containing idea.s.md)
           Dir.glob(File.join(dir, "*")).sort.each do |path|
             next unless Dir.exist?(path)
             # Skip scope subdirectories
             basename = File.basename(path)
             next if SCOPE_SUBDIRECTORIES.include?(basename)
 
-            idea_file = File.join(path, "idea.md")
+            idea_file = File.join(path, "idea.s.md")
             if File.exist?(idea_file)
               idea = load_idea_from_directory(path, include_content)
               ideas << idea if idea
@@ -163,7 +164,7 @@ module Ace
         end
 
         def load_idea_from_directory(dir_path, include_content)
-          idea_file = File.join(dir_path, "idea.md")
+          idea_file = File.join(dir_path, "idea.s.md")
           return nil unless File.exist?(idea_file)
 
           dirname = File.basename(dir_path)
@@ -175,12 +176,18 @@ module Ace
           title = dirname.sub(/^\d{8}-\d{6}-/, "")
           title = title.tr("-", " ").strip
 
-          # Find attachment files (exclude idea.md)
+          # Find attachment files (exclude idea.s.md)
           attachments = Dir.glob(File.join(dir_path, "*"))
-            .reject { |f| File.basename(f) == "idea.md" }
+            .reject { |f| File.basename(f) == "idea.s.md" }
             .select { |f| File.file?(f) }
             .map { |f| File.basename(f) }
             .sort
+
+          # Read content to parse frontmatter
+          content = File.read(idea_file)
+          parsed = Atoms::YamlParser.parse(content)
+          frontmatter = parsed[:frontmatter]
+          body_content = parsed[:content]
 
           idea_data = {
             id: id,
@@ -190,15 +197,16 @@ module Ace
             created_at: extract_timestamp_from_filename(dirname),
             context: extract_context_from_path(dir_path),
             attachments: attachments,
-            is_directory: true
+            is_directory: true,
+            status: frontmatter["status"] || "pending",
+            priority: frontmatter["priority"]
           }
 
           if include_content
-            content = File.read(idea_file)
-            idea_data[:content] = content
+            idea_data[:content] = body_content
 
-            # Try to extract metadata from content
-            if content =~ /^#\s+(.+)$/
+            # Try to extract title from content header
+            if body_content =~ /^#\s+(.+)$/
               idea_data[:title] = ::Regexp.last_match(1).strip
             end
           end
@@ -256,6 +264,12 @@ module Ace
           title = filename.sub(/^\d{8}-\d{6}-/, "").sub(/\.md$/, "")
           title = title.tr("-", " ").strip
 
+          # Read content to parse frontmatter
+          content = File.read(path)
+          parsed = Atoms::YamlParser.parse(content)
+          frontmatter = parsed[:frontmatter]
+          body_content = parsed[:content]
+
           idea_data = {
             id: id,
             filename: filename,
@@ -264,15 +278,16 @@ module Ace
             created_at: extract_timestamp_from_filename(filename),
             context: extract_context_from_path(path),
             attachments: [],
-            is_directory: false
+            is_directory: false,
+            status: frontmatter["status"] || "pending",
+            priority: frontmatter["priority"]
           }
 
           if include_content
-            content = File.read(path)
-            idea_data[:content] = content
+            idea_data[:content] = body_content
 
-            # Try to extract metadata from content
-            if content =~ /^#\s+(.+)$/
+            # Try to extract title from content header
+            if body_content =~ /^#\s+(.+)$/
               idea_data[:title] = ::Regexp.last_match(1).strip
             end
           end
@@ -310,10 +325,10 @@ module Ace
           # Count flat file ideas (*.s.md)
           flat_count = Dir.glob(File.join(dir, "*.s.md")).count
 
-          # Count directory-based ideas (directories with idea.md)
+          # Count directory-based ideas (directories with idea.s.md)
           dir_count = Dir.glob(File.join(dir, "*"))
             .select { |path| Dir.exist?(path) && !SCOPE_SUBDIRECTORIES.include?(File.basename(path)) }
-            .count { |path| File.exist?(File.join(path, "idea.md")) }
+            .count { |path| File.exist?(File.join(path, "idea.s.md")) }
 
           main_count = flat_count + dir_count
 
@@ -326,7 +341,7 @@ module Ace
             subdir_flat = Dir.glob(File.join(subdir, "*.s.md")).count
             subdir_dirs = Dir.glob(File.join(subdir, "*"))
               .select { |path| Dir.exist?(path) }
-              .count { |path| File.exist?(File.join(path, "idea.md")) }
+              .count { |path| File.exist?(File.join(path, "idea.s.md")) }
             subdirs_count += subdir_flat + subdir_dirs
           end
 
