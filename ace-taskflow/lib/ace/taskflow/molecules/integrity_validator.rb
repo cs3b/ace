@@ -88,12 +88,12 @@ module Ace
 
           # Load from all releases
           @release_resolver.find_all.each do |release|
-            release_ideas = @idea_loader.load_all(context: release[:name], scope: :all)
+            release_ideas = @idea_loader.load_all(context: release[:name])
             ideas.concat(release_ideas)
           end
 
           # Load from backlog
-          backlog_ideas = @idea_loader.load_all(context: "backlog", scope: :all)
+          backlog_ideas = @idea_loader.load_all(context: "backlog")
           ideas.concat(backlog_ideas)
 
           ideas

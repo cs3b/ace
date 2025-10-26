@@ -191,11 +191,11 @@ module Ace
           # Get total count of ALL ideas for proper display
           total_ideas = if preset_config[:name] == 'all' || preset_config[:name] == 'done'
                          # For 'all' or 'done' presets, get the actual total including done
-                         all_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+                         all_ideas = @idea_loader.load_all(context: context, include_content: false)
                          all_ideas.size
                        else
                          # For 'next' and other presets, still show total for context
-                         all_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+                         all_ideas = @idea_loader.load_all(context: context, include_content: false)
                          all_ideas.size
                        end
 
@@ -245,8 +245,8 @@ module Ace
           context = preset_config[:context] || 'current'
 
           # Get summary statistics
-          all_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
-          done_ideas = @idea_loader.load_all(context: context, include_content: false, scope: :done)
+          all_ideas = @idea_loader.load_all(context: context, include_content: false)
+          done_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["done/**/*.s.md"])
           active_ideas = all_ideas - done_ideas
 
           # Get release info

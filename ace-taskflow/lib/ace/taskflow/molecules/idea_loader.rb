@@ -104,15 +104,15 @@ module Ace
 
         # Load ideas using glob patterns
         def load_all_with_glob(context:, include_content:, glob:)
-          context_root = determine_context_root(context)
-          return [] unless context_root && Dir.exist?(context_root)
+          idea_dir = determine_idea_directory(context)
+          return [] unless idea_dir && Dir.exist?(idea_dir)
 
           ideas = []
           matched_paths = Set.new
 
           # Apply each glob pattern
           Array(glob).each do |pattern|
-            Dir.glob(File.join(context_root, pattern)).each do |path|
+            Dir.glob(File.join(idea_dir, pattern)).each do |path|
               # Avoid duplicates
               next if matched_paths.include?(path)
               matched_paths.add(path)
