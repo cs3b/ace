@@ -32,6 +32,7 @@ module Ace
         # @param source_file [String] Path to source file
         # @return [PathExpander] Instance with inferred context
         def self.for_file(source_file)
+          # Lazy-loaded to avoid circular dependency: ProjectRootFinder requires PathExpander
           require_relative '../molecules/project_root_finder'
 
           expanded_source = File.expand_path(source_file)
@@ -46,6 +47,7 @@ module Ace
         #
         # @return [PathExpander] Instance with CLI context
         def self.for_cli
+          # Lazy-loaded to avoid circular dependency: ProjectRootFinder requires PathExpander
           require_relative '../molecules/project_root_finder'
 
           new(
