@@ -19,7 +19,7 @@ class FileNamerTest < AceTestCase
     # Freeze time for predictable timestamp
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       path = @namer.generate
-      assert_match %r{/test/ideas/20250115-103045-idea\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-idea\.s\.md$}, path
     end
   end
 
@@ -27,7 +27,7 @@ class FileNamerTest < AceTestCase
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       metadata = { title: "My Great Idea!" }
       path = @namer.generate(metadata)
-      assert_match %r{/test/ideas/20250115-103045-my-great-idea\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-my-great-idea\.s\.md$}, path
     end
   end
 
@@ -36,7 +36,7 @@ class FileNamerTest < AceTestCase
       metadata = { title: "Test@#$%^&*()_+={}[]|\\:\";<>?,./~`" }
       path = @namer.generate(metadata)
       # All special characters should be removed, leaving only hyphens
-      assert_match %r{/test/ideas/20250115-103045-test\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-test\.s\.md$}, path
     end
   end
 
@@ -44,7 +44,7 @@ class FileNamerTest < AceTestCase
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       metadata = { title: "Too    many     spaces" }
       path = @namer.generate(metadata)
-      assert_match %r{/test/ideas/20250115-103045-too-many-spaces\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-too-many-spaces\.s\.md$}, path
     end
   end
 
@@ -52,7 +52,7 @@ class FileNamerTest < AceTestCase
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       metadata = { title: "   ---trimmed---   " }
       path = @namer.generate(metadata)
-      assert_match %r{/test/ideas/20250115-103045-trimmed\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-trimmed\.s\.md$}, path
     end
   end
 
@@ -63,8 +63,8 @@ class FileNamerTest < AceTestCase
       path = @namer.generate(metadata)
 
       filename = File.basename(path)
-      # Extract just the title part (after timestamp, before .md)
-      title_part = filename.match(/\d{8}-\d{6}-(.+)\.md$/)[1]
+      # Extract just the title part (after timestamp, before .s.md)
+      title_part = filename.match(/\d{8}-\d{6}-(.+)\.s\.md$/)[1]
       assert_equal 50, title_part.length, "Title should be truncated to 50 characters"
     end
   end
@@ -73,7 +73,7 @@ class FileNamerTest < AceTestCase
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       metadata = { title: "" }
       path = @namer.generate(metadata)
-      assert_match %r{/test/ideas/20250115-103045-idea\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-idea\.s\.md$}, path
     end
   end
 
@@ -81,7 +81,7 @@ class FileNamerTest < AceTestCase
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       metadata = { title: nil }
       path = @namer.generate(metadata)
-      assert_match %r{/test/ideas/20250115-103045-idea\.md$}, path
+      assert_match %r{/test/ideas/20250115-103045-idea\.s\.md$}, path
     end
   end
 
@@ -91,7 +91,7 @@ class FileNamerTest < AceTestCase
 
     Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
       path = namer.generate
-      assert_match %r{^\./ideas/20250115-103045-idea\.md$}, path
+      assert_match %r{^\./ideas/20250115-103045-idea\.s\.md$}, path
     end
   end
 end

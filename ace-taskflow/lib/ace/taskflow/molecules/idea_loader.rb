@@ -1,51 +1,66 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "set"
 require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
+require_relative "../configuration"
+require_relative "../atoms/yaml_parser"
 
 module Ace
   module Taskflow
     module Molecules
       class IdeaLoader
+        # Scope-specific subdirectories for organizing ideas (GTD-inspired)
+        # Scopes organize ideas by priority/certainty (folder location):
+        #   - next (top-level): Immediately actionable ideas
+        #   - maybe/: Uncertain if we should do it
+        #   - anyday/: Good idea but not urgent
+        #   - done/: Completed or skipped
+        # Note: Scope is independent from status (draft/pending/in-progress/done/obsolete)
+        SCOPE_SUBDIRECTORIES = %w[done maybe anyday].freeze
+
         def initialize(root_path = nil)
           @root_path = root_path || ConfigLoader.find_root
           @config = ConfigLoader.load
           @release_resolver = ReleaseResolver.new(@root_path)
         end
 
-        def load_all(context: "current", include_content: false, scope: :next)
-          idea_dir = determine_idea_directory(context)
-          return [] unless idea_dir && Dir.exist?(idea_dir)
-
-          ideas = []
-
-          # Load pending ideas from main ideas/ directory (for :next and :all scopes)
-          if [:next, :all, :recent].include?(scope)
-            pending_ideas = load_ideas_from_directory(idea_dir, include_content)
-            ideas.concat(pending_ideas)
-          end
-
-          # Load done ideas from done/ subdirectory (for :done and :all scopes)
-          if [:done, :all].include?(scope)
-            done_dir = File.join(idea_dir, "done")
-            if Dir.exist?(done_dir)
-              done_ideas = load_ideas_from_directory(done_dir, include_content)
-              ideas.concat(done_ideas)
-            end
-          end
-
-          ideas
+        # Load all ideas matching the glob patterns
+        # @param release [String] The release to load from (default: "current")
+        #   - "current" or "active": Load from active release
+        #   - "backlog": Load from backlog directory
+        #   - "v.X.Y.Z": Load from specific release
+        # @param include_content [Boolean] Whether to include file content (default: false)
+        # @param glob [Array<String>, nil] Glob patterns to match (default: ["ideas/**/*.s.md"])
+        #   - Default `["ideas/**/*.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
+        #   - Use `["ideas/*.s.md"]` for top-level ideas only (excludes subdirectories)
+        #   - Use `["ideas/maybe/**/*.s.md"]` for ideas in maybe/ subdirectory only
+        #   - Patterns are relative to the release root (release/backlog path)
+        # @return [Array<Hash>] Array of idea hashes with keys: :id, :filename, :title, :path, :created_at, :release
+        # @example Load all ideas from current release
+        #   loader.load_all(release: "current")
+        # @example Load top-level ideas only (no subdirectories)
+        #   loader.load_all(release: "current", glob: ["ideas/*.s.md"])
+        # @example Load maybe ideas only
+        #   loader.load_all(release: "current", glob: ["ideas/maybe/**/*.s.md"])
+        def load_all(release: "current", include_content: false, glob: nil)
+          # Use glob-based loading (glob defaults to all ideas if not provided)
+          # Use the default pattern from configuration if no glob provided
+          glob ||= Taskflow.configuration.default_glob_pattern
+          load_all_with_glob(release: release, include_content: include_content, glob: glob)
         end
 
-        def find_next(context: "current")
-          ideas = load_all(context: context, include_content: false, scope: :next)
+        def find_next(release: "current")
+          # Top-level ideas only (excludes subdirectories like maybe/, anyday/, done/)
+          ideas = load_all(release: release, include_content: false, glob: ["*.s.md"])
           ideas.first
         end
 
-        def find_by_partial_name(partial, context: "current")
-          ideas = load_all(context: context, include_content: false, scope: :all)
+        def find_by_partial_name(partial, release: "current")
+          # All ideas (including subdirectories)
+          ideas = load_all(release: release, include_content: false)
 
           # Find first idea where filename contains the partial string
           ideas.find do |idea|
@@ -57,7 +72,7 @@ module Ace
           # Parse reference format (e.g., "20250924-165837" or just partial name)
           if reference =~ /^\d{8}-\d{6}/
             # Full timestamp reference
-            ideas = load_all(context: "current", include_content: true)
+            ideas = load_all(release: "current", include_content: true)
             ideas.find { |idea| idea[:id] == reference }
           else
             # Partial name search
@@ -76,44 +91,85 @@ module Ace
           end
         end
 
-        def count_by_context
+        def count_by_release
           counts = {}
+          ideas_dirname = @config.dig("taskflow", "directories", "ideas") || "ideas"
 
           # Count in active releases
           @release_resolver.find_active.each do |release|
-            ideas_subdir = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
-            # Extract just the last part if it's a nested path
-            ideas_dirname = ideas_subdir.split("/").last
             idea_dir = File.join(release[:path], ideas_dirname)
             counts[release[:name]] = count_ideas_in_directory(idea_dir)
           end
 
           # Count in backlog
-          ideas_dir_config = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
-          backlog_dir = File.join(@root_path, ideas_dir_config)
-          counts["backlog"] = count_ideas_in_directory(backlog_dir)
+          backlog_release_root = determine_release_root("backlog")
+          backlog_idea_dir = File.join(backlog_release_root, ideas_dirname)
+          counts["backlog"] = count_ideas_in_directory(backlog_idea_dir)
 
           counts
         end
 
         private
 
+        # Load ideas using glob patterns
+        def load_all_with_glob(release:, include_content:, glob:)
+          # Use release root (release path) not idea directory, since glob patterns include ideas/ prefix
+          release_root = determine_release_root(release)
+          return [] unless release_root && Dir.exist?(release_root)
+
+          ideas = []
+          matched_paths = Set.new
+
+          # Apply each glob pattern - prepend ideas directory
+          ideas_dir = Taskflow.configuration.ideas_dir
+          Array(glob).each do |pattern|
+            # Prepend ideas directory to pattern if not already there
+            full_pattern = if pattern.start_with?("#{ideas_dir}/")
+              pattern
+            else
+              File.join(ideas_dir, pattern)
+            end
+            Dir.glob(File.join(release_root, full_pattern)).each do |path|
+              # Avoid duplicates
+              next if matched_paths.include?(path)
+              matched_paths.add(path)
+
+              # Load idea from file or directory
+              if File.file?(path) && path.end_with?('.s.md')
+                idea = load_idea_file(path, include_content)
+                ideas << idea if idea
+              elsif Dir.exist?(path)
+                # Check if it's a directory-based idea (contains idea.s.md)
+                idea_file = File.join(path, "idea.s.md")
+                if File.exist?(idea_file)
+                  idea = load_idea_from_directory(path, include_content)
+                  ideas << idea if idea
+                end
+              end
+            end
+          end
+
+          ideas
+        end
+
         def load_ideas_from_directory(dir, include_content)
           ideas = []
 
-          # Load flat file ideas (*.md)
-          flat_files = Dir.glob(File.join(dir, "*.md")).sort
+          # Load flat file ideas (*.s.md)
+          flat_files = Dir.glob(File.join(dir, "*.s.md")).sort
           flat_files.each do |path|
             idea = load_idea_file(path, include_content)
             ideas << idea if idea
           end
 
-          # Load directory-based ideas (directories containing idea.md)
+          # Load directory-based ideas (directories containing idea.s.md)
           Dir.glob(File.join(dir, "*")).sort.each do |path|
             next unless Dir.exist?(path)
-            next if File.basename(path) == "done" # Skip done/ subdirectory
+            # Skip scope subdirectories
+            basename = File.basename(path)
+            next if SCOPE_SUBDIRECTORIES.include?(basename)
 
-            idea_file = File.join(path, "idea.md")
+            idea_file = File.join(path, "idea.s.md")
             if File.exist?(idea_file)
               idea = load_idea_from_directory(path, include_content)
               ideas << idea if idea
@@ -124,7 +180,7 @@ module Ace
         end
 
         def load_idea_from_directory(dir_path, include_content)
-          idea_file = File.join(dir_path, "idea.md")
+          idea_file = File.join(dir_path, "idea.s.md")
           return nil unless File.exist?(idea_file)
 
           dirname = File.basename(dir_path)
@@ -136,12 +192,18 @@ module Ace
           title = dirname.sub(/^\d{8}-\d{6}-/, "")
           title = title.tr("-", " ").strip
 
-          # Find attachment files (exclude idea.md)
+          # Find attachment files (exclude idea.s.md)
           attachments = Dir.glob(File.join(dir_path, "*"))
-            .reject { |f| File.basename(f) == "idea.md" }
+            .reject { |f| File.basename(f) == "idea.s.md" }
             .select { |f| File.file?(f) }
             .map { |f| File.basename(f) }
             .sort
+
+          # Read content to parse frontmatter
+          content = File.read(idea_file)
+          parsed = Atoms::YamlParser.parse(content)
+          frontmatter = parsed[:frontmatter]
+          body_content = parsed[:content]
 
           idea_data = {
             id: id,
@@ -149,17 +211,18 @@ module Ace
             title: title,
             path: dir_path,
             created_at: extract_timestamp_from_filename(dirname),
-            context: extract_context_from_path(dir_path),
+            release: extract_release_from_path(dir_path),
             attachments: attachments,
-            is_directory: true
+            is_directory: true,
+            status: frontmatter["status"] || "pending",
+            priority: frontmatter["priority"]
           }
 
           if include_content
-            content = File.read(idea_file)
-            idea_data[:content] = content
+            idea_data[:content] = body_content
 
-            # Try to extract metadata from content
-            if content =~ /^#\s+(.+)$/
+            # Try to extract title from content header
+            if body_content =~ /^#\s+(.+)$/
               idea_data[:title] = ::Regexp.last_match(1).strip
             end
           end
@@ -167,40 +230,42 @@ module Ace
           idea_data
         end
 
-        def determine_idea_directory(context)
-          ideas_dir_config = @config.dig("taskflow", "directories", "ideas") || "backlog/ideas"
-          # Extract just the last part if it's a nested path for release-specific ideas
-          ideas_dirname = ideas_dir_config.split("/").last
+        # Determine the release root directory (backlog or release)
+        # This is used for glob-based loading where patterns start from release root
+        def determine_release_root(release_name)
+          backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
 
-          case context
+          case release_name
           when "current", "active", nil
             # Find active release
-            release = @release_resolver.find_primary_active
-            if release
-              File.join(release[:path], ideas_dirname)
+            active_release = @release_resolver.find_primary_active
+            if active_release
+              active_release[:path]
             else
               # Fall back to backlog if no active release
-              File.join(@root_path, ideas_dir_config)
+              File.join(@root_path, backlog_dir)
             end
           when "backlog"
-            File.join(@root_path, ideas_dir_config)
+            File.join(@root_path, backlog_dir)
           when /^v\.\d+\.\d+\.\d+/
             # Specific release
-            release = @release_resolver.find_release(context)
-            if release
-              File.join(release[:path], ideas_dirname)
-            else
-              nil
-            end
+            found_release = @release_resolver.find_release(release_name)
+            found_release ? found_release[:path] : nil
           else
             # Try to find as release name
-            release = @release_resolver.find_release(context)
-            if release
-              File.join(release[:path], ideas_dirname)
-            else
-              nil
-            end
+            found_release = @release_resolver.find_release(release_name)
+            found_release ? found_release[:path] : nil
           end
+        end
+
+        # Determine the ideas directory within a release
+        # This is used for scope-based loading (backward compatibility)
+        def determine_idea_directory(release)
+          release_root = determine_release_root(release)
+          return nil unless release_root
+
+          ideas_dirname = @config.dig("taskflow", "directories", "ideas") || "ideas"
+          File.join(release_root, ideas_dirname)
         end
 
         def load_idea_file(path, include_content)
@@ -215,23 +280,30 @@ module Ace
           title = filename.sub(/^\d{8}-\d{6}-/, "").sub(/\.md$/, "")
           title = title.tr("-", " ").strip
 
+          # Read content to parse frontmatter
+          content = File.read(path)
+          parsed = Atoms::YamlParser.parse(content)
+          frontmatter = parsed[:frontmatter]
+          body_content = parsed[:content]
+
           idea_data = {
             id: id,
             filename: filename,
             title: title,
             path: path,
             created_at: extract_timestamp_from_filename(filename),
-            context: extract_context_from_path(path),
+            release: extract_release_from_path(path),
             attachments: [],
-            is_directory: false
+            is_directory: false,
+            status: frontmatter["status"] || "pending",
+            priority: frontmatter["priority"]
           }
 
           if include_content
-            content = File.read(path)
-            idea_data[:content] = content
+            idea_data[:content] = body_content
 
-            # Try to extract metadata from content
-            if content =~ /^#\s+(.+)$/
+            # Try to extract title from content header
+            if body_content =~ /^#\s+(.+)$/
               idea_data[:title] = ::Regexp.last_match(1).strip
             end
           end
@@ -250,7 +322,7 @@ module Ace
           end
         end
 
-        def extract_context_from_path(path)
+        def extract_release_from_path(path)
           relative = Pathname.new(path).relative_path_from(Pathname.new(@root_path)).to_s
           backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
 
@@ -266,28 +338,30 @@ module Ace
         def count_ideas_in_directory(dir)
           return 0 unless Dir.exist?(dir)
 
-          # Count flat file ideas (*.md)
-          flat_count = Dir.glob(File.join(dir, "*.md")).count
+          # Count flat file ideas (*.s.md)
+          flat_count = Dir.glob(File.join(dir, "*.s.md")).count
 
-          # Count directory-based ideas (directories with idea.md)
+          # Count directory-based ideas (directories with idea.s.md)
           dir_count = Dir.glob(File.join(dir, "*"))
-            .select { |path| Dir.exist?(path) && File.basename(path) != "done" }
-            .count { |path| File.exist?(File.join(path, "idea.md")) }
+            .select { |path| Dir.exist?(path) && !SCOPE_SUBDIRECTORIES.include?(File.basename(path)) }
+            .count { |path| File.exist?(File.join(path, "idea.s.md")) }
 
           main_count = flat_count + dir_count
 
-          # Also count ideas in done/ subdirectory
-          done_dir = File.join(dir, "done")
-          done_count = 0
-          if Dir.exist?(done_dir)
-            done_flat = Dir.glob(File.join(done_dir, "*.md")).count
-            done_dirs = Dir.glob(File.join(done_dir, "*"))
+          # Count ideas in scope subdirectories
+          subdirs_count = 0
+          SCOPE_SUBDIRECTORIES.each do |subdir_name|
+            subdir = File.join(dir, subdir_name)
+            next unless Dir.exist?(subdir)
+
+            subdir_flat = Dir.glob(File.join(subdir, "*.s.md")).count
+            subdir_dirs = Dir.glob(File.join(subdir, "*"))
               .select { |path| Dir.exist?(path) }
-              .count { |path| File.exist?(File.join(path, "idea.md")) }
-            done_count = done_flat + done_dirs
+              .count { |path| File.exist?(File.join(path, "idea.s.md")) }
+            subdirs_count += subdir_flat + subdir_dirs
           end
 
-          main_count + done_count
+          main_count + subdirs_count
         end
       end
     end

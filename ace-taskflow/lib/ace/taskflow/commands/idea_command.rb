@@ -92,15 +92,15 @@ module Ace
         end
 
         def show_idea(reference, args)
-          context = parse_context(args)
-          idea = @idea_loader.find_by_partial_name(reference, context: context)
+          release = parse_release(args)
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
 
           if idea
             # Load with full content
             full_idea = @idea_loader.load_idea(idea[:path])
             display_idea(full_idea)
           else
-            puts "No idea found matching '#{reference}' in #{context_name(context)}."
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
             exit 1
           end
         end
@@ -114,8 +114,8 @@ module Ace
           end
 
           # Try to find an existing idea
-          context = parse_context(remaining_args)
-          idea = @idea_loader.find_by_partial_name(first_arg, context: context)
+          release = parse_release(remaining_args)
+          idea = @idea_loader.find_by_partial_name(first_arg, release: release)
 
           if idea
             # Found an idea, show it
@@ -140,6 +140,8 @@ module Ace
             puts "  --clipboard, -c      Read content from clipboard"
             puts "  --backlog            Create in backlog"
             puts "  --release <name>     Create in specific release"
+            puts "  --maybe              Create in maybe/ subdirectory"
+            puts "  --anyday             Create in anyday/ subdirectory"
             puts "  --git-commit, -gc    Auto-commit the idea file"
             puts "  --llm-enhance, -llm  Enhance with LLM suggestions"
             exit 1
@@ -182,6 +184,13 @@ module Ace
             end
           end
 
+          # Append scope subdirectory if --maybe or --anyday flag was provided
+          # Scopes (GTD-inspired): next (top-level), maybe/, anyday/, done/
+          # Note: Scope is separate from status (draft/pending/in-progress/done/obsolete)
+          if options[:subdirectory]
+            config["directory"] = File.join(config["directory"], options[:subdirectory])
+          end
+
           # Capture the idea with options
           writer = Organisms::IdeaWriter.new(config)
           path = writer.write(options[:content], options)
@@ -197,7 +206,7 @@ module Ace
           puts "Idea: #{idea.id || idea.filename}"
           puts "Title: #{idea.title}"
           puts "Created: #{idea.created_at}"
-          puts "Context: #{idea.context}"
+          puts "Release: #{idea.release}"
 
           if idea.path
             # Use project root, not .ace-taskflow root
@@ -213,7 +222,7 @@ module Ace
           end
         end
 
-        def parse_context(args)
+        def parse_release(args)
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"
@@ -227,14 +236,14 @@ module Ace
           "current"
         end
 
-        def context_name(context)
-          case context
+        def release_name(release)
+          case release
           when "current", "active"
             "current release"
           when "backlog"
             "backlog"
           else
-            "release #{context}"
+            "release #{release}"
           end
         end
 
@@ -337,11 +346,11 @@ module Ace
           end
 
           # Find the idea
-          context = parse_context(args[1..-1] || [])
-          idea = @idea_loader.find_by_partial_name(reference, context: context)
+          release = parse_release(args[1..-1] || [])
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
 
           unless idea
-            puts "No idea found matching '#{reference}' in #{context_name(context)}."
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
             exit 1
           end
 
@@ -363,6 +372,15 @@ module Ace
         def show_help
           puts "Usage: ace-taskflow idea [subcommand] [options]"
           puts ""
+          puts "Scopes (GTD-based organization):"
+          puts "  next     - Top-level ideas (immediately actionable, default)"
+          puts "  maybe/   - Uncertain if we should do it"
+          puts "  anyday/  - Good idea but not urgent"
+          puts "  done/    - Completed or skipped"
+          puts ""
+          puts "Note: Scope (folder location) is separate from status (draft/pending/done)."
+          puts "      An idea in 'maybe' scope can have 'pending' status."
+          puts ""
           puts "Subcommands:"
           puts "  (none)             Show next idea from active release"
           puts "  <partial-name>     Show idea matching partial name"
@@ -371,6 +389,8 @@ module Ace
           puts "    --clipboard, -c     Read content from clipboard"
           puts "    --backlog           Create in backlog"
           puts "    --release <name>    Create in specific release"
+          puts "    --maybe             Create in maybe/ scope (uncertain ideas)"
+          puts "    --anyday            Create in anyday/ scope (not urgent)"
           puts "    --git-commit, -gc   Auto-commit the idea file"
           puts "    --no-git-commit     Don't commit (overrides config)"
           puts "    --llm-enhance, -llm Enhance with LLM suggestions"
@@ -406,6 +426,8 @@ module Ace
           puts "  ace-taskflow idea create 'Main context' --clipboard"
           puts "  ace-taskflow idea create 'Future feature' --backlog"
           puts "  ace-taskflow idea create 'Bug fix' --release v.0.9.1"
+          puts "  ace-taskflow idea create 'Uncertain idea' --maybe"
+          puts "  ace-taskflow idea create 'Low priority' --anyday"
           puts "  ace-taskflow idea create 'New feature' --git-commit"
           puts "  ace-taskflow idea create 'Complex task' --llm-enhance --git-commit"
         end

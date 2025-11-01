@@ -37,8 +37,8 @@ class TestFactoryTest < AceTaskflowTestCase
       TestFactory.create_release(dir, "v.1.0.0", status: "active", tasks: tasks)
 
       taskflow_root = File.join(dir, ".ace-taskflow")
-      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "t", "001", "task.001.md"))
-      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "t", "002", "task.002.md"))
+      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "t", "001", "task.001.s.md"))
+      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "t", "002", "task.002.s.md"))
     end
   end
 
@@ -49,8 +49,8 @@ class TestFactoryTest < AceTaskflowTestCase
                                        statuses: { "001" => "done", "002" => "in-progress" })
 
       taskflow_root = File.join(dir, ".ace-taskflow")
-      task_001_content = File.read(File.join(taskflow_root, "v.1.0.0", "t", "001", "task.001.md"))
-      task_002_content = File.read(File.join(taskflow_root, "v.1.0.0", "t", "002", "task.002.md"))
+      task_001_content = File.read(File.join(taskflow_root, "v.1.0.0", "t", "001", "task.001.s.md"))
+      task_002_content = File.read(File.join(taskflow_root, "v.1.0.0", "t", "002", "task.002.s.md"))
 
       assert_match(/status: done/, task_001_content)
       assert_match(/status: in-progress/, task_002_content)

@@ -43,20 +43,20 @@ module Ace
         def create_retro(args)
           # Parse options
           title_parts = []
-          context = "current"
+          release = "current"
 
           i = 0
           while i < args.length
             arg = args[i]
             case arg
             when "--release"
-              context = args[i + 1]
+              release = args[i + 1]
               i += 2
             when "--current"
-              context = "current"
+              release = "current"
               i += 1
             when "--backlog"
-              context = "backlog"
+              release = "backlog"
               i += 1
             else
               title_parts << arg
@@ -75,7 +75,7 @@ module Ace
             return 1
           end
 
-          result = @manager.create_retro(title, context: context)
+          result = @manager.create_retro(title, release: release)
 
           if result[:success]
             puts result[:message]
@@ -99,14 +99,14 @@ module Ace
             return 1
           end
 
-          context = parse_context(args)
-          retro = @manager.load_retro(reference, context: context)
+          release = parse_release(args)
+          retro = @manager.load_retro(reference, release: release)
 
           if retro
             display_retro(retro)
             0
           else
-            puts "Retro '#{reference}' not found in #{context_name(context)}."
+            puts "Retro '#{reference}' not found in #{release_name(release)}."
             1
           end
         end
@@ -120,8 +120,8 @@ module Ace
             return 1
           end
 
-          context = parse_context(args)
-          result = @manager.mark_retro_done(reference, context: context)
+          release = parse_release(args)
+          result = @manager.mark_retro_done(reference, release: release)
 
           if result[:success]
             puts result[:message]
@@ -157,7 +157,7 @@ module Ace
           end
         end
 
-        def parse_context(args)
+        def parse_release(args)
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"
@@ -171,14 +171,14 @@ module Ace
           "current"
         end
 
-        def context_name(context)
-          case context
+        def release_name(release)
+          case release
           when "current", "active"
             "current release"
           when "backlog"
             "backlog"
           else
-            "release #{context}"
+            "release #{release}"
           end
         end
 

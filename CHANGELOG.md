@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.101] - 2025-11-01
+
+### Fixed
+- **ace-taskflow v0.14.2**: File extension and GTD scope terminology
+  - Fixed FileNamer to generate .s.md extension consistently
+  - Fixed IdeaLoader default glob patterns to only match ideas directory (not tasks)
+  - Updated all FileNamer tests to expect .s.md extension
+
+### Changed
+- **ace-taskflow v0.14.2**: Enhanced GTD scope documentation
+  - Added comprehensive help text explaining GTD-based scopes (next/maybe/anyday/done)
+  - Clarified that scope (folder location) is separate from status (metadata)
+  - Updated comments throughout to distinguish scope from status
+
+## [0.9.100] - 2025-11-01
+
+### Fixed
+- **ace-taskflow v0.14.1**: Universal preset glob patterns and statistics counting
+  - Fixed glob patterns in all presets (next, maybe, anyday, all) to properly include both ideas/ and tasks/ directories
+  - Fixed IdeaLoader to use context_root instead of idea_dir for correct glob pattern resolution
+  - Fixed statistics counting to use specific globs: `ideas/**/*.s.md` for ideas, `tasks/**/task.*.s.md` for tasks
+  - Added command-level filtering to separate idea patterns from task patterns
+  - Corrected total count calculations in ideas command to use proper globs
+  - Resolved issues where presets returned 0 results and statistics showed incorrect counts
+
+### Technical
+- **ace-taskflow**: Created comprehensive retrospective documenting critical testing gaps
+  - Identified lack of integration tests for preset system
+  - Documented that major functionality was broken despite passing unit tests
+  - Proposed improvements: integration test suite, preset validation, and debug command
+  - Emphasized importance of end-to-end testing for user-facing features
+
 ## [0.9.99] - 2025-10-26
 
 ### Added
@@ -15,6 +47,30 @@ All notable changes to this project will be documented in this file.
   - Updated documentation with usage examples and path resolution rules
 
 ## [0.9.98] - 2025-10-25
+
+### Added
+- **ace-taskflow v0.14.0**: Maybe and Anyday idea scopes for better idea organization
+  - New subdirectories: `ideas/maybe/` for uncertain ideas, `ideas/anyday/` for low-priority ideas
+  - Preset support: `ace-taskflow ideas maybe` and `ace-taskflow ideas anyday` commands
+  - Creation flags: `--maybe` and `--anyday` for `ace-taskflow idea create`
+  - Statistics display with emoji indicators: 💡 (pending), 🤔 (maybe), 📅 (anyday), ✅ (done)
+  - Example configurations in `.ace.example/taskflow/presets/maybe.yml` and `anyday.yml`
+
+### Changed
+- **ace-taskflow v0.14.0**: Code quality improvements from dual code reviews
+  - Extract SCOPE_SUBDIRECTORIES constant to centralize scope definitions
+  - Add PRESET_TO_SCOPE mapping for cleaner preset-to-scope resolution
+  - Improve status determination using dirname inspection instead of string matching
+  - Reduce code duplication in IdeaLoader with loop-based scope loading
+  - Add validate_subdirectory_exclusivity helper for mutual exclusivity checks
+
+### Technical
+- **ace-taskflow v0.14.0**: Enhanced test coverage and POSIX compliance
+  - Add comprehensive test coverage for --maybe/--anyday flag mutual exclusivity (6 new tests)
+  - Fix missing final newlines in IdeaWriter templates for POSIX compliance
+  - Clean up test artifacts and finalize task 088
+
+## [0.9.97] - 2025-10-25
 
 ### Fixed
 - **ace-taskflow v0.13.2**: Task sorting issue in preset configurations

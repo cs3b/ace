@@ -13,7 +13,7 @@ module Ace
 
         def reschedule(task_identifiers, options = {})
           # Get all current tasks
-          all_tasks = @task_manager.list_tasks(context: "all")
+          all_tasks = @task_manager.list_tasks(release: "all")
 
           # Resolve task identifiers to actual tasks
           tasks_to_reschedule = resolve_tasks(task_identifiers, all_tasks)

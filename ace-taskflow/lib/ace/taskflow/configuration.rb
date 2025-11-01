@@ -29,7 +29,7 @@ module Ace
 
       # Get ideas directory name
       def ideas_dir
-        config.dig("directories", "ideas") || "backlog/ideas"
+        config.dig("directories", "ideas") || "ideas"
       end
 
       # Get release ideas subdirectory name (for use within release directories)
@@ -51,6 +51,12 @@ module Ace
       # Get pending directory name
       def pending_dir
         config.dig("directories", "pending") || "pending"
+      end
+
+      # Get default glob pattern for all spec files
+      # This is the single source of truth for spec file matching
+      def default_glob_pattern
+        ['**/*.s.md']
       end
 
       # Get active release selection strategy
@@ -189,7 +195,7 @@ module Ace
               allow_qualified: true            # Enable v.0.9.0+018 syntax
               allow_cross_release: true        # Can reference other releases
 
-            # Default contexts
+            # Default releases
             defaults:
               idea_location: "active"          # Where ideas go by default
               task_location: "active"          # Where new tasks go by default

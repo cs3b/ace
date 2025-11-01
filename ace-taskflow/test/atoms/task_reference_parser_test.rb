@@ -11,7 +11,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_qualified_reference
     result = @parser.parse("v.0.9.0+018")
 
-    assert_equal "v.0.9.0", result[:context]
+    assert_equal "v.0.9.0", result[:release]
     assert_equal "018", result[:number]
     assert result[:qualified]
     assert_equal "v.0.9.0+018", result[:original]
@@ -20,7 +20,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_backlog_reference
     result = @parser.parse("backlog+025")
 
-    assert_equal "backlog", result[:context]
+    assert_equal "backlog", result[:release]
     assert_equal "025", result[:number]
     assert result[:qualified]
   end
@@ -28,7 +28,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_simple_reference
     result = @parser.parse("018")
 
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal "018", result[:number]
     refute result[:qualified]
   end
@@ -36,7 +36,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_task_dot_reference
     result = @parser.parse("task.018")
 
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal "018", result[:number]
     refute result[:qualified]
   end
@@ -44,7 +44,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_current_reference
     result = @parser.parse("current+018")
 
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal "018", result[:number]
     assert result[:qualified]
   end
@@ -74,13 +74,13 @@ class TaskReferenceParserTest < Minitest::Test
     refute @parser.qualified?("task.018")
   end
 
-  def test_release_context_predicate
-    assert @parser.release_context?("v.0.9.0")
-    assert @parser.release_context?("v.0.10.0-beta")
+  def test_is_release_version_predicate
+    assert @parser.is_release_version?("v.0.9.0")
+    assert @parser.is_release_version?("v.0.10.0-beta")
 
-    refute @parser.release_context?("backlog")
-    refute @parser.release_context?("current")
-    refute @parser.release_context?("018")
+    refute @parser.is_release_version?("backlog")
+    refute @parser.is_release_version?("current")
+    refute @parser.is_release_version?("018")
   end
 
   def test_format_qualified_reference
@@ -92,8 +92,8 @@ class TaskReferenceParserTest < Minitest::Test
 
   def test_convert_reference_formats
     assert_equal "current+018", @parser.convert("018", :qualified)
-    assert_equal "current+018", @parser.convert("018", :qualified, context: "current")
-    assert_equal "v.0.9.0+018", @parser.convert("018", :qualified, context: "v.0.9.0")
+    assert_equal "current+018", @parser.convert("018", :qualified, release: "current")
+    assert_equal "v.0.9.0+018", @parser.convert("018", :qualified, release: "v.0.9.0")
     assert_equal "018", @parser.convert("v.0.9.0+018", :simple)
     assert_nil @parser.convert("invalid", :qualified)
   end

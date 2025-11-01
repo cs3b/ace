@@ -1,9 +1,10 @@
-description: "All items across all contexts"
+description: "All items in current release (all statuses)"
 type:  # Universal preset
-context: "all"
-filters: {}
+release: "current"
+filters:
+  glob: ["**/*.s.md"]  # All spec files (tasks and ideas)
 sort:
-  by: "context"
+  by: "release"
   ascending: true
 display:
-  group_by: "context"
+  group_by: "release"

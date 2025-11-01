@@ -31,8 +31,8 @@ module Ace
                   end
 
           # List retros
-          context = options[:context]
-          retros = @manager.list_retros(context: context, filters: { scope: scope })
+          release = options[:release]
+          retros = @manager.list_retros(release: release, filters: { scope: scope })
 
           # Apply limit if specified
           if options[:limit]
@@ -41,9 +41,9 @@ module Ace
 
           # Display results
           if retros.empty?
-            display_empty_message(context, scope)
+            display_empty_message(release, scope)
           else
-            display_retros(retros, context, scope, options)
+            display_retros(retros, release, scope, options)
           end
 
           0
@@ -56,7 +56,7 @@ module Ace
 
         def parse_options(args)
           options = {
-            context: "current",
+            release: "current",
             limit: nil,
             all: false,
             done: false,
@@ -68,13 +68,13 @@ module Ace
             arg = args[i]
             case arg
             when "--release"
-              options[:context] = args[i + 1]
+              options[:release] = args[i + 1]
               i += 2
             when "--current"
-              options[:context] = "current"
+              options[:release] = "current"
               i += 1
             when "--backlog"
-              options[:context] = "backlog"
+              options[:release] = "backlog"
               i += 1
             when "--limit"
               options[:limit] = args[i + 1].to_i
@@ -96,13 +96,13 @@ module Ace
           options
         end
 
-        def display_retros(retros, context, scope, options)
+        def display_retros(retros, release, scope, options)
           # Group by status if showing all
           if scope == :all
             active_retros = retros.reject { |r| r[:is_done] }
             done_retros = retros.select { |r| r[:is_done] }
 
-            puts "Retrospective Notes (#{context_name(context)}):"
+            puts "Retrospective Notes (#{release_name(release)}):"
             puts ""
 
             if active_retros.any?
@@ -116,11 +116,11 @@ module Ace
               done_retros.each { |retro| display_retro_line(retro) }
             end
           elsif scope == :done
-            puts "Done Retrospective Notes (#{context_name(context)}):"
+            puts "Done Retrospective Notes (#{release_name(release)}):"
             retros.each { |retro| display_retro_line(retro) }
           else
             # Active only (default)
-            puts "Active Retrospective Notes (#{context_name(context)}):"
+            puts "Active Retrospective Notes (#{release_name(release)}):"
             retros.each { |retro| display_retro_line(retro) }
           end
 
@@ -136,27 +136,27 @@ module Ace
           puts "  #{status_icon} #{date}  #{title}"
         end
 
-        def display_empty_message(context, scope)
+        def display_empty_message(release, scope)
           case scope
           when :all
-            puts "No retrospective notes found in #{context_name(context)}."
+            puts "No retrospective notes found in #{release_name(release)}."
           when :done
-            puts "No done retrospective notes found in #{context_name(context)}."
+            puts "No done retrospective notes found in #{release_name(release)}."
           else
-            puts "No active retrospective notes found in #{context_name(context)}."
+            puts "No active retrospective notes found in #{release_name(release)}."
           end
 
           puts "Use 'ace-taskflow retro create <title>' to create your first reflection note."
         end
 
-        def context_name(context)
-          case context
+        def release_name(release)
+          case release
           when "current", "active"
             "current release"
           when "backlog"
             "backlog"
           else
-            context
+            release
           end
         end
 

@@ -1,7 +1,8 @@
-description: "Next actionable tasks (pending + in-progress)"
-type: "tasks"
-context: "current"
+description: "Next actionable items (pending + in-progress, excluding maybe/anyday)"
+# Universal preset - works for both ideas and tasks
+release: "current"
 filters:
+  glob: ["*/*.s.md"]  # Items in immediate subdirectories only (excludes maybe/anyday)
   status:
     - "pending"
     - "in-progress"

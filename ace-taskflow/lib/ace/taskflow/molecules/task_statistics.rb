@@ -16,7 +16,7 @@ module Ace
             total: tasks.size,
             by_status: {},
             by_priority: {},
-            by_context: {}
+            by_release: {}
           }
 
           tasks.each do |task|
@@ -30,10 +30,10 @@ module Ace
             stats[:by_priority][priority] ||= 0
             stats[:by_priority][priority] += 1
 
-            # Count by context
-            ctx = task[:context] || "unknown"
-            stats[:by_context][ctx] ||= 0
-            stats[:by_context][ctx] += 1
+            # Count by release
+            ctx = task[:release] || "unknown"
+            stats[:by_release][ctx] ||= 0
+            stats[:by_release][ctx] += 1
           end
 
           stats
@@ -46,7 +46,7 @@ module Ace
             total: 0,
             by_status: {},
             by_priority: {},
-            by_context: {}
+            by_release: {}
           }
         end
       end

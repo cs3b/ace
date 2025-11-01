@@ -167,7 +167,7 @@ module Ace
             exit 1
           end
 
-          result = @manager.create_task(title, context: options[:context], metadata: options[:metadata])
+          result = @manager.create_task(title, release: options[:release], metadata: options[:metadata])
 
           if result[:success]
             puts result[:message]
@@ -359,7 +359,7 @@ module Ace
           end
         end
 
-        def parse_context(args)
+        def parse_release(args)
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"
@@ -374,7 +374,7 @@ module Ace
         end
 
         def get_tasks_for_preset(preset_config)
-          context = preset_config[:context] || 'current'
+          release = preset_config[:release] || 'current'
           filters_raw = preset_config[:filters] || {}
 
           # Convert string keys to symbols for compatibility with TaskManager
@@ -383,7 +383,7 @@ module Ace
             filters[key.to_sym] = value
           end
 
-          @manager.list_tasks(context: context, filters: filters)
+          @manager.list_tasks(release: release, filters: filters)
         end
 
         def apply_preset_sorting(tasks, preset_config)
@@ -428,7 +428,7 @@ module Ace
           puts ""
 
           # Get all tasks to check dependencies
-          all_tasks = @manager.list_tasks(context: "all")
+          all_tasks = @manager.list_tasks(release: "all")
 
           # Generate dependency tree
           tree_output = Molecules::DependencyTreeVisualizer.generate_task_tree(task.id, all_tasks)
@@ -469,7 +469,7 @@ module Ace
           puts "    -h, --help       Show create command help"
           puts "  start <reference>  Mark task as in-progress"
           puts "  done <reference>   Mark task as completed"
-          puts "  move <ref> <target> Move task to different context"
+          puts "  move <ref> <target> Move task to different release"
           puts "  update <reference> Update task metadata"
           puts "  add-dependency <ref> --depends-on <dep>"
           puts "                     Add dependency to task"
@@ -482,8 +482,8 @@ module Ace
           puts "  (default)          Show formatted task with status"
           puts ""
           puts "Reference formats:"
-          puts "  018               Task in current context"
-          puts "  task.018          Task in current context"
+          puts "  018               Task in current release"
+          puts "  task.018          Task in current release"
           puts "  v.0.9.0+018       Task from specific release"
           puts "  backlog+025       Task from backlog"
           puts "  current+018       Explicit current/active"

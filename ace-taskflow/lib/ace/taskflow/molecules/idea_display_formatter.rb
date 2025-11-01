@@ -6,17 +6,17 @@ module Ace
       # Pure logic for formatting idea display
       # Unit testable - no I/O
       class IdeaDisplayFormatter
-        # Format context name for display
-        # @param context [String] Context identifier
-        # @return [String] Human-readable context name
-        def self.context_name(context)
-          case context
+        # Format release name for display
+        # @param release [String] Context identifier
+        # @return [String] Human-readable release name
+        def self.release_name(release)
+          case release
           when "current", "active"
             "current release"
           when "backlog"
             "backlog"
           else
-            "release #{context}"
+            "release #{release}"
           end
         end
 
@@ -28,7 +28,7 @@ module Ace
           lines << "Idea: #{idea[:id] || idea[:filename]}"
           lines << "Title: #{idea[:title]}" if idea[:title]
           lines << "Created: #{idea[:created_at]}" if idea[:created_at]
-          lines << "Context: #{idea[:context]}" if idea[:context]
+          lines << "Release: #{idea[:release]}" if idea[:release]
           lines
         end
 
@@ -72,10 +72,10 @@ module Ace
 
         # Format "not found" error message
         # @param reference [String] Idea reference
-        # @param context [String] Context where search was performed
+        # @param release [String] Context where search was performed
         # @return [String] Error message
-        def self.format_not_found_message(reference, context)
-          "No idea found matching '#{reference}' in #{context_name(context)}."
+        def self.format_not_found_message(reference, release)
+          "No idea found matching '#{reference}' in #{release_name(release)}."
         end
 
         # Format empty state message

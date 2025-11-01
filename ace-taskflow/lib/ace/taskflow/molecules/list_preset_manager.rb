@@ -2,6 +2,7 @@
 
 require 'ace/core'
 require 'yaml'
+require_relative '../configuration'
 
 module Ace
   module Taskflow
@@ -12,6 +13,7 @@ module Ace
 
         def initialize
           @presets = load_presets
+          @config = Taskflow.configuration
         end
 
         def list_presets(type = :all)
@@ -34,7 +36,13 @@ module Ace
 
           # Check if preset is compatible with the requested type
           preset_type = preset[:type]
-          return nil if preset_type && preset_type != type.to_s
+          # If type is nil, only return universal presets (preset_type must be nil)
+          if type.nil?
+            return nil if preset_type
+          else
+            # If type is specified, return nil if preset_type exists and doesn't match
+            return nil if preset_type && preset_type != type.to_s
+          end
 
           preset.dup
         end
@@ -47,8 +55,10 @@ module Ace
           preset_type.nil? || preset_type == type.to_s
         end
 
-        def apply_preset(name, additional_filters = {})
-          preset = get_preset(name)
+        def apply_preset(name, additional_filters = {}, type = :tasks)
+          preset = get_preset(name, type)
+          # If no type-specific preset found, try universal presets (type: nil)
+          preset ||= get_preset(name, nil) if type
           return nil unless preset
 
           # Merge preset filters with additional filters
@@ -61,15 +71,54 @@ module Ace
             end
           end
 
+          # Apply folder prefix to glob patterns based on type
+          glob_with_prefix = apply_folder_prefix(preset[:glob], type)
+
           {
             name: name,
             description: preset[:description],
-            context: preset[:context] || 'current',
+            release: preset[:release] || 'current',
             filters: merged_filters,
+            glob: glob_with_prefix,
             sort: preset[:sort] || { by: :sort, ascending: true },
             display: preset[:display] || {},
             type: preset[:type] || 'tasks'
           }
+        end
+
+        # Apply folder prefix to glob patterns based on type
+        # Converts relative patterns like "maybe/**/*.s.md" to "ideas/maybe/**/*.s.md"
+        # Uses configured folder names from config.directories
+        def apply_folder_prefix(glob_patterns, folder_type)
+          # Provide default pattern if none specified
+          glob_patterns ||= @config.default_glob_pattern
+
+          # Get configured folder name
+          folder_name = case folder_type
+          when :ideas
+            @config.ideas_dir
+          when :tasks
+            @config.task_dir
+          else
+            return glob_patterns # No prefix for unknown types
+          end
+
+          # Apply prefix to each pattern
+          Array(glob_patterns).map do |pattern|
+            # Skip patterns that already have a folder prefix (legacy patterns)
+            if pattern.include?('/')
+              # Check if it starts with a known folder name - if so, keep as is
+              if pattern.start_with?("#{@config.ideas_dir}/", "#{@config.task_dir}/")
+                pattern
+              else
+                # Prefix the pattern
+                "#{folder_name}/#{pattern}"
+              end
+            else
+              # Simple pattern without slash - prefix it
+              "#{folder_name}/#{pattern}"
+            end
+          end
         end
 
         private
@@ -103,17 +152,50 @@ module Ace
 
           return nil unless data.is_a?(Hash)
 
+          # Load glob patterns - support both single string and array
+          glob = data.dig('filters', 'glob')
+          glob = [glob] if glob.is_a?(String)
+
+          # Validate glob patterns
+          if glob
+            valid_globs = []
+            glob.each do |pattern|
+              if valid_glob?(pattern)
+                valid_globs << pattern
+              else
+                warn "Invalid glob pattern in #{file}: #{pattern.inspect}"
+              end
+            end
+            glob = valid_globs.empty? ? nil : valid_globs
+          end
+
+          # Extract filters and remove glob from it since it's stored separately
+          filters = (data['filters'] || {}).dup
+          filters.delete('glob')
+
           {
             description: data['description'] || "#{File.basename(file, '.yml')} preset",
-            context: data['context'],
-            filters: data['filters'] || {},
+            release: data['release'],
+            filters: filters,
+            glob: glob,
             sort: data['sort'] || { by: :sort, ascending: true },
             display: data['display'] || {},
             type: data['type']
           }
-        rescue => e
+        rescue StandardError => e
           warn "Error loading preset from #{file}: #{e.message}"
           nil
+        end
+
+        def valid_glob?(pattern)
+          return false unless pattern.is_a?(String) && !pattern.empty?
+          # Disallow dangerous characters
+          return false if pattern =~ /[<>|]/
+          # Ensure it's a relative path (no absolute paths)
+          return false if pattern.start_with?('/')
+          true
+        rescue StandardError
+          false
         end
 
         def default_presets
@@ -121,7 +203,7 @@ module Ace
             'next' => {
               name: 'next',
               description: 'Next actionable tasks (pending + in-progress)',
-              context: 'current',
+              release: 'current',
               filters: { status: ['pending', 'in-progress'] },
               sort: { by: :sort, ascending: true },
               display: { group_by: nil },
@@ -131,7 +213,7 @@ module Ace
             'recent' => {
               name: 'recent',
               description: 'Recently modified items',
-              context: 'current',
+              release: 'current',
               filters: {},
               sort: { by: :modified, ascending: false },
               display: { show_dates: true },
@@ -141,7 +223,7 @@ module Ace
             'all' => {
               name: 'all',
               description: 'All tasks in current release (all statuses)',
-              context: 'current',
+              release: 'current',
               filters: {},
               sort: { by: :sort, ascending: true },
               display: {},
@@ -151,17 +233,17 @@ module Ace
             'all-releases' => {
               name: 'all-releases',
               description: 'All tasks across all releases',
-              context: 'all',
+              release: 'all',
               filters: {},
-              sort: { by: :context, ascending: true },
-              display: { group_by: :context },
+              sort: { by: :release, ascending: true },
+              display: { group_by: :release },
               type: nil, # Universal preset
               default: true
             },
             'pending' => {
               name: 'pending',
               description: 'Pending items only',
-              context: 'current',
+              release: 'current',
               filters: { status: ['pending'] },
               sort: { by: :sort, ascending: true },
               display: {},
@@ -171,7 +253,7 @@ module Ace
             'in-progress' => {
               name: 'in-progress',
               description: 'In-progress items only',
-              context: 'current',
+              release: 'current',
               filters: { status: ['in-progress'] },
               sort: { by: :sort, ascending: true },
               display: {},
@@ -181,7 +263,7 @@ module Ace
             'done' => {
               name: 'done',
               description: 'Completed items',
-              context: 'current',
+              release: 'current',
               filters: { status: ['done'] },
               sort: { by: :modified, ascending: false },
               display: { show_dates: true },
