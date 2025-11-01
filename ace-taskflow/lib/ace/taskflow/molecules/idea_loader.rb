@@ -27,7 +27,7 @@ module Ace
         end
 
         # Load all ideas matching the glob patterns
-        # @param context [String] The context to load from (default: "current")
+        # @param release [String] The release to load from (default: "current")
         #   - "current" or "active": Load from active release
         #   - "backlog": Load from backlog directory
         #   - "v.X.Y.Z": Load from specific release
@@ -36,30 +36,30 @@ module Ace
         #   - Default `["ideas/**/*.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
         #   - Use `["ideas/*.s.md"]` for top-level ideas only (excludes subdirectories)
         #   - Use `["ideas/maybe/**/*.s.md"]` for ideas in maybe/ subdirectory only
-        #   - Patterns are relative to the context root (release/backlog path)
-        # @return [Array<Hash>] Array of idea hashes with keys: :id, :filename, :title, :path, :created_at, :context
+        #   - Patterns are relative to the release root (release/backlog path)
+        # @return [Array<Hash>] Array of idea hashes with keys: :id, :filename, :title, :path, :created_at, :release
         # @example Load all ideas from current release
-        #   loader.load_all(context: "current")
+        #   loader.load_all(release: "current")
         # @example Load top-level ideas only (no subdirectories)
-        #   loader.load_all(context: "current", glob: ["ideas/*.s.md"])
+        #   loader.load_all(release: "current", glob: ["ideas/*.s.md"])
         # @example Load maybe ideas only
-        #   loader.load_all(context: "current", glob: ["ideas/maybe/**/*.s.md"])
-        def load_all(context: "current", include_content: false, glob: nil)
+        #   loader.load_all(release: "current", glob: ["ideas/maybe/**/*.s.md"])
+        def load_all(release: "current", include_content: false, glob: nil)
           # Use glob-based loading (glob defaults to all ideas if not provided)
           # Default pattern only matches ideas/ subdirectory to exclude tasks
           glob ||= ["ideas/**/*.s.md"]
-          load_all_with_glob(context: context, include_content: include_content, glob: glob)
+          load_all_with_glob(release: release, include_content: include_content, glob: glob)
         end
 
-        def find_next(context: "current")
+        def find_next(release: "current")
           # Top-level ideas only (excludes subdirectories like maybe/, anyday/, done/)
-          ideas = load_all(context: context, include_content: false, glob: ["ideas/*.s.md"])
+          ideas = load_all(release: release, include_content: false, glob: ["ideas/*.s.md"])
           ideas.first
         end
 
-        def find_by_partial_name(partial, context: "current")
+        def find_by_partial_name(partial, release: "current")
           # All ideas (including subdirectories)
-          ideas = load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
+          ideas = load_all(release: release, include_content: false, glob: ["ideas/**/*.s.md"])
 
           # Find first idea where filename contains the partial string
           ideas.find do |idea|
@@ -71,7 +71,7 @@ module Ace
           # Parse reference format (e.g., "20250924-165837" or just partial name)
           if reference =~ /^\d{8}-\d{6}/
             # Full timestamp reference
-            ideas = load_all(context: "current", include_content: true)
+            ideas = load_all(release: "current", include_content: true)
             ideas.find { |idea| idea[:id] == reference }
           else
             # Partial name search
@@ -90,7 +90,7 @@ module Ace
           end
         end
 
-        def count_by_context
+        def count_by_release
           counts = {}
           ideas_dirname = @config.dig("taskflow", "directories", "ideas") || "ideas"
 
@@ -101,8 +101,8 @@ module Ace
           end
 
           # Count in backlog
-          backlog_context_root = determine_context_root("backlog")
-          backlog_idea_dir = File.join(backlog_context_root, ideas_dirname)
+          backlog_release_root = determine_release_root("backlog")
+          backlog_idea_dir = File.join(backlog_release_root, ideas_dirname)
           counts["backlog"] = count_ideas_in_directory(backlog_idea_dir)
 
           counts
@@ -111,17 +111,17 @@ module Ace
         private
 
         # Load ideas using glob patterns
-        def load_all_with_glob(context:, include_content:, glob:)
-          # Use context root (release path) not idea directory, since glob patterns include ideas/ prefix
-          context_root = determine_context_root(context)
-          return [] unless context_root && Dir.exist?(context_root)
+        def load_all_with_glob(release:, include_content:, glob:)
+          # Use release root (release path) not idea directory, since glob patterns include ideas/ prefix
+          release_root = determine_release_root(release)
+          return [] unless release_root && Dir.exist?(release_root)
 
           ideas = []
           matched_paths = Set.new
 
           # Apply each glob pattern
           Array(glob).each do |pattern|
-            Dir.glob(File.join(context_root, pattern)).each do |path|
+            Dir.glob(File.join(release_root, pattern)).each do |path|
               # Avoid duplicates
               next if matched_paths.include?(path)
               matched_paths.add(path)
@@ -203,7 +203,7 @@ module Ace
             title: title,
             path: dir_path,
             created_at: extract_timestamp_from_filename(dirname),
-            context: extract_context_from_path(dir_path),
+            release: extract_release_from_path(dir_path),
             attachments: attachments,
             is_directory: true,
             status: frontmatter["status"] || "pending",
@@ -222,17 +222,17 @@ module Ace
           idea_data
         end
 
-        # Determine the context root directory (backlog or release)
-        # This is used for glob-based loading where patterns start from context root
-        def determine_context_root(context)
+        # Determine the release root directory (backlog or release)
+        # This is used for glob-based loading where patterns start from release root
+        def determine_release_root(release_name)
           backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
 
-          case context
+          case release_name
           when "current", "active", nil
             # Find active release
-            release = @release_resolver.find_primary_active
-            if release
-              release[:path]
+            active_release = @release_resolver.find_primary_active
+            if active_release
+              active_release[:path]
             else
               # Fall back to backlog if no active release
               File.join(@root_path, backlog_dir)
@@ -241,23 +241,23 @@ module Ace
             File.join(@root_path, backlog_dir)
           when /^v\.\d+\.\d+\.\d+/
             # Specific release
-            release = @release_resolver.find_release(context)
-            release ? release[:path] : nil
+            found_release = @release_resolver.find_release(release_name)
+            found_release ? found_release[:path] : nil
           else
             # Try to find as release name
-            release = @release_resolver.find_release(context)
-            release ? release[:path] : nil
+            found_release = @release_resolver.find_release(release_name)
+            found_release ? found_release[:path] : nil
           end
         end
 
-        # Determine the ideas directory within a context
+        # Determine the ideas directory within a release
         # This is used for scope-based loading (backward compatibility)
-        def determine_idea_directory(context)
-          context_root = determine_context_root(context)
-          return nil unless context_root
+        def determine_idea_directory(release)
+          release_root = determine_release_root(release)
+          return nil unless release_root
 
           ideas_dirname = @config.dig("taskflow", "directories", "ideas") || "ideas"
-          File.join(context_root, ideas_dirname)
+          File.join(release_root, ideas_dirname)
         end
 
         def load_idea_file(path, include_content)
@@ -284,7 +284,7 @@ module Ace
             title: title,
             path: path,
             created_at: extract_timestamp_from_filename(filename),
-            context: extract_context_from_path(path),
+            release: extract_release_from_path(path),
             attachments: [],
             is_directory: false,
             status: frontmatter["status"] || "pending",
@@ -314,7 +314,7 @@ module Ace
           end
         end
 
-        def extract_context_from_path(path)
+        def extract_release_from_path(path)
           relative = Pathname.new(path).relative_path_from(Pathname.new(@root_path)).to_s
           backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
 

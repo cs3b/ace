@@ -7,12 +7,12 @@ module Ace
       class PathBuilder
         # Build task path for new directory structure
         # @param root [String] The root directory (e.g., .ace-taskflow)
-        # @param context [String] The context (backlog, v.X.Y.Z, done/v.X.Y.Z)
+        # @param release [String] The release (backlog, v.X.Y.Z, done/v.X.Y.Z)
         # @param task_number [String, Integer] The task number
         # @param slug_part [String] Optional descriptive slug part (e.g., "feat-taskflow-idea")
         # @param config [Configuration] Optional configuration object
         # @return [String] The complete path to the task directory
-        def self.build_task_path(root, context, task_number, slug_part = nil, config_param = nil)
+        def self.build_task_path(root, release, task_number, slug_part = nil, config_param = nil)
           task_dir = (config_param || config).task_dir
 
           task_dir_name = if slug_part
@@ -20,21 +20,21 @@ module Ace
           else
             task_number.to_s
           end
-          File.join(root, context, task_dir, task_dir_name)
+          File.join(root, release, task_dir, task_dir_name)
         end
 
         # Build task file path (with optional filename)
         # @param root [String] The root directory
-        # @param context [String] The context
+        # @param release [String] The release
         # @param task_number [String, Integer] The task number
         # @param filename [String] Optional filename (defaults to "task.NNN.s.md" for new format)
         # @param slug_part [String] Optional descriptive slug part
         # @param config [Configuration] Optional configuration object
         # @return [String] The complete path to the task file
-        def self.build_task_file_path(root, context, task_number, filename = nil, slug_part = nil, config_param = nil)
+        def self.build_task_file_path(root, release, task_number, filename = nil, slug_part = nil, config_param = nil)
           # Use new naming convention: task.NNN.s.md when slug is present
           actual_filename = filename || (slug_part ? "task.#{task_number.to_s.rjust(3, '0')}.s.md" : "task.s.md")
-          File.join(build_task_path(root, context, task_number, slug_part, config_param), actual_filename)
+          File.join(build_task_path(root, release, task_number, slug_part, config_param), actual_filename)
         end
 
         # Build release path
@@ -59,13 +59,13 @@ module Ace
 
         # Build ideas directory path
         # @param root [String] The root directory
-        # @param context [String] The context (backlog, v.X.Y.Z, current)
+        # @param release [String] The release (backlog, v.X.Y.Z, current)
         # @return [String] The path to the ideas directory
-        def self.build_ideas_path(root, context)
-          if context == "backlog"
+        def self.build_ideas_path(root, release)
+          if release == "backlog"
             File.join(root, "backlog", "ideas")
           else
-            File.join(root, context, "ideas")
+            File.join(root, release, "ideas")
           end
         end
 
@@ -87,19 +87,19 @@ module Ace
           match ? match[1] : nil
         end
 
-        # Extract release version from path
+        # Extract release version string from path
         # @param path [String] The file or directory path
         # @return [String, nil] The release version or nil if not found
-        def self.extract_release(path)
+        def self.extract_release_version(path)
           # Match v.X.Y.Z patterns
           match = path.match(%r{/(v\.\d+\.\d+\.\d+[^/]*)(?:/|$)})
           match ? match[1] : nil
         end
 
-        # Determine context from path
+        # Determine release/location from path
         # @param path [String] The file or directory path
-        # @return [String] The context (backlog, pending, active release, or done)
-        def self.extract_context(path)
+        # @return [String] The release (backlog, pending, active release version, or done)
+        def self.extract_release(path)
           if path.include?("/backlog/")
             "backlog"
           elsif path.include?("/pending/")
@@ -107,16 +107,16 @@ module Ace
           elsif path.include?("/done/")
             "done"
           else
-            extract_release(path) || "unknown"
+            extract_release_version(path) || "unknown"
           end
         end
 
         # Build qualified task reference
-        # @param context [String] The context (v.0.9.0, backlog, current)
+        # @param release [String] The release (v.0.9.0, backlog, current)
         # @param task_number [String, Integer] The task number
         # @return [String] The qualified reference (e.g., v.0.9.0+018)
-        def self.build_qualified_reference(context, task_number)
-          "#{context}+#{task_number.to_s.rjust(3, '0')}"
+        def self.build_qualified_reference(release, task_number)
+          "#{release}+#{task_number.to_s.rjust(3, '0')}"
         end
 
         # Generate descriptive filename from title
