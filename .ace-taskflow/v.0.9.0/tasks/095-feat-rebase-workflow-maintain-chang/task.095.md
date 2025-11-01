@@ -6,111 +6,125 @@ estimate: TBD
 dependencies: []
 ---
 
-# Create rebase workflow to maintain changelog and version consistency
+# Create ace-git-rebase package with changelog preservation workflow
 
 ## Behavioral Specification
 
 ### User Experience
-**Input**: Developer invokes rebase workflow command during feature branch development
-**Process**: System automatically validates and updates changelog entries and version references during rebase operations
-**Output**: Rebased branch with properly maintained changelog entries and consistent version references
+**Input**: Developer needs guidance for rebasing while preserving changelog entries and version files
+**Process**: Developer follows workflow instructions provided by the ace-git-rebase package
+**Output**: Successfully rebased branch with intact changelog entries and consistent version references
 
 ### Expected Behavior
-- When a developer initiates a rebase, the system preserves changelog entries correctly
-- Version references remain consistent across rebased commits
-- Conflict resolution guidance is provided for changelog and version file conflicts
-- The workflow prevents loss of changelog entries during rebase operations
-- Automatic validation ensures changelog integrity after rebase completion
+- Developers install the ace-git-rebase gem to access workflow instructions
+- The workflow guide provides step-by-step instructions for rebase operations
+- Clear patterns for resolving changelog and version file conflicts
+- Configuration examples show how to customize rebase behavior
+- The package integrates with Claude Code through handbook/workflow-instructions/
 
 ### Interface Contract
 
-#### CLI Command
-```bash
-ace-rebase [options] [target-branch]
+#### Package Structure
+```
+ace-git-rebase/
+├── .ace.example/git/rebase.yml          # Configuration example
+├── lib/ace/git_rebase/version.rb        # VERSION constant
+├── handbook/workflow-instructions/      # Workflow documentation
+│   └── rebase-preserve-changelog.wf.md  # Main workflow
+├── ace-git-rebase.gemspec               # Gem specification
+├── CHANGELOG.md                         # Keep a Changelog format
+└── README.md                            # Package documentation
 ```
 
-**Arguments:**
-- `target-branch`: Branch to rebase onto (defaults to main/master)
+**Configuration Interface (.ace/git/rebase.yml):**
+```yaml
+git:
+  rebase:
+    preserve_files:        # Files to protect during rebase
+      - CHANGELOG.md
+      - "**/version.rb"
+    auto_resolve: manual   # Conflict resolution strategy
+    verbose: false         # Output verbosity
+```
 
-**Options:**
-- `--interactive, -i`: Launch interactive rebase with changelog awareness
-- `--preserve-changelog`: Ensure changelog entries are maintained (default: true)
-- `--validate-versions`: Check version consistency after rebase (default: true)
-- `--auto-resolve`: Attempt automatic resolution of changelog conflicts
-- `--dry-run`: Preview rebase effects without applying changes
-
-**Error Handling:**
-- Exit with error if changelog entries would be lost
-- Provide clear guidance for manual conflict resolution
-- Rollback capability if validation fails
+**Workflow Access:**
+- Via gem installation: `gem install ace-git-rebase`
+- Via Claude Code: Workflow available through handbook integration
+- No executable binary (workflow-first approach)
 
 ### Success Criteria
-- [ ] Changelog entries from feature branch are preserved during rebase
-- [ ] Version numbers remain consistent across all files after rebase
-- [ ] Conflicts in changelog files are detected and handled appropriately
-- [ ] User receives clear feedback about changelog/version changes
-- [ ] Workflow integrates seamlessly with existing git rebase operations
-- [ ] Documentation clearly explains workflow usage and edge cases
+- [ ] ace-git-rebase gem package created with minimal structure
+- [ ] Workflow instruction provides comprehensive rebase guidance
+- [ ] Configuration example demonstrates customization patterns
+- [ ] Package follows ace-gems.g.md standards (CHANGELOG.md, version.rb, etc.)
+- [ ] Handbook integration enables Claude Code workflow access
+- [ ] No unnecessary Ruby implementation (workflow-focused)
 
 ### Validation Questions
-- Should the workflow support multiple changelog formats (e.g., CHANGELOG.md, NEWS.md)?
-- How should the system handle semantic versioning conflicts?
-- Should automatic changelog merging be the default behavior?
-- What level of version validation is needed (major/minor/patch)?
-- Should the workflow integrate with existing CI/CD pipelines?
+- Should the package name be `ace-git-rebase` or just `ace-git`?
+- Do we need any Ruby helper methods or pure documentation?
+- Should we include multiple workflow variants (interactive, automated)?
+- How should the workflow reference existing tools (ace-git-diff, ace-git-commit)?
 
 ## Objective
 
-Enable developers to safely rebase branches while maintaining the integrity of changelog entries and version consistency across the codebase, reducing manual work and preventing common rebase-related issues with project documentation.
+Create a minimal, workflow-first ace-git-rebase gem package that provides comprehensive guidance for rebasing operations while preserving changelog entries and version consistency, following the ace-gems standard structure.
 
 ## Scope of Work
 
-### User Experience Scope
-- Command-line interface for rebase operations
-- Interactive conflict resolution guidance
-- Validation and feedback mechanisms
-- Integration with standard git workflows
+### Package Creation Scope
+- Minimal gem structure per ace-gems.g.md
+- Workflow instruction in handbook/workflow-instructions/
+- Configuration examples in .ace.example/
+- Proper versioning and changelog setup
 
-### System Behavior Scope
-- Changelog preservation during rebase
-- Version consistency validation
-- Conflict detection and resolution assistance
-- Rollback and recovery capabilities
+### Workflow Documentation Scope
+- Pre-rebase verification steps
+- Conflict resolution patterns for CHANGELOG.md
+- Version file conflict handling strategies
+- Post-rebase validation procedures
+- Recovery and rollback guidance
 
-### Interface Scope
-- CLI command with comprehensive options
-- Clear error messages and guidance
-- Progress indicators for long operations
-- Integration hooks for CI/CD systems
+### Integration Scope
+- Claude Code handbook integration
+- Configuration through ace-core cascade
+- References to related ace-git-* packages
 
 ## Deliverables
 
-### Behavioral Specifications
-- Complete CLI interface specification
-- User interaction flow documentation
-- Error handling and recovery procedures
-- Validation criteria and test scenarios
+### Package Components
+- ace-git-rebase.gemspec with minimal dependencies
+- lib/ace/git_rebase/version.rb with VERSION constant
+- handbook/workflow-instructions/rebase-preserve-changelog.wf.md
+- .ace.example/git/rebase.yml configuration template
+- CHANGELOG.md in Keep a Changelog format
+- README.md with installation and usage guide
+- Rakefile for gem tasks (no tests needed)
+- LICENSE file (MIT)
 
-### Validation Artifacts
-- Test cases for various rebase scenarios
-- Acceptance criteria verification checklist
-- User feedback collection mechanism
-- Performance benchmarks for large repositories
+### Workflow Content
+- Complete rebase procedure with changelog focus
+- Conflict resolution decision trees
+- Example scenarios and solutions
+- Integration points with git commands
+- Recovery procedures for failed rebases
 
 ## Out of Scope
 
-**Implementation Concerns (deferred to replan phase):**
-- Specific git hook implementation details
-- Internal algorithm for changelog merging
-- Database or storage mechanisms
-- Performance optimization strategies
-- Choice of programming language or libraries
-- File structure and code organization
-- Technical architecture decisions
+**Implementation Concerns (deferred or not needed):**
+- Executable binary (no CLI tool)
+- Ruby implementation of rebase logic
+- Automated conflict resolution algorithms
+- Test suite (workflow-only package)
+- Complex ATOM architecture (atoms/, molecules/, organisms/)
+- Integration with CI/CD pipelines
+- Performance optimization
 
 ## References
 
-- Source Idea: `.ace-taskflow/v.0.9.0/ideas/20251025-112037-create-rebase-workflow-to-mind-the-changelog-an.md`
-- Related: Git rebase documentation
-- Related: Conventional Commits specification
+- Source Idea: `.ace-taskflow/v.0.9.0/ideas/done/20251025-112037-create-rebase-workflow-to-mind-the-changelog-an.md`
+- Related: ace-gems.g.md development guide
+- Related: ace-git-commit package structure
+- Related: ace-git-diff package for command execution patterns
+- Related: Keep a Changelog specification
 - Related: Semantic Versioning specification
