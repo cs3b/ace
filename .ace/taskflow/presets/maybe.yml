@@ -2,7 +2,7 @@ description: "Items for future consideration (maybe priority)"
 # Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["maybe/**/*.s.md"]  # Keep glob for backward compatibility
+  glob: ["maybe/**/*.s.md"]  # Glob pattern to filter for items in the 'maybe' scope
 sort:
   by: "created_at"
   ascending: false
