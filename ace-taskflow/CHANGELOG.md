@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2025-11-01
+
+### Added
+- Implement .s.md extension and remove backward compatibility
+- Implement glob-based preset system for ideas and tasks
+
+### Fixed
+- Adjust universal presets and statistics logic
+- Require configuration and update universal preset expectations
+- Fix glob patterns to be relative to ideas directory
+- Address PR review feedback and fix failing tests
+
+### Changed
+- Clarify comments and refine exception handling
+- Make presets universal and parse status/priority
+
 ## [0.14.0] - 2025-10-26
 
 ### 🚨 Breaking Changes
