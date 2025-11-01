@@ -15,6 +15,7 @@ module Ace
       class TasksCommand
         def initialize
           @manager = Organisms::TaskManager.new
+          @config = Taskflow.configuration
           @preset_manager = Molecules::ListPresetManager.new
           @stats_formatter = Molecules::StatsFormatter.new
         end
@@ -83,12 +84,12 @@ module Ace
             when "--list"
               filters[:list] = true
               i += 1
-            # Legacy flag mappings
+            # Release selection flags
             when "--backlog"
-              filters[:context] = "backlog"
+              filters[:release] = "backlog"
               i += 1
             when "--release"
-              filters[:context] = args[i + 1] if i + 1 < args.length
+              filters[:release] = args[i + 1] if i + 1 < args.length
               i += 2
             when "--sort"
               sort_spec = args[i + 1]
@@ -128,9 +129,9 @@ module Ace
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
           return 1 unless preset_config
 
-          # Override context if provided via legacy flags
-          if additional_filters[:context]
-            preset_config[:context] = additional_filters[:context]
+          # Override release if provided via flags
+          if additional_filters[:release]
+            preset_config[:context] = additional_filters[:release]
           end
 
           # Override sort if provided
@@ -164,13 +165,20 @@ module Ace
 
 
         def get_tasks_for_preset(preset_config)
-          context = preset_config[:context] || 'current'
+          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
           filters_raw = preset_config[:filters] || {}
           glob = preset_config[:glob]
 
-          # Filter glob patterns to only include task-related patterns
+          # If no glob provided, use 'all' preset to get default
+          unless glob
+            all_preset = @preset_manager.apply_preset('all', {}, :tasks)
+            glob = all_preset[:glob] if all_preset
+          end
+
+          # Filter glob patterns to only include task-related patterns (already prefixed by preset manager)
           if glob && glob.is_a?(Array)
-            glob = glob.select { |pattern| pattern.start_with?('tasks/') || !pattern.include?('/') }
+            task_dir = @config.task_dir
+            glob = glob.select { |pattern| pattern.start_with?("#{task_dir}/") || !pattern.include?('/') }
           end
 
           # Convert string keys to symbols for compatibility with TaskManager
@@ -179,16 +187,16 @@ module Ace
             filters[key.to_sym] = value
           end
 
-          case context
+          case release
           when 'all'
-            @manager.list_tasks(context: "all", filters: filters, glob: glob)
+            @manager.list_tasks(context: "all", filters: filters, glob: glob)  # Note: task_manager still uses :context key
           when 'backlog'
             @manager.list_tasks(context: "backlog", filters: filters, glob: glob)
           when 'current'
             @manager.list_tasks(context: "current", filters: filters, glob: glob)
           else
-            # Assume it's a specific release context
-            @manager.list_tasks(context: context, filters: filters, glob: glob)
+            # Assume it's a specific release
+            @manager.list_tasks(context: release, filters: filters, glob: glob)
           end
         end
 
@@ -211,11 +219,11 @@ module Ace
 
         def display_tasks_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
-          context = preset_config[:context] || 'current'
+          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            context: context
+            context: release  # Note: stats_formatter still uses :context key
           )
           puts header
 
@@ -246,14 +254,14 @@ module Ace
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
           return 1 unless preset_config
 
-          # Override context if provided via legacy flags
-          if additional_filters[:context]
-            context = additional_filters[:context]
+          # Override release if provided via flags
+          if additional_filters[:release]
+            release = additional_filters[:release]
           else
-            context = preset_config[:context] || 'current'
+            release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
           end
 
-          puts @stats_formatter.format_stats_view(context: context)
+          puts @stats_formatter.format_stats_view(context: release)  # Note: stats_formatter still uses :context key
           0
         end
 

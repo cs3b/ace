@@ -12,6 +12,7 @@ module Ace
       class IdeasCommand
         def initialize
           @root_path = Molecules::ConfigLoader.find_root
+          @config = Taskflow.configuration
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
           @preset_manager = Molecules::ListPresetManager.new
           @stats_formatter = Molecules::StatsFormatter.new(@root_path)
@@ -73,9 +74,9 @@ module Ace
           # Add preset name to config for scope determination
           preset_config[:name] = preset_name
 
-          # Override context if provided via legacy flags
-          if additional_filters[:context]
-            preset_config[:context] = additional_filters[:context]
+          # Override release if provided via flags
+          if additional_filters[:release]
+            preset_config[:context] = additional_filters[:release]
           end
 
           # Get ideas based on preset configuration
@@ -127,15 +128,15 @@ module Ace
             when "--format"
               filters[:format] = args[i + 1] if i + 1 < args.length
               i += 2
-            # Legacy flag mappings to preset contexts
+            # Release selection flags
             when "--backlog"
-              filters[:context] = "backlog"
+              filters[:release] = "backlog"
               i += 1
             when "--release", "-r"
-              filters[:context] = args[i + 1] if i + 1 < args.length
+              filters[:release] = args[i + 1] if i + 1 < args.length
               i += 2
             when "--current"
-              filters[:context] = "current"
+              filters[:release] = "current"
               i += 1
             when "--all"
               # Map to 'all' preset
@@ -153,19 +154,26 @@ module Ace
         end
 
         def get_ideas_for_preset(preset_config)
-          context = preset_config[:context] || 'current'
-          glob = preset_config[:glob] || ["**/*.s.md"]  # Default glob
+          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+          glob = preset_config[:glob]
 
-          # Filter glob patterns to only include idea-related patterns
-          if glob && glob.is_a?(Array)
-            glob = glob.select { |pattern| pattern.start_with?('ideas/') || !pattern.include?('/') }
+          # If no glob provided, use 'all' preset to get default
+          unless glob
+            all_preset = @preset_manager.apply_preset('all', {}, :ideas)
+            glob = all_preset[:glob] if all_preset
           end
 
-          case context
+          # Filter glob patterns to only include idea-related patterns (already prefixed by preset manager)
+          if glob && glob.is_a?(Array)
+            ideas_dir = @config.ideas_dir
+            glob = glob.select { |pattern| pattern.start_with?("#{ideas_dir}/") || !pattern.include?('/') }
+          end
+
+          case release
           when 'all'
             get_all_ideas_with_glob(glob)
           else
-            @idea_loader.load_all(context: context, include_content: false, glob: glob)
+            @idea_loader.load_all(release: release, include_content: false, glob: glob)
           end
         end
 
@@ -175,14 +183,14 @@ module Ace
 
           # Active releases
           active_releases = release_resolver.find_active
-          active_releases.each do |release|
-            ideas = @idea_loader.load_all(context: release[:name], include_content: false, glob: glob)
-            ideas.each { |idea| idea[:release] = release[:name] }
+          active_releases.each do |rel|
+            ideas = @idea_loader.load_all(release: rel[:name], include_content: false, glob: glob)
+            ideas.each { |idea| idea[:release] = rel[:name] }
             all_ideas.concat(ideas)
           end
 
           # Backlog
-          backlog_ideas = @idea_loader.load_all(context: "backlog", include_content: false, glob: glob)
+          backlog_ideas = @idea_loader.load_all(release: "backlog", include_content: false, glob: glob)
           backlog_ideas.each { |idea| idea[:release] = "backlog" }
           all_ideas.concat(backlog_ideas)
 
@@ -191,23 +199,23 @@ module Ace
 
         def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil, short = false)
           # Display three-line header
-          context = preset_config[:context] || 'current'
+          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
 
-          # Get total count of ALL ideas for proper display
-          total_ideas = if preset_config[:name] == 'all' || preset_config[:name] == 'done'
-                         # For 'all' or 'done' presets, get the actual total including done
-                         all_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
+          # Get total count of ALL ideas for proper display - use 'all' preset for consistent glob
+          all_preset = @preset_manager.apply_preset('all', {}, :ideas)
+          total_glob = all_preset ? all_preset[:glob] : nil
+
+          total_ideas = if total_glob
+                         all_ideas = @idea_loader.load_all(release: release, include_content: false, glob: total_glob)
                          all_ideas.size
                        else
-                         # For 'next' and other presets, still show total for context
-                         all_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
-                         all_ideas.size
+                         ideas.size  # Fallback to displayed count
                        end
 
           header = @stats_formatter.format_header(
             command_type: :ideas,
             displayed_count: ideas.size,
-            context: context,
+            context: release,  # Note: stats_formatter still uses :context key
             total_count: total_ideas
           )
           puts header
@@ -215,12 +223,12 @@ module Ace
           # Check if grouping is needed
           display_config = preset_config[:display] || {}
           if display_config[:group_by] == 'context' || display_config[:group_by] == :context
-            # Group by release/context
+            # Group by release
             grouped = ideas.group_by { |idea| idea[:release] || 'current' }
-            grouped.each do |context, context_ideas|
+            grouped.each do |rel_name, rel_ideas|
               puts ""
-              puts "#{context} (#{context_ideas.length} ideas):"
-              context_ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false, short) }
+              puts "#{rel_name} (#{rel_ideas.length} ideas):"
+              rel_ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false, short) }
             end
           else
             ideas.each { |idea| display_idea_line(idea, display_config[:verbose] || false, short) }
@@ -233,25 +241,28 @@ module Ace
           preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :ideas)
           return 1 unless preset_config
 
-          # Override context if provided via legacy flags
-          if additional_filters[:context]
-            context = additional_filters[:context]
+          # Override release if provided via flags
+          if additional_filters[:release]
+            release = additional_filters[:release]
           else
-            context = preset_config[:context] || 'current'
+            release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
           end
 
-          puts @stats_formatter.format_stats_view(context: context)
+          puts @stats_formatter.format_stats_view(context: release)  # Note: stats_formatter still uses :context key
           0
         end
 
         def display_ideas_as_json(ideas, preset_config)
           require 'json'
 
-          context = preset_config[:context] || 'current'
+          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
 
-          # Get summary statistics
-          all_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
-          done_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/done/**/*.s.md"])
+          # Get summary statistics using presets
+          all_preset = @preset_manager.apply_preset('all', {}, :ideas)
+          done_preset = @preset_manager.apply_preset('done', {}, :ideas)
+
+          all_ideas = all_preset ? @idea_loader.load_all(release: release, include_content: false, glob: all_preset[:glob]) : []
+          done_ideas = done_preset ? @idea_loader.load_all(release: release, include_content: false, glob: done_preset[:glob]) : []
           active_ideas = all_ideas - done_ideas
 
           # Get release info
@@ -259,7 +270,7 @@ module Ace
           current_release = release_resolver.find_primary_active
 
           output = {
-            release: current_release ? current_release[:name] : context,
+            release: current_release ? current_release[:name] : release,
             summary: {
               ideas: {
                 total: all_ideas.size,
