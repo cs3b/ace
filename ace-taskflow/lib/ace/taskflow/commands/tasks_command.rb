@@ -137,7 +137,7 @@ module Ace
 
           # Override release if provided via flags
           if additional_filters[:release]
-            preset_config[:context] = additional_filters[:release]
+            preset_config[:release] = additional_filters[:release]
           end
 
           # Override sort if provided
@@ -171,7 +171,7 @@ module Ace
 
 
         def get_tasks_for_preset(preset_config)
-          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+          release = preset_config[:release] || 'current'
           filters_raw = preset_config[:filters] || {}
           glob = preset_config[:glob]
 
@@ -192,14 +192,14 @@ module Ace
 
           case release
           when 'all'
-            @manager.list_tasks(context: "all", filters: filters, glob: glob)  # Note: task_manager still uses :context key
+            @manager.list_tasks(release: "all", filters: filters, glob: glob)
           when 'backlog'
-            @manager.list_tasks(context: "backlog", filters: filters, glob: glob)
+            @manager.list_tasks(release: "backlog", filters: filters, glob: glob)
           when 'current'
-            @manager.list_tasks(context: "current", filters: filters, glob: glob)
+            @manager.list_tasks(release: "current", filters: filters, glob: glob)
           else
             # Assume it's a specific release
-            @manager.list_tasks(context: release, filters: filters, glob: glob)
+            @manager.list_tasks(release: release, filters: filters, glob: glob)
           end
         end
 
@@ -222,11 +222,11 @@ module Ace
 
         def display_tasks_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
-          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+          release = preset_config[:release] || 'current'
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            context: release  # Note: stats_formatter still uses :context key
+            release: release
           )
           puts header
 
@@ -239,12 +239,12 @@ module Ace
 
           # Check if grouping is needed
           display_config = preset_config[:display] || {}
-          if display_config[:group_by] == 'context' || display_config[:group_by] == :context
-            grouped = tasks.group_by { |t| t[:context] }
-            grouped.each do |context, context_tasks|
+          if display_config[:group_by] == 'release' || display_config[:group_by] == :release
+            grouped = tasks.group_by { |t| t[:release] }
+            grouped.each do |release, release_tasks|
               puts ""
-              puts "#{context}:"
-              context_tasks.each { |task| display_task_line(task) }
+              puts "#{release}:"
+              release_tasks.each { |task| display_task_line(task) }
             end
           else
             tasks.each { |task| display_task_line(task) }
@@ -261,10 +261,10 @@ module Ace
           if additional_filters[:release]
             release = additional_filters[:release]
           else
-            release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+            release = preset_config[:release] || 'current'
           end
 
-          puts @stats_formatter.format_stats_view(context: release)  # Note: stats_formatter still uses :context key
+          puts @stats_formatter.format_stats_view(release: release)
           0
         end
 
@@ -477,12 +477,12 @@ module Ace
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            context: context
+            release: context
           )
           puts header
 
           # Get ALL tasks for complete dependency visualization
-          all_tasks = @manager.list_tasks(context: "all")
+          all_tasks = @manager.list_tasks(release: "all")
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
         end
@@ -490,11 +490,11 @@ module Ace
         # Formatter methods for preset context
         def display_tree_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
-          context = preset_config[:context] || 'current'
+          release = preset_config[:release] || 'current'
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            context: context
+            release: release
           )
           puts header
 
@@ -506,7 +506,7 @@ module Ace
           end
 
           # Get ALL tasks for complete dependency visualization
-          all_tasks = @manager.list_tasks(context: "all")
+          all_tasks = @manager.list_tasks(release: "all")
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
           0
@@ -514,11 +514,11 @@ module Ace
 
         def display_paths_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
-          context = preset_config[:context] || 'current'
+          release = preset_config[:release] || 'current'
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            context: context
+            release: release
           )
           puts header
 
@@ -543,11 +543,11 @@ module Ace
 
         def display_list_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
-          context = preset_config[:context] || 'current'
+          release = preset_config[:release] || 'current'
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            context: context
+            release: release
           )
           puts header
 

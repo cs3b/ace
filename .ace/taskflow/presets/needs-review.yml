@@ -1,6 +1,6 @@
 description: "Items requiring review (needs_review flag set)"
 # Universal preset - works for both ideas and tasks
-context: "current"
+release: "current"
 filters:
   glob: ["**/*.s.md"]
   metadata:

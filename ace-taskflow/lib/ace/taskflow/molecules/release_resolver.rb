@@ -91,10 +91,10 @@ module Ace
         end
 
         # Resolve a context string to a release path
-        # @param context [String] Context string (current, backlog, pending, v.X.Y.Z)
+        # @param release [String] Context string (current, backlog, pending, v.X.Y.Z)
         # @return [String, nil] Resolved path or nil
-        def resolve_context(context)
-          case context
+        def resolve_release(release)
+          case release
           when "current", "active"
             primary = find_primary_active
             primary ? primary[:path] : nil

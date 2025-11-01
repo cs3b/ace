@@ -6,7 +6,7 @@ module Ace
       # Task data structure
       class Task
         attr_reader :id, :status, :priority, :estimate, :dependencies,
-                    :title, :content, :path, :task_number, :context, :metadata,
+                    :title, :content, :path, :task_number, :release, :metadata,
                     :sort
 
         def initialize(attributes = {})
@@ -19,7 +19,7 @@ module Ace
           @content = attributes[:content]
           @path = attributes[:path]
           @task_number = attributes[:task_number]
-          @context = attributes[:context]
+          @release = attributes[:release]
           @metadata = attributes[:metadata] || {}
           @sort = attributes[:sort]
         end
@@ -36,7 +36,7 @@ module Ace
             content: content,
             path: path,
             task_number: task_number,
-            context: context,
+            release: release,
             metadata: metadata,
             sort: sort
           }
@@ -64,12 +64,12 @@ module Ace
 
         # Get qualified reference
         def qualified_reference
-          return nil unless context && task_number
+          return nil unless release && task_number
 
-          if context == "current"
+          if release == "current"
             task_number
           else
-            "#{context}+#{task_number}"
+            "#{release}+#{task_number}"
           end
         end
 

@@ -1,6 +1,6 @@
 description: "Items with no urgency (anyday priority)"
 # Universal preset - works for both ideas and tasks
-context: "current"
+release: "current"
 filters:
   glob: ["anyday/**/*.s.md"]  # Items in anyday subdirectories
 sort:

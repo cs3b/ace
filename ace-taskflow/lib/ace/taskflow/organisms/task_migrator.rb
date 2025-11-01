@@ -29,17 +29,17 @@ module Ace
             total: 0
           }
 
-          contexts_to_migrate.each do |context_path|
-            migrate_context(context_path, results)
+          releases_to_migrate.each do |context_path|
+            migrate_release(release_path, results)
           end
 
           results
         end
 
         # Migrate tasks in a specific context
-        # @param context [String] Context name (e.g., "v.0.9.0", "backlog")
+        # @param release [String] Context name (e.g., "v.0.9.0", "backlog")
         # @return [Hash] Migration results
-        def migrate_context(context_path, results = nil)
+        def migrate_release(release_path, results = nil)
           results ||= { migrated: [], skipped: [], errors: [], total: 0 }
 
           config = Ace::Taskflow.configuration
@@ -78,23 +78,23 @@ module Ace
 
         private
 
-        def contexts_to_migrate
+        def releases_to_migrate
           config = Ace::Taskflow.configuration
-          contexts = []
+          releases = []
 
           # Active releases
           Dir.glob(File.join(@root_path, "v.*")).each do |release_path|
-            contexts << release_path if File.directory?(release_path)
+            releases << release_path if File.directory?(release_path)
           end
 
           # Backlog
           backlog_path = File.join(@root_path, config.backlog_dir)
           if File.directory?(backlog_path)
-            contexts << backlog_path
+            releases << backlog_path
 
             # Backlog releases
             Dir.glob(File.join(backlog_path, "v.*")).each do |release_path|
-              contexts << release_path if File.directory?(release_path)
+              releases << release_path if File.directory?(release_path)
             end
           end
 
@@ -102,7 +102,7 @@ module Ace
           done_path = File.join(@root_path, config.done_dir)
           if File.directory?(done_path)
             Dir.glob(File.join(done_path, "v.*")).each do |release_path|
-              contexts << release_path if File.directory?(release_path)
+              releases << release_path if File.directory?(release_path)
             end
           end
 

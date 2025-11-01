@@ -77,7 +77,7 @@ module Ace
           {
             name: name,
             description: preset[:description],
-            context: preset[:context] || 'current',
+            release: preset[:release] || 'current',
             filters: merged_filters,
             glob: glob_with_prefix,
             sort: preset[:sort] || { by: :sort, ascending: true },
@@ -175,7 +175,7 @@ module Ace
 
           {
             description: data['description'] || "#{File.basename(file, '.yml')} preset",
-            context: data['context'],
+            release: data['release'],
             filters: filters,
             glob: glob,
             sort: data['sort'] || { by: :sort, ascending: true },
@@ -203,7 +203,7 @@ module Ace
             'next' => {
               name: 'next',
               description: 'Next actionable tasks (pending + in-progress)',
-              context: 'current',
+              release: 'current',
               filters: { status: ['pending', 'in-progress'] },
               sort: { by: :sort, ascending: true },
               display: { group_by: nil },
@@ -213,7 +213,7 @@ module Ace
             'recent' => {
               name: 'recent',
               description: 'Recently modified items',
-              context: 'current',
+              release: 'current',
               filters: {},
               sort: { by: :modified, ascending: false },
               display: { show_dates: true },
@@ -223,7 +223,7 @@ module Ace
             'all' => {
               name: 'all',
               description: 'All tasks in current release (all statuses)',
-              context: 'current',
+              release: 'current',
               filters: {},
               sort: { by: :sort, ascending: true },
               display: {},
@@ -233,17 +233,17 @@ module Ace
             'all-releases' => {
               name: 'all-releases',
               description: 'All tasks across all releases',
-              context: 'all',
+              release: 'all',
               filters: {},
-              sort: { by: :context, ascending: true },
-              display: { group_by: :context },
+              sort: { by: :release, ascending: true },
+              display: { group_by: :release },
               type: nil, # Universal preset
               default: true
             },
             'pending' => {
               name: 'pending',
               description: 'Pending items only',
-              context: 'current',
+              release: 'current',
               filters: { status: ['pending'] },
               sort: { by: :sort, ascending: true },
               display: {},
@@ -253,7 +253,7 @@ module Ace
             'in-progress' => {
               name: 'in-progress',
               description: 'In-progress items only',
-              context: 'current',
+              release: 'current',
               filters: { status: ['in-progress'] },
               sort: { by: :sort, ascending: true },
               display: {},
@@ -263,7 +263,7 @@ module Ace
             'done' => {
               name: 'done',
               description: 'Completed items',
-              context: 'current',
+              release: 'current',
               filters: { status: ['done'] },
               sort: { by: :modified, ascending: false },
               display: { show_dates: true },

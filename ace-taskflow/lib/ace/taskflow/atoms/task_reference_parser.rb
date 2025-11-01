@@ -29,7 +29,7 @@ module Ace
             number = match[2]
 
             return {
-              release: normalize_context(context),
+              release: normalize_release(release),
               number: number,
               qualified: true,
               original: reference
@@ -66,9 +66,9 @@ module Ace
         end
 
         # Normalize a context string
-        # @param context [String] The context to normalize
+        # @param release [String] The context to normalize
         # @return [String] The normalized context
-        def self.normalize_context(context)
+        def self.normalize_release(release)
           case context.downcase
           when "current", "active"
             "current"
@@ -81,18 +81,18 @@ module Ace
         end
 
         # Check if a context is a release version
-        # @param context [String] The context to check
+        # @param release [String] The context to check
         # @return [Boolean] True if it's a release version
-        def self.release_context?(context)
+        def self.is_release_version?(release)
           context.match?(RELEASE_VERSION_PATTERN)
         end
 
         # Format a task reference
-        # @param context [String] The context
+        # @param release [String] The context
         # @param number [String, Integer] The task number
         # @param qualified [Boolean] Whether to create qualified reference
         # @return [String] The formatted reference
-        def self.format(context, number, qualified: true)
+        def self.format(release, number, qualified: true)
           number_str = number.to_s.rjust(3, '0')
 
           if qualified
@@ -110,9 +110,9 @@ module Ace
         # Convert between reference formats
         # @param reference [String] The reference to convert
         # @param target_format [Symbol] The target format (:qualified or :simple)
-        # @param context [String] Optional context for simple->qualified conversion
+        # @param release [String] Optional context for simple->qualified conversion
         # @return [String, nil] The converted reference or nil if invalid
-        def self.convert(reference, target_format, context: "current")
+        def self.convert(reference, target_format, release: "current")
           parsed = parse(reference)
           return nil unless parsed
 
@@ -155,7 +155,7 @@ module Ace
 
         # Normalize a reference to canonical ID format
         # @param reference [String] The task reference to normalize
-        # @param context_resolver [#resolve_context] Object that can resolve "current" to actual release
+        # @param release_resolver [#resolve_context] Object that can resolve "current" to actual release
         # @return [String, nil] Canonical ID (e.g., "v.0.9.0+task.072") or nil if invalid
         def self.normalize_to_canonical_id(reference, context_resolver)
           parsed = parse(reference)

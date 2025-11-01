@@ -138,15 +138,15 @@ module Ace
         end
 
         # Load tasks using glob patterns
-        # @param context_path [String] Base path for glob evaluation
+        # @param release_path [String] Base path for glob evaluation
         # @param glob_patterns [Array<String>] Glob patterns to match
         # @return [Array<Hash>] Array of matched tasks
-        def load_tasks_with_glob(context_path, glob_patterns)
+        def load_tasks_with_glob(release_path, glob_patterns)
           tasks = []
           matched_paths = Set.new
 
           Array(glob_patterns).each do |pattern|
-            Dir.glob(File.join(context_path, pattern)).each do |path|
+            Dir.glob(File.join(release_path, pattern)).each do |path|
               # Avoid duplicates
               next if matched_paths.include?(path)
               matched_paths.add(path)
@@ -359,11 +359,11 @@ module Ace
         end
 
         # Find task directory, supporting both old and new formats
-        # @param context_path [String] The context directory path
+        # @param release_path [String] The context directory path
         # @param number [String] The task number
         # @return [String, nil] The task directory path or nil if not found
-        def find_task_directory(context_path, number)
-          task_base = File.join(context_path, @config.task_dir)
+        def find_task_directory(release_path, number)
+          task_base = File.join(release_path, @config.task_dir)
           padded_number = number.to_s.rjust(3, '0')
 
           # First try in main t/ directory
@@ -408,8 +408,8 @@ module Ace
           @root_path = root_path
         end
 
-        def resolve_context(context)
-          case context
+        def resolve_release(context)
+          case release
           when "current", "active"
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(@root_path)

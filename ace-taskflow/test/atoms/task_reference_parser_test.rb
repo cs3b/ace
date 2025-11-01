@@ -92,8 +92,8 @@ class TaskReferenceParserTest < Minitest::Test
 
   def test_convert_reference_formats
     assert_equal "current+018", @parser.convert("018", :qualified)
-    assert_equal "current+018", @parser.convert("018", :qualified, context: "current")
-    assert_equal "v.0.9.0+018", @parser.convert("018", :qualified, context: "v.0.9.0")
+    assert_equal "current+018", @parser.convert("018", :qualified, release: "current")
+    assert_equal "v.0.9.0+018", @parser.convert("018", :qualified, release: "v.0.9.0")
     assert_equal "018", @parser.convert("v.0.9.0+018", :simple)
     assert_nil @parser.convert("invalid", :qualified)
   end

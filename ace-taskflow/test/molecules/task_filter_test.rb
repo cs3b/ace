@@ -7,11 +7,11 @@ class TaskFilterTest < AceTaskflowTestCase
   def setup
     @filter = Ace::Taskflow::Molecules::TaskFilter
     @tasks = [
-      { id: "task.001", status: "done", priority: "high", context: "v.0.9.0", dependencies: [] },
-      { id: "task.002", status: "in-progress", priority: "medium", context: "v.0.9.0", dependencies: ["task.001"] },
-      { id: "task.003", status: "pending", priority: "high", context: "v.0.9.0", dependencies: [] },
-      { id: "task.004", status: "pending", priority: "low", context: "backlog", dependencies: [] },
-      { id: "task.005", status: "blocked", priority: "medium", context: "v.0.8.0", dependencies: ["task.999"] }
+      { id: "task.001", status: "done", priority: "high", release: "v.0.9.0", dependencies: [] },
+      { id: "task.002", status: "in-progress", priority: "medium", release: "v.0.9.0", dependencies: ["task.001"] },
+      { id: "task.003", status: "pending", priority: "high", release: "v.0.9.0", dependencies: [] },
+      { id: "task.004", status: "pending", priority: "low", release: "backlog", dependencies: [] },
+      { id: "task.005", status: "blocked", priority: "medium", release: "v.0.8.0", dependencies: ["task.999"] }
     ]
   end
 
@@ -59,7 +59,7 @@ class TaskFilterTest < AceTaskflowTestCase
     result = @filter.filter_by_context(@tasks, "v.0.9.0")
 
     assert_equal 3, result.length
-    assert result.all? { |t| t[:context] == "v.0.9.0" }
+    assert result.all? { |t| t[:release] == "v.0.9.0" }
   end
 
   def test_filter_by_context_backlog
@@ -96,7 +96,7 @@ class TaskFilterTest < AceTaskflowTestCase
 
   def test_apply_filters_with_context
     filters = {
-      context: "v.0.9.0",
+      release: "v.0.9.0",
       status: ["pending", "in-progress"]
     }
     result = @filter.apply_filters(@tasks, filters)
@@ -141,7 +141,7 @@ class TaskFilterTest < AceTaskflowTestCase
     result = @filter.sort_tasks(@tasks, :context, true, false)
 
     # Should sort alphabetically: backlog, v.0.8.0, v.0.9.0
-    contexts = result.map { |t| t[:context] }
+    contexts = result.map { |t| t[:release] }
     assert_equal "backlog", contexts.first
   end
 

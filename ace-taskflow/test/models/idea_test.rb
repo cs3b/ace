@@ -10,7 +10,7 @@ class IdeaModelTest < AceTaskflowTestCase
       title: "Implement dark mode",
       content: "Add dark mode support across the application",
       path: "/path/to/idea.001.md",
-      context: "backlog",
+      release: "backlog",
       created_at: "2025-01-01 10:00:00",
       tags: ["feature", "ui"],
       status: "pending"
@@ -60,7 +60,7 @@ class IdeaModelTest < AceTaskflowTestCase
 
   def test_idea_context_accessor
     idea = Ace::Taskflow::Models::Idea.new(@idea_data)
-    assert_equal "backlog", idea.context
+    assert_equal "backlog", idea.release
   end
 
   def test_idea_created_at_accessor

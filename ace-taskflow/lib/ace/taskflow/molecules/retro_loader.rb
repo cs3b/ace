@@ -17,8 +17,8 @@ module Ace
 
         # Find retro by reference (filename or partial match)
         # Searches both retro/ and retro/done/ directories
-        def find_retro_by_reference(reference, context: "current")
-          retro_dir = resolve_retro_directory(context)
+        def find_retro_by_reference(reference, release: "current")
+          retro_dir = resolve_retro_directory(release)
           return nil unless retro_dir && Dir.exist?(retro_dir)
 
           # Search in both active (retro/) and done (retro/done/) directories
@@ -46,8 +46,8 @@ module Ace
         end
 
         # List retros from retro/ directory only (excludes done/)
-        def list_active_retros(context: "current")
-          retro_dir = resolve_retro_directory(context)
+        def list_active_retros(release: "current")
+          retro_dir = resolve_retro_directory(release)
           return [] unless retro_dir && Dir.exist?(retro_dir)
 
           Dir.glob(File.join(retro_dir, "*.md"))
@@ -58,8 +58,8 @@ module Ace
         end
 
         # List retros from retro/done/ directory only
-        def list_done_retros(context: "current")
-          retro_dir = resolve_retro_directory(context)
+        def list_done_retros(release: "current")
+          retro_dir = resolve_retro_directory(release)
           return [] unless retro_dir
 
           done_dir = File.join(retro_dir, "done")
@@ -73,8 +73,8 @@ module Ace
         end
 
         # List all retros (both retro/ and retro/done/)
-        def list_all_retros(context: "current")
-          list_active_retros(context: context) + list_done_retros(context: context)
+        def list_all_retros(release: "current")
+          list_active_retros(release: release) + list_done_retros(release: release)
         end
 
         # Parse retro metadata and content
@@ -113,11 +113,11 @@ module Ace
           }
         end
 
-        # Resolve retro directory for given context
-        def resolve_retro_directory(context)
+        # Resolve retro directory for given release
+        def resolve_retro_directory(release)
           retro_dirname = @config.dig("taskflow", "directories", "retros") || "retros"
 
-          case context
+          case release
           when "current", "active", nil
             # Find active release
             primary = @release_resolver.find_primary_active
@@ -129,8 +129,8 @@ module Ace
             @root_path
           else
             # Try to resolve as release
-            release = @release_resolver.find_release(context)
-            release ? File.join(release[:path], retro_dirname) : nil
+            release_info = @release_resolver.find_release(release)
+            release_info ? File.join(release_info[:path], retro_dirname) : nil
           end
         end
 

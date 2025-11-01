@@ -11,7 +11,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        task = manager.get_next_task(context: "v.0.9.0")
+        task = manager.get_next_task(release: "v.0.9.0")
 
         assert task
         # "next" preset includes in-progress tasks, so task.002 (in-progress) comes first
@@ -32,7 +32,7 @@ class TaskManagerTest < AceTaskflowTestCase
 
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        task = manager.get_next_task(context: "current")
+        task = manager.get_next_task(release: "current")
 
         assert task
         assert_equal "v.0.9.0+task.004", task[:id]
@@ -44,7 +44,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        result = manager.create_task("New task title", context: "v.0.9.0")
+        result = manager.create_task("New task title", release: "v.0.9.0")
 
         assert result[:success]
         # Test fixtures have: v.0.9.0 (5 tasks), v.0.8.0 (3 tasks), backlog (10 tasks)
@@ -102,15 +102,15 @@ class TaskManagerTest < AceTaskflowTestCase
         manager = Ace::Taskflow::Organisms::TaskManager.new
 
         # All tasks from current context
-        all_tasks = manager.list_tasks(context: "current")
+        all_tasks = manager.list_tasks(release: "current")
         assert_equal 5, all_tasks.length
 
         # Pending only
-        pending = manager.list_tasks(context: "current", filters: { status: ["pending"] })
+        pending = manager.list_tasks(release: "current", filters: { status: ["pending"] })
         assert_equal 3, pending.length
 
         # Done only
-        done = manager.list_tasks(context: "current", filters: { status: ["done"] })
+        done = manager.list_tasks(release: "current", filters: { status: ["done"] })
         assert_equal 1, done.length
       end
     end
@@ -154,7 +154,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        stats = manager.get_statistics(context: "all")
+        stats = manager.get_statistics(release: "all")
 
         assert stats[:total] > 0
         assert stats[:done] > 0

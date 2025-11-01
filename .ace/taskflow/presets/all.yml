@@ -1,6 +1,6 @@
 description: "All tasks in current release (all statuses)"
 type:  # Universal preset
-context: "current"
+release: "current"
 filters:
   glob: ["**/*.s.md"]  # All items (folder prefix added by PresetManager based on context)
 sort:

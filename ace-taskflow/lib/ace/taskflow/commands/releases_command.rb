@@ -127,12 +127,12 @@ module Ace
         end
 
         def get_releases_for_preset(preset_config)
-          context = preset_config[:context] || 'all'
+          release = preset_config[:release] || 'all'
           # Note: release_manager doesn't use filters in the same way,
           # it uses a simple string filter argument
 
-          # Map preset context to manager filter
-          filter = case context
+          # Map preset release to manager filter
+          filter = case release
           when 'active'
             'active'
           when 'backlog'

@@ -167,7 +167,7 @@ module Ace
             exit 1
           end
 
-          result = @manager.create_task(title, context: options[:context], metadata: options[:metadata])
+          result = @manager.create_task(title, release: options[:release], metadata: options[:metadata])
 
           if result[:success]
             puts result[:message]
@@ -359,7 +359,7 @@ module Ace
           end
         end
 
-        def parse_context(args)
+        def parse_release(args)
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"
@@ -374,7 +374,7 @@ module Ace
         end
 
         def get_tasks_for_preset(preset_config)
-          context = preset_config[:context] || 'current'
+          release = preset_config[:release] || 'current'
           filters_raw = preset_config[:filters] || {}
 
           # Convert string keys to symbols for compatibility with TaskManager
@@ -383,7 +383,7 @@ module Ace
             filters[key.to_sym] = value
           end
 
-          @manager.list_tasks(context: context, filters: filters)
+          @manager.list_tasks(release: release, filters: filters)
         end
 
         def apply_preset_sorting(tasks, preset_config)
@@ -428,7 +428,7 @@ module Ace
           puts ""
 
           # Get all tasks to check dependencies
-          all_tasks = @manager.list_tasks(context: "all")
+          all_tasks = @manager.list_tasks(release: "all")
 
           # Generate dependency tree
           tree_output = Molecules::DependencyTreeVisualizer.generate_task_tree(task.id, all_tasks)

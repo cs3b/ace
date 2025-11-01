@@ -31,10 +31,10 @@ module Ace
         end
 
         # Get next task to work on
-        # @param context [String] Context to search (current, backlog, specific release)
+        # @param release [String] Release to search (current, backlog, specific release)
         # @return [Hash, nil] Next task or nil
-        def get_next_task(context: "current")
-          tasks = list_tasks(context: context, filters: { status: ["pending", "in-progress"] })
+        def get_next_task(release: "current")
+          tasks = list_tasks(release: release, filters: { status: ["pending", "in-progress"] })
 
           # Delegate to pure logic molecule
           Molecules::TaskSelector.select_next(tasks)
@@ -48,28 +48,28 @@ module Ace
         end
 
         # List tasks with optional filtering
-        # @param context [String] Context to list from
+        # @param release [String] Release to list from
         # @param filters [Hash] Filter criteria
         # @param glob [Array<String>, nil] Optional glob patterns for loading
         # @return [Array<Hash>] Filtered tasks
-        def list_tasks(context: "current", filters: {}, glob: nil)
+        def list_tasks(release: "current", filters: {}, glob: nil)
           # If glob patterns provided, use glob-based loading
           if glob && !glob.empty?
-            context_path = resolve_context_path(context)
-            return [] unless context_path
-            tasks = @task_loader.load_tasks_with_glob(context_path, glob)
+            release_path = resolve_release_path(release)
+            return [] unless release_path
+            tasks = @task_loader.load_tasks_with_glob(release_path, glob)
             return Molecules::TaskFilter.apply_filters(tasks, filters)
           end
 
-          # Otherwise use traditional context-based loading
-          context_path = resolve_context_path(context)
-          return [] unless context_path
+          # Otherwise use traditional release-based loading
+          release_path = resolve_release_path(release)
+          return [] unless release_path
 
-          # Load tasks from context
-          tasks = if context == "all"
+          # Load tasks from release
+          tasks = if release == "all"
             @task_loader.load_all_tasks
           else
-            @task_loader.load_tasks_from_release(context_path)
+            @task_loader.load_tasks_from_release(release_path)
           end
 
           # Apply filters
@@ -78,22 +78,22 @@ module Ace
 
         # Create new task
         # @param title [String] Task title
-        # @param context [String] Target context
+        # @param release [String] Target release
         # @param metadata [Hash] Additional metadata
         # @return [Hash] Result with :success, :message, :task_id
-        def create_task(title, context: "current", metadata: {})
-          # Resolve context
-          context_path = resolve_context_path(context)
-          unless context_path
-            return { success: false, message: "Invalid context: #{context}" }
+        def create_task(title, release: "current", metadata: {})
+          # Resolve release
+          release_path = resolve_release_path(release)
+          unless release_path
+            return { success: false, message: "Invalid release: #{release}" }
           end
 
           # Generate task ID and slug
-          task_number = generate_task_number(context_path)
-          task_id = generate_task_id(context, task_number)
+          task_number = generate_task_number(release_path)
+          task_id = generate_task_id(release, task_number)
 
           # Safety check: Verify ID doesn't exist in either t/ or done/
-          if task_id_exists?(context_path, task_id)
+          if task_id_exists?(release_path, task_id)
             return {
               success: false,
               message: "Task ID #{task_id} already exists! This should not happen. Please report this issue."
@@ -103,7 +103,7 @@ module Ace
           slug_part = Molecules::TaskSlugGenerator.generate_descriptive_part(title, metadata)
 
           # Create task directory and file with new naming convention
-          task_dir = Atoms::PathBuilder.build_task_path("", context_path, task_number, slug_part)
+          task_dir = Atoms::PathBuilder.build_task_path("", release_path, task_number, slug_part)
           filename = "task.#{task_number}.s.md"
           task_file = File.join(task_dir, filename)
 
@@ -305,9 +305,9 @@ module Ace
           end
         end
 
-        # Move task between contexts
+        # Move task between releases
         # @param reference [String] Task reference
-        # @param target [String] Target context (backlog, v.0.10.0, etc.)
+        # @param target [String] Target release (backlog, v.0.10.0, etc.)
         # @return [Hash] Result with :success, :message, :new_reference
         def move_task(reference, target)
           # Find source task
@@ -316,10 +316,10 @@ module Ace
             return { success: false, message: "Task #{reference} not found" }
           end
 
-          # Resolve target context
-          target_path = resolve_context_path(target)
+          # Resolve target release
+          target_path = resolve_release_path(target)
           unless target_path
-            return { success: false, message: "Invalid target context: #{target}" }
+            return { success: false, message: "Invalid target release: #{target}" }
           end
 
           # Generate new task number and slug in target
@@ -368,19 +368,19 @@ module Ace
 
         # Get recent tasks
         # @param days [Integer] Number of days to look back
-        # @param context [String] Context to search
+        # @param release [String] Release to search
         # @return [Array<Hash>] Recent tasks
-        def get_recent_tasks(days: 7, context: "all")
-          list_tasks(context: context, filters: { recent_days: days })
+        def get_recent_tasks(days: 7, release: "all")
+          list_tasks(release: release, filters: { recent_days: days })
         end
 
         # Get task statistics
-        # @param context [String] Context to analyze
+        # @param release [String] Release to analyze
         # @return [Hash] Statistics
-        def get_statistics(context: "all")
+        def get_statistics(release: "all")
           # Use glob pattern to include all tasks (including maybe/, anyday/, done/ subdirectories)
           # Only match task files (task.*.s.md), not documentation files
-          tasks = list_tasks(context: context, glob: ["**/task.*.s.md"])
+          tasks = list_tasks(release: release, glob: ["**/task.*.s.md"])
 
           # Delegate to pure logic molecule
           Molecules::TaskStatistics.calculate(tasks)
@@ -388,8 +388,8 @@ module Ace
 
         private
 
-        def resolve_context_path(context)
-          case context
+        def resolve_release_path(release)
+          case release
           when "current", "active"
             primary = @release_resolver.find_primary_active
             primary ? primary[:path] : nil
@@ -399,13 +399,13 @@ module Ace
             @root_path
           else
             # Try to resolve as release
-            release = @release_resolver.find_release(context)
-            release ? release[:path] : nil
+            release_info = @release_resolver.find_release(release)
+            release_info ? release_info[:path] : nil
           end
         end
 
-        def generate_task_number(context_path)
-          # Load ALL tasks from ALL releases and contexts to find global maximum
+        def generate_task_number(release_path)
+          # Load ALL tasks from ALL releases to find global maximum
           # This ensures task IDs are never reused across the entire project
           all_tasks = @task_loader.load_all_tasks
 
@@ -431,11 +431,11 @@ module Ace
           match ? match[1].to_i : nil
         end
 
-        def generate_task_id(context, number)
-          if context == "backlog"
+        def generate_task_id(release, number)
+          if release == "backlog"
             "backlog+task.#{number}"
-          elsif context.start_with?("v.")
-            "#{context}+task.#{number}"
+          elsif release.start_with?("v.")
+            "#{release}+task.#{number}"
           else
             # For current/active, use the actual release version
             primary = @release_resolver.find_primary_active
@@ -487,12 +487,12 @@ module Ace
           )
         end
 
-        def task_id_exists?(context_path, task_id)
+        def task_id_exists?(release_path, task_id)
           config = Ace::Taskflow.configuration
           # Check both active and done directories for existing task IDs
           dirs = [
-            File.join(context_path, config.task_dir),
-            File.join(context_path, "done")
+            File.join(release_path, config.task_dir),
+            File.join(release_path, "done")
           ]
 
           dirs.any? do |dir|

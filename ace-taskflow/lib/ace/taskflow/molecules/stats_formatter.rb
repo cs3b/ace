@@ -39,16 +39,16 @@ module Ace
         # Generate three-line header for list outputs
         # @param command_type [Symbol] :tasks or :ideas
         # @param displayed_count [Integer] Number of items being displayed
-        # @param context [String] Current context (for release identification)
+        # @param release [String] Current release (for release identification)
         # @param total_count [Integer] Optional override for total count (for filtered views)
         # @return [String] Formatted three-line header
-        def format_header(command_type:, displayed_count: 0, context: "current", total_count: nil)
+        def format_header(command_type:, displayed_count: 0, release: "current", total_count: nil)
           # Get release information
-          release_info = get_release_info(context)
+          release_info = get_release_info(release)
           return minimal_header(command_type, displayed_count) unless release_info
 
           # Get global statistics (unfiltered)
-          task_stats = @task_manager.get_statistics(context: release_info[:context])
+          task_stats = @task_manager.get_statistics(context: release_info[:release])
           idea_stats = get_idea_statistics(release_info[:path])
 
           lines = []
@@ -74,13 +74,13 @@ module Ace
         end
 
         # Format statistics-only view (expanded)
-        # @param context [String] Context for statistics
+        # @param release [String] Release for statistics
         # @return [String] Formatted detailed statistics
-        def format_stats_view(context: "current")
-          release_info = get_release_info(context)
-          return "No release found for context: #{context}" unless release_info
+        def format_stats_view(release: "current")
+          release_info = get_release_info(release)
+          return "No release found for release: #{release}" unless release_info
 
-          task_stats = @task_manager.get_statistics(context: release_info[:context])
+          task_stats = @task_manager.get_statistics(context: release_info[:release])
           idea_stats = get_idea_statistics(release_info[:path])
 
           lines = []
@@ -150,45 +150,45 @@ module Ace
           "new"
         end
 
-        def get_release_info(context)
-          # Resolve context to release
-          release = case context
+        def get_release_info(release)
+          # Resolve release to release info
+          release_info = case release
                    when "current", "active"
                      @release_resolver.find_primary_active
                    when "backlog"
-                     { name: "Backlog", path: File.join(@root_path, "backlog"), context: "backlog" }
+                     { name: "Backlog", path: File.join(@root_path, "backlog"), release: "backlog" }
                    when "all"
-                     { name: "All Releases", path: @root_path, context: "all" }
+                     { name: "All Releases", path: @root_path, release: "all" }
                    else
                      # Try to find release or create a release info from version string
-                     found_release = @release_resolver.find_release(context)
+                     found_release = @release_resolver.find_release(release)
                      if found_release
                        found_release
-                     elsif context&.match(/^v\.\d+\.\d+\.\d+/)
+                     elsif release&.match(/^v\.\d+\.\d+\.\d+/)
                        # Create release info from version string
                        {
-                         name: context,
-                         path: File.join(@root_path, ".ace-taskflow", context),
-                         context: context
+                         name: release,
+                         path: File.join(@root_path, ".ace-taskflow", release),
+                         release: release
                        }
                      else
                        nil
                      end
                    end
 
-          return nil unless release
+          return nil unless release_info
 
           # Extract codename from release name if present
-          if release[:name] && release[:name].match(/^v\.\d+\.\d+\.\d+/)
+          if release_info[:name] && release_info[:name].match(/^v\.\d+\.\d+\.\d+/)
             # Try to find a codename file or extract from directory name
-            codename = extract_codename_from_path(release[:path])
-            release[:codename] = codename if codename
+            codename = extract_codename_from_path(release_info[:path])
+            release_info[:codename] = codename if codename
           end
 
-          # Ensure context is set
-          release[:context] ||= release[:name]
+          # Ensure release is set
+          release_info[:release] ||= release_info[:name]
 
-          release
+          release_info
         end
 
         def extract_codename_from_path(release_path)

@@ -4,7 +4,7 @@ module Ace
   module Taskflow
     module Models
       class Idea
-        attr_reader :id, :filename, :title, :content, :path, :created_at, :context, :tags, :status
+        attr_reader :id, :filename, :title, :content, :path, :created_at, :release, :tags, :status
 
         def initialize(data)
           # Normalize to symbol keys to support both string and symbol keys
@@ -16,7 +16,7 @@ module Ace
           @content = attrs[:content]
           @path = attrs[:path]
           @created_at = attrs[:created_at]
-          @context = attrs[:context] || "current"
+          @release = attrs[:release] || "current"
           @tags = attrs[:tags] || []
           @status = attrs[:status] || "pending"
         end
@@ -29,7 +29,7 @@ module Ace
             content: @content,
             path: @path,
             created_at: @created_at,
-            context: @context,
+            release: @release,
             tags: @tags,
             status: @status
           }

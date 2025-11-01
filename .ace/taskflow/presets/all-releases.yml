@@ -1,10 +1,10 @@
 description: "All tasks across all releases"
 type:  # Universal preset
-context: "all"
+release: "all"
 filters:
   glob: ["**/*.s.md"]
 sort:
-  by: "context"
+  by: "release"
   ascending: true
 display:
-  group_by: "context"
+  group_by: "release"
