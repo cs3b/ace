@@ -2,7 +2,7 @@ description: "Items with no urgency (anyday priority)"
 # Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["anyday/**/*.s.md"]  # Glob pattern to filter for items in the 'anyday' scope
+  glob: ["anyday/**/*.s.md"]  # Items anywhere in anyday subdirectory
 sort:
   by: "created_at"
   ascending: false

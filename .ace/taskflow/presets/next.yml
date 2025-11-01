@@ -2,7 +2,8 @@ description: "Next actionable items (pending + in-progress, excluding maybe/anyd
 # Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["*.s.md"]  # Top-level only, excludes subdirectories
+  # Note: Ideas use folder structure, tasks use different patterns
+  # This preset works universally by filtering on status rather than glob patterns
   status:
     - "pending"
     - "in-progress"
