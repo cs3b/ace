@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2025-11-01
+
+### Added
+- Use .s.md extension and clarify GTD scope
+
 ## [0.14.1] - 2025-11-01
 
 ### Added
