@@ -233,8 +233,8 @@ module Ace
                      "current"
                    end
 
-          # Get ALL ideas including done for accurate stats
-          ideas = @idea_loader.load_all(context: context, include_content: false)
+          # Get ALL ideas including done for accurate stats - use ideas-specific glob
+          ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
 
           stats = {
             total: ideas.size,

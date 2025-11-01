@@ -156,6 +156,11 @@ module Ace
           context = preset_config[:context] || 'current'
           glob = preset_config[:glob] || ["**/*.s.md"]  # Default glob
 
+          # Filter glob patterns to only include idea-related patterns
+          if glob && glob.is_a?(Array)
+            glob = glob.select { |pattern| pattern.start_with?('ideas/') || !pattern.include?('/') }
+          end
+
           case context
           when 'all'
             get_all_ideas_with_glob(glob)
@@ -191,11 +196,11 @@ module Ace
           # Get total count of ALL ideas for proper display
           total_ideas = if preset_config[:name] == 'all' || preset_config[:name] == 'done'
                          # For 'all' or 'done' presets, get the actual total including done
-                         all_ideas = @idea_loader.load_all(context: context, include_content: false)
+                         all_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
                          all_ideas.size
                        else
                          # For 'next' and other presets, still show total for context
-                         all_ideas = @idea_loader.load_all(context: context, include_content: false)
+                         all_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
                          all_ideas.size
                        end
 
@@ -245,8 +250,8 @@ module Ace
           context = preset_config[:context] || 'current'
 
           # Get summary statistics
-          all_ideas = @idea_loader.load_all(context: context, include_content: false)
-          done_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["done/**/*.s.md"])
+          all_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
+          done_ideas = @idea_loader.load_all(context: context, include_content: false, glob: ["ideas/done/**/*.s.md"])
           active_ideas = all_ideas - done_ideas
 
           # Get release info

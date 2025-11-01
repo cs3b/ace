@@ -168,6 +168,11 @@ module Ace
           filters_raw = preset_config[:filters] || {}
           glob = preset_config[:glob]
 
+          # Filter glob patterns to only include task-related patterns
+          if glob && glob.is_a?(Array)
+            glob = glob.select { |pattern| pattern.start_with?('tasks/') || !pattern.include?('/') }
+          end
+
           # Convert string keys to symbols for compatibility with TaskManager
           filters = {}
           filters_raw.each do |key, value|
