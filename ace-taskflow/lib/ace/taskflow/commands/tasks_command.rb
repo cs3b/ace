@@ -7,12 +7,14 @@ require_relative "../molecules/dependency_tree_visualizer"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/task"
 require_relative "../atoms/path_formatter"
+require_relative "helpers"
 
 module Ace
   module Taskflow
     module Commands
       # Handle tasks (plural) subcommand for browsing/listing
       class TasksCommand
+        include Helpers
         def initialize
           @manager = Organisms::TaskManager.new
           @config = Taskflow.configuration
@@ -43,12 +45,6 @@ module Ace
         end
 
         private
-
-        def filter_glob_by_type(glob, type_dir)
-          return nil unless glob.is_a?(Array)
-          filtered = glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
-          filtered.empty? ? nil : filtered
-        end
 
         def detect_preset_name(args)
           return nil if args.empty? || args.first.start_with?('-')
