@@ -1,6 +1,11 @@
 ---
+<<<<<<<< HEAD:.ace-taskflow/v.0.9.0/ideas/20251007-134439-for-ace-taskflow-ideas-tasks-release-we-shou/idea.s.md
 status: pending
 priority: now
+========
+status: done
+completed_at: 2025-11-01T11:32:04+00:00
+>>>>>>>> d45eac66 (feat(taskflow): Introduce unified --filter syntax and remove legacy flags):.ace-taskflow/v.0.9.0/ideas/done/20251007-134439-for-ace-taskflow-ideas-tasks-release-we-shou.md
 ---
 
 # Idea
