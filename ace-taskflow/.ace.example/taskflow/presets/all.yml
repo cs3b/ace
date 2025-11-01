@@ -1,8 +1,8 @@
-description: "All tasks in current release (all statuses)"
+description: "All items in current release (all statuses)"
 type:  # Universal preset
 context: "current"
 filters:
-  glob: ["ideas/**/*.s.md", "tasks/**/*.s.md"]  # All items in ideas and tasks dirs
+  glob: ["**/*.s.md"]  # All spec files (tasks and ideas)
 sort:
   by: "context"
   ascending: true

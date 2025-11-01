@@ -91,7 +91,7 @@ module Ace
         # Uses configured folder names from config.directories
         def apply_folder_prefix(glob_patterns, folder_type)
           # Provide default pattern if none specified
-          glob_patterns ||= ['**/*.s.md']
+          glob_patterns ||= @config.default_glob_pattern
 
           # Get configured folder name
           folder_name = case folder_type
