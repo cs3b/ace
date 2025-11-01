@@ -1,7 +1,8 @@
 ---
 sort: 50.0
+status: done
+completed_at: 2025-11-01T11:51:39+00:00
 ---
-
 # Idea
 
 # ace-docs -> we should use date hour:minute for any
