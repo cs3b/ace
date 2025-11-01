@@ -36,15 +36,15 @@ module Ace
           lines << "Dependency Tree:"
           lines << "=" * 48
 
-          # Group by context if available
-          contexts = forest.map { |tree| tree[:task][:context] }.uniq.compact
+          # Group by release if available
+          releases = forest.map { |tree| tree[:task][:release] }.uniq.compact
 
-          if contexts.size > 1
-            contexts.each do |context|
+          if releases.size > 1
+            releases.each do |release|
               lines << ""
-              lines << "#{context}:"
-              context_trees = forest.select { |tree| tree[:task][:context] == context }
-              render_forest_trees(context_trees, lines)
+              lines << "#{release}:"
+              release_trees = forest.select { |tree| tree[:task][:release] == release }
+              render_forest_trees(release_trees, lines)
             end
           else
             render_forest_trees(forest, lines)

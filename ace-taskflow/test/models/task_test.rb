@@ -105,7 +105,7 @@ class TaskModelTest < AceTaskflowTestCase
     assert_equal "Task description here", task.content
   end
 
-  def test_task_context_accessor
+  def test_task_release_accessor
     task = Ace::Taskflow::Models::Task.new(@task_data)
     assert_equal "v.0.9.0", task.release
   end

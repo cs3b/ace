@@ -229,7 +229,7 @@ module Ace
               task[:status].to_s.downcase == value
             when "priority"
               task[:priority].to_s.downcase == value
-            when "context"
+            when "release"
               task[:release].to_s.downcase == value
             when "has_dependencies"
               value == "true" ? !task[:dependencies].empty? : task[:dependencies].empty?

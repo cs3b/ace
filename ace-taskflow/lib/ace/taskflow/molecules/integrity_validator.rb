@@ -69,8 +69,8 @@ module Ace
 
           # Load from all releases
           @release_resolver.find_all.each do |release|
-            context_tasks = @task_loader.load_tasks_from_release(release[:path])
-            tasks.concat(context_tasks)
+            release_tasks = @task_loader.load_tasks_from_release(release[:path])
+            tasks.concat(release_tasks)
           end
 
           # Load from backlog
@@ -272,17 +272,17 @@ module Ace
           # This is informational only
           idea_count_by_release = {}
           ideas.each do |idea|
-            context = idea[:context] || "unknown"
-            idea_count_by_release[context] ||= 0
-            idea_count_by_release[context] += 1
+            release = idea[:release] || "unknown"
+            idea_count_by_release[release] ||= 0
+            idea_count_by_release[release] += 1
           end
 
-          idea_count_by_release.each do |context, count|
+          idea_count_by_release.each do |release, count|
             if count > 50  # Arbitrary threshold
               issues << {
                 type: :info,
-                message: "Release #{context} has #{count} ideas - consider processing backlog",
-                location: context
+                message: "Release #{release} has #{count} ideas - consider processing backlog",
+                location: release
               }
             end
           end

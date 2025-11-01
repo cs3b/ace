@@ -28,7 +28,7 @@ module Ace
 
         # Parse task create arguments
         # @param args [Array<String>] Command arguments
-        # @return [Hash] Parsed options with :title and :context
+        # @return [Hash] Parsed options with :title and :release
         def self.parse_create_args(args)
           title_parts = []
           release = "current"
@@ -51,7 +51,7 @@ module Ace
 
           {
             title: title_parts.join(" "),
-            release: context
+            release: release
           }
         end
 
@@ -77,7 +77,7 @@ module Ace
 
         # Parse task create arguments with OptionParser (new flexible version)
         # @param args [Array<String>] Command arguments
-        # @return [Hash] Parsed options with :title, :context, and :metadata
+        # @return [Hash] Parsed options with :title, :release, and :metadata
         # @raise [SystemExit] Exits with 0 if --help flag provided
         def self.parse_create_args_with_optparse(args)
           options = {

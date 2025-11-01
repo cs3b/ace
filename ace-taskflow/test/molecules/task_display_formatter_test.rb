@@ -136,26 +136,26 @@ class TaskDisplayFormatterTest < Minitest::Test
     assert_equal "task.001 My Task", result
   end
 
-  def test_group_by_context
+  def test_group_by_release
     tasks = [
       { id: "task.001", release: "v.0.9.0" },
       { id: "task.002", release: "v.0.9.0" },
       { id: "task.003", release: "backlog" }
     ]
 
-    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.group_by_context(tasks)
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.group_by_release(tasks)
 
     assert_equal 2, result["v.0.9.0"].length
     assert_equal 1, result["backlog"].length
   end
 
-  def test_group_by_context_handles_missing_context
+  def test_group_by_release_handles_missing_context
     tasks = [
       { id: "task.001" },
       { id: "task.002", release: "v.0.9.0" }
     ]
 
-    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.group_by_context(tasks)
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.group_by_release(tasks)
 
     assert_equal 1, result["unknown"].length
     assert_equal 1, result["v.0.9.0"].length

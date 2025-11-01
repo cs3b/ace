@@ -58,7 +58,7 @@ class IdeaModelTest < AceTaskflowTestCase
     assert_equal "/path/to/idea.001.md", idea.path
   end
 
-  def test_idea_context_accessor
+  def test_idea_release_accessor
     idea = Ace::Taskflow::Models::Idea.new(@idea_data)
     assert_equal "backlog", idea.release
   end

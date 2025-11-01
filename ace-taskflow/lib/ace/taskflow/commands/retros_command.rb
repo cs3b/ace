@@ -32,7 +32,7 @@ module Ace
 
           # List retros
           release = options[:release]
-          retros = @manager.list_retros(context: context, filters: { scope: scope })
+          retros = @manager.list_retros(release: release, filters: { scope: scope })
 
           # Apply limit if specified
           if options[:limit]
@@ -41,9 +41,9 @@ module Ace
 
           # Display results
           if retros.empty?
-            display_empty_message(context, scope)
+            display_empty_message(release, scope)
           else
-            display_retros(retros, context, scope, options)
+            display_retros(retros, release, scope, options)
           end
 
           0
@@ -96,7 +96,7 @@ module Ace
           options
         end
 
-        def display_retros(retros, context, scope, options)
+        def display_retros(retros, release, scope, options)
           # Group by status if showing all
           if scope == :all
             active_retros = retros.reject { |r| r[:is_done] }
@@ -136,7 +136,7 @@ module Ace
           puts "  #{status_icon} #{date}  #{title}"
         end
 
-        def display_empty_message(context, scope)
+        def display_empty_message(release, scope)
           case scope
           when :all
             puts "No retrospective notes found in #{release_name(release)}."
@@ -150,13 +150,13 @@ module Ace
         end
 
         def release_name(release)
-          case context
+          case release
           when "current", "active"
             "current release"
           when "backlog"
             "backlog"
           else
-            context
+            release
           end
         end
 

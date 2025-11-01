@@ -4,19 +4,19 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/molecules/idea_display_formatter"
 
 class IdeaDisplayFormatterTest < Minitest::Test
-  def test_context_name_current
+  def test_release_name_current
     assert_equal "current release", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("current")
   end
 
-  def test_context_name_active
+  def test_release_name_active
     assert_equal "current release", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("active")
   end
 
-  def test_context_name_backlog
+  def test_release_name_backlog
     assert_equal "backlog", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("backlog")
   end
 
-  def test_context_name_release
+  def test_release_name_release
     assert_equal "release v.0.9.0", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("v.0.9.0")
   end
 
@@ -48,20 +48,20 @@ class IdeaDisplayFormatterTest < Minitest::Test
     assert_includes result, "Idea: idea-001"
     assert_includes result, "Title: Implement caching"
     assert_includes result, "Created: 2025-10-01"
-    assert_includes result, "Context: v.0.9.0"
+    assert_includes result, "Release: v.0.9.0"
   end
 
   def test_format_idea_header_skips_missing_fields
     idea = {
       id: "idea-001",
       title: "My idea"
-      # No created_at or context
+      # No created_at or release
     }
     result = Ace::Taskflow::Molecules::IdeaDisplayFormatter.format_idea_header(idea)
 
     assert_equal 2, result.length
     refute result.any? { |line| line.include?("Created:") }
-    refute result.any? { |line| line.include?("Context:") }
+    refute result.any? { |line| line.include?("Release:") }
   end
 
   def test_format_idea_display_without_content
@@ -112,7 +112,7 @@ class IdeaDisplayFormatterTest < Minitest::Test
     assert_includes result, "Idea: idea-001"
     assert_includes result, "Title: My idea"
     assert_includes result, "Created: 2025-10-01"
-    assert_includes result, "Context: v.0.9.0"
+    assert_includes result, "Release: v.0.9.0"
     assert_includes result, "Path: /path/to/idea.md"
     assert_includes result, "--- Content ---"
     assert_includes result, "Full content here"

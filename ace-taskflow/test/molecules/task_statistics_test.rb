@@ -60,7 +60,7 @@ class TaskStatisticsTest < Minitest::Test
     assert_equal 1, result[:by_priority]["medium"]
   end
 
-  def test_calculate_counts_by_context
+  def test_calculate_counts_by_release
     tasks = [
       { id: "task.001", release: "v.0.9.0" },
       { id: "task.002", release: "v.0.9.0" },
@@ -69,13 +69,13 @@ class TaskStatisticsTest < Minitest::Test
 
     result = Ace::Taskflow::Molecules::TaskStatistics.calculate(tasks)
 
-    assert_equal 2, result[:by_context]["v.0.9.0"]
-    assert_equal 1, result[:by_context]["backlog"]
+    assert_equal 2, result[:by_release]["v.0.9.0"]
+    assert_equal 1, result[:by_release]["backlog"]
   end
 
   def test_calculate_handles_missing_attributes
     tasks = [
-      { id: "task.001" },  # No status, priority, context
+      { id: "task.001" },  # No status, priority, release
       { id: "task.002", status: "pending" }
     ]
 
@@ -92,6 +92,6 @@ class TaskStatisticsTest < Minitest::Test
     assert_equal 0, result[:total]
     assert_equal({}, result[:by_status])
     assert_equal({}, result[:by_priority])
-    assert_equal({}, result[:by_context])
+    assert_equal({}, result[:by_release])
   end
 end

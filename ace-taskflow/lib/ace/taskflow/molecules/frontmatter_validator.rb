@@ -23,7 +23,7 @@ module Ace
         # Validate content's frontmatter
         # @param content [String] The content to validate
         # @param component_type [Symbol] Type of component
-        # @param file_path [String] Optional file path for context
+        # @param file_path [String] Optional file path for error context
         # @return [Hash] Validation result
         def self.validate_content(content, component_type, file_path = nil)
           result = Atoms::SafeYamlParser.parse_with_recovery(content)

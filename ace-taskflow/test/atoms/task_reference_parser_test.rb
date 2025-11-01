@@ -74,13 +74,13 @@ class TaskReferenceParserTest < Minitest::Test
     refute @parser.qualified?("task.018")
   end
 
-  def test_release_context_predicate
-    assert @parser.release_context?("v.0.9.0")
-    assert @parser.release_context?("v.0.10.0-beta")
+  def test_is_release_version_predicate
+    assert @parser.is_release_version?("v.0.9.0")
+    assert @parser.is_release_version?("v.0.10.0-beta")
 
-    refute @parser.release_context?("backlog")
-    refute @parser.release_context?("current")
-    refute @parser.release_context?("018")
+    refute @parser.is_release_version?("backlog")
+    refute @parser.is_release_version?("current")
+    refute @parser.is_release_version?("018")
   end
 
   def test_format_qualified_reference

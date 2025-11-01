@@ -29,21 +29,21 @@ module Ace
             total: 0
           }
 
-          releases_to_migrate.each do |context_path|
+          releases_to_migrate.each do |release_path|
             migrate_release(release_path, results)
           end
 
           results
         end
 
-        # Migrate tasks in a specific context
+        # Migrate tasks in a specific release
         # @param release [String] Context name (e.g., "v.0.9.0", "backlog")
         # @return [Hash] Migration results
         def migrate_release(release_path, results = nil)
           results ||= { migrated: [], skipped: [], errors: [], total: 0 }
 
           config = Ace::Taskflow.configuration
-          task_dir = File.join(context_path, config.task_dir)
+          task_dir = File.join(release_path, config.task_dir)
           return results unless File.directory?(task_dir)
 
           # Find all task directories
@@ -106,7 +106,7 @@ module Ace
             end
           end
 
-          contexts
+          releases
         end
 
         def migrate_task_directory(old_path, results)

@@ -75,7 +75,7 @@ module Ace
             return 1
           end
 
-          result = @manager.create_retro(title, release: context)
+          result = @manager.create_retro(title, release: release)
 
           if result[:success]
             puts result[:message]
@@ -100,7 +100,7 @@ module Ace
           end
 
           release = parse_release(args)
-          retro = @manager.load_retro(reference, release: context)
+          retro = @manager.load_retro(reference, release: release)
 
           if retro
             display_retro(retro)
@@ -121,7 +121,7 @@ module Ace
           end
 
           release = parse_release(args)
-          result = @manager.mark_retro_done(reference, release: context)
+          result = @manager.mark_retro_done(reference, release: release)
 
           if result[:success]
             puts result[:message]
@@ -172,13 +172,13 @@ module Ace
         end
 
         def release_name(release)
-          case context
+          case release
           when "current", "active"
             "current release"
           when "backlog"
             "backlog"
           else
-            "release #{context}"
+            "release #{release}"
           end
         end
 

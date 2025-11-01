@@ -195,7 +195,7 @@ module Ace
               allow_qualified: true            # Enable v.0.9.0+018 syntax
               allow_cross_release: true        # Can reference other releases
 
-            # Default contexts
+            # Default releases
             defaults:
               idea_location: "active"          # Where ideas go by default
               task_location: "active"          # Where new tasks go by default

@@ -6,7 +6,7 @@ require_relative "../configuration"
 module Ace
   module Taskflow
     module Molecules
-      # Resolve release paths and contexts
+      # Resolve release paths
       class ReleaseResolver
         attr_reader :root_path
 
@@ -90,7 +90,7 @@ module Ace
           all_releases.find { |r| r[:path] == identifier }
         end
 
-        # Resolve a context string to a release path
+        # Resolve a release string to a release path
         # @param release [String] Context string (current, backlog, pending, v.X.Y.Z)
         # @return [String, nil] Resolved path or nil
         def resolve_release(release)
@@ -104,7 +104,7 @@ module Ace
             File.join(root_path, "pending")
           else
             # Try to find as a release
-            release = find_release(context)
+            release = find_release(release)
             release ? release[:path] : nil
           end
         end
