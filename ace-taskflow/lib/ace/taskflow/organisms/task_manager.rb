@@ -104,7 +104,7 @@ module Ace
 
           # Create task directory and file with new naming convention
           task_dir = Atoms::PathBuilder.build_task_path("", context_path, task_number, slug_part)
-          filename = "task.#{task_number}.md"
+          filename = "task.#{task_number}.s.md"
           task_file = File.join(task_dir, filename)
 
           begin
@@ -342,7 +342,7 @@ module Ace
             FileUtils.mv(old_dir, new_dir)
 
             # Use new naming convention for moved task
-            new_task_file = File.join(new_dir, "task.#{new_number}.md")
+            new_task_file = File.join(new_dir, "task.#{new_number}.s.md")
 
             # If old task uses different naming, rename it
             old_filename = File.basename(task[:path])

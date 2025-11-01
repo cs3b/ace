@@ -129,8 +129,8 @@ module Ace
 
           # Find all task directories
           Dir.glob(File.join(task_path, "*")).select { |d| File.directory?(d) }.each do |task_folder|
-            # Find .md files in the task folder (not in subfolders)
-            md_files = Dir.glob(File.join(task_folder, "*.md"))
+            # Find .s.md files in the task folder (not in subfolders)
+            md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
             # Process each .md file that has task frontmatter
             md_files.each do |file|

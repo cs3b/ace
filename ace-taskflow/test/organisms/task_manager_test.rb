@@ -52,7 +52,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert_equal "v.0.9.0+task.011", result[:task_id]
 
         # Verify file was created (directory includes slug: "011-task-new-title")
-        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "011-*", "*.md")).first
+        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "011-*", "*.s.md")).first
         assert task_file, "Task file should exist in tasks/011-* directory"
         assert File.exist?(task_file)
       end
@@ -89,7 +89,7 @@ class TaskManagerTest < AceTaskflowTestCase
         refute Dir.exist?(old_dir)
 
         # Verify new file created
-        new_file = Dir.glob(File.join(dir, ".ace-taskflow", "done", "v.0.8.0", "t", "004", "*.md")).first
+        new_file = Dir.glob(File.join(dir, ".ace-taskflow", "done", "v.0.8.0", "t", "004", "*.s.md")).first
         assert new_file
         assert File.exist?(new_file)
       end
