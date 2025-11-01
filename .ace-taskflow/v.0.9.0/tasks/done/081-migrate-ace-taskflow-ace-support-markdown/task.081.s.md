@@ -3,7 +3,7 @@ id: v.0.9.0+task.081
 status: done
 priority: high
 estimate: 1-2 days
-dependencies: [task.079]
+dependencies: []
 needs_review: false
 ---
 
