@@ -5,6 +5,7 @@ require "set"
 require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
+require_relative "../configuration"
 require_relative "../atoms/yaml_parser"
 
 module Ace
@@ -46,20 +47,20 @@ module Ace
         #   loader.load_all(release: "current", glob: ["ideas/maybe/**/*.s.md"])
         def load_all(release: "current", include_content: false, glob: nil)
           # Use glob-based loading (glob defaults to all ideas if not provided)
-          # Default pattern only matches ideas/ subdirectory to exclude tasks
-          glob ||= ["ideas/**/*.s.md"]
+          # Use the default pattern from configuration if no glob provided
+          glob ||= Taskflow.configuration.default_glob_pattern
           load_all_with_glob(release: release, include_content: include_content, glob: glob)
         end
 
         def find_next(release: "current")
           # Top-level ideas only (excludes subdirectories like maybe/, anyday/, done/)
-          ideas = load_all(release: release, include_content: false, glob: ["ideas/*.s.md"])
+          ideas = load_all(release: release, include_content: false, glob: ["*.s.md"])
           ideas.first
         end
 
         def find_by_partial_name(partial, release: "current")
           # All ideas (including subdirectories)
-          ideas = load_all(release: release, include_content: false, glob: ["ideas/**/*.s.md"])
+          ideas = load_all(release: release, include_content: false)
 
           # Find first idea where filename contains the partial string
           ideas.find do |idea|
@@ -119,9 +120,16 @@ module Ace
           ideas = []
           matched_paths = Set.new
 
-          # Apply each glob pattern
+          # Apply each glob pattern - prepend ideas directory
+          ideas_dir = Taskflow.configuration.ideas_dir
           Array(glob).each do |pattern|
-            Dir.glob(File.join(release_root, pattern)).each do |path|
+            # Prepend ideas directory to pattern if not already there
+            full_pattern = if pattern.start_with?("#{ideas_dir}/")
+              pattern
+            else
+              File.join(ideas_dir, pattern)
+            end
+            Dir.glob(File.join(release_root, full_pattern)).each do |path|
               # Avoid duplicates
               next if matched_paths.include?(path)
               matched_paths.add(path)

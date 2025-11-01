@@ -53,6 +53,12 @@ module Ace
         config.dig("directories", "pending") || "pending"
       end
 
+      # Get default glob pattern for all spec files
+      # This is the single source of truth for spec file matching
+      def default_glob_pattern
+        ['**/*.s.md']
+      end
+
       # Get active release selection strategy
       def active_strategy
         config["active_strategy"] || "lowest"
