@@ -142,7 +142,7 @@ module Ace
             display: data['display'] || {},
             type: data['type']
           }
-        rescue => e
+        rescue StandardError => e
           warn "Error loading preset from #{file}: #{e.message}"
           nil
         end
@@ -154,7 +154,7 @@ module Ace
           # Ensure it's a relative path (no absolute paths)
           return false if pattern.start_with?('/')
           true
-        rescue
+        rescue StandardError
           false
         end
 
