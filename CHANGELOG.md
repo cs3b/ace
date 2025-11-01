@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.100] - 2025-11-01
+
+### Fixed
+- **ace-taskflow v0.14.1**: Universal preset glob patterns and statistics counting
+  - Fixed glob patterns in all presets (next, maybe, anyday, all) to properly include both ideas/ and tasks/ directories
+  - Fixed IdeaLoader to use context_root instead of idea_dir for correct glob pattern resolution
+  - Fixed statistics counting to use specific globs: `ideas/**/*.s.md` for ideas, `tasks/**/task.*.s.md` for tasks
+  - Added command-level filtering to separate idea patterns from task patterns
+  - Corrected total count calculations in ideas command to use proper globs
+  - Resolved issues where presets returned 0 results and statistics showed incorrect counts
+
+### Technical
+- **ace-taskflow**: Created comprehensive retrospective documenting critical testing gaps
+  - Identified lack of integration tests for preset system
+  - Documented that major functionality was broken despite passing unit tests
+  - Proposed improvements: integration test suite, preset validation, and debug command
+  - Emphasized importance of end-to-end testing for user-facing features
+
 ## [0.9.99] - 2025-10-26
 
 ### Added
