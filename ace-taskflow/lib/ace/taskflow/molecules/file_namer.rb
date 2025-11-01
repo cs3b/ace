@@ -27,9 +27,9 @@ module Ace
           else
             # Standard flat file naming
             filename = if title && !title.empty?
-                         "#{timestamp}-#{title}.md"
+                         "#{timestamp}-#{title}.s.md"
                        else
-                         "#{timestamp}-idea.md"
+                         "#{timestamp}-idea.s.md"
                        end
             File.join(directory, filename)
           end

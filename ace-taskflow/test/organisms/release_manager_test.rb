@@ -289,7 +289,7 @@ class ReleaseManagerTest < AceTaskflowTestCase
         FileUtils.mkdir_p(task_dir)
 
         task_status = all_done ? "done" : (i == 0 ? "done" : "pending")
-        File.write(File.join(task_dir, "task.#{task_num}.md"), <<~TASK)
+        File.write(File.join(task_dir, "task.#{task_num}.s.md"), <<~TASK)
           ---
           id: #{name}+task.#{task_num}
           status: #{task_status}

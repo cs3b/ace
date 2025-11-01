@@ -124,13 +124,13 @@ module Ace
 
         # Create new retro file with template
         # @param title [String] Retro title for filename
-        # @param context [String] Context to create in (current, backlog, specific release)
+        # @param release [String] Release to create in (current, backlog, specific release)
         # @return [Hash] Result with :success, :message, :path
-        def create_retro(title, context: "current")
-          # Resolve context to retro directory
-          retro_dir = @retro_loader.resolve_retro_directory(context)
+        def create_retro(title, release: "current")
+          # Resolve release to retro directory
+          retro_dir = @retro_loader.resolve_retro_directory(release)
           unless retro_dir
-            return { success: false, message: "Invalid context: #{context}" }
+            return { success: false, message: "Invalid release: #{release}" }
           end
 
           # Ensure retro directory exists
@@ -169,38 +169,38 @@ module Ace
 
         # Load retro by reference
         # @param reference [String] Retro reference (filename or partial match)
-        # @param context [String] Context to search
+        # @param release [String] Release to search
         # @return [Hash, nil] Retro data or nil
-        def load_retro(reference, context: "current")
-          @retro_loader.find_retro_by_reference(reference, context: context)
+        def load_retro(reference, release: "current")
+          @retro_loader.find_retro_by_reference(reference, release: release)
         end
 
         # List retros with filtering
-        # @param context [String] Context to list from
+        # @param release [String] Release to list from
         # @param filters [Hash] Filter criteria (:scope => :active, :done, :all)
         # @return [Array<Hash>] Filtered retros
-        def list_retros(context: "current", filters: {})
+        def list_retros(release: "current", filters: {})
           scope = filters[:scope] || :active
 
           case scope
           when :active
-            @retro_loader.list_active_retros(context: context)
+            @retro_loader.list_active_retros(release: release)
           when :done
-            @retro_loader.list_done_retros(context: context)
+            @retro_loader.list_done_retros(release: release)
           when :all
-            @retro_loader.list_all_retros(context: context)
+            @retro_loader.list_all_retros(release: release)
           else
-            @retro_loader.list_active_retros(context: context)
+            @retro_loader.list_active_retros(release: release)
           end
         end
 
         # Mark retro as done by moving to done/ subfolder
         # @param reference [String] Retro reference
-        # @param context [String] Context to search
+        # @param release [String] Release to search
         # @return [Hash] Result with :success and :message
-        def mark_retro_done(reference, context: "current")
+        def mark_retro_done(reference, release: "current")
           # Find the retro
-          retro = load_retro(reference, context: context)
+          retro = load_retro(reference, release: release)
           unless retro
             return { success: false, message: "Retro '#{reference}' not found" }
           end

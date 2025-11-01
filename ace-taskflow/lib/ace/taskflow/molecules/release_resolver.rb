@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require_relative "../configuration"
 
 module Ace
   module Taskflow
     module Molecules
-      # Resolve release paths and contexts
+      # Resolve release paths
       class ReleaseResolver
         attr_reader :root_path
 
@@ -89,11 +90,11 @@ module Ace
           all_releases.find { |r| r[:path] == identifier }
         end
 
-        # Resolve a context string to a release path
-        # @param context [String] Context string (current, backlog, pending, v.X.Y.Z)
+        # Resolve a release string to a release path
+        # @param release [String] Context string (current, backlog, pending, v.X.Y.Z)
         # @return [String, nil] Resolved path or nil
-        def resolve_context(context)
-          case context
+        def resolve_release(release)
+          case release
           when "current", "active"
             primary = find_primary_active
             primary ? primary[:path] : nil
@@ -103,7 +104,7 @@ module Ace
             File.join(root_path, "pending")
           else
             # Try to find as a release
-            release = find_release(context)
+            release = find_release(release)
             release ? release[:path] : nil
           end
         end
@@ -128,8 +129,8 @@ module Ace
 
           # Find all task directories
           Dir.glob(File.join(task_path, "*")).select { |d| File.directory?(d) }.each do |task_folder|
-            # Find .md files in the task folder (not in subfolders)
-            md_files = Dir.glob(File.join(task_folder, "*.md"))
+            # Find .s.md files in the task folder (not in subfolders)
+            md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
             # Process each .md file that has task frontmatter
             md_files.each do |file|

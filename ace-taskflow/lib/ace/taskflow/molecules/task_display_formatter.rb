@@ -59,24 +59,24 @@ module Ace
           "#{ref} #{title}"
         end
 
-        # Group tasks by context
+        # Group tasks by release
         # @param tasks [Array<Hash>] Tasks to group
-        # @return [Hash] Tasks grouped by context
-        def self.group_by_context(tasks)
-          tasks.group_by { |t| t[:context] || "unknown" }
+        # @return [Hash] Tasks grouped by release
+        def self.group_by_release(tasks)
+          tasks.group_by { |t| t[:release] || "unknown" }
         end
 
         # Format grouped tasks for display
-        # @param grouped_tasks [Hash] Tasks grouped by context
+        # @param grouped_tasks [Hash] Tasks grouped by release
         # @param formatter [Symbol] Format type (:line, :list)
         # @return [String] Formatted output
         def self.format_grouped(grouped_tasks, formatter = :line)
           output = []
 
-          grouped_tasks.each do |context, context_tasks|
+          grouped_tasks.each do |release, release_tasks|
             output << ""
-            output << "#{context}:"
-            context_tasks.each do |task|
+            output << "#{release}:"
+            release_tasks.each do |task|
               case formatter
               when :line
                 output << format_task_line(task)

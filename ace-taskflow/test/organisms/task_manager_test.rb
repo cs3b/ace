@@ -11,7 +11,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        task = manager.get_next_task(context: "v.0.9.0")
+        task = manager.get_next_task(release: "v.0.9.0")
 
         assert task
         # "next" preset includes in-progress tasks, so task.002 (in-progress) comes first
@@ -24,15 +24,15 @@ class TaskManagerTest < AceTaskflowTestCase
   def test_find_next_task_skips_blocked
     with_test_project do |dir|
       # Mark task 002 (in-progress) and 003 (pending) as blocked
-      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "002", "task.002.md")
+      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "002", "task.002.s.md")
       File.write(task_002, File.read(task_002).gsub(/status: in-progress/, "status: blocked"))
 
-      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.md")
+      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.s.md")
       File.write(task_003, File.read(task_003).gsub(/status: pending/, "status: blocked"))
 
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        task = manager.get_next_task(context: "current")
+        task = manager.get_next_task(release: "current")
 
         assert task
         assert_equal "v.0.9.0+task.004", task[:id]
@@ -44,7 +44,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        result = manager.create_task("New task title", context: "v.0.9.0")
+        result = manager.create_task("New task title", release: "v.0.9.0")
 
         assert result[:success]
         # Test fixtures have: v.0.9.0 (5 tasks), v.0.8.0 (3 tasks), backlog (10 tasks)
@@ -52,7 +52,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert_equal "v.0.9.0+task.011", result[:task_id]
 
         # Verify file was created (directory includes slug: "011-task-new-title")
-        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "011-*", "*.md")).first
+        task_file = Dir.glob(File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "011-*", "*.s.md")).first
         assert task_file, "Task file should exist in tasks/011-* directory"
         assert File.exist?(task_file)
       end
@@ -69,7 +69,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert result[:success]
 
         # Verify file was updated
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.s.md")
         content = File.read(task_file)
         assert_match(/status: in-progress/, content)
       end
@@ -89,7 +89,7 @@ class TaskManagerTest < AceTaskflowTestCase
         refute Dir.exist?(old_dir)
 
         # Verify new file created
-        new_file = Dir.glob(File.join(dir, ".ace-taskflow", "done", "v.0.8.0", "t", "004", "*.md")).first
+        new_file = Dir.glob(File.join(dir, ".ace-taskflow", "done", "v.0.8.0", "t", "004", "*.s.md")).first
         assert new_file
         assert File.exist?(new_file)
       end
@@ -102,15 +102,15 @@ class TaskManagerTest < AceTaskflowTestCase
         manager = Ace::Taskflow::Organisms::TaskManager.new
 
         # All tasks from current context
-        all_tasks = manager.list_tasks(context: "current")
+        all_tasks = manager.list_tasks(release: "current")
         assert_equal 5, all_tasks.length
 
         # Pending only
-        pending = manager.list_tasks(context: "current", filters: { status: ["pending"] })
+        pending = manager.list_tasks(release: "current", filters: { status: ["pending"] })
         assert_equal 3, pending.length
 
         # Done only
-        done = manager.list_tasks(context: "current", filters: { status: ["done"] })
+        done = manager.list_tasks(release: "current", filters: { status: ["done"] })
         assert_equal 1, done.length
       end
     end
@@ -120,7 +120,7 @@ class TaskManagerTest < AceTaskflowTestCase
     skip "Test needs fix - will be reviewed in Phase 9"
     with_test_project do |dir|
       # Add dependencies to task 004 (needs quotes for YAML)
-      task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "004", "task.004.md")
+      task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "004", "task.004.s.md")
       content = File.read(task_file)
       File.write(task_file, content.gsub(/dependencies: \[\]/, 'dependencies: ["v.0.9.0+task.003"]'))
 
@@ -154,7 +154,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        stats = manager.get_statistics(context: "all")
+        stats = manager.get_statistics(release: "all")
 
         assert stats[:total] > 0
         assert stats[:done] > 0

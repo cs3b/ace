@@ -69,14 +69,14 @@ module Ace
 
           # Load from all releases
           @release_resolver.find_all.each do |release|
-            context_tasks = @task_loader.load_tasks_from_context(release[:path])
-            tasks.concat(context_tasks)
+            release_tasks = @task_loader.load_tasks_from_release(release[:path])
+            tasks.concat(release_tasks)
           end
 
           # Load from backlog
           backlog_path = File.join(@root_path, "backlog")
           if Dir.exist?(backlog_path)
-            backlog_tasks = @task_loader.load_tasks_from_context(backlog_path)
+            backlog_tasks = @task_loader.load_tasks_from_release(backlog_path)
             tasks.concat(backlog_tasks)
           end
 
@@ -88,12 +88,12 @@ module Ace
 
           # Load from all releases
           @release_resolver.find_all.each do |release|
-            release_ideas = @idea_loader.load_all(context: release[:name], scope: :all)
+            release_ideas = @idea_loader.load_all(release: release[:name])
             ideas.concat(release_ideas)
           end
 
           # Load from backlog
-          backlog_ideas = @idea_loader.load_all(context: "backlog", scope: :all)
+          backlog_ideas = @idea_loader.load_all(release: "backlog")
           ideas.concat(backlog_ideas)
 
           ideas
@@ -272,17 +272,17 @@ module Ace
           # This is informational only
           idea_count_by_release = {}
           ideas.each do |idea|
-            context = idea[:context] || "unknown"
-            idea_count_by_release[context] ||= 0
-            idea_count_by_release[context] += 1
+            release = idea[:release] || "unknown"
+            idea_count_by_release[release] ||= 0
+            idea_count_by_release[release] += 1
           end
 
-          idea_count_by_release.each do |context, count|
+          idea_count_by_release.each do |release, count|
             if count > 50  # Arbitrary threshold
               issues << {
                 type: :info,
-                message: "Release #{context} has #{count} ideas - consider processing backlog",
-                location: context
+                message: "Release #{release} has #{count} ideas - consider processing backlog",
+                location: release
               }
             end
           end

@@ -39,12 +39,12 @@ module Ace
         def self.generate(task_number, title, metadata = {})
           number = task_number.to_s.rjust(3, '0')
           type = extract_type(title, metadata)
-          context = extract_context(title, metadata)
-          keywords = extract_keywords(title, type, context)
+          component = extract_component(title, metadata)
+          keywords = extract_keywords(title, type, component)
 
           # Build the slug components
           components = [number, type]
-          components << context unless context.empty?
+          components << component unless component.empty?
           components << keywords unless keywords.empty?
 
           components.join('-')
@@ -56,11 +56,11 @@ module Ace
         # @return [String] The descriptive part (e.g., "feat-taskflow-idea-gc-llm")
         def self.generate_descriptive_part(title, metadata = {})
           type = extract_type(title, metadata)
-          context = extract_context(title, metadata)
-          keywords = extract_keywords(title, type, context)
+          component = extract_component(title, metadata)
+          keywords = extract_keywords(title, type, component)
 
           components = [type]
-          components << context unless context.empty?
+          components << component unless component.empty?
           components << keywords unless keywords.empty?
 
           components.join('-')
@@ -68,14 +68,14 @@ module Ace
 
         # Parse a slug to extract its components
         # @param slug [String] The slug to parse
-        # @return [Hash] Components { number:, type:, context:, keywords: }
+        # @return [Hash] Components { number:, type:, component:, keywords: }
         def self.parse_slug(slug)
           parts = slug.split('-')
 
           {
             number: parts[0] =~ /^\d+$/ ? parts[0] : nil,
             type: parts[1] || DEFAULT_TYPE,
-            context: parts[2] || '',
+            component: parts[2] || '',
             keywords: parts[3..-1]&.join('-') || ''
           }
         end
@@ -112,11 +112,11 @@ module Ace
           TYPE_PREFIXES[type_lower] || type_lower[0...MAX_TYPE_LENGTH]
         end
 
-        def self.extract_context(title, metadata)
+        def self.extract_component(title, metadata)
           # Check metadata first
-          if metadata[:component] || metadata[:context]
-            context = (metadata[:component] || metadata[:context]).to_s
-            return sanitize_slug_component(context)[0...MAX_CONTEXT_LENGTH]
+          if metadata[:component]
+            component = metadata[:component].to_s
+            return sanitize_slug_component(component)[0...MAX_CONTEXT_LENGTH]
           end
 
           # Try to extract ACE component from title
@@ -129,7 +129,7 @@ module Ace
           end
 
           # Look for common component names
-          components = %w[taskflow context core nav test llm git handbook tools]
+          components = %w[taskflow component core nav test llm git handbook tools]
           components.each do |comp|
             return comp if title_lower.include?(comp)
           end
@@ -137,7 +137,7 @@ module Ace
           ''
         end
 
-        def self.extract_keywords(title, type, context)
+        def self.extract_keywords(title, type, component)
           # Remove noise words and already extracted components
           words = title.downcase
                        .gsub(/[^a-z0-9\s-]/, '') # Remove special chars
@@ -150,9 +150,9 @@ module Ace
             ace task feature bug
           ]
 
-          # Also remove the type and context if present
+          # Also remove the type and component if present
           noise_words << type if type != DEFAULT_TYPE
-          noise_words << context unless context.empty?
+          noise_words << component unless component.empty?
 
           keywords = words.reject { |w| noise_words.include?(w) || w.length < 2 }
 

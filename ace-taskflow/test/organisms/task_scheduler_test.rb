@@ -35,7 +35,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
     end
 
     # Mock list_tasks to accept keyword arguments
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     # Reschedule task 027 to add_next
     @scheduler.reschedule(["027"], strategy: :add_next)
@@ -63,7 +63,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
       File.write(task[:path], content)
     end
 
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     @scheduler.reschedule(["026"], strategy: :add_at_end)
 
@@ -87,7 +87,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
       File.write(task[:path], content)
     end
 
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     @scheduler.reschedule(["027"], strategy: :after, reference_task: "025")
 
@@ -113,7 +113,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
       File.write(task[:path], content)
     end
 
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     @scheduler.reschedule(["027"], strategy: :before, reference_task: "026")
 
@@ -134,7 +134,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
       File.write(task[:path], "---\nid: #{task[:id]}\nstatus: #{task[:status]}\n---\n# Task")
     end
 
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     # Should not raise error
     @scheduler.reschedule(["025"], strategy: :add_at_end)
@@ -152,7 +152,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
       File.write(task[:path], "---\nid: #{task[:id]}\nstatus: #{task[:status]}\n---\n# Task")
     end
 
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     # Should not raise error
     @scheduler.reschedule(["task.025"], strategy: :add_at_end)
@@ -162,7 +162,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
   end
 
   def test_raises_error_when_no_valid_tasks_found
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| [] }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| [] }
 
     error = assert_raises(RuntimeError) do
       @scheduler.reschedule(["999"], strategy: :add_next)
@@ -177,7 +177,7 @@ class TaskSchedulerTest < AceTaskflowTestCase
     ]
 
     File.write(tasks[0][:path], "---\nid: #{tasks[0][:id]}\nstatus: #{tasks[0][:status]}\n---\n# Task")
-    @task_manager.define_singleton_method(:list_tasks) { |context: nil| tasks }
+    @task_manager.define_singleton_method(:list_tasks) { |release: nil| tasks }
 
     error = assert_raises(RuntimeError) do
       @scheduler.reschedule(["025"], strategy: :after, reference_task: "999")

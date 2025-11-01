@@ -460,7 +460,7 @@ module Ace
 
           # Mock git to return diff with test.rb changes
           mock_diff = "diff --git a/test.rb b/test.rb\n+puts 'test'"
-          ChangeDetector.stub :execute_git_command, mock_diff do
+          ChangeDetector.stub :generate_git_diff, mock_diff do
             result = ChangeDetector.get_diff_for_document(document)
 
             refute result[:multi_subject], "Should not be multi-subject"

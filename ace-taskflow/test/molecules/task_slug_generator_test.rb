@@ -65,7 +65,7 @@ class TaskSlugGeneratorTest < AceTaskflowTestCase
 
     assert_equal "025", result[:number]
     assert_equal "feat", result[:type]
-    assert_equal "taskflow", result[:context]
+    assert_equal "taskflow", result[:component]
     assert_equal "idea-management", result[:keywords]
   end
 
@@ -75,7 +75,7 @@ class TaskSlugGeneratorTest < AceTaskflowTestCase
 
     assert_equal "042", result[:number]
     assert_equal "fix", result[:type]
-    assert_equal "", result[:context]
+    assert_equal "", result[:component]
   end
 
   def test_generate_pads_task_number

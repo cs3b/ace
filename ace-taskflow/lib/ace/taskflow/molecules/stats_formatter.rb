@@ -39,16 +39,16 @@ module Ace
         # Generate three-line header for list outputs
         # @param command_type [Symbol] :tasks or :ideas
         # @param displayed_count [Integer] Number of items being displayed
-        # @param context [String] Current context (for release identification)
+        # @param release [String] Current release (for release identification)
         # @param total_count [Integer] Optional override for total count (for filtered views)
         # @return [String] Formatted three-line header
-        def format_header(command_type:, displayed_count: 0, context: "current", total_count: nil)
+        def format_header(command_type:, displayed_count: 0, release: "current", total_count: nil)
           # Get release information
-          release_info = get_release_info(context)
+          release_info = get_release_info(release)
           return minimal_header(command_type, displayed_count) unless release_info
 
           # Get global statistics (unfiltered)
-          task_stats = @task_manager.get_statistics(context: release_info[:context])
+          task_stats = @task_manager.get_statistics(release: release_info[:release])
           idea_stats = get_idea_statistics(release_info[:path])
 
           lines = []
@@ -57,7 +57,7 @@ module Ace
           actual_total = total_count || (command_type == :tasks ? task_stats[:total] : idea_stats[:total])
 
           # Line 1: Context line
-          lines << format_context_line(command_type, displayed_count,
+          lines << format_release_line(command_type, displayed_count,
                                        actual_total,
                                        release_info)
 
@@ -74,13 +74,13 @@ module Ace
         end
 
         # Format statistics-only view (expanded)
-        # @param context [String] Context for statistics
+        # @param release [String] Release for statistics
         # @return [String] Formatted detailed statistics
-        def format_stats_view(context: "current")
-          release_info = get_release_info(context)
-          return "No release found for context: #{context}" unless release_info
+        def format_stats_view(release: "current")
+          release_info = get_release_info(release)
+          return "No release found for release: #{release}" unless release_info
 
-          task_stats = @task_manager.get_statistics(context: release_info[:context])
+          task_stats = @task_manager.get_statistics(release: release_info[:release])
           idea_stats = get_idea_statistics(release_info[:path])
 
           lines = []
@@ -134,45 +134,61 @@ module Ace
 
         private
 
-        def get_release_info(context)
-          # Resolve context to release
-          release = case context
+        # Determine idea status from path and metadata
+        # Uses directory inspection instead of string matching for robustness
+        def determine_idea_status(idea)
+          # First check if status is explicitly set and not "new"
+          return idea[:status] if idea[:status] && idea[:status] != "new"
+
+          # Determine status from path by checking parent directory name
+          if idea[:path]
+            parent_dir = File.basename(File.dirname(idea[:path]))
+            return parent_dir if IdeaLoader::SCOPE_SUBDIRECTORIES.include?(parent_dir)
+          end
+
+          # Default to "new" for pending ideas
+          "new"
+        end
+
+        def get_release_info(release)
+          # Resolve release to release info
+          release_info = case release
                    when "current", "active"
                      @release_resolver.find_primary_active
                    when "backlog"
-                     { name: "Backlog", path: File.join(@root_path, "backlog"), context: "backlog" }
+                     { name: "Backlog", path: File.join(@root_path, "backlog"), release: "backlog" }
                    when "all"
-                     { name: "All Releases", path: @root_path, context: "all" }
+                     { name: "All Releases", path: @root_path, release: "all" }
                    else
                      # Try to find release or create a release info from version string
-                     found_release = @release_resolver.find_release(context)
+                     found_release = @release_resolver.find_release(release)
                      if found_release
                        found_release
-                     elsif context&.match(/^v\.\d+\.\d+\.\d+/)
+                     elsif release&.match(/^v\.\d+\.\d+\.\d+/)
                        # Create release info from version string
                        {
-                         name: context,
-                         path: File.join(@root_path, ".ace-taskflow", context),
-                         context: context
+                         name: release,
+                         path: File.join(@root_path, ".ace-taskflow", release),
+                         release: release
                        }
                      else
                        nil
                      end
                    end
 
-          return nil unless release
+          return nil unless release_info
 
           # Extract codename from release name if present
-          if release[:name] && release[:name].match(/^v\.\d+\.\d+\.\d+/)
+          if release_info[:name] && release_info[:name].match(/^v\.\d+\.\d+\.\d+/)
             # Try to find a codename file or extract from directory name
-            codename = extract_codename_from_path(release[:path])
-            release[:codename] = codename if codename
+            codename = extract_codename_from_path(release_info[:path])
+            release_info[:codename] = codename if codename
           end
 
-          # Ensure context is set
-          release[:context] ||= release[:name]
+          # Ensure release is set
+          release_info[:release] ||= release_info[:name]
 
-          release
+          release_info
         end
 
         def extract_codename_from_path(release_path)
@@ -209,7 +225,7 @@ module Ace
         def get_idea_statistics(release_path)
           # Extract release name from path for context
           release_name = File.basename(release_path)
-          context = if release_name == "backlog"
+          release_name = if release_name == "backlog"
                      "backlog"
                    elsif release_name.match(/^v\.\d+\.\d+\.\d+/)
                      release_name
@@ -218,7 +234,7 @@ module Ace
                    end
 
           # Get ALL ideas including done for accurate stats
-          ideas = @idea_loader.load_all(context: context, include_content: false, scope: :all)
+          ideas = @idea_loader.load_all(release: release_name, include_content: false)
 
           stats = {
             total: ideas.size,
@@ -226,12 +242,8 @@ module Ace
           }
 
           ideas.each do |idea|
-            # Determine status based on path
-            status = if idea[:path] && idea[:path].include?("/done/")
-                      "done"
-                     else
-                      idea[:status] || "new"
-                     end
+            # Determine status based on path and metadata
+            status = determine_idea_status(idea)
             stats[:by_status][status] ||= 0
             stats[:by_status][status] += 1
           end
@@ -239,7 +251,7 @@ module Ace
           stats
         end
 
-        def format_context_line(command_type, displayed_count, total_count, release_info)
+        def format_release_line(command_type, displayed_count, total_count, release_info)
           item_type = command_type == :tasks ? "tasks" : "ideas"
           release_desc = release_info[:codename] || ""
 
@@ -253,11 +265,15 @@ module Ace
         def format_ideas_line(idea_stats)
           parts = []
 
-          # Show pending ideas (new) and done ideas
+          # Show pending ideas (new), maybe, anyday, and done ideas
           new_count = idea_stats[:by_status]["new"] || 0
+          maybe_count = idea_stats[:by_status]["maybe"] || 0
+          anyday_count = idea_stats[:by_status]["anyday"] || 0
           done_count = idea_stats[:by_status]["done"] || 0
 
           parts << "💡 #{new_count}" if new_count > 0
+          parts << "🤔 #{maybe_count}" if maybe_count > 0
+          parts << "📅 #{anyday_count}" if anyday_count > 0
           parts << "✅ #{done_count}" if done_count > 0
 
           # Add other statuses from IDEA_STATUS_ORDER
@@ -270,8 +286,8 @@ module Ace
             parts << "#{icon} #{count}"
           end
 
-          # Add unknown statuses
-          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || s == "done" }
+          # Add unknown statuses (exclude new and scope subdirectories which are already handled)
+          unknown_statuses = idea_stats[:by_status].reject { |s, _| IDEA_STATUS_ORDER.include?(s) || IdeaLoader::SCOPE_SUBDIRECTORIES.include?(s) }
           unknown_count = unknown_statuses.values.sum
           parts << "❓ #{unknown_count}" if unknown_count > 0
 

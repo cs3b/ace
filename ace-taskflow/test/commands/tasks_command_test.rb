@@ -279,4 +279,56 @@ class TasksCommandTest < AceTaskflowTestCase
       end
     end
   end
+
+  def test_filter_glob_by_type_filters_correctly
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
+
+        # Test filtering task-related patterns
+        glob = ["tasks/**.md", "ideas/**.md", "*.md"]
+        result = command.send(:filter_glob_by_type, glob, "tasks")
+
+        assert_equal ["tasks/**.md", "*.md"], result
+        refute_includes result, "ideas/**.md"
+      end
+    end
+  end
+
+  def test_filter_glob_by_type_returns_nil_for_non_array
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
+
+        result = command.send(:filter_glob_by_type, "not an array", "tasks")
+        assert_nil result
+      end
+    end
+  end
+
+  def test_filter_glob_by_type_returns_nil_for_nil
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
+
+        result = command.send(:filter_glob_by_type, nil, "tasks")
+        assert_nil result
+      end
+    end
+  end
+
+  def test_filter_glob_by_type_preserves_patterns_without_slashes
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        command = Ace::Taskflow::Commands::TasksCommand.new
+
+        glob = ["pattern1", "pattern2", "tasks/pattern3"]
+        result = command.send(:filter_glob_by_type, glob, "tasks")
+
+        assert_includes result, "pattern1"
+        assert_includes result, "pattern2"
+        assert_includes result, "tasks/pattern3"
+      end
+    end
+  end
 end

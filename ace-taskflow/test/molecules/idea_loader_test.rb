@@ -14,10 +14,10 @@ class IdeaLoaderTest < AceTaskflowTestCase
         # Create test idea in .ace-taskflow/v.0.9.0/ideas (not v.0.9.0/ideas)
         idea_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250101-120000-test-idea.md"), "# Test Idea\n\nContent here")
+        File.write(File.join(idea_dir, "20250101-120000-test-idea.s.md"), "# Test Idea\n\nContent here")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        ideas = @loader.load_all(context: "v.0.9.0")
+        ideas = @loader.load_all(release: "v.0.9.0")
 
         assert_equal 1, ideas.length
         assert_equal "20250101-120000", ideas.first[:id]
@@ -32,10 +32,10 @@ class IdeaLoaderTest < AceTaskflowTestCase
         # Create test idea in .ace-taskflow/backlog/ideas
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250102-130000-backlog-idea.md"), "# Backlog Idea")
+        File.write(File.join(idea_dir, "20250102-130000-backlog-idea.s.md"), "# Backlog Idea")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        ideas = @loader.load_all(context: "backlog")
+        ideas = @loader.load_all(release: "backlog")
 
         assert_equal 1, ideas.length
         assert_equal "20250102-130000", ideas.first[:id]
@@ -52,17 +52,17 @@ class IdeaLoaderTest < AceTaskflowTestCase
         FileUtils.mkdir_p(v090_ideas)
         FileUtils.mkdir_p(backlog_ideas)
 
-        File.write(File.join(v090_ideas, "20250101-100000-idea-one.md"), "# Idea One")
-        File.write(File.join(backlog_ideas, "20250102-100000-idea-two.md"), "# Idea Two")
+        File.write(File.join(v090_ideas, "20250101-100000-idea-one.s.md"), "# Idea One")
+        File.write(File.join(backlog_ideas, "20250102-100000-idea-two.s.md"), "# Idea Two")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
 
         # Load from v.0.9.0
-        v090_result = @loader.load_all(context: "v.0.9.0")
+        v090_result = @loader.load_all(release: "v.0.9.0")
         assert_equal 1, v090_result.length
 
         # Load from backlog
-        backlog_result = @loader.load_all(context: "backlog")
+        backlog_result = @loader.load_all(release: "backlog")
         assert_equal 1, backlog_result.length
       end
     end
@@ -73,11 +73,11 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250101-100000-first.md"), "# First")
-        File.write(File.join(idea_dir, "20250102-100000-second.md"), "# Second")
+        File.write(File.join(idea_dir, "20250101-100000-first.s.md"), "# First")
+        File.write(File.join(idea_dir, "20250102-100000-second.s.md"), "# Second")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        next_idea = @loader.find_next(context: "backlog")
+        next_idea = @loader.find_next(release: "backlog")
 
         assert_equal "20250101-100000", next_idea[:id]
       end
@@ -89,11 +89,11 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250101-100000-dark-mode-feature.md"), "# Dark Mode")
-        File.write(File.join(idea_dir, "20250102-100000-light-theme.md"), "# Light Theme")
+        File.write(File.join(idea_dir, "20250101-100000-dark-mode-feature.s.md"), "# Dark Mode")
+        File.write(File.join(idea_dir, "20250102-100000-light-theme.s.md"), "# Light Theme")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        idea = @loader.find_by_partial_name("dark", context: "backlog")
+        idea = @loader.find_by_partial_name("dark", release: "backlog")
 
         assert idea
         assert_match(/dark/i, idea[:filename])
@@ -110,7 +110,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        idea_path = File.join(idea_dir, "20250101-100000-test.md")
+        idea_path = File.join(idea_dir, "20250101-100000-test.s.md")
         File.write(idea_path, "# My Idea\n\nThis is the content")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
@@ -127,7 +127,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        ideas = @loader.load_all(context: "v.99.99.99")
+        ideas = @loader.load_all(release: "v.99.99.99")
 
         assert_equal [], ideas
       end
@@ -139,10 +139,10 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250101-100000-test.md"), "# Test\n\nLong content here")
+        File.write(File.join(idea_dir, "20250101-100000-test.s.md"), "# Test\n\nLong content here")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        ideas = @loader.load_all(context: "backlog", include_content: false)
+        ideas = @loader.load_all(release: "backlog", include_content: false)
 
         assert_equal 1, ideas.length
         assert_nil ideas.first[:content]
@@ -155,10 +155,10 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250101-100000-add-dark-mode-feature.md"), "Content")
+        File.write(File.join(idea_dir, "20250101-100000-add-dark-mode-feature.s.md"), "Content")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        ideas = @loader.load_all(context: "backlog")
+        ideas = @loader.load_all(release: "backlog")
 
         assert_equal 1, ideas.length
         assert_match(/add dark mode feature/i, ideas.first[:title])
@@ -182,10 +182,10 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
-        File.write(File.join(idea_dir, "20250101-100000-UPPERCASE-IDEA.md"), "# Test")
+        File.write(File.join(idea_dir, "20250101-100000-UPPERCASE-IDEA.s.md"), "# Test")
 
         @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
-        idea = @loader.find_by_partial_name("uppercase", context: "backlog")
+        idea = @loader.find_by_partial_name("uppercase", release: "backlog")
 
         assert idea
         assert_match(/UPPERCASE/i, idea[:filename])

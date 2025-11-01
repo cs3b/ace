@@ -17,7 +17,7 @@ module Ace
 
         # Parse a task reference into its components
         # @param reference [String] The task reference to parse
-        # @return [Hash, nil] Hash with :context and :number, or nil if invalid
+        # @return [Hash, nil] Hash with :release and :number, or nil if invalid
         def self.parse(reference)
           return nil if reference.nil? || reference.empty?
 
@@ -25,11 +25,11 @@ module Ace
 
           # Check for qualified reference (e.g., v.0.9.0+018, backlog+025)
           if match = reference.match(QUALIFIED_REFERENCE_PATTERN)
-            context = match[1]
+            release_str = match[1]
             number = match[2]
 
             return {
-              context: normalize_context(context),
+              release: normalize_release(release_str),
               number: number,
               qualified: true,
               original: reference
@@ -39,7 +39,7 @@ module Ace
           # Check for simple reference (e.g., 018, task.018)
           if match = reference.match(SIMPLE_REFERENCE_PATTERN)
             return {
-              context: "current",
+              release: "current",
               number: match[1],
               qualified: false,
               original: reference
@@ -65,42 +65,42 @@ module Ace
           result && result[:qualified]
         end
 
-        # Normalize a context string
-        # @param context [String] The context to normalize
-        # @return [String] The normalized context
-        def self.normalize_context(context)
-          case context.downcase
+        # Normalize a release string
+        # @param release [String] The release to normalize
+        # @return [String] The normalized release
+        def self.normalize_release(release)
+          case release.downcase
           when "current", "active"
             "current"
           when "backlog"
             "backlog"
           else
             # Keep release versions as-is
-            context
+            release
           end
         end
 
-        # Check if a context is a release version
-        # @param context [String] The context to check
+        # Check if a string is a release version
+        # @param release [String] The string to check
         # @return [Boolean] True if it's a release version
-        def self.release_context?(context)
-          context.match?(RELEASE_VERSION_PATTERN)
+        def self.is_release_version?(release)
+          release.match?(RELEASE_VERSION_PATTERN)
         end
 
         # Format a task reference
-        # @param context [String] The context
+        # @param release [String] The release
         # @param number [String, Integer] The task number
         # @param qualified [Boolean] Whether to create qualified reference
         # @return [String] The formatted reference
-        def self.format(context, number, qualified: true)
+        def self.format(release, number, qualified: true)
           number_str = number.to_s.rjust(3, '0')
 
           if qualified
-            if context == "current"
+            if release == "current"
               # Even for current, if explicitly qualified, include it
               "current+#{number_str}"
             else
-              "#{context}+#{number_str}"
+              "#{release}+#{number_str}"
             end
           else
             number_str
@@ -110,9 +110,9 @@ module Ace
         # Convert between reference formats
         # @param reference [String] The reference to convert
         # @param target_format [Symbol] The target format (:qualified or :simple)
-        # @param context [String] Optional context for simple->qualified conversion
+        # @param release [String] Optional release for simple->qualified conversion
         # @return [String, nil] The converted reference or nil if invalid
-        def self.convert(reference, target_format, context: "current")
+        def self.convert(reference, target_format, release: "current")
           parsed = parse(reference)
           return nil unless parsed
 
@@ -122,8 +122,8 @@ module Ace
             if parsed[:qualified]
               parsed[:original]
             else
-              # Convert simple to qualified with provided context
-              format(context, parsed[:number], qualified: true)
+              # Convert simple to qualified with provided release
+              format(release, parsed[:number], qualified: true)
             end
           when :simple
             parsed[:number].to_s.rjust(3, '0')
@@ -141,8 +141,8 @@ module Ace
           references = []
 
           # Find qualified references (e.g., v.0.9.0+018, backlog+025)
-          text.scan(/\b([\w\.-]+)\+(\d+)\b/) do |context, number|
-            references << "#{context}+#{number}"
+          text.scan(/\b([\w\.-]+)\+(\d+)\b/) do |release_str, number|
+            references << "#{release_str}+#{number}"
           end
 
           # Find simple task references (e.g., task.003)
@@ -155,25 +155,25 @@ module Ace
 
         # Normalize a reference to canonical ID format
         # @param reference [String] The task reference to normalize
-        # @param context_resolver [#resolve_context] Object that can resolve "current" to actual release
+        # @param release_resolver [#resolve_release] Object that can resolve "current" to actual release
         # @return [String, nil] Canonical ID (e.g., "v.0.9.0+task.072") or nil if invalid
-        def self.normalize_to_canonical_id(reference, context_resolver)
+        def self.normalize_to_canonical_id(reference, release_resolver)
           parsed = parse(reference)
           return nil unless parsed
 
-          # Resolve context to actual release name
-          context = if parsed[:context] == "current"
+          # Resolve release to actual release name
+          release = if parsed[:release] == "current"
             # Ask the resolver for the actual current release
-            resolved = context_resolver.resolve_context(parsed[:context])
-            resolved || parsed[:context]
+            resolved = release_resolver.resolve_release(parsed[:release])
+            resolved || parsed[:release]
           else
-            parsed[:context]
+            parsed[:release]
           end
 
-          # Build canonical ID: context+task.number
+          # Build canonical ID: release+task.number
           # Ensure number is zero-padded to 3 digits
           padded_number = parsed[:number].to_s.rjust(3, '0')
-          "#{context}+task.#{padded_number}"
+          "#{release}+task.#{padded_number}"
         end
       end
     end

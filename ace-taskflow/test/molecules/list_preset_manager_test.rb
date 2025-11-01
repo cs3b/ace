@@ -27,7 +27,7 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
 
       assert_equal "next", preset[:name]
       assert_equal "Next actionable tasks (pending + in-progress)", preset[:description]
-      assert_equal "current", preset[:context]
+      assert_equal "current", preset[:release]
       assert_equal ["pending", "in-progress"], preset[:filters][:status]
       assert_equal :sort, preset[:sort][:by]
       assert_equal true, preset[:sort][:ascending]
@@ -38,7 +38,7 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
 
       assert_equal "recent", preset[:name]
       assert_equal "Recently modified items (last 7 days)", preset[:description]
-      assert_equal "current", preset[:context]
+      assert_equal "current", preset[:release]
       assert_equal({}, preset[:filters])
       assert_equal "modified", preset[:sort]["by"]
       assert_equal false, preset[:sort]["ascending"]
@@ -49,7 +49,7 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
 
       assert_equal "all", preset[:name]
       assert_equal "All tasks in current release (all statuses)", preset[:description]
-      assert_equal "current", preset[:context]
+      assert_equal "current", preset[:release]
       assert_equal({}, preset[:display])
     end
   end
@@ -70,8 +70,8 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
       ideas_presets = @manager.list_presets(:ideas)
       ideas_preset_names = ideas_presets.map { |p| p[:name] }
 
-      # next is tasks-specific, should not appear for ideas
-      refute_includes ideas_preset_names, "next"
+      # next is now universal, should appear for ideas
+      assert_includes ideas_preset_names, "next"
       # universal presets should appear
       assert_includes ideas_preset_names, "recent"
       assert_includes ideas_preset_names, "all"
@@ -86,7 +86,7 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
     end
 
     it "checks preset existence for ideas" do
-      refute @manager.preset_exists?("next", :ideas)
+      assert @manager.preset_exists?("next", :ideas)  # next is now universal
       assert @manager.preset_exists?("recent", :ideas)
       assert @manager.preset_exists?("all", :ideas)
       refute @manager.preset_exists?("nonexistent", :ideas)
@@ -98,7 +98,7 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
       result = @manager.apply_preset("next", { priority: ["high"] })
 
       assert_equal "next", result[:name]
-      assert_equal "current", result[:context]
+      assert_equal "current", result[:release]
       assert_equal ["pending", "in-progress"], result[:filters]["status"]
       assert_equal ["high"], result[:filters][:priority]
     end
@@ -114,16 +114,17 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
     it "overwrites non-array filters" do
       result = @manager.apply_preset("next", { days: 14 })
 
-      assert_equal "current", result[:context]
+      assert_equal "current", result[:release]
       assert_equal 14, result[:filters][:days]
     end
   end
 
   describe "type compatibility" do
-    it "returns nil for incompatible preset-type combinations" do
-      # next preset is tasks-only
-      assert_nil @manager.get_preset("next", :ideas)
-      assert_nil @manager.get_preset("next", :releases)
+    it "returns preset for universal presets regardless of type" do
+      # next preset is now universal - works for all types
+      refute_nil @manager.get_preset("next", :ideas)
+      refute_nil @manager.get_preset("next", :tasks)
+      refute_nil @manager.get_preset("next", :releases)  # universal means all types
     end
 
     it "returns preset for compatible type combinations" do

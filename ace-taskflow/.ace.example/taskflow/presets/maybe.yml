@@ -1,0 +1,9 @@
+description: "Items for future consideration (maybe priority)"
+# Universal preset - works for both ideas and tasks
+release: "current"
+filters:
+  glob: ["maybe/**/*.s.md"]  # Items in maybe subdirectories
+sort:
+  by: "created_at"
+  ascending: false
+display: {}

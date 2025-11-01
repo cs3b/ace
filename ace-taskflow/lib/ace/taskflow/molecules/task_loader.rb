@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "set"
 require "ace/support/markdown"
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
@@ -29,9 +30,9 @@ module Ace
           frontmatter = parsed[:frontmatter]
           body_content = parsed[:content]
 
-          # Extract task number and context from path
+          # Extract task number and release from path
           task_number = Atoms::PathBuilder.extract_task_number(path)
-          context = Atoms::PathBuilder.extract_context(path)
+          release = Atoms::PathBuilder.extract_release(path)
 
           # Build task data
           {
@@ -45,27 +46,27 @@ module Ace
             content: body_content,
             path: path,
             task_number: task_number,
-            context: context,
+            release: release,
             metadata: frontmatter
           }
         rescue StandardError => e
           nil
         end
 
-        # Load all tasks from a release or context
-        # @param context_path [String] Path to the release or context
+        # Load all tasks from a release
+        # @param release_path [String] Path to the release
         # @return [Array<Hash>] Array of task data
-        def load_tasks_from_context(context_path)
+        def load_tasks_from_release(release_path)
           tasks = []
-          task_dir = File.join(context_path, @config.task_dir)
+          task_dir = File.join(release_path, @config.task_dir)
 
           return tasks unless File.directory?(task_dir)
 
           # Iterate through task directories in main t/ directory
           # Supports both old format (t/001/) and new format (t/001-feat-taskflow/)
           Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "done" }.each do |task_folder|
-            # Find .md files in the task folder (not in subfolders)
-            md_files = Dir.glob(File.join(task_folder, "*.md"))
+            # Find .s.md files in the task folder (not in subfolders)
+            md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
             # Find the task file - the one with YAML frontmatter containing task metadata
             task_file = md_files.find do |file|
@@ -82,8 +83,8 @@ module Ace
           done_dir = File.join(task_dir, @config.done_dir)
           if File.directory?(done_dir)
             Dir.glob(File.join(done_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
-              # Find .md files in the task folder
-              md_files = Dir.glob(File.join(task_folder, "*.md"))
+              # Find .s.md files in the task folder
+              md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
               # Find the task file - the one with YAML frontmatter containing task metadata
               task_file = md_files.find do |file|
@@ -100,7 +101,7 @@ module Ace
           tasks
         end
 
-        # Load all tasks across all contexts
+        # Load all tasks across all releases
         # @return [Array<Hash>] Array of all tasks
         def load_all_tasks
           tasks = []
@@ -108,19 +109,19 @@ module Ace
           # Load from active releases
           Dir.glob(File.join(root_path, "v.*")).each do |release_path|
             next unless File.directory?(release_path)
-            tasks.concat(load_tasks_from_context(release_path))
+            tasks.concat(load_tasks_from_release(release_path))
           end
 
           # Load from backlog
           backlog_path = File.join(root_path, "backlog")
           if File.directory?(backlog_path)
             # Direct backlog tasks
-            tasks.concat(load_tasks_from_context(backlog_path))
+            tasks.concat(load_tasks_from_release(backlog_path))
 
             # Backlog releases
             Dir.glob(File.join(backlog_path, "v.*")).each do |release_path|
               next unless File.directory?(release_path)
-              tasks.concat(load_tasks_from_context(release_path))
+              tasks.concat(load_tasks_from_release(release_path))
             end
           end
 
@@ -129,7 +130,32 @@ module Ace
           if File.directory?(done_path)
             Dir.glob(File.join(done_path, "v.*")).each do |release_path|
               next unless File.directory?(release_path)
-              tasks.concat(load_tasks_from_context(release_path))
+              tasks.concat(load_tasks_from_release(release_path))
+            end
+          end
+
+          tasks
+        end
+
+        # Load tasks using glob patterns
+        # @param release_path [String] Base path for glob evaluation
+        # @param glob_patterns [Array<String>] Glob patterns to match
+        # @return [Array<Hash>] Array of matched tasks
+        def load_tasks_with_glob(release_path, glob_patterns)
+          tasks = []
+          matched_paths = Set.new
+
+          Array(glob_patterns).each do |pattern|
+            Dir.glob(File.join(release_path, pattern)).each do |path|
+              # Avoid duplicates
+              next if matched_paths.include?(path)
+              matched_paths.add(path)
+
+              # Load task if it's a .s.md file
+              if File.file?(path) && path.end_with?('.s.md')
+                task = load_task(path)
+                tasks << task if task
+              end
             end
           end
 
@@ -147,23 +173,23 @@ module Ace
 
           # Determine search scope
           if parsed[:qualified]
-            # Qualified reference: search specific context only
-            context_path = resolve_context_to_path(parsed[:context])
-            return nil unless context_path
-            tasks = load_tasks_from_context(context_path)
+            # Qualified reference: search specific release only
+            release_path = resolve_release_to_path(parsed[:release])
+            return nil unless release_path
+            tasks = load_tasks_from_release(release_path)
           else
             # Simple reference: search globally across all tasks
             tasks = load_all_tasks
           end
 
-          # Create a simple context resolver for normalization
+          # Create a simple release resolver for normalization
           resolver = ContextResolver.new(@root_path)
           canonical_id = Atoms::TaskReferenceParser.normalize_to_canonical_id(reference, resolver)
 
           # Search by ID field (primary) or by task_number (fallback for compatibility)
           tasks.find do |t|
             t[:id] == canonical_id ||
-            (t[:task_number] == parsed[:number] && t[:id]&.include?(parsed[:context]))
+            (t[:task_number] == parsed[:number] && t[:id]&.include?(parsed[:release]))
           end
         end
 
@@ -289,23 +315,23 @@ module Ace
 
         private
 
-        # Resolve context string to a file system path
-        # @param context [String] Context identifier (current, backlog, or release name)
+        # Resolve release string to a file system path
+        # @param release_name [String] Release identifier (current, backlog, or release name)
         # @return [String, nil] Resolved path or nil if not found
-        def resolve_context_to_path(context)
-          if context == "current"
+        def resolve_release_to_path(release_name)
+          if release_name == "current"
             # Find primary active release
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(root_path)
             primary = resolver.find_primary_active
             primary ? primary[:path] : nil
-          elsif context == "backlog"
+          elsif release_name == "backlog"
             File.join(root_path, "backlog")
           else
             # Try to find as release
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(root_path)
-            release = resolver.find_release(context)
+            release = resolver.find_release(release_name)
             release ? release[:path] : nil
           end
         end
@@ -333,11 +359,11 @@ module Ace
         end
 
         # Find task directory, supporting both old and new formats
-        # @param context_path [String] The context directory path
+        # @param release_path [String] The release directory path
         # @param number [String] The task number
         # @return [String, nil] The task directory path or nil if not found
-        def find_task_directory(context_path, number)
-          task_base = File.join(context_path, @config.task_dir)
+        def find_task_directory(release_path, number)
+          task_base = File.join(release_path, @config.task_dir)
           padded_number = number.to_s.rjust(3, '0')
 
           # First try in main t/ directory
@@ -376,23 +402,23 @@ module Ace
         end
       end
 
-      # Simple context resolver for normalizing task references
+      # Simple release resolver for normalizing task references
       class ContextResolver
         def initialize(root_path)
           @root_path = root_path
         end
 
-        def resolve_context(context)
-          case context
+        def resolve_release(release)
+          case release
           when "current", "active"
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(@root_path)
             primary = resolver.find_primary_active
-            primary ? primary[:name] : context
+            primary ? primary[:name] : release
           when "backlog"
             "backlog"
           else
-            context
+            release
           end
         end
       end

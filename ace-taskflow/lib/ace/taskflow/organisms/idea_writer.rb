@@ -194,7 +194,7 @@ module Ace
         def default_config
           {
             "directory" => "./ideas",
-            "template" => "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}",
+            "template" => "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}\n",
             "formatting" => {
               "timestamp_format" => "%Y-%m-%d %H:%M:%S"
             }
@@ -234,7 +234,7 @@ module Ace
 
         def format_idea(content, metadata)
           template = @config["template"] ||
-                     "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}"
+                     "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}\n"
 
           # Get author from settings or environment
           author = metadata[:author] ||
