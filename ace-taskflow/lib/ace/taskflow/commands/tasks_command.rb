@@ -44,6 +44,11 @@ module Ace
 
         private
 
+        def filter_glob_by_type(glob, type_dir)
+          return nil unless glob.is_a?(Array)
+          glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
+        end
+
         def detect_preset_name(args)
           return nil if args.empty? || args.first.start_with?('-')
 
@@ -176,10 +181,7 @@ module Ace
           end
 
           # Filter glob patterns to only include task-related patterns (already prefixed by preset manager)
-          if glob && glob.is_a?(Array)
-            task_dir = @config.task_dir
-            glob = glob.select { |pattern| pattern.start_with?("#{task_dir}/") || !pattern.include?('/') }
-          end
+          glob = filter_glob_by_type(glob, @config.task_dir) if glob
 
           # Convert string keys to symbols for compatibility with TaskManager
           filters = {}
