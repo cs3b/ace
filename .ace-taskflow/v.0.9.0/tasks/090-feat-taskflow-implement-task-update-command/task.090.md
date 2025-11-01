@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.090
-status: draft
+status: pending
 priority: high
 estimate: 1 week
 dependencies: []
@@ -146,7 +146,277 @@ Enable programmatic and manual updates to task metadata fields without requiring
 
 ## References
 
-- Source Idea: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/ideas/20251101-090039-implement-ace-taskflow-task-update-command-for-met.md
+- Source Idea: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/ideas/done/20251101-090039-implement-ace-taskflow-task-update-command-for-met.md
 - Related Task: v.0.9.0+task.089 (ace-git-worktree gem - requires this command)
 - Existing Pattern: ace-taskflow molecules/task_loader.rb update_task_status method
 - Similar Tools: kubectl patch, git config, npm config set
+
+## Technical Approach
+
+### Architecture Pattern
+The update command will follow the existing ace-taskflow patterns:
+- Use TaskManager orchestration layer for business logic
+- Create new molecule `TaskFieldUpdater` for field update operations
+- Extend existing TaskLoader molecule with generic update capability
+- Use SafeYamlParser for frontmatter parsing and SafeFileWriter for atomic writes
+
+### Technology Stack
+- Ruby standard library for CLI and YAML processing
+- Existing ace-support-markdown gem for SafeFileWriter (already a dependency)
+- No new external dependencies required
+- Reuse existing patterns from task_loader.rb
+
+### Implementation Strategy
+1. Parse command-line field arguments into structured updates
+2. Load task using existing TaskFinder logic
+3. Parse frontmatter using SafeYamlParser
+4. Apply field updates with dot notation support
+5. Write updated content using SafeFileWriter with backup
+6. Provide clear feedback on changes made
+
+## Tool Selection
+
+| Criteria | Direct YAML Manipulation | Template Engine | Regex Replacement | Selected |
+|----------|-------------------------|-----------------|-------------------|----------|
+| Flexibility | Excellent | Good | Poor | Direct YAML |
+| Nested Support | Excellent | Limited | Very Limited | Direct YAML |
+| Type Safety | Good | Poor | None | Direct YAML |
+| Error Handling | Good | Fair | Poor | Direct YAML |
+| Performance | Good | Fair | Excellent | Direct YAML |
+
+**Selection Rationale:** Direct YAML manipulation using Ruby's YAML library provides the best balance of flexibility, type safety, and support for nested structures. This approach aligns with how other ace-taskflow commands handle metadata.
+
+### Dependencies
+- No new gem dependencies required
+- Uses existing ace-support-markdown gem (already in gemspec)
+- Ruby YAML library (standard library)
+
+## File Modifications
+
+### Create
+- `lib/ace/taskflow/molecules/task_field_updater.rb`
+  - Purpose: Handle generic field updates with dot notation support
+  - Key components: parse_field_updates, apply_updates, validate_types
+  - Dependencies: SafeYamlParser, YAML library
+
+- `test/molecules/task_field_updater_test.rb`
+  - Purpose: Test field update logic
+  - Key components: Test nested updates, type validation, error cases
+  - Dependencies: Minitest, test fixtures
+
+### Modify
+- `lib/ace/taskflow/commands/task_command.rb`
+  - Changes: Implement update_task method (currently stubbed)
+  - Impact: Enable task update functionality
+  - Integration points: Parse --field flags, call TaskManager.update_task_fields
+
+- `lib/ace/taskflow/organisms/task_manager.rb`
+  - Changes: Add update_task_fields method
+  - Impact: Orchestrate field update operations
+  - Integration points: Use TaskFinder, TaskFieldUpdater, TaskLoader
+
+- `lib/ace/taskflow/molecules/task_loader.rb`
+  - Changes: Add generic update_task_field method (extends existing pattern)
+  - Impact: Provide low-level field update capability
+  - Integration points: SafeYamlParser, SafeFileWriter
+
+- `test/commands/task_command_test.rb`
+  - Changes: Add tests for update command
+  - Impact: Ensure CLI works correctly
+  - Integration points: Test various field update scenarios
+
+### Delete
+- None
+
+## Test Case Planning
+
+### Happy Path Scenarios
+1. **Single Field Update**
+   - Input: `task update 081 --field priority=high`
+   - Expected: Priority field updated to "high"
+   - Verification: Task file contains updated priority
+
+2. **Multiple Field Updates**
+   - Input: `task update 081 --field priority=high --field estimate="2 weeks"`
+   - Expected: Both fields updated in single operation
+   - Verification: Both changes present in task file
+
+3. **Nested Field Update**
+   - Input: `task update 081 --field worktree.branch=081-fix-auth`
+   - Expected: Nested worktree.branch field created/updated
+   - Verification: YAML structure contains nested field
+
+### Edge Case Scenarios
+1. **Empty Value**
+   - Input: `--field description=""`
+   - Expected: Field set to empty string
+   - Verification: Field exists but is empty
+
+2. **Deep Nesting**
+   - Input: `--field a.b.c.d=value`
+   - Expected: Creates nested structure if needed
+   - Verification: Full path exists in YAML
+
+3. **Special Characters**
+   - Input: `--field title="Task: Update 'system' config"`
+   - Expected: Quotes and special chars handled
+   - Verification: Value preserved exactly
+
+### Error Condition Scenarios
+1. **Task Not Found**
+   - Input: Invalid task reference
+   - Expected: Clear error message, exit code 1
+   - Verification: No files modified
+
+2. **Invalid Field Syntax**
+   - Input: `--field invalid-syntax`
+   - Expected: Error message with correct syntax, exit code 2
+   - Verification: Task unchanged
+
+3. **Write Permission Error**
+   - Input: Read-only file
+   - Expected: Permission error message, exit code 3
+   - Verification: Backup preserved if exists
+
+### Test Type Categorization
+
+**Unit Tests (High Priority)**
+- TaskFieldUpdater molecule: parse_field_updates, apply_updates, validate_types
+- Field syntax parsing with various formats
+- Nested structure creation and updates
+- Type inference from string values
+
+**Integration Tests (Medium Priority)**
+- TaskManager.update_task_fields orchestration
+- End-to-end CLI command execution
+- File backup and atomic write verification
+- Error handling and recovery
+
+**End-to-End Tests (Low Priority)**
+- Full workflow with real task files
+- Concurrent update handling
+- Large batch updates performance
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Corrupted YAML from malformed updates
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Use SafeFileWriter with automatic backup
+  - **Rollback:** Restore from .bak file
+
+- **Risk:** Type inference errors (e.g., "123" as string vs number)
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Smart type inference with fallback to string
+  - **Monitoring:** Log ambiguous conversions
+
+### Integration Risks
+- **Risk:** Breaking existing task file format
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Extensive testing with existing task files
+  - **Monitoring:** Doctor command validation
+
+## Implementation Plan
+
+### Planning Steps
+* [ ] Review existing TaskLoader update patterns in detail
+  > TEST: Pattern Analysis
+  > Type: Pre-condition Check
+  > Assert: Understand current update_task_status and update_task_dependencies patterns
+  > Command: grep -n "update_task" lib/ace/taskflow/molecules/task_loader.rb
+
+* [ ] Analyze SafeYamlParser for frontmatter handling edge cases
+* [ ] Research YAML type inference best practices in Ruby
+* [ ] Design field update data structure for batch operations
+
+### Execution Steps
+
+- [ ] Create TaskFieldUpdater molecule with core logic
+  > TEST: Molecule Creation
+  > Type: Action Validation
+  > Assert: TaskFieldUpdater class exists with required methods
+  > Command: ruby -Ilib:test -e "require 'ace/taskflow/molecules/task_field_updater'; puts Ace::Taskflow::Molecules::TaskFieldUpdater.instance_methods(false)"
+
+- [ ] Implement parse_field_updates method for --field parsing
+  ```ruby
+  # Parse "--field key=value" into structured format
+  # Handle: simple keys, nested keys (dot notation), quoted values
+  def self.parse_field_updates(field_args)
+    # Returns: { "key" => "value", "nested.key" => "value" }
+  end
+  ```
+
+- [ ] Implement apply_updates method with nested support
+  ```ruby
+  # Apply updates to YAML hash with dot notation support
+  def self.apply_updates(yaml_hash, updates)
+    # Handle nested keys like "worktree.branch"
+    # Create intermediate hashes as needed
+  end
+  ```
+  > TEST: Nested Update Support
+  > Type: Unit Test
+  > Assert: Nested fields create proper YAML structure
+  > Command: ruby -Ilib:test test/molecules/task_field_updater_test.rb -n test_nested_field_update
+
+- [ ] Add update_task_field to TaskLoader molecule
+  ```ruby
+  def update_task_field(task_path, field_updates)
+    # Load content
+    # Parse frontmatter
+    # Apply updates
+    # Write with SafeFileWriter
+  end
+  ```
+
+- [ ] Implement update_task_fields in TaskManager
+  ```ruby
+  def update_task_fields(reference, field_updates)
+    # Find task
+    # Call TaskLoader.update_task_field
+    # Return result hash
+  end
+  ```
+
+- [ ] Update task_command.rb update_task method
+  ```ruby
+  def update_task(args)
+    # Parse --field arguments
+    # Call manager.update_task_fields
+    # Display results
+  end
+  ```
+  > TEST: CLI Integration
+  > Type: Integration Test
+  > Assert: Command accepts --field flags and updates task
+  > Command: ace-taskflow task update test-task --field priority=high --dry-run
+
+- [ ] Add comprehensive unit tests for TaskFieldUpdater
+- [ ] Add integration tests for task update command
+- [ ] Test with real task files in development environment
+  > TEST: Real Task Update
+  > Type: End-to-End Test
+  > Assert: Actual task file updated correctly with backup
+  > Command: ace-taskflow task update 090 --field test_field=test_value && grep test_field .ace-taskflow/v.0.9.0/tasks/090*/task.090.md
+
+- [ ] Update command help text and documentation
+- [ ] Run full test suite
+  > TEST: Full Test Suite
+  > Type: Validation
+  > Assert: All tests pass
+  > Command: cd ace-taskflow && bundle exec rake test
+
+## Acceptance Criteria
+
+- [ ] Task update command accepts --field arguments
+- [ ] Single and multiple field updates work correctly
+- [ ] Nested fields supported with dot notation
+- [ ] Type inference works for common types (string, number, boolean, array)
+- [ ] Atomic file writes with automatic backup
+- [ ] Clear error messages for invalid inputs
+- [ ] Exit codes match specification (0, 1, 2, 3)
+- [ ] All existing tests continue to pass
+- [ ] New tests provide >90% coverage of new code
