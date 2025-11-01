@@ -41,6 +41,11 @@ module Ace
 
         private
 
+        def filter_glob_by_type(glob, type_dir)
+          return nil unless glob.is_a?(Array)
+          glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
+        end
+
         def detect_preset_name(args)
           return nil if args.empty? || args.first.start_with?('-')
 
@@ -164,10 +169,7 @@ module Ace
           end
 
           # Filter glob patterns to only include idea-related patterns (already prefixed by preset manager)
-          if glob && glob.is_a?(Array)
-            ideas_dir = @config.ideas_dir
-            glob = glob.select { |pattern| pattern.start_with?("#{ideas_dir}/") || !pattern.include?('/') }
-          end
+          glob = filter_glob_by_type(glob, @config.ideas_dir) if glob
 
           case release
           when 'all'
