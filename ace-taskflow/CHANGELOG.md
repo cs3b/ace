@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-11-01
+
+### 🚨 Breaking Changes
+
+#### API Renaming: Context → Release
+
+Complete terminology change across the entire codebase for improved clarity. The term "release" better reflects the purpose of identifying which version/scope an item belongs to.
+
+**Affected Components:**
+- **Models**: `Task#context` → `Task#release`, `Idea#context` → `Idea#release`
+- **Commands**: All CLI commands now use `--release` instead of `--context`
+- **Configuration**: Preset YAML files now use `release:` key instead of `context:`
+- **API Methods**: All method parameters renamed from `context` to `release`
+- **Internal Components**: TaskReferenceParser, validators, formatters, loaders
+
+**Migration Guide:**
+
+For Ruby API usage:
+```ruby
+# Before
+loader.load_all(context: "current")
+task = Task.new(context: "v.1.0.0")
+
+# After
+loader.load_all(release: "current")
+task = Task.new(release: "v.1.0.0")
+```
+
+For YAML preset files:
+```yaml
+# Before
+context: current
+
+# After
+release: current
+```
+
+For CLI commands:
+```bash
+# Before
+ace-taskflow tasks --context v.0.9.0
+
+# After
+ace-taskflow tasks --release v.0.9.0
+```
+
+**Impact**: 53+ files changed across models, commands, molecules, organisms, and tests. All existing code and configurations using `context` must be updated to use `release`.
+
+### Changed
+
+- **Architecture Improvements**:
+  - Refactored preset and configuration architecture for better maintainability
+  - Enhanced ListPresetManager with improved glob handling and error messages
+  - Extracted `filter_glob_by_type` to shared `commands/helpers.rb` module
+  - Reduced code duplication across IdeasCommand and TasksCommand
+  - Improved PathBuilder and loader architecture
+
+### Fixed
+
+- **Glob Pattern Handling**: Removed hardcoded directory names from glob patterns
+  - Added `Configuration#default_glob_pattern` method (returns `['**/*.s.md']`)
+  - Single source of truth for default glob patterns
+  - Patterns now automatically prefixed with correct directory (ideas/ or tasks/)
+
+- **Empty Results Handling**: Improved glob filtering and error handling for empty result sets
+
+- **File Extension References**: Fixed remaining `.md` references that should be `.s.md` in:
+  - ReleaseResolver
+  - StructureValidator
+  - TaskManager
+
+- **TaskReferenceParser**: Updated to return `:release` key instead of `:context` for consistency
+
+### Technical
+
+- Updated all 734 tests to use `release` parameter naming
+- Comprehensive refactoring across 36+ files in final context→release migration
+- All tests passing with new terminology
+
 ## [0.14.2] - 2025-11-01
 
 ### Added
