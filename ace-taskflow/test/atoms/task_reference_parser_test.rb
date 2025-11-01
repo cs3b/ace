@@ -11,7 +11,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_qualified_reference
     result = @parser.parse("v.0.9.0+018")
 
-    assert_equal "v.0.9.0", result[:context]
+    assert_equal "v.0.9.0", result[:release]
     assert_equal "018", result[:number]
     assert result[:qualified]
     assert_equal "v.0.9.0+018", result[:original]
@@ -20,7 +20,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_backlog_reference
     result = @parser.parse("backlog+025")
 
-    assert_equal "backlog", result[:context]
+    assert_equal "backlog", result[:release]
     assert_equal "025", result[:number]
     assert result[:qualified]
   end
@@ -28,7 +28,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_simple_reference
     result = @parser.parse("018")
 
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal "018", result[:number]
     refute result[:qualified]
   end
@@ -36,7 +36,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_task_dot_reference
     result = @parser.parse("task.018")
 
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal "018", result[:number]
     refute result[:qualified]
   end
@@ -44,7 +44,7 @@ class TaskReferenceParserTest < Minitest::Test
   def test_parse_current_reference
     result = @parser.parse("current+018")
 
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal "018", result[:number]
     assert result[:qualified]
   end
