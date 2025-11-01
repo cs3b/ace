@@ -184,7 +184,9 @@ module Ace
             end
           end
 
-          # Append subdirectory if --maybe or --anyday flag was provided
+          # Append scope subdirectory if --maybe or --anyday flag was provided
+          # Scopes (GTD-inspired): next (top-level), maybe/, anyday/, done/
+          # Note: Scope is separate from status (draft/pending/in-progress/done/obsolete)
           if options[:subdirectory]
             config["directory"] = File.join(config["directory"], options[:subdirectory])
           end
@@ -370,6 +372,15 @@ module Ace
         def show_help
           puts "Usage: ace-taskflow idea [subcommand] [options]"
           puts ""
+          puts "Scopes (GTD-based organization):"
+          puts "  next     - Top-level ideas (immediately actionable, default)"
+          puts "  maybe/   - Uncertain if we should do it"
+          puts "  anyday/  - Good idea but not urgent"
+          puts "  done/    - Completed or skipped"
+          puts ""
+          puts "Note: Scope (folder location) is separate from status (draft/pending/done)."
+          puts "      An idea in 'maybe' scope can have 'pending' status."
+          puts ""
           puts "Subcommands:"
           puts "  (none)             Show next idea from active release"
           puts "  <partial-name>     Show idea matching partial name"
@@ -378,8 +389,8 @@ module Ace
           puts "    --clipboard, -c     Read content from clipboard"
           puts "    --backlog           Create in backlog"
           puts "    --release <name>    Create in specific release"
-          puts "    --maybe             Create in maybe/ subdirectory"
-          puts "    --anyday            Create in anyday/ subdirectory"
+          puts "    --maybe             Create in maybe/ scope (uncertain ideas)"
+          puts "    --anyday            Create in anyday/ scope (not urgent)"
           puts "    --git-commit, -gc   Auto-commit the idea file"
           puts "    --no-git-commit     Don't commit (overrides config)"
           puts "    --llm-enhance, -llm Enhance with LLM suggestions"

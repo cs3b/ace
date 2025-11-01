@@ -11,7 +11,13 @@ module Ace
   module Taskflow
     module Molecules
       class IdeaLoader
-        # Scope-specific subdirectories for organizing ideas
+        # Scope-specific subdirectories for organizing ideas (GTD-inspired)
+        # Scopes organize ideas by priority/certainty (folder location):
+        #   - next (top-level): Immediately actionable ideas
+        #   - maybe/: Uncertain if we should do it
+        #   - anyday/: Good idea but not urgent
+        #   - done/: Completed or skipped
+        # Note: Scope is independent from status (draft/pending/in-progress/done/obsolete)
         SCOPE_SUBDIRECTORIES = %w[done maybe anyday].freeze
 
         def initialize(root_path = nil)
@@ -26,33 +32,34 @@ module Ace
         #   - "backlog": Load from backlog directory
         #   - "v.X.Y.Z": Load from specific release
         # @param include_content [Boolean] Whether to include file content (default: false)
-        # @param glob [Array<String>, nil] Glob patterns to match (default: ["**/*.s.md"])
-        #   - Default `["**/*.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
-        #   - Use `["*.s.md"]` for top-level ideas only (excludes subdirectories)
-        #   - Use `["maybe/**/*.s.md"]` for ideas in maybe/ subdirectory only
-        #   - Patterns are relative to the ideas/ directory within the context
+        # @param glob [Array<String>, nil] Glob patterns to match (default: ["ideas/**/*.s.md"])
+        #   - Default `["ideas/**/*.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
+        #   - Use `["ideas/*.s.md"]` for top-level ideas only (excludes subdirectories)
+        #   - Use `["ideas/maybe/**/*.s.md"]` for ideas in maybe/ subdirectory only
+        #   - Patterns are relative to the context root (release/backlog path)
         # @return [Array<Hash>] Array of idea hashes with keys: :id, :filename, :title, :path, :created_at, :context
         # @example Load all ideas from current release
         #   loader.load_all(context: "current")
         # @example Load top-level ideas only (no subdirectories)
-        #   loader.load_all(context: "current", glob: ["*.s.md"])
+        #   loader.load_all(context: "current", glob: ["ideas/*.s.md"])
         # @example Load maybe ideas only
-        #   loader.load_all(context: "current", glob: ["maybe/**/*.s.md"])
+        #   loader.load_all(context: "current", glob: ["ideas/maybe/**/*.s.md"])
         def load_all(context: "current", include_content: false, glob: nil)
-          # Use glob-based loading (glob defaults to all .s.md files if not provided)
-          glob ||= ["**/*.s.md"]
+          # Use glob-based loading (glob defaults to all ideas if not provided)
+          # Default pattern only matches ideas/ subdirectory to exclude tasks
+          glob ||= ["ideas/**/*.s.md"]
           load_all_with_glob(context: context, include_content: include_content, glob: glob)
         end
 
         def find_next(context: "current")
           # Top-level ideas only (excludes subdirectories like maybe/, anyday/, done/)
-          ideas = load_all(context: context, include_content: false, glob: ["*.s.md"])
+          ideas = load_all(context: context, include_content: false, glob: ["ideas/*.s.md"])
           ideas.first
         end
 
         def find_by_partial_name(partial, context: "current")
           # All ideas (including subdirectories)
-          ideas = load_all(context: context, include_content: false, glob: ["**/*.s.md"])
+          ideas = load_all(context: context, include_content: false, glob: ["ideas/**/*.s.md"])
 
           # Find first idea where filename contains the partial string
           ideas.find do |idea|
