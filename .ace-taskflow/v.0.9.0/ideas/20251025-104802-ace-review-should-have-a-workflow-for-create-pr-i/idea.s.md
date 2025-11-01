@@ -1,6 +1,11 @@
 ---
+<<<<<<<< HEAD:.ace-taskflow/v.0.9.0/ideas/20251025-104802-ace-review-should-have-a-workflow-for-create-pr-i/idea.s.md
 status: pending
 priority: now
+========
+status: done
+completed_at: 2025-11-01T16:03:28+00:00
+>>>>>>>> 0cafae32 (feat(taskflow): Create draft task 094 for ace-review context.md pattern and PR workflow):.ace-taskflow/v.0.9.0/ideas/done/20251025-104802-ace-review-should-have-a-workflow-for-create-pr-i.md
 ---
 
 # Idea
