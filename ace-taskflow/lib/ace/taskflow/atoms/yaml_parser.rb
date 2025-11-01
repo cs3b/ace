@@ -24,7 +24,7 @@ module Ace
           yaml_content = content[4...end_index]
 
           begin
-            YAML.safe_load(yaml_content, permitted_classes: [Date, Time]) || {}
+            YAML.safe_load(yaml_content, permitted_classes: [Date, Time, Symbol]) || {}
           rescue Psych::SyntaxError
             {}
           end
