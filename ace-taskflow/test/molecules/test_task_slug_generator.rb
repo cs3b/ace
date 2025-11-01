@@ -40,7 +40,7 @@ module Ace
           assert_equal "030-feat-taskflow-llm-enhancement", slug
         end
 
-        def test_context_extraction
+        def test_component_extraction
           # ACE component detection
           slug = TaskSlugGenerator.generate("010", "Update ace-taskflow module")
           assert slug.include?("-taskflow-")
@@ -73,7 +73,7 @@ module Ace
           result = TaskSlugGenerator.parse_slug("025-feat-taskflow-idea-gc-llm")
           assert_equal "025", result[:number]
           assert_equal "feat", result[:type]
-          assert_equal "taskflow", result[:context]
+          assert_equal "taskflow", result[:component]
           assert_equal "idea-gc-llm", result[:keywords]
         end
 
@@ -81,7 +81,7 @@ module Ace
           result = TaskSlugGenerator.parse_slug("025")
           assert_equal "025", result[:number]
           assert_equal "task", result[:type]
-          assert_equal "", result[:context]
+          assert_equal "", result[:component]
           assert_equal "", result[:keywords]
         end
 

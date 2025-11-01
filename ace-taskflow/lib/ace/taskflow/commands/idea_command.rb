@@ -92,8 +92,8 @@ module Ace
         end
 
         def show_idea(reference, args)
-          context = parse_release(args)
-          idea = @idea_loader.find_by_partial_name(reference, release: context)
+          release = parse_release(args)
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
 
           if idea
             # Load with full content
@@ -114,8 +114,8 @@ module Ace
           end
 
           # Try to find an existing idea
-          context = parse_release(remaining_args)
-          idea = @idea_loader.find_by_partial_name(first_arg, release: context)
+          release = parse_release(remaining_args)
+          idea = @idea_loader.find_by_partial_name(first_arg, release: release)
 
           if idea
             # Found an idea, show it
@@ -206,7 +206,7 @@ module Ace
           puts "Idea: #{idea.id || idea.filename}"
           puts "Title: #{idea.title}"
           puts "Created: #{idea.created_at}"
-          puts "Context: #{idea.context}"
+          puts "Release: #{idea.release}"
 
           if idea.path
             # Use project root, not .ace-taskflow root
@@ -243,7 +243,7 @@ module Ace
           when "backlog"
             "backlog"
           else
-            "release #{context}"
+            "release #{release}"
           end
         end
 
@@ -346,8 +346,8 @@ module Ace
           end
 
           # Find the idea
-          context = parse_release(args[1..-1] || [])
-          idea = @idea_loader.find_by_partial_name(reference, release: context)
+          release = parse_release(args[1..-1] || [])
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
 
           unless idea
             puts "No idea found matching '#{reference}' in #{release_name(release)}."

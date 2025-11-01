@@ -466,7 +466,7 @@ module Ace
 
         def show_dependency_tree(tasks, options)
           # Display three-line header
-          context = if options[:all]
+          release = if options[:all]
                      "all"
                    elsif options[:release]
                      options[:release]
@@ -477,7 +477,7 @@ module Ace
           header = @stats_formatter.format_header(
             command_type: :tasks,
             displayed_count: tasks.size,
-            release: context
+            release: release
           )
           puts header
 
@@ -487,7 +487,7 @@ module Ace
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
         end
 
-        # Formatter methods for preset context
+        # Formatter methods for preset release
         def display_tree_with_preset(tasks, preset_config, original_count = nil, limit = nil)
           # Display three-line header
           release = preset_config[:release] || 'current'

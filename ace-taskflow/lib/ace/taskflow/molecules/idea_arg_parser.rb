@@ -78,7 +78,7 @@ module Ace
           options
         end
 
-        # Parse context from arguments
+        # Parse release from arguments
         # @param args [Array<String>] Command arguments
         # @return [String] Context (current, backlog, or release name)
         def self.parse_release(args)

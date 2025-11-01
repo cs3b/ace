@@ -48,7 +48,7 @@ module Ace
           return minimal_header(command_type, displayed_count) unless release_info
 
           # Get global statistics (unfiltered)
-          task_stats = @task_manager.get_statistics(context: release_info[:release])
+          task_stats = @task_manager.get_statistics(release: release_info[:release])
           idea_stats = get_idea_statistics(release_info[:path])
 
           lines = []
@@ -57,7 +57,7 @@ module Ace
           actual_total = total_count || (command_type == :tasks ? task_stats[:total] : idea_stats[:total])
 
           # Line 1: Context line
-          lines << format_context_line(command_type, displayed_count,
+          lines << format_release_line(command_type, displayed_count,
                                        actual_total,
                                        release_info)
 
@@ -80,7 +80,7 @@ module Ace
           release_info = get_release_info(release)
           return "No release found for release: #{release}" unless release_info
 
-          task_stats = @task_manager.get_statistics(context: release_info[:release])
+          task_stats = @task_manager.get_statistics(release: release_info[:release])
           idea_stats = get_idea_statistics(release_info[:path])
 
           lines = []
@@ -225,7 +225,7 @@ module Ace
         def get_idea_statistics(release_path)
           # Extract release name from path for context
           release_name = File.basename(release_path)
-          context = if release_name == "backlog"
+          release_name = if release_name == "backlog"
                      "backlog"
                    elsif release_name.match(/^v\.\d+\.\d+\.\d+/)
                      release_name
@@ -234,7 +234,7 @@ module Ace
                    end
 
           # Get ALL ideas including done for accurate stats
-          ideas = @idea_loader.load_all(release: context, include_content: false)
+          ideas = @idea_loader.load_all(release: release_name, include_content: false)
 
           stats = {
             total: ideas.size,
@@ -251,7 +251,7 @@ module Ace
           stats
         end
 
-        def format_context_line(command_type, displayed_count, total_count, release_info)
+        def format_release_line(command_type, displayed_count, total_count, release_info)
           item_type = command_type == :tasks ? "tasks" : "ideas"
           release_desc = release_info[:codename] || ""
 

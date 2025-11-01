@@ -55,15 +55,15 @@ class TaskFilterTest < AceTaskflowTestCase
     assert_equal 3, result.length
   end
 
-  def test_filter_by_context
-    result = @filter.filter_by_context(@tasks, "v.0.9.0")
+  def test_filter_by_release
+    result = @filter.filter_by_release(@tasks, "v.0.9.0")
 
     assert_equal 3, result.length
     assert result.all? { |t| t[:release] == "v.0.9.0" }
   end
 
-  def test_filter_by_context_backlog
-    result = @filter.filter_by_context(@tasks, "backlog")
+  def test_filter_by_release_backlog
+    result = @filter.filter_by_release(@tasks, "backlog")
 
     assert_equal 1, result.length
     assert_equal "task.004", result.first[:id]
@@ -94,7 +94,7 @@ class TaskFilterTest < AceTaskflowTestCase
     assert_equal "task.003", result.first[:id]
   end
 
-  def test_apply_filters_with_context
+  def test_apply_filters_with_release
     filters = {
       release: "v.0.9.0",
       status: ["pending", "in-progress"]
@@ -137,12 +137,12 @@ class TaskFilterTest < AceTaskflowTestCase
     assert_equal "task.001", result.last[:id]
   end
 
-  def test_sort_tasks_by_context
-    result = @filter.sort_tasks(@tasks, :context, true, false)
+  def test_sort_tasks_by_release
+    result = @filter.sort_tasks(@tasks, :release, true, false)
 
     # Should sort alphabetically: backlog, v.0.8.0, v.0.9.0
-    contexts = result.map { |t| t[:release] }
-    assert_equal "backlog", contexts.first
+    releases = result.map { |t| t[:release] }
+    assert_equal "backlog", releases.first
   end
 
   def test_matches_filter_string_with_field_value

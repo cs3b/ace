@@ -101,7 +101,7 @@ module Ace
           tasks
         end
 
-        # Load all tasks across all contexts
+        # Load all tasks across all releases
         # @return [Array<Hash>] Array of all tasks
         def load_all_tasks
           tasks = []
@@ -182,7 +182,7 @@ module Ace
             tasks = load_all_tasks
           end
 
-          # Create a simple context resolver for normalization
+          # Create a simple release resolver for normalization
           resolver = ContextResolver.new(@root_path)
           canonical_id = Atoms::TaskReferenceParser.normalize_to_canonical_id(reference, resolver)
 
@@ -359,7 +359,7 @@ module Ace
         end
 
         # Find task directory, supporting both old and new formats
-        # @param release_path [String] The context directory path
+        # @param release_path [String] The release directory path
         # @param number [String] The task number
         # @return [String, nil] The task directory path or nil if not found
         def find_task_directory(release_path, number)
@@ -402,23 +402,23 @@ module Ace
         end
       end
 
-      # Simple context resolver for normalizing task references
+      # Simple release resolver for normalizing task references
       class ContextResolver
         def initialize(root_path)
           @root_path = root_path
         end
 
-        def resolve_release(context)
+        def resolve_release(release)
           case release
           when "current", "active"
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(@root_path)
             primary = resolver.find_primary_active
-            primary ? primary[:name] : context
+            primary ? primary[:name] : release
           when "backlog"
             "backlog"
           else
-            context
+            release
           end
         end
       end

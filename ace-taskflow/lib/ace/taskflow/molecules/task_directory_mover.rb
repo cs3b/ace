@@ -18,7 +18,7 @@ module Ace
           task_dir = File.dirname(task_path)
           task_dir_name = File.basename(task_dir)
 
-          # Determine parent context directory (e.g., .ace-taskflow/v.0.9.0/t)
+          # Determine parent release directory (e.g., .ace-taskflow/v.0.9.0/t)
           parent_dir = File.dirname(task_dir)
 
           # Create done directory if it doesn't exist

@@ -132,38 +132,38 @@ class IdeaArgParserTest < Minitest::Test
     assert_equal true, result[:git_commit]
   end
 
-  def test_parse_context_default
-    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_context([])
+  def test_parse_release_default
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_release([])
 
     assert_equal "current", result
   end
 
-  def test_parse_context_backlog
-    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_context(["--backlog"])
+  def test_parse_release_backlog
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_release(["--backlog"])
 
     assert_equal "backlog", result
   end
 
-  def test_parse_context_current
-    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_context(["--current"])
+  def test_parse_release_current
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_release(["--current"])
 
     assert_equal "current", result
   end
 
-  def test_parse_context_release
-    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_context(["--release", "v.0.9.0"])
+  def test_parse_release_release
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_release(["--release", "v.0.9.0"])
 
     assert_equal "v.0.9.0", result
   end
 
-  def test_parse_context_release_short
-    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_context(["-r", "v.1.0.0"])
+  def test_parse_release_release_short
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_release(["-r", "v.1.0.0"])
 
     assert_equal "v.1.0.0", result
   end
 
-  def test_parse_context_with_other_args
-    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_context([
+  def test_parse_release_with_other_args
+    result = Ace::Taskflow::Molecules::IdeaArgParser.parse_release([
       "some", "content", "--release", "v.0.8.0", "more", "content"
     ])
 

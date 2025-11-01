@@ -150,14 +150,14 @@ module Ace
           active_release = release_resolver.find_primary_active
           return unless active_release
 
-          # Use release name as context (e.g., "v.0.9.0")
+          # Use release name (e.g., "v.0.9.0")
           release = active_release[:name]
 
           # Get task statistics for active release
-          task_stats = task_manager.get_statistics(release: context)
+          task_stats = task_manager.get_statistics(release: release)
 
           # Get idea statistics for active release
-          ideas = idea_loader.load_all(release: context, include_content: false)
+          ideas = idea_loader.load_all(release: release, include_content: false)
           idea_stats = {
             total: ideas.size,
             by_status: {}
