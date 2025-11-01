@@ -30,9 +30,9 @@ module Ace
           frontmatter = parsed[:frontmatter]
           body_content = parsed[:content]
 
-          # Extract task number and context from path
+          # Extract task number and release from path
           task_number = Atoms::PathBuilder.extract_task_number(path)
-          context = Atoms::PathBuilder.extract_context(path)
+          release = Atoms::PathBuilder.extract_release(path)
 
           # Build task data
           {
@@ -46,19 +46,19 @@ module Ace
             content: body_content,
             path: path,
             task_number: task_number,
-            context: context,
+            release: release,
             metadata: frontmatter
           }
         rescue StandardError => e
           nil
         end
 
-        # Load all tasks from a release or context
-        # @param context_path [String] Path to the release or context
+        # Load all tasks from a release
+        # @param release_path [String] Path to the release
         # @return [Array<Hash>] Array of task data
-        def load_tasks_from_context(context_path)
+        def load_tasks_from_release(release_path)
           tasks = []
-          task_dir = File.join(context_path, @config.task_dir)
+          task_dir = File.join(release_path, @config.task_dir)
 
           return tasks unless File.directory?(task_dir)
 
@@ -173,10 +173,10 @@ module Ace
 
           # Determine search scope
           if parsed[:qualified]
-            # Qualified reference: search specific context only
-            context_path = resolve_context_to_path(parsed[:context])
-            return nil unless context_path
-            tasks = load_tasks_from_context(context_path)
+            # Qualified reference: search specific release only
+            release_path = resolve_release_to_path(parsed[:release])
+            return nil unless release_path
+            tasks = load_tasks_from_release(release_path)
           else
             # Simple reference: search globally across all tasks
             tasks = load_all_tasks
@@ -189,7 +189,7 @@ module Ace
           # Search by ID field (primary) or by task_number (fallback for compatibility)
           tasks.find do |t|
             t[:id] == canonical_id ||
-            (t[:task_number] == parsed[:number] && t[:id]&.include?(parsed[:context]))
+            (t[:task_number] == parsed[:number] && t[:id]&.include?(parsed[:release]))
           end
         end
 
@@ -315,23 +315,23 @@ module Ace
 
         private
 
-        # Resolve context string to a file system path
-        # @param context [String] Context identifier (current, backlog, or release name)
+        # Resolve release string to a file system path
+        # @param release_name [String] Release identifier (current, backlog, or release name)
         # @return [String, nil] Resolved path or nil if not found
-        def resolve_context_to_path(context)
-          if context == "current"
+        def resolve_release_to_path(release_name)
+          if release_name == "current"
             # Find primary active release
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(root_path)
             primary = resolver.find_primary_active
             primary ? primary[:path] : nil
-          elsif context == "backlog"
+          elsif release_name == "backlog"
             File.join(root_path, "backlog")
           else
             # Try to find as release
             require_relative "release_resolver"
             resolver = ReleaseResolver.new(root_path)
-            release = resolver.find_release(context)
+            release = resolver.find_release(release_name)
             release ? release[:path] : nil
           end
         end

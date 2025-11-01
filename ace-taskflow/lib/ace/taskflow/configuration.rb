@@ -29,7 +29,7 @@ module Ace
 
       # Get ideas directory name
       def ideas_dir
-        config.dig("directories", "ideas") || "backlog/ideas"
+        config.dig("directories", "ideas") || "ideas"
       end
 
       # Get release ideas subdirectory name (for use within release directories)

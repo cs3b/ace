@@ -2,7 +2,7 @@ description: "Items for future consideration (maybe priority)"
 # Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["ideas/maybe/**/*.s.md", "tasks/maybe/**/*.s.md"]  # Items in maybe subdirectories
+  glob: ["maybe/**/*.s.md"]  # Items in maybe subdirectory (folder prefix added by PresetManager)
 sort:
   by: "created_at"
   ascending: false

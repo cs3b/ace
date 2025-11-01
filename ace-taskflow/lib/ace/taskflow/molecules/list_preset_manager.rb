@@ -2,6 +2,7 @@
 
 require 'ace/core'
 require 'yaml'
+require_relative '../configuration'
 
 module Ace
   module Taskflow
@@ -12,6 +13,7 @@ module Ace
 
         def initialize
           @presets = load_presets
+          @config = Taskflow.configuration
         end
 
         def list_presets(type = :all)
@@ -69,16 +71,53 @@ module Ace
             end
           end
 
+          # Apply folder prefix to glob patterns based on type
+          glob_with_prefix = apply_folder_prefix(preset[:glob], type)
+
           {
             name: name,
             description: preset[:description],
             context: preset[:context] || 'current',
             filters: merged_filters,
-            glob: preset[:glob],
+            glob: glob_with_prefix,
             sort: preset[:sort] || { by: :sort, ascending: true },
             display: preset[:display] || {},
             type: preset[:type] || 'tasks'
           }
+        end
+
+        # Apply folder prefix to glob patterns based on type
+        # Converts relative patterns like "maybe/**/*.s.md" to "ideas/maybe/**/*.s.md"
+        # Uses configured folder names from config.directories
+        def apply_folder_prefix(glob_patterns, folder_type)
+          return nil unless glob_patterns
+
+          # Get configured folder name
+          folder_name = case folder_type
+          when :ideas
+            @config.ideas_dir
+          when :tasks
+            @config.task_dir
+          else
+            return glob_patterns # No prefix for unknown types
+          end
+
+          # Apply prefix to each pattern
+          Array(glob_patterns).map do |pattern|
+            # Skip patterns that already have a folder prefix (legacy patterns)
+            if pattern.include?('/')
+              # Check if it starts with a known folder name - if so, keep as is
+              if pattern.start_with?("#{@config.ideas_dir}/", "#{@config.task_dir}/")
+                pattern
+              else
+                # Prefix the pattern
+                "#{folder_name}/#{pattern}"
+              end
+            else
+              # Simple pattern without slash - prefix it
+              "#{folder_name}/#{pattern}"
+            end
+          end
         end
 
         private
