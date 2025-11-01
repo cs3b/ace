@@ -2,7 +2,7 @@ description: "All tasks in current release (all statuses)"
 type:  # Universal preset
 context: "current"
 filters:
-  glob: ["**/*.s.md"]
+  glob: ["ideas/**/*.s.md", "tasks/**/*.s.md"]  # All items in ideas and tasks dirs
 sort:
   by: "sort"
   ascending: true

@@ -378,7 +378,9 @@ module Ace
         # @param context [String] Context to analyze
         # @return [Hash] Statistics
         def get_statistics(context: "all")
-          tasks = list_tasks(context: context)
+          # Use glob pattern to include all tasks (including maybe/, anyday/, done/ subdirectories)
+          # Only match task files (task.*.s.md), not documentation files
+          tasks = list_tasks(context: context, glob: ["tasks/**/task.*.s.md"])
 
           # Delegate to pure logic molecule
           Molecules::TaskStatistics.calculate(tasks)
