@@ -38,10 +38,10 @@ module Ace
               filters[:list] = true
               i += 1
             when "--backlog"
-              filters[:context] = "backlog"
+              filters[:release] = "backlog"
               i += 1
             when "--release"
-              filters[:context] = parse_string_value(args, i + 1)
+              filters[:release] = parse_string_value(args, i + 1)
               i += 2
             when "--sort"
               filters[:sort] = parse_sort_spec(args, i + 1)

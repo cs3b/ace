@@ -92,7 +92,7 @@ module Ace
         end
 
         def show_idea(reference, args)
-          context = parse_context(args)
+          context = parse_release(args)
           idea = @idea_loader.find_by_partial_name(reference, release: context)
 
           if idea
@@ -100,7 +100,7 @@ module Ace
             full_idea = @idea_loader.load_idea(idea[:path])
             display_idea(full_idea)
           else
-            puts "No idea found matching '#{reference}' in #{context_name(context)}."
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
             exit 1
           end
         end
@@ -114,7 +114,7 @@ module Ace
           end
 
           # Try to find an existing idea
-          context = parse_context(remaining_args)
+          context = parse_release(remaining_args)
           idea = @idea_loader.find_by_partial_name(first_arg, release: context)
 
           if idea
@@ -222,7 +222,7 @@ module Ace
           end
         end
 
-        def parse_context(args)
+        def parse_release(args)
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"
@@ -236,8 +236,8 @@ module Ace
           "current"
         end
 
-        def context_name(context)
-          case context
+        def release_name(release)
+          case release
           when "current", "active"
             "current release"
           when "backlog"
@@ -346,11 +346,11 @@ module Ace
           end
 
           # Find the idea
-          context = parse_context(args[1..-1] || [])
+          context = parse_release(args[1..-1] || [])
           idea = @idea_loader.find_by_partial_name(reference, release: context)
 
           unless idea
-            puts "No idea found matching '#{reference}' in #{context_name(context)}."
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
             exit 1
           end
 

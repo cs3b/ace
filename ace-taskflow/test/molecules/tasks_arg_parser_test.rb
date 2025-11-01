@@ -40,13 +40,13 @@ class TasksArgParserTest < Minitest::Test
   def test_parse_filters_with_backlog_flag
     result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters(["--backlog"])
 
-    assert_equal "backlog", result[:context]
+    assert_equal "backlog", result[:release]
   end
 
   def test_parse_filters_with_release_flag
     result = Ace::Taskflow::Molecules::TasksArgParser.parse_filters(["--release", "v.0.9.0"])
 
-    assert_equal "v.0.9.0", result[:context]
+    assert_equal "v.0.9.0", result[:release]
   end
 
   def test_parse_filters_with_sort_field_only

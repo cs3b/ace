@@ -82,7 +82,7 @@ module Ace
 
           # Override release if provided via flags
           if additional_filters[:release]
-            preset_config[:context] = additional_filters[:release]
+            preset_config[:release] = additional_filters[:release]
           end
 
           # Get ideas based on preset configuration
@@ -160,7 +160,7 @@ module Ace
         end
 
         def get_ideas_for_preset(preset_config)
-          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+          release = preset_config[:release] || 'current'
           glob = preset_config[:glob]
 
           # If no glob provided, use 'all' preset to get default
@@ -202,7 +202,7 @@ module Ace
 
         def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil, short = false)
           # Display three-line header
-          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+          release = preset_config[:release] || 'current'
 
           # Get total count of ALL ideas for proper display - use 'all' preset for consistent glob
           all_preset = @preset_manager.apply_preset('all', {}, :ideas)
@@ -218,14 +218,14 @@ module Ace
           header = @stats_formatter.format_header(
             command_type: :ideas,
             displayed_count: ideas.size,
-            context: release,  # Note: stats_formatter still uses :context key
+            release: release,
             total_count: total_ideas
           )
           puts header
 
           # Check if grouping is needed
           display_config = preset_config[:display] || {}
-          if display_config[:group_by] == 'context' || display_config[:group_by] == :context
+          if display_config[:group_by] == 'release' || display_config[:group_by] == :release
             # Group by release
             grouped = ideas.group_by { |idea| idea[:release] || 'current' }
             grouped.each do |rel_name, rel_ideas|
@@ -248,17 +248,17 @@ module Ace
           if additional_filters[:release]
             release = additional_filters[:release]
           else
-            release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+            release = preset_config[:release] || 'current'
           end
 
-          puts @stats_formatter.format_stats_view(context: release)  # Note: stats_formatter still uses :context key
+          puts @stats_formatter.format_stats_view(release: release)
           0
         end
 
         def display_ideas_as_json(ideas, preset_config)
           require 'json'
 
-          release = preset_config[:context] || 'current'  # Note: keeping :context key for preset compatibility
+          release = preset_config[:release] || 'current'
 
           # Get summary statistics using presets
           all_preset = @preset_manager.apply_preset('all', {}, :ideas)

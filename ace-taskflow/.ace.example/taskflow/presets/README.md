@@ -20,16 +20,16 @@ ace-taskflow ideas urgent  # If type is null/universal
 ```yaml
 description: "Human-readable description"
 type: "tasks"      # "tasks", "ideas", "releases", or null for universal
-context: "current"  # "current", "all", "backlog", or specific release
+release: "current"  # "current", "all", "backlog", or specific release
 filters:
   status: ["pending", "in-progress"]  # Status filter
   priority: ["high", "critical"]      # Priority filter
   # Add custom filters as needed
 sort:
-  by: "priority"    # Sort field: priority, status, modified, id, context
+  by: "priority"    # Sort field: priority, status, modified, id, release
   ascending: false  # Sort direction
 display:
-  group_by: "context"  # Optional grouping
+  group_by: "release"  # Optional grouping
   show_dates: true     # Show timestamps
   days: 7             # Time window for recent items
 ```

@@ -138,9 +138,9 @@ class TaskDisplayFormatterTest < Minitest::Test
 
   def test_group_by_context
     tasks = [
-      { id: "task.001", context: "v.0.9.0" },
-      { id: "task.002", context: "v.0.9.0" },
-      { id: "task.003", context: "backlog" }
+      { id: "task.001", release: "v.0.9.0" },
+      { id: "task.002", release: "v.0.9.0" },
+      { id: "task.003", release: "backlog" }
     ]
 
     result = Ace::Taskflow::Molecules::TaskDisplayFormatter.group_by_context(tasks)
@@ -152,7 +152,7 @@ class TaskDisplayFormatterTest < Minitest::Test
   def test_group_by_context_handles_missing_context
     tasks = [
       { id: "task.001" },
-      { id: "task.002", context: "v.0.9.0" }
+      { id: "task.002", release: "v.0.9.0" }
     ]
 
     result = Ace::Taskflow::Molecules::TaskDisplayFormatter.group_by_context(tasks)

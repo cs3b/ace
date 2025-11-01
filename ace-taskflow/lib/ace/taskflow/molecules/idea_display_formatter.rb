@@ -7,10 +7,10 @@ module Ace
       # Unit testable - no I/O
       class IdeaDisplayFormatter
         # Format context name for display
-        # @param context [String] Context identifier
+        # @param release [String] Context identifier
         # @return [String] Human-readable context name
-        def self.context_name(context)
-          case context
+        def self.release_name(release)
+          case release
           when "current", "active"
             "current release"
           when "backlog"
@@ -72,10 +72,10 @@ module Ace
 
         # Format "not found" error message
         # @param reference [String] Idea reference
-        # @param context [String] Context where search was performed
+        # @param release [String] Context where search was performed
         # @return [String] Error message
         def self.format_not_found_message(reference, context)
-          "No idea found matching '#{reference}' in #{context_name(context)}."
+          "No idea found matching '#{reference}' in #{release_name(release)}."
         end
 
         # Format empty state message

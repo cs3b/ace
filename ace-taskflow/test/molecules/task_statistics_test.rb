@@ -62,9 +62,9 @@ class TaskStatisticsTest < Minitest::Test
 
   def test_calculate_counts_by_context
     tasks = [
-      { id: "task.001", context: "v.0.9.0" },
-      { id: "task.002", context: "v.0.9.0" },
-      { id: "task.003", context: "backlog" }
+      { id: "task.001", release: "v.0.9.0" },
+      { id: "task.002", release: "v.0.9.0" },
+      { id: "task.003", release: "backlog" }
     ]
 
     result = Ace::Taskflow::Molecules::TaskStatistics.calculate(tasks)

@@ -5,19 +5,19 @@ require_relative "../../lib/ace/taskflow/molecules/idea_display_formatter"
 
 class IdeaDisplayFormatterTest < Minitest::Test
   def test_context_name_current
-    assert_equal "current release", Ace::Taskflow::Molecules::IdeaDisplayFormatter.context_name("current")
+    assert_equal "current release", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("current")
   end
 
   def test_context_name_active
-    assert_equal "current release", Ace::Taskflow::Molecules::IdeaDisplayFormatter.context_name("active")
+    assert_equal "current release", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("active")
   end
 
   def test_context_name_backlog
-    assert_equal "backlog", Ace::Taskflow::Molecules::IdeaDisplayFormatter.context_name("backlog")
+    assert_equal "backlog", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("backlog")
   end
 
   def test_context_name_release
-    assert_equal "release v.0.9.0", Ace::Taskflow::Molecules::IdeaDisplayFormatter.context_name("v.0.9.0")
+    assert_equal "release v.0.9.0", Ace::Taskflow::Molecules::IdeaDisplayFormatter.release_name("v.0.9.0")
   end
 
   def test_format_idea_header_minimal
@@ -40,7 +40,7 @@ class IdeaDisplayFormatterTest < Minitest::Test
       id: "idea-001",
       title: "Implement caching",
       created_at: "2025-10-01",
-      context: "v.0.9.0"
+      release: "v.0.9.0"
     }
     result = Ace::Taskflow::Molecules::IdeaDisplayFormatter.format_idea_header(idea)
 
@@ -103,7 +103,7 @@ class IdeaDisplayFormatterTest < Minitest::Test
       id: "idea-001",
       title: "My idea",
       created_at: "2025-10-01",
-      context: "v.0.9.0",
+      release: "v.0.9.0",
       path: "/path/to/idea.md",
       content: "Full content here"
     }

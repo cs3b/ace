@@ -1,6 +1,6 @@
 description: "Items for future consideration (maybe priority)"
 # Universal preset - works for both ideas and tasks
-context: "current"
+release: "current"
 filters:
   glob: ["maybe/**/*.s.md"]  # Items in maybe subdirectories
 sort:

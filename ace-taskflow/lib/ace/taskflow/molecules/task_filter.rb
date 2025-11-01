@@ -33,15 +33,15 @@ module Ace
           end
         end
 
-        # Filter tasks by release/context
+        # Filter tasks by release
         # @param tasks [Array<Hash>] Tasks to filter
-        # @param context [String] Context to filter by
+        # @param release [String] Release to filter by
         # @return [Array<Hash>] Filtered tasks
-        def self.filter_by_context(tasks, context)
-          return tasks if context.nil? || context.empty?
+        def self.filter_by_release(tasks, release)
+          return tasks if release.nil? || release.empty?
 
           tasks.select do |task|
-            task[:context] == context
+            task[:release] == release
           end
         end
 
@@ -117,9 +117,9 @@ module Ace
             result = filter_by_priority(result, priorities)
           end
 
-          # Apply context filter
-          if filters[:context]
-            result = filter_by_context(result, filters[:context])
+          # Apply release filter
+          if filters[:release]
+            result = filter_by_release(result, filters[:release])
           end
 
           # Apply dependency filter
@@ -181,8 +181,8 @@ module Ace
               tasks.sort_by { |t| priority_value(t[:priority]) }
             when :status
               tasks.sort_by { |t| status_value(t[:status]) }
-            when :context, "context"
-              tasks.sort_by { |t| t[:context] || "" }
+            when :release, "release"
+              tasks.sort_by { |t| t[:release] || "" }
             when :id
               tasks.sort_by { |t| t[:id] || "" }
             when :modified
@@ -230,7 +230,7 @@ module Ace
             when "priority"
               task[:priority].to_s.downcase == value
             when "context"
-              task[:context].to_s.downcase == value
+              task[:release].to_s.downcase == value
             when "has_dependencies"
               value == "true" ? !task[:dependencies].empty? : task[:dependencies].empty?
             else

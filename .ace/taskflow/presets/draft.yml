@@ -1,6 +1,6 @@
 description: "Draft items awaiting refinement"
 # Universal preset - works for both ideas and tasks
-context: "current"
+release: "current"
 filters:
   glob: ["**/*.s.md"]
   status:

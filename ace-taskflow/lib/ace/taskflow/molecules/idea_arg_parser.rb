@@ -81,7 +81,7 @@ module Ace
         # Parse context from arguments
         # @param args [Array<String>] Command arguments
         # @return [String] Context (current, backlog, or release name)
-        def self.parse_context(args)
+        def self.parse_release(args)
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"

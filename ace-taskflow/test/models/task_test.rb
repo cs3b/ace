@@ -15,7 +15,7 @@ class TaskModelTest < AceTaskflowTestCase
       sort: 100,
       path: "/path/to/task.md",
       content: "Task description here",
-      context: "v.0.9.0",
+      release: "v.0.9.0",
       task_number: "001",
       metadata: {}
     }
@@ -107,7 +107,7 @@ class TaskModelTest < AceTaskflowTestCase
 
   def test_task_context_accessor
     task = Ace::Taskflow::Models::Task.new(@task_data)
-    assert_equal "v.0.9.0", task.context
+    assert_equal "v.0.9.0", task.release
   end
 
   def test_task_number_accessor

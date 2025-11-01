@@ -49,7 +49,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args(args)
 
     assert_equal "Fix the bug", result[:title]
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
   end
 
   def test_parse_create_args_with_backlog_flag
@@ -57,7 +57,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args(args)
 
     assert_equal "New task", result[:title]
-    assert_equal "backlog", result[:context]
+    assert_equal "backlog", result[:release]
   end
 
   def test_parse_create_args_with_release_flag
@@ -65,7 +65,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args(args)
 
     assert_equal "Feature task", result[:title]
-    assert_equal "v.0.10.0", result[:context]
+    assert_equal "v.0.10.0", result[:release]
   end
 
   def test_parse_create_args_with_backlog_in_middle
@@ -73,7 +73,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args(args)
 
     assert_equal "Some task", result[:title]
-    assert_equal "backlog", result[:context]
+    assert_equal "backlog", result[:release]
   end
 
   def test_parse_create_args_with_release_and_title
@@ -81,7 +81,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args(args)
 
     assert_equal "Important fix", result[:title]
-    assert_equal "v.0.9.0", result[:context]
+    assert_equal "v.0.9.0", result[:release]
   end
 
   def test_parse_create_args_with_empty_array
@@ -89,7 +89,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args(args)
 
     assert_equal "", result[:title]
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
   end
 
   def test_parse_dependency_args_with_long_flag
@@ -155,7 +155,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
 
     assert_equal "Add feature", result[:title]
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal({}, result[:metadata])
   end
 
@@ -164,7 +164,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
 
     assert_equal "Add feature", result[:title]
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal({}, result[:metadata])
   end
 
@@ -202,14 +202,14 @@ class TaskArgParserTest < Minitest::Test
     args = ["--title", "Task", "--backlog"]
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
 
-    assert_equal "backlog", result[:context]
+    assert_equal "backlog", result[:release]
   end
 
   def test_parse_create_args_with_optparse_release_flag
     args = ["--title", "Task", "--release", "v.0.10.0"]
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
 
-    assert_equal "v.0.10.0", result[:context]
+    assert_equal "v.0.10.0", result[:release]
   end
 
   def test_parse_create_args_with_optparse_all_metadata_flags
@@ -243,7 +243,7 @@ class TaskArgParserTest < Minitest::Test
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
 
     assert_nil result[:title]
-    assert_equal "current", result[:context]
+    assert_equal "current", result[:release]
     assert_equal({}, result[:metadata])
   end
 
