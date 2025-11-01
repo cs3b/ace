@@ -136,6 +136,16 @@ module Ace
 
               # Load idea from file or directory
               if File.file?(path) && path.end_with?('.s.md')
+                # Check if this is a directory-based idea (idea.s.md inside a directory)
+                if File.basename(path) == "idea.s.md"
+                  parent_dir = File.dirname(path)
+                  # All idea.s.md files are part of directory-based ideas (standardized format)
+                  idea = load_idea_from_directory(parent_dir, include_content)
+                  ideas << idea if idea
+                  next
+                end
+
+                # Otherwise load as flat file (legacy format)
                 idea = load_idea_file(path, include_content)
                 ideas << idea if idea
               elsif Dir.exist?(path)
