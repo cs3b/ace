@@ -5,11 +5,13 @@ require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/idea"
 require_relative "../atoms/path_formatter"
+require_relative "helpers"
 
 module Ace
   module Taskflow
     module Commands
       class IdeasCommand
+        include Helpers
         def initialize
           @root_path = Molecules::ConfigLoader.find_root
           @config = Taskflow.configuration
@@ -40,12 +42,6 @@ module Ace
         end
 
         private
-
-        def filter_glob_by_type(glob, type_dir)
-          return nil unless glob.is_a?(Array)
-          filtered = glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
-          filtered.empty? ? nil : filtered
-        end
 
         def detect_preset_name(args)
           return nil if args.empty? || args.first.start_with?('-')
