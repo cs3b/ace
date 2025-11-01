@@ -1,8 +1,7 @@
 description: "All tasks across all releases"
 type:  # Universal preset
 release: "all"
-filters:
-  glob: ["**/*.s.md"]
+filters: {}
 sort:
   by: "release"
   ascending: true

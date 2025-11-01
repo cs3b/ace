@@ -1,8 +1,7 @@
 description: "Recently modified items (last 7 days)"
 type:  # Universal preset for tasks, ideas, releases
 release: "current"
-filters:
-  glob: ["**/*.s.md"]
+filters: {}
 sort:
   by: "modified"
   ascending: false

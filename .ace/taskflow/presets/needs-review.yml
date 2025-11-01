@@ -1,8 +1,7 @@
-description: "Items requiring review (needs_review flag set)"
-# Universal preset - works for both ideas and tasks
+description: "Tasks requiring review (needs_review flag set)"
+type: "tasks"
 release: "current"
 filters:
-  glob: ["**/*.s.md"]
   metadata:
     needs_review: true
 sort:

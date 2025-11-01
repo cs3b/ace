@@ -1,8 +1,7 @@
-description: "Draft items awaiting refinement"
-# Universal preset - works for both ideas and tasks
+description: "Draft tasks"
+type: "tasks"
 release: "current"
 filters:
-  glob: ["**/*.s.md"]
   status:
     - "draft"
 sort:
