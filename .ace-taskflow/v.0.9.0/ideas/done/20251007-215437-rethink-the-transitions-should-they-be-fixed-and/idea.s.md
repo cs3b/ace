@@ -1,11 +1,6 @@
 ---
-<<<<<<<< HEAD:.ace-taskflow/v.0.9.0/ideas/20251007-215437-rethink-the-transitions-should-they-be-fixed-and/idea.s.md
-status: pending
-priority: now
-========
 status: done
 completed_at: 2025-11-01T18:08:55+00:00
->>>>>>>> ed639aca (refactor(taskflow): Make task transitions flexible and idempotent):.ace-taskflow/v.0.9.0/ideas/done/20251007-215437-rethink-the-transitions-should-they-be-fixed-and.md
 ---
 
 # Idea

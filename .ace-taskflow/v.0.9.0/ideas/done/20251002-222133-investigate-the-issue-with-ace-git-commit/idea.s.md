@@ -1,11 +1,6 @@
 ---
-<<<<<<<< HEAD:.ace-taskflow/v.0.9.0/ideas/20251002-222133-investigate-the-issue-with-ace-git-commit/idea.s.md
-status: pending
-priority: now
-========
 status: done
 completed_at: 2025-11-01T19:26:39+00:00
->>>>>>>> bdb7092e (fix(taskflow): Create task to fix ace-git-commit staging issues):.ace-taskflow/v.0.9.0/ideas/done/20251002-222133-investigate-the-issue-with-ace-git-commit.md
 ---
 
 # Idea

@@ -1,11 +1,6 @@
 ---
-<<<<<<<< HEAD:.ace-taskflow/v.0.9.0/ideas/20251015-011423-enhancement-in-ace-taskflow-make-the-task-folde/idea.s.md
-status: pending
-priority: now
-========
 status: done
 completed_at: 2025-11-01T12:53:01+00:00
->>>>>>>> 082ee957 (feat(taskflow): Redesign task structure with hierarchical slugs):.ace-taskflow/v.0.9.0/ideas/done/20251015-011423-enhancement-in-ace-taskflow-make-the-task-folde.md
 ---
 
 # Idea
