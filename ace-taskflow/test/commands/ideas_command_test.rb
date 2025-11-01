@@ -102,4 +102,32 @@ class IdeasCommandTest < AceTaskflowTestCase
       end
     end
   end
+
+  def test_filter_glob_by_type_filters_correctly
+    # Test filtering idea-related patterns
+    glob = ["ideas/**.md", "tasks/**.md", "*.md"]
+    result = @command.send(:filter_glob_by_type, glob, "ideas")
+
+    assert_equal ["ideas/**.md", "*.md"], result
+    refute_includes result, "tasks/**.md"
+  end
+
+  def test_filter_glob_by_type_returns_nil_for_non_array
+    result = @command.send(:filter_glob_by_type, "not an array", "ideas")
+    assert_nil result
+  end
+
+  def test_filter_glob_by_type_returns_nil_for_nil
+    result = @command.send(:filter_glob_by_type, nil, "ideas")
+    assert_nil result
+  end
+
+  def test_filter_glob_by_type_preserves_patterns_without_slashes
+    glob = ["pattern1", "pattern2", "ideas/pattern3"]
+    result = @command.send(:filter_glob_by_type, glob, "ideas")
+
+    assert_includes result, "pattern1"
+    assert_includes result, "pattern2"
+    assert_includes result, "ideas/pattern3"
+  end
 end

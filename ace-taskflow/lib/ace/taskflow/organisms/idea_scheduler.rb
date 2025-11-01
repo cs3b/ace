@@ -25,13 +25,13 @@ module Ace
         # @return [Hash] Result with :success and :message
         def reschedule(reference, options = {})
           # Find the idea
-          idea = @idea_loader.find_by_partial_name(reference, context: "current")
+          idea = @idea_loader.find_by_partial_name(reference, release: "current")
           unless idea
             return { success: false, message: "Idea '#{reference}' not found" }
           end
 
           # Load all ideas to calculate new sort position
-          all_ideas = @idea_loader.load_all(context: "current")
+          all_ideas = @idea_loader.load_all(release: "current")
 
           # Filter to only pending ideas for positioning
           pending_ideas = all_ideas.select { |i| i[:status] != "done" }
@@ -61,11 +61,11 @@ module Ace
           elsif options[:add_at_end]
             @sort_calculator.calculate_last_position(other_ideas)
           elsif options[:after]
-            after_idea = @idea_loader.find_by_partial_name(options[:after], context: "current")
+            after_idea = @idea_loader.find_by_partial_name(options[:after], release: "current")
             return idea[:sort] || 50.0 unless after_idea
             @sort_calculator.calculate_after_position(other_ideas, after_idea)
           elsif options[:before]
-            before_idea = @idea_loader.find_by_partial_name(options[:before], context: "current")
+            before_idea = @idea_loader.find_by_partial_name(options[:before], release: "current")
             return idea[:sort] || 50.0 unless before_idea
             @sort_calculator.calculate_before_position(other_ideas, before_idea)
           else
