@@ -211,17 +211,17 @@ module Ace
           end
 
           # Check for task file
-          task_files = Dir.glob(File.join(task_folder, "task.*.md"))
+          task_files = Dir.glob(File.join(task_folder, "task.*.s.md"))
           if task_files.empty?
             # Try older format
-            task_files = Dir.glob(File.join(task_folder, "*.md"))
+            task_files = Dir.glob(File.join(task_folder, "*.s.md"))
           end
 
           if task_files.empty?
             issues << { type: :error, message: "No task file found", location: task_folder }
           elsif task_files.size > 1
             # Check if one is the main task file
-            main_task = task_files.find { |f| File.basename(f).match?(/^task\.\d+\.md$/) }
+            main_task = task_files.find { |f| File.basename(f).match?(/^task\.\d+\.s\.md$/) }
             unless main_task
               issues << { type: :warning, message: "Multiple markdown files, unclear which is main task", location: task_folder }
             end
