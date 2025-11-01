@@ -93,7 +93,7 @@ module Ace
 
         def show_idea(reference, args)
           context = parse_context(args)
-          idea = @idea_loader.find_by_partial_name(reference, context: context)
+          idea = @idea_loader.find_by_partial_name(reference, release: context)
 
           if idea
             # Load with full content
@@ -115,7 +115,7 @@ module Ace
 
           # Try to find an existing idea
           context = parse_context(remaining_args)
-          idea = @idea_loader.find_by_partial_name(first_arg, context: context)
+          idea = @idea_loader.find_by_partial_name(first_arg, release: context)
 
           if idea
             # Found an idea, show it
@@ -347,7 +347,7 @@ module Ace
 
           # Find the idea
           context = parse_context(args[1..-1] || [])
-          idea = @idea_loader.find_by_partial_name(reference, context: context)
+          idea = @idea_loader.find_by_partial_name(reference, release: context)
 
           unless idea
             puts "No idea found matching '#{reference}' in #{context_name(context)}."

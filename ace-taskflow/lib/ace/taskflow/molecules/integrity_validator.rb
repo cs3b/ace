@@ -69,14 +69,14 @@ module Ace
 
           # Load from all releases
           @release_resolver.find_all.each do |release|
-            context_tasks = @task_loader.load_tasks_from_context(release[:path])
+            context_tasks = @task_loader.load_tasks_from_release(release[:path])
             tasks.concat(context_tasks)
           end
 
           # Load from backlog
           backlog_path = File.join(@root_path, "backlog")
           if Dir.exist?(backlog_path)
-            backlog_tasks = @task_loader.load_tasks_from_context(backlog_path)
+            backlog_tasks = @task_loader.load_tasks_from_release(backlog_path)
             tasks.concat(backlog_tasks)
           end
 
@@ -88,12 +88,12 @@ module Ace
 
           # Load from all releases
           @release_resolver.find_all.each do |release|
-            release_ideas = @idea_loader.load_all(context: release[:name])
+            release_ideas = @idea_loader.load_all(release: release[:name])
             ideas.concat(release_ideas)
           end
 
           # Load from backlog
-          backlog_ideas = @idea_loader.load_all(context: "backlog")
+          backlog_ideas = @idea_loader.load_all(release: "backlog")
           ideas.concat(backlog_ideas)
 
           ideas

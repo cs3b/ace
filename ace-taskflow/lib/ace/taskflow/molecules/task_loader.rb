@@ -109,19 +109,19 @@ module Ace
           # Load from active releases
           Dir.glob(File.join(root_path, "v.*")).each do |release_path|
             next unless File.directory?(release_path)
-            tasks.concat(load_tasks_from_context(release_path))
+            tasks.concat(load_tasks_from_release(release_path))
           end
 
           # Load from backlog
           backlog_path = File.join(root_path, "backlog")
           if File.directory?(backlog_path)
             # Direct backlog tasks
-            tasks.concat(load_tasks_from_context(backlog_path))
+            tasks.concat(load_tasks_from_release(backlog_path))
 
             # Backlog releases
             Dir.glob(File.join(backlog_path, "v.*")).each do |release_path|
               next unless File.directory?(release_path)
-              tasks.concat(load_tasks_from_context(release_path))
+              tasks.concat(load_tasks_from_release(release_path))
             end
           end
 
@@ -130,7 +130,7 @@ module Ace
           if File.directory?(done_path)
             Dir.glob(File.join(done_path, "v.*")).each do |release_path|
               next unless File.directory?(release_path)
-              tasks.concat(load_tasks_from_context(release_path))
+              tasks.concat(load_tasks_from_release(release_path))
             end
           end
 

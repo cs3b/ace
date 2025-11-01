@@ -157,7 +157,7 @@ module Ace
           task_stats = task_manager.get_statistics(context: context)
 
           # Get idea statistics for active release
-          ideas = idea_loader.load_all(context: context, include_content: false)
+          ideas = idea_loader.load_all(release: context, include_content: false)
           idea_stats = {
             total: ideas.size,
             by_status: {}

@@ -69,7 +69,7 @@ module Ace
           tasks = if context == "all"
             @task_loader.load_all_tasks
           else
-            @task_loader.load_tasks_from_context(context_path)
+            @task_loader.load_tasks_from_release(context_path)
           end
 
           # Apply filters

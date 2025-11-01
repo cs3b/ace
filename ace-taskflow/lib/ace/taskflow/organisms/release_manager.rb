@@ -173,7 +173,7 @@ module Ace
           end
 
           # Check for high-priority pending tasks
-          pending_tasks = @task_loader.load_tasks_from_context(release[:path])
+          pending_tasks = @task_loader.load_tasks_from_release(release[:path])
           high_priority_pending = pending_tasks.select do |task|
             task[:status] == "pending" && task[:priority] == "high"
           end
@@ -208,7 +208,7 @@ module Ace
           release = @resolver.find_release(name)
           return "Release not found" unless release
 
-          tasks = @task_loader.load_tasks_from_context(release[:path])
+          tasks = @task_loader.load_tasks_from_release(release[:path])
 
           changelog = "## #{name}\n\n"
 

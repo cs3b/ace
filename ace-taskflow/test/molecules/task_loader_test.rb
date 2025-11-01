@@ -26,7 +26,7 @@ class TaskLoaderTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
-        tasks = @loader.load_tasks_from_context(release_path)
+        tasks = @loader.load_tasks_from_release(release_path)
 
         assert_equal 5, tasks.length
         assert tasks.all? { |t| t[:id].start_with?("v.0.9.0+task") }
@@ -38,7 +38,7 @@ class TaskLoaderTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
-        all_tasks = @loader.load_tasks_from_context(release_path)
+        all_tasks = @loader.load_tasks_from_release(release_path)
         pending_tasks = all_tasks.select { |task| task[:status] == "pending" }
 
         assert_equal 3, pending_tasks.length
