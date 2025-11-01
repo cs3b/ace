@@ -29,7 +29,7 @@ module Ace
             number = match[2]
 
             return {
-              context: normalize_context(context),
+              release: normalize_context(context),
               number: number,
               qualified: true,
               original: reference
@@ -39,7 +39,7 @@ module Ace
           # Check for simple reference (e.g., 018, task.018)
           if match = reference.match(SIMPLE_REFERENCE_PATTERN)
             return {
-              context: "current",
+              release: "current",
               number: match[1],
               qualified: false,
               original: reference
@@ -162,12 +162,12 @@ module Ace
           return nil unless parsed
 
           # Resolve context to actual release name
-          context = if parsed[:context] == "current"
+          context = if parsed[:release] == "current"
             # Ask the resolver for the actual current release
-            resolved = context_resolver.resolve_context(parsed[:context])
-            resolved || parsed[:context]
+            resolved = context_resolver.resolve_context(parsed[:release])
+            resolved || parsed[:release]
           else
-            parsed[:context]
+            parsed[:release]
           end
 
           # Build canonical ID: context+task.number
