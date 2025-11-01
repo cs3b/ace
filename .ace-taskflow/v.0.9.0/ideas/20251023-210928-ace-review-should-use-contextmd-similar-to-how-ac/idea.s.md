@@ -1,6 +1,11 @@
 ---
+<<<<<<<< HEAD:.ace-taskflow/v.0.9.0/ideas/20251023-210928-ace-review-should-use-contextmd-similar-to-how-ac/idea.s.md
 status: pending
 priority: now
+========
+status: done
+completed_at: 2025-11-01T16:03:27+00:00
+>>>>>>>> 0cafae32 (feat(taskflow): Create draft task 094 for ace-review context.md pattern and PR workflow):.ace-taskflow/v.0.9.0/ideas/done/20251023-210928-ace-review-should-use-contextmd-similar-to-how-ac.md
 ---
 
 # Idea
