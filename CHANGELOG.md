@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.101] - 2025-11-01
+
+### Fixed
+- **ace-taskflow v0.14.2**: File extension and GTD scope terminology
+  - Fixed FileNamer to generate .s.md extension consistently
+  - Fixed IdeaLoader default glob patterns to only match ideas directory (not tasks)
+  - Updated all FileNamer tests to expect .s.md extension
+
+### Changed
+- **ace-taskflow v0.14.2**: Enhanced GTD scope documentation
+  - Added comprehensive help text explaining GTD-based scopes (next/maybe/anyday/done)
+  - Clarified that scope (folder location) is separate from status (metadata)
+  - Updated comments throughout to distinguish scope from status
+
 ## [0.9.100] - 2025-11-01
 
 ### Fixed
