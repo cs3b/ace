@@ -158,30 +158,30 @@ class PathBuilderTest < AceTaskflowTestCase
     assert_equal "v.1.0.0-beta", result
   end
 
-  def test_extract_release_returns_nil_for_backlog
+  def test_extract_release_version_returns_nil_for_backlog
     path = "/path/to/.ace-taskflow/backlog/tasks/001/task.md"
-    result = @builder.extract_release(path)
+    result = @builder.extract_release_version(path)
 
     assert_nil result
   end
 
-  def test_extract_context_from_backlog_path
+  def test_extract_release_from_backlog_path
     path = "/path/to/.ace-taskflow/backlog/tasks/001/task.md"
-    result = @builder.extract_context(path)
+    result = @builder.extract_release(path)
 
     assert_equal "backlog", result
   end
 
-  def test_extract_context_from_done_path
+  def test_extract_release_from_done_path
     path = "/path/to/.ace-taskflow/done/v.0.8.0/tasks/001/task.md"
-    result = @builder.extract_context(path)
+    result = @builder.extract_release(path)
 
     assert_equal "done", result
   end
 
-  def test_extract_context_from_active_release_path
+  def test_extract_release_from_active_release_path
     path = "/path/to/.ace-taskflow/v.0.9.0/tasks/001/task.md"
-    result = @builder.extract_context(path)
+    result = @builder.extract_release(path)
 
     assert_equal "v.0.9.0", result
   end
