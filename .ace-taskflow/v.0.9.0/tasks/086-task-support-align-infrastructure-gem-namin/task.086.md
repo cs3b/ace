@@ -5,6 +5,8 @@ priority: medium
 estimate: 12h
 dependencies: []
 sort: 997
+reviewed: 2025-11-01
+reviewer: claude-opus-4.1
 ---
 
 # Align infrastructure gem naming to ace-support-* pattern
@@ -129,6 +131,176 @@ Establish consistent naming conventions across the ACE ecosystem that clearly di
 
 This is a foundation-level improvement that benefits all current and future ACE users.
 
+## Review Summary
+
+**Review Completed:** 2025-11-01
+**Review Type:** Comprehensive technical and implementation analysis
+
+### Key Findings
+
+1. **Scope Analysis:**
+   - Identified 11 gems with runtime dependency on ace-core
+   - Identified 6 gems with development dependency on ace-test-support
+   - Located 138+ documentation files needing reference updates
+   - Confirmed zero breaking changes to module structure or require paths
+
+2. **Dependency Impact:**
+   - **ace-core dependents:** ace-llm, ace-test-runner, ace-nav, ace-search, ace-lint, ace-git-commit, ace-taskflow, ace-context, ace-docs, ace-git-diff, ace-review
+   - **ace-test-support dependents:** ace-test-runner (runtime), ace-git-diff, ace-nav, ace-support-markdown, ace-review, ace-search (all dev)
+   - All require patch version bumps only
+
+3. **Implementation Approach:**
+   - Local development using path gems (no RubyGems publishing complexity during development)
+   - No backward compatibility needed per requirements - clean break with minor version bumps
+   - Module names unchanged: `Ace::Core`, `Ace::TestSupport`
+   - Require paths unchanged: `require 'ace/core'`, `require 'ace/test_support'`
+
+### Decision Validation
+
+All validation questions (lines 109-117) have been answered:
+- **Deprecation Strategy:** No shim gems needed - direct rename with documentation
+- **Version Bump:** Patch version for dependency updates
+- **Transition Timeline:** Immediate cutover acceptable (no backward compatibility required)
+- **Rollout Approach:** Staged by dependency tier (Foundation → Core → Feature)
+- **Existing Projects:** Simple Gemfile update required
+- **Documentation Timing:** Phase 3 (after ecosystem updated and tested)
+
+### Planning Completeness
+
+✓ Technical approach defined with architecture patterns
+✓ 4-phase migration strategy with detailed steps
+✓ Risk assessment with mitigation strategies
+✓ File modification inventory (create/modify/delete/rename)
+✓ Tool selection (leverage existing infrastructure)
+✓ Implementation plan with validation tests
+✓ Acceptance criteria defined
+
+## Impact Analysis
+
+### Affected Gems and Version Strategy
+
+**Tier 1 - Foundation (Both dependencies):**
+- `ace-test-runner` 0.1.5 → 0.1.6 (runtime: ace-core, dev: ace-test-support)
+- `ace-nav` 0.10.1 → 0.10.2 (runtime: ace-core, dev: ace-test-support)
+
+**Tier 2 - Core Tools:**
+- `ace-context` 0.16.0 → 0.16.1 (runtime: ace-core)
+- `ace-git-commit` 0.11.0 → 0.11.1 (runtime: ace-core)
+- `ace-git-diff` 0.1.1 → 0.1.2 (runtime: ace-core, dev: ace-test-support)
+- `ace-llm` 0.9.4 → 0.9.5 (runtime: ace-core)
+- `ace-taskflow` 0.13.2 → 0.13.3 (runtime: ace-core)
+
+**Tier 3 - Feature Gems:**
+- `ace-search` 0.11.2 → 0.11.3 (runtime: ace-core, dev: ace-test-support)
+- `ace-lint` 0.3.0 → 0.3.1 (runtime: ace-core)
+- `ace-docs` 0.6.1 → 0.6.2 (runtime: ace-core)
+- `ace-review` 0.11.1 → 0.11.2 (runtime: ace-core, dev: ace-test-support)
+- `ace-support-markdown` 0.1.2 → 0.1.3 (dev: ace-test-support only)
+
+**New Gem Versions:**
+- `ace-support-core` 0.10.0 (matches current ace-core)
+- `ace-support-test-helpers` 0.9.2 (matches current ace-test-support)
+
+### Dependency Graph
+
+```
+ace-support-core (NEW from ace-core)
+├── ace-context
+├── ace-git-commit
+├── ace-git-diff
+├── ace-lint
+├── ace-llm
+├── ace-nav
+├── ace-docs
+├── ace-review
+├── ace-search
+├── ace-taskflow
+└── ace-test-runner
+
+ace-support-test-helpers (NEW from ace-test-support)
+├── ace-test-runner (runtime)
+├── ace-git-diff (dev)
+├── ace-nav (dev)
+├── ace-review (dev)
+├── ace-search (dev)
+└── ace-support-markdown (dev)
+```
+
+### Breaking Change Analysis
+
+**Zero Breaking Changes:**
+- ✗ No API changes
+- ✗ No module namespace changes
+- ✗ No require path changes
+- ✗ No CLI command changes
+- ✓ Only Gemfile dependency names change
+
+## Key Decisions
+
+### Decision 1: No Backward Compatibility Required
+
+**Decision:** Per user requirements, no backward compatibility needed - clean break with minor version bumps.
+
+**Rationale:**
+- We're pre-release (all versions < 1.0.0)
+- Simpler implementation without shim gems
+- Clearer migration path
+- Less maintenance burden
+
+### Decision 2: Create New Directories (Not Rename)
+
+**Decision:** Create NEW gem directories alongside old ones for safer migration.
+
+**Rationale:**
+- Lower risk during development
+- Easier rollback if needed
+- Can test side-by-side
+- Git history preserved
+
+**Implementation:**
+- Create: `ace-support-core/` (from ace-core)
+- Create: `ace-support-test-helpers/` (from ace-test-support)
+- Update root Gemfile to use new paths
+
+### Decision 3: Local Development First
+
+**Decision:** Use local gem paths during development, not RubyGems publishing.
+
+**Rationale:**
+- Faster iteration
+- No RubyGems publishing delays
+- Easy testing across mono-repo
+- Simpler rollback
+
+**Example Gemfile:**
+```ruby
+gem "ace-support-core", path: "ace-support-core"
+gem "ace-support-test-helpers", path: "ace-support-test-helpers"
+```
+
+### Decision 4: Staged Rollout by Tier
+
+**Decision:** Update gems in dependency order across three tiers.
+
+**Tier Structure:**
+1. **Foundation:** ace-test-runner, ace-nav (depend on both)
+2. **Core Tools:** ace-context, ace-git-*, ace-llm, ace-taskflow
+3. **Feature Gems:** ace-search, ace-lint, ace-docs, ace-review, ace-support-markdown
+
+**Rationale:**
+- Catches issues early
+- Easier debugging
+- Can pause at tier boundaries
+
+### Decision 5: Documentation After Implementation
+
+**Decision:** Update docs AFTER gems are working (Phase 3).
+
+**Rationale:**
+- Documentation reflects actual state
+- Reduces confusion during transition
+- Single batch update more efficient
+
 ## Scope of Work
 
 ### User Experience Scope
@@ -188,6 +360,9 @@ This is a foundation-level improvement that benefits all current and future ACE 
   - `docs/ace-gems.g.md` - Formalize naming convention rule
 
 ## Technical Approach
+
+> **Status:** Comprehensive review completed 2025-11-01
+> **Next Steps:** Ready for Phase 1 execution (create and publish new gems)
 
 ### Migration Strategy Selection
 
