@@ -46,7 +46,8 @@ module Ace
 
         def filter_glob_by_type(glob, type_dir)
           return nil unless glob.is_a?(Array)
-          glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
+          filtered = glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
+          filtered.empty? ? nil : filtered
         end
 
         def detect_preset_name(args)
@@ -181,7 +182,7 @@ module Ace
           end
 
           # Filter glob patterns to only include task-related patterns (already prefixed by preset manager)
-          glob = filter_glob_by_type(glob, @config.task_dir) if glob
+          glob = filter_glob_by_type(glob, @config.task_dir)
 
           # Convert string keys to symbols for compatibility with TaskManager
           filters = {}
@@ -271,7 +272,7 @@ module Ace
           task = Models::Task.new(task_data)
 
           status_str = status_icon(task.status)
-          ref = task.qualified_reference || task.task_number || task.id
+          ref = task.qualified_reference || task.task_number || task.id || "unknown"
 
           puts "  #{ref.ljust(15)} #{status_str} #{task.title}"
 
@@ -404,8 +405,8 @@ module Ace
           puts "Presets (recommended):"
           available_presets = @preset_manager.list_presets(:tasks)
           available_presets.each do |preset|
-            name = preset[:name]
-            desc = preset[:description]
+            name = preset[:name] || "unknown"
+            desc = preset[:description] || ""
             default_marker = preset[:default] ? " (default)" : ""
             puts "  #{name.ljust(12)} #{desc}#{default_marker}"
           end

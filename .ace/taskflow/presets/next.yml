@@ -2,7 +2,7 @@ description: "Next actionable items (pending + in-progress, excluding maybe/anyd
 # Universal preset - works for both ideas and tasks
 context: "current"
 filters:
-  glob: ["*.s.md"]  # Top-level items only (folder prefix added by PresetManager)
+  glob: ["*/task.*.s.md", "*/idea.s.md"]  # Items in immediate subdirectories only, excluding maybe/anyday (folder prefix added by PresetManager)
   status:
     - "pending"
     - "in-progress"
