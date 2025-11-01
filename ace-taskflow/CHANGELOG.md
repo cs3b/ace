@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2025-11-01
+
+### Fixed
+
+- **YAML Parser**: Added `Symbol` to permitted classes in `YamlParser.parse_frontmatter` to fix "Tried to load unspecified class: Symbol" error when running `ace-taskflow doctor` on files with Symbol-style YAML keys (`:key_name` format)
+- **Task Metadata**: Fixed incomplete frontmatter in tasks 074 and 075 (missing closing `---` delimiter, priority, estimate, and dependencies fields)
+- **Task Dependencies**: Removed invalid dependency references to non-existent `task.079` in tasks 081 and 082
+
+### Changed
+
+- Tasks 074 and 075 now include minimal task descriptions for better documentation
+
 ## [0.15.0] - 2025-11-01
 
 ### 🚨 Breaking Changes
