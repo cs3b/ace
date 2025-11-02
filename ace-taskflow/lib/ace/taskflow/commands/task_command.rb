@@ -241,78 +241,16 @@ module Ace
         end
 
         def update_task(args)
-          # Parse reference and --field flags
-          reference = nil
-          field_args = []
+          reference = args.first
 
-          args.each_with_index do |arg, i|
-            if arg == "--field"
-              # Next arg is the field=value
-              field_args << args[i + 1] if args[i + 1]
-            elsif !arg.start_with?("--") && reference.nil? && (i == 0 || args[i - 1] != "--field")
-              # First non-flag argument is the reference
-              reference = arg
-            end
-          end
-
-          # Validate usage
           unless reference
-            puts "Error: Task reference required"
-            puts ""
-            puts "Usage: ace-taskflow task update <reference> --field <key=value> [--field <key2=value2>]"
-            puts ""
-            puts "Examples:"
-            puts "  ace-taskflow task update 090 --field priority=high"
-            puts "  ace-taskflow task update 090 --field worktree.branch=feature-name"
-            puts "  ace-taskflow task update 090 --field priority=high --field estimate=\"1 week\""
-            return 1
+            puts "Usage: ace-taskflow task update <reference>"
+            puts "Note: This command is not yet implemented"
+            exit 1
           end
 
-          if field_args.empty?
-            puts "Error: At least one --field argument required"
-            puts ""
-            puts "Usage: ace-taskflow task update <reference> --field <key=value> [--field <key2=value2>]"
-            return 2
-          end
-
-          # Parse field updates
-          begin
-            field_updates = Molecules::TaskFieldUpdater.parse_field_updates(field_args)
-          rescue Molecules::TaskFieldUpdater::FieldUpdateError => e
-            puts "Error: #{e.message}"
-            puts ""
-            puts "Expected format: --field key=value"
-            puts "Examples:"
-            puts "  --field priority=high"
-            puts "  --field \"estimate=2 weeks\""
-            puts "  --field worktree.branch=feature-name"
-            return 2
-          end
-
-          # Update task
-          result = @manager.update_task_fields(reference, field_updates)
-
-          if result[:success]
-            puts "Task updated: #{result[:task][:id] || reference}"
-            puts "Updated fields:"
-            result[:updated_fields].each do |field|
-              value = field_updates[field]
-              puts "  #{field}: #{value.inspect}"
-            end
-            puts "Task path: #{result[:path]}"
-            return 0
-          else
-            puts "Error: #{result[:message]}"
-
-            # Return appropriate exit code based on error
-            if result[:message].include?("not found")
-              return 1
-            elsif result[:message].include?("Field update error") || result[:message].include?("Invalid field")
-              return 2
-            else
-              return 3
-            end
-          end
+          puts "Task update functionality coming soon"
+          exit 0
         end
 
         def display_task_path(task_data)

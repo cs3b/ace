@@ -4,6 +4,10 @@
 
 This document describes the new hierarchical folder and file naming structure for ace-taskflow tasks and ideas. The redesign replaces redundant naming patterns with a clean, context-rich hierarchy that supports multiple related items in shared thematic folders.
 
+**Implementation Approach:** The system uses LLM-generated slugs as the primary method (via ace-llm), with fallback to existing slug generation logic when LLM is unavailable. This provides high-quality, context-aware naming while ensuring the system always works.
+
+**Scope:** Only active tasks/ideas use the new format going forward. Done items remain unchanged - no migration needed.
+
 ## Key Changes
 
 ### Tasks Structure
@@ -228,6 +232,21 @@ ace-taskflow idea done <reference>      # Move to done/ subfolder
 ```
 
 ## Internal Implementation Notes
+
+### Slug Generation Strategy
+
+The system uses a two-tier approach for generating slugs:
+
+1. **Primary: LLM Generation** (via ace-llm)
+   - Analyzes task title/idea description with project context
+   - Generates context-aware hierarchical slugs (folder + file)
+   - Returns JSON with `folder_slug` and `file_slug`
+   - Provides high-quality, meaningful names
+
+2. **Fallback: Existing Logic** (when LLM unavailable/fails)
+   - Uses existing `TaskSlugGenerator` and `FileNamer`
+   - Deterministic, always available
+   - Ensures system never fails due to LLM issues
 
 ### File Discovery
 
