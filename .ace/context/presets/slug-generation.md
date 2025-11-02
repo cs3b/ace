@@ -1,5 +1,5 @@
 ---
-description: Context aggregation for LLM-based slug generation
+description: Project context for LLM-based slug generation
 context:
   presets:
     - project-base  # Includes project structure and components dynamically
@@ -8,15 +8,11 @@ context:
     format: markdown
     max_size: 102400
     timeout: 30
-  files:
-    # Include the slug generation rules/prompt
-    - ace-taskflow/handbook/prompts/slug-generation.md
-  embed_document_source: false
 ---
 
 # Slug Generation Context
 
-This preset aggregates project-specific context with slug generation rules for use by the LLM slug generator in ace-taskflow.
+This preset loads project-specific context for the LLM slug generator in ace-taskflow.
 
 ## How It Works
 
@@ -25,15 +21,10 @@ This preset aggregates project-specific context with slug generation rules for u
    - Architecture and terminology
    - Common patterns and conventions
 
-2. **Slug Rules**: Loaded from `handbook/prompts/slug-generation.md`
-   - Generic formatting rules
-   - Goal type definitions
-   - Response format specification
-
-3. **Combined Output**: Sent to LLM for intelligent slug generation
-   - LLM understands the specific project context
-   - Applies consistent slug generation rules
+2. **LLM Processing**: The generator combines this context with task/idea details
+   - Understands the specific project context
    - Produces project-appropriate slugs
+   - Uses hierarchical structure (folder + file slugs)
 
 ## Usage
 
