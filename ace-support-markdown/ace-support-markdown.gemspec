@@ -32,5 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "ace-test-support", "~> 0.1"
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.1"
 end
