@@ -47,14 +47,14 @@ module Ace
         def fetch_slug_context
           require "ace/context"
 
-          # Load slug-generation preset which includes project-base
-          result = Ace::Context.load_preset("slug-generation")
+          # Load project-base preset for project context
+          result = Ace::Context.load_preset("project-base")
           context_content = result.content
 
-          debug_log("Successfully loaded slug context (#{context_content.length} bytes)")
+          debug_log("Successfully loaded project context (#{context_content.length} bytes)")
           context_content
         rescue StandardError => e
-          debug_log("Error loading slug context: #{e.message}")
+          debug_log("Error loading project context: #{e.message}")
           debug_log("Using minimal fallback context")
           # Minimal fallback if ace-context unavailable
           "Project context unavailable. Generate generic slugs following these rules:\n" \
