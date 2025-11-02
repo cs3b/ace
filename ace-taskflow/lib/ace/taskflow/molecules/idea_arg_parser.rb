@@ -55,7 +55,7 @@ module Ace
             when "--no-git-commit"
               options[:git_commit] = false
               i += 1
-            when "--llm-enhance", "-llm"
+            when "--llm-enhance", "--llm", "-llm"
               options[:llm_enhance] = true
               i += 1
             when "--no-llm-enhance"

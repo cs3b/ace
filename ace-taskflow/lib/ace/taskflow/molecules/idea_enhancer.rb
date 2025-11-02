@@ -196,11 +196,11 @@ module Ace
             begin
               text = response[:text].strip
 
-              # Strip markdown code blocks if present
-              if text.start_with?("```json") && text.end_with?("```")
+              # Strip markdown code blocks if present (handle incomplete blocks from truncated responses)
+              if text.start_with?("```json")
                 debug_log("Stripping markdown json code blocks from response")
                 text = text.gsub(/^```json\s*\n?/, '').gsub(/\n?```\s*$/, '')
-              elsif text.start_with?("```") && text.end_with?("```")
+              elsif text.start_with?("```")
                 debug_log("Stripping markdown code blocks from response")
                 text = text.gsub(/^```\s*\n?/, '').gsub(/\n?```\s*$/, '')
               end
@@ -210,7 +210,9 @@ module Ace
               debug_log("Successfully parsed LLM response")
               { success: true, data: data }
             rescue JSON::ParserError => e
-              debug_log("Invalid JSON response: #{text[0..500]}...")
+              debug_log("Invalid JSON response (first 500 chars): #{text[0..500]}...")
+              debug_log("Full response length: #{text.length} chars")
+              debug_log("JSON parse error: #{e.message}")
               { success: false, error: "Invalid JSON response: #{e.message}" }
             end
           else
