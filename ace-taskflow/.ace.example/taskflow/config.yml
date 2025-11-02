@@ -8,6 +8,10 @@ taskflow:
   # Task directory name (default: t)
   task_dir: "t"
 
+  # Status transition mode (default: false - flexible mode)
+  # Set to true for rigid status validation (legacy behavior)
+  strict_transitions: false
+
   # Default locations for new items
   defaults:
     idea_location: "active"      # Where to save ideas: active, backlog, or v.X.Y.Z
