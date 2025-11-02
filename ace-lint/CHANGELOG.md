@@ -73,7 +73,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Made `lint` the default command - can now use `ace-lint file.md` instead of `ace-lint lint file.md`
 * Commands `version` and `help` still work as before
 
-## [0.1.1][3] - 2025-10-13
+## [0.3.1] - 2025-11-01
+
+### Changed
+
+- **Dependency Migration**: Updated to use renamed infrastructure gems
+  - Changed dependency from `ace-core` to `ace-support-core`
+  - Part of ecosystem-wide naming convention alignment for infrastructure gems
+
+## [0.1.1] - 2025-10-13
 
 ### Fixed
 

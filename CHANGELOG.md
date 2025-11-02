@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.102] - 2025-11-02
+
+### Changed
+- **Infrastructure Gem Naming Alignment**: Renamed foundational gems to establish clear naming conventions
+  - Renamed `ace-core` to `ace-support-core` (v0.10.0) - configuration cascade and shared functionality
+  - Renamed `ace-test-support` to `ace-support-test-helpers` (v0.9.2) - test utilities and helpers
+  - Updated all 12 dependent gems to use new package names with patch version bumps
+  - Established naming pattern: `ace-*` for CLI tools, `ace-support-*` for library-only infrastructure
+  - No breaking changes - module names and require paths remain unchanged
+
+### Added
+- **Migration Guide**: Comprehensive documentation for gem renaming transition
+- **Naming Convention Documentation**: Formalized ace-* vs ace-support-* patterns in docs/ace-gems.g.md
+
+### Technical
+- Updated dependencies in 12 gems: ace-context, ace-docs, ace-git-commit, ace-git-diff, ace-lint, ace-llm, ace-nav, ace-review, ace-search, ace-support-markdown, ace-taskflow, ace-test-runner
+- All affected gems received patch version bumps for dependency updates
+- Updated root Gemfile to reference new gem names
+- Created new gem directories alongside old ones for safer migration
+
 ## [0.9.101] - 2025-11-01
 
 ### Fixed

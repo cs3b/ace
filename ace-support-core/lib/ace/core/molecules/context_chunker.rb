@@ -1,0 +1,215 @@
+# frozen_string_literal: true
+
+module Ace
+  module Core
+    module Molecules
+      # ContextChunker splits large content into manageable chunks
+      class ContextChunker
+        DEFAULT_CHUNK_LIMIT = 150_000
+        DEFAULT_CHUNK_SUFFIX = '_chunk'
+
+        attr_reader :chunk_limit
+
+        def initialize(chunk_limit = DEFAULT_CHUNK_LIMIT)
+          @chunk_limit = chunk_limit
+        end
+
+        # Check if content needs chunking
+        def needs_chunking?(content)
+          return false if content.nil? || content.empty?
+
+          line_count = content.lines.size
+          line_count > @chunk_limit
+        end
+
+        # Split content into chunks
+        def chunk_content(content, base_path, options = {})
+          opts = {
+            chunk_suffix: DEFAULT_CHUNK_SUFFIX,
+            include_metadata: true
+          }.merge(options)
+
+          return single_file_result(content, base_path) unless needs_chunking?(content)
+
+          lines = content.lines
+          chunks = split_into_chunks(lines)
+
+          chunk_files = generate_chunk_files(chunks, base_path, opts)
+          index_content = generate_index_content(chunk_files, base_path, opts)
+
+          {
+            chunked: true,
+            total_chunks: chunks.size,
+            chunk_limit: @chunk_limit,
+            total_lines: lines.size,
+            index_file: "#{base_path}.md",
+            index_content: index_content,
+            chunk_files: chunk_files,
+            total_size: calculate_total_size(chunk_files)
+          }
+        end
+
+        # Split content and write all files (index + chunks)
+        def chunk_and_write(content, base_path, file_writer, options = {})
+          chunk_result = chunk_content(content, base_path, options)
+
+          unless chunk_result[:chunked]
+            # Write single file
+            return {
+              chunked: false,
+              files_written: 1,
+              results: [
+                file_writer.write(content, "#{base_path}.md", options)
+              ]
+            }
+          end
+
+          # Write index file and all chunks
+          write_results = []
+
+          # Write index file
+          index_result = file_writer.write(
+            chunk_result[:index_content],
+            chunk_result[:index_file],
+            options
+          )
+          write_results << index_result.merge(file_type: 'index')
+
+          # Write chunk files
+          chunk_result[:chunk_files].each do |chunk_info|
+            chunk_result_write = file_writer.write(
+              chunk_info[:content],
+              chunk_info[:path],
+              options
+            )
+            write_results << chunk_result_write.merge(file_type: 'chunk', chunk_number: chunk_info[:chunk_number])
+
+            # Progress callback if provided
+            if options[:progress_callback]
+              options[:progress_callback].call("Wrote chunk #{chunk_info[:chunk_number]} of #{chunk_result[:total_chunks]}")
+            end
+          end
+
+          {
+            chunked: true,
+            total_chunks: chunk_result[:total_chunks],
+            files_written: write_results.size,
+            results: write_results
+          }
+        end
+
+        private
+
+        # Generate result for single file (no chunking needed)
+        def single_file_result(content, base_path)
+          {
+            chunked: false,
+            total_chunks: 1,
+            total_lines: content.lines.size,
+            file_path: "#{base_path}.md",
+            content: content,
+            total_size: content.bytesize
+          }
+        end
+
+        # Split lines into chunks
+        def split_into_chunks(lines)
+          chunks = []
+          current_chunk = []
+
+          lines.each do |line|
+            current_chunk << line
+
+            if current_chunk.size >= @chunk_limit
+              chunks << current_chunk.join
+              current_chunk = []
+            end
+          end
+
+          # Add remaining lines
+          chunks << current_chunk.join unless current_chunk.empty?
+
+          chunks
+        end
+
+        # Generate chunk file information
+        def generate_chunk_files(chunks, base_path, options)
+          chunk_files = []
+
+          chunks.each_with_index do |chunk_content, index|
+            chunk_number = index + 1
+            chunk_path = "#{base_path}#{options[:chunk_suffix]}_#{chunk_number.to_s.rjust(3, '0')}.md"
+
+            chunk_files << {
+              chunk_number: chunk_number,
+              path: chunk_path,
+              content: chunk_content,
+              lines: chunk_content.lines.size,
+              size: chunk_content.bytesize
+            }
+          end
+
+          chunk_files
+        end
+
+        # Generate index file content
+        def generate_index_content(chunk_files, base_path, options)
+          index_lines = []
+
+          index_lines << "# Context Index"
+          index_lines << ""
+          index_lines << "This content has been split into #{chunk_files.size} chunks due to size constraints."
+          index_lines << ""
+          index_lines << "## Summary"
+          index_lines << ""
+          index_lines << "- Total chunks: #{chunk_files.size}"
+          index_lines << "- Chunk limit: #{@chunk_limit} lines"
+          index_lines << "- Total size: #{format_bytes(calculate_total_size(chunk_files))}"
+          index_lines << ""
+          index_lines << "## Chunks"
+          index_lines << ""
+
+          chunk_files.each do |chunk_info|
+            relative_path = chunk_info[:path].sub(%r{^.*/}, '')
+            index_lines << "### Chunk #{chunk_info[:chunk_number]}"
+            index_lines << ""
+            index_lines << "- File: [#{relative_path}](#{relative_path})"
+            index_lines << "- Lines: #{chunk_info[:lines]}"
+            index_lines << "- Size: #{format_bytes(chunk_info[:size])}"
+            index_lines << ""
+          end
+
+          if options[:include_metadata]
+            index_lines << "## Metadata"
+            index_lines << ""
+            index_lines << "- Generated at: #{Time.now.iso8601}"
+            index_lines << "- Base path: #{base_path}"
+            index_lines << "- Chunk suffix: #{options[:chunk_suffix]}"
+            index_lines << ""
+          end
+
+          index_lines.join("\n")
+        end
+
+        # Calculate total size of all chunks
+        def calculate_total_size(chunk_files)
+          chunk_files.sum { |chunk| chunk[:size] }
+        end
+
+        # Format bytes for human readability
+        def format_bytes(bytes)
+          units = ['B', 'KB', 'MB', 'GB']
+          size = bytes.to_f
+          unit_index = 0
+
+          while size >= 1024 && unit_index < units.size - 1
+            size /= 1024
+            unit_index += 1
+          end
+
+          "#{size.round(2)} #{units[unit_index]}"
+        end
+      end
+    end
+  end
+end
