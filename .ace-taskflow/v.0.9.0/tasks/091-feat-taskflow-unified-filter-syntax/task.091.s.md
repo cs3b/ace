@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.091
-status: draft
+status: pending
 priority: high
 estimate: 2 weeks
 dependencies: []
@@ -133,7 +133,7 @@ ace-taskflow ideas --filter-clear --filter status:done --filter author:john
 
 **Error Handling:**
 
-- **Invalid syntax**: "Error: Invalid filter syntax. Use: --field key:value"
+- **Invalid syntax**: "Error: Invalid filter syntax. Use: --filter key:value"
 - **Parsing error**: Show helpful message with examples
 - **No matches**: Return empty list (not an error)
 - **Unknown keys**: Allow gracefully (supports custom frontmatter fields)
@@ -165,10 +165,10 @@ ace-taskflow ideas --filter-clear --filter status:done --filter author:john
 
 ### Validation Questions
 
-- [ ] **Scope of Legacy Removal**: Should `--days` be removed or kept as convenience alias to `--filter recent_days:n`?
-- [ ] **Preset Defaults**: Should presets be updated to use new filter syntax in comments/documentation?
-- [ ] **Sorting with Filters**: Should filters and sorting be independent (yes) or should certain filter combinations suggest sort order?
-- [ ] **Performance**: Are there performance implications for filtering on arbitrary frontmatter fields?
+- [x] **Scope of Legacy Removal**: Keep `--days` as convenience alias - it's clearer than `--filter recent_days:n`
+- [x] **Preset Defaults**: Presets will continue using internal filter structure (not shown to users as --filter syntax)
+- [x] **Sorting with Filters**: Filters and sorting are fully independent
+- [x] **Performance**: Performance should be acceptable since filtering is in-memory on already loaded tasks
 
 ## Objective
 
@@ -180,45 +180,363 @@ Simplify and unify the filtering interface across ace-taskflow commands by remov
 - **Extensibility**: Works automatically with custom fields added to frontmatter
 - **Clarity**: Clearer semantics with explicit key:value syntax
 
-## Scope of Work
+## Technical Approach
 
-### User Experience Scope
-- CLI filtering on tasks, ideas, and releases via `--filter` flags
-- Support for single and multiple filter criteria
-- Clear, helpful error messages for invalid syntax
-- Migration path for users of legacy flags
+### Architecture Pattern
 
-### System Behavior Scope
-- Parse `--filter key:value` syntax from command-line arguments
-- Support OR, negation, and array matching operators
-- Merge filters with preset defaults (unless cleared)
-- Apply filters with AND logic across keys
-- Work with arbitrary frontmatter fields
+The implementation follows the existing ATOM architecture:
 
-### Interface Scope
-- `--filter key:value` flag on tasks, ideas, releases commands
-- `--filter-clear` flag to bypass preset defaults
-- Removal of legacy filtering flags
-- Updated preset system documentation
+- **Atoms**: Filter parser (key:value → filter specs), value matcher (field matching logic)
+- **Molecules**: Filter applier (orchestrates multiple filters), enhanced TaskFilter
+- **Organisms**: TaskManager, IdeaLoader (consume enhanced filter molecules)
+- **Commands**: tasks_command, ideas_command, releases_command (parse CLI flags)
 
-### Deliverables
+### Technology Stack
 
-#### Behavioral Specifications
-- Complete interface contract with all syntax variations
-- Operator documentation (simple, OR, negation, array matching)
-- Filter application logic (AND/OR semantics)
-- Error handling specifications
+- Ruby 3.x with existing dependencies
+- Thor CLI framework (already in use)
+- YAML for presets (no changes needed)
+- Existing test framework (minitest)
 
-#### User Experience Artifacts
-- Migration guide from legacy flags to new syntax
-- Updated README with new filtering syntax
-- Updated command help text
-- Examples for common filtering use cases
+### Implementation Strategy
 
-#### Breaking Change Documentation
-- Clear list of removed flags and their replacements
-- Migration examples for each removed flag
-- Warning in release notes
+**Phase 1: Core Filter Engine** (Foundation)
+- Create filter parser atom for --filter key:value syntax
+- Create filter applier molecule with OR, negation, array support
+- Extend TaskFilter to use new filter applier
+
+**Phase 2: Command Integration** (CLI Layer)
+- Update tasks_command, ideas_command, releases_command
+- Replace --status, --priority parsing with --filter parsing
+- Add deprecation warnings for removed flags
+- Keep --days as convenience (maps to --filter recent_days:n)
+
+**Phase 3: Testing & Documentation** (Quality & UX)
+- Comprehensive test coverage for all filter operations
+- Update README with new syntax and examples
+- Create migration guide for breaking changes
+- Update command help text
+
+## File Modifications
+
+### Create
+
+- `ace-taskflow/lib/ace/taskflow/atoms/filter_parser.rb`
+  - Purpose: Parse `--filter key:value` syntax from command-line arguments
+  - Key components: Parse key:value, handle OR (|), negation (!), validation
+  - Dependencies: None (pure Ruby)
+
+- `ace-taskflow/lib/ace/taskflow/molecules/filter_applier.rb`
+  - Purpose: Apply parsed filter specifications to task/idea collections
+  - Key components: AND logic across filters, OR within filter, negation, array matching
+  - Dependencies: FilterParser atom, existing task/idea data structures
+
+- `ace-taskflow/test/atoms/filter_parser_test.rb`
+  - Purpose: Unit tests for FilterParser atom
+  - Key components: Test all filter syntax variations, edge cases, error handling
+  - Dependencies: Test helper, FilterParser
+
+- `ace-taskflow/test/molecules/filter_applier_test.rb`
+  - Purpose: Unit tests for FilterApplier molecule
+  - Key components: Test filter application logic, combinations, array matching
+  - Dependencies: Test helper, FilterApplier, sample task data
+
+- `.ace-taskflow/v.0.9.0/tasks/091-feat-taskflow-unified-filter-syntax/ux/usage.md`
+  - Purpose: User-facing usage documentation with examples
+  - Key components: Command syntax, scenarios, migration guide
+  - Dependencies: None
+
+### Modify
+
+- `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
+  - Changes: Replace parse_additional_filters method to use FilterParser
+  - Impact: Removes --status, --priority, --backlog, --current parsing
+  - Integration points: FilterApplier for applying filters
+
+- `ace-taskflow/lib/ace/taskflow/commands/ideas_command.rb`
+  - Changes: Replace parse_additional_filters to use FilterParser
+  - Impact: Removes --status parsing
+  - Integration points: FilterApplier for applying filters
+
+- `ace-taskflow/lib/ace/taskflow/commands/releases_command.rb`
+  - Changes: Replace parse_additional_filters to use FilterParser
+  - Impact: Removes --active, --done, --backlog parsing
+  - Integration points: FilterApplier for applying filters
+
+- `ace-taskflow/lib/ace/taskflow/molecules/task_filter.rb`
+  - Changes: Enhance apply_filters to delegate to FilterApplier for --filter syntax
+  - Impact: Maintains backward compatibility for preset filter structure
+  - Integration points: FilterApplier molecule
+
+- `ace-taskflow/lib/ace/taskflow/molecules/list_preset_manager.rb`
+  - Changes: Documentation update only (presets use internal filter structure)
+  - Impact: No functional changes - presets continue working as-is
+  - Integration points: Commands still use apply_preset the same way
+
+- `ace-taskflow/test/commands/tasks_command_test.rb`
+  - Changes: Update tests to use --filter syntax, remove legacy flag tests
+  - Impact: Comprehensive test coverage for new filter syntax
+  - Integration points: Test filter combinations, error cases
+
+- `ace-taskflow/test/commands/ideas_command_test.rb`
+  - Changes: Update tests to use --filter syntax
+  - Impact: Test new filter functionality for ideas
+  - Integration points: Test filter combinations with ideas-specific fields
+
+- `ace-taskflow/test/commands/releases_command_test.rb`
+  - Changes: Update tests to use --filter syntax
+  - Impact: Test new filter functionality for releases
+  - Integration points: Test filter combinations with release-specific fields
+
+- `ace-taskflow/test/molecules/task_filter_test.rb`
+  - Changes: Add tests for filter applier integration
+  - Impact: Ensure TaskFilter properly delegates to FilterApplier
+  - Integration points: Test backward compatibility with presets
+
+- `ace-taskflow/README.md`
+  - Changes: Update all examples to use --filter syntax
+  - Impact: Primary user documentation reflects new interface
+  - Integration points: Show migration from old to new syntax
+
+- `ace-taskflow/CHANGELOG.md`
+  - Changes: Add breaking change entry for v0.10.0
+  - Impact: Clear communication of breaking changes
+  - Integration points: Link to migration guide
+
+### Delete
+
+- None (no files deleted, only code within files)
+
+## Risk Assessment
+
+### Technical Risks
+
+- **Risk:** Breaking change affects existing users and scripts
+  - **Probability:** High
+  - **Impact:** High
+  - **Mitigation:** Clear error messages, migration guide, CHANGELOG entry
+  - **Rollback:** Not applicable (breaking change is intentional for v0.10.0)
+
+- **Risk:** Filter syntax parser has bugs with edge cases
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Comprehensive unit tests, fuzz testing with varied inputs
+  - **Rollback:** Fix bugs incrementally, covered by tests
+
+- **Risk:** Performance degradation with complex filter combinations
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Benchmark tests, optimize if needed (filters on in-memory data)
+  - **Rollback:** N/A - performance should be similar to current implementation
+
+### Integration Risks
+
+- **Risk:** Preset system incompatibility with new filter approach
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Presets continue using internal filter structure, no changes needed
+  - **Monitoring:** Test all default presets with new code
+
+- **Risk:** Breaking changes to undocumented use cases
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Comprehensive testing, alpha testing with real workflows
+  - **Monitoring:** Monitor for reported issues after release
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Review existing filter implementation patterns across all three commands
+  > TEST: Understanding Check
+  > Type: Pre-condition Check
+  > Assert: All legacy flag parsing locations identified and documented
+  > Command: # grep -r "\-\-status\|\-\-priority\|\-\-active" ace-taskflow/lib/ace/taskflow/commands/
+
+* [ ] Design filter parser API and data structures
+  - Define FilterSpec data structure (key, values[], negated?, or_mode?)
+  - Define FilterParser.parse(args) → [FilterSpec] API
+  - Define FilterApplier.apply(items, filter_specs) → filtered_items API
+
+* [ ] Plan test strategy for all filter combinations
+  - Unit tests: FilterParser (30+ cases)
+  - Unit tests: FilterApplier (40+ cases)
+  - Integration tests: Commands with filters (25+ cases per command)
+  - Edge case tests: Special characters, empty values, malformed syntax
+
+### Execution Steps
+
+- [ ] Create FilterParser atom with comprehensive parsing logic
+  - Parse `key:value` syntax
+  - Handle pipe-separated OR values (`value1|value2`)
+  - Handle negation prefix (`!value`)
+  - Validate syntax and provide clear error messages
+  - Trim whitespace from keys and values
+  > TEST: Filter Parser Validation
+  > Type: Unit Test
+  > Assert: All syntax variations parse correctly
+  > Command: # bundle exec ruby -Itest test/atoms/filter_parser_test.rb
+
+- [ ] Create FilterApplier molecule with filtering logic
+  - Implement simple match (case-insensitive string equality)
+  - Implement array matching (value in array)
+  - Implement negation (invert match result)
+  - Implement OR within filter (any value matches)
+  - Implement AND across filters (all filters must match)
+  > TEST: Filter Application Logic
+  > Type: Unit Test
+  > Assert: All filter operations work correctly
+  > Command: # bundle exec ruby -Itest test/molecules/filter_applier_test.rb
+
+- [ ] Update tasks_command.rb to use new filter system
+  - Replace `parse_additional_filters` with FilterParser
+  - Add `--filter` and `--filter-clear` flag parsing
+  - Remove `--status`, `--priority`, `--backlog`, `--current` parsing
+  - Add helpful error messages for removed flags
+  - Keep `--days` as convenience flag (maps to filter)
+  > TEST: Tasks Command Filter Integration
+  > Type: Integration Test
+  > Assert: All filter combinations work with tasks command
+  > Command: # bundle exec ruby -Itest test/commands/tasks_command_test.rb
+
+- [ ] Update ideas_command.rb to use new filter system
+  - Replace `parse_additional_filters` with FilterParser
+  - Add `--filter` and `--filter-clear` flag parsing
+  - Remove `--status` parsing (ideas had less legacy flags)
+  - Keep `--days` as convenience flag
+  > TEST: Ideas Command Filter Integration
+  > Type: Integration Test
+  > Assert: All filter combinations work with ideas command
+  > Command: # bundle exec ruby -Itest test/commands/ideas_command_test.rb
+
+- [ ] Update releases_command.rb to use new filter system
+  - Replace `parse_additional_filters` with FilterParser
+  - Add `--filter` and `--filter-clear` flag parsing
+  - Remove `--active`, `--done`, `--backlog` parsing
+  > TEST: Releases Command Filter Integration
+  > Type: Integration Test
+  > Assert: All filter combinations work with releases command
+  > Command: # bundle exec ruby -Itest test/commands/releases_command_test.rb
+
+- [ ] Enhance task_filter.rb to integrate with FilterApplier
+  - Update `apply_filters` to support FilterSpec format
+  - Maintain backward compatibility with preset filter hash format
+  - Delegate to FilterApplier for new filter specs
+  > TEST: TaskFilter Backward Compatibility
+  > Type: Integration Test
+  > Assert: Presets continue working with enhanced TaskFilter
+  > Command: # bundle exec ruby -Itest test/molecules/task_filter_test.rb
+
+- [ ] Update all command help text to document new syntax
+  - Update `show_help` methods in all three command classes
+  - Remove legacy flag documentation
+  - Add `--filter` and `--filter-clear` documentation
+  - Add examples showing filter syntax
+  > TEST: Help Text Validation
+  > Type: Manual Check
+  > Assert: Help text is clear and shows correct syntax
+  > Command: # ace-taskflow tasks --help && ace-taskflow ideas --help && ace-taskflow releases --help
+
+- [ ] Create comprehensive test suite for new filter functionality
+  - FilterParser unit tests (30+ test cases)
+  - FilterApplier unit tests (40+ test cases)
+  - Command integration tests (75+ test cases total)
+  - Edge case and error handling tests
+  > TEST: Complete Test Suite
+  > Type: Full Test Run
+  > Assert: All tests pass with >95% coverage
+  > Command: # bundle exec rake test
+
+- [ ] Update README.md with new filter syntax and examples
+  - Replace all legacy flag examples with --filter syntax
+  - Add "Filtering" section with comprehensive examples
+  - Add migration guide subsection
+  - Update quick reference table
+  > TEST: Documentation Review
+  > Type: Manual Check
+  > Assert: All examples use correct new syntax
+  > Command: # Review ace-taskflow/README.md manually
+
+- [ ] Update CHANGELOG.md with breaking change entry
+  - Add v0.10.0 section (or next version)
+  - Document all removed flags
+  - Provide migration examples for each removed flag
+  - Link to usage documentation
+  > TEST: Changelog Validation
+  > Type: Manual Check
+  > Assert: Breaking changes clearly documented
+  > Command: # Review ace-taskflow/CHANGELOG.md manually
+
+- [ ] Create UX/usage documentation with migration guide
+  - Document all filter operators with examples
+  - Provide migration table: old flag → new filter syntax
+  - Include troubleshooting section
+  - Show common use case examples
+  > TEST: Usage Documentation Complete
+  > Type: Manual Check
+  > Assert: Migration path is clear for all legacy flags
+  > Command: # Review .ace-taskflow/v.0.9.0/tasks/091-.../ux/usage.md
+
+- [ ] Run complete test suite and fix any failures
+  > TEST: Final Test Suite
+  > Type: Full Test Run
+  > Assert: All tests pass, no regressions
+  > Command: # bundle exec rake test
+
+- [ ] Perform manual testing of all filter combinations
+  - Test with actual .ace-taskflow data
+  - Verify all filter operators work correctly
+  - Test error messages for invalid syntax
+  - Test with presets to ensure compatibility
+  > TEST: Manual Integration Testing
+  > Type: Manual Testing
+  > Assert: All filter scenarios work as expected in real usage
+  > Command: # Manual testing with ace-taskflow commands
+
+## Acceptance Criteria
+
+- [ ] **AC 1**: All legacy filter flags removed from code
+  - `--status`, `--priority`, `--context`, `--backlog`, `--current`, `--active`, `--done` all removed
+  - Code search for these flags returns no results in command parsing code
+  - Attempting to use removed flags shows clear error message
+
+- [ ] **AC 2**: Unified `--filter key:value` syntax works across all commands
+  - `ace-taskflow tasks --filter status:pending` works
+  - `ace-taskflow ideas --filter status:done` works
+  - `ace-taskflow releases --filter status:active` works
+  - Any frontmatter field can be used as filter key
+
+- [ ] **AC 3**: All filter operators function correctly
+  - Simple matching: `--filter key:value` works
+  - OR values: `--filter status:pending|in-progress` works
+  - Negation: `--filter status:!done` works
+  - Array matching: `--filter dependencies:task.081` works
+  - Multiple filters (AND): `--filter status:pending --filter priority:high` works
+
+- [ ] **AC 4**: `--filter-clear` flag bypasses preset filters
+  - `ace-taskflow tasks next --filter-clear` shows all tasks (no preset filters)
+  - Release and sort from preset are preserved
+
+- [ ] **AC 5**: Presets continue working unchanged
+  - All default presets (next, recent, all, done, etc.) work correctly
+  - Custom presets continue loading and applying filters
+  - Preset filters use internal structure (not affected by CLI syntax change)
+
+- [ ] **AC 6**: Documentation fully updated
+  - README.md has no references to removed flags
+  - All examples use new --filter syntax
+  - Migration guide created in ux/usage.md
+  - CHANGELOG.md documents breaking changes
+
+- [ ] **AC 7**: Comprehensive test coverage
+  - >95% code coverage for new filter components
+  - All filter operator combinations tested
+  - Error cases and edge cases covered
+  - Integration tests for all three commands
+
+- [ ] **AC 8**: Performance is acceptable
+  - Filter operations complete in <100ms for typical datasets (100-500 items)
+  - No significant performance regression vs current implementation
 
 ## Out of Scope
 
@@ -227,6 +545,8 @@ Simplify and unify the filtering interface across ace-taskflow commands by remov
 - ❌ **Nested Frontmatter**: Filtering on nested keys (e.g., `metadata.review.status`)
 - ❌ **Performance Optimization**: Index-based filtering (address if needed)
 - ❌ **Filter History**: Saving/recalling previous filters (future enhancement)
+- ❌ **Regex Matching**: Regular expression support in filter values (may add later)
+- ❌ **Range Queries**: Date/number range filtering like `--filter date:2024-01..2024-12`
 
 ## References
 
@@ -235,6 +555,9 @@ Simplify and unify the filtering interface across ace-taskflow commands by remov
 - Current Code: `ace-taskflow/lib/ace/taskflow/commands/{task,ideas,releases}_command.rb`
 - Existing Filters: `ace-taskflow/lib/ace/taskflow/molecules/task_filter.rb`
 - Presets: `ace-taskflow/lib/ace/taskflow/molecules/list_preset_manager.rb`
+- Test Patterns: `docs/testing-patterns.md`
+- Architecture: `docs/architecture.md`
+- ACE Gems Guide: `docs/ace-gems.g.md`
 
 ---
 
@@ -253,7 +576,7 @@ We are in pre-release (v.0.9.0), so breaking changes are acceptable for:
 Users upgrading will see:
 - Clear error: "Error: --status flag is no longer supported. Use: --filter status:value"
 - Help text updated with new syntax
-- Migration guide in release notes
+- Migration guide in ux/usage.md
 - Examples in README updated
 
 ### Design Principles
@@ -263,3 +586,14 @@ Users upgrading will see:
 3. **Expressiveness Over Simplicity**: Support complex queries when needed
 4. **Extensibility Over Predictability**: Custom fields work automatically
 5. **Clarity Over Brevity**: Explicit `key:value` syntax beats cryptic flags
+
+### Test-Driven Development Approach
+
+Implementation will follow TDD:
+1. Write test for filter parser syntax
+2. Implement parser to make test pass
+3. Write test for filter applier logic
+4. Implement applier to make test pass
+5. Write integration test for command
+6. Update command to make test pass
+7. Refactor and optimize with tests as safety net
