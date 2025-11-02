@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2025-11-02
+
+### Added
+
+- Enhance array parsing to handle quoted items with commas in CLI arguments
+
+### Fixed
+
+- Prevent accumulating newlines in task update command
+- Address code review feedback for task update command
+
+### Changed
+
+- Complete ace-support-markdown integration for document manipulation
+- Extract CLI parsing logic to FieldArgumentParser molecule
+- Address code review feedback for task update command
+
 ## [0.16.0] - 2025-11-02
 
 ### Added
