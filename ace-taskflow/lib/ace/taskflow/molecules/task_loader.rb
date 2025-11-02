@@ -3,7 +3,6 @@
 require "set"
 require "yaml"
 require "ace/support/markdown"
-require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
 require_relative "../configuration"
 require_relative "task_field_updater"
@@ -27,10 +26,13 @@ module Ace
           return nil unless File.exist?(path)
 
           content = File.read(path)
-          parsed = Atoms::YamlParser.parse(content)
+          result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
 
-          frontmatter = parsed[:frontmatter]
-          body_content = parsed[:content]
+          # For tasks, we expect valid frontmatter
+          return nil unless result[:valid]
+
+          frontmatter = result[:frontmatter]
+          body_content = result[:body]
 
           # Extract task number and release from path
           task_number = Atoms::PathBuilder.extract_task_number(path)
@@ -276,23 +278,14 @@ module Ace
           # Read current content
           content = File.read(task_path)
 
-          # Parse frontmatter and body
-          parsed = Atoms::YamlParser.parse(content)
-          frontmatter = parsed[:frontmatter]
-          body_content = parsed[:content]
+          # Parse document using ace-support-markdown
+          document = Ace::Support::Markdown::Models::MarkdownDocument.parse(content, file_path: task_path)
 
-          # Apply field updates
-          updated_frontmatter = TaskFieldUpdater.apply_updates(frontmatter, field_updates)
+          # Apply field updates using FrontmatterEditor
+          updated_doc = Ace::Support::Markdown::Molecules::FrontmatterEditor.update(document, field_updates)
 
-          # Reconstruct file content
-          yaml_content = YAML.dump(updated_frontmatter)
-          # Remove YAML document separator if present at start
-          yaml_content = yaml_content.delete_prefix("---\n")
-
-          # Strip leading newlines from body since we add the separator explicitly
-          body_content = body_content.lstrip
-
-          updated_content = "---\n#{yaml_content}---\n\n#{body_content}"
+          # Get updated content
+          updated_content = updated_doc.to_markdown
 
           # Use SafeFileWriter for atomic write with backup
           result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
@@ -316,10 +309,10 @@ module Ace
               path: task_path
             }
           end
-        rescue TaskFieldUpdater::FieldUpdateError => e
+        rescue Ace::Support::Markdown::Models::MarkdownDocument::ValidationError => e
           {
             success: false,
-            message: "Field update error: #{e.message}",
+            message: "Invalid document format: #{e.message}",
             path: task_path
           }
         rescue StandardError => e
@@ -334,8 +327,10 @@ module Ace
         # @param content [String] Task file content
         # @return [Hash] Parsed metadata
         def parse_metadata(content)
-          parsed = Atoms::YamlParser.parse(content)
-          frontmatter = parsed[:frontmatter]
+          result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
+
+          return nil unless result[:valid]
+          frontmatter = result[:frontmatter]
 
           return nil unless frontmatter
 
@@ -411,10 +406,11 @@ module Ace
 
           begin
             content = File.read(file_path, encoding: "utf-8")
-            parsed = Atoms::YamlParser.parse(content)
+            result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
 
             # Check if frontmatter exists and contains task metadata
-            frontmatter = parsed[:frontmatter]
+            return false unless result[:valid]
+            frontmatter = result[:frontmatter]
             return false unless frontmatter
 
             # A task file should have at least an id and status in frontmatter
