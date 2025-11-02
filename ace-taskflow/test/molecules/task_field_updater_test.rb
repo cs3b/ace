@@ -107,6 +107,18 @@ class TaskFieldUpdaterTest < Minitest::Test
     assert_equal({ "percentage" => 95.5 }, result)
   end
 
+  def test_parse_array_of_strings
+    result = @updater.parse_field_updates(["tags=[feature, refactor, bug]"])
+
+    assert_equal({ "tags" => ["feature", "refactor", "bug"] }, result)
+  end
+
+  def test_parse_mixed_type_array
+    result = @updater.parse_field_updates(['data=[1, "hello", true]'])
+
+    assert_equal({ "data" => [1, "hello", true] }, result)
+  end
+
   # ========================================
   # apply_updates tests
   # ========================================
