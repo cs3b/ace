@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require "set"
+require "yaml"
 require "ace/support/markdown"
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
 require_relative "../configuration"
+require_relative "task_field_updater"
 
 module Ace
   module Taskflow
@@ -262,6 +264,67 @@ module Ace
           result[:success]
         rescue StandardError
           false
+        end
+
+        # Update arbitrary task fields
+        # @param task_path [String] Path to the task file
+        # @param field_updates [Hash] Field updates (key => value)
+        # @return [Hash] Result with :success, :message, :updated_fields
+        def update_task_field(task_path, field_updates)
+          return { success: false, message: "Task file not found: #{task_path}" } unless File.exist?(task_path)
+
+          # Read current content
+          content = File.read(task_path)
+
+          # Parse frontmatter and body
+          parsed = Atoms::YamlParser.parse(content)
+          frontmatter = parsed[:frontmatter]
+          body_content = parsed[:content]
+
+          # Apply field updates
+          updated_frontmatter = TaskFieldUpdater.apply_updates(frontmatter, field_updates)
+
+          # Reconstruct file content
+          yaml_content = YAML.dump(updated_frontmatter)
+          # Remove YAML document separator if present at start
+          yaml_content = yaml_content.sub(/\A---\n/, "")
+
+          updated_content = "---\n#{yaml_content}---\n\n#{body_content}"
+
+          # Use SafeFileWriter for atomic write with backup
+          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            task_path,
+            updated_content,
+            backup: true,
+            validate: false
+          )
+
+          if result[:success]
+            {
+              success: true,
+              message: "Task updated successfully",
+              updated_fields: field_updates.keys,
+              path: task_path
+            }
+          else
+            {
+              success: false,
+              message: "Failed to write task file: #{result[:error] || 'Unknown error'}",
+              path: task_path
+            }
+          end
+        rescue TaskFieldUpdater::FieldUpdateError => e
+          {
+            success: false,
+            message: "Field update error: #{e.message}",
+            path: task_path
+          }
+        rescue StandardError => e
+          {
+            success: false,
+            message: "Unexpected error: #{e.message}",
+            path: task_path
+          }
         end
 
         # Parse task metadata from content string (unit testable)
