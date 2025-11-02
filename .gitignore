@@ -10,6 +10,8 @@ node_modules
 # Cache, tmp and backup files
 .cache
 *.bak
+*.backup
+*.backup.*
 tmp
 tmp/
 **/test-reports
