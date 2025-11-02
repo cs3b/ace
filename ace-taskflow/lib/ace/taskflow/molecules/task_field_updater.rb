@@ -93,32 +93,23 @@ module Ace
             return value_str[1..-2]
           end
 
-          # Empty value
-          return "" if value_str.empty?
-
-          # Boolean
-          return true if value_str == "true"
-          return false if value_str == "false"
-
-          # Integer
-          return value_str.to_i if value_str.match?(/^-?\d+$/)
-
-          # Float
-          return value_str.to_f if value_str.match?(/^-?\d+\.\d+$/)
-
-          # Array syntax: [item1, item2, item3]
-          if value_str.match?(/^\[.*\]$/)
+          case value_str
+          when "" then ""
+          when "true" then true
+          when "false" then false
+          when /^-?\d+$/ then value_str.to_i
+          when /^-?\d+\.\d+$/ then value_str.to_f
+          when /^\[.*\]$/
             content = value_str[1..-2].strip
             return [] if content.empty?
 
             # Split by comma and trim each item
             items = content.split(",").map(&:strip)
             # Try to infer types for array items
-            return items.map { |item| infer_type(item) }
+            items.map { |item| infer_type(item) }
+          else
+            value_str
           end
-
-          # Default to string
-          value_str
         end
 
         # Apply nested update using dot notation

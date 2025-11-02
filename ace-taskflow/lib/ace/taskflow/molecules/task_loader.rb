@@ -287,7 +287,7 @@ module Ace
           # Reconstruct file content
           yaml_content = YAML.dump(updated_frontmatter)
           # Remove YAML document separator if present at start
-          yaml_content = yaml_content.sub(/\A---\n/, "")
+          yaml_content = yaml_content.delete_prefix("---\n")
 
           updated_content = "---\n#{yaml_content}---\n\n#{body_content}"
 
