@@ -1,0 +1,17 @@
+# Test fixture for local ace core config
+ace:
+  test_mode: true
+  override: "local"
+  version: "0.9.0"
+  config_cascade:
+    enabled: true
+    search_paths:
+      - ".ace"
+      - "~/.ace"
+    merge_strategy: deep
+  features:
+    auto_load_env: true
+    validate_config: true
+  nested:
+    deep:
+      value: "from_local"

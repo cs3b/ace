@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'Context loading for ACE projects'
   spec.description = 'Context loading gem for ACE projects. Provides preset-based context ' \
-                     'loading with configuration cascade support via ace-core. Supports ' \
+                     'loading with configuration cascade support via ace-support-core. Supports ' \
                      'multiple file formats and dynamic content generation.'
   spec.homepage = 'https://github.com/cs3b/ace-meta'
   spec.required_ruby_version = '>= 3.2.0'
@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-core', '~> 0.10.0'
+  spec.add_dependency 'ace-support-core', '~> 0.10.0'
   spec.add_dependency 'ace-git-diff', '~> 0.1.0'
 
   # Development dependencies managed in root Gemfile

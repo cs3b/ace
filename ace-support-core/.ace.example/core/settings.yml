@@ -1,0 +1,25 @@
+# Example ace-core configuration
+# Copy to .ace/core/settings.yml in your project and customize
+
+ace:
+  # Project identification
+  project:
+    name: "your-project"
+    type: "application"  # Options: application, gem, monorepo
+
+  # Configuration cascade settings (optional)
+  config_cascade:
+    merge_strategy: deep      # How to merge configs: deep, shallow, replace
+    array_strategy: replace   # How to handle arrays: replace, concat, union
+
+  # Environment variables (optional)
+  environment:
+    load_dotenv: true
+    dotenv_files:
+      - ".env.local"    # Local overrides (gitignored)
+      - ".env"          # Project defaults
+
+  # Project-specific settings (optional)
+  settings:
+    verbose_logging: false
+    cache_ttl: 3600  # 1 hour

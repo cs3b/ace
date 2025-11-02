@@ -13,6 +13,30 @@ update:
 
 Quick reference based on production patterns from ace-lint, ace-docs, ace-taskflow, ace-search.
 
+## Gem Naming Conventions
+
+ACE gems follow a strict naming pattern to clarify their purpose:
+
+### ace-* Pattern (Functional Gems with CLI Tools)
+- **Purpose**: Provide direct functionality to users through CLI commands
+- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review
+- **Characteristics**:
+  - Have executables in `exe/` directory
+  - Registered in gemspec: `spec.executables = ['ace-tool']`
+  - User-facing functionality
+
+### ace-support-* Pattern (Infrastructure Library Gems)
+- **Purpose**: Provide shared infrastructure and utilities for other gems
+- **Examples**: ace-support-core, ace-support-test-helpers, ace-support-markdown
+- **Characteristics**:
+  - No CLI executables (`spec.executables = []`)
+  - Library-only functionality
+  - Shared by multiple ace-* gems
+
+### ace-llm-providers-* Pattern (Provider Extensions)
+- **Purpose**: Extend ace-llm with specific provider implementations
+- **Examples**: ace-llm-providers-cli, ace-llm-providers-openai (future)
+
 ## Standard Structure
 
 ```
@@ -35,7 +59,7 @@ ace-gem/
 
 ## Configuration
 
-Use ace-core config cascade. **Never hardcode paths**.
+Use ace-support-core config cascade. **Never hardcode paths**.
 
 ```ruby
 # Single-purpose (flat): .ace/gem/config.yml
@@ -50,6 +74,8 @@ end
 Ace::Core.config.get('ace', 'lint')           # General
 Ace::Core.config.get('ace', 'lint', 'kramdown')  # Tool-specific
 ```
+
+Note: Module name remains `Ace::Core` even though gem is `ace-support-core`.
 
 ## Handbook
 
@@ -119,19 +145,20 @@ end
 ## Gemspec
 
 ```ruby
-spec.add_dependency "ace-core", "~> 0.9"
-spec.add_development_dependency "ace-test-support", "~> 0.9"
+spec.add_dependency "ace-support-core", "~> 0.10"
+spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 ```
 
 ## Essential Patterns
 
 ✅ **DO**:
-- Use `Ace::Core.config.get('ace', 'gem')` for config
+- Use `Ace::Core.config.get('ace', 'gem')` for config (module name unchanged)
 - Include handbook/ with agents and workflows
 - Flat test structure: `test/atoms/` not `test/ace/gem/atoms/`
 - Provide .ace.example/ configs
 - Maintain CHANGELOG.md in Keep a Changelog format
-- Add ace-core dependency
+- Add ace-support-core dependency for configuration support
+- Follow naming conventions: ace-* for CLI tools, ace-support-* for libraries
 
 ❌ **DON'T**:
 - Hardcode config paths or create custom ConfigLoader

@@ -5,7 +5,17 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.11.1] - 2025-10-24
+## [0.11.2] - 2025-11-01
+
+### Changed
+
+- **Dependency Migration**: Updated to use renamed infrastructure gems
+  - Changed dependency from `ace-core` to `ace-support-core`
+  - Changed dependency from `ace-test-support)
+  - Part of ecosystem-wide naming convention alignment for infrastructure gems
+
+## [0.11.1]
+ - 2025-10-24
 
 ### Fixed
 - Address PR #3 review issues for ace-git-diff integration

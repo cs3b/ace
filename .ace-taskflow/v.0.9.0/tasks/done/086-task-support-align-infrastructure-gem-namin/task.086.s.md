@@ -1,12 +1,13 @@
 ---
 id: v.0.9.0+task.086
-status: pending
+status: done
 priority: medium
 estimate: 12h
 dependencies: []
 sort: 997
 reviewed: 2025-11-01
 reviewer: claude-opus-4.1
+completed: 2025-11-02
 ---
 
 # Align infrastructure gem naming to ace-support-* pattern
@@ -14,6 +15,7 @@ reviewer: claude-opus-4.1
 ## Behavioral Specification
 
 ### User Experience
+
 - **Input**: Current ACE ecosystem with mixed naming conventions for infrastructure gems (`ace-core`, `ace-test-support`) versus support gems (`ace-support-mac-clipboard`, `ace-support-markdown`)
 - **Process**: Developers and AI agents interact with a consistently named ecosystem where infrastructure/support gems are clearly distinguished from functional capability gems through naming
 - **Output**: Unified `ace-support-*` naming pattern for all infrastructure and support gems, improved discoverability in RubyGems listings, clearer ecosystem organization
@@ -23,22 +25,26 @@ reviewer: claude-opus-4.1
 The ACE ecosystem should present a consistent naming convention that helps users understand the role and purpose of each gem at a glance:
 
 **Current State:**
+
 - `ace-core` - Foundational configuration cascade (15+ gems depend on it)
 - `ace-test-support` - Shared test utilities (development dependency)
 - `ace-support-mac-clipboard` - Platform-specific clipboard support
 - `ace-support-markdown` - Markdown editing support
 
 **Desired State:**
+
 - `ace-support-core` - Foundational configuration cascade (renamed from ace-core)
 - `ace-support-test-helpers` - Shared test utilities (renamed from ace-test-support)
 - `ace-support-mac-clipboard` - Platform-specific clipboard support (no change)
 - `ace-support-markdown` - Markdown editing support (no change)
 
 **Ecosystem Organization Principle:**
+
 - `ace-*` - Functional capability gems providing specific features with direct CLI tools (ace-search, ace-lint, ace-docs, etc.)
 - `ace-support-*` - Infrastructure and support gems without direct CLI tools (libraries that other gems depend on)
 
 **User-Facing Impact:**
+
 - RubyGems search results show clearer organization
 - Gemfile dependencies are more self-documenting
 - AI agents can better understand gem roles through naming
@@ -47,6 +53,7 @@ The ACE ecosystem should present a consistent naming convention that helps users
 ### Interface Contract
 
 **Package Installation:**
+
 ```bash
 # New names (after rename)
 gem install ace-support-core          # Core config cascade
@@ -58,6 +65,7 @@ gem install ace-test-support  # Redirects or shows deprecation warning
 ```
 
 **Gemspec Dependencies:**
+
 ```ruby
 # All ace-* gems will be updated to use new names
 Gem::Specification.new do |spec|
@@ -70,6 +78,7 @@ end
 ```
 
 **Ruby Requires (Backward Compatible):**
+
 ```ruby
 # Internal module structure remains unchanged for compatibility
 require 'ace/core'          # Still works - maps to ace-support-core gem
@@ -81,17 +90,20 @@ Ace::TestSupport::VERSION    # Works as before
 ```
 
 **CLI/Tool Behavior:**
+
 ```bash
 # No CLI changes - these gems have no executables
 # Only package names and dependencies change
 ```
 
 **Error Handling:**
+
 - **Old gem installed with new code**: Clear error message indicating gem rename and migration path
 - **Missing dependency during transition**: Helpful error suggesting the new gem name
 - **Version conflicts**: Standard RubyGems version conflict resolution with clear gem names
 
 **Edge Cases:**
+
 - **Existing projects with old gem names**: Gradual migration path with deprecation warnings
 - **Mixed old/new dependencies**: RubyGems should handle gracefully with proper gem metadata
 - **Cached gems**: Bundler cache invalidation and rebuild instructions
@@ -158,6 +170,7 @@ This is a foundation-level improvement that benefits all current and future ACE 
 ### Decision Validation
 
 All validation questions (lines 109-117) have been answered:
+
 - **Deprecation Strategy:** No shim gems needed - direct rename with documentation
 - **Version Bump:** Patch version for dependency updates
 - **Transition Timeline:** Immediate cutover acceptable (no backward compatibility required)
@@ -180,10 +193,12 @@ All validation questions (lines 109-117) have been answered:
 ### Affected Gems and Version Strategy
 
 **Tier 1 - Foundation (Both dependencies):**
+
 - `ace-test-runner` 0.1.5 → 0.1.6 (runtime: ace-core, dev: ace-test-support)
 - `ace-nav` 0.10.1 → 0.10.2 (runtime: ace-core, dev: ace-test-support)
 
 **Tier 2 - Core Tools:**
+
 - `ace-context` 0.16.0 → 0.16.1 (runtime: ace-core)
 - `ace-git-commit` 0.11.0 → 0.11.1 (runtime: ace-core)
 - `ace-git-diff` 0.1.1 → 0.1.2 (runtime: ace-core, dev: ace-test-support)
@@ -191,6 +206,7 @@ All validation questions (lines 109-117) have been answered:
 - `ace-taskflow` 0.13.2 → 0.13.3 (runtime: ace-core)
 
 **Tier 3 - Feature Gems:**
+
 - `ace-search` 0.11.2 → 0.11.3 (runtime: ace-core, dev: ace-test-support)
 - `ace-lint` 0.3.0 → 0.3.1 (runtime: ace-core)
 - `ace-docs` 0.6.1 → 0.6.2 (runtime: ace-core)
@@ -198,6 +214,7 @@ All validation questions (lines 109-117) have been answered:
 - `ace-support-markdown` 0.1.2 → 0.1.3 (dev: ace-test-support only)
 
 **New Gem Versions:**
+
 - `ace-support-core` 0.10.0 (matches current ace-core)
 - `ace-support-test-helpers` 0.9.2 (matches current ace-test-support)
 
@@ -229,6 +246,7 @@ ace-support-test-helpers (NEW from ace-test-support)
 ### Breaking Change Analysis
 
 **Zero Breaking Changes:**
+
 - ✗ No API changes
 - ✗ No module namespace changes
 - ✗ No require path changes
@@ -242,6 +260,7 @@ ace-support-test-helpers (NEW from ace-test-support)
 **Decision:** Per user requirements, no backward compatibility needed - clean break with minor version bumps.
 
 **Rationale:**
+
 - We're pre-release (all versions < 1.0.0)
 - Simpler implementation without shim gems
 - Clearer migration path
@@ -252,12 +271,14 @@ ace-support-test-helpers (NEW from ace-test-support)
 **Decision:** Create NEW gem directories alongside old ones for safer migration.
 
 **Rationale:**
+
 - Lower risk during development
 - Easier rollback if needed
 - Can test side-by-side
 - Git history preserved
 
 **Implementation:**
+
 - Create: `ace-support-core/` (from ace-core)
 - Create: `ace-support-test-helpers/` (from ace-test-support)
 - Update root Gemfile to use new paths
@@ -267,12 +288,14 @@ ace-support-test-helpers (NEW from ace-test-support)
 **Decision:** Use local gem paths during development, not RubyGems publishing.
 
 **Rationale:**
+
 - Faster iteration
 - No RubyGems publishing delays
 - Easy testing across mono-repo
 - Simpler rollback
 
 **Example Gemfile:**
+
 ```ruby
 gem "ace-support-core", path: "ace-support-core"
 gem "ace-support-test-helpers", path: "ace-support-test-helpers"
@@ -283,11 +306,13 @@ gem "ace-support-test-helpers", path: "ace-support-test-helpers"
 **Decision:** Update gems in dependency order across three tiers.
 
 **Tier Structure:**
+
 1. **Foundation:** ace-test-runner, ace-nav (depend on both)
 2. **Core Tools:** ace-context, ace-git-*, ace-llm, ace-taskflow
 3. **Feature Gems:** ace-search, ace-lint, ace-docs, ace-review, ace-support-markdown
 
 **Rationale:**
+
 - Catches issues early
 - Easier debugging
 - Can pause at tier boundaries
@@ -297,6 +322,7 @@ gem "ace-support-test-helpers", path: "ace-support-test-helpers"
 **Decision:** Update docs AFTER gems are working (Phase 3).
 
 **Rationale:**
+
 - Documentation reflects actual state
 - Reduces confusion during transition
 - Single batch update more efficient
@@ -304,12 +330,14 @@ gem "ace-support-test-helpers", path: "ace-support-test-helpers"
 ## Scope of Work
 
 ### User Experience Scope
+
 - **Package Discovery**: How developers find and understand gems in RubyGems listings
 - **Dependency Management**: How developers specify and understand dependencies in Gemfiles
 - **Migration Experience**: How existing users transition from old to new gem names
 - **Documentation Access**: How users find and understand updated documentation
 
 ### System Behavior Scope
+
 - **Gem Publishing**: Publishing renamed gems to RubyGems with proper metadata
 - **Dependency Resolution**: Ensuring RubyGems and Bundler correctly resolve new names
 - **Backward Compatibility**: Maintaining require paths and module namespaces
@@ -317,6 +345,7 @@ gem "ace-support-test-helpers", path: "ace-support-test-helpers"
 - **Pattern Documentation**: Update `docs/ace-gems.g.md` to formalize the naming convention (gems without direct CLI tools should be ace-support-*)
 
 ### Interface Scope
+
 - **RubyGems API**: Gem metadata, dependencies, and version specifications
 - **Bundler Integration**: Gemfile dependency specifications
 - **Ruby Requires**: Module loading and namespace resolution
@@ -325,12 +354,14 @@ gem "ace-support-test-helpers", path: "ace-support-test-helpers"
 ### Deliverables
 
 #### Behavioral Specifications
+
 - Detailed rename execution plan with rollback strategy
 - Dependency update strategy across 15+ gems
 - Backward compatibility preservation approach
 - User migration guide and timeline
 
 #### Validation Artifacts
+
 - Pre-rename validation checklist
 - Post-rename verification tests
 - Dependency resolution validation
@@ -369,38 +400,45 @@ gem "ace-support-test-helpers", path: "ace-support-test-helpers"
 After analyzing RubyGems ecosystem patterns and existing ACE monorepo structure, we will use a **coordinated multi-phase migration** approach:
 
 **Phase 1: Gem Creation and Publishing**
+
 - Create new `ace-support-core` and `ace-support-test-helpers` gems as siblings to existing gems
 - Publish to RubyGems with proper metadata
 - Initially coexist with old gems (no breaking changes yet)
 
 **Phase 2: Dependency Updates**
+
 - Update all 13 dependent gems to reference new gem names
 - Coordinate version bumps across ecosystem
 - Test compatibility in CI/CD
 
 **Phase 3: Deprecation and Documentation**
+
 - Mark old gems as deprecated in RubyGems metadata
 - Update all documentation and guides
 - Provide clear migration path for external users
 
 **Phase 4: Old Gem Retirement (Future)**
+
 - After grace period, archive old gem repositories
 - Keep old gems available on RubyGems but frozen
 
 ### Architecture Pattern
 
 **Gem Structure Preservation:**
+
 - Internal module structure remains unchanged (`Ace::Core`, `Ace::TestSupport`)
 - Require paths stay backward compatible (`require 'ace/core'`)
 - ATOM architecture maintained (atoms/, molecules/, organisms/, models/)
 - Handbook integration patterns preserved
 
 **Naming Convention Formalization:**
+
 - `ace-*` gems: Functional capability gems WITH direct CLI tools (ace-search, ace-lint, ace-docs, etc.)
 - `ace-support-*` gems: Infrastructure and support gems WITHOUT direct CLI tools (libraries)
 - Document this pattern in `docs/ace-gems.g.md`
 
 **Backward Compatibility Strategy:**
+
 - Old gems become "shim gems" that depend on new gems
 - No code changes required for existing users
 - Only Gemfile updates needed during transition
@@ -408,16 +446,19 @@ After analyzing RubyGems ecosystem patterns and existing ACE monorepo structure,
 ### Technology Stack
 
 **RubyGems Publishing:**
+
 - Use existing `gem push` workflow
 - Leverage RubyGems metadata for deprecation warnings
 - Version coordination: Bump all affected gems to v0.9.x during migration
 
 **Bundler Integration:**
+
 - Path-based gems during development (`gem "ace-support-core", path: "ace-support-core"`)
 - RubyGems dependencies for published versions
 - Update root Gemfile for workspace development
 
 **Testing Infrastructure:**
+
 - Existing ace-test-runner for validation
 - CI/CD matrix tests across all gems
 - Integration tests verify cross-gem compatibility
@@ -425,6 +466,7 @@ After analyzing RubyGems ecosystem patterns and existing ACE monorepo structure,
 ### Implementation Strategy
 
 **Risk Mitigation:**
+
 1. Create new gems first (no breaking changes)
 2. Test new gems thoroughly before updating dependents
 3. Staged rollout: Update deps gem-by-gem with testing between
@@ -432,11 +474,13 @@ After analyzing RubyGems ecosystem patterns and existing ACE monorepo structure,
 5. Document rollback procedures at each phase
 
 **Version Strategy:**
+
 - New gems start at v0.9.0 (align with ecosystem)
 - Dependent gems bump patch version for dependency updates
 - Old gems frozen at current version with deprecation notice
 
 **Rollback Procedures:**
+
 - Phase 1: Simply don't publish new gems (no impact)
 - Phase 2: Revert dependency updates in affected gemspecs
 - Phase 3: Remove deprecation notices
@@ -455,6 +499,7 @@ No new tools required - using existing ACE ecosystem tooling:
 | Git tags | Version control and rollback | Standard practice for releases |
 
 **Selection Rationale:**
+
 - Zero new dependencies keeps migration simple
 - Leverage existing monorepo infrastructure
 - Standard Ruby ecosystem tools well-understood
@@ -465,6 +510,7 @@ No new tools required - using existing ACE ecosystem tooling:
 ### Create
 
 **New Gem Directories:**
+
 - `ace-support-core/` (copy of ace-core with renamed gemspec)
   - Purpose: Renamed version of foundational configuration cascade gem
   - Key components: Same ATOM structure, config cascade, zero dependencies
@@ -478,6 +524,7 @@ No new tools required - using existing ACE ecosystem tooling:
 ### Modify
 
 **Gemspecs (13 dependent gems):**
+
 - `ace-context/ace-context.gemspec` - Change `ace-core` → `ace-support-core`
 - `ace-docs/ace-docs.gemspec` - Change `ace-core` → `ace-support-core`
 - `ace-git-commit/ace-git-commit.gemspec` - Change `ace-core` → `ace-support-core`
@@ -492,10 +539,12 @@ No new tools required - using existing ACE ecosystem tooling:
 - `ace-test-runner/ace-test-runner.gemspec` - Change `ace-core` → `ace-support-core`, `ace-test-support` → `ace-support-test-helpers`
 
 **Root Gemfile:**
+
 - Update path references: `gem "ace-support-core", path: "ace-support-core"`
 - Update path references: `gem "ace-support-test-helpers", path: "ace-support-test-helpers"`
 
 **Documentation (138+ files):**
+
 - `docs/ace-gems.g.md` - Add naming convention rule section
 - `README.md` - Update gem references
 - `CHANGELOG.md` - Document migration in root changelog
@@ -505,6 +554,7 @@ No new tools required - using existing ACE ecosystem tooling:
 - Task and idea files - Update references (138+ markdown files)
 
 **CI/CD:**
+
 - `.github/workflows/ci.yml` - Update gem matrix to include new names
 
 ### Delete
@@ -514,6 +564,7 @@ None immediately - old gems maintained as deprecated shims during transition per
 ### Rename (Comprehensive Migration)
 
 **Gem Directories:**
+
 - `ace-core/` → `ace-support-core/` (directory rename)
   - Type: Complete gem directory
   - Related renames:
@@ -535,6 +586,7 @@ None immediately - old gems maintained as deprecated shims during transition per
   - Documentation updates: 138+ markdown files
 
 **Internal Structure (NO CHANGES):**
+
 - `lib/ace/core/` - Module path stays the same
 - `lib/ace/test_support/` - Module path stays the same
 - All require statements in dependent gems - No changes needed
@@ -545,18 +597,21 @@ None immediately - old gems maintained as deprecated shims during transition per
 ### Technical Risks
 
 **Risk: Dependency Resolution Conflicts**
+
 - **Probability:** Medium
 - **Impact:** High
 - **Mitigation:** Staged rollout with testing between each gem update; use version pinning during transition
 - **Rollback:** Revert to previous gem versions via Git tags; bundler lock file provides safety net
 
 **Risk: RubyGems Publishing Issues**
+
 - **Probability:** Low
 - **Impact:** Medium
 - **Mitigation:** Test publishing in test environment first; verify gem metadata before production push
 - **Rollback:** RubyGems allows yanking recent gems (within 24 hours); keep old gems available
 
 **Risk: CI/CD Pipeline Failures**
+
 - **Probability:** Medium
 - **Impact:** Medium
 - **Mitigation:** Update CI configuration before publishing; test matrix locally first
@@ -565,12 +620,14 @@ None immediately - old gems maintained as deprecated shims during transition per
 ### Integration Risks
 
 **Risk: External Projects Using Old Gem Names**
+
 - **Probability:** High (if any external users exist)
 - **Impact:** Medium
 - **Mitigation:** Maintain old gems as shim dependencies for extended period; clear migration documentation
 - **Monitoring:** Watch RubyGems download stats; check for GitHub issues
 
 **Risk: Documentation Out of Sync**
+
 - **Probability:** High (138+ files to update)
 - **Impact:** Low
 - **Mitigation:** Systematic search and replace; create validation checklist; use ace-docs for tracking
@@ -579,6 +636,7 @@ None immediately - old gems maintained as deprecated shims during transition per
 ### Performance Risks
 
 **Risk: Build/Test Time Increase**
+
 - **Probability:** Low
 - **Impact:** Low
 - **Mitigation:** No new dependencies added; same code structure preserved
@@ -589,13 +647,13 @@ None immediately - old gems maintained as deprecated shims during transition per
 
 ### Planning Steps
 
-* [x] **Research Phase Completed:**
+- [x] **Research Phase Completed:**
   - Analyzed all 13 dependent gems and their dependency declarations
   - Identified 138+ documentation files referencing old gem names
   - Reviewed RubyGems migration patterns and deprecation strategies
   - Confirmed backward compatibility approach (module names unchanged)
 
-* [ ] **Pre-Migration Validation:**
+- [ ] **Pre-Migration Validation:**
   - Run full test suite to establish baseline (all gems green)
   - Verify all gems publish successfully to RubyGems
   - Document current version numbers for all affected gems
@@ -605,7 +663,7 @@ None immediately - old gems maintained as deprecated shims during transition per
   > Assert: All 15+ gems have passing tests, current versions documented
   > Command: ace-test --all && ace-taskflow release --version
 
-* [ ] **Create Migration Checklist:**
+- [ ] **Create Migration Checklist:**
   - Document all 13 gemspecs to update
   - List all 138+ documentation files needing updates
   - Plan version bump strategy for each gem
@@ -922,3 +980,75 @@ None immediately - old gems maintained as deprecated shims during transition per
 - [ ] **Deprecation Notices**: Old gems marked as deprecated with migration guidance
 - [ ] **No Breaking Changes**: Users can upgrade with only Gemfile changes (no code modifications required)
 - [ ] **Rollback Tested**: Rollback procedures documented and validated at each phase
+
+## Completion Summary
+
+**Status**: ✅ COMPLETED
+**Date**: 2025-11-02
+**Branch**: task-086-gem-rename
+**PR**: #8
+
+### What Was Delivered
+
+1. **New Infrastructure Gems Created**
+   - `ace-support-core` (v0.10.0) - copied from ace-core
+   - `ace-support-test-helpers` (v0.9.2) - copied from ace-test-support
+   - All tests passing in isolation
+
+2. **Dependency Updates (12 gems)**
+   - **Tier 1**: ace-test-runner (0.1.6), ace-nav (0.10.2)
+   - **Tier 2**: ace-context (0.16.1), ace-git-commit (0.11.1), ace-git-diff (0.1.2), ace-llm (0.9.5), ace-taskflow (0.15.2)
+   - **Tier 3**: ace-search (0.11.3), ace-lint (0.3.1), ace-docs (0.6.2), ace-review (0.11.2), ace-support-markdown (0.1.3)
+   - All received patch version bumps
+   - All CHANGELOGs updated
+
+3. **Documentation Updates**
+   - Updated `docs/ace-gems.g.md` with formal naming conventions
+   - Updated root Gemfile
+   - Updated root CHANGELOG.md (v0.9.102)
+   - All gem-specific CHANGELOGs updated
+
+4. **Testing & Validation**
+   - All individual gem tests passing
+   - Comprehensive test suite passing
+   - Bundle installation successful
+   - Code review completed (gpro model) - all issues addressed
+
+### Key Achievements
+
+**No Breaking Changes**:
+
+- Module names unchanged (`Ace::Core`, `Ace::TestSupport`)
+- Require paths unchanged (`require 'ace/core'`, `require 'ace/test_support'`)
+- All APIs preserved
+- Zero code changes needed in consuming gems
+
+**Clear Naming Convention Established**:
+
+- **ace-*** pattern: Functional gems WITH CLI tools
+- **ace-support-*** pattern: Infrastructure gems WITHOUT CLI tools
+- Pattern documented in docs/ace-gems.g.md
+
+### Files Modified
+
+- 135 files changed in main commit
+- 25 files changed in review fixes
+- Total: 12,700+ insertions, 112 deletions
+
+### Commits
+
+1. `6e7e7753` - feat(infrastructure-gem-naming): Rename ace-core and ace-test-support
+2. `7b9d8e3e` - docs: update CHANGELOG to version 0.9.102
+3. `8b0fbb07` - fix: Address code review feedback on documentation and hygiene
+
+### Next Steps (Publishing - Not in Scope)
+
+- Build and publish ace-support-core v0.10.0 to RubyGems
+- Build and publish ace-support-test-helpers v0.9.2 to RubyGems
+- Publish updated dependent gems (all 12)
+- Mark old gems as deprecated
+- Remove old directories after validation period
+
+### Actual Time
+
+~3-4 hours (well under 12-hour estimate)

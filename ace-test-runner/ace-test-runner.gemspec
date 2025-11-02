@@ -30,8 +30,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-core", "~> 0.1"
-  spec.add_dependency "ace-test-support", "~> 0.1"
+  spec.add_dependency "ace-support-core", "~> 0.1"
+  spec.add_dependency "ace-support-test-helpers", "~> 0.1"
   spec.add_dependency "minitest", "~> 5.0"
   spec.add_dependency "minitest-reporters", "~> 1.6"
   spec.add_dependency "ostruct"

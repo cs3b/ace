@@ -34,11 +34,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-core", "~> 0.9"
+  spec.add_dependency "ace-support-core", "~> 0.9"
   spec.add_dependency "thor", "~> 1.3"
 
   # Development dependencies
-  spec.add_development_dependency "ace-test-support", "~> 0.9"
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "minitest", "~> 5.0"
 end
