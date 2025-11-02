@@ -289,6 +289,9 @@ module Ace
           # Remove YAML document separator if present at start
           yaml_content = yaml_content.delete_prefix("---\n")
 
+          # Strip leading newlines from body since we add the separator explicitly
+          body_content = body_content.lstrip
+
           updated_content = "---\n#{yaml_content}---\n\n#{body_content}"
 
           # Use SafeFileWriter for atomic write with backup
