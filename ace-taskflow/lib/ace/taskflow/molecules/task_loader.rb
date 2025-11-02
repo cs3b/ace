@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require "set"
+require "yaml"
 require "ace/support/markdown"
-require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
 require_relative "../configuration"
+require_relative "task_field_updater"
 
 module Ace
   module Taskflow
@@ -25,10 +26,13 @@ module Ace
           return nil unless File.exist?(path)
 
           content = File.read(path)
-          parsed = Atoms::YamlParser.parse(content)
+          result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
 
-          frontmatter = parsed[:frontmatter]
-          body_content = parsed[:content]
+          # For tasks, we expect valid frontmatter
+          return nil unless result[:valid]
+
+          frontmatter = result[:frontmatter]
+          body_content = result[:body]
 
           # Extract task number and release from path
           task_number = Atoms::PathBuilder.extract_task_number(path)
@@ -264,12 +268,69 @@ module Ace
           false
         end
 
+        # Update arbitrary task fields
+        # @param task_path [String] Path to the task file
+        # @param field_updates [Hash] Field updates (key => value)
+        # @return [Hash] Result with :success, :message, :updated_fields
+        def update_task_field(task_path, field_updates)
+          return { success: false, message: "Task file not found: #{task_path}" } unless File.exist?(task_path)
+
+          # Read current content
+          content = File.read(task_path)
+
+          # Parse document using ace-support-markdown
+          document = Ace::Support::Markdown::Models::MarkdownDocument.parse(content, file_path: task_path)
+
+          # Apply field updates using FrontmatterEditor
+          updated_doc = Ace::Support::Markdown::Molecules::FrontmatterEditor.update(document, field_updates)
+
+          # Get updated content
+          updated_content = updated_doc.to_markdown
+
+          # Use SafeFileWriter for atomic write with backup
+          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            task_path,
+            updated_content,
+            backup: true,
+            validate: false
+          )
+
+          if result[:success]
+            {
+              success: true,
+              message: "Task updated successfully",
+              updated_fields: field_updates.keys,
+              path: task_path
+            }
+          else
+            {
+              success: false,
+              message: "Failed to write task file: #{result[:error] || 'Unknown error'}",
+              path: task_path
+            }
+          end
+        rescue Ace::Support::Markdown::Models::MarkdownDocument::ValidationError => e
+          {
+            success: false,
+            message: "Invalid document format: #{e.message}",
+            path: task_path
+          }
+        rescue StandardError => e
+          {
+            success: false,
+            message: "Unexpected error: #{e.message}",
+            path: task_path
+          }
+        end
+
         # Parse task metadata from content string (unit testable)
         # @param content [String] Task file content
         # @return [Hash] Parsed metadata
         def parse_metadata(content)
-          parsed = Atoms::YamlParser.parse(content)
-          frontmatter = parsed[:frontmatter]
+          result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
+
+          return nil unless result[:valid]
+          frontmatter = result[:frontmatter]
 
           return nil unless frontmatter
 
@@ -345,10 +406,11 @@ module Ace
 
           begin
             content = File.read(file_path, encoding: "utf-8")
-            parsed = Atoms::YamlParser.parse(content)
+            result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
 
             # Check if frontmatter exists and contains task metadata
-            frontmatter = parsed[:frontmatter]
+            return false unless result[:valid]
+            frontmatter = result[:frontmatter]
             return false unless frontmatter
 
             # A task file should have at least an id and status in frontmatter
