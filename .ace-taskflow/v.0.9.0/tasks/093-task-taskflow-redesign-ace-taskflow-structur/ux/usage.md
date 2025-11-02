@@ -10,28 +10,28 @@ This document describes the new hierarchical folder and file naming structure fo
 
 **Old Format:**
 ```
-.ace-taskflow/v.0.9.0/tasks/045-info-tasks-and-id-045/task.045.md
+.ace-taskflow/v.0.9.0/tasks/045-info-tasks-and-id-045/task.045.s.md
                              ↑ Redundant ID info  ↑ Generic "task" prefix
 ```
 
 **New Format:**
 ```
-.ace-taskflow/v.0.9.0/tasks/045-taskflow-info/045-show-tasks-and-ids.t.md
-                             ↑ General context   ↑ Specific description + .t.md
+.ace-taskflow/v.0.9.0/tasks/045-taskflow-info/045-show-tasks-and-ids.s.md
+                             ↑ General context   ↑ Specific description + .s.md
 ```
 
 ### Ideas Structure
 
-**Old Format:**
+**Old Format (Flat - Current Bug):**
 ```
-.ace-taskflow/v.0.9.0/ideas/20251015-011423-enhancement-in-ace-taskflow-make-the-task-folde.md
-                            ↑ Flat structure with very long filename
+.ace-taskflow/v.0.9.0/ideas/20251015-011423-enhancement-in-ace-taskflow-make-the-task-folde.s.md
+                            ↑ Flat structure with very long filename (BUG - should be in folder)
 ```
 
-**New Format:**
+**New Format (Timestamped Folders):**
 ```
-.ace-taskflow/v.0.9.0/ideas/taskflow-enhance/20251015-011423-redesign-task-structure.i.md
-                            ↑ Thematic folder   ↑ Timestamp ID + description + .i.md
+.ace-taskflow/v.0.9.0/ideas/20251015-011423-taskflow-enhance/redesign-task-structure.s.md
+                            ↑ Timestamped folder (each idea separate) ↑ Description + .s.md
 ```
 
 ## Usage Scenarios
@@ -48,14 +48,14 @@ ace-taskflow task create "Fix search default behavior"
 **Result:**
 ```
 Created task v.0.9.0+085
-Path: .ace-taskflow/v.0.9.0/tasks/085-search-fix/085-default-behavior.t.md
+Path: .ace-taskflow/v.0.9.0/tasks/085-search-fix/085-default-behavior.s.md
 ```
 
 **What happens:**
 - System assigns next available task number (085)
 - Generates folder slug from title: `085-search-fix` (system area + goal type)
-- Generates file slug: `085-default-behavior.t.md` (specific description)
-- Creates task with `.t.md` extension
+- Generates file slug: `085-default-behavior.s.md` (specific description)
+- Creates task with `.s.md` extension (existing extension)
 
 ### Scenario 2: Creating related tasks (Multi-task folder)
 
@@ -64,10 +64,10 @@ Path: .ace-taskflow/v.0.9.0/tasks/085-search-fix/085-default-behavior.t.md
 **Commands:**
 ```bash
 ace-taskflow task create "Fix search default to project root"
-# Creates: 085-search-fix/085-default-to-project-root.t.md
+# Creates: 085-search-fix/085-default-to-project-root.s.md
 
 ace-taskflow task create "Fix search ignore pattern handling"
-# Creates: 085-search-fix/085.1-ignore-pattern-handling.t.md (sub-task)
+# Creates: 085-search-fix/085.1-ignore-pattern-handling.s.md (sub-task)
 ```
 
 **What happens:**
@@ -85,11 +85,11 @@ ace-taskflow task create "Fix search ignore pattern handling"
 ace-taskflow task 085                    # Find by number
 ace-taskflow task show 085               # Show task details
 ace-taskflow task v.0.9.0+085           # Find by full reference
-ace-taskflow tasks all                   # Lists all tasks (adapts to .t.md)
+ace-taskflow tasks all                   # Lists all tasks
 ```
 
 **What happens:**
-- System finds tasks by `.t.md` extension (instead of old `task.*.md` pattern)
+- System finds tasks by `{id}-*.s.md` pattern (instead of old `task.*.s.md` pattern)
 - All existing command syntax works without changes
 - Display formats remain the same
 
@@ -105,7 +105,7 @@ ace-taskflow task done 085
 **Result:**
 ```
 Moved: tasks/085-search-fix/ → done/085-search-fix/
-       tasks/085-search-fix/085-default-to-project-root.t.md
+       tasks/085-search-fix/085-default-to-project-root.s.md
 ```
 
 **What happens:**
@@ -113,7 +113,7 @@ Moved: tasks/085-search-fix/ → done/085-search-fix/
 - Structure preserved (hierarchical organization maintained)
 - All related tasks in folder move together
 
-### Scenario 5: Creating a new idea (Basic)
+### Scenario 5: Creating a new idea (Basic - Bug Fix)
 
 **Goal:** Capture an idea with automatic slug generation
 
@@ -124,32 +124,34 @@ ace-taskflow idea create "Improve search performance for large repos"
 
 **Result:**
 ```
-Idea captured: .ace-taskflow/v.0.9.0/ideas/search-enhance/20251102-143022-improve-search-performance.i.md
+Idea captured: .ace-taskflow/v.0.9.0/ideas/20251102-143022-search-enhance/improve-search-performance.s.md
 ```
 
 **What happens:**
 - System generates timestamp identifier: `20251102-143022`
-- Generates folder slug from content: `search-enhance` (system area + goal type)
-- Generates file slug: `improve-search-performance` (specific description)
-- Creates idea with `.i.md` extension
+- Generates timestamped folder: `20251102-143022-search-enhance` (timestamp + theme)
+- Generates file slug: `improve-search-performance.s.md` (description only, NO timestamp)
+- **BUG FIX**: ALWAYS creates in subfolder, never as flat file
+- Creates idea with `.s.md` extension (existing extension)
 
-### Scenario 6: Creating related ideas (Multi-idea folder)
+### Scenario 6: Creating related ideas (No Automatic Grouping)
 
 **Goal:** Create multiple ideas in the same thematic area
 
 **Commands:**
 ```bash
 ace-taskflow idea create "Add caching to search results"
-# Creates: ideas/search-enhance/20251102-143022-add-caching-results.i.md
+# Creates: ideas/20251102-143022-search-enhance/add-caching-results.s.md
 
 ace-taskflow idea create "Implement parallel search execution"
-# Creates: ideas/search-enhance/20251102-150312-parallel-search-execution.i.md
+# Creates: ideas/20251102-150312-search-enhance/parallel-search-execution.s.md
 ```
 
 **What happens:**
-- Both ideas use the same thematic folder `search-enhance`
-- Each idea has unique timestamp identifier
-- Folder groups related ideas by theme
+- Each idea gets its own timestamped folder (NO automatic grouping)
+- Both have similar theme (`search-enhance`) but separate timestamps
+- Timestamp provides unique folder identifier
+- Each folder contains single idea file with description-only name
 
 ### Scenario 7: Finding ideas (Backward compatible)
 
@@ -159,13 +161,13 @@ ace-taskflow idea create "Implement parallel search execution"
 ```bash
 # All existing formats still work:
 ace-taskflow idea show 20251102-143022   # By timestamp
-ace-taskflow ideas all                   # Lists all (adapts to .i.md)
+ace-taskflow ideas all                   # Lists all ideas
 ace-taskflow ideas active                # Shows active ideas
 ```
 
 **What happens:**
-- System finds ideas by `.i.md` extension (instead of flat `.md` pattern)
-- Timestamp-based identification still works
+- System finds ideas in timestamped folders by `.s.md` extension
+- Timestamp extracted from folder name (not filename)
 - All existing command syntax preserved
 
 ## Command Reference
@@ -176,7 +178,7 @@ ace-taskflow ideas active                # Shows active ideas
 ```bash
 ace-taskflow task create "<title>" [--status draft|pending] [--estimate <hours>]
 ```
-- Generates: `{id}-{system-area}-{goal-type}/{id}-{precise-description}.t.md`
+- Generates: `{id}-{system-area}-{goal-type}/{id}-{precise-description}.s.md`
 - Goal types auto-detected: `add`, `enhance`, `fix`, `refactor`
 
 **Find:**
@@ -204,8 +206,9 @@ ace-taskflow task done <reference>      # Move to done/
 ```bash
 ace-taskflow idea create "<content>" [--clipboard] [--llm-enhance]
 ```
-- Generates: `{system-area}-{goal-type}/{timestamp}-{precise-description}.i.md`
-- Timestamp format: `YYYYMMDD-HHMMSS`
+- Generates: `{timestamp}-{system-area}-{goal-type}/{precise-description}.s.md`
+- Timestamp format: `YYYYMMDD-HHMMSS` (in folder name, NOT filename)
+- **Bug Fix**: ALWAYS creates in subfolder, never as flat file
 
 **Find:**
 ```bash
@@ -229,14 +232,16 @@ ace-taskflow idea done <reference>      # Move to done/ subfolder
 ### File Discovery
 
 **Tasks:**
-- Pattern: `**/*.t.md` (replaces `**/task.*.md`)
-- Extension `.t.md` identifies task files
+- Pattern: `**/*{id}-*.s.md` (replaces `**/task.*.s.md`)
+- Extension `.s.md` identifies files (existing extension)
+- Filename pattern `{id}-*.s.md` identifies task files
 - Supports both folder and file name parsing for task numbers
 
 **Ideas:**
-- Pattern: `**/*.i.md` (replaces `**/*.md` flat files)
-- Extension `.i.md` identifies idea files
-- Timestamp extracted from filename
+- Pattern: `**/{timestamp}-*/*.s.md` (finds ideas in timestamped folders)
+- Extension `.s.md` identifies files (existing extension)
+- Timestamp extracted from folder name (NOT filename)
+- Each idea in separate timestamped folder
 
 ### Slug Generation
 
@@ -246,27 +251,28 @@ ace-taskflow idea done <reference>      # Move to done/ subfolder
 - Auto-generated from title keywords
 
 **Task File Naming (3-5 words):**
-- Format: `{id}-{precise-description}.t.md`
-- Example: `085-always-use-project-root.t.md`
+- Format: `{id}-{precise-description}.s.md`
+- Example: `085-always-use-project-root.s.md`
 - Completes the context from folder name
 
-**Idea Folder Naming (2-4 words):**
-- Format: `{system-area}-{goal-type}` (no ID)
-- Example: `taskflow-enhance`, `search-fix`
-- Thematic grouping for related ideas
+**Idea Folder Naming:**
+- Format: `{timestamp}-{system-area}-{goal-type}` (timestamp first)
+- Example: `20251015-011423-taskflow-enhance`, `20251020-143022-search-fix`
+- Each idea gets unique timestamped folder (no grouping)
 
-**Idea File Naming (3-5 words):**
-- Format: `{timestamp}-{precise-description}.i.md`
-- Example: `20251015-011423-redesign-task-structure.i.md`
-- Timestamp provides unique ID
+**Idea File Naming (5±2 words):**
+- Format: `{precise-description}.s.md` (NO timestamp in filename)
+- Example: `redesign-task-structure.s.md`, `default-to-project-root.s.md`
+- Description only, timestamp is in folder name
 
 ## Migration Path
 
 ### Phase 1: Read Support (Backward Compatibility)
 - System reads both old and new formats
-- Old format: `task.*.md` files
-- New format: `*.t.md` files
-- Ideas: Both flat `.md` and directory-based `.i.md`
+- Old task format: `task.*.s.md` files
+- New task format: `{id}-*.s.md` files
+- Old idea format: Flat `.s.md` files (current bug)
+- New idea format: `{timestamp}-*/{description}.s.md` (timestamped folders)
 
 ### Phase 2: Write in New Format
 - All new tasks created with new structure
@@ -287,13 +293,14 @@ ace-taskflow idea done <reference>      # Move to done/ subfolder
 4. Sub-tasks get decimal notation (085.1, 085.2)
 
 **For Ideas:**
-1. Timestamp provides automatic unique ID
-2. Folder grouping helps organize related ideas
-3. Ideas in same theme automatically co-located
-4. Done ideas moved to `done/{folder}/` preserving structure
+1. Timestamp in folder name provides automatic unique ID
+2. Each idea gets separate timestamped folder (no automatic grouping)
+3. Filename is description-only (no timestamp duplication)
+4. Done ideas moved to `done/{timestamp}-{folder}/` preserving structure
+5. **Bug fixed**: Ideas ALWAYS created in subfolders, never as flat files
 
 **General:**
-1. New extensions (`.t.md`, `.i.md`) clearly identify file types
+1. Extension `.s.md` (spec) used for both tasks and ideas (existing)
 2. Hierarchical structure improves readability
 3. Backward compatibility maintained for all commands
 4. Migration can happen gradually (no breaking changes)
@@ -307,7 +314,10 @@ ace-taskflow idea done <reference>      # Move to done/ subfolder
 **Solution:** Slug generation is automatic. File a feature request for custom slug support.
 
 **Problem:** Old format tasks not appearing
-**Solution:** During transition period, both formats supported. Check file extension.
+**Solution:** During transition period, both formats supported. Check filename pattern (`task.*.s.md` vs `{id}-*.s.md`).
 
 **Problem:** Multiple tasks in one folder
 **Solution:** This is expected behavior. Related tasks share thematic folders with sub-numbering (085.1, 085.2).
+
+**Problem:** Idea created as flat file instead of in folder
+**Solution:** This was a bug in the old system. After this fix, ideas ALWAYS created in timestamped folders. Use migration tool to move old flat files to folders.
