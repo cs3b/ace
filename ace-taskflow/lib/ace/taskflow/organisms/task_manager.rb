@@ -100,11 +100,20 @@ module Ace
             }
           end
 
-          slug_part = Molecules::TaskSlugGenerator.generate_descriptive_part(title, metadata)
+          # Generate hierarchical slugs using LLM with fallback
+          require_relative "../molecules/llm_slug_generator"
+          slug_gen = Molecules::LlmSlugGenerator.new(debug: ENV["DEBUG"] == "true")
+          slug_result = slug_gen.generate_task_slugs(title, metadata)
 
-          # Create task directory and file with new naming convention
-          task_dir = Atoms::PathBuilder.build_task_path("", release_path, task_number, slug_part)
-          filename = "task.#{task_number}.s.md"
+          folder_slug = slug_result[:folder_slug]
+          file_slug = slug_result[:file_slug]
+
+          # Create task directory with hierarchical naming: {number}-{folder-slug}
+          task_config = Ace::Taskflow.configuration
+          task_dir = File.join(release_path, task_config.task_dir, "#{task_number}-#{folder_slug}")
+
+          # Create file with new naming convention: {number}-{file-slug}.s.md
+          filename = "#{task_number}-#{file_slug}.s.md"
           task_file = File.join(task_dir, filename)
 
           begin
@@ -337,36 +346,6 @@ module Ace
             }
           else
             { success: false, message: "Failed to update task status" }
-          end
-        end
-
-        # Update task fields
-        # @param reference [String] Task reference
-        # @param field_updates [Hash] Field updates (key => value)
-        # @return [Hash] Result with :success, :message, :updated_fields, :task
-        def update_task_fields(reference, field_updates)
-          task = @task_loader.find_task_by_reference(reference)
-          unless task
-            return { success: false, message: "Task not found: #{reference}" }
-          end
-
-          # Update the task file
-          result = @task_loader.update_task_field(task[:path], field_updates)
-
-          if result[:success]
-            {
-              success: true,
-              message: "Task updated: #{task[:id] || reference}",
-              updated_fields: result[:updated_fields],
-              task: task,
-              path: result[:path]
-            }
-          else
-            {
-              success: false,
-              message: result[:message],
-              path: result[:path]
-            }
           end
         end
 

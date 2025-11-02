@@ -77,14 +77,23 @@ module Ace
           task_dir = (config_param || config).task_dir
 
           # Match patterns like:
-          # - /tasks/019/ (new format)
-          # - /tasks/019/task.md (new format)
-          # - /tasks/019-feat-taskflow/ (new format with slug)
-          # - /tasks/019-feat-taskflow/task.019.md (new format with slug and numbered filename)
+          # - /tasks/019/ (old format)
+          # - /tasks/019/task.019.s.md (old format with file)
+          # - /tasks/019-feat-taskflow/ (new hierarchical format with slug)
+          # - /tasks/019-feat-taskflow/019-specific-desc.s.md (new hierarchical format with file)
           # Also support legacy /t/ paths
-          pattern = %r{/(?:#{Regexp.escape(task_dir)}|t)/(\d+)(?:-[^/]+)?(?:/|$)}
-          match = path.match(pattern)
-          match ? match[1] : nil
+
+          # First try to extract from folder name: /tasks/NNN-slug/ or /tasks/NNN/
+          folder_pattern = %r{/(?:#{Regexp.escape(task_dir)}|t)/(\d+)(?:-[^/]+)?(?:/|$)}
+          folder_match = path.match(folder_pattern)
+          return folder_match[1] if folder_match
+
+          # Also try to extract from filename: NNN-description.s.md
+          file_pattern = %r{/(\d+)-[^/]+\.s\.md$}
+          file_match = path.match(file_pattern)
+          return file_match[1] if file_match
+
+          nil
         end
 
         # Extract release version string from path

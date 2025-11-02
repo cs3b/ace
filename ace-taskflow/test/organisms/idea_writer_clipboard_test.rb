@@ -81,7 +81,11 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
 
     path = @writer.write("main content", clipboard: false)
 
-    content = File.read(path)
+    # Path is now a directory, find the idea file inside
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have idea file in directory"
+
+    content = File.read(idea_files.first)
     assert_match(/main content/, content)
     refute_match(/should not appear/, content)
   end
@@ -92,7 +96,11 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
 
     path = @writer.write("main content")
 
-    content = File.read(path)
+    # Path is now a directory, find the idea file inside
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have idea file in directory"
+
+    content = File.read(idea_files.first)
     assert_match(/main content/, content)
     refute_match(/should be ignored/, content)
   end
