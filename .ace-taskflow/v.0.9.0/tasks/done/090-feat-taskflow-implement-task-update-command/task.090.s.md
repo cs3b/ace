@@ -1,10 +1,12 @@
 ---
 id: v.0.9.0+task.090
-status: in-progress
+status: done
 priority: high
 estimate: 1 week
 dependencies: []
 ---
+
+
 
 # Implement ace-taskflow task update command for metadata updates
 
@@ -79,20 +81,20 @@ ace-taskflow task update 081 --field "dependencies=[082, 083]"
 
 ### Success Criteria
 
-- [ ] **Field Updates**: Any frontmatter field can be updated via --field flag
-- [ ] **Nested Support**: Dot notation works for nested YAML structures
-- [ ] **Batch Updates**: Multiple --field flags processed in single command
-- [ ] **Validation**: Field types validated against existing schema
-- [ ] **Preservation**: Non-metadata content remains unchanged
-- [ ] **Atomic Writes**: File updates are atomic with automatic backup
-- [ ] **Clear Output**: User receives confirmation of all updated fields
+- [x] **Field Updates**: Any frontmatter field can be updated via --field flag
+- [x] **Nested Support**: Dot notation works for nested YAML structures
+- [x] **Batch Updates**: Multiple --field flags processed in single command
+- [x] **Validation**: Field types validated against existing schema
+- [x] **Preservation**: Non-metadata content remains unchanged
+- [x] **Atomic Writes**: File updates are atomic with automatic backup
+- [x] **Clear Output**: User receives confirmation of all updated fields
 
 ### Validation Questions
 
-- [ ] **Field Validation**: Should we validate against known task schema or allow any field?
-- [ ] **Type Inference**: How to infer types from string values (e.g., "true" → boolean)?
-- [ ] **Array Syntax**: Best syntax for array values in --field flag?
-- [ ] **Backup Strategy**: Keep how many backup versions of task files?
+- [x] **Field Validation**: Allow any field (flexibility for ace-git-worktree and future use cases)
+- [x] **Type Inference**: Smart inference - integers, floats, booleans, arrays, with string fallback
+- [x] **Array Syntax**: Use `[item1, item2, item3]` format matching YAML syntax
+- [x] **Backup Strategy**: SafeFileWriter provides automatic timestamped backups
 
 ## Objective
 

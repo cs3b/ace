@@ -37,7 +37,7 @@ module Ace
         # @param updates [Hash] Field updates with keys and values
         # @return [Hash] Updated YAML hash
         def self.apply_updates(yaml_hash, updates)
-          result = yaml_hash.dup
+          result = Marshal.load(Marshal.dump(yaml_hash))
 
           updates.each do |key_path, value|
             if key_path.include?(".")
@@ -60,9 +60,6 @@ module Ace
           errors = []
 
           updates.each do |key_path, new_value|
-            # Extract the final key from dot notation
-            final_key = key_path.split(".").last
-
             # Get existing value if it exists
             existing_value = get_nested_value(yaml_hash, key_path)
 
@@ -90,8 +87,8 @@ module Ace
         # @param value_str [String] String value from command line
         # @return [Object] Inferred value (Integer, Boolean, Array, or String)
         def self.infer_type(value_str)
-          # Remove surrounding quotes if present
-          if value_str.match?(/^["'](.*)["']$/)
+          # Remove surrounding quotes if present (must match)
+          if value_str.match?(/^"(.*)"$/) || value_str.match?(/^'(.*)'$/)
             # Quoted string - strip quotes and return as string
             return value_str[1..-2]
           end
