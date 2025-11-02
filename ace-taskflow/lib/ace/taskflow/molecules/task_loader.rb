@@ -254,7 +254,7 @@ module Ace
             estimate: frontmatter["estimate"],
             dependencies: frontmatter["dependencies"] || [],
             sort: frontmatter["sort"],
-            title: extract_title(result[:content])
+            title: extract_title(parsed[:content])
           }
         rescue StandardError
           nil
