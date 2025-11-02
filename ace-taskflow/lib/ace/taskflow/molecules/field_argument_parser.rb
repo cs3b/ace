@@ -53,8 +53,9 @@ module Ace
             content = value_str[1..-2].strip
             return [] if content.empty?
 
-            # Split by comma and trim each item
-            items = content.split(",").map(&:strip)
+            # Parse array items handling quoted strings
+            items = parse_array_items(content)
+
             # Try to infer types for array items
             items.map { |item| infer_type(item) }
           else
@@ -62,7 +63,49 @@ module Ace
           end
         end
 
-        private_class_method :infer_type
+        # Parse array items handling quoted strings with commas
+        # @param content [String] Array content without brackets
+        # @return [Array<String>] Parsed items
+        def self.parse_array_items(content)
+          items = []
+          current_item = ""
+          in_quotes = false
+          quote_char = nil
+          i = 0
+
+          while i < content.length
+            char = content[i]
+
+            if !in_quotes && (char == '"' || char == "'")
+              # Starting a quoted string
+              in_quotes = true
+              quote_char = char
+              current_item += char
+            elsif in_quotes && char == quote_char
+              # Ending a quoted string
+              in_quotes = false
+              quote_char = nil
+              current_item += char
+            elsif !in_quotes && char == ','
+              # Found a comma outside quotes - this is a separator
+              items << current_item.strip
+              current_item = ""
+            else
+              # Regular character
+              current_item += char
+            end
+
+            i += 1
+          end
+
+          # Add the last item if present
+          items << current_item.strip unless current_item.strip.empty?
+
+          # Handle empty items (consecutive commas)
+          items.map { |item| item.empty? ? "" : item }
+        end
+
+        private_class_method :infer_type, :parse_array_items
       end
     end
   end

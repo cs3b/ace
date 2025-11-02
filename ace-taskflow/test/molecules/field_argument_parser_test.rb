@@ -160,4 +160,32 @@ class FieldArgumentParserTest < Minitest::Test
     assert_equal(-42, result["temperature"])
     assert_equal(-123.45, result["balance"])
   end
+
+  def test_parse_array_with_quoted_commas
+    result = @parser.parse(['tags=["item 1", "item, with comma", "item 3"]'])
+
+    assert_equal({ "tags" => ["item 1", "item, with comma", "item 3"] }, result)
+  end
+
+  def test_parse_array_with_mixed_quotes
+    result = @parser.parse(['data=[1, "hello, world", true, "another"]'])
+
+    expected = { "data" => [1, "hello, world", true, "another"] }
+    assert_equal expected, result
+  end
+
+  def test_parse_array_with_empty_items
+    result = @parser.parse(['values=[1, , 3]'])
+
+    assert_equal({ "values" => [1, "", 3] }, result)
+  end
+
+  def test_parse_complex_nested_array
+    result = @parser.parse([
+      'config=["server, port:8080", "db, host:localhost", 42]'
+    ])
+
+    expected = { "config" => ["server, port:8080", "db, host:localhost", 42] }
+    assert_equal expected, result
+  end
 end
