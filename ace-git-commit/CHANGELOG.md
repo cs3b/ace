@@ -5,7 +5,17 @@ All notable changes to ace-git-commit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.11.0] - 2025-10-23
+## [0.11.1] - 2025-11-01
+
+### Changed
+
+- **Dependency Migration**: Updated to use renamed infrastructure gems
+  - Changed dependency from `ace-core` to `ace-support-core`
+  - Changed dependency from `ace-test-support` to `ace-support-test-helpers` (if applicable)
+  - Part of ecosystem-wide naming convention alignment for infrastructure gems
+
+## [0.11.0]
+ - 2025-10-23
 
 ### Changed
 - Integrated with ace-git-diff for unified git command execution

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2025-11-01
+
+### Changed
+
+- **Dependency Migration**: Updated to use renamed infrastructure gems
+  - Changed dependency from `ace-core` to `ace-support-core`
+  - Changed dependency from `ace-test-support` to `ace-support-test-helpers` (if applicable)
+  - Part of ecosystem-wide naming convention alignment for infrastructure gems
+
+
 ## [0.15.1] - 2025-11-01
 
 ### Fixed

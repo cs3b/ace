@@ -1,0 +1,12 @@
+ace:
+  level: "home"
+  shared: "from_home"
+  core:
+    version: "1.0.1"
+    environment: "development"
+    features:
+      - "advanced"
+      - "home"
+  settings:
+    timeout: 60
+    cache: true
