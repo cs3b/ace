@@ -44,23 +44,32 @@ module Ace
 
         private
 
-        def fetch_slug_context
-          require "ace/context"
+        def load_slug_prompt
+          require "open3"
 
-          # Load project-base preset for project context
-          result = Ace::Context.load_preset("project-base")
-          context_content = result.content
+          # Load prompt via ace-nav protocol
+          stdout, stderr, status = Open3.capture3("ace-nav", "prompt://slug-generation", "--content")
 
-          debug_log("Successfully loaded project context (#{context_content.length} bytes)")
-          context_content
+          if status.success?
+            debug_log("Successfully loaded slug-generation prompt via ace-nav")
+            stdout.strip
+          else
+            # Fallback to reading file directly from handbook
+            prompt_path = File.join(gem_root, "handbook/prompts/slug-generation.md")
+            if File.exist?(prompt_path)
+              debug_log("Loaded slug-generation prompt from file (ace-nav unavailable)")
+              File.read(prompt_path)
+            else
+              raise "Slug generation prompt not found via ace-nav or file system"
+            end
+          end
         rescue StandardError => e
-          debug_log("Error loading project context: #{e.message}")
-          debug_log("Using minimal fallback context")
-          # Minimal fallback if ace-context unavailable
-          "Project context unavailable. Generate generic slugs following these rules:\n" \
-          "- Folder: {system}-{goal} (2-4 words, lowercase with hyphens)\n" \
-          "- File: {specific-description} (3-5+ words, lowercase with hyphens)\n" \
-          "- Goal types: add, enhance, fix, refactor, docs, test"
+          debug_log("Error loading slug prompt: #{e.message}")
+          raise "Failed to load slug generation prompt: #{e.message}"
+        end
+
+        def gem_root
+          File.expand_path("../../..", __dir__)
         end
 
         def try_llm_task_generation(title, context)
@@ -163,61 +172,43 @@ module Ace
         end
 
         def build_task_slug_prompt(title, context)
-          # Load project context via preset
-          slug_context = fetch_slug_context
+          # Load prompt template via ace-nav protocol
+          prompt_template = load_slug_prompt
 
+          # Append task-specific details to the prompt
           <<~PROMPT
-            #{slug_context}
+            #{prompt_template}
 
             ---
 
-            # Task Slug Generation
+            ## Task Details
 
-            Task Title: "#{title}"
-            Additional Context: #{context.to_json}
+            **Task Title**: #{title}
+            **Additional Context**: #{context.to_json}
 
-            Generate hierarchical slugs for this task based on the project context above:
-            - **Folder slug** (2-4 words): {system/area}-{goal-type} (e.g., "search-fix", "llm-enhance")
-            - **File slug** (3-5+ words): {specific-action-description} (e.g., "always-use-project-root")
-
-            Use project terminology from the context to identify the appropriate system/area.
-
-            Respond with ONLY valid JSON:
-            {
-              "folder_slug": "system-goal",
-              "file_slug": "specific-action-description"
-            }
+            Generate the hierarchical slugs for this task.
           PROMPT
         end
 
         def build_idea_slug_prompt(description, context)
-          # Load project context via preset
-          slug_context = fetch_slug_context
+          # Load prompt template via ace-nav protocol
+          prompt_template = load_slug_prompt
 
           # Extract first 1000 chars for context
           desc_preview = description[0..1000]
 
+          # Append idea-specific details to the prompt
           <<~PROMPT
-            #{slug_context}
+            #{prompt_template}
 
             ---
 
-            # Idea Slug Generation
+            ## Idea Details
 
-            Idea Description: "#{desc_preview}"
-            Additional Context: #{context.to_json}
+            **Idea Description**: #{desc_preview}
+            **Additional Context**: #{context.to_json}
 
-            Generate hierarchical slugs for this idea based on the project context above:
-            - **Folder slug** (2-4 words): {system/area}-{goal-type} (e.g., "llm-enhance", "taskflow-refactor")
-            - **File slug** (3-7 words): {specific-idea-description} describing the idea
-
-            Use project terminology from the context to identify the appropriate system/area.
-
-            Respond with ONLY valid JSON:
-            {
-              "folder_slug": "system-goal",
-              "file_slug": "specific-idea-description"
-            }
+            Generate the hierarchical slugs for this idea.
           PROMPT
         end
 
