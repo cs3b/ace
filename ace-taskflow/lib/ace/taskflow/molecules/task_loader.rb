@@ -204,21 +204,18 @@ module Ace
         def update_task_status(task_path, new_status)
           return false unless File.exist?(task_path)
 
-          content = File.read(task_path)
+          # Use DocumentEditor for safe frontmatter manipulation
+          # This prevents frontmatter corruption that occurred with regex-based editing
+          editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(task_path)
+          editor.update_frontmatter("status" => new_status)
 
-          # Update status in frontmatter
-          updated_content = content.sub(/^status:\s*.+$/m, "status: #{new_status}")
-
-          # Use SafeFileWriter for atomic write with backup
-          # Note: Validation disabled since we're doing our own frontmatter manipulation
-          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
-            task_path,
-            updated_content,
-            backup: true,
-            validate: false
-          )
+          # Save with backup and validation enabled
+          result = editor.save!(backup: true, validate_before: true)
           result[:success]
-        rescue StandardError
+        rescue StandardError => e
+          # Enhanced error logging for better debugging
+          warn "TaskLoader: Failed to update task status in #{task_path}: #{e.class} - #{e.message}"
+          warn e.backtrace.join("\n") if $DEBUG
           false
         end
 
@@ -229,42 +226,17 @@ module Ace
         def update_task_dependencies(task_path, new_dependencies)
           return false unless File.exist?(task_path)
 
-          content = File.read(task_path)
+          # Use DocumentEditor for safe frontmatter manipulation
+          editor = Ace::Support::Markdown::Organisms::DocumentEditor.new(task_path)
+          editor.update_frontmatter("dependencies" => new_dependencies || [])
 
-          # Format dependencies for YAML
-          deps_yaml = if new_dependencies.nil? || new_dependencies.empty?
-            "dependencies: []"
-          else
-            formatted_deps = new_dependencies.map { |d| d.to_s }
-            "dependencies: [#{formatted_deps.join(', ')}]"
-          end
-
-          # Check if dependencies field exists
-          if content =~ /^dependencies:/m
-            # Update existing dependencies field
-            updated_content = content.sub(/^dependencies:.*$/m, deps_yaml)
-          else
-            # Add dependencies field after status or priority
-            if content =~ /^(status:.*?)$/m
-              updated_content = content.sub(/^(status:.*?)$/m, "\\1\n#{deps_yaml}")
-            elsif content =~ /^(priority:.*?)$/m
-              updated_content = content.sub(/^(priority:.*?)$/m, "\\1\n#{deps_yaml}")
-            else
-              # Add after id field
-              updated_content = content.sub(/^(id:.*?)$/m, "\\1\n#{deps_yaml}")
-            end
-          end
-
-          # Use SafeFileWriter for atomic write with backup
-          # Note: Validation disabled since we're doing our own frontmatter manipulation
-          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
-            task_path,
-            updated_content,
-            backup: true,
-            validate: false
-          )
+          # Save with backup and validation enabled
+          result = editor.save!(backup: true, validate_before: true)
           result[:success]
-        rescue StandardError
+        rescue StandardError => e
+          # Enhanced error logging for better debugging
+          warn "TaskLoader: Failed to update task dependencies in #{task_path}: #{e.class} - #{e.message}"
+          warn e.backtrace.join("\n") if $DEBUG
           false
         end
 
@@ -341,7 +313,7 @@ module Ace
             estimate: frontmatter["estimate"],
             dependencies: frontmatter["dependencies"] || [],
             sort: frontmatter["sort"],
-            title: extract_title(parsed[:content])
+            title: extract_title(result[:content])
           }
         rescue StandardError
           nil

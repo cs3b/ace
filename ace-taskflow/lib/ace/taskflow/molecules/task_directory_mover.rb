@@ -21,6 +21,16 @@ module Ace
           # Determine parent release directory (e.g., .ace-taskflow/v.0.9.0/t)
           parent_dir = File.dirname(task_dir)
 
+          # Check if task is already in done/ directory (idempotent operation)
+          if task_path.include?("/done/")
+            task_filename = File.basename(task_path)
+            return {
+              success: true,
+              new_path: task_path,
+              message: "Task already in done/"
+            }
+          end
+
           # Create done directory if it doesn't exist
           done_dir = File.join(parent_dir, "done")
           FileUtils.mkdir_p(done_dir) unless File.directory?(done_dir)
@@ -28,11 +38,14 @@ module Ace
           # Target path in done directory
           target_dir = File.join(done_dir, task_dir_name)
 
-          # Check if target already exists
+          # Check if target already exists (idempotent - task already moved)
           if File.exist?(target_dir)
+            task_filename = File.basename(task_path)
+            new_task_path = File.join(target_dir, task_filename)
             return {
-              success: false,
-              message: "Target already exists in done/: #{target_dir}"
+              success: true,
+              new_path: new_task_path,
+              message: "Task already in done/"
             }
           end
 
