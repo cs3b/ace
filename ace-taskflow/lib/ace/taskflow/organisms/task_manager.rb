@@ -154,16 +154,39 @@ module Ace
             return status_result
           end
 
+          # Check if status update was idempotent (already done)
+          was_already_done = status_result[:message].include?("already has status")
+
           # Move task to done directory
           require_relative "../molecules/task_directory_mover"
           mover = Molecules::TaskDirectoryMover.new
           move_result = mover.move_to_done(task[:path])
 
           if move_result[:success]
-            {
-              success: true,
-              message: "Task #{reference} marked as done and moved to done/"
-            }
+            # Check if move was also idempotent
+            was_already_moved = move_result[:message].include?("already in done")
+
+            if was_already_done && was_already_moved
+              {
+                success: true,
+                message: "Task #{reference} already completed"
+              }
+            elsif was_already_done
+              {
+                success: true,
+                message: "Task #{reference} already marked as done, moved to done/"
+              }
+            elsif was_already_moved
+              {
+                success: true,
+                message: "Task #{reference} marked as done (already in done/)"
+              }
+            else
+              {
+                success: true,
+                message: "Task #{reference} marked as done and moved to done/"
+              }
+            end
           else
             # Status was updated but move failed
             {
@@ -273,8 +296,20 @@ module Ace
             return { success: false, message: "Task #{reference} not found" }
           end
 
+          # Check if this is an idempotent operation (already in desired state)
+          if Molecules::StatusValidator.idempotent_operation?(task[:status], new_status)
+            return {
+              success: true,
+              message: "Task #{reference} already has status: #{new_status}"
+            }
+          end
+
+          # Get flexible/strict mode from config (default: flexible)
+          strict_transitions = @config.dig("taskflow", "strict_transitions") == true
+          flexible_mode = !strict_transitions
+
           # Validate status transition using pure logic molecule
-          unless Molecules::StatusValidator.valid_transition?(task[:status], new_status)
+          unless Molecules::StatusValidator.valid_transition?(task[:status], new_status, flexible: flexible_mode)
             return {
               success: false,
               message: "Invalid status transition: #{task[:status]} → #{new_status}"

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2025-11-02
+
+### Added
+
+- **Flexible Task Transitions**: Tasks can now transition from any status directly to "done" without requiring intermediate steps (default behavior)
+- **Custom Status Support**: Support for custom statuses like "ready-for-review" that aren't in the predefined status list
+- **Idempotent Operations**: Running `task done` or status updates multiple times succeeds gracefully with informative messages instead of errors
+- **Configuration Support**: New `strict_transitions` config option to enable rigid status validation (opt-in for legacy behavior)
+- **Enhanced User Feedback**: Context-aware messages distinguish between new transitions, no-op operations, and already-satisfied states
+
+### Fixed
+
+- **Critical Bug - Frontmatter Corruption**: Replaced dangerous regex-based frontmatter editing with safe `DocumentEditor` from ace-support-markdown, preventing task files from being corrupted to 3 lines
+- **Task Directory Mover Idempotency**: Moving tasks to done/ directory now succeeds when task is already in done/ instead of failing
+
+### Changed
+
+- **Default Behavior**: Flexible transitions are now the default (can transition from any status to any other status)
+- **Status Validator**: Updated to support both flexible and strict modes with idempotency checks
+- **Task Manager**: Enhanced to read configuration and provide better error messages
+
+### Technical
+
+- Added comprehensive test coverage: 12 new tests for flexible validation, 10 new tests for idempotent operations, 5 new safety tests for frontmatter preservation
+- Updated existing tests to explicitly use strict mode where appropriate for backward compatibility
+
 ## [0.16.1] - 2025-11-02
 
 ### Added

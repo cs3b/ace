@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.104] - 2025-11-02
+
+### Added
+- **ace-taskflow v0.17.0 - Flexible Task Transitions**: Tasks can now transition from any status directly to "done" without requiring intermediate steps (default behavior)
+- **Custom Status Support**: Support for custom statuses like "ready-for-review" that aren't in the predefined status list
+- **Idempotent Operations**: Running `task done` or status updates multiple times succeeds gracefully with informative messages instead of errors
+- **Configuration Support**: New `strict_transitions` config option to enable rigid status validation (opt-in for legacy behavior)
+
+### Fixed
+- **Critical Bug - Frontmatter Corruption**: Replaced dangerous regex-based frontmatter editing with safe `DocumentEditor` from ace-support-markdown, preventing task files from being corrupted to 3 lines
+
+### Changed
+- **ace-taskflow Default Behavior**: Flexible transitions are now the default (can transition from any status to any other status)
+
 ## [0.9.103] - 2025-11-02
 
 ### Added
