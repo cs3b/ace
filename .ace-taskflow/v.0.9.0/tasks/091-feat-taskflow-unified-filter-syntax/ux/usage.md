@@ -278,8 +278,8 @@ ace-taskflow tasks --filter status:PENDING  # Works (matches 'pending')
 |--------------|----------------|-------------|
 | `--status pending,done` | `--filter status:pending\|done` | `ace-taskflow tasks --filter status:pending\|done` |
 | `--priority high` | `--filter priority:high` | `ace-taskflow tasks --filter priority:high` |
-| `--backlog` | `--filter release:backlog` or use preset | `ace-taskflow tasks --release backlog` or `ace-taskflow tasks backlog` |
-| `--current` | Default or use preset | `ace-taskflow tasks` (default is current) |
+| `--backlog` | **KEPT** - Release selection alias | `ace-taskflow tasks --backlog` (unchanged) |
+| `--current` | **KEPT** - Release selection alias | `ace-taskflow tasks --current` (unchanged) |
 | `--active` (releases) | `--filter status:active` | `ace-taskflow releases --filter status:active` |
 | `--done` (releases) | `--filter status:done` or use preset | `ace-taskflow releases done` or `--filter status:done` |
 

@@ -66,22 +66,24 @@ ace-taskflow tasks --filter team:backend --filter sprint:12
 ace-taskflow tasks recent --filter priority:high --filter status:!blocked
 ```
 
-**Breaking Changes - Legacy Flags REMOVED:**
+**Breaking Changes - Legacy Filter Flags REMOVED:**
 ```
 ❌ Removed: --status <statuses>        → Use: --filter status:value
 ❌ Removed: --priority <priorities>    → Use: --filter priority:value
-❌ Removed: --context <context>        → Use: --filter context:value
-❌ Removed: --backlog, --current       → Use: --filter context:backlog or preset
-❌ Removed: --active (releases)        → Use: --filter status:active
-❌ Removed: --done (releases)          → Use: --filter status:done
+❌ Removed: --context <context>        → Use: --filter context:value (rarely used)
+❌ Removed: --active (releases)        → Use: --filter status:active or preset
+❌ Removed: --done (releases)          → Use: --filter status:done or preset
 ```
 
 **Retained Flags (Not Filter-Related):**
 ```
+✅ --backlog             → Release selection alias (not a filter)
+✅ --current             → Release selection alias (not a filter)
+✅ --release <name>      → Release selection (not a filter)
 ✅ --limit <n>           → Result limiting (not filtering)
-✅ --days <n>            → Maps to --filter recent_days:n
+✅ --days <n>            → Convenience alias for --filter recent_days:n
 ✅ --sort <field>        → Sorting (not filtering)
-✅ --all                  → Maps to 'all' preset
+✅ --all                 → Maps to 'all' preset
 ✅ Presets (next, all, recent, etc.)
 ```
 
@@ -149,7 +151,7 @@ ace-taskflow ideas --filter-clear --filter status:done --filter author:john
 
 ### Success Criteria
 
-- [ ] **Legacy Flags Removed**: All `--status`, `--priority`, `--context`, `--backlog`, `--current`, `--active`, `--done` flags removed from code
+- [ ] **Legacy Filter Flags Removed**: All `--status`, `--priority`, `--context`, `--active`, `--done` flags removed from code (but `--backlog`, `--current`, `--release` retained as release selection aliases)
 - [ ] **--filter Syntax Works**: `--filter key:value` works on tasks, ideas, and releases commands
 - [ ] **Multiple Filters**: Multiple `--filter` flags combine with AND logic
 - [ ] **OR Values**: Pipe syntax `value1|value2` enables OR within single filter
@@ -250,17 +252,17 @@ The implementation follows the existing ATOM architecture:
 
 - `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
   - Changes: Replace parse_additional_filters method to use FilterParser
-  - Impact: Removes --status, --priority, --backlog, --current parsing
+  - Impact: Removes --status, --priority parsing; keeps --backlog as release selection
   - Integration points: FilterApplier for applying filters
 
 - `ace-taskflow/lib/ace/taskflow/commands/ideas_command.rb`
   - Changes: Replace parse_additional_filters to use FilterParser
-  - Impact: Removes --status parsing
+  - Impact: Removes --status parsing; keeps --backlog, --current as release selection
   - Integration points: FilterApplier for applying filters
 
 - `ace-taskflow/lib/ace/taskflow/commands/releases_command.rb`
   - Changes: Replace parse_additional_filters to use FilterParser
-  - Impact: Removes --active, --done, --backlog parsing
+  - Impact: Removes --active, --done parsing (use --filter status:active/done instead)
   - Integration points: FilterApplier for applying filters
 
 - `ace-taskflow/lib/ace/taskflow/molecules/task_filter.rb`
@@ -391,7 +393,7 @@ The implementation follows the existing ATOM architecture:
 - [ ] Update tasks_command.rb to use new filter system
   - Replace `parse_additional_filters` with FilterParser
   - Add `--filter` and `--filter-clear` flag parsing
-  - Remove `--status`, `--priority`, `--backlog`, `--current` parsing
+  - Remove `--status`, `--priority` parsing (KEEP `--backlog`, `--current` as release selection)
   - Add helpful error messages for removed flags
   - Keep `--days` as convenience flag (maps to filter)
   > TEST: Tasks Command Filter Integration
@@ -402,7 +404,7 @@ The implementation follows the existing ATOM architecture:
 - [ ] Update ideas_command.rb to use new filter system
   - Replace `parse_additional_filters` with FilterParser
   - Add `--filter` and `--filter-clear` flag parsing
-  - Remove `--status` parsing (ideas had less legacy flags)
+  - Remove `--status` parsing (KEEP `--backlog`, `--current` as release selection)
   - Keep `--days` as convenience flag
   > TEST: Ideas Command Filter Integration
   > Type: Integration Test
@@ -496,8 +498,9 @@ The implementation follows the existing ATOM architecture:
 ## Acceptance Criteria
 
 - [ ] **AC 1**: All legacy filter flags removed from code
-  - `--status`, `--priority`, `--context`, `--backlog`, `--current`, `--active`, `--done` all removed
-  - Code search for these flags returns no results in command parsing code
+  - `--status`, `--priority`, `--context`, `--active`, `--done` all removed
+  - `--backlog` and `--current` RETAINED as release selection aliases (not filters)
+  - Code search for removed flags returns no results in filter parsing code
   - Attempting to use removed flags shows clear error message
 
 - [ ] **AC 2**: Unified `--filter key:value` syntax works across all commands
