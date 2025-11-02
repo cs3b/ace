@@ -44,6 +44,88 @@ module Ace
 
         private
 
+        def fetch_slug_context
+          require 'open3'
+
+          # Try to load both project context and slug rules
+          # First get project-base context
+          project_stdout, project_stderr, project_status = Open3.capture3(
+            "ace-context", "project-base",
+            "--output", "stdio",
+            "--format", "markdown"
+          )
+
+          # Then load slug generation rules directly
+          # Try multiple possible locations for the slug rules file
+          possible_paths = [
+            "ace-taskflow/handbook/prompts/slug-generation.md",  # Work tree location
+            "handbook/prompts/slug-generation.md",               # If running from ace-taskflow dir
+            ".ace/prompts/slug-generation.md"                    # Alternative location
+          ]
+
+          slug_rules_path = possible_paths.find { |path| File.exist?(path) }
+
+          slug_rules = if slug_rules_path
+                         # Read file and skip frontmatter if present
+                         content = File.read(slug_rules_path)
+                         if content =~ /^---\n.*?\n---\n(.*)/m
+                           $1.strip
+                         else
+                           content
+                         end
+                       else
+                         debug_log("Slug rules file not found in any expected location")
+                         debug_log("Searched: #{possible_paths.join(', ')}")
+                         ""
+                       end
+
+          # Combine both contexts
+          if project_status.success?
+            debug_log("Successfully loaded project context (#{project_stdout.length} bytes)")
+            debug_log("Loaded slug rules (#{slug_rules.length} bytes)")
+            <<~CONTEXT
+              #{project_stdout}
+
+              ---
+
+              #{slug_rules}
+            CONTEXT
+          else
+            debug_log("Failed to load project context: #{project_stderr}")
+            debug_log("Falling back to basic slug generation rules")
+            # Return basic rules as fallback with whatever slug rules we have
+            <<~CONTEXT
+              #{load_fallback_rules}
+
+              ---
+
+              #{slug_rules}
+            CONTEXT
+          end
+        rescue StandardError => e
+          debug_log("Error loading slug context: #{e.message}")
+          load_fallback_rules
+        end
+
+        def load_fallback_rules
+          <<~RULES
+            # Slug Generation Rules (Fallback)
+
+            ## Folder Slugs (2-4 words)
+            Format: {system/area}-{goal/action}
+            Goal types: add, enhance, fix, refactor, docs, test
+
+            ## File Slugs (3-5+ words)
+            Format: {specific-action-description}
+            Describe the specific change precisely.
+
+            ## Rules
+            - All lowercase with hyphens
+            - No numbers or timestamps
+            - Be concise and descriptive
+          RULES
+        end
+
         def try_llm_task_generation(title, context)
           # Build prompt for task slug generation
           prompt = build_task_slug_prompt(title, context)
@@ -104,15 +186,27 @@ module Ace
 
         def call_llm(prompt)
           require "ace/llm/query_interface"
+          # Workaround for missing require in ace-llm
+          require "ace/llm/molecules/llm_alias_resolver"
+
+          # Log the prompt being sent to LLM
+          debug_log("=== LLM PROMPT ===")
+          debug_log(prompt)
+          debug_log("=== END PROMPT ===")
 
           # Use glite (Gemini 2.0 Flash Lite) as default - fast and cheap
           response = Ace::LLM::QueryInterface.query(
             "glite",
             prompt,
             temperature: 0.3,  # Lower temperature for more consistent output
-            max_tokens: 200,   # Short output expected
+            max_tokens: 500,   # Increased for context-aware responses
             debug: @debug
           )
+
+          # Log the response from LLM
+          debug_log("=== LLM RESPONSE ===")
+          debug_log(response[:text])
+          debug_log("=== END RESPONSE ===")
 
           { success: true, text: response[:text] }
         rescue StandardError => e
@@ -132,64 +226,51 @@ module Ace
         end
 
         def build_task_slug_prompt(title, context)
-          project = context[:project_name] || "ace-taskflow"
+          # Load project context and slug generation rules
+          slug_context = fetch_slug_context
 
           <<~PROMPT
-            Given a task title and project context, generate hierarchical slugs for file organization.
+            #{slug_context}
+
+            ---
 
             Task Title: "#{title}"
-            Project: #{project}
+            Additional Context: #{context.to_json}
 
-            Generate TWO slugs in JSON format:
-            1. folder_slug: 2-4 words describing system area and goal type (e.g., "search-fix", "taskflow-enhance")
-            2. file_slug: 3-5 words with precise description (e.g., "always-use-project-root", "implement-update-command")
-
-            Goal types to use: #{GOAL_TYPES.join(", ")}
-
-            Rules:
-            - Use lowercase with hyphens
-            - folder_slug: {system-area}-{goal-type}
-            - file_slug: {specific-description}
-            - Be concise and descriptive
-            - Do NOT include task number in slugs
+            Generate hierarchical slugs for this task following the rules above.
+            Use the project structure from the context to identify the appropriate system/area.
 
             Respond with ONLY valid JSON:
             {
-              "folder_slug": "system-area-goal-type",
-              "file_slug": "precise-description"
+              "folder_slug": "system-goal",
+              "file_slug": "specific-action-description"
             }
           PROMPT
         end
 
         def build_idea_slug_prompt(description, context)
-          project = context[:project_name] || "ace-taskflow"
+          # Load project context and slug generation rules
+          slug_context = fetch_slug_context
 
-          # Extract first 200 chars for context
-          desc_preview = description[0..200]
+          # Extract first 1000 chars for context (increased from 200)
+          desc_preview = description[0..1000]
 
           <<~PROMPT
-            Given an idea description and project context, generate hierarchical slugs for file organization.
+            #{slug_context}
+
+            ---
 
             Idea Description: "#{desc_preview}"
-            Project: #{project}
+            Additional Context: #{context.to_json}
 
-            Generate TWO slugs in JSON format:
-            1. folder_slug: System area and goal type (e.g., "taskflow-enhance", "search-fix")
-            2. file_slug: 5±2 words describing the idea (e.g., "redesign-task-structure", "improve-search-performance")
-
-            Goal types to use: #{GOAL_TYPES.join(", ")}
-
-            Rules:
-            - Use lowercase with hyphens
-            - folder_slug: {system-area}-{goal-type}
-            - file_slug: {description} (approximately 5 words, range 3-7)
-            - Be concise and descriptive
-            - Do NOT include timestamp in slugs
+            Generate hierarchical slugs for this idea following the rules above.
+            Use the project structure from the context to identify the appropriate system/area.
+            The file slug should be 3-7 words describing the specific idea.
 
             Respond with ONLY valid JSON:
             {
-              "folder_slug": "system-area-goal-type",
-              "file_slug": "description-of-idea"
+              "folder_slug": "system-goal",
+              "file_slug": "specific-idea-description"
             }
           PROMPT
         end
