@@ -45,85 +45,22 @@ module Ace
         private
 
         def fetch_slug_context
-          require 'open3'
+          require "ace/context"
 
-          # Try to load both project context and slug rules
-          # First get project-base context
-          project_stdout, project_stderr, project_status = Open3.capture3(
-            "ace-context", "project-base",
-            "--output", "stdio",
-            "--format", "markdown"
-          )
+          # Load slug-generation preset which includes project-base
+          result = Ace::Context.load_preset("slug-generation")
+          context_content = result.content
 
-          # Then load slug generation rules directly
-          # Try multiple possible locations for the slug rules file
-          possible_paths = [
-            "ace-taskflow/handbook/prompts/slug-generation.md",  # Work tree location
-            "handbook/prompts/slug-generation.md",               # If running from ace-taskflow dir
-            ".ace/prompts/slug-generation.md"                    # Alternative location
-          ]
-
-          slug_rules_path = possible_paths.find { |path| File.exist?(path) }
-
-          slug_rules = if slug_rules_path
-                         # Read file and skip frontmatter if present
-                         content = File.read(slug_rules_path)
-                         if content =~ /^---\n.*?\n---\n(.*)/m
-                           $1.strip
-                         else
-                           content
-                         end
-                       else
-                         debug_log("Slug rules file not found in any expected location")
-                         debug_log("Searched: #{possible_paths.join(', ')}")
-                         ""
-                       end
-
-          # Combine both contexts
-          if project_status.success?
-            debug_log("Successfully loaded project context (#{project_stdout.length} bytes)")
-            debug_log("Loaded slug rules (#{slug_rules.length} bytes)")
-            <<~CONTEXT
-              #{project_stdout}
-
-              ---
-
-              #{slug_rules}
-            CONTEXT
-          else
-            debug_log("Failed to load project context: #{project_stderr}")
-            debug_log("Falling back to basic slug generation rules")
-            # Return basic rules as fallback with whatever slug rules we have
-            <<~CONTEXT
-              #{load_fallback_rules}
-
-              ---
-
-              #{slug_rules}
-            CONTEXT
-          end
+          debug_log("Successfully loaded slug context (#{context_content.length} bytes)")
+          context_content
         rescue StandardError => e
           debug_log("Error loading slug context: #{e.message}")
-          load_fallback_rules
-        end
-
-        def load_fallback_rules
-          <<~RULES
-            # Slug Generation Rules (Fallback)
-
-            ## Folder Slugs (2-4 words)
-            Format: {system/area}-{goal/action}
-            Goal types: add, enhance, fix, refactor, docs, test
-
-            ## File Slugs (3-5+ words)
-            Format: {specific-action-description}
-            Describe the specific change precisely.
-
-            ## Rules
-            - All lowercase with hyphens
-            - No numbers or timestamps
-            - Be concise and descriptive
-          RULES
+          debug_log("Using minimal fallback context")
+          # Minimal fallback if ace-context unavailable
+          "Project context unavailable. Generate generic slugs following these rules:\n" \
+          "- Folder: {system}-{goal} (2-4 words, lowercase with hyphens)\n" \
+          "- File: {specific-description} (3-5+ words, lowercase with hyphens)\n" \
+          "- Goal types: add, enhance, fix, refactor, docs, test"
         end
 
         def try_llm_task_generation(title, context)
@@ -226,7 +163,7 @@ module Ace
         end
 
         def build_task_slug_prompt(title, context)
-          # Load project context and slug generation rules
+          # Load project context via preset
           slug_context = fetch_slug_context
 
           <<~PROMPT
@@ -234,11 +171,16 @@ module Ace
 
             ---
 
+            # Task Slug Generation
+
             Task Title: "#{title}"
             Additional Context: #{context.to_json}
 
-            Generate hierarchical slugs for this task following the rules above.
-            Use the project structure from the context to identify the appropriate system/area.
+            Generate hierarchical slugs for this task based on the project context above:
+            - **Folder slug** (2-4 words): {system/area}-{goal-type} (e.g., "search-fix", "llm-enhance")
+            - **File slug** (3-5+ words): {specific-action-description} (e.g., "always-use-project-root")
+
+            Use project terminology from the context to identify the appropriate system/area.
 
             Respond with ONLY valid JSON:
             {
@@ -249,10 +191,10 @@ module Ace
         end
 
         def build_idea_slug_prompt(description, context)
-          # Load project context and slug generation rules
+          # Load project context via preset
           slug_context = fetch_slug_context
 
-          # Extract first 1000 chars for context (increased from 200)
+          # Extract first 1000 chars for context
           desc_preview = description[0..1000]
 
           <<~PROMPT
@@ -260,12 +202,16 @@ module Ace
 
             ---
 
+            # Idea Slug Generation
+
             Idea Description: "#{desc_preview}"
             Additional Context: #{context.to_json}
 
-            Generate hierarchical slugs for this idea following the rules above.
-            Use the project structure from the context to identify the appropriate system/area.
-            The file slug should be 3-7 words describing the specific idea.
+            Generate hierarchical slugs for this idea based on the project context above:
+            - **Folder slug** (2-4 words): {system/area}-{goal-type} (e.g., "llm-enhance", "taskflow-refactor")
+            - **File slug** (3-7 words): {specific-idea-description} describing the idea
+
+            Use project terminology from the context to identify the appropriate system/area.
 
             Respond with ONLY valid JSON:
             {
