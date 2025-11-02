@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.103] - 2025-11-02
+
+### Added
+
+- **ace-taskflow v0.16.0**: Implemented `task update` command for programmatic metadata updates
+  - Update any frontmatter field via `--field key=value` syntax
+  - Dot notation support for nested YAML structures (e.g., `worktree.branch=feature-name`)
+  - Batch updates with multiple `--field` flags in single command
+  - Smart type inference for integers, floats, booleans, arrays, and strings
+  - Atomic file writes with automatic timestamped backups
+  - Comprehensive error handling with specific exit codes
+  - 34 test cases covering all functionality
+  - Primary use case: Enable ace-git-worktree to add worktree metadata to tasks
+
 ## [0.9.102] - 2025-11-02
 
 ### Changed

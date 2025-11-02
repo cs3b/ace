@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2025-11-02
+
+### Added
+
+- Enhance array parsing to handle quoted items with commas in CLI arguments
+
+### Fixed
+
+- Prevent accumulating newlines in task update command
+- Address code review feedback for task update command
+
+### Changed
+
+- Complete ace-support-markdown integration for document manipulation
+- Extract CLI parsing logic to FieldArgumentParser molecule
+- Address code review feedback for task update command
+
+## [0.16.0] - 2025-11-02
+
+### Added
+
+- **Task Update Command**: Implemented `ace-taskflow task update` command for updating task metadata fields
+  - Support for updating any frontmatter field via `--field key=value` syntax
+  - Dot notation support for nested YAML structures (e.g., `worktree.branch=value`)
+  - Multiple `--field` flags for batch updates in a single command
+  - Smart type inference for integers, floats, booleans, arrays, and strings
+  - Atomic file writes with automatic timestamped backups
+  - Comprehensive error handling with specific exit codes (0=success, 1=not found, 2=invalid syntax, 3=write error)
+  - 34 comprehensive test cases covering all functionality
+  - Primary use case: Enable ace-git-worktree to add worktree metadata to tasks
+
+### Fixed
+
+- Address code review feedback on documentation and hygiene
+- Handle directory-based ideas in glob matching for idea_loader
+- Correct Symbol loading and update task metadata
+- Rename 'context' to 'release' across the codebase for consistency
+- Remove hardcoded directory names from glob patterns
+- Update file extension from .md to .s.md for task files
+- Update TaskReferenceParser to return :release key
+- Improve glob filtering and handle empty results
+
+### Changed
+
+- Refactor: Extract filter_glob_by_type to shared helper for better code organization
+- Refactor: Rename 'context' to 'release' across the project for clarity
+- Refactor: Rename context to release for IdeaLoader
+- Refactor: Extract glob filtering logic to helper method
+- Refactor: Refactor preset and configuration architecture
+
+### Technical
+
+- Update tests to use release parameter
+- Rename infrastructure gems (ace-core → ace-support-core, ace-test-support → ace-support-test-helpers)
+- Bump versions for dependency updates (0.15.0, 0.15.1)
+
 ## [0.15.2] - 2025-11-01
 
 ### Changed
