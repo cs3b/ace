@@ -70,7 +70,6 @@ ace-taskflow tasks recent --filter priority:high --filter status:!blocked
 ```
 ❌ Removed: --status <statuses>        → Use: --filter status:value
 ❌ Removed: --priority <priorities>    → Use: --filter priority:value
-❌ Removed: --context <context>        → Use: --filter context:value (rarely used)
 ❌ Removed: --active (releases)        → Use: --filter status:active or preset
 ❌ Removed: --done (releases)          → Use: --filter status:done or preset
 ```
@@ -151,7 +150,7 @@ ace-taskflow ideas --filter-clear --filter status:done --filter author:john
 
 ### Success Criteria
 
-- [ ] **Legacy Filter Flags Removed**: All `--status`, `--priority`, `--context`, `--active`, `--done` flags removed from code (but `--backlog`, `--current`, `--release` retained as release selection aliases)
+- [ ] **Legacy Filter Flags Removed**: All `--status`, `--priority`, `--active`, `--done` flags removed from code (but `--backlog`, `--current`, `--release` retained as release selection aliases)
 - [ ] **--filter Syntax Works**: `--filter key:value` works on tasks, ideas, and releases commands
 - [ ] **Multiple Filters**: Multiple `--filter` flags combine with AND logic
 - [ ] **OR Values**: Pipe syntax `value1|value2` enables OR within single filter
@@ -498,8 +497,8 @@ The implementation follows the existing ATOM architecture:
 ## Acceptance Criteria
 
 - [ ] **AC 1**: All legacy filter flags removed from code
-  - `--status`, `--priority`, `--context`, `--active`, `--done` all removed
-  - `--backlog` and `--current` RETAINED as release selection aliases (not filters)
+  - `--status`, `--priority`, `--active`, `--done` all removed
+  - `--backlog`, `--current`, `--release` RETAINED as release selection (not filters)
   - Code search for removed flags returns no results in filter parsing code
   - Attempting to use removed flags shows clear error message
 
