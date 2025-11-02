@@ -117,7 +117,7 @@ The old gems (`ace-core` and `ace-test-support`) are now deprecated and will be 
 
 - **November 2025**: New gems published, old gems deprecated
 - **December 2025**: Final reminder to migrate
-- **January 2025**: Old gems marked as fully deprecated (but still available)
+- **January 2026**: Old gems marked as fully deprecated (but still available)
 
 ## Getting Help
 

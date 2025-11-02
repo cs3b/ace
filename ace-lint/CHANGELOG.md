@@ -79,11 +79,9 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 - **Dependency Migration**: Updated to use renamed infrastructure gems
   - Changed dependency from `ace-core` to `ace-support-core`
-  - Changed dependency from `ace-test-support` to `ace-support-test-helpers` (if applicable)
   - Part of ecosystem-wide naming convention alignment for infrastructure gems
 
-## [0.1.1]
-[3] - 2025-10-13
+## [0.1.1] - 2025-10-13
 
 ### Fixed
 
