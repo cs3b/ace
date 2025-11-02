@@ -109,4 +109,128 @@ class TaskLoaderTest < AceTaskflowTestCase
     invalid_task = { status: "pending" } # Missing ID
     refute @loader.valid_task?(invalid_task)
   end
+
+  # Test DocumentEditor-based status updates (frontmatter safety)
+  def test_update_task_status_preserves_frontmatter
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create a task file with comprehensive frontmatter
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "099", "task.099.s.md")
+        FileUtils.mkdir_p(File.dirname(task_file))
+        File.write(task_file, <<~CONTENT)
+          ---
+          id: v.0.9.0+task.099
+          status: pending
+          priority: high
+          estimate: 4h
+          dependencies: []
+          sort: 999
+          custom_field: custom value
+          ---
+
+          # Test Task
+
+          ## Description
+          Task for testing frontmatter preservation
+        CONTENT
+
+        # Update status
+        result = @loader.update_task_status(task_file, "in-progress")
+        assert result, "Status update should succeed"
+
+        # Verify file still exists and is readable
+        assert File.exist?(task_file), "Task file should still exist"
+
+        # Load and verify content
+        updated_content = File.read(task_file)
+
+        # Verify frontmatter is intact
+        assert_match(/^---/, updated_content, "Frontmatter should start with ---")
+        assert_match(/^id: v\.0\.9\.0\+task\.099/, updated_content, "ID should be preserved")
+        assert_match(/^status: in-progress/, updated_content, "Status should be updated")
+        assert_match(/^priority: high/, updated_content, "Priority should be preserved")
+        assert_match(/^estimate: 4h/, updated_content, "Estimate should be preserved")
+        assert_match(/^dependencies: \[\]/, updated_content, "Dependencies should be preserved")
+        assert_match(/^sort: 999/, updated_content, "Sort should be preserved")
+        assert_match(/^custom_field: custom value/, updated_content, "Custom fields should be preserved")
+
+        # Verify body content is intact
+        assert_match(/# Test Task/, updated_content, "Heading should be preserved")
+        assert_match(/## Description/, updated_content, "Section should be preserved")
+
+        # Verify file is NOT corrupted (should be more than 3 lines)
+        line_count = updated_content.lines.count
+        assert line_count > 10, "File should not be corrupted (has #{line_count} lines, expected > 10)"
+      end
+    end
+  end
+
+  def test_update_task_dependencies_preserves_frontmatter
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create a task file
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "098", "task.098.s.md")
+        FileUtils.mkdir_p(File.dirname(task_file))
+        File.write(task_file, <<~CONTENT)
+          ---
+          id: v.0.9.0+task.098
+          status: pending
+          priority: medium
+          estimate: 2h
+          dependencies: []
+          sort: 998
+          ---
+
+          # Dependency Test Task
+
+          Testing dependency updates
+        CONTENT
+
+        # Update dependencies
+        new_deps = ["v.0.9.0+task.001", "v.0.9.0+task.002"]
+        result = @loader.update_task_dependencies(task_file, new_deps)
+        assert result, "Dependency update should succeed"
+
+        # Load and verify content
+        updated_content = File.read(task_file)
+
+        # Verify dependencies are updated
+        assert_match(/^dependencies:/, updated_content, "Dependencies field should exist")
+        assert_match(/v\.0\.9\.0\+task\.001/, updated_content, "First dependency should be present")
+        assert_match(/v\.0\.9\.0\+task\.002/, updated_content, "Second dependency should be present")
+
+        # Verify other frontmatter is preserved
+        assert_match(/^status: pending/, updated_content, "Status should be preserved")
+        assert_match(/^priority: medium/, updated_content, "Priority should be preserved")
+
+        # Verify file is not corrupted
+        line_count = updated_content.lines.count
+        assert line_count > 10, "File should not be corrupted (has #{line_count} lines)"
+      end
+    end
+  end
+
+  def test_update_task_status_creates_backup
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "097", "task.097.s.md")
+        FileUtils.mkdir_p(File.dirname(task_file))
+        original_content = TestFactory.sample_task_content(id: "v.0.9.0+task.097", status: "pending")
+        File.write(task_file, original_content)
+
+        # Update status
+        result = @loader.update_task_status(task_file, "done")
+        assert result, "Status update should succeed"
+
+        # Verify backup was created (DocumentEditor creates .backup files)
+        backup_files = Dir.glob("#{task_file}.backup*")
+        assert backup_files.any?, "Backup file should be created"
+      end
+    end
+  end
+
+  def test_update_task_status_handles_invalid_file
+    result = @loader.update_task_status("/nonexistent/file.md", "done")
+    refute result, "Should return false for nonexistent file"
+  end
 end
