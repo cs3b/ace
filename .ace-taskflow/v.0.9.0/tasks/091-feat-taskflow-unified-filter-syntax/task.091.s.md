@@ -14,6 +14,23 @@ needs_review: true
 
 ### [HIGH] Critical Implementation Questions
 
+- [ ] **Syntax Consistency Across All Commands**: The proposed `--filter key:value` uses colon (`:`) as separator, but the `update` subcommand uses `--field key=value` with equals (`=`). Should we unify ALL ace-taskflow parameter syntax to use colons consistently?
+  - **Current inconsistency**:
+    - Filtering (proposed): `--filter status:pending`
+    - Update command (current): `--field status=pending`
+  - **Research conducted**: Checked update command implementation
+  - **Industry patterns**:
+    - Kubernetes: Uses `key=value` for labels/selectors
+    - Git config: Uses `key=value` for set operations
+    - grep/ripgrep: Uses `key:value` for filtering/matching
+  - **Suggested options**:
+    - **Option A**: Use `:` for read operations (filtering), `=` for write operations (updates)
+    - **Option B**: Unify everything to `:` (single syntax rule)
+    - **Option C**: Unify everything to `=` (single syntax rule)
+  - **Recommended default**: Option A (semantic distinction: `:` for matching, `=` for setting)
+  - **Why needs human input**: Critical API consistency decision affecting user mental model
+  - **Scope impact**: If changing update command, may require separate implementation task
+
 - [ ] **Task 093 Impact on File Discovery**: Task 093 recently changed the file naming from `task.{id}.s.md` to `{id}-{slug}.s.md`. Does the current TaskManager already handle this new pattern correctly, or do we need to update file discovery logic as part of this task?
   - **Research conducted**: Read task 093 completion notes; checked current file patterns in .ace-taskflow/
   - **Similar implementations**: Task 093 implementation already complete
@@ -436,6 +453,12 @@ Task 093 was recently completed (Nov 3, 2025) and changed:
 
 ### Planning Steps
 
+* [ ] **DECISION REQUIRED**: Resolve syntax consistency question (`:` vs `=`) before implementation
+  - If Option A (`:` for read, `=` for write): Proceed with current task scope
+  - If Option B (all `:`): Add update command modification to this task OR create follow-up task
+  - If Option C (all `=`): Change filter syntax to `--filter key=value` in this task
+  > **Impact**: This decision affects the entire implementation approach
+
 * [ ] Review existing filter implementation patterns across all three commands
   > TEST: Understanding Check
   > Type: Pre-condition Check
@@ -638,6 +661,7 @@ Task 093 was recently completed (Nov 3, 2025) and changed:
 - ❌ **Filter History**: Saving/recalling previous filters (future enhancement)
 - ❌ **Regex Matching**: Regular expression support in filter values (may add later)
 - ❌ **Range Queries**: Date/number range filtering like `--filter date:2024-01..2024-12`
+- ⚠️ **Update Command Syntax Change**: Changing `--field key=value` to `--field key:value` (CONDITIONAL: Only if Option B chosen for syntax consistency question; may require separate task)
 
 ## References
 
