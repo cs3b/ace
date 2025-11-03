@@ -3,117 +3,174 @@
 require "test_helper"
 require "ace/taskflow/organisms/idea_writer"
 
-class IdeaWriterTest < AceTestCase
+# Pure unit tests for IdeaWriter - no filesystem operations
+class IdeaWriterUnitTest < AceTaskflowTestCase
   def setup
-    @temp_dir = Dir.mktmpdir
     @config = {
-      "directory" => @temp_dir,
+      "directory" => "/test/ideas",
       "template" => "# %{title}\n\n%{content}\n\n---\nCaptured: %{timestamp}",
       "formatting" => {
         "timestamp_format" => "%Y-%m-%d %H:%M:%S"
       }
     }
     @writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
+
+    # Track all FileUtils and SafeFileWriter calls
+    @mkdir_calls = []
+    @write_calls = []
   end
 
-  def teardown
-    FileUtils.rm_rf(@temp_dir)
-  end
+  def test_generates_correct_path_with_timestamp_and_slug
+    mock_slug_resp = mock_slug_response(folder_slug: "test-idea", file_slug: "test-content")
 
-  def test_writes_idea_to_file
-    content = "This is a test idea"
-    path = @writer.write(content)
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        content = "This is a test idea"
+        path = @writer.write(content)
 
-    # Path is now a directory (bug fix: ideas always in subfolders)
-    assert Dir.exist?(path), "Directory should be created"
-    assert_includes path, @temp_dir, "Directory should be in temp directory"
+        # Verify path format: /test/ideas/YYYYMMDD-HHMMSS-test-idea
+        assert_match(%r{^/test/ideas/\d{8}-\d{6}-test-idea$}, path)
 
-    # Find the idea file inside the directory
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have at least one .s.md file in directory"
+        # Verify directory was created
+        assert @mkdir_calls.include?(path), "Should create idea directory"
 
-    idea_file = idea_files.first
-    file_content = File.read(idea_file)
-    assert_includes file_content, content, "File should contain the idea content"
+        # Verify file was written
+        assert @write_calls.any? { |call| call[:path].include?("test-content.s.md") }
+      end
+    end
   end
 
   def test_uses_configured_directory
-    custom_dir = File.join(@temp_dir, "custom", "ideas")
-    @config["directory"] = custom_dir
-    writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
+    custom_config = @config.merge("directory" => "/custom/ideas")
+    writer = Ace::Taskflow::Organisms::IdeaWriter.new(custom_config)
 
-    content = "Test idea in custom directory"
-    path = writer.write(content)
+    mock_slug_resp = mock_slug_response(folder_slug: "custom-dir", file_slug: "test-idea")
 
-    # Path is now a directory
-    assert Dir.exist?(path), "Directory should be created"
-    assert_includes path, custom_dir, "Directory should be in custom directory"
-    assert Dir.exist?(custom_dir), "Custom directory should be created"
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        path = writer.write("Test content")
 
-    # Check that file exists inside the directory
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have idea file in directory"
+        # Verify path uses custom directory
+        assert_match(%r{^/custom/ideas/\d{8}-\d{6}-custom-dir$}, path)
+      end
+    end
   end
 
-  def test_creates_directory_if_not_exists
-    nested_dir = File.join(@temp_dir, "deep", "nested", "ideas")
-    @config["directory"] = nested_dir
-    writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
+  def test_creates_nested_directory_structure
+    mock_slug_resp = mock_slug_response(folder_slug: "nested-idea", file_slug: "test-content")
 
-    content = "Test idea in nested directory"
-    path = writer.write(content)
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        path = @writer.write("Test content")
 
-    assert Dir.exist?(nested_dir), "Nested directory should be created"
-    assert Dir.exist?(path), "Idea directory should be created"
-
-    # Check that file exists inside the directory
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have idea file in directory"
+        # Verify mkdir_p was called (creates parent directories)
+        assert @mkdir_calls.any?, "Should call mkdir_p"
+        assert_match(/nested-idea$/, path)
+      end
+    end
   end
 
-  def test_formats_idea_with_template
-    content = "Template test idea"
-    metadata = {
-      title: "Template Test",
-      timestamp: "2025-01-01 12:00:00"
-    }
+  def test_formats_content_with_template
+    mock_slug_resp = mock_slug_response(folder_slug: "template-test", file_slug: "test-idea")
 
-    path = @writer.write(content, metadata)
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        content = "Template test idea"
+        metadata = {
+          title: "Template Test",
+          timestamp: "2025-01-01 12:00:00"
+        }
 
-    # Path is now a directory, find the idea file inside
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have idea file in directory"
+        @writer.write(content, metadata)
 
-    idea_file = idea_files.first
-    file_content = File.read(idea_file)
+        # Verify content was formatted
+        write_call = @write_calls.first
+        assert write_call, "Should write file"
 
-    assert_includes file_content, "# Template Test", "Should include title from metadata"
-    assert_includes file_content, content, "Should include content"
-    assert_includes file_content, "2025-01-01 12:00:00", "Should include timestamp"
+        formatted_content = write_call[:content]
+        assert_includes formatted_content, "# Template Test"
+        assert_includes formatted_content, content
+        assert_includes formatted_content, "2025-01-01 12:00:00"
+      end
+    end
   end
 
   def test_extracts_title_from_content
-    content = "This is a long idea that should be truncated for the title section of the generated filename"
-    path = @writer.write(content)
+    mock_slug_resp = mock_slug_response(folder_slug: "long-idea", file_slug: "truncated-title")
 
-    # Path is now a directory, the title should be in the directory name (after timestamp)
-    dirname = File.basename(path)
-    # Directory name format: YYYYMMDD-HHMMSS-{sanitized-title} or YYYYMMDD-HHMMSS-{folder-slug}
-    # The sanitized title or slug should contain part of the content
-    assert_match(/this-is-a-long-idea|enhance|idea/, dirname, "Directory name should contain sanitized title or slug")
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        content = "This is a long idea that should be truncated for title"
+        path = @writer.write(content)
 
-    # Also check that file was created inside
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have idea file in directory"
+        # Verify path contains folder slug
+        assert_match(/long-idea$/, path)
+
+        # Verify file slug is used in filename
+        write_call = @write_calls.first
+        assert_match(/truncated-title\.s\.md$/, write_call[:path])
+      end
+    end
   end
 
   def test_raises_error_on_empty_content
-    content = ""
-
     error = assert_raises(Ace::Taskflow::Organisms::IdeaWriterError) do
-      @writer.write(content)
+      @writer.write("")
     end
 
     assert_match(/No content provided/, error.message)
+  end
+
+  def test_handles_llm_enhanced_content_skips_template
+    # LLM-enhanced content already has frontmatter
+    enhanced_content = <<~CONTENT
+      ---
+      title: Enhanced Title
+      ---
+
+      # Enhanced Title
+
+      ## Problem
+      Test problem
+    CONTENT
+
+    mock_slug_resp = mock_slug_response(folder_slug: "enhanced", file_slug: "test")
+
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        path = @writer.write(enhanced_content)
+
+        write_call = @write_calls.first
+        # Content should be returned as-is (no template applied)
+        assert_equal enhanced_content, write_call[:content]
+      end
+    end
+  end
+
+  private
+
+  # Mock filesystem operations
+  def mock_filesystem
+    # Capture instance variables in local variables for closure
+    write_calls = @write_calls
+    mkdir_calls = @mkdir_calls
+
+    # Mock FileUtils.mkdir_p
+    FileUtils.stub :mkdir_p, ->(path) { mkdir_calls << path } do
+      # Mock SafeFileWriter.write
+      original_write = Ace::Support::Markdown::Organisms::SafeFileWriter.method(:write)
+
+      Ace::Support::Markdown::Organisms::SafeFileWriter.define_singleton_method(:write) do |path, content, **options|
+        write_calls << { path: path, content: content, options: options }
+        path
+      end
+
+      begin
+        yield
+      ensure
+        # Restore original write method
+        Ace::Support::Markdown::Organisms::SafeFileWriter.define_singleton_method(:write, original_write)
+      end
+    end
   end
 end
