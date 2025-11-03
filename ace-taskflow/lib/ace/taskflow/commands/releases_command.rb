@@ -4,6 +4,8 @@ require_relative "../organisms/release_manager"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/release"
+require_relative "../atoms/filter_parser"
+require_relative "../molecules/task_filter"
 
 module Ace
   module Taskflow
@@ -21,17 +23,15 @@ module Ace
           preset_name = detect_preset_name(args)
           if preset_name
             args.shift # Remove preset name from args
-            execute_with_preset(preset_name, args)
-          elsif args.empty? || (!args.first.start_with?('-') && !@preset_manager.preset_exists?(args.first, :releases))
-            # Default to 'all' preset for releases when no arguments or no valid preset/flag
-            execute_with_preset('all', args)
+            return execute_with_preset(preset_name, args)
           else
-            # Fallback to legacy flag-based execution for backward compatibility
-            execute_legacy(args)
+            # Default to 'all' preset for all other cases (flags, empty, etc.)
+            # This includes new --filter flags and legacy flags (which will error in parse methods)
+            return execute_with_preset('all', args)
           end
         rescue StandardError => e
           puts "Error: #{e.message}"
-          exit 1
+          1
         end
 
         private
@@ -55,12 +55,26 @@ module Ace
           # Check for special flags
           if additional_filters[:stats]
             show_statistics_for_preset(preset_name)
-            return
+            return 0
           end
 
-          # Apply preset with additional filters
-          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return unless preset_config
+          # Handle filter-clear: if set, don't pass old-style filters to preset
+          if additional_filters[:filter_clear]
+            # Apply preset but ignore its filters
+            preset_config = @preset_manager.apply_preset(preset_name, {})
+            return unless preset_config
+            # Clear the preset filters but keep release, sort, glob, display
+            preset_config[:filters] = {}
+          else
+            # Apply preset with additional filters (normal flow)
+            preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+            return unless preset_config
+          end
+
+          # Store filter_specs in preset_config so filtering can access them
+          if additional_filters[:filter_specs]
+            preset_config[:filter_specs] = additional_filters[:filter_specs]
+          end
 
           # Get releases based on preset configuration
           releases = get_releases_for_preset(preset_config)
@@ -74,8 +88,10 @@ module Ace
           # Display releases
           if releases.empty?
             puts "No releases found for preset '#{preset_name}'."
+            0
           else
             display_releases_with_preset(releases, preset_config, original_count, additional_filters[:limit])
+            0
           end
         end
 
@@ -85,6 +101,7 @@ module Ace
 
           if options[:stats]
             show_statistics
+            0
           else
             # Get releases based on filter
             releases = if options[:filter]
@@ -99,16 +116,37 @@ module Ace
             end
 
             display_releases(releases, options)
+            0
           end
         end
 
         def parse_additional_filters(args)
           filters = {}
+          filter_strings = []
 
           i = 0
           while i < args.length
             arg = args[i]
             case arg
+            # NEW: Unified filter syntax
+            when "--filter"
+              if i + 1 < args.length
+                filter_strings << args[i + 1]
+                i += 2
+              else
+                raise ArgumentError, "Missing value for --filter flag. Use: --filter key:value"
+              end
+            when "--filter-clear"
+              filters[:filter_clear] = true
+              i += 1
+            # REMOVED: Legacy filter flags with helpful error messages
+            when "--active"
+              raise ArgumentError, "Error: --active flag is no longer supported. Use: --filter status:active"
+            when "--done"
+              raise ArgumentError, "Error: --done flag is no longer supported. Use: --filter status:done"
+            when "--backlog"
+              raise ArgumentError, "Error: --backlog flag is no longer supported. Use: --filter status:backlog"
+            # KEPT: Display flags
             when "--limit"
               filters[:limit] = args[i + 1].to_i if i + 1 < args.length
               i += 2
@@ -123,13 +161,17 @@ module Ace
             end
           end
 
+          # Parse filter strings into filter specifications
+          if filter_strings.any?
+            filters[:filter_specs] = Atoms::FilterParser.parse(filter_strings)
+          end
+
           filters
         end
 
         def get_releases_for_preset(preset_config)
           release = preset_config[:release] || 'all'
-          # Note: release_manager doesn't use filters in the same way,
-          # it uses a simple string filter argument
+          filters_raw = preset_config[:filters] || {}
 
           # Map preset release to manager filter
           filter = case release
@@ -143,7 +185,22 @@ module Ace
             nil # Show all
           end
 
-          @manager.list_releases(filter)
+          # Load releases
+          releases = @manager.list_releases(filter)
+
+          # Apply filters from preset
+          filters = {}
+          filters_raw.each do |key, value|
+            filters[key.to_sym] = value
+          end
+
+          # Add filter_specs to filters hash so TaskFilter can access them
+          if preset_config[:filter_specs]
+            filters[:filter_specs] = preset_config[:filter_specs]
+          end
+
+          # Apply TaskFilter (works with releases - they're hashes with metadata)
+          Molecules::TaskFilter.apply_filters(releases, filters)
         end
 
         def display_releases_with_preset(releases, preset_config, original_count = nil, limit = nil)
@@ -208,11 +265,11 @@ module Ace
           args.each_with_index do |arg, index|
             case arg
             when "--backlog"
-              options[:filter] = "backlog"
+              raise ArgumentError, "Error: --backlog flag is no longer supported. Use: --filter status:backlog"
             when "--active"
-              options[:filter] = "active"
+              raise ArgumentError, "Error: --active flag is no longer supported. Use: --filter status:active"
             when "--done"
-              options[:filter] = "done"
+              raise ArgumentError, "Error: --done flag is no longer supported. Use: --filter status:done"
             when "--stats"
               options[:stats] = true
             when "--limit"
@@ -377,20 +434,23 @@ module Ace
           end
           puts ""
           puts "Preset Examples:"
-          puts "  ace-taskflow releases                    # Uses 'all' preset (default)"
-          puts "  ace-taskflow releases all               # All releases, grouped by status"
-          puts "  ace-taskflow releases recent            # Recently modified releases"
-          puts "  ace-taskflow releases all --stats       # Statistics for all preset"
+          puts "  ace-taskflow releases                         # Uses 'all' preset (default)"
+          puts "  ace-taskflow releases all                     # All releases, grouped by status"
+          puts "  ace-taskflow releases recent                  # Recently modified releases"
           puts ""
-          puts "Legacy Flag Options (backward compatibility):"
-          puts "  --backlog    List backlog releases"
-          puts "  --active     List active releases"
-          puts "  --done       List completed releases"
-          puts "  --stats      Show release statistics"
+          puts "Filtering Options:"
+          puts "  --filter <key>:<value>                        Filter by any frontmatter field"
+          puts "  --filter-clear                                Clear preset filters (keep release/scope/sort)"
           puts ""
-          puts "Additional Preset Filters:"
+          puts "Filter Examples:"
+          puts "  ace-taskflow releases --filter status:active"
+          puts "  ace-taskflow releases --filter status:done"
+          puts "  ace-taskflow releases all --filter status:!backlog"
+          puts "  ace-taskflow releases --filter-clear --filter status:active"
+          puts ""
+          puts "Display Options:"
           puts "  --limit <n>  Limit number of results displayed"
-          puts "  --stats      Show statistics for preset"
+          puts "  --stats      Show release statistics"
           puts ""
           puts "Custom Presets:"
           puts "  Create YAML files in .ace/taskflow/presets/ to define custom presets"

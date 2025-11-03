@@ -6,6 +6,7 @@ require_relative "../molecules/stats_formatter"
 require_relative "../models/idea"
 require_relative "../atoms/path_formatter"
 require_relative "../atoms/filter_parser"
+require_relative "../molecules/task_filter"
 require_relative "helpers"
 
 module Ace
@@ -241,7 +242,6 @@ module Ace
           end
 
           # Apply TaskFilter (works with both tasks and ideas - they're both hashes with frontmatter)
-          require_relative '../molecules/task_filter'
           Molecules::TaskFilter.apply_filters(ideas, filters)
         end
 
