@@ -1,6 +1,6 @@
 ---
 description: System prompt for idea enhancement with project context
-context_preset: project
+context_preset: project-base
 embed_context: true
 ---
 
