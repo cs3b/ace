@@ -171,58 +171,56 @@ module Ace
         end
 
         def call_llm_query(prompt, system_prompt, context)
-          # Save system prompt to temp file (llm-query needs file path)
-          Tempfile.create(['idea_system', '.md']) do |f|
-            f.write(system_prompt)
-            f.flush
+          require "ace/llm/query_interface"
+          # Workaround for missing require in ace-llm
+          require "ace/llm/molecules/llm_alias_resolver"
 
-            # Get model from config or use default
-            model = context[:llm_model] || @config.dig("defaults", "llm_model") || "gflash"
+          # Get model from config or use default
+          model = context[:llm_model] || @config.dig("defaults", "llm_model") || "gflash"
 
-            debug_log("Calling llm-query with model: #{model}")
+          debug_log("Calling Ace::LLM with model: #{model}")
+          debug_log("System prompt length: #{system_prompt.length} chars")
+          debug_log("User prompt length: #{prompt.length} chars")
 
-            stdout, stderr, status = Open3.capture3(
-              "llm-query",
-              model,
-              prompt,
-              "--system", f.path,
-              "--format", "json"
-            )
+          # Call LLM via ace-llm interface
+          response = Ace::LLM::QueryInterface.query(
+            model,
+            prompt,
+            system: system_prompt,
+            temperature: 0.3,
+            max_tokens: 10000,  # Allow full enhanced content generation
+            debug: @debug
+          )
 
-            if status.success?
-              begin
-                # llm-query returns JSON with a 'text' field containing our response
-                wrapper = JSON.parse(stdout)
+          if response[:text]
+            begin
+              text = response[:text].strip
 
-                # Extract the actual response from the text field
-                if wrapper["text"]
-                  text = wrapper["text"].strip
-
-                  # Strip markdown code blocks if present (fallback for older prompts)
-                  if text.start_with?("```json") && text.end_with?("```")
-                    debug_log("Stripping markdown json code blocks from response")
-                    text = text.gsub(/^```json\s*\n?/, '').gsub(/\n?```\s*$/, '')
-                  elsif text.start_with?("```") && text.end_with?("```")
-                    debug_log("Stripping markdown code blocks from response")
-                    text = text.gsub(/^```\s*\n?/, '').gsub(/\n?```\s*$/, '')
-                  end
-
-                  # Parse the cleaned JSON
-                  data = JSON.parse(text)
-                  debug_log("Successfully parsed LLM response")
-                  { success: true, data: data }
-                else
-                  debug_log("No text field in LLM response: #{stdout}")
-                  { success: false, error: "Invalid response format from llm-query" }
-                end
-              rescue JSON::ParserError => e
-                debug_log("Invalid JSON response: #{stdout[0..500]}...")
-                { success: false, error: "Invalid JSON response: #{e.message}" }
+              # Strip markdown code blocks if present (handle incomplete blocks from truncated responses)
+              if text.start_with?("```json")
+                debug_log("Stripping markdown json code blocks from response")
+                text = text.gsub(/^```json\s*\n?/, '').gsub(/\n?```\s*$/, '')
+              elsif text.start_with?("```")
+                debug_log("Stripping markdown code blocks from response")
+                text = text.gsub(/^```\s*\n?/, '').gsub(/\n?```\s*$/, '')
               end
-            else
-              { success: false, error: stderr }
+
+              # Parse the JSON response
+              data = JSON.parse(text)
+              debug_log("Successfully parsed LLM response")
+              { success: true, data: data }
+            rescue JSON::ParserError => e
+              debug_log("Invalid JSON response (first 500 chars): #{text[0..500]}...")
+              debug_log("Full response length: #{text.length} chars")
+              debug_log("JSON parse error: #{e.message}")
+              { success: false, error: "Invalid JSON response: #{e.message}" }
             end
+          else
+            { success: false, error: "No text in LLM response" }
           end
+        rescue StandardError => e
+          debug_log("LLM call failed: #{e.message}")
+          { success: false, error: e.message }
         end
 
         def format_enhanced_idea(llm_data, original_content, context)
@@ -236,6 +234,10 @@ module Ace
           enhanced << "location: #{context[:location]}" if context[:location]
           enhanced << "llm_model: #{context[:llm_model] || @config.dig('defaults', 'llm_model') || 'gflash'}"
           enhanced << "---"
+          enhanced << ""
+
+          # Add title heading after frontmatter
+          enhanced << "# #{llm_data['title']}" if llm_data['title']
           enhanced << ""
 
           # Add enhanced description
@@ -260,7 +262,8 @@ module Ace
         end
 
         def llm_available?
-          system("which llm-query > /dev/null 2>&1")
+          # Always available via ace-llm gem (no external command needed)
+          true
         end
 
         def gem_root

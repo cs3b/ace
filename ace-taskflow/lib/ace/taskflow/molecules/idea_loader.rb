@@ -190,10 +190,23 @@ module Ace
         end
 
         def load_idea_from_directory(dir_path, include_content)
-          idea_file = File.join(dir_path, "idea.s.md")
-          return nil unless File.exist?(idea_file)
-
           dirname = File.basename(dir_path)
+
+          # Try new format first: {description}.s.md (without timestamp)
+          # Find any .s.md file that's not 'idea.s.md'
+          md_files = Dir.glob(File.join(dir_path, "*.s.md"))
+                        .reject { |f| File.basename(f) == "idea.s.md" }
+
+          idea_file = if md_files.any?
+                        # New format: use the slug-based filename
+                        md_files.first
+                      else
+                        # Old format: idea.s.md
+                        idea_s = File.join(dir_path, "idea.s.md")
+                        File.exist?(idea_s) ? idea_s : nil
+                      end
+
+          return nil unless idea_file && File.exist?(idea_file)
 
           # Extract ID from dirname (timestamp part)
           id = dirname[/^(\d{8}-\d{6})/, 1]
@@ -202,9 +215,9 @@ module Ace
           title = dirname.sub(/^\d{8}-\d{6}-/, "")
           title = title.tr("-", " ").strip
 
-          # Find attachment files (exclude idea.s.md)
+          # Find attachment files (exclude all .s.md files)
           attachments = Dir.glob(File.join(dir_path, "*"))
-            .reject { |f| File.basename(f) == "idea.s.md" }
+            .reject { |f| f.end_with?(".s.md") }
             .select { |f| File.file?(f) }
             .map { |f| File.basename(f) }
             .sort
@@ -212,7 +225,7 @@ module Ace
           # Read content to parse frontmatter
           content = File.read(idea_file)
           parsed = Atoms::YamlParser.parse(content)
-          frontmatter = parsed[:frontmatter]
+          frontmatter = parsed[:frontmatter] || {}
           body_content = parsed[:content]
 
           idea_data = {

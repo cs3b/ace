@@ -61,14 +61,23 @@ module Ace
 
           debug_log("Final metadata title for filename: #{metadata[:title]}")
 
-          # Generate file path (directory if attachments, file otherwise)
+          # Generate hierarchical slugs using LLM with fallback
+          require_relative "../molecules/llm_slug_generator"
+          slug_gen = Molecules::LlmSlugGenerator.new(debug: @debug)
+          slug_result = slug_gen.generate_idea_slugs(enhanced_content, metadata)
+
+          metadata[:folder_slug] = slug_result[:folder_slug]
+          metadata[:file_slug] = slug_result[:file_slug]
+
+          # Generate path (always a directory now - BUG FIX)
           path = generate_path(metadata)
+
+          # BUG FIX: ALWAYS create idea in a subdirectory
+          # Path is the directory, create it
+          FileUtils.mkdir_p(path)
 
           # Handle attachments if present
           if attachment_files.any?
-            # Path is directory - create it and save attachments
-            FileUtils.mkdir_p(path)
-
             # Use save_attachments for all types (handles images, files, RTF, HTML)
             attachment_result = Molecules::AttachmentManager.save_attachments(
               attachment_files,
@@ -82,27 +91,24 @@ module Ace
             attachment_result[:failed_files].each do |failure|
               puts "Warning: #{failure[:filename]} - #{failure[:error]}"
             end
-
-            # Write idea.md in directory
-            idea_file = File.join(path, "idea.md")
-            formatted_content = format_idea(enhanced_content, metadata)
-            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
-              idea_file,
-              formatted_content,
-              backup: true,
-              validate: false  # Ideas may not follow strict markdown structure
-            )
-          else
-            # No attachments - write flat file
-            ensure_directory_exists(path)
-            formatted_content = format_idea(enhanced_content, metadata)
-            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
-              path,
-              formatted_content,
-              backup: true,
-              validate: false  # Ideas may not follow strict markdown structure
-            )
           end
+
+          # Write idea file in directory with hierarchical naming convention
+          # Use {file-slug}.s.md format if available (NO timestamp in filename)
+          # Otherwise use generic "idea.s.md" for fallback compatibility
+          filename = if metadata[:file_slug]
+                       "#{metadata[:file_slug]}.s.md"
+                     else
+                       "idea.s.md"
+                     end
+          idea_file = File.join(path, filename)
+          formatted_content = format_idea(enhanced_content, metadata)
+          Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            idea_file,
+            formatted_content,
+            backup: true,
+            validate: false  # Ideas may not follow strict markdown structure
+          )
 
           # Commit to git if requested
           if should_commit?(options)
@@ -233,6 +239,9 @@ module Ace
         end
 
         def format_idea(content, metadata)
+          # If content already has frontmatter (LLM-enhanced), return as-is
+          return content if content&.start_with?("---\n")
+
           template = @config["template"] ||
                      "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}\n"
 

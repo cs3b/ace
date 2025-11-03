@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.093
-status: pending
+status: in-progress
 priority: medium
-estimate: 2-3 weeks
+estimate: 1-2 days
 dependencies: []
 sort: 996
 ---
@@ -319,394 +319,150 @@ The new unified structure provides:
 
 ### Technical Approach
 
-#### Architecture Pattern
+**Simplified LLM-First Strategy:**
 
-The implementation follows the existing ATOM architecture pattern used throughout ace-taskflow:
+The implementation uses LLM-generated slugs as the primary method with fallback to existing logic:
 
-- **Atoms**: Pure functions for file extension detection, slug parsing, path pattern matching
-- **Molecules**: File naming logic, slug generation enhancements, path discovery updates
-- **Organisms**: Coordination of task/idea creation, completion, and migration workflows
-- **Commands**: CLI interface updates (minimal changes - maintain backward compatibility)
+```ruby
+# Primary: LLM generates hierarchical slugs
+def generate_slugs(title)
+  llm_result = try_llm_generation(title)
+  return llm_result if llm_result
+
+  # Fallback: Use existing slug generation
+  fallback_slug_generation(title)
+end
+```
 
 **Key Design Principles:**
-- **Backward Compatibility**: Support both old and new formats during transition
-- **Progressive Enhancement**: New items use new format, existing items preserved
-- **Pattern-Based Discovery**: Replace `task.*.s.md` with `{id}-*.s.md` pattern for tasks
-- **Hierarchical Slug Generation**: Two-level context (folder = general, file = specific)
+- **LLM-First**: Use ace-llm to generate high-quality hierarchical slugs
+- **Graceful Degradation**: Fall back to existing logic if LLM unavailable/fails
+- **Backward Compatibility**: Support both old and new formats (done/ items unchanged)
+- **Pattern-Based Discovery**: Update glob patterns to find both formats
 - **Extension Preservation**: Keep `.s.md` extension for both tasks and ideas
 - **Bug Fix Priority**: Fix ideas always being created in subfolders (not flat files)
 
-#### Integration with Existing Architecture
-
-**Current System:**
-- `TaskLoader`: Uses `Dir.glob` with `*.s.md` pattern, checks for `has_task_frontmatter?`
-- `IdeaLoader`: Uses `Dir.glob` with `*.s.md` pattern, extracts timestamp from filename
-- `PathBuilder`: Builds paths, extracts task numbers from directory names
-- `TaskSlugGenerator`: Generates descriptive slugs from titles
-- `FileNamer`: Generates timestamped filenames for ideas
-
-**Integration Points:**
-1. **File Discovery**: Update glob patterns to use new extensions
-2. **Path Construction**: Enhance to support hierarchical slugs
-3. **Slug Generation**: Extend to generate both folder and file slugs
-4. **ID Extraction**: Update to parse from both folder and file names
-5. **Migration Support**: Add dual-format support during transition
-
 ### Technology Stack
 
-#### Libraries/Frameworks
-- **Existing Dependencies** (no new dependencies required):
-  - Ruby stdlib: `File`, `Dir`, `FileUtils`, `Pathname`
-  - `ace-support-markdown`: SafeFileWriter for atomic writes
-  - YAML frontmatter parsing (existing `Atoms::YamlParser`)
+**Dependencies:**
+- **ace-llm**: For LLM-based slug generation (primary method)
+- **Existing**: Ruby stdlib, ace-support-markdown, existing slug generators (fallback)
 
-#### Version Compatibility
+**Version Compatibility:**
 - Ruby 2.7+ (existing requirement)
 - No breaking changes to public CLI interface
 - Backward compatible file format support
 
-### File Modifications
+**Important Scope Note:**
+- **Only active tasks/ideas** will use new format going forward
+- **Done items remain unchanged** - No migration needed for completed tasks/ideas
+- System reads both formats seamlessly
 
-#### Modify - Core Loading Logic
+### Implementation Steps
 
-**ace-taskflow/lib/ace/taskflow/molecules/task_loader.rb**
-- **Changes:**
-  - Update `load_tasks_from_release`: Change file pattern from `task.*.s.md` to `*.s.md` (finds `{id}-*.s.md`)
-  - Update `has_task_frontmatter?`: Support both `task.*.s.md` (old) and `{id}-*.s.md` (new) patterns
-  - Update `find_task_directory`: Search for both old and new directory naming patterns
-- **Impact:** Task discovery now finds tasks by new filename pattern
-- **Integration:** All commands that list/find tasks will automatically use new discovery
+**Step 1: Update File Discovery** (2-3 hours)
+- Modify `TaskLoader` glob pattern: `*.s.md` finds both old (`task.*.s.md`) and new (`{id}-*.s.md`)
+- Modify `IdeaLoader` to find ideas in timestamped folders (`{timestamp}-*/`)
+- Support both formats during read operations
 
-**ace-taskflow/lib/ace/taskflow/molecules/idea_loader.rb**
-- **Changes:**
-  - Update `load_all_with_glob`: Look for ideas in timestamped folders `{timestamp}-*/`
-  - Update file detection logic: Find `.s.md` files within timestamped folders
-  - Add support for both flat files (legacy) and timestamped folders (new)
-  - Update `load_idea_file`: Extract timestamp from folder name (not filename)
-  - Support `{description}.s.md` filename pattern (no timestamp in filename)
-- **Impact:** Idea discovery uses timestamped folder structure
-- **Integration:** All idea commands automatically use new structure
+**Step 2: LLM-Based Slug Generation** (2-3 hours)
+- Create slug generator using ace-llm with project context
+- Prompt LLM to generate hierarchical slugs (folder + file) in JSON format
+- Fallback to existing `TaskSlugGenerator` and `FileNamer` if LLM unavailable
 
-#### Modify - Path Building
+**Step 3: Update Creation Logic** (2-3 hours)
+- Modify `TaskManager.create_task`: Build paths as `{id}-{folder-slug}/{file-slug}.s.md`
+- Modify `IdeaWriter.write`: Build paths as `{timestamp}-{folder-slug}/{file-slug}.s.md`
+- **BUG FIX**: ALWAYS create ideas in folders, never as flat files
 
-**ace-taskflow/lib/ace/taskflow/atoms/path_builder.rb**
-- **Changes:**
-  - Update `extract_task_number`: Parse task numbers from new format (e.g., `085-search-fix`)
-  - Add `extract_sub_task_number`: Handle sub-task notation (085.1, 085.2)
-  - Update `build_task_file_path`: Generate `{id}-{description}.s.md` instead of `task.{id}.s.md`
-  - Add `build_idea_folder_path`: Generate timestamped idea folder paths `{timestamp}-{theme}/`
-  - Add helper to build idea file path: `{folder}/{description}.s.md`
-- **Impact:** Path operations support both formats
-- **Integration:** Used by all file creation and discovery operations
+**Step 4: Tests & Documentation** (4-6 hours)
+- Test new file patterns with both LLM and fallback modes
+- Test backward compatibility (reads both formats)
+- Update documentation with new structure examples
 
-#### Modify - Slug Generation
+### LLM Prompt Strategy
 
-**ace-taskflow/lib/ace/taskflow/molecules/task_slug_generator.rb**
-- **Changes:**
-  - Add `generate_folder_slug`: Generate general context slug (2-4 words)
-  - Add `generate_file_slug`: Generate specific description slug (3-5 words)
-  - Update `generate_descriptive_part`: Split into folder + file components
-  - Add goal type extraction: `add`, `enhance`, `fix`, `refactor`
-- **Impact:** Creates hierarchical slugs with clear context separation
-- **Integration:** Used by TaskManager during task creation
+**For Tasks:**
+```json
+{
+  "prompt": "Given task title and project context, generate slugs:",
+  "title": "Fix search default behavior",
+  "context": "ace-taskflow project",
+  "output_format": {
+    "folder_slug": "2-4 words: {system-area}-{goal-type}",
+    "file_slug": "3-5 words: {specific-description}",
+    "goal_types": ["add", "enhance", "fix", "refactor"]
+  }
+}
+```
 
-**ace-taskflow/lib/ace/taskflow/molecules/file_namer.rb**
-- **Changes:**
-  - Add `generate_folder_slug`: Generate timestamped folder slugs `{timestamp}-{theme}`
-  - Add `generate_file_slug`: Generate description-only file slugs (5±2 words, NO timestamp)
-  - Update `generate`: Support timestamped folder structure (folder + file separation)
-  - Keep extension: `.s.md` (no change)
-- **Impact:** Ideas created with timestamped folder structure
-- **Integration:** Used by IdeaWriter during idea creation
+**For Ideas:**
+```json
+{
+  "prompt": "Given idea description and project context, generate slugs:",
+  "description": "Improve search performance for large repos",
+  "context": "ace-taskflow project",
+  "output_format": {
+    "folder_slug": "{system-area}-{goal-type}",
+    "file_slug": "5±2 words: {description}"
+  }
+}
+```
 
-#### Modify - Task Management
+### Implementation Checklist
 
-**ace-taskflow/lib/ace/taskflow/organisms/task_manager.rb**
-- **Changes:**
-  - Update `create_task`: Use new hierarchical slug generation
-  - Add sub-task detection: Check if folder exists, assign sub-number if needed
-  - Update `complete_task`: Move entire folder to done/ (preserve structure)
-  - Add `generate_file_slug_from_title`: Extract specific description
-- **Impact:** Task creation and completion use new structure
-- **Integration:** All task lifecycle operations updated
+#### Day 1: Core Changes (6-8 hours)
 
-**ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb**
-- **Changes:**
-  - **BUG FIX**: ALWAYS create ideas in timestamped folder, never as flat files
-  - Update `generate_path`: Create `{timestamp}-{theme}/` folder structure
-  - Add `generate_folder_slug`: Generate `{timestamp}-{system-area}-{goal-type}` folder name
-  - Add `generate_file_slug`: Generate `{description}.s.md` filename (no timestamp)
-  - Remove flat file creation logic completely
-  - Keep extension: `.s.md` (no change)
-- **Impact:** Ideas ALWAYS created in subfolder (fixes current bug)
-- **Integration:** All idea creation uses new structure, no more flat files
+* [ ] **Step 1: Update File Discovery** (2-3h)
+  - [ ] Update TaskLoader glob patterns to find both formats
+  - [ ] Update IdeaLoader to look in timestamped folders
+  - [ ] Test loading both old and new formats
+  - [ ] Verify all existing tasks/ideas still load correctly
 
-#### Modify - Directory Movement
+* [ ] **Step 2: LLM Slug Generation** (2-3h)
+  - [ ] Create LLM-based slug generator with ace-llm
+  - [ ] Design prompts for tasks and ideas
+  - [ ] Implement fallback to existing generators
+  - [ ] Test LLM generation with sample titles/descriptions
+  - [ ] Test fallback when LLM unavailable
 
-**ace-taskflow/lib/ace/taskflow/molecules/task_directory_mover.rb**
-- **Changes:**
-  - Update `move_to_done`: Move entire folder (not just file)
-  - Add validation: Ensure all files in folder are moved together
-  - Update path resolution: Handle hierarchical structure
-- **Impact:** Done tasks maintain folder organization
-- **Integration:** Used by complete_task operations
+* [ ] **Step 3: Update Creation Logic** (2-3h)
+  - [ ] Modify TaskManager to use hierarchical paths
+  - [ ] Modify IdeaWriter to always create folders (bug fix)
+  - [ ] Update path builders for new structure
+  - [ ] Test creating new tasks with new structure
+  - [ ] Test creating new ideas in timestamped folders
 
-**ace-taskflow/lib/ace/taskflow/molecules/idea_directory_mover.rb**
-- **Changes:**
-  - Update `move_to_subdirectory`: Move to `done/{timestamp}-{theme}/` (preserve timestamp folder)
-  - Add folder structure preservation logic
-  - Update path resolution for timestamped folders
-  - Handle legacy flat files during migration
-- **Impact:** Done ideas maintain timestamped folder structure
-- **Integration:** Used by idea done operations
+#### Day 2: Testing & Documentation (4-6 hours)
 
-#### Create - Migration Support
+* [ ] **Step 4: Comprehensive Testing** (3-4h)
+  - [ ] Test all task commands with new structure
+  - [ ] Test all idea commands with new structure
+  - [ ] Test backward compatibility (mixed formats)
+  - [ ] Test sub-task creation (085.1, 085.2)
+  - [ ] Test moving tasks/ideas to done/
+  - [ ] Test LLM fallback scenarios
 
-**ace-taskflow/lib/ace/taskflow/molecules/format_detector.rb**
-- **Purpose:** Detect old vs new format for tasks and ideas
-- **Key components:**
-  - `detect_task_format(path)`: Returns `:legacy` (`task.*.s.md`) or `:hierarchical` (`{id}-*.s.md`)
-  - `detect_idea_format(path)`: Returns `:flat` (flat `.s.md`) or `:folder` (in timestamped folder)
-  - `is_task_file?(path)`: Check for both `task.*.s.md` and `{id}-*.s.md` patterns
-  - `is_idea_file?(path)`: Check for `.s.md` in both flat and folder structures
-  - `is_flat_idea?(path)`: Detect legacy flat idea files that need migration
-- **Dependencies:** File extension checking, path pattern matching
+* [ ] **Step 5: Documentation** (1-2h)
+  - [ ] Update README with new structure examples
+  - [ ] Update CHANGELOG with changes
+  - [ ] Update usage.md with examples
+  - [ ] Document LLM-first approach
 
-**ace-taskflow/lib/ace/taskflow/organisms/structure_migrator.rb**
-- **Purpose:** Migrate existing tasks/ideas to new format (future enhancement)
-- **Key components:**
-  - `migrate_task(task_path)`: Convert task to new structure
-  - `migrate_idea(idea_path)`: Convert idea to new structure
-  - `validate_migration(path)`: Ensure migration success
-  - `create_backup(path)`: Backup before migration
-- **Dependencies:** FormatDetector, TaskLoader, IdeaLoader, SafeFileWriter
+---
 
-#### Modify - Configuration
+## Summary
 
-**ace-taskflow/lib/ace/taskflow/configuration.rb**
-- **Changes:**
-  - Add `task_file_pattern`: Configure task filename pattern (`{id}-*.s.md`)
-  - Add `idea_require_folder`: ALWAYS true - ideas must be in folders (bug fix)
-  - Add `support_legacy_format`: Toggle for backward compatibility (default: true)
-  - Add `slug_max_folder_words`: Max words in folder slug (default: 4 for tasks, variable for ideas)
-  - Add `slug_max_file_words`: Max words in file slug (default: 5 for tasks, 5±2 for ideas)
-  - Keep `file_extension`: `.s.md` for both tasks and ideas (no change)
-- **Impact:** Configurable format support, enforces subfolder creation for ideas
-- **Integration:** Used by all file operations
+This simplified approach uses LLM-generated slugs as the primary method, falling back to existing logic if unavailable. The implementation focuses on four key steps over 1-2 days:
 
-### Implementation Plan
+1. Update file discovery to support both formats
+2. Add LLM-based slug generation with fallback
+3. Update creation logic for hierarchical structure
+4. Test and document the changes
 
-#### Planning Steps
-
-* [ ] **Review and validate behavioral specification**
-  - Ensure all edge cases covered in spec
-  - Validate success criteria completeness
-  - Confirm interface contract covers all commands
-
-* [ ] **Analyze existing file discovery patterns**
-  - Document current glob patterns across codebase
-  - Identify all locations using `*.s.md` pattern
-  - Map dependencies between loaders and commands
-
-* [ ] **Design slug generation algorithm**
-  - Define word extraction and filtering rules
-  - Determine goal type keywords and mapping
-  - Establish system area detection patterns
-  - Plan folder vs file slug distribution
-
-* [ ] **Plan migration strategy**
-  - Define backward compatibility requirements
-  - Design dual-format support approach
-  - Plan validation and rollback procedures
-
-#### Execution Steps
-
-- [ ] **Phase 1: Core Infrastructure (Week 1)**
-  - [ ] Create FormatDetector molecule
-    > TEST: Format Detection
-    > Type: Unit Test
-    > Assert: Correctly identifies legacy vs new format for both tasks and ideas
-    > Command: bundle exec ruby -I test test/molecules/format_detector_test.rb
-
-  - [ ] Update Configuration with new extension settings
-    > TEST: Configuration Values
-    > Type: Unit Test
-    > Assert: New configuration keys return expected defaults
-    > Command: bundle exec ruby -I test test/configuration_test.rb
-
-  - [ ] Enhance TaskSlugGenerator for hierarchical slugs
-    - Add `generate_folder_slug` method (2-4 words, general context)
-    - Add `generate_file_slug` method (3-5 words, specific description)
-    - Add goal type detection (add/enhance/fix/refactor)
-    - Add system area extraction logic
-    > TEST: Slug Generation
-    > Type: Unit Test
-    > Assert: Folder slugs are 2-4 words, file slugs are 3-5 words, goal types detected correctly
-    > Command: bundle exec ruby -I test test/molecules/task_slug_generator_test.rb
-
-  - [ ] Enhance FileNamer for idea timestamped folder structure
-    - Add `generate_folder_slug` for timestamped folders (`{timestamp}-{theme}`)
-    - Add `generate_file_slug` for description-only filenames (5±2 words, no timestamp)
-    - Keep extension `.s.md` (no change)
-    > TEST: Idea File Naming
-    > Type: Unit Test
-    > Assert: Folder includes timestamp, file is description-only, extension is .s.md
-    > Command: bundle exec ruby -I test test/molecules/file_namer_test.rb
-
-- [ ] **Phase 2: Path and Discovery (Week 1)**
-  - [ ] Update PathBuilder for new format
-    - Modify `extract_task_number` to parse from hierarchical names
-    - Add `extract_sub_task_number` for decimal notation (085.1)
-    - Update `build_task_file_path` to generate `{id}-{description}.s.md` pattern
-    - Add `build_idea_folder_path` for timestamped folders `{timestamp}-{theme}/`
-    - Add `build_idea_file_path` for description-only filenames
-    > TEST: Path Building
-    > Type: Unit Test
-    > Assert: Paths built correctly for both old and new formats, sub-tasks supported, idea timestamps in folders
-    > Command: bundle exec ruby -I test test/atoms/path_builder_test.rb
-
-  - [ ] Update TaskLoader for new filename pattern
-    - Change file pattern from `task.*.s.md` to `*.s.md` (finds `{id}-*.s.md`)
-    - Add backward compatibility for `task.*.s.md` pattern
-    - Update `find_task_directory` for hierarchical folders
-    - Enhance `has_task_frontmatter?` to check both patterns
-    > TEST: Task Loading
-    > Type: Integration Test
-    > Assert: Loads both old and new format tasks, finds tasks in hierarchical folders
-    > Command: bundle exec ruby -I test test/molecules/task_loader_test.rb
-
-  - [ ] Update IdeaLoader for timestamped folder structure
-    - Look for ideas in timestamped folders `{timestamp}-*/`
-    - Find `.s.md` files within timestamped folders
-    - Support both flat files (legacy) and timestamped folders (new)
-    - Extract timestamp from folder name (not filename)
-    > TEST: Idea Loading
-    > Type: Integration Test
-    > Assert: Loads both old flat and new timestamped folder ideas, timestamp from folder name
-    > Command: bundle exec ruby -I test test/molecules/idea_loader_test.rb
-
-- [ ] **Phase 3: Creation Logic (Week 2)**
-  - [ ] Update TaskManager.create_task
-    - Integrate hierarchical slug generation
-    - Add sub-task detection (check folder existence)
-    - Assign sub-numbers (085.1, 085.2) for related tasks
-    - Generate `{id}-{description}.s.md` files in hierarchical folders
-    > TEST: Task Creation
-    > Type: Integration Test
-    > Assert: Tasks created with correct folder/file structure, sub-tasks assigned correctly, .s.md extension
-    > Command: bundle exec ruby -I test test/organisms/task_manager_test.rb
-
-  - [ ] **FIX IdeaWriter.write (Bug Fix)**
-    - **ALWAYS create ideas in timestamped folders, never as flat files**
-    - Generate timestamped folder: `{timestamp}-{system-area}-{goal-type}/`
-    - Generate description-only filename: `{description}.s.md` (no timestamp)
-    - Remove any flat file creation logic
-    - Maintain timestamp-based folder IDs
-    > TEST: Idea Creation (Bug Fix Validation)
-    > Type: Integration Test
-    > Assert: Ideas ALWAYS created in subfolder, never as flat files, timestamp in folder not filename
-    > Command: bundle exec ruby -I test test/organisms/idea_writer_test.rb
-
-- [ ] **Phase 4: Movement Operations (Week 2)**
-  - [ ] Update TaskDirectoryMover
-    - Modify `move_to_done` to move entire folder
-    - Add validation for folder contents
-    - Preserve hierarchical structure in done/
-    > TEST: Task Movement
-    > Type: Integration Test
-    > Assert: Entire folder moved to done/, structure preserved
-    > Command: bundle exec ruby -I test test/molecules/task_directory_mover_test.rb
-
-  - [ ] Update IdeaDirectoryMover
-    - Modify movement to preserve folder structure (`done/{folder}/`)
-    - Update path resolution for hierarchical ideas
-    > TEST: Idea Movement
-    > Type: Integration Test
-    > Assert: Ideas moved to done/{folder}/, thematic grouping preserved
-    > Command: bundle exec ruby -I test test/molecules/idea_directory_mover_test.rb
-
-- [ ] **Phase 5: Testing & Validation (Week 3)**
-  - [ ] Create comprehensive integration tests
-    - Full task lifecycle (create → complete → find)
-    - Full idea lifecycle (create → complete → find)
-    - Sub-task creation and management
-    - Multi-idea folder grouping
-    > TEST: End-to-End Workflows
-    > Type: Integration Test
-    > Assert: Complete workflows function correctly with new structure
-    > Command: bundle exec rake test
-
-  - [ ] Test backward compatibility
-    - Verify old format tasks still load
-    - Verify old format ideas still load
-    - Test mixed environments (old + new)
-    > TEST: Backward Compatibility
-    > Type: Integration Test
-    > Assert: Old format files work alongside new format
-    > Command: bundle exec ruby -I test test/integration/backward_compatibility_test.rb
-
-  - [ ] Manual CLI testing
-    - Test all task commands with new structure
-    - Test all idea commands with new structure
-    - Verify display formats correct
-    - Confirm error handling works
-
-  - [ ] Update documentation
-    - Update README with new structure examples
-    - Update CHANGELOG with migration notes
-    - Create migration guide for users
-
-  - [ ] Create migration tool (StructureMigrator organism)
-    - Implement batch migration for existing tasks
-    - Implement batch migration for existing ideas
-    - Add dry-run mode
-    - Add backup/rollback support
-    > TEST: Migration Tool
-    > Type: Integration Test
-    > Assert: Migrations complete successfully, backups created, rollback works
-    > Command: bundle exec ruby -I test test/organisms/structure_migrator_test.rb
-
-### Risk Assessment
-
-#### Technical Risks
-
-- **Risk:** File discovery breaks in edge cases (nested folders, symbolic links)
-  - **Probability:** Medium
-  - **Impact:** High (could break task/idea listing)
-  - **Mitigation:** Comprehensive test coverage for edge cases, add validation for folder structures
-  - **Rollback:** Revert glob pattern changes, maintain old format support
-
-- **Risk:** Sub-task numbering conflicts (085.1 already exists)
-  - **Probability:** Low
-  - **Impact:** Medium (creation fails, user confusion)
-  - **Mitigation:** Check for existing sub-numbers, increment to next available (085.2, 085.3)
-  - **Rollback:** Manual renumbering if needed
-
-- **Risk:** Slug generation produces unexpected results
-  - **Probability:** Medium
-  - **Impact:** Low (slugs don't match expectations but still functional)
-  - **Mitigation:** Extensive testing of slug algorithm, provide clear slug examples in docs
-  - **Rollback:** No rollback needed - slugs are deterministic but cosmetic
-
-#### Integration Risks
-
-- **Risk:** Commands assume old file patterns
-  - **Probability:** Medium
-  - **Impact:** High (commands fail to find files)
-  - **Mitigation:** Update all glob patterns consistently, maintain backward compatibility layer
-  - **Monitoring:** Test all commands in CI with both formats
-
-- **Risk:** Third-party tools depend on old structure
-  - **Probability:** Low
-  - **Impact:** Medium (external integrations break)
-  - **Mitigation:** Maintain dual-format support, document migration timeline
-  - **Monitoring:** Provide migration guide and deprecation warnings
-
-#### Performance Risks
-
-- **Risk:** Hierarchical folder scanning slower than flat structure
-  - **Probability:** Low
-  - **Impact:** Low (slight performance degradation)
-  - **Mitigation:** Glob patterns optimized, folder depth limited to 2 levels
-  - **Monitoring:** Benchmark task/idea listing before and after
-  - **Thresholds:** <100ms for listing 100 tasks/ideas (acceptable)
+**Key Benefits:**
+- Much simpler than manual slug parsing (1-2 days vs 2-3 weeks)
+- Better quality slugs from LLM understanding of context
+- Graceful degradation with existing logic as fallback
+- No migration needed for done/ items
+- Backward compatible with existing tasks/ideas

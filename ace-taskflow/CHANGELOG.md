@@ -88,7 +88,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update tests to use release parameter
 - Rename infrastructure gems (ace-core → ace-support-core, ace-test-support → ace-support-test-helpers)
 - Bump versions for dependency updates (0.15.0, 0.15.1)
-
 ## [0.15.2] - 2025-11-01
 
 ### Changed

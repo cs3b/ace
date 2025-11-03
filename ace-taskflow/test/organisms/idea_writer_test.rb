@@ -24,11 +24,16 @@ class IdeaWriterTest < AceTestCase
     content = "This is a test idea"
     path = @writer.write(content)
 
-    assert File.exist?(path), "File should be created"
-    assert_includes path, @temp_dir, "File should be in temp directory"
-    assert_match(/\.md$/, path, "File should have .md extension")
+    # Path is now a directory (bug fix: ideas always in subfolders)
+    assert Dir.exist?(path), "Directory should be created"
+    assert_includes path, @temp_dir, "Directory should be in temp directory"
 
-    file_content = File.read(path)
+    # Find the idea file inside the directory
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have at least one .s.md file in directory"
+
+    idea_file = idea_files.first
+    file_content = File.read(idea_file)
     assert_includes file_content, content, "File should contain the idea content"
   end
 
@@ -40,9 +45,14 @@ class IdeaWriterTest < AceTestCase
     content = "Test idea in custom directory"
     path = writer.write(content)
 
-    assert File.exist?(path), "File should be created"
-    assert_includes path, custom_dir, "File should be in custom directory"
+    # Path is now a directory
+    assert Dir.exist?(path), "Directory should be created"
+    assert_includes path, custom_dir, "Directory should be in custom directory"
     assert Dir.exist?(custom_dir), "Custom directory should be created"
+
+    # Check that file exists inside the directory
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have idea file in directory"
   end
 
   def test_creates_directory_if_not_exists
@@ -54,7 +64,11 @@ class IdeaWriterTest < AceTestCase
     path = writer.write(content)
 
     assert Dir.exist?(nested_dir), "Nested directory should be created"
-    assert File.exist?(path), "File should be created"
+    assert Dir.exist?(path), "Idea directory should be created"
+
+    # Check that file exists inside the directory
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have idea file in directory"
   end
 
   def test_formats_idea_with_template
@@ -65,7 +79,13 @@ class IdeaWriterTest < AceTestCase
     }
 
     path = @writer.write(content, metadata)
-    file_content = File.read(path)
+
+    # Path is now a directory, find the idea file inside
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have idea file in directory"
+
+    idea_file = idea_files.first
+    file_content = File.read(idea_file)
 
     assert_includes file_content, "# Template Test", "Should include title from metadata"
     assert_includes file_content, content, "Should include content"
@@ -76,9 +96,15 @@ class IdeaWriterTest < AceTestCase
     content = "This is a long idea that should be truncated for the title section of the generated filename"
     path = @writer.write(content)
 
-    # The title should be extracted and sanitized for the filename
-    basename = File.basename(path)
-    assert_match(/this-is-a-long-idea/, basename, "Filename should contain sanitized title")
+    # Path is now a directory, the title should be in the directory name (after timestamp)
+    dirname = File.basename(path)
+    # Directory name format: YYYYMMDD-HHMMSS-{sanitized-title} or YYYYMMDD-HHMMSS-{folder-slug}
+    # The sanitized title or slug should contain part of the content
+    assert_match(/this-is-a-long-idea|enhance|idea/, dirname, "Directory name should contain sanitized title or slug")
+
+    # Also check that file was created inside
+    idea_files = Dir.glob(File.join(path, "*.s.md"))
+    assert idea_files.any?, "Should have idea file in directory"
   end
 
   def test_raises_error_on_empty_content
