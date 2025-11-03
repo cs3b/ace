@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'dependency_resolver'
+require_relative 'filter_applier'
 
 module Ace
   module Taskflow
@@ -105,6 +106,7 @@ module Ace
         def self.apply_filters(tasks, filters = {})
           result = tasks
 
+          # FIRST: Apply old-style filters (from presets)
           # Apply status filter
           if filters[:status]
             statuses = Array(filters[:status])
@@ -137,6 +139,11 @@ module Ace
             filters[:metadata].each do |field, value|
               result = filter_by_metadata(result, field, value)
             end
+          end
+
+          # SECOND: Apply new-style filter_specs (from --filter flags)
+          if filters[:filter_specs] && !filters[:filter_specs].empty?
+            result = FilterApplier.apply(result, filters[:filter_specs])
           end
 
           result

@@ -7,6 +7,7 @@ require_relative "../molecules/dependency_tree_visualizer"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/task"
 require_relative "../atoms/path_formatter"
+require_relative "../atoms/filter_parser"
 require_relative "helpers"
 
 module Ace
@@ -60,14 +61,44 @@ module Ace
 
         def parse_additional_filters(args)
           filters = {}
+          filter_strings = []
 
           i = 0
           while i < args.length
             arg = args[i]
             case arg
+            # NEW: Unified filter syntax
+            when "--filter"
+              if i + 1 < args.length
+                filter_strings << args[i + 1]
+                i += 2
+              else
+                raise ArgumentError, "Missing value for --filter flag. Use: --filter key:value"
+              end
+            when "--filter-clear"
+              filters[:filter_clear] = true
+              i += 1
+            # REMOVED: Legacy filter flags with helpful error messages
             when "--status"
-              filters[:status] = args[i + 1].split(',') if i + 1 < args.length
-              i += 2
+              suggested_value = args[i + 1] if i + 1 < args.length
+              suggested_filter = if suggested_value
+                # Convert comma-separated to pipe-separated
+                converted = suggested_value.gsub(',', '|')
+                "--filter status:#{converted}"
+              else
+                "--filter status:value"
+              end
+              raise ArgumentError, "Error: --status flag is no longer supported. Use: #{suggested_filter}"
+            when "--priority"
+              suggested_value = args[i + 1] if i + 1 < args.length
+              suggested_filter = if suggested_value
+                converted = suggested_value.gsub(',', '|')
+                "--filter priority:#{converted}"
+              else
+                "--filter priority:value"
+              end
+              raise ArgumentError, "Error: --priority flag is no longer supported. Use: #{suggested_filter}"
+            # KEPT: Convenience and formatting flags
             when "--days"
               filters[:days] = args[i + 1].to_i if i + 1 < args.length
               i += 2
@@ -86,7 +117,7 @@ module Ace
             when "--list"
               filters[:list] = true
               i += 1
-            # Release selection flags
+            # KEPT: Release selection flags (not filters)
             when "--backlog"
               filters[:release] = "backlog"
               i += 1
@@ -110,6 +141,11 @@ module Ace
             end
           end
 
+          # Parse filter strings into filter specifications
+          if filter_strings.any?
+            filters[:filter_specs] = Atoms::FilterParser.parse(filter_strings)
+          end
+
           filters
         end
 
@@ -127,9 +163,23 @@ module Ace
             return show_statistics_for_preset(preset_name, additional_filters)
           end
 
-          # Apply preset with additional filters
-          preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-          return 1 unless preset_config
+          # Handle filter-clear: if set, don't pass old-style filters to preset
+          if additional_filters[:filter_clear]
+            # Apply preset but ignore its filters
+            preset_config = @preset_manager.apply_preset(preset_name, {})
+            return 1 unless preset_config
+            # Clear the preset filters but keep release, sort, glob, display
+            preset_config[:filters] = {}
+          else
+            # Apply preset with additional filters (normal flow)
+            preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+            return 1 unless preset_config
+          end
+
+          # Store filter_specs in preset_config so TaskFilter can access them
+          if additional_filters[:filter_specs]
+            preset_config[:filter_specs] = additional_filters[:filter_specs]
+          end
 
           # Override release if provided via flags
           if additional_filters[:release]
@@ -184,6 +234,11 @@ module Ace
           filters = {}
           filters_raw.each do |key, value|
             filters[key.to_sym] = value
+          end
+
+          # Add filter_specs to filters hash so TaskFilter can access them
+          if preset_config[:filter_specs]
+            filters[:filter_specs] = preset_config[:filter_specs]
           end
 
           case release
@@ -411,31 +466,41 @@ module Ace
           puts "  reschedule           Reorder tasks by updating sort values"
           puts ""
           puts "Preset Examples:"
-          puts "  ace-taskflow tasks                    # Uses 'next' preset (default)"
-          puts "  ace-taskflow tasks recent             # Recently modified tasks"
-          puts "  ace-taskflow tasks recent --days 3    # Recent with custom filter"
-          puts "  ace-taskflow tasks all                # All tasks in current release"
-          puts "  ace-taskflow tasks all-releases       # All tasks across all releases"
-          puts "  ace-taskflow tasks pending            # Only pending tasks"
-          puts "  ace-taskflow tasks next --stats       # Statistics for next preset"
+          puts "  ace-taskflow tasks                           # Uses 'next' preset (default)"
+          puts "  ace-taskflow tasks recent                    # Recently modified tasks"
+          puts "  ace-taskflow tasks all                       # All tasks in current release"
+          puts "  ace-taskflow tasks all-releases              # All tasks across all releases"
           puts ""
-          puts "Legacy Flag Options (backward compatibility):"
+          puts "Filtering Options:"
+          puts "  --filter <key>:<value>                       Filter by any frontmatter field"
+          puts "  --filter-clear                               Clear preset filters (keep release/scope/sort)"
+          puts ""
+          puts "Filter Operators:"
+          puts "  Simple:     --filter status:pending         Exact match (case-insensitive)"
+          puts "  OR values:  --filter status:pending|done    Match any value (pipe-separated)"
+          puts "  Negation:   --filter status:!done           Exclude matches"
+          puts "  Array:      --filter dependencies:task.081  Value in array"
+          puts "  Multiple:   --filter status:pending --filter priority:high    AND logic"
+          puts ""
+          puts "Filter Examples:"
+          puts "  ace-taskflow tasks --filter status:pending --filter priority:high"
+          puts "  ace-taskflow tasks --filter status:pending|in-progress"
+          puts "  ace-taskflow tasks all --filter status:!done --filter status:!blocked"
+          puts "  ace-taskflow tasks next --filter-clear --filter priority:high"
+          puts "  ace-taskflow tasks --filter team:backend --filter sprint:12"
+          puts ""
+          puts "Release Selection:"
           puts "  --backlog            List backlog tasks"
           puts "  --release <name>     List tasks in specific release"
-          puts "  --status <statuses>  Filter by status (comma-separated)"
-          puts "  --days <n>           Days to look back (default: 7)"
-          puts "  --stats              Show task statistics"
-          puts "  --sort <field>       Sort by field (priority, status, id, modified)"
-          puts "  --limit <n>          Limit number of results displayed"
           puts ""
-          puts "Additional Preset Filters:"
-          puts "  --status <statuses>  Add status filter to preset"
-          puts "  --days <n>           Modify days for time-based presets"
+          puts "Display Options:"
+          puts "  --days <n>           Days to look back (default: 7)"
           puts "  --limit <n>          Limit number of results displayed"
-          puts "  --stats              Show statistics for preset"
+          puts "  --stats              Show task statistics"
           puts "  --tree               Show dependency tree view"
           puts "  --path               Show paths only"
           puts "  --list               Show simple list format"
+          puts "  --sort <field>       Sort by field (priority, status, id, modified)"
           puts ""
           puts "Reschedule Options:"
           puts "  --add-next           Place tasks before existing pending tasks"
