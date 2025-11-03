@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.002
-status: done
+status: in-progress
 priority: low
 estimate: 2h
-dependencies: [v.0.9.0+task.001]
+dependencies:
+- v.0.9.0+task.001
 ---
 
 # Create Root Gemfile for Workspace
