@@ -7,17 +7,18 @@ require "tmpdir"
 
 class IdeaWriterClipboardTest < AceTaskflowTestCase
   def setup
-    @temp_dir = Dir.mktmpdir
+    # Use in-memory config (no real filesystem)
     @config = {
-      "directory" => File.join(@temp_dir, "ideas"),
+      "directory" => "/test/ideas",
       "template" => "%{content}"
     }
     @writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
     @original_clipboard = Clipboard
+    @written_files = []
+    @mkdir_calls = []
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
     old_verbose = $VERBOSE
     $VERBOSE = nil
     Object.const_set(:Clipboard, @original_clipboard) if defined?(@original_clipboard)
@@ -78,31 +79,42 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
   # Test that --clipboard flag is respected
   def test_write_without_clipboard_flag_ignores_clipboard
     mock_clipboard("should not appear")
+    mock_slug_resp = mock_slug_response(folder_slug: "test", file_slug: "content")
 
-    path = @writer.write("main content", clipboard: false)
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        path = @writer.write("main content", clipboard: false)
 
-    # Path is now a directory, find the idea file inside
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have idea file in directory"
+        assert path
+        assert_match(%r{/test/ideas/}, path)
 
-    content = File.read(idea_files.first)
-    assert_match(/main content/, content)
-    refute_match(/should not appear/, content)
+        # Verify file was written with correct content
+        write_call = @written_files.first
+        assert write_call
+        assert_match(/main content/, write_call[:content])
+        refute_match(/should not appear/, write_call[:content])
+      end
+    end
   end
 
   # Test that --clipboard flag is not set, clipboard is ignored
   def test_clipboard_ignored_when_flag_not_set
     mock_clipboard("should be ignored")
+    mock_slug_resp = mock_slug_response(folder_slug: "test", file_slug: "content")
 
-    path = @writer.write("main content")
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        path = @writer.write("main content")
 
-    # Path is now a directory, find the idea file inside
-    idea_files = Dir.glob(File.join(path, "*.s.md"))
-    assert idea_files.any?, "Should have idea file in directory"
+        assert path
 
-    content = File.read(idea_files.first)
-    assert_match(/main content/, content)
-    refute_match(/should be ignored/, content)
+        # Verify file was written with correct content
+        write_call = @written_files.first
+        assert write_call
+        assert_match(/main content/, write_call[:content])
+        refute_match(/should be ignored/, write_call[:content])
+      end
+    end
   end
 
   private
@@ -123,5 +135,29 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
     # Mock clipboard to return file paths (one per line)
     content = file_paths.join("\n")
     mock_clipboard(content)
+  end
+
+  def mock_filesystem
+    # Capture instance variables for closure
+    written_files = @written_files
+    mkdir_calls = @mkdir_calls
+
+    # Mock FileUtils.mkdir_p
+    FileUtils.stub :mkdir_p, ->(path) { mkdir_calls << path } do
+      # Mock SafeFileWriter.write
+      original_write = Ace::Support::Markdown::Organisms::SafeFileWriter.method(:write)
+
+      Ace::Support::Markdown::Organisms::SafeFileWriter.define_singleton_method(:write) do |path, content, **options|
+        written_files << { path: path, content: content, options: options }
+        path
+      end
+
+      begin
+        yield
+      ensure
+        # Restore original write method
+        Ace::Support::Markdown::Organisms::SafeFileWriter.define_singleton_method(:write, original_write)
+      end
+    end
   end
 end
