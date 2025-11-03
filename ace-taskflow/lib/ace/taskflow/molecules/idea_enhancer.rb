@@ -188,7 +188,7 @@ module Ace
             prompt,
             system: system_prompt,
             temperature: 0.3,
-            max_tokens: 1000,
+            max_tokens: 10000,  # Allow full enhanced content generation
             debug: @debug
           )
 
