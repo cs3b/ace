@@ -12,6 +12,45 @@ end
 # Helper module for mocking Ace::LLM::QueryInterface in tests
 # Uses define_singleton_method pattern consistent with existing test mocking
 module LlmMockHelper
+  # Track if global mocking is enabled
+  @@global_llm_mocking = false
+  @@original_llm_query = nil
+
+  # Enable global LLM mocking (called automatically from test_helper)
+  def self.enable_global_mocking!
+    return if @@global_llm_mocking
+
+    begin
+      @@original_llm_query = Ace::LLM::QueryInterface.method(:query)
+      @@global_llm_mocking = true
+
+      # Globally mock all LLM calls to return a default response
+      Ace::LLM::QueryInterface.define_singleton_method(:query) do |model, prompt, **kwargs|
+        # Return minimal valid response for slug generation
+        {
+          text: '{"folder_slug": "test-default", "file_slug": "test-content"}',
+          model: model || "mocked",
+          provider: "mocked",
+          usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
+          metadata: {}
+        }
+      end
+    rescue NameError
+      # Ace::LLM not loaded yet, will be mocked when first accessed
+    end
+  end
+
+  # Disable global mocking (restore original)
+  def self.disable_global_mocking!
+    return unless @@global_llm_mocking
+
+    if @@original_llm_query
+      Ace::LLM::QueryInterface.define_singleton_method(:query, @@original_llm_query)
+    end
+
+    @@global_llm_mocking = false
+    @@original_llm_query = nil
+  end
   # Mock successful LLM query with custom response text
   # @param response_text [String] The text response from LLM (typically JSON)
   # @param model [String] Model identifier for response metadata
@@ -93,3 +132,6 @@ module LlmMockHelper
     }.to_json
   end
 end
+
+# Enable global LLM mocking automatically when module is loaded in tests
+LlmMockHelper.enable_global_mocking! if defined?(Minitest)
