@@ -236,6 +236,10 @@ module Ace
           enhanced << "---"
           enhanced << ""
 
+          # Add title heading after frontmatter
+          enhanced << "# #{llm_data['title']}" if llm_data['title']
+          enhanced << ""
+
           # Add enhanced description
           enhanced << llm_data['enhanced_description'] if llm_data['enhanced_description']
           enhanced << ""

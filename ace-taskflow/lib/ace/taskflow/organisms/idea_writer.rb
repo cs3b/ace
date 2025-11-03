@@ -239,6 +239,9 @@ module Ace
         end
 
         def format_idea(content, metadata)
+          # If content already has frontmatter (LLM-enhanced), return as-is
+          return content if content&.start_with?("---\n")
+
           template = @config["template"] ||
                      "# Idea\n\n%{content}\n\n---\nCaptured: %{timestamp}\n"
 
