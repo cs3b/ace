@@ -23,6 +23,8 @@ module ShellMockHelper
         ShellMockHelper.handle_ace_nav_mock(args, kwargs)
       when "ace-context"
         ShellMockHelper.handle_ace_context_mock(args, kwargs)
+      when "git"
+        ShellMockHelper.handle_git_mock(args, kwargs)
       else
         # Pass through to original method for other commands
         @@original_capture3.call(cmd, *args, **kwargs, &block)
@@ -104,6 +106,38 @@ module ShellMockHelper
       [context_content, "", OpenStruct.new(success?: true)]
     else
       ["", "Preset not found", OpenStruct.new(success?: false, exitstatus: 1)]
+    end
+  end
+
+  # Handle git command mocking
+  def self.handle_git_mock(args, _kwargs)
+    subcommand = args.first
+
+    case subcommand
+    when "rev-parse"
+      # Check if in git repo
+      if args.include?("--git-dir")
+        [".git", "", OpenStruct.new(success?: true, exitstatus: 0)]
+      else
+        ["", "", OpenStruct.new(success?: true, exitstatus: 0)]
+      end
+    when "add"
+      # Mock git add
+      ["", "", OpenStruct.new(success?: true, exitstatus: 0)]
+    when "commit"
+      # Mock git commit
+      commit_message = args[args.index("-m") + 1] if args.include?("-m")
+      output = "[mock] 1 file changed, 1 insertion(+)\n create mode 100644 #{commit_message}"
+      [output, "", OpenStruct.new(success?: true, exitstatus: 0)]
+    when "status"
+      # Mock git status - return clean status
+      ["", "", OpenStruct.new(success?: true, exitstatus: 0)]
+    when "init", "config"
+      # Mock git init and config
+      ["", "", OpenStruct.new(success?: true, exitstatus: 0)]
+    else
+      # Unknown git command - return success
+      ["", "", OpenStruct.new(success?: true, exitstatus: 0)]
     end
   end
 end

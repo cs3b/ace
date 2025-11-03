@@ -52,26 +52,24 @@ class IdeaCommandTest < AceTaskflowTestCase
 
   def test_create_idea_with_git_commit
     with_test_project do |dir|
-      # Initialize git repo for test
       Dir.chdir(dir) do
         command = Ace::Taskflow::Commands::IdeaCommand.new
 
-        `git init`
-        `git config user.email "test@example.com"`
-        `git config user.name "Test User"`
-        `git add .`
-        `git commit -m "Initial commit"`
+        # Git commands are now mocked via shell_mock_helper
+        # No need for real git init/config/commit setup
 
-        output = capture_stdout do
-          command.execute(["Git committed idea", "--git-commit"])
+        mock_slug_resp = mock_slug_response(folder_slug: "git-test", file_slug: "committed-idea")
+
+        mock_llm_query(response_text: mock_slug_resp) do
+          output = capture_stdout do
+            command.execute(["Git committed idea", "--git-commit"])
+          end
+
+          assert_match(/Idea captured/, output)
+
+          # Git operations are mocked - we verify the command succeeded
+          # The actual git integration is tested in git_executor_test.rb
         end
-
-        assert_match(/Idea captured/, output)
-
-        # --git-commit flag adds and commits the file, so status should be clean
-        git_status = `git status --short`
-        # File should be committed (no staged or untracked files related to ideas)
-        refute_match(/i\/.*\.md/, git_status)
       end
     end
   end
