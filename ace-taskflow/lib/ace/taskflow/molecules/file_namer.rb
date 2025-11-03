@@ -13,26 +13,24 @@ module Ace
         def generate(metadata = {})
           timestamp_format = @config.dig("file_naming", "timestamp_format") || "%Y%m%d-%H%M%S"
           timestamp = Time.now.strftime(timestamp_format)
-          title = sanitize_title(metadata[:title])
           directory = idea_directory
 
-          # If has_attachments, generate directory path instead of file path
-          if metadata[:has_attachments]
+          # BUG FIX: ALWAYS generate directory paths (never flat files)
+          # This fixes the bug where ideas were sometimes created as flat files
+          # Generate folder name with timestamp + theme
+          if metadata[:folder_slug]
+            # Use LLM-generated hierarchical slugs
+            dirname = "#{timestamp}-#{metadata[:folder_slug]}"
+          else
+            # Fallback: use title for folder slug
+            title = sanitize_title(metadata[:title])
             dirname = if title && !title.empty?
                         "#{timestamp}-#{title}"
                       else
                         "#{timestamp}-idea"
                       end
-            File.join(directory, dirname)
-          else
-            # Standard flat file naming
-            filename = if title && !title.empty?
-                         "#{timestamp}-#{title}.s.md"
-                       else
-                         "#{timestamp}-idea.s.md"
-                       end
-            File.join(directory, filename)
           end
+          File.join(directory, dirname)
         end
 
         private
