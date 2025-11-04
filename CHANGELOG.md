@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-git-worktree v0.1.7**: Major worktree detection and parsing improvements
+  - Fix critical worktree detection issue - now detects all 7 existing worktrees
+  - Update porcelain format parsing to handle structured git worktree output
+  - Fix CommandExecutor timeout parameter mismatch causing git help output
+  - Add full support for mixed environments (task-aware + traditional worktrees)
+  - Proper task ID extraction for existing worktrees (086, 089, 090, 091, 093, 097)
+
 ## [0.9.113] - 2025-11-04
 
 ### Security
