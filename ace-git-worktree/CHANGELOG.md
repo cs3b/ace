@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-11-04
+
+### Fixed
+- **CRITICAL**: Fix CLI override flags being ignored (--no-mise-trust, --no-status-update, --no-commit, --commit-message)
+- **CRITICAL**: Fix overly restrictive branch validation that rejected / characters and main/master branches
+- WorktreeManager now properly respects --no-mise-trust flag before applying configuration defaults
+- TaskWorktreeOrchestrator respects all CLI override flags instead of always using configuration defaults
+- Branch validation now follows Git's actual branch naming rules while maintaining security
+- Fix regex syntax errors in task_fetcher.rb and mise_trustor.rb character classes
+
+### Added
+- Comprehensive test coverage for branch validation with slash characters and main/master branches
+- Integration tests for CLI override functionality across all override flags
+- Tests for custom commit message functionality
+- Enhanced CLI command tests with override flag verification
+
+### Technical
+- Updated valid_branch_name? to allow legitimate Git branch patterns (feature/login, bugfix/issue-123, etc.)
+- Enhanced option merging logic in WorktreeManager and TaskWorktreeOrchestrator
+- Fixed CreateCommand initialization to use fully qualified constant names
+- Maintained all existing security protections while fixing functional regressions
+
 ## [0.1.3] - 2025-11-04
 
 ### Security
