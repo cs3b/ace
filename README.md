@@ -16,7 +16,7 @@ All gems follow the `ace-*` naming convention and ATOM architecture pattern:
 
 | Gem | Command(s) | Purpose |
 |-----|------------|---------|
-| **ace-core** | `ace-framework` | Configuration cascade, shared utilities foundation |
+| **ace-support-core** | `ace-framework` | Configuration cascade, shared utilities foundation |
 | **ace-context** | `ace-context` | Project context loading with smart caching |
 | **ace-git-commit** | `ace-git-commit` | LLM-powered smart commit message generation |
 | **ace-llm** | `ace-llm-query` | Multi-provider LLM integration (Claude, OpenAI, etc.) |
@@ -34,7 +34,7 @@ As of v0.9.0, ACE uses a monorepo architecture (migrated from Git submodules):
 
 ```
 ace-meta/
-├── ace-core/              # Foundation gem (zero dependencies)
+├── ace-support-core/      # Foundation gem (zero dependencies)
 ├── ace-context/           # Context loading
 ├── ace-git-commit/        # Git commit tool
 ├── ace-llm/               # LLM integration
@@ -108,7 +108,7 @@ bundle exec ace-context project
 bundle exec ace-taskflow tasks --current
 
 # Test specific gem
-cd ace-core
+cd ace-support-core
 bundle exec rake test
 
 # Test all gems
@@ -182,7 +182,7 @@ Workflows are self-contained with embedded templates following ADR-001.
 ## 🎯 Core Principles
 
 1. **Modular Gems**: Each capability is a focused, independently installable gem
-2. **Zero-Dependency Core**: ace-core uses only Ruby standard library
+2. **Zero-Dependency Core**: ace-support-core uses only Ruby standard library
 3. **Deterministic Commands**: Consistent, parseable output for AI agents
 4. **Configuration Cascade**: Project → User → Gem defaults with deep merging
 5. **ATOM Architecture**: Consistent patterns across all gems
