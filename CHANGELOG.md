@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.112] - 2025-11-04
+
+### Fixed
+- **ace-core removal**: Complete migration from ace-core to ace-support-core
+  - Removed duplicate VERSION constant conflicts that caused warnings
+  - Fixed "Failed to resolve protocol: wfi://create-task" errors
+  - Updated all gem dependencies to use ace-support-core
+  - Eliminated ace-core package entirely (75 files removed)
+- **ace-git-worktree v0.1.2**: Updated dependencies and documentation
+  - Fixed gemspec dependency from ace-core to ace-support-core
+  - Added required support gems to resolve bundler conflicts
+  - Updated README.md with correct dependency references
+
+### Changed
+- BREAKING CHANGE: ace-core package no longer exists, use ace-support-core
+- Updated all documentation references to ace-support-core across codebase
+- Regenerated Gemfile.lock files to remove ace-core references
+
+### Technical
+- Resolved VERSION constant conflicts between ace-core and ace-support-core
+- Ensured proper dependency resolution for ace-nav, ace-context, ace-taskflow
+- Verified wfi:// protocol resolution works correctly after migration
+
 ## [0.9.111] - 2025-11-04
 
 ### Added
