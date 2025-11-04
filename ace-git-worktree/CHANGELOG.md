@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-11-04
+
+### Fixed
+- Update dependency from ace-core to ace-support-core in gemspec
+- Add required support gems (ace-support-markdown, ace-support-mac-clipboard) to Gemfile
+- Resolves dependency conflicts after ace-core → ace-support-core migration
+
 ## [0.1.1] - 2025-11-04
 
 ### Fixed
