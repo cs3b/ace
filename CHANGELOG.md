@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.105] - 2025-11-04
+
+### Added
+- **ace-taskflow v0.18.0 - Unified Filter System**: New `--filter key:value` syntax replaces legacy filtering flags across tasks, ideas, and releases commands
+  - FilterParser Atom: Parses filter syntax with support for OR values (`key:value1|value2`), negation (`key:!value`), and array matching
+  - FilterApplier Molecule: Applies filter specifications with AND logic across filters and OR logic within filters
+  - Filter-Clear Flag: `--filter-clear` option to override preset filters while keeping release/scope/sort configuration
+  - Universal Field Filtering: Filter by any frontmatter field including custom fields (e.g., `--filter team:backend`, `--filter sprint:12`)
+  - 52 new tests (23 for FilterParser, 29 for FilterApplier) with 100% pass rate
+
+### Changed
+- **ace-taskflow v0.18.0 - Breaking Changes**: Clean break approach with helpful error messages
+  - Removed `--status` and `--priority` flags from tasks/ideas commands - use `--filter status:value` or `--filter priority:value` instead
+  - Removed `--active`, `--done`, and `--backlog` flags from releases command - use `--filter status:active|done|backlog` instead
+  - Updated all command help text with new filter syntax, operators, and comprehensive examples
+  - Enhanced TaskFilter molecule to integrate with FilterApplier for universal filtering
+
+### Technical
+- Comprehensive usage guide with 30+ examples in `ux/usage.md`
+- Error messages show exact migration syntax when legacy flags are used
+- Fixed test suite to use new filter syntax throughout
+
 ## [0.9.104] - 2025-11-02
 
 ### Added
