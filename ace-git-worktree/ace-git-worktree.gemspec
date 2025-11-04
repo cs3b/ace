@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-core', '>= 0.9.0'
+  spec.add_dependency 'ace-support-core', '>= 0.9.0'
   spec.add_dependency 'ace-git-diff', '>= 0.1.0'
   spec.add_dependency 'ace-taskflow', '>= 0.10.0'
 
