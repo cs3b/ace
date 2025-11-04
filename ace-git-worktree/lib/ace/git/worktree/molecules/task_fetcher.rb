@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+# Try to require ace-taskflow API for direct integration
+begin
+  require "ace/taskflow/molecules/task_loader"
+  require "ace/taskflow/atoms/task_reference_parser"
+rescue LoadError
+  # ace-taskflow not available - will fall back to CLI
+end
+
 module Ace
   module Git
     module Worktree
@@ -21,8 +29,9 @@ module Ace
           # Default timeout for ace-taskflow commands
           DEFAULT_TIMEOUT = 10
 
-          # Valid task ID pattern (3 digits, optional prefix)
-          TASK_ID_PATTERN = /\A(v\.\d+\.\d+\+)?(task\.)?(\d{3})\z/
+          # Valid task ID pattern (3+ digits, optional prefix, more flexible)
+          # Matches: 081, task.081, v.0.9.0+081, and supports the patterns used by WorktreeInfo
+          TASK_ID_PATTERN = /\A(v\.\d+\.\d+\+)?(task[.-])?(\d{3,})\z/
 
           # Maximum task ID length
           MAX_TASK_ID_LENGTH = 50
@@ -54,7 +63,13 @@ module Ace
               return nil
             end
 
-            # Normalize task reference
+            # Try direct API integration first (more reliable for completed tasks)
+            if use_direct_api?
+              task_data = fetch_via_direct_api(task_ref)
+              return task_data ? create_task_metadata_from_data(task_data, task_ref) : nil
+            end
+
+            # Fallback to CLI-based approach
             normalized_ref = normalize_task_reference(task_ref)
             return nil unless normalized_ref
 
@@ -161,6 +176,83 @@ module Ace
 
           private
 
+          # Check if we can use direct ace-taskflow API
+          #
+          # @return [Boolean] true if direct API is available
+          def use_direct_api?
+            defined?(Ace::Taskflow::Molecules::TaskLoader) && defined?(Ace::Taskflow::Atoms::TaskReferenceParser)
+          end
+
+          # Fetch task using direct ace-taskflow API
+          #
+          # @param task_ref [String] Task reference
+          # @return [Hash, nil] Task data hash or nil if not found
+          def fetch_via_direct_api(task_ref)
+            begin
+              # Get project root from environment or detect it
+              root_path = ENV["PROJECT_ROOT_PATH"] || Dir.pwd
+
+              # Use TaskLoader to find task globally (including done tasks)
+              loader = Ace::Taskflow::Molecules::TaskLoader.new(root_path)
+              task_data = loader.find_task_by_reference(task_ref)
+
+              return task_data
+            rescue StandardError
+              # Fall back to CLI on any error
+              return nil
+            end
+          end
+
+          # Create TaskMetadata from raw task data
+          #
+          # @param task_data [Hash] Raw task data from ace-taskflow
+          # @param original_ref [String] Original task reference
+          # @return [TaskMetadata] Task metadata object
+          def create_task_metadata_from_data(task_data, original_ref)
+            frontmatter = task_data[:frontmatter] || {}
+
+            TaskMetadata.new(
+              id: extract_task_id_from_data(frontmatter, original_ref),
+              title: frontmatter["title"] || "Unknown Task",
+              description: frontmatter["description"] || "",
+              status: frontmatter["status"] || "unknown",
+              estimate: frontmatter["estimate"],
+              path: task_data[:path],
+              raw_data: task_data
+            )
+          end
+
+          # Extract task ID from task data
+          #
+          # @param frontmatter [Hash] Task frontmatter
+          # @param fallback_ref [String] Original reference as fallback
+          # @return [String] Task ID
+          def extract_task_id_from_data(frontmatter, fallback_ref)
+            # Try to get ID from frontmatter first
+            if frontmatter["id"]
+              return normalize_task_id_from_frontmatter(frontmatter["id"])
+            end
+
+            # Fallback to original reference
+            normalize_task_reference(fallback_ref) || fallback_ref
+          end
+
+          # Normalize task ID from frontmatter
+          #
+          # @param id [String] ID from frontmatter (e.g., "v.0.9.0+task.090")
+          # @return [String] Normalized task ID (e.g., "090")
+          def normalize_task_id_from_frontmatter(id)
+            # Extract just the numeric part from various formats
+            if id.match?(/\Av\.[\d.]+\+task\.(\d+)\z/)
+              id.match(/\Av\.[\d.]+\+task\.(\d+)\z/)[1]
+            elsif id.match?(/\A(\d+)\z/)
+              id
+            else
+              # For other formats, try to extract numeric part
+              id.scan(/\d+/).last || id
+            end
+          end
+
           # Validate task reference for security
           #
           # @param task_ref [String] Task reference to validate
@@ -204,15 +296,27 @@ module Ace
 
             # Extract numeric ID from various formats
             # Format 1: Just number (081)
-            # Format 2: task.number (task.081)
-            # Format 3: version+task.number (v.0.9.0+task.081)
+            # Format 2: task.number (task.081) or task-number (task-081)
+            # Format 3: version+task.number (v.0.9.0+081)
+            # Use the same flexible patterns as WorktreeInfo for consistency
 
-            # Use stricter pattern that matches expected formats
+            # Try the strict pattern first (for well-formed references)
             match = ref.match(TASK_ID_PATTERN)
-            return nil unless match
+            if match
+              # Return just the numeric part for ace-taskflow
+              return match[3]  # The third capture group is the numeric part
+            end
 
-            # Return just the numeric part for ace-taskflow
-            match[3]  # The third capture group is the 3-digit number
+            # Fallback: use the same patterns as WorktreeInfo for consistency
+            # Pattern 1: task.081 or task-081
+            match = ref.match(/(?:task[.-])?(\d+)/i)
+            return match[1] if match
+
+            # Pattern 2: Just a number (for bare task IDs)
+            match = ref.match(/^(\d+)$/)
+            return match[1] if match
+
+            nil
           end
 
           # Execute ace-taskflow command to fetch task

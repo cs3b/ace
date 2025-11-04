@@ -196,31 +196,45 @@ module Ace
             begin
               # Step 1: Fetch task metadata
               task_metadata = fetch_task_metadata(task_ref)
-              return error_workflow_result("Task not found: #{task_ref}", workflow_result) unless task_metadata
 
-              workflow_result[:task_id] = task_metadata.id
-              workflow_result[:steps_completed] << "task_fetched"
+              # Step 2: Find existing worktree (with fallback for missing task)
+              if task_metadata
+                workflow_result[:task_id] = task_metadata.id
+                workflow_result[:steps_completed] << "task_fetched"
+                worktree_info = find_worktree_for_task(task_metadata)
+              else
+                # Fallback: Try to find worktree by task reference even if task metadata not found
+                worktree_info = find_worktree_by_task_reference(task_ref)
+                if worktree_info
+                  puts "Task not found, but worktree found. Removing worktree without updating task metadata."
+                  workflow_result[:task_id] = task_ref
+                  workflow_result[:task_not_found] = true
+                else
+                  return error_workflow_result("Task not found: #{task_ref}", workflow_result)
+                end
+              end
 
-              # Step 2: Find existing worktree
-              worktree_info = find_worktree_for_task(task_metadata)
               return error_workflow_result("No worktree found for task", workflow_result) unless worktree_info
 
               workflow_result[:worktree_path] = worktree_info.path
               workflow_result[:branch] = worktree_info.branch
 
               # Step 3: Check removal safety
-              safety_check = @worktree_creator.check_removal_safety(worktree_info.path)
+              worktree_remover = Molecules::WorktreeRemover.new
+              safety_check = worktree_remover.check_removal_safety(worktree_info.path)
               unless options[:force] || safety_check[:safe]
                 return error_workflow_result("Cannot remove worktree: #{safety_check[:errors].join(', ')}", workflow_result)
               end
 
-              # Step 4: Remove worktree metadata from task
-              if remove_worktree_metadata_from_task(task_metadata)
+              # Step 4: Remove worktree metadata from task (only if task was found)
+              if task_metadata && remove_worktree_metadata_from_task(task_metadata)
                 workflow_result[:steps_completed] << "metadata_removed"
+              elsif workflow_result[:task_not_found]
+                workflow_result[:steps_completed] << "skipped_metadata_cleanup"
               end
 
               # Step 5: Remove the worktree
-              remove_result = @worktree_creator.remove(worktree_info.path, force: options[:force])
+              remove_result = worktree_remover.remove(worktree_info.path, force: options[:force])
               return error_workflow_result("Failed to remove worktree: #{remove_result[:error]}", workflow_result) unless remove_result[:success]
 
               workflow_result[:steps_completed] << "worktree_removed"
@@ -242,7 +256,8 @@ module Ace
             begin
               if task_refs.nil?
                 # Get all task-associated worktrees
-                worktrees = @worktree_creator.list_all.select(&:task_associated?)
+                worktree_lister = Molecules::WorktreeLister.new
+                worktrees = worktree_lister.list_all.select(&:task_associated?)
                 task_ids = worktrees.map(&:task_id).compact.uniq
               else
                 task_ids = Array(task_refs).map { |ref| ref.to_s.match(/(\d+)/)[1] }.compact
@@ -281,6 +296,42 @@ module Ace
           end
 
           private
+
+          # Find worktree by task reference (fallback when task metadata not found)
+          #
+          # @param task_ref [String] Task reference (e.g., "090", "task.090")
+          # @return [WorktreeInfo, nil] Worktree info or nil if not found
+          def find_worktree_by_task_reference(task_ref)
+            # Get all worktrees using WorktreeLister
+            worktree_lister = Molecules::WorktreeLister.new
+            worktrees = worktree_lister.list_all
+
+            # Normalize task reference to match worktree IDs
+            normalized_id = normalize_task_id_for_matching(task_ref)
+
+            # Find worktree with matching task ID
+            worktrees.find do |worktree|
+              worktree.task_id == normalized_id
+            end
+          end
+
+          # Normalize task ID for worktree matching
+          #
+          # @param task_ref [String] Task reference
+          # @return [String] Normalized task ID
+          def normalize_task_id_for_matching(task_ref)
+            # Handle various formats: "090", "task.090", "v.0.9.0+task.090"
+            if task_ref.match?(/\A(\d+)\z/)
+              task_ref # Already numeric
+            elsif task_ref.match?(/\Atask\.?(\d+)\z/)
+              task_ref.match(/\Atask\.?(\d+)\z/)[1]
+            elsif task_ref.match?(/\Av\.[\d.]+\+task\.(\d+)\z/)
+              task_ref.match(/\Av\.[\d.]+\+task\.(\d+)\z/)[1]
+            else
+              # Try to extract numeric part
+              task_ref.scan(/\d+/).last || task_ref
+            end
+          end
 
           # Initialize workflow result structure
           #
