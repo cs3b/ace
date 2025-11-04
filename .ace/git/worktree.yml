@@ -1,0 +1,105 @@
+# ace-git-worktree configuration
+#
+# This file provides default configuration for task-aware git worktree management.
+# Copy this file to .ace/git/worktree.yml and customize as needed.
+#
+# Configuration is loaded in this priority (highest to lowest):
+# 1. .ace/git/worktree.yml (project-specific)
+# 2. ~/.ace/git/worktree.yml (user-specific)
+# 3. .ace.example/git/worktree.yml (these defaults)
+
+git:
+  worktree:
+    # Root directory for all worktrees (relative to project root)
+    # This is where worktree directories will be created
+    root_path: ".ace-wt"
+
+    # Automatically trust mise.toml files when creating worktrees
+    # If true, runs `mise trust` automatically in new worktrees
+    mise_trust_auto: true
+
+    # Task-based naming and behavior configuration
+    task:
+      # Directory naming format for task worktrees
+      # Available variables: {id}, {task_id}, {release}, {slug}
+      # Examples:
+      #   "task.{task_id}"        -> task.task.081
+      #   "{release}/{id}"        -> v.0.9.0/081
+      #   "{task_id}"             -> task.081
+      directory_format: "{task_id}"
+
+      # Branch naming format for task worktrees
+      # Available variables: {id}, {task_id}, {release}, {slug}
+      # Examples:
+      #   "{release}-{id}-{slug}"    -> v.0.9.0-081-fix-authentication-bug
+      #   "task-{task_id}-{slug}"     -> task-task.081-fix-authentication-bug
+      #   "{id}-{slug}"               -> 081-fix-authentication-bug
+      branch_format: "{release}-{id}-{slug}"
+
+      # Automatically mark tasks as in-progress when creating worktrees
+      # If true, updates task status to "in-progress" via ace-taskflow
+      auto_mark_in_progress: true
+
+      # Automatically commit task changes before creating worktree
+      # If true, commits task status and metadata changes to main branch
+      auto_commit_task: true
+
+      # Commit message format for task updates
+      # Available variables: {id}, {task_id}, {release}, {slug}
+      commit_message_format: "chore({task_id}): mark as in-progress, creating worktree for {release}"
+
+      # Add worktree metadata to task frontmatter
+      # If true, adds worktree info (branch, path, created_at) to task file
+      add_worktree_metadata: true
+
+    # Cleanup policies for worktree management
+    cleanup:
+      # Automatically remove worktrees when their branches are merged
+      # If true, worktrees are cleaned up after branch merge
+      on_merge: false
+
+      # Automatically remove worktrees when their branches are deleted
+      # If true, worktrees are cleaned up after branch deletion
+      on_delete: true
+
+# Additional configuration examples:
+
+# Example 1: Custom directory structure
+# git:
+#   worktree:
+#     root_path: "~/worktrees"
+#     task:
+#       directory_format: "work/{release}/{id}"
+#       branch_format: "work/{id}-{slug}"
+
+# Example 2: Minimal automation
+# git:
+#   worktree:
+#     root_path: ".worktrees"
+#     mise_trust_auto: false
+#     task:
+#       auto_mark_in_progress: false
+#       auto_commit_task: false
+#       add_worktree_metadata: true
+
+# Example 3: Development-focused setup
+# git:
+#   worktree:
+#     root_path: ".dev"
+#     mise_trust_auto: true
+#     task:
+#       directory_format: "{id}-dev"
+#       branch_format: "dev/{id}-{slug}"
+#       auto_mark_in_progress: true
+#       auto_commit_task: true
+#       add_worktree_metadata: true
+
+# Template Variable Reference:
+# {id}        -> Numeric task ID (e.g., 081)
+# {task_id}   -> Full task ID (e.g., task.081)
+# {release}   -> Release version (e.g., v.0.9.0)
+# {slug}      -> URL-safe slug from task title (e.g., fix-authentication-bug)
+
+# For more information, see:
+# - ace-git-worktree create --help
+# - ace-git-worktree config --help
