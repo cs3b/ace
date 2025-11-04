@@ -218,9 +218,190 @@ ace-git-worktree follows the ATOM architecture pattern:
 
 ## Dependencies
 
+### Required Dependencies
+
 - **ace-support-core** (~> 0.9.0) - Configuration cascade management
 - **ace-git-diff** (~> 0.1.0) - Safe git command execution
+
+### Optional Dependencies
+
 - **ace-taskflow** (~> 0.9.0) - Task metadata and status management
+  - Required for task-aware worktree operations
+  - Used for fetching task information and updating status
+  - Not required for traditional worktree operations
+
+### System Dependencies
+
+- **git** (version 2.0+) - Git version control system
+- **mise** (optional) - Development environment manager
+  - Used for automatic environment setup
+  - If not available, mise trust operations are skipped
+
+## Troubleshooting
+
+### Common Issues
+
+#### ace-taskflow not found
+
+**Error:** `ace-taskflow is not available or not in PATH`
+
+**Solutions:**
+```bash
+# 1. Install ace-taskflow
+gem install ace-taskflow
+
+# 2. Check if it's in PATH
+which ace-taskflow
+
+# 3. Add to PATH if needed (example for bash)
+echo 'export PATH="$HOME/.gem/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**Alternative:** Use traditional worktree creation without task integration:
+```bash
+ace-git-worktree create <branch-name>
+```
+
+#### Git repository not found
+
+**Error:** `fatal: not a git repository` or `git command failed`
+
+**Solutions:**
+```bash
+# 1. Initialize git repository
+git init
+
+# 2. Check git status
+git status
+
+# 3. Ensure you're in the correct directory
+pwd
+ls -la .git
+```
+
+#### Permission denied errors
+
+**Error:** `Permission denied` or `access denied`
+
+**Solutions:**
+```bash
+# 1. Check directory permissions
+ls -la
+
+# 2. Ensure git repository is writable
+chmod -R u+w .git
+
+# 3. Check worktree directory permissions
+ls -la /path/to/worktrees
+```
+
+#### Task not found
+
+**Error:** `Task not found` or `Task 'XXX' does not exist`
+
+**Solutions:**
+```bash
+# 1. Check available tasks
+ace-taskflow tasks
+
+# 2. Verify task ID format
+# Try these formats: 081, task.081, v.0.9.0+081
+
+# 3. Check current release context
+ace-taskflow release
+
+# 4. List recent tasks
+ace-taskflow tasks recent
+```
+
+#### Worktree already exists
+
+**Error:** `Worktree path already exists` or `Directory already exists`
+
+**Solutions:**
+```bash
+# 1. List existing worktrees
+ace-git-worktree list
+
+# 2. Use different path
+ace-git-worktree create --task 081 --path /different/path
+
+# 3. Remove existing worktree first
+ace-git-worktree remove /path/to/existing/worktree
+
+# 4. Use force flag (caution)
+ace-git-worktree create --task 081 --force
+```
+
+#### Configuration issues
+
+**Error:** `Configuration not found` or `Invalid configuration`
+
+**Solutions:**
+```bash
+# 1. Show current configuration
+ace-git-worktree config show
+
+# 2. Validate configuration
+ace-git-worktree config validate
+
+# 3. Show configuration file locations
+ace-git-worktree config files
+
+# 4. Create example configuration
+mkdir -p .ace/git
+cp ace-git-worktree/.ace.example/git/worktree.yml .ace/git/worktree.yml
+```
+
+### Debug Mode
+
+Enable verbose output for debugging:
+
+```bash
+# Use --verbose flag where available
+ace-git-worktree --verbose create --task 081
+
+# Check ace-taskflow availability
+ace-taskflow --version
+
+# Test git operations
+git worktree list
+git status
+```
+
+### Getting Help
+
+```bash
+# Show general help
+ace-git-worktree --help
+
+# Show command-specific help
+ace-git-worktree create --help
+ace-git-worktree list --help
+ace-git-worktree switch --help
+
+# Check version
+ace-git-worktree --version
+```
+
+### Reporting Issues
+
+When reporting issues, include:
+
+1. **Command used:** Full command with arguments
+2. **Error message:** Complete error output
+3. **System information:**
+   ```bash
+   ace-git-worktree --version
+   git --version
+   ruby --version
+   which ace-taskflow
+   ```
+4. **Configuration:** `ace-git-worktree config show`
+5. **Git status:** `git status` and `git worktree list`
+
+For more help, open an issue at: https://github.com/cs3b/ace-meta/issues
 
 ## Development
 

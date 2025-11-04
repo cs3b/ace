@@ -190,6 +190,19 @@ module Ace
           def create_task_worktree(options)
             puts "Creating worktree for task: #{options[:task]}"
 
+            # Check ace-taskflow availability first
+            availability_check = check_task_dependency_availability
+            unless availability_check[:available]
+              puts "Error: ace-taskflow is required for task-aware worktree creation."
+              puts
+              puts availability_check[:message]
+              puts
+              puts "Alternative: Use traditional worktree creation:"
+              puts "  ace-git-worktree create <branch-name>"
+              puts
+              return 1
+            end
+
             # Prepare creation options
             creation_options = {
               dry_run: options[:dry_run],
@@ -209,8 +222,33 @@ module Ace
             else
               puts "Failed to create worktree: #{result[:error]}"
               display_warnings(result[:warnings]) if result[:warnings]
+
+              # Provide helpful guidance based on error type
+              if result[:error]&.include?("ace-taskflow")
+                puts
+                puts "ace-taskflow issue detected. Check that:"
+                puts "  1. ace-taskflow is installed: gem install ace-taskflow"
+                puts "  2. ace-taskflow is in your PATH: which ace-taskflow"
+                puts "  3. Task '#{options[:task]}' exists in the current release"
+              elsif result[:error]&.include?("not found")
+                puts
+                puts "Task not found suggestions:"
+                puts "  1. Check task ID format (try: #{options[:task]}, task.#{options[:task]}, v.0.9.0+#{options[:task]})"
+                puts "  2. List available tasks: ace-taskflow tasks"
+                puts "  3. Verify you're in the correct project directory"
+              end
+
               1
             end
+          end
+
+          # Check if task dependencies are available with helpful messages
+          #
+          # @return [Hash] { available: boolean, message: string }
+          def check_task_dependency_availability
+            require_relative "../molecules/task_fetcher"
+            fetcher = Ace::Git::Worktree::Molecules::TaskFetcher.new
+            fetcher.check_availability_with_message
           end
 
           # Create a traditional worktree
