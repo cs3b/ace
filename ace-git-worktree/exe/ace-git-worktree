@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Add lib to load path
+lib = File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+require "ace/git/worktree"
+
+# Start the CLI
+exit_code = Ace::Git::Worktree::CLI.start(ARGV)
+exit(exit_code || 0)

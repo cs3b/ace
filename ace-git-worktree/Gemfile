@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# Specify your gem's dependencies in ace-git-worktree.gemspec
+gemspec
+
+# Use root Gemfile for development dependencies
+eval_gemfile(File.expand_path("../Gemfile", __dir__))

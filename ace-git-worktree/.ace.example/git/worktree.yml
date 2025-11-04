@@ -1,0 +1,84 @@
+# Configuration for ace-git-worktree
+# Place this file at .ace/git/worktree.yml in your project
+
+# Root directory for all worktrees (relative to project root)
+root_path: ".ace-wt"
+
+# Mise integration
+mise_trust_auto: true
+mise_trust_timeout: 5  # seconds
+
+# Task-based naming conventions
+task:
+  # Directory naming template variables:
+  # {id} - Task number only (e.g., "081")
+  # {task_id} - Full task ID (e.g., "v.0.9.0+task.081")
+  # {release} - Release version (e.g., "v.0.9.0")
+  # {slug} - Task title slug (e.g., "fix-authentication-bug")
+
+  # Directory format for task worktrees
+  directory_format: "task.{id}"        # Results in: task.081
+
+  # Branch naming format
+  branch_format: "{id}-{slug}"         # Results in: 081-fix-authentication-bug
+
+  # Slug generation settings
+  slug_max_length: 50                  # Maximum characters for slug portion
+  slug_separator: "-"                  # Character to use between words
+
+  # Workflow automation
+  auto_mark_in_progress: true          # Auto-update task status to in-progress
+  auto_commit_task: true                # Auto-commit task changes before creating worktree
+  commit_message_format: "chore(task-{id}): mark as in-progress, creating worktree"
+  add_worktree_metadata: true          # Add worktree info to task frontmatter
+
+  # Multiple worktrees for same task
+  duplicate_suffix_format: "-{count}"  # Format for duplicate worktrees (task.081-2)
+
+# Traditional worktree settings (non-task)
+traditional:
+  # Default directory format for non-task worktrees
+  directory_format: "{branch}"         # Use branch name as directory name
+
+# Cleanup policies
+cleanup:
+  on_merge: false                       # Auto-remove when branch merged
+  on_delete: true                       # Remove worktree when branch deleted
+  on_task_done: false                   # Remove when task marked as done
+
+# Output settings
+output:
+  default_format: "table"               # Default output format (table|json)
+  show_absolute_paths: true             # Show absolute paths in output
+  color_enabled: true                  # Enable colored output
+
+# Git settings
+git:
+  worktree_command_timeout: 30         # Timeout for git worktree commands (seconds)
+  auto_fetch: false                    # Fetch before creating worktree
+
+# Alternative naming examples (commented out):
+#
+# Minimal task numbers:
+# task:
+#   directory_format: "{id}"
+#   branch_format: "{id}"
+# Results: 081/ with branch 081
+#
+# Full task IDs:
+# task:
+#   directory_format: "{task_id}"
+#   branch_format: "{task_id}"
+# Results: v.0.9.0+task.081/ with branch v.0.9.0+task.081
+#
+# Task prefix in branches:
+# task:
+#   directory_format: "task.{id}"
+#   branch_format: "task-{id}-{slug}"
+# Results: task.081/ with branch task-081-fix-bug
+#
+# Release-based organization:
+# task:
+#   directory_format: "{release}/task.{id}"
+#   branch_format: "{release}-{id}-{slug}"
+# Results: v.0.9.0/task.081/ with branch v.0.9.0-081-fix-bug
