@@ -1,5 +1,14 @@
 # frozen_string_literal: true
 
+require "open3"
+
+# Define CommandTimeout if not available (for some Ruby installations)
+unless Open3.const_defined?(:CommandTimeout)
+  module Open3
+    class CommandTimeout < StandardError; end
+  end
+end
+
 require_relative "worktree/version"
 
 module Ace

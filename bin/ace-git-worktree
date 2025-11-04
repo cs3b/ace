@@ -14,4 +14,4 @@ ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
 require "bundler/setup"
 
 # Now require and run the actual ace-git-worktree executable
-load ace_meta_root.join(".ace-wt/task.089-zai/ace-git-worktree/exe/ace-git-worktree").to_s
+load ace_meta_root.join("ace-git-worktree/exe/ace-git-worktree").to_s
