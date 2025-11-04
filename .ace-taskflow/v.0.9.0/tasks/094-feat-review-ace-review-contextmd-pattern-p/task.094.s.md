@@ -14,18 +14,19 @@ reviewed_by: User
 
 ### ✅ [RESOLVED] Session file naming convention
 - **Original Priority**: HIGH
-- **Decision**: Follow ace-docs pattern exactly with location-based extension rules
-  - **Cache folder** (.cache/): No .tmp extension (context.md, prompt-user.md, prompt-system.md)
-  - **Release folder** (.ace-taskflow/): Add .tmp extension (context.md.tmp, prompt-user.md.tmp, prompt-system.md.tmp)
-  - subject.md.tmp remains as separate file
-  - context.md.tmp → processed by ace-context → produces prompt-user.md.tmp
-  - No backward compatibility needed - all new reviews use new format immediately
-  - Report file naming unchanged
-- **Rationale**: Consistency with ace-docs pattern, clean implementation without dual-format maintenance burden
+- **Decision**: Cache-first storage model - all working files in `.cache/ace-review/`, final reports in release folder (same location as current implementation). No `.tmp` extensions needed.
+  - **Cache location**: `.cache/ace-review/sessions/review-{timestamp}/` for all working files
+  - **Working files in cache**: context.md, prompt-system.md, prompt-user.md, subject.md (no .tmp extensions)
+  - **Release location**: `.ace-taskflow/v.0.9.0/reviews/review-{timestamp}/` for final reports only
+  - **Final reports in release**: review-report-{model}.md, metadata.yml (copied from cache)
+  - ace-review returns path to report in release folder (backward compatible)
+  - Cache is automatically gitignored, no .tmp pattern needed
+- **Rationale**: Eliminates .tmp complexity, matches ace-docs pattern, cleaner separation of working files vs outputs
 - **Implementation Notes**:
-  - One implementation path only
-  - Existing scripts may need updates but clean break is acceptable
-  - Clear distinction between cache (development) and release (archived) artifacts
+  - Working files never clutter release folder
+  - Release folder location unchanged (backward compatible)
+  - Simpler gitignore (just `.cache`)
+  - No location detection logic needed
 - **Resolved by**: User
 - **Date**: 2025-11-04
 
@@ -91,7 +92,7 @@ reviewed_by: User
 **Implementation Readiness**: ✅ Ready for implementation
 
 **Key Decisions Made**:
-1. **Session file naming**: Follow ace-docs pattern with location-based extensions (.tmp in release folders, clean names in cache)
+1. **Session file naming**: Cache-first storage - working files in `.cache/ace-review/`, final reports in release folder (same location as current). No `.tmp` extensions.
 2. **Architecture**: Create ContextComposer molecule for context.md generation, ContextExtractor delegates to it
 3. **PR features removed**: PR description generation and workflows moved to separate /ace:pr-create command (out of scope)
 4. **Error handling**: Fail fast when ace-context unavailable or fails - clear error messages with installation guidance
@@ -305,15 +306,23 @@ gh pr create --title "..." --body "$(extract_from_review)"
 
 **Session Artifacts:**
 
+**Cache Location** (`.cache/ace-review/sessions/review-20251101-153000/`):
 ```
-.ace-taskflow/v.0.9.0/reviews/review-20251101-153000/
 ├── context.md              # YAML frontmatter + instructions + config
 ├── prompt-system.md        # System prompt (review focus, guidelines)
 ├── prompt-user.md          # Embedded content from ace-context
-├── subject.diff            # Extracted diffs (if applicable)
-├── review-report.md        # LLM-generated review output
+├── subject.md              # Extracted diffs (if applicable)
+├── review-report-{model}.md # LLM-generated review output
 └── metadata.yml            # Session metadata (timestamp, preset, model, etc.)
 ```
+
+**Release Location** (`.ace-taskflow/v.0.9.0/reviews/review-20251101-153000/`):
+```
+├── review-report-{model}.md # Final report (copied from cache)
+└── metadata.yml             # Session metadata (copied from cache)
+```
+
+**Note**: ace-review returns path to report in release folder
 
 **Error Handling:**
 
@@ -328,18 +337,19 @@ gh pr create --title "..." --body "$(extract_from_review)"
 - **Large diffs**: ace-context handles truncation, report in metadata.yml
 - **Missing subject**: Error before creating context.md (existing behavior)
 - **Multiple ranges in diff**: ace-context combines all ranges, noted in context.md
-- **Cache vs release location**: Detect location, apply appropriate naming (.tmp or clean)
+- **Release folder unavailable**: Save reports to cache only, warn user
 
 ### Success Criteria
 
 **Context Management:**
-- [ ] **Context.md Always Created**: Every ace-review session creates context.md.tmp (release) or context.md (cache) with YAML frontmatter
+- [ ] **Context.md Always Created**: Every ace-review session creates context.md in cache with YAML frontmatter
 - [ ] **ace-context Integration**: Context loading uses `Ace::Context.load_file_as_preset()`
 - [ ] **ContextExtractor Simplified**: Delegates to ContextComposer, old extraction logic replaced
-- [ ] **Session Reproducibility**: Running `ace-context /path/to/session/context.md.tmp` reproduces exact context
+- [ ] **Session Reproducibility**: Running `ace-context .cache/ace-review/sessions/review-*/context.md` reproduces exact context
 - [ ] **Preset Compatibility**: All existing presets work with new context.md pattern
-- [ ] **Location-Based Naming**: Cache uses clean names, release uses .tmp extensions
+- [ ] **Cache-First Storage**: Working files in cache, final reports copied to release folder
 - [ ] **Fail-Fast Errors**: Clear error messages when ace-context fails
+- [ ] **Backward Compatible Output**: ace-review returns release folder path (same as current)
 
 ### Validation Questions (ALL RESOLVED - See Review Completion Summary)
 
@@ -368,22 +378,24 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
 - Enhanced session artifacts for reproducibility
 - No changes to CLI interface
 - Fail-fast error messages from ace-context (clear guidance on fixes)
-- Location-based file naming (.tmp for release folders, clean names for cache)
+- Cache-first storage (working files in cache, final reports in release folder)
 
 ### System Behavior Scope
 
 **Context Management:**
 - context.md file generation with YAML frontmatter
 - ace-context integration replacing ContextExtractor logic
-- Session artifact management (save context.md.tmp, prompt-user.md.tmp, prompt-system.md.tmp)
+- Session artifact management in cache (context.md, prompt-user.md, prompt-system.md, subject.md)
+- Report copying to release folder (review-report-{model}.md, metadata.yml)
 - Fail-fast error handling for ace-context failures
 - ContextComposer molecule creation for context.md generation
 
 ### Interface Scope
 
 - No CLI changes (context.md creation is internal)
-- Enhanced session directory structure with location-based naming
-- Review output filename remains: review-report-{model-slug}.md
+- Cache-first session directory structure
+- Review output filename remains: review-report-{model-slug}.md (in release folder)
+- ace-review returns path to report in release folder (backward compatible)
 - Documentation updates to match implementation
 
 ### Deliverables
@@ -436,14 +448,14 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
 
 ### Create
 - ace-review/lib/ace/review/molecules/context_composer.rb
-  - Purpose: Generate context.md with YAML frontmatter
+  - Purpose: Generate context.md with YAML frontmatter in cache
   - Key components: create_context_md(), build_frontmatter()
   - Dependencies: YAML, ace-context
-  - Notes: Location-aware naming (context.md vs context.md.tmp)
+  - Notes: Always generates in cache directory
 
 - ace-review/test/molecules/context_composer_test.rb
-  - Purpose: Test context.md generation
-  - Key components: Frontmatter validation, format tests, location-based naming
+  - Purpose: Test context.md generation in cache
+  - Key components: Frontmatter validation, format tests, cache directory handling
   - Dependencies: minitest, ace-context
 
 ### Modify
@@ -453,9 +465,9 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
   - Integration points: Returns context.md content and embedded result
 
 - ace-review/lib/ace/review/organisms/review_manager.rb
-  - Changes: Save context.md.tmp (release) / context.md (cache), split prompts (prompt-user.md.tmp, prompt-system.md.tmp)
-  - Impact: Enhanced session artifacts, location-based naming
-  - Integration points: save_session_files(), uses ContextComposer, fail-fast on ace-context errors
+  - Changes: Save all working files to cache, copy final reports to release folder
+  - Impact: Cache-first storage, report copying logic
+  - Integration points: save_session_files(), copy_to_release(), uses ContextComposer, fail-fast on ace-context errors
 
 - ace-review/test/molecules/context_extractor_test.rb
   - Changes: Update tests for new context.md approach, test error handling
@@ -463,9 +475,9 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
   - Integration points: Mock ContextComposer
 
 - ace-review/test/organisms/review_manager_test.rb
-  - Changes: Verify context.md.tmp creation and structure, test location-based naming
-  - Impact: Test new session file organization
-  - Integration points: Check file artifacts (context.md.tmp, prompt-*.md.tmp)
+  - Changes: Verify cache directory creation, test report copying to release
+  - Impact: Test cache-first storage and release copying
+  - Integration points: Check cache files, verify release folder reports
 
 - ace-review/docs/usage.md (or README.md)
   - Changes: Document review-report-{model-slug}.md naming convention
@@ -561,13 +573,13 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
   > TEST: Session Reproducibility
   > Type: Integration Test
   > Assert: Loading context.md via ace-context reproduces exact session context
-  > Command: ace-context .ace-taskflow/v.0.9.0/reviews/review-*/context.md.tmp --output stdio
+  > Command: ace-context .cache/ace-review/sessions/review-*/context.md --output stdio
 
-- [ ] Test location-based naming (cache vs release folders)
-  > TEST: Location-Based Naming
+- [ ] Test report copying to release folder
+  > TEST: Report Copying
   > Type: Integration Test
-  > Assert: Cache folders use clean names, release folders use .tmp extensions
-  > Command: # Create reviews in both locations, verify naming
+  > Assert: Final reports copied to release folder, ace-review returns release path
+  > Command: # Verify cache has working files, release has final reports only
 
 - [ ] Update gem documentation and CHANGELOG
   > TEST: Documentation Complete
@@ -577,15 +589,17 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
 
 ## Acceptance Criteria
 
-- [ ] **Context.md Always Created**: Every ace-review session creates context.md.tmp (release) or context.md (cache) with YAML frontmatter
+- [ ] **Context.md Always Created**: Every ace-review session creates context.md in cache with YAML frontmatter
 - [ ] **ace-context Integration**: Context loading uses `Ace::Context.load_file_as_preset()`
-- [ ] **Session Reproducibility**: Running `ace-context /path/to/session/context.md.tmp` reproduces exact context
+- [ ] **Session Reproducibility**: Running `ace-context .cache/ace-review/sessions/review-*/context.md` reproduces exact context
 - [ ] **Preset Compatibility**: All existing presets and CLI commands work unchanged
-- [ ] **Location-Based Naming**: Cache folders use clean names, release folders use .tmp extensions
-- [ ] **Enhanced Session Artifacts**: Sessions include context.md.tmp, prompt-user.md.tmp, prompt-system.md.tmp, subject.md.tmp, metadata.yml, review-report-{model}.md
-- [ ] **ContextComposer Created**: New molecule handles context.md generation with proper delegation
+- [ ] **Cache-First Storage**: Working files in `.cache/ace-review/`, final reports copied to release folder
+- [ ] **Enhanced Session Artifacts**: Cache includes context.md, prompt-user.md, prompt-system.md, subject.md, metadata.yml, review-report-{model}.md
+- [ ] **Release Folder Reports**: Final reports (review-report-{model}.md, metadata.yml) copied to release folder
+- [ ] **ContextComposer Created**: New molecule handles context.md generation in cache
 - [ ] **Fail-Fast Errors**: ace-context failures produce clear error messages with installation guidance
-- [ ] **Documentation Updated**: Usage docs reflect review-report-{model-slug}.md naming and session structure
+- [ ] **Backward Compatible Output**: ace-review returns release folder path (same as current behavior)
+- [ ] **Documentation Updated**: Usage docs reflect cache-first storage and session structure
 - [ ] **Tests Pass**: All existing and new tests pass successfully
 
 ## Original Review Summary (Pre-Resolution)
