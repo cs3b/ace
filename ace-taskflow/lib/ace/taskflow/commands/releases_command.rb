@@ -62,13 +62,13 @@ module Ace
           if additional_filters[:filter_clear]
             # Apply preset but ignore its filters
             preset_config = @preset_manager.apply_preset(preset_name, {})
-            return unless preset_config
+            return 1 unless preset_config
             # Clear the preset filters but keep release, sort, glob, display
             preset_config[:filters] = {}
           else
             # Apply preset with additional filters (normal flow)
             preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
-            return unless preset_config
+            return 1 unless preset_config
           end
 
           # Store filter_specs in preset_config so filtering can access them

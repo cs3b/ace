@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2025-11-04
+
+### Fixed
+
+- **Return Value Consistency**: Fixed `releases_command.rb` to return error code `1` instead of `nil` when preset configuration fails
+- **Error Message Whitespace Handling**: Fixed legacy flag error messages to properly handle spaces after commas (e.g., `--status pending, done` now correctly suggests `--filter status:pending|done` instead of `--filter status:pending| done`)
+  - Updated error message conversion in `tasks_command.rb` for `--status` and `--priority` flags
+  - Updated error message conversion in `ideas_command.rb` for `--status` and `--priority` flags
+
 ## [0.18.0] - 2025-11-04
 
 ### Added
