@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2025-11-04
+
+### Fixed
+
+- **Task Update Command Restoration**: Restored the complete `ace-taskflow task update` command implementation that was accidentally deleted in commit 54cac8b3
+  - Restored `TaskFieldUpdater` molecule for field parsing and validation
+  - Restored `FieldArgumentParser` molecule for CLI argument parsing
+  - Restored `update_task` method in `task_command.rb` with full help text and examples
+  - Restored `update_task_fields` in `task_manager.rb` for task orchestration
+  - Restored `update_task_field` in `task_loader.rb` using ace-support-markdown integration
+  - Restored comprehensive unit tests (10 tests, 19 assertions)
+  - Command supports `--field key=value` syntax for simple and nested YAML updates
+  - Enables worktree metadata updates for ace-git-worktree integration (task 089)
+  - Updated task 089 with verified working examples and implementation notes
+
 ## [0.18.3] - 2025-11-04
 
 ### Fixed
