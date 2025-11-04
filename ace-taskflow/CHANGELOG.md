@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3] - 2025-11-04
+
+### Fixed
+
+- **Task Header Statistics**: Fixed missing three-line header with release statistics in `ace-taskflow tasks` output
+  - Fixed `StatsFormatter#initialize` (line 36) to pass `@root_path` to `ReleaseResolver.new`
+  - Fixed `TasksCommand#initialize` to initialize `@root_path` and pass it to `StatsFormatter.new`
+  - Header now correctly displays release info, idea stats, and task counts instead of minimal "X tasks" output
+  - Pre-existing bug (not introduced by unified filter PR) that manifested when running from subdirectories
+
+## [0.18.2] - 2025-11-04
+
+### Fixed
+
+- **Releases Preset Type Dispatch**: Fixed `releases_command.rb` to correctly pass `:releases` type parameter to `ListPresetManager.apply_preset` method (3 occurrences at lines 64, 70, 251)
+  - Without this fix, release-specific presets (e.g., `type: "releases"`) would fail to load, falling back to `:tasks` namespace and returning "preset not found" error
+  - Affected commands: `ace-taskflow releases <preset>`, `ace-taskflow releases --stats`
+  - Identified by GPT-5 code review (review-20251104-005003)
+
+## [0.18.1] - 2025-11-04
+
+### Fixed
+
+- **Return Value Consistency**: Fixed `releases_command.rb` to return error code `1` instead of `nil` when preset configuration fails
+- **Error Message Whitespace Handling**: Fixed legacy flag error messages to properly handle spaces after commas (e.g., `--status pending, done` now correctly suggests `--filter status:pending|done` instead of `--filter status:pending| done`)
+  - Updated error message conversion in `tasks_command.rb` for `--status` and `--priority` flags
+  - Updated error message conversion in `ideas_command.rb` for `--status` and `--priority` flags
+
+## [0.18.0] - 2025-11-04
+
+### Added
+
+- **Unified Filter System**: New `--filter key:value` syntax replaces legacy filtering flags across tasks, ideas, and releases commands
+- **FilterParser Atom**: Parses filter syntax with support for OR values (`key:value1|value2`), negation (`key:!value`), and array matching
+- **FilterApplier Molecule**: Applies filter specifications with AND logic across filters and OR logic within filters
+- **Filter-Clear Flag**: `--filter-clear` option to override preset filters while keeping release/scope/sort configuration
+- **Universal Field Filtering**: Filter by any frontmatter field including custom fields (e.g., `--filter team:backend`, `--filter sprint:12`)
+- **Comprehensive Test Coverage**: 52 new tests (23 for FilterParser, 29 for FilterApplier) with 100% pass rate
+
+### Changed
+
+- **BREAKING**: Removed `--status` flag from tasks/ideas commands - use `--filter status:value` instead
+- **BREAKING**: Removed `--priority` flag from tasks/ideas commands - use `--filter priority:value` instead
+- **BREAKING**: Removed `--active` flag from releases command - use `--filter status:active` instead
+- **BREAKING**: Removed `--done` flag from releases command - use `--filter status:done` instead
+- **BREAKING**: Removed `--backlog` flag from releases command - use `--filter status:backlog` instead
+- Updated all command help text with new filter syntax, operators, and examples
+- Enhanced TaskFilter molecule to integrate with FilterApplier for universal filtering
+
+### Technical
+
+- Helpful error messages show exact migration syntax when legacy flags are used
+- Clean break approach for backward compatibility (no deprecation period)
+- Comprehensive usage guide with 30+ examples in `ux/usage.md`
+- Fixed test suite to use new filter syntax
+
 ## [0.17.0] - 2025-11-02
 
 ### Added

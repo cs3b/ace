@@ -5,6 +5,8 @@ require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/stats_formatter"
 require_relative "../models/idea"
 require_relative "../atoms/path_formatter"
+require_relative "../atoms/filter_parser"
+require_relative "../molecules/task_filter"
 require_relative "helpers"
 
 module Ace
@@ -69,12 +71,26 @@ module Ace
             return show_statistics_for_preset(preset_name, additional_filters)
           end
 
-          # Apply preset with additional filters
-          preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :ideas)
-          return 1 unless preset_config
+          # Handle filter-clear: if set, don't pass old-style filters to preset
+          if additional_filters[:filter_clear]
+            # Apply preset but ignore its filters
+            preset_config = @preset_manager.apply_preset(preset_name, {}, :ideas)
+            return 1 unless preset_config
+            # Clear the preset filters but keep release, sort, glob, display
+            preset_config[:filters] = {}
+          else
+            # Apply preset with additional filters (normal flow)
+            preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :ideas)
+            return 1 unless preset_config
+          end
 
           # Add preset name to config for scope determination
           preset_config[:name] = preset_name
+
+          # Store filter_specs in preset_config so filtering can access them
+          if additional_filters[:filter_specs]
+            preset_config[:filter_specs] = additional_filters[:filter_specs]
+          end
 
           # Override release if provided via flags
           if additional_filters[:release]
@@ -107,11 +123,43 @@ module Ace
 
         def parse_additional_filters(args)
           filters = {}
+          filter_strings = []
 
           i = 0
           while i < args.length
             arg = args[i]
             case arg
+            # NEW: Unified filter syntax
+            when "--filter"
+              if i + 1 < args.length
+                filter_strings << args[i + 1]
+                i += 2
+              else
+                raise ArgumentError, "Missing value for --filter flag. Use: --filter key:value"
+              end
+            when "--filter-clear"
+              filters[:filter_clear] = true
+              i += 1
+            # REMOVED: Legacy filter flags with helpful error messages
+            when "--status"
+              suggested_value = args[i + 1] if i + 1 < args.length
+              suggested_filter = if suggested_value
+                converted = suggested_value.gsub(/,\s*/, '|')
+                "--filter status:#{converted}"
+              else
+                "--filter status:value"
+              end
+              raise ArgumentError, "Error: --status flag is no longer supported. Use: #{suggested_filter}"
+            when "--priority"
+              suggested_value = args[i + 1] if i + 1 < args.length
+              suggested_filter = if suggested_value
+                converted = suggested_value.gsub(/,\s*/, '|')
+                "--filter priority:#{converted}"
+              else
+                "--filter priority:value"
+              end
+              raise ArgumentError, "Error: --priority flag is no longer supported. Use: #{suggested_filter}"
+            # KEPT: Display and formatting flags
             when "--days"
               filters[:days] = args[i + 1].to_i if i + 1 < args.length
               i += 2
@@ -130,7 +178,7 @@ module Ace
             when "--format"
               filters[:format] = args[i + 1] if i + 1 < args.length
               i += 2
-            # Release selection flags
+            # KEPT: Release selection flags (not filters)
             when "--backlog"
               filters[:release] = "backlog"
               i += 1
@@ -152,11 +200,17 @@ module Ace
             end
           end
 
+          # Parse filter strings into filter specifications
+          if filter_strings.any?
+            filters[:filter_specs] = Atoms::FilterParser.parse(filter_strings)
+          end
+
           filters
         end
 
         def get_ideas_for_preset(preset_config)
           release = preset_config[:release] || 'current'
+          filters_raw = preset_config[:filters] || {}
           glob = preset_config[:glob]
 
           # If no glob provided, use 'all' preset to get default
@@ -168,12 +222,27 @@ module Ace
           # Filter glob patterns to only include idea-related patterns (already prefixed by preset manager)
           glob = filter_glob_by_type(glob, @config.ideas_dir)
 
-          case release
+          # Load ideas
+          ideas = case release
           when 'all'
             get_all_ideas_with_glob(glob)
           else
             @idea_loader.load_all(release: release, include_content: false, glob: glob)
           end
+
+          # Apply filters from preset
+          filters = {}
+          filters_raw.each do |key, value|
+            filters[key.to_sym] = value
+          end
+
+          # Add filter_specs to filters hash so TaskFilter can access them
+          if preset_config[:filter_specs]
+            filters[:filter_specs] = preset_config[:filter_specs]
+          end
+
+          # Apply TaskFilter (works with both tasks and ideas - they're both hashes with frontmatter)
+          Molecules::TaskFilter.apply_filters(ideas, filters)
         end
 
         def get_all_ideas_with_glob(glob)
@@ -374,12 +443,21 @@ module Ace
           end
           puts ""
           puts "Preset Examples:"
-          puts "  ace-taskflow ideas                    # Uses 'next' preset (pending ideas only)"
-          puts "  ace-taskflow ideas all               # All ideas including done"
-          puts "  ace-taskflow ideas done              # Only completed ideas"
-          puts "  ace-taskflow ideas recent --days 3   # Recent ideas with custom filter"
+          puts "  ace-taskflow ideas                           # Uses 'next' preset (pending ideas only)"
+          puts "  ace-taskflow ideas all                       # All ideas including done"
+          puts "  ace-taskflow ideas done                      # Only completed ideas"
           puts ""
-          puts "Additional Options:"
+          puts "Filtering Options:"
+          puts "  --filter <key>:<value>                       Filter by any frontmatter field"
+          puts "  --filter-clear                               Clear preset filters (keep release/scope/sort)"
+          puts ""
+          puts "Filter Examples:"
+          puts "  ace-taskflow ideas --filter status:pending"
+          puts "  ace-taskflow ideas --filter status:pending|done"
+          puts "  ace-taskflow ideas all --filter status:!done"
+          puts "  ace-taskflow ideas --filter-clear --filter priority:high"
+          puts ""
+          puts "Display Options:"
           puts "  --days <n>         Modify days for time-based presets"
           puts "  --limit <n>        Limit number of results displayed"
           puts "  --verbose, -v      Show detailed information"

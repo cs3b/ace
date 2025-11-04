@@ -49,7 +49,7 @@ class ReleasesCommandTest < AceTaskflowTestCase
 
       Dir.chdir(dir) do
         output = capture_stdout do
-          @command.execute(["--active"])
+          @command.execute(["--filter", "status:active"])
         end
 
         # Should only show active release
@@ -69,7 +69,7 @@ class ReleasesCommandTest < AceTaskflowTestCase
 
       Dir.chdir(dir) do
         output = capture_stdout do
-          @command.execute(["--done"])
+          @command.execute(["--filter", "status:done"])
         end
 
         # Should show completed releases

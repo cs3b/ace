@@ -33,7 +33,7 @@ module Ace
           @root_path = root_path || Molecules::ConfigLoader.find_root
           @task_manager = Organisms::TaskManager.new
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
-          @release_resolver = Molecules::ReleaseResolver.new
+          @release_resolver = Molecules::ReleaseResolver.new(@root_path)
         end
 
         # Generate three-line header for list outputs
