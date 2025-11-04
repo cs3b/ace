@@ -32,13 +32,19 @@ module Ace
             #   result = GitCommand.execute("worktree", "list")
             #   # => { success: true, output: "/path/to/worktree abc123 [branch-name]\n", error: "", exit_code: 0 }
             def execute(*args, timeout: DEFAULT_TIMEOUT)
+              begin
               require "ace/git/diff/atoms/command_executor"
+            rescue LoadError
+              # Try alternative path for local development
+              require "ace/git_diff/atoms/command_executor"
+            end
 
               # Ensure all arguments are strings
               string_args = args.map(&:to_s)
 
               # Execute via ace-git-diff's CommandExecutor for safety
-              result = Ace::GitDiff::Atoms::CommandExecutor.execute("git", *string_args, timeout: timeout)
+              # Note: CommandExecutor doesn't support timeout parameter
+              result = Ace::GitDiff::Atoms::CommandExecutor.execute("git", *string_args)
 
               # Normalize result format
               {
@@ -48,13 +54,24 @@ module Ace
                 exit_code: result[:exit_code] || 0
               }
             rescue LoadError
-              # Fallback if ace-git-diff is not available
-              {
-                success: false,
-                output: "",
-                error: "ace-git-diff gem not available for git command execution",
-                exit_code: 1
-              }
+              # Fallback if ace-git-diff is not available - use system git directly
+              begin
+                require "open3"
+                stdout, stderr, status = Open3.capture3("git", *string_args)
+                {
+                  success: status.success?,
+                  output: stdout,
+                  error: stderr,
+                  exit_code: status.exitstatus
+                }
+              rescue StandardError => e
+                {
+                  success: false,
+                  output: "",
+                  error: "Failed to execute git command: #{e.message}",
+                  exit_code: 1
+                }
+              end
             rescue StandardError => e
               {
                 success: false,
