@@ -58,6 +58,27 @@ module Ace
         rescue StandardError => e
           puts "Unexpected error: #{e.message}"
           puts
+
+          # Provide specific guidance for common errors
+          case e.message
+          when /ace-taskflow/
+            puts "ace-taskflow dependency issue detected:"
+            puts "  1. Install ace-taskflow: gem install ace-taskflow"
+            puts "  2. Check PATH: which ace-taskflow"
+            puts "  3. For task operations, ensure ace-taskflow is available"
+          when /git.*not found|git.*command/
+            puts "Git dependency issue detected:"
+            puts "  1. Install git: https://git-scm.com/downloads"
+            puts "  2. Check git is in PATH: which git"
+            puts "  3. Ensure you're in a git repository"
+          when /permission.*denied|access.*denied/
+            puts "Permission issue detected:"
+            puts "  1. Check directory permissions"
+            puts "  2. Ensure git repository is accessible"
+            puts "  3. Try running with appropriate permissions"
+          end
+
+          puts
           show_help
           1
         end

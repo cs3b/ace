@@ -21,7 +21,41 @@ module Ace
           # Maximum allowed path length to prevent issues
           MAX_PATH_LENGTH = 4096
 
+          # Dangerous path patterns that should be blocked
+          DANGEROUS_PATTERNS = [
+            /\.\.\//,  # Directory traversal
+            /\A\.\./,  # Starts with ..
+            /\/\.\./,  # Contains /..
+            /\x00/,    # Null bytes
+            /[<>:"|?*]/, # Windows invalid characters (also good for Unix)
+          ].freeze
+
           class << self
+            # Validate that a path is safe for processing
+            #
+            # @param path [String] Path to validate
+            # @return [Boolean] true if path is safe
+            # @raise [ArgumentError] if path contains dangerous patterns
+            def safe_path?(path)
+              return false if path.nil? || path.empty?
+
+              path_str = path.to_s.strip
+
+              # Check for dangerous patterns
+              DANGEROUS_PATTERNS.each do |pattern|
+                if path_str.match?(pattern)
+                  raise ArgumentError, "Path contains dangerous pattern: #{path_str.inspect}"
+                end
+              end
+
+              # Check path length
+              if path_str.length > MAX_PATH_LENGTH
+                raise ArgumentError, "Path too long: #{path_str.length} > #{MAX_PATH_LENGTH}"
+              end
+
+              true
+            end
+
             # Expand a path, resolving ~ and making it absolute
             #
             # @param path [String] Path to expand
@@ -33,6 +67,9 @@ module Ace
             #   PathExpander.expand("/absolute/path") # => "/absolute/path"
             def expand(path)
               return "" if path.nil? || path.empty?
+
+              # Validate path safety first
+              safe_path?(path)
 
               # Convert to string and strip whitespace
               path_str = path.to_s.strip
@@ -51,11 +88,17 @@ module Ace
                 end
               end
 
-              # Make path absolute
+              # Make path absolute and normalize
               absolute_path = File.expand_path(expanded)
 
-              # Normalize path separators
-              File.absolute_path(absolute_path)
+              # Realpath to resolve symlinks and get canonical path
+              # Use this to ensure we have the real path, preventing symlink-based attacks
+              begin
+                File.realpath(absolute_path)
+              rescue Errno::ENOENT
+                # Path doesn't exist yet, return normalized absolute path
+                File.absolute_path(absolute_path)
+              end
             end
 
             # Resolve a path relative to a base directory

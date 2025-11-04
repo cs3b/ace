@@ -5,8 +5,8 @@ require_relative 'lib/ace/git/worktree/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-git-worktree'
   spec.version = Ace::Git::Worktree::VERSION
-  spec.authors = ['ACE Development Team']
-  spec.email = ['dev@ace.ecosystem']
+  spec.authors = ['Miguel Czyz']
+  spec.email = ['mc@cs3b.com']
 
   spec.summary = 'Task-aware git worktree management for ACE ecosystem'
   spec.description = <<~DESC
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
     - Automated environment setup (mise trust)
     - Support for traditional worktree operations
   DESC
-  spec.homepage = 'https://github.com/ace-ecosystem/ace-meta'
+  spec.homepage = 'https://github.com/cs3b/ace-meta'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.0.0'
 

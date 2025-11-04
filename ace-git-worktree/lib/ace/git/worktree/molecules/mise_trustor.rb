@@ -22,6 +22,12 @@ module Ace
           # Mise configuration file name
           MISE_CONFIG_FILE = "mise.toml"
 
+          # Allowed commands for security (whitelist approach)
+          ALLOWED_COMMANDS = %w[mise].freeze
+
+          # Maximum argument length to prevent injection
+          MAX_ARG_LENGTH = 1000
+
           # Initialize a new MiseTrustor
           #
           # @param timeout [Integer] Command timeout in seconds
@@ -258,6 +264,58 @@ module Ace
 
           private
 
+          # Sanitize command arguments to prevent injection
+          #
+          # @param args [Array<String>] Command arguments to sanitize
+          # @return [Array<String>] Sanitized arguments
+          # @raise [ArgumentError] if arguments contain dangerous content
+          def sanitize_arguments(args)
+            return [] if args.nil? || args.empty?
+
+            sanitized = []
+            args.each do |arg|
+              arg_str = arg.to_s.strip
+
+              # Check argument length
+              if arg_str.length > MAX_ARG_LENGTH
+                raise ArgumentError, "Argument too long: #{arg_str.length} > #{MAX_ARG_LENGTH}"
+              end
+
+              # Check for dangerous patterns
+              dangerous_patterns = [
+                /[;&|`$(){}[\]]/,  # Shell metacharacters
+                /\x00/,           # Null bytes
+                /[\r\n]/,         # Newlines
+                /[<>]/,           # Redirects
+              ]
+
+              dangerous_patterns.each do |pattern|
+                if arg_str.match?(pattern)
+                  raise ArgumentError, "Argument contains dangerous characters: #{arg_str.inspect}"
+                end
+              end
+
+              sanitized << arg_str
+            end
+
+            sanitized
+          end
+
+          # Validate that a command is allowed
+          #
+          # @param command [String] Command to validate
+          # @return [Boolean] true if command is allowed
+          # @raise [ArgumentError] if command is not allowed
+          def validate_command(command)
+            command_str = command.to_s.strip
+
+            unless ALLOWED_COMMANDS.include?(command_str)
+              raise ArgumentError, "Command not allowed: #{command_str}"
+            end
+
+            true
+          end
+
           # Execute mise trust command
           #
           # @param mise_file_path [String] Path to the mise.toml file
@@ -280,7 +338,27 @@ module Ace
           def execute_command(command, *args, timeout: DEFAULT_TIMEOUT, chdir: nil)
             require "open3"
 
-            full_command = [command] + args
+            # Validate command is allowed
+            validate_command(command)
+
+            # Sanitize arguments
+            sanitized_args = sanitize_arguments(args)
+
+            # Validate chdir parameter if provided
+            if chdir
+              # Use the PathExpander for safe path validation
+              require_relative "../atoms/path_expander"
+              expanded_chdir = Ace::Git::Worktree::Atoms::PathExpander.expand(chdir)
+
+              unless File.directory?(expanded_chdir)
+                raise ArgumentError, "Directory does not exist: #{expanded_chdir}"
+              end
+
+              chdir = expanded_chdir
+            end
+
+            # Build safe command array (this prevents shell injection)
+            full_command = [command] + sanitized_args
 
             stdout, stderr, status = if chdir
                                      Dir.chdir(chdir) do

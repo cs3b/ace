@@ -21,6 +21,12 @@ module Ace
           # Default timeout for ace-taskflow commands
           DEFAULT_TIMEOUT = 10
 
+          # Valid task ID pattern (3 digits, optional prefix)
+          TASK_ID_PATTERN = /\A(v\.\d+\.\d+\+)?(task\.)?(\d{3})\z/
+
+          # Maximum task ID length
+          MAX_TASK_ID_LENGTH = 50
+
           # Initialize a new TaskFetcher
           #
           # @param timeout [Integer] Command timeout in seconds
@@ -40,6 +46,13 @@ module Ace
           #   task = fetcher.fetch("v.0.9.0+081")
           def fetch(task_ref)
             return nil if task_ref.nil? || task_ref.empty?
+
+            # Validate task reference for security early
+            begin
+              validate_task_reference(task_ref)
+            rescue ArgumentError
+              return nil
+            end
 
             # Normalize task reference
             normalized_ref = normalize_task_reference(task_ref)
@@ -107,7 +120,77 @@ module Ace
             match ? match[1] : nil
           end
 
+          # Get helpful error message when ace-taskflow is unavailable
+          #
+          # @return [String] User-friendly error message with installation guidance
+          def ace_taskflow_unavailable_message
+            <<~MESSAGE
+              ace-taskflow is not available or not in PATH.
+
+              Required for task-aware worktree operations.
+
+              Installation options:
+              1. Install ace-taskflow gem: gem install ace-taskflow
+              2. Add to your Gemfile: gem 'ace-taskflow'
+              3. Ensure it's in your PATH: which ace-taskflow
+
+              For more information: https://github.com/cs3b/ace-meta
+            MESSAGE
+          end
+
+          # Check availability and return helpful error if unavailable
+          #
+          # @return [Hash] { available: boolean, message: string }
+          def check_availability_with_message
+            if ace_taskflow_available?
+              { available: true, message: "ace-taskflow is available" }
+            else
+              { available: false, message: ace_taskflow_unavailable_message }
+            end
+          end
+
+          # Check if ace-taskflow is available with caching
+          #
+          # @return [Boolean] true if ace-taskflow command is available
+          def ace_taskflow_available_with_cache
+            return @ace_taskflow_available if defined?(@ace_taskflow_available)
+
+            result = execute_command("ace-taskflow", "--version", timeout: 5)
+            @ace_taskflow_available = result[:success]
+          end
+
           private
+
+          # Validate task reference for security
+          #
+          # @param task_ref [String] Task reference to validate
+          # @return [Boolean] true if valid
+          # @raise [ArgumentError] if task reference is invalid
+          def validate_task_reference(task_ref)
+            ref = task_ref.to_s.strip
+
+            # Check length
+            if ref.length > MAX_TASK_ID_LENGTH
+              raise ArgumentError, "Task reference too long: #{ref.length} > #{MAX_TASK_ID_LENGTH}"
+            end
+
+            # Check for dangerous patterns
+            dangerous_patterns = [
+              /[;&|`$(){}[\]]/,  # Shell metacharacters
+              /\x00/,           # Null bytes
+              /[\r\n]/,         # Newlines
+              /[<>]/,           # Redirects
+              /\.\./,           # Directory traversal
+            ]
+
+            dangerous_patterns.each do |pattern|
+              if ref.match?(pattern)
+                raise ArgumentError, "Task reference contains dangerous characters: #{ref.inspect}"
+              end
+            end
+
+            true
+          end
 
           # Normalize task reference to a standard format
           #
@@ -116,16 +199,20 @@ module Ace
           def normalize_task_reference(task_ref)
             ref = task_ref.to_s.strip
 
+            # Validate for security first
+            validate_task_reference(ref)
+
             # Extract numeric ID from various formats
             # Format 1: Just number (081)
             # Format 2: task.number (task.081)
             # Format 3: version+task.number (v.0.9.0+task.081)
 
-            match = ref.match(/(\d+)/)
+            # Use stricter pattern that matches expected formats
+            match = ref.match(TASK_ID_PATTERN)
             return nil unless match
 
             # Return just the numeric part for ace-taskflow
-            match[1]
+            match[3]  # The third capture group is the 3-digit number
           end
 
           # Execute ace-taskflow command to fetch task
@@ -185,7 +272,38 @@ module Ace
           def execute_command(command, *args, timeout: DEFAULT_TIMEOUT)
             require "open3"
 
-            full_command = [command] + args
+            # Only allow ace-taskflow commands
+            allowed_commands = %w[ace-taskflow]
+            command_str = command.to_s.strip
+
+            unless allowed_commands.include?(command_str)
+              raise ArgumentError, "Command not allowed: #{command_str}"
+            end
+
+            # Sanitize arguments
+            sanitized_args = []
+            args.each do |arg|
+              arg_str = arg.to_s.strip
+
+              # Check for dangerous patterns
+              dangerous_patterns = [
+                /[;&|`$(){}[\]]/,  # Shell metacharacters
+                /\x00/,           # Null bytes
+                /[\r\n]/,         # Newlines
+                /[<>]/,           # Redirects
+              ]
+
+              dangerous_patterns.each do |pattern|
+                if arg_str.match?(pattern)
+                  raise ArgumentError, "Argument contains dangerous characters: #{arg_str.inspect}"
+                end
+              end
+
+              sanitized_args << arg_str
+            end
+
+            # Build safe command array
+            full_command = [command] + sanitized_args
             stdout, stderr, status = Open3.capture3(*full_command, timeout: timeout)
 
             {
