@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-11-04
+
+### Fixed
+- Resolve syntax and runtime errors in ace-git-worktree gem
+- Fix comment formatting errors in model files (task_metadata.rb, worktree_metadata.rb)
+- Fix Ruby syntax errors (hash conditional values, constant assignment in methods)
+- Fix initialization order in WorktreeManager
+- Implement lazy loading for CLI commands to prevent configuration validation during help
+
+### Technical
+- Update gemspec dependencies to use less restrictive version constraints
+- Improve CLI command registration with lazy loading pattern
+
 ## [0.1.0] - 2025-11-04
 
 ### Added
