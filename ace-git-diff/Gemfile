@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 # Development dependencies (local path for mono-repo development)
-gem "ace-core", path: "../ace-core"
+gem "ace-support-core", path: "../ace-support-core"
 gem "ace-test-support", path: "../ace-test-support"
 
 # Testing and development tools
