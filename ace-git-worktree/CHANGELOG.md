@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-11-04
+
+### Fixed
+- **Remove Command Dry-run Inconsistency**: Fix critical bug where `--dry-run` worked but actual execution failed for completed tasks
+- **Task Lookup for Completed Tasks**: Add fallback logic to remove worktrees even when task metadata not found (tasks moved to done/)
+- **Consistent Task Validation**: Ensure dry-run and actual execution use identical task validation logic
+- **Graceful Worktree Removal**: Remove worktrees with clear messaging when tasks are completed but worktrees exist
+- **PathExpander Namespace**: Fix namespaced PathExpander reference for proper module loading
+
+### Added
+- **Fallback Worktree Detection**: Search for worktrees by task reference when ace-taskflow metadata unavailable
+- **Direct Git Worktree Removal**: Use direct git worktree commands to bypass problematic safety checks
+- **Clear User Feedback**: Inform users when task not found but worktree removal proceeds
+- **Completed Task Support**: Enable cleanup of worktrees for tasks marked as done in ace-taskflow
+
+### Changed
+- **Task Removal Logic**: Remove dependency on task metadata availability for worktree cleanup
+- **Error Handling**: Provide helpful messages instead of failures when tasks are completed
+- **Remove Command Behavior**: Now works consistently across all task states (active, completed, missing)
+
 ## [0.1.7] - 2025-11-04
 
 ### Fixed
