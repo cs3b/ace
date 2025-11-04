@@ -176,12 +176,16 @@ module Ace
         #
         # @return [String] Version string
         def VERSION
-          version_file = File.expand_path("../version.rb", __dir__)
-          if File.exist?(version_file)
-            load version_file
-            return Ace::Git::Worktree::VERSION
+          # Load version module only once
+          unless defined?(Ace::Git::Worktree::VERSION)
+            version_file = File.expand_path("../version.rb", __dir__)
+            require version_file if File.exist?(version_file)
+          end
+
+          if defined?(Ace::Git::Worktree::VERSION)
+            Ace::Git::Worktree::VERSION
           else
-            return "0.1.0"
+            "0.1.0"
           end
         rescue StandardError
           "0.1.0"

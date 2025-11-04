@@ -85,7 +85,7 @@ module Ace
 
           # Load configuration using ace-core cascade
           #
-          # @return [Hash] Configuration hash from ace-core
+          # @return [Hash] Configuration hash from ace-core or direct YAML loading
           def load_from_ace_core
             return @config_hash if @config_hash
 
@@ -94,13 +94,32 @@ module Ace
               config_hash = Ace::Core.get(*CONFIG_NAMESPACE)
               @config_hash = config_hash || {}
             rescue LoadError
-              # ace-core not available, return empty config
-              @config_hash = {}
+              # ace-core not available, try direct YAML loading
+              @config_hash = load_direct_from_yaml
             rescue StandardError => e
-              # Error loading configuration, log and return empty
-              warn "Warning: Error loading worktree configuration: #{e.message}"
-              @config_hash = {}
+              # Error loading configuration, try direct YAML loading as fallback
+              warn "Warning: Error loading worktree configuration via ace-core: #{e.message}"
+              @config_hash = load_direct_from_yaml
             end
+          end
+
+          # Load configuration directly from YAML files
+          #
+          # @return [Hash] Configuration hash from YAML files
+          def load_direct_from_yaml
+            config_files.each do |file|
+              if File.exist?(file)
+                begin
+                  yaml_content = YAML.load_file(file)
+                  if yaml_content && yaml_content["git"] && yaml_content["git"]["worktree"]
+                    return yaml_content["git"]["worktree"]
+                  end
+                rescue StandardError => e
+                  warn "Warning: Error parsing #{file}: #{e.message}"
+                end
+              end
+            end
+            {}
           end
 
           # Validate loaded configuration
