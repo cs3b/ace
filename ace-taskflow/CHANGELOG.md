@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3] - 2025-11-04
+
+### Fixed
+
+- **Task Header Statistics**: Fixed missing three-line header with release statistics in `ace-taskflow tasks` output
+  - Fixed `StatsFormatter#initialize` (line 36) to pass `@root_path` to `ReleaseResolver.new`
+  - Fixed `TasksCommand#initialize` to initialize `@root_path` and pass it to `StatsFormatter.new`
+  - Header now correctly displays release info, idea stats, and task counts instead of minimal "X tasks" output
+  - Pre-existing bug (not introduced by unified filter PR) that manifested when running from subdirectories
+
 ## [0.18.2] - 2025-11-04
 
 ### Fixed
