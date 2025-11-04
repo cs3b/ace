@@ -20,7 +20,7 @@ module Ace
         class CreateCommand
           # Initialize a new CreateCommand
           def initialize
-            @manager = Organisms::WorktreeManager.new
+            @manager = Ace::Git::Worktree::Organisms::WorktreeManager.new
           end
 
           # Run the create command

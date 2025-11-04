@@ -69,8 +69,9 @@ module Ace
                 ))
               end
 
-              # Step 3: Update task status if configured
-              if @config.auto_mark_in_progress? && !task_metadata.in_progress?
+              # Step 3: Update task status if configured (and not overridden)
+              should_update_status = options[:no_status_update] ? false : @config.auto_mark_in_progress?
+              if should_update_status && !task_metadata.in_progress?
                 if update_task_status(task_metadata.id, "in-progress")
                   workflow_result[:steps_completed] << "status_updated"
                 else
@@ -82,9 +83,11 @@ module Ace
               worktree_metadata = create_worktree_metadata(task_metadata)
               workflow_result[:steps_completed] << "metadata_prepared"
 
-              # Step 5: Commit task changes if configured
-              if @config.auto_commit_task? && @config.auto_mark_in_progress?
-                if commit_task_changes(task_metadata, "in-progress")
+              # Step 5: Commit task changes if configured (and not overridden)
+              should_commit = options[:no_commit] ? false : @config.auto_commit_task?
+              if should_commit && should_update_status
+                commit_message = options[:commit_message] || "in-progress"
+                if commit_task_changes(task_metadata, commit_message)
                   workflow_result[:steps_completed] << "task_committed"
                 else
                   # Continue even if commit fails, but note it
@@ -110,8 +113,9 @@ module Ace
                 end
               end
 
-              # Step 8: Trust mise configuration if enabled
-              if @config.mise_trust_auto?
+              # Step 8: Trust mise configuration if enabled (and not overridden)
+              should_trust_mise = options[:no_mise_trust] ? false : @config.mise_trust_auto?
+              if should_trust_mise
                 mise_result = @mise_trustor.trust_worktree(worktree_result[:worktree_path])
                 if mise_result[:success]
                   workflow_result[:steps_completed] << "mise_trusted"

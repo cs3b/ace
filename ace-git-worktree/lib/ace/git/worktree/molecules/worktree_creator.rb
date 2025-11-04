@@ -250,7 +250,7 @@ module Ace
             return false if branch_name.nil? || branch_name.empty?
             return false if branch_name.length > 255
 
-            # Git branch name restrictions
+            # Git branch name restrictions (following git's actual rules)
             invalid_patterns = [
               /\.\./,           # Cannot contain ..
               /^@{/,           # Cannot start with @{
@@ -258,17 +258,21 @@ module Ace
               /[~^:?*\[\]]/,   # Cannot contain these special characters
               /\.$/,           # Cannot end with .
               /^\.$/,          # Cannot be just .
-              /\//,            # Cannot contain / (for simplicity)
-              /\.$/,           # Cannot end with .
-              /\.lock$/        # Cannot end with .lock
+              /\.lock$/,       # Cannot end with .lock
+              /^$/,            # Cannot be empty
+              /^\. /           # Cannot start with dot followed by space
             ]
 
             # Check for invalid patterns
             return false if invalid_patterns.any? { |pattern| branch_name.match?(pattern) }
 
-            # Cannot be HEAD or other reserved names
-            reserved_names = %w[HEAD master main]
+            # Cannot be HEAD or other reserved names that conflict with git's internal refs
+            reserved_names = %w[HEAD]
             return false if reserved_names.include?(branch_name)
+
+            # Additional validation: branch name cannot contain sequences that would be invalid
+            # in file system paths (since git stores branches as files)
+            return false if branch_name.include?('.git')
 
             true
           end

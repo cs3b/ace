@@ -169,4 +169,110 @@ class CreateCommandTest < Minitest::Test
       assert_equal 1, result, "Should reject dangerous path: #{dangerous_path}"
     end
   end
+
+  def test_cli_override_flags_are_passed_through_task_creation
+    # Test that CLI override flags are properly passed through the manager chain (critical for review feedback)
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_task, { success: true }) do |task_ref, options|
+      assert_equal "081", task_ref
+      # Test that all CLI override flags are properly passed through
+      assert_equal true, options[:no_mise_trust], "Should pass through --no-mise-trust"
+      assert_equal true, options[:no_status_update], "Should pass through --no-status-update"
+      assert_equal true, options[:no_commit], "Should pass through --no-commit"
+      assert_equal "Custom commit message", options[:commit_message], "Should pass through --commit-message"
+      assert_equal true, options[:dry_run], "Should pass through --dry-run"
+      true
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    result = @command.run([
+      "--task", "081",
+      "--no-mise-trust",
+      "--no-status-update",
+      "--no-commit",
+      "--commit-message", "Custom commit message",
+      "--dry-run"
+    ])
+
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
+
+  def test_cli_override_flags_are_passed_through_traditional_creation
+    # Test that CLI override flags work for traditional worktree creation too
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create, { success: true }) do |branch_name, options|
+      assert_equal "feature-branch", branch_name
+      # Test that relevant CLI override flags are properly passed through
+      assert_equal true, options[:no_mise_trust], "Should pass through --no-mise-trust"
+      assert_equal "/custom/path", options[:path], "Should pass through --path"
+      assert_equal true, options[:force], "Should pass through --force"
+      true
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    result = @command.run([
+      "feature-branch",
+      "--path", "/custom/path",
+      "--no-mise-trust",
+      "--force"
+    ])
+
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
+
+  def test_individual_override_flags_work
+    # Test each override flag individually to ensure they work in isolation
+    override_flags = [
+      ["--no-mise-trust", :no_mise_trust],
+      ["--no-status-update", :no_status_update],
+      ["--no-commit", :no_commit]
+    ]
+
+    override_flags.each do |flag, option_key|
+      mock_worktree_manager = Minitest::Mock.new
+      mock_worktree_manager.expect(:create_task, { success: true }) do |task_ref, options|
+        assert_equal true, options[option_key], "Should set #{option_key} to true for #{flag}"
+        true
+      end
+
+      @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+      result = @command.run(["--task", "081", flag, "--dry-run"])
+      assert_equal 0, result, "Should handle #{flag} flag correctly"
+      mock_worktree_manager.verify
+    end
+  end
+
+  def test_commit_message_override_works
+    # Test that custom commit messages are properly passed through
+    test_messages = [
+      "Implement feature X",
+      "Fix security vulnerability",
+      "Update dependencies",
+      "WIP: experimental changes"
+    ]
+
+    test_messages.each do |commit_message|
+      mock_worktree_manager = Minitest::Mock.new
+      mock_worktree_manager.expect(:create_task, { success: true }) do |task_ref, options|
+        assert_equal commit_message, options[:commit_message], "Should pass through custom commit message"
+        true
+      end
+
+      @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+      result = @command.run([
+        "--task", "081",
+        "--commit-message", commit_message,
+        "--dry-run"
+      ])
+
+      assert_equal 0, result, "Should handle commit message: #{commit_message}"
+      mock_worktree_manager.verify
+    end
+  end
 end

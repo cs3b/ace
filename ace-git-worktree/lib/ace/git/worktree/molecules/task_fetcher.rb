@@ -176,7 +176,7 @@ module Ace
 
             # Check for dangerous patterns
             dangerous_patterns = [
-              /[;&|`$(){}[\]]/,  # Shell metacharacters
+              /[;&|`$(){}\[\]]/,  # Shell metacharacters
               /\x00/,           # Null bytes
               /[\r\n]/,         # Newlines
               /[<>]/,           # Redirects
@@ -287,7 +287,7 @@ module Ace
 
               # Check for dangerous patterns
               dangerous_patterns = [
-                /[;&|`$(){}[\]]/,  # Shell metacharacters
+                /[;&|`$(){}\[\]]/,  # Shell metacharacters
                 /\x00/,           # Null bytes
                 /[\r\n]/,         # Newlines
                 /[<>]/,           # Redirects
