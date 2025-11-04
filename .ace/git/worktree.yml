@@ -23,17 +23,17 @@ git:
       # Directory naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
       # Examples:
-      #   "task.{task_id}"        -> task.task.081
-      #   "{release}/{id}"        -> v.0.9.0/081
-      #   "{task_id}"             -> task.081
-      directory_format: "{task_id}"
+      #   "task.{id}"        -> task.081
+      #   "{id}"             -> 081
+      #   "{release}/{id}"   -> v.0.9.0/081
+      directory_format: "{release}/{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
       # Examples:
-      #   "{release}-{id}-{slug}"    -> v.0.9.0-081-fix-authentication-bug
-      #   "task-{task_id}-{slug}"     -> task-task.081-fix-authentication-bug
-      #   "{id}-{slug}"               -> 081-fix-authentication-bug
+      #   "{id}-{slug}"       -> 081-fix-authentication-bug
+      #   "task-{id}-{slug}"  -> task-081-fix-authentication-bug
+      #   "{release}-{id}"    -> v.0.9.0-081
       branch_format: "{release}-{id}-{slug}"
 
       # Automatically mark tasks as in-progress when creating worktrees
@@ -46,7 +46,7 @@ git:
 
       # Commit message format for task updates
       # Available variables: {id}, {task_id}, {release}, {slug}
-      commit_message_format: "chore({task_id}): mark as in-progress, creating worktree for {release}"
+      commit_message_format: "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}"
 
       # Add worktree metadata to task frontmatter
       # If true, adds worktree info (branch, path, created_at) to task file
