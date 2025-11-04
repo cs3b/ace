@@ -17,7 +17,7 @@ module Ace
         def initialize(args = ARGV)
           @args = args
           @commands = {}
-          register_commands
+          @commands_registered = false
         end
 
         # Run the CLI
@@ -44,6 +44,8 @@ module Ace
           command_name = @args.first
           command_args = @args[1..-1]
 
+          # Register commands only when we need them
+          ensure_commands_registered
           command = @commands[command_name]
           if command
             command.run(command_args)
@@ -61,6 +63,13 @@ module Ace
         end
 
         private
+
+        # Ensure commands are registered (lazy loading)
+        def ensure_commands_registered
+          return if @commands_registered
+          register_commands
+          @commands_registered = true
+        end
 
         # Register all available commands
         def register_commands
@@ -146,9 +155,9 @@ module Ace
         #
         # @return [String] Version string
         def VERSION
-          VERSION_FILE = File.expand_path("../version.rb", __dir__)
-          if File.exist?(VERSION_FILE)
-            load VERSION_FILE
+          version_file = File.expand_path("../version.rb", __dir__)
+          if File.exist?(version_file)
+            load version_file
             return Ace::Git::Worktree::VERSION
           else
             return "0.1.0"

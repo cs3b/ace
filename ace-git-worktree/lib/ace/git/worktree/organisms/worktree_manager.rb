@@ -26,10 +26,10 @@ module Ace
           # @param project_root [String] Project root directory
           def initialize(config: nil, project_root: Dir.pwd)
             @project_root = project_root
-            @config = config || load_configuration
 
             # Initialize molecules
             @config_loader = Molecules::ConfigLoader.new(project_root)
+            @config = config || load_configuration
             @worktree_creator = Molecules::WorktreeCreator.new
             @worktree_lister = Molecules::WorktreeLister.new
             @worktree_remover = Molecules::WorktreeRemover.new
@@ -281,13 +281,14 @@ module Ace
               # Get task worktree status
               task_status = @task_orchestrator.get_task_worktree_status
 
-              {
+              result = {
                 success: true,
                 worktrees: worktrees,
                 statistics: stats,
-                task_status: task_status[:status] if task_status[:success],
                 configuration: @config.to_h
               }
+              result[:task_status] = task_status[:status] if task_status[:success]
+              result
             rescue StandardError => e
               error_result("Failed to get worktree status: #{e.message}")
             end

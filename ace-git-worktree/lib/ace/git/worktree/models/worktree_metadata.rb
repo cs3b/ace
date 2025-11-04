@@ -7,7 +7,7 @@ module Ace
         # Worktree metadata model for task frontmatter
         #
         # Represents worktree information that gets added to task frontmatter
-        to track the association between tasks and their worktrees.
+        # to track the association between tasks and their worktrees.
         #
         # @example Create for a new worktree
         #   metadata = WorktreeMetadata.new(

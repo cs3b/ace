@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.110] - 2025-11-04
+
+### Added
+- **ace-git-worktree v0.1.0**: New gem for task-aware git worktree management
+  - Task-aware worktree creation with ace-taskflow integration
+  - Automatic task status updates and metadata tracking
+  - Configuration-driven naming conventions and behaviors
+  - Complete ATOM architecture implementation
+  - CLI with comprehensive commands (create, list, switch, remove, prune, config)
+  - Traditional worktree operations support
+  - Automatic mise trust execution for development environments
+  - Comprehensive documentation and workflow instructions
+  - Example configuration templates and agent definitions
+
+### Fixed
+- **ace-taskflow v0.18.4**: Restored task update command implementation
+  - Restored complete `ace-taskflow task update` command that was accidentally deleted
+  - Restored TaskFieldUpdater molecule, FieldArgumentParser molecule, and all related methods
+  - Command supports `--field key=value` syntax for simple and nested YAML field updates
+  - Enables worktree metadata updates for ace-git-worktree integration (task 089)
+  - Includes comprehensive unit tests (10 tests, 19 assertions, all passing)
+  - Updated task 089 with verified working examples and implementation notes
+
+### Integration
+- Added ace-git-worktree to ace-meta Gemfile for development
+- Updated tools.md to include ace-git-worktree command reference
+- Added comprehensive documentation with examples and integration patterns
+- Created agent definition for worktree operations
+- Integration with ace-ecosystem tools and configuration system
+
+### Success Criteria
+- ✅ Complete ATOM architecture implemented
+- ✅ Task-aware worktree creation with automatic integration
+- ✅ Traditional worktree operations supported
+- ✅ Configuration system with validation
+- ✅ CLI with comprehensive commands
+- ✅ Documentation and handbook integration
+- ✅ Example configuration and agent definitions
+- ✅ Integration with ace-ecosystem complete
+
+## [0.9.109] - 2025-11-04
+- **ace-git-worktree v0.1.0**: New gem for task-aware git worktree management
+  - Task-aware worktree creation with ace-taskflow integration
+  - Automatic task status updates and metadata tracking
+  - Configuration-driven naming conventions and behaviors
+  - Complete ATOM architecture implementation
+  - CLI with comprehensive commands (create, list, switch, remove, prune, config)
+  - Traditional worktree operations support
+  - Automatic mise trust execution for development environments
+  - Comprehensive documentation and workflow instructions
+  - Example configuration templates and agent definitions
+
+### Fixed
+- **ace-taskflow v0.18.4**: Restored task update command implementation
+  - Restored complete `ace-taskflow task update` command that was accidentally deleted
+  - Restored TaskFieldUpdater molecule, FieldArgumentParser molecule, and all related methods
+  - Command supports `--field key=value` syntax for simple and nested YAML field updates
+  - Enables worktree metadata updates for ace-git-worktree integration (task 089)
+  - Includes comprehensive unit tests (10 tests, 19 assertions, all passing)
+  - Updated task 089 with verified working examples and implementation notes
+
+## [0.9.109] - 2025-11-04
+
 ## [0.9.109] - 2025-11-04
 
 ### Fixed
