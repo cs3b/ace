@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.108] - 2025-11-04
+
+### Fixed
+- **ace-taskflow v0.18.3**: Fixed missing task header statistics
+  - Tasks command now displays full three-line header with release info, idea stats, and task counts
+  - Fixed root_path initialization in StatsFormatter and TasksCommand
+  - Pre-existing bug (not from unified filter PR)
+
 ## [0.9.107] - 2025-11-04
 
 ### Fixed

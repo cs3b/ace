@@ -17,10 +17,11 @@ module Ace
       class TasksCommand
         include Helpers
         def initialize
+          @root_path = Molecules::ConfigLoader.find_root
           @manager = Organisms::TaskManager.new
           @config = Taskflow.configuration
           @preset_manager = Molecules::ListPresetManager.new
-          @stats_formatter = Molecules::StatsFormatter.new
+          @stats_formatter = Molecules::StatsFormatter.new(@root_path)
         end
 
         def execute(args)
