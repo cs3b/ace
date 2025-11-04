@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **CRITICAL**: Fix path traversal vulnerability in PathExpander atom
+- **CRITICAL**: Fix command injection vulnerability in MiseTrustor and TaskFetcher
+- Add comprehensive input validation for task IDs and file paths
+- Implement command whitelisting and argument sanitization
+- Add protection against symlink-based attacks with realpath resolution
+
+### Fixed
+- Update gemspec metadata from placeholder ACE team values to correct author information
+- Fix Gemfile to use eval_gemfile pattern following ACE standards
+- Modernize Rakefile to use ace-test patterns instead of outdated rake/testtask
+- Remove Gemfile.lock from gem directory to follow ACE conventions
+
+### Added
+- Comprehensive test coverage for all CLI commands (6/6 commands)
+- Security tests for path traversal and command injection prevention
+- Integration tests for molecules and organisms
+- Graceful error handling when ace-taskflow is unavailable
+- Helpful error messages with installation guidance
+- Troubleshooting section in README.md with step-by-step solutions
+
+### Technical
+- Enhanced security validation across all user input points
+- Improved dependency management with graceful degradation
+- Better error reporting with specific guidance for common issues
+- Comprehensive security test suite with attack vector coverage
+
 ## [0.1.2] - 2025-11-04
 
 ### Fixed
