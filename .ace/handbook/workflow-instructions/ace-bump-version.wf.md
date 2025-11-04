@@ -143,6 +143,7 @@ Use `ace-git-commit` with specific files and direct message:
 ace-git-commit \
   ace-[package]/CHANGELOG.md \
   ace-[package]/lib/ace/[package]/version.rb \
+  Gemfile.lock \
   -m "chore: bumping patch version to X.Y.Z"
 ```
 
@@ -151,14 +152,18 @@ Or for minor/major bumps:
 ace-git-commit \
   ace-[package]/CHANGELOG.md \
   ace-[package]/lib/ace/[package]/version.rb \
+  Gemfile.lock \
   -m "chore: bumping minor version to X.Y.Z"
 ```
+
+**Important:** In mono-repo setups with workspace dependencies, `Gemfile.lock` at the project root is updated when package versions change. Always include it in version bump commits to keep the lockfile synchronized with package versions.
 
 **For commit workflow details:** See `ace-nav wfi://commit`
 
 Verify:
 ```bash
 git log -1 --stat
+# Should show 3 files: CHANGELOG.md, version.rb, Gemfile.lock
 ```
 
 ## Semantic Versioning Rules
@@ -195,7 +200,8 @@ git log -1 --stat
 - `cannot determine bump type` → ambiguous commits, manually specify patch/minor
 - `changelog format invalid` → restructure to Keep a Changelog format (see template)
 - `ace-git-commit fails` → check git hooks or commit manually: `git commit -m "..."`
-- `wrong files staged` → `git reset`, then explicitly add version.rb and CHANGELOG.md
+- `wrong files staged` → `git reset`, then explicitly add version.rb, CHANGELOG.md, and Gemfile.lock
+- `Gemfile.lock shows uncommitted changes after bump` → expected in mono-repos; workflow now includes Gemfile.lock in commit (see Step 6)
 
 ## Embedded Templates
 
@@ -313,3 +319,4 @@ Error: CHANGELOG.md missing
 * BREAKING CHANGE must appear in commit body for MAJOR bump detection
 * **Explicit bump level** (patch|minor|major) overrides automatic detection
 * Use explicit bump when you want to force a specific version change regardless of commits
+* **Mono-repo lockfile management**: In workspace setups, `Gemfile.lock` at project root is updated when package versions change and must be committed with version bumps to maintain dependency synchronization
