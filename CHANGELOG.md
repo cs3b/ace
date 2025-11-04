@@ -129,16 +129,6 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.109] - 2025-11-04
 
-## [0.9.109] - 2025-11-04
-
-### Fixed
-- **ace-taskflow v0.18.4**: Restored task update command implementation
-  - Restored complete `ace-taskflow task update` command that was accidentally deleted in commit 54cac8b3
-  - Restored TaskFieldUpdater molecule, FieldArgumentParser molecule, and all related methods
-  - Command supports `--field key=value` syntax for simple and nested YAML field updates
-  - Enables worktree metadata updates for ace-git-worktree integration (task 089)
-  - Includes comprehensive unit tests (10 tests, 19 assertions, all passing)
-  - Updated task 089 with verified working examples and implementation notes
 
 ## [0.9.108] - 2025-11-04
 
