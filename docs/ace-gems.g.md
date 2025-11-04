@@ -108,6 +108,92 @@ require 'ace/gem'
 Ace::Gem::CLI.start(ARGV)
 ```
 
+## Mono-Repo Binstubs (Development)
+
+### bin/ vs exe/ Distinction
+- **bin/**: Mono-repo development binstubs for running executables without installation
+- **exe/**: Gem distribution executables that get installed with the gem
+- **Pattern**: bin/ wrappers use root Gemfile, exe/ uses gem's own dependencies
+
+### Mono-Repo Binstub Pattern
+```ruby
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Wrapper script to run ace-gem with proper bundler context
+require "pathname"
+
+# Find the ace-meta root directory
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+
+# Set the Gemfile location
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+# Load bundler
+require "bundler/setup"
+
+# Now require and run the actual ace-gem executable
+load ace_meta_root.join("ace-gem/exe/ace-gem").to_s
+```
+
+### Development Workflow
+```bash
+# Run any ace gem directly without installation
+./bin/ace-gem --help
+./bin/ace-search --query "pattern"
+./bin/ace-git-worktree --task 123
+
+# All binstubs use root Gemfile for consistent environment
+# No need to install gems locally during development
+```
+
+### Examples in Production
+- **bin/ace-docs**: Wraps ace-docs/exe/ace-docs
+- **bin/ace-search**: Wraps ace-search/exe/ace-search
+- **bin/ace-lint**: Wraps ace-lint/exe/ace-lint
+- **bin/ace-git-worktree**: Wraps ace-git-worktree/exe/ace-git-worktree
+
+## Captured Feedback & Best Practices
+
+### Context Awareness (Critical)
+**Problem**: Agents don't always read roadmap/docs before drafting releases or solutions
+**Solution**:
+- Always read project roadmap, taskflow, and existing documentation first
+- Check for existing patterns and solutions before creating new ones
+- Understand project context and previous decisions
+
+### Configuration Clarity
+**Problem**: Users struggle with type definitions and sync behavior
+**Solution**:
+- Document configuration types clearly with examples
+- Explain sync behavior and when it occurs
+- Provide example configurations for common use cases
+- Use validation with helpful error messages
+
+### Git Integration Patterns
+**Problem**: Handling renames, moves, whitespace, and diff filtering
+**Solution**:
+- Use git diff with proper filters for deterministic behavior
+- Handle file renames and moves correctly
+- Manage whitespace issues in text processing
+- Prefer git diff over subagent file selection decisions
+
+### Tool Delegation Principles
+**Problem**: Unclear boundaries between tools
+**Solution**:
+- Delegate specialized work to appropriate tools (e.g., linting → lint tool)
+- Avoid reimplementing functionality that exists in specialized tools
+- Provide clear integration points between tools
+- Document tool boundaries and responsibilities
+
+### Development Environment Patterns
+**Problem**: Inconsistent development setups across gems
+**Solution**:
+- Use mono-repo binstubs for consistent development environment
+- Standardize on root Gemfile for dependency management
+- Provide clear development documentation
+- Include workspace awareness for git worktree development
+
 ## Testing
 
 ```ruby
