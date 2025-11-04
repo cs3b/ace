@@ -22,6 +22,7 @@ update:
 | **ace-review** | Code review | `ace-review --preset pr`, `ace-review --auto-execute` |
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
+| **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
 | **ace-test** | Run tests | `ace-test`, `ace-test --fail-fast`, `ace-test atoms` |
 
 ## Quick Examples

@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Add lib directory to load path
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+# Load the ace-git-worktree gem
+require "ace/git/worktree"
+
+# Run the CLI
+exit_code = Ace::Git::Worktree::CLI.new(ARGV).run
+
+# Exit with the appropriate code
+exit(exit_code)

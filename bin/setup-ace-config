@@ -38,7 +38,7 @@ print_error() {
 
 # Check if we're in the right directory
 check_project_root() {
-    if [ ! -f "Gemfile" ] || [ ! -d "ace-core" ]; then
+    if [ ! -f "Gemfile" ] || [ ! -d "ace-support-core" ]; then
         print_error "This script must be run from the ace-meta project root"
         print_info "Current directory: $(pwd)"
         exit 1
@@ -169,7 +169,7 @@ test_loading() {
 
         if command -v ruby &> /dev/null; then
             # Test loading core config
-            if ruby -r ./ace-core/lib/ace/core -e "p Ace::Core.get('core')" &> /dev/null; then
+            if ruby -r ./ace-support-core/lib/ace/core -e "p Ace::Core.get('core')" &> /dev/null; then
                 print_success "  Core configuration loads successfully"
             else
                 print_error "  Failed to load core configuration"

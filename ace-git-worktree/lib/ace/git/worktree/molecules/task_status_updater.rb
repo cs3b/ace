@@ -1,0 +1,243 @@
+# frozen_string_literal: true
+
+module Ace
+  module Git
+    module Worktree
+      module Molecules
+        # Task status updater molecule
+        #
+        # Updates task status using ace-taskflow CLI commands.
+        # Provides methods for marking tasks as in-progress, done, etc.
+        #
+        # @example Mark task as in-progress
+        #   updater = TaskStatusUpdater.new
+        #   success = updater.mark_in_progress("081")
+        #
+        # @example Update with custom status
+        #   success = updater.update_status("081", "done")
+        class TaskStatusUpdater
+          # Default timeout for ace-taskflow commands
+          DEFAULT_TIMEOUT = 10
+
+          # Initialize a new TaskStatusUpdater
+          #
+          # @param timeout [Integer] Command timeout in seconds
+          def initialize(timeout: DEFAULT_TIMEOUT)
+            @timeout = timeout
+          end
+
+          # Mark task as in-progress
+          #
+          # @param task_ref [String] Task reference (081, task.081, v.0.9.0+081)
+          # @return [Boolean] true if status was updated successfully
+          #
+          # @example
+          #   updater = TaskStatusUpdater.new
+          #   success = updater.mark_in_progress("081")
+          def mark_in_progress(task_ref)
+            update_status(task_ref, "in-progress")
+          end
+
+          # Mark task as done
+          #
+          # @param task_ref [String] Task reference
+          # @return [Boolean] true if status was updated successfully
+          #
+          # @example
+          #   success = updater.mark_done("081")
+          def mark_done(task_ref)
+            update_status(task_ref, "done")
+          end
+
+          # Mark task as blocked
+          #
+          # @param task_ref [String] Task reference
+          # @return [Boolean] true if status was updated successfully
+          #
+          # @example
+          #   success = updater.mark_blocked("081")
+          def mark_blocked(task_ref)
+            update_status(task_ref, "blocked")
+          end
+
+          # Update task to custom status
+          #
+          # @param task_ref [String] Task reference
+          # @param status [String] New status value
+          # @return [Boolean] true if status was updated successfully
+          #
+          # @example
+          #   success = updater.update_status("081", "in-progress")
+          def update_status(task_ref, status)
+            return false if task_ref.nil? || task_ref.empty?
+            return false if status.nil? || status.empty?
+
+            # Normalize task reference
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            # Execute ace-taskflow command
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "status=#{status}")
+
+            result[:success]
+          end
+
+          # Update task priority
+          #
+          # @param task_ref [String] Task reference
+          # @param priority [String] New priority (high, medium, low)
+          # @return [Boolean] true if priority was updated successfully
+          #
+          # @example
+          #   success = updater.update_priority("081", "high")
+          def update_priority(task_ref, priority)
+            return false unless %w[high medium low].include?(priority.to_s)
+
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "priority=#{priority}")
+            result[:success]
+          end
+
+          # Update task estimate
+          #
+          # @param task_ref [String] Task reference
+          # @param estimate [String] New estimate (e.g., "2h", "1-2 days")
+          # @return [Boolean] true if estimate was updated successfully
+          #
+          # @example
+          #   success = updater.update_estimate("081", "4h")
+          def update_estimate(task_ref, estimate)
+            return false if estimate.nil? || estimate.empty?
+
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "estimate=#{estimate}")
+            result[:success]
+          end
+
+          # Add worktree metadata to task
+          #
+          # @param task_ref [String] Task reference
+          # @param worktree_metadata [WorktreeMetadata] Worktree metadata to add
+          # @return [Boolean] true if metadata was added successfully
+          #
+          # @example
+          #   metadata = WorktreeMetadata.new(branch: "081-fix", path: ".ace-wt/task.081")
+          #   success = updater.add_worktree_metadata("081", metadata)
+          def add_worktree_metadata(task_ref, worktree_metadata)
+            return false unless worktree_metadata.is_a?(Models::WorktreeMetadata)
+
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            # Use the ace-taskflow update command with nested field syntax
+            # Format: worktree.branch=value, worktree.path=value, etc.
+            metadata_hash = worktree_metadata.to_h
+            success = true
+
+            metadata_hash.each do |field, value|
+              field_path = "worktree.#{field}"
+              result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "#{field_path}=#{value}")
+              success &&= result[:success]
+            end
+
+            success
+          end
+
+          # Remove worktree metadata from task
+          #
+          # @param task_ref [String] Task reference
+          # @return [Boolean] true if metadata was removed successfully
+          #
+          # @example
+          #   success = updater.remove_worktree_metadata("081")
+          def remove_worktree_metadata(task_ref)
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            # Note: ace-taskflow may not support removing entire sections
+            # This would typically be handled by updating the task file directly
+            # For now, we'll return false to indicate this limitation
+            false
+          end
+
+          # Get current task status
+          #
+          # @param task_ref [String] Task reference
+          # @return [String, nil] Current status or nil if not found
+          #
+          # @example
+          #   status = updater.get_status("081") # => "in-progress"
+          def get_status(task_ref)
+            normalized_ref = normalize_task_reference(task_ref)
+            return nil unless normalized_ref
+
+            # Fetch task metadata
+            fetcher = TaskFetcher.new(timeout: @timeout)
+            task = fetcher.fetch(normalized_ref)
+            task ? task.status : nil
+          end
+
+          # Check if ace-taskflow update command is available
+          #
+          # @return [Boolean] true if update command is available
+          def update_command_available?
+            # Try to get help for the update command
+            result = execute_ace_taskflow_command("task", "update", "--help", timeout: 5)
+            result[:success]
+          end
+
+          private
+
+          # Normalize task reference to a standard format
+          #
+          # @param task_ref [String] Input task reference
+          # @return [String, nil] Normalized reference or nil if invalid
+          def normalize_task_reference(task_ref)
+            ref = task_ref.to_s.strip
+
+            # Extract numeric ID from various formats
+            match = ref.match(/(\d+)/)
+            match ? match[1] : nil
+          end
+
+          # Execute ace-taskflow command
+          #
+          # @param args [Array<String>] Command arguments
+          # @return [Hash] Result with :success, :output, :error, :exit_code
+          def execute_ace_taskflow_command(*args)
+            require "open3"
+
+            full_command = ["ace-taskflow"] + args
+
+            stdout, stderr, status = Open3.capture3(*full_command, timeout: @timeout)
+
+            {
+              success: status.success?,
+              output: stdout.to_s,
+              error: stderr.to_s,
+              exit_code: status.exitstatus
+            }
+          rescue Open3::CommandTimeout
+            {
+              success: false,
+              output: "",
+              error: "ace-taskflow command timed out after #{@timeout} seconds",
+              exit_code: 124
+            }
+          rescue StandardError => e
+            {
+              success: false,
+              output: "",
+              error: "ace-taskflow command failed: #{e.message}",
+              exit_code: 1
+            }
+          end
+        end
+      end
+    end
+  end
+end

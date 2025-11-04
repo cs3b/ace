@@ -4,16 +4,131 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.109] - 2025-11-04
+## [0.9.113] - 2025-11-04
+
+### Security
+- **ace-git-worktree v0.1.3**: Critical security fixes and comprehensive testing
+  - **CRITICAL**: Fix path traversal vulnerability in PathExpander atom
+  - **CRITICAL**: Fix command injection vulnerability in MiseTrustor and TaskFetcher
+  - Add comprehensive input validation for task IDs and file paths
+  - Implement command whitelisting and argument sanitization
+  - Add protection against symlink-based attacks with realpath resolution
+
+### Fixed
+- **ace-git-worktree**: Configuration standards compliance
+  - Update gemspec metadata from placeholder to correct author information
+  - Fix Gemfile to use eval_gemfile pattern following ACE standards
+  - Modernize Rakefile to use ace-test patterns
+  - Remove Gemfile.lock from gem directory
+
+### Added
+- **ace-git-worktree**: Comprehensive test coverage and user experience
+  - Complete test coverage for all CLI commands (6/6 commands)
+  - Security tests for path traversal and command injection prevention
+  - Integration tests for molecules and organisms
+  - Graceful error handling when ace-taskflow is unavailable
+  - Helpful error messages with installation guidance
+  - Troubleshooting section in README.md
+
+## [0.9.112] - 2025-11-04
+
+### Fixed
+- **ace-core removal**: Complete migration from ace-core to ace-support-core
+  - Removed duplicate VERSION constant conflicts that caused warnings
+  - Fixed "Failed to resolve protocol: wfi://create-task" errors
+  - Updated all gem dependencies to use ace-support-core
+  - Eliminated ace-core package entirely (75 files removed)
+- **ace-git-worktree v0.1.2**: Updated dependencies and documentation
+  - Fixed gemspec dependency from ace-core to ace-support-core
+  - Added required support gems to resolve bundler conflicts
+  - Updated README.md with correct dependency references
+
+### Changed
+- BREAKING CHANGE: ace-core package no longer exists, use ace-support-core
+- Updated all documentation references to ace-support-core across codebase
+- Regenerated Gemfile.lock files to remove ace-core references
+
+### Technical
+- Resolved VERSION constant conflicts between ace-core and ace-support-core
+- Ensured proper dependency resolution for ace-nav, ace-context, ace-taskflow
+- Verified wfi:// protocol resolution works correctly after migration
+
+## [0.9.111] - 2025-11-04
+
+### Added
+- **ace-git-worktree v0.1.1**: Updated gem with fixes and improvements
+  - Fixed syntax errors in model files (comment formatting, hash conditionals)
+  - Fixed Ruby syntax errors (constant assignment, initialization order)
+  - Implemented lazy loading for CLI commands to improve help command performance
+  - Updated dependency constraints for better compatibility
+
+### Technical
+- Resolved runtime errors preventing ace-git-worktree from functioning
+- Improved CLI architecture with lazy command registration pattern
+
+## [0.9.110] - 2025-11-04
+
+### Added
+- **ace-git-worktree v0.1.0**: New gem for task-aware git worktree management
+  - Task-aware worktree creation with ace-taskflow integration
+  - Automatic task status updates and metadata tracking
+  - Configuration-driven naming conventions and behaviors
+  - Complete ATOM architecture implementation
+  - CLI with comprehensive commands (create, list, switch, remove, prune, config)
+  - Traditional worktree operations support
+  - Automatic mise trust execution for development environments
+  - Comprehensive documentation and workflow instructions
+  - Example configuration templates and agent definitions
 
 ### Fixed
 - **ace-taskflow v0.18.4**: Restored task update command implementation
-  - Restored complete `ace-taskflow task update` command that was accidentally deleted in commit 54cac8b3
+  - Restored complete `ace-taskflow task update` command that was accidentally deleted
   - Restored TaskFieldUpdater molecule, FieldArgumentParser molecule, and all related methods
   - Command supports `--field key=value` syntax for simple and nested YAML field updates
   - Enables worktree metadata updates for ace-git-worktree integration (task 089)
   - Includes comprehensive unit tests (10 tests, 19 assertions, all passing)
   - Updated task 089 with verified working examples and implementation notes
+
+### Integration
+- Added ace-git-worktree to ace-meta Gemfile for development
+- Updated tools.md to include ace-git-worktree command reference
+- Added comprehensive documentation with examples and integration patterns
+- Created agent definition for worktree operations
+- Integration with ace-ecosystem tools and configuration system
+
+### Success Criteria
+- ✅ Complete ATOM architecture implemented
+- ✅ Task-aware worktree creation with automatic integration
+- ✅ Traditional worktree operations supported
+- ✅ Configuration system with validation
+- ✅ CLI with comprehensive commands
+- ✅ Documentation and handbook integration
+- ✅ Example configuration and agent definitions
+- ✅ Integration with ace-ecosystem complete
+
+## [0.9.109] - 2025-11-04
+- **ace-git-worktree v0.1.0**: New gem for task-aware git worktree management
+  - Task-aware worktree creation with ace-taskflow integration
+  - Automatic task status updates and metadata tracking
+  - Configuration-driven naming conventions and behaviors
+  - Complete ATOM architecture implementation
+  - CLI with comprehensive commands (create, list, switch, remove, prune, config)
+  - Traditional worktree operations support
+  - Automatic mise trust execution for development environments
+  - Comprehensive documentation and workflow instructions
+  - Example configuration templates and agent definitions
+
+### Fixed
+- **ace-taskflow v0.18.4**: Restored task update command implementation
+  - Restored complete `ace-taskflow task update` command that was accidentally deleted
+  - Restored TaskFieldUpdater molecule, FieldArgumentParser molecule, and all related methods
+  - Command supports `--field key=value` syntax for simple and nested YAML field updates
+  - Enables worktree metadata updates for ace-git-worktree integration (task 089)
+  - Includes comprehensive unit tests (10 tests, 19 assertions, all passing)
+  - Updated task 089 with verified working examples and implementation notes
+
+## [0.9.109] - 2025-11-04
+
 
 ## [0.9.108] - 2025-11-04
 
