@@ -140,7 +140,7 @@ module Ace
 
             # Make path relative to project root
             relative_path = begin
-              PathExpander.relative_to_git_root(worktree_info.path, project_root)
+              Atoms::PathExpander.relative_to_git_root(worktree_info.path, project_root)
             rescue StandardError
               worktree_info.path
             end
