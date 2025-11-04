@@ -22,7 +22,7 @@ interfaces.
 * **Mono-Repo**: All ace-\* gems at root with shared dependencies
 * **ATOM Pattern**: Consistent architecture (Atoms, Molecules, Organisms, Models)
 * **Config Cascade**: `.ace/` hierarchy, nearest-wins resolution
-* **Zero-Dependency Core**: ace-core uses only Ruby stdlib
+* **Zero-Dependency Core**: ace-support-core uses only Ruby stdlib
 * **AI-Native**: Deterministic commands for autonomous execution
 
 Mono-repo contains modular gems; each follows ATOM with consistent structure. See [blueprint.md](blueprint.md) for
@@ -67,7 +67,7 @@ Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, 
 
 Modular Ruby gems providing focused CLI functionality:
 
-* **ace-core**: Configuration management foundation
+* **ace-support-core**: Configuration management foundation
 * **ace-context**: Project context loading with protocol support
 * **ace-docs**: Documentation management with frontmatter-based tracking
 * **ace-git-commit**: Smart git commit generation with LLM integration
@@ -141,7 +141,7 @@ autonomous execution.
 
 **Configuration Cascade**: `.ace/` searched current→home; nearest wins; project-specific settings.
 
-**Zero-Dependency Core**: ace-core uses only Ruby stdlib; stable foundation; reduces conflicts.
+**Zero-Dependency Core**: ace-support-core uses only Ruby stdlib; stable foundation; reduces conflicts.
 
 ## Security & Quality
 

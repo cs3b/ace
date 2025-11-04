@@ -5,7 +5,7 @@ require "bundler/setup"
 desc "Run tests for all packages"
 task :test do
   packages = %w[
-    ace-core
+    ace-support-core
     ace-test-support
     ace-test-runner
     ace-context
@@ -57,7 +57,7 @@ namespace :test do
     package = args[:name]
     unless package
       puts "Usage: rake test:package[package-name]"
-      puts "Example: rake test:package[ace-core]"
+      puts "Example: rake test:package[ace-support-core]"
       exit 1
     end
 
@@ -82,7 +82,7 @@ desc "Install dependencies for all packages"
 task :bundle do
   system("bundle install")
 
-  %w[ace-core ace-test-support ace-test-runner ace-context ace-nav ace-taskflow ace-git-commit ace-llm ace-llm-providers-cli].each do |package|
+  %w[ace-support-core ace-test-support ace-test-runner ace-context ace-nav ace-taskflow ace-git-commit ace-llm ace-llm-providers-cli].each do |package|
     puts "Installing dependencies for #{package}..."
     Dir.chdir(package) do
       system("bundle install")

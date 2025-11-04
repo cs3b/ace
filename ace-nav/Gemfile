@@ -6,5 +6,5 @@ source "https://rubygems.org"
 gemspec
 
 # Use local ace-* gems in development
-gem "ace-core", path: "../ace-core"
+gem "ace-support-core", path: "../ace-support-core"
 gem "ace-test-support", path: "../ace-test-support", group: [:development, :test]

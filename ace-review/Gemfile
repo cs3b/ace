@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 # Use local versions of ace gems during development
-gem "ace-core", path: "../ace-core" if File.exist?("../ace-core")
+gem "ace-support-core", path: "../ace-support-core" if File.exist?("../ace-support-core")
 gem "ace-context", path: "../ace-context" if File.exist?("../ace-context")
 gem "ace-git-diff", path: "../ace-git-diff" if File.exist?("../ace-git-diff")
 gem "ace-nav", path: "../ace-nav" if File.exist?("../ace-nav")

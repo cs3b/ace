@@ -8,14 +8,14 @@ require "pathname"
 lib_path = File.expand_path("../lib", __dir__)
 $LOAD_PATH.unshift(lib_path) if File.directory?(lib_path)
 
-# Add ace-core lib if in development mode
-ace_core_lib = File.expand_path("../../ace-core/lib", __dir__)
-$LOAD_PATH.unshift(ace_core_lib) if File.directory?(ace_core_lib)
+# Add ace-support-core lib if in development mode
+ace_support_core_lib = File.expand_path("../../ace-support-core/lib", __dir__)
+$LOAD_PATH.unshift(ace_support_core_lib) if File.directory?(ace_support_core_lib)
 
 require "ace/llm"
 require "ace/llm/molecules/client_registry"
 
-# Load .env files from .ace cascade (if ace-core is available)
+# Load .env files from .ace cascade (if ace-support-core is available)
 Ace::LLM::Atoms::EnvReader.load_env_cascade
 
 module Ace
