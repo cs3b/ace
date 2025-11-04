@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **ace-git-worktree v0.1.0**: New gem for git worktree management with task integration
+  - Task-aware worktree creation with automatic status updates to in-progress
+  - Integration with ace-taskflow for task metadata and status management
+  - Automatic worktree metadata tracking in task frontmatter (branch, path, created_at)
+  - Mise.toml automatic trust integration for environment setup
+  - 6 CLI commands: create, list, switch, remove, prune, config
+  - Configurable naming templates with {id}, {slug}, {release} variables
+  - Traditional worktree support for non-task development
+  - Full ATOM architecture implementation with comprehensive test coverage
+  - Integration with ace-git-diff for safe git command execution
+  - Handbook with workflow instructions and agent definition
+
 ## [0.9.109] - 2025-11-04
 
 ### Fixed

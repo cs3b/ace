@@ -14,7 +14,7 @@ module Ace
           # @param branch [String] Branch name to create
           # @param options [Hash] Additional options
           # @return [Hash] Result with :success, :path, :branch, :error
-          def self.create(path:, branch:, options = {})
+          def self.create(path:, branch:, **options)
             # Validate inputs
             return error_result("Path cannot be empty") if path.nil? || path.empty?
             return error_result("Branch cannot be empty") if branch.nil? || branch.empty?
@@ -91,7 +91,7 @@ module Ace
           # @param path [String] Worktree path to remove
           # @param options [Hash] Options (force: true to force removal)
           # @return [Hash] Result with :success, :output, :error
-          def self.remove(path:, options = {})
+          def self.remove(path:, **options)
             return error_result("Path cannot be empty") if path.nil? || path.empty?
 
             git_args = ["worktree", "remove", path]

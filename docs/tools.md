@@ -16,6 +16,7 @@ update:
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged` |
+| **ace-git-worktree** | Git worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree list` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
@@ -49,6 +50,13 @@ ace-lint "**/*.md" --type markdown      # Lint all markdown files
 # Git commits
 ace-git-commit                          # Generate commit for all changes
 ace-git-commit --staged                 # Commit only staged files
+
+# Git worktree management
+ace-git-worktree create --task 081      # Create task-aware worktree
+ace-git-worktree create feature-branch  # Traditional worktree
+ace-git-worktree list --show-tasks      # List all worktrees with tasks
+ace-git-worktree switch 081             # Navigate to worktree by task ID
+ace-git-worktree remove 081             # Remove worktree
 
 # Search
 ace-search "TODO"                       # Auto-detect: search content
