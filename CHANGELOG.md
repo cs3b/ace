@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **ace-git-worktree v0.1.8**: Fix remove command inconsistency and add fallback for completed tasks
+  - Fix critical bug where remove --dry-run worked but actual execution failed
+  - Add fallback logic to remove worktrees even when task metadata not found
+  - Implement consistent task validation between dry-run and actual execution
+  - Enable cleanup of worktrees for tasks marked as done in ace-taskflow
 - **ace-git-worktree v0.1.7**: Major worktree detection and parsing improvements
   - Fix critical worktree detection issue - now detects all 7 existing worktrees
   - Update porcelain format parsing to handle structured git worktree output
