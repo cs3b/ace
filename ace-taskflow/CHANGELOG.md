@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2025-11-04
+
+### Fixed
+
+- **Releases Preset Type Dispatch**: Fixed `releases_command.rb` to correctly pass `:releases` type parameter to `ListPresetManager.apply_preset` method (3 occurrences at lines 64, 70, 251)
+  - Without this fix, release-specific presets (e.g., `type: "releases"`) would fail to load, falling back to `:tasks` namespace and returning "preset not found" error
+  - Affected commands: `ace-taskflow releases <preset>`, `ace-taskflow releases --stats`
+  - Identified by GPT-5 code review (review-20251104-005003)
+
 ## [0.18.1] - 2025-11-04
 
 ### Fixed

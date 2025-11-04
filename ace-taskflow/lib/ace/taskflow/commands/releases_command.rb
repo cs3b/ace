@@ -61,13 +61,13 @@ module Ace
           # Handle filter-clear: if set, don't pass old-style filters to preset
           if additional_filters[:filter_clear]
             # Apply preset but ignore its filters
-            preset_config = @preset_manager.apply_preset(preset_name, {})
+            preset_config = @preset_manager.apply_preset(preset_name, {}, :releases)
             return 1 unless preset_config
             # Clear the preset filters but keep release, sort, glob, display
             preset_config[:filters] = {}
           else
             # Apply preset with additional filters (normal flow)
-            preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+            preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :releases)
             return 1 unless preset_config
           end
 
@@ -248,7 +248,7 @@ module Ace
         end
 
         def show_statistics_for_preset(preset_name)
-          preset_config = @preset_manager.apply_preset(preset_name)
+          preset_config = @preset_manager.apply_preset(preset_name, {}, :releases)
           return unless preset_config
 
           puts "Release Statistics for '#{preset_name}' preset:"
