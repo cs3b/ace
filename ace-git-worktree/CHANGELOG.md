@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-11-04
+
+### Fixed
+- **Binstub**: Fix hardcoded path from `.ace-wt/task.089-zai/ace-git-worktree/` to `ace-git-worktree/`
+- **VERSION**: Eliminate duplicate VERSION constant warnings by loading from correct gem location
+- **Open3**: Add fallback for `Open3::CommandTimeout` constant for Ruby installations where it's not available
+- **Configuration**: Improve template validation to be template-specific rather than overly strict
+- **Configuration**: Add YAML fallback loading when `ace-support-core` is not available
+
+### Changed
+- **Template Validation**: Directory format requires `{task_id}`, branch format requires `{id, slug}`, commit format requires `{release, task_id, slug}`
+- **Configuration Loading**: Now loads from `.ace/git/worktree.yml` even when ace-support-core gem is missing
+
 ## [0.1.5] - 2025-11-04
 
 ### Fixed
