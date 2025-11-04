@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-11-04
+
+### Fixed
+- **Documentation**: Remove duplicate changelog entry for version [0.9.109] in project CHANGELOG.md
+- **Documentation**: Remove duplicated retrospective template content from task 0891 retro document
+- Clean up placeholder template sections that were accidentally included in documentation
+- Improve professional documentation quality by eliminating redundancies
+
+### Added
+- Comprehensive review documentation including GPT-5 codex review and Google Pro review reports
+- Complete documentation of all review feedback implementations and resolutions
+- Enhanced project documentation with detailed review metadata and analysis
+
+### Documentation
+- Verified README.md version flag documentation is correct
+- Clean changelog without duplicate entries for better maintainability
+- Professional documentation standards meeting Google Pro review recommendations
+
 ## [0.1.4] - 2025-11-04
 
 ### Fixed
