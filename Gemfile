@@ -2,7 +2,6 @@ source 'https://rubygems.org'
 
 # Local workspace gems - flat in root (ace-* prefix)
 gem 'ace-context', path: 'ace-context'
-gem 'ace-core', path: 'ace-core'
 gem 'ace-docs', path: 'ace-docs'
 gem 'ace-git-commit', path: 'ace-git-commit'
 gem 'ace-git-diff', path: 'ace-git-diff'
