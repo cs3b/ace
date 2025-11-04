@@ -218,7 +218,7 @@ ace-git-worktree follows the ATOM architecture pattern:
 
 ## Dependencies
 
-- **ace-core** (~> 0.9.0) - Configuration cascade management
+- **ace-support-core** (~> 0.9.0) - Configuration cascade management
 - **ace-git-diff** (~> 0.1.0) - Safe git command execution
 - **ace-taskflow** (~> 0.9.0) - Task metadata and status management
 
@@ -260,7 +260,7 @@ ace-git-worktree integrates seamlessly with other ACE tools:
 - **ace-taskflow**: Task metadata fetching and status updates
 - **ace-git-commit**: Consistent commit message generation
 - **ace-git-diff**: Safe git command execution
-- **ace-core**: Configuration cascade management
+- **ace-support-core**: Configuration cascade management
 
 ## Examples
 

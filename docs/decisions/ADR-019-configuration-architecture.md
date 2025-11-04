@@ -18,17 +18,17 @@ This led to:
 - Configuration bugs across gems
 - Difficulty maintaining configs
 
-ace-core provided a solution with its config cascade system, but not all gems adopted it correctly.
+ace-support-core (renamed from ace-core) provided a solution with its config cascade system, but not all gems adopted it correctly.
 
 ## Decision
 
-All ace-* gems **must** use ace-core's configuration cascade with standardized patterns.
+All ace-* gems **must** use ace-support-core's configuration cascade with standardized patterns.
 
 ### Dependency Requirement
 
 ```ruby
 # ace-gem.gemspec
-spec.add_dependency "ace-core", "~> 0.9"
+spec.add_dependency "ace-support-core", "~> 0.9"
 ```
 
 ### Configuration Locations
@@ -165,7 +165,7 @@ kramdown = Ace::Core.config.get('ace', 'lint', 'kramdown')
 
 ### Negative
 
-- **ace-core Dependency**: All gems depend on ace-core
+- **ace-support-core Dependency**: All gems depend on ace-support-core
 - **Learning Curve**: Must understand cascade system
 - **Migration Effort**: Existing custom loaders need removal
 
