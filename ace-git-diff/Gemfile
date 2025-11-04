@@ -1,15 +1,5 @@
 # frozen_string_literal: true
 
 source "https://rubygems.org"
-
-# Specify your gem's dependencies in ace-git-diff.gemspec
 gemspec
-
-# Development dependencies (local path for mono-repo development)
-gem "ace-support-core", path: "../ace-support-core"
-gem "ace-test-support", path: "../ace-test-support"
-
-# Testing and development tools
-gem "rake", "~> 13.0"
-gem "minitest", "~> 5.0"
-gem "minitest-reporters", "~> 1.6"
+eval_gemfile(File.expand_path("../Gemfile", __dir__))
