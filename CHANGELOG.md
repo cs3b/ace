@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.108] - 2025-11-04
+
+### Fixed
+- **ace-taskflow v0.18.3**: Fixed missing task header statistics
+  - Tasks command now displays full three-line header with release info, idea stats, and task counts
+  - Fixed root_path initialization in StatsFormatter and TasksCommand
+  - Pre-existing bug (not from unified filter PR)
+
+## [0.9.107] - 2025-11-04
+
+### Fixed
+- **ace-taskflow v0.18.2**: Critical bug fix for releases preset type dispatch
+  - Fixed missing `:releases` type parameter in `releases_command.rb` (3 locations)
+  - Release-specific presets now correctly resolve instead of falling back to `:tasks` namespace
+  - Identified by GPT-5 code review
+
+## [0.9.106] - 2025-11-04
+
+### Fixed
+- **ace-taskflow v0.18.1**: Bug fixes from code review feedback
+  - Fixed return value consistency in releases command (returns error code 1 instead of nil on preset failure)
+  - Fixed error message whitespace handling for legacy flags (properly strips spaces after commas in migration suggestions)
+
+## [0.9.105] - 2025-11-04
+
+### Added
+- **ace-taskflow v0.18.0 - Unified Filter System**: New `--filter key:value` syntax replaces legacy filtering flags across tasks, ideas, and releases commands
+  - FilterParser Atom: Parses filter syntax with support for OR values (`key:value1|value2`), negation (`key:!value`), and array matching
+  - FilterApplier Molecule: Applies filter specifications with AND logic across filters and OR logic within filters
+  - Filter-Clear Flag: `--filter-clear` option to override preset filters while keeping release/scope/sort configuration
+  - Universal Field Filtering: Filter by any frontmatter field including custom fields (e.g., `--filter team:backend`, `--filter sprint:12`)
+  - 52 new tests (23 for FilterParser, 29 for FilterApplier) with 100% pass rate
+
+### Changed
+- **ace-taskflow v0.18.0 - Breaking Changes**: Clean break approach with helpful error messages
+  - Removed `--status` and `--priority` flags from tasks/ideas commands - use `--filter status:value` or `--filter priority:value` instead
+  - Removed `--active`, `--done`, and `--backlog` flags from releases command - use `--filter status:active|done|backlog` instead
+  - Updated all command help text with new filter syntax, operators, and comprehensive examples
+  - Enhanced TaskFilter molecule to integrate with FilterApplier for universal filtering
+
+### Technical
+- Comprehensive usage guide with 30+ examples in `ux/usage.md`
+- Error messages show exact migration syntax when legacy flags are used
+- Fixed test suite to use new filter syntax throughout
+
 ## [0.9.104] - 2025-11-02
 
 ### Added

@@ -1,20 +1,22 @@
 ---
 id: v.0.9.0+task.091
-status: pending
+status: done
 priority: high
 estimate: 2 weeks
 dependencies: []
 sort: 999
-needs_review: true
+needs_review: false
 ---
 
 # Replace legacy filter flags with unified --filter key:value syntax
 
-## Review Questions (Pending Human Input)
+## Review Questions (RESOLVED)
 
 ### [HIGH] Critical Implementation Questions
 
-- [ ] **Syntax Consistency Across All Commands**: The proposed `--filter key:value` uses colon (`:`) as separator, but the `update` subcommand uses `--field key=value` with equals (`=`). Should we unify ALL ace-taskflow parameter syntax to use colons consistently?
+- [x] **Syntax Consistency Across All Commands**: DECISION - Option A selected
+  - **Decision**: Use `:` for read operations (filtering), `=` for write operations (updates)
+  - **Rationale**: Semantic distinction makes the API clearer - colon for matching/filtering, equals for setting/updating
   - **Current inconsistency**:
     - Filtering (proposed): `--filter status:pending`
     - Update command (current): `--field status=pending`
@@ -31,55 +33,47 @@ needs_review: true
   - **Why needs human input**: Critical API consistency decision affecting user mental model
   - **Scope impact**: If changing update command, may require separate implementation task
 
-- [ ] **Task 093 Impact on File Discovery**: Task 093 recently changed the file naming from `task.{id}.s.md` to `{id}-{slug}.s.md`. Does the current TaskManager already handle this new pattern correctly, or do we need to update file discovery logic as part of this task?
-  - **Research conducted**: Read task 093 completion notes; checked current file patterns in .ace-taskflow/
-  - **Similar implementations**: Task 093 implementation already complete
-  - **Suggested default**: Assume TaskManager already updated (task 093 was completed)
-  - **Why needs human input**: Verify no filtering code depends on old filename pattern
+- [x] **Task 093 Impact on File Discovery**: DECISION - Verify TaskManager compatibility
+  - **Decision**: Yes, verify TaskManager handles new file naming (brief testing shows it's working)
+  - **Action**: Test TaskManager with task 093 file patterns before proceeding with implementation
+  - **Expected**: TaskManager already updated as part of task 093 completion
 
-- [ ] **Backward Compatibility Strategy**: Should we maintain temporary backward compatibility with legacy flags (`--status`, `--priority`) with deprecation warnings, or do a clean break?
-  - **Research conducted**: Checked CHANGELOG for versioning; we're at v0.9.0 (pre-release)
-  - **Industry practice**: Pre-release versions commonly do clean breaks
-  - **Suggested default**: Clean break with helpful error messages (as specified in task)
-  - **Why needs human input**: Confirm no external scripts/tools depend on old syntax
+- [x] **Backward Compatibility Strategy**: DECISION - Clean break
+  - **Decision**: Clean break with helpful error messages directing users to new syntax
+  - **Rationale**: We're at v0.9.0 (pre-release), breaking changes are acceptable
+  - **Implementation**: Show clear error messages like "Error: --status flag no longer supported. Use: --filter status:value"
+  - **No deprecation period**: Remove flags entirely, rely on error messages for migration
 
-- [ ] **Filter-Clear Scope**: The `--filter-clear` flag should "bypass preset filters" but keep release/scope. Should it also keep the sort configuration from presets?
-  - **Research conducted**: Reviewed ListPresetManager structure - presets have `:filters`, `:release`, `:sort`, `:glob`, `:display`
-  - **Current task spec**: Says "removes only filters from preset, keeps release/scope/sort"
-  - **Suggested default**: Keep sort (as spec states)
-  - **Why needs human input**: Confirm "scope" means `:glob` and `:display` should also be kept
+- [x] **Filter-Clear Scope**: DECISION - Keep sort configuration
+  - **Decision**: Yes, keep sort configuration when using --filter-clear
+  - **Behavior**: `--filter-clear` removes only `:filters` from preset, keeps `:release`, `:sort`, `:glob`, `:display`
+  - **Rationale**: User can always override sort explicitly with `--sort` flag if needed
 
-### [MEDIUM] Enhancement Questions
+### [MEDIUM] Enhancement Questions - Decisions Applied
 
-- [ ] **Array Filter Syntax Clarity**: For array matching, should we support both positive and negative matching?
+- [x] **Array Filter Syntax Clarity**: DECISION - Yes, support array negation
+  - **Decision**: Support both positive and negative matching for arrays for consistency
   - **Example**: `--filter dependencies:!v.0.9.0+task.081` (does NOT depend on task 081)
-  - **Research conducted**: Task spec shows negation for simple values, doesn't explicitly cover array negation
-  - **Suggested default**: Yes, support array negation for consistency
-  - **Why needs human input**: Clarify if this adds complexity without benefit
+  - **Implementation**: Apply negation logic to array matching same as simple values
 
-- [ ] **Error Message Quality**: For removed flags, should error messages show the equivalent new syntax for that specific use case?
+- [x] **Error Message Quality**: DECISION - Show contextual conversion
+  - **Decision**: Show exact conversion in error messages for better UX
   - **Example**: User runs `ace-taskflow tasks --status pending,in-progress`
-  - **Current approach**: "Error: --status flag no longer supported. Use: --filter status:value"
-  - **Enhanced approach**: "Error: --status flag no longer supported. Use: --filter status:pending|in-progress"
-  - **Research conducted**: Better UX to show exact conversion
-  - **Suggested default**: Show contextual conversion in error message
-  - **Why needs human input**: Confirm worth the extra implementation effort
+  - **Error**: "Error: --status flag no longer supported. Use: --filter status:pending|in-progress"
+  - **Benefit**: Users can immediately copy-paste the correct syntax
 
-- [ ] **Preset Filter Structure Unchanged**: Task says "presets continue using internal filter structure". Should preset YAML files be able to use the new `--filter` syntax as a convenience, with automatic conversion?
-  - **Research conducted**: Current presets use hash structure like `filters: {status: [pending, in-progress]}`
-  - **Current task scope**: Says presets use internal structure (no YAML syntax change)
-  - **Suggested default**: Keep preset YAML unchanged (internal structure only)
-  - **Why needs human input**: Confirm this is acceptable or if preset syntax should also evolve
+- [x] **Preset Filter Structure Unchanged**: DECISION - Keep internal structure
+  - **Decision**: Preset YAML files continue using internal hash structure
+  - **Structure**: `filters: {status: [pending, in-progress]}`
+  - **Rationale**: Presets are configuration files, not CLI syntax; internal structure is clearer for YAML
 
-### [LOW] Documentation and Testing Questions
+### [LOW] Documentation and Testing Questions - Decisions Applied
 
-- [ ] **Migration Guide Location**: Should the migration guide be:
-  - Option A: In task UX folder `.ace-taskflow/v.0.9.0/tasks/091-.../ux/usage.md`
-  - Option B: In ace-taskflow README.md with dedicated section
-  - Option C: Both (UX folder + README section)
-  - **Research conducted**: Checked existing docs structure
-  - **Suggested default**: Option C (comprehensive in UX, summary in README)
-  - **Why needs human input**: Documentation strategy preference
+- [x] **Migration Guide Location**: DECISION - Option C (Both locations)
+  - **Decision**: Comprehensive guide in task UX folder, summary in README
+  - **UX folder**: `.ace-taskflow/v.0.9.0/tasks/091-.../ux/usage.md` (detailed guide with examples)
+  - **README**: Add migration section referencing UX guide
+  - **Rationale**: Task UX for comprehensive docs, README for quick reference
 
 ## Behavioral Specification
 
