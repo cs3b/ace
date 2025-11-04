@@ -238,6 +238,61 @@ module Ace
           false
         end
 
+        # Update arbitrary task fields
+        # @param task_path [String] Path to task file
+        # @param field_updates [Hash] Hash of field paths to values
+        # @return [Hash] Result with :success, :message, :updated_fields, :path
+        def update_task_field(task_path, field_updates)
+          return { success: false, message: "Task file not found: #{task_path}" } unless File.exist?(task_path)
+
+          # Read current content
+          content = File.read(task_path)
+
+          # Parse document using ace-support-markdown
+          document = Ace::Support::Markdown::Models::MarkdownDocument.parse(content, file_path: task_path)
+
+          # Apply field updates using FrontmatterEditor
+          updated_doc = Ace::Support::Markdown::Molecules::FrontmatterEditor.update(document, field_updates)
+
+          # Get updated content
+          updated_content = updated_doc.to_markdown
+
+          # Use SafeFileWriter for atomic write with backup
+          result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+            task_path,
+            updated_content,
+            backup: true,
+            validate: false
+          )
+
+          if result[:success]
+            {
+              success: true,
+              message: "Task updated successfully",
+              updated_fields: field_updates.keys,
+              path: task_path
+            }
+          else
+            {
+              success: false,
+              message: "Failed to write task file: #{result[:error] || 'Unknown error'}",
+              path: task_path
+            }
+          end
+        rescue Ace::Support::Markdown::Models::MarkdownDocument::ValidationError => e
+          {
+            success: false,
+            message: "Invalid document format: #{e.message}",
+            path: task_path
+          }
+        rescue StandardError => e
+          {
+            success: false,
+            message: "Unexpected error: #{e.message}",
+            path: task_path
+          }
+        end
+
         # Parse task metadata from content string (unit testable)
         # @param content [String] Task file content
         # @return [Hash] Parsed metadata
