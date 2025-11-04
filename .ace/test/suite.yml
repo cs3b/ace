@@ -9,8 +9,8 @@ test_suite:
       group: foundation
       priority: 2
 
-    - name: ace-core
-      path: ace-core
+    - name: ace-support-core
+      path: ace-support-core
       group: foundation
       priority: 1
 

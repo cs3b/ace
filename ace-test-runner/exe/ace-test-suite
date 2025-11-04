@@ -79,8 +79,8 @@ unless config
     test_suite:
       max_parallel: 10
       packages:
-        - name: ace-core
-          path: ./ace-core
+        - name: ace-support-core
+          path: ./ace-support-core
           group: foundation
           priority: 1
         - name: ace-test-runner
