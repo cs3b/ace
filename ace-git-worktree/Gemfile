@@ -7,10 +7,11 @@ gemspec
 
 # Development dependencies managed in root Gemfile for ace-meta consistency
 # These are local development references only
-gem "ace-core", path: "../ace-core"
 gem "ace-git-diff", path: "../ace-git-diff"
 gem "ace-taskflow", path: "../ace-taskflow"
 gem "ace-support-core", path: "../ace-support-core"
+gem "ace-support-markdown", path: "../ace-support-markdown"
+gem "ace-support-mac-clipboard", path: "../ace-support-mac-clipboard"
 gem "ace-test-support", path: "../ace-test-support"
 
 group :development, :test do
