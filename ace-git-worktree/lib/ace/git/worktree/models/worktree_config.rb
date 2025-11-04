@@ -28,11 +28,11 @@ module Ace
             "root_path" => ".ace-wt",
             "mise_trust_auto" => true,
             "task" => {
-              "directory_format" => "task.{id}",
+              "directory_format" => "task.{task_id}",
               "branch_format" => "{id}-{slug}",
               "auto_mark_in_progress" => true,
               "auto_commit_task" => true,
-              "commit_message_format" => "chore(task-{id}): mark as in-progress, creating worktree",
+              "commit_message_format" => "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}",
               "add_worktree_metadata" => true
             },
             "cleanup" => {
@@ -192,11 +192,16 @@ module Ace
             end
 
             # Validate template variables
-            required_vars = %w[id task_id release slug]
-            [directory_format, branch_format, commit_message_format].each do |template|
-              missing_vars = required_vars.reject { |var| template.include?("{#{var}}") }
+            templates_with_requirements = {
+              directory_format => [%w[task_id], directory_format],
+              branch_format => [%w[id slug], branch_format],
+              commit_message_format => [%w[release task_id slug], commit_message_format]
+            }
+
+            templates_with_requirements.each do |template_key, (required_vars, template_value)|
+              missing_vars = required_vars.reject { |var| template_value.include?("{#{var}}") }
               if missing_vars.any?
-                errors << "#{template} should include common template variables: #{missing_vars.join(', ')}"
+                errors << "#{template_value} should include common template variables: #{missing_vars.join(', ')}"
               end
             end
 
