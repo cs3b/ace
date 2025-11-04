@@ -144,16 +144,72 @@ module Ace
 
           # Parse multiple lines from git worktree list output
           #
-          # @param output [String] Full output from `git worktree list`
+          # @param output [String] Full output from `git worktree list --porcelain`
           # @return [Array<WorktreeInfo>] Array of parsed worktree info
           #
           # @example
-          #   worktrees = WorktreeInfo.from_git_output_list(`git worktree list`)
+          #   worktrees = WorktreeInfo.from_git_output_list(`git worktree list --porcelain`)
           def self.from_git_output_list(output)
             return [] if output.nil? || output.empty?
 
             lines = output.strip.split("\n")
-            lines.map { |line| from_git_output(line) }.compact
+            worktrees = []
+
+            # Parse porcelain format: 3 lines per worktree
+            i = 0
+            while i < lines.length
+              line = lines[i].strip
+
+              if line.start_with?("worktree ")
+                # Parse worktree block
+                path = line.sub(/^worktree\s+/, "")
+
+                # Look ahead for HEAD and branch lines
+                head_line = i + 1 < lines.length ? lines[i + 1].strip : ""
+                branch_line = i + 2 < lines.length ? lines[i + 2].strip : ""
+
+                commit = nil
+                branch = nil
+                detached = false
+                bare = false
+
+                # Parse HEAD line
+                if head_line.start_with?("HEAD ")
+                  commit = head_line.sub(/^HEAD\s+/, "")
+                end
+
+                # Parse branch line
+                if branch_line.start_with?("branch ")
+                  branch_ref = branch_line.sub(/^branch\s+/, "")
+                  # Extract branch name from refs/heads/branch-name
+                  if branch_ref.start_with?("refs/heads/")
+                    branch = branch_ref.sub(/^refs\/heads\//, "")
+                  end
+                else
+                  # No branch line means detached HEAD
+                  detached = true
+                end
+
+                # Try to extract task ID from path or branch
+                task_id = extract_task_id(path, branch)
+
+                worktrees << new(
+                  path: path,
+                  branch: branch,
+                  commit: commit,
+                  task_id: task_id,
+                  bare: bare,
+                  detached: detached
+                )
+
+                i += 3  # Skip the next 2 lines (HEAD and branch)
+              else
+                # Skip this line (might be empty or malformed)
+                i += 1
+              end
+            end
+
+            worktrees
           end
 
           # Find worktree info by task ID
