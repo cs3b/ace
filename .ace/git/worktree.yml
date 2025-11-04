@@ -26,7 +26,7 @@ git:
       #   "task.{id}"        -> task.081
       #   "{id}"             -> 081
       #   "{release}/{id}"   -> v.0.9.0/081
-      directory_format: "{release}/{task_id}"
+      directory_format: "task./{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
@@ -34,7 +34,7 @@ git:
       #   "{id}-{slug}"       -> 081-fix-authentication-bug
       #   "task-{id}-{slug}"  -> task-081-fix-authentication-bug
       #   "{release}-{id}"    -> v.0.9.0-081
-      branch_format: "{release}-{id}-{slug}"
+      branch_format: "{id}-{slug}"
 
       # Automatically mark tasks as in-progress when creating worktrees
       # If true, updates task status to "in-progress" via ace-taskflow
