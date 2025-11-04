@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.106] - 2025-11-04
+
+### Fixed
+- **ace-taskflow v0.18.1**: Bug fixes from code review feedback
+  - Fixed return value consistency in releases command (returns error code 1 instead of nil on preset failure)
+  - Fixed error message whitespace handling for legacy flags (properly strips spaces after commas in migration suggestions)
+
 ## [0.9.105] - 2025-11-04
 
 ### Added

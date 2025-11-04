@@ -83,7 +83,7 @@ module Ace
               suggested_value = args[i + 1] if i + 1 < args.length
               suggested_filter = if suggested_value
                 # Convert comma-separated to pipe-separated
-                converted = suggested_value.gsub(',', '|')
+                converted = suggested_value.gsub(/,\s*/, '|')
                 "--filter status:#{converted}"
               else
                 "--filter status:value"
@@ -92,7 +92,7 @@ module Ace
             when "--priority"
               suggested_value = args[i + 1] if i + 1 < args.length
               suggested_filter = if suggested_value
-                converted = suggested_value.gsub(',', '|')
+                converted = suggested_value.gsub(/,\s*/, '|')
                 "--filter priority:#{converted}"
               else
                 "--filter priority:value"
