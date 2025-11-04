@@ -19,7 +19,7 @@ This document provides navigation guidance for the ACE codebase, highlighting wh
 
 ```
 ace-*/          # Ruby gems following ATOM architecture (15+ production gems)
-                # ace-core, ace-context, ace-taskflow, ace-nav, ace-llm,
+                # ace-support-core, ace-context, ace-taskflow, ace-nav, ace-llm,
                 # ace-git-commit, ace-search, ace-review, ace-docs, ace-lint,
                 # ace-test-runner, ace-test-support, ace-llm-providers-cli,
                 # ace-support-mac-clipboard
