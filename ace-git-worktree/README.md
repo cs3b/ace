@@ -413,6 +413,27 @@ cd ace-meta/ace-git-worktree
 bundle install
 ```
 
+### Mono-Repo Development (Recommended)
+
+For local development in the ACE mono-repo, you can run ace-git-worktree directly without installing the gem:
+
+```bash
+# Run from mono-repo root using binstub wrapper
+./bin/ace-git-worktree --help
+./bin/ace-git-worktree create --task 081
+./bin/ace-git-worktree list --show-tasks
+
+# All commands work the same as the installed gem
+# Uses root Gemfile for consistent development environment
+# No need for local gem installation during development
+```
+
+**Benefits of mono-repo development:**
+- **No Installation Required**: Run commands directly without gem installation
+- **Consistent Environment**: Uses mono-repo root Gemfile for dependency management
+- **Faster Development**: Skip gem build/install cycle during development
+- **Workspace Awareness**: Proper git worktree context handling
+
 ### Testing
 
 ```bash
