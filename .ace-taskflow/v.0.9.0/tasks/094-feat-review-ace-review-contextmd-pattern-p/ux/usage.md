@@ -2,14 +2,15 @@
 
 ## Overview
 
-The enhanced ace-review provides transparent, reproducible review sessions by adopting ace-docs' proven context.md pattern. Every review session now creates a context.md file that captures the complete configuration, enabling exact session reproduction. Additionally, a new PR workflow guides users through generating pull request descriptions.
+The enhanced ace-review provides transparent, reproducible review sessions by adopting ace-docs' proven context.md pattern. Every review session now creates a context.md file that captures the complete configuration, enabling exact session reproduction.
 
 ## Key Features
 
 - **Context.md Creation**: Automatic generation of context.md with YAML frontmatter for every review session
 - **Full ace-context Integration**: Leverages ace-context for all content loading (files, presets, diffs, commands)
 - **Session Reproducibility**: Re-run any review by loading the saved context.md file
-- **PR Description Generation**: New preset and workflow for creating GitHub pull request descriptions
+- **Location-Based Naming**: Cache folders use clean filenames, release folders use .tmp extensions
+- **Fail-Fast Error Handling**: Clear error messages when ace-context is unavailable or fails
 - **Transparent Configuration**: All context sources visible in a single human-readable file
 
 ## Command Structure
@@ -30,21 +31,6 @@ ace-review --preset ruby-atom --subject 'recent-commits: 5'
 ace-review --preset code --subject staged --auto-execute
 ```
 
-### PR Description Generation
-
-```bash
-# Generate PR description for current branch
-ace-review --preset pr-description --auto-execute
-
-# Generate with custom diff range
-ace-review --preset pr-description --subject 'diff: {ranges: ["develop...HEAD"]}' --auto-execute
-
-# Generate with additional context
-ace-review --preset pr-description \
-  --subject 'diff: {ranges: ["origin/main...HEAD"]}' \
-  --context 'presets: [project, architecture]' \
-  --auto-execute
-```
 
 ## Usage Scenarios
 
@@ -57,52 +43,38 @@ ace-review --preset pr-description \
 ace-review --preset pr --auto-execute
 
 # Output shows session location:
-# Review saved to .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/review-report.md
+# Review saved to .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/review-report-gpro.md
 
 # Step 2: Reproduce the exact review later
-ace-context .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/context.md
+ace-context .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/context.md.tmp
 
-# Step 3: Share context.md with team for identical reviews
-cat .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/context.md
+# Step 3: Share context.md.tmp with team for identical reviews
+cat .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/context.md.tmp
 ```
 
-**Expected Output Structure**:
+**Expected Output Structure (Release Folder)**:
 ```
 .ace-taskflow/v.0.9.0/reviews/review-20251101-153000/
-├── context.md              # Complete session configuration
-├── prompt-system.md        # System prompt
-├── prompt-user.md          # Embedded content from ace-context
-├── subject.diff            # Extracted diffs
-├── review-report.md        # LLM-generated review
+├── context.md.tmp          # Complete session configuration
+├── prompt-system.md.tmp    # System prompt
+├── prompt-user.md.tmp      # Embedded content from ace-context
+├── subject.md.tmp          # Extracted diffs
+├── review-report-gpro.md   # LLM-generated review (model: gpro)
 └── metadata.yml            # Session metadata
 ```
 
-### Scenario 2: Creating a GitHub Pull Request
-
-**Goal**: Generate a PR description and create a pull request
-
-```bash
-# Step 1: Generate PR description
-ace-review --preset pr-description --auto-execute
-
-# Step 2: Extract the generated description
-review_dir=$(ls -d .ace-taskflow/v.0.9.0/reviews/review-* | tail -1)
-review_file="$review_dir/review-report.md"
-
-# Step 3: Extract title (first heading after frontmatter)
-title=$(grep -m1 "^# " "$review_file" | sed 's/^# //')
-
-# Step 4: Extract body (everything after title)
-body=$(sed '1,/^# /d' "$review_file")
-
-# Step 5: Create the PR
-gh pr create --title "$title" --body "$body"
-
-# Output: PR URL
-# https://github.com/user/repo/pull/123
+**Expected Output Structure (Cache Folder)**:
+```
+.cache/ace-review/review-20251101-153000/
+├── context.md              # Complete session configuration (no .tmp)
+├── prompt-system.md        # System prompt (no .tmp)
+├── prompt-user.md          # Embedded content from ace-context (no .tmp)
+├── subject.md              # Extracted diffs (no .tmp)
+├── review-report-gpro.md   # LLM-generated review (model: gpro)
+└── metadata.yml            # Session metadata
 ```
 
-### Scenario 3: Custom Context Loading
+### Scenario 2: Custom Context Loading
 
 **Goal**: Review with specific project documentation loaded
 
@@ -127,7 +99,7 @@ ace-review --preset security \
   --auto-execute
 ```
 
-### Scenario 4: Debugging a Failed Review
+### Scenario 3: Debugging a Failed Review
 
 **Goal**: Understand why a review session failed or produced unexpected results
 
@@ -135,17 +107,17 @@ ace-review --preset security \
 # Step 1: Locate the failed session
 session_dir=".ace-taskflow/v.0.9.0/reviews/review-20251101-160000"
 
-# Step 2: Examine the context.md to see what was loaded
-cat "$session_dir/context.md"
+# Step 2: Examine the context.md.tmp to see what was loaded
+cat "$session_dir/context.md.tmp"
 
 # Step 3: Check what ace-context actually embedded
-cat "$session_dir/prompt-user.md" | head -100
+cat "$session_dir/prompt-user.md.tmp" | head -100
 
 # Step 4: Verify the subject diff
-cat "$session_dir/subject.diff" | head -50
+cat "$session_dir/subject.md.tmp" | head -50
 
 # Step 5: Re-run with debugging
-ace-context "$session_dir/context.md" --debug
+ace-context "$session_dir/context.md.tmp" --debug
 ```
 
 ## Command Reference
@@ -154,13 +126,26 @@ ace-context "$session_dir/context.md" --debug
 
 Every review session creates these files:
 
+**In Release Folders** (e.g., `.ace-taskflow/v.0.9.0/reviews/`):
+
 | File | Purpose | Format |
 |------|---------|--------|
-| `context.md` | Session configuration with YAML frontmatter | Markdown with YAML frontmatter |
-| `prompt-system.md` | System prompt instructions | Markdown |
-| `prompt-user.md` | Embedded content from ace-context | XML-embedded markdown |
-| `subject.diff` | Git diff content (if applicable) | Unified diff format |
-| `review-report.md` | LLM-generated review output | Markdown with frontmatter |
+| `context.md.tmp` | Session configuration with YAML frontmatter | Markdown with YAML frontmatter |
+| `prompt-system.md.tmp` | System prompt instructions | Markdown |
+| `prompt-user.md.tmp` | Embedded content from ace-context | XML-embedded markdown |
+| `subject.md.tmp` | Git diff content (if applicable) | Unified diff format |
+| `review-report-{model}.md` | LLM-generated review output (model slug appended) | Markdown with frontmatter |
+| `metadata.yml` | Session metadata and statistics | YAML |
+
+**In Cache Folders** (e.g., `.cache/ace-review/`):
+
+| File | Purpose | Format |
+|------|---------|--------|
+| `context.md` | Session configuration (no .tmp extension) | Markdown with YAML frontmatter |
+| `prompt-system.md` | System prompt instructions (no .tmp) | Markdown |
+| `prompt-user.md` | Embedded content from ace-context (no .tmp) | XML-embedded markdown |
+| `subject.md` | Git diff content (no .tmp) | Unified diff format |
+| `review-report-{model}.md` | LLM-generated review output | Markdown with frontmatter |
 | `metadata.yml` | Session metadata and statistics | YAML |
 
 ### Context.md Structure
@@ -190,46 +175,23 @@ context:
 - All changes in current branch
 ```
 
-### PR Description Preset Configuration
-
-Location: `.ace/review/presets/pr-description.yml`
-
-```yaml
-composition:
-  base: "prompt://base/pr-description"
-  format: "prompt://format/pr-description"
-  focus:
-    - "prompt://focus/changes-summary"
-    - "prompt://focus/impact-analysis"
-  guidelines:
-    - "prompt://guidelines/pr-best-practices"
-
-subject:
-  diff:
-    ranges: ["origin/main...HEAD"]
-
-context:
-  presets: [project]
-
-options:
-  auto_execute: true
-  model: gpt-4  # Or your preferred model
-```
-
 ## Tips and Best Practices
 
-1. **Session Organization**: Review sessions are timestamped and stored in `.ace-taskflow/v.0.9.0/reviews/`. Clean old sessions periodically.
+1. **Session Organization**: Review sessions are timestamped and stored in `.ace-taskflow/v.0.9.0/reviews/` (release) or `.cache/ace-review/` (cache). Clean old sessions periodically.
 
-2. **Context Optimization**: Use specific presets rather than loading all project files to reduce token usage.
+2. **Location-Based Naming**: Release folders use .tmp extensions for session files, cache folders use clean names. This follows the ace-docs pattern consistently.
 
-3. **Reproducibility**: Share the context.md file with team members for consistent review perspective.
+3. **Context Optimization**: Use specific presets rather than loading all project files to reduce token usage.
 
-4. **PR Workflow**: Customize the pr-description preset to match your team's PR template requirements.
+4. **Reproducibility**: Share the context.md.tmp file with team members for consistent review perspective. They can load it with `ace-context path/to/context.md.tmp`.
 
-5. **Debugging**: If reviews fail, check:
+5. **Fail-Fast Philosophy**: If ace-context is unavailable or fails, ace-review will error immediately with clear guidance. This prevents silent degradation and ensures reviews are complete.
+
+6. **Debugging**: If reviews fail, check:
    - ace-context availability: `which ace-context`
    - Context preset exists: `ace-context --list`
    - Git range is valid: `git log origin/main...HEAD --oneline`
+   - Session files for error details: `cat .ace-taskflow/v.0.9.0/reviews/review-*/metadata.yml`
 
 ## Migration from Previous Versions
 
@@ -237,10 +199,12 @@ The CLI interface remains unchanged - existing commands work identically. The ke
 
 | Aspect | Before | After |
 |--------|--------|-------|
-| Context extraction | Internal ContextExtractor | Delegates to ace-context |
-| Session files | context.md.tmp | context.md with frontmatter |
-| Reproducibility | Not supported | Full reproduction via context.md |
-| PR creation | Manual process | Documented workflow with preset |
+| Context extraction | Internal ContextExtractor | Delegates to ace-context via ContextComposer |
+| Session files | prompt.md.tmp, context.md.tmp | context.md.tmp, prompt-system.md.tmp, prompt-user.md.tmp, subject.md.tmp |
+| File naming | Single .tmp pattern | Location-based: .tmp (release), clean (cache) |
+| Review output | review.md | review-report-{model-slug}.md |
+| Reproducibility | Not supported | Full reproduction via context.md.tmp |
+| Error handling | Fallback to empty | Fail-fast with clear error messages |
 
 ## Troubleshooting
 
@@ -250,6 +214,10 @@ The CLI interface remains unchanged - existing commands work identically. The ke
 gem install ace-context
 # Or add to Gemfile
 bundle add ace-context
+
+# Verify installation
+which ace-context
+ace-context --version
 ```
 
 **Context preset not loading**:
@@ -259,19 +227,17 @@ ace-context --list
 
 # Test preset loading
 ace-context project --output stdio
+
+# Debug preset loading
+ace-context project --debug
 ```
 
-**PR creation fails**:
-```bash
-# Ensure gh CLI is installed
-which gh || brew install gh
-
-# Authenticate with GitHub
-gh auth login
-
-# Verify current branch has upstream
-git push -u origin feature-branch
-```
+**Review fails with ace-context error**:
+ace-review now fails fast with clear error messages. Check:
+- ace-context is installed and in PATH
+- Preset exists: `ace-context --list | grep project`
+- YAML syntax in context.md.tmp is valid
+- Files referenced in context exist and are readable
 
 **Large diffs causing timeouts**:
 ```bash
@@ -281,11 +247,21 @@ ace-review --preset pr \
   --auto-execute
 ```
 
+**Location detection issues**:
+If files are created with wrong extensions (.tmp vs clean):
+- Release folders (.ace-taskflow/, project folders): Should have .tmp
+- Cache folders (.cache/): Should have clean names
+- Check session creation location in debug output
+
 ## Internal Implementation Notes
 
 The enhanced ace-review uses:
-- `Ace::Context.load_file_as_preset()` for loading context.md files
-- YAML frontmatter in context.md for configuration
-- ace-context's markdown-xml format for embedding
+- **ContextComposer** molecule for generating context.md files with YAML frontmatter
+- **ContextExtractor** delegates to ContextComposer for composition
+- `Ace::Context.load_file_as_preset()` for loading and embedding context
+- ace-context's markdown-xml format for content embedding
+- **Location-based naming**: Detects cache vs release folders, applies appropriate extensions
+- **Fail-fast error handling**: Errors immediately if ace-context unavailable or fails
 - Delegates all file reading, git operations, and command execution to ace-context
 - Preserves backward compatibility with existing CLI interface
+- **Review output naming**: Appends model slug to review-report (e.g., review-report-gpro.md)
