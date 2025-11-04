@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.107] - 2025-11-04
+
+### Fixed
+- **ace-taskflow v0.18.2**: Critical bug fix for releases preset type dispatch
+  - Fixed missing `:releases` type parameter in `releases_command.rb` (3 locations)
+  - Release-specific presets now correctly resolve instead of falling back to `:tasks` namespace
+  - Identified by GPT-5 code review
+
 ## [0.9.106] - 2025-11-04
 
 ### Fixed
