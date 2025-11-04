@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-11-04
+
+### Added
+
+- **Unified Filter System**: New `--filter key:value` syntax replaces legacy filtering flags across tasks, ideas, and releases commands
+- **FilterParser Atom**: Parses filter syntax with support for OR values (`key:value1|value2`), negation (`key:!value`), and array matching
+- **FilterApplier Molecule**: Applies filter specifications with AND logic across filters and OR logic within filters
+- **Filter-Clear Flag**: `--filter-clear` option to override preset filters while keeping release/scope/sort configuration
+- **Universal Field Filtering**: Filter by any frontmatter field including custom fields (e.g., `--filter team:backend`, `--filter sprint:12`)
+- **Comprehensive Test Coverage**: 52 new tests (23 for FilterParser, 29 for FilterApplier) with 100% pass rate
+
+### Changed
+
+- **BREAKING**: Removed `--status` flag from tasks/ideas commands - use `--filter status:value` instead
+- **BREAKING**: Removed `--priority` flag from tasks/ideas commands - use `--filter priority:value` instead
+- **BREAKING**: Removed `--active` flag from releases command - use `--filter status:active` instead
+- **BREAKING**: Removed `--done` flag from releases command - use `--filter status:done` instead
+- **BREAKING**: Removed `--backlog` flag from releases command - use `--filter status:backlog` instead
+- Updated all command help text with new filter syntax, operators, and examples
+- Enhanced TaskFilter molecule to integrate with FilterApplier for universal filtering
+
+### Technical
+
+- Helpful error messages show exact migration syntax when legacy flags are used
+- Clean break approach for backward compatibility (no deprecation period)
+- Comprehensive usage guide with 30+ examples in `ux/usage.md`
+- Fixed test suite to use new filter syntax
+
 ## [0.17.0] - 2025-11-02
 
 ### Added
