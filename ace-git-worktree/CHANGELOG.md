@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-11-04
+
+### Fixed
+- **Worktree Detection**: Fix critical issue where `ace-git-worktree list` showed "No worktrees found" despite existing worktrees
+- **Git Output Parsing**: Update porcelain format parsing to handle 3-line format per worktree (worktree/HEAD/branch lines)
+- **CommandExecutor Integration**: Fix timeout parameter mismatch causing git help output instead of worktree listing
+- **Module Path**: Correct require path from `ace/git/diff/atoms/command_executor` to `ace/git_diff/atoms/command_executor`
+- **YAML Loading**: Add missing `require "yaml"` to ConfigLoader classes
+
+### Added
+- **Full Worktree Support**: Now detects and displays all 7 existing worktrees (6 task-associated + 1 main)
+- **Task Association**: Proper task ID extraction from existing worktree paths (086, 089, 090, 091, 093, 097)
+- **Mixed Environment**: Support for both task-aware and traditional worktrees in unified view
+
+### Changed
+- **Porcelain Parsing**: Complete rewrite of `from_git_output_list()` to handle structured porcelain format
+- **Worktree Information**: Enhanced display showing Task, Branch, Path, and Status for all worktrees
+
 ## [0.1.6] - 2025-11-04
 
 ### Fixed
