@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.113] - 2025-11-04
+
+### Security
+- **ace-git-worktree v0.1.3**: Critical security fixes and comprehensive testing
+  - **CRITICAL**: Fix path traversal vulnerability in PathExpander atom
+  - **CRITICAL**: Fix command injection vulnerability in MiseTrustor and TaskFetcher
+  - Add comprehensive input validation for task IDs and file paths
+  - Implement command whitelisting and argument sanitization
+  - Add protection against symlink-based attacks with realpath resolution
+
+### Fixed
+- **ace-git-worktree**: Configuration standards compliance
+  - Update gemspec metadata from placeholder to correct author information
+  - Fix Gemfile to use eval_gemfile pattern following ACE standards
+  - Modernize Rakefile to use ace-test patterns
+  - Remove Gemfile.lock from gem directory
+
+### Added
+- **ace-git-worktree**: Comprehensive test coverage and user experience
+  - Complete test coverage for all CLI commands (6/6 commands)
+  - Security tests for path traversal and command injection prevention
+  - Integration tests for molecules and organisms
+  - Graceful error handling when ace-taskflow is unavailable
+  - Helpful error messages with installation guidance
+  - Troubleshooting section in README.md
+
 ## [0.9.112] - 2025-11-04
 
 ### Fixed
