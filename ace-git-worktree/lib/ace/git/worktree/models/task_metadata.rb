@@ -7,8 +7,8 @@ module Ace
         # Task metadata model
         #
         # Represents metadata about a task fetched from ace-taskflow,
-        including the task ID, title, status, and derived information
-        such as slugs for naming conventions.
+        # including the task ID, title, status, and derived information
+        # such as slugs for naming conventions.
         #
         # @example Create from ace-taskflow output
         #   metadata = TaskMetadata.from_ace_taskflow_output(yaml_string)
