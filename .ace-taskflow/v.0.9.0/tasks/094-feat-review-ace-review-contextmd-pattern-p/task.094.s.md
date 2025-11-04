@@ -2,53 +2,112 @@
 id: v.0.9.0+task.094
 status: pending
 priority: medium
-estimate: 6h
+estimate: 4h
 dependencies: []
-needs_review: true
+review_completed: 2025-11-04
+reviewed_by: User
 ---
 
-# Enhance ace-review with context.md pattern and PR workflow
+# Enhance ace-review with context.md pattern (ace-docs alignment)
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
-### [HIGH] Critical Implementation Questions
+### ✅ [RESOLVED] Session file naming convention
+- **Original Priority**: HIGH
+- **Decision**: Follow ace-docs pattern exactly with location-based extension rules
+  - **Cache folder** (.cache/): No .tmp extension (context.md, prompt-user.md, prompt-system.md)
+  - **Release folder** (.ace-taskflow/): Add .tmp extension (context.md.tmp, prompt-user.md.tmp, prompt-system.md.tmp)
+  - subject.md.tmp remains as separate file
+  - context.md.tmp → processed by ace-context → produces prompt-user.md.tmp
+  - No backward compatibility needed - all new reviews use new format immediately
+  - Report file naming unchanged
+- **Rationale**: Consistency with ace-docs pattern, clean implementation without dual-format maintenance burden
+- **Implementation Notes**:
+  - One implementation path only
+  - Existing scripts may need updates but clean break is acceptable
+  - Clear distinction between cache (development) and release (archived) artifacts
+- **Resolved by**: User
+- **Date**: 2025-11-04
 
-- [ ] **Session file naming convention**: Should we maintain backward compatibility with existing session files (prompt.md.tmp, context.md.tmp, subject.md.tmp) or migrate to new names (prompt-system.md, prompt-user.md, context.md)?
-  - **Research conducted**: Current implementation uses .tmp extensions for all temporary files
-  - **Similar implementations**: ace-docs saves context.md without .tmp extension
-  - **Suggested default**: Keep .tmp files for backward compatibility, ADD new files (context.md, prompt-system.md, prompt-user.md) alongside
-  - **Why needs human input**: Breaking change vs. duplication trade-off
+### ✅ [RESOLVED] ContextComposer location
+- **Original Priority**: HIGH
+- **Decision**: Create new ContextComposer molecule, delegate from ContextExtractor
+- **Rationale**: Single responsibility principle, clear naming, matches ace-docs pattern
+- **Implementation Notes**:
+  - New file: ace-review/lib/ace/review/molecules/context_composer.rb
+  - ContextExtractor becomes thin wrapper calling ContextComposer + ace-context
+  - Clear separation: Composer creates context.md, Extractor orchestrates
+- **Resolved by**: User
+- **Date**: 2025-11-04
 
-- [ ] **ContextComposer location**: Should we create a new ContextComposer molecule or modify existing ContextExtractor?
-  - **Research conducted**: ContextExtractor already uses ace-context but doesn't generate context.md
-  - **Code analysis**: ContextExtractor has 135 lines, moderately complex
-  - **Suggested default**: Create new ContextComposer, delegate from ContextExtractor
-  - **Why needs human input**: Architecture decision affecting maintainability
+### ✅ [RESOLVED] PR description format
+- **Original Priority**: HIGH
+- **Decision**: OUT OF SCOPE - Remove PR description generation from this task
+- **Rationale**:
+  - Presets are user configuration - we don't prescribe formats
+  - PR creation workflow should be separate `/ace:pr-create` command (out of ace-review scope)
+  - ace-review focuses on code review, not PR creation
+- **Implementation Notes**:
+  - Remove pr-description preset from deliverables
+  - Remove review-create-pr.wf.md from deliverables
+  - Remove PR-related prompts from scope
+  - Task scope reduced to context.md pattern adoption only
+- **Resolved by**: User
+- **Date**: 2025-11-04
 
-- [ ] **PR description format**: What specific structure should the pr-description preset generate for PR titles and bodies?
-  - **Research conducted**: No existing pr-description preset, only generic 'pr' preset
-  - **Industry standards**: Conventional commits, GitHub PR templates vary widely
-  - **Suggested default**: Title from first commit or branch name, body with sections: Summary, Changes, Testing, Related Issues
-  - **Why needs human input**: Team/project specific PR conventions
+### ✅ [RESOLVED] Error handling for ace-context failures
+- **Original Priority**: MEDIUM
+- **Decision**: Fail fast - ace-context is a prerequisite, error out immediately if unavailable or fails
+- **Rationale**: ace-context is required gem dependency (in gemspec), should always be available. Failures indicate configuration/installation issues that must be fixed.
+- **Implementation Notes**:
+  - Do not attempt fallback or degraded mode
+  - Return clear error message to user
+  - Include installation/configuration guidance in error
+- **Resolved by**: User
+- **Date**: 2025-11-04
 
-### [MEDIUM] Enhancement Questions
+### ✅ [RESOLVED] Review output filename
+- **Original Priority**: MEDIUM
+- **Decision**: Keep current format "review-report-{model-slug}.md" (e.g., review-report-gpro.md)
+- **Rationale**: Already implemented correctly in code, provides clear indication of which model generated the review
+- **Implementation Notes**:
+  - Update documentation to match this format
+  - No code changes needed
+  - Example: review-report-gpro.md, review-report-sonnet.md
+- **Resolved by**: User
+- **Date**: 2025-11-04
 
-- [ ] **Error handling for ace-context failures**: How should we handle scenarios where ace-context is unavailable or fails?
-  - **Research conducted**: Current ContextExtractor has try-catch with empty string fallback
-  - **Suggested default**: Warn user but continue with degraded functionality (no context embedding)
-  - **Why needs human input**: User experience vs. fail-fast philosophy
+### ✅ [RESOLVED] Default model for pr-description preset
+- **Original Priority**: LOW
+- **Decision**: OUT OF SCOPE - pr-description preset removed (see question 3 resolution)
+- **Resolved by**: User
+- **Date**: 2025-11-04
 
-- [ ] **Review output filename**: Should we keep "review.md" or rename to "review-report.md" to match documentation?
-  - **Research conducted**: Current code uses "review.md", documentation references "review-report.md"
-  - **Suggested default**: Use "review-report.md" for consistency with docs
-  - **Why needs human input**: Backward compatibility for existing scripts/workflows
+## Review Completion Summary
 
-### [LOW] Configuration Questions
+**Date**: 2025-11-04
+**Reviewed by**: User
+**Questions Resolved**: 6 (3 HIGH, 2 MEDIUM, 1 LOW)
+**Implementation Readiness**: ✅ Ready for implementation
 
-- [ ] **Default model for pr-description preset**: Which LLM model should be the default for PR descriptions?
-  - **Research conducted**: Current presets don't specify models (inherit from user config)
-  - **Suggested default**: Use same as general review (inherit from config)
-  - **Why needs human input**: Cost vs. quality trade-off for PR descriptions
+**Key Decisions Made**:
+1. **Session file naming**: Follow ace-docs pattern with location-based extensions (.tmp in release folders, clean names in cache)
+2. **Architecture**: Create ContextComposer molecule for context.md generation, ContextExtractor delegates to it
+3. **PR features removed**: PR description generation and workflows moved to separate /ace:pr-create command (out of scope)
+4. **Error handling**: Fail fast when ace-context unavailable or fails - clear error messages with installation guidance
+5. **Output filename**: Keep existing review-report-{model-slug}.md format, update documentation to match
+6. **Scope reduction**: Focus entirely on context.md pattern adoption, remove all PR-related deliverables
+
+**Scope Changes**:
+- **Removed from scope**: pr-description preset, review-create-pr.wf.md, PR format prompts
+- **Estimate updated**: 6h → 4h (reduced scope)
+- **Task focus**: context.md pattern adoption only
+
+**Implementation Impact**:
+- Clean migration, no backward compatibility needed
+- All existing presets continue working
+- Session artifacts enhanced for reproducibility
+- Consistent with ace-docs implementation pattern
 
 ## Research Findings from Review
 
@@ -258,64 +317,47 @@ gh pr create --title "..." --body "$(extract_from_review)"
 
 **Error Handling:**
 
-- **ace-context fails to load preset**: Report error, show which preset/file failed
-- **context.md invalid YAML**: Report parsing error, show line number
-- **ace-context not available**: Report dependency error, suggest installation
-- **gh CLI not available** (for PR workflow): Report tool missing, provide installation link
+- **ace-context fails to load preset**: Fail fast with error showing which preset/file failed, provide installation guidance
+- **context.md invalid YAML**: Fail fast with parsing error showing line number
+- **ace-context not available**: Fail fast with dependency error and installation instructions
+- **ace-context execution error**: Fail fast with clear error message from ace-context
 
 **Edge Cases:**
 
 - **No context specified**: Create context.md with empty context config, proceed with subject only
 - **Large diffs**: ace-context handles truncation, report in metadata.yml
 - **Missing subject**: Error before creating context.md (existing behavior)
-- **PR workflow on non-git repo**: Workflow fails at `gh pr create`, user sees git error
 - **Multiple ranges in diff**: ace-context combines all ranges, noted in context.md
+- **Cache vs release location**: Detect location, apply appropriate naming (.tmp or clean)
 
 ### Success Criteria
 
 **Context Management:**
-- [ ] **Context.md Always Created**: Every ace-review session creates context.md with YAML frontmatter
+- [ ] **Context.md Always Created**: Every ace-review session creates context.md.tmp (release) or context.md (cache) with YAML frontmatter
 - [ ] **ace-context Integration**: Context loading uses `Ace::Context.load_file_as_preset()`
-- [ ] **ContextExtractor Removed**: Old extraction logic completely replaced
-- [ ] **Session Reproducibility**: Running `ace-context /path/to/session/context.md` reproduces exact context
+- [ ] **ContextExtractor Simplified**: Delegates to ContextComposer, old extraction logic replaced
+- [ ] **Session Reproducibility**: Running `ace-context /path/to/session/context.md.tmp` reproduces exact context
 - [ ] **Preset Compatibility**: All existing presets work with new context.md pattern
-- [ ] **Format Flexibility**: context.md supports markdown-xml, markdown, yaml, json formats
+- [ ] **Location-Based Naming**: Cache uses clean names, release uses .tmp extensions
+- [ ] **Fail-Fast Errors**: Clear error messages when ace-context fails
 
-**PR Creation Workflow:**
-- [ ] **Workflow Documented**: review-create-pr.wf.md provides clear step-by-step process
-- [ ] **Preset Available**: pr-description preset generates structured PR descriptions
-- [ ] **Integration Examples**: Workflow shows examples with different git hosts
-- [ ] **Error Guidance**: Workflow documents common errors and solutions
-
-### Validation Questions
-
-**Context Management:**
-- [ ] **Frontmatter Content**: Should context.md include base instructions below frontmatter, or only YAML config?
-- [ ] **Preset Migration**: Should we update existing presets to leverage ace-context features (e.g., preset composition)?
-- [ ] **Error Reporting**: How should ace-context errors be surfaced to users? (inline, separate error file, stderr)
-- [ ] **Backward Compatibility**: Should we support reading old session formats for reproduction?
-
-**PR Creation Workflow:**
-- [ ] **Preset Configuration**: Should pr-description be a new preset or enhancement to existing `pr` preset?
-- [ ] **Output Format**: What structure should PR descriptions follow? (conventional commits, custom format, configurable)
-- [ ] **Title Extraction**: How should title be determined? (first commit message, inferred from changes, user prompt)
-- [ ] **Multi-commit PRs**: How should workflow handle PRs with many commits? (summarize all, group by type, list individually)
+### Validation Questions (ALL RESOLVED - See Review Completion Summary)
 
 ## Objective
 
-Transform ace-review's context management to match ace-docs' proven pattern, enhancing reproducibility and consistency across ACE tools, while adding documented workflow guidance for common PR creation use case.
+Transform ace-review's context management to match ace-docs' proven pattern, enhancing reproducibility and consistency across ACE tools.
 
 **Why**:
 - **Current Context Management**: ContextExtractor duplicates logic already in ace-context, lacks reproducibility
-- **Current PR Creation**: Users must manually piece together reviews into PRs, no clear guidance
 - **ace-docs Pattern**: Proven approach with context.md + ace-context provides transparency and reproducibility
+- **Consistency Need**: All ACE tools should use same context management pattern
 
 **Benefits**:
 - **Reproducibility**: context.md captures complete session configuration for exact reproduction
 - **Consistency**: Same pattern across ace-docs and ace-review reduces learning curve
 - **Simplicity**: Eliminates code duplication, leverages ace-context capabilities fully
 - **Transparency**: All context sources visible in single human-readable file
-- **Extensibility**: PR workflow demonstrates review-to-action pattern for other use cases
+- **Maintainability**: Single pattern to understand and maintain across tools
 
 ## Scope of Work
 
@@ -325,55 +367,49 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
 - Internal context.md creation (transparent to users)
 - Enhanced session artifacts for reproducibility
 - No changes to CLI interface
-- Improved error messages from ace-context
-
-**PR Creation:**
-- Workflow documentation for manual PR creation
-- Preset configuration for PR description generation
-- Integration examples with gh CLI
-- Error guidance and troubleshooting
+- Fail-fast error messages from ace-context (clear guidance on fixes)
+- Location-based file naming (.tmp for release folders, clean names for cache)
 
 ### System Behavior Scope
 
 **Context Management:**
 - context.md file generation with YAML frontmatter
-- ace-context integration replacing ContextExtractor
-- Session artifact management (save context.md, embedded prompts)
-- Error handling for ace-context failures
-
-**PR Creation:**
-- Workflow instruction creation
-- Preset configuration (pr-description)
-- Output format specification for PR descriptions
-- Integration pattern documentation
+- ace-context integration replacing ContextExtractor logic
+- Session artifact management (save context.md.tmp, prompt-user.md.tmp, prompt-system.md.tmp)
+- Fail-fast error handling for ace-context failures
+- ContextComposer molecule creation for context.md generation
 
 ### Interface Scope
 
 - No CLI changes (context.md creation is internal)
-- Enhanced session directory structure
-- Workflow documentation (review-create-pr.wf.md)
-- Preset configuration (pr-description.yml)
+- Enhanced session directory structure with location-based naming
+- Review output filename remains: review-report-{model-slug}.md
+- Documentation updates to match implementation
 
 ### Deliverables
 
 #### Behavioral Specifications
-- User experience flows for context.md creation and PR workflow
+- User experience flows for context.md creation
 - System behavior for ace-context integration
-- Interface contracts for session artifacts and workflow steps
+- Interface contracts for session artifacts
 
 #### Validation Artifacts
-- Success criteria for context management and PR workflow
-- Validation questions for implementation decisions
+- Success criteria for context management
+- Validation questions for implementation decisions (RESOLVED)
 - Error handling scenarios and edge cases
 
 ## Out of Scope
 
-- ❌ **CLI Command for PR Creation**: No new `ace-review create-pr` command (workflow documentation only)
-- ❌ **Automatic PR Creation**: No automated PR creation (users execute `gh pr create` manually)
-- ❌ **Git Host Integration**: No direct GitHub/GitLab API integration (uses gh CLI pattern)
+- ❌ **PR Description Generation**: No pr-description preset (belongs in separate /ace:pr-create workflow)
+- ❌ **PR Workflow Documentation**: No review-create-pr.wf.md (separate from ace-review)
+- ❌ **PR Format Prompts**: No PR-specific format templates (user-configurable presets only)
+- ❌ **CLI Command for PR Creation**: No new `ace-review create-pr` command
+- ❌ **Automatic PR Creation**: No automated PR creation integration
+- ❌ **Git Host Integration**: No direct GitHub/GitLab API integration
 - ❌ **ContextExtractor Preservation**: Old extraction logic will be completely removed (not maintained)
 - ❌ **Legacy Session Format Support**: No reading old session formats (forward-only migration)
 - ❌ **Multiple Format Support**: context.md uses markdown-xml format only (not configurable)
+- ❌ **Backward Compatibility**: No .tmp file duplication or symlinks (clean migration only)
 
 ## Technical Approach
 
@@ -403,50 +439,41 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
   - Purpose: Generate context.md with YAML frontmatter
   - Key components: create_context_md(), build_frontmatter()
   - Dependencies: YAML, ace-context
-
-- ace-review/.ace.example/review/presets/pr-description.yml
-  - Purpose: Preset configuration for PR descriptions
-  - Key components: Composition targeting PR format
-  - Dependencies: prompt:// references
-
-- ace-review/handbook/workflow-instructions/review-create-pr.wf.md
-  - Purpose: Document PR creation workflow
-  - Key components: Step-by-step process, gh CLI usage
-  - Dependencies: ace-review, gh CLI
-
-- ace-review/handbook/prompts/format/pr-description.md
-  - Purpose: PR description format template
-  - Key components: Title/body structure for PRs
-  - Dependencies: None
+  - Notes: Location-aware naming (context.md vs context.md.tmp)
 
 - ace-review/test/molecules/context_composer_test.rb
   - Purpose: Test context.md generation
-  - Key components: Frontmatter validation, format tests
+  - Key components: Frontmatter validation, format tests, location-based naming
   - Dependencies: minitest, ace-context
 
 ### Modify
 - ace-review/lib/ace/review/molecules/context_extractor.rb
   - Changes: Delegate to ContextComposer for context.md generation
-  - Impact: Simplifies logic, removes duplication
+  - Impact: Simplifies logic, removes duplication, fail-fast error handling
   - Integration points: Returns context.md content and embedded result
 
 - ace-review/lib/ace/review/organisms/review_manager.rb
-  - Changes: Save context.md instead of context.md.tmp, split prompts
-  - Impact: Enhanced session artifacts, better organization
-  - Integration points: save_session_files(), uses ContextComposer
+  - Changes: Save context.md.tmp (release) / context.md (cache), split prompts (prompt-user.md.tmp, prompt-system.md.tmp)
+  - Impact: Enhanced session artifacts, location-based naming
+  - Integration points: save_session_files(), uses ContextComposer, fail-fast on ace-context errors
 
 - ace-review/test/molecules/context_extractor_test.rb
-  - Changes: Update tests for new context.md approach
-  - Impact: Test delegation to ContextComposer
+  - Changes: Update tests for new context.md approach, test error handling
+  - Impact: Test delegation to ContextComposer, verify fail-fast behavior
   - Integration points: Mock ContextComposer
 
 - ace-review/test/organisms/review_manager_test.rb
-  - Changes: Verify context.md creation and structure
+  - Changes: Verify context.md.tmp creation and structure, test location-based naming
   - Impact: Test new session file organization
-  - Integration points: Check file artifacts
+  - Integration points: Check file artifacts (context.md.tmp, prompt-*.md.tmp)
+
+- ace-review/docs/usage.md (or README.md)
+  - Changes: Document review-report-{model-slug}.md naming convention
+  - Impact: Documentation consistency with implementation
+  - Integration points: Session artifacts section
 
 ### Delete
-- None - maintaining backward compatibility
+- None - clean migration, no backward compatibility layer needed
 
 ## Risk Assessment
 
@@ -524,25 +551,7 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
   > Assert: Review session creates context.md, prompt-system.md, prompt-user.md
   > Command: cd ace-review && bundle exec rake test TEST=test/organisms/review_manager_test.rb
 
-- [ ] Create pr-description preset configuration
-  > TEST: PR Preset Validation
-  > Type: Config Validation
-  > Assert: pr-description.yml loads successfully with expected structure
-  > Command: ace-review --preset pr-description --dry-run
-
-- [ ] Create PR description format prompt
-  > TEST: Format Prompt Exists
-  > Type: File Validation
-  > Assert: PR description format prompt accessible via ace-nav
-  > Command: ace-nav "prompt://format/pr-description" --content
-
-- [ ] Write review-create-pr workflow instruction
-  > TEST: Workflow Documentation
-  > Type: File Validation
-  > Assert: Workflow instruction complete with all steps
-  > Command: ace-nav "wfi://review-create-pr" --content
-
-- [ ] Test with all existing presets for backward compatibility
+- [ ] Test with all existing presets for compatibility
   > TEST: Preset Compatibility
   > Type: Integration Test
   > Assert: All existing presets (pr, security, ruby-atom, etc.) work unchanged
@@ -552,13 +561,13 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
   > TEST: Session Reproducibility
   > Type: Integration Test
   > Assert: Loading context.md via ace-context reproduces exact session context
-  > Command: ace-context .ace-taskflow/v.0.9.0/reviews/review-*/context.md --output stdio
+  > Command: ace-context .ace-taskflow/v.0.9.0/reviews/review-*/context.md.tmp --output stdio
 
-- [ ] Test PR workflow end-to-end
-  > TEST: PR Creation Flow
-  > Type: Manual Validation
-  > Assert: PR description generates and gh pr create accepts output
-  > Command: ace-review --preset pr-description --auto-execute && echo "Verify review-report.md structure"
+- [ ] Test location-based naming (cache vs release folders)
+  > TEST: Location-Based Naming
+  > Type: Integration Test
+  > Assert: Cache folders use clean names, release folders use .tmp extensions
+  > Command: # Create reviews in both locations, verify naming
 
 - [ ] Update gem documentation and CHANGELOG
   > TEST: Documentation Complete
@@ -568,33 +577,35 @@ Transform ace-review's context management to match ace-docs' proven pattern, enh
 
 ## Acceptance Criteria
 
-- [x] **Context.md Always Created**: Every ace-review session creates context.md with YAML frontmatter
-- [x] **ace-context Integration**: Context loading uses `Ace::Context.load_file_as_preset()`
-- [x] **Session Reproducibility**: Running `ace-context /path/to/session/context.md` reproduces exact context
-- [x] **Backward Compatibility**: All existing presets and CLI commands work unchanged
-- [x] **PR Workflow Documented**: review-create-pr.wf.md provides clear PR creation steps
-- [x] **PR Preset Available**: pr-description preset generates structured PR descriptions
-- [x] **Enhanced Session Artifacts**: Sessions include context.md, split prompts, and metadata
-- [x] **Tests Pass**: All existing and new tests pass successfully
+- [ ] **Context.md Always Created**: Every ace-review session creates context.md.tmp (release) or context.md (cache) with YAML frontmatter
+- [ ] **ace-context Integration**: Context loading uses `Ace::Context.load_file_as_preset()`
+- [ ] **Session Reproducibility**: Running `ace-context /path/to/session/context.md.tmp` reproduces exact context
+- [ ] **Preset Compatibility**: All existing presets and CLI commands work unchanged
+- [ ] **Location-Based Naming**: Cache folders use clean names, release folders use .tmp extensions
+- [ ] **Enhanced Session Artifacts**: Sessions include context.md.tmp, prompt-user.md.tmp, prompt-system.md.tmp, subject.md.tmp, metadata.yml, review-report-{model}.md
+- [ ] **ContextComposer Created**: New molecule handles context.md generation with proper delegation
+- [ ] **Fail-Fast Errors**: ace-context failures produce clear error messages with installation guidance
+- [ ] **Documentation Updated**: Usage docs reflect review-report-{model-slug}.md naming and session structure
+- [ ] **Tests Pass**: All existing and new tests pass successfully
 
-## Review Summary
+## Original Review Summary (Pre-Resolution)
 
 **Questions Generated:** 6 total (3 HIGH, 2 MEDIUM, 1 LOW)
 
-**Critical Blockers:**
-1. Session file naming convention decision (backward compatibility vs. clean migration)
-2. Architecture decision on ContextComposer vs. modifying ContextExtractor
-3. PR description template structure for team consistency
+**Critical Blockers (RESOLVED):**
+1. ✅ Session file naming convention - Follow ace-docs pattern with location-based extensions
+2. ✅ Architecture decision - Create ContextComposer molecule
+3. ✅ PR features - Removed from scope (separate /ace:pr-create command)
 
-**Implementation Readiness:** Ready with suggested defaults - all technical prerequisites are in place
+**Implementation Readiness:** ✅ Ready for implementation - all questions resolved, scope clarified
 
-**Recommended Next Steps:**
-1. Answer the HIGH priority questions to unblock implementation
-2. Create ContextComposer following ace-docs pattern (suggested default)
-3. Implement with backward compatibility (keep .tmp files, add new ones)
-4. Test thoroughly with all existing presets before release
+**Resolution Outcome:**
+1. Clean migration with location-based naming (no backward compatibility layer)
+2. ContextComposer follows ace-docs pattern
+3. Scope reduced to context.md adoption only (4h estimate)
+4. All existing presets continue working without changes
 
-**Key Discovery:** ace-docs already provides a complete implementation pattern that can be directly adapted for ace-review. The main decisions are around maintaining backward compatibility and PR workflow conventions.
+**Key Discovery:** ace-docs provides complete implementation pattern. PR workflow belongs in separate command, not ace-review.
 
 ## References
 
