@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.111] - 2025-11-04
+
+### Added
+- **ace-git-worktree v0.1.1**: Updated gem with fixes and improvements
+  - Fixed syntax errors in model files (comment formatting, hash conditionals)
+  - Fixed Ruby syntax errors (constant assignment, initialization order)
+  - Implemented lazy loading for CLI commands to improve help command performance
+  - Updated dependency constraints for better compatibility
+
+### Technical
+- Resolved runtime errors preventing ace-git-worktree from functioning
+- Improved CLI architecture with lazy command registration pattern
+
 ## [0.9.110] - 2025-11-04
 
 ### Added
