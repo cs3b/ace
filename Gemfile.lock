@@ -6,6 +6,11 @@ PATH
       ace-support-core (~> 0.10.0)
 
 PATH
+  remote: ace-core
+  specs:
+    ace-core (0.10.0)
+
+PATH
   remote: ace-docs
   specs:
     ace-docs (0.6.2)
@@ -220,6 +225,7 @@ PLATFORMS
 
 DEPENDENCIES
   ace-context!
+  ace-core!
   ace-docs!
   ace-git-commit!
   ace-git-diff!
