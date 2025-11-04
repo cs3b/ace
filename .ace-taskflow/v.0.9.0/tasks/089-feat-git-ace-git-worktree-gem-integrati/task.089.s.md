@@ -3,14 +3,47 @@ id: v.0.9.0+task.089
 status: pending
 priority: medium
 estimate: 3-4 weeks
-dependencies: [v.0.9.0+task.090]
+dependencies:
+- v.0.9.0+task.090
 sort: 998
 ---
 
 # Create ace-git-worktree gem with task integration
 
-> **Implementation Status**: Ready for implementation once task 090 (ace-taskflow update command) is completed.
+> **Implementation Status**: Ready for implementation - dependency task 090 is complete and verified working.
 > All architectural decisions have been made and documented below.
+
+## Implementation Notes (2025-11-04)
+
+**ace-taskflow task update command verified working:**
+
+The update command implementation was restored from git history and is now fully functional. Verified working syntax:
+
+```bash
+# Simple field update
+ace-taskflow task update 089 --field priority=high
+
+# Nested field update (for worktree metadata)
+ace-taskflow task update 089 --field worktree.branch=test-branch
+
+# Multiple field updates
+ace-taskflow task update 089 --field priority=high --field estimate="1 week"
+
+# Example worktree metadata update (as documented in architectural decisions)
+ace-taskflow task update 081 \
+  --field worktree.branch=081-fix-auth \
+  --field worktree.path=.ace-wt/task.081 \
+  --field worktree.created_at="2025-11-04 12:00:00"
+```
+
+**Test results:**
+- ✅ Unit tests pass: 10 tests, 19 assertions, 0 failures
+- ✅ Simple field updates work correctly
+- ✅ Nested field updates (worktree.branch, worktree.path, etc.) work correctly
+- ✅ Multiple field updates in single command work correctly
+- ✅ Implementation matches documented syntax in task 090
+
+**No blockers for implementation** - proceed with ace-git-worktree development using documented integration approach.
 
 ## Architectural Decisions (Resolved)
 
@@ -1371,4 +1404,3 @@ No files to delete.
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Installable via gem install
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Listed in docs/tools.md
 {: .task-list}
-

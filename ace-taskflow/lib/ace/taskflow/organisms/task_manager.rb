@@ -349,6 +349,36 @@ module Ace
           end
         end
 
+        # Update task fields
+        # @param reference [String] Task reference
+        # @param field_updates [Hash] Field updates to apply
+        # @return [Hash] Result with :success, :message, :updated_fields, :task, :path
+        def update_task_fields(reference, field_updates)
+          task = @task_loader.find_task_by_reference(reference)
+          unless task
+            return { success: false, message: "Task not found: #{reference}" }
+          end
+
+          # Update the task file
+          result = @task_loader.update_task_field(task[:path], field_updates)
+
+          if result[:success]
+            {
+              success: true,
+              message: "Task updated: #{task[:id] || reference}",
+              updated_fields: result[:updated_fields],
+              task: task,
+              path: result[:path]
+            }
+          else
+            {
+              success: false,
+              message: result[:message],
+              path: result[:path]
+            }
+          end
+        end
+
         # Move task between releases
         # @param reference [String] Task reference
         # @param target [String] Target release (backlog, v.0.10.0, etc.)
