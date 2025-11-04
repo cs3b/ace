@@ -69,8 +69,9 @@ module Ace
               )
 
               if result[:success]
-                # Trust mise configuration if enabled
-                if @config.mise_trust_auto?
+                # Trust mise configuration if enabled (and not overridden)
+                should_trust_mise = options[:no_mise_trust] ? false : @config.mise_trust_auto?
+                if should_trust_mise
                   mise_result = @mise_trustor.trust_worktree(result[:worktree_path])
                   unless mise_result[:success]
                     result[:warnings] = ["Failed to trust mise configuration"]
