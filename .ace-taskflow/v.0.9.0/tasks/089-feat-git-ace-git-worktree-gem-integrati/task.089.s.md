@@ -51,9 +51,10 @@ Based on architectural review, the following decisions have been made for the ac
 
 ### Decision 1: Task Metadata Updates
 **Use `ace-taskflow task update` command for metadata updates**
-- The `update` command is currently stubbed in ace-taskflow but needs implementation (tracked in task 090)
-- Will support `--field key=value` syntax for arbitrary metadata updates
+- The `update` command is fully implemented in ace-taskflow v0.18.4+ (restored from git history)
+- Supports `--field key=value` syntax for arbitrary metadata updates (simple and nested fields)
 - Example: `ace-taskflow task update 081 --field worktree.branch=081-slug --field worktree.path=.ace-wt/task.081`
+- Verified working in ace-taskflow v0.18.4 (see Implementation Notes above for test results)
 - **Rationale**: Clean separation of concerns, no direct file manipulation from external gems
 
 ### Decision 2: Programmatic API Usage
