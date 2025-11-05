@@ -94,7 +94,11 @@ module Ace
             begin
               require "ace/core"
               config_hash = Ace::Core.get(*CONFIG_NAMESPACE)
-              @config_hash = config_hash || {}
+              if config_hash.nil? || config_hash.empty?
+                @config_hash = load_direct_from_yaml
+              else
+                @config_hash = config_hash
+              end
             rescue LoadError
               # ace-core not available, try direct YAML loading
               @config_hash = load_direct_from_yaml
@@ -114,7 +118,7 @@ module Ace
                 begin
                   yaml_content = YAML.load_file(file)
                   if yaml_content && yaml_content["git"] && yaml_content["git"]["worktree"]
-                    return yaml_content["git"]["worktree"]
+                    return yaml_content
                   end
                 rescue StandardError => e
                   warn "Warning: Error parsing #{file}: #{e.message}"

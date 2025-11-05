@@ -23,9 +23,9 @@ module Ace
 
           # Dangerous path patterns that should be blocked
           DANGEROUS_PATTERNS = [
-            /\.\.\//,  # Directory traversal
-            /\A\.\./,  # Starts with ..
-            /\/\.\./,  # Contains /..
+            /\.\.\/\.\./, # Directory traversal with multiple levels (../../etc)
+            /\A\.\.\/\.\./, # Starts with ../../ (multiple levels)
+            /\/\.\.\/\.\./, # Contains /../ (multiple levels)
             /\x00/,    # Null bytes
             /[<>:"|?*]/, # Windows invalid characters (also good for Unix)
           ].freeze
