@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **ace-git-worktree v0.1.10**: Improve completed task cleanup messaging and user experience
+  - Replace confusing "Task metadata cleanup would require task access" message with clear status-based messaging
+  - Show "Task completed: no metadata cleanup needed" for done/completed tasks
+  - Fix task status detection to handle stripped CLI format (" done" instead of "done")
+  - Improve user experience for normal completed task workflows
 - **ace-git-worktree v0.1.9**: Fix critical task lookup and CLI parsing issues
   - Fix ace-taskflow CLI output format mismatch causing "Task not found" errors
   - Implement robust CLI parser for human-readable ace-taskflow output format
