@@ -69,8 +69,6 @@ context:
   sections:
     focus:
       title: "Files Under Review"
-      content_type: "files"
-      priority: 1
       description: "Source files and documentation"
       files:
         - docs/README.md
@@ -79,16 +77,12 @@ context:
 
     diff:
       title: "Recent Changes"
-      content_type: "diffs"
-      priority: 2
       description: "Recent changes in the codebase"
       ranges:
         - origin/main...HEAD
 
     context:
       title: "System Context"
-      content_type: "commands"
-      priority: 3
       description: "System and project status"
       commands:
         - git status
@@ -101,22 +95,18 @@ context:
 ### Required Fields
 
 - **title**: Human-readable title for the section
-- **content_type**: Type of content (files, commands, diffs, content)
 
 ### Optional Fields
 
-- **priority**: Numerical priority (lower numbers appear first, default: 999)
 - **description**: Description of what the section contains
 - **exclude**: File exclusion patterns for file sections
 
-### Content Type Specific Fields
+### Content Fields
 
-#### files sections
+#### files
 ```yaml
 focus:
   title: "Source Files"
-  content_type: "files"
-  priority: 1
   description: "Main source files being reviewed"
   files:
     - "src/**/*.js"
@@ -126,12 +116,10 @@ focus:
     - "node_modules/**"
 ```
 
-#### commands sections
+#### commands
 ```yaml
 system:
   title: "System Information"
-  content_type: "commands"
-  priority: 2
   description: "System status and information"
   commands:
     - "pwd"
@@ -139,28 +127,39 @@ system:
     - "npm test"
 ```
 
-#### diffs sections
+#### diffs
 ```yaml
 changes:
   title: "Code Changes"
-  content_type: "diffs"
-  priority: 1
   description: "Recent code changes to review"
   ranges:
     - "origin/main...HEAD"
     - "HEAD~5...HEAD"
 ```
 
-#### content sections
+#### inline content
 ```yaml
 intro:
   title: "Introduction"
-  content_type: "content"
-  priority: 1
   description: "Review introduction and context"
   content: |
     This is a code review of the recent changes.
     Please focus on performance and security aspects.
+```
+
+#### Mixed Content
+```yaml
+review:
+  title: "Complete Review"
+  description: "Files, commands, diffs, and notes"
+  files:
+    - "src/**/*.js"
+  commands:
+    - "npm test"
+  diffs:
+    - "origin/main...HEAD"
+  content: |
+    Focus on security and performance.
 ```
 
 ## Using Sections with Existing Configurations

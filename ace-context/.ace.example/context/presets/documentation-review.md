@@ -11,8 +11,6 @@ context:
   sections:
     content:
       title: "Documentation Content"
-      content_type: "files"
-      priority: 1
       description: "Main documentation files being reviewed"
       files:
         - "README.md"
@@ -21,8 +19,6 @@ context:
 
     style:
       title: "Style Guidelines"
-      content_type: "files"
-      priority: 2
       description: "Documentation style and formatting guidelines"
       files:
         - "docs/STYLE_GUIDE.md"
@@ -31,8 +27,6 @@ context:
 
     structure:
       title: "Documentation Structure"
-      content_type: "files"
-      priority: 3
       description: "Documentation organization and navigation"
       files:
         - "docs/_navigation.yml"
@@ -41,8 +35,6 @@ context:
 
     examples:
       title: "Code Examples"
-      content_type: "files"
-      priority: 4
       description: "Example code and scripts in documentation"
       files:
         - "docs/examples/**/*"
@@ -50,8 +42,6 @@ context:
 
     validation:
       title: "Validation Results"
-      content_type: "commands"
-      priority: 5
       description: "Documentation validation and linting results"
       commands:
         - "markdownlint docs/**/*.md"

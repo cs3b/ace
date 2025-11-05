@@ -928,16 +928,20 @@ module Ace
 
         # Process content for a specific section
         def process_section_content(context, section_name, section_data, options)
-          content_type = section_data[:content_type] || section_data['content_type']
-
-          case content_type
-          when 'files'
+          # Process all content types that are present in the section
+          if has_files_content?(section_data)
             process_files_section(context, section_name, section_data, options)
-          when 'commands'
+          end
+
+          if has_commands_content?(section_data)
             process_commands_section(context, section_name, section_data, options)
-          when 'diffs'
+          end
+
+          if has_diffs_content?(section_data)
             process_diffs_section(context, section_name, section_data, options)
-          when 'content'
+          end
+
+          if has_content_content?(section_data)
             process_inline_content_section(context, section_name, section_data, options)
           end
         end
@@ -1102,6 +1106,29 @@ module Ace
           (context_config['commands'] && context_config['commands'].any?) ||
           (context_config['diffs'] && context_config['diffs'].any?) ||
           (context_config['ranges'] && context_config['ranges'].any?)
+        end
+
+        # Helper methods to detect content types in sections
+
+        # Checks if section has files content
+        def has_files_content?(section_data)
+          !!(section_data[:files] || section_data['files'])
+        end
+
+        # Checks if section has commands content
+        def has_commands_content?(section_data)
+          !!(section_data[:commands] || section_data['commands'])
+        end
+
+        # Checks if section has diffs content
+        def has_diffs_content?(section_data)
+          !!(section_data[:ranges] || section_data['ranges'] ||
+                section_data[:diffs] || section_data['diffs'])
+        end
+
+        # Checks if section has inline content
+        def has_content_content?(section_data)
+          !!(section_data[:content] || section_data['content'])
         end
 
         def project_root

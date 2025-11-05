@@ -11,8 +11,6 @@ context:
   sections:
     vulnerability:
       title: "Security Analysis"
-      content_type: "commands"
-      priority: 1
       description: "Security vulnerability scans and analysis"
       commands:
         - "bundle exec bundler-audit"
@@ -21,8 +19,6 @@ context:
 
     secrets:
       title: "Secrets Detection"
-      content_type: "commands"
-      priority: 2
       description: "Scanning for exposed secrets and credentials"
       commands:
         - "git-secrets --scan"
@@ -30,8 +26,6 @@ context:
 
     dependencies:
       title: "Dependency Security"
-      content_type: "commands"
-      priority: 3
       description: "Security scan of project dependencies"
       commands:
         - "bundle audit"
@@ -40,8 +34,6 @@ context:
 
     sensitive:
       title: "Sensitive Files"
-      content_type: "files"
-      priority: 4
       description: "Security-sensitive configuration files"
       files:
         - "config/initializers/secret_token.rb"
@@ -51,8 +43,6 @@ context:
 
     policies:
       title: "Security Policies"
-      content_type: "files"
-      priority: 5
       description: "Security policies and procedures"
       files:
         - "SECURITY.md"

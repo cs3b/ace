@@ -80,20 +80,22 @@ module Ace
           merged
         end
 
-        # Gets sections sorted by priority
+        # Gets sections sorted by YAML insertion order
         # @param sections [Hash] sections hash
-        # @return [Array] array of [name, section] pairs sorted by priority
+        # @return [Array] array of [name, section] pairs in YAML order
         def sorted_sections(sections)
-          sections.sort_by { |name, data| data['priority'] || data[:priority] || 999 }
+          # In Ruby 3.2+, hash insertion order is preserved
+          # This returns sections in the order they appear in the YAML file
+          sections.to_a
         end
 
-        # Filters sections by content type
+        # Filters sections by content type (based on actual content, not content_type field)
         # @param sections [Hash] sections hash
-        # @param content_type [String] content type to filter by
+        # @param content_type [String] content type to filter by (files, commands, diffs, content)
         # @return [Hash] filtered sections
         def filter_sections_by_type(sections, content_type)
           sections.select { |_, section|
-            section['content_type'] == content_type || section[:content_type] == content_type
+            has_content_type?(section, content_type)
           }
         end
 
@@ -134,9 +136,6 @@ module Ace
           section.each do |key, value|
             normalized[key.to_sym] = value
           end
-
-          # Set default priority if not specified
-          normalized[:priority] ||= 999
 
           # Ensure title is set
           normalized[:title] ||= name.to_s.humanize if name
@@ -187,8 +186,6 @@ module Ace
         def create_attachments_section(legacy_content)
           {
             title: "Attachments",
-            content_type: "files",
-            priority: 999,
             **legacy_content
           }
         end
@@ -204,8 +201,6 @@ module Ace
           if context['files'] || context[:files]
             sections['files'] = {
               title: "Files",
-              content_type: "files",
-              priority: 100,
               files: context['files'] || context[:files]
             }
           end
@@ -214,8 +209,6 @@ module Ace
           if context['commands'] || context[:commands]
             sections['commands'] = {
               title: "Commands",
-              content_type: "commands",
-              priority: 200,
               commands: context['commands'] || context[:commands]
             }
           end
@@ -224,8 +217,6 @@ module Ace
           if context['diffs'] || context[:diffs] || context['ranges'] || context[:ranges]
             sections['diffs'] = {
               title: "Diffs",
-              content_type: "diffs",
-              priority: 300,
               ranges: context['diffs'] || context[:diffs] || context['ranges'] || context[:ranges]
             }
           end
@@ -270,6 +261,25 @@ module Ace
             obj.map { |item| deep_copy(item) }
           else
             obj
+          end
+        end
+
+        # Checks if a section has a specific content type
+        # @param section [Hash] section definition
+        # @param content_type [String] content type to check for
+        # @return [Boolean] true if section has the specified content type
+        def has_content_type?(section, content_type)
+          case content_type
+          when 'files'
+            !!(section['files'] || section[:files])
+          when 'commands'
+            !!(section['commands'] || section[:commands])
+          when 'diffs'
+            !!(section['ranges'] || section[:ranges] || section['diffs'] || section[:diffs])
+          when 'content'
+            !!(section['content'] || section[:content])
+          else
+            false
           end
         end
       end

@@ -11,8 +11,6 @@ context:
   sections:
     focus:
       title: "Files Under Review"
-      content_type: "files"
-      priority: 1
       description: "Source files that are being reviewed"
       files:
         - "src/**/*.rb"
@@ -22,8 +20,6 @@ context:
 
     style:
       title: "Style Guidelines"
-      content_type: "files"
-      priority: 2
       description: "Style and coding standards"
       files:
         - ".rubocop.yml"
@@ -32,16 +28,12 @@ context:
 
     diff:
       title: "Recent Changes"
-      content_type: "diffs"
-      priority: 3
       description: "Recent changes in the codebase"
       ranges:
         - "origin/main...HEAD"
 
     tests:
       title: "Test Results"
-      content_type: "commands"
-      priority: 4
       description: "Current test results"
       commands:
         - "bundle exec rspec --format documentation"
@@ -50,8 +42,6 @@ context:
 
     context:
       title: "Project Context"
-      content_type: "commands"
-      priority: 5
       description: "Project information and status"
       commands:
         - "git log --oneline origin/main..HEAD"

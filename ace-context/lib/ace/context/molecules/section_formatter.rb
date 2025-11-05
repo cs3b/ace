@@ -86,14 +86,20 @@ module Ace
             output << "## #{title}"
             output << "<#{name}>"
 
-            case section_data[:content_type] || section_data['content_type']
-            when 'files'
+            # Format all content types that are present in the section
+            if has_files_content?(section_data)
               output << format_files_section(section_data)
-            when 'commands'
+            end
+
+            if has_commands_content?(section_data)
               output << format_commands_section(section_data)
-            when 'diffs'
+            end
+
+            if has_diffs_content?(section_data)
               output << format_diffs_section(section_data)
-            when 'content'
+            end
+
+            if has_content_content?(section_data)
               output << format_content_section(section_data)
             end
 
@@ -177,14 +183,20 @@ module Ace
             title = section_data[:title] || section_data['title'] || name.to_s.humanize
             output << "## #{title}"
 
-            case section_data[:content_type] || section_data['content_type']
-            when 'files'
+            # Format all content types that are present in the section
+            if has_files_content?(section_data)
               output << format_files_section_markdown(section_data)
-            when 'commands'
+            end
+
+            if has_commands_content?(section_data)
               output << format_commands_section_markdown(section_data)
-            when 'diffs'
+            end
+
+            if has_diffs_content?(section_data)
               output << format_diffs_section_markdown(section_data)
-            when 'content'
+            end
+
+            if has_content_content?(section_data)
               output << format_content_section_markdown(section_data)
             end
 
@@ -469,6 +481,33 @@ module Ace
           when '.conf' then 'apache'
           else 'text'
           end
+        end
+
+        # Helper methods to detect content types in sections
+
+        # Checks if section has files content
+        def has_files_content?(section_data)
+          !!(section_data[:files] || section_data['files'] ||
+                section_data[:_processed_files] || section_data['_processed_files'])
+        end
+
+        # Checks if section has commands content
+        def has_commands_content?(section_data)
+          !!(section_data[:commands] || section_data['commands'] ||
+                section_data[:_processed_commands] || section_data['_processed_commands'])
+        end
+
+        # Checks if section has diffs content
+        def has_diffs_content?(section_data)
+          !!(section_data[:ranges] || section_data['ranges'] ||
+                section_data[:diffs] || section_data['diffs'] ||
+                section_data[:_processed_diffs] || section_data['_processed_diffs'])
+        end
+
+        # Checks if section has inline content
+        def has_content_content?(section_data)
+          !!(section_data[:content] || section_data['content'] ||
+                section_data[:_processed_content] || section_data['_processed_content'])
         end
       end
     end

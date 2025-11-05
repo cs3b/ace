@@ -57,7 +57,9 @@ module Ace
         end
 
         def sorted_sections
-          @sections.sort_by { |name, data| data[:priority] || 999 }
+          # In Ruby 3.2+, hash insertion order is preserved
+          # This returns sections in the order they appear in the YAML file
+          @sections.to_a
         end
 
         def section_names
