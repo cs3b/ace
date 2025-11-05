@@ -5,6 +5,19 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2025-11-05
+
+### Fixed
+- **Implementation Gap**: Actually completed the v0.13.0 architectural changes that were documented but not fully implemented
+- **Removed Legacy Code**: Eliminated all prompt splitting logic and fallback methods as claimed in v0.13.0 CHANGELOG
+- **Updated Tests**: Fixed test expectations to match new architecture and removed tests for removed methods
+- **File Structure**: Corrected session file naming to use `system.prompt.md` and `user.prompt.md`
+
+### Technical
+- **Code Cleanup**: Removed 214 lines of legacy code while maintaining functionality
+- **Syntax Validation**: All Ruby files now pass syntax validation
+- **Architecture Alignment**: Implementation now matches documented CHANGELOG claims
+
 ## [0.13.0] - 2025-11-05
 
 ### 🎯 **Major Architecture Fix - System/User Prompt Separation**
