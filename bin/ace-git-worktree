@@ -1,17 +1,24 @@
-#!/usr/bin/env ruby
-# frozen_string_literal: true
-
-# Wrapper script to run ace-git-worktree with proper bundler context
-require "pathname"
+#!/usr/bin/env fish
+# Wrapper script for ace-git-worktree with auto-navigation
 
 # Find the ace-meta root directory
-ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+set ace_meta_root (dirname (dirname (realpath (status current-filename))))
 
 # Set the Gemfile location
-ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+set -x BUNDLE_GEMFILE "$ace_meta_root/Gemfile"
 
-# Load bundler
-require "bundler/setup"
+# Run the actual command and capture output
+set output (ruby -rbundler/setup "$ace_meta_root/ace-git-worktree/exe/ace-git-worktree" $argv 2>&1)
+set exit_code $status
 
-# Now require and run the actual ace-git-worktree executable
-load ace_meta_root.join("ace-git-worktree/exe/ace-git-worktree").to_s
+# Print the output
+echo $output
+
+# Extract worktree path and change directory if present
+set worktree_path (echo $output | grep '^WORKTREE_PATH=' | cut -d= -f2)
+if test -n "$worktree_path"; and test -d "$worktree_path"
+    cd $worktree_path
+    mise trust 2>/dev/null
+end
+
+exit $exit_code
