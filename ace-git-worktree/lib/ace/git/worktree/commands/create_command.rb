@@ -67,7 +67,6 @@ module Ace
 
               OPTIONS:
                   --path <path>           Custom worktree path (default: from config)
-                  --no-mise-trust         Skip automatic mise trust
                   --dry-run               Show what would be created without creating
                   --no-status-update      Skip marking task as in-progress
                   --no-commit             Skip committing task changes
@@ -87,13 +86,13 @@ module Ace
                   ace-git-worktree create --task 081 --path ~/worktrees --dry-run
 
                   # Skip automatic actions
-                  ace-git-worktree create --task 081 --no-status-update --no-mise-trust
+                  ace-git-worktree create --task 081 --no-status-update
 
               CONFIGURATION:
                   Worktree creation is controlled by .ace/git/worktree.yml:
                   - root_path: Default worktree root directory
                   - task.auto_*: Automation settings for task workflows
-                  - mise_trust_auto: Automatic mise trust behavior
+                  - hooks.after_create: Commands to run after worktree creation
             HELP
             0
           end
@@ -109,7 +108,6 @@ module Ace
               task: nil,
               path: nil,
               dry_run: false,
-              no_mise_trust: false,
               no_status_update: false,
               no_commit: false,
               no_auto_navigate: false,
@@ -131,8 +129,6 @@ module Ace
                 options[:path] = args[i]
               when "--dry-run"
                 options[:dry_run] = true
-              when "--no-mise-trust"
-                options[:no_mise_trust] = true
               when "--no-status-update"
                 options[:no_status_update] = true
               when "--no-commit"
@@ -211,7 +207,6 @@ module Ace
             # Prepare creation options
             creation_options = {
               dry_run: options[:dry_run],
-              no_mise_trust: options[:no_mise_trust],
               no_status_update: options[:no_status_update],
               no_commit: options[:no_commit],
               commit_message: options[:commit_message],
@@ -272,7 +267,6 @@ module Ace
             # Prepare creation options
             creation_options = {
               path: options[:path],
-              no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact
 
@@ -313,6 +307,19 @@ module Ace
               puts "\nSteps completed:"
               result[:steps_completed].each_with_index do |step, i|
                 puts "  ✓ #{step.gsub('_', ' ')}"
+              end
+
+              # Display hooks results if available
+              if result[:hooks_results] && result[:hooks_results].any?
+                puts "\nHooks executed:"
+                result[:hooks_results].each do |hook_result|
+                  status = hook_result[:success] ? "✓" : "✗"
+                  command = hook_result[:command].length > 60 ? "#{hook_result[:command][0..57]}..." : hook_result[:command]
+                  puts "  #{status} #{command}"
+                  unless hook_result[:success]
+                    puts "    Error: #{hook_result[:error]}" if hook_result[:error]
+                  end
+                end
               end
             end
 
