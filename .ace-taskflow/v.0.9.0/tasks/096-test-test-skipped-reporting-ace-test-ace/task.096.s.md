@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.096
-status: draft
+status: pending
 priority: medium
 estimate: 4-6h
 dependencies: []
@@ -235,3 +235,266 @@ Minitest Output → ResultParser → TestResult (skipped tracked)
 - ace-test-runner gem: `/Users/mc/Ps/ace-meta/ace-test-runner/`
 - Minitest documentation: https://github.com/seattlerb/minitest
 - Related: Agent reporter already surfaces skips (`ace-test-runner/lib/ace/test_runner/organisms/agent_reporter.rb:140-147`)
+
+## Technical Approach
+
+### Architecture Analysis
+
+**Current State Verification:**
+- ✅ `ResultParser` (atoms/result_parser.rb): Extracts skip count from Minitest output (line 10, 56)
+- ✅ `TestResult` model (models/test_result.rb): Tracks skipped attribute and provides `has_skips?` method
+- ✅ JSON output (formatters/progress_formatter.rb:125): Already includes skipped in stats
+- ✅ Markdown reports: Already include skipped in metrics tables
+- ✅ Agent reporter (organisms/agent_reporter.rb:140-147): Already creates actionable items for skips
+
+**Missing Implementations:**
+- ❌ Console summary (formatters/progress_formatter.rb:46-48): Doesn't include skipped in summary line
+- ❌ Suite aggregation (suite/result_aggregator.rb:31-43): Doesn't calculate total_skipped
+- ❌ Suite display (suite/display_manager.rb:129-134): Doesn't show skipped in overall summary
+- ❌ Package display (suite/display_manager.rb:193, 203): Doesn't show skipped per package
+
+### Implementation Strategy
+
+**Approach:** Minimally invasive enhancements to existing formatters - add skipped display where missing while preserving all existing functionality.
+
+**Design Decisions:**
+1. **Conditional Display:** Only show skipped count when > 0 to keep output clean
+2. **Icon Selection:** Use ⚠️ (warning) for informational status when skips exist
+3. **No Detail Section:** Don't add "SKIPPED (N):" section listing individual skipped tests (keep focus on failures)
+4. **Suite Priority:** List packages with skips separately for quick identification
+5. **Backward Compatible:** All changes additive, no breaking changes to output formats
+
+### File Modifications
+
+#### Modify Files
+
+**1. ace-test-runner/lib/ace/test_runner/formatters/progress_formatter.rb**
+- **Lines 46-48:** Update console summary line to include skipped count
+- **Changes:**
+  - Add conditional skipped count display: `", #{result.skipped} skipped" if result.has_skips?`
+  - Change status icon from "✅" to "⚠️" when `result.has_skips?` (informational, not failure)
+- **Impact:** Individual test runs now show skip count in console output
+- **Test:** Verify with tests that have skipped tests (use `skip` in Minitest)
+
+**2. ace-test-runner/lib/ace/test_runner/suite/result_aggregator.rb**
+- **Lines 31-43:** Add `total_skipped` to aggregation hash
+- **Changes:**
+  - Add: `total_skipped: results.sum { |r| r[:skipped] || 0 }` after line 36
+  - Update aggregate to include skip counts from all packages
+- **Impact:** Suite summary can now access aggregated skip counts
+- **Test:** Verify suite aggregation includes skipped from summary.json files
+
+**3. ace-test-runner/lib/ace/test_runner/suite/display_manager.rb**
+- **Lines 78-110 (show_final_results):** Add skipped column to per-package display
+  - Add: `, #{results[:skipped] || 0} skipped` after failures in output (lines 86, 105)
+  - Update package display to show skip counts inline
+- **Lines 129-134 (show_summary):** Show skipped in overall summary
+  - Update line 133 to: `puts "Tests:     #{summary[:total_tests]} total, #{summary[:total_passed]} passed, #{summary[:total_failed]} failed, #{summary[:total_skipped]} skipped"` if skipped > 0
+  - Add after line 155: Package skips section listing packages with skip counts
+  - Update status line (121-125) to show "(with N skipped)" when total_skipped > 0
+- **Lines 193, 203 (print_package_line):** Update per-package status lines
+  - Add skipped count display for completed packages
+  - Show: `"#{tests} tests, #{assertions} assertions, #{failures} failures, #{skipped} skipped"`
+- **Impact:** Suite display shows skip information at all levels (overall, per-package)
+- **Test:** Verify suite display with packages that have skipped tests
+
+**4. ace-test-runner/lib/ace/test_runner/suite/display_manager.rb (package table in markdown)**
+- **Lines 147-153 (generate_report in result_aggregator.rb):** Add Skipped column to package table
+- **Changes:**
+  - Update header line 147: `"| Package | Status | Tests | Passed | Failed | Skipped | Duration |"`
+  - Update separator line 148: Add one more column separator
+  - Update data line 152: Add `| #{result[:skipped] || 0}` before duration
+- **Impact:** Markdown package tables show skip counts
+- **Test:** Verify markdown report includes skipped column
+
+### Technology Stack
+
+**No new dependencies required.** All changes use existing:
+- Ruby stdlib (String manipulation, conditionals)
+- Existing TestResult model attributes
+- Existing ResultParser skip extraction
+- Existing display formatting helpers
+
+### Performance Implications
+
+**Negligible impact:**
+- Skip count already calculated and stored in TestResult
+- Only adds string concatenation when skips > 0
+- No additional parsing or computation required
+- Suite aggregation adds one sum operation (O(n) where n = package count)
+
+### Risk Assessment
+
+**Technical Risks:**
+
+- **Risk:** Breaking existing CI/CD parsers that depend on exact console output format
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Changes are additive, preserve existing structure; skipped only shown when > 0
+  - **Rollback:** Revert formatters to previous versions; data structures unchanged
+
+- **Risk:** Output format changes affect automated testing tools
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** JSON/markdown formats already include skipped; console additions follow same pattern
+  - **Rollback:** Easy revert since changes isolated to formatters
+
+**Integration Risks:**
+
+- **Risk:** Display width issues with longer summary lines
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Test with various skip counts; terminal width already handled by BaseFormatter
+  - **Monitoring:** Visual inspection of output in various terminals
+
+**Rollback Strategy:**
+1. Revert formatter changes (progress_formatter.rb, display_manager.rb)
+2. Revert aggregator changes (result_aggregator.rb)
+3. All data structures unchanged, no database migrations needed
+4. Tests continue to work (data collection unchanged)
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Research existing test reporting architecture
+  - Analyzed ResultParser (extracts skips from Minitest)
+  - Analyzed TestResult model (stores skipped attribute)
+  - Analyzed formatters (progress, markdown, agent)
+  - Analyzed suite components (aggregator, display manager)
+  - Verified JSON/markdown already include skipped
+  - Verified agent reporter already surfaces skips
+
+* [x] Design display format and icon selection
+  - Chose ⚠️ icon for informational status (non-alarming)
+  - Decided conditional display (only when skipped > 0)
+  - Planned suite-level and package-level displays
+  - Decided not to add detailed skip listing (focus on failures)
+  - Designed markdown table column addition
+
+* [x] Create UX/usage documentation for validation
+  - Documented before/after examples
+  - Created 5 usage scenarios (no skips, some skips, suite, all skipped, high rate)
+  - Verified backward compatibility
+  - Documented JSON/markdown consistency
+
+### Execution Steps
+
+- [ ] Update ProgressFormatter console summary for individual test runs
+  - [ ] Modify format_stdout method (lines 46-48) to include skipped count
+  - [ ] Add conditional skipped display: only show when result.has_skips?
+  - [ ] Update status icon logic: use ⚠️ instead of ✅ when has_skips? is true
+  - [ ] Preserve existing failure display logic unchanged
+  > TEST: Individual Test Run with Skips
+  > Type: Output Validation
+  > Assert: Console summary shows "N tests, M assertions, X failures, Y errors, Z skipped (duration)" when Z > 0
+  > Command: cd ace-test-runner && bundle exec ruby -Ilib -Itest test/formatters/progress_formatter_test.rb -n test_format_with_skipped_tests
+
+- [ ] Update ResultAggregator to include total_skipped
+  - [ ] Modify aggregate method (lines 31-43) to sum skipped counts
+  - [ ] Add: `total_skipped: results.sum { |r| r[:skipped] || 0 }` to returned hash
+  - [ ] Ensure backward compatibility: treat missing skipped as 0
+  > TEST: Suite Aggregation with Skips
+  > Type: Data Aggregation
+  > Assert: Aggregator sums skipped counts correctly across all packages
+  > Command: cd ace-test-runner && bundle exec ruby -Ilib -Itest test/suite/result_aggregator_test.rb -n test_aggregates_skipped_counts
+
+- [ ] Update DisplayManager show_summary for overall suite results
+  - [ ] Modify show_summary method (lines 114-156) to include skipped
+  - [ ] Update status line (121-125): Add "(with N skipped)" when total_skipped > 0
+  - [ ] Update Tests line (129-134): Change format to "total, passed, failed, skipped"
+  - [ ] Add new section after line 155: "Packages with skips:" listing packages with skipped > 0
+  > TEST: Suite Summary with Skips
+  > Type: Display Validation
+  > Assert: Suite summary shows total skipped and per-package breakdown
+  > Command: cd ace-test-runner && bundle exec ruby -Ilib -Itest test/suite/display_manager_test.rb -n test_show_summary_with_skips
+
+- [ ] Update DisplayManager show_final_results for per-package display
+  - [ ] Modify show_final_results (lines 60-112) to include skipped per package
+  - [ ] Add skipped count display at line 86 (success case): ", #{results[:skipped] || 0} skipped"
+  - [ ] Add skipped count display at line 105 (failure case): show skipped separately
+  - [ ] Update package status lines to show skip information
+  > TEST: Package Display with Skips
+  > Type: Display Validation
+  > Assert: Per-package lines show skipped count correctly
+  > Command: cd ace-test-runner && bundle exec ruby -Ilib -Itest test/suite/display_manager_test.rb -n test_show_final_results_with_skips
+
+- [ ] Update DisplayManager print_package_line for live updates
+  - [ ] Modify print_package_line (lines 160-212) to include skipped
+  - [ ] Add skipped count at line 193 (success case): show alongside failures
+  - [ ] Add skipped count at line 203 (failure case): include in failure count breakdown
+  - [ ] Ensure running state handles skipped in progress display
+  > TEST: Live Package Updates with Skips
+  > Type: Display Validation
+  > Assert: Package lines show skipped during and after test execution
+  > Command: cd ace-test-runner && bundle exec ruby -Ilib -Itest test/suite/display_manager_test.rb -n test_print_package_line_with_skips
+
+- [ ] Update ResultAggregator generate_report for markdown output
+  - [ ] Modify generate_report (lines 111-156) to add Skipped column
+  - [ ] Update table header (line 147): Add "| Skipped" column before Duration
+  - [ ] Update separator (line 148): Add separator for new column
+  - [ ] Update data rows (line 152): Add "| #{result[:skipped] || 0}" before duration
+  > TEST: Markdown Report with Skipped Column
+  > Type: Report Format Validation
+  > Assert: Markdown table includes Skipped column with correct values
+  > Command: cd ace-test-runner && bundle exec ruby -Ilib -Itest test/suite/result_aggregator_test.rb -n test_generate_report_includes_skipped_column
+
+- [ ] Run full ace-test-runner test suite to verify no regressions
+  > TEST: Full Test Suite Regression Check
+  > Type: Integration Test
+  > Assert: All existing tests pass, no regressions introduced
+  > Command: cd ace-test-runner && bundle exec rake test
+
+- [ ] Run ace-test-suite on ace-meta to validate live suite behavior
+  - [ ] Execute suite with intentional skipped tests in test gems
+  - [ ] Verify overall summary shows skipped counts
+  - [ ] Verify per-package display includes skipped
+  - [ ] Verify markdown report includes skipped column
+  > TEST: Live Suite Execution Validation
+  > Type: Integration Test
+  > Assert: Suite correctly displays skipped tests across all output formats
+  > Command: cd /Users/mc/Ps/ace-meta && bundle exec ace-test-suite
+
+## Acceptance Criteria
+
+- [ ] **Console Visibility**: Individual test run console summary includes skipped count when > 0
+  - Verify: Run ace-test on gem with skipped tests, check summary line format
+  - Example: "⚠️ 12 tests, 24 assertions, 1 failures, 0 errors, 2 skipped (1.23s)"
+
+- [ ] **Suite Aggregation**: Suite summary shows total skipped count aggregated across all packages
+  - Verify: Run ace-test-suite, check overall summary includes total_skipped
+  - Example: "Tests: 157 total, 152 passed, 0 failed, 5 skipped"
+
+- [ ] **Per-Package Display**: Suite output shows skipped count for each package
+  - Verify: Run ace-test-suite, check per-package lines include skip counts
+  - Example: "[ace-core] ⚠️ 45 tests, 98 assertions, 0 failures, 2 skipped 2.31s"
+
+- [ ] **Markdown Table**: Package table includes Skipped column
+  - Verify: Check generated markdown report includes skipped column
+  - Example: "| ace-core | ✅ Pass | 45 | 43 | 0 | 2 | 2.31s |"
+
+- [ ] **Non-Intrusive Design**: Skipped tests displayed as informational (⚠️), not alarming
+  - Verify: Status icon is ⚠️ when has_skips? is true, not ❌
+  - Verify: Skipped count only shown when > 0 (clean output for 0 skips)
+
+- [ ] **JSON Consistency**: JSON output includes skipped count (verify unchanged)
+  - Verify: Run ace-test --format json, check skipped field present
+  - Verify: Matches console display values
+
+- [ ] **Markdown Consistency**: Markdown reports include skipped in metrics (verify unchanged)
+  - Verify: Generated markdown reports include skipped in metrics table
+  - Verify: Matches console and JSON values
+
+- [ ] **Backward Compatibility**: Existing reports without skips display correctly
+  - Verify: Tests with 0 skipped show clean output
+  - Verify: No breaking changes to output format parsing
+  - Verify: All existing tests pass without modification
+
+## Out of Scope
+
+- ❌ **Detailed Skip Reasons**: Not extracting Minitest skip messages (future enhancement)
+- ❌ **Skip Rate Thresholds**: Not adding configurable warning thresholds (use agent reporter)
+- ❌ **Historical Skip Tracking**: Not comparing skip counts across runs (separate feature)
+- ❌ **Framework Changes**: Not modifying Minitest integration or parsing logic
+- ❌ **Agent Report Enhancements**: Not making major changes to agent report format (minor updates only)
+- ❌ **Interactive Skip Management**: Not adding commands to enable/disable skipped tests
