@@ -75,6 +75,10 @@ git:
           timeout: 30
           continue_on_error: true
 
+        - command: "cd {worktree_path} && claude --dangerously-skip-permissions '/ace:load-context'"
+          timeout: 30
+          continue_on_error: true
+
         # Alternative using environment variable:
         # - command: "find $ACE_WORKTREE_PATH -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
         #   timeout: 30
