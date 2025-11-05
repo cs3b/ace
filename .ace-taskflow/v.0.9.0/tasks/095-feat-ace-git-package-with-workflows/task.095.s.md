@@ -4,7 +4,6 @@ status: draft
 priority: medium
 estimate: 2-3 days
 dependencies: []
-needs_review: true
 ---
 
 # Create ace-git package with three essential workflows
@@ -14,31 +13,27 @@ Create a unified ace-git gem package that consolidates git workflow management w
 - **create-pr.wf.md**: Pull request creation with comprehensive templates (new)
 - **squash-pr.wf.md**: Smart commit squashing (one per version) for clean history
 
-## Review Questions (Pending Human Input)
+## Review Questions - RESOLVED
 
-### [HIGH] Critical Implementation Questions
-- [ ] Should this be named `ace-git` (unified package) or keep separate `ace-git-rebase`, `ace-git-pr` packages?
-  - **Research conducted**: Examined existing ace-git-* packages (ace-git-commit, ace-git-diff, ace-git-worktree)
-  - **Pattern observed**: Current packages are feature-specific (commit, diff, worktree)
-  - **Suggested default**: Create unified `ace-git` package with multiple workflows
-  - **Why needs human input**: Architectural decision affecting package organization
+### Decisions Made (2025-11-05)
 
-- [ ] Should we implement any Ruby helper methods or keep this purely workflow-focused?
-  - **Research conducted**: Checked ace-git-commit (has executable), ace-git-diff (has executable)
-  - **Pattern observed**: Most git packages include minimal Ruby for CLI integration
-  - **Suggested default**: Workflow-only package, no executable
-  - **Why needs human input**: Determines if users need programmatic access
+#### [HIGH] Critical Implementation Decisions
+- [x] **Package naming**: Create unified `ace-git` package with multiple workflows
+  - **Rationale**: Consolidates git workflows in single package for easier installation and maintenance
+  - **Decision basis**: User specified "ace-git package with 3 workflows" in requirements
 
-### [MEDIUM] Enhancement Questions
-- [ ] Should the PR creation workflow integrate with GitHub CLI (`gh`) or provide generic git instructions?
-  - **Research conducted**: Found existing `gh pr create` usage in commit workflow instruction
-  - **Suggested default**: Use `gh` commands with fallback instructions for generic git
-  - **Why needs human input**: Platform-specific vs platform-agnostic approach
+- [x] **Implementation approach**: Pure workflow package without Ruby executable
+  - **Rationale**: These are primarily guidance documents, not automation tools
+  - **Decision basis**: Follows workflow-first principle, reduces complexity
 
-- [ ] Should squash workflow support interactive mode selection or automatic detection?
-  - **Research conducted**: No existing squash patterns found in current packages
-  - **Suggested default**: Automatic detection based on version tags/CHANGELOG entries
-  - **Why needs human input**: Balance between automation and user control
+#### [MEDIUM] Enhancement Decisions
+- [x] **PR creation approach**: GitHub CLI (`gh`) primary with alternative instructions
+  - **Rationale**: Aligns with existing patterns in ace-git-commit workflows
+  - **Decision basis**: GitHub is primary platform, but alternatives documented for flexibility
+
+- [x] **Squash workflow mode**: Configurable with automatic detection as default
+  - **Rationale**: Provides flexibility while maintaining ease of use
+  - **Decision basis**: Automatic by default (version-based), interactive mode available via config
 
 ## Behavioral Specification
 
@@ -116,7 +111,7 @@ git:
 
 - Via gem installation: `gem install ace-git`
 - Via Claude Code: All three workflows available through handbook integration
-- No executable binary (workflow-first approach)
+- **No executable binary** - Pure workflow package (per review decision)
 
 ### Success Criteria
 
@@ -162,14 +157,15 @@ Create a minimal, workflow-first ace-git gem package that consolidates essential
 - PR template selection and customization
 - Branch naming conventions
 - Commit message preparation
-- Integration with GitHub CLI (`gh`)
+- **Primary**: GitHub CLI (`gh`) integration with full examples
+- **Secondary**: Alternative instructions for GitLab, Bitbucket, etc.
 - Draft PR vs ready-for-review decisions
 
 #### Squash Workflow (squash-pr.wf.md)
-- Version-based commit detection
+- Version-based commit detection (automatic by default)
 - CHANGELOG entry preservation
-- Interactive vs automatic squashing
-- Commit message consolidation
+- **Configurable mode**: Automatic detection or interactive selection
+- Commit message consolidation strategies
 - History cleanup best practices
 
 ### Integration Scope
