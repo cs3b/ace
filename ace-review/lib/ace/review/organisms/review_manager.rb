@@ -150,7 +150,7 @@ module Ace
           system_context_path = create_system_context_file(session_dir, composition, context_config)
 
           # Step 3b: Create user.context.md with actual subject configuration
-          user_context_path = create_user_context_file(session_dir, subject_config || {})
+          user_context_path = create_user_context_file(session_dir, subject_config, config[:subject])
 
           # Step 3c: Generate system.prompt.md via ace-context
           system_prompt_path = File.join(session_dir, "system.prompt.md")
@@ -238,7 +238,10 @@ module Ace
         end
 
         # Create user.context.md with subject configuration
-        def create_user_context_file(session_dir, subject_config)
+        def create_user_context_file(session_dir, subject_config, preset_subject_config = nil)
+          # Use explicit subject config first, then fallback to preset config, then default to staged changes
+          effective_config = subject_config || preset_subject_config || "staged"
+
           # Build ace-context frontmatter for subject
           frontmatter = {
             "context" => {
@@ -249,26 +252,39 @@ module Ace
           }
 
           # Add subject configuration to frontmatter
-          if subject_config.is_a?(Hash)
-            if subject_config["files"]
-              frontmatter["context"]["files"].concat(Array(subject_config["files"]))
-            end
-            if subject_config["commands"]
-              frontmatter["context"]["commands"].concat(Array(subject_config["commands"]))
-            end
-            if subject_config["diff"]
-              frontmatter["context"]["diffs"] = [subject_config["diff"]]
-            end
-            if subject_config["content"]
-              # For inline content, include it directly after frontmatter
-              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{subject_config["content"]}"
+          case effective_config
+          when String
+            # Handle simple string shortcuts like "staged", "working", "pr", or inline content
+            if effective_config.match?(/\.(md|rb|js|ts|py|go|java|php|cpp|c|h|css|html|xml|json|yaml|yml|toml)$/i)
+              # It's a file path
+              frontmatter["context"]["files"] << effective_config
+            elsif effective_config.length < 50 && !effective_config.include?("\n")
+              # It's likely a preset/shortcut like "staged", "working", "pr"
+              # For simple shortcuts, we'll use ace-context's preset functionality
+              frontmatter["context"]["presets"] << effective_config
             else
-              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
+              # It's inline content
+              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{effective_config}"
             end
-          else
-            # Subject config is likely inline content
-            user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{subject_config}"
+          when Hash
+            # Handle structured configuration
+            if effective_config["files"]
+              frontmatter["context"]["files"].concat(Array(effective_config["files"]))
+            end
+            if effective_config["commands"]
+              frontmatter["context"]["commands"].concat(Array(effective_config["commands"]))
+            end
+            if effective_config["diff"]
+              frontmatter["context"]["diffs"] = [effective_config["diff"]]
+            end
+            if effective_config["content"]
+              # For inline content, include it directly after frontmatter
+              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{effective_config["content"]}"
+            end
           end
+
+          # Default content if not set above
+          user_context_content ||= "#{YAML.dump(frontmatter).strip}\n---\n\n"
 
           # Write to file
           user_context_path = File.join(session_dir, "user.context.md")
@@ -336,29 +352,34 @@ module Ace
           )
 
           if result[:success]
+            # Save Ruby API metadata if available
+            save_ruby_api_metadata(session_dir, result) if result[:metadata]
+
             # Copy final review to release folder
             release_path = copy_to_release(session_dir, review_data)
 
-            # Return the release path for backward compatibility
+            # Return enhanced result with metadata for backward compatibility
             {
               success: true,
               output_file: release_path || result[:output_file],
-              message: release_path ? "Review saved to #{release_path}" : "Review saved to #{result[:output_file]}"
+              message: release_path ? "Review saved to #{release_path}" : "Review saved to #{result[:output_file]}",
+              usage: result[:usage],
+              model_info: result[:model_info],
+              provider_info: result[:provider_info]
             }
           else
-            result
+            # Enhanced error information from Ruby API
+            error_result = result.dup
+            if result[:error_type]
+              error_result[:enhanced_error] = "#{result[:error_type]}: #{result[:error]}"
+            end
+            error_result
           end
         end
 
         def save_session_files(session_dir, review_data)
-          # v0.13.0 architecture: system and user prompts are already saved as .prompt.md files
-          # Save subject (no .tmp extension)
-          File.write(File.join(session_dir, "subject.md"), review_data[:subject])
-
-          # Save context if present (no .tmp extension)
-          unless review_data[:context].empty?
-            File.write(File.join(session_dir, "context.md"), review_data[:context])
-          end
+          # v0.13.0+ architecture: system and user prompts are already saved as .prompt.md files
+          # Subject and context are handled directly via ace-context workflow, no need for separate files
 
           # Save metadata (committable - no .tmp extension)
           metadata = create_metadata(review_data)
@@ -434,6 +455,19 @@ module Ace
             "system_prompt_size" => review_data[:system_prompt].length,
             "user_prompt_size" => review_data[:user_prompt].length
           }
+        end
+
+        def save_ruby_api_metadata(session_dir, result)
+          # Save rich metadata from Ruby API
+          metadata_file = File.join(session_dir, "llm_metadata.yml")
+          metadata_content = {
+            "timestamp" => Time.now.iso8601,
+            "usage" => result[:usage],
+            "model_info" => result[:model_info],
+            "provider_info" => result[:provider_info],
+            "raw_metadata" => result[:metadata]
+          }
+          File.write(metadata_file, YAML.dump(metadata_content))
         end
 
         def add_review_metadata(response, review_data)
