@@ -1,102 +1,93 @@
 # frozen_string_literal: true
 
-require "open3"
-require "json"
+require "ace/llm"
 
 module Ace
   module Review
     module Molecules
-      # Executes LLM queries for code reviews
+      # Executes LLM queries for code reviews using Ruby API
       class LlmExecutor
         def initialize
           @default_model = Ace::Review.get("defaults", "model") || "google:gemini-2.5-flash"
         end
 
-        # Execute an LLM query
+        # Execute an LLM query using Ruby API
         # @param system_prompt [String] system prompt
         # @param user_prompt [String] user prompt
         # @param model [String] the model to use
         # @param session_dir [String] the session directory for output
-        # @return [Hash] result with success, response, output_file, and error keys
+        # @return [Hash] result with success, response, output_file, metadata, and error keys
         def execute(system_prompt:, user_prompt:, model: nil, session_dir:)
           model ||= @default_model
 
-          # Check if ace-llm-query is available
-          unless command_exists?("ace-llm-query")
+          # Check if ace-llm Ruby API is available
+          unless ruby_api_available?
             return {
               success: false,
               response: nil,
-              error: "ace-llm-query not found. Please install ace-llm gem or use --dry-run"
+              error: "ace-llm Ruby API not available. Please install ace-llm gem or use --dry-run"
             }
           end
 
-          # v0.13.0 architecture: only supports system/user prompt format
-          result = execute_with_system_user_prompts(system_prompt, user_prompt, model, session_dir)
-
-          if result[:success]
-            {
-              success: true,
-              response: result[:output],
-              output_file: result[:output_file],
-              error: nil
-            }
-          else
-            {
-              success: false,
-              response: nil,
-              error: result[:error] || "LLM execution failed"
-            }
-          end
+          # Use Ruby API directly for v0.13.0 architecture
+          execute_with_ruby_api(system_prompt, user_prompt, model, session_dir)
+        rescue StandardError => e
+          {
+            success: false,
+            response: nil,
+            error: "LLM execution failed: #{e.message}"
+          }
         end
 
         private
 
-        def command_exists?(command)
-          system("which #{command} > /dev/null 2>&1")
+        # Check if Ruby API is available
+        def ruby_api_available?
+          defined?(Ace::LLM::QueryInterface)
         end
 
-        def execute_with_system_user_prompts(system_prompt, user_prompt, model, session_dir)
-          require "tempfile"
+        # Execute using Ruby API with system/user prompts
+        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir)
+          # Extract model short name for output filename
+          model_short = model.include?(":") ? model.split(":", 2).last : model
+          output_file = File.join(session_dir, "review-report-#{model_short}.md")
 
-          # Create temporary files for system and user prompts
-          system_temp_file = Tempfile.new(["system-prompt", ".md"])
-          system_temp_file.write(system_prompt)
-          system_temp_file.close
+          # Use Ruby API directly - no temp files needed!
+          result = Ace::LLM::QueryInterface.query(
+            model,
+            user_prompt,
+            system: system_prompt,
+            output: output_file,
+            format: "text",
+            timeout: 600,
+            force: true
+          )
 
-          user_temp_file = Tempfile.new(["user-prompt", ".md"])
-          user_temp_file.write(user_prompt)
-          user_temp_file.close
-
-          begin
-            # Extract model short name for output filename
-            model_short = model.include?(":") ? model.split(":", 2).last : model
-
-            # Build output file path in session directory
-            output_file = File.join(session_dir, "review-report-#{model_short}.md")
-
-            # Execute ace-llm-query with correct flags (--system, --prompt)
-            cmd = [
-              "ace-llm-query",
-              model,                        # PROVIDER:MODEL format
-              "--system", system_temp_file.path,           # System prompt file
-              "--prompt", user_temp_file.path,             # User prompt as --prompt flag
-              "--output", output_file,     # Output to session directory
-              "--timeout", "600",          # 600 seconds timeout
-              "--format", "markdown"       # Markdown format
-            ]
-
-            stdout, stderr, status = Open3.capture3(*cmd)
-
-            {
-              success: status.success?,
-              output: stdout,
-              output_file: output_file,
-              error: stderr
-            }
-          ensure
-            system_temp_file.unlink
-            user_temp_file.unlink
-          end
+          # Return structured result with rich metadata
+          {
+            success: true,
+            response: result[:text],
+            output_file: output_file,
+            metadata: result[:metadata],
+            usage: result[:usage],
+            model_info: result[:model],
+            provider_info: result[:provider],
+            error: nil
+          }
+        rescue Ace::LLM::Error => e
+          {
+            success: false,
+            response: nil,
+            error: "LLM error: #{e.message}",
+            error_type: e.class.name
+          }
+        rescue => e
+          {
+            success: false,
+            response: nil,
+            error: "Unexpected error: #{e.message}",
+            error_type: e.class.name
+          }
         end
       end
     end

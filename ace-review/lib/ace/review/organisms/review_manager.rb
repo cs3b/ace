@@ -336,17 +336,28 @@ module Ace
           )
 
           if result[:success]
+            # Save Ruby API metadata if available
+            save_ruby_api_metadata(session_dir, result) if result[:metadata]
+
             # Copy final review to release folder
             release_path = copy_to_release(session_dir, review_data)
 
-            # Return the release path for backward compatibility
+            # Return enhanced result with metadata for backward compatibility
             {
               success: true,
               output_file: release_path || result[:output_file],
-              message: release_path ? "Review saved to #{release_path}" : "Review saved to #{result[:output_file]}"
+              message: release_path ? "Review saved to #{release_path}" : "Review saved to #{result[:output_file]}",
+              usage: result[:usage],
+              model_info: result[:model_info],
+              provider_info: result[:provider_info]
             }
           else
-            result
+            # Enhanced error information from Ruby API
+            error_result = result.dup
+            if result[:error_type]
+              error_result[:enhanced_error] = "#{result[:error_type]}: #{result[:error]}"
+            end
+            error_result
           end
         end
 
@@ -434,6 +445,19 @@ module Ace
             "system_prompt_size" => review_data[:system_prompt].length,
             "user_prompt_size" => review_data[:user_prompt].length
           }
+        end
+
+        def save_ruby_api_metadata(session_dir, result)
+          # Save rich metadata from Ruby API
+          metadata_file = File.join(session_dir, "llm_metadata.yml")
+          metadata_content = {
+            "timestamp" => Time.now.iso8601,
+            "usage" => result[:usage],
+            "model_info" => result[:model_info],
+            "provider_info" => result[:provider_info],
+            "raw_metadata" => result[:metadata]
+          }
+          File.write(metadata_file, YAML.dump(metadata_content))
         end
 
         def add_review_metadata(response, review_data)
