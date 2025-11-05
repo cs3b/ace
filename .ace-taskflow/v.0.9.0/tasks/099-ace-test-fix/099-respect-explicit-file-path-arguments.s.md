@@ -2,7 +2,7 @@
 id: v.0.9.0+task.099
 status: draft
 priority: high
-estimate: TBD
+estimate: 2-4 hours
 dependencies: []
 ---
 
@@ -80,11 +80,11 @@ Running atoms (12 files)...
 
 ### Validation Questions
 
-- [ ] **Precedence rules**: What happens if user provides both a file path AND a group target (e.g., `ace-test atoms test/atoms/foo_test.rb`)? Should file paths always take precedence?
-- [ ] **Glob patterns**: Should we support glob patterns as explicit arguments (e.g., `ace-test test/atoms/*_test.rb`)? Or is that a separate enhancement?
-- [ ] **Test method filtering**: Should we support running specific test methods by name (e.g., `ace-test file.rb --name test_foo`)? Or only line numbers for now?
-- [ ] **Exit code behavior**: Should exit codes remain the same (0 for success, 1 for failures) regardless of filtering mode?
-- [ ] **Reporting format**: Should the test report directory structure change when running explicit files vs groups?
+- [x] **Precedence rules**: File paths always take precedence over group targets. When both are provided, only the explicit files are executed.
+- [x] **Glob patterns**: Deferred to future enhancement. Only explicit file paths are supported in this task.
+- [x] **Test method filtering**: Deferred to future enhancement. Only line number filtering is supported in this task.
+- [x] **Exit code behavior**: Exit codes remain the same (0 for success, 1 for failures) regardless of filtering mode.
+- [x] **Reporting format**: Test reports should maintain the same structure but only include results from the executed files.
 
 ## Objective
 
@@ -122,6 +122,40 @@ Enable developers and AI agents to run focused, efficient tests by respecting ex
 - Success criteria validation through manual testing scenarios
 - User acceptance scenarios covering all filtering modes
 - Behavioral test cases for file filtering in grouped execution mode
+
+### Implementation Approach
+
+**Key Integration Points:**
+- The primary fix is expected to be in `TestOrchestrator#should_execute_sequentially?` method
+- CLI argument parsing and file preservation logic appears to be working correctly
+- The bug occurs when the system decides between group execution vs explicit file execution
+
+**Likely Files to be Modified:**
+- `ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb` - Core logic fix
+- `ace-test-runner/exe/ace-test` - Potential CLI validation improvements
+- `ace-test-runner/test/integration/` - New test coverage
+
+**Testing Strategy:**
+- Create integration tests that verify the behavioral specification
+- Test both positive scenarios and error conditions
+- Ensure no regression to existing group-based execution
+
+### Validation Test Scenarios
+
+**Positive Test Cases:**
+1. `ace-test test/atoms/path_expander_test.rb` → Should run only that file
+2. `ace-test test/atoms/path_expander_test.rb:42` → Should run only test at line 42
+3. `ace-test test/atoms/path_expander_test.rb test/molecules/config_loader_test.rb` → Should run only those 2 files
+4. `ace-test` (no arguments) → Should run groups as before (no regression)
+
+**Error Test Cases:**
+1. `ace-test test/atoms/nonexistent_test.rb` → Should show "Test file not found" error
+2. `ace-test test/atoms/path_expander_test.rb:999` → Should show "No test found at line" error
+3. `ace-test lib/ace/foo.rb` → Should show "Not a test file" error
+
+**Precedence Test Cases:**
+1. `ace-test atoms test/atoms/path_expander_test.rb` → Should run only the specified file, ignore group
+2. `ace-test test/atoms/path_expander_test.rb smoke` → Should run only the specified file, ignore group
 
 ## Out of Scope
 
