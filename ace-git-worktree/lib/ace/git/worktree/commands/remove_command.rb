@@ -249,7 +249,7 @@ module Ace
 
                 # Delete the branch if it exists
                 if worktree_info.branch && !worktree_info.branch.empty?
-                  branch_result = Ace::Git::Worktree::Atoms::GitCommand.branch("-D", worktree_info.branch)
+                  branch_result = Ace::Git::Worktree::Atoms::GitCommand.execute("branch", "-D", worktree_info.branch)
                   if branch_result[:success]
                     puts "Deleted branch: #{worktree_info.branch}"
                   else
