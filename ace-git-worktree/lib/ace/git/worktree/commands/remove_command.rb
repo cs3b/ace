@@ -21,6 +21,7 @@ module Ace
           # Initialize a new RemoveCommand
           def initialize
             @manager = Organisms::WorktreeManager.new
+            @task_fetcher = Molecules::TaskFetcher.new
           end
 
           # Run the remove command
@@ -178,25 +179,34 @@ module Ace
           def remove_task_worktree(options)
             puts "Removing worktree for task: #{options[:task]}"
 
-            # Try to find worktree by task reference first (for completed tasks)
-            worktree_info = find_worktree_by_task_reference(options[:task])
+            # Try to find task metadata first
+            task_metadata = @task_fetcher.fetch(options[:task])
             task_found = false
+            worktree_info = nil
 
-            if worktree_info
-              puts "Task not found in ace-taskflow, but worktree found. Removing worktree only."
-              task_found = false # Mark as not found so we skip task metadata updates
+            if task_metadata
+              puts "Task found: #{task_metadata.title} (status: #{task_metadata.status})"
+              worktree_info = find_worktree_for_task(task_metadata)
+              task_found = true
             else
-              # Try to find task metadata
-              task_metadata = @manager.task_fetcher.fetch(options[:task])
-              if task_metadata
-                worktree_info = find_worktree_for_task(task_metadata)
-                task_found = true
-              end
+              # Fallback: Try to find worktree by task reference (for cases where task metadata exists but worktree doesn't)
+              puts "Task not found in ace-taskflow, checking for orphaned worktree..."
+              worktree_info = find_worktree_by_task_reference(options[:task])
+              task_found = false
             end
 
             unless worktree_info
-              puts "Error: Task not found: #{options[:task]}"
-              puts "Use 'ace-taskflow tasks list' to see available tasks"
+              # Provide specific error messages based on what we found
+              if task_metadata
+                puts "Task found but no worktree is associated with it."
+                puts "Task: #{task_metadata.title} (status: #{task_metadata.status})"
+                puts "This task may have been completed and its worktree cleaned up already."
+                puts ""
+                puts "Use 'ace-git-worktree list' to see available worktrees"
+              else
+                puts "Error: Task not found: #{options[:task]}"
+                puts "Use 'ace-taskflow tasks list' to see available tasks"
+              end
               return 1
             end
 
@@ -204,7 +214,7 @@ module Ace
               puts "DRY RUN - No changes will be made"
               puts "This would:"
               puts "  • Remove worktree and its metadata from task #{options[:task]}"
-              puts "  • #{task_found ? 'Clean up task file metadata' : 'Skip task metadata cleanup (task not found)'}"
+              puts "  • #{task_found ? 'Clean up task file metadata' : 'Skip task metadata cleanup (no worktree metadata found)'}"
               puts "  • #{options[:keep_directory] ? 'Keep' : 'Remove'} the worktree directory"
               return 0
             end

@@ -22,7 +22,7 @@ module Ace
         #     release: "v.0.9.0"
         #   )
         class TaskMetadata
-          attr_reader :id, :task_id, :title, :status, :priority, :estimate, :release, :dependencies, :slug
+          attr_reader :id, :task_id, :title, :status, :priority, :estimate, :release, :dependencies, :slug, :path, :description, :branch
 
           # Initialize a new TaskMetadata
           #
@@ -35,7 +35,7 @@ module Ace
           # @param release [String] Release version (e.g., "v.0.9.0")
           # @param dependencies [Array<String>] List of dependency task IDs
           # @param slug [String, nil] URL-safe slug (generated if nil)
-          def initialize(id:, task_id:, title:, status:, priority: nil, estimate: nil, release: nil, dependencies: [], slug: nil)
+          def initialize(id:, task_id:, title:, status:, priority: nil, estimate: nil, release: nil, dependencies: [], slug: nil, branch: nil)
             @id = id.to_s
             @task_id = task_id.to_s
             @title = title.to_s
@@ -45,6 +45,7 @@ module Ace
             @release = release&.to_s
             @dependencies = Array(dependencies).map(&:to_s)
             @slug = slug || generate_slug
+            @branch = branch
           end
 
           # Check if the task is in a workable state
@@ -97,34 +98,98 @@ module Ace
           #   output = `ace-taskflow task show 081 --content`
           #   metadata = TaskMetadata.from_ace_taskflow_output(output)
           def self.from_ace_taskflow_output(output)
+            puts "DEBUG: === TaskMetadata.from_ace_taskflow_output START ===" if ENV["DEBUG"]
+            puts "DEBUG: TaskMetadata.from_ace_taskflow_output called with #{output.length} chars" if ENV["DEBUG"]
+            puts "DEBUG: First 200 chars: #{output[0, 200].inspect}" if ENV["DEBUG"]
             return nil if output.nil? || output.empty?
+            puts "DEBUG: About to call parse_ace_taskflow_cli_output" if ENV["DEBUG"]
 
-            # ace-taskflow outputs YAML with frontmatter and content
-            # We need to extract the YAML frontmatter
-            yaml_match = output.match(/\A---\s*\n(.*?)\n---\s*\n(.*)/m)
-            return nil unless yaml_match
-
-            yaml_content = yaml_match[1]
-            markdown_content = yaml_match[2]
+            # ace-taskflow outputs human-readable format, not YAML frontmatter
+            # Parse the CLI format into structured data (inline implementation)
+            puts "DEBUG: Starting inline CLI parsing" if ENV["DEBUG"]
+            data = {}
 
             begin
-              data = YAML.safe_load(yaml_content)
-              return nil unless data.is_a?(Hash)
+              output.each_line do |line|
+                line = line.strip
+                next if line.empty?
+                break if line == "--- Content ---"
 
-              # Extract task ID from various formats
-              id = extract_id_from_data(data)
-              return nil unless id
+                if line.include?(':')
+                  key, value = line.split(':', 2).map(&:strip)
+                  key = key.gsub(/[^\w\s]/, '')
+                  value = value.strip
 
-              # Extract other fields
-              task_id = data["id"] || "task.#{id}"
-              title = data.dig("title") || extract_title_from_content(markdown_content) || "Task #{id}"
-              status = data["status"] || "pending"
-              priority = data["priority"]
-              estimate = data["estimate"]
-              release = extract_release_from_data(data)
-              dependencies = Array(data["dependencies"])
+                  case key.downcase
+                  when 'task'
+                    # Extract ID inline (from extract_id_from_task_value logic)
+                    if value.match?(/\Av\.[\d.]+\+task\.(\d+)\z/)
+                      data['id'] = value.match(/\Av\.[\d.]+\+task\.(\d+)\z/)[1]
+                    else
+                      data['id'] = value.scan(/\d+/).last
+                    end
+                  when 'status'
+                    data['status'] = value.gsub(/[^\w\s]/, '').downcase
+                  when 'estimate'
+                    data['estimate'] = value
+                  when 'priority'
+                    data['priority'] = value
+                  when 'dependencies'
+                    data['dependencies'] = value.split(',').map(&:strip).reject(&:empty?)
+                  when 'path'
+                    data['path'] = value
+                  when 'title'
+                    data['title'] = value
+                  else
+                    data[key.downcase] = value
+                  end
+                end
+              end
+            rescue StandardError => e
+              puts "DEBUG: Inline parsing exception: #{e.message}" if ENV["DEBUG"]
+              puts "DEBUG: Inline parsing backtrace: #{e.backtrace.first(3).join(', ')}" if ENV["DEBUG"]
+              return nil
+            end
 
-              new(
+            puts "DEBUG: Inline parsing result: #{data.inspect}" if ENV["DEBUG"]
+            return nil unless data.is_a?(Hash)
+
+            # Extract task ID from various formats
+            puts "DEBUG: About to extract ID from data: #{data.inspect}" if ENV["DEBUG"]
+            # Inline extract_id_from_data logic
+            id = nil
+            if data["id"]
+              id = data["id"].to_s
+            elsif data["task_id"]
+              match = data["task_id"].match(/(\d+)/)
+              id = match[1] if match
+            elsif data["id"]
+              match = data["id"].match(/(\d+)/)
+              id = match[1] if match
+            end
+            puts "DEBUG: Extracted ID: #{id.inspect}" if ENV["DEBUG"]
+            return nil unless id
+
+            # Extract other fields
+            task_id = data["id"] || "task.#{id}"
+            title = data["title"] || "Task #{id}"
+            status = data["status"] || "pending"
+            priority = data["priority"]
+            estimate = data["estimate"]
+            # Inline extract_release_from_data logic
+            release = nil
+            if data["release"]
+              release = data["release"]
+            elsif data["id"]
+              match = data["id"].match(/^(v\.[\d.]+)\+/)
+              release = match[1] if match
+            end
+            dependencies = Array(data["dependencies"])
+
+            puts "DEBUG: About to create TaskMetadata with: id=#{id}, task_id=#{task_id}, title=#{title}" if ENV["DEBUG"]
+
+            begin
+              result = new(
                 id: id,
                 task_id: task_id,
                 title: title,
@@ -132,10 +197,20 @@ module Ace
                 priority: priority,
                 estimate: estimate,
                 release: release,
-                dependencies: dependencies
+                dependencies: dependencies,
+                slug: "task-#{id}",
+                branch: nil  # Completed tasks don't have worktree branches
               )
-            rescue Psych::SyntaxError
+
+              puts "DEBUG: TaskMetadata created successfully: #{result.inspect}" if ENV["DEBUG"]
+              result
+            rescue StandardError => e
+              puts "DEBUG: TaskMetadata creation exception: #{e.message}" if ENV["DEBUG"]
+              puts "DEBUG: TaskMetadata creation backtrace: #{e.backtrace.first(3).join(', ')}" if ENV["DEBUG"]
               nil
+            end
+          rescue StandardError
+            nil
             end
           end
 
@@ -236,6 +311,14 @@ module Ace
             [@id, @task_id, @release].hash
           end
 
+          # Get branch associated with this task (if any)
+          #
+          # @return [String, nil] Branch name or nil for completed tasks
+          def branch
+            # Completed tasks don't have associated worktree branches
+            nil
+          end
+
           # String representation
           #
           # @return [String] String representation
@@ -248,6 +331,73 @@ module Ace
           # @return [String] Detailed inspect string
           def inspect
             "#<#{self.class.name} id=#{@id} task_id=#{@task_id} title=#{@title.inspect} status=#{@status.inspect}>"
+          end
+
+          # Parse ace-taskflow CLI output format into structured data
+          #
+          # @param output [String] CLI output from ace-taskflow task show --content
+          # @return [Hash, nil] Parsed data hash or nil if parsing fails
+          def self.parse_ace_taskflow_cli_output(output)
+            puts "DEBUG: parse_ace_taskflow_cli_output called" if ENV["DEBUG"]
+            data = {}
+
+            output.each_line do |line|
+              line = line.strip
+              next if line.empty?
+
+              # Stop parsing at "--- Content ---" separator
+              break if line == "--- Content ---"
+
+              # Parse key-value pairs (Key: Value)
+              if line.include?(':')
+                key, value = line.split(':', 2).map(&:strip)
+
+                # Clean up the key (remove special characters)
+                key = key.gsub(/[^\w\s]/, '')
+
+                # Clean up the value
+                value = value.strip
+
+                # Handle special fields
+                case key.downcase
+                when 'task'
+                  # Extract ID from "Task: v.0.9.0+task.089"
+                  data['id'] = extract_id_from_task_value(value)
+                when 'status'
+                  # Clean up status emoji and convert to string
+                  data['status'] = value.gsub(/[^\w\s]/, '').downcase
+                when 'estimate'
+                  data['estimate'] = value
+                when 'priority'
+                  data['priority'] = value
+                when 'dependencies'
+                  # Parse comma-separated dependencies
+                  data['dependencies'] = value.split(',').map(&:strip).reject(&:empty?)
+                when 'path'
+                  data['path'] = value
+                when 'title'
+                  data['title'] = value
+                else
+                  data[key.downcase] = value
+                end
+              end
+            end
+
+            data
+          end
+
+          # Extract task ID from task value like "v.0.9.0+task.089"
+          #
+          # @param task_value [String] Task value from CLI output
+          # @return [String, nil] Extracted task ID
+          def self.extract_id_from_task_value(task_value)
+            # Extract just the numeric part from formats like "v.0.9.0+task.089"
+            if task_value.match?(/\Av\.[\d.]+\+task\.(\d+)\z/)
+              task_value.match(/\Av\.[\d.]+\+task\.(\d+)\z/)[1]
+            else
+              # For other formats, try to extract numeric part
+              task_value.scan(/\d+/).last
+            end
           end
 
           private
@@ -321,4 +471,3 @@ module Ace
       end
     end
   end
-end
