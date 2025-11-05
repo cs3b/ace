@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "timeout"
 
 module Ace
   module Git
@@ -144,12 +145,14 @@ module Ace
           def execute_command(command:, working_dir:, timeout:, env:)
             start_time = Time.now
 
-            stdout, stderr, status = Open3.capture3(
-              env,
-              command,
-              chdir: working_dir,
-              timeout: timeout
-            )
+            # Use Timeout module to enforce timeout
+            stdout, stderr, status = Timeout.timeout(timeout) do
+              Open3.capture3(
+                env,
+                command,
+                chdir: working_dir
+              )
+            end
 
             duration = Time.now - start_time
 
