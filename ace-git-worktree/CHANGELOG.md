@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.10] - 2025-11-05
+
+### Fixed
+- **Completed Task Cleanup Messaging**: Replace confusing "Task metadata cleanup would require task access - skipped for completed task" message with clear status-based messaging
+- **Task Status Detection**: Fix status parsing to handle stripped format (" done" instead of "done") from CLI output
+- **User Experience**: Provide clear feedback when removing worktrees for completed tasks, which is the normal workflow
+
+### Added
+- **Clear Completion Messages**: Show "Task completed: no metadata cleanup needed" for done/completed tasks
+- **Status-based Messaging**: Different messages for different task statuses to avoid confusion
+
+### Changed
+- **Remove Command Logic**: Updated messaging to be informative rather than suggesting errors for normal completed task workflows
+- **User Communication**: Focus on clarity and explaining normal workflow expectations
+
+## [0.1.9] - 2025-11-05
+
+### Fixed
+- **CLI Format Parsing**: Major rewrite of TaskMetadata parser to handle ace-taskflow CLI human-readable format instead of expected YAML frontmatter
+- **Method Resolution Failures**: Implement inline parsing logic as workaround for Ruby class method loading issues
+- **Task ID Extraction**: Fix parsing of task IDs from "v.0.9.0+task.089" format in CLI output
+- **Timeout Parameter Error**: Fix Open3.capture3 timeout parameter syntax causing command execution failures
+- **TaskMetadata Branch Accessor**: Add missing branch method for completed tasks returning nil
+
+### Added
+- **Inline CLI Parser**: Complete implementation for parsing ace-taskflow CLI key-value format
+- **Comprehensive Debug Output**: Added DEBUG environment variable support for troubleshooting integration issues
+- **Fallback Logic**: Enhanced error handling when ace-taskflow direct API integration fails
+
+### Changed
+- **TaskMetadata Architecture**: Rewrote from_ace_taskflow_output() to parse CLI format instead of YAML frontmatter
+- **Error Handling**: Better distinction between task not found vs worktree not found scenarios
+
 ## [0.1.8] - 2025-11-04
 
 ### Fixed
