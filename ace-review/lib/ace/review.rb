@@ -65,7 +65,7 @@ module Ace
         {
           "pr" => {
             "description" => "Pull request review",
-            "prompt_composition" => {
+            "system_prompt" => {
               "base" => "prompt://base/system",
               "format" => "prompt://format/standard",
               "guidelines" => [
@@ -83,7 +83,7 @@ module Ace
           },
           "security" => {
             "description" => "Security-focused review",
-            "prompt_composition" => {
+            "system_prompt" => {
               "base" => "prompt://base/system",
               "format" => "prompt://format/detailed",
               "focus" => ["prompt://focus/quality/security"],

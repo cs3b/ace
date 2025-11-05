@@ -2,7 +2,7 @@
 
 description: "Agent definition review - structure and clarity"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/detailed"
   focus:

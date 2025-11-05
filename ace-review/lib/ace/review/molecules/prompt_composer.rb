@@ -59,30 +59,6 @@ module Ace
           sections.join("\n\n")
         end
 
-        # Build a complete review prompt with context and subject
-        def build_review_prompt(composition, context, subject, config_dir: nil)
-          prompt_parts = []
-
-          # Add composed system prompt
-          system_prompt = compose(composition, config_dir: config_dir)
-          prompt_parts << system_prompt if system_prompt && !system_prompt.empty?
-
-          # Add context section
-          if context && !context.empty?
-            prompt_parts << wrap_section("Project Context", context)
-          end
-
-          # Add subject section
-          if subject && !subject.empty?
-            prompt_parts << wrap_section("Code to Review", subject)
-          end
-
-          # Add review request
-          prompt_parts << generate_review_request(composition)
-
-          prompt_parts.join("\n\n")
-        end
-
         private
 
         def wrap_section(title, content)
@@ -93,22 +69,6 @@ module Ace
 
             #{content}
           SECTION
-        end
-
-        def generate_review_request(composition)
-          focus_areas = if composition["focus"] && !composition["focus"].empty?
-                          "\n\nPay special attention to the focus areas specified above."
-                        else
-                          ""
-                        end
-
-          <<~REQUEST
-            ## Review Request
-
-            Please review the provided code according to the guidelines and format specified above.#{focus_areas}
-
-            Provide actionable feedback with specific suggestions for improvement. Reference line numbers or file locations where applicable.
-          REQUEST
         end
       end
     end

@@ -2,7 +2,7 @@
 
 description: "Documentation review - completeness and clarity"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/standard"
   focus:

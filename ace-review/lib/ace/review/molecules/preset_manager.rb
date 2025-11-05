@@ -79,7 +79,7 @@ module Ace
 
           {
             description: preset["description"],
-            prompt_composition: resolve_prompt_composition(preset["prompt_composition"], overrides),
+            system_prompt: resolve_system_prompt_composition(preset["system_prompt"], overrides),
             context: resolve_context_config(preset["context"], overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             model: overrides[:model] || preset["model"] || default_model,
@@ -253,7 +253,7 @@ module Ace
           end
         end
 
-        def resolve_prompt_composition(composition, overrides)
+        def resolve_system_prompt_composition(composition, overrides)
           return {} unless composition
 
           result = composition.dup

@@ -2,7 +2,7 @@
 
 description: "Pull request review - comprehensive code changes review"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/detailed"
   focus:

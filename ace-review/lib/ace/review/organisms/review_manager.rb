@@ -3,6 +3,7 @@
 require "fileutils"
 require "time"
 require "yaml"
+require "open3"
 
 module Ace
   module Review
@@ -31,28 +32,32 @@ module Ace
           config_result = prepare_review_config(options)
           return config_result unless config_result[:success]
 
-          # Step 2: Extract content
+          # Step 2: Create session directory early (needed for ace-context)
+          cache_dir = create_cache_directory
+          session_dir = create_session_directory(options, cache_dir)
+
+          # Step 3: Extract content
           content_result = extract_review_content(config_result[:config], options)
           return content_result unless content_result[:success]
 
-          # Step 3: Compose prompt
+          # Step 4: Compose prompts via ace-context
           prompt_result = compose_review_prompt(
             config_result[:config],
             content_result[:context],
-            content_result[:subject]
+            content_result[:subject],
+            options.subject_config,  # Pass original subject configuration
+            session_dir
           )
           return prompt_result unless prompt_result[:success]
 
-          # Step 4: Prepare review data structure
+          # Step 5: Prepare review data structure
           review_data = build_review_data(
             options,
             config_result[:config],
             content_result,
-            prompt_result[:prompt]
+            prompt_result,  # Pass the entire prompt_result to handle both formats
+            cache_dir
           )
-
-          # Step 5: Create session directory
-          session_dir = create_session_directory(options, review_data[:cache_dir])
 
           # Step 6: Save session files
           save_session_files(session_dir, review_data)
@@ -135,17 +140,66 @@ module Ace
           }
         end
 
-        # Step 3: Compose the review prompt
-        def compose_review_prompt(config, context, subject)
-          # Build prompt composition from options or config
-          composition = config[:prompt_composition] || {}
+        # Step 3: Generate system and user prompts via ace-context
+        def compose_review_prompt(config, context, subject, subject_config, session_dir)
+          composition = config[:system_prompt] || {}
+          context_config = config[:context] || "project"
 
-          prompt = @prompt_composer.build_review_prompt(
+          # Step 3a: Create system.context.md
+          system_context_path = create_system_context_file(session_dir, composition, context_config)
+
+          # Step 3b: Create user.context.md with actual subject configuration
+          user_context_path = create_user_context_file(session_dir, subject_config || {})
+
+          # Step 3c: Generate system.prompt.md via ace-context
+          system_prompt_path = File.join(session_dir, "system.prompt.md")
+          unless execute_ace_context(system_context_path, system_prompt_path)
+            warn "Failed to generate system prompt via ace-context" if Ace::Review.debug?
+            # Fallback: use temporary combined prompt
+            return create_fallback_prompt(composition, context, subject)
+          end
+
+          # Step 3d: Generate user.prompt.md via ace-context
+          user_prompt_path = File.join(session_dir, "user.prompt.md")
+          unless execute_ace_context(user_context_path, user_prompt_path)
+            warn "Failed to generate user prompt via ace-context" if Ace::Review.debug?
+            # Fallback: use temporary combined prompt
+            return create_fallback_prompt(composition, context, subject)
+          end
+
+          # Load the generated prompts
+          system_prompt = File.read(system_prompt_path) if File.exist?(system_prompt_path)
+          user_prompt = File.read(user_prompt_path) if File.exist?(user_prompt_path)
+
+          if system_prompt.nil? || system_prompt.empty?
+            return { success: false, error: "Failed to generate system prompt" }
+          end
+
+          {
+            success: true,
+            system_prompt: system_prompt,
+            user_prompt: user_prompt || "Please review the provided code.",
+            system_prompt_path: system_prompt_path,
+            user_prompt_path: user_prompt_path
+          }
+        end
+
+        # Fallback method for when ace-context fails
+        def create_fallback_prompt(composition, context, subject)
+          # Use basic compose method to get system prompt content
+          system_prompt = @prompt_composer.compose(
             composition,
-            context,
-            subject,
             config_dir: File.dirname(@preset_manager.config_path || ".")
           )
+
+          # Create a combined prompt for now (will be replaced with proper ace-context flow)
+          combined_parts = []
+          combined_parts << system_prompt if system_prompt && !system_prompt.empty?
+          combined_parts << wrap_section("Project Context", context) if context && !context.empty?
+          combined_parts << wrap_section("Code to Review", subject) if subject && !subject.empty?
+          combined_parts << generate_review_request(composition)
+
+          prompt = combined_parts.join("\n\n")
 
           if prompt.nil? || prompt.empty?
             return { success: false, error: "Failed to compose prompt" }
@@ -153,18 +207,175 @@ module Ace
 
           { success: true, prompt: prompt }
         end
+        end
+
+        # Temporary helper methods (will be removed when proper ace-context flow is implemented)
+        def wrap_section(title, content)
+          return "" unless content && !content.strip.empty?
+
+          <<~SECTION
+            ## #{title}
+
+            #{content}
+          SECTION
+        end
+
+        def generate_review_request(composition)
+          focus_areas = if composition["focus"] && !composition["focus"].empty?
+                          "\n\nPay special attention to the focus areas specified above."
+                        else
+                          ""
+                        end
+
+          <<~REQUEST
+            ## Review Request
+
+            Please review the provided code according to the guidelines and format specified above.#{focus_areas}
+
+            Provide actionable feedback with specific suggestions for improvement. Reference line numbers or file locations where applicable.
+          REQUEST
+        end
+
+        # Create system.context.md with ace-context frontmatter
+        def create_system_context_file(session_dir, system_prompt_config, context_config)
+          # Build ace-context frontmatter
+          frontmatter = {
+            "context" => {
+              "files" => [],
+              "presets" => [],
+              "include_self" => true
+            }
+          }
+
+          # Add prompt:// references from system_prompt_config
+          if system_prompt_config["base"]
+            frontmatter["context"]["files"] << system_prompt_config["base"]
+          end
+
+          if system_prompt_config["format"]
+            frontmatter["context"]["files"] << system_prompt_config["format"]
+          end
+
+          if system_prompt_config["focus"]
+            frontmatter["context"]["files"].concat(system_prompt_config["focus"])
+          end
+
+          if system_prompt_config["guidelines"]
+            frontmatter["context"]["files"].concat(system_prompt_config["guidelines"])
+          end
+
+          # Add context preset (e.g., "project" becomes presets: ["project"])
+          if context_config && context_config != "none" && !context_config.empty?
+            if context_config.is_a?(String)
+              frontmatter["context"]["presets"] << context_config
+            elsif context_config.is_a?(Hash) && context_config["presets"]
+              frontmatter["context"]["presets"].concat(context_config["presets"])
+            end
+          end
+
+          # Create system.context.md content
+          system_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
+
+          # Add base system instructions after frontmatter
+          if system_prompt_config["base"]
+            base_content = @prompt_composer.resolver.resolve(
+              system_prompt_config["base"],
+              config_dir: File.dirname(@preset_manager.config_path || ".")
+            )
+            system_context_content += base_content if base_content
+          end
+
+          # Write to file
+          system_context_path = File.join(session_dir, "system.context.md")
+          File.write(system_context_path, system_context_content)
+
+          system_context_path
+        end
+
+        # Create user.context.md with subject configuration
+        def create_user_context_file(session_dir, subject_config)
+          # Build ace-context frontmatter for subject
+          frontmatter = {
+            "context" => {
+              "files" => [],
+              "commands" => [],
+              "presets" => []
+            }
+          }
+
+          # Add subject configuration to frontmatter
+          if subject_config.is_a?(Hash)
+            if subject_config["files"]
+              frontmatter["context"]["files"].concat(Array(subject_config["files"]))
+            end
+            if subject_config["commands"]
+              frontmatter["context"]["commands"].concat(Array(subject_config["commands"]))
+            end
+            if subject_config["diff"]
+              frontmatter["context"]["diffs"] = [subject_config["diff"]]
+            end
+            if subject_config["content"]
+              # For inline content, include it directly after frontmatter
+              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{subject_config["content"]}"
+            else
+              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
+            end
+          else
+            # Subject config is likely inline content
+            user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{subject_config}"
+          end
+
+          # Write to file
+          user_context_path = File.join(session_dir, "user.context.md")
+          File.write(user_context_path, user_context_content)
+
+          user_context_path
+        end
+
+        # Execute ace-context to generate prompts
+        def execute_ace_context(input_file, output_file)
+          return false unless command_exists?("ace-context")
+
+          cmd = ["ace-context", input_file, "--output", output_file]
+          stdout, stderr, status = Open3.capture3(*cmd)
+
+          unless status.success?
+            warn "ace-context failed: #{stderr}" if Ace::Review.debug?
+            return false
+          end
+
+          true
+        end
+
+        def command_exists?(command)
+          system("which #{command} > /dev/null 2>&1")
+        end
 
         # Build the complete review data structure
-        def build_review_data(options, config, content, prompt)
-          {
+        def build_review_data(options, config, content, prompt_result, cache_dir)
+          # Handle both legacy prompt format and new system/user prompt format
+          review_data = {
             preset: options.preset,
             config: config,
             subject: content[:subject],
             context: content[:context],
-            prompt: prompt,
             model: options.effective_model(config[:model]),
-            cache_dir: content[:cache_dir]
+            cache_dir: cache_dir
           }
+
+          # Add prompt data based on format
+          if prompt_result[:system_prompt] && prompt_result[:user_prompt]
+            # New format: separate system and user prompts
+            review_data[:system_prompt] = prompt_result[:system_prompt]
+            review_data[:user_prompt] = prompt_result[:user_prompt]
+            review_data[:system_prompt_path] = prompt_result[:system_prompt_path]
+            review_data[:user_prompt_path] = prompt_result[:user_prompt_path]
+          else
+            # Legacy format: single combined prompt
+            review_data[:prompt] = prompt_result[:prompt]
+          end
+
+          review_data
         end
 
         def extract_subject(subject_config)
@@ -179,11 +390,23 @@ module Ace
         def execute_with_llm(review_data, session_dir)
           executor = Ace::Review::Molecules::LlmExecutor.new
 
-          result = executor.execute(
-            prompt: review_data[:prompt],
-            model: review_data[:model],
-            session_dir: session_dir
-          )
+          # Check if we have new system/user prompt format or legacy single prompt
+          if review_data[:system_prompt] && review_data[:user_prompt]
+            # New format: separate system and user prompts
+            result = executor.execute(
+              system_prompt: review_data[:system_prompt],
+              user_prompt: review_data[:user_prompt],
+              model: review_data[:model],
+              session_dir: session_dir
+            )
+          else
+            # Legacy format: single combined prompt
+            result = executor.execute(
+              prompt: review_data[:prompt],
+              model: review_data[:model],
+              session_dir: session_dir
+            )
+          end
 
           if result[:success]
             # Copy final review to release folder
@@ -201,8 +424,9 @@ module Ace
         end
 
         def save_session_files(session_dir, review_data)
-          # Split prompt into system and user files (no .tmp extension)
-          split_and_save_prompts(session_dir, review_data[:prompt])
+          # TODO: Implement proper system/user prompt generation via ace-context
+          # For now, save single combined prompt (will be replaced)
+          File.write(File.join(session_dir, "prompt.md"), review_data[:prompt])
 
           # Save subject (no .tmp extension)
           File.write(File.join(session_dir, "subject.md"), review_data[:subject])
@@ -253,31 +477,7 @@ module Ace
           base_cache_path
         end
 
-        def split_and_save_prompts(session_dir, prompt)
-          # Split prompt into system and user parts
-          # Look for system/user separator or split evenly
-          if prompt.include?("---")
-            # Split at YAML frontmatter separator
-            parts = prompt.split("---", 2)
-            system_prompt = parts[0].strip
-            user_prompt = parts[1].strip
-          elsif prompt.include?("\n\n")
-            # Split at first double newline (simple heuristic)
-            parts = prompt.split("\n\n", 2)
-            system_prompt = parts[0].strip
-            user_prompt = parts[1].strip
-          else
-            # Split evenly as fallback
-            mid_point = prompt.length / 2
-            system_prompt = prompt[0...mid_point].strip
-            user_prompt = prompt[mid_point..-1].strip
-          end
-
-          # Save system and user prompts
-          File.write(File.join(session_dir, "prompt-system.md"), system_prompt)
-          File.write(File.join(session_dir, "prompt-user.md"), user_prompt)
-        end
-
+    
         def copy_to_release(session_dir, review_data)
           # Copy final review reports to release folder
           release_base_path = @preset_manager.review_base_path

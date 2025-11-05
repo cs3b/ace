@@ -2,7 +2,7 @@
 
 description: "Code quality review - architecture and conventions"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/detailed"
   focus:

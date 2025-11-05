@@ -3,7 +3,7 @@
 
 description: "Ruby code review with ATOM architecture focus"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/detailed"
   focus:
