@@ -24,13 +24,13 @@ module Ace
           MIN_LENGTH = 3
 
           # Characters that are not allowed in git branch names
-          FORBIDDEN_CHARS = /[~\^:\*\?\[\]]/
+          FORBIDDEN_CHARS = /[~\^*\?\[\]:]/
 
           # Characters to replace with hyphens
-          SEPARATORS = /[ \._\/\\]+/
+          SEPARATORS = /[ \._\/\\()]+/
 
-          # Multiple consecutive non-word characters
-          MULTIPLE_SEPARATORS = /[^a-zA-Z0-9\-]+/
+          # Multiple consecutive non-word characters (but allow single hyphens)
+          MULTIPLE_SEPARATORS = /-{2,}|[^a-zA-Z0-9\-]+/
 
           # Leading/trailing separators and hyphens
           TRIM_SEPARATORS = /^[-_]+|[-_]+$/
@@ -100,7 +100,7 @@ module Ace
               return "task" if task_id.nil? || task_id.empty?
 
               # Extract the numeric part from various task ID formats
-              numeric_part = task_id.to_s.match(/(\d+)/)
+              numeric_part = task_id.to_s.match(/(\d+)$/)
               return "task-#{task_id}" unless numeric_part
 
               "task-#{numeric_part[1]}"
@@ -167,11 +167,13 @@ module Ace
               return false if slug.length > 255 # Git branch name limit
               return false if slug.match?(FORBIDDEN_CHARS)
               return false if slug.start_with?("-") || slug.end_with?("-")
+              return false if slug.include?(".")  # Dots not allowed in git branch names
+              return false if slug.include?(" ")  # Spaces not allowed
 
               # Check for invalid git branch name patterns
               return false if slug == "HEAD"
               return false if slug.include?("..")
-              return false if slug.include?("@{")
+              return false if slug.include?("@")
 
               true
             end

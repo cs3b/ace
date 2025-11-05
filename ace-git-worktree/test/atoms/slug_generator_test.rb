@@ -23,7 +23,8 @@ class SlugGeneratorTest < Minitest::Test
     long_title = "This is a very long task title that exceeds the maximum length for generating slugs and should be truncated appropriately"
     slug = @generator.from_title(long_title, max_length: 50)
     assert slug.length <= 50
-    assert slug.end_with?("-")
+    refute slug.end_with?("-")  # Should not end with hyphen
+    refute slug.empty?  # Should not be empty
   end
 
   def test_from_title_empty
