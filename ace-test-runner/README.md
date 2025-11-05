@@ -37,10 +37,27 @@ Run all tests with default AI-friendly format:
 ace-test
 ```
 
+### Explicit File Execution
+
+Run specific test files or line numbers for focused testing during development:
+
+```bash
+# Run a single test file
+ace-test test/atoms/path_expander_test.rb
+
+# Run a specific test at line number
+ace-test test/atoms/path_expander_test.rb:42
+
+# Run multiple specific files
+ace-test test/atoms/path_expander_test.rb test/molecules/config_loader_test.rb
+```
+
+When explicit file paths are provided, ace-test will execute **only** those files, bypassing any configured test groups for fast, focused feedback.
+
 ### Command Line Options
 
 ```bash
-ace-test [options]
+ace-test [options] [file-paths]
   --format FORMAT        # Output format: progress (default), progress-file, json
   --report-dir DIR      # Report storage directory (default: test-reports/)
   --no-save             # Skip saving detailed reports
@@ -53,6 +70,12 @@ ace-test [options]
   --per-file           # Execute each test file separately (slower, for debugging)
   --help                # Display help information
 ```
+
+**File Path Arguments:**
+- Provide explicit test file paths to run only those files
+- Use `file:line` syntax to run specific tests at line numbers
+- Multiple files can be provided
+- When files are specified, they take precedence over group configuration
 
 ### Configuration
 
@@ -146,6 +169,8 @@ ace-test unit         # All unit tests (smoke + atoms + molecules + organisms + 
 ace-test integration  # Integration tests only
 ace-test all          # All tests (default)
 ```
+
+**Note:** When explicit file paths are provided, they always take precedence over group configuration. For example, `ace-test atoms test/atoms/foo_test.rb` will run only the specified file, not the entire atoms group.
 
 ### Report Structure
 
