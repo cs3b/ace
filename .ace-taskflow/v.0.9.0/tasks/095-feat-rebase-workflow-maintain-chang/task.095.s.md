@@ -6,16 +6,21 @@ estimate: TBD
 dependencies: []
 ---
 
-# Create ace-git-rebase package with changelog preservation workflow
+# Create ace-git package with
+
+- changelog preservation workflow - rebase.wf.md
+- creating pr - create-pr.wf.md  (new)
 
 ## Behavioral Specification
 
 ### User Experience
+
 **Input**: Developer needs guidance for rebasing while preserving changelog entries and version files
 **Process**: Developer follows workflow instructions provided by the ace-git-rebase package
 **Output**: Successfully rebased branch with intact changelog entries and consistent version references
 
 ### Expected Behavior
+
 - Developers install the ace-git-rebase gem to access workflow instructions
 - The workflow guide provides step-by-step instructions for rebase operations
 - Clear patterns for resolving changelog and version file conflicts
@@ -25,6 +30,7 @@ dependencies: []
 ### Interface Contract
 
 #### Package Structure
+
 ```
 ace-git-rebase/
 ├── .ace.example/git/rebase.yml          # Configuration example
@@ -37,6 +43,7 @@ ace-git-rebase/
 ```
 
 **Configuration Interface (.ace/git/rebase.yml):**
+
 ```yaml
 git:
   rebase:
@@ -48,11 +55,13 @@ git:
 ```
 
 **Workflow Access:**
+
 - Via gem installation: `gem install ace-git-rebase`
 - Via Claude Code: Workflow available through handbook integration
 - No executable binary (workflow-first approach)
 
 ### Success Criteria
+
 - [ ] ace-git-rebase gem package created with minimal structure
 - [ ] Workflow instruction provides comprehensive rebase guidance
 - [ ] Configuration example demonstrates customization patterns
@@ -61,6 +70,7 @@ git:
 - [ ] No unnecessary Ruby implementation (workflow-focused)
 
 ### Validation Questions
+
 - Should the package name be `ace-git-rebase` or just `ace-git`?
 - Do we need any Ruby helper methods or pure documentation?
 - Should we include multiple workflow variants (interactive, automated)?
@@ -73,12 +83,14 @@ Create a minimal, workflow-first ace-git-rebase gem package that provides compre
 ## Scope of Work
 
 ### Package Creation Scope
+
 - Minimal gem structure per ace-gems.g.md
 - Workflow instruction in handbook/workflow-instructions/
 - Configuration examples in .ace.example/
 - Proper versioning and changelog setup
 
 ### Workflow Documentation Scope
+
 - Pre-rebase verification steps
 - Conflict resolution patterns for CHANGELOG.md
 - Version file conflict handling strategies
@@ -86,6 +98,7 @@ Create a minimal, workflow-first ace-git-rebase gem package that provides compre
 - Recovery and rollback guidance
 
 ### Integration Scope
+
 - Claude Code handbook integration
 - Configuration through ace-core cascade
 - References to related ace-git-* packages
@@ -93,6 +106,7 @@ Create a minimal, workflow-first ace-git-rebase gem package that provides compre
 ## Deliverables
 
 ### Package Components
+
 - ace-git-rebase.gemspec with minimal dependencies
 - lib/ace/git_rebase/version.rb with VERSION constant
 - handbook/workflow-instructions/rebase-preserve-changelog.wf.md
@@ -103,6 +117,7 @@ Create a minimal, workflow-first ace-git-rebase gem package that provides compre
 - LICENSE file (MIT)
 
 ### Workflow Content
+
 - Complete rebase procedure with changelog focus
 - Conflict resolution decision trees
 - Example scenarios and solutions
@@ -112,6 +127,7 @@ Create a minimal, workflow-first ace-git-rebase gem package that provides compre
 ## Out of Scope
 
 **Implementation Concerns (deferred or not needed):**
+
 - Executable binary (no CLI tool)
 - Ruby implementation of rebase logic
 - Automated conflict resolution algorithms
@@ -128,3 +144,4 @@ Create a minimal, workflow-first ace-git-rebase gem package that provides compre
 - Related: ace-git-diff package for command execution patterns
 - Related: Keep a Changelog specification
 - Related: Semantic Versioning specification
+
