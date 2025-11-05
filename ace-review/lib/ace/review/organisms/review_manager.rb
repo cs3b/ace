@@ -45,7 +45,7 @@ module Ace
             config_result[:config],
             content_result[:context],
             content_result[:subject],
-            options.subject_config,  # Pass original subject configuration
+            options.subject,  # Pass original subject configuration
             session_dir
           )
           return prompt_result unless prompt_result[:success]

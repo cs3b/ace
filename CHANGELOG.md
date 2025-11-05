@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **ace-review v0.13.1**: Complete v0.13.0 architectural implementation
+  - Remove all prompt splitting logic and fallback methods that were documented but not implemented
+  - Eliminate legacy single prompt support in LlmExecutor
+  - Implement proper system/user prompt separation via ace-context
+  - Fix session file structure to use `system.prompt.md` and `user.prompt.md`
+  - Update test suite to remove tests for removed methods and fix expectations
+  - Remove 214 lines of legacy code while maintaining functionality
+  - Breaking changes: LlmExecutor now requires system_prompt and user_prompt parameters
+
+### Changed
 - **ace-git-worktree v0.1.11**: Replace CLI subprocess calls with Ruby API integration
   - Update TaskFetcher and TaskStatusUpdater to use ace-taskflow Ruby API as primary method
   - Eliminate subprocess overhead and improve performance in mono-repo environments
