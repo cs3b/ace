@@ -8,6 +8,9 @@ rescue LoadError
   # ace-taskflow not available - will fall back to CLI
 end
 
+# Require our own models
+require_relative "../models/task_metadata"
+
 module Ace
   module Git
     module Worktree
@@ -65,8 +68,13 @@ module Ace
 
             # Try direct API integration first (more reliable for completed tasks)
             if use_direct_api?
+              puts "DEBUG: Trying direct API for task #{task_ref}" if ENV["DEBUG"]
               task_data = fetch_via_direct_api(task_ref)
-              return task_data ? create_task_metadata_from_data(task_data, task_ref) : nil
+              puts "DEBUG: Direct API result: #{task_data ? 'Found' : 'Not found'}" if ENV["DEBUG"]
+              if task_data
+                return create_task_metadata_from_data(task_data, task_ref)
+              end
+              # Fall through to CLI approach if direct API didn't find the task
             end
 
             # Fallback to CLI-based approach
@@ -74,11 +82,27 @@ module Ace
             return nil unless normalized_ref
 
             # Execute ace-taskflow command
+            puts "DEBUG: Fallback to CLI for task #{normalized_ref}" if ENV["DEBUG"]
+            puts "DEBUG: Executing: ace-taskflow task show #{normalized_ref} --content" if ENV["DEBUG"]
             output = execute_ace_taskflow(normalized_ref)
+            puts "DEBUG: CLI output length: #{output ? output.length : 0}" if ENV["DEBUG"]
+            puts "DEBUG: CLI output: #{output.inspect}" if ENV["DEBUG"] && output
             return nil unless output
 
             # Parse the output
-            parse_task_output(output)
+            puts "DEBUG: Parsing CLI output" if ENV["DEBUG"]
+            begin
+              puts "DEBUG: About to call parse_task_output" if ENV["DEBUG"]
+              puts "DEBUG: Models::TaskMetadata constant: #{Models::TaskMetadata.inspect}" if ENV["DEBUG"]
+              result = parse_task_output(output)
+              puts "DEBUG: Parse result: #{result ? 'Success' : 'Failed'}" if ENV["DEBUG"]
+              puts "DEBUG: Parsed result: #{result.inspect}" if ENV["DEBUG"] && result
+            rescue StandardError => e
+              puts "DEBUG: Parse exception: #{e.message}" if ENV["DEBUG"]
+              puts "DEBUG: Parse backtrace: #{e.backtrace.first(3).join(', ')}" if ENV["DEBUG"]
+              result = nil
+            end
+            result
           end
 
           # Fetch multiple tasks by references
@@ -180,6 +204,8 @@ module Ace
           #
           # @return [Boolean] true if direct API is available
           def use_direct_api?
+            puts "DEBUG: Checking API availability: #{defined?(Ace::Taskflow::Molecules::TaskLoader)}" if ENV["DEBUG"]
+            puts "DEBUG: TaskReferenceParser available: #{defined?(Ace::Taskflow::Atoms::TaskReferenceParser)}" if ENV["DEBUG"]
             defined?(Ace::Taskflow::Molecules::TaskLoader) && defined?(Ace::Taskflow::Atoms::TaskReferenceParser)
           end
 
@@ -324,7 +350,9 @@ module Ace
           # @param task_ref [String] Normalized task reference
           # @return [String, nil] Command output or nil if failed
           def execute_ace_taskflow(task_ref)
-            result = execute_command("ace-taskflow", "task", "show", task_ref, "--content", timeout: @timeout)
+            puts "DEBUG: execute_ace_taskflow called with #{task_ref}" if ENV["DEBUG"]
+            result = execute_command("ace-taskflow", "task", "show", task_ref, "--content")
+            puts "DEBUG: execute_ace_taskflow result: #{result.inspect}" if ENV["DEBUG"]
             result[:success] ? result[:output] : nil
           end
 
@@ -376,6 +404,8 @@ module Ace
           def execute_command(command, *args, timeout: DEFAULT_TIMEOUT)
             require "open3"
 
+            puts "DEBUG: execute_command called with: #{command} #{args.join(' ')}" if ENV["DEBUG"]
+
             # Only allow ace-taskflow commands
             allowed_commands = %w[ace-taskflow]
             command_str = command.to_s.strip
@@ -408,14 +438,16 @@ module Ace
 
             # Build safe command array
             full_command = [command] + sanitized_args
-            stdout, stderr, status = Open3.capture3(*full_command, timeout: timeout)
+            stdout, stderr, status = Open3.capture3(*full_command)
 
-            {
+            result = {
               success: status.success?,
               output: stdout.to_s,
               error: stderr.to_s,
               exit_code: status.exitstatus
             }
+            puts "DEBUG: Command result: success=#{result[:success]}, exit_code=#{result[:exit_code]}, error=#{result[:error].inspect}" if ENV["DEBUG"]
+            result
           rescue Open3::CommandTimeout
             {
               success: false,
