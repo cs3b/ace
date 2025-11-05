@@ -197,9 +197,9 @@ module Ace
 
             unless worktree_info
               # Provide specific error messages based on what we found
-              if task_metadata
+              if task_data
                 puts "Task found but no worktree is associated with it."
-                puts "Task: #{task_metadata.title} (status: #{task_metadata.status})"
+                puts "Task: #{task_data[:title]} (status: #{task_data[:status]})"
                 puts "This task may have been completed and its worktree cleaned up already."
                 puts ""
                 puts "Use 'ace-git-worktree list' to see available worktrees"
@@ -243,14 +243,17 @@ module Ace
               git_result = Ace::Git::Worktree::Atoms::GitCommand.worktree("remove", worktree_info.path, "--force")
 
               if git_result[:success]
-                puts "Worktree removed successfully: #{worktree_info.path}"
+                puts "Worktree removed successfully!"
+                puts "Worktree path: #{worktree_info.path}"
+                puts "Branch: #{worktree_info.branch}"
 
                 # Provide appropriate messaging based on task status
-                if task_found && task_metadata
-                  if task_metadata.status.strip.include?("done") || task_metadata.status.strip.include?("completed")
-                    puts "Task completed: no metadata cleanup needed"
+                if task_found && task_data
+                  status = task_data[:status].to_s.strip
+                  if status.include?("done") || status.include?("completed")
+                    puts "\nTask completed: no metadata cleanup needed"
                   else
-                    puts "Note: Task metadata cleanup not available for this task status"
+                    puts "\nNote: Task metadata cleanup not available for this task status"
                   end
                 end
                 0
@@ -375,10 +378,29 @@ module Ace
             worktree_lister = Ace::Git::Worktree::Molecules::WorktreeLister.new
             worktrees = worktree_lister.list_all
 
+            # Extract task number from task data
+            task_number = extract_task_number(task_data)
+
             worktrees.find do |worktree|
-              worktree.task_id == task_metadata.id ||
-                worktree.branch == task_metadata.branch
+              worktree.task_id == task_number ||
+                worktree.task_id == task_data[:id] ||
+                worktree.branch == task_data[:branch]
             end
+          end
+
+          # Extract task number from task data
+          #
+          # @param task_data [Hash] Task data
+          # @return [String] Task number
+          def extract_task_number(task_data)
+            return task_data[:task_number].to_s if task_data[:task_number]
+
+            if task_data[:id]
+              match = task_data[:id].match(/task\.(\d+)$/)
+              return match[1] if match
+            end
+
+            ""
           end
 
           # Normalize task ID for worktree matching
