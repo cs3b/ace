@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2025-11-05
+
+### Fixed
+- **Ruby API Integration**: Replace CLI dependency with direct ace-taskflow Ruby API calls
+- **TaskFetcher**: Update availability check to prioritize Ruby API over CLI subprocess calls
+- **TaskStatusUpdater**: Add Ruby API integration via TaskManager with CLI fallback
+- **Mono-repo Optimization**: Improve performance by using in-process Ruby API instead of subprocess calls
+- **Error Messages**: Better distinction between mono-repo and standalone installation environments
+- **Configuration**: Update default worktree path for Git compatibility
+
+### Changed
+- **Architecture**: Both TaskFetcher and TaskStatusUpdater now use Ruby API as primary method
+- **Fallback Strategy**: Graceful degradation to CLI when Ruby API unavailable
+- **Debug Output**: Enhanced debugging capabilities for troubleshooting integration issues
+- **Performance**: Eliminate subprocess overhead when Ruby API available
+
 ## [0.1.10] - 2025-11-05
 
 ### Fixed
