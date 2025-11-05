@@ -139,8 +139,12 @@ module Ace
 
           # Check if ace-taskflow is available
           #
-          # @return [Boolean] true if ace-taskflow command is available
+          # @return [Boolean] true if ace-taskflow API or command is available
           def ace_taskflow_available?
+            # First try to check if Ruby API is available (preferred in mono-repo)
+            return true if use_direct_api?
+
+            # Fallback to CLI check for standalone installations
             result = execute_command("ace-taskflow", "--version", timeout: 5)
             result[:success]
           end
@@ -149,6 +153,18 @@ module Ace
           #
           # @return [String, nil] Version string or nil if not available
           def ace_taskflow_version
+            if use_direct_api?
+              # Try to get version from Ruby API
+              begin
+                # Check if we can access ace-taskflow version constant
+                if defined?(Ace::Taskflow::VERSION)
+                  return Ace::Taskflow::VERSION
+                end
+              rescue StandardError
+                # Fall through to CLI version check
+              end
+            end
+
             return nil unless ace_taskflow_available?
 
             result = execute_command("ace-taskflow", "--version", timeout: 5)
@@ -163,26 +179,36 @@ module Ace
           #
           # @return [String] User-friendly error message with installation guidance
           def ace_taskflow_unavailable_message
-            <<~MESSAGE
-              ace-taskflow is not available or not in PATH.
+            if defined?(Ace::Taskflow::Molecules::TaskLoader)
+              # Ruby API is available but something else went wrong
+              "ace-taskflow Ruby API is available but encountered an error."
+            else
+              # Neither Ruby API nor CLI is available
+              <<~MESSAGE
+                ace-taskflow is not available.
 
-              Required for task-aware worktree operations.
+                Required for task-aware worktree operations.
 
-              Installation options:
-              1. Install ace-taskflow gem: gem install ace-taskflow
-              2. Add to your Gemfile: gem 'ace-taskflow'
-              3. Ensure it's in your PATH: which ace-taskflow
+                In a mono-repo environment, ensure ace-taskflow is in your Gemfile.
+                For standalone installation:
+                1. Install ace-taskflow gem: gem install ace-taskflow
+                2. Ensure it's in your PATH: which ace-taskflow
 
-              For more information: https://github.com/cs3b/ace-meta
-            MESSAGE
+                For more information: https://github.com/cs3b/ace-meta
+              MESSAGE
+            end
           end
 
           # Check availability and return helpful error if unavailable
           #
           # @return [Hash] { available: boolean, message: string }
           def check_availability_with_message
-            if ace_taskflow_available?
-              { available: true, message: "ace-taskflow is available" }
+            if use_direct_api?
+              # Ruby API is available - this is the preferred method in mono-repo
+              { available: true, message: "ace-taskflow Ruby API is available" }
+            elsif ace_taskflow_available?
+              # CLI is available - fallback for standalone installations
+              { available: true, message: "ace-taskflow CLI is available" }
             else
               { available: false, message: ace_taskflow_unavailable_message }
             end

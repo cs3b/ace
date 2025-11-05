@@ -1,12 +1,20 @@
 # frozen_string_literal: true
 
+# Try to require ace-taskflow API for direct integration
+begin
+  require "ace/taskflow/organisms/task_manager"
+  require "ace/taskflow/molecules/task_loader"
+rescue LoadError
+  # ace-taskflow not available - will fall back to CLI
+end
+
 module Ace
   module Git
     module Worktree
       module Molecules
         # Task status updater molecule
         #
-        # Updates task status using ace-taskflow CLI commands.
+        # Updates task status using ace-taskflow Ruby API or CLI commands.
         # Provides methods for marking tasks as in-progress, done, etc.
         #
         # @example Mark task as in-progress
@@ -24,6 +32,7 @@ module Ace
           # @param timeout [Integer] Command timeout in seconds
           def initialize(timeout: DEFAULT_TIMEOUT)
             @timeout = timeout
+            @project_root = ENV["PROJECT_ROOT_PATH"] || Dir.pwd
           end
 
           # Mark task as in-progress
@@ -72,14 +81,22 @@ module Ace
             return false if task_ref.nil? || task_ref.empty?
             return false if status.nil? || status.empty?
 
-            # Normalize task reference
-            normalized_ref = normalize_task_reference(task_ref)
-            return false unless normalized_ref
+            puts "DEBUG: TaskStatusUpdater.update_status called with task_ref=#{task_ref}, status=#{status}" if ENV["DEBUG"]
+            puts "DEBUG: use_ruby_api? = #{use_ruby_api?}" if ENV["DEBUG"]
 
-            # Execute ace-taskflow command
-            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "status=#{status}")
+            # Try Ruby API first (preferred in mono-repo)
+            if use_ruby_api?
+              puts "DEBUG: Using Ruby API for status update" if ENV["DEBUG"]
+              result = update_status_via_api(task_ref, status)
+              puts "DEBUG: Ruby API result: #{result}" if ENV["DEBUG"]
+              return result
+            end
 
-            result[:success]
+            # Fallback to CLI for standalone installations
+            puts "DEBUG: Using CLI for status update" if ENV["DEBUG"]
+            result = update_status_via_cli(task_ref, status)
+            puts "DEBUG: CLI result: #{result}" if ENV["DEBUG"]
+            result
           end
 
           # Update task priority
@@ -130,21 +147,13 @@ module Ace
           def add_worktree_metadata(task_ref, worktree_metadata)
             return false unless worktree_metadata.is_a?(Models::WorktreeMetadata)
 
-            normalized_ref = normalize_task_reference(task_ref)
-            return false unless normalized_ref
-
-            # Use the ace-taskflow update command with nested field syntax
-            # Format: worktree.branch=value, worktree.path=value, etc.
-            metadata_hash = worktree_metadata.to_h
-            success = true
-
-            metadata_hash.each do |field, value|
-              field_path = "worktree.#{field}"
-              result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "#{field_path}=#{value}")
-              success &&= result[:success]
+            # Try Ruby API first (preferred in mono-repo)
+            if use_ruby_api?
+              return add_worktree_metadata_via_api(task_ref, worktree_metadata)
             end
 
-            success
+            # Fallback to CLI for standalone installations
+            add_worktree_metadata_via_cli(task_ref, worktree_metadata)
           end
 
           # Remove worktree metadata from task
@@ -191,6 +200,91 @@ module Ace
           end
 
           private
+
+          # Check if we can use Ruby API
+          #
+          # @return [Boolean] true if Ruby API is available
+          def use_ruby_api?
+            defined?(Ace::Taskflow::Organisms::TaskManager) && defined?(Ace::Taskflow::Molecules::TaskLoader)
+          end
+
+          # Update task status using Ruby API
+          #
+          # @param task_ref [String] Task reference
+          # @param status [String] New status
+          # @return [Boolean] true if successful
+          def update_status_via_api(task_ref, status)
+            begin
+              # Use TaskManager for status updates
+              task_manager = Ace::Taskflow::Organisms::TaskManager.new(@project_root)
+              result = task_manager.update_task_status(task_ref, status)
+              result[:success]
+            rescue StandardError => e
+              # Fall back to CLI on API error
+              update_status_via_cli(task_ref, status)
+            end
+          end
+
+          # Update task status using CLI
+          #
+          # @param task_ref [String] Task reference
+          # @param status [String] New status
+          # @return [Boolean] true if successful
+          def update_status_via_cli(task_ref, status)
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "status=#{status}")
+            result[:success]
+          end
+
+          # Add worktree metadata using Ruby API
+          #
+          # @param task_ref [String] Task reference
+          # @param worktree_metadata [WorktreeMetadata] Worktree metadata
+          # @return [Boolean] true if successful
+          def add_worktree_metadata_via_api(task_ref, worktree_metadata)
+            begin
+              # Use TaskManager for field updates
+              task_manager = Ace::Taskflow::Organisms::TaskManager.new(@project_root)
+
+              # Convert worktree metadata to field updates
+              metadata_hash = worktree_metadata.to_h
+              field_updates = {}
+              metadata_hash.each do |field, value|
+                field_updates["worktree.#{field}"] = value.to_s
+              end
+
+              result = task_manager.update_task_fields(task_ref, field_updates)
+              result[:success]
+            rescue StandardError => e
+              # Fall back to CLI on API error
+              add_worktree_metadata_via_cli(task_ref, worktree_metadata)
+            end
+          end
+
+          # Add worktree metadata using CLI
+          #
+          # @param task_ref [String] Task reference
+          # @param worktree_metadata [WorktreeMetadata] Worktree metadata
+          # @return [Boolean] true if successful
+          def add_worktree_metadata_via_cli(task_ref, worktree_metadata)
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            # Use the ace-taskflow update command with nested field syntax
+            # Format: worktree.branch=value, worktree.path=value, etc.
+            metadata_hash = worktree_metadata.to_h
+            success = true
+
+            metadata_hash.each do |field, value|
+              field_path = "worktree.#{field}"
+              result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "#{field_path}=#{value}")
+              success &&= result[:success]
+            end
+
+            success
+          end
 
           # Normalize task reference to a standard format
           #

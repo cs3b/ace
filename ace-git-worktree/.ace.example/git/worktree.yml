@@ -12,7 +12,7 @@ git:
   worktree:
     # Root directory for all worktrees (relative to project root)
     # This is where worktree directories will be created
-    root_path: ".ace-wt"
+    root_path: "../ace-worktrees"
 
     # Automatically trust mise.toml files when creating worktrees
     # If true, runs `mise trust` automatically in new worktrees
