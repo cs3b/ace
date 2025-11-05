@@ -72,7 +72,11 @@ git:
       after_create:
         # Trust all mise configuration files in the worktree
         - command: "find {worktree_path} -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
-          timeout: 30
+          timeout: 5
+          continue_on_error: true
+
+        - command: "cd {worktree_path}"
+          timeout: 5 
           continue_on_error: true
 
         # Alternative using environment variable:
