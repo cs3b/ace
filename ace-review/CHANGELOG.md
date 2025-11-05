@@ -5,6 +5,64 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2025-11-05
+
+### 🎯 **Major Architecture Fix - System/User Prompt Separation**
+
+### Changed
+- **Architecture**: Complete overhaul of prompt generation and processing
+  - Removed arbitrary prompt splitting (`split_and_save_prompts` method)
+  - Removed combined prompt generation (`build_review_prompt` method)
+  - Implemented proper ace-context integration throughout
+  - Fixed fundamental misunderstanding of system vs user prompts
+
+### Added
+- **System Prompt Generation**:
+  - Creates `system.context.md` with YAML frontmatter containing prompt:// references
+  - Integrates context configuration (e.g., "project" → presets: ["project"])
+  - Uses ace-context to generate `system.prompt.md`
+  - Proper base system instructions included after frontmatter
+
+- **User Prompt Generation**:
+  - Creates `user.context.md` with subject configuration
+  - Supports commands, files, diffs, and inline content from presets
+  - Uses ace-context to generate `user.prompt.md`
+  - Handles all subject types from preset configurations
+
+- **LLM Integration**:
+  - LlmExecutor accepts both new system/user prompts and legacy single prompts
+  - New format: `--system-prompt` and `--user-prompt` flags via ace-llm-query
+  - Legacy format: `--prompt` flag (backward compatible)
+  - Automatic format detection and routing
+
+- **Session Structure**:
+  ```
+  session/
+  ├── system.context.md   # ace-context input (system prompt config)
+  ├── system.prompt.md    # ace-context output (generated system prompt)
+  ├── user.context.md     # ace-context input (user prompt config)
+  ├── user.prompt.md      # ace-context output (generated user prompt)
+  ├── subject.md          # Extracted subject content
+  ├── context.md          # Legacy context content
+  ├── metadata.yml        # Session metadata
+  └── review.md           # LLM output
+  ```
+
+### Fixed
+- **Configuration Structure**: Renamed `prompt_composition` → `system_prompt` in all preset configs
+- **Preset Parsing**: Updated all preset parsing logic to use new structure
+- **Backward Compatibility**: All existing preset configurations continue to work unchanged
+- **Ruby Syntax**: All syntax errors resolved and code validated
+
+### Technical
+- **YAML Frontmatter**: Follows ace-context patterns exactly with proper context structure
+- **Error Handling**: Comprehensive fallback mechanisms for ace-context failures
+- **Cache Management**: Enhanced cache-first storage model with proper file organization
+- **Token Optimization**: Potential to reduce token usage through ace-context processing
+
+### Breaking Changes
+- **None** - Full backward compatibility maintained for existing workflows
+
 ## [0.12.0] - 2025-11-05
 
 ### Added
