@@ -35,9 +35,9 @@ class ReviewManagerTest < AceReviewTest
     assert result[:session_dir], "Should have session directory"
     assert Dir.exist?(result[:session_dir]), "Session directory should exist"
 
-    # Check that session files are created without .tmp extensions
-    assert File.exist?(File.join(result[:session_dir], "prompt-system.md"))
-    assert File.exist?(File.join(result[:session_dir], "prompt-user.md"))
+    # Check that session files are created with v0.13.0 architecture
+    assert File.exist?(File.join(result[:session_dir], "system.prompt.md"))
+    assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
     assert File.exist?(File.join(result[:session_dir], "subject.md"))
     assert File.exist?(File.join(result[:session_dir], "metadata.yml"))
   end
@@ -81,51 +81,44 @@ class ReviewManagerTest < AceReviewTest
     assert_equal File.join(@temp_dir, "custom_session"), result[:session_dir]
 
     # Verify files are created in custom session directory
-    assert File.exist?(File.join(result[:session_dir], "prompt-system.md"))
-    assert File.exist?(File.join(result[:session_dir], "prompt-user.md"))
+    assert File.exist?(File.join(result[:session_dir], "system.prompt.md"))
+    assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
   end
 
-  def test_split_and_save_prompts_with_yaml_separator
-    prompt = <<~PROMPT
-      You are a code reviewer.
-      ---
-      Please review the following code:
-    PROMPT
+  def test_v0_13_0_architecture_system_user_prompt_separation
+    options = {
+      subject: { "content" => "def test_method; puts 'hello'; end" },
+      context: "project",
+      auto_execute: false
+    }
 
-    session_dir = File.join(@temp_dir, "session")
-    FileUtils.mkdir_p(session_dir)
+    result = @manager.execute_review(options)
 
-    @manager.send(:split_and_save_prompts, session_dir, prompt)
+    assert result[:success], "Review should succeed: #{result[:error]}"
+    assert result[:session_dir], "Should have session directory"
 
-    system_file = File.join(session_dir, "prompt-system.md")
-    user_file = File.join(session_dir, "prompt-user.md")
+    session_dir = result[:session_dir]
 
-    assert File.exist?(system_file)
-    assert File.exist?(user_file)
+    # Verify v0.13.0 session structure
+    assert File.exist?(File.join(session_dir, "system.context.md")), "Should have system.context.md"
+    assert File.exist?(File.join(session_dir, "system.prompt.md")), "Should have system.prompt.md"
+    assert File.exist?(File.join(session_dir, "user.context.md")), "Should have user.context.md"
+    assert File.exist?(File.join(session_dir, "user.prompt.md")), "Should have user.prompt.md"
+    assert File.exist?(File.join(session_dir, "subject.md")), "Should have subject.md"
+    assert File.exist?(File.join(session_dir, "metadata.yml")), "Should have metadata.yml"
 
-    system_content = File.read(system_file)
-    user_content = File.read(user_file)
+    # Verify system prompt has proper structure
+    system_prompt_content = File.read(File.join(session_dir, "system.prompt.md"))
+    refute_empty system_prompt_content, "System prompt should not be empty"
 
-    assert_match(/You are a code reviewer/, system_content)
-    assert_match(/Please review the following code/, user_content)
-  end
+    # Verify user prompt has proper structure
+    user_prompt_content = File.read(File.join(session_dir, "user.prompt.md"))
+    refute_empty user_prompt_content, "User prompt should not be empty"
 
-  def test_split_and_save_prompts_with_double_newline
-    prompt = "You are a code reviewer.\n\nPlease review the following code:"
-
-    session_dir = File.join(@temp_dir, "session")
-    FileUtils.mkdir_p(session_dir)
-
-    @manager.send(:split_and_save_prompts, session_dir, prompt)
-
-    system_file = File.join(session_dir, "prompt-system.md")
-    user_file = File.join(session_dir, "prompt-user.md")
-
-    system_content = File.read(system_file)
-    user_content = File.read(user_file)
-
-    assert_match(/You are a code reviewer/, system_content)
-    assert_match(/Please review the following code/, user_content)
+    # Verify metadata reflects new architecture
+    metadata_content = File.read(File.join(session_dir, "metadata.yml"))
+    assert metadata_content.include?("system_prompt_size"), "Metadata should include system_prompt_size"
+    assert metadata_content.include?("user_prompt_size"), "Metadata should include user_prompt_size"
   end
 
   def test_create_cache_directory

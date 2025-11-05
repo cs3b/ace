@@ -2,7 +2,7 @@
 
 description: "Security review - vulnerability and risk analysis"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/detailed"
   focus:

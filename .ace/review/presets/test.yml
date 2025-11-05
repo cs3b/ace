@@ -2,7 +2,7 @@
 
 description: "Test review - coverage and quality"
 
-prompt_composition:
+system_prompt:
   base: "prompt://base/system"
   format: "prompt://format/standard"
   focus:
