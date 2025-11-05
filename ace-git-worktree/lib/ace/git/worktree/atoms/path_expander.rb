@@ -174,14 +174,8 @@ module Ace
                 }
               end
 
-              # Check if path is within git repository (worktrees should be outside)
-              if git_root && expanded_path.start_with?(expand(git_root))
-                return {
-                  valid: false,
-                  error: "Worktree path cannot be within the git repository (#{git_root})",
-                  expanded_path: expanded_path
-                }
-              end
+              # Note: Worktrees can be created within the repository for development workflows
+              # .ace-wt is a standard and gitignored location for worktrees
 
               # Check if parent directory exists and is writable
               parent_dir = File.dirname(expanded_path)
