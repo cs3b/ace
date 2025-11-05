@@ -59,6 +59,46 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-git-worktree
+      path: ace-git-worktree
+      group: tools
+      priority: 3
+
+    - name: ace-lint
+      path: ace-lint
+      group: tools
+      priority: 3
+
+    - name: ace-review
+      path: ace-review
+      group: tools
+      priority: 3
+
+    - name: ace-git-diff
+      path: ace-git-diff
+      group: tools
+      priority: 3
+
+    - name: ace-core
+      path: ace-core
+      group: tools
+      priority: 3
+
+    - name: ace-support-markdown
+      path: ace-support-markdown
+      group: foundation
+      priority: 2
+
+    - name: ace-support-mac-clipboard
+      path: ace-support-mac-clipboard
+      group: foundation
+      priority: 2
+
+    - name: ace-support-test-helpers
+      path: ace-support-test-helpers
+      group: foundation
+      priority: 2
+
   # Test command options
   test_options:
     format: compact

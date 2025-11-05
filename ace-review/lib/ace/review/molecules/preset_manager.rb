@@ -147,6 +147,10 @@ module Ace
             return legacy_path if File.exist?(legacy_path)
           end
 
+          # Fallback to .ace/review/config.yml for tests and standalone usage
+          fallback_path = File.join(project_root, ".ace/review/config.yml")
+          return fallback_path if File.exist?(fallback_path)
+
           nil
         end
 
@@ -171,15 +175,15 @@ module Ace
               content = File.read(preset_file)
               return YAML.safe_load(content, permitted_classes: [Symbol])
             end
-          else
-            # Fallback to direct path if ace-core not available
-            preset_dir = File.join(project_root, ".ace/review/presets")
-            preset_file = File.join(preset_dir, "#{preset_name}.yml")
+          end
 
-            if File.exist?(preset_file)
-              content = File.read(preset_file)
-              return YAML.safe_load(content, permitted_classes: [Symbol])
-            end
+          # Fallback to .ace/review/presets for tests and standalone usage
+          preset_dir = File.join(project_root, ".ace/review/presets")
+          preset_file = File.join(preset_dir, "#{preset_name}.yml")
+
+          if File.exist?(preset_file)
+            content = File.read(preset_file)
+            return YAML.safe_load(content, permitted_classes: [Symbol])
           end
 
           nil
