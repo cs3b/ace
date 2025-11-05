@@ -74,12 +74,12 @@ module Ace
             # Build output file path in session directory
             output_file = File.join(session_dir, "review-report-#{model_short}.md")
 
-            # Execute ace-llm-query with system and user prompt files
+            # Execute ace-llm-query with correct flags (--system, --user)
             cmd = [
               "ace-llm-query",
               model,                        # PROVIDER:MODEL format
-              "--system-prompt", system_temp_file.path,  # System prompt file
-              "--user-prompt", user_temp_file.path,      # User prompt file
+              "--system", system_temp_file.path,           # System prompt file
+              "--user", user_temp_file.path,               # User prompt file
               "--output", output_file,     # Output to session directory
               "--timeout", "600",          # 600 seconds timeout
               "--format", "markdown"       # Markdown format
