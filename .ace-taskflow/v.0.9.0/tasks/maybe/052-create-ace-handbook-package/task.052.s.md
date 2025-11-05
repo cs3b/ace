@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.052
-status: draft
+status: pending
 priority: medium
 estimate: 1-2 days
 dependencies: []
@@ -189,3 +189,379 @@ Migrate 8 workflows from dev-handbook/.meta/wfi/ to ace-handbook/handbook/workfl
 ### Templates
 - Current location: `dev-handbook/templates/`
 - To be embedded in workflows per ADR-002
+
+## Technical Approach
+
+### Architecture Pattern
+
+**Pattern**: Workflow-only Ruby gem (no executable code, no ATOM architecture)
+- **Rationale**: Follows the planned ace-git pattern for pure workflow packages
+- **Integration**: Leverages existing ace-nav automatic gem discovery via `Ace::Nav::Molecules::HandbookScanner`
+- **Discovery**: ace-nav scans installed gems for `handbook/workflow-instructions/` directories automatically
+- **Impact**: Minimal - no code dependencies, just workflow files and documentation
+
+### Technology Stack
+
+**No runtime dependencies required** - This is a pure workflow package:
+- **ace-support-core**: NOT NEEDED (no configuration, no Ruby code)
+- **File format**: Markdown with YAML frontmatter (.wf.md extension)
+- **Protocol**: wfi:// handled by ace-nav (no gem-side code needed)
+
+**Development dependencies** (from root Gemfile):
+- Standard Ruby tooling for gemspec validation
+- ace-lint for markdown validation (optional)
+
+### Implementation Strategy
+
+**Key Decision: Remove "meta-" Prefix**
+- Current workflows use `meta-manage-guides`, `meta-review-workflows` etc.
+- **Recommendation**: Remove "meta-" prefix in ace-handbook gem
+- **Rationale**:
+  - Workflows are now clearly scoped within ace-handbook package
+  - No naming collision with other workflow types
+  - Simpler, cleaner naming: `wfi://manage-guides` vs `wfi://meta-manage-guides`
+  - Consistent with other ace-* gem workflows (no prefixes)
+
+**Migration Strategy**:
+1. Create new gem structure following ace-gems.g.md
+2. Copy workflows from `dev-handbook/.meta/wfi/` to `ace-handbook/handbook/workflow-instructions/`
+3. Remove "meta-" prefix from filenames and workflow names
+4. Validate workflows with ace-lint
+5. Keep original dev-handbook workflows until gem is published (backward compatibility)
+6. After gem is installed, ace-nav will auto-discover workflows from gem
+
+**Auto-Discovery Mechanism** (from ace-nav research):
+```ruby
+# ace-nav/lib/ace/nav/molecules/handbook_scanner.rb:106
+def scan_gem_sources
+  @gem_resolver.find_ace_gems.map.with_index do |gem_info, index|
+    next unless gem_info[:has_handbook]  # Looks for handbook/ directory
+    Models::HandbookSource.new(
+      name: gem_info[:name],
+      path: gem_info[:path],
+      alias_name: "@#{gem_info[:name]}",
+      type: :gem,
+      priority: 100 + index
+    )
+  end.compact
+end
+```
+
+## File Modifications
+
+### Create
+
+**New gem directory structure** (following ace-context/ace-git-commit patterns):
+
+- **ace-handbook/** (root gem directory)
+  - Purpose: Root directory for the ace-handbook gem
+  - Key components: All gem packaging files
+
+- **ace-handbook/lib/ace/handbook.rb**
+  - Purpose: Minimal gem entry point (required for valid Ruby gem)
+  - Content: Module definition only, no functionality
+
+- **ace-handbook/lib/ace/handbook/version.rb**
+  - Purpose: Gem version constant
+  - Content: `VERSION = "0.1.0"`
+
+- **ace-handbook/handbook/** (handbook content directory)
+  - Purpose: Contains all workflow instructions
+  - Key components: workflow-instructions/ subdirectory
+
+- **ace-handbook/handbook/workflow-instructions/** (8 workflow files)
+  - **manage-guides.wf.md** (source: dev-handbook/.meta/wfi/manage-guides.wf.md, ~276 lines)
+  - **review-guides.wf.md** (source: dev-handbook/.meta/wfi/review-guides.wf.md, ~336 lines)
+  - **manage-workflow-instructions.wf.md** (source: dev-handbook/.meta/wfi/manage-workflow-instructions.wf.md, ~253 lines)
+  - **review-workflows.wf.md** (source: dev-handbook/.meta/wfi/review-workflows.wf.md, ~286 lines)
+  - **manage-agents.wf.md** (source: dev-handbook/.meta/wfi/manage-agents.wf.md, ~347 lines)
+  - **update-handbook-docs.wf.md** (source: dev-handbook/.meta/wfi/update-handbook-docs.wf.md, ~306 lines)
+  - **update-tools-docs.wf.md** (source: dev-handbook/.meta/wfi/update-tools-docs.wf.md, ~305 lines)
+  - **update-integration-claude.wf.md** (source: dev-handbook/.meta/wfi/update-integration-claude.wf.md, ~297 lines)
+
+- **ace-handbook/ace-handbook.gemspec**
+  - Purpose: Gem specification following ace-gems.g.md pattern
+  - Key components: metadata, files list (NO executables), minimal dependencies
+  - Dependencies: NONE (pure workflow package)
+
+- **ace-handbook/README.md**
+  - Purpose: Gem overview and usage instructions
+  - Key components: Installation, workflow access via wfi://, workflow listing
+
+- **ace-handbook/CHANGELOG.md**
+  - Purpose: Version history in Keep a Changelog format
+  - Initial content: 0.1.0 release notes
+
+- **ace-handbook/Rakefile**
+  - Purpose: Standard gem tasks (no tests for workflow-only gem)
+  - Content: Minimal bundler/gem_tasks setup
+
+- **ace-handbook/LICENSE.txt** (if not inherited)
+  - Purpose: Gem license (likely MIT)
+
+### Modify
+
+**Root mono-repo files**:
+
+- **Gemfile**
+  - Changes: Add `gem 'ace-handbook', path: 'ace-handbook'` to development dependencies
+  - Impact: Enables local development and testing of gem
+  - Integration: Follows existing pattern for all ace-* gems
+
+- **.ace-taskflow/v.0.9.0/tasks/maybe/052-create-ace-handbook-package/task.052.s.md**
+  - Changes: Add complete implementation plan (this document)
+  - Impact: Task ready for execution
+  - Status: draft → pending
+
+### Delete
+
+**No files to delete** - Original dev-handbook workflows remain for backward compatibility until gem adoption is complete.
+
+**Future cleanup** (separate task):
+- dev-handbook/.meta/wfi/*.wf.md (after gem is published and adopted)
+- .claude/commands/meta-*.md (Claude Code slash commands for handbook workflows)
+
+### Naming Changes Summary
+
+**Workflow filename changes** (removing "meta-" prefix):
+- No changes to source files initially
+- New gem uses clean names without "meta-" prefix
+- Original files remain in dev-handbook/.meta/wfi/ for compatibility
+
+**Protocol access changes**:
+- Old: `wfi://meta-manage-guides` (still works from dev-handbook)
+- New: `wfi://manage-guides` (from ace-handbook gem after install)
+- Coexistence: Both work during transition (priority system in ace-nav)
+
+## Risk Assessment
+
+### Technical Risks
+
+**Risk: Workflow File Dependencies**
+- **Probability**: Medium
+- **Impact**: Medium
+- **Description**: Workflows may reference dev-handbook specific paths or templates
+- **Mitigation**:
+  - Audit all workflow files for path references
+  - Update paths to be relative to project root
+  - Ensure templates are embedded per ADR-002
+  - Test workflows after migration with ace-nav
+- **Rollback**: Keep original workflows in dev-handbook until validation complete
+
+**Risk: ace-nav Discovery Failure**
+- **Probability**: Low
+- **Impact**: High
+- **Description**: ace-nav may not discover workflows in new gem structure
+- **Mitigation**:
+  - Follow exact pattern from ace-context, ace-taskflow (verified working)
+  - Test discovery with `ace-nav --sources` after gem install
+  - Verify `handbook/workflow-instructions/` directory structure
+- **Rollback**: Original workflows still available in dev-handbook
+- **Monitoring**: Run `ace-nav wfi://manage-guides` to verify discovery
+
+**Risk: Workflow Name Conflicts**
+- **Probability**: Low
+- **Impact**: Low
+- **Description**: Removing "meta-" prefix could conflict with existing workflows
+- **Mitigation**:
+  - Search existing workflows for naming conflicts: `ace-nav 'wfi://*' --list | grep -E "(manage-guides|review-workflows)"`
+  - Verify no conflicts exist (completed in research phase - no conflicts found)
+- **Rollback**: Retain "meta-" prefix if conflicts discovered
+
+### Integration Risks
+
+**Risk: Claude Code Slash Command Integration**
+- **Probability**: Low
+- **Impact**: Medium
+- **Description**: .claude/commands/ may need updates for new workflow paths
+- **Mitigation**:
+  - Claude Code slash commands use wfi:// protocol, no path changes needed
+  - Slash commands will automatically use new gem workflows (ace-nav handles discovery)
+  - Test slash commands after gem installation
+- **Monitoring**: Verify `/meta-manage-guides` still works via wfi:// protocol
+
+**Risk: Template Embedding Compliance**
+- **Probability**: Medium
+- **Impact**: Medium
+- **Description**: Workflows may not have all templates properly embedded per ADR-002
+- **Mitigation**:
+  - Audit each workflow for `<documents>` and `<template>` blocks
+  - Verify all external template references are embedded
+  - Use ace-lint to validate markdown structure
+- **Rollback**: Fix template embedding before marking task complete
+
+### Performance Risks
+
+**Risk: Gem Installation Size**
+- **Probability**: Low
+- **Impact**: Low
+- **Description**: 8 workflow files (~2400 lines total) could bloat gem size
+- **Mitigation**: Markdown files are minimal, total size <100KB estimated
+- **Monitoring**: Check gem size with `gem build ace-handbook.gemspec`
+- **Thresholds**: Acceptable if <500KB (likely ~50KB)
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Research ace-nav workflow discovery mechanism
+  - Verified `handbook/workflow-instructions/` directory auto-discovery
+  - Confirmed no configuration needed in gem for wfi:// protocol
+  - Analyzed `Ace::Nav::Molecules::HandbookScanner` implementation
+
+* [x] Analyze existing workflow patterns and dependencies
+  - Reviewed all 8 source workflows in dev-handbook/.meta/wfi/
+  - Identified ~2400 lines of workflow content
+  - Confirmed templates should be embedded per ADR-002
+  - Verified no Ruby code dependencies needed
+
+* [x] Research workflow naming conventions
+  - Current: `meta-` prefix for handbook management workflows
+  - Other gems: No prefixes (manage-guides, review-workflows, etc.)
+  - Decision: Remove "meta-" prefix in new gem
+  - No naming conflicts found with `ace-nav wfi://` search
+
+* [ ] Audit workflow files for path dependencies
+  - Search each workflow for absolute/relative path references
+  - Identify any dev-handbook specific paths
+  - Document required path updates for portability
+  - Command: `ace-search "dev-handbook" --content --glob "dev-handbook/.meta/wfi/*.wf.md"`
+
+* [ ] Verify template embedding completeness
+  - Check each workflow for `<documents>` and `<template>` blocks
+  - Identify workflows missing embedded templates
+  - Locate external template files to be embedded
+  - Command: `ace-search "<template" --content --glob "dev-handbook/.meta/wfi/*.wf.md"`
+
+### Execution Steps
+
+- [ ] Create gem directory structure
+  - Create `ace-handbook/` directory at repository root
+  - Create `ace-handbook/lib/ace/handbook/` directory structure
+  - Create `ace-handbook/handbook/workflow-instructions/` directory
+  > TEST: Directory Structure Validation
+  > Type: Pre-condition Check
+  > Assert: Required directories exist with correct structure
+  > Command: `test -d ace-handbook/handbook/workflow-instructions && test -d ace-handbook/lib/ace/handbook && echo "✓ Structure valid" || echo "✗ Structure missing"`
+
+- [ ] Create minimal Ruby gem files
+  - Create `ace-handbook/lib/ace/handbook.rb` with module definition
+  - Create `ace-handbook/lib/ace/handbook/version.rb` with VERSION constant
+  - Create `ace-handbook/Rakefile` with minimal gem tasks
+  > TEST: Ruby Syntax Validation
+  > Type: Action Validation
+  > Assert: Ruby files have valid syntax
+  > Command: `ruby -c ace-handbook/lib/ace/handbook.rb && ruby -c ace-handbook/lib/ace/handbook/version.rb`
+
+- [ ] Copy and rename workflow files
+  - Copy 8 workflows from `dev-handbook/.meta/wfi/` to `ace-handbook/handbook/workflow-instructions/`
+  - Remove "meta-" prefix from filenames (no content changes yet)
+  - Preserve file permissions and structure
+  - Command: `for f in dev-handbook/.meta/wfi/*.wf.md; do cp "$f" "ace-handbook/handbook/workflow-instructions/$(basename $f)"; done`
+  > TEST: File Copy Verification
+  > Type: Action Validation
+  > Assert: All 8 workflows copied successfully
+  > Command: `test $(ls -1 ace-handbook/handbook/workflow-instructions/*.wf.md | wc -l) -eq 8 && echo "✓ All files copied" || echo "✗ File count mismatch"`
+
+- [ ] Update workflow path references
+  - Update paths in workflows to be project-root relative
+  - Replace `dev-handbook/` references with appropriate paths
+  - Ensure workflows work from gem installation context
+  > TEST: Path Reference Audit
+  > Type: Action Validation
+  > Assert: No absolute or dev-handbook-specific paths remain
+  > Command: `ace-search "dev-handbook" --content --glob "ace-handbook/handbook/workflow-instructions/*.wf.md" | wc -l | grep -q "^0$" && echo "✓ No path issues" || echo "✗ Path references found"`
+
+- [ ] Validate template embedding (per ADR-002)
+  - Verify all workflows have `<documents>` sections with embedded templates
+  - No external template dependencies should remain
+  - Validate XML structure is correct
+  > TEST: Template Embedding Check
+  > Type: Action Validation
+  > Assert: All workflows have proper template embedding
+  > Command: `ace-search "<documents>" --content --glob "ace-handbook/handbook/workflow-instructions/*.wf.md" | wc -l`
+
+- [ ] Create gemspec file
+  - Create `ace-handbook/ace-handbook.gemspec` following ace-gems.g.md pattern
+  - Set version to 0.1.0
+  - Include handbook/ directory in files list
+  - NO executables (spec.executables = [])
+  - NO runtime dependencies
+  > TEST: Gemspec Validation
+  > Type: Action Validation
+  > Assert: Gemspec is valid and buildable
+  > Command: `cd ace-handbook && gem build ace-handbook.gemspec`
+
+- [ ] Create README.md
+  - Document workflow package purpose
+  - List all 8 workflows with descriptions
+  - Explain wfi:// protocol access
+  - Include installation and usage examples
+  > TEST: README Completeness
+  > Type: Manual Review
+  > Assert: README covers installation, usage, and workflow listing
+  > Command: `cat ace-handbook/README.md | grep -q "wfi://" && echo "✓ README includes protocol docs" || echo "✗ Missing protocol docs"`
+
+- [ ] Create CHANGELOG.md
+  - Initialize with Keep a Changelog format
+  - Document 0.1.0 release with all 8 workflows
+  - Note this is initial extraction from dev-handbook
+  > TEST: CHANGELOG Format
+  > Type: Action Validation
+  > Assert: CHANGELOG follows Keep a Changelog format
+  > Command: `head -5 ace-handbook/CHANGELOG.md | grep -q "## \[0.1.0\]" && echo "✓ CHANGELOG valid" || echo "✗ CHANGELOG format invalid"`
+
+- [ ] Add gem to root Gemfile
+  - Add `gem 'ace-handbook', path: 'ace-handbook'` to development section
+  - Run `bundle install` to register gem locally
+  > TEST: Gemfile Integration
+  > Type: Action Validation
+  > Assert: Gem is registered in Bundler
+  > Command: `bundle exec gem list | grep -q "ace-handbook" && echo "✓ Gem registered" || echo "✗ Gem not found"`
+
+- [ ] Test workflow discovery with ace-nav
+  - Run `bundle exec ace-nav --sources` to verify gem appears
+  - Run `ace-nav 'wfi://manage-guides' --list` to test workflow discovery
+  - Verify all 8 workflows are discoverable
+  > TEST: Workflow Discovery
+  > Type: Integration Test
+  > Assert: ace-nav discovers all workflows from new gem
+  > Command: `bundle exec ace-nav 'wfi://*' --list | grep -c "@ace-handbook" | grep -q "8" && echo "✓ All workflows discovered" || echo "✗ Discovery failed"`
+
+- [ ] Validate workflow execution
+  - Test each workflow with `ace-nav wfi://workflow-name`
+  - Verify workflows load and display correctly
+  - Check for any broken references or errors
+  > TEST: Workflow Execution
+  > Type: Integration Test
+  > Assert: Workflows execute without errors
+  > Command: `for wf in manage-guides review-guides manage-workflow-instructions review-workflows manage-agents update-handbook-docs update-tools-docs update-integration-claude; do bundle exec ace-nav "wfi://$wf" >/dev/null 2>&1 || echo "✗ Failed: $wf"; done`
+
+- [ ] Lint workflow files
+  - Run `ace-lint` on all workflow markdown files
+  - Fix any markdown syntax issues
+  - Ensure frontmatter is valid YAML
+  > TEST: Markdown Quality
+  > Type: Quality Check
+  > Assert: All workflows pass markdown linting
+  > Command: `bundle exec ace-lint "ace-handbook/handbook/workflow-instructions/*.wf.md" --fix`
+
+- [ ] Update task status and commit
+  - Mark this task as completed
+  - Create git commit with all changes
+  - Document in commit message: "feat(handbook): create ace-handbook gem with 8 workflow instructions"
+
+## Acceptance Criteria
+
+- [x] **Task Planning Complete**: Comprehensive implementation plan with technical approach, file modifications, risks, and execution steps
+- [ ] **Gem Structure Created**: ace-handbook directory with proper Ruby gem structure (lib/, handbook/, gemspec, README, CHANGELOG)
+- [ ] **Workflows Migrated**: All 8 workflows copied to ace-handbook/handbook/workflow-instructions/ with clean naming (no "meta-" prefix)
+- [ ] **Path References Updated**: All workflow files use project-root relative paths, no dev-handbook-specific dependencies
+- [ ] **Template Embedding Verified**: All workflows have embedded templates per ADR-002 (no external template dependencies)
+- [ ] **Gemspec Valid**: ace-handbook.gemspec builds successfully with `gem build` command
+- [ ] **Documentation Complete**: README.md explains workflow access via wfi:// protocol, CHANGELOG.md initialized
+- [ ] **Bundle Integration**: Gem added to root Gemfile and installs correctly with `bundle install`
+- [ ] **ace-nav Discovery**: `ace-nav --sources` shows @ace-handbook source, all 8 workflows discoverable
+- [ ] **Workflow Execution**: All workflows accessible via `ace-nav wfi://workflow-name` and execute without errors
+- [ ] **Quality Validation**: All workflow files pass ace-lint markdown validation
+- [ ] **No Breaking Changes**: Original dev-handbook workflows remain functional for backward compatibility
