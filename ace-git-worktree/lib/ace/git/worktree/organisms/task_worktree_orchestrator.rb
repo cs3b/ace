@@ -24,7 +24,6 @@ module Ace
             @config = config || load_configuration
             @task_fetcher = Molecules::TaskFetcher.new
             @task_status_updater = Molecules::TaskStatusUpdater.new
-            @task_metadata_writer = Molecules::TaskMetadataWriter.new
             @task_committer = Molecules::TaskCommitter.new
             @worktree_creator = Molecules::WorktreeCreator.new
             @mise_trustor = Molecules::MiseTrustor.new
@@ -51,16 +50,17 @@ module Ace
             workflow_result = initialize_workflow_result
 
             begin
-              # Step 1: Fetch task metadata
-              task_metadata = fetch_task_metadata(task_ref)
-              return error_workflow_result("Task not found: #{task_ref}", workflow_result) unless task_metadata
+              # Step 1: Fetch task data
+              task_data = fetch_task_data(task_ref)
+              return error_workflow_result("Task not found: #{task_ref}", workflow_result) unless task_data
 
-              workflow_result[:task_id] = task_metadata.id
-              workflow_result[:task_title] = task_metadata.title
+              task_id = extract_task_id(task_data)
+              workflow_result[:task_id] = task_id
+              workflow_result[:task_title] = task_data[:title]
               workflow_result[:steps_completed] << "task_fetched"
 
               # Step 2: Check if worktree already exists
-              existing_worktree = check_existing_worktree(task_metadata)
+              existing_worktree = check_existing_worktree(task_data)
               if existing_worktree
                 return success_workflow_result("Worktree already exists", workflow_result.merge(
                   worktree_path: existing_worktree.path,
@@ -71,8 +71,8 @@ module Ace
 
               # Step 3: Update task status if configured (and not overridden)
               should_update_status = options[:no_status_update] ? false : @config.auto_mark_in_progress?
-              if should_update_status && !task_metadata.in_progress?
-                if update_task_status(task_metadata.id, "in-progress")
+              if should_update_status && task_data[:status] != "in-progress"
+                if update_task_status(task_id, "in-progress")
                   workflow_result[:steps_completed] << "status_updated"
                 else
                   return error_workflow_result("Failed to update task status", workflow_result)
@@ -80,14 +80,14 @@ module Ace
               end
 
               # Step 4: Create worktree metadata
-              worktree_metadata = create_worktree_metadata(task_metadata)
+              worktree_metadata = create_worktree_metadata(task_data)
               workflow_result[:steps_completed] << "metadata_prepared"
 
               # Step 5: Commit task changes if configured (and not overridden)
               should_commit = options[:no_commit] ? false : @config.auto_commit_task?
               if should_commit && should_update_status
                 commit_message = options[:commit_message] || "in-progress"
-                if commit_task_changes(task_metadata, commit_message)
+                if commit_task_changes(task_data, commit_message)
                   workflow_result[:steps_completed] << "task_committed"
                 else
                   # Continue even if commit fails, but note it
@@ -96,7 +96,7 @@ module Ace
               end
 
               # Step 6: Create the worktree
-              worktree_result = create_worktree_for_task(task_metadata, worktree_metadata)
+              worktree_result = create_worktree_for_task(task_data, worktree_metadata)
               return error_workflow_result(worktree_result[:error], workflow_result) unless worktree_result[:success]
 
               workflow_result[:worktree_path] = worktree_result[:worktree_path]
@@ -106,7 +106,7 @@ module Ace
 
               # Step 7: Add worktree metadata to task file
               if @config.add_worktree_metadata?
-                if add_worktree_metadata_to_task(task_metadata, worktree_metadata)
+                if add_worktree_metadata_to_task(task_data, worktree_metadata)
                   workflow_result[:steps_completed] << "metadata_added"
                 else
                   workflow_result[:warnings] << "Failed to add worktree metadata to task"
@@ -144,31 +144,32 @@ module Ace
             workflow_result = initialize_workflow_result
 
             begin
-              # Step 1: Fetch task metadata
-              task_metadata = fetch_task_metadata(task_ref)
-              return error_workflow_result("Task not found: #{task_ref}", workflow_result) unless task_metadata
+              # Step 1: Fetch task data
+              task_data = fetch_task_data(task_ref)
+              return error_workflow_result("Task not found: #{task_ref}", workflow_result) unless task_data
 
-              workflow_result[:task_id] = task_metadata.id
-              workflow_result[:task_title] = task_metadata.title
+              task_id = extract_task_id(task_data)
+              workflow_result[:task_id] = task_id
+              workflow_result[:task_title] = task_data[:title]
               workflow_result[:steps_completed] << "task_fetched"
 
               # Step 2: Check what would be created
-              directory_name = @config.format_directory(task_metadata)
-              branch_name = @config.format_branch(task_metadata)
+              directory_name = @config.format_directory(task_data)
+              branch_name = @config.format_branch(task_data)
               worktree_path = File.join(@config.absolute_root_path, directory_name)
 
               workflow_result[:would_create] = {
                 worktree_path: worktree_path,
                 branch: branch_name,
                 directory_name: directory_name,
-                task_status_update: @config.auto_mark_in_progress? && !task_metadata.in_progress?,
+                task_status_update: @config.auto_mark_in_progress? && task_data[:status] != "in-progress",
                 task_commit: @config.auto_commit_task?,
                 metadata_addition: @config.add_worktree_metadata?,
                 mise_trust: @config.mise_trust_auto?
               }
 
               workflow_result[:steps_planned] = [
-                "fetch_task_metadata",
+                "fetch_task_data",
                 ("update_task_status" if workflow_result[:would_create][:task_status_update]),
                 ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
                 "create_worktree",
@@ -194,19 +195,20 @@ module Ace
             workflow_result = initialize_workflow_result
 
             begin
-              # Step 1: Fetch task metadata
-              task_metadata = fetch_task_metadata(task_ref)
+              # Step 1: Fetch task data
+              task_data = fetch_task_data(task_ref)
 
               # Step 2: Find existing worktree (with fallback for missing task)
-              if task_metadata
-                workflow_result[:task_id] = task_metadata.id
+              if task_data
+                task_id = extract_task_id(task_data)
+                workflow_result[:task_id] = task_id
                 workflow_result[:steps_completed] << "task_fetched"
-                worktree_info = find_worktree_for_task(task_metadata)
+                worktree_info = find_worktree_for_task_data(task_data)
               else
-                # Fallback: Try to find worktree by task reference even if task metadata not found
+                # Fallback: Try to find worktree by task reference even if task data not found
                 worktree_info = find_worktree_by_task_reference(task_ref)
                 if worktree_info
-                  puts "Task not found, but worktree found. Removing worktree without updating task metadata."
+                  puts "Task not found, but worktree found. Removing worktree without updating task data."
                   workflow_result[:task_id] = task_ref
                   workflow_result[:task_not_found] = true
                 else
@@ -227,7 +229,7 @@ module Ace
               end
 
               # Step 4: Remove worktree metadata from task (only if task was found)
-              if task_metadata && remove_worktree_metadata_from_task(task_metadata)
+              if task_data && remove_worktree_metadata_from_task(task_data)
                 workflow_result[:steps_completed] << "metadata_removed"
               elsif workflow_result[:task_not_found]
                 workflow_result[:steps_completed] << "skipped_metadata_cleanup"
@@ -360,20 +362,20 @@ module Ace
             loader.load
           end
 
-          # Fetch task metadata
+          # Fetch task data
           #
           # @param task_ref [String] Task reference
-          # @return [TaskMetadata, nil] Task metadata or nil
-          def fetch_task_metadata(task_ref)
+          # @return [Hash, nil] Task data hash or nil
+          def fetch_task_data(task_ref)
             @task_fetcher.fetch(task_ref)
           end
 
           # Check if worktree already exists for task
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash
           # @return [WorktreeInfo, nil] Existing worktree or nil
-          def check_existing_worktree(task_metadata)
-            @worktree_creator.worktree_exists?(task_metadata: task_metadata)
+          def check_existing_worktree(task_data)
+            @worktree_creator.worktree_exists?(task_data: task_data)
           end
 
           # Update task status
@@ -387,12 +389,12 @@ module Ace
 
           # Create worktree metadata
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [WorktreeMetadata] Worktree metadata
-          def create_worktree_metadata(task_metadata)
+          def create_worktree_metadata(task_data)
             # Generate worktree path and branch names
-            directory_name = @config.format_directory(task_metadata)
-            branch_name = @config.format_branch(task_metadata)
+            directory_name = @config.format_directory(task_data)
+            branch_name = @config.format_branch(task_data)
             worktree_path = File.join(@config.absolute_root_path, directory_name)
 
             Models::WorktreeMetadata.new(
@@ -404,32 +406,34 @@ module Ace
 
           # Commit task changes
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @param status [String] Task status
           # @return [Boolean] true if successful
-          def commit_task_changes(task_metadata, status)
+          def commit_task_changes(task_data, status)
             # Find the task file (this would need implementation)
             # For now, commit all changes
-            @task_committer.commit_all_changes(status, task_metadata.id)
+            task_id = extract_task_id(task_data)
+            @task_committer.commit_all_changes(status, task_id)
           end
 
           # Create worktree for task
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @param worktree_metadata [WorktreeMetadata] Worktree metadata
           # @return [Hash] Worktree creation result
-          def create_worktree_for_task(task_metadata, worktree_metadata)
-            @worktree_creator.create_for_task(task_metadata, @config)
+          def create_worktree_for_task(task_data, worktree_metadata)
+            @worktree_creator.create_for_task(task_data, @config)
           end
 
           # Add worktree metadata to task
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @param worktree_metadata [WorktreeMetadata] Worktree metadata
           # @return [Boolean] true if successful
-          def add_worktree_metadata_to_task(task_metadata, worktree_metadata)
+          def add_worktree_metadata_to_task(task_data, worktree_metadata)
             # Try to use ace-taskflow update command first
-            if @task_status_updater.add_worktree_metadata(task_metadata.id, worktree_metadata)
+            task_id = extract_task_id(task_data)
+            if @task_status_updater.add_worktree_metadata(task_id, worktree_metadata)
               return true
             end
 
@@ -440,17 +444,18 @@ module Ace
 
           # Find worktree for task
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [WorktreeInfo, nil] Worktree info or nil
-          def find_worktree_for_task(task_metadata)
-            @worktree_creator.find_by_task_id(task_metadata.id)
+          def find_worktree_for_task_data(task_data)
+            task_id = extract_task_id(task_data)
+            @worktree_creator.find_by_task_id(task_id)
           end
 
           # Remove worktree metadata from task
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [Boolean] true if successful
-          def remove_worktree_metadata_from_task(task_metadata)
+          def remove_worktree_metadata_from_task(task_data)
             # This would need implementation to find and update the task file
             false
           end
@@ -477,6 +482,23 @@ module Ace
               success: false,
               error: error_message
             )
+          end
+
+          # Extract task ID from task data
+          #
+          # @param task_data [Hash] Task data hash
+          # @return [String] Task ID (e.g., "094")
+          def extract_task_id(task_data)
+            # Use task_number if available, otherwise extract from id
+            return task_data[:task_number] if task_data[:task_number]
+
+            # Extract from id field (e.g., "v.0.9.0+task.094" -> "094")
+            if task_data[:id]
+              match = task_data[:id].match(/task\.(\d+)$/)
+              return match[1] if match
+            end
+
+            "unknown"
           end
 
           # Create error result

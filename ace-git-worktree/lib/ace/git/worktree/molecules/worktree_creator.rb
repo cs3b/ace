@@ -11,9 +11,9 @@ module Ace
         #
         # @example Create a task-aware worktree
         #   creator = WorktreeCreator.new
-        #   task = TaskMetadata.fetch("081")
+        #   task_data = fetch_task_data("081")
         #   config = WorktreeConfig.new
-        #   result = creator.create_for_task(task, config)
+        #   result = creator.create_for_task(task_data, config)
         #
         # @example Create a traditional worktree
         #   result = creator.create_traditional("feature-branch", "/path/to/worktree")
@@ -30,7 +30,7 @@ module Ace
 
           # Create a worktree for a specific task
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @param config [WorktreeConfig] Worktree configuration
           # @param counter [Integer, nil] Counter for multiple worktrees of same task
           # @param git_root [String, nil] Git repository root (auto-detected if nil)
@@ -38,12 +38,12 @@ module Ace
           #
           # @example
           #   creator = WorktreeCreator.new
-          #   task = TaskMetadata.fetch("081")
+          #   task_data = fetch_task_data("081")
           #   config = ConfigLoader.new.load
-          #   result = creator.create_for_task(task, config)
+          #   result = creator.create_for_task(task_data, config)
           #   # => { success: true, worktree_path: "/project/.ace-wt/task.081", branch: "081-fix-auth", error: nil }
-          def create_for_task(task_metadata, config, counter: nil, git_root: nil)
-            return error_result("Task metadata is required") unless task_metadata
+          def create_for_task(task_data, config, counter: nil, git_root: nil)
+            return error_result("Task data is required") unless task_data
             return error_result("Configuration is required") unless config
 
             begin
@@ -52,8 +52,8 @@ module Ace
               return error_result("Not in a git repository") unless git_root
 
               # Generate names based on configuration
-              directory_name = config.format_directory(task_metadata, counter)
-              branch_name = config.format_branch(task_metadata)
+              directory_name = config.format_directory(task_data, counter)
+              branch_name = config.format_branch(task_data)
 
               # Build full path
               worktree_path = File.join(config.absolute_root_path, directory_name)
@@ -72,7 +72,7 @@ module Ace
                 worktree_path: worktree_path,
                 branch: branch_name,
                 directory_name: directory_name,
-                task_id: task_metadata.id,
+                task_id: extract_task_id_from_data(task_data),
                 git_root: git_root,
                 error: nil
               }
@@ -119,22 +119,23 @@ module Ace
 
           # Check if a worktree already exists for the given criteria
           #
-          # @param task_metadata [TaskMetadata, nil] Task metadata
+          # @param task_data [Hash, nil] Task data hash from ace-taskflow
           # @param branch_name [String, nil] Branch name
           # @param worktree_path [String, nil] Worktree path
           # @return [WorktreeInfo, nil] Existing worktree info or nil
           #
           # @example
-          #   existing = creator.worktree_exists_for_task?(task)
+          #   existing = creator.worktree_exists_for_task?(task_data)
           #   existing = creator.worktree_exists_for_branch?("feature-branch")
-          def worktree_exists?(task_metadata: nil, branch_name: nil, worktree_path: nil)
+          def worktree_exists?(task_data: nil, branch_name: nil, worktree_path: nil)
             require_relative "worktree_lister"
             lister = WorktreeLister.new
             worktrees = lister.list_all
 
             # Check by task ID
-            if task_metadata
-              existing = Models::WorktreeInfo.find_by_task_id(worktrees, task_metadata.id)
+            if task_data
+              task_id = extract_task_id_from_data(task_data)
+              existing = Models::WorktreeInfo.find_by_task_id(worktrees, task_id)
               return existing if existing
             end
 
@@ -156,18 +157,18 @@ module Ace
 
           # Generate a unique worktree path for a task (handles conflicts)
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @param config [WorktreeConfig] Worktree configuration
           # @param git_root [String] Git repository root
           # @return [String] Unique worktree path
           #
           # @example
-          #   path = creator.generate_unique_path(task, config, git_root)
+          #   path = creator.generate_unique_path(task_data, config, git_root)
           #   # => "/project/.ace-wt/task.081-2"
-          def generate_unique_path(task_metadata, config, git_root)
+          def generate_unique_path(task_data, config, git_root)
             counter = 1
             loop do
-              directory_name = config.format_directory(task_metadata, counter > 1 ? counter : nil)
+              directory_name = config.format_directory(task_data, counter > 1 ? counter : nil)
               worktree_path = File.join(config.absolute_root_path, directory_name)
 
               # Check if path already exists
@@ -275,6 +276,23 @@ module Ace
             return false if branch_name.include?('.git')
 
             true
+          end
+
+          # Extract task ID from task data
+          #
+          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @return [String] Task ID (e.g., "094")
+          def extract_task_id_from_data(task_data)
+            # Use task_number if available, otherwise extract from id
+            return task_data[:task_number] if task_data[:task_number]
+
+            # Extract from id field (e.g., "v.0.9.0+task.094" -> "094")
+            if task_data[:id]
+              match = task_data[:id].match(/task\.(\d+)$/)
+              return match[1] if match
+            end
+
+            "unknown"
           end
 
           # Create an error result hash

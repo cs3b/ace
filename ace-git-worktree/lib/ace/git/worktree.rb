@@ -40,7 +40,6 @@ module Ace
       require_relative "worktree/configuration"
       require_relative "worktree/models/worktree_config"
       require_relative "worktree/models/worktree_info"
-      require_relative "worktree/models/task_metadata"
       require_relative "worktree/models/worktree_metadata"
 
       require_relative "worktree/atoms/git_command"
@@ -50,7 +49,6 @@ module Ace
       require_relative "worktree/molecules/config_loader"
       require_relative "worktree/molecules/task_fetcher"
       require_relative "worktree/molecules/task_status_updater"
-      require_relative "worktree/molecules/task_metadata_writer"
       require_relative "worktree/molecules/task_committer"
       require_relative "worktree/molecules/worktree_creator"
       require_relative "worktree/molecules/worktree_lister"

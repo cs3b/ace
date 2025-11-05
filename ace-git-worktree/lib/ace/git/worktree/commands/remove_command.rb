@@ -179,14 +179,14 @@ module Ace
           def remove_task_worktree(options)
             puts "Removing worktree for task: #{options[:task]}"
 
-            # Try to find task metadata first
-            task_metadata = @task_fetcher.fetch(options[:task])
+            # Try to find task data first
+            task_data = @task_fetcher.fetch(options[:task])
             task_found = false
             worktree_info = nil
 
-            if task_metadata
-              puts "Task found: #{task_metadata.title} (status: #{task_metadata.status})"
-              worktree_info = find_worktree_for_task(task_metadata)
+            if task_data
+              puts "Task found: #{task_data[:title]} (status: #{task_data[:status]})"
+              worktree_info = find_worktree_for_task(task_data)
               task_found = true
             else
               # Fallback: Try to find worktree by task reference (for cases where task metadata exists but worktree doesn't)
@@ -367,11 +367,11 @@ module Ace
             end
           end
 
-          # Find worktree for task (when task metadata is available)
+          # Find worktree for task (when task data is available)
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [WorktreeInfo, nil] Worktree info or nil if not found
-          def find_worktree_for_task(task_metadata)
+          def find_worktree_for_task(task_data)
             worktree_lister = Ace::Git::Worktree::Molecules::WorktreeLister.new
             worktrees = worktree_lister.list_all
 
