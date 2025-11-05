@@ -26,7 +26,6 @@ module Ace
             @task_status_updater = Molecules::TaskStatusUpdater.new
             @task_committer = Molecules::TaskCommitter.new
             @worktree_creator = Molecules::WorktreeCreator.new
-            @mise_trustor = Molecules::MiseTrustor.new
           end
 
           # Create a worktree for a task with complete workflow
@@ -113,14 +112,26 @@ module Ace
                 end
               end
 
-              # Step 8: Trust mise configuration if enabled (and not overridden)
-              should_trust_mise = options[:no_mise_trust] ? false : @config.mise_trust_auto?
-              if should_trust_mise
-                mise_result = @mise_trustor.trust_worktree(worktree_result[:worktree_path])
-                if mise_result[:success]
-                  workflow_result[:steps_completed] << "mise_trusted"
+              # Step 8: Run after-create hooks if configured
+              hooks = @config.after_create_hooks
+              if hooks && hooks.any?
+                require_relative "../molecules/hook_executor"
+                hook_executor = Molecules::HookExecutor.new
+                hook_result = hook_executor.execute_hooks(
+                  hooks,
+                  worktree_path: worktree_result[:worktree_path],
+                  project_root: @project_root,
+                  task_data: task_data
+                )
+
+                if hook_result[:success]
+                  workflow_result[:steps_completed] << "hooks_executed"
+                  workflow_result[:hooks_results] = hook_result[:results]
                 else
-                  workflow_result[:warnings] << "Failed to trust mise configuration"
+                  # Hooks are non-blocking - failures become warnings
+                  workflow_result[:warnings] ||= []
+                  workflow_result[:warnings] += hook_result[:errors]
+                  workflow_result[:hooks_results] = hook_result[:results]
                 end
               end
 
@@ -165,7 +176,7 @@ module Ace
                 task_status_update: @config.auto_mark_in_progress? && task_data[:status] != "in-progress",
                 task_commit: @config.auto_commit_task?,
                 metadata_addition: @config.add_worktree_metadata?,
-                mise_trust: @config.mise_trust_auto?
+                hooks_count: @config.after_create_hooks.length
               }
 
               workflow_result[:steps_planned] = [
@@ -174,7 +185,7 @@ module Ace
                 ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
                 "create_worktree",
                 ("add_worktree_metadata" if workflow_result[:would_create][:metadata_addition]),
-                ("trust_mise_config" if workflow_result[:would_create][:mise_trust])
+                ("execute_#{workflow_result[:would_create][:hooks_count]}_hooks" if workflow_result[:would_create][:hooks_count] > 0)
               ].compact
 
               success_workflow_result("Dry run completed", workflow_result)

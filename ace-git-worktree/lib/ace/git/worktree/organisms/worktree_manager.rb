@@ -34,7 +34,6 @@ module Ace
             @worktree_lister = Molecules::WorktreeLister.new
             @worktree_remover = Molecules::WorktreeRemover.new
             @task_fetcher = Molecules::TaskFetcher.new
-            @mise_trustor = Molecules::MiseTrustor.new
 
             # Initialize orchestrator
             @task_orchestrator = Organisms::TaskWorktreeOrchestrator.new(config: @config, project_root: project_root)
@@ -69,15 +68,6 @@ module Ace
               )
 
               if result[:success]
-                # Trust mise configuration if enabled (and not overridden)
-                should_trust_mise = options[:no_mise_trust] ? false : @config.mise_trust_auto?
-                if should_trust_mise
-                  mise_result = @mise_trustor.trust_worktree(result[:worktree_path])
-                  unless mise_result[:success]
-                    result[:warnings] = ["Failed to trust mise configuration"]
-                  end
-                end
-
                 result[:message] = "Worktree created successfully"
               end
 
