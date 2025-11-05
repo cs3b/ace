@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **ace-git-worktree v0.1.13**: Simplify PathExpander implementation and remove over-engineered security tests
+  - Remove complex security pattern validation (7 test methods eliminated)
+  - Reduce PathExpander implementation from 290+ to 190 lines (35% reduction)
+  - Focus on worktree-specific functionality: path expansion, validation, writability checks
+  - Remove over-engineered regex patterns and complex security checks
+  - Update all tests to use proper `.ace-wt/` directory structure
+  - All 25 PathExpander tests now pass vs 32 tests with 11+ failures previously
+  - All 23 SlugGenerator tests continue to pass
+  - Maintain essential functionality while dramatically improving maintainability
 - **ace-git-worktree v0.1.12**: Fix critical task finding issue and remove over-engineered components
   - Fix "unknown keyword: :task_data" error in ace-git-worktree create --task command
   - Remove over-engineered TaskMetadata model (501 lines of code eliminated)
@@ -18,6 +27,11 @@ All notable changes to this project will be documented in this file.
   - Update TaskFetcher and TaskStatusUpdater to use ace-taskflow Ruby API as primary method
   - Eliminate subprocess overhead and improve performance in mono-repo environments
   - Add graceful fallback to CLI when Ruby API unavailable for standalone installations
+
+### Added
+- **ace-git-worktree v0.1.13**: Clean, maintainable PathExpander focused on practical worktree needs
+- **ace-review**: Fallback configuration loading for improved standalone usage
+- **ace-test suite**: Updated to include missing packages (ace-git-worktree and others)
   - Improve error messages to distinguish between mono-repo vs standalone environments
   - Add debug output for troubleshooting integration issues
 - **ace-git-worktree v0.1.10**: Improve completed task cleanup messaging and user experience
