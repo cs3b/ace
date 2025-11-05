@@ -18,6 +18,14 @@ All notable changes to this project will be documented in this file.
 - **ace-git-worktree v0.1.11**: Replace CLI subprocess calls with Ruby API integration
   - Update TaskFetcher and TaskStatusUpdater to use ace-taskflow Ruby API as primary method
   - Eliminate subprocess overhead and improve performance in mono-repo environments
+
+## [0.9.114] - 2025-11-05
+
+### Changed
+- **ace-git-worktree v0.1.12**: Package version bump with enhanced stability and user experience
+  - Resolve ace-git-worktree commit operation failures with enhanced error handling
+  - Fix configuration loading and path validation issues for reliable operation
+  - Add automatic navigation support for improved user experience
   - Add graceful fallback to CLI when Ruby API unavailable for standalone installations
   - Improve error messages to distinguish between mono-repo vs standalone environments
   - Add debug output for troubleshooting integration issues

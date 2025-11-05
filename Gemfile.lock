@@ -37,7 +37,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.1.11)
+    ace-git-worktree (0.1.12)
       ace-git-diff (>= 0.1.0)
       ace-support-core (>= 0.9.0)
       ace-taskflow (>= 0.10.0)
@@ -77,9 +77,10 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.13.1)
+    ace-review (0.14.0)
       ace-context (~> 0.9)
       ace-git-diff (~> 0.1)
+      ace-llm (~> 0.1)
       ace-nav (~> 0.9)
       ace-support-core (~> 0.9)
 

@@ -79,7 +79,8 @@ module Ace
 
           {
             description: preset["description"],
-            system_prompt: resolve_system_prompt_composition(preset["system_prompt"], overrides),
+            # Extract prompt composition for ace-context frontmatter (but let ace-context process it)
+            system_prompt: preset["system_prompt"] || preset["prompt_composition"],
             context: resolve_context_config(preset["context"], overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             model: overrides[:model] || preset["model"] || default_model,
