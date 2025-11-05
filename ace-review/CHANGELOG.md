@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updated Tests**: Fixed test expectations to match new architecture and removed tests for removed methods
 - **File Structure**: Corrected session file naming to use `system.prompt.md` and `user.prompt.md`
 - **CLI Integration**: Fixed `undefined method 'subject_config'` error in ReviewManager parameter naming
-- **ace-llm-query Flags**: Updated to use correct `--system` and `--user` flags instead of `--system-prompt` and `--user-prompt`
+- **ace-llm-query Interface**: Updated to use correct `--system` and `--prompt` flags instead of non-existent `--user` flag
 
 ### Technical
 - **Code Cleanup**: Removed 214 lines of legacy code while maintaining functionality
