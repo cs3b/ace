@@ -189,7 +189,7 @@ module Ace
             "context" => {
               "files" => [],
               "presets" => [],
-              "include_self" => true
+              "embed_document_source" => true
             }
           }
 
