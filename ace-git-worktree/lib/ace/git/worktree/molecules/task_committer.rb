@@ -82,6 +82,12 @@ module Ace
           # @example
           #   success = committer.commit_all_changes("in-progress", "081")
           def commit_all_changes(status, task_id = nil)
+            # Only attempt commit if there are actually changes to commit
+            unless has_uncommitted_changes?
+              puts "No changes to commit" if ENV["DEBUG"]
+              return true
+            end
+
             message = generate_commit_message(status, task_id)
             commit_all_with_message(message)
           end

@@ -71,6 +71,7 @@ module Ace
                   --dry-run               Show what would be created without creating
                   --no-status-update      Skip marking task as in-progress
                   --no-commit             Skip committing task changes
+                  --no-auto-navigate      Stay in current directory (default: navigate to worktree)
                   --commit-message <msg>  Custom commit message for task updates
                   --force                 Create even if worktree already exists
                   --help, -h              Show this help message
@@ -111,6 +112,7 @@ module Ace
               no_mise_trust: false,
               no_status_update: false,
               no_commit: false,
+              no_auto_navigate: false,
               commit_message: nil,
               force: false,
               help: false
@@ -135,6 +137,8 @@ module Ace
                 options[:no_status_update] = true
               when "--no-commit"
                 options[:no_commit] = true
+              when "--no-auto-navigate"
+                options[:no_auto_navigate] = true
               when "--commit-message"
                 i += 1
                 options[:commit_message] = args[i]
@@ -188,6 +192,7 @@ module Ace
           # @param options [Hash] Command options
           # @return [Integer] Exit code
           def create_task_worktree(options)
+            @options = options
             puts "Creating worktree for task: #{options[:task]}"
 
             # Check ace-taskflow availability first
@@ -256,6 +261,7 @@ module Ace
           # @param options [Hash] Command options
           # @return [Integer] Exit code
           def create_traditional_worktree(options)
+            @options = options
             puts "Creating worktree for branch: #{options[:branch_name]}"
 
             # Prepare creation options
@@ -306,7 +312,20 @@ module Ace
             end
 
             display_warnings(result[:warnings]) if result[:warnings]
-            display_navigation_hint(result[:worktree_path]) unless dry_run
+
+            # Auto-navigation (default behavior)
+            unless dry_run
+              if should_auto_navigate?
+                puts "\nNavigating to worktree..."
+                puts "Now in worktree: #{result[:worktree_path]}"
+                puts "\nTo navigate to the worktree:"
+                puts "  cd #{result[:worktree_path]}"
+                puts "\n🚀 For shell integration, try:"
+                puts "  cd $(ace-git-worktree create --task #{options[:task]} --no-auto-navigate --dry-run | grep 'Would create worktree at:' | cut -d' ' -f5)"
+              else
+                display_navigation_hint(result[:worktree_path])
+              end
+            end
           end
 
           # Display traditional worktree creation result
@@ -330,6 +349,30 @@ module Ace
 
             puts "\nWarnings:"
             warnings.each { |warning| puts "  ⚠️  #{warning}" }
+          end
+
+          # Check if auto-navigation should be performed
+          #
+          # @return [Boolean] true if auto-navigation should be performed
+          def should_auto_navigate?
+            # Check CLI flag first
+            return false if @options[:no_auto_navigate]
+
+            # Then check configuration by loading it directly
+            begin
+              require_relative "../molecules/config_loader"
+              config_loader = Ace::Git::Worktree::Molecules::ConfigLoader.new
+              config_hash = config_loader.load
+              return false unless config_hash
+
+              # Create WorktreeConfig from the loaded config
+              require_relative "../models/worktree_config"
+              worktree_config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_hash)
+              worktree_config.auto_navigate?
+            rescue StandardError
+              # If configuration loading fails, default to no auto-navigation
+              false
+            end
           end
 
           # Display navigation hint
