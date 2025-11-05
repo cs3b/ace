@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.14.0] - 2025-11-05
 
-### 🚀 **Major Performance Upgrade - Ruby API Migration**
+### 🚀 **Major Performance Upgrade - Ruby API Migration & Context Fix**
 
 ### Changed
 - **Architecture**: Complete migration from CLI subprocess to Ruby API calls
@@ -46,11 +46,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Backward Compatibility**: All existing CLI options and workflows unchanged
 - **Error Recovery**: Enhanced error messages and recovery paths
 
+### Fixed
+- **Context Generation Bug**: Fixed empty user.context.md files that had no subject configuration
+  - Updated `create_user_context_file` method to properly handle subject configuration fallbacks
+  - Eliminated redundant subject.md file creation (subject now handled via ace-context workflow)
+  - Enhanced configuration flow: explicit config → preset config → default "staged" configuration
+  - Improved handling of file paths, preset shortcuts, and structured configurations
+
 ### Performance
 - **98-99% faster** LLM calls
 - **Zero temp file overhead**
 - **Direct Ruby object responses**
 - **Immediate availability** of results and metadata
+
+### Technical
+- **Streamlined Session Structure**: Removed subject.md and context.md files, now using ace-context workflow
+- **Enhanced Configuration Handling**: Better fallback logic for subject configuration processing
+- **Updated Tests**: Modified test expectations to match new v0.14.0 session structure
 
 ## [0.13.1] - 2025-11-05
 

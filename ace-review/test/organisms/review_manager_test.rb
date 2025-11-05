@@ -35,10 +35,11 @@ class ReviewManagerTest < AceReviewTest
     assert result[:session_dir], "Should have session directory"
     assert Dir.exist?(result[:session_dir]), "Session directory should exist"
 
-    # Check that session files are created with v0.13.0 architecture
+    # Check that session files are created with v0.14.0 architecture (ace-context workflow)
     assert File.exist?(File.join(result[:session_dir], "system.prompt.md"))
     assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
-    assert File.exist?(File.join(result[:session_dir], "subject.md"))
+    assert File.exist?(File.join(result[:session_dir], "system.context.md"))
+    assert File.exist?(File.join(result[:session_dir], "user.context.md"))
     assert File.exist?(File.join(result[:session_dir], "metadata.yml"))
   end
 
@@ -58,13 +59,14 @@ class ReviewManagerTest < AceReviewTest
 
       assert result[:success], "Review should succeed: #{result[:error]}"
 
-      # Check that context.md is created in cache directory
+      # Check that context is handled via ace-context workflow
       session_dir = result[:session_dir]
-      context_file = File.join(session_dir, "context.md")
-      assert File.exist?(context_file), "Context.md should be created"
+      system_context_file = File.join(session_dir, "system.context.md")
+      assert File.exist?(system_context_file), "system.context.md should be created"
 
-      context_content = File.read(context_file)
-      assert_match(/Test Project/, context_content)
+      # The context should be embedded in the system.context.md frontmatter
+      system_context_content = File.read(system_context_file)
+      assert_match(/presets/, system_context_content)
     end
   end
 
@@ -99,13 +101,13 @@ class ReviewManagerTest < AceReviewTest
 
     session_dir = result[:session_dir]
 
-    # Verify v0.13.0 session structure
+    # Verify v0.14.0 session structure (ace-context workflow)
     assert File.exist?(File.join(session_dir, "system.context.md")), "Should have system.context.md"
     assert File.exist?(File.join(session_dir, "system.prompt.md")), "Should have system.prompt.md"
     assert File.exist?(File.join(session_dir, "user.context.md")), "Should have user.context.md"
     assert File.exist?(File.join(session_dir, "user.prompt.md")), "Should have user.prompt.md"
-    assert File.exist?(File.join(session_dir, "subject.md")), "Should have subject.md"
     assert File.exist?(File.join(session_dir, "metadata.yml")), "Should have metadata.yml"
+    # Note: subject.md is no longer created - subject content is handled via ace-context workflow
 
     # Verify system prompt has proper structure
     system_prompt_content = File.read(File.join(session_dir, "system.prompt.md"))
