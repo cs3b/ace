@@ -13,13 +13,12 @@ module Ace
         end
 
         # Execute an LLM query
-        # @param prompt [String] the prompt to send (legacy format)
-        # @param system_prompt [String] system prompt (new format)
-        # @param user_prompt [String] user prompt (new format)
+        # @param system_prompt [String] system prompt
+        # @param user_prompt [String] user prompt
         # @param model [String] the model to use
         # @param session_dir [String] the session directory for output
         # @return [Hash] result with success, response, output_file, and error keys
-        def execute(prompt: nil, system_prompt: nil, user_prompt: nil, model: nil, session_dir:)
+        def execute(system_prompt:, user_prompt:, model: nil, session_dir:)
           model ||= @default_model
 
           # Check if ace-llm-query is available
@@ -31,20 +30,8 @@ module Ace
             }
           end
 
-          # Handle new system/user prompt format vs legacy single prompt
-          if system_prompt && user_prompt
-            # New format: separate system and user prompts
-            result = execute_with_system_user_prompts(system_prompt, user_prompt, model, session_dir)
-          elsif prompt
-            # Legacy format: single combined prompt
-            result = execute_ace_llm_query(prompt, model, session_dir)
-          else
-            return {
-              success: false,
-              response: nil,
-              error: "Either prompt (legacy) or system_prompt + user_prompt (new) must be provided"
-            }
-          end
+          # v0.13.0 architecture: only supports system/user prompt format
+          result = execute_with_system_user_prompts(system_prompt, user_prompt, model, session_dir)
 
           if result[:success]
             {
@@ -109,44 +96,6 @@ module Ace
           ensure
             system_temp_file.unlink
             user_temp_file.unlink
-          end
-        end
-
-        def execute_ace_llm_query(prompt, model, session_dir)
-          # Write prompt to temp file
-          require "tempfile"
-          temp_file = Tempfile.new(["review-prompt", ".md"])
-          temp_file.write(prompt)
-          temp_file.close
-
-          begin
-            # Extract model short name for output filename
-            # "google:gemini-2.5-flash" -> "gemini-2.5-flash"
-            model_short = model.include?(":") ? model.split(":", 2).last : model
-
-            # Build output file path in session directory
-            output_file = File.join(session_dir, "review-report-#{model_short}.md")
-
-            # Execute ace-llm-query with correct flags
-            cmd = [
-              "ace-llm-query",
-              model,                      # PROVIDER:MODEL format
-              "--prompt", temp_file.path, # Prompt file (replaces --file)
-              "--output", output_file,    # Output to session directory
-              "--timeout", "600",         # 600 seconds timeout
-              "--format", "markdown"      # Markdown format
-            ]
-
-            stdout, stderr, status = Open3.capture3(*cmd)
-
-            {
-              success: status.success?,
-              output: stdout,
-              output_file: output_file,
-              error: stderr
-            }
-          ensure
-            temp_file.unlink
           end
         end
       end

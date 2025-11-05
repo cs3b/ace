@@ -69,7 +69,8 @@ module Ace
             {
               success: true,
               session_dir: session_dir,
-              prompt_file: File.join(session_dir, "prompt.md.tmp"),
+              system_prompt_file: File.join(session_dir, "system.prompt.md"),
+              user_prompt_file: File.join(session_dir, "user.prompt.md"),
               message: "Review session prepared in #{session_dir}"
             }
           end
@@ -154,17 +155,13 @@ module Ace
           # Step 3c: Generate system.prompt.md via ace-context
           system_prompt_path = File.join(session_dir, "system.prompt.md")
           unless execute_ace_context(system_context_path, system_prompt_path)
-            warn "Failed to generate system prompt via ace-context" if Ace::Review.debug?
-            # Fallback: use temporary combined prompt
-            return create_fallback_prompt(composition, context, subject)
+            return { success: false, error: "Failed to generate system prompt via ace-context" }
           end
 
           # Step 3d: Generate user.prompt.md via ace-context
           user_prompt_path = File.join(session_dir, "user.prompt.md")
           unless execute_ace_context(user_context_path, user_prompt_path)
-            warn "Failed to generate user prompt via ace-context" if Ace::Review.debug?
-            # Fallback: use temporary combined prompt
-            return create_fallback_prompt(composition, context, subject)
+            return { success: false, error: "Failed to generate user prompt via ace-context" }
           end
 
           # Load the generated prompts
@@ -182,58 +179,6 @@ module Ace
             system_prompt_path: system_prompt_path,
             user_prompt_path: user_prompt_path
           }
-        end
-
-        # Fallback method for when ace-context fails
-        def create_fallback_prompt(composition, context, subject)
-          # Use basic compose method to get system prompt content
-          system_prompt = @prompt_composer.compose(
-            composition,
-            config_dir: File.dirname(@preset_manager.config_path || ".")
-          )
-
-          # Create a combined prompt for now (will be replaced with proper ace-context flow)
-          combined_parts = []
-          combined_parts << system_prompt if system_prompt && !system_prompt.empty?
-          combined_parts << wrap_section("Project Context", context) if context && !context.empty?
-          combined_parts << wrap_section("Code to Review", subject) if subject && !subject.empty?
-          combined_parts << generate_review_request(composition)
-
-          prompt = combined_parts.join("\n\n")
-
-          if prompt.nil? || prompt.empty?
-            return { success: false, error: "Failed to compose prompt" }
-          end
-
-          { success: true, prompt: prompt }
-        end
-        end
-
-        # Temporary helper methods (will be removed when proper ace-context flow is implemented)
-        def wrap_section(title, content)
-          return "" unless content && !content.strip.empty?
-
-          <<~SECTION
-            ## #{title}
-
-            #{content}
-          SECTION
-        end
-
-        def generate_review_request(composition)
-          focus_areas = if composition["focus"] && !composition["focus"].empty?
-                          "\n\nPay special attention to the focus areas specified above."
-                        else
-                          ""
-                        end
-
-          <<~REQUEST
-            ## Review Request
-
-            Please review the provided code according to the guidelines and format specified above.#{focus_areas}
-
-            Provide actionable feedback with specific suggestions for improvement. Reference line numbers or file locations where applicable.
-          REQUEST
         end
 
         # Create system.context.md with ace-context frontmatter
@@ -353,27 +298,19 @@ module Ace
 
         # Build the complete review data structure
         def build_review_data(options, config, content, prompt_result, cache_dir)
-          # Handle both legacy prompt format and new system/user prompt format
+          # v0.13.0 architecture: only supports system/user prompt format
           review_data = {
             preset: options.preset,
             config: config,
             subject: content[:subject],
             context: content[:context],
             model: options.effective_model(config[:model]),
-            cache_dir: cache_dir
+            cache_dir: cache_dir,
+            system_prompt: prompt_result[:system_prompt],
+            user_prompt: prompt_result[:user_prompt],
+            system_prompt_path: prompt_result[:system_prompt_path],
+            user_prompt_path: prompt_result[:user_prompt_path]
           }
-
-          # Add prompt data based on format
-          if prompt_result[:system_prompt] && prompt_result[:user_prompt]
-            # New format: separate system and user prompts
-            review_data[:system_prompt] = prompt_result[:system_prompt]
-            review_data[:user_prompt] = prompt_result[:user_prompt]
-            review_data[:system_prompt_path] = prompt_result[:system_prompt_path]
-            review_data[:user_prompt_path] = prompt_result[:user_prompt_path]
-          else
-            # Legacy format: single combined prompt
-            review_data[:prompt] = prompt_result[:prompt]
-          end
 
           review_data
         end
@@ -390,23 +327,13 @@ module Ace
         def execute_with_llm(review_data, session_dir)
           executor = Ace::Review::Molecules::LlmExecutor.new
 
-          # Check if we have new system/user prompt format or legacy single prompt
-          if review_data[:system_prompt] && review_data[:user_prompt]
-            # New format: separate system and user prompts
-            result = executor.execute(
-              system_prompt: review_data[:system_prompt],
-              user_prompt: review_data[:user_prompt],
-              model: review_data[:model],
-              session_dir: session_dir
-            )
-          else
-            # Legacy format: single combined prompt
-            result = executor.execute(
-              prompt: review_data[:prompt],
-              model: review_data[:model],
-              session_dir: session_dir
-            )
-          end
+          # v0.13.0 architecture: only supports system/user prompt format
+          result = executor.execute(
+            system_prompt: review_data[:system_prompt],
+            user_prompt: review_data[:user_prompt],
+            model: review_data[:model],
+            session_dir: session_dir
+          )
 
           if result[:success]
             # Copy final review to release folder
@@ -424,29 +351,13 @@ module Ace
         end
 
         def save_session_files(session_dir, review_data)
-          # Handle new architecture (system/user prompts) vs legacy (single prompt)
-          if review_data[:system_prompt] && review_data[:user_prompt]
-            # New architecture: system and user prompts are already saved as .prompt.md files
-            # No need to save them again here
+          # v0.13.0 architecture: system and user prompts are already saved as .prompt.md files
+          # Save subject (no .tmp extension)
+          File.write(File.join(session_dir, "subject.md"), review_data[:subject])
 
-            # Save subject (no .tmp extension)
-            File.write(File.join(session_dir, "subject.md"), review_data[:subject])
-
-            # Save context if present (no .tmp extension)
-            unless review_data[:context].empty?
-              File.write(File.join(session_dir, "context.md"), review_data[:context])
-            end
-          else
-            # Legacy architecture: single combined prompt
-            File.write(File.join(session_dir, "prompt.md"), review_data[:prompt])
-
-            # Save subject (no .tmp extension)
-            File.write(File.join(session_dir, "subject.md"), review_data[:subject])
-
-            # Save context if present (no .tmp extension)
-            unless review_data[:context].empty?
-              File.write(File.join(session_dir, "context.md"), review_data[:context])
-            end
+          # Save context if present (no .tmp extension)
+          unless review_data[:context].empty?
+            File.write(File.join(session_dir, "context.md"), review_data[:context])
           end
 
           # Save metadata (committable - no .tmp extension)
@@ -520,7 +431,8 @@ module Ace
             "model" => review_data[:model],
             "has_context" => !review_data[:context].empty?,
             "subject_size" => review_data[:subject].length,
-            "prompt_size" => review_data[:prompt].length
+            "system_prompt_size" => review_data[:system_prompt].length,
+            "user_prompt_size" => review_data[:user_prompt].length
           }
         end
 
@@ -537,5 +449,6 @@ module Ace
           metadata + response
         end
       end
+    end
     end
   end

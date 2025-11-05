@@ -30,10 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Handles all subject types from preset configurations
 
 - **LLM Integration**:
-  - LlmExecutor accepts both new system/user prompts and legacy single prompts
+  - LlmExecutor requires separate system and user prompts
   - New format: `--system-prompt` and `--user-prompt` flags via ace-llm-query
-  - Legacy format: `--prompt` flag (backward compatible)
-  - Automatic format detection and routing
+  - Removed legacy single prompt support for cleaner architecture
 
 - **Session Structure**:
   ```
@@ -61,7 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Token Optimization**: Potential to reduce token usage through ace-context processing
 
 ### Breaking Changes
-- **None** - Full backward compatibility maintained for existing workflows
+- **LlmExecutor API**: Removed legacy single prompt support, now requires system_prompt and user_prompt parameters
+- **ReviewManager**: Removed fallback prompt generation methods, ace-context is now required
+- **Session Structure**: Updated file naming from legacy `prompt.md` to `system.prompt.md` and `user.prompt.md`
 
 ## [0.12.0] - 2025-11-05
 
