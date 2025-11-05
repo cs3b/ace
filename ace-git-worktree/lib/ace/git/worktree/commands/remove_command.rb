@@ -247,6 +247,16 @@ module Ace
                 puts "Worktree path: #{worktree_info.path}"
                 puts "Branch: #{worktree_info.branch}"
 
+                # Delete the branch if it exists
+                if worktree_info.branch && !worktree_info.branch.empty?
+                  branch_result = Ace::Git::Worktree::Atoms::GitCommand.branch("-D", worktree_info.branch)
+                  if branch_result[:success]
+                    puts "Deleted branch: #{worktree_info.branch}"
+                  else
+                    puts "Warning: Failed to delete branch #{worktree_info.branch}: #{branch_result[:error]}"
+                  end
+                end
+
                 # Provide appropriate messaging based on task status
                 if task_found && task_data
                   status = task_data[:status].to_s.strip
