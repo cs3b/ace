@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.095
-status: draft
+status: pending
 priority: medium
 estimate: 2-3 days
 dependencies: []
@@ -204,6 +204,305 @@ Each workflow includes:
 - Integration points with git/gh commands
 - Recovery procedures for failures
 - Configuration customization examples
+
+## Out of Scope
+
+**Implementation Concerns (deferred or not needed):**
+
+- Executable binary (no CLI tool)
+- Ruby implementation of rebase logic
+- Automated conflict resolution algorithms
+- Test suite (workflow-only package)
+- Complex ATOM architecture (atoms/, molecules/, organisms/)
+- Integration with CI/CD pipelines
+- Performance optimization
+
+## Technical Approach
+
+### Architecture Pattern
+The ace-git package follows a **workflow-first architecture** with minimal Ruby implementation:
+- Pure documentation package pattern (similar to handbook packages)
+- Leverage ace-core for configuration management only
+- No executable binary - workflows accessed via gem installation
+- Self-contained workflows following ADR-001 principles
+
+### Technology Stack
+- **Ruby gem structure**: Minimal gemspec and version.rb only
+- **Configuration**: ace-support-core for config cascade (v0.10+)
+- **Workflow format**: Markdown with YAML frontmatter (.wf.md)
+- **Integration**: GitHub CLI (`gh`) for PR operations
+- **Version detection**: Git tag patterns for squash workflow
+
+### Implementation Strategy
+Since this is a workflow-only package, the implementation focuses on:
+1. Creating comprehensive, self-contained workflow documentation
+2. Establishing clear configuration patterns
+3. Providing extensive examples and edge case handling
+4. Ensuring compatibility with existing ace-git-* tools
+
+## Tool Selection
+
+| Criteria | Ruby Executable | Workflow-Only | Shell Scripts | Selected |
+|----------|----------------|---------------|---------------|----------|
+| Complexity | High | Low | Medium | Workflow-Only |
+| Maintenance | High | Low | Medium | Workflow-Only |
+| Flexibility | Low | High | Medium | Workflow-Only |
+| User Control | Low | High | Medium | Workflow-Only |
+| Testing Needs | High | None | Medium | Workflow-Only |
+
+**Selection Rationale:** Workflow-only approach selected based on task requirements specifying "pure workflow package without Ruby executable" and the nature of these operations being guidance-focused rather than automation-focused.
+
+## File Modifications
+
+### Create
+- ace-git/ (root directory)
+  - Purpose: New gem package directory
+  - Key components: Standard ace gem structure
+  - Dependencies: None (new package)
+
+- ace-git/ace-git.gemspec
+  - Purpose: Gem specification file
+  - Key components: Dependencies, metadata, file list
+  - Dependencies: ace-support-core ~> 0.10
+
+- ace-git/lib/ace/git/version.rb
+  - Purpose: Version constant definition
+  - Key components: VERSION = "0.1.0"
+  - Dependencies: None
+
+- ace-git/handbook/workflow-instructions/rebase.wf.md
+  - Purpose: Changelog-preserving rebase workflow
+  - Key components: Conflict resolution, file preservation strategies
+  - Dependencies: git, existing CHANGELOG.md patterns
+  - Protocol: Accessible via `wfi://rebase`
+
+- ace-git/handbook/workflow-instructions/create-pr.wf.md
+  - Purpose: Pull request creation workflow
+  - Key components: GitHub CLI usage, template references via template:// protocol
+  - Dependencies: gh CLI tool
+  - Protocol: Accessible via `wfi://create-pr`
+
+- ace-git/handbook/workflow-instructions/squash-pr.wf.md
+  - Purpose: Version-based commit squashing workflow
+  - Key components: Version detection, interactive rebase guidance
+  - Dependencies: git, version tag patterns
+  - Protocol: Accessible via `wfi://squash-pr`
+
+- ace-git/.ace.example/git/config.yml
+  - Purpose: Minimal configuration example (user preferences only)
+  - Key components: default_branch, remote settings
+  - Dependencies: ace-core config cascade
+
+- ace-git/.ace.example/nav/protocols/wfi-sources/ace-git.yml
+  - Purpose: Register workflow discovery with ace-nav
+  - Key components: Gem-based source configuration
+  - Dependencies: ace-nav protocol system
+
+- ace-git/.ace.example/nav/protocols/tmpl-sources/ace-git.yml
+  - Purpose: Register template discovery with ace-nav
+  - Key components: Template source configuration
+  - Dependencies: ace-nav protocol system
+
+- ace-git/handbook/templates/pr/default.template.md
+  - Purpose: Default PR template
+  - Key components: Summary, changes, testing, checklist
+  - Protocol: Accessible via `template://pr/default`
+
+- ace-git/handbook/templates/pr/feature.template.md
+  - Purpose: Feature PR template
+  - Key components: Feature description, implementation details
+  - Protocol: Accessible via `template://pr/feature`
+
+- ace-git/handbook/templates/pr/bugfix.template.md
+  - Purpose: Bugfix PR template
+  - Key components: Bug description, root cause, fix details
+  - Protocol: Accessible via `template://pr/bugfix`
+
+- ace-git/handbook/templates/commit/squash.template.md
+  - Purpose: Squashed commit message template
+  - Key components: Version header, features, fixes, breaking changes
+  - Protocol: Accessible via `template://commit/squash`
+
+- ace-git/CHANGELOG.md
+  - Purpose: Package changelog in Keep a Changelog format
+  - Key components: Initial 0.1.0 release entry
+  - Dependencies: Keep a Changelog specification
+
+- ace-git/README.md
+  - Purpose: Package documentation
+  - Key components: Installation, usage for all three workflows
+  - Dependencies: None
+
+- ace-git/Rakefile
+  - Purpose: Basic gem tasks
+  - Key components: gem_tasks only (no tests)
+  - Dependencies: bundler/gem_tasks
+
+- ace-git/LICENSE
+  - Purpose: MIT license file
+  - Key components: Standard MIT license text
+  - Dependencies: None
+
+### Modify
+- bin/ace-git (if binstub pattern needed)
+  - Changes: Add mono-repo binstub wrapper
+  - Impact: Enables development testing
+  - Integration points: Root Gemfile
+
+- .claude/agents/ (if symlinks needed)
+  - Changes: Add symlinks to handbook workflows
+  - Impact: Claude Code integration
+  - Integration points: Handbook directory
+
+### Delete
+None - This is a new package creation
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Workflow instructions may not cover all edge cases
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Include comprehensive edge case sections, provide recovery procedures
+  - **Rollback:** Update workflows based on user feedback
+
+- **Risk:** Configuration cascade might not work as expected
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Test with ace-support-core patterns, provide fallback examples
+  - **Rollback:** Document manual configuration approaches
+
+### Integration Risks
+- **Risk:** GitHub CLI not available on all systems
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Provide alternative git-based approaches for PR creation
+  - **Monitoring:** Document in README requirements section
+
+- **Risk:** Version detection patterns don't match all projects
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Make patterns configurable, provide manual override
+  - **Monitoring:** Gather feedback on version formats
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Review existing rebase workflows from dev-handbook
+  > TEST: Workflow Analysis
+  > Type: Pre-condition Check
+  > Assert: Key rebase patterns and conflict scenarios identified
+  > Command: grep -r "rebase" dev-handbook/workflow-instructions/ | head -20
+
+* [ ] Analyze GitHub CLI PR creation patterns in existing code
+  > TEST: PR Pattern Check
+  > Type: Pre-condition Check
+  > Assert: Common gh pr create usage patterns documented
+  > Command: grep -r "gh pr create" . --include="*.md" | head -10
+
+* [ ] Study version tagging patterns in ace-taskflow
+  > TEST: Version Pattern Analysis
+  > Type: Pre-condition Check
+  > Assert: Version tag formats understood (v.X.Y.Z pattern)
+  > Command: git tag | grep -E "v\.[0-9]+" | tail -5
+
+* [ ] Research commit squashing best practices
+* [ ] Design configuration schema for all three workflows
+
+### Execution Steps
+
+- [ ] Create ace-git directory structure
+  > TEST: Directory Creation
+  > Type: Action Validation
+  > Assert: ace-git directory exists with correct structure
+  > Command: ls -la ace-git/
+
+- [ ] Create ace-git.gemspec with minimal dependencies
+  > TEST: Gemspec Validation
+  > Type: Action Validation
+  > Assert: Valid gemspec with ace-support-core dependency
+  > Command: ruby -c ace-git/ace-git.gemspec
+
+- [ ] Create lib/ace/git/version.rb with VERSION constant
+  > TEST: Version File
+  > Type: Action Validation
+  > Assert: Version constant defined as 0.1.0
+  > Command: grep "VERSION = " ace-git/lib/ace/git/version.rb
+
+- [ ] Create handbook/workflow-instructions/rebase.wf.md
+  > TEST: Rebase Workflow
+  > Type: Content Validation
+  > Assert: Workflow includes conflict resolution and file preservation
+  > Command: grep -E "(conflict|preserve|CHANGELOG)" ace-git/handbook/workflow-instructions/rebase.wf.md | head -5
+
+- [ ] Create handbook/workflow-instructions/create-pr.wf.md
+  > TEST: PR Workflow
+  > Type: Content Validation
+  > Assert: Workflow includes gh pr create examples
+  > Command: grep "gh pr create" ace-git/handbook/workflow-instructions/create-pr.wf.md
+
+- [ ] Create handbook/workflow-instructions/squash-pr.wf.md
+  > TEST: Squash Workflow
+  > Type: Content Validation
+  > Assert: Workflow includes version detection and interactive rebase
+  > Command: grep -E "(rebase -i|version|squash)" ace-git/handbook/workflow-instructions/squash-pr.wf.md | head -5
+
+- [ ] Create configuration examples in .ace.example/git/
+  > TEST: Config Examples
+  > Type: File Validation
+  > Assert: All four config files exist
+  > Command: ls -la ace-git/.ace.example/git/*.yml | wc -l
+
+- [ ] Write comprehensive README.md
+  > TEST: README Content
+  > Type: Documentation Check
+  > Assert: README covers installation and all three workflows
+  > Command: grep -E "(Installation|rebase|create-pr|squash)" ace-git/README.md | wc -l
+
+- [ ] Create CHANGELOG.md with initial release
+  > TEST: Changelog Format
+  > Type: Format Validation
+  > Assert: Follows Keep a Changelog format
+  > Command: grep -E "## \[0.1.0\]" ace-git/CHANGELOG.md
+
+- [ ] Create minimal Rakefile
+  > TEST: Rakefile Valid
+  > Type: Syntax Check
+  > Assert: Rakefile loads gem tasks
+  > Command: ruby -c ace-git/Rakefile
+
+- [ ] Add MIT LICENSE file
+  > TEST: License Present
+  > Type: File Check
+  > Assert: LICENSE file exists
+  > Command: test -f ace-git/LICENSE && echo "LICENSE exists"
+
+- [ ] Create bin/ace-git wrapper if needed for development
+- [ ] Test gem build locally
+  > TEST: Gem Build
+  > Type: Build Validation
+  > Assert: Gem builds without errors
+  > Command: cd ace-git && gem build ace-git.gemspec
+
+- [ ] Verify handbook integration paths
+  > TEST: Handbook Structure
+  > Type: Integration Check
+  > Assert: All workflows in correct location
+  > Command: find ace-git/handbook -name "*.wf.md" | wc -l
+
+## Acceptance Criteria
+
+- [x] ace-git gem package created with minimal structure
+- [ ] Three workflow instructions provide comprehensive guidance:
+  - [ ] rebase.wf.md: Complete rebase with changelog preservation
+  - [ ] create-pr.wf.md: Pull request creation with templates
+  - [ ] squash-pr.wf.md: Smart commit squashing by version
+- [ ] Configuration examples demonstrate customization for all workflows
+- [ ] Package follows ace-gems.g.md standards (CHANGELOG.md, version.rb, etc.)
+- [ ] Handbook integration enables Claude Code workflow access for all three workflows
+- [ ] No unnecessary Ruby implementation (workflow-focused)
+- [ ] README documents all three workflows clearly
 
 ## Out of Scope
 
