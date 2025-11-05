@@ -10,6 +10,7 @@ dependencies: []
 
 - changelog preservation workflow - rebase.wf.md
 - creating pr - create-pr.wf.md  (new)
+- squash pr - squash-pr.wf.md (auto squash and reduce number of commits, one per version)
 
 ## Behavioral Specification
 
