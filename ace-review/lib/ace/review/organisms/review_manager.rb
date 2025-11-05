@@ -424,16 +424,29 @@ module Ace
         end
 
         def save_session_files(session_dir, review_data)
-          # TODO: Implement proper system/user prompt generation via ace-context
-          # For now, save single combined prompt (will be replaced)
-          File.write(File.join(session_dir, "prompt.md"), review_data[:prompt])
+          # Handle new architecture (system/user prompts) vs legacy (single prompt)
+          if review_data[:system_prompt] && review_data[:user_prompt]
+            # New architecture: system and user prompts are already saved as .prompt.md files
+            # No need to save them again here
 
-          # Save subject (no .tmp extension)
-          File.write(File.join(session_dir, "subject.md"), review_data[:subject])
+            # Save subject (no .tmp extension)
+            File.write(File.join(session_dir, "subject.md"), review_data[:subject])
 
-          # Save context if present (no .tmp extension)
-          unless review_data[:context].empty?
-            File.write(File.join(session_dir, "context.md"), review_data[:context])
+            # Save context if present (no .tmp extension)
+            unless review_data[:context].empty?
+              File.write(File.join(session_dir, "context.md"), review_data[:context])
+            end
+          else
+            # Legacy architecture: single combined prompt
+            File.write(File.join(session_dir, "prompt.md"), review_data[:prompt])
+
+            # Save subject (no .tmp extension)
+            File.write(File.join(session_dir, "subject.md"), review_data[:subject])
+
+            # Save context if present (no .tmp extension)
+            unless review_data[:context].empty?
+              File.write(File.join(session_dir, "context.md"), review_data[:context])
+            end
           end
 
           # Save metadata (committable - no .tmp extension)
@@ -526,4 +539,3 @@ module Ace
       end
     end
   end
-end
