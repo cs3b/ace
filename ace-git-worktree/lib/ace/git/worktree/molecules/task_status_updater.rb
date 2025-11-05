@@ -216,7 +216,7 @@ module Ace
           def update_status_via_api(task_ref, status)
             begin
               # Use TaskManager for status updates
-              task_manager = Ace::Taskflow::Organisms::TaskManager.new(@project_root)
+              task_manager = Ace::Taskflow::Organisms::TaskManager.new
               result = task_manager.update_task_status(task_ref, status)
 
               puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
@@ -256,7 +256,7 @@ module Ace
           def add_worktree_metadata_via_api(task_ref, worktree_metadata)
             begin
               # Use TaskManager for field updates
-              task_manager = Ace::Taskflow::Organisms::TaskManager.new(@project_root)
+              task_manager = Ace::Taskflow::Organisms::TaskManager.new
 
               # Convert worktree metadata to field updates
               metadata_hash = worktree_metadata.to_h
