@@ -52,7 +52,7 @@ module Ace
           )
 
           # Step 5: Create session directory
-          session_dir = create_session_directory(options)
+          session_dir = create_session_directory(options, review_data[:cache_dir])
 
           # Step 6: Save session files
           save_session_files(session_dir, review_data)
@@ -121,12 +121,17 @@ module Ace
 
           # Extract context (background info)
           context_config = options.context || config[:context]
-          context = extract_context(context_config)
+
+          # Create cache directory for context.md if not provided
+          cache_dir = options.session_dir || create_cache_directory
+
+          context = extract_context(context_config, cache_dir)
 
           {
             success: true,
             subject: subject,
-            context: context
+            context: context,
+            cache_dir: cache_dir
           }
         end
 
@@ -157,7 +162,8 @@ module Ace
             subject: content[:subject],
             context: content[:context],
             prompt: prompt,
-            model: options.effective_model(config[:model])
+            model: options.effective_model(config[:model]),
+            cache_dir: content[:cache_dir]
           }
         end
 
@@ -166,8 +172,8 @@ module Ace
           @subject_extractor.extract(subject_config)
         end
 
-        def extract_context(context_config)
-          @context_extractor.extract(context_config)
+        def extract_context(context_config, cache_dir = nil)
+          @context_extractor.extract(context_config, cache_dir)
         end
 
         def execute_with_llm(review_data, session_dir)
@@ -180,12 +186,14 @@ module Ace
           )
 
           if result[:success]
-            # LlmExecutor now saves directly to output_file
-            # Just return the result with output_file path
+            # Copy final review to release folder
+            release_path = copy_to_release(session_dir, review_data)
+
+            # Return the release path for backward compatibility
             {
               success: true,
-              output_file: result[:output_file],
-              message: "Review saved to #{result[:output_file]}"
+              output_file: release_path || result[:output_file],
+              message: release_path ? "Review saved to #{release_path}" : "Review saved to #{result[:output_file]}"
             }
           else
             result
@@ -193,15 +201,15 @@ module Ace
         end
 
         def save_session_files(session_dir, review_data)
-          # Save prompt (temporary - with .tmp extension)
-          File.write(File.join(session_dir, "prompt.md.tmp"), review_data[:prompt])
+          # Split prompt into system and user files (no .tmp extension)
+          split_and_save_prompts(session_dir, review_data[:prompt])
 
-          # Save subject (temporary - with .tmp extension)
-          File.write(File.join(session_dir, "subject.md.tmp"), review_data[:subject])
+          # Save subject (no .tmp extension)
+          File.write(File.join(session_dir, "subject.md"), review_data[:subject])
 
-          # Save context if present (temporary - with .tmp extension)
+          # Save context if present (no .tmp extension)
           unless review_data[:context].empty?
-            File.write(File.join(session_dir, "context.md.tmp"), review_data[:context])
+            File.write(File.join(session_dir, "context.md"), review_data[:context])
           end
 
           # Save metadata (committable - no .tmp extension)
@@ -225,18 +233,70 @@ module Ace
           }
         end
 
-        def create_session_directory(options)
+        def create_session_directory(options, cache_dir)
           if options.session_dir
             FileUtils.mkdir_p(options.session_dir)
             return options.session_dir
           end
 
-          # Use reviews folder from preset manager
-          base_path = @preset_manager.review_base_path
+          # Use cache directory (cache-first approach)
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-          session_dir = File.join(base_path, "review-#{timestamp}")
+          session_dir = File.join(cache_dir, "review-#{timestamp}")
           FileUtils.mkdir_p(session_dir)
           session_dir
+        end
+
+        def create_cache_directory
+          # Create cache directory in .cache/ace-review/sessions/
+          base_cache_path = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
+          FileUtils.mkdir_p(base_cache_path)
+          base_cache_path
+        end
+
+        def split_and_save_prompts(session_dir, prompt)
+          # Split prompt into system and user parts
+          # Look for system/user separator or split evenly
+          if prompt.include?("---")
+            # Split at YAML frontmatter separator
+            parts = prompt.split("---", 2)
+            system_prompt = parts[0].strip
+            user_prompt = parts[1].strip
+          elsif prompt.include?("\n\n")
+            # Split at first double newline (simple heuristic)
+            parts = prompt.split("\n\n", 2)
+            system_prompt = parts[0].strip
+            user_prompt = parts[1].strip
+          else
+            # Split evenly as fallback
+            mid_point = prompt.length / 2
+            system_prompt = prompt[0...mid_point].strip
+            user_prompt = prompt[mid_point..-1].strip
+          end
+
+          # Save system and user prompts
+          File.write(File.join(session_dir, "prompt-system.md"), system_prompt)
+          File.write(File.join(session_dir, "prompt-user.md"), user_prompt)
+        end
+
+        def copy_to_release(session_dir, review_data)
+          # Copy final review reports to release folder
+          release_base_path = @preset_manager.review_base_path
+          FileUtils.mkdir_p(release_base_path)
+
+          # Create output filename
+          model_slug = review_data[:model].gsub(/[^a-zA-Z0-9\-_]/, '-').downcase
+          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+          release_filename = "review-report-#{model_slug}-#{timestamp}.md"
+          release_path = File.join(release_base_path, release_filename)
+
+          # Copy review file if it exists
+          review_file = File.join(session_dir, "review.md")
+          if File.exist?(review_file)
+            FileUtils.cp(review_file, release_path)
+            return release_path
+          end
+
+          nil
         end
 
 

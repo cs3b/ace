@@ -12,6 +12,7 @@ require "ace/context"
 require_relative "review/version"
 
 # Require all necessary components explicitly
+require_relative "review/molecules/context_composer"
 require_relative "review/molecules/context_extractor"
 require_relative "review/molecules/llm_executor"
 require_relative "review/molecules/preset_manager"

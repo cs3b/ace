@@ -5,13 +5,43 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2025-11-05
+
+### Added
+- **Context.md Pattern**: Adopt ace-docs context.md pattern for improved reproducibility
+  - ContextComposer molecule generates context.md with YAML frontmatter
+  - ContextExtractor delegates to ContextComposer for ace-context integration
+  - Cache-first storage with `.cache/ace-review/sessions/` directory
+  - Context.md files saved with embedded files and ace-context configuration
+
+### Changed
+- **Storage Model**: Implement cache-first storage approach
+  - Working files stored in cache directory instead of release folder
+  - Final reports copied to release folder `.ace-taskflow/v.*/reviews/`
+  - Removed `.tmp` extensions from all session files
+  - Split prompts into `prompt-system.md` and `prompt-user.md` files
+
+### Enhanced
+- **Ace-Context Integration**: Full integration with ace-context via `load_file_as_preset()`
+  - Follows ace-docs pattern exactly for consistency
+  - Support for presets, files, diffs, and commands in YAML frontmatter
+  - Fail-fast error handling with clear error messages
+  - Backward compatible CLI interface
+
+### Technical
+- **ContextComposer**: New molecule for context.md generation
+- **ReviewManager**: Updated with cache-first storage and prompt splitting
+- **ContextExtractor**: Refactored to delegate to ContextComposer
+- **Comprehensive Tests**: Added test coverage for all new functionality
+- **Backward Compatibility**: All existing presets work without modification
+
 ## [0.11.2] - 2025-11-01
 
 ### Changed
 
 - **Dependency Migration**: Updated to use renamed infrastructure gems
   - Changed dependency from `ace-core` to `ace-support-core`
-  - Changed dependency from `ace-test-support)
+  - Changed dependency from `ace-test-support`
   - Part of ecosystem-wide naming convention alignment for infrastructure gems
 
 ## [0.11.1]
