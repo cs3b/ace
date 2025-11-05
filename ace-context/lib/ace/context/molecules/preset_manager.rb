@@ -4,6 +4,7 @@ require 'ace/core'
 require 'yaml'
 require 'set'
 require_relative '../atoms/preset_validator'
+require_relative '../atoms/section_validator'
 
 module Ace
   module Context
@@ -15,6 +16,7 @@ module Ace
         def initialize
           @presets = load_presets
           @preset_cache = {}  # Cache for composed presets during single execution
+          @section_validator = Atoms::SectionValidator.new
         end
 
         def list_presets
@@ -114,6 +116,9 @@ module Ace
             metadata: {}
           }
 
+          # Collect all sections for merging
+          all_sections = []
+
           presets.each do |preset|
             # Merge context configuration
             if preset[:context]
@@ -137,9 +142,14 @@ module Ace
                 merged[:context]['commands'].concat(context['commands'])
               end
 
+              # Collect sections for separate processing
+              if context['sections']
+                all_sections << context['sections']
+              end
+
               # Copy other context keys
               context.each do |key, value|
-                next if %w[params files commands].include?(key)
+                next if %w[params files commands sections].include?(key)
                 merged[:context][key] = value
               end
             end
@@ -165,6 +175,14 @@ module Ace
             if preset[:metadata]
               merged[:metadata] = deep_merge_hash(merged[:metadata], preset[:metadata])
             end
+          end
+
+          # Merge sections using SectionProcessor if any exist
+          if all_sections.any?
+            require_relative 'section_processor'
+            section_processor = Molecules::SectionProcessor.new
+            merged_sections = section_processor.merge_sections(*all_sections)
+            merged[:context]['sections'] = merged_sections
           end
 
           # Deduplicate arrays
@@ -250,6 +268,14 @@ module Ace
           context_config = frontmatter['context'] || {}
           params = context_config['params'] || {}
 
+          # Validate sections if present
+          if context_config['sections']
+            unless @section_validator.validate_sections(context_config['sections'])
+              warn "Warning: Section validation failed in #{file}: #{@section_validator.errors.join(', ')}"
+              # Don't fail loading, just warn - allow users to fix configuration
+            end
+          end
+
           preset_data = {
             description: frontmatter['description'] || "#{File.basename(file, '.md')} preset",
             params: params,
@@ -260,6 +286,12 @@ module Ace
             cache: params['output'] == 'cache',
             metadata: frontmatter['metadata'] || {}
           }
+
+          # Add section validation metadata if sections were validated
+          if context_config['sections']
+            preset_data[:metadata][:sections_validated] = true
+            preset_data[:metadata][:section_validation_errors] = @section_validator.errors unless @section_validator.errors.empty?
+          end
 
           # Extract all params to root level (for backward compatibility and consistency)
           params.each do |key, value|
