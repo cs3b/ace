@@ -143,11 +143,11 @@ module Ace
 
         # Step 3: Generate system and user prompts via ace-context
         def compose_review_prompt(config, context, subject, subject_config, session_dir)
-          composition = config[:system_prompt] || {}
+          # Let ace-context handle prompt resolution via presets
           context_config = config[:context] || "project"
 
-          # Step 3a: Create system.context.md
-          system_context_path = create_system_context_file(session_dir, composition, context_config)
+          # Step 3a: Create system.context.md with ace-context preset
+          system_context_path = create_system_context_file(session_dir, nil, context_config)
 
           # Step 3b: Create user.context.md with actual subject configuration
           user_context_path = create_user_context_file(session_dir, subject_config, config[:subject])
@@ -182,32 +182,14 @@ module Ace
         end
 
         # Create system.context.md with ace-context frontmatter
-        def create_system_context_file(session_dir, system_prompt_config, context_config)
-          # Build ace-context frontmatter
+        def create_system_context_file(session_dir, _system_prompt_config, context_config)
+          # Build ace-context frontmatter - let ace-context handle preset resolution
           frontmatter = {
             "context" => {
-              "files" => [],
               "presets" => [],
               "include_self" => true
             }
           }
-
-          # Add prompt:// references from system_prompt_config
-          if system_prompt_config["base"]
-            frontmatter["context"]["files"] << system_prompt_config["base"]
-          end
-
-          if system_prompt_config["format"]
-            frontmatter["context"]["files"] << system_prompt_config["format"]
-          end
-
-          if system_prompt_config["focus"]
-            frontmatter["context"]["files"].concat(system_prompt_config["focus"])
-          end
-
-          if system_prompt_config["guidelines"]
-            frontmatter["context"]["files"].concat(system_prompt_config["guidelines"])
-          end
 
           # Add context preset (e.g., "project" becomes presets: ["project"])
           if context_config && context_config != "none" && !context_config.empty?
@@ -218,17 +200,8 @@ module Ace
             end
           end
 
-          # Create system.context.md content
+          # Create system.context.md content - let ace-context handle the rest
           system_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
-
-          # Add base system instructions after frontmatter
-          if system_prompt_config["base"]
-            base_content = @prompt_composer.resolver.resolve(
-              system_prompt_config["base"],
-              config_dir: File.dirname(@preset_manager.config_path || ".")
-            )
-            system_context_content += base_content if base_content
-          end
 
           # Write to file
           system_context_path = File.join(session_dir, "system.context.md")
