@@ -244,8 +244,14 @@ module Ace
 
               if git_result[:success]
                 puts "Worktree removed successfully: #{worktree_info.path}"
-                if task_found
-                  puts "Task metadata cleanup would require task access - skipped for completed task"
+
+                # Provide appropriate messaging based on task status
+                if task_found && task_metadata
+                  if task_metadata.status.strip.include?("done") || task_metadata.status.strip.include?("completed")
+                    puts "Task completed: no metadata cleanup needed"
+                  else
+                    puts "Note: Task metadata cleanup not available for this task status"
+                  end
                 end
                 0
               else
