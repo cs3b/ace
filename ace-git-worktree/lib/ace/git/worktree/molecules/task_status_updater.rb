@@ -218,8 +218,18 @@ module Ace
               # Use TaskManager for status updates
               task_manager = Ace::Taskflow::Organisms::TaskManager.new(@project_root)
               result = task_manager.update_task_status(task_ref, status)
-              result[:success]
+
+              puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
+
+              if result[:success]
+                true
+              else
+                puts "DEBUG: TaskManager failed: #{result[:message]}" if ENV["DEBUG"]
+                # Fall back to CLI on API failure
+                update_status_via_cli(task_ref, status)
+              end
             rescue StandardError => e
+              puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
               # Fall back to CLI on API error
               update_status_via_cli(task_ref, status)
             end
