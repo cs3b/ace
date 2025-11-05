@@ -325,10 +325,10 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Output worktree path for shell capture
+            # Display cd command for user to execute
             unless dry_run
               puts ""
-              puts "WORKTREE_PATH=#{result[:worktree_path]}"
+              puts "cd #{result[:worktree_path]}"
             end
           end
 
@@ -386,7 +386,7 @@ module Ace
             return unless worktree_path
 
             puts ""
-            puts "WORKTREE_PATH=#{worktree_path}"
+            puts "cd #{worktree_path}"
           end
         end
       end
