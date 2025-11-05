@@ -15,10 +15,10 @@ set exit_code $status
 echo $output
 
 # Extract worktree path and change directory if present
+# This happens AFTER all hooks have completed
 set worktree_path (echo $output | grep '^WORKTREE_PATH=' | cut -d= -f2)
 if test -n "$worktree_path"; and test -d "$worktree_path"
     cd $worktree_path
-    mise trust 2>/dev/null
 end
 
 exit $exit_code
