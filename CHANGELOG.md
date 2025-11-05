@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **ace-git-worktree v0.1.9**: Fix critical task lookup and CLI parsing issues
+  - Fix ace-taskflow CLI output format mismatch causing "Task not found" errors
+  - Implement robust CLI parser for human-readable ace-taskflow output format
+  - Add proper support for completed tasks without associated worktrees
+  - Fix Ruby syntax errors and method loading issues in TaskMetadata class
+  - Enhance error messages to distinguish task vs worktree not found scenarios
+  - Resolve timeout parameter issues in ace-taskflow command execution
 - **ace-git-worktree v0.1.8**: Fix remove command inconsistency and add fallback for completed tasks
   - Fix critical bug where remove --dry-run worked but actual execution failed
   - Add fallback logic to remove worktrees even when task metadata not found
