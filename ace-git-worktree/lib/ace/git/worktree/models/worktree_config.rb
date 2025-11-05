@@ -26,7 +26,6 @@ module Ace
           # Default configuration values
           DEFAULT_CONFIG = {
             "root_path" => ".ace-wt",
-            "mise_trust_auto" => true,
             "auto_navigate" => true,
             "task" => {
               "directory_format" => "task.{task_id}",
@@ -39,13 +38,16 @@ module Ace
             "cleanup" => {
               "on_merge" => false,
               "on_delete" => true
+            },
+            "hooks" => {
+              "after_create" => []
             }
           }.freeze
 
           # Configuration namespace paths
           CONFIG_NAMESPACE = ["git", "worktree"].freeze
 
-          attr_reader :root_path, :mise_trust_auto, :auto_navigate, :task_config, :cleanup_config
+          attr_reader :root_path, :auto_navigate, :task_config, :cleanup_config, :hooks_config
 
           # Initialize a new WorktreeConfig
           #
@@ -71,13 +73,6 @@ module Ace
           # @return [String] Branch format template
           def branch_format
             @task_config["branch_format"]
-          end
-
-          # Check if mise trust should be automatic
-          #
-          # @return [Boolean] true if mise trust should run automatically
-          def mise_trust_auto?
-            @mise_trust_auto
           end
 
           # Check if auto-navigation should be performed
@@ -134,6 +129,21 @@ module Ace
           # @return [Boolean] true if cleanup on delete
           def cleanup_on_delete?
             @cleanup_config["on_delete"]
+          end
+
+          # Get after-create hooks configuration
+          #
+          # @return [Array<Hash>] Array of hook definitions
+          def after_create_hooks
+            @hooks_config["after_create"] || []
+          end
+
+          # Check if hooks are configured
+          #
+          # @return [Boolean] true if any hooks are configured
+          def hooks_enabled?
+            hooks = after_create_hooks
+            hooks.is_a?(Array) && hooks.any?
           end
 
           # Format a directory path using task data
@@ -222,9 +232,10 @@ module Ace
           def to_h
             {
               root_path: root_path,
-              mise_trust_auto: mise_trust_auto?,
+              auto_navigate: auto_navigate?,
               task: @task_config.dup,
-              cleanup: @cleanup_config.dup
+              cleanup: @cleanup_config.dup,
+              hooks: @hooks_config.dup
             }
           end
 
@@ -266,10 +277,10 @@ module Ace
           # Initialize instance attributes from merged configuration
           def initialize_attributes
             @root_path = @merged_config["root_path"]
-            @mise_trust_auto = @merged_config["mise_trust_auto"]
             @auto_navigate = @merged_config["auto_navigate"]
             @task_config = @merged_config["task"] || {}
             @cleanup_config = @merged_config["cleanup"] || {}
+            @hooks_config = @merged_config["hooks"] || {}
           end
 
           # Expand root path to absolute path

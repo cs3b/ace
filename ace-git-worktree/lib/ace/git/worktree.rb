@@ -53,7 +53,7 @@ module Ace
       require_relative "worktree/molecules/worktree_creator"
       require_relative "worktree/molecules/worktree_lister"
       require_relative "worktree/molecules/worktree_remover"
-      require_relative "worktree/molecules/mise_trustor"
+      require_relative "worktree/molecules/hook_executor"
 
       require_relative "worktree/organisms/task_worktree_orchestrator"
       require_relative "worktree/organisms/worktree_manager"

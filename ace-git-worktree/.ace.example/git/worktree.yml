@@ -14,10 +14,6 @@ git:
     # This is where worktree directories will be created
     root_path: ".ace-wt"
 
-    # Automatically trust mise.toml files when creating worktrees
-    # If true, runs `mise trust` automatically in new worktrees
-    mise_trust_auto: true
-
     # Automatically navigate to worktree after creation
     # If true, provides enhanced navigation experience after worktree creation
     auto_navigate: true
@@ -27,10 +23,10 @@ git:
       # Directory naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
       # Examples:
-      #   "task.{id}"        -> task.081
+      #   "task.{task_id}"   -> task.081
       #   "{id}"             -> 081
       #   "{release}/{id}"   -> v.0.9.0/081
-      directory_format: "task.{id}"
+      directory_format: "task.{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
@@ -50,7 +46,7 @@ git:
 
       # Commit message format for task updates
       # Available variables: {id}, {task_id}, {release}, {slug}
-      commit_message_format: "chore(task-{id}): mark as in-progress, creating worktree"
+      commit_message_format: "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}"
 
       # Add worktree metadata to task frontmatter
       # If true, adds worktree info (branch, path, created_at) to task file
@@ -66,6 +62,50 @@ git:
       # If true, worktrees are cleaned up after branch deletion
       on_delete: true
 
+    # Hooks: Commands to run at specific lifecycle points
+    # Commands execute sequentially from the PROJECT ROOT by default
+    # Available variables: {worktree_path}, {task_id}, {task_title}, {release}, {worktree_dir}
+    # Environment variables: ACE_PROJECT_ROOT, ACE_WORKTREE_PATH, ACE_TASK_ID, ACE_TASK_TITLE, ACE_RELEASE
+    hooks:
+      # after_create: Commands to run after worktree creation
+      # Hook configuration:
+      #   command: Shell command to execute (required)
+      #   working_dir: Directory to run in (default: project root)
+      #     - "." or empty: project root (default)
+      #     - "worktree": the worktree directory
+      #     - relative path: relative to project root
+      #     - absolute path: as specified
+      #   timeout: Maximum execution time in seconds (default: 30, max: 300)
+      #   continue_on_error: Continue if this hook fails (default: false)
+      #   env: Additional environment variables (key-value pairs)
+      after_create:
+        # Example 1: Trust all mise configuration files in the worktree
+        - command: "find {worktree_path} -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
+          timeout: 30
+          continue_on_error: true
+
+        # Example 2: Same using environment variable
+        # - command: "find $ACE_WORKTREE_PATH -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
+        #   timeout: 30
+        #   continue_on_error: true
+
+        # Example 3: Run command IN the worktree directory
+        # - command: "bundle install --quiet"
+        #   working_dir: "worktree"
+        #   timeout: 120
+        #   continue_on_error: true
+
+        # Example 4: Run custom setup script from project root
+        # - command: "[ -f .ace/git/worktree/hooks/setup.sh ] && bash .ace/git/worktree/hooks/setup.sh || true"
+        #   timeout: 60
+        #   continue_on_error: false
+
+        # Example 5: With custom environment and variable interpolation
+        # - command: "echo 'Setup complete for task {task_id} at {worktree_path}'"
+        #   env:
+        #     CUSTOM_VAR: "value"
+        #   continue_on_error: true
+
 # Additional configuration examples:
 
 # Example 1: Custom directory structure
@@ -80,23 +120,27 @@ git:
 # git:
 #   worktree:
 #     root_path: ".worktrees"
-#     mise_trust_auto: false
 #     task:
 #       auto_mark_in_progress: false
 #       auto_commit_task: false
 #       add_worktree_metadata: true
+#     hooks:
+#       after_create: []  # No hooks
 
 # Example 3: Development-focused setup
 # git:
 #   worktree:
 #     root_path: ".dev"
-#     mise_trust_auto: true
 #     task:
 #       directory_format: "{id}-dev"
 #       branch_format: "dev/{id}-{slug}"
 #       auto_mark_in_progress: true
 #       auto_commit_task: true
 #       add_worktree_metadata: true
+#     hooks:
+#       after_create:
+#         - command: "mise trust mise*.toml"
+#         - command: "bundle install --quiet"
 
 # Template Variable Reference:
 # {id}        -> Numeric task ID (e.g., 081)

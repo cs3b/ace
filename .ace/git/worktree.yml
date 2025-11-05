@@ -14,10 +14,6 @@ git:
     # This is where worktree directories will be created
     root_path: ".ace-wt"
 
-    # Automatically trust mise.toml files when creating worktrees
-    # If true, runs `mise trust` automatically in new worktrees
-    mise_trust_auto: true
-
     # Automatically navigate to worktree after creation
     # If true, changes directory to the created worktree
     auto_navigate: true
@@ -65,6 +61,29 @@ git:
       # Automatically remove worktrees when their branches are deleted
       # If true, worktrees are cleaned up after branch deletion
       on_delete: true
+
+    # Hooks: Commands to run at specific lifecycle points
+    # Commands run from project root by default
+    # Available variables: {worktree_path}, {task_id}, {task_title}, {release}
+    # Environment: $ACE_PROJECT_ROOT, $ACE_WORKTREE_PATH, $ACE_TASK_ID, etc.
+    hooks:
+      # after_create: Commands to run after worktree creation
+      # Each hook supports: command, working_dir, timeout, continue_on_error, env
+      after_create:
+        # Trust all mise configuration files in the worktree
+        - command: "find {worktree_path} -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
+          timeout: 30
+          continue_on_error: true
+
+        # Alternative using environment variable:
+        # - command: "find $ACE_WORKTREE_PATH -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
+        #   timeout: 30
+        #   continue_on_error: true
+
+        # Optional: Run custom setup script if it exists
+        # - command: "[ -f .ace/git/worktree/hooks/setup.sh ] && .ace/git/worktree/hooks/setup.sh || true"
+        #   timeout: 60
+        #   continue_on_error: false
 
 # Additional configuration examples:
 
