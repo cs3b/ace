@@ -1,22 +1,37 @@
-# Section-Based Content Organization Migration Guide
+# Section-Based Content Organization Guide
 
-This guide explains how to migrate existing ace-context configurations to use the new section-based content organization system.
+This guide explains how to use the section-based content organization system in ace-context, which allows you to organize context content into logical sections (focus, style, diff, etc.) with XML-style tags for better structure and clarity.
 
 ## Overview
 
-The section-based system allows you to organize context content into logical sections (focus, style, diff, etc.) with XML-style tags, providing better structure and clarity for your context configurations.
+ace-context supports both traditional configurations and section-based organization. Sections provide enhanced structure without requiring changes to existing configurations.
 
-## Benefits of Sections
+## Benefits of Using Sections
 
 - **Better Organization**: Content is grouped logically by semantic meaning
 - **XML-style Tags**: Structured output with `<sectionname>` tags for processing
 - **Priority Ordering**: Control the order of sections with priority values
-- **Backward Compatibility**: Existing configurations continue to work unchanged
-- **Auto-Migration**: Legacy configurations can be automatically migrated
+- **Full Compatibility**: Existing configurations continue to work unchanged
+- **Mixed Usage**: Use sections alongside traditional configurations
 
-## Migration from Legacy Format
+## When to Use Sections
 
-### Before (Legacy Format)
+### Use Sections When:
+- You need structured output for processing by other tools
+- You want clear separation between different types of content
+- You're creating specialized review contexts (code review, security review, etc.)
+- You need precise control over content ordering
+- You want section-specific file organization
+
+### Use Traditional Format When:
+- You have simple, flat configurations
+- You don't need XML-style structured output
+- You prefer the established format
+- Your team is not ready to adopt sections yet
+
+## Section Format vs. Traditional Format
+
+### Traditional Format (Still Supported)
 
 ```yaml
 ---
@@ -39,7 +54,7 @@ context:
 ---
 ```
 
-### After (Section-Based Format)
+### Section-Based Format (Enhanced)
 
 ```yaml
 ---
@@ -102,6 +117,7 @@ focus:
   title: "Source Files"
   content_type: "files"
   priority: 1
+  description: "Main source files being reviewed"
   files:
     - "src/**/*.js"
     - "README.md"
@@ -116,6 +132,7 @@ system:
   title: "System Information"
   content_type: "commands"
   priority: 2
+  description: "System status and information"
   commands:
     - "pwd"
     - "git status --short"
@@ -128,6 +145,7 @@ changes:
   title: "Code Changes"
   content_type: "diffs"
   priority: 1
+  description: "Recent code changes to review"
   ranges:
     - "origin/main...HEAD"
     - "HEAD~5...HEAD"
@@ -139,29 +157,51 @@ intro:
   title: "Introduction"
   content_type: "content"
   priority: 1
+  description: "Review introduction and context"
   content: |
     This is a code review of the recent changes.
     Please focus on performance and security aspects.
 ```
 
-## Auto-Migration
+## Using Sections with Existing Configurations
 
-ace-context will automatically migrate legacy configurations to sections when:
+ace-context automatically detects and enhances traditional configurations:
 
-1. The configuration has `files`, `commands`, or `diffs` but no `sections`
-2. The system detects it's a legacy format during loading
+1. **Auto-Enhancement**: Traditional configurations get automatic section organization
+2. **Mixed Usage**: You can combine traditional and section-based approaches
+3. **Gradual Adoption**: Migrate configurations at your own pace
 
-The auto-migration creates sections with these defaults:
+### Auto-Enhancement Results
 
-| Legacy Field | Section Name | Title | Priority |
-|--------------|--------------|-------|----------|
+When ace-context encounters a traditional configuration, it automatically creates sections:
+
+| Traditional Field | Section Name | Title | Priority |
+|-------------------|--------------|-------|----------|
 | `files` | `files` | "Files" | 100 |
 | `commands` | `commands` | "Commands" | 200 |
 | `diffs`/`ranges` | `diffs` | "Diffs" | 300 |
 
+### Mixed Configuration Example
+
+You can use both approaches in the same configuration:
+
+```yaml
+context:
+  files:        # Traditional files (go to attachments section)
+    - README.md
+  commands:     # Traditional commands (go to attachments section)
+    - pwd
+  sections:
+    focus:       # Enhanced section-based organization
+      title: "Source Code"
+      content_type: "files"
+      files: ["src/**/*.js"]
+```
+
 ## Output Formats
 
-### markdown-xml (Recommended)
+### markdown-xml (Recommended for Sections)
+
 ```
 ## Files Under Review
 <focus>
@@ -173,12 +213,14 @@ The auto-migration creates sections with these defaults:
 ## System Context
 <context>
   <output command="git status --short">
-    // Git status output
+    M src/main.js
+    A README.md
   </output>
 </context>
 ```
 
 ### markdown
+
 ```
 ## Files Under Review
 ### src/main.js
@@ -189,9 +231,25 @@ The auto-migration creates sections with these defaults:
 ## System Context
 ### Command: `git status --short`
 ```
-// Git status output
+M src/main.js
+A README.md
 ```
 ```
+
+### Section File Organization
+
+Use `--organize-by-sections` to create separate files for each section:
+
+```bash
+ace-context code-review --organize-by-sections --output context.md
+```
+
+This creates:
+- `context.md` (index with complete context)
+- `context-focus.md` (files section)
+- `context-style.md` (style section)
+- `context-diff.md` (diff section)
+- etc.
 
 ## Common Section Patterns
 
@@ -224,13 +282,6 @@ sections:
   policies:       # Security policies
 ```
 
-## Backward Compatibility
-
-- **Existing Presets**: Continue to work unchanged
-- **Mixed Configurations**: You can have both legacy keys and sections
-- **Gradual Migration**: Migrate one preset at a time
-- **Auto-Detection**: System automatically detects section vs. legacy formats
-
 ## CLI Usage
 
 ### Loading Section-Based Presets
@@ -245,18 +296,11 @@ ace-context code-review --organize-by-sections
 ace-context code-review --format markdown-xml
 ```
 
-### File Organization
+### Section File Organization
 ```bash
 # Write sections to separate files
 ace-context code-review --organize-by-sections --output context.md
 ```
-
-This creates:
-- `context.md` (index with complete context)
-- `context-focus.md` (files section)
-- `context-style.md` (style section)
-- `context-diff.md` (diff section)
-- etc.
 
 ## Troubleshooting
 
@@ -267,20 +311,20 @@ Warning: Section validation failed in preset.md: Section 'focus' missing require
 
 **Solution**: Ensure all sections have required fields (title, content_type).
 
-### Auto-Migration Not Working
-If auto-migration doesn't occur, check:
+### Auto-Enhancement Not Expected
+If traditional configurations aren't being enhanced as expected, check:
 - Configuration doesn't already have `sections` key
 - At least one of `files`, `commands`, or `diffs` is present
 - No syntax errors in the YAML
 
-### Mixed Legacy and Sections
-You can temporarily use both:
+### Mixed Configuration Issues
+You can use both approaches simultaneously:
 ```yaml
 context:
-  files:    # Legacy files (will go to attachments section)
-  commands: # Legacy commands (will go to attachments section)
+  files:      # Traditional files (go to attachments section)
+  commands:   # Traditional commands (go to attachments section)
   sections:
-    focus:   # New section-based organization
+    focus:     # Enhanced section-based organization
       title: "Files Under Review"
       content_type: "files"
       files: ["src/**/*.js"]
@@ -292,14 +336,17 @@ context:
 2. **Set Clear Priorities**: Lower numbers appear first (1-10 for main sections)
 3. **Provide Descriptions**: Help users understand what each section contains
 4. **Use markdown-xml Format**: Best for structured processing with XML tags
-5. **Test Migrations**: Verify auto-migrated sections make sense for your use case
-6. **Document Changes**: Update team documentation when migrating to sections
+5. **Test Configurations**: Verify section organization works for your use case
+6. **Document Usage**: Update team documentation when adopting sections
+7. **Consider Audience**: Use sections when the output will be processed by tools or needs clear structure
 
-## Example Migrations
+## Examples
 
-See the `.ace.example/context/presets/` directory for complete examples of section-based configurations covering different use cases:
+See the `.ace.example/context/presets/` directory for complete examples of section-based configurations:
 
 - `code-review.md` - Comprehensive code review sections
 - `documentation-review.md` - Documentation-focused sections
 - `security-review.md` - Security-focused sections
 - `section-example-simple.md` - Basic section structure
+
+Each example demonstrates different patterns and use cases for section-based organization.
