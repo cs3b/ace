@@ -325,32 +325,10 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Auto-navigation (default behavior)
+            # Output worktree path for shell capture
             unless dry_run
-              if should_auto_navigate?
-                puts ""
-                puts "=" * 60
-                puts "WORKTREE_PATH=#{result[:worktree_path]}"
-                puts "=" * 60
-                puts ""
-                puts "Add this to your shell config for auto-navigation:"
-                puts ""
-                puts "  # Fish shell (~/.config/fish/config.fish)"
-                puts "  function gwt"
-                puts "    set path (ace-git-worktree create --task $argv 2>&1 | grep '^WORKTREE_PATH=' | cut -d= -f2)"
-                puts "    and cd $path"
-                puts "  end"
-                puts ""
-                puts "  # Bash/Zsh (~/.bashrc or ~/.zshrc)"
-                puts "  gwt() {"
-                puts "    local path=$(ace-git-worktree create --task \"$@\" 2>&1 | grep '^WORKTREE_PATH=' | cut -d= -f2)"
-                puts "    [ -n \"$path\" ] && cd \"$path\""
-                puts "  }"
-                puts ""
-                puts "Then use: gwt 052"
-              else
-                display_navigation_hint(result[:worktree_path])
-              end
+              puts ""
+              puts "WORKTREE_PATH=#{result[:worktree_path]}"
             end
           end
 
@@ -407,8 +385,8 @@ module Ace
           def display_navigation_hint(worktree_path)
             return unless worktree_path
 
-            puts "\nTo navigate to the worktree:"
-            puts "  cd #{worktree_path}"
+            puts ""
+            puts "WORKTREE_PATH=#{worktree_path}"
           end
         end
       end
