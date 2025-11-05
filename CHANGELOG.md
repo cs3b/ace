@@ -108,6 +108,15 @@ All notable changes to this project will be documented in this file.
   - Breaking changes: LlmExecutor now requires system_prompt and user_prompt parameters
 
 ### Changed
+- **ace-git-worktree v0.1.12**: Fix critical task finding issue and remove over-engineered components
+  - Fix "unknown keyword: :task_data" error in ace-git-worktree create --task command
+  - Remove over-engineered TaskMetadata model (501 lines of code eliminated)
+  - Simplify TaskFetcher from 496 to 240 lines (50% reduction in complexity)
+  - Update all components to use hash-based task data instead of TaskMetadata objects
+  - Fix API mismatches between TaskWorktreeOrchestrator, WorktreeCreator, and TaskStatusUpdater
+  - Ensure clean delegation to ace-taskflow instead of duplicating task management logic
+  - All 59 tests passing across molecules, organisms, models, and integration test suites
+  - ace-git-worktree create --task 094 now works correctly with proper task data integration
 - **ace-git-worktree v0.1.11**: Replace CLI subprocess calls with Ruby API integration
   - Update TaskFetcher and TaskStatusUpdater to use ace-taskflow Ruby API as primary method
   - Eliminate subprocess overhead and improve performance in mono-repo environments
