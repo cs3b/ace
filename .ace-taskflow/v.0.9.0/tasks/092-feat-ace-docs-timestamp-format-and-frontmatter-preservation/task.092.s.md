@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.092
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 4h
 dependencies: []
 ---
 
@@ -164,3 +164,286 @@ Enable fine-grained timestamp tracking in ace-docs to support multiple releases 
 - **No migration of existing dates**: Preserve historical accuracy; only new timestamps use new format
 - **Atomic writes**: Use existing SafeFileWriter pattern with backup to prevent data loss
 - **Flexible key support**: Any document field can use timestamp format, not just predefined fields
+
+---
+
+## Technical Approach
+
+### Architecture Pattern
+
+The implementation follows the ATOM architecture pattern used across ACE gems:
+
+- **Atoms**: Pure timestamp parsing and validation functions
+- **Molecules**: Timestamp processing and special value resolution
+- **Organisms**: High-level document update orchestration (no changes needed - delegates to molecules)
+- **Models**: Document model extensions for timestamp handling
+
+**Integration Strategy**: Extend existing `FrontmatterManager` molecule and `Document` model without breaking backward compatibility. The ace-support-markdown `DocumentEditor` already provides atomic writes and frontmatter preservation, so we focus on timestamp format handling.
+
+### Technology Stack
+
+**Existing Dependencies**:
+- Ruby standard library `Date` and `Time` classes (already used)
+- ace-support-markdown `DocumentEditor` (already integrated, provides frontmatter preservation)
+- ace-support-markdown `SafeFileWriter` (atomic writes with backup)
+
+**No New Dependencies Required**: All functionality can be implemented with existing Ruby stdlib and ace-support-markdown infrastructure.
+
+**Timestamp Format Selection**:
+- Use Ruby `Time.strftime("%Y-%m-%d %H:%M")` for consistent formatting
+- Use Ruby `Time.parse` with fallback to `Date.parse` for flexible input parsing
+- Regex validation: `/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/` for format checking
+
+### Implementation Strategy
+
+**Backward Compatibility Approach**:
+1. Accept both date-only (`YYYY-MM-DD`) and date+time (`YYYY-MM-DD HH:MM`) formats
+2. Parse date-only as Date objects (existing behavior)
+3. Parse date+time as Time objects, preserve time component
+4. Return type based on format detected (Date vs Time)
+
+**Special Value Processing**:
+- "today" → `Date.today.strftime("%Y-%m-%d")` (existing behavior)
+- "now" → `Time.now.strftime("%Y-%m-%d %H:%M")` (new behavior)
+- Extend `FrontmatterManager.process_value` to handle both
+
+**Validation Strategy**:
+- Atom-level: Pure validation function for timestamp format
+- Molecule-level: Parsing with error handling and type conversion
+- Error messages: Clear, actionable guidance on expected format
+
+**Rollback Plan**:
+- ace-support-markdown `SafeFileWriter` already creates `.bak` files
+- `DocumentEditor.rollback` method available for recovery
+- All updates are atomic (write to temp, then rename)
+
+## File Modifications
+
+### Modify
+
+**ace-docs/lib/ace/docs/atoms/timestamp_parser.rb** (NEW)
+- Purpose: Pure timestamp parsing and validation functions
+- Key components:
+  - `parse_timestamp(value)` - Parse string to Date or Time
+  - `validate_timestamp_format(value)` - Validate format with regex
+  - `format_timestamp(time_obj)` - Format Date/Time to string
+- Dependencies: Ruby stdlib Date, Time
+- Rationale: Atom for pure, testable timestamp operations
+
+**ace-docs/lib/ace/docs/molecules/frontmatter_manager.rb**
+- Changes: Extend `process_value` to handle "now" and datetime formats
+  - Current: Handles "today" → date-only format
+  - Add: Handle "now" → date+time format
+  - Add: Validate and pass through `YYYY-MM-DD HH:MM` format
+  - Delegate parsing to new `TimestampParser` atom
+- Impact: Enables time-aware timestamp updates
+- Integration points: Called by `update_document` (existing)
+
+**ace-docs/lib/ace/docs/models/document.rb**
+- Changes: Extend `last_updated` and `last_checked` methods
+  - Current: Returns Date objects only
+  - Add: Return Time objects when time component present
+  - Add: Preserve time component in parsing
+  - Maintain backward compatibility for date-only values
+- Impact: Document model can represent and display timestamps with time
+- Integration points: Used by status, validation, and display logic
+
+### Test Files to Create
+
+**ace-docs/test/atoms/timestamp_parser_test.rb** (NEW)
+- Test cases:
+  - Parse date-only format → Date object
+  - Parse date+time format → Time object
+  - Validate valid formats (date-only, date+time)
+  - Validate invalid formats (wrong separators, missing components)
+  - Format Date objects → date-only string
+  - Format Time objects → date+time string
+  - Handle edge cases (midnight, end of day, invalid dates)
+
+**ace-docs/test/molecules/frontmatter_manager_test.rb** (NEW)
+- Test cases:
+  - Process "today" → date-only format (existing behavior)
+  - Process "now" → date+time format (new)
+  - Process explicit date-only string → unchanged
+  - Process explicit date+time string → validated and passed through
+  - Update document with date-only timestamp
+  - Update document with date+time timestamp
+  - Preserve existing frontmatter fields during update
+
+### Test Files to Modify
+
+**ace-docs/test/models/document_test.rb**
+- Add test cases:
+  - Parse frontmatter with date-only last-updated → Date
+  - Parse frontmatter with date+time last-updated → Time
+  - Display date-only timestamps in original format
+  - Display date+time timestamps with HH:MM
+  - Backward compatibility: existing date-only tests still pass
+
+### Documentation to Update
+
+**ace-docs/docs/usage.md**
+- Add sections:
+  - Timestamp format documentation (date-only vs date+time)
+  - Special value documentation ("today", "now")
+  - Examples of setting date+time timestamps
+  - Changelog format examples with time component
+  - Migration guidance (optional, no forced migration)
+
+**ace-docs/README.md**
+- Update quick start examples to show date+time option
+- Add note about backward compatibility
+- Reference usage.md for detailed timestamp documentation
+
+## Risk Assessment
+
+### Technical Risks
+
+**Risk: Breaking Existing Date-Only Timestamps**
+- Probability: Low
+- Impact: High
+- Mitigation: Comprehensive backward compatibility testing, accept both formats in parsing
+- Rollback: Revert changes to process_value and parsing logic
+
+**Risk: Time Zone Confusion**
+- Probability: Medium
+- Impact: Medium
+- Mitigation: Document clearly that all timestamps are local time (no timezone conversion)
+- Monitoring: Check for user confusion in issue reports
+
+**Risk: Validation Too Strict**
+- Probability: Low
+- Impact: Medium
+- Mitigation: Use permissive parsing with clear error messages, validate format but accept variations
+- Rollback: Relax validation rules in TimestampParser atom
+
+### Integration Risks
+
+**Risk: Frontmatter Preservation Regression**
+- Probability: Low (ace-support-markdown DocumentEditor is proven)
+- Impact: High (data loss)
+- Mitigation: Comprehensive test coverage of frontmatter preservation, use existing SafeFileWriter
+- Monitoring: Test with various frontmatter structures, verify backup files created
+
+**Risk: Performance Impact from Time Parsing**
+- Probability: Very Low
+- Impact: Low
+- Mitigation: Ruby's Time.parse is fast, no observable performance impact for typical use
+- Monitoring: Run existing performance benchmarks if available
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Review existing timestamp handling across ace-docs codebase
+  - Search for all Date.parse and Date.today usage
+  - Identify all locations that format or display timestamps
+  - Document current behavior for regression testing
+  > TEST: Codebase Understanding
+  > Type: Pre-condition Check
+  > Assert: All timestamp usage locations identified
+  > Command: ace-search "Date\.(parse|today|strftime)" --content --glob "ace-docs/lib/**/*.rb"
+
+* [ ] Design timestamp parser atom API
+  - Define method signatures for parse, validate, format
+  - Plan error handling and edge cases
+  - Sketch test cases for TDD approach
+  > TEST: API Design Complete
+  > Type: Design Validation
+  > Assert: API supports all use cases from behavioral spec
+  > Command: # Review API design against behavioral specification requirements
+
+* [ ] Review ace-support-markdown DocumentEditor integration
+  - Verify frontmatter preservation guarantees
+  - Confirm atomic write behavior
+  - Check error handling and rollback support
+  > TEST: Dependency Understanding
+  > Type: Integration Check
+  > Assert: DocumentEditor provides required safety guarantees
+  > Command: ace-search "DocumentEditor" --content --glob "ace-docs/lib/**/*.rb"
+
+### Execution Steps
+
+- [ ] Create TimestampParser atom with TDD approach
+  - Write test file: `ace-docs/test/atoms/timestamp_parser_test.rb`
+  - Implement: `ace-docs/lib/ace/docs/atoms/timestamp_parser.rb`
+  - Test coverage: parse date-only, parse date+time, validate formats, format output
+  > TEST: TimestampParser Tests Pass
+  > Type: Unit Test
+  > Assert: All timestamp parsing and validation tests pass
+  > Command: cd ace-docs && bundle exec rake test TEST=test/atoms/timestamp_parser_test.rb
+
+- [ ] Extend FrontmatterManager to use TimestampParser
+  - Update `process_value` method to handle "now" special value
+  - Add date+time format validation and passthrough
+  - Delegate parsing to TimestampParser.parse_timestamp
+  > TEST: FrontmatterManager Tests Pass
+  > Type: Unit Test
+  > Assert: All frontmatter manager tests pass including new timestamp tests
+  > Command: cd ace-docs && bundle exec rake test TEST=test/molecules/frontmatter_manager_test.rb
+
+- [ ] Update Document model timestamp methods
+  - Extend `last_updated` to return Time when time component present
+  - Extend `last_checked` to return Time when time component present
+  - Maintain backward compatibility for date-only values
+  > TEST: Document Model Tests Pass
+  > Type: Unit Test
+  > Assert: All document model tests pass including timestamp parsing tests
+  > Command: cd ace-docs && bundle exec rake test TEST=test/models/document_test.rb
+
+- [ ] Add integration tests for end-to-end timestamp updates
+  - Create test documents with various frontmatter structures
+  - Test update with "now" special value
+  - Test update with explicit date+time value
+  - Verify frontmatter preservation in all cases
+  > TEST: Integration Tests Pass
+  > Type: Integration Test
+  > Assert: End-to-end timestamp updates work correctly with frontmatter preservation
+  > Command: cd ace-docs && bundle exec rake test TEST=test/integration/*timestamp*.rb
+
+- [ ] Run full test suite to verify no regressions
+  - Execute all ace-docs tests
+  - Verify existing date-only behavior unchanged
+  - Check for any unexpected failures
+  > TEST: Full Test Suite Passes
+  > Type: Regression Test
+  > Assert: All tests pass, no regressions introduced
+  > Command: cd ace-docs && bundle exec rake test
+
+- [ ] Update documentation with timestamp format examples
+  - Update `ace-docs/docs/usage.md` with timestamp documentation
+  - Add examples for date+time format and special values
+  - Update `ace-docs/README.md` quick start examples
+  > TEST: Documentation Accuracy
+  > Type: Documentation Review
+  > Assert: Documentation accurately reflects implementation
+  > Command: ace-lint ace-docs/docs/usage.md ace-docs/README.md
+
+- [ ] Manual testing with real documents
+  - Test `ace-docs update README.md --set last-updated=now`
+  - Test `ace-docs update CHANGELOG.md --set release-date="2025-11-01 14:30"`
+  - Verify frontmatter preservation in real files
+  - Check backup file creation
+  > TEST: Manual Verification
+  > Type: Manual Test
+  > Assert: Real-world usage works as expected
+  > Command: # Manual testing with actual ace-docs commands
+
+## Acceptance Criteria
+
+- [ ] TimestampParser atom created with comprehensive tests
+- [ ] FrontmatterManager handles "now" and date+time formats
+- [ ] Document model parses and returns Time objects for date+time values
+- [ ] All existing date-only functionality unchanged (backward compatible)
+- [ ] Frontmatter preservation verified in all update scenarios
+- [ ] Full test suite passes with no regressions
+- [ ] Documentation updated with timestamp format examples
+- [ ] Manual testing confirms end-to-end functionality
+
+## Out of Scope (Unchanged from Behavioral Spec)
+
+- ❌ **Timezone Support**: Timezone inclusion or conversion (assume local time)
+- ❌ **Historical Migration**: Bulk migration of existing date-only timestamps
+- ❌ **Seconds Precision**: Sub-minute timestamps (HH:MM only, no seconds)
+- ❌ **Custom Time Formats**: Support for formats other than YYYY-MM-DD HH:MM
+- ❌ **Future Enhancements**: Scheduled releases, time-based triggers
