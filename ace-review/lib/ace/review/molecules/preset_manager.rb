@@ -79,7 +79,8 @@ module Ace
 
           {
             description: preset["description"],
-            # Let ace-context handle prompt resolution, don't parse in ace-review
+            # Extract prompt composition for ace-context frontmatter (but let ace-context process it)
+            system_prompt: preset["system_prompt"] || preset["prompt_composition"],
             context: resolve_context_config(preset["context"], overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             model: overrides[:model] || preset["model"] || default_model,
