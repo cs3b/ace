@@ -196,11 +196,25 @@ module Ace
             end
 
             unless worktree_info
-              # Provide specific error messages based on what we found
+              # Even if worktree doesn't exist, try to clean up the branch
               if task_data
                 puts "Task found but no worktree is associated with it."
                 puts "Task: #{task_data[:title]} (status: #{task_data[:status]})"
-                puts "This task may have been completed and its worktree cleaned up already."
+
+                # Try to find and delete the branch based on task data
+                branch_name = find_branch_for_task(task_data, options[:task])
+                if branch_name
+                  puts "Found orphaned branch: #{branch_name}"
+                  puts "Deleting branch..."
+                  branch_result = Ace::Git::Worktree::Atoms::GitCommand.execute("branch", "-D", branch_name)
+                  if branch_result[:success]
+                    puts "Deleted branch: #{branch_name}"
+                    return 0
+                  else
+                    puts "Warning: Failed to delete branch: #{branch_result[:error]}"
+                  end
+                end
+
                 puts ""
                 puts "Use 'ace-git-worktree list' to see available worktrees"
               else
@@ -428,6 +442,31 @@ module Ace
             else
               # Try to extract numeric part
               task_ref.scan(/\d+/).last || task_ref
+            end
+          end
+
+          # Find branch associated with a task
+          #
+          # @param task_data [Hash] Task data
+          # @param task_ref [String] Task reference
+          # @return [String, nil] Branch name or nil if not found
+          def find_branch_for_task(task_data, task_ref)
+            # Get all branches
+            branches_result = Ace::Git::Worktree::Atoms::GitCommand.execute("branch", "--format=%(refname:short)")
+            return nil unless branches_result[:success]
+
+            branches = branches_result[:output].split("\n").map(&:strip)
+            task_number = extract_task_number(task_data)
+
+            # Try to find branch matching task patterns
+            # Pattern 1: 052-task-title
+            # Pattern 2: task-052
+            # Pattern 3: v.0.9.0-052
+            branches.find do |branch|
+              branch.start_with?("#{task_number}-") ||
+                branch.start_with?("task-#{task_number}") ||
+                branch =~ /\d+-#{task_number}-/ ||
+                branch.include?("-#{task_number}-")
             end
           end
         end
