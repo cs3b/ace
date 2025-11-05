@@ -187,7 +187,7 @@ module Ace
             # Fetch task metadata
             fetcher = TaskFetcher.new(timeout: @timeout)
             task = fetcher.fetch(normalized_ref)
-            task ? task.status : nil
+            task ? task[:status] : nil
           end
 
           # Check if ace-taskflow update command is available

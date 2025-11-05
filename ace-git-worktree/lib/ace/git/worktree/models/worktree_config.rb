@@ -136,18 +136,18 @@ module Ace
             @cleanup_config["on_delete"]
           end
 
-          # Format a directory path using task metadata
+          # Format a directory path using task data
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @param counter [Integer, nil] Counter for multiple worktrees of same task
           # @return [String] Formatted directory path
           #
           # @example
           #   config.format_directory(task) # => "task.081"
           #   config.format_directory(task, 2) # => "task.081-2"
-          def format_directory(task_metadata, counter = nil)
+          def format_directory(task_data, counter = nil)
             template = directory_format
-            formatted = apply_template_variables(template, task_metadata)
+            formatted = apply_template_variables(template, task_data)
 
             # Add counter if provided
             formatted = "#{formatted}-#{counter}" if counter
@@ -155,28 +155,28 @@ module Ace
             formatted
           end
 
-          # Format a branch name using task metadata
+          # Format a branch name using task data
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [String] Formatted branch name
           #
           # @example
           #   config.format_branch(task) # => "081-fix-authentication-bug"
-          def format_branch(task_metadata)
+          def format_branch(task_data)
             template = branch_format
-            apply_template_variables(template, task_metadata)
+            apply_template_variables(template, task_data)
           end
 
           # Format a commit message for task updates
           #
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [String] Formatted commit message
           #
           # @example
           #   config.format_commit_message(task) # => "chore(task-081): mark as in-progress, creating worktree"
-          def format_commit_message(task_metadata)
+          def format_commit_message(task_data)
             template = commit_message_format
-            apply_template_variables(template, task_metadata)
+            apply_template_variables(template, task_data)
           end
 
           # Validate configuration settings
@@ -283,17 +283,20 @@ module Ace
           # Apply template variables to a format string
           #
           # @param template [String] Template string with {variable} placeholders
-          # @param task_metadata [TaskMetadata] Task metadata
+          # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [String] Formatted string with variables replaced
-          def apply_template_variables(template, task_metadata)
+          def apply_template_variables(template, task_data)
             formatted = template.dup
+
+            # Extract task number from ID for backward compatibility
+            task_id = extract_task_number(task_data)
 
             # Available template variables
             variables = {
-              "id" => task_metadata.id,
-              "task_id" => task_metadata.task_id,
-              "release" => task_metadata.release,
-              "slug" => task_metadata.slug
+              "id" => task_id,
+              "task_id" => task_id,
+              "release" => extract_release(task_data),
+              "slug" => create_slug(task_data[:title] || "unknown-task")
             }
 
             # Replace each variable
@@ -302,6 +305,56 @@ module Ace
             end
 
             formatted
+          end
+
+          # Extract task number from task data
+          #
+          # @param task_data [Hash] Task data hash
+          # @return [String] Task number (e.g., "094")
+          def extract_task_number(task_data)
+            # Use task_number if available, otherwise extract from id
+            return task_data[:task_number] if task_data[:task_number]
+
+            # Extract from id field (e.g., "v.0.9.0+task.094" -> "094")
+            if task_data[:id]
+              match = task_data[:id].match(/task\.(\d+)$/)
+              return match[1] if match
+            end
+
+            "unknown"
+          end
+
+          # Extract release from task data
+          #
+          # @param task_data [Hash] Task data hash
+          # @return [String] Release (e.g., "v.0.9.0")
+          def extract_release(task_data)
+            # Use release field if available
+            return task_data[:release] if task_data[:release]
+
+            # Extract from id field (e.g., "v.0.9.0+task.094" -> "v.0.9.0")
+            if task_data[:id]
+              match = task_data[:id].match(/^(v\.[\d.]+)\+task\.(\d+)$/)
+              return match[1] if match
+            end
+
+            "unknown"
+          end
+
+          # Create URL-friendly slug from title
+          #
+          # @param title [String] Task title
+          # @return [String] URL-friendly slug
+          def create_slug(title)
+            return "unknown-task" unless title
+
+            # Convert to lowercase, replace spaces and special chars with hyphens
+            title.downcase
+                 .gsub(/[^a-z0-9\s-]/, '') # Remove special chars except spaces and hyphens
+                 .gsub(/\s+/, '-')          # Replace spaces with hyphens
+                 .gsub(/-+/, '-')            # Replace multiple hyphens with single
+                 .gsub(/^-|-$/, '')          # Remove leading/trailing hyphens
+                 .tap { |slug| slug.empty? ? "unknown-task" : slug }
           end
         end
       end

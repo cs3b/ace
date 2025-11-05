@@ -253,7 +253,12 @@ module Ace
           def check_task_dependency_availability
             require_relative "../molecules/task_fetcher"
             fetcher = Ace::Git::Worktree::Molecules::TaskFetcher.new
-            fetcher.check_availability_with_message
+
+            if fetcher.ace_taskflow_available?
+              { available: true, message: "ace-taskflow is available" }
+            else
+              { available: false, message: "ace-taskflow is not available. Install with: gem install ace-taskflow" }
+            end
           end
 
           # Create a traditional worktree
