@@ -18,6 +18,10 @@ git:
     # If true, runs `mise trust` automatically in new worktrees
     mise_trust_auto: true
 
+    # Automatically navigate to worktree after creation
+    # If true, changes directory to the created worktree
+    auto_navigate: true
+
     # Task-based naming and behavior configuration
     task:
       # Directory naming format for task worktrees
