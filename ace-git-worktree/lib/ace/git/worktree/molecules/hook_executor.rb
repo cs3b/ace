@@ -316,7 +316,7 @@ module Ace
 
             # Generate slug from title
             require_relative "../atoms/slug_generator"
-            Atoms::SlugGenerator.new.generate(title)
+            Atoms::SlugGenerator.from_title(title)
           end
 
           # Create success result
