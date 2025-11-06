@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## [0.9.120] - 2025-11-10
 
 ### Technical
@@ -131,6 +132,15 @@ All notable changes to this project will be documented in this file.
   - Eliminate subprocess overhead and improve performance in mono-repo environments
 
 ## [0.9.114] - 2025-11-05
+
+### Added
+- **ace-context v0.17.0**: Major enhancement with preset-in-section functionality
+  - Allow sections to reference and combine multiple presets for modular project context creation
+  - Full preset composition support within sections with circular dependency detection
+  - Intelligent content merging with automatic deduplication of files and commands
+  - Mixed content support - combine preset content with local files, commands, and content
+  - Enhanced section system with simplified usage (removed content_type and priority requirements)
+  - Comprehensive test coverage and documentation
 
 ### Changed
 - **ace-git-worktree v0.1.12**: Package version bump with enhanced stability and user experience
