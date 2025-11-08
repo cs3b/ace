@@ -9,15 +9,18 @@ dependencies: []
 # Create ace-git package with three essential workflows
 
 Create a unified ace-git gem package that consolidates git workflow management with three essential workflows:
+
 - **rebase.wf.md**: Changelog preservation during rebase operations
 - **create-pr.wf.md**: Pull request creation with comprehensive templates (new)
 - **squash-pr.wf.md**: Smart commit squashing (one per version) for clean history
+  ( one strategy keep one commit per release )
 
 ## Review Questions - RESOLVED
 
 ### Decisions Made (2025-11-05)
 
 #### [HIGH] Critical Implementation Decisions
+
 - [x] **Package naming**: Create unified `ace-git` package with multiple workflows
   - **Rationale**: Consolidates git workflows in single package for easier installation and maintenance
   - **Decision basis**: User specified "ace-git package with 3 workflows" in requirements
@@ -27,6 +30,7 @@ Create a unified ace-git gem package that consolidates git workflow management w
   - **Decision basis**: Follows workflow-first principle, reduces complexity
 
 #### [MEDIUM] Enhancement Decisions
+
 - [x] **PR creation approach**: GitHub CLI (`gh`) primary with alternative instructions
   - **Rationale**: Aligns with existing patterns in ace-git-commit workflows
   - **Decision basis**: GitHub is primary platform, but alternatives documented for flexibility
@@ -147,6 +151,7 @@ Create a minimal, workflow-first ace-git gem package that consolidates essential
 ### Workflow Documentation Scope
 
 #### Rebase Workflow (rebase.wf.md)
+
 - Pre-rebase verification steps
 - Conflict resolution patterns for CHANGELOG.md
 - Version file conflict handling strategies
@@ -154,6 +159,7 @@ Create a minimal, workflow-first ace-git gem package that consolidates essential
 - Recovery and rollback guidance
 
 #### PR Creation Workflow (create-pr.wf.md)
+
 - PR template selection and customization
 - Branch naming conventions
 - Commit message preparation
@@ -162,6 +168,7 @@ Create a minimal, workflow-first ace-git gem package that consolidates essential
 - Draft PR vs ready-for-review decisions
 
 #### Squash Workflow (squash-pr.wf.md)
+
 - Version-based commit detection (automatic by default)
 - CHANGELOG entry preservation
 - **Configurable mode**: Automatic detection or interactive selection
@@ -198,6 +205,7 @@ Create a minimal, workflow-first ace-git gem package that consolidates essential
 ### Workflow Content
 
 Each workflow includes:
+
 - Complete step-by-step procedures
 - Decision trees for edge cases
 - Example scenarios with solutions
@@ -220,13 +228,16 @@ Each workflow includes:
 ## Technical Approach
 
 ### Architecture Pattern
+
 The ace-git package follows a **workflow-first architecture** with minimal Ruby implementation:
+
 - Pure documentation package pattern (similar to handbook packages)
 - Leverage ace-core for configuration management only
 - No executable binary - workflows accessed via gem installation
 - Self-contained workflows following ADR-001 principles
 
 ### Technology Stack
+
 - **Ruby gem structure**: Minimal gemspec and version.rb only
 - **Configuration**: ace-support-core for config cascade (v0.10+)
 - **Workflow format**: Markdown with YAML frontmatter (.wf.md)
@@ -234,7 +245,9 @@ The ace-git package follows a **workflow-first architecture** with minimal Ruby 
 - **Version detection**: Git tag patterns for squash workflow
 
 ### Implementation Strategy
+
 Since this is a workflow-only package, the implementation focuses on:
+
 1. Creating comprehensive, self-contained workflow documentation
 2. Establishing clear configuration patterns
 3. Providing extensive examples and edge case handling
@@ -255,6 +268,7 @@ Since this is a workflow-only package, the implementation focuses on:
 ## File Modifications
 
 ### Create
+
 - ace-git/ (root directory)
   - Purpose: New gem package directory
   - Key components: Standard ace gem structure
@@ -344,6 +358,7 @@ Since this is a workflow-only package, the implementation focuses on:
   - Dependencies: None
 
 ### Modify
+
 - bin/ace-git (if binstub pattern needed)
   - Changes: Add mono-repo binstub wrapper
   - Impact: Enables development testing
@@ -355,11 +370,13 @@ Since this is a workflow-only package, the implementation focuses on:
   - Integration points: Handbook directory
 
 ### Delete
+
 None - This is a new package creation
 
 ## Risk Assessment
 
 ### Technical Risks
+
 - **Risk:** Workflow instructions may not cover all edge cases
   - **Probability:** Medium
   - **Impact:** Medium
@@ -373,6 +390,7 @@ None - This is a new package creation
   - **Rollback:** Document manual configuration approaches
 
 ### Integration Risks
+
 - **Risk:** GitHub CLI not available on all systems
   - **Probability:** Medium
   - **Impact:** Medium
@@ -389,26 +407,26 @@ None - This is a new package creation
 
 ### Planning Steps
 
-* [ ] Review existing rebase workflows from dev-handbook
+- [ ] Review existing rebase workflows from dev-handbook
   > TEST: Workflow Analysis
   > Type: Pre-condition Check
   > Assert: Key rebase patterns and conflict scenarios identified
   > Command: grep -r "rebase" dev-handbook/workflow-instructions/ | head -20
 
-* [ ] Analyze GitHub CLI PR creation patterns in existing code
+- [ ] Analyze GitHub CLI PR creation patterns in existing code
   > TEST: PR Pattern Check
   > Type: Pre-condition Check
   > Assert: Common gh pr create usage patterns documented
   > Command: grep -r "gh pr create" . --include="*.md" | head -10
 
-* [ ] Study version tagging patterns in ace-taskflow
+- [ ] Study version tagging patterns in ace-taskflow
   > TEST: Version Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Version tag formats understood (v.X.Y.Z pattern)
   > Command: git tag | grep -E "v\.[0-9]+" | tail -5
 
-* [ ] Research commit squashing best practices
-* [ ] Design configuration schema for all three workflows
+- [ ] Research commit squashing best practices
+- [ ] Design configuration schema for all three workflows
 
 ### Execution Steps
 
@@ -527,4 +545,3 @@ None - This is a new package creation
 - Related: Keep a Changelog specification
 - Related: Semantic Versioning specification
 - Related: GitHub CLI (`gh`) documentation for PR creation
-
