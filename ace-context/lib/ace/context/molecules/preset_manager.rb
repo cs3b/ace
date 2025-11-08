@@ -4,6 +4,7 @@ require 'ace/core'
 require 'yaml'
 require 'set'
 require_relative '../atoms/preset_validator'
+require_relative '../atoms/section_validator'
 
 module Ace
   module Context
@@ -13,6 +14,7 @@ module Ace
         attr_reader :presets
 
         def initialize
+          @section_validator = Atoms::SectionValidator.new
           @presets = load_presets
           @preset_cache = {}  # Cache for composed presets during single execution
         end
@@ -46,7 +48,7 @@ module Ace
           preset = get_preset(name)
           unless preset
             return {
-              error: "Preset '#{name}' not found",
+              error: "Preset '#{name}' not found. Available presets: #{@presets.keys.join(', ')}",
               success: false
             }
           end
@@ -108,11 +110,14 @@ module Ace
             params: {},
             context: {},
             body: '',
-            format: nil,
+            # Don't set format here - let ContextLoader determine the default
             output: nil,
             cache: false,
             metadata: {}
           }
+
+          # Collect all sections for merging
+          all_sections = []
 
           presets.each do |preset|
             # Merge context configuration
@@ -137,16 +142,21 @@ module Ace
                 merged[:context]['commands'].concat(context['commands'])
               end
 
+              # Collect sections for separate processing
+              if context['sections']
+                all_sections << context['sections']
+              end
+
               # Copy other context keys
               context.each do |key, value|
-                next if %w[params files commands].include?(key)
+                next if %w[params files commands sections].include?(key)
                 merged[:context][key] = value
               end
             end
 
             # Scalar overrides (last wins)
             merged[:description] = preset[:description] if preset[:description]
-            merged[:format] = preset[:format] if preset[:format]
+            # Don't override format from preset - let ContextLoader handle defaults based on embed_document_source
             merged[:output] = preset[:output] if preset[:output]
             merged[:cache] = preset[:cache] if preset[:cache]
 
@@ -165,6 +175,14 @@ module Ace
             if preset[:metadata]
               merged[:metadata] = deep_merge_hash(merged[:metadata], preset[:metadata])
             end
+          end
+
+          # Merge sections using SectionProcessor if any exist
+          if all_sections.any?
+            require_relative 'section_processor'
+            section_processor = Molecules::SectionProcessor.new
+            merged_sections = section_processor.merge_sections(*all_sections)
+            merged[:context]['sections'] = merged_sections
           end
 
           # Deduplicate arrays
@@ -250,16 +268,31 @@ module Ace
           context_config = frontmatter['context'] || {}
           params = context_config['params'] || {}
 
+          # Validate sections if present
+          if context_config['sections']
+            unless @section_validator.validate_sections(context_config['sections'])
+              errors = @section_validator.errors
+              warn "Warning: Section validation failed in #{file}:\n  #{errors.join("\n  ")}\n\nPlease review the sections configuration in this file. The preset will continue to load, but section functionality may be limited."
+              # Don't fail loading, just warn - allow users to fix configuration
+            end
+          end
+
           preset_data = {
             description: frontmatter['description'] || "#{File.basename(file, '.md')} preset",
             params: params,
             context: context_config,
             body: body.strip,
-            format: params['format'] || 'markdown',
+            format: params['format'], # Don't set default here - let ContextLoader handle defaults
             output: params['output'] || 'stdio',
             cache: params['output'] == 'cache',
             metadata: frontmatter['metadata'] || {}
           }
+
+          # Add section validation metadata if sections were validated
+          if context_config['sections']
+            preset_data[:metadata][:sections_validated] = true
+            preset_data[:metadata][:section_validation_errors] = @section_validator.errors unless @section_validator.errors.empty?
+          end
 
           # Extract all params to root level (for backward compatibility and consistency)
           params.each do |key, value|
