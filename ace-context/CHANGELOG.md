@@ -5,6 +5,119 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.4] - 2025-11-07
+
+### Fixed
+- **Critical Format Regression**: Fixed markdown-xml format not being applied to section-based presets
+  - Issue was in PresetManager where preset format defaulted to 'markdown' instead of respecting CLI options
+  - Removed hardcoded format default in `load_preset_from_file` method
+  - Preset composition no longer overrides explicitly requested formats
+  - CLI `--format markdown-xml` option now works correctly with sections
+
+- **Format Parameter Propagation**: Ensured format parameters flow correctly from CLI through ContextLoader
+  - CLI format options properly propagate through the entire processing chain
+  - `embed_document_source: true` now correctly defaults to `markdown-xml` format
+  - Explicit format specifications take precedence over preset defaults
+
+### Technical
+- Modified `PresetManager#load_preset_from_file` to not set hardcoded format defaults
+- Updated `PresetManager#merge_preset_data` to preserve format resolution in ContextLoader
+- All 27 integration tests passing with no regressions
+- Verified XML output format with proper section tags and file order preservation
+
+## [Unreleased]
+
+## [0.17.3] - 2025-11-07
+
+### Added
+- **Integration Tests**: Added comprehensive integration tests based on Gemini Pro review feedback
+  - Complex section workflow integration test (`section_workflow_integration_test.rb`)
+  - Security review section test with preset-in-section functionality (`security_review_section_test.rb`)
+  - Tests validate end-to-end workflow, XML output format, and error handling
+
+- **Documentation Enhancements**: Improved user experience with better guidance
+  - Added composition best practice note to `configuration.md` to prevent over-composition
+  - Added preset discovery section to `usage.md` with filesystem navigation tips
+  - References enhanced error messages that list available presets
+
+### Technical
+- All 98 tests passing (17 atoms + 43 molecules + 11 organisms + 27 integration tests)
+- No regressions introduced with new functionality
+- Enhanced test coverage for section-based workflows and preset composition
+
+## [0.17.2] - 2025-11-06
+
+### Added
+- **Documentation Restructuring**: Enhanced user documentation with clear separation
+  - Renamed `section_guide.md` → `configuration.md` covering all YAML configuration options
+  - Added new `usage.md` with comprehensive command-line interface documentation
+  - Removed outdated documentation files
+
+### Fixed
+- **Critical Section Merging Bug**: Fixed issue where sections without `content_type` were losing content during merging
+  - Implemented content detection based on actual keys present (`files?`, `commands?`, etc.)
+  - Added comprehensive helper methods for content type detection
+  - Resolved data loss when merging sections with mixed content types
+
+- **Enhanced Error Messages**: Improved error reporting with better context and troubleshooting guidance
+  - Section validation errors now include specific fix suggestions
+  - Preset loading errors show available preset options
+  - Dependency resolution errors provide clear action items for users
+
+### Changed
+- **Code Refactoring**: Improved performance and maintainability
+  - Refactored `detect_language` method to use Hash lookup instead of case statement
+  - Centralized content detection helper methods in `SectionProcessor`
+  - Simplified test suite by removing deprecated `content_type` references
+
+- **Test Enhancements**: Added comprehensive integration tests
+  - Added integration tests for section merging without `content_type`
+  - Updated all tests to work with simplified validation approach
+  - All 91 tests now passing (0 failures, 0 errors)
+
+## [0.17.1] - 2025-11-06
+
+### Fixed
+- **Section Processing**: Fixed critical issues with section-based content organization
+  - Resolved embed_document_source access bug in ContextLoader
+  - Fixed file order preservation within sections to maintain preset configuration order
+  - Fixed exclude pattern handling in legacy-to-section migration
+  - Fixed command processing to maintain backward compatibility
+  - Fixed format detection to respect explicit format requests
+  - Fixed infinite recursion bug in format_sections_for_yaml method
+- **Test Suite**: All ace-context tests now passing (91 tests, 0 failures, 0 errors)
+
+## [0.17.0] - 2025-11-06
+
+### Added
+- **Preset-in-Section Functionality**: Allow sections to reference and combine multiple presets
+  - Sections can now contain `presets` field with array of preset names
+  - Full preset composition support within sections with circular dependency detection
+  - Intelligent content merging with automatic deduplication of files and commands
+  - Mixed content support - combine preset content with local files, commands, and content
+  - Comprehensive error handling for missing or invalid preset references
+
+- **Enhanced Section System**: Improved section-based content organization
+  - Removed content_type and priority requirements for simpler usage
+  - YAML order preservation for natural section sequencing
+  - Better mixed content support within single sections
+
+- **Comprehensive Testing**: Full test coverage for preset-in-section functionality
+  - SectionValidator updates for preset validation
+  - SectionProcessor enhancements for nested preset composition
+  - ContextLoader integration for preset processing
+  - Error handling and edge case coverage
+
+- **Documentation and Examples**: Complete usage guide and examples
+  - Updated section guide with preset-in-section documentation
+  - New example presets demonstrating functionality
+  - Migration guide and best practices
+
+### Technical
+- Updated ace-support-core dependency references
+- Enhanced validation and error handling systems
+- Improved content merging algorithms for mixed data types
+
 ## [0.16.1] - 2025-11-01
 
 ### Changed

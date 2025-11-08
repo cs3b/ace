@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.117] - 2025-11-07
+
+### Added
+- **ace-context v0.17.3**: Integration tests and documentation enhancements based on review feedback
+  - Added comprehensive integration tests for section-based workflows and preset composition
+  - Enhanced documentation with preset discovery guidance and composition best practices
+  - All 98 tests passing with no regressions introduced
+
+### Technical
+- Added section workflow integration test validating end-to-end functionality
+- Added security review section test with preset-in-section composition
+- Improved test coverage for complex section-based configurations
+
+## [0.9.116] - 2025-11-06
+
+### Added
+- **ace-context v0.17.2**: Comprehensive improvements based on three-provider review feedback
+  - Enhanced documentation structure with configuration.md and usage.md separation
+  - Improved error messages with better context and troubleshooting guidance
+  - Code refactoring for better performance and maintainability
+
+### Fixed
+- **ace-context**: Critical section merging bug where sections without content_type were losing content
+- **ace-context**: Enhanced preset loading errors to show available preset options
+- **ace-context**: Comprehensive test coverage for all new functionality (91 tests passing)
+
+### Technical
+- **ace-context**: Refactored detect_language method to use Hash lookup instead of case statement
+- **ace-context**: Centralized content detection helper methods in SectionProcessor
+- **ace-context**: Removed deprecated content_type references throughout test suite
+
+## [0.9.115] - 2025-11-06
+
+### Added
+- **ace-context v0.17.1**: Enhanced section-based content organization with comprehensive fixes
+  - Improved file order preservation within sections to maintain preset configuration order
+  - Better format detection that respects explicit format requests even with embed_document_source
+  - Enhanced section processing with proper exclude pattern handling
+
+### Fixed
+- **ace-context**: Critical embed_document_source access bug in ContextLoader that prevented files from being loaded
+- **ace-context**: Exclude pattern handling in legacy-to-section migration to ensure proper file filtering
+- **ace-context**: Command processing consistency to maintain backward compatibility with existing behavior
+- **ace-context**: Infinite recursion bug in format_sections_for_yaml method that caused stack overflow errors
+- **ace-context**: All test failures resolved - test suite now fully passing (91 tests, 0 failures, 0 errors)
+
 ### Changed
 - **ace-review v0.13.1**: Complete v0.13.0 architectural implementation
   - Remove all prompt splitting logic and fallback methods that were documented but not implemented
