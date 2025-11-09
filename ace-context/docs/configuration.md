@@ -364,6 +364,91 @@ presets:
   - "preset-a"  # ❌ This will cause circular dependency error
 ```
 
+### Nesting Depth Limits
+
+**Recommended Maximum Depth: 3-4 levels**
+
+While ace-context supports deep preset nesting, excessive depth can impact performance and maintainability. Follow these guidelines:
+
+#### ✅ Good: Shallow Hierarchy (2-3 levels)
+```yaml
+# base.md (level 0)
+context:
+  files:
+    - "README.md"
+
+# development.md (level 1)
+presets:
+  - "base"
+context:
+  files:
+    - "src/**/*.rb"
+
+# project-context.md (level 2)
+presets:
+  - "development"
+  - "testing"
+context:
+  files:
+    - "docs/**/*.md"
+```
+
+**Performance**: Fast loading, clear inheritance chain
+
+#### ⚠️ Acceptable: Medium Depth (4 levels)
+```yaml
+# project-context.md (level 3)
+presets:
+  - "team-shared"    # references "base" (level 2)
+  - "ruby-tools"     # references "development" (level 2)
+```
+
+**Performance**: Slight overhead, still manageable
+
+#### ❌ Avoid: Deep Nesting (5+ levels)
+```yaml
+# feature-context.md (level 5+)
+presets:
+  - "specialized"   # references 4+ levels deep
+```
+
+**Problems**:
+- Slow context loading
+- Difficult to debug inheritance issues
+- Complex dependency chains
+- Circular dependency risk increases
+
+#### Refactoring Deep Nesting
+
+If you need deep nesting, consider **flattening with explicit content**:
+
+```yaml
+# ❌ Deep nesting
+presets:
+  - "level-1"  # which includes level-2, level-3, level-4...
+
+# ✅ Explicit composition
+presets:
+  - "base"
+  - "ruby-tools"
+  - "testing"
+  - "deployment"
+files:
+  - "specific/files/**/*"
+```
+
+This makes dependencies explicit and improves performance.
+
+#### Performance Impact
+
+| Depth Level | Load Time* | Maintainability |
+|-------------|-----------|----------------|
+| 1-2 levels  | Fast      | Excellent      |
+| 3-4 levels  | Normal    | Good           |
+| 5+ levels   | Slow      | Poor           |
+
+*Approximate relative performance on typical configurations
+
 ## Configuration Validation
 
 ### Section Validation Rules

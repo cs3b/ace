@@ -2,6 +2,6 @@
 
 module Ace
   module Context
-    VERSION = "0.17.4"
+    VERSION = "0.17.5"
   end
 end

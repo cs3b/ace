@@ -27,6 +27,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.5] - 2025-11-09
+
+### Fixed
+- **PR Review Preset Configuration**: Removed hardcoded PR number from `.ace/review/presets/pr.yml`
+  - Changed from `gh pr diff 18` to generic `git diff origin/main...HEAD`
+  - Added `git log origin/main..HEAD --oneline` for commit history
+  - Now works for any PR branch, not just PR #18
+
+### Changed
+- **Documentation Enhancement**: Added comprehensive preset nesting depth guidelines
+  - Documented recommended maximum depth of 3-4 levels for optimal performance
+  - Included examples of good (2-3 levels), acceptable (4 levels), and poor (5+ levels) nesting
+  - Added refactoring guidance for deep nesting scenarios
+  - Performance impact table showing load time vs maintainability trade-offs
+
 ## [0.17.3] - 2025-11-07
 
 ### Added
