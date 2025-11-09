@@ -18,6 +18,7 @@ context: "project"
 
 subject:
   commands:
-    - "gh pr diff 18"
+    - "git diff origin/main...HEAD"
+    - "git log origin/main..HEAD --oneline"
 
 model: gpro

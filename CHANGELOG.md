@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.118] - 2025-11-09
+
+### Added
+- **ace-context v0.17.5**: Documentation enhancement for preset nesting depth guidelines
+  - Added comprehensive preset nesting depth documentation to `ace-context/docs/configuration.md`
+  - Documented recommended maximum depth of 3-4 levels for optimal performance
+  - Included examples of good, acceptable, and poor nesting patterns with refactoring guidance
+  - Added performance impact table showing load time vs maintainability trade-offs
+
+### Fixed
+- **ace-context v0.17.5**: PR review preset configuration issue
+  - Removed hardcoded PR number from `.ace/review/presets/pr.yml`
+  - Changed from `gh pr diff 18` to generic `git diff origin/main...HEAD` and `git log origin/main..HEAD --oneline`
+  - PR review preset now works for any PR branch, not just a specific PR number
+
 ## [0.9.117] - 2025-11-07
 
 ### Added
