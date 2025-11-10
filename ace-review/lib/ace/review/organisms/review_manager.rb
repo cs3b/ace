@@ -169,14 +169,18 @@ module Ace
 
           # Step 3c: Generate system.prompt.md via ace-context
           system_prompt_path = File.join(session_dir, "system.prompt.md")
-          unless execute_ace_context(system_context_path, system_prompt_path)
-            return { success: false, error: "Failed to generate system prompt via ace-context" }
+          begin
+            execute_ace_context(system_context_path, system_prompt_path)
+          rescue Errors::MissingDependencyError, Errors::ContextProcessingError => e
+            return { success: false, error: "Failed to generate system prompt: #{e.message}" }
           end
 
           # Step 3d: Generate user.prompt.md via ace-context
           user_prompt_path = File.join(session_dir, "user.prompt.md")
-          unless execute_ace_context(user_context_path, user_prompt_path)
-            return { success: false, error: "Failed to generate user prompt via ace-context" }
+          begin
+            execute_ace_context(user_context_path, user_prompt_path)
+          rescue Errors::MissingDependencyError, Errors::ContextProcessingError => e
+            return { success: false, error: "Failed to generate user prompt: #{e.message}" }
           end
 
           # Load the generated prompts
@@ -382,7 +386,7 @@ module Ace
 
           begin
             # Load context using ace-context Ruby API
-            context_result = Ace::Context.load_file_as_preset(input_file)
+            context_result = Ace::Context.load_file(input_file)
 
             # Check for errors in metadata
             if context_result.metadata[:error]

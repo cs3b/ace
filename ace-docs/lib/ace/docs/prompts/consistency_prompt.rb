@@ -272,7 +272,7 @@ module Ace
 
           # Load via ace-context to get XML-embedded documents
           begin
-            result = Ace::Context.load_file_as_preset(context_md_path)
+            result = Ace::Context.load_file(context_md_path)
             result.content
           rescue StandardError => e
             warn "ace-context embedding failed: #{e.message}, falling back to direct format" if Ace::Docs.debug?
