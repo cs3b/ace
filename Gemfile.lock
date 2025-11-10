@@ -1,7 +1,7 @@
 PATH
   remote: ace-context
   specs:
-    ace-context (0.17.5)
+    ace-context (0.17.6)
       ace-git-diff (~> 0.1.0)
       ace-support-core (~> 0.10.0)
 

@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.6] - 2025-11-10
+
 ### Added
 - **Diff Configuration Enhancements**: Support for both simple and complex diff formats
   - Added `diff` key with complex structure support: `{ ranges: [...], since: "...", paths: [...] }`
