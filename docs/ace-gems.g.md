@@ -37,8 +37,19 @@ ACE gems follow a strict naming pattern to clarify their purpose:
 - **Purpose**: Extend ace-llm with specific provider implementations
 - **Examples**: ace-llm-providers-cli, ace-llm-providers-openai (future)
 
+### ace-integration-* Pattern (Integration Package Gems)
+- **Purpose**: Bundle workflows, templates, and assets for integrating with external tools/platforms
+- **Examples**: ace-integration-claude (Claude Code integration)
+- **Characteristics**:
+  - No CLI executables (`spec.executables = []`)
+  - Integration assets in `integrations/` top-level directory
+  - Workflows accessible via `wfi://` protocol through ace-nav
+  - Templates, documentation, and custom commands bundled with gem
+  - Pure workflow packages with asset packaging
+
 ## Standard Structure
 
+### Standard ACE Gem (CLI Tools)
 ```
 ace-gem/
 ├── .ace.example/gem/config.yml    # REQUIRED
@@ -55,6 +66,26 @@ ace-gem/
 ├── docs/usage.md                  # Optional
 ├── exe/ace-gem, CHANGELOG.md, README.md, Rakefile
 └── ace-gem.gemspec
+```
+
+### Integration Package Gem (ace-integration-* pattern)
+```
+ace-integration-platform/
+├── .ace.example/nav/protocols/wfi-sources/ace-integration-platform.yml  # ace-nav discovery
+├── lib/ace/integration/platform.rb     # Gem entry point
+├── lib/ace/integration/platform/version.rb  # Version constant
+├── handbook/workflow-instructions/    # Integration workflows
+│   └── update-integration-platform.wf.md
+├── integrations/platform/             # Integration assets (OFFICIAL PATTERN)
+│   ├── templates/                    # Command and agent templates
+│   ├── commands/_custom/             # Custom command definitions
+│   ├── README.md                     # Integration documentation
+│   ├── metadata-field-reference.md  # Configuration reference
+│   └── install-prompts.md           # Installation guide
+├── README.md                         # This file
+├── CHANGELOG.md                      # Version history
+├── ace-integration-platform.gemspec  # Gem specification
+└── Rakefile                          # Gem tasks
 ```
 
 ## Configuration
@@ -245,6 +276,9 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - Maintain CHANGELOG.md in Keep a Changelog format
 - Add ace-support-core dependency for configuration support
 - Follow naming conventions: ace-* for CLI tools, ace-support-* for libraries
+- **Integration packages**: Use `integrations/` directory for integration assets (official pattern)
+- **Integration packages**: Include ace-nav protocol registration for workflow discovery
+- **Integration packages**: Bundle templates, documentation, and custom commands with workflows
 
 ❌ **DON'T**:
 - Hardcode config paths or create custom ConfigLoader
@@ -257,5 +291,6 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 **ace-docs**: Handbook integration, usage.md
 **ace-taskflow**: Comprehensive agents+workflows
 **ace-search**: Clean agents, separation
+**ace-integration-claude**: Reference implementation for integration packages (integrations/ pattern)
 
 *See existing ace-* gems for implementations.*
