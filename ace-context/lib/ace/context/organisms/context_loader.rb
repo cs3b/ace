@@ -419,6 +419,18 @@ module Ace
             # Process base content if present (for template files with context.base)
             process_base_content(context, config, @options)
 
+            # Process sections if present (same as preset loading)
+            preset_like_config = { 'context' => config }
+            if @section_processor.has_sections?(preset_like_config)
+              sections = @section_processor.process_sections(preset_like_config, @preset_manager)
+              context.sections = sections
+
+              # Process content for each section
+              sections.each do |section_name, section_data|
+                process_section_content(context, section_name, section_data, @options, config)
+              end
+            end
+
             # Replace metadata with original frontmatter (keep it unmodified)
             # Convert string keys to symbols for consistency
             context.metadata = {}
@@ -440,6 +452,10 @@ module Ace
               format = config['format'] || @options[:format] || 'markdown-xml'
               return format_context(context, format)
             end
+
+            # Format context before returning (same as preset loading)
+            format = config['format'] || @options[:format] || 'markdown-xml'
+            format_context(context, format)
 
             return context
           end
