@@ -66,48 +66,16 @@ module Ace
         end
 
         def extract_from_hash(config)
-          # Transform config to ace-context format
-          context_config = {}
-
-          # Map 'diff' to 'diffs' for ace-context
-          # Supports both old format (string) and new format (hash with ranges)
-          if config["diff"]
-            diff_config = config["diff"]
-            if diff_config.is_a?(Hash)
-              # New format: diff: { ranges: [...], paths: [...] }
-              # Validate that at least one of ranges or since is present
-              unless diff_config["ranges"] || diff_config["since"]
-                raise ArgumentError, "diff config must specify 'ranges' or 'since' when using hash format"
-              end
-
-              # Validate ranges format if present
-              if diff_config["ranges"]
-                unless diff_config["ranges"].is_a?(Array)
-                  raise ArgumentError, "diff 'ranges' must be an array, got #{diff_config['ranges'].class}"
-                end
-              end
-
-              # Extract ranges for context
-              context_config["diffs"] = diff_config["ranges"] if diff_config["ranges"]
-            elsif diff_config.is_a?(String)
-              # Old format: diff: "origin/main...HEAD"
-              context_config["diffs"] = [diff_config]
-            else
-              # Fallback: wrap in array
-              context_config["diffs"] = [diff_config]
-            end
-          end
-
-          # Copy compatible keys
-          context_config["files"] = config["files"] if config["files"]
-          context_config["commands"] = config["commands"] if config["commands"]
-
-          use_ace_context(context_config)
+          # Pass configuration directly to ace-context without transformation
+          use_ace_context(config)
         end
 
         def use_ace_context(config)
           # Use ace-context for unified content extraction
-          result = Ace::Context.load_auto(YAML.dump(config), format: 'markdown')
+          # Pass configuration directly as YAML frontmatter
+          context_md = "#{YAML.dump(config).strip}\n---\n\n"
+
+          result = Ace::Context.load_auto(context_md, format: 'markdown')
           result.content
         rescue StandardError => e
           warn "ace-context extraction failed: #{e.message}" if Ace::Review.debug?

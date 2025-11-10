@@ -4,6 +4,109 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.120] - 2025-11-10
+
+### Technical
+- **ace-context v0.18.0**: Minor version bump with context.base support and file-based config parity
+  - Added `context.base` field for generic base content handling
+  - Fixed file-based configs to process sections and formatting same as presets
+  - Enhanced ace-review integration with full section content generation
+
+## [0.9.119] - 2025-11-10
+
+### Added
+- **ace-review v0.15.0**: Section-based content organization integration
+  - Added support for `instructions.context.sections` format in ReviewManager
+  - Integration with ace-context v0.17.5+ section-based content organization
+  - Structured organization of review content into semantic sections (focus, style, diff, etc.)
+  - All built-in presets (pr, code, security, docs, performance, ruby-atom, agents, test) now use sections
+  - Enhanced PresetManager to preserve `instructions` field through resolution chain
+  - Added automatic format detection for seamless backward compatibility
+
+### Changed
+- **ace-review v0.15.0**: Enhanced ReviewManager architecture
+  - Created new `create_system_context_file_with_instructions()` method for section-based contexts
+  - Full backward compatibility maintained for existing user presets with `system_prompt` format
+  - Updated CLI to properly display system and user prompt file paths
+  - CLI now shows correct `ace-llm query` command with `--file` and `--context` parameters
+
+### Documentation
+- **ace-review v0.15.0**: Comprehensive documentation updates
+  - Added README.md documentation for new section-based format with examples
+  - Documented legacy format for backward compatibility and migration guidance
+  - Added comprehensive test coverage for new section-based functionality
+
+## [0.9.118] - 2025-11-09
+
+### Added
+- **ace-context v0.17.5**: Documentation enhancement for preset nesting depth guidelines
+  - Added comprehensive preset nesting depth documentation to `ace-context/docs/configuration.md`
+  - Documented recommended maximum depth of 3-4 levels for optimal performance
+  - Included examples of good, acceptable, and poor nesting patterns with refactoring guidance
+  - Added performance impact table showing load time vs maintainability trade-offs
+
+### Fixed
+- **ace-context v0.17.5**: PR review preset configuration issue
+  - Removed hardcoded PR number from `.ace/review/presets/pr.yml`
+  - Changed from `gh pr diff 18` to generic `git diff origin/main...HEAD` and `git log origin/main..HEAD --oneline`
+  - PR review preset now works for any PR branch, not just a specific PR number
+
+## [0.9.117] - 2025-11-07
+
+### Added
+- **ace-context v0.17.3**: Integration tests and documentation enhancements based on review feedback
+  - Added comprehensive integration tests for section-based workflows and preset composition
+  - Enhanced documentation with preset discovery guidance and composition best practices
+  - All 98 tests passing with no regressions introduced
+
+### Technical
+- Added section workflow integration test validating end-to-end functionality
+- Added security review section test with preset-in-section composition
+- Improved test coverage for complex section-based configurations
+
+## [0.9.116] - 2025-11-06
+
+### Added
+- **ace-context v0.17.2**: Comprehensive improvements based on three-provider review feedback
+  - Enhanced documentation structure with configuration.md and usage.md separation
+  - Improved error messages with better context and troubleshooting guidance
+  - Code refactoring for better performance and maintainability
+
+### Fixed
+- **ace-context**: Critical section merging bug where sections without content_type were losing content
+- **ace-context**: Enhanced preset loading errors to show available preset options
+- **ace-context**: Comprehensive test coverage for all new functionality (91 tests passing)
+
+### Technical
+- **ace-context**: Refactored detect_language method to use Hash lookup instead of case statement
+- **ace-context**: Centralized content detection helper methods in SectionProcessor
+- **ace-context**: Removed deprecated content_type references throughout test suite
+
+## [0.9.115] - 2025-11-06
+
+### Added
+- **ace-context v0.17.1**: Enhanced section-based content organization with comprehensive fixes
+  - Improved file order preservation within sections to maintain preset configuration order
+  - Better format detection that respects explicit format requests even with embed_document_source
+  - Enhanced section processing with proper exclude pattern handling
+
+### Fixed
+- **ace-context**: Critical embed_document_source access bug in ContextLoader that prevented files from being loaded
+- **ace-context**: Exclude pattern handling in legacy-to-section migration to ensure proper file filtering
+- **ace-context**: Command processing consistency to maintain backward compatibility with existing behavior
+- **ace-context**: Infinite recursion bug in format_sections_for_yaml method that caused stack overflow errors
+- **ace-context**: All test failures resolved - test suite now fully passing (91 tests, 0 failures, 0 errors)
+
+### Changed
+- **ace-review v0.13.1**: Complete v0.13.0 architectural implementation
+  - Remove all prompt splitting logic and fallback methods that were documented but not implemented
+  - Eliminate legacy single prompt support in LlmExecutor
+  - Implement proper system/user prompt separation via ace-context
+  - Fix session file structure to use `system.prompt.md` and `user.prompt.md`
+  - Update test suite to remove tests for removed methods and fix expectations
+  - Remove 214 lines of legacy code while maintaining functionality
+  - Breaking changes: LlmExecutor now requires system_prompt and user_prompt parameters
+
 ## [0.9.114] - 2025-11-10
 
 ### Added
@@ -46,6 +149,14 @@ All notable changes to this project will be documented in this file.
 - **ace-git-worktree v0.1.11**: Replace CLI subprocess calls with Ruby API integration
   - Update TaskFetcher and TaskStatusUpdater to use ace-taskflow Ruby API as primary method
   - Eliminate subprocess overhead and improve performance in mono-repo environments
+
+## [0.9.114] - 2025-11-05
+
+### Changed
+- **ace-git-worktree v0.1.12**: Package version bump with enhanced stability and user experience
+  - Resolve ace-git-worktree commit operation failures with enhanced error handling
+  - Fix configuration loading and path validation issues for reliable operation
+  - Add automatic navigation support for improved user experience
   - Add graceful fallback to CLI when Ruby API unavailable for standalone installations
 
 ### Added
