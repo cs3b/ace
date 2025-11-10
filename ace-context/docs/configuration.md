@@ -187,9 +187,10 @@ context:
     changes:
       title: "Recent Changes"
       description: "Code changes to review"
-      diffs:
-        - origin/main...HEAD
-        - HEAD~5...HEAD
+      diff:
+        ranges:
+          - origin/main...HEAD
+          - HEAD~5...HEAD
 
     intro:
       title: "Introduction"
@@ -300,6 +301,10 @@ commands:
 
 ### Git Diffs Configuration
 
+ace-context supports two formats for git diffs:
+
+#### Simple Format (Legacy)
+
 ```yaml
 diffs:                         # or ranges (both work)
   - "origin/main...HEAD"      # Branch comparison
@@ -307,6 +312,53 @@ diffs:                         # or ranges (both work)
   - "main..feature"           # Feature branch
   - "abc123..def456"          # Commit ranges
 ```
+
+This format provides a simple array of git range strings. Both `diffs` and `ranges` keys are supported for backward compatibility.
+
+#### Complex Format (Recommended)
+
+```yaml
+diff:
+  ranges:                      # Required: array of git ranges
+    - "origin/main...HEAD"
+    - "HEAD~5...HEAD"
+  paths:                       # Optional: filter to specific paths (future)
+    - "src/**/*.rb"
+    - "lib/**/*.js"
+  since:                       # Optional: alternative to ranges
+    "origin/main"              # Expands to "origin/main...HEAD"
+```
+
+The `diff` format supports additional options:
+
+- **`ranges`**: Array of git range strings (same as simple format)
+- **`since`**: Single reference point (automatically expands to `since...HEAD`)
+- **`paths`**: Path filtering (reserved for future ace-git-diff integration)
+
+**Use simple format when**: You only need basic git ranges
+**Use complex format when**: You need path filtering or other advanced options (future)
+
+#### Format Comparison
+
+```yaml
+# Simple format - direct array
+context:
+  diffs:
+    - "origin/main...HEAD"
+
+# Complex format - with options
+context:
+  diff:
+    ranges:
+      - "origin/main...HEAD"
+
+# Complex format - using 'since'
+context:
+  diff:
+    since: "origin/main"        # Expands to "origin/main...HEAD"
+```
+
+Both formats are normalized internally to the same `ranges` structure, ensuring consistent processing.
 
 ### Inline Content
 
@@ -575,8 +627,8 @@ context:
     changes:
       title: "Recent Changes"
       description: "Code changes to review"
-      diffs:
-        - "origin/main...HEAD"
+      diff:
+        since: "origin/main"    # Expands to origin/main...HEAD
 ---
 ```
 

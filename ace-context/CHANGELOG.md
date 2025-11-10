@@ -27,6 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Diff Configuration Enhancements**: Support for both simple and complex diff formats
+  - Added `diff` key with complex structure support: `{ ranges: [...], since: "...", paths: [...] }`
+  - Maintained backward compatibility with legacy `diffs` array format
+  - Support for `since` parameter that expands to `since...HEAD` range format
+  - Normalization of all diff formats to internal `ranges` structure in SectionProcessor
+  - Comprehensive test coverage with 16 unit tests for format normalization
+  - Updated documentation with clear examples and format comparison guide
+
 ## [0.17.5] - 2025-11-09
 
 ### Fixed

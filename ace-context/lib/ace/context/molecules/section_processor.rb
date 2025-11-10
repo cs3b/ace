@@ -316,6 +316,37 @@ module Ace
             normalized.delete(:desciription)
           end
 
+          # Normalize diff/diffs to ranges format
+          # Supports two formats:
+          # 1. diffs: [...] - simple array of range strings (legacy)
+          # 2. diff: { ranges: [...], paths: [...], since: "..." } - complex format with options
+          if normalized[:diff]
+            diff_config = normalized[:diff]
+            if diff_config.is_a?(Hash)
+              # Extract ranges from complex diff config
+              if diff_config[:ranges] || diff_config['ranges']
+                normalized[:ranges] = diff_config[:ranges] || diff_config['ranges']
+              elsif diff_config[:since] || diff_config['since']
+                # Convert 'since' to range format
+                since_ref = diff_config[:since] || diff_config['since']
+                normalized[:ranges] = ["#{since_ref}...HEAD"]
+              end
+              # Note: paths filtering will be handled by ace-git-diff when implemented
+            elsif diff_config.is_a?(String)
+              # Single range string
+              normalized[:ranges] = [diff_config]
+            elsif diff_config.is_a?(Array)
+              # Array of ranges
+              normalized[:ranges] = diff_config
+            end
+            # Remove the diff key after normalization
+            normalized.delete(:diff)
+          elsif normalized[:diffs]
+            # Legacy diffs format - just rename to ranges
+            normalized[:ranges] = normalized[:diffs]
+            normalized.delete(:diffs)
+          end
+
           # Ensure title is set with robust title generation
           normalized[:title] ||= generate_title_from_name(name) if name
 
@@ -351,8 +382,23 @@ module Ace
             legacy_content[:commands] = context['commands'] || context[:commands]
           end
 
-          # Legacy diffs/ranges
-          if context['diffs'] || context[:diffs]
+          # Legacy diff/diffs/ranges - normalize to ranges
+          if context['diff'] || context[:diff]
+            diff_config = context['diff'] || context[:diff]
+            if diff_config.is_a?(Hash)
+              # Extract ranges from complex diff config
+              if diff_config['ranges'] || diff_config[:ranges]
+                legacy_content[:ranges] = diff_config['ranges'] || diff_config[:ranges]
+              elsif diff_config['since'] || diff_config[:since]
+                since_ref = diff_config['since'] || diff_config[:since]
+                legacy_content[:ranges] = ["#{since_ref}...HEAD"]
+              end
+            elsif diff_config.is_a?(String)
+              legacy_content[:ranges] = [diff_config]
+            elsif diff_config.is_a?(Array)
+              legacy_content[:ranges] = diff_config
+            end
+          elsif context['diffs'] || context[:diffs]
             legacy_content[:ranges] = context['diffs'] || context[:diffs]
           elsif context['ranges'] || context[:ranges]
             legacy_content[:ranges] = context['ranges'] || context[:ranges]
@@ -393,11 +439,31 @@ module Ace
             }
           end
 
-          # Diffs section
-          if context['diffs'] || context[:diffs] || context['ranges'] || context[:ranges]
+          # Diffs section - handle diff/diffs/ranges
+          ranges = nil
+          if context['diff'] || context[:diff]
+            diff_config = context['diff'] || context[:diff]
+            if diff_config.is_a?(Hash)
+              ranges = diff_config['ranges'] || diff_config[:ranges]
+              if !ranges && (diff_config['since'] || diff_config[:since])
+                since_ref = diff_config['since'] || diff_config[:since]
+                ranges = ["#{since_ref}...HEAD"]
+              end
+            elsif diff_config.is_a?(String)
+              ranges = [diff_config]
+            elsif diff_config.is_a?(Array)
+              ranges = diff_config
+            end
+          elsif context['diffs'] || context[:diffs]
+            ranges = context['diffs'] || context[:diffs]
+          elsif context['ranges'] || context[:ranges]
+            ranges = context['ranges'] || context[:ranges]
+          end
+
+          if ranges
             sections['diffs'] = {
               title: "Diffs",
-              ranges: context['diffs'] || context[:diffs] || context['ranges'] || context[:ranges]
+              ranges: ranges
             }
           end
 
