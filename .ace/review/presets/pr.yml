@@ -39,6 +39,6 @@ context: "project"
 subject:
   diff:
     ranges:
-      - "origin/main...HEAD"
+      - "origin...HEAD"
 
 model: gpro
