@@ -3,24 +3,47 @@
 
 description: "Ruby code review with ATOM architecture focus"
 
-prompt_composition:
-  base: "prompt://base/system"
-  format: "prompt://format/detailed"
-  focus:
-    - "prompt://focus/architecture/atom"
-    - "prompt://focus/languages/ruby"
-  guidelines:
-    - "prompt://guidelines/tone"
-    - "prompt://guidelines/icons"
+instructions:
+  context:
+    base: "prompt://base/system"
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Detailed output formatting and structure guidelines"
+        files:
+          - "prompt://format/detailed"
+      architecture_focus:
+        title: "Architecture Review Focus"
+        description: "ATOM architecture patterns and Ruby best practices"
+        files:
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/languages/ruby"
+      communication:
+        title: "Communication Style"
+        description: "Professional communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+      visual_indicators:
+        title: "Visual Indicators"
+        description: "Icons and visual markers for quick scanning"
+        files:
+          - "prompt://guidelines/icons"
+      architecture_context:
+        title: "Architecture Documentation"
+        description: "Project architecture and main documentation"
+        files:
+          - "docs/architecture.md"
+          - "README.md"
 
-context:
-  files:
-    - "docs/architecture.md"
-    - "README.md"
+context: "project"
 
 subject:
-  commands:
-    - "git diff HEAD~1..HEAD -- '*.rb'"
-    - "git diff HEAD~1..HEAD -- 'lib/**/*.rb'"
+  # Use diff key for consistent filtering via ace-git-diff
+  diff:
+    ranges:
+      - "HEAD~1..HEAD"
+    filters:
+      - "*.rb"
+      - "lib/**/*.rb"
 
 model: "google:gemini-2.5-flash"

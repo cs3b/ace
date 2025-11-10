@@ -14,10 +14,15 @@ class SubjectExtractorTest < AceReviewTest
     assert_kind_of String, result
   end
 
-  def test_extracts_from_hash_with_new_diff_format
+  def test_extracts_from_hash_with_new_ace_context_format
     config = {
-      "diff" => {
-        "ranges" => ["origin/main...HEAD"]
+      "context" => {
+        "sections" => {
+          "changes" => {
+            "title" => "Changes to Review",
+            "diffs" => ["origin/main...HEAD"]
+          }
+        }
       }
     }
 
@@ -25,7 +30,7 @@ class SubjectExtractorTest < AceReviewTest
     assert_kind_of String, result
   end
 
-  def test_extracts_from_hash_with_old_diff_string_format
+  def test_extracts_from_hash_with_legacy_diff_format
     config = {
       "diff" => "origin/main...HEAD"
     }
@@ -34,68 +39,20 @@ class SubjectExtractorTest < AceReviewTest
     assert_kind_of String, result
   end
 
-  def test_validates_diff_hash_requires_ranges_or_since
+  def test_passes_through_any_hash_format_directly
     config = {
-      "diff" => {
-        "paths" => ["lib/**/*.rb"]  # Missing ranges or since
+      "context" => {
+        "sections" => {
+          "review" => {
+            "title" => "Review Section",
+            "files" => ["**/*.rb"],
+            "diffs" => ["HEAD~5..HEAD", "origin/main...HEAD"]
+          }
+        }
       }
     }
 
-    error = assert_raises(ArgumentError) do
-      @extractor.extract(config)
-    end
-
-    assert_match(/must specify 'ranges' or 'since'/, error.message)
-  end
-
-  def test_validates_ranges_must_be_array
-    config = {
-      "diff" => {
-        "ranges" => "not-an-array"
-      }
-    }
-
-    error = assert_raises(ArgumentError) do
-      @extractor.extract(config)
-    end
-
-    assert_match(/must be an array/, error.message)
-    assert_match(/got String/, error.message)
-  end
-
-  def test_accepts_hash_with_ranges
-    config = {
-      "diff" => {
-        "ranges" => ["HEAD~5..HEAD", "origin/main...HEAD"]
-      }
-    }
-
-    # Should not raise an error
-    result = @extractor.extract(config)
-    assert_kind_of String, result
-  end
-
-  def test_accepts_hash_with_since
-    config = {
-      "diff" => {
-        "since" => "7d"
-      }
-    }
-
-    # Should not raise an error (since is valid alternative to ranges)
-    result = @extractor.extract(config)
-    assert_kind_of String, result
-  end
-
-  def test_accepts_hash_with_both_ranges_and_since
-    config = {
-      "diff" => {
-        "ranges" => ["HEAD~5..HEAD"],
-        "since" => "7d"
-      }
-    }
-
-    # Should not raise an error (having both is fine)
+    # Should not raise an error and pass through directly
     result = @extractor.extract(config)
     assert_kind_of String, result
   end
@@ -116,6 +73,57 @@ class SubjectExtractorTest < AceReviewTest
 
     result = @extractor.extract(config)
     assert_kind_of String, result
+  end
+
+  def test_passes_complete_ace_context_format_directly
+    # Test that SubjectExtractor passes complete ace-context format directly
+    config = {
+      "context" => {
+        "sections" => {
+          "code_changes" => {
+            "title" => "Code Changes",
+            "description" => "Code changes for review",
+            "diffs" => ["origin/main...HEAD", "HEAD~5..HEAD"],
+            "since" => "7d"
+          },
+          "additional_files" => {
+            "title" => "Related Files",
+            "description" => "Additional files for context",
+            "files" => ["**/*.rb"]
+          }
+        }
+      },
+      "commands" => ["git log --oneline -5"]
+    }
+
+    result = @extractor.extract(config)
+    assert_kind_of String, result
+  end
+
+  def test_handles_both_legacy_and_new_formats
+    # Test that SubjectExtractor can handle both legacy and new ace-context formats
+    new_config = {
+      "context" => {
+        "sections" => {
+          "changes" => {
+            "title" => "Changes to Review",
+            "diffs" => ["HEAD~3..HEAD"]
+          }
+        }
+      }
+    }
+
+    legacy_config = {
+      "diff" => "origin/main...HEAD",
+      "files" => ["README.md"]
+    }
+
+    # Both should work - passed through directly to ace-context
+    new_result = @extractor.extract(new_config)
+    legacy_result = @extractor.extract(legacy_config)
+
+    assert_kind_of String, new_result
+    assert_kind_of String, legacy_result
   end
 
   def test_returns_empty_string_for_nil

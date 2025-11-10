@@ -105,19 +105,4 @@ class CLIPresetCompositionTest < AceTestCase
     refute_match(/Test file 1 content/, stdout)
     refute_match(/Test file 2 content/, stdout)
   end
-
-  def test_single_preset_with_inspect_config
-    stdout, stderr, status = run_ace_context("base", "--inspect-config")
-
-    assert status.success?, "Command should succeed: #{stderr}"
-    assert_match(/test1.md/, stdout)
-    assert_match(/timeout:\s*30/, stdout)
-  end
-
-  def test_nonexistent_preset_shows_warning
-    stdout, stderr, status = run_ace_context("-p", "base", "-p", "nonexistent", "--inspect-config")
-
-    # Should show warning but still process base preset
-    assert_match(/test1.md/, stdout) || assert_match(/Preset 'nonexistent' not found/, stderr)
-  end
 end

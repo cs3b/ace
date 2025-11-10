@@ -283,7 +283,6 @@ module Ace
         end
 
         # Load context.md via ace-context (embeds files as XML)
-        # ace-context v0.14.0+ processes presets from frontmatter via load_file_as_preset
         # @param context_md [String] The context.md content
         # @param document [Document] The document configuration (unused, kept for compatibility)
         # @param cache_dir [String, nil] Directory containing context.md and referenced files
@@ -295,7 +294,7 @@ module Ace
             # Load context.md - ace-context processes presets and files from frontmatter
             result = if cache_dir
                       context_file = File.join(cache_dir, "context.md")
-                      Ace::Context.load_file_as_preset(context_file)
+                      Ace::Context.load_file(context_file)
                     else
                       Ace::Context.load_auto(context_md)
                     end
