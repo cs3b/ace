@@ -70,6 +70,8 @@ module Ace
 
         # Merge with config values
         def merge_config(config)
+          return if config.nil?
+
           # Merge system prompt configuration if not overridden
           @prompt_base ||= config.dig("system_prompt", "base")
           @prompt_format ||= config.dig("system_prompt", "format")

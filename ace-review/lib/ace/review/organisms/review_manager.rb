@@ -207,9 +207,10 @@ module Ace
           # Build complete ace-context configuration
           ace_context_config = {}
 
-          # Start with context_config if provided
+          # Normalize and merge context_config if provided
           if context_config
-            ace_context_config.merge!(context_config)
+            normalized_config = normalize_context_config(context_config)
+            ace_context_config = deep_merge_context(ace_context_config, normalized_config)
           end
 
           # Add additional context as "context" key for ace-context, but avoid duplicates
@@ -223,7 +224,8 @@ module Ace
                 ace_context_config["context"]["presets"] << additional_context
               end
             elsif additional_context.is_a?(Hash)
-              ace_context_config["context"].merge!(additional_context)
+              additional_normalized = normalize_context_config(additional_context)
+              ace_context_config = deep_merge_context(ace_context_config, additional_normalized)
             end
           end
 
@@ -235,6 +237,98 @@ module Ace
           File.write(context_path, context_content)
 
           context_path
+        end
+
+        # Normalize various input types to proper ace-context structure
+        def normalize_context_config(input)
+          case input
+          when String
+            # String input (e.g., "project", "staged") -> wrap as preset
+            { "context" => { "presets" => [input] } }
+          when Hash
+            # Check if this config has a top-level "base" key that needs to be moved
+            has_base = input.key?("base") || input.key?(:base)
+            has_context = input.key?("context") || input.key?(:context)
+
+            if has_base && !has_context
+              # Config has base: at top level but no context: key
+              # Need to move base under context.base and wrap other keys
+              normalized = { "context" => {} }
+
+              input.each do |key, value|
+                key_str = key.to_s
+                if key_str == "base"
+                  # Move top-level base to context.base
+                  normalized["context"]["base"] = value
+                else
+                  # Other top-level keys go under context
+                  normalized["context"][key_str] = value
+                end
+              end
+
+              normalized
+            elsif has_base && has_context
+              # Config has both base: and context: at top level
+              # Move base under context.base
+              normalized = {}
+              base_value = input["base"] || input[:base]
+
+              input.each do |key, value|
+                key_str = key.to_s
+                if key_str == "base"
+                  # Skip - will add under context.base below
+                  next
+                elsif key_str == "context"
+                  # Merge context and add base under it
+                  context_hash = value.is_a?(Hash) ? value.dup : {}
+                  context_hash["base"] = base_value
+                  normalized["context"] = context_hash
+                else
+                  normalized[key_str] = value
+                end
+              end
+
+              normalized
+            else
+              # Config already properly structured or doesn't need normalization
+              input
+            end
+          else
+            # Fallback for other types
+            {}
+          end
+        end
+
+        # Deep merge two context configurations
+        def deep_merge_context(base, overlay)
+          result = base.dup
+
+          overlay.each do |key, value|
+            if result[key].is_a?(Hash) && value.is_a?(Hash)
+              result[key] = deep_merge_hash(result[key], value)
+            else
+              result[key] = value
+            end
+          end
+
+          result
+        end
+
+        # Deep merge helper for nested hashes
+        def deep_merge_hash(base, overlay)
+          result = base.dup
+
+          overlay.each do |key, value|
+            if result[key].is_a?(Hash) && value.is_a?(Hash)
+              result[key] = deep_merge_hash(result[key], value)
+            elsif result[key].is_a?(Array) && value.is_a?(Array)
+              result[key] = (result[key] + value).uniq
+            else
+              result[key] = value
+            end
+          end
+
+          result
         end
 
         # Extract preset names from sections to avoid duplication
@@ -263,23 +357,32 @@ module Ace
         end
 
 
-        # Execute ace-context to generate prompts
+        # Execute ace-context to generate prompts using Ruby API
         def execute_ace_context(input_file, output_file)
-          return false unless command_exists?("ace-context")
-
-          cmd = ["ace-context", input_file, "--output", output_file]
-          stdout, stderr, status = Open3.capture3(*cmd)
-
-          unless status.success?
-            warn "ace-context failed: #{stderr}" if Ace::Review.debug?
+          begin
+            require 'ace/context'
+          rescue LoadError => e
+            warn "Failed to load ace-context: #{e.message}" if Ace::Review.debug?
             return false
           end
 
-          true
-        end
+          begin
+            # Load context using ace-context Ruby API
+            context_result = Ace::Context.load_file_as_preset(input_file)
 
-        def command_exists?(command)
-          system("which #{command} > /dev/null 2>&1")
+            # Check for errors in metadata
+            if context_result.metadata[:error]
+              warn "ace-context failed: #{context_result.metadata[:error]}" if Ace::Review.debug?
+              return false
+            end
+
+            # Write the rendered content to output file
+            File.write(output_file, context_result.content)
+            true
+          rescue StandardError => e
+            warn "ace-context failed: #{e.message}" if Ace::Review.debug?
+            false
+          end
         end
 
         # Build the complete review data structure

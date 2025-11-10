@@ -434,7 +434,23 @@ module Ace
 
           json_sections = {}
           sections.each do |name, section_data|
-            json_sections[name] = format_sections_for_json({ name => section_data })['sections'][name]
+            json_sections[name] = {
+              'title' => section_data[:title] || section_data['title'],
+              'content_type' => section_data[:content_type] || section_data['content_type'],
+              'priority' => section_data[:priority] || section_data['priority']
+            }
+
+            # Add processed content
+            case section_data[:content_type] || section_data['content_type']
+            when 'files'
+              json_sections[name]['files'] = format_files_for_json(section_data)
+            when 'commands'
+              json_sections[name]['commands'] = format_commands_for_json(section_data)
+            when 'diffs'
+              json_sections[name]['diffs'] = format_diffs_for_json(section_data)
+            when 'content'
+              json_sections[name]['content'] = section_data[:_processed_content] || section_data['_processed_content']
+            end
           end
           json_sections
         end
