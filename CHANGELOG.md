@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.114] - 2025-11-10
+
+### Added
+- **ace-context v0.17.6**: Add support for complex diff configuration format
+  - Support both simple `diffs: [...]` and complex `diff: { ranges: [...] }` formats
+  - Add `since` parameter that expands to `since...HEAD` range format
+  - Normalize all diff formats to internal `ranges` structure in SectionProcessor
+  - Maintain backward compatibility with legacy `diffs` format
+  - Add 16 unit tests for format normalization
+  - Update documentation with format comparison and examples
+
 ### Added
 - **ace-context v0.17.0**: Major enhancement with preset-in-section functionality
   - Allow sections to reference and combine multiple presets for modular project context creation
