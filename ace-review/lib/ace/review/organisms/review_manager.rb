@@ -144,11 +144,16 @@ module Ace
         # Step 3: Generate system and user prompts via ace-context
         def compose_review_prompt(config, context, subject, subject_config, session_dir)
           # Extract prompt composition and context config
-          system_prompt_config = config[:system_prompt] || {}
-          context_config = config[:context] || "project"
+          system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
+          context_config = config[:context] || config["context"] || "project"
 
           # Step 3a: Create system.context.md with base prompt + composition frontmatter
-          system_context_path = create_system_context_file(session_dir, system_prompt_config, context_config)
+          if uses_instructions_format?(config)
+            instructions_config = config["instructions"] || config[:instructions]
+            system_context_path = create_system_context_file_with_instructions(session_dir, instructions_config, context_config)
+          else
+            system_context_path = create_system_context_file(session_dir, system_prompt_config, context_config)
+          end
 
           # Step 3b: Create user.context.md with actual subject configuration
           user_context_path = create_user_context_file(session_dir, subject_config, config[:subject])
@@ -180,6 +185,57 @@ module Ace
             system_prompt_path: system_prompt_path,
             user_prompt_path: user_prompt_path
           }
+        end
+
+        # Detect whether preset uses instructions format or legacy system_prompt format
+        def uses_instructions_format?(resolved_config)
+          instructions = resolved_config["instructions"] || resolved_config[:instructions]
+          instructions && instructions.is_a?(Hash)
+        end
+
+        # Create system.context.md with instructions-based section support
+        def create_system_context_file_with_instructions(session_dir, instructions_config, context_config)
+          # Build ace-context frontmatter with sections
+          frontmatter = {
+            "context" => {
+              "embed_document_source" => true
+            }
+          }
+
+          # Add instructions.context directly to frontmatter
+          instructions_context = instructions_config["context"] || instructions_config[:context]
+          if instructions_context
+            frontmatter["context"].merge!(instructions_context)
+          end
+
+          # Add additional context preset (e.g., "project" becomes presets: ["project"])
+          if context_config && context_config != "none" && !context_config.empty?
+            frontmatter["context"]["presets"] ||= []
+            if context_config.is_a?(String)
+              frontmatter["context"]["presets"] << context_config
+            elsif context_config.is_a?(Hash) && context_config["presets"]
+              frontmatter["context"]["presets"].concat(context_config["presets"])
+            end
+          end
+
+          # Create system.context.md content
+          system_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
+
+          # Add base system instructions after frontmatter
+          base_prompt = instructions_config["base"] || instructions_config[:base]
+          if base_prompt
+            base_content = @prompt_composer.resolver.resolve(
+              base_prompt,
+              config_dir: File.dirname(@preset_manager.config_path || ".")
+            )
+            system_context_content += base_content if base_content
+          end
+
+          # Write to file
+          system_context_path = File.join(session_dir, "system.context.md")
+          File.write(system_context_path, system_context_content)
+
+          system_context_path
         end
 
         # Create system.context.md with ace-context frontmatter

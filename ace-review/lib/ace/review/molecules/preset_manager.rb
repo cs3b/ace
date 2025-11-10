@@ -81,6 +81,8 @@ module Ace
             description: preset["description"],
             # Extract prompt composition for ace-context frontmatter (but let ace-context process it)
             system_prompt: preset["system_prompt"] || preset["prompt_composition"],
+            # Preserve instructions field for section-based context generation
+            instructions: preset["instructions"],
             context: resolve_context_config(preset["context"], overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             model: overrides[:model] || preset["model"] || default_model,

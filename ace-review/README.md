@@ -151,9 +151,60 @@ storage:
 
 Create preset files in `.ace/review/presets/`:
 
+#### New Section-Based Format (Recommended)
+
 ```yaml
 # .ace/review/presets/team-review.yml
 description: "Team-specific review criteria"
+
+# New instructions format with section-based organization
+instructions:
+  base: "prompt://base/system"
+  context:
+    sections:
+      review_focus:
+        title: "Review Focus Areas"
+        description: "Architecture and code quality focus"
+        files:
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/languages/ruby"
+          - "prompt://project/focus/team/standards"  # Custom team focus
+
+      format_guidelines:
+        title: "Format Guidelines"
+        description: "Output formatting and structure"
+        files:
+          - "prompt://format/detailed"
+
+      communication_guidelines:
+        title: "Communication Style"
+        description: "Review communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+          - "prompt://guidelines/icons"
+
+      team_context:
+        title: "Team Context"
+        description: "Team-specific background information"
+        files:
+          - "docs/team-guidelines.md"
+        presets:
+          - "project"
+
+# Context: additional background information
+context: "project"
+
+# Subject: what to review
+subject:
+  diff: {ranges: ["HEAD~1..HEAD"]}        # Recent changes
+  files: ["lib/**/*.rb"]                  # Ruby files
+```
+
+#### Legacy Format (Backward Compatible)
+
+```yaml
+# .ace/review/presets/legacy-review.yml
+description: "Legacy format preset"
 
 prompt_composition:
   base: "prompt://base/system"
@@ -161,7 +212,6 @@ prompt_composition:
   focus:
     - "prompt://focus/architecture/atom"
     - "prompt://focus/languages/ruby"
-    - "prompt://project/focus/team/standards"  # Custom team focus
   guidelines:
     - "prompt://guidelines/tone"
 
@@ -175,6 +225,8 @@ subject:
   diff: {ranges: ["HEAD~1..HEAD"]}        # Recent changes
   files: ["lib/**/*.rb"]                  # Ruby files
 ```
+
+**Note**: The new `instructions` format provides section-based organization that ace-context processes into structured XML-tagged output. The legacy `prompt_composition` format continues to work for backward compatibility.
 
 ## Prompt System
 

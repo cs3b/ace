@@ -236,11 +236,25 @@ module Ace
           puts "✓ Review saved: #{result[:output_file]}"
         elsif result[:session_dir]
           puts "✓ Review session prepared: #{result[:session_dir]}"
-          puts "  Prompt: #{result[:prompt_file]}"
-          unless @options[:dry_run]
-            puts
-            puts "To execute with LLM:"
-            puts "  ace-llm query --file #{result[:prompt_file]}"
+
+          # Display prompt files for ace-context workflow
+          if result[:system_prompt_file] && result[:user_prompt_file]
+            puts "  System prompt: #{result[:system_prompt_file]}"
+            puts "  User prompt: #{result[:user_prompt_file]}"
+
+            unless @options[:dry_run]
+              puts
+              puts "To execute with LLM:"
+              puts "  ace-llm query --file #{result[:user_prompt_file]} --context #{result[:system_prompt_file]}"
+            end
+          elsif result[:prompt_file]
+            # Legacy format for backward compatibility
+            puts "  Prompt: #{result[:prompt_file]}"
+            unless @options[:dry_run]
+              puts
+              puts "To execute with LLM:"
+              puts "  ace-llm query --file #{result[:prompt_file]}"
+            end
           end
         end
       end

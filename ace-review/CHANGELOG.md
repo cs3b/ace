@@ -5,6 +5,28 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Section-Based Content Organization**: Support for `instructions.context.sections` format
+  - Integration with ace-context v0.17.5+ section-based content organization
+  - Structured organization of review content into semantic sections (focus, style, diff, etc.)
+  - All built-in presets (pr, code, security, docs, performance, ruby-atom, agents, test) now use sections
+  - PresetManager enhanced to preserve `instructions` field through resolution chain
+  - New format detection helper for automatic backward compatibility
+
+### Changed
+- **ReviewManager**: Enhanced to support both legacy `system_prompt` and new `instructions` formats
+  - Automatic format detection ensures seamless migration
+  - New `create_system_context_file_with_instructions()` method for section-based contexts
+  - Full backward compatibility maintained for existing user presets
+
+### Documentation
+- **README.md**: Added comprehensive documentation for new section-based format
+  - Examples of `instructions` format with section organization
+  - Legacy format documentation for backward compatibility
+  - Migration guidance and best practices
+
 ## [0.14.0] - 2025-11-05
 
 ### 🚀 **Major Performance Upgrade - Ruby API Migration & Context Fix**

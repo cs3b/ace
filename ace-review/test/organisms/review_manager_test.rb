@@ -224,4 +224,257 @@ class ReviewManagerTest < AceReviewTest
     cache_dir = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
     assert Dir.exist?(cache_dir), "Cache directory should be created"
   end
+
+  # Tests for instructions-based section support
+  def test_instructions_format_detection
+    # Test format detection with instructions config
+    config_with_instructions = {
+      instructions: {
+        base: "prompt://base/system",
+        context: {
+          sections: {
+            format: {
+              title: "Format Guidelines",
+              files: ["prompt://format/standard"]
+            }
+          }
+        }
+      }
+    }
+
+    assert @manager.send(:uses_instructions_format?, config_with_instructions),
+           "Should detect instructions format"
+
+    # Test format detection with legacy system_prompt config
+    config_with_system_prompt = {
+      system_prompt: {
+        base: "prompt://base/system",
+        format: "prompt://format/standard"
+      }
+    }
+
+    refute @manager.send(:uses_instructions_format?, config_with_system_prompt),
+           "Should not detect instructions format for system_prompt"
+
+    # Test format detection with neither
+    config_empty = {}
+
+    refute @manager.send(:uses_instructions_format?, config_empty),
+           "Should not detect instructions format for empty config"
+  end
+
+  def test_system_context_file_creation_with_instructions
+    # Create a temporary session directory
+    session_dir = File.join(@temp_dir, "test_session")
+    FileUtils.mkdir_p(session_dir)
+
+    instructions_config = {
+      base: "prompt://base/system",
+      context: {
+        sections: {
+          format: {
+            title: "Format Guidelines",
+            description: "Output formatting and structure guidelines",
+            files: ["prompt://format/standard"]
+          },
+          guidelines: {
+            title: "Review Guidelines",
+            description: "Communication style and visual indicators",
+            files: ["prompt://guidelines/tone", "prompt://guidelines/icons"]
+          },
+          project_context: {
+            title: "Project Context",
+            description: "Project information and background",
+            presets: ["project"]
+          }
+        }
+      }
+    }
+
+    context_config = "project"
+
+    # Call the new method
+    system_context_path = @manager.send(
+      :create_system_context_file_with_instructions,
+      session_dir,
+      instructions_config,
+      context_config
+    )
+
+    assert_equal File.join(session_dir, "system.context.md"), system_context_path
+    assert File.exist?(system_context_path), "system.context.md should be created"
+
+    # Read and verify content
+    content = File.read(system_context_path)
+
+    # Should contain YAML frontmatter with sections
+    assert_match(/^---/, content, "Should start with YAML frontmatter")
+    assert_match(/sections:/, content, "Should contain sections in frontmatter")
+    assert_match(/format:/, content, "Should contain format section")
+    assert_match(/guidelines:/, content, "Should contain guidelines section")
+    assert_match(/project_context:/, content, "Should contain project_context section")
+
+    # Should preserve project context preset
+    assert_match(/presets:\s*\n\s*-\s*project/, content, "Should include project preset")
+
+    # Should contain base content after frontmatter
+    assert_match(/---\s*\n\s*$/, content, "Should end frontmatter and have base content area")
+  end
+
+  def test_system_context_file_creation_with_instructions_and_additional_context
+    session_dir = File.join(@temp_dir, "test_session_with_ctx")
+    FileUtils.mkdir_p(session_dir)
+
+    instructions_config = {
+      base: "prompt://base/system",
+      context: {
+        sections: {
+          test_section: {
+            title: "Test Section",
+            files: ["README.md"]
+          }
+        }
+      }
+    }
+
+    # Test with additional context config
+    context_config = { "presets" => ["base", "team"] }
+
+    system_context_path = @manager.send(
+      :create_system_context_file_with_instructions,
+      session_dir,
+      instructions_config,
+      context_config
+    )
+
+    content = File.read(system_context_path)
+
+    # Should merge additional presets
+    assert_match(/presets:\s*\n\s*-\s*base\s*\n\s*-\s*team/, content,
+                  "Should merge additional context presets")
+  end
+
+  def test_instructions_format_integration_in_compose_review_prompt
+    # Create a mock config directly instead of using preset manager
+    config = {
+      "description" => "Test instructions preset",
+      "instructions" => {
+        "base" => "prompt://base/system",
+        "context" => {
+          "sections" => {
+            "format" => {
+              "title" => "Format Guidelines",
+              "files" => ["prompt://format/standard"]
+            }
+          }
+        }
+      },
+      "context" => "project",
+      "model" => "test-model"
+    }
+
+    session_dir = File.join(@temp_dir, "integration_test")
+    FileUtils.mkdir_p(session_dir)
+
+    # Test the integration in compose_review_prompt
+    result = @manager.send(
+      :compose_review_prompt,
+      config,
+      {}, # context
+      {}, # subject
+      {}, # subject_config
+      session_dir
+    )
+
+    assert result[:success], "compose_review_prompt should succeed with instructions format"
+
+    # Verify system.context.md was created with sections
+    system_context_file = File.join(session_dir, "system.context.md")
+    assert File.exist?(system_context_file), "system.context.md should exist"
+
+    content = File.read(system_context_file)
+    assert_match(/sections:/, content, "Should contain sections in frontmatter")
+    assert_match(/format:/, content, "Should contain format section")
+  end
+
+  def test_backward_compatibility_with_system_prompt_format
+    # Test that system_prompt format still works (legacy compatibility)
+    session_dir = File.join(@temp_dir, "legacy_test")
+    FileUtils.mkdir_p(session_dir)
+
+    system_prompt_config = {
+      "base" => "prompt://base/system",
+      "format" => "prompt://format/standard",
+      "focus" => ["prompt://focus/ruby", "prompt://focus/testing"],
+      "guidelines" => ["prompt://guidelines/tone"]
+    }
+
+    context_config = "project"
+
+    # Call the legacy method
+    system_context_path = @manager.send(
+      :create_system_context_file,
+      session_dir,
+      system_prompt_config,
+      context_config
+    )
+
+    assert_equal File.join(session_dir, "system.context.md"), system_context_path
+    assert File.exist?(system_context_path), "system.context.md should be created"
+
+    # Read and verify content
+    content = File.read(system_context_path)
+
+    # Should contain YAML frontmatter with files (not sections)
+    assert_match(/^---/, content, "Should start with YAML frontmatter")
+    assert_match(/files:/, content, "Should contain files in frontmatter")
+    assert_match(/prompt:\/\/format\/standard/, content, "Should contain format prompt")
+    assert_match(/prompt:\/\/focus\/ruby/, content, "Should contain focus prompts")
+    assert_match(/prompt:\/\/guidelines\/tone/, content, "Should contain guidelines prompts")
+
+    # Should NOT contain sections (legacy format)
+    refute_match(/sections:/, content, "Legacy format should not contain sections")
+
+    # Should preserve project context preset
+    assert_match(/presets:\s*\n\s*-\s*project/, content, "Should include project preset")
+  end
+
+  def test_system_prompt_format_integration_in_compose_review_prompt
+    # Test that system_prompt format works in the full workflow
+    config = {
+      "description" => "Test legacy preset",
+      "system_prompt" => {
+        "base" => "prompt://base/system",
+        "format" => "prompt://format/standard",
+        "focus" => ["prompt://focus/ruby"],
+        "guidelines" => ["prompt://guidelines/tone"]
+      },
+      "context" => "project",
+      "model" => "test-model"
+    }
+
+    session_dir = File.join(@temp_dir, "legacy_integration_test")
+    FileUtils.mkdir_p(session_dir)
+
+    # Test the integration in compose_review_prompt
+    result = @manager.send(
+      :compose_review_prompt,
+      config,
+      {}, # context
+      {}, # subject
+      {}, # subject_config
+      session_dir
+    )
+
+    assert result[:success], "compose_review_prompt should succeed with system_prompt format"
+
+    # Verify system.context.md was created with files (not sections)
+    system_context_file = File.join(session_dir, "system.context.md")
+    assert File.exist?(system_context_file), "system.context.md should exist"
+
+    content = File.read(system_context_file)
+    refute_match(/sections:/, content, "Legacy format should not contain sections")
+    assert_match(/files:/, content, "Legacy format should contain files")
+    assert_match(/prompt:\/\/format\/standard/, content, "Should contain format prompt")
+  end
 end

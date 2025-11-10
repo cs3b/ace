@@ -266,4 +266,4 @@ ACE is designed for AI-assisted development and works seamlessly with:
 
 ---
 
-**ACE: Making AI-assisted development as simple as `gem install ace-*`**
+**ACE: Making AI-assisted development as simple as `gem install ace-*`**# Test change
