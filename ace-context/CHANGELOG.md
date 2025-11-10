@@ -27,6 +27,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-11-10
+
+### Added
+- Add context.base support for generic base content handling
+  - New `context.base` field enables loading base content from files or protocol references
+  - Base content appears before sections in formatted output
+  - Supports protocol resolution via ace-nav (e.g., `prompt://base/system`)
+  - Graceful error handling for missing files or invalid protocols
+  - Comprehensive test coverage with 7 new test cases
+
+### Fixed
+- Treat file-based configs same as presets for sections and formatting
+  - Files loaded via `load_template` now process sections correctly
+  - File-based configs now format output before returning (matching preset behavior)
+  - Fixes inconsistency where sections worked in presets but not in direct file loading
+  - ace-review integration now generates full section content (1613 lines vs 29 before)
+
 ## [0.17.6] - 2025-11-10
 
 ### Added
