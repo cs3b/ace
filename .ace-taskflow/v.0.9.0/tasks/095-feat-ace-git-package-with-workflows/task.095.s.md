@@ -13,7 +13,11 @@ Create a unified ace-git gem package that consolidates git workflow management w
 - **rebase.wf.md**: Changelog preservation during rebase operations
 - **create-pr.wf.md**: Pull request creation with comprehensive templates (new)
 - **squash-pr.wf.md**: Smart commit squashing (one per version) for clean history
-  ( one strategy keep one commit per release )
+  additional note use case:
+  > one strategy keep one commit per release )
+  > now take a look at commits from c0319bb68fec8ab61d9f51df6a83e8dc54910d23 to
+1e4956c335739e79668f6989ef11eede550a8ea4 and propose how to reorganize - squash them so they will be more maintable
+ in any further merges and create clean history
 
 ## Review Questions - RESOLVED
 

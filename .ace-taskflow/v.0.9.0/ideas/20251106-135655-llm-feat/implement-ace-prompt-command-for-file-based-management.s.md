@@ -35,11 +35,32 @@ This functionality will be implemented as a new `ace-prompt` gem, adhering to th
 *   **Handbook**: Include `handbook/agents/read-prompt.ag.md` for single-purpose prompt retrieval and `handbook/workflow-instructions/manage-prompt-lifecycle.wf.md` for comprehensive prompt management workflows.
 
 ## Considerations
+
+### Core Functionality
 -   **Prompt Search Order**: Clearly define the precedence for prompt file lookup (e.g., task-level overrides release-level, which overrides project-level).
 -   **Archiving Format**: Standardize the naming convention for archived prompts (e.g., `prompt_name_YYYYMMDD_HHMMSS.md`).
 -   **New Prompt Templates**: Allow users to specify templates for new prompt files, potentially leveraging `dev-handbook/templates/` or a dedicated `ace-prompt` template directory.
 -   **Security**: Implement robust path validation to prevent directory traversal vulnerabilities when resolving prompt file paths.
 -   **Deterministic Output**: Ensure CLI commands provide clear, parseable output for AI agents.
+
+### Integration Enhancements
+-   **ace-taskflow Integration**: Leverage `ace-taskflow` to automatically resolve current task ID and release version context. Use `ace-taskflow task current` or similar to determine active task workspace.
+-   **LLM Piping**: Design for seamless piping to `ace-llm-query` with `ace-prompt read [name] | ace-llm-query -m gpt-4`. Consider adding `--pipe` flag that outputs raw prompt content without formatting.
+-   **Context Composition**: Integrate with `ace-context` to enrich prompts with project context. Support `ace-prompt read [name] --with-context project` to automatically prepend project context to prompts.
+-   **Review Integration**: Consider integration with `ace-review` for prompt-based code review workflows where prompts can reference review presets.
+
+### User Experience Improvements
+-   **Interactive Mode**: Add `ace-prompt select` command that lists available prompts and allows interactive selection using arrow keys (similar to `fzf` pattern).
+-   **Template System**: Support prompt templates with variable substitution (e.g., `{{TASK_ID}}`, `{{RELEASE_VERSION}}`, `{{DATE}}`). Variables resolved from context or command-line arguments.
+-   **Preview Before Execute**: Add `--preview` flag to show prompt content before archiving/executing. Useful for verifying prompt content before committing to archival.
+-   **Prompt History**: Implement `ace-prompt history [name]` to show archived versions of a specific prompt with timestamps and optional diff between versions.
+-   **Multi-Prompt Sessions**: Support linking multiple prompt files in a session for complex multi-turn interactions (e.g., `ace-prompt session start`, `ace-prompt session add [name]`, `ace-prompt session execute`).
+
+### Prototype Command Cleanup
+-   **Fix Typo**: Correct "Insturction" → "Instruction" in `.claude/commands/prompt.md`
+-   **Error Handling**: Add clear error messages for missing prompt files with suggestions (e.g., "Prompt 'the-prompt.md' not found. Available prompts: [list]")
+-   **Archive Directory Structure**: Clarify archive organization - should archived prompts maintain original directory structure or be flattened? Recommend: maintain hierarchy with timestamps (e.g., `.cache/prompts/archive/the-prompt/20251109-131500.md`)
+-   **Summary Generation**: Specify how summary of previous prompt is generated - extract title and first paragraph? Full content? LLM-generated summary?
 
 ## Benefits
 -   **Enhanced Prompt Management**: Provides a structured, file-based system for creating, storing, and retrieving prompts.
