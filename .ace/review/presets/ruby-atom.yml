@@ -4,8 +4,8 @@
 description: "Ruby code review with ATOM architecture focus"
 
 instructions:
-  base: "prompt://base/system"
   context:
+    base: "prompt://base/system"
     sections:
       format:
         title: "Format Guidelines"

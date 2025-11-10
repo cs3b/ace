@@ -3,8 +3,8 @@
 description: "Pull request review - comprehensive code changes review"
 
 instructions:
-  base: "prompt://base/system"
   context:
+    base: "prompt://base/system"
     sections:
       format:
         title: "Format Guidelines"

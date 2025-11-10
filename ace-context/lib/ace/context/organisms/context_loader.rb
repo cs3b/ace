@@ -416,6 +416,9 @@ module Ace
             # Process the config (loads embedded files from context.files)
             context = process_template_config(config)
 
+            # Process base content if present (for template files with context.base)
+            process_base_content(context, config, @options)
+
             # Replace metadata with original frontmatter (keep it unmodified)
             # Convert string keys to symbols for consistency
             context.metadata = {}
@@ -508,6 +511,9 @@ module Ace
             preset_name: preset[:name],
             metadata: preset[:metadata] || {}
           )
+
+          # Process base content if present
+          process_base_content(context, context_config, options)
 
           # Process sections if present
           if @section_processor.has_sections?(preset)
@@ -1121,6 +1127,38 @@ module Ace
           (context_config['commands'] && context_config['commands'].any?) ||
           (context_config['diffs'] && context_config['diffs'].any?) ||
           (context_config['ranges'] && context_config['ranges'].any?)
+        end
+
+        # Process base content from context.base field
+        def process_base_content(context, context_config, options)
+          base_ref = context_config['base'] || context_config[:base]
+          return unless base_ref && !base_ref.to_s.strip.empty?
+
+          # Resolve protocol reference
+          resolved_path = resolve_file_reference(base_ref)
+          unless resolved_path
+            context.metadata[:base_error] = "Failed to resolve base reference: #{base_ref}"
+            warn "Warning: Failed to resolve base reference: #{base_ref}" if options[:debug]
+            return
+          end
+
+          # Check if file exists
+          unless File.exist?(resolved_path)
+            context.metadata[:base_error] = "Base file not found: #{resolved_path}"
+            warn "Warning: Base file not found: #{resolved_path}" if options[:debug]
+            return
+          end
+
+          # Load base content
+          base_content = File.read(resolved_path).strip
+          if base_content.empty?
+            warn "Warning: Base file is empty: #{resolved_path}" if options[:debug]
+          end
+
+          # Store base content as primary content
+          context.content = base_content
+          context.metadata[:base_path] = resolved_path
+          context.metadata[:base_ref] = base_ref
         end
 
         # Helper methods to detect content types in sections

@@ -3,8 +3,8 @@
 description: "Agent definition review - structure and clarity"
 
 instructions:
-  base: "prompt://base/system"
   context:
+    base: "prompt://base/system"
     sections:
       format:
         title: "Format Guidelines"

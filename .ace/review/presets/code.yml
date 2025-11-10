@@ -3,8 +3,8 @@
 description: "Code quality review - architecture and conventions"
 
 instructions:
-  base: "prompt://base/system"
   context:
+    base: "prompt://base/system"
     sections:
       format:
         title: "Format Guidelines"

@@ -3,9 +3,9 @@
 description: "Pull request review - comprehensive code changes review"
 
 instructions:
-  base: "prompt://base/system"
   description: "Pull request review instructions"
   context:
+    base: "prompt://base/system"
     sections:
       review_focus:
         title: "Files Under Review"
