@@ -5,26 +5,6 @@ All notable changes to ace-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.17.4] - 2025-11-07
-
-### Fixed
-- **Critical Format Regression**: Fixed markdown-xml format not being applied to section-based presets
-  - Issue was in PresetManager where preset format defaulted to 'markdown' instead of respecting CLI options
-  - Removed hardcoded format default in `load_preset_from_file` method
-  - Preset composition no longer overrides explicitly requested formats
-  - CLI `--format markdown-xml` option now works correctly with sections
-
-- **Format Parameter Propagation**: Ensured format parameters flow correctly from CLI through ContextLoader
-  - CLI format options properly propagate through the entire processing chain
-  - `embed_document_source: true` now correctly defaults to `markdown-xml` format
-  - Explicit format specifications take precedence over preset defaults
-
-### Technical
-- Modified `PresetManager#load_preset_from_file` to not set hardcoded format defaults
-- Updated `PresetManager#merge_preset_data` to preserve format resolution in ContextLoader
-- All 27 integration tests passing with no regressions
-- Verified XML output format with proper section tags and file order preservation
-
 ## [Unreleased]
 
 ## [0.18.0] - 2025-11-10
@@ -69,6 +49,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Included examples of good (2-3 levels), acceptable (4 levels), and poor (5+ levels) nesting
   - Added refactoring guidance for deep nesting scenarios
   - Performance impact table showing load time vs maintainability trade-offs
+
+## [0.17.4] - 2025-11-07
+
+### Fixed
+- **Critical Format Regression**: Fixed markdown-xml format not being applied to section-based presets
+  - Issue was in PresetManager where preset format defaulted to 'markdown' instead of respecting CLI options
+  - Removed hardcoded format default in `load_preset_from_file` method
+  - Preset composition no longer overrides explicitly requested formats
+  - CLI `--format markdown-xml` option now works correctly with sections
+
+- **Format Parameter Propagation**: Ensured format parameters flow correctly from CLI through ContextLoader
+  - CLI format options properly propagate through the entire processing chain
+  - `embed_document_source: true` now correctly defaults to `markdown-xml` format
+  - Explicit format specifications take precedence over preset defaults
+
+### Technical
+- Modified `PresetManager#load_preset_from_file` to not set hardcoded format defaults
+- Updated `PresetManager#merge_preset_data` to preserve format resolution in ContextLoader
+- All 27 integration tests passing with no regressions
+- Verified XML output format with proper section tags and file order preservation
 
 ## [0.17.3] - 2025-11-07
 
@@ -169,8 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Changed dependency from `ace-core` to `ace-support-core`
   - Part of ecosystem-wide naming convention alignment for infrastructure gems
 
-## [0.16.0]
- - 2025-10-24
+## [0.16.0] - 2025-10-24
 
 ### Added
 - Enable file path and protocol arguments for ace:load-context command

@@ -49,6 +49,7 @@ context:
 ```yaml
 context:
   params:           # Output and processing parameters
+  base:             # Path or protocol to a file for base content
   embed_document_source: bool  # Include the preset file itself in output
   files:            # List of files to include (simplified format)
   commands:         # List of commands to execute (simplified format)
@@ -78,6 +79,49 @@ context:
 - `markdown-xml`: Markdown with XML-style tags (recommended for sections)
 - `yaml`: YAML format
 - `json`: JSON format
+
+## Base Content Configuration
+
+The `base` key allows you to specify a file or protocol reference that will be loaded as the primary content, appearing before any section-based output.
+
+```yaml
+context:
+  base: docs/system-prompt.md  # Load from a file
+  # or
+  base: prompt://base/system   # Load via protocol
+
+  # Base content appears first, followed by sections
+  sections:
+    guidelines:
+      files:
+        - docs/coding-standards.md
+```
+
+### Features
+
+- **File Paths**: Load content from any file path relative to the project root
+- **Protocol Support**: Use protocol references like `prompt://`, `wfi://`, `guide://` for dynamic content
+- **Error Handling**: Gracefully handles missing files or invalid protocols with clear error messages
+- **Output Position**: Base content always appears before sections in formatted output
+
+### Example with Protocol
+
+```yaml
+---
+description: "Code review context with base instructions"
+context:
+  params:
+    format: markdown-xml
+
+  base: prompt://base/system   # Load base review instructions
+
+  sections:
+    focus:
+      title: "Review Focus"
+      files:
+        - prompt://focus/architecture/atom
+        - prompt://focus/languages/ruby
+```
 
 ## Simplified Format Examples
 

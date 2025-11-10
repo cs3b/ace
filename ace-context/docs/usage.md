@@ -79,7 +79,7 @@ ace-context project-base --output cache
 ace-context project-base -o context.md
 ```
 
-#### `--format`, `-f`
+#### `--format`, `-F`
 Specify output format.
 
 ```bash
@@ -96,7 +96,7 @@ ace-context project-base --format yaml
 ace-context project-base --format json
 
 # Short form
-ace-context project-base -f markdown-xml
+ace-context project-base -F markdown-xml
 ```
 
 ### Input Options

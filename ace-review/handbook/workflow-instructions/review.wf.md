@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-07'
+  last-updated: '2025-11-10'
 ---
 
 # Code Review Workflow Instruction
@@ -181,15 +181,90 @@ context:
   presets: [project]                       # Load project documentation
   files: ["docs/architecture.md"]          # Specific architectural docs
 
-prompt:
-  focus:
-    - architecture/atom
-    - languages/ruby
+# New instructions format with section-based organization
+instructions:
+  context:
+    sections:
+      review_focus:
+        title: "Review Focus Areas"
+        description: "Architecture and code quality focus"
+        files:
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/languages/ruby"
 ```
 
 Then use the preset:
 ```bash
 ace-review --preset multi-repo --auto-execute
+```
+
+## Section-Based Instructions Format (New in 0.15.0)
+
+The new `instructions` format allows structured, section-based organization of review prompts for better clarity and composability.
+
+### Benefits
+
+- **Structured Organization**: Organize prompts into logical sections with titles and descriptions
+- **Protocol Support**: Use `prompt://` protocol for dynamic prompt loading
+- **Better Integration**: Leverages ace-context's section-based processing
+- **Backward Compatible**: Legacy `prompt_composition` format still works
+
+### Example: Section-Based Preset
+
+```yaml
+# .ace/review/presets/comprehensive.yml
+description: "Comprehensive code review with structured prompts"
+
+instructions:
+  context:
+    base: "prompt://base/system"   # Base system instructions
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Standard output formatting"
+        files:
+          - "prompt://format/standard"
+      focus:
+        title: "Review Focus"
+        description: "What to look for in code"
+        files:
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/languages/ruby"
+          - "prompt://focus/quality/best-practices"
+      guidelines:
+        title: "Communication Guidelines"
+        description: "How to present findings"
+        files:
+          - "prompt://guidelines/tone"
+
+subject:
+  diff:
+    ranges:
+      - "origin/main...HEAD"
+
+context:
+  presets: [project]
+```
+
+### Legacy Format (Still Supported)
+
+The traditional `prompt_composition` format continues to work:
+
+```yaml
+# .ace/review/presets/legacy-style.yml
+description: "Review using legacy format"
+
+prompt_composition:
+  base: "base/code-review"
+  format: "format/standard"
+  focus:
+    - "architecture/atom"
+    - "languages/ruby"
+  guidelines: "guidelines/professional"
+
+subject:
+  diff:
+    ranges: ["origin/main...HEAD"]
 ```
 
 ## Essential Tips

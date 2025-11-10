@@ -2,7 +2,14 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.9.8
+**Version:** 0.15.0
+
+## What's New in 0.15.0
+
+- **Section-Based Presets**: A new `instructions` format in presets allows for structured, section-based content organization for more powerful and readable reviews. See examples below.
+- **Enhanced ace-context Integration**: Deeper integration with `ace-context` for processing structured review content.
+- **Backward Compatibility**: The legacy `prompt_composition` format continues to work alongside the new `instructions` format.
+- For full details, see the [CHANGELOG.md](CHANGELOG.md).
 
 ## Changes in 0.9.8
 
