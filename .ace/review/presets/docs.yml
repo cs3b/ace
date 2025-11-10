@@ -2,17 +2,32 @@
 
 description: "Documentation review - completeness and clarity"
 
-system_prompt:
+instructions:
   base: "prompt://base/system"
-  format: "prompt://format/standard"
-  focus:
-    - "prompt://focus/scope/docs"
-  guidelines:
-    - "prompt://guidelines/tone"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Standard output formatting and structure guidelines"
+        files:
+          - "prompt://format/standard"
+      docs_focus:
+        title: "Documentation Review Focus"
+        description: "Focus areas for documentation completeness and clarity"
+        files:
+          - "prompt://focus/scope/docs"
+      communication:
+        title: "Communication Style"
+        description: "Professional communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+      readme_context:
+        title: "README Context"
+        description: "Main project documentation"
+        files:
+          - "README.md"
 
-context:
-  files:
-    - "README.md"
+context: "project"
 
 subject:
   files:

@@ -2,17 +2,36 @@
 
 description: "Code quality review - architecture and conventions"
 
-system_prompt:
+instructions:
   base: "prompt://base/system"
-  format: "prompt://format/detailed"
-  focus:
-    - "prompt://focus/architecture/atom"
-  guidelines:
-    - "prompt://guidelines/tone"
-    - "prompt://guidelines/icons"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Output formatting and structure guidelines"
+        files:
+          - "prompt://format/detailed"
+      focus:
+        title: "Review Focus Areas"
+        description: "Architecture and code quality focus"
+        files:
+          - "prompt://focus/architecture/atom"
+      guidelines:
+        title: "Review Guidelines"
+        description: "Communication style and visual indicators"
+        files:
+          - "prompt://guidelines/tone"
+          - "prompt://guidelines/icons"
+      project_context:
+        title: "Project Context"
+        description: "Project information and background"
+        presets:
+          - "project"
 
 context: "project"
 
 subject:
-  commands:
-    - "git diff HEAD~3..HEAD"
+  # Use diff key for consistent filtering via ace-git-diff
+  diff:
+    ranges:
+      - "HEAD~3..HEAD"

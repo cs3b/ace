@@ -2,12 +2,26 @@
 
 description: "Pull request review - comprehensive code changes review"
 
-prompt_composition:
+instructions:
   base: "prompt://base/system"
-  format: "prompt://format/standard"
-  guidelines:
-    - "prompt://guidelines/tone"
-    - "prompt://guidelines/icons"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Output formatting and structure guidelines"
+        files:
+          - "prompt://format/standard"
+      guidelines:
+        title: "Review Guidelines"
+        description: "Communication style and visual indicators"
+        files:
+          - "prompt://guidelines/tone"
+          - "prompt://guidelines/icons"
+      project_context:
+        title: "Project Context"
+        description: "Project information and background"
+        presets:
+          - "project"
 
 context: "project"
 

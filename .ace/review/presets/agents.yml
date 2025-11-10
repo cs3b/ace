@@ -2,18 +2,37 @@
 
 description: "Agent definition review - structure and clarity"
 
-system_prompt:
+instructions:
   base: "prompt://base/system"
-  format: "prompt://format/detailed"
-  focus:
-    - "prompt://focus/scope/docs"
-  guidelines:
-    - "prompt://guidelines/tone"
-    - "prompt://guidelines/icons"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Detailed output formatting and structure guidelines"
+        files:
+          - "prompt://format/detailed"
+      docs_focus:
+        title: "Documentation Review Focus"
+        description: "Focus areas for documentation completeness and clarity"
+        files:
+          - "prompt://focus/scope/docs"
+      communication:
+        title: "Communication Style"
+        description: "Professional communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+      visual_indicators:
+        title: "Visual Indicators"
+        description: "Icons and visual markers for quick scanning"
+        files:
+          - "prompt://guidelines/icons"
+      agents_context:
+        title: "Agent Documentation"
+        description: "Agent definition and workflow documentation"
+        files:
+          - "docs/agents.g.md"
 
-context:
-  files:
-    - "docs/agents.g.md"
+context: "project"
 
 subject:
   files:

@@ -66,96 +66,89 @@ Update ace-review to use the new section-based content organization system from 
 # .ace/review/presets/pr.yml
 description: "Pull request review - comprehensive code changes review"
 
-# Section-based configuration
-sections:
-  focus:
-    title: "Files Under Review"
-    content_type: "diffs"
-    priority: 1
-    ranges:
-      - "origin/main...HEAD"
-    paths:
-      - "src/**/*.js"
-      - "tests/**/*.test.js"
-
-  style:
-    title: "Style Guidelines"
-    content_type: "files"
-    priority: 2
-    files:
-      - ".eslintrc.js"
-      - "docs/CODING_STANDARDS.md"
-      - "style-guide.md"
-
-  diff:
-    title: "Recent Changes"
-    content_type: "diffs"
-    priority: 3
-    ranges:
-      - "origin/main...HEAD"
-
+# Section-based instructions using ace-context
+instructions:
+  base: "prompt://base/system"
   context:
-    title: "Project Context"
-    content_type: "commands"
-    priority: 4
-    commands:
-      - "git log --oneline origin/main..HEAD"
-      - "npm test"
-      - "git status"
+    sections:
+      review_focus:
+        title: "Files Under Review"
+        description: "Code changes and files being reviewed"
+        files:
+          - "prompt://focus/languages/ruby"
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/scope/tests"
+          - "prompt://focus/scope/docs"
 
-# Legacy support (auto-migrated)
+      format_guidelines:
+        title: "Format Guidelines"
+        description: "Output formatting and structure guidelines"
+        files:
+          - "prompt://format/detailed"
+
+      review_guidelines:
+        title: "Review Guidelines"
+        description: "Communication style and visual indicators"
+        files:
+          - "prompt://guidelines/tone"
+          - "prompt://guidelines/icons"
+
+      project_context:
+        title: "Project Context"
+        description: "Project information and background"
+        presets:
+          - "project"
+
+# Legacy support (unchanged)
 context: "project"
+
+# Subject configuration (unchanged)
 subject:
   diff:
     ranges:
       - "origin/main...HEAD"
 
-# Prompt composition (unchanged)
-prompt_composition:
-  base: "prompt://base/system"
-  format: "prompt://format/standard"
-  guidelines:
-    - "prompt://guidelines/tone"
-    - "prompt://guidelines/icons"
+  # Alternative: Use commands for custom git operations
+  # commands:
+  #   - "git diff origin/main...HEAD"
+  #   - "git log origin/main..HEAD --oneline"
+
+model: gpro
 ```
 
 **Expected system.context.md Output**:
 ```markdown
 ---
 context:
-  sections:
-    focus:
-      title: "Files Under Review"
-      content_type: "diffs"
-      priority: 1
-      ranges:
-        - "origin/main...HEAD"
-      paths:
-        - "src/**/*.js"
-        - "tests/**/*.test.js"
-    style:
-      title: "Style Guidelines"
-      content_type: "files"
-      priority: 2
-      files:
-        - ".eslintrc.js"
-        - "docs/CODING_STANDARDS.md"
-        - "style-guide.md"
-    diff:
-      title: "Recent Changes"
-      content_type: "diffs"
-      priority: 3
-      ranges:
-        - "origin/main...HEAD"
-    context:
-      title: "Project Context"
-      content_type: "commands"
-      priority: 4
-      commands:
-        - "git log --oneline origin/main..HEAD"
-        - "npm test"
-        - "git status"
   embed_document_source: true
+  sections:
+    review_focus:
+      title: "Files Under Review"
+      description: "Code changes and files being reviewed"
+      files:
+        - "prompt://focus/languages/ruby"
+        - "prompt://focus/architecture/atom"
+        - "prompt://focus/scope/tests"
+        - "prompt://focus/scope/docs"
+
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Output formatting and structure guidelines"
+      files:
+        - "prompt://format/detailed"
+
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Communication style and visual indicators"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+
+    project_context:
+      title: "Project Context"
+      description: "Project information and background"
+      presets:
+        - "project"
 ---
 
 [Base system prompt content from prompt://base/system]
@@ -164,60 +157,53 @@ context:
 **Expected system.prompt.md After ace-context Processing**:
 ```markdown
 ## Files Under Review
-<focus>
-  <file path="src/main.js" language="javascript">
-    // Changed code content
-  </file>
-  <file path="tests/main.test.js" language="javascript">
-    // Test changes
-  </file>
-</focus>
 
-## Style Guidelines
-<style>
-  <file path=".eslintrc.js">
-    // ESLint configuration
-  </file>
-  <file path="docs/CODING_STANDARDS.md">
-    # Coding Standards
-    <!-- Style guidelines content -->
-  </file>
-</style>
+<review_focus>
+<!-- Content from prompt://focus/languages/ruby -->
+<!-- Content from prompt://focus/architecture/atom -->
+<!-- Content from prompt://focus/scope/tests -->
+<!-- Content from prompt://focus/scope/docs -->
+</review_focus>
 
-## Recent Changes
-<diff>
-  <output command="git diff origin/main...HEAD">
-    // Git diff output
-  </output>
-</diff>
+## Format Guidelines
+
+<format_guidelines>
+<!-- Content from prompt://format/detailed -->
+</format_guidelines>
+
+## Review Guidelines
+
+<review_guidelines>
+<!-- Content from prompt://guidelines/tone -->
+<!-- Content from prompt://guidelines/icons -->
+</review_guidelines>
 
 ## Project Context
-<context>
-  <output command="git log --oneline origin/main..HEAD">
-    // Recent commits
-  </output>
-  <output command="npm test">
-    // Test results
-  </output>
-</context>
+
+<project_context>
+<!-- Project context content from "project" preset -->
+</project_context>
 ```
+
+**User Prompt Generation**:
+The user prompt will be generated separately from the subject configuration, containing the actual code diffs and context for review, following the existing ace-context patterns.
 
 ### Success Criteria
 
-- [ ] ReviewManager updated to support section-based preset configuration
-- [ ] All existing ace-review presets migrated to use sections where appropriate
-- [ ] PresetManager enhanced to handle both legacy and section-based configurations
+- [ ] ReviewManager updated to support `instructions.context.sections` configuration
+- [ ] All existing ace-review presets updated to use `instructions` format with sections
+- [ ] PresetManager enhanced to handle both legacy `system_prompt` and new `instructions` formats
 - [ ] Backward compatibility maintained for all existing user presets
-- [ ] Standard section templates created for common review types (PR, code, security, docs)
-- [ ] Comprehensive test coverage for section-based review functionality
-- [ ] Documentation updated with section-based usage examples
+- [ ] Standard section patterns created for common review types (PR, code, security, docs)
+- [ ] Comprehensive test coverage for instructions-based review functionality
+- [ ] Documentation updated with instructions-based usage examples
 
 ### Validation Questions
 
-- Does the section-based approach improve review organization and clarity?
-- Are the standard section templates appropriate for common review scenarios?
-- Is the migration path for existing presets smooth and automatic?
-- Do users have sufficient flexibility to define custom sections?
+- Does the `instructions.context.sections` approach improve review organization and clarity?
+- Are the standard section patterns appropriate for common review scenarios?
+- Is the migration path from `system_prompt` to `instructions` format smooth and automatic?
+- Do users have sufficient flexibility to define custom sections through the instructions format?
 
 ## Planning Steps
 

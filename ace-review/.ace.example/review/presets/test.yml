@@ -2,17 +2,32 @@
 
 description: "Test review - coverage and quality"
 
-prompt_composition:
+instructions:
   base: "prompt://base/system"
-  format: "prompt://format/standard"
-  focus:
-    - "prompt://focus/scope/tests"
-  guidelines:
-    - "prompt://guidelines/tone"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Standard output formatting and structure guidelines"
+        files:
+          - "prompt://format/standard"
+      test_focus:
+        title: "Test Review Focus"
+        description: "Focus areas for test coverage and quality analysis"
+        files:
+          - "prompt://focus/scope/tests"
+      communication:
+        title: "Communication Style"
+        description: "Professional communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+      test_helper:
+        title: "Test Context"
+        description: "Test framework and helper files"
+        files:
+          - "test/test_helper.rb"
 
-context:
-  files:
-    - "test/test_helper.rb"
+context: "project"
 
 subject:
   files:
