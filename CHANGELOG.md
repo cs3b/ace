@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.119] - 2025-11-10
+
+### Added
+- **ace-review v0.15.0**: Section-based content organization integration
+  - Added support for `instructions.context.sections` format in ReviewManager
+  - Integration with ace-context v0.17.5+ section-based content organization
+  - Structured organization of review content into semantic sections (focus, style, diff, etc.)
+  - All built-in presets (pr, code, security, docs, performance, ruby-atom, agents, test) now use sections
+  - Enhanced PresetManager to preserve `instructions` field through resolution chain
+  - Added automatic format detection for seamless backward compatibility
+
+### Changed
+- **ace-review v0.15.0**: Enhanced ReviewManager architecture
+  - Created new `create_system_context_file_with_instructions()` method for section-based contexts
+  - Full backward compatibility maintained for existing user presets with `system_prompt` format
+  - Updated CLI to properly display system and user prompt file paths
+  - CLI now shows correct `ace-llm query` command with `--file` and `--context` parameters
+
+### Documentation
+- **ace-review v0.15.0**: Comprehensive documentation updates
+  - Added README.md documentation for new section-based format with examples
+  - Documented legacy format for backward compatibility and migration guidance
+  - Added comprehensive test coverage for new section-based functionality
+
 ## [0.9.118] - 2025-11-09
 
 ### Added
