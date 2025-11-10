@@ -209,7 +209,7 @@ module Ace
 
           # Normalize and merge context_config if provided
           if context_config
-            normalized_config = normalize_context_config(context_config)
+            normalized_config = Atoms::ContextNormalizer.normalize_context_config(context_config)
             ace_context_config = deep_merge_context(ace_context_config, normalized_config)
           end
 
@@ -224,7 +224,7 @@ module Ace
                 ace_context_config["context"]["presets"] << additional_context
               end
             elsif additional_context.is_a?(Hash)
-              additional_normalized = normalize_context_config(additional_context)
+              additional_normalized = Atoms::ContextNormalizer.normalize_context_config(additional_context)
               ace_context_config = deep_merge_context(ace_context_config, additional_normalized)
             end
           end
@@ -239,67 +239,24 @@ module Ace
           context_path
         end
 
-        # Normalize various input types to proper ace-context structure
-        def normalize_context_config(input)
-          case input
-          when String
-            # String input (e.g., "project", "staged") -> wrap as preset
-            { "context" => { "presets" => [input] } }
-          when Hash
-            # Check if this config has a top-level "base" key that needs to be moved
-            has_base = input.key?("base") || input.key?(:base)
-            has_context = input.key?("context") || input.key?(:context)
-
-            if has_base && !has_context
-              # Config has base: at top level but no context: key
-              # Need to move base under context.base and wrap other keys
-              normalized = { "context" => {} }
-
-              input.each do |key, value|
-                key_str = key.to_s
-                if key_str == "base"
-                  # Move top-level base to context.base
-                  normalized["context"]["base"] = value
-                else
-                  # Other top-level keys go under context
-                  normalized["context"][key_str] = value
-                end
-              end
-
-              normalized
-            elsif has_base && has_context
-              # Config has both base: and context: at top level
-              # Move base under context.base
-              normalized = {}
-              base_value = input["base"] || input[:base]
-
-              input.each do |key, value|
-                key_str = key.to_s
-                if key_str == "base"
-                  # Skip - will add under context.base below
-                  next
-                elsif key_str == "context"
-                  # Merge context and add base under it
-                  context_hash = value.is_a?(Hash) ? value.dup : {}
-                  context_hash["base"] = base_value
-                  normalized["context"] = context_hash
-                else
-                  normalized[key_str] = value
-                end
-              end
-
-              normalized
-            else
-              # Config already properly structured or doesn't need normalization
-              input
-            end
-          else
-            # Fallback for other types
-            {}
-          end
-        end
-
-        # Deep merge two context configurations
+        # Deep merge two context configurations (top-level wrapper)
+        #
+        # Merges overlay into base with smart type handling. This is a simplified
+        # version that delegates to deep_merge_hash for all hash values.
+        #
+        # @param base [Hash] Base configuration (lower priority)
+        # @param overlay [Hash] Overlay configuration (higher priority)
+        # @return [Hash] Merged configuration
+        #
+        # @example Simple merge
+        #   deep_merge_context({a: 1}, {b: 2})
+        #   #=> {a: 1, b: 2}
+        #
+        # @example Nested hash merge
+        #   deep_merge_context({a: {b: 1}}, {a: {c: 2}})
+        #   #=> {a: {b: 1, c: 2}}
+        #
+        # @api private
         def deep_merge_context(base, overlay)
           result = base.dup
 
@@ -314,16 +271,57 @@ module Ace
           result
         end
 
-        # Deep merge helper for nested hashes
+        # Deep merge two hashes with smart type handling
+        #
+        # Recursively merges two hashes following these rules:
+        # - Hashes: Recursively merged (keys from both hashes preserved)
+        # - Arrays: Concatenated and deduplicated (first occurrence preserved)
+        # - Scalars: Overlay value wins (replaces base value)
+        # - Type conflicts: Overlay value wins (e.g., hash vs array)
+        #
+        # @param base [Hash] Base hash (lower priority)
+        # @param overlay [Hash] Overlay hash (higher priority)
+        # @return [Hash] Deeply merged result
+        #
+        # @example Simple merge
+        #   deep_merge_hash({a: 1}, {b: 2})
+        #   #=> {a: 1, b: 2}
+        #
+        # @example Nested hash merge (3 levels)
+        #   base = {context: {sections: {code: {files: ["a.rb"]}}}}
+        #   overlay = {context: {sections: {code: {files: ["b.rb"]}}}}
+        #   deep_merge_hash(base, overlay)
+        #   #=> {context: {sections: {code: {files: ["a.rb", "b.rb"]}}}}
+        #
+        # @example Array concatenation with deduplication
+        #   deep_merge_hash({files: ["a.rb", "b.rb"]}, {files: ["b.rb", "c.rb"]})
+        #   #=> {files: ["a.rb", "b.rb", "c.rb"]}  # "b.rb" appears only once
+        #
+        # @example Scalar override
+        #   deep_merge_hash({model: "gpt-4"}, {model: "claude"})
+        #   #=> {model: "claude"}
+        #
+        # @example Type conflict (hash vs array)
+        #   deep_merge_hash({files: {a: 1}}, {files: ["a.rb"]})
+        #   #=> {files: ["a.rb"]}  # overlay array wins over base hash
+        #
+        # @note Array merge preserves order of first occurrence. The concatenation
+        #   is (base + overlay).uniq, so if an element appears in both arrays,
+        #   it will appear at its position in the base array.
+        #
+        # @api private
         def deep_merge_hash(base, overlay)
           result = base.dup
 
           overlay.each do |key, value|
             if result[key].is_a?(Hash) && value.is_a?(Hash)
+              # Recursively merge nested hashes
               result[key] = deep_merge_hash(result[key], value)
             elsif result[key].is_a?(Array) && value.is_a?(Array)
+              # Concatenate arrays and remove duplicates (first occurrence wins)
               result[key] = (result[key] + value).uniq
             else
+              # For scalars or type conflicts, overlay wins
               result[key] = value
             end
           end
@@ -358,12 +356,28 @@ module Ace
 
 
         # Execute ace-context to generate prompts using Ruby API
+        # @param input_file [String] Path to context configuration file
+        # @param output_file [String] Path to write rendered context
+        # @raise [Errors::MissingDependencyError] If ace-context gem not available
+        # @raise [Errors::ContextProcessingError] If context processing fails
+        # @return [true] On success
         def execute_ace_context(input_file, output_file)
+          # Ensure ace-context is available
           begin
             require 'ace/context'
           rescue LoadError => e
-            warn "Failed to load ace-context: #{e.message}" if Ace::Review.debug?
-            return false
+            raise Errors::MissingDependencyError.new(
+              "ace-context",
+              "gem install ace-context"
+            )
+          end
+
+          # Check if Ace::Context is actually defined (might fail silently)
+          unless defined?(Ace::Context)
+            raise Errors::MissingDependencyError.new(
+              "ace-context",
+              "gem install ace-context"
+            )
           end
 
           begin
@@ -372,16 +386,24 @@ module Ace
 
             # Check for errors in metadata
             if context_result.metadata[:error]
-              warn "ace-context failed: #{context_result.metadata[:error]}" if Ace::Review.debug?
-              return false
+              error_message = context_result.metadata[:error]
+              raise Errors::ContextProcessingError.new(
+                "Failed to process context file: #{error_message}",
+                { input_file: input_file, error: error_message }
+              )
             end
 
             # Write the rendered content to output file
             File.write(output_file, context_result.content)
             true
+          rescue Errors::ContextProcessingError
+            # Re-raise our own errors
+            raise
           rescue StandardError => e
-            warn "ace-context failed: #{e.message}" if Ace::Review.debug?
-            false
+            raise Errors::ContextProcessingError.new(
+              "ace-context processing failed: #{e.message}",
+              { input_file: input_file, error: e.message, backtrace: e.backtrace.first(5) }
+            )
           end
         end
 

@@ -157,7 +157,8 @@ module Ace
           return {} unless config_path && File.exist?(config_path)
 
           content = File.read(config_path)
-          YAML.safe_load(content, permitted_classes: [Symbol]) || {}
+          config_data = YAML.safe_load(content, permitted_classes: [Symbol]) || {}
+          deep_stringify_keys(config_data)
         rescue StandardError => e
           warn "Failed to load configuration from #{config_path}: #{e.message}" if Ace::Review.debug?
           {}
@@ -172,7 +173,8 @@ module Ace
 
             if preset_file && File.exist?(preset_file)
               content = File.read(preset_file)
-              return YAML.safe_load(content, permitted_classes: [Symbol])
+              preset_data = YAML.safe_load(content, permitted_classes: [Symbol])
+              return deep_stringify_keys(preset_data)
             end
           else
             # Fallback to direct path if ace-core not available
@@ -181,7 +183,8 @@ module Ace
 
             if File.exist?(preset_file)
               content = File.read(preset_file)
-              return YAML.safe_load(content, permitted_classes: [Symbol])
+              preset_data = YAML.safe_load(content, permitted_classes: [Symbol])
+              return deep_stringify_keys(preset_data)
             end
           end
 
@@ -314,6 +317,41 @@ module Ace
           # Keep existing %{release} expansion if user configured it
           release = current_release
           template.gsub("%{release}", release)
+        end
+
+        # Recursively convert all hash keys to strings
+        #
+        # YAML.safe_load with permitted_classes: [Symbol] can return hashes with
+        # both string and symbol keys. This normalizes all keys to strings for
+        # consistent access patterns throughout the codebase.
+        #
+        # @param value [Object] Value to stringify (Hash, Array, or other)
+        # @return [Object] Value with all hash keys stringified
+        #
+        # @example Simple hash
+        #   deep_stringify_keys({a: 1, b: 2})
+        #   #=> {"a" => 1, "b" => 2}
+        #
+        # @example Nested hash
+        #   deep_stringify_keys({a: {b: {c: 1}}})
+        #   #=> {"a" => {"b" => {"c" => 1}}}
+        #
+        # @example Hash in array
+        #   deep_stringify_keys([{a: 1}, {b: 2}])
+        #   #=> [{"a" => 1}, {"b" => 2}]
+        #
+        # @api private
+        def deep_stringify_keys(value)
+          case value
+          when Hash
+            value.each_with_object({}) do |(k, v), result|
+              result[k.to_s] = deep_stringify_keys(v)
+            end
+          when Array
+            value.map { |v| deep_stringify_keys(v) }
+          else
+            value
+          end
         end
       end
     end

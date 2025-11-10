@@ -7,9 +7,19 @@ rescue LoadError
   # ace-core is optional for basic functionality
 end
 
-require "ace/context"
+# Try to load ace-context if available (required for full functionality)
+begin
+  require "ace/context"
+rescue LoadError
+  # ace-context is required for context processing
+  # Will raise MissingDependencyError when needed
+end
 
 require_relative "review/version"
+require_relative "review/errors"
+
+# Require atoms
+require_relative "review/atoms/context_normalizer"
 
 # Require all necessary components explicitly
 require_relative "review/molecules/context_composer"
@@ -29,8 +39,6 @@ require_relative "review/cli"
 
 module Ace
   module Review
-    class Error < StandardError; end
-
     # Define module namespaces
     module Atoms; end
     module Molecules; end

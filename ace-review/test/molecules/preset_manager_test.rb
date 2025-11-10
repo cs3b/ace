@@ -99,4 +99,61 @@ class PresetManagerTest < AceReviewTest
     assert_includes resolved[:prompt_composition]["focus"], "prompt://focus/quality/security"
     assert_includes resolved[:prompt_composition]["focus"], "quality/performance"
   end
+
+  # deep_stringify_keys tests
+  def test_deep_stringify_keys_simple_hash
+    input = { a: 1, b: 2 }
+    result = @manager.send(:deep_stringify_keys, input)
+
+    assert_equal({ "a" => 1, "b" => 2 }, result)
+  end
+
+  def test_deep_stringify_keys_nested_hash
+    input = { a: { b: { c: 1 } } }
+    result = @manager.send(:deep_stringify_keys, input)
+
+    assert_equal({ "a" => { "b" => { "c" => 1 } } }, result)
+  end
+
+  def test_deep_stringify_keys_hash_in_array
+    input = [{ a: 1 }, { b: 2 }]
+    result = @manager.send(:deep_stringify_keys, input)
+
+    assert_equal([{ "a" => 1 }, { "b" => 2 }], result)
+  end
+
+  def test_deep_stringify_keys_mixed_keys
+    input = { :symbol_key => 1, "string_key" => 2 }
+    result = @manager.send(:deep_stringify_keys, input)
+
+    assert_equal({ "symbol_key" => 1, "string_key" => 2 }, result)
+  end
+
+  def test_deep_stringify_keys_complex_nested
+    input = {
+      :context => {
+        :sections => [
+          { :name => "code", :files => ["a.rb"] },
+          { :name => "docs", :files => ["README.md"] }
+        ]
+      }
+    }
+    result = @manager.send(:deep_stringify_keys, input)
+
+    expected = {
+      "context" => {
+        "sections" => [
+          { "name" => "code", "files" => ["a.rb"] },
+          { "name" => "docs", "files" => ["README.md"] }
+        ]
+      }
+    }
+    assert_equal expected, result
+  end
+
+  def test_deep_stringify_keys_non_hash_passthrough
+    assert_equal "string", @manager.send(:deep_stringify_keys, "string")
+    assert_equal 123, @manager.send(:deep_stringify_keys, 123)
+    assert_equal nil, @manager.send(:deep_stringify_keys, nil)
+  end
 end
