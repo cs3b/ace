@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.120] - 2025-11-10
+
+### Technical
+- **ace-context v0.18.0**: Minor version bump with context.base support and file-based config parity
+  - Added `context.base` field for generic base content handling
+  - Fixed file-based configs to process sections and formatting same as presets
+  - Enhanced ace-review integration with full section content generation
+
 ## [0.9.119] - 2025-11-10
 
 ### Added
