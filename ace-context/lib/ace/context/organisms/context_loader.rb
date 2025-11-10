@@ -10,6 +10,8 @@ require 'ace/core/atoms/command_executor'
 require 'ace/core/atoms/template_parser'
 require 'ace/core/atoms/file_reader'
 require_relative '../molecules/preset_manager'
+require_relative '../molecules/section_processor'
+require_relative '../molecules/section_formatter'
 require_relative '../models/context_data'
 require_relative '../atoms/git_extractor'
 
@@ -21,6 +23,7 @@ module Ace
         def initialize(options = {})
           @options = options
           @preset_manager = Molecules::PresetManager.new
+          @section_processor = Molecules::SectionProcessor.new
           @merger = Ace::Core::Molecules::ContextMerger.new
           @file_aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size],
@@ -59,10 +62,22 @@ module Ace
             context.metadata[:composed_from] = preset[:composed_from]
           end
 
-          # Determine format - use markdown-xml for embedded sources, markdown otherwise
+          # Determine format - respect explicit format requests but default to markdown-xml for embedded sources
           context_config = preset[:context] || {}
-          default_format = context_config['embed_document_source'] ? 'markdown-xml' : 'markdown'
-          format = preset[:format] || params['format'] || params[:format] || merged_options[:format] || default_format
+
+          # Check for explicit format request in preset or params
+          explicit_format = preset[:format] || params['format'] || params[:format] || merged_options[:format]
+
+          if explicit_format
+            # Use the explicitly requested format
+            format = explicit_format
+          elsif context_config['embed_document_source']
+            # Default to markdown-xml format when embed_document_source is true and no explicit format requested
+            format = 'markdown-xml'
+          else
+            # Fallback to markdown
+            format = 'markdown'
+          end
           format_context(context, format)
 
           context
@@ -401,6 +416,21 @@ module Ace
             # Process the config (loads embedded files from context.files)
             context = process_template_config(config)
 
+            # Process base content if present (for template files with context.base)
+            process_base_content(context, config, @options)
+
+            # Process sections if present (same as preset loading)
+            preset_like_config = { 'context' => config }
+            if @section_processor.has_sections?(preset_like_config)
+              sections = @section_processor.process_sections(preset_like_config, @preset_manager)
+              context.sections = sections
+
+              # Process content for each section
+              sections.each do |section_name, section_data|
+                process_section_content(context, section_name, section_data, @options, config)
+              end
+            end
+
             # Replace metadata with original frontmatter (keep it unmodified)
             # Convert string keys to symbols for consistency
             context.metadata = {}
@@ -422,6 +452,10 @@ module Ace
               format = config['format'] || @options[:format] || 'markdown-xml'
               return format_context(context, format)
             end
+
+            # Format context before returning (same as preset loading)
+            format = config['format'] || @options[:format] || 'markdown-xml'
+            format_context(context, format)
 
             return context
           end
@@ -494,48 +528,32 @@ module Ace
             metadata: preset[:metadata] || {}
           )
 
-          # Process files from context configuration
-          if context_config['files'] && context_config['files'].any?
-            # Resolve any protocol references (e.g., wfi://workflow-name)
-            resolved_files = context_config['files'].map do |file_ref|
-              resolve_file_reference(file_ref)
-            end.compact
+          # Process base content if present
+          process_base_content(context, context_config, options)
 
-            aggregator = Ace::Core::Molecules::FileAggregator.new(
-              max_size: options[:max_size] || options['max_size'],
-              base_dir: options[:base_dir] || project_root,
-              exclude: context_config['exclude'] || []
-            )
+          # Process sections if present
+          if @section_processor.has_sections?(preset)
+            sections = @section_processor.process_sections(preset, @preset_manager)
+            context.sections = sections
 
-            # Use aggregate to handle glob patterns
-            result = aggregator.aggregate(resolved_files)
+            # Process content for each section
+            sections.each do |section_name, section_data|
+              process_section_content(context, section_name, section_data, options, context_config)
+            end
+          else
+            # Migrate legacy configuration to sections if needed
+            if should_migrate_to_sections?(context_config)
+              migrated_config = @section_processor.migrate_legacy_to_sections(preset)
+              sections = @section_processor.process_sections(migrated_config, @preset_manager)
+              context.sections = sections
 
-            # Add files to context if embed_document_source is true
-            if context_config['embed_document_source']
-              result[:files].each do |file_info|
-                context.add_file(file_info[:path], file_info[:content])
+              # Process migrated sections
+              sections.each do |section_name, section_data|
+                process_section_content(context, section_name, section_data, options, context_config)
               end
-            end
-
-            # Add errors if any
-            result[:errors].each do |error|
-              context.metadata[:errors] ||= []
-              context.metadata[:errors] << error
-            end
-          end
-
-          # Process commands
-          if context_config['commands'] && context_config['commands'].any?
-            timeout = options[:timeout] || options['timeout'] || 30
-            context_config['commands'].each do |command|
-              cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
-              context.commands ||= []
-              context.commands << {
-                command: command,
-                output: cmd_result[:stdout],
-                success: cmd_result[:success],
-                error: cmd_result[:error]
-              }
+            else
+              # Legacy processing for non-section configurations
+              process_legacy_content(context, context_config, options)
             end
           end
 
@@ -547,93 +565,6 @@ module Ace
             if preset[:body] && !preset[:body].empty?
               context.metadata[:preset_content] = preset[:body]
             end
-          end
-
-          context
-        end
-
-        # Load a file and treat it as a preset-like configuration
-        # Supports YAML files and markdown with frontmatter
-        def load_file_as_preset(path)
-          unless File.exist?(path)
-            return Models::ContextData.new.tap do |c|
-              c.metadata[:error] = "File not found: #{path}"
-              c.content = "Error: File not found: #{path}"
-            end
-          end
-
-          content = File.read(path)
-          config = {}
-          body = nil  # Will contain markdown body if file has frontmatter
-
-          # Check if it's a YAML file
-          if path.match?(/\.ya?ml$/i)
-            begin
-              yaml_content = YAML.safe_load(content, aliases: true, permitted_classes: [Symbol])
-              config = yaml_content.is_a?(Hash) ? yaml_content : {}
-            rescue Psych::SyntaxError => e
-              return Models::ContextData.new.tap do |c|
-                c.metadata[:error] = "Invalid YAML in #{path}: #{e.message}"
-                c.content = "Error: Invalid YAML: #{e.message}"
-              end
-            end
-          elsif has_frontmatter?(path)
-            # Extract frontmatter from markdown file
-            if content.match(/\A---\s*\n(.*?)\n---\s*\n(.*)\z/m)
-              frontmatter_yaml = $1
-              body = $2  # Extract body content after frontmatter
-              begin
-                frontmatter = YAML.safe_load(frontmatter_yaml, aliases: true, permitted_classes: [Symbol])
-                frontmatter = {} unless frontmatter.is_a?(Hash)
-
-                # Use context key if present, otherwise use frontmatter directly
-                config = frontmatter['context'] || frontmatter
-              rescue Psych::SyntaxError => e
-                return Models::ContextData.new.tap do |c|
-                  c.metadata[:error] = "Invalid YAML frontmatter in #{path}: #{e.message}"
-                  c.content = "Error: Invalid YAML frontmatter: #{e.message}"
-                end
-              end
-            end
-          else
-            # Not a YAML file or markdown with frontmatter - treat as plain file
-            return load_file(path)
-          end
-
-          # Extract params and merge into options
-          params = config['params'] || config[:params] || {}
-          merged_options = @options.merge(params)
-          # Ensure base_dir is always project root for file path resolution
-          merged_options[:base_dir] = project_root
-
-          # Build a preset-like structure
-          preset_data = {
-            success: true,
-            context: config,
-            output: config['output'] || config[:output] || params['output'] || params[:output],
-            name: File.basename(path, '.*'),
-            source_file: path,
-            body: body || ""  # Include body from markdown or empty string
-          }
-
-          # Check for preset composition in file
-          if config['presets'] || config[:presets]
-            preset_data[:presets] = Array(config['presets'] || config[:presets])
-            # Load with composition
-            preset_data = compose_file_with_presets(preset_data)
-          end
-
-          # Load from the preset-like config
-          context = load_from_preset_config(preset_data, merged_options)
-          context.metadata[:loaded_from_file] = true
-          context.metadata[:file_path] = path
-          context.metadata[:source_type] = 'file'
-          context.metadata[:output] = preset_data[:output] if preset_data[:output]
-
-          # Format context with files if embed_document_source is true
-          if config['embed_document_source']
-            format = config['params']&.[]('format') || config['format'] || merged_options[:format] || 'markdown-xml'
-            return format_context(context, format)
           end
 
           context
@@ -878,21 +809,27 @@ module Ace
         def format_context(context, format)
           case format
           when 'markdown', 'yaml', 'xml', 'markdown-xml', 'json'
-            # Use OutputFormatter for all formats
-            data = {
-              files: context.files,
-              metadata: context.metadata.dup,
-              commands: context.commands,
-              content: context.content
-            }
+            # Use SectionFormatter if context has sections, otherwise fallback to OutputFormatter
+            if context.has_sections?
+              formatter = Molecules::SectionFormatter.new(format)
+              context.content = formatter.format_with_sections(context)
+            else
+              # Use OutputFormatter for legacy contexts
+              data = {
+                files: context.files,
+                metadata: context.metadata.dup,
+                commands: context.commands,
+                content: context.content
+              }
 
-            # Include preset_name at the top level for YAML format
-            if context.metadata[:preset_name]
-              data[:preset_name] = context.metadata[:preset_name]
+              # Include preset_name at the top level for YAML format
+              if context.metadata[:preset_name]
+                data[:preset_name] = context.metadata[:preset_name]
+              end
+
+              formatter = Ace::Core::Molecules::OutputFormatter.new(format)
+              context.content = formatter.format(data)
             end
-
-            formatter = Ace::Core::Molecules::OutputFormatter.new(format)
-            context.content = formatter.format(data)
             context
           else
             context
@@ -934,6 +871,246 @@ module Ace
             # Regular file path or glob pattern
             file_ref
           end
+        end
+
+        # Process content for a specific section
+        def process_section_content(context, section_name, section_data, options, context_config = {})
+          # Process all content types that are present in the section
+          if has_files_content?(section_data)
+            process_files_section(context, section_name, section_data, options, context_config)
+          end
+
+          if has_commands_content?(section_data)
+            process_commands_section(context, section_name, section_data, options, context_config)
+          end
+
+          if has_diffs_content?(section_data)
+            process_diffs_section(context, section_name, section_data, options)
+          end
+
+          if has_content_content?(section_data)
+            process_inline_content_section(context, section_name, section_data, options)
+          end
+        end
+
+        # Process files section content
+        def process_files_section(context, section_name, section_data, options, context_config = {})
+          files = section_data[:files] || section_data['files'] || []
+          return unless files.any?
+
+          # Resolve any protocol references (e.g., wfi://workflow-name)
+          resolved_files = files.map do |file_ref|
+            resolve_file_reference(file_ref)
+          end.compact
+
+          aggregator = Ace::Core::Molecules::FileAggregator.new(
+            max_size: options[:max_size] || options['max_size'],
+            base_dir: options[:base_dir] || project_root,
+            exclude: section_data[:exclude] || section_data['exclude'] || []
+          )
+
+          # Check if any patterns contain glob characters
+          has_globs = resolved_files.any? { |f| f.include?('*') || f.include?('?') || f.include?('[') }
+
+          # Use aggregate for globs, aggregate_files for literal paths to preserve order
+          result = if has_globs
+                     aggregator.aggregate(resolved_files)
+                   else
+                     aggregator.aggregate_files(resolved_files)
+                   end
+
+          # Store section files in section data
+          section_data[:_processed_files] = result[:files]
+
+          # Add files to context if embed_document_source is true
+          if context_config['embed_document_source']
+            result[:files].each do |file_info|
+              context.add_file(file_info[:path], file_info[:content])
+            end
+          end
+
+          # Add errors if any
+          result[:errors].each do |error|
+            context.metadata[:errors] ||= []
+            context.metadata[:errors] << "Section '#{section_name}': #{error}"
+          end
+        end
+
+        # Process commands section content
+        def process_commands_section(context, section_name, section_data, options, context_config = {})
+          commands = section_data[:commands] || section_data['commands'] || []
+          return unless commands.any?
+
+          timeout = options[:timeout] || options['timeout'] || 30
+          processed_commands = []
+
+          commands.each do |command|
+            cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
+            processed_commands << {
+              command: command,
+              output: cmd_result[:stdout],
+              success: cmd_result[:success],
+              error: cmd_result[:error]
+            }
+          end
+
+          # Store processed commands in section data
+          section_data[:_processed_commands] = processed_commands
+
+          # Add commands to context (always, like in legacy processing)
+          context.commands = (context.commands || []) + processed_commands
+        end
+
+        # Process diffs section content
+        def process_diffs_section(context, section_name, section_data, options)
+          ranges = section_data[:ranges] || section_data['ranges'] || []
+          return unless ranges.any?
+
+          processed_diffs = []
+
+          ranges.each do |diff_range|
+            result = Atoms::GitExtractor.extract_diff(diff_range)
+            if result[:success]
+              processed_diffs << {
+                range: diff_range,
+                output: result[:output],
+                success: true
+              }
+            else
+              processed_diffs << {
+                range: diff_range,
+                output: "",
+                success: false,
+                error: result[:error]
+              }
+              context.metadata[:errors] ||= []
+              context.metadata[:errors] << "Section '#{section_name}': Git diff failed for '#{diff_range}': #{result[:error]}"
+            end
+          end
+
+          # Store processed diffs in section data
+          section_data[:_processed_diffs] = processed_diffs
+        end
+
+        # Process inline content section
+        def process_inline_content_section(context, section_name, section_data, options)
+          content = section_data[:content] || section_data['content']
+          # Store content in section data
+          section_data[:_processed_content] = content if content
+        end
+
+        # Process legacy content (non-section configurations)
+        def process_legacy_content(context, context_config, options)
+          # Process files from context configuration
+          if context_config['files'] && context_config['files'].any?
+            # Resolve any protocol references (e.g., wfi://workflow-name)
+            resolved_files = context_config['files'].map do |file_ref|
+              resolve_file_reference(file_ref)
+            end.compact
+
+            aggregator = Ace::Core::Molecules::FileAggregator.new(
+              max_size: options[:max_size] || options['max_size'],
+              base_dir: options[:base_dir] || project_root,
+              exclude: context_config['exclude'] || []
+            )
+
+            # Use aggregate to handle glob patterns
+            result = aggregator.aggregate(resolved_files)
+
+            # Add files to context if embed_document_source is true
+            if context_config['embed_document_source']
+              result[:files].each do |file_info|
+                context.add_file(file_info[:path], file_info[:content])
+              end
+            end
+
+            # Add errors if any
+            result[:errors].each do |error|
+              context.metadata[:errors] ||= []
+              context.metadata[:errors] << error
+            end
+          end
+
+          # Process commands
+          if context_config['commands'] && context_config['commands'].any?
+            timeout = options[:timeout] || options['timeout'] || 30
+            context_config['commands'].each do |command|
+              cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
+              context.commands ||= []
+              context.commands << {
+                command: command,
+                output: cmd_result[:stdout],
+                success: cmd_result[:success],
+                error: cmd_result[:error]
+              }
+            end
+          end
+        end
+
+        # Check if configuration should be migrated to sections
+        def should_migrate_to_sections?(context_config)
+          # Auto-migrate if there are files, commands, or diffs but no sections
+          return false if @section_processor.has_sections?({ 'context' => context_config })
+
+          (context_config['files'] && context_config['files'].any?) ||
+          (context_config['commands'] && context_config['commands'].any?) ||
+          (context_config['diffs'] && context_config['diffs'].any?) ||
+          (context_config['ranges'] && context_config['ranges'].any?)
+        end
+
+        # Process base content from context.base field
+        def process_base_content(context, context_config, options)
+          base_ref = context_config['base'] || context_config[:base]
+          return unless base_ref && !base_ref.to_s.strip.empty?
+
+          # Resolve protocol reference
+          resolved_path = resolve_file_reference(base_ref)
+          unless resolved_path
+            context.metadata[:base_error] = "Failed to resolve base reference: #{base_ref}"
+            warn "Warning: Failed to resolve base reference: #{base_ref}" if options[:debug]
+            return
+          end
+
+          # Check if file exists
+          unless File.exist?(resolved_path)
+            context.metadata[:base_error] = "Base file not found: #{resolved_path}"
+            warn "Warning: Base file not found: #{resolved_path}" if options[:debug]
+            return
+          end
+
+          # Load base content
+          base_content = File.read(resolved_path).strip
+          if base_content.empty?
+            warn "Warning: Base file is empty: #{resolved_path}" if options[:debug]
+          end
+
+          # Store base content as primary content
+          context.content = base_content
+          context.metadata[:base_path] = resolved_path
+          context.metadata[:base_ref] = base_ref
+        end
+
+        # Helper methods to detect content types in sections
+
+        # Checks if section has files content
+        def has_files_content?(section_data)
+          !!(section_data[:files] || section_data['files'])
+        end
+
+        # Checks if section has commands content
+        def has_commands_content?(section_data)
+          !!(section_data[:commands] || section_data['commands'])
+        end
+
+        # Checks if section has diffs content
+        def has_diffs_content?(section_data)
+          !!(section_data[:ranges] || section_data['ranges'] ||
+                section_data[:diffs] || section_data['diffs'])
+        end
+
+        # Checks if section has inline content
+        def has_content_content?(section_data)
+          !!(section_data[:content] || section_data['content'])
         end
 
         def project_root

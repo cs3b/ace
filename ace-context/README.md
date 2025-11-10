@@ -11,7 +11,7 @@ gem install ace-context
 Or add to your Gemfile:
 
 ```ruby
-gem 'ace-context', '~> 0.11.0'
+gem 'ace-context', '~> 0.18.0'
 ```
 
 ## Usage
@@ -183,19 +183,20 @@ context:
     - date
 ```
 
-**Diffs**: Include git diff output for code review (delegates to ace-git-diff)
+**Diffs**: Include git diff output for code review. We recommend the `diff` key for its flexibility.
 ```yaml
 context:
-  # Both diff: and diffs: keys work identically
+  # Recommended complex format
   diff:
     ranges:
-      - origin/main...HEAD   # Changes in current branch
-      - HEAD~5..HEAD        # Last 5 commits
+      - "origin/main...HEAD"
+    # 'since' is a convenient alternative to 'ranges'
+    # since: "origin/main" # Expands to "origin/main...HEAD"
     paths: ["lib/**/*.rb"]   # Optional: filter by paths
 
-  # Legacy format (deprecated):
+  # A simpler format is also supported for basic use cases:
   # diffs:
-  #   - origin/main...HEAD
+  #   - "origin/main...HEAD"
 ```
 
 **Presets**: Include other ace-context presets

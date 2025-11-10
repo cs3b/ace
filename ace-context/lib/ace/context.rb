@@ -83,15 +83,6 @@ module Ace
         loader.load_multiple_inputs(preset_names, file_paths, options)
       end
 
-      # Load a file as a preset-like configuration
-      # @param path [String] Path to configuration file (YAML or markdown with frontmatter)
-      # @param options [Hash] Additional options
-      # @return [Models::ContextData] Loaded context data
-      def load_file_as_preset(path, options = {})
-        loader = Organisms::ContextLoader.new(options)
-        loader.load_file_as_preset(path)
-      end
-
       # Write context output to file with optional chunking
       # @param context [Models::ContextData] Context to write
       # @param output_path [String] Output file path

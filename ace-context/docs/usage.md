@@ -1,0 +1,565 @@
+# Command-Line Usage Guide
+
+This guide explains how to use the ace-context command-line interface to load, process, and output project contexts.
+
+## Basic Usage
+
+```bash
+ace-context <preset-name> [options]
+```
+
+The simplest usage loads a preset by name:
+
+```bash
+# Load the 'project-base' preset
+ace-context project-base
+
+# Load the 'code-review' preset
+ace-context code-review
+```
+
+## Discovering Presets
+
+### Finding Available Presets
+
+Presets are stored in `~/.ace/context/presets/` (or `ACE_CONTEXT_DIR/presets/`). You can list available presets:
+
+```bash
+# List all available presets
+ls ~/.ace/context/presets/
+
+# Show preset details
+cat ~/.ace/context/presets/project-base.md
+
+# Check if a preset exists
+test -f ~/.ace/context/presets/security-review.md && echo "Preset exists" || echo "Preset not found"
+```
+
+### Understanding Preset Errors
+
+When you reference a non-existent preset, ace-context provides helpful error messages:
+
+```bash
+ace-context unknown-preset
+# Error: Preset 'unknown-preset' not found. Available presets: project-base, code-review, security-review, development
+```
+
+The error message includes:
+- The preset name that couldn't be found
+- A list of all available presets to help you choose the correct one
+
+### Custom Preset Locations
+
+You can override the default preset location using environment variables:
+
+```bash
+# Use custom context directory
+export ACE_CONTEXT_DIR="/path/to/my/contexts"
+ace-context my-custom-preset
+
+# Check current preset directory
+echo "Presets directory: ${ACE_CONTEXT_DIR:-$HOME/.ace/context/presets}"
+```
+
+## Command-Line Options
+
+### Output Options
+
+#### `--output`, `-o`
+Specify output file location.
+
+```bash
+# Save to specific file
+ace-context project-base --output context.md
+
+# Save to cache directory (default behavior)
+ace-context project-base --output cache
+
+# Short form
+ace-context project-base -o context.md
+```
+
+#### `--format`, `-F`
+Specify output format.
+
+```bash
+# Markdown with XML-style tags (recommended for sections)
+ace-context project-base --format markdown-xml
+
+# Standard markdown
+ace-context project-base --format markdown
+
+# YAML format
+ace-context project-base --format yaml
+
+# JSON format
+ace-context project-base --format json
+
+# Short form
+ace-context project-base -F markdown-xml
+```
+
+### Input Options
+
+#### `--preset`, `-p`
+Load specific preset(s). Can be used multiple times.
+
+```bash
+# Load single preset
+ace-context --preset project-base
+
+# Load multiple presets (composed together)
+ace-context --preset base --preset development --preset testing
+
+# Short form
+ace-context -p base -p development
+```
+
+#### `--file`, `-f`
+Load configuration from YAML or markdown file with frontmatter.
+
+```bash
+# Load from YAML file
+ace-context --file config/project.yml
+
+# Load from markdown file with frontmatter
+ace-context --file docs/project-config.md
+
+# Load multiple files
+ace-context --file base.yml --file overrides.md
+
+# Short form
+ace-context -f config.yml
+```
+
+#### Positional Arguments
+You can also specify presets as positional arguments:
+
+```bash
+# These are equivalent:
+ace-context project-base
+ace-context --preset project-base
+```
+
+### Display Options
+
+#### `--organize-by-sections`
+Create separate files for each section when using section-based presets.
+
+```bash
+# Create separate section files
+ace-context code-review --organize-by-sections --output context.md
+
+# Results in:
+# - context.md (main file with all sections)
+# - context-focus.md (files section)
+# - context-style.md (style section)
+# - context-diff.md (diff section)
+# - etc.
+```
+
+#### `--inspect-config`
+Show the resolved configuration without processing content.
+
+```bash
+# Show what will be loaded
+ace-context project-base --inspect-config
+```
+
+### Processing Options
+
+#### `--max-size`
+Maximum output size in bytes.
+
+```bash
+# Limit output to 5MB
+ace-context project-base --max-size 5242880
+```
+
+#### `--timeout`
+Command execution timeout in seconds.
+
+```bash
+# Set 60-second timeout
+ace-context project-base --timeout 60
+```
+
+## Advanced Usage
+
+### Multiple Input Types
+
+You can combine different input types:
+
+```bash
+# Combine preset with file configuration
+ace-context --preset base --file project-overrides.yml
+
+# Mix preset with inline YAML
+ace-context project-base --context '{"files": ["extra-file.md"]}'
+```
+
+### Protocol-based Loading
+
+Load contexts using protocols (requires ace-nav integration):
+
+```bash
+# Load workflow file
+ace-context wfi://code-review-workflow
+
+# Load guide file
+ace-context guide://development-guide
+
+# Load task file
+ace-context task://planning-session
+```
+
+### Auto-Detection
+
+ace-context automatically detects input types:
+
+```bash
+# Preset name
+ace-context project-base
+
+# File path (if file exists)
+ace-context config/project.yml
+
+# Protocol URL
+ace-context wfi://my-workflow
+
+# Inline YAML (if contains YAML syntax)
+ace-context '{"files": ["README.md"]}'
+```
+
+## Common Workflows
+
+### Code Review Workflow
+
+```bash
+# Basic code review
+ace-context code-review
+
+# Code review with security focus
+ace-context security-review
+
+# Custom code review to specific file
+ace-context --preset base --context '{"files": ["src/auth/**/*.rb"]}' --format markdown-xml
+
+# Save code review to file
+ace-context code-review --output review.md --format markdown-xml
+```
+
+### Project Setup Workflow
+
+```bash
+# Complete project context
+ace-context project-base
+
+# Development setup
+ace-context development
+
+# Testing setup
+ace-context testing
+
+# Project overview in YAML format
+ace-context project-base --format yaml
+```
+
+### Documentation Workflow
+
+```bash
+# Documentation review
+ace-context documentation-review
+
+# Generate project documentation context
+ace-context --preset docs --format markdown-xml --output docs-context.md
+
+# Include workflow files
+ace-context wfi://documentation-workflow --format markdown
+```
+
+### Troubleshooting Workflow
+
+```bash
+# Check configuration without processing
+ace-context project-base --inspect-config
+
+# Quick system check
+ace-context --preset system-check --format json
+
+# Verbose output with larger timeout
+ace-context project-base --timeout 120 --max-size 20971520
+```
+
+## Output Formats
+
+### Markdown Format (Default)
+
+```bash
+ace-context project-base
+```
+
+Produces standard markdown with code blocks:
+
+```markdown
+## Files
+
+### README.md
+```markdown
+# Project Title
+...
+```
+
+### Commands
+
+### pwd
+```
+/Users/username/project
+```
+```
+
+### Markdown-XML Format
+
+```bash
+ace-context project-base --format markdown-xml
+```
+
+Produces markdown with XML-style tags:
+
+```markdown
+## Files
+
+<files>
+  <file path="README.md" language="markdown">
+# Project Title
+...
+  </file>
+</files>
+
+## Commands
+
+<commands>
+  <output command="pwd">
+/Users/username/project
+  </output>
+</commands>
+```
+
+### YAML Format
+
+```bash
+ace-context project-base --format yaml
+```
+
+Produces structured YAML output:
+
+```yaml
+preset_name: project-base
+files:
+  - path: README.md
+    content: |
+      # Project Title
+      ...
+metadata:
+    generated_at: 2025-11-06T15:30:00Z
+    total_files: 5
+```
+
+### JSON Format
+
+```bash
+ace-context project-base --format json
+```
+
+Produces JSON output:
+
+```json
+{
+  "preset_name": "project-base",
+  "files": [
+    {
+      "path": "README.md",
+      "content": "# Project Title\n..."
+    }
+  ],
+  "metadata": {
+    "generated_at": "2025-11-06T15:30:00Z",
+    "total_files": 5
+  }
+}
+```
+
+## File Organization
+
+### Section-Based Organization
+
+When using section-based presets with `--organize-by-sections`:
+
+```bash
+ace-context code-review --organize-by-sections --output review.md
+```
+
+Creates multiple files:
+- `review.md` - Main file with all sections
+- `review-focus.md` - Files under review
+- `review-style.md` - Style guidelines
+- `review-diff.md` - Recent changes
+- `review-context.md` - System context
+
+### Cache Organization
+
+```bash
+# Output to cache (default)
+ace-context project-base
+
+# Cache files are organized by preset name:
+# ~/.ace/cache/contexts/project-base-20251106-153000.md
+```
+
+## Environment Variables
+
+### `ACE_CONTEXT_DIR`
+Override default context directory.
+
+```bash
+export ACE_CONTEXT_DIR="/path/to/my/contexts"
+ace-context my-preset
+```
+
+### `ACE_CACHE_DIR`
+Override default cache directory.
+
+```bash
+export ACE_CACHE_DIR="/path/to/my/cache"
+ace-context project-base --output cache
+```
+
+### `ACE_DEBUG`
+Enable debug output.
+
+```bash
+export ACE_DEBUG=1
+ace-context project-base
+```
+
+## Exit Codes
+
+- `0` - Success
+- `1` - General error
+- `2` - Configuration error
+- `3` - File not found
+- `4` - Permission denied
+- `5` - Timeout exceeded
+- `6` - Size limit exceeded
+
+## Troubleshooting
+
+### Common Issues
+
+#### Preset Not Found
+```bash
+ace-context unknown-preset
+# Error: Preset 'unknown-preset' not found
+```
+
+**Solution**: Check available presets with `ace-context --help` or verify preset name.
+
+#### File Not Found
+```bash
+ace-context --file missing-config.yml
+# Error: File not found: missing-config.yml
+```
+
+**Solution**: Verify file path and permissions.
+
+#### Timeout Exceeded
+```bash
+ace-context slow-preset
+# Error: Command execution timeout exceeded
+```
+
+**Solution**: Increase timeout with `--timeout` option.
+
+#### Size Limit Exceeded
+```bash
+ace-context large-preset
+# Error: Output size limit exceeded
+```
+
+**Solution**: Increase limit with `--max-size` or refine file patterns.
+
+### Debug Mode
+
+Enable debug output for troubleshooting:
+
+```bash
+export ACE_DEBUG=1
+ace-context project-base
+```
+
+Debug output includes:
+- Configuration resolution steps
+- File discovery and processing
+- Command execution details
+- Error stack traces
+
+### Configuration Inspection
+
+Use `--inspect-config` to understand what will be loaded:
+
+```bash
+ace-context project-base --inspect-config
+```
+
+Shows:
+- Resolved preset configuration
+- File patterns that will be used
+- Commands that will be executed
+- Output format settings
+
+## Integration Examples
+
+### Git Hooks
+
+```bash
+#!/bin/sh
+# pre-commit hook
+echo "Generating pre-commit context..."
+ace-context code-review --format markdown-xml --output .git/context.md
+```
+
+### CI/CD Pipeline
+
+```bash
+#!/bin/bash
+# CI pipeline step
+echo "Generating build context..."
+ace-context ci-build --format json --output build-context.json
+
+echo "Running security scan..."
+ace-context security-review --format markdown --output security-report.md
+```
+
+### Development Scripts
+
+```bash
+#!/bin/bash
+# dev-setup.sh
+echo "Setting up development environment..."
+
+# Generate project context
+ace-context development --output dev-context.md
+
+# Show system info
+ace-context system-check --format yaml
+```
+
+## Performance Tips
+
+1. **Use Specific Patterns**: Avoid overly broad file patterns
+2. **Set Appropriate Timeouts**: Configure based on command complexity
+3. **Limit Output Size**: Use `--max-size` for large projects
+4. **Cache Appropriately**: Use cache for frequently used contexts
+5. **Choose Right Format**: Use `markdown` for speed, `markdown-xml` for structure
+
+This usage guide covers all aspects of the ace-context command-line interface. Use these patterns and options to effectively integrate ace-context into your development workflow.

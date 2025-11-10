@@ -74,7 +74,7 @@ class ContextLoaderTest < AceTestCase
     context = loader.load_preset("nonexistent")
 
     assert_equal "nonexistent", context.preset_name
-    assert_equal "Preset 'nonexistent' not found", context.metadata[:error]
+    assert_match(/Preset 'nonexistent' not found.*Available presets:/, context.metadata[:error])
   end
 
   def test_applies_exclusions

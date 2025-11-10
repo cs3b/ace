@@ -1,0 +1,225 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class ContextExtractorTest < AceReviewTest
+  def setup
+    @extractor = Ace::Review::Molecules::ContextExtractor.new
+    @temp_dir = Dir.mktmpdir
+  end
+
+  def teardown
+    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
+  end
+
+  def test_extract_none_returns_empty_string
+    result = @extractor.extract(nil)
+    assert_equal "", result
+
+    result = @extractor.extract("none")
+    assert_equal "", result
+
+    result = @extractor.extract(false)
+    assert_equal "", result
+  end
+
+  def test_extract_project_context_without_cache_dir
+    # Create some mock project docs
+    readme_path = File.join(@temp_dir, "README.md")
+    File.write(readme_path, "# Test Project")
+
+    Dir.chdir(@temp_dir) do
+      result = @extractor.extract("project")
+      assert_match(/Test Project/, result)
+    end
+  end
+
+  def test_extract_project_context_with_cache_dir
+    # Create some mock project docs
+    readme_path = File.join(@temp_dir, "README.md")
+    File.write(readme_path, "# Test Project")
+
+    cache_dir = File.join(@temp_dir, "cache")
+    FileUtils.mkdir_p(cache_dir)
+
+    Dir.chdir(@temp_dir) do
+      result = @extractor.extract("project", cache_dir)
+      assert_match(/Test Project/, result)
+
+      # Verify context.md was created
+      context_file = File.join(cache_dir, "context.md")
+      assert File.exist?(context_file)
+
+      context_content = File.read(context_file)
+      assert_match(/^---\ncontext:/, context_content)
+    end
+  end
+
+  def test_extract_from_string_yaml_config
+    yaml_config = {
+      "files" => ["test.rb"],
+      "presets" => ["project"]
+    }.to_yaml
+
+    result = @extractor.extract(yaml_config)
+    refute_empty result
+  end
+
+  def test_extract_from_string_yaml_config_with_cache
+    yaml_config = {
+      "files" => ["test.rb"],
+      "presets" => ["project"]
+    }.to_yaml
+
+    cache_dir = File.join(@temp_dir, "cache")
+    FileUtils.mkdir_p(cache_dir)
+
+    result = @extractor.extract(yaml_config, cache_dir)
+    refute_empty result
+
+    # Verify context.md was created
+    context_file = File.join(cache_dir, "context.md")
+    assert File.exist?(context_file)
+  end
+
+  def test_extract_from_string_file_path
+    # Create a test file
+    test_file = File.join(@temp_dir, "test.rb")
+    File.write(test_file, "class Test; end")
+
+    Dir.chdir(@temp_dir) do
+      result = @extractor.extract("test.rb")
+      refute_empty result
+    end
+  end
+
+  def test_extract_from_string_file_path_with_cache
+    # Create a test file
+    test_file = File.join(@temp_dir, "test.rb")
+    File.write(test_file, "class Test; end")
+
+    cache_dir = File.join(@temp_dir, "cache")
+    FileUtils.mkdir_p(cache_dir)
+
+    Dir.chdir(@temp_dir) do
+      result = @extractor.extract("test.rb", cache_dir)
+      refute_empty result
+
+      # Verify context.md was created
+      context_file = File.join(cache_dir, "context.md")
+      assert File.exist?(context_file)
+    end
+  end
+
+  def test_extract_from_hash_config
+    config = {
+      "files" => ["test.rb"],
+      "presets" => ["project"]
+    }
+
+    result = @extractor.extract(config)
+    refute_empty result
+  end
+
+  def test_extract_from_hash_config_with_cache
+    config = {
+      "files" => ["test.rb"],
+      "presets" => ["project"]
+    }
+
+    cache_dir = File.join(@temp_dir, "cache")
+    FileUtils.mkdir_p(cache_dir)
+
+    result = @extractor.extract(config, cache_dir)
+    refute_empty result
+
+    # Verify context.md was created
+    context_file = File.join(cache_dir, "context.md")
+    assert File.exist?(context_file)
+
+    context_content = File.read(context_file)
+    assert_match(/^---\ncontext:/, context_content)
+    assert_match(/files:\s*\n\s*- test\.rb/, context_content)
+    assert_match(/presets:\s*\n\s*- project/, context_content)
+  end
+
+  def test_extract_with_preset_context
+    # Mock preset manager to return context
+    preset_manager_mock = Minitest::Mock.new
+    preset_manager_mock.expect(:load_preset, { "context" => { "files" => ["test.rb"] } }, ["test-preset"])
+
+    @extractor.instance_variable_set(:@preset_manager, preset_manager_mock)
+
+    result = @extractor.extract("test-preset")
+    refute_empty result
+
+    preset_manager_mock.verify
+  end
+
+  def test_extract_with_preset_reference_in_hash
+    # Mock preset manager to return context
+    preset_manager_mock = Minitest::Mock.new
+    preset_manager_mock.expect(:load_preset, { "context" => { "files" => ["test.rb"] } }, ["test-preset"])
+
+    @extractor.instance_variable_set(:@preset_manager, preset_manager_mock)
+
+    config = { "preset" => "test-preset" }
+    result = @extractor.extract(config)
+    refute_empty result
+
+    preset_manager_mock.verify
+  end
+
+  def test_extract_raises_error_on_context_composer_failure
+    # Mock ContextComposer to raise an error
+    Ace::Review::Molecules::ContextComposer.stub(:create_context_md, ->(*) {
+      raise Ace::Review::Molecules::ContextComposer::ContextComposerError, "Mock error"
+    }) do
+      config = { "files" => ["test.rb"] }
+
+      error = assert_raises(Ace::Review::Molecules::ContextExtractor::ContextExtractorError) do
+        @extractor.extract(config, @temp_dir)
+      end
+
+      assert_match(/Context extraction failed: Mock error/, error.message)
+    end
+  end
+
+  def test_extract_with_ace_context_preset
+    # Mock ace-context preset check
+    @extractor.stub(:ace_context_preset_exists?, true) do
+      # Mock ace-context loading
+      ace_context_result_mock = Minitest::Mock.new
+      ace_context_result_mock.expect(:content, "Mock context content")
+
+      Ace::Context.stub(:load_auto, ace_context_result_mock) do
+        result = @extractor.extract("mock-preset")
+        assert_equal "Mock context content", result
+      end
+    end
+  end
+
+  def test_extract_with_empty_config
+    result = @extractor.extract({})
+    refute_empty result
+  end
+
+  def test_extract_with_falsey_values
+    result = @extractor.extract(false)
+    assert_equal "", result
+
+    result = @extractor.extract(nil)
+    assert_equal "", result
+
+    result = @extractor.extract("none")
+    assert_equal "", result
+  end
+
+  def test_backward_compatibility_without_cache_dir
+    # Test that existing code works without cache_dir parameter
+    config = { "files" => ["test.rb"] }
+
+    result = @extractor.extract(config)
+    refute_empty result
+  end
+end

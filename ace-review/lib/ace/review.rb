@@ -7,11 +7,22 @@ rescue LoadError
   # ace-core is optional for basic functionality
 end
 
-require "ace/context"
+# Try to load ace-context if available (required for full functionality)
+begin
+  require "ace/context"
+rescue LoadError
+  # ace-context is required for context processing
+  # Will raise MissingDependencyError when needed
+end
 
 require_relative "review/version"
+require_relative "review/errors"
+
+# Require atoms
+require_relative "review/atoms/context_normalizer"
 
 # Require all necessary components explicitly
+require_relative "review/molecules/context_composer"
 require_relative "review/molecules/context_extractor"
 require_relative "review/molecules/llm_executor"
 require_relative "review/molecules/preset_manager"
@@ -28,8 +39,6 @@ require_relative "review/cli"
 
 module Ace
   module Review
-    class Error < StandardError; end
-
     # Define module namespaces
     module Atoms; end
     module Molecules; end
@@ -64,7 +73,7 @@ module Ace
         {
           "pr" => {
             "description" => "Pull request review",
-            "prompt_composition" => {
+            "system_prompt" => {
               "base" => "prompt://base/system",
               "format" => "prompt://format/standard",
               "guidelines" => [
@@ -82,7 +91,7 @@ module Ace
           },
           "security" => {
             "description" => "Security-focused review",
-            "prompt_composition" => {
+            "system_prompt" => {
               "base" => "prompt://base/system",
               "format" => "prompt://format/detailed",
               "focus" => ["prompt://focus/quality/security"],

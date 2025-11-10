@@ -2,17 +2,43 @@
 
 description: "Security review - vulnerability and risk analysis"
 
-prompt_composition:
-  base: "prompt://base/system"
-  format: "prompt://format/detailed"
-  focus:
-    - "prompt://focus/quality/security"
-  guidelines:
-    - "prompt://guidelines/tone"
-    - "prompt://guidelines/icons"
+instructions:
+  context:
+    base: "prompt://base/system"
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Detailed output formatting and structure guidelines"
+        files:
+          - "prompt://format/detailed"
+      security_focus:
+        title: "Security Review Focus"
+        description: "Security vulnerability and risk analysis focus areas"
+        files:
+          - "prompt://focus/quality/security"
+      communication:
+        title: "Communication Style"
+        description: "Professional communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+      visual_indicators:
+        title: "Visual Indicators"
+        description: "Icons and visual markers for quick scanning"
+        files:
+          - "prompt://guidelines/icons"
+      project_context:
+        title: "Project Context"
+        description: "Project information and background"
+        presets:
+          - "project"
 
 context: "project"
 
 subject:
-  commands:
-    - "git diff HEAD~5..HEAD"
+  context:
+    sections:
+      security_changes:
+        title: "Security-Relevant Changes"
+        description: "Code changes that may have security implications"
+        diffs:
+          - "HEAD~5..HEAD"
