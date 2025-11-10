@@ -1,9 +1,9 @@
 ---
 id: v.0.9.0+task.102
-status: draft
+status: pending
 priority: high
-estimate: 2-3 days
-dependencies: [v.0.9.0+task.101]
+estimate: 1-2 days
+dependencies: []
 ---
 
 # Integrate ace-review with section-based content organization
@@ -205,48 +205,195 @@ The user prompt will be generated separately from the subject configuration, con
 - Is the migration path from `system_prompt` to `instructions` format smooth and automatic?
 - Do users have sufficient flexibility to define custom sections through the instructions format?
 
-## Planning Steps
+## Research Findings
 
-1. **Dependency Analysis**
-   - [ ] Analyze ace-context section implementation (task.099)
-   - [ ] Review existing ace-review preset structure
-   - [ ] Plan migration strategy for existing presets
-   - [ ] Design section templates for common review types
+**ace-context v0.17.5 Status:**
+- ✅ Section-based content organization already implemented
+- ✅ Supports `context.sections` with title, description, files, commands, diffs, content, presets
+- ✅ Outputs markdown-xml format with XML-style section tags
+- ✅ Full backward compatibility with simplified format
 
-2. **Integration Architecture**
-   - [ ] Review ReviewManager integration points
-   - [ ] Plan PresetManager enhancements
-   - [ ] Design backward compatibility strategy
-   - [ ] Plan testing approach
+**ace-review Preset Status:**
+- ✅ Presets already use `instructions.context.sections` format (pr.yml, code.yml, security.yml)
+- ❌ ReviewManager doesn't process `instructions` format - only handles legacy `system_prompt`
+- ❌ create_system_context_file doesn't translate instructions.context.sections to ace-context frontmatter
+- ⚠️  Current implementation manually builds frontmatter from system_prompt fields, ignoring sections
 
-3. **Preset Design**
-   - [ ] Design standard section templates
-   - [ ] Plan custom section definition approach
-   - [ ] Review and enhance existing presets
-   - [ ] Document section best practices
+**Integration Gap:**
+The presets define sections, but ReviewManager.create_system_context_file (line 186-237) doesn't use them. It only extracts system_prompt.{base, format, focus, guidelines} and manually builds the frontmatter, completely bypassing the sections configuration.
 
-## Execution Steps
+## Technical Approach
 
-### Phase 1: Core Integration
-- [ ] Update ReviewManager to support section-based context configuration
-- [ ] Enhance PresetManager to handle sections in preset files
-- [ ] Update preset resolution to support both legacy and section formats
-- [ ] Implement auto-migration for existing presets
+### Architecture Pattern
 
-### Phase 2: Preset Enhancement
-- [ ] Update all built-in ace-review presets to use sections
-- [ ] Create standard section templates for common review types
-- [ ] Add custom section definition support
-- [ ] Update preset documentation and examples
+**Minimal-change approach**: Update ReviewManager to detect and use `instructions` format when present, falling back to legacy `system_prompt` format for backward compatibility.
 
-### Phase 3: Testing and Validation
-- [ ] Test with all existing ace-review presets
-- [ ] Validate backward compatibility with user custom presets
-- [ ] Test section-based review generation
-- [ ] Performance testing with large review sets
+**Integration Strategy:**
+1. PresetManager already loads presets with `instructions` field intact
+2. ReviewManager needs to:
+   - Detect `instructions` vs `system_prompt` format
+   - When `instructions` exists, pass `instructions.context` directly to ace-context
+   - When `system_prompt` exists, continue current behavior
+3. No changes to PresetManager required - it already loads the data correctly
 
-### Phase 4: Documentation and Polish
-- [ ] Update ace-review documentation with section examples
-- [ ] Create migration guide for existing users
-- [ ] Add section best practices guide
-- [ ] Final testing and validation
+### File Modifications
+
+#### Modify
+- `ace-review/lib/ace/review/organisms/review_manager.rb`
+  - Changes: Update `create_system_context_file` to detect and handle `instructions` format
+  - Impact: Enables section-based review contexts
+  - Integration: Delegates section processing to ace-context (already supports it)
+
+- `ace-review/lib/ace/review/molecules/preset_manager.rb`
+  - Changes: Update `resolve_preset` to include `instructions` field
+  - Impact: Preserve instructions configuration through resolution chain
+  - Integration: Pass-through only, no complex logic needed
+
+#### No Structural Changes Needed
+All presets already have the correct format. No migration scripts needed.
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Verify ace-context section handling with test input
+  > TEST: ace-context Section Processing
+  > Type: Integration Validation
+  > Assert: ace-context correctly processes instructions.context.sections into XML-tagged output
+  > Command: echo "---\ncontext:\n  sections:\n    test:\n      title: 'Test Section'\n      files:\n        - 'README.md'\n---\n" | ace-context - --format markdown-xml --output stdio
+
+* [ ] Analyze ReviewManager.create_system_context_file implementation
+  > TEST: Understanding Check
+  > Type: Code Analysis
+  > Assert: Current flow from preset → frontmatter → ace-context is understood
+  > Command: # Manual review of ReviewManager lines 186-237
+
+* [ ] Design backward compatibility approach
+  - Detect `instructions` vs `system_prompt` in config
+  - Preserve existing behavior for `system_prompt`
+  - Add new path for `instructions`
+
+### Execution Steps
+
+#### Step 1: Update PresetManager to preserve instructions field
+- [ ] Modify `resolve_preset` method to include `instructions` in returned config
+  > TEST: Preset Resolution
+  > Type: Unit Test
+  > Assert: resolved config includes instructions field when present in preset
+  > Command: bundle exec rake test TEST=test/molecules/preset_manager_test.rb
+
+#### Step 2: Update ReviewManager to handle instructions format
+- [ ] Add `format_detection` helper to detect instructions vs system_prompt
+  > TEST: Format Detection
+  > Type: Unit Test
+  > Assert: correctly identifies instructions vs system_prompt formats
+  > Command: # Add test in review_manager_test.rb
+
+- [ ] Create `create_system_context_file_with_instructions` method
+  - Extracts `instructions.base` for content after frontmatter
+  - Passes `instructions.context` directly to ace-context frontmatter
+  - Preserves `instructions.context.sections` structure
+  > TEST: Instructions Processing
+  > Type: Integration Test
+  > Assert: system.context.md contains sections frontmatter correctly
+  > Command: # Verify generated system.context.md structure
+
+- [ ] Update `create_system_context_file` to branch on format type
+  - If `instructions` exists, use new method
+  - Otherwise, use existing legacy path
+  > TEST: Backward Compatibility
+  > Type: Integration Test
+  > Assert: legacy system_prompt presets still work correctly
+  > Command: ace-review --preset legacy-test --dry-run
+
+#### Step 3: Add comprehensive tests
+- [ ] Test instructions format with pr preset
+  > TEST: PR Preset with Instructions
+  > Type: Integration Test
+  > Assert: PR review generates properly sectioned context
+  > Command: ace-review --preset pr --subject "staged" --dry-run && cat .cache/ace-review/sessions/*/system.context.md
+
+- [ ] Test backward compatibility with system_prompt format
+  > TEST: Legacy System Prompt
+  > Type: Integration Test
+  > Assert: old-style presets continue to work
+  > Command: # Create test preset with system_prompt format and verify
+
+- [ ] Test mixed configurations (instructions + overrides)
+  > TEST: Override Handling
+  > Type: Integration Test
+  > Assert: CLI overrides work with instructions format
+  > Command: ace-review --preset pr --context "custom" --dry-run
+
+#### Step 4: Validate with all built-in presets
+- [ ] Test pr preset
+  > TEST: PR Preset Validation
+  > Type: Acceptance Test
+  > Assert: PR review with sections generates expected output structure
+  > Command: ace-review --preset pr --dry-run && grep -A 5 "<format_guidelines>" .cache/ace-review/sessions/*/system.prompt.md
+
+- [ ] Test code preset
+- [ ] Test security preset
+- [ ] Test docs preset
+- [ ] Test performance preset
+- [ ] Test ruby-atom preset
+- [ ] Test agents preset
+- [ ] Test test preset
+  > TEST: All Presets
+  > Type: Acceptance Test Suite
+  > Assert: All 7 presets generate valid section-based contexts
+  > Command: for preset in code security docs performance ruby-atom agents test; do ace-review --preset $preset --dry-run || exit 1; done
+
+#### Step 5: Update documentation
+- [ ] Add instructions format examples to ace-review docs
+- [ ] Document section configuration options
+- [ ] Add best practices for section organization
+- [ ] Update preset creation guide
+
+## Acceptance Criteria
+
+- [ ] ReviewManager correctly processes `instructions.context.sections` configuration
+- [ ] All built-in ace-review presets work with section-based contexts
+- [ ] Full backward compatibility maintained for `system_prompt` format presets
+- [ ] ace-context generates properly structured output with XML section tags
+- [ ] System prompts show clear section organization (format, guidelines, focus, context)
+- [ ] All existing tests pass + new integration tests for instructions format
+- [ ] Documentation updated with instructions format examples
+
+## Out of Scope
+
+- ❌ Changes to ace-context (already supports sections as of v0.17.5)
+- ❌ Changes to preset file formats (already correct)
+- ❌ Migration scripts (presets already in correct format)
+- ❌ New section types or capabilities (using existing ace-context features only)
+
+## Risk Assessment
+
+### Technical Risks
+
+- **Risk:** Breaking existing user presets with system_prompt format
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Detect format type and branch to legacy path for system_prompt
+  - **Rollback:** Revert ReviewManager changes, functionality reverts to current state
+
+- **Risk:** ace-context section output doesn't match expectations
+  - **Probability:** Low (already tested in v0.17.5)
+  - **Impact:** Medium
+  - **Mitigation:** Validate with test cases before full integration
+  - **Monitoring:** Check generated system.prompt.md files for proper XML tags
+
+### Integration Risks
+
+- **Risk:** instructions.context structure doesn't match ace-context expected input
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Test with example presets, validate frontmatter structure
+  - **Monitoring:** ace-context error output during review preparation
+
+## References
+
+- ace-context v0.17.5 CHANGELOG: Section support implementation
+- ace-context docs/configuration.md: Section-based format documentation
+- ace-review/lib/ace/review/organisms/review_manager.rb:186-237: Current implementation
+- .ace.example/review/presets/*.yml: Existing preset formats with instructions
