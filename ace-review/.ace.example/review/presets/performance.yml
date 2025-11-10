@@ -2,18 +2,38 @@
 
 description: "Performance review - optimization opportunities"
 
-prompt_composition:
+instructions:
   base: "prompt://base/system"
-  format: "prompt://format/detailed"
-  focus:
-    - "prompt://focus/quality/performance"
-  guidelines:
-    - "prompt://guidelines/tone"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Detailed output formatting and structure guidelines"
+        files:
+          - "prompt://format/detailed"
+      performance_focus:
+        title: "Performance Focus"
+        description: "Performance optimization and bottlenecks analysis"
+        files:
+          - "prompt://focus/quality/performance"
+      guidelines:
+        title: "Communication Guidelines"
+        description: "Professional communication style"
+        files:
+          - "prompt://guidelines/tone"
+      project_context:
+        title: "Project Context"
+        description: "Project information and background"
+        presets:
+          - "project"
 
 context: "project"
 
 subject:
-  # Use diff key for consistent filtering via ace-git-diff
-  diff:
-    ranges:
-      - "HEAD~3..HEAD"
+  context:
+    sections:
+      performance_changes:
+        title: "Performance-Relevant Changes"
+        description: "Code changes that may impact performance"
+        diffs:
+          - "HEAD~3..HEAD"

@@ -70,20 +70,22 @@ module Ace
 
         # Merge with config values
         def merge_config(config)
-          # Merge prompt composition if not overridden
-          @prompt_base ||= config.dig("prompt_composition", "base")
-          @prompt_format ||= config.dig("prompt_composition", "format")
+          return if config.nil?
+
+          # Merge system prompt configuration if not overridden
+          @prompt_base ||= config.dig("system_prompt", "base")
+          @prompt_format ||= config.dig("system_prompt", "format")
 
           # Handle focus modules
-          if @add_focus && config.dig("prompt_composition", "focus")
-            existing_focus = config.dig("prompt_composition", "focus") || []
+          if @add_focus && config.dig("system_prompt", "focus")
+            existing_focus = config.dig("system_prompt", "focus") || []
             additional_focus = @add_focus.split(",").map(&:strip)
             @prompt_focus = (existing_focus + additional_focus).uniq.join(",")
-          elsif !@prompt_focus && config.dig("prompt_composition", "focus")
-            @prompt_focus = Array(config.dig("prompt_composition", "focus")).join(",")
+          elsif !@prompt_focus && config.dig("system_prompt", "focus")
+            @prompt_focus = Array(config.dig("system_prompt", "focus")).join(",")
           end
 
-          @prompt_guidelines ||= Array(config.dig("prompt_composition", "guidelines")).join(",") if config.dig("prompt_composition", "guidelines")
+          @prompt_guidelines ||= Array(config.dig("system_prompt", "guidelines")).join(",") if config.dig("system_prompt", "guidelines")
 
           # Merge other config values
           @context ||= config["context"]
@@ -93,8 +95,8 @@ module Ace
           self
         end
 
-        # Build prompt composition hash
-        def prompt_composition
+        # Build system prompt composition hash
+        def system_prompt_composition
           composition = {}
 
           composition["base"] = prompt_base if prompt_base

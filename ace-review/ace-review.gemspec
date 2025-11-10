@@ -37,6 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-context', '~> 0.9'
   spec.add_dependency 'ace-git-diff', '~> 0.1'
   spec.add_dependency 'ace-nav', '~> 0.9'
+  spec.add_dependency 'ace-llm', '~> 0.1'
 
   # Development dependencies
   spec.add_development_dependency 'ace-support-test-helpers', '~> 0.1'
