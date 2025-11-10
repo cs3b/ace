@@ -147,16 +147,25 @@ module Ace
           system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
           context_config = config[:context] || config["context"] || "project"
 
-          # Step 3a: Create system.context.md with base prompt + composition frontmatter
-          if uses_instructions_format?(config)
-            instructions_config = config["instructions"] || config[:instructions]
-            system_context_path = create_system_context_file_with_instructions(session_dir, instructions_config, context_config)
-          else
-            system_context_path = create_system_context_file(session_dir, system_prompt_config, context_config)
+          # Step 3a: Create system.context.md with instructions configuration
+          instructions_config = config["instructions"] || config[:instructions]
+          unless instructions_config
+            return {
+              success: false,
+              error: "No instructions found in config. All presets must use instructions format."
+            }
           end
+          system_context_path = create_context_file(session_dir, instructions_config, context_config, "system.context.md")
 
-          # Step 3b: Create user.context.md with actual subject configuration
-          user_context_path = create_user_context_file(session_dir, subject_config, config[:subject])
+          # Step 3b: Create user.context.md with subject configuration
+          subject_config = config["subject"] || config[:subject]
+          unless subject_config
+            return {
+              success: false,
+              error: "No subject found in config. All presets must use subject format."
+            }
+          end
+          user_context_path = create_context_file(session_dir, subject_config, nil, "user.context.md")
 
           # Step 3c: Generate system.prompt.md via ace-context
           system_prompt_path = File.join(session_dir, "system.prompt.md")
@@ -193,160 +202,66 @@ module Ace
           instructions && instructions.is_a?(Hash)
         end
 
-        # Create system.context.md with instructions-based section support
-        def create_system_context_file_with_instructions(session_dir, instructions_config, context_config)
-          # Build ace-context frontmatter with sections
-          frontmatter = {
-            "context" => {
-              "embed_document_source" => true
-            }
-          }
+        # Unified context file processor - pass configuration directly to ace-context
+        def create_context_file(session_dir, context_config, additional_context, output_filename)
+          # Build complete ace-context configuration
+          ace_context_config = {}
 
-          # Add instructions.context directly to frontmatter
-          instructions_context = instructions_config["context"] || instructions_config[:context]
-          if instructions_context
-            frontmatter["context"].merge!(instructions_context)
+          # Start with context_config if provided
+          if context_config
+            ace_context_config.merge!(context_config)
           end
 
-          # Add additional context preset (e.g., "project" becomes presets: ["project"])
-          if context_config && context_config != "none" && !context_config.empty?
-            frontmatter["context"]["presets"] ||= []
-            if context_config.is_a?(String)
-              frontmatter["context"]["presets"] << context_config
-            elsif context_config.is_a?(Hash) && context_config["presets"]
-              frontmatter["context"]["presets"].concat(context_config["presets"])
+          # Add additional context as "context" key for ace-context, but avoid duplicates
+          if additional_context && additional_context != "none" && !additional_context.empty?
+            ace_context_config["context"] ||= {}
+            if additional_context.is_a?(String)
+              # Check if this preset is already included in the sections to avoid duplication
+              existing_presets = extract_presets_from_sections(ace_context_config)
+              unless existing_presets.include?(additional_context)
+                ace_context_config["context"]["presets"] ||= []
+                ace_context_config["context"]["presets"] << additional_context
+              end
+            elsif additional_context.is_a?(Hash)
+              ace_context_config["context"].merge!(additional_context)
             end
           end
 
-          # Create system.context.md content
-          system_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
-
-          # Add base system instructions after frontmatter
-          base_prompt = instructions_config["base"] || instructions_config[:base]
-          if base_prompt
-            base_content = @prompt_composer.resolver.resolve(
-              base_prompt,
-              config_dir: File.dirname(@preset_manager.config_path || ".")
-            )
-            system_context_content += base_content if base_content
-          end
+          # Create context.md content with full configuration as frontmatter
+          context_content = "#{YAML.dump(ace_context_config).strip}\n---\n\n"
 
           # Write to file
-          system_context_path = File.join(session_dir, "system.context.md")
-          File.write(system_context_path, system_context_content)
+          context_path = File.join(session_dir, output_filename)
+          File.write(context_path, context_content)
 
-          system_context_path
+          context_path
         end
 
-        # Create system.context.md with ace-context frontmatter
-        def create_system_context_file(session_dir, system_prompt_config, context_config)
-          # Build ace-context frontmatter
-          frontmatter = {
-            "context" => {
-              "files" => [],
-              "presets" => [],
-              "embed_document_source" => true
-            }
-          }
+        # Extract preset names from sections to avoid duplication
+        def extract_presets_from_sections(config)
+          presets = []
+          return presets unless config.is_a?(Hash)
 
-          # Add prompt:// references from system_prompt_config (excluding base - that's included directly)
-          if system_prompt_config
-            if system_prompt_config["format"]
-              frontmatter["context"]["files"] << system_prompt_config["format"]
-            end
+          # Check if config has context with sections
+          context = config["context"] || config[:context]
+          return presets unless context.is_a?(Hash)
 
-            if system_prompt_config["focus"]
-              frontmatter["context"]["files"].concat(system_prompt_config["focus"])
-            end
+          sections = context["sections"] || context[:sections]
+          return presets unless sections.is_a?(Hash)
 
-            if system_prompt_config["guidelines"]
-              frontmatter["context"]["files"].concat(system_prompt_config["guidelines"])
+          # Extract presets from all sections
+          sections.each do |section_name, section_config|
+            if section_config.is_a?(Hash)
+              section_presets = section_config["presets"] || section_config[:presets]
+              if section_presets.is_a?(Array)
+                presets.concat(section_presets)
+              end
             end
           end
 
-          # Add context preset (e.g., "project" becomes presets: ["project"])
-          if context_config && context_config != "none" && !context_config.empty?
-            if context_config.is_a?(String)
-              frontmatter["context"]["presets"] << context_config
-            elsif context_config.is_a?(Hash) && context_config["presets"]
-              frontmatter["context"]["presets"].concat(context_config["presets"])
-            end
-          end
-
-          # Create system.context.md content
-          system_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n"
-
-          # Add base system instructions after frontmatter
-          if system_prompt_config && system_prompt_config["base"]
-            base_content = @prompt_composer.resolver.resolve(
-              system_prompt_config["base"],
-              config_dir: File.dirname(@preset_manager.config_path || ".")
-            )
-            system_context_content += base_content if base_content
-          end
-
-          # Write to file
-          system_context_path = File.join(session_dir, "system.context.md")
-          File.write(system_context_path, system_context_content)
-
-          system_context_path
+          presets.uniq
         end
 
-        # Create user.context.md with subject configuration
-        def create_user_context_file(session_dir, subject_config, preset_subject_config = nil)
-          # Use explicit subject config first, then fallback to preset config, then default to staged changes
-          effective_config = subject_config || preset_subject_config || "staged"
-
-          # Build ace-context frontmatter for subject
-          frontmatter = {
-            "context" => {
-              "files" => [],
-              "commands" => [],
-              "presets" => []
-            }
-          }
-
-          # Add subject configuration to frontmatter
-          case effective_config
-          when String
-            # Handle simple string shortcuts like "staged", "working", "pr", or inline content
-            if effective_config.match?(/\.(md|rb|js|ts|py|go|java|php|cpp|c|h|css|html|xml|json|yaml|yml|toml)$/i)
-              # It's a file path
-              frontmatter["context"]["files"] << effective_config
-            elsif effective_config.length < 50 && !effective_config.include?("\n")
-              # It's likely a preset/shortcut like "staged", "working", "pr"
-              # For simple shortcuts, we'll use ace-context's preset functionality
-              frontmatter["context"]["presets"] << effective_config
-            else
-              # It's inline content
-              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{effective_config}"
-            end
-          when Hash
-            # Handle structured configuration
-            if effective_config["files"]
-              frontmatter["context"]["files"].concat(Array(effective_config["files"]))
-            end
-            if effective_config["commands"]
-              frontmatter["context"]["commands"].concat(Array(effective_config["commands"]))
-            end
-            if effective_config["diff"]
-              frontmatter["context"]["diffs"] = [effective_config["diff"]]
-            end
-            if effective_config["content"]
-              # For inline content, include it directly after frontmatter
-              user_context_content = "#{YAML.dump(frontmatter).strip}\n---\n\n#{effective_config["content"]}"
-            end
-          end
-
-          # Default content if not set above
-          user_context_content ||= "#{YAML.dump(frontmatter).strip}\n---\n\n"
-
-          # Write to file
-          user_context_path = File.join(session_dir, "user.context.md")
-          File.write(user_context_path, user_context_content)
-
-          user_context_path
-        end
 
         # Execute ace-context to generate prompts
         def execute_ace_context(input_file, output_file)

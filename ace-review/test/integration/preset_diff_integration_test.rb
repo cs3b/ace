@@ -20,39 +20,48 @@ class PresetDiffIntegrationTest < AceReviewTest
     system("git commit -q -m 'Initial commit'")
   end
 
-  def test_loads_preset_with_new_diff_hash_format
+  def test_loads_preset_with_new_subject_format
     preset_content = <<~YAML
       description: "Test PR preset"
       subject:
-        diff:
-          ranges:
-            - "HEAD~1..HEAD"
+        context:
+          sections:
+            changes:
+              title: "Changes to Review"
+              diffs:
+                - "HEAD~1..HEAD"
     YAML
 
     create_test_preset("test_pr", preset_content)
     preset = YAML.load_file(".ace/review/presets/test_pr.yml")
 
-    assert_kind_of Hash, preset["subject"]["diff"]
-    assert_includes preset["subject"]["diff"], "ranges"
-    assert_equal ["HEAD~1..HEAD"], preset["subject"]["diff"]["ranges"]
+    assert_kind_of Hash, preset["subject"]["context"]
+    assert_includes preset["subject"]["context"], "sections"
+    assert_kind_of Hash, preset["subject"]["context"]["sections"]["changes"]
+    assert_equal "Changes to Review", preset["subject"]["context"]["sections"]["changes"]["title"]
   end
 
-  def test_extracts_subject_from_hash_config_with_ranges
+  def test_extracts_subject_from_new_ace_context_format
     # Create a change to diff
     File.write("test.txt", "modified content")
     system("git add test.txt")
     system("git commit -q -m 'Modify test'")
 
     config = {
-      "diff" => {
-        "ranges" => ["HEAD~1..HEAD"]
+      "context" => {
+        "sections" => {
+          "changes" => {
+            "title" => "Recent Changes",
+            "diffs" => ["HEAD~1..HEAD"]
+          }
+        }
       }
     }
 
     result = @extractor.extract(config)
 
     assert_kind_of String, result
-    # Result should contain diff output (may be filtered by ace-context)
+    # Result should contain diff output (processed by ace-context)
     assert !result.nil?
   end
 
@@ -94,32 +103,23 @@ class PresetDiffIntegrationTest < AceReviewTest
     assert !result.nil?
   end
 
-  def test_validates_hash_format_requires_ranges_or_since
+  def test_handles_new_ace_context_format_directly
+    # Test that SubjectExtractor passes new ace-context format directly
     config = {
-      "diff" => {
-        "invalid_key" => "value"
+      "context" => {
+        "sections" => {
+          "changes" => {
+            "title" => "Multiple Changes",
+            "diffs" => ["origin/main...HEAD", "HEAD~5..HEAD"]
+          }
+        }
       }
     }
 
-    error = assert_raises(ArgumentError) do
-      @extractor.extract(config)
-    end
-
-    assert_match(/must specify 'ranges' or 'since'/, error.message)
-  end
-
-  def test_validates_ranges_must_be_array
-    config = {
-      "diff" => {
-        "ranges" => "not-an-array"
-      }
-    }
-
-    error = assert_raises(ArgumentError) do
-      @extractor.extract(config)
-    end
-
-    assert_match(/must be an array/, error.message)
+    result = @extractor.extract(config)
+    assert_kind_of String, result
+    # Result should contain diff output (processed by ace-context)
+    assert !result.nil?
   end
 
   def test_extracts_from_preset_with_since_key
@@ -131,7 +131,6 @@ class PresetDiffIntegrationTest < AceReviewTest
 
     # Should not raise an error (since is valid alternative to ranges)
     result = @extractor.extract(config)
-
     assert_kind_of String, result
   end
 

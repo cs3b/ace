@@ -26,13 +26,10 @@ instructions:
 context: "project"
 
 subject:
-  # New: Use diff key for consistent filtering via ace-git-diff
-  # Respects global .ace/diff/config.yml configuration
-  diff:
-    ranges:
-      - "origin/main...HEAD"
-
-  # Alternative: Use commands for custom git operations
-  # commands:
-  #   - "git diff origin/main...HEAD"
-  #   - "git log origin/main..HEAD --oneline"
+  context:
+    sections:
+      code_changes:
+        title: "Code Changes"
+        description: "Code changes to review from pull request"
+        diffs:
+          - "origin/main...HEAD"

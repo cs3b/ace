@@ -293,12 +293,13 @@ class ReviewManagerTest < AceReviewTest
 
     context_config = "project"
 
-    # Call the new method
+    # Call the new unified method
     system_context_path = @manager.send(
-      :create_system_context_file_with_instructions,
+      :create_context_file,
       session_dir,
       instructions_config,
-      context_config
+      context_config,
+      "system.context.md"
     )
 
     assert_equal File.join(session_dir, "system.context.md"), system_context_path
@@ -341,10 +342,11 @@ class ReviewManagerTest < AceReviewTest
     context_config = { "presets" => ["base", "team"] }
 
     system_context_path = @manager.send(
-      :create_system_context_file_with_instructions,
+      :create_context_file,
       session_dir,
       instructions_config,
-      context_config
+      context_config,
+      "system.context.md"
     )
 
     content = File.read(system_context_path)
@@ -397,26 +399,43 @@ class ReviewManagerTest < AceReviewTest
     assert_match(/format:/, content, "Should contain format section")
   end
 
-  def test_backward_compatibility_with_system_prompt_format
-    # Test that system_prompt format still works (legacy compatibility)
-    session_dir = File.join(@temp_dir, "legacy_test")
+  def test_instructions_format_processing
+    # Test that instructions format works with unified processor
+    session_dir = File.join(@temp_dir, "instructions_test")
     FileUtils.mkdir_p(session_dir)
 
-    system_prompt_config = {
+    instructions_config = {
       "base" => "prompt://base/system",
-      "format" => "prompt://format/standard",
-      "focus" => ["prompt://focus/ruby", "prompt://focus/testing"],
-      "guidelines" => ["prompt://guidelines/tone"]
+      "context" => {
+        "sections" => {
+          "format" => {
+            "title" => "Format Guidelines",
+            "description" => "Standard output formatting guidelines",
+            "files" => ["prompt://format/standard"]
+          },
+          "focus" => {
+            "title" => "Review Focus Areas",
+            "description" => "Ruby and testing focus areas",
+            "files" => ["prompt://focus/ruby", "prompt://focus/testing"]
+          },
+          "guidelines" => {
+            "title" => "Communication Guidelines",
+            "description" => "Professional communication style",
+            "files" => ["prompt://guidelines/tone"]
+          }
+        }
+      }
     }
 
     context_config = "project"
 
-    # Call the legacy method
+    # Call the unified method
     system_context_path = @manager.send(
-      :create_system_context_file,
+      :create_context_file,
       session_dir,
-      system_prompt_config,
-      context_config
+      instructions_config,
+      context_config,
+      "system.context.md"
     )
 
     assert_equal File.join(session_dir, "system.context.md"), system_context_path
@@ -425,35 +444,59 @@ class ReviewManagerTest < AceReviewTest
     # Read and verify content
     content = File.read(system_context_path)
 
-    # Should contain YAML frontmatter with files (not sections)
+    # Should contain YAML frontmatter with sections
     assert_match(/^---/, content, "Should start with YAML frontmatter")
-    assert_match(/files:/, content, "Should contain files in frontmatter")
-    assert_match(/prompt:\/\/format\/standard/, content, "Should contain format prompt")
-    assert_match(/prompt:\/\/focus\/ruby/, content, "Should contain focus prompts")
-    assert_match(/prompt:\/\/guidelines\/tone/, content, "Should contain guidelines prompts")
-
-    # Should NOT contain sections (legacy format)
-    refute_match(/sections:/, content, "Legacy format should not contain sections")
+    assert_match(/sections:/, content, "Should contain sections in frontmatter")
+    assert_match(/format:/, content, "Should contain format section")
+    assert_match(/focus:/, content, "Should contain focus section")
+    assert_match(/guidelines:/, content, "Should contain guidelines section")
 
     # Should preserve project context preset
     assert_match(/presets:\s*\n\s*-\s*project/, content, "Should include project preset")
   end
 
-  def test_system_prompt_format_integration_in_compose_review_prompt
-    # Test that system_prompt format works in the full workflow
+  def test_new_instructions_format_integration_in_compose_review_prompt
+    # Test that new instructions format works in full workflow
     config = {
-      "description" => "Test legacy preset",
-      "system_prompt" => {
+      "description" => "Test new preset",
+      "instructions" => {
         "base" => "prompt://base/system",
-        "format" => "prompt://format/standard",
-        "focus" => ["prompt://focus/ruby"],
-        "guidelines" => ["prompt://guidelines/tone"]
+        "context" => {
+          "sections" => {
+            "format" => {
+              "title" => "Format Guidelines",
+              "description" => "Standard output formatting",
+              "files" => ["prompt://format/standard"]
+            },
+            "focus" => {
+              "title" => "Review Focus",
+              "description" => "Ruby code focus areas",
+              "files" => ["prompt://focus/ruby"]
+            },
+            "guidelines" => {
+              "title" => "Communication Guidelines",
+              "description" => "Professional communication style",
+              "files" => ["prompt://guidelines/tone"]
+            }
+          }
+        }
+      },
+      "subject" => {
+        "context" => {
+          "sections" => {
+            "changes" => {
+              "title" => "Changes to Review",
+              "description" => "Code changes for review",
+              "diffs" => ["HEAD~2..HEAD"]
+            }
+          }
+        }
       },
       "context" => "project",
       "model" => "test-model"
     }
 
-    session_dir = File.join(@temp_dir, "legacy_integration_test")
+    session_dir = File.join(@temp_dir, "new_integration_test")
     FileUtils.mkdir_p(session_dir)
 
     # Test the integration in compose_review_prompt
@@ -466,15 +509,178 @@ class ReviewManagerTest < AceReviewTest
       session_dir
     )
 
-    assert result[:success], "compose_review_prompt should succeed with system_prompt format"
+    assert result[:success], "compose_review_prompt should succeed with new format"
 
-    # Verify system.context.md was created with files (not sections)
+    # Verify system.context.md was created
     system_context_file = File.join(session_dir, "system.context.md")
     assert File.exist?(system_context_file), "system.context.md should exist"
 
     content = File.read(system_context_file)
-    refute_match(/sections:/, content, "Legacy format should not contain sections")
-    assert_match(/files:/, content, "Legacy format should contain files")
-    assert_match(/prompt:\/\/format\/standard/, content, "Should contain format prompt")
+    # Should use new format with sections
+    assert_match(/sections:/, content, "Should contain sections")
+    assert_match(/format:/, content, "Should contain format section")
+
+    # Verify user.context.md was created
+    user_context_file = File.join(session_dir, "user.context.md")
+    assert File.exist?(user_context_file), "user.context.md should exist"
+
+    user_content = File.read(user_context_file)
+    assert_match(/sections:/, user_content, "User context should have sections")
+    assert_match(/changes:/, user_content, "User context should have changes section")
+  end
+
+  def test_subject_processing_with_sections
+    # Test that subject with sections works with unified processor
+    session_dir = File.join(@temp_dir, "subject_test")
+    FileUtils.mkdir_p(session_dir)
+
+    subject_config = {
+      "context" => {
+        "sections" => {
+          "code_changes" => {
+            "title" => "Code Changes",
+            "description" => "Code changes to review",
+            "diffs" => ["HEAD~3..HEAD"]
+          },
+          "additional_files" => {
+            "title" => "Related Files",
+            "description" => "Additional files for context",
+            "files" => ["**/*.rb"]
+          }
+        }
+      }
+    }
+
+    # Call the unified method for subject
+    user_context_path = @manager.send(
+      :create_context_file,
+      session_dir,
+      subject_config,
+      nil,
+      "user.context.md"
+    )
+
+    assert_equal File.join(session_dir, "user.context.md"), user_context_path
+    assert File.exist?(user_context_path), "user.context.md should be created"
+
+    # Read and verify content
+    content = File.read(user_context_path)
+
+    # Should contain YAML frontmatter with sections
+    assert_match(/^---/, content, "Should start with YAML frontmatter")
+    assert_match(/sections:/, content, "Should contain sections in frontmatter")
+    assert_match(/code_changes:/, content, "Should contain code_changes section")
+    assert_match(/additional_files:/, content, "Should contain additional_files section")
+  end
+
+  def test_subject_processing_with_files_and_commands
+    # Test subject with mixed content types
+    session_dir = File.join(@temp_dir, "subject_mixed_test")
+    FileUtils.mkdir_p(session_dir)
+
+    subject_config = {
+      "context" => {
+        "sections" => {
+          "test_files" => {
+            "title" => "Test Files",
+            "description" => "Test files to review",
+            "files" => ["test/**/*_test.rb", "spec/**/*_spec.rb"]
+          },
+          "test_commands" => {
+            "title" => "Test Commands",
+            "description" => "Test execution results",
+            "commands" => ["bundle exec rspec --format documentation"]
+          }
+        }
+      }
+    }
+
+    # Call the unified method for subject
+    user_context_path = @manager
+      .send(
+        :create_context_file,
+        session_dir,
+        subject_config,
+        nil,
+        "user.context.md"
+      )
+
+    assert_equal File.join(session_dir, "user.context.md"), user_context_path
+    assert File.exist?(user_context_path), "user.context.md should be created"
+
+    # Read and verify content
+    content = File.read(user_context_path)
+
+    # Should contain YAML frontmatter with sections
+    assert_match(/^---/, content, "Should start with YAML frontmatter")
+    assert_match(/sections:/, content, "Should contain sections in frontmatter")
+    assert_match(/test_files:/, content, "Should contain test_files section")
+    assert_match(/test_commands:/, content, "Should contain test_commands section")
+  end
+
+  def test_both_instructions_and_subject_processing
+    # Test that both instructions and subject work together
+    session_dir = File.join(@temp_dir, "both_test")
+    FileUtils.mkdir_p(session_dir)
+
+    instructions_config = {
+      "base" => "prompt://base/system",
+      "context" => {
+        "sections" => {
+          "review_format" => {
+            "title" => "Review Format",
+            "description" => "Output formatting guidelines",
+            "files" => ["prompt://format/detailed"]
+          }
+        }
+      }
+    }
+
+    subject_config = {
+      "context" => {
+        "sections" => {
+          "changes_to_review" => {
+            "title" => "Changes to Review",
+            "description" => "Code changes to review",
+            "diffs" => ["HEAD~2..HEAD"]
+          }
+        }
+      }
+    }
+
+    context_config = "project"
+
+    # Call unified method for instructions
+    system_context_path = @manager.send(
+      :create_context_file,
+      session_dir,
+      instructions_config,
+      context_config,
+      "system.context.md"
+    )
+
+    # Call unified method for subject
+    user_context_path = @manager.send(
+      :create_context_file,
+      session_dir,
+      subject_config,
+      nil,
+      "user.context.md"
+    )
+
+    assert_equal File.join(session_dir, "system.context.md"), system_context_path
+    assert_equal File.join(session_dir, "user.context.md"), user_context_path
+    assert File.exist?(system_context_path), "system.context.md should be created"
+    assert File.exist?(user_context_path), "user.context.md should be created"
+
+    # Verify instructions content
+    system_content = File.read(system_context_path)
+    assert_match(/sections:/, system_content, "System context should have sections")
+    assert_match(/review_format:/, system_content, "System context should have review_format section")
+
+    # Verify subject content
+    user_content = File.read(user_context_path)
+    assert_match(/sections:/, user_content, "User context should have sections")
+    assert_match(/changes_to_review:/, user_content, "User context should have changes_to_review section")
   end
 end

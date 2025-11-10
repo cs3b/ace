@@ -35,7 +35,10 @@ instructions:
 context: "project"
 
 subject:
-  # Use diff key for consistent filtering via ace-git-diff
-  diff:
-    ranges:
-      - "HEAD~5..HEAD"
+  context:
+    sections:
+      security_changes:
+        title: "Security-Relevant Changes"
+        description: "Code changes that may have security implications"
+        diffs:
+          - "HEAD~5..HEAD"

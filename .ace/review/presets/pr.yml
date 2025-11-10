@@ -4,16 +4,19 @@ description: "Pull request review - comprehensive code changes review"
 
 instructions:
   base: "prompt://base/system"
+  description: "Pull request review instructions"
   context:
     sections:
       review_focus:
         title: "Files Under Review"
         description: "Code changes and files being reviewed"
         files:
-          - "prompt://focus/languages/ruby"
-          - "prompt://focus/architecture/atom"
           - "prompt://focus/scope/tests"
           - "prompt://focus/scope/docs"
+          - "prompt://focus/languages/ruby"
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/quality/security"
+          - "prompt://focus/quality/performance"
 
       format_guidelines:
         title: "Format Guidelines"
@@ -34,11 +37,13 @@ instructions:
         presets:
           - "project"
 
-context: "project"
-
 subject:
-  diff:
-    ranges:
-      - "origin...HEAD"
+  context:
+    sections:
+      code_changes:
+        title: "Code Changes"
+        description: "Code changes to review from pull request"
+        diffs:
+          - "origin...HEAD"
 
 model: gpro

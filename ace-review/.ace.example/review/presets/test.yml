@@ -30,6 +30,11 @@ instructions:
 context: "project"
 
 subject:
-  files:
-    - "test/**/*_test.rb"
-    - "spec/**/*_spec.rb"
+  context:
+    sections:
+      test_files:
+        title: "Test Files"
+        description: "Test files to review for coverage and quality"
+        files:
+          - "test/**/*_test.rb"
+          - "spec/**/*_spec.rb"

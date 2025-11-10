@@ -31,7 +31,10 @@ instructions:
 context: "project"
 
 subject:
-  # Use diff key for consistent filtering via ace-git-diff
-  diff:
-    ranges:
-      - "HEAD~3..HEAD"
+  context:
+    sections:
+      code_changes:
+        title: "Recent Code Changes"
+        description: "Code changes from recent commits for review"
+        diffs:
+          - "HEAD~3..HEAD"
