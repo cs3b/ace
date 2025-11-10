@@ -21,14 +21,19 @@ instructions:
         description: "Professional communication guidelines"
         files:
           - "prompt://guidelines/tone"
-      readme_context:
-        title: "README Context"
-        description: "Main project documentation"
+      context-project:
+        presets:
+          - "project"
+      context-package:
+        title: "Ace Review Codebase"
+        description: "All ruby files and config examples for Ace Context package"
         files:
-          - "README.md"
-
-context: "project"
+          - "ace-review/lib/**/*.rb"
+          - "ace-review/.ace.example/**/*"
 
 subject:
-  files:
-    - "**/*.md"
+  context:
+    sections:
+      review-that:
+        files:
+          - "ace-review/**/*.md"
