@@ -382,4 +382,96 @@ class WorktreeManagerTest < Minitest::Test
     mock_worktree_lister.verify
     mock_worktree_remover.verify
   end
+
+  def test_create_traditional_worktree_executes_hooks
+    # Setup: Create a config with after_create_hooks
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      root_path: ".ace-wt",
+      project_root: @temp_dir
+    )
+
+    # Add hooks configuration
+    hooks = [
+      {
+        "command" => "echo 'Hook executed'",
+        "timeout" => 5,
+        "continue_on_error" => true
+      }
+    ]
+    config.instance_variable_set(:@after_create_hooks, hooks)
+
+    # Create manager with our config
+    manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
+      config: config,
+      project_root: @temp_dir
+    )
+
+    # Mock the worktree creator to return success
+    mock_creator = Minitest::Mock.new
+    worktree_result = {
+      success: true,
+      worktree_path: "/path/to/worktree",
+      branch: "test-branch"
+    }
+    mock_creator.expect(:create_traditional, worktree_result, [String, NilClass, Hash])
+
+    # Mock the hook executor
+    mock_hook_executor = Minitest::Mock.new
+    hook_result = {
+      success: true,
+      results: [{ command: "echo 'Hook executed'", success: true }]
+    }
+    mock_hook_executor.expect(:execute_hooks, hook_result, [Array, Hash])
+
+    manager.instance_variable_set(:@worktree_creator, mock_creator)
+
+    # Stub HookExecutor.new to return our mock
+    Ace::Git::Worktree::Molecules::HookExecutor.stub(:new, mock_hook_executor) do
+      result = manager.create("test-branch")
+
+      assert result[:success]
+      assert_equal "Worktree created successfully", result[:message]
+      assert result[:hooks_results], "Should have hooks_results in result"
+      assert_equal 1, result[:hooks_results].length
+    end
+
+    mock_creator.verify
+    mock_hook_executor.verify
+  end
+
+  def test_create_traditional_worktree_without_hooks
+    # Setup: Create a config without after_create_hooks
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      root_path: ".ace-wt",
+      project_root: @temp_dir
+    )
+
+    # No hooks configured
+    config.instance_variable_set(:@after_create_hooks, [])
+
+    # Create manager with our config
+    manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
+      config: config,
+      project_root: @temp_dir
+    )
+
+    # Mock the worktree creator to return success
+    mock_creator = Minitest::Mock.new
+    worktree_result = {
+      success: true,
+      worktree_path: "/path/to/worktree",
+      branch: "test-branch"
+    }
+    mock_creator.expect(:create_traditional, worktree_result, [String, NilClass, Hash])
+
+    manager.instance_variable_set(:@worktree_creator, mock_creator)
+
+    result = manager.create("test-branch")
+
+    assert result[:success]
+    assert_equal "Worktree created successfully", result[:message]
+    assert_nil result[:hooks_results], "Should not have hooks_results when no hooks configured"
+
+    mock_creator.verify
+  end
 end
