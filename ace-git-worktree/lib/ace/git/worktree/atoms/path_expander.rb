@@ -21,10 +21,11 @@ module Ace
             # Expand a path using standard Ruby path expansion
             #
             # @param path [String] Path to expand
+            # @param base [String, nil] Base directory for relative paths (default: current directory)
             # @return [String] Expanded absolute path
-            def expand(path)
+            def expand(path, base = nil)
               return "" if path.nil? || path.empty?
-              File.expand_path(path)
+              base ? File.expand_path(path, base) : File.expand_path(path)
             end
 
             # Resolve a path relative to a base directory
@@ -100,20 +101,18 @@ module Ace
               end
 
               # Check if worktree is being created directly in git root (not allowed)
+              # Allow worktrees in subdirectories or outside git root entirely
               if git_root
                 git_root_expanded = File.expand_path(git_root)
                 expanded_path_abs = File.expand_path(expanded_path)
 
-                if expanded_path_abs.start_with?(git_root_expanded + "/")
-                  relative_path = expanded_path_abs[git_root_expanded.length..-1]
-                  # Don't allow direct creation in git root, only allow in .ace-wt
-                  unless relative_path.start_with?("/.ace-wt/")
-                    return {
-                      valid: false,
-                      error: "Worktree cannot be created directly in git repository. Use .ace-wt/ directory instead.",
-                      expanded_path: expanded_path
-                    }
-                  end
+                # Only prevent creation directly at git root, not in subdirectories
+                if expanded_path_abs == git_root_expanded
+                  return {
+                    valid: false,
+                    error: "Worktree cannot be created at git repository root. Use a subdirectory or different location.",
+                    expanded_path: expanded_path
+                  }
                 end
               end
 

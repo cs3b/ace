@@ -31,13 +31,14 @@ module Ace
           # @param worktree_path [String] Path to the worktree directory
           # @param force [Boolean] Force removal even if there are uncommitted changes
           # @param remove_directory [Boolean] Also remove the worktree directory
+          # @param delete_branch [Boolean] Also delete the associated branch
           # @return [Hash] Result with :success, :message, :error
           #
           # @example
           #   remover = WorktreeRemover.new
           #   result = remover.remove("/project/.ace-wt/task.081")
           #   # => { success: true, message: "Worktree removed successfully", error: nil }
-          def remove(worktree_path, force: false, remove_directory: true)
+          def remove(worktree_path, force: false, remove_directory: true, delete_branch: false)
             return error_result("Worktree path is required") if worktree_path.nil? || worktree_path.empty?
 
             begin
@@ -52,6 +53,9 @@ module Ace
                 return error_result("Worktree has uncommitted changes. Use --force to remove anyway.")
               end
 
+              # Store branch name before removal
+              branch_name = worktree_info.branch
+
               # Remove the worktree using git
               result = remove_git_worktree(expanded_path)
               return result unless result[:success]
@@ -61,11 +65,19 @@ module Ace
                 remove_worktree_directory(expanded_path)
               end
 
+              # Optionally delete the branch
+              branch_deleted = false
+              if delete_branch && branch_name && !branch_name.empty?
+                delete_result = delete_branch_if_safe(branch_name, force)
+                branch_deleted = delete_result[:success]
+              end
+
               {
                 success: true,
                 message: "Worktree removed successfully",
                 path: expanded_path,
-                branch: worktree_info.branch,
+                branch: branch_name,
+                branch_deleted: branch_deleted,
                 error: nil
               }
             rescue StandardError => e
@@ -334,6 +346,39 @@ module Ace
               message: nil,
               error: message
             }
+          end
+
+          # Delete a branch if it's safe to do so
+          #
+          # @param branch_name [String] Branch name to delete
+          # @param force [Boolean] Force deletion even if not merged
+          # @return [Hash] Result with :success, :message, :error
+          def delete_branch_if_safe(branch_name, force)
+            require_relative "../atoms/git_command"
+
+            # Check if branch is already merged (unless forcing)
+            unless force
+              # Check if branch is merged into current branch
+              result = Atoms::GitCommand.execute("branch", "--merged", timeout: @timeout)
+              if result[:success]
+                merged_branches = result[:output].split("\n").map(&:strip).map { |b| b.gsub(/^\*?\s*/, '') }
+                unless merged_branches.include?(branch_name)
+                  # Branch is not merged, don't delete unless forced
+                  warn "Warning: Branch #{branch_name} is not merged. Skipping deletion. Use --force to delete anyway."
+                  return { success: false, message: "Branch not merged", error: nil }
+                end
+              end
+            end
+
+            # Delete the branch
+            delete_flag = force ? "-D" : "-d"
+            result = Atoms::GitCommand.execute("branch", delete_flag, branch_name, timeout: @timeout)
+
+            if result[:success]
+              { success: true, message: "Branch #{branch_name} deleted", error: nil }
+            else
+              { success: false, message: nil, error: "Failed to delete branch: #{result[:error]}" }
+            end
           end
         end
       end

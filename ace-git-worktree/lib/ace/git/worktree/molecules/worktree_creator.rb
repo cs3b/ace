@@ -23,8 +23,10 @@ module Ace
 
           # Initialize a new WorktreeCreator
           #
+          # @param config [WorktreeConfig, nil] Worktree configuration
           # @param timeout [Integer] Command timeout in seconds
-          def initialize(timeout: DEFAULT_TIMEOUT)
+          def initialize(config: nil, timeout: DEFAULT_TIMEOUT)
+            @config = config
             @timeout = timeout
           end
 
@@ -240,7 +242,13 @@ module Ace
           def generate_default_worktree_path(branch_name, git_root)
             # Sanitize branch name for directory use
             sanitized_branch = branch_name.gsub(/[^a-zA-Z0-9\-_]/, "-")
-            File.join(git_root, ".ace-wt", sanitized_branch)
+
+            # Use config's root_path if available, otherwise default to .ace-wt
+            if @config
+              File.join(@config.absolute_root_path, sanitized_branch)
+            else
+              File.join(git_root, ".ace-wt", sanitized_branch)
+            end
           end
 
           # Validate if a branch name is valid for git

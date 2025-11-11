@@ -12,7 +12,7 @@ git:
   worktree:
     # Root directory for all worktrees (relative to project root)
     # This is where worktree directories will be created
-    root_path: ".ace-wt"
+    root_path: "../"
 
     # Automatically navigate to worktree after creation
     # If true, changes directory to the created worktree
@@ -26,7 +26,7 @@ git:
       #   "task.{id}"        -> task.081
       #   "{id}"             -> 081
       #   "{release}/{id}"   -> v.0.9.0/081
-      directory_format: "task.{task_id}"
+      directory_format: "ace-task.{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}

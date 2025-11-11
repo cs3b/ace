@@ -288,7 +288,7 @@ module Ace
           # @return [String] Absolute path
           def expand_root_path
             require_relative "../atoms/path_expander"
-            Atoms::PathExpander.expand(@root_path)
+            Atoms::PathExpander.expand(@root_path, @project_root)
           end
 
           # Apply template variables to a format string

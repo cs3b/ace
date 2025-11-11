@@ -72,6 +72,7 @@ module Ace
                   --task <task-id>         Remove worktree for specific task
                   --force                 Force removal even with uncommitted changes
                   --keep-directory        Keep the worktree directory (default: remove)
+                  --delete-branch, -db    Also delete the associated branch
                   --dry-run               Show what would be removed without removing
                   --help, -h              Show this help message
 
@@ -115,6 +116,7 @@ module Ace
               identifier: nil,
               force: false,
               keep_directory: false,
+              delete_branch: false,
               dry_run: false,
               help: false
             }
@@ -131,6 +133,8 @@ module Ace
                 options[:force] = true
               when "--keep-directory"
                 options[:keep_directory] = true
+              when "--delete-branch", "-db"
+                options[:delete_branch] = true
               when "--dry-run"
                 options[:dry_run] = true
               when "--help", "-h"
@@ -196,22 +200,31 @@ module Ace
             end
 
             unless worktree_info
-              # Even if worktree doesn't exist, try to clean up the branch
+              # Even if worktree doesn't exist, try to clean up the branch if requested
               if task_data
                 puts "Task found but no worktree is associated with it."
                 puts "Task: #{task_data[:title]} (status: #{task_data[:status]})"
 
-                # Try to find and delete the branch based on task data
+                # Try to find the orphaned branch
                 branch_name = find_branch_for_task(task_data, options[:task])
                 if branch_name
                   puts "Found orphaned branch: #{branch_name}"
-                  puts "Deleting branch..."
-                  branch_result = Ace::Git::Worktree::Atoms::GitCommand.execute("branch", "-D", branch_name)
-                  if branch_result[:success]
-                    puts "Deleted branch: #{branch_name}"
-                    return 0
+
+                  # Only delete if user requested it
+                  if options[:delete_branch]
+                    # Use safe deletion method (same as main flow)
+                    remover = Ace::Git::Worktree::Molecules::WorktreeRemover.new
+                    delete_result = remover.send(:delete_branch_if_safe, branch_name, options[:force])
+
+                    if delete_result[:success]
+                      puts "Deleted branch: #{branch_name}"
+                      return 0
+                    else
+                      puts "Warning: Branch '#{branch_name}' was not deleted"
+                      puts "Note: Use --force to delete unmerged branches"
+                    end
                   else
-                    puts "Warning: Failed to delete branch: #{branch_result[:error]}"
+                    puts "Note: Branch '#{branch_name}' still exists. Use --delete-branch to remove it."
                   end
                 end
 
@@ -261,14 +274,23 @@ module Ace
                 puts "Worktree path: #{worktree_info.path}"
                 puts "Branch: #{worktree_info.branch}"
 
-                # Delete the branch if it exists
-                if worktree_info.branch && !worktree_info.branch.empty?
-                  branch_result = Ace::Git::Worktree::Atoms::GitCommand.execute("branch", "-D", worktree_info.branch)
-                  if branch_result[:success]
+                # Delete the branch if requested and it exists (using safe deletion method)
+                branch_deleted = false
+                if options[:delete_branch] && worktree_info.branch && !worktree_info.branch.empty?
+                  # Use WorktreeRemover's safe deletion method for consistency
+                  remover = Ace::Git::Worktree::Molecules::WorktreeRemover.new
+                  delete_result = remover.send(:delete_branch_if_safe, worktree_info.branch, options[:force])
+
+                  if delete_result[:success]
+                    branch_deleted = true
                     puts "Deleted branch: #{worktree_info.branch}"
                   else
-                    puts "Warning: Failed to delete branch #{worktree_info.branch}: #{branch_result[:error]}"
+                    # Branch deletion failed (likely unmerged without --force)
+                    puts "Warning: Branch '#{worktree_info.branch}' was not deleted"
+                    puts "Note: Use --force to delete unmerged branches"
                   end
+                elsif worktree_info.branch && !worktree_info.branch.empty?
+                  puts "\nNote: Branch '#{worktree_info.branch}' still exists. Use --delete-branch to remove it."
                 end
 
                 # Provide appropriate messaging based on task status
@@ -307,14 +329,15 @@ module Ace
             # Prepare removal options
             removal_options = {
               force: options[:force],
-              remove_directory: !options[:keep_directory]
+              remove_directory: !options[:keep_directory],
+              delete_branch: options[:delete_branch]
             }.compact
 
             # Remove the worktree
             result = @manager.remove(options[:identifier], removal_options)
 
             if result[:success]
-              display_traditional_removal_result(result)
+              display_traditional_removal_result(result, options)
               0
             else
               puts "Failed to remove worktree: #{result[:error]}"
@@ -342,10 +365,20 @@ module Ace
           # Display traditional worktree removal result
           #
           # @param result [Hash] Removal result
-          def display_traditional_removal_result(result)
+          # @param options [Hash] Command options
+          def display_traditional_removal_result(result, options = {})
             puts "\nWorktree removed successfully!"
             puts "Worktree path: #{result[:path]}" if result[:path]
             puts "Branch: #{result[:branch]}" if result[:branch]
+
+            if result[:branch_deleted]
+              puts "Branch deleted: #{result[:branch]}"
+            elsif result[:branch] && !result[:branch_deleted]
+              # This message is shown if the branch exists but wasn't deleted,
+              # which happens if --delete-branch was not provided, or if the
+              # branch deletion failed (e.g., unmerged branch without --force)
+              puts "\nNote: Branch '#{result[:branch]}' still exists. Use --delete-branch to remove it."
+            end
           end
 
           # Display removal hints and suggestions

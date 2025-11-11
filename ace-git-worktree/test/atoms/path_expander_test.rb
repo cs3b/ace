@@ -132,15 +132,6 @@ class PathExpanderTest < Minitest::Test
     assert_match(/Parent directory does not exist/, validation[:error])
   end
 
-  def test_validate_for_worktree_in_git_repo
-    # Create a worktree path inside the git repo (should be invalid)
-    git_repo_path = @temp_dir
-    worktree_in_repo = File.join(git_repo_path, "worktree_in_repo")
-
-    validation = @expander.validate_for_worktree(worktree_in_repo, git_repo_path)
-    refute validation[:valid]
-    assert_match(/cannot be created directly in git repository/, validation[:error])
-  end
 
   def test_validate_for_worktree_long_path
     # Create a very long path in .ace-wt
@@ -220,5 +211,88 @@ class PathExpanderTest < Minitest::Test
     parent = File.dirname(Dir.pwd)
     slug = @expander.expand("..")
     assert_equal parent, slug
+  end
+
+  # New tests for base parameter
+  def test_expand_with_base_parameter
+    base_dir = File.join(@temp_dir, "project")
+    FileUtils.mkdir_p(base_dir)
+
+    # Expand relative path with explicit base
+    result = @expander.expand("../", base_dir)
+    assert_equal @temp_dir, result
+  end
+
+  def test_expand_relative_path_with_base
+    base_dir = File.join(@temp_dir, "project")
+    FileUtils.mkdir_p(base_dir)
+
+    result = @expander.expand("subdir", base_dir)
+    expected = File.join(base_dir, "subdir")
+    assert_equal expected, result
+  end
+
+  def test_expand_absolute_path_with_base
+    base_dir = File.join(@temp_dir, "project")
+
+    # Absolute paths should ignore base
+    result = @expander.expand("/tmp/absolute", base_dir)
+    assert_equal "/tmp/absolute", result
+  end
+
+  def test_expand_without_base_uses_current_directory
+    FileUtils.mkdir_p(File.join(@temp_dir, "subdir"))
+    Dir.chdir(@temp_dir)
+
+    result = @expander.expand("subdir")
+    expected = File.expand_path(File.join(@temp_dir, "subdir"))
+    # Normalize both paths to handle macOS /private prefix
+    assert_equal File.realpath(expected), File.realpath(result)
+  end
+
+  # Updated validation tests for new logic
+  def test_validate_for_worktree_at_git_root_should_fail
+    git_root = @temp_dir
+
+    # Creating worktree AT the git root should fail
+    validation = @expander.validate_for_worktree(git_root, git_root)
+    refute validation[:valid]
+    assert_match(/cannot be created at git repository root/, validation[:error])
+  end
+
+  def test_validate_for_worktree_in_subdirectory_should_pass
+    git_root = @temp_dir
+    worktree_subdir = File.join(git_root, ".ace-wt")
+    FileUtils.mkdir_p(worktree_subdir)
+
+    # Creating worktree in subdirectory should pass
+    worktree_path = File.join(worktree_subdir, "task-123")
+    validation = @expander.validate_for_worktree(worktree_path, git_root)
+    assert validation[:valid]
+    assert_nil validation[:error]
+  end
+
+  def test_validate_for_worktree_outside_git_root_should_pass
+    git_root = @temp_dir
+    parent_dir = File.dirname(git_root)
+    FileUtils.mkdir_p(parent_dir) unless File.exist?(parent_dir)
+
+    # Creating worktree outside git root should pass
+    worktree_path = File.join(parent_dir, "worktree-outside")
+    validation = @expander.validate_for_worktree(worktree_path, git_root)
+    assert validation[:valid]
+    assert_nil validation[:error]
+  end
+
+  def test_validate_for_worktree_in_custom_directory_should_pass
+    git_root = @temp_dir
+    custom_dir = File.join(git_root, "custom-worktrees")
+    FileUtils.mkdir_p(custom_dir)
+
+    # Creating worktree in custom subdirectory should pass
+    worktree_path = File.join(custom_dir, "feature-branch")
+    validation = @expander.validate_for_worktree(worktree_path, git_root)
+    assert validation[:valid]
+    assert_nil validation[:error]
   end
 end
