@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.123] - 2025-11-11
+
+### Fixed
+- **ace-git-worktree v0.2.1**: Hook execution fixes and code review improvements
+  - Execute after-create hooks for classic branches (previously only worked for task-based)
+  - Improved error messages for orphaned branch deletion with detailed reasons
+  - Fixed hook configuration structure in tests for reliable execution
+
+### Changed
+- **ace-git-worktree v0.2.1**: Enhanced API encapsulation
+  - Made `WorktreeRemover#delete_branch_if_safe` public for better encapsulation
+  - Enhanced documentation with hooks configuration examples and orphaned branch cleanup
+
+### Technical
+- **ace-git-worktree v0.2.1**: Code quality improvements
+  - Addressed code review feedback improving test coverage and encapsulation
+  - Added test for hook failure handling as non-blocking warnings
+  - Restored `pr.yml` preset for ace-review (unblocked CLI default)
+
 ## [0.9.122] - 2025-11-11
 
 ### Added
