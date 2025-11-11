@@ -12,10 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `presets:` array at root level for preset composition
   - Recursive preset loading with circular dependency detection (max depth: 10)
   - Smart merging strategies: arrays concatenate+deduplicate, hashes deep merge, scalars last-wins
+  - **Composition order**: Base presets are loaded first, then the composing preset (last wins for scalars)
   - Full backward compatibility - existing presets without `presets:` key continue to work unchanged
   - New `PresetValidator` atom for validation and circular dependency detection
+  - Preset name validation (prevents path traversal, enforces length limits)
   - Enhanced `PresetManager` molecule with `load_preset_with_composition` method
-  - Comprehensive test coverage for composition, merging, and error cases
+  - Comprehensive test coverage: 23 validator tests, 10 manager composition tests, 7 integration tests
 - **Example Preset Refactoring**: New DRY preset structure
   - `code.yml` base preset with common review instructions
   - `code-pr.yml` composed preset for pull request reviews
@@ -26,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recursive loading with visited set tracking
   - Deep merge support for nested hash structures
   - Array deduplication during composition
+  - Caching prevents redundant composition (particularly beneficial for deeply nested presets)
+  - Standardized internal metadata format (string keys for consistency)
+  - Added `strip_composition_metadata` helper method for DRY code
 
 ## [0.15.0] - 2025-11-10
 

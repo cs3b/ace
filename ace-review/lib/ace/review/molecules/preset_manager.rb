@@ -20,25 +20,21 @@ module Ace
         end
 
         # Load a specific preset by name
+        # Cached results are returned immediately to avoid redundant composition
         def load_preset(preset_name)
           return nil unless preset_name
 
-          # Check cache first
+          # Check cache first (composition can be expensive for deeply nested presets)
           return @preset_cache[preset_name] if @preset_cache.key?(preset_name)
 
           # Load with composition support
           result = load_preset_with_composition(preset_name)
 
-          # Handle composition errors (check both symbol and string keys for compatibility)
-          success = result && (result[:success] || result["success"])
-          return nil unless success
+          # Handle composition errors
+          return nil unless result && result["success"]
 
-          # Extract preset data (remove metadata - check both symbol and string keys)
-          preset = result.reject { |k, _|
-            k == :success || k == "success" ||
-            k == :composed || k == "composed" ||
-            k == :composed_from || k == "composed_from"
-          }
+          # Extract preset data (remove composition metadata)
+          preset = strip_composition_metadata(result)
 
           # Merge with defaults and cache
           @preset_cache[preset_name] = merge_with_defaults(preset)
@@ -123,13 +119,14 @@ module Ace
 
         # Load a preset with composition support
         # Returns fully composed preset data with all dependent presets merged
+        # Composition order: base presets first, then composing preset (last wins for scalars)
         def load_preset_with_composition(name, visited = Set.new)
           # Check circular dependency
           validation = Atoms::PresetValidator.check_circular_dependency(name, visited.to_a)
           unless validation[:success]
             return {
-              error: validation[:error],
-              success: false
+              "error" => validation[:error],
+              "success" => false
             }
           end
 
@@ -137,8 +134,8 @@ module Ace
           preset = load_preset_from_file(name) || load_preset_from_config(name)
           unless preset
             return {
-              error: "Preset '#{name}' not found. Available presets: #{available_presets.join(', ')}",
-              success: false
+              "error" => "Preset '#{name}' not found. Available presets: #{available_presets.join(', ')}",
+              "success" => false
             }
           end
 
@@ -162,37 +159,30 @@ module Ace
 
           preset_refs.each do |ref_name|
             composed = load_preset_with_composition(ref_name, new_visited)
-            # Check both symbol and string keys for compatibility
-            if composed[:success] || composed["success"]
+            if composed["success"]
               composed_presets << composed
             else
-              errors << (composed[:error] || composed["error"])
+              errors << composed["error"]
             end
           end
 
           # If there were errors loading dependencies, return error
           if errors.any?
             return {
-              error: "Failed to load preset dependencies: #{errors.join(', ')}",
-              success: false,
-              partial_presets: composed_presets
+              "error" => "Failed to load preset dependencies: #{errors.join(', ')}",
+              "success" => false,
+              "partial_presets" => composed_presets
             }
           end
 
           # Strip metadata from composed presets before merging
-          clean_composed = composed_presets.map do |p|
-            p.reject { |k, _|
-              k == :success || k == "success" ||
-              k == :composed || k == "composed" ||
-              k == :composed_from || k == "composed_from"
-            }
-          end
+          clean_composed = composed_presets.map { |p| strip_composition_metadata(p) }
 
           # Merge all composed presets with current preset
-          # Order: dependencies first, then current preset (last wins)
+          # Order: dependencies first, then current preset (last wins for scalars)
           merged = merge_preset_data(clean_composed + [preset])
 
-          # Ensure consistent string keys
+          # Ensure consistent string keys and add composition metadata
           merged = deep_stringify_keys(merged)
           merged["success"] = true
           merged["composed"] = true
@@ -202,6 +192,14 @@ module Ace
         end
 
         private
+
+        # Strip composition metadata from a preset hash
+        # Removes internal keys used for composition tracking: success, composed, composed_from
+        # @param preset_hash [Hash] Preset data with potential metadata
+        # @return [Hash] Preset data without composition metadata
+        def strip_composition_metadata(preset_hash)
+          preset_hash.reject { |k, _| ["success", "composed", "composed_from"].include?(k) }
+        end
 
         # Merge multiple preset data structures
         # Arrays are concatenated and deduplicated (first occurrence wins)
@@ -220,10 +218,12 @@ module Ace
           merged
         end
 
-        # Deep merge two hashes
-        # Arrays are concatenated and deduplicated
-        # Nested hashes are merged recursively
-        # Scalars use last-wins strategy
+        # Deep merge two hashes with special handling for arrays
+        # This is distinct from the simple deep_merge method which is used for merging
+        # with defaults. This method implements the composition-specific merge strategy:
+        # - Arrays: concatenate and deduplicate
+        # - Nested hashes: merge recursively
+        # - Scalars: last value wins
         def deep_merge_hash(hash1, hash2)
           merged = hash1.dup
 

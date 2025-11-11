@@ -124,6 +124,76 @@ module Ace
           assert_equal ["base", "code"], refs
           assert refs.all? { |ref| ref.is_a?(String) }
         end
+
+        # Preset name validation tests
+        def test_validate_preset_name_valid
+          result = @validator.validate_preset_name('valid-preset')
+          assert result[:success]
+        end
+
+        def test_validate_preset_name_nil
+          result = @validator.validate_preset_name(nil)
+          refute result[:success]
+          assert_equal "Preset name cannot be nil or empty", result[:error]
+        end
+
+        def test_validate_preset_name_empty
+          result = @validator.validate_preset_name('')
+          refute result[:success]
+          assert_equal "Preset name cannot be nil or empty", result[:error]
+        end
+
+        def test_validate_preset_name_path_traversal
+          result = @validator.validate_preset_name('../etc/passwd')
+          refute result[:success]
+          assert_includes result[:error], "cannot contain path separators"
+        end
+
+        def test_validate_preset_name_forward_slash
+          result = @validator.validate_preset_name('foo/bar')
+          refute result[:success]
+          assert_includes result[:error], "cannot contain path separators"
+        end
+
+        def test_validate_preset_name_backslash
+          result = @validator.validate_preset_name('foo\\bar')
+          refute result[:success]
+          assert_includes result[:error], "cannot contain path separators"
+        end
+
+        def test_validate_preset_name_too_long
+          long_name = 'a' * 101
+          result = @validator.validate_preset_name(long_name)
+          refute result[:success]
+          assert_includes result[:error], "too long"
+        end
+
+        # Error message format tests
+        def test_circular_dependency_error_message_format
+          result = @validator.check_circular_dependency('preset-c', ['preset-a', 'preset-b', 'preset-c'])
+          refute result[:success]
+          assert_match(/Circular dependency detected: preset-a -> preset-b -> preset-c -> preset-c/, result[:error])
+        end
+
+        def test_max_depth_error_message_format
+          chain = (1..10).map { |i| "preset-#{i}" }
+          result = @validator.check_circular_dependency('preset-11', chain)
+          refute result[:success]
+          assert_match(/Maximum preset nesting depth \(10\) exceeded/, result[:error])
+          assert_includes result[:error], "preset-1"
+        end
+
+        def test_validate_presets_error_includes_missing_names
+          @preset_manager.expect(:preset_exists?, true, ['exists'])
+          @preset_manager.expect(:preset_exists?, false, ['missing1'])
+          @preset_manager.expect(:preset_exists?, false, ['missing2'])
+
+          result = @validator.validate_presets(['exists', 'missing1', 'missing2'], @preset_manager)
+
+          refute result[:success]
+          assert_equal ['missing1', 'missing2'], result[:missing]
+          @preset_manager.verify
+        end
       end
     end
   end

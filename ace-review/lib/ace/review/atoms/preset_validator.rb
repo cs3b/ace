@@ -9,6 +9,31 @@ module Ace
       class PresetValidator
         MAX_DEPTH = 10  # Maximum recursion depth for preset composition
 
+        # Validate preset name format
+        # Returns { success: true } if valid
+        # Returns { success: false, error: "..." } if invalid
+        def self.validate_preset_name(preset_name)
+          return { success: false, error: "Preset name cannot be nil or empty" } if preset_name.nil? || preset_name.empty?
+
+          # Check for path traversal attempts
+          if preset_name.include?("..") || preset_name.include?("/") || preset_name.include?("\\")
+            return {
+              success: false,
+              error: "Invalid preset name '#{preset_name}': cannot contain path separators or '..' sequences"
+            }
+          end
+
+          # Check for reasonable length
+          if preset_name.length > 100
+            return {
+              success: false,
+              error: "Preset name too long (max 100 characters): '#{preset_name[0..20]}...'"
+            }
+          end
+
+          { success: true }
+        end
+
         # Check if a preset exists in the preset manager
         def self.preset_exists?(preset_name, preset_manager)
           preset_manager.preset_exists?(preset_name)
