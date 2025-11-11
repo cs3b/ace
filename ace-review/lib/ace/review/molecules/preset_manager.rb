@@ -2,6 +2,8 @@
 
 require "yaml"
 require "pathname"
+require "set"
+require_relative '../atoms/preset_validator'
 
 module Ace
   module Review
@@ -24,9 +26,19 @@ module Ace
           # Check cache first
           return @preset_cache[preset_name] if @preset_cache.key?(preset_name)
 
-          # Try preset files first
-          preset = load_preset_from_file(preset_name) || load_preset_from_config(preset_name)
-          return nil unless preset
+          # Load with composition support
+          result = load_preset_with_composition(preset_name)
+
+          # Handle composition errors (check both symbol and string keys for compatibility)
+          success = result && (result[:success] || result["success"])
+          return nil unless success
+
+          # Extract preset data (remove metadata - check both symbol and string keys)
+          preset = result.reject { |k, _|
+            k == :success || k == "success" ||
+            k == :composed || k == "composed" ||
+            k == :composed_from || k == "composed_from"
+          }
 
           # Merge with defaults and cache
           @preset_cache[preset_name] = merge_with_defaults(preset)
@@ -109,7 +121,129 @@ module Ace
           File.join(project_root, ".cache/ace-review/sessions")
         end
 
+        # Load a preset with composition support
+        # Returns fully composed preset data with all dependent presets merged
+        def load_preset_with_composition(name, visited = Set.new)
+          # Check circular dependency
+          validation = Atoms::PresetValidator.check_circular_dependency(name, visited.to_a)
+          unless validation[:success]
+            return {
+              error: validation[:error],
+              success: false
+            }
+          end
+
+          # Load preset from file or config
+          preset = load_preset_from_file(name) || load_preset_from_config(name)
+          unless preset
+            return {
+              error: "Preset '#{name}' not found. Available presets: #{available_presets.join(', ')}",
+              success: false
+            }
+          end
+
+          # Mark this preset as visited
+          new_visited = visited.dup.add(name)
+
+          # Extract preset references
+          preset_refs = Atoms::PresetValidator.extract_preset_references(preset)
+
+          # If no references, return preset as-is
+          if preset_refs.empty?
+            # Ensure consistent string keys
+            result = deep_stringify_keys(preset)
+            result["success"] = true
+            return result
+          end
+
+          # Load all referenced presets recursively
+          composed_presets = []
+          errors = []
+
+          preset_refs.each do |ref_name|
+            composed = load_preset_with_composition(ref_name, new_visited)
+            # Check both symbol and string keys for compatibility
+            if composed[:success] || composed["success"]
+              composed_presets << composed
+            else
+              errors << (composed[:error] || composed["error"])
+            end
+          end
+
+          # If there were errors loading dependencies, return error
+          if errors.any?
+            return {
+              error: "Failed to load preset dependencies: #{errors.join(', ')}",
+              success: false,
+              partial_presets: composed_presets
+            }
+          end
+
+          # Strip metadata from composed presets before merging
+          clean_composed = composed_presets.map do |p|
+            p.reject { |k, _|
+              k == :success || k == "success" ||
+              k == :composed || k == "composed" ||
+              k == :composed_from || k == "composed_from"
+            }
+          end
+
+          # Merge all composed presets with current preset
+          # Order: dependencies first, then current preset (last wins)
+          merged = merge_preset_data(clean_composed + [preset])
+
+          # Ensure consistent string keys
+          merged = deep_stringify_keys(merged)
+          merged["success"] = true
+          merged["composed"] = true
+          merged["composed_from"] = preset_refs + [name]
+
+          merged
+        end
+
         private
+
+        # Merge multiple preset data structures
+        # Arrays are concatenated and deduplicated (first occurrence wins)
+        # Hashes are deep merged recursively
+        # Scalars follow "last wins" strategy
+        def merge_preset_data(presets)
+          return presets.first if presets.size == 1
+
+          merged = {}
+
+          presets.each do |preset|
+            # Deep merge each preset into the result
+            merged = deep_merge_hash(merged, preset)
+          end
+
+          merged
+        end
+
+        # Deep merge two hashes
+        # Arrays are concatenated and deduplicated
+        # Nested hashes are merged recursively
+        # Scalars use last-wins strategy
+        def deep_merge_hash(hash1, hash2)
+          merged = hash1.dup
+
+          hash2.each do |key, value2|
+            if merged.key?(key)
+              value1 = merged[key]
+              merged[key] = if value1.is_a?(Hash) && value2.is_a?(Hash)
+                              deep_merge_hash(value1, value2)
+                            elsif value1.is_a?(Array) && value2.is_a?(Array)
+                              (value1 + value2).uniq
+                            else
+                              value2  # Last wins
+                            end
+            else
+              merged[key] = value2
+            end
+          end
+
+          merged
+        end
 
         def find_project_root
           # Try ace-core first

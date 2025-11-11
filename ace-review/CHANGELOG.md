@@ -5,6 +5,28 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Preset Composition**: Support for composing review presets from reusable base configurations
+  - New `presets:` array at root level for preset composition
+  - Recursive preset loading with circular dependency detection (max depth: 10)
+  - Smart merging strategies: arrays concatenate+deduplicate, hashes deep merge, scalars last-wins
+  - Full backward compatibility - existing presets without `presets:` key continue to work unchanged
+  - New `PresetValidator` atom for validation and circular dependency detection
+  - Enhanced `PresetManager` molecule with `load_preset_with_composition` method
+  - Comprehensive test coverage for composition, merging, and error cases
+- **Example Preset Refactoring**: New DRY preset structure
+  - `code.yml` base preset with common review instructions
+  - `code-pr.yml` composed preset for pull request reviews
+  - `code-wip.yml` composed preset for work-in-progress reviews
+
+### Changed
+- **PresetManager**: Enhanced to support preset composition while maintaining backward compatibility
+  - Recursive loading with visited set tracking
+  - Deep merge support for nested hash structures
+  - Array deduplication during composition
+
 ## [0.15.0] - 2025-11-10
 
 ### Added
