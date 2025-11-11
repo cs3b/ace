@@ -460,7 +460,7 @@ module Ace
             end
 
             # Branch exists but no worktree - delete the orphaned branch
-            delete_result = @worktree_remover.send(:delete_branch_if_safe, identifier, force)
+            delete_result = @worktree_remover.delete_branch_if_safe(identifier, force)
 
             if delete_result[:success]
               {
@@ -471,7 +471,9 @@ module Ace
                 path: nil
               }
             else
-              error_result("Branch '#{identifier}' exists but could not be deleted: #{delete_result[:error]}")
+              # Include detailed message from delete_result for better troubleshooting
+              reason = delete_result[:message] || delete_result[:error] || "unknown reason"
+              error_result("Branch '#{identifier}' exists but could not be deleted: #{reason}")
             end
           end
         end
