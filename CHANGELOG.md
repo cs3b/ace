@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.121] - 2025-11-11
+
+### Added
+- **ace-handbook v0.1.0**: New pure workflow package for handbook management
+  - 6 handbook management workflows accessible via wfi:// protocol
+  - Workflows: manage-guides, review-guides, manage-workflow-instructions, review-workflows, manage-agents, update-handbook-docs
+  - Complete gem structure following ACE patterns with comprehensive documentation
+  - Extracted from dev-handbook/.meta/wfi/ for better maintainability and distribution
+- **ace-integration-claude v0.1.0**: New dedicated package for Claude Code integration
+  - Claude Code integration workflow: `wfi://update-integration-claude`
+  - Bundled integration assets: templates, custom commands, documentation
+  - 11 custom command definitions and reference guides
+  - Positioned for future growth of Claude Code integration workflows
+- **Package organization improvements**: Better domain separation across ACE packages
+  - Moved `update-tools-docs.wf.md` to ace-docs package (tools documentation management)
+  - Moved `update-integration-claude.wf.md` to ace-integration-claude package (Claude Code integration)
+  - Maintained backward compatibility while improving package boundaries
+
 ## [0.9.120] - 2025-11-10
 
 ### Technical

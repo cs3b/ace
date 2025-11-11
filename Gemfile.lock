@@ -43,6 +43,16 @@ PATH
       ace-taskflow (>= 0.10.0)
 
 PATH
+  remote: ace-handbook
+  specs:
+    ace-handbook (0.1.0)
+
+PATH
+  remote: ace-integration-claude
+  specs:
+    ace-integration-claude (0.1.0)
+
+PATH
   remote: ace-lint
   specs:
     ace-lint (0.3.1)
@@ -232,6 +242,8 @@ DEPENDENCIES
   ace-git-commit!
   ace-git-diff!
   ace-git-worktree!
+  ace-handbook!
+  ace-integration-claude!
   ace-lint!
   ace-llm!
   ace-llm-providers-cli!
