@@ -390,7 +390,7 @@ class WorktreeManagerTest < Minitest::Test
       project_root: @temp_dir
     )
 
-    # Add hooks configuration
+    # Add hooks configuration using the correct structure
     hooks = [
       {
         "command" => "echo 'Hook executed'",
@@ -398,7 +398,7 @@ class WorktreeManagerTest < Minitest::Test
         "continue_on_error" => true
       }
     ]
-    config.instance_variable_set(:@after_create_hooks, hooks)
+    config.instance_variable_set(:@hooks_config, { "after_create" => hooks })
 
     # Create manager with our config
     manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
@@ -447,7 +447,7 @@ class WorktreeManagerTest < Minitest::Test
     )
 
     # No hooks configured
-    config.instance_variable_set(:@after_create_hooks, [])
+    config.instance_variable_set(:@hooks_config, {})
 
     # Create manager with our config
     manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
@@ -473,6 +473,68 @@ class WorktreeManagerTest < Minitest::Test
     assert_nil result[:hooks_results], "Should not have hooks_results when no hooks configured"
 
     mock_creator.verify
+  end
+
+  def test_create_traditional_worktree_handles_hook_failures_as_warnings
+    # Setup: Create a config with after_create_hooks
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      root_path: ".ace-wt",
+      project_root: @temp_dir
+    )
+
+    # Add hooks configuration
+    hooks = [
+      {
+        "command" => "failing-command",
+        "timeout" => 5,
+        "continue_on_error" => true
+      }
+    ]
+    config.instance_variable_set(:@hooks_config, { "after_create" => hooks })
+
+    manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
+      config: config,
+      project_root: @temp_dir
+    )
+
+    # Mock the worktree creator to return success
+    mock_creator = Minitest::Mock.new
+    worktree_result = {
+      success: true,
+      worktree_path: "/path/to/worktree",
+      branch: "test-branch"
+    }
+    mock_creator.expect(:create_traditional, worktree_result, [String, NilClass, Hash])
+
+    # Mock the hook executor to return failure
+    mock_hook_executor = Minitest::Mock.new
+    hook_result = {
+      success: false,
+      errors: ["Hook command failed"],
+      results: [{ command: "failing-command", success: false, error: "exit status 1" }]
+    }
+    mock_hook_executor.expect(:execute_hooks, hook_result, [Array, Hash])
+
+    manager.instance_variable_set(:@worktree_creator, mock_creator)
+
+    Ace::Git::Worktree::Molecules::HookExecutor.stub(:new, mock_hook_executor) do
+      result = manager.create("test-branch")
+
+      # Worktree creation should still succeed even if hooks fail
+      assert result[:success], "Worktree creation should still succeed even if hooks fail"
+      assert_equal "Worktree created successfully", result[:message]
+
+      # Result should contain warnings
+      assert result[:warnings], "Result should contain warnings"
+      assert_equal ["Hook command failed"], result[:warnings]
+
+      # Result should still contain hook results
+      assert result[:hooks_results], "Result should still contain hook results"
+      assert_equal 1, result[:hooks_results].length
+    end
+
+    mock_creator.verify
+    mock_hook_executor.verify
   end
 
   def test_remove_deletes_orphaned_branch_when_worktree_missing

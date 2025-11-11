@@ -123,6 +123,40 @@ root_path: "/var/worktrees"        # Creates: /var/worktrees/task-name/
 
 **Note:** Relative paths are resolved relative to the project root, not the current working directory.
 
+### After-Create Hooks
+
+You can configure commands to run automatically after successful worktree creation (both classic and task-based):
+
+```yaml
+git:
+  worktree:
+    hooks:
+      after_create:
+        - command: "find {worktree_path} -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
+          timeout: 5
+          continue_on_error: true
+        - command: "echo 'Worktree ready at {worktree_path}'"
+          timeout: 2
+```
+
+**Available template variables:**
+- `{worktree_path}` - Full path to the created worktree
+- `{project_root}` - Project root directory
+- `{task_id}` - Task ID (only for task-based worktrees)
+
+**Hook options:**
+- `command` - Shell command to execute (required)
+- `timeout` - Timeout in seconds (default: 10)
+- `continue_on_error` - Continue if hook fails (default: true)
+
+**Common use cases:**
+- Automatically trust mise.toml files
+- Initialize development environment
+- Set up IDE workspace files
+- Run post-setup scripts
+
+Hook failures are non-blocking by default and appear as warnings in the output.
+
 ### Template Variables
 
 Available variables for naming formats:
@@ -213,9 +247,24 @@ ace-git-worktree remove --task 081 --keep-directory
 
 **Branch Deletion Behavior:**
 - By default, removing a worktree keeps the associated branch
-- Use `--delete-branch` to also delete the branch after worktree removal
+- Use `--delete-branch` (or `-db`) to also delete the branch after worktree removal
 - Without `--force`, only merged branches are deleted (safe mode)
 - With `--force`, unmerged branches can be deleted (use with caution)
+
+**Orphaned Branch Cleanup:**
+If a worktree has already been removed but the branch still exists, you can delete the orphaned branch:
+
+```bash
+# First removal (worktree only)
+ace-git-worktree remove feature-branch
+# → Worktree removed, branch still exists
+
+# Second removal (delete orphaned branch)
+ace-git-worktree remove feature-branch --delete-branch
+# → Deleted orphaned branch: feature-branch
+```
+
+This works for both classic and task-based branches.
 
 ### prune
 Clean up deleted worktrees

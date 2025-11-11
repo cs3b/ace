@@ -348,6 +348,8 @@ module Ace
             }
           end
 
+          public
+
           # Delete a branch if it's safe to do so
           #
           # @param branch_name [String] Branch name to delete
