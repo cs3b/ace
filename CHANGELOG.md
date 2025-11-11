@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.122] - 2025-11-11
+
+### Added
+- **ace-git-worktree v0.2.0**: Configurable root_path and branch deletion features
+  - Configurable worktree root path supporting paths outside project directory
+  - New `--delete-branch` flag for safe branch deletion on worktree removal
+  - Path expansion with optional base parameter for context-aware resolution
+  - Comprehensive test coverage with 46 new tests across all components
+  - Enhanced documentation with usage examples and benefits
+
 ## [0.9.121] - 2025-11-11
 
 ### Added

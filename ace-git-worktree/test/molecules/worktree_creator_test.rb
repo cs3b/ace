@@ -301,4 +301,65 @@ class WorktreeCreatorTest < Minitest::Test
         "Should reject invalid branch: #{invalid_branch}"
     end
   end
+
+  # Tests for config parameter
+  def test_generate_default_worktree_path_with_config
+    # Create a mock config with custom root_path
+    config = mock_config("/custom/root/path")
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+    git_root = @temp_dir
+
+    path = creator.send(:generate_default_worktree_path, "feature-branch", git_root)
+
+    assert_equal "/custom/root/path/feature-branch", path
+  end
+
+  def test_generate_default_worktree_path_without_config
+    # Creator without config should use default .ace-wt
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+    git_root = @temp_dir
+
+    path = creator.send(:generate_default_worktree_path, "feature-branch", git_root)
+
+    expected = File.join(git_root, ".ace-wt", "feature-branch")
+    assert_equal expected, path
+  end
+
+  def test_generate_default_worktree_path_sanitizes_branch_name
+    config = mock_config("/worktrees")
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+    git_root = @temp_dir
+
+    # Branch name with special characters
+    path = creator.send(:generate_default_worktree_path, "feature/sub-branch", git_root)
+
+    assert_equal "/worktrees/feature-sub-branch", path
+  end
+
+  def test_create_traditional_with_config_respects_root_path
+    config = mock_config(File.join(@temp_dir, "custom-worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    # Ensure parent directory exists
+    FileUtils.mkdir_p(File.join(@temp_dir, "custom-worktrees"))
+
+    # Mock git command success
+    git_result = { success: true, output: "", error: nil }
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+        result = creator.create_traditional("test-branch", nil, git_root: @temp_dir)
+
+        assert result[:success]
+        assert_match %r{custom-worktrees/test-branch}, result[:worktree_path]
+      end
+    end
+  end
+
+  private
+
+  def mock_config(root_path)
+    config = Object.new
+    config.define_singleton_method(:absolute_root_path) { root_path }
+    config
+  end
 end

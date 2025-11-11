@@ -30,7 +30,7 @@ module Ace
             # Initialize molecules
             @config_loader = Molecules::ConfigLoader.new(project_root)
             @config = config || load_configuration
-            @worktree_creator = Molecules::WorktreeCreator.new
+            @worktree_creator = Molecules::WorktreeCreator.new(config: @config)
             @worktree_lister = Molecules::WorktreeLister.new
             @worktree_remover = Molecules::WorktreeRemover.new
             @task_fetcher = Molecules::TaskFetcher.new
@@ -214,7 +214,8 @@ module Ace
               result = @worktree_remover.remove(
                 worktree.path,
                 force: options[:force],
-                remove_directory: options[:remove_directory] != false
+                remove_directory: options[:remove_directory] != false,
+                delete_branch: options[:delete_branch] == true
               )
 
               if result[:success]

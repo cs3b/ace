@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2025-11-11
+
+### Added
+- **Configurable Worktree Root Path**: `root_path` configuration now supports paths outside the project directory
+  - Relative paths are resolved relative to project root (not current directory)
+  - Allows worktrees in parent directory (`../`), home directory (`~/worktrees`), or custom locations
+  - Benefits: keeps project clean, avoids IDE file watcher overhead, prevents nested git issues
+- **Branch Deletion on Worktree Removal**: New `--delete-branch` flag for remove command
+  - Safely deletes branches when removing worktrees
+  - Without `--force`: only deletes merged branches (safe mode)
+  - With `--force`: can delete unmerged branches (use with caution)
+  - Clear user feedback when branch is kept vs. deleted
+
+### Changed
+- **Path Expansion**: `PathExpander.expand()` now accepts optional `base` parameter for context-aware expansion
+- **Path Validation**: Relaxed to allow worktrees in subdirectories or outside git root (only prevents creation AT git root)
+- **WorktreeCreator**: Now accepts configuration object to respect `root_path` setting for traditional worktrees
+- **WorktreeRemover**: Enhanced with `delete_branch_if_safe()` method that checks merge status before deletion
+
+### Fixed
+- **Configuration Respect**: Fixed bug where `root_path` configuration was ignored for traditional worktrees
+- **Branch Orphaning**: Fixed issue where removing worktrees left orphaned branches causing "branch already exists" errors
+
 ## [0.1.11] - 2025-11-05
 
 ### Fixed

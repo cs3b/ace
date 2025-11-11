@@ -95,6 +95,34 @@ git:
       on_delete: true                         # Auto-cleanup on delete
 ```
 
+### Worktree Root Path
+
+The `root_path` setting determines where worktrees are created. It supports flexible configurations:
+
+**Inside project (default):**
+```yaml
+root_path: ".ace-wt"              # Creates: project/.ace-wt/task-name/
+```
+
+**Outside project (parent directory):**
+```yaml
+root_path: "../"                   # Creates: parent-dir/task-name/
+```
+
+**Custom location:**
+```yaml
+root_path: "~/worktrees"           # Creates: ~/worktrees/task-name/
+root_path: "/var/worktrees"        # Creates: /var/worktrees/task-name/
+```
+
+**Benefits of external worktrees:**
+- Keeps project directory clean
+- Avoids IDE file watcher overhead
+- Prevents nested git repository issues
+- Easier to manage separate disk space
+
+**Note:** Relative paths are resolved relative to the project root, not the current working directory.
+
 ### Template Variables
 
 Available variables for naming formats:
@@ -170,12 +198,24 @@ ace-git-worktree remove --task 081
 # Remove by branch name
 ace-git-worktree remove feature-branch
 
-# Force removal (with uncommitted changes)
-ace-git-worktree remove --task 081 --force
+# Remove worktree AND delete the branch (long form)
+ace-git-worktree remove feature-branch --delete-branch
+
+# Remove worktree AND delete the branch (short form)
+ace-git-worktree remove feature-branch -db
+
+# Force removal (with uncommitted changes and unmerged branch)
+ace-git-worktree remove --task 081 --force -db
 
 # Keep directory (remove git tracking only)
 ace-git-worktree remove --task 081 --keep-directory
 ```
+
+**Branch Deletion Behavior:**
+- By default, removing a worktree keeps the associated branch
+- Use `--delete-branch` to also delete the branch after worktree removal
+- Without `--force`, only merged branches are deleted (safe mode)
+- With `--force`, unmerged branches can be deleted (use with caution)
 
 ### prune
 Clean up deleted worktrees
