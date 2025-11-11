@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-11-11
+
+### Fixed
+- Execute after-create hooks for classic branches (previously only worked for task-based branches)
+- Proper hook configuration structure in tests for reliable test execution
+
+### Changed
+- Made `WorktreeRemover#delete_branch_if_safe` public for better API encapsulation
+- Improved error messages for orphaned branch deletion to include detailed reasons
+- Enhanced documentation with hooks configuration examples and orphaned branch cleanup guide
+
+### Technical
+- Addressed code review feedback improving encapsulation and test coverage
+- Added test for hook failure handling as non-blocking warnings
+- Fixed tests to use correct `@hooks_config` structure instead of direct instance variable
+
 ## [0.2.0] - 2025-11-11
 
 ### Added
