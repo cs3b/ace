@@ -79,11 +79,6 @@ test_suite:
       group: tools
       priority: 3
 
-    - name: ace-core
-      path: ace-core
-      group: tools
-      priority: 3
-
     - name: ace-support-markdown
       path: ace-support-markdown
       group: foundation
