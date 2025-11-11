@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.124] - 2025-11-11
+
+### Technical
+- **ace-review v0.15.1**: Optimize test suite performance with mocking (2.2x faster, 2.03s → 0.93s)
+  - Add `Ace::Context.load_auto()` mocking in test_helper
+  - Add `GitExtractor` mocking (staged_diff, working_diff, tracking_branch)
+  - Remove real git operations from integration tests
+  - Fix test issues (super calls, initialization timing, assertions)
+  - All 108 tests passing (16 atoms + 53 molecules + 29 organisms + 10 integration)
+
 ## [0.9.123] - 2025-11-11
 
 ### Fixed

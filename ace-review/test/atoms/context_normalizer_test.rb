@@ -4,6 +4,7 @@ require "test_helper"
 
 class ContextNormalizerTest < AceReviewTest
   def setup
+    super
     @normalizer = Ace::Review::Atoms::ContextNormalizer
   end
 
