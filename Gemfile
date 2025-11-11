@@ -20,6 +20,8 @@ gem 'ace-test-runner', path: 'ace-test-runner'
 
 # Shared dev/test tools for all gems
 group :development, :test do
+  gem 'ace-handbook', path: 'ace-handbook'
+  gem 'ace-integration-claude', path: 'ace-integration-claude'
   gem 'ace-support-test-helpers', path: 'ace-support-test-helpers'
   gem 'bundler', '~> 2.4'
   gem 'minitest', '~> 5.20'

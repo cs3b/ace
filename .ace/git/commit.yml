@@ -15,7 +15,7 @@ git:
       # Custom scopes for ace-meta components
       custom:
         # Gem components
-        - ace-core
+        - ace-support-core
         - ace-llm
         - ace-git-commit
         - ace-context

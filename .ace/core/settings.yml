@@ -28,7 +28,7 @@ ace:
   # Custom paths or patterns can be added here
   paths:
     gems:
-      - "ace-core"
+      - "ace-support-core"
       - "ace-*"  # Future gems
     submodules:
       - "dev-tools"

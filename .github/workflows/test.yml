@@ -23,7 +23,7 @@ jobs:
       matrix:
         ruby: ['3.2', '3.3', '3.4']
         package:
-          - ace-core
+          - ace-support-core
           - ace-test-support
           - ace-test-runner
           - ace-context
