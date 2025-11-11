@@ -474,4 +474,114 @@ class WorktreeManagerTest < Minitest::Test
 
     mock_creator.verify
   end
+
+  def test_remove_deletes_orphaned_branch_when_worktree_missing
+    # Setup: Create a config
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      root_path: ".ace-wt",
+      project_root: @temp_dir
+    )
+
+    manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
+      config: config,
+      project_root: @temp_dir
+    )
+
+    # Mock: Worktree not found
+    mock_lister = Minitest::Mock.new
+    mock_lister.expect(:find_by_task_id, nil, [String])
+    mock_lister.expect(:find_by_branch, nil, [String])
+    mock_lister.expect(:find_by_directory, nil, [String])
+    mock_lister.expect(:find_by_path, nil, [String])
+
+    # Mock: Branch exists in git
+    branch_list_result = { success: true, output: "main\nfeature-branch\nother-branch" }
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, lambda { |*args|
+      if args.include?("--format=%(refname:short)")
+        branch_list_result
+      else
+        { success: false }
+      end
+    }) do
+      # Mock: delete_branch_if_safe succeeds
+      mock_remover = Minitest::Mock.new
+      delete_result = { success: true, message: "Branch deleted" }
+      mock_remover.expect(:delete_branch_if_safe, delete_result, [String, TrueClass])
+
+      manager.instance_variable_set(:@worktree_lister, mock_lister)
+      manager.instance_variable_set(:@worktree_remover, mock_remover)
+
+      result = manager.remove("feature-branch", delete_branch: true, force: true)
+
+      assert result[:success], "Should successfully delete orphaned branch"
+      assert_equal "Deleted orphaned branch: feature-branch", result[:message]
+      assert_equal "feature-branch", result[:branch]
+      assert_equal true, result[:branch_deleted]
+      assert_nil result[:path]
+
+      mock_lister.verify
+      mock_remover.verify
+    end
+  end
+
+  def test_remove_fails_when_branch_and_worktree_both_missing
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      root_path: ".ace-wt",
+      project_root: @temp_dir
+    )
+
+    manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
+      config: config,
+      project_root: @temp_dir
+    )
+
+    # Mock: Worktree not found
+    mock_lister = Minitest::Mock.new
+    mock_lister.expect(:find_by_task_id, nil, [String])
+    mock_lister.expect(:find_by_branch, nil, [String])
+    mock_lister.expect(:find_by_directory, nil, [String])
+    mock_lister.expect(:find_by_path, nil, [String])
+
+    # Mock: Branch does NOT exist in git
+    branch_list_result = { success: true, output: "main\nother-branch" }
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, branch_list_result) do
+      manager.instance_variable_set(:@worktree_lister, mock_lister)
+
+      result = manager.remove("nonexistent-branch", delete_branch: true)
+
+      refute result[:success], "Should fail when neither worktree nor branch exists"
+      assert_match(/Worktree not found/, result[:error])
+
+      mock_lister.verify
+    end
+  end
+
+  def test_remove_without_delete_branch_still_fails_when_worktree_missing
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      root_path: ".ace-wt",
+      project_root: @temp_dir
+    )
+
+    manager = Ace::Git::Worktree::Organisms::WorktreeManager.new(
+      config: config,
+      project_root: @temp_dir
+    )
+
+    # Mock: Worktree not found
+    mock_lister = Minitest::Mock.new
+    mock_lister.expect(:find_by_task_id, nil, [String])
+    mock_lister.expect(:find_by_branch, nil, [String])
+    mock_lister.expect(:find_by_directory, nil, [String])
+    mock_lister.expect(:find_by_path, nil, [String])
+
+    manager.instance_variable_set(:@worktree_lister, mock_lister)
+
+    # Without --delete-branch, should fail immediately
+    result = manager.remove("feature-branch", delete_branch: false)
+
+    refute result[:success], "Should fail when worktree not found and no --delete-branch"
+    assert_match(/Worktree not found/, result[:error])
+
+    mock_lister.verify
+  end
 end

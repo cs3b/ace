@@ -229,7 +229,16 @@ module Ace
 
               # Find the worktree
               worktree = find_worktree_by_identifier(identifier)
-              return error_result("Worktree not found: #{identifier}") unless worktree
+
+              unless worktree
+                # Worktree not found - check if we should try branch-only deletion
+                if options[:delete_branch]
+                  result = attempt_branch_only_deletion(identifier, options[:force])
+                  return result if result[:success]
+                end
+
+                return error_result("Worktree not found: #{identifier}")
+              end
 
               # Remove the worktree
               result = @worktree_remover.remove(
@@ -428,6 +437,42 @@ module Ace
               success: false,
               error: message
             }
+          end
+
+          # Attempt to delete an orphaned branch (when worktree doesn't exist)
+          #
+          # @param identifier [String] Branch name or identifier
+          # @param force [Boolean] Force deletion even if unmerged
+          # @return [Hash] Deletion result
+          def attempt_branch_only_deletion(identifier, force)
+            require_relative "../atoms/git_command"
+
+            # Get list of all branches
+            branches_result = Atoms::GitCommand.execute("branch", "--format=%(refname:short)", timeout: 5)
+            unless branches_result[:success]
+              return error_result("Worktree not found: #{identifier}")
+            end
+
+            # Check if identifier matches a branch name
+            branches = branches_result[:output].split("\n").map(&:strip)
+            unless branches.include?(identifier)
+              return error_result("Worktree not found: #{identifier}")
+            end
+
+            # Branch exists but no worktree - delete the orphaned branch
+            delete_result = @worktree_remover.send(:delete_branch_if_safe, identifier, force)
+
+            if delete_result[:success]
+              {
+                success: true,
+                message: "Deleted orphaned branch: #{identifier}",
+                branch: identifier,
+                branch_deleted: true,
+                path: nil
+              }
+            else
+              error_result("Branch '#{identifier}' exists but could not be deleted: #{delete_result[:error]}")
+            end
           end
         end
       end
