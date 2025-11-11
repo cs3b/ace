@@ -69,6 +69,27 @@ module Ace
 
               if result[:success]
                 result[:message] = "Worktree created successfully"
+
+                # Execute after-create hooks if configured
+                hooks = @config.after_create_hooks
+                if hooks && hooks.any?
+                  require_relative "../molecules/hook_executor"
+                  hook_executor = Molecules::HookExecutor.new
+                  hook_result = hook_executor.execute_hooks(
+                    hooks,
+                    worktree_path: result[:worktree_path],
+                    project_root: @project_root,
+                    task_data: nil  # No task data for traditional worktrees
+                  )
+
+                  if hook_result[:success]
+                    result[:hooks_results] = hook_result[:results]
+                  else
+                    # Hooks are non-blocking - failures become warnings
+                    result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
+                    result[:hooks_results] = hook_result[:results]
+                  end
+                end
               end
 
               result
