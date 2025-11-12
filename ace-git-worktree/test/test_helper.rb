@@ -8,19 +8,15 @@ require "minitest/autorun"
 require "minitest/pride"
 require "minitest/reporters"
 
+# Load shared test support for mocking fixtures
+require "ace/test_support"
+
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
-# Configure SimpleCov for coverage reporting
+# Standardized coverage configuration
 if ENV["COVERAGE"]
-  require "simplecov"
-  SimpleCov.start do
-    add_filter "/test/"
-    add_group "Atoms", "lib/ace/git/worktree/atoms"
-    add_group "Molecules", "lib/ace/git/worktree/molecules"
-    add_group "Organisms", "lib/ace/git/worktree/organisms"
-    add_group "Models", "lib/ace/git/worktree/models"
-    add_group "Commands", "lib/ace/git/worktree/commands"
-  end
+  require "ace/test_support/coverage"
+  Ace::TestSupport::Coverage.start("ace-git-worktree")
 end
 
 # Test utilities and helpers
@@ -37,29 +33,22 @@ module TestHelper
   end
 
   def stub_ace_core_config(config_data = {})
-    # Mock Ace::Core.get for configuration
-    Ace::Core.stub(:get, config_data) do
+    # Use shared fixtures from ace-test-support
+    Ace::TestSupport::Fixtures::GitMocks.stub_ace_core_config(config_data) do
       yield
     end
   end
 
   def stub_ace_taskflow_output(task_id, output)
-    # Mock ace-taskflow CLI output
-    Open3.stub(:capture3, ["#{output}", "", 0]) do
+    # Use shared fixtures from ace-test-support
+    Ace::TestSupport::Fixtures::GitMocks.stub_ace_taskflow_output(task_id, output) do
       yield
     end
   end
 
-  def stub_git_command(output = "", error = "", exit_status = 0)
-    # Mock git command execution via ace-git-diff
-    mock_result = {
-      success: exit_status == 0,
-      output: output,
-      error: error,
-      exit_code: exit_status
-    }
-
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+  def stub_git_command(output: "", error: "", exit_status: 0)
+    # Use shared fixtures from ace-test-support
+    Ace::TestSupport::Fixtures::GitMocks.stub_git_command(output: output, error: error, exit_status: exit_status) do
       yield
     end
   end
