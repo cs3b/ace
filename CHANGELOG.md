@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Technical
+- **ace-git-worktree v0.2.2**: Test suite modernization and command enhancements
+  - Simplified test architecture with 843 line reduction (focused smoke tests)
+  - Added missing CLI flags (--no-mise-trust, --force)
+  - Enhanced security validation for user inputs
+  - Fixed command test mocks to match actual API signatures
+
 ## [0.9.124] - 2025-11-11
 
 ### Technical
