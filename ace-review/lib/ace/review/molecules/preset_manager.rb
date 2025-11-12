@@ -16,7 +16,8 @@ module Ace
           @project_root = project_root || find_project_root
           @config_path = resolve_config_path(config_path)
           @config = load_configuration
-          @preset_cache = {}
+          @preset_cache = {}  # Final preset cache (after merging with defaults)
+          @composition_cache = {}  # Intermediate composition cache (before defaults merge)
         end
 
         # Load a specific preset by name
@@ -31,7 +32,13 @@ module Ace
           result = load_preset_with_composition(preset_name)
 
           # Handle composition errors
-          return nil unless result && result["success"]
+          unless result && result["success"]
+            # Log composition failure for debugging
+            if result && result["error"]
+              warn "Failed to compose preset '#{preset_name}': #{result['error']}" if Ace::Review.debug?
+            end
+            return nil
+          end
 
           # Extract preset data (remove composition metadata)
           preset = strip_composition_metadata(result)
@@ -120,7 +127,16 @@ module Ace
         # Load a preset with composition support
         # Returns fully composed preset data with all dependent presets merged
         # Composition order: base presets first, then composing preset (last wins for scalars)
+        # Uses intermediate caching to avoid redundant composition of shared dependencies
         def load_preset_with_composition(name, visited = Set.new)
+          start_time = Time.now if Ace::Review.debug?
+
+          # Check composition cache first (skips circular dependency check for cached results)
+          if @composition_cache.key?(name) && visited.empty?
+            warn "[COMPOSITION] Cache hit for '#{name}'" if Ace::Review.debug?
+            return @composition_cache[name].dup
+          end
+
           # Check circular dependency
           validation = Atoms::PresetValidator.check_circular_dependency(name, visited.to_a)
           unless validation[:success]
@@ -188,17 +204,41 @@ module Ace
           merged["composed"] = true
           merged["composed_from"] = preset_refs + [name]
 
+          # Cache the composed result for future reuse (only cache successful compositions)
+          @composition_cache[name] = merged.dup if visited.empty?
+
+          # Log composition performance metrics in debug mode
+          if Ace::Review.debug?
+            elapsed = Time.now - start_time
+            depth = visited.size + 1
+            ref_count = preset_refs.size
+            warn "[COMPOSITION] Composed '#{name}' in #{(elapsed * 1000).round(2)}ms (depth: #{depth}, refs: #{ref_count})"
+          end
+
           merged
         end
 
         private
 
-        # Strip composition metadata from a preset hash
+        # Strip composition metadata from a preset hash (deep recursive)
         # Removes internal keys used for composition tracking: success, composed, composed_from
+        # Recursively processes nested hashes and arrays to ensure complete metadata removal
         # @param preset_hash [Hash] Preset data with potential metadata
-        # @return [Hash] Preset data without composition metadata
+        # @return [Hash] Preset data without composition metadata at any nesting level
         def strip_composition_metadata(preset_hash)
-          preset_hash.reject { |k, _| ["success", "composed", "composed_from"].include?(k) }
+          result = preset_hash.reject { |k, _| ["success", "composed", "composed_from"].include?(k) }
+
+          # Recursively strip metadata from nested structures
+          result.transform_values do |value|
+            case value
+            when Hash
+              strip_composition_metadata(value)
+            when Array
+              value.map { |item| item.is_a?(Hash) ? strip_composition_metadata(item) : item }
+            else
+              value
+            end
+          end
         end
 
         # Merge multiple preset data structures

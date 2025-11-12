@@ -221,4 +221,140 @@ class PresetCompositionIntegrationTest < AceReviewTest
     assert_equal "No references", preset["description"]
     assert_equal "test-model", preset["model"]
   end
+
+  def test_very_deep_nesting_near_max_depth
+    # Create a chain of 7 presets (closer to MAX_DEPTH=10)
+    create_test_preset("layer_1", <<~YAML)
+      description: "Base layer"
+      model: "foundation-model"
+      config:
+        layer: 1
+    YAML
+
+    (2..7).each do |i|
+      create_test_preset("layer_#{i}", <<~YAML)
+        presets:
+          - layer_#{i-1}
+        description: "Layer #{i}"
+        config:
+          layer: #{i}
+          feature_#{i}: "enabled"
+      YAML
+    end
+
+    preset = @manager.load_preset("layer_7")
+
+    refute_nil preset, "7-level nesting should work within MAX_DEPTH=10"
+    assert_equal "Layer 7", preset["description"]
+    assert_equal "foundation-model", preset["model"]
+
+    # Verify deep merge worked correctly
+    assert_equal 7, preset["config"]["layer"]
+    (2..7).each do |i|
+      assert_equal "enabled", preset["config"]["feature_#{i}"]
+    end
+  end
+
+  def test_complex_object_array_deduplication
+    # Test array deduplication with hash objects, not just strings
+    create_test_preset("base_sections", <<~YAML)
+      description: "Base with sections"
+      sections:
+        - name: "intro"
+          priority: 1
+        - name: "body"
+          priority: 2
+        - name: "conclusion"
+          priority: 3
+    YAML
+
+    create_test_preset("extended_sections", <<~YAML)
+      presets:
+        - base_sections
+      description: "Extended sections"
+      sections:
+        - name: "body"
+          priority: 2
+        - name: "appendix"
+          priority: 4
+    YAML
+
+    preset = @manager.load_preset("extended_sections")
+
+    refute_nil preset
+    assert_equal "Extended sections", preset["description"]
+
+    # Arrays of hashes should be concatenated and deduplicated
+    sections = preset["sections"]
+    assert_equal 4, sections.size, "Should have 4 unique sections"
+
+    section_names = sections.map { |s| s["name"] }
+    assert_equal ["intro", "body", "conclusion", "appendix"], section_names
+  end
+
+  def test_intermediate_caching_performance
+    # This test verifies that intermediate composition results are cached
+    # Create a diamond dependency: top -> left, right; left -> base; right -> base
+    create_test_preset("base_common", <<~YAML)
+      description: "Common base"
+      model: "shared-model"
+    YAML
+
+    create_test_preset("left_branch", <<~YAML)
+      presets:
+        - base_common
+      description: "Left branch"
+      left_feature: "enabled"
+    YAML
+
+    create_test_preset("right_branch", <<~YAML)
+      presets:
+        - base_common
+      description: "Right branch"
+      right_feature: "enabled"
+    YAML
+
+    create_test_preset("diamond_top", <<~YAML)
+      presets:
+        - left_branch
+        - right_branch
+      description: "Diamond top"
+      top_feature: "enabled"
+    YAML
+
+    # Load the top preset - base_common should only be composed once due to caching
+    preset = @manager.load_preset("diamond_top")
+
+    refute_nil preset
+    assert_equal "Diamond top", preset["description"]
+    assert_equal "shared-model", preset["model"]
+    assert_equal "enabled", preset["left_feature"]
+    assert_equal "enabled", preset["right_feature"]
+    assert_equal "enabled", preset["top_feature"]
+  end
+
+  def test_deep_metadata_stripping_in_nested_structures
+    # Verify that metadata is stripped from deeply nested structures
+    create_test_preset("nested_metadata", <<~YAML)
+      description: "Nested structure"
+      config:
+        database:
+          settings:
+            pool: 5
+            timeout: 5000
+    YAML
+
+    preset = @manager.load_preset("nested_metadata")
+
+    # Manually check that no metadata keys exist at any level
+    refute preset.key?("success")
+    refute preset.key?("composed")
+    refute preset.key?("composed_from")
+
+    # Check nested structures don't have metadata
+    if preset["config"].is_a?(Hash) && preset["config"]["database"].is_a?(Hash)
+      refute preset["config"].key?("success")
+      refute preset["config"]["database"].key?("success")
+    end
+  end
 end

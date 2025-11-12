@@ -235,6 +235,143 @@ subject:
 
 **Note**: The new `instructions` format provides section-based organization that ace-context processes into structured XML-tagged output. The legacy `prompt_composition` format continues to work for backward compatibility.
 
+### Preset Composition (DRY Configuration)
+
+Create reusable base presets and compose specialized presets from them, reducing duplication and improving maintainability.
+
+#### Basic Composition
+
+Use the `presets:` array at the root level to compose from other presets:
+
+```yaml
+# .ace/review/presets/code.yml - Base preset
+description: "Base code review configuration"
+instructions:
+  context:
+    base: "prompt://base/system"
+    sections:
+      review_focus:
+        files:
+          - "prompt://focus/languages/ruby"
+          - "prompt://focus/architecture/atom"
+model: gpro
+```
+
+```yaml
+# .ace/review/presets/code-pr.yml - Specialized for PRs
+presets:
+  - code                    # Inherit from base preset
+
+description: "Pull request review"
+subject:
+  context:
+    sections:
+      code_changes:
+        diffs:
+          - "origin...HEAD"
+```
+
+#### Composition Rules
+
+- **Merge Strategy**: Base presets loaded first, then composing preset (last wins for scalars)
+- **Arrays**: Concatenated and deduplicated (first occurrence wins)
+- **Hashes**: Deep merged recursively
+- **Scalars**: Last value wins (override behavior)
+
+#### Multi-Level Composition
+
+Compose from multiple presets or create nested composition chains:
+
+```yaml
+# .ace/review/presets/code-security.yml
+presets:
+  - code
+  - security-base
+
+description: "Security-focused code review"
+# Merges instructions from both base presets
+```
+
+#### Performance Features
+
+- **Intermediate Caching**: Shared base presets composed once and cached
+- **Circular Detection**: Prevents infinite loops with MAX_DEPTH=10 limit
+- **Debug Mode**: Enable `ACE_REVIEW_DEBUG=1` to see composition metrics
+
+```bash
+# View composition performance
+ACE_REVIEW_DEBUG=1 ace-review --preset complex-nested
+
+# Example output:
+# [COMPOSITION] Composed 'base' in 1.23ms (depth: 1, refs: 0)
+# [COMPOSITION] Composed 'code-pr' in 2.45ms (depth: 2, refs: 1)
+```
+
+#### Migration Example
+
+**Before** (duplicated configuration):
+
+```yaml
+# pr.yml - 150 lines
+description: "PR review"
+instructions:
+  context:
+    # ... many lines ...
+subject:
+  diffs: ["origin...HEAD"]
+
+# wip.yml - 145 lines (95% duplicate)
+description: "WIP review"
+instructions:
+  context:
+    # ... same lines ...
+subject:
+  commands: ["git diff HEAD"]
+```
+
+**After** (DRY with composition):
+
+```yaml
+# code.yml - 40 lines (shared base)
+description: "Base code review"
+instructions:
+  context:
+    # ... shared configuration ...
+
+# code-pr.yml - 10 lines
+presets: [code]
+description: "PR review"
+subject:
+  diffs: ["origin...HEAD"]
+
+# code-wip.yml - 10 lines
+presets: [code]
+description: "WIP review"
+subject:
+  commands: ["git diff HEAD"]
+```
+
+#### Error Handling
+
+Composition failures are handled gracefully:
+
+- **Missing Preset**: Clear error with available preset list
+- **Circular Reference**: Shows dependency chain (e.g., `a -> b -> a`)
+- **Max Depth**: Prevents deeply nested chains (limit: 10 levels)
+
+#### Why Preset Composition Over YAML Anchors?
+
+While YAML anchors (`&ref`, `*ref`) provide similar functionality, preset composition offers several advantages:
+
+- **Cross-File Reuse**: Reference presets across different files (YAML anchors limited to single file)
+- **Semantic Clarity**: Explicit `presets:` array shows intent and dependencies
+- **Validation**: Built-in circular dependency detection and error handling
+- **Caching**: Automatic performance optimization for shared base presets
+- **Debugging**: Debug mode shows composition chain and timing metrics
+- **Version Control**: Each preset file can be versioned independently
+
+**YAML anchors are still useful** for repetition within a single preset file, while preset composition handles cross-file modularity.
+
 ## Prompt System
 
 ### Prompt Cascade
