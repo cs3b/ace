@@ -29,6 +29,9 @@ module Ace
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
             begin
+              # Show help if no arguments provided
+              return show_help if args.empty?
+
               options = parse_arguments(args)
               return show_help if options[:help]
 
@@ -140,6 +143,8 @@ module Ace
                 options[:commit_message] = args[i]
               when "--force"
                 options[:force] = true
+              when "--no-mise-trust"
+                options[:no_mise_trust] = true
               when "--help", "-h"
                 options[:help] = true
               when /^--/
@@ -181,6 +186,31 @@ module Ace
             if options[:commit_message] && options[:commit_message].empty?
               raise ArgumentError, "Commit message cannot be empty"
             end
+
+            # Security validation for paths
+            if options[:path] && contains_dangerous_patterns?(options[:path])
+              raise ArgumentError, "Path contains potentially dangerous characters"
+            end
+          end
+
+          # Check if a string contains dangerous patterns
+          #
+          # @param value [String] Value to check
+          # @return [Boolean] true if dangerous patterns found
+          def contains_dangerous_patterns?(value)
+            return false if value.nil?
+
+            dangerous_patterns = [
+              /;/,           # Command separator
+              /\|/,          # Pipe
+              /`/,           # Backtick command substitution
+              /\$\(/,        # Command substitution
+              /\.\.\//,      # Path traversal
+              /&&/,          # AND operator
+              /\|\|/         # OR operator
+            ]
+
+            dangerous_patterns.any? { |pattern| value.match?(pattern) }
           end
 
           # Create a task-aware worktree
@@ -206,10 +236,12 @@ module Ace
 
             # Prepare creation options
             creation_options = {
+              path: options[:path],
               dry_run: options[:dry_run],
               no_status_update: options[:no_status_update],
               no_commit: options[:no_commit],
               commit_message: options[:commit_message],
+              no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact
 
@@ -267,6 +299,7 @@ module Ace
             # Prepare creation options
             creation_options = {
               path: options[:path],
+              no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact
 

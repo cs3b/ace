@@ -27,6 +27,7 @@ module Ace
           DEFAULT_CONFIG = {
             "root_path" => ".ace-wt",
             "auto_navigate" => true,
+            "mise_trust_auto" => true,
             "task" => {
               "directory_format" => "task.{task_id}",
               "branch_format" => "{id}-{slug}",
@@ -47,7 +48,7 @@ module Ace
           # Configuration namespace paths
           CONFIG_NAMESPACE = ["git", "worktree"].freeze
 
-          attr_reader :root_path, :auto_navigate, :task_config, :cleanup_config, :hooks_config
+          attr_reader :root_path, :auto_navigate, :mise_trust_auto, :task_config, :cleanup_config, :hooks_config
 
           # Initialize a new WorktreeConfig
           #
@@ -80,6 +81,13 @@ module Ace
           # @return [Boolean] true if auto-navigation should be performed
           def auto_navigate?
             @auto_navigate
+          end
+
+          # Check if mise should automatically trust worktree directories
+          #
+          # @return [Boolean] true if mise auto-trust is enabled
+          def mise_trust_auto?
+            @mise_trust_auto
           end
 
           # Check if tasks should be marked as in-progress automatically
@@ -233,6 +241,7 @@ module Ace
             {
               root_path: root_path,
               auto_navigate: auto_navigate?,
+              mise_trust_auto: mise_trust_auto?,
               task: @task_config.dup,
               cleanup: @cleanup_config.dup,
               hooks: @hooks_config.dup
@@ -278,6 +287,7 @@ module Ace
           def initialize_attributes
             @root_path = @merged_config["root_path"]
             @auto_navigate = @merged_config["auto_navigate"]
+            @mise_trust_auto = @merged_config["mise_trust_auto"]
             @task_config = @merged_config["task"] || {}
             @cleanup_config = @merged_config["cleanup"] || {}
             @hooks_config = @merged_config["hooks"] || {}

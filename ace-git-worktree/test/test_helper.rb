@@ -2,6 +2,7 @@
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ace/git/worktree"
+require "ace/git_diff"
 
 require "minitest/autorun"
 require "minitest/pride"

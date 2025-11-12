@@ -151,7 +151,15 @@ module Ace
               when /^--/
                 raise ArgumentError, "Unknown option: #{arg}"
               else
-                raise ArgumentError, "Unexpected argument: #{arg}"
+                # Accept subcommand arguments (show, validate) as aliases for flags
+                case arg
+                when "show"
+                  options[:show] = true
+                when "validate"
+                  options[:validate] = true
+                else
+                  raise ArgumentError, "Unexpected argument: #{arg}"
+                end
               end
 
               i += 1

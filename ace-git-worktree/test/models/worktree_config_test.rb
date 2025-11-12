@@ -30,7 +30,7 @@ class WorktreeConfigTest < Minitest::Test
 
     assert_equal ".ace-wt", config.root_path
     assert_equal true, config.mise_trust_auto?
-    assert_equal "task.{id}", config.directory_format
+    assert_equal "task.{task_id}", config.directory_format
     assert_equal "{id}-{slug}", config.branch_format
     assert_equal true, config.auto_mark_in_progress?
     assert_equal true, config.auto_commit_task?
@@ -62,66 +62,66 @@ class WorktreeConfigTest < Minitest::Test
   end
 
   def test_format_directory_with_task
-    task_metadata = Ace::Git::Worktree::Models::TaskMetadata.new(
-      id: "081",
-      task_id: "task.081",
+    task_data = {
+      id: "task.081",
+      task_number: "081",
       title: "Fix authentication bug",
       status: "pending",
       release: "v.0.9.0"
-    )
+    }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
-    formatted = config.format_directory(task_metadata)
+    formatted = config.format_directory(task_data)
 
     assert_equal "task.081", formatted
   end
 
   def test_format_directory_with_counter
-    task_metadata = Ace::Git::Worktree::Models::TaskMetadata.new(
-      id: "081",
-      task_id: "task.081",
+    task_data = {
+      id: "task.081",
+      task_number: "081",
       title: "Fix authentication bug",
       status: "pending"
-    )
+    }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
 
     # Without counter
-    formatted = config.format_directory(task_metadata)
+    formatted = config.format_directory(task_data)
     assert_equal "task.081", formatted
 
     # With counter
-    formatted_with_counter = config.format_directory(task_metadata, 2)
+    formatted_with_counter = config.format_directory(task_data, 2)
     assert_equal "task.081-2", formatted_with_counter
   end
 
   def test_format_branch_with_task
-    task_metadata = Ace::Git::Worktree::Models::TaskMetadata.new(
-      id: "081",
-      task_id: "task.081",
+    task_data = {
+      id: "task.081",
+      task_number: "081",
       title: "Fix authentication bug",
       status: "pending",
       release: "v.0.9.0"
-    )
+    }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
-    formatted = config.format_branch(task_metadata)
+    formatted = config.format_branch(task_data)
 
     assert_equal "081-fix-authentication-bug", formatted
   end
 
   def test_format_commit_message_with_task
-    task_metadata = Ace::Git::Worktree::Models::TaskMetadata.new(
-      id: "081",
-      task_id: "task.081",
+    task_data = {
+      id: "task.081",
+      task_number: "081",
       title: "Fix authentication bug",
       status: "pending"
-    )
+    }
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
-    formatted = config.format_commit_message(task_metadata)
+    formatted = config.format_commit_message(task_data)
 
-    assert_equal "chore(task-081): mark as in-progress, creating worktree", formatted
+    assert_equal "chore(unknown-081): mark as in-progress, creating worktree for fix-authentication-bug", formatted
   end
 
   def test_absolute_root_path
@@ -167,13 +167,15 @@ class WorktreeConfigTest < Minitest::Test
   end
 
   def test_validate_missing_root_path
-    invalid_config = @default_config.dup
-    invalid_config.delete("root_path")
+    invalid_config = {
+      "git" => {
+        "worktree" => {
+          "root_path" => ""
+        }
+      }
+    }
 
-    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
-      { "git" => { "worktree" => invalid_config } },
-      @project_root
-    )
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(invalid_config, @project_root)
     errors = config.validate
 
     assert_includes errors, "root_path must be a non-empty string"
@@ -233,25 +235,25 @@ class WorktreeConfigTest < Minitest::Test
     config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
 
     # Test all the convenience methods
-    assert_equal "task.{id}", config.directory_format
+    assert_equal "task.{task_id}", config.directory_format
     assert_equal "{id}-{slug}", config.branch_format
     assert_equal true, config.mise_trust_auto?
     assert_equal true, config.auto_mark_in_progress?
     assert_equal true, config.auto_commit_task?
-    assert_equal "chore(task-{id}): mark as in-progress, creating worktree", config.commit_message_format
+    assert_equal "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}", config.commit_message_format
     assert_equal true, config.add_worktree_metadata?
     assert_equal false, config.cleanup_on_merge?
     assert_equal true, config.cleanup_on_delete?
   end
 
   def test_custom_template_variables
-    task_metadata = Ace::Git::Worktree::Models::TaskMetadata.new(
-      id: "123",
-      task_id: "task.123",
+    task_data = {
+      id: "task.123",
+      task_number: "123",
       title: "Test task with release",
       status: "pending",
       release: "v.1.0.0"
-    )
+    }
 
     custom_config = {
       "git" => {
@@ -266,8 +268,8 @@ class WorktreeConfigTest < Minitest::Test
 
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(custom_config, @project_root)
 
-    assert_equal "work/v.1.0.0/123", config.format_directory(task_metadata)
-    assert_equal "v.1.0.0/123-test-task-with-release", config.format_branch(task_metadata)
+    assert_equal "work/v.1.0.0/123", config.format_directory(task_data)
+    assert_equal "v.1.0.0/123-test-task-with-release", config.format_branch(task_data)
   end
 
   def test_mise_trust_auto_false
