@@ -127,7 +127,8 @@ class PresetManagerTest < AceReviewTest
           - "test.rb"
     YAML
 
-    preset = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
     assert_equal "Composed preset", preset["description"]
     assert_equal "base-model", preset["model"]
     assert_equal "prompt://base/system", preset["instructions"]["base"]
@@ -152,7 +153,8 @@ class PresetManagerTest < AceReviewTest
       description: "Composed preset"
     YAML
 
-    preset = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
     assert_equal "Composed preset", preset["description"]
     assert_equal "model-1", preset["model"]
     assert_equal "project", preset["context"]
@@ -178,7 +180,8 @@ class PresetManagerTest < AceReviewTest
       output_format: "json"
     YAML
 
-    preset = @manager.load_preset("top")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("top")
     assert_equal "Top", preset["description"]
     assert_equal "base-model", preset["model"]
     assert_equal "project", preset["context"]
@@ -204,7 +207,8 @@ class PresetManagerTest < AceReviewTest
           - "file3.rb"
     YAML
 
-    preset = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
     # Arrays should be concatenated and deduplicated
     expected_files = ["file1.rb", "file2.rb", "file3.rb"]
     assert_equal expected_files, preset["subject"]["files"]
@@ -232,7 +236,8 @@ class PresetManagerTest < AceReviewTest
               title: "Code"
     YAML
 
-    preset = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
     assert_equal "prompt://base/system", preset["instructions"]["base"]
     assert preset["instructions"]["context"]["sections"]["format"]
     assert preset["instructions"]["context"]["sections"]["code"]
@@ -251,7 +256,8 @@ class PresetManagerTest < AceReviewTest
       output_format: "json"
     YAML
 
-    preset = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
     assert_equal "Composed description", preset["description"]
     assert_equal "base-model", preset["model"]
     assert_equal "json", preset["output_format"]
@@ -270,7 +276,8 @@ class PresetManagerTest < AceReviewTest
       description: "Preset B"
     YAML
 
-    preset = @manager.load_preset("preset_a")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("preset_a")
     assert_nil preset
   end
 
@@ -281,7 +288,8 @@ class PresetManagerTest < AceReviewTest
       description: "Composed"
     YAML
 
-    preset = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
     assert_nil preset
   end
 
@@ -291,7 +299,8 @@ class PresetManagerTest < AceReviewTest
       model: "simple-model"
     YAML
 
-    preset = @manager.load_preset("simple")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("simple")
     assert_equal "Simple preset", preset["description"]
     assert_equal "simple-model", preset["model"]
   end
@@ -308,8 +317,9 @@ class PresetManagerTest < AceReviewTest
       description: "Composed"
     YAML
 
-    preset1 = @manager.load_preset("composed")
-    preset2 = @manager.load_preset("composed")
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset1 = manager.load_preset("composed")
+    preset2 = manager.load_preset("composed")
 
     # Should return same cached object
     assert_equal preset1.object_id, preset2.object_id
