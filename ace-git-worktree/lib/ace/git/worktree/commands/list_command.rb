@@ -170,6 +170,31 @@ module Ace
             if options[:format] && !%w[table json simple].include?(options[:format])
               raise ArgumentError, "Invalid format: #{options[:format]}"
             end
+
+            # Security validation for search patterns
+            if options[:search] && contains_dangerous_patterns?(options[:search])
+              raise ArgumentError, "Search pattern contains potentially dangerous characters"
+            end
+          end
+
+          # Check if a string contains dangerous patterns
+          #
+          # @param value [String] Value to check
+          # @return [Boolean] true if dangerous patterns found
+          def contains_dangerous_patterns?(value)
+            return false if value.nil?
+
+            dangerous_patterns = [
+              /;/,           # Command separator
+              /\|/,          # Pipe
+              /`/,           # Backtick command substitution
+              /\$\(/,        # Command substitution
+              /\.\.\//,      # Path traversal
+              /&&/,          # AND operator
+              /\|\|/         # OR operator
+            ]
+
+            dangerous_patterns.any? { |pattern| value.match?(pattern) }
           end
 
           # Display list result

@@ -1,0 +1,9 @@
+description: "Preset without subject"
+instructions:
+  base: "prompt://base/system"
+  context:
+    sections:
+      test:
+        title: "Test"
+        files: []
+# No subject defined

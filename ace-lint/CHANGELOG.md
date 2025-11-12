@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
+## [0.3.2] - 2025-11-11
+
+### Fixed
+- Address code review feedback on documentation and hygiene
+- Fix test discovery and execution issues with ace-test integration
+
+### Changed
+- Update test structure to work with ace-test smoke pattern
+- Rename ace-core and ace-test-support dependencies
+
 ## 0.3.0 - 2025-10-13
 
 ### Changed

@@ -83,7 +83,8 @@ module Ace
 
         # List available prompt modules
         def list_prompts
-          @prompt_resolver.list_available
+          prompts = @prompt_resolver.list_available
+          prompts.is_a?(Hash) ? prompts.keys : []
         end
 
         private

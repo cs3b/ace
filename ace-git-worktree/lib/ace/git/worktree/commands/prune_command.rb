@@ -116,6 +116,7 @@ module Ace
             options = {
               dry_run: false,
               cleanup_directories: false,
+              force: false,
               verbose: false,
               help: false
             }
@@ -129,6 +130,8 @@ module Ace
                 options[:dry_run] = true
               when "--cleanup-directories"
                 options[:cleanup_directories] = true
+              when "--force"
+                options[:force] = true
               when "--verbose", "-v"
                 options[:verbose] = true
               when "--help", "-h"

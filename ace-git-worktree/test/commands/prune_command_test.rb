@@ -20,7 +20,7 @@ class PruneCommandTest < Minitest::Test
   def test_run_prunes_worktrees
     # Mock successful worktree pruning
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:prune_worktrees, true, [Hash])
+    mock_worktree_manager.expect(:prune, { success: true })
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -32,7 +32,7 @@ class PruneCommandTest < Minitest::Test
   def test_run_with_dry_run_flag
     # Mock successful dry run pruning
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:prune_worktrees, true, [Hash])
+    mock_worktree_manager.expect(:prune, { success: true })
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -44,7 +44,7 @@ class PruneCommandTest < Minitest::Test
   def test_run_with_force_flag
     # Mock successful force pruning
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:prune_worktrees, true, [Hash])
+    mock_worktree_manager.expect(:prune, { success: true })
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -56,7 +56,7 @@ class PruneCommandTest < Minitest::Test
   def test_run_with_verbose_flag
     # Mock successful verbose pruning
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:prune_worktrees, true, [Hash])
+    mock_worktree_manager.expect(:prune, { success: true })
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
@@ -68,7 +68,7 @@ class PruneCommandTest < Minitest::Test
   def test_handles_prune_errors_gracefully
     # Mock worktree manager throwing an error
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:prune_worktrees, nil) do
+    mock_worktree_manager.expect(:prune, nil) do
       raise StandardError, "Git command failed"
     end
 
@@ -90,7 +90,7 @@ class PruneCommandTest < Minitest::Test
 
     flag_combinations.each do |flags|
       mock_worktree_manager = Minitest::Mock.new
-      mock_worktree_manager.expect(:prune_worktrees, true, [Hash])
+      mock_worktree_manager.expect(:prune, { success: true })
 
       @command.instance_variable_set(:@manager, mock_worktree_manager)
 
