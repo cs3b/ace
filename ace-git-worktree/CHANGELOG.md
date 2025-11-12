@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-11-12
+
+### Changed
+- Simplified test suite architecture from complex mocks to focused smoke tests (843 line reduction)
+- Converted organism/molecule tests to verify public API contracts instead of internal implementation
+- Updated command tests to match actual method signatures and result formats
+
+### Added
+- Missing `--no-mise-trust` flag support in create command
+- Missing `--force` flag support in prune command
+- Security validation for dangerous patterns in paths and search queries
+- Help display when create command invoked without arguments
+
+### Fixed
+- Config command now accepts subcommand arguments (show/validate) as aliases for flags
+- Test helper to require ace/git_diff for CommandExecutor mocking
+- Mock expectations in command tests to match actual API signatures
+- Integration test skips with clear explanatory messages
+
+### Technical
+- Added ace/git_diff dependency to test_helper for proper mocking
+- Improved test maintainability by focusing on behavior over implementation
+- Enhanced security validation across user input points
+
 ## [0.2.1] - 2025-11-11
 
 ### Fixed

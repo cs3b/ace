@@ -1,0 +1,31 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
+
+## [0.1.1] - 2025-11-11
+
+### Added
+- Comprehensive test suite with smoke test pattern compatibility
+- Test infrastructure for all core components (Error, ContentType, Reader, ContentParser)
+
+### Fixed
+- Test discovery and execution issues with ace-test integration
+- Module structure and constant loading verification tests
+
+### Changed
+- Update test structure to work with ace-test smoke pattern
+- Improve test coverage for clipboard functionality
+
+## 0.1.0 - 2025-10-13
+
+### Added
+- Initial release of ace-support-mac-clipboard
+- Core clipboard functionality with FFI integration
+- ContentType module for macOS clipboard type mappings
+- Reader class for clipboard content access
+- ContentParser class for data processing
+
+[1]: https://keepachangelog.com/en/1.0.0/
+[2]: https://semver.org/spec/v2.0.0.html

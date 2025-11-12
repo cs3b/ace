@@ -174,6 +174,37 @@ module Ace
             if options[:identifier] && options[:identifier].empty?
               raise ArgumentError, "Identifier cannot be empty"
             end
+
+            # Security validation for identifiers
+            if options[:identifier] && contains_dangerous_patterns?(options[:identifier])
+              raise ArgumentError, "Identifier contains potentially dangerous characters"
+            end
+
+            # Security validation for task IDs
+            if options[:task] && contains_dangerous_patterns?(options[:task])
+              raise ArgumentError, "Task ID contains potentially dangerous characters"
+            end
+          end
+
+          # Check if a string contains dangerous patterns
+          #
+          # @param value [String] Value to check
+          # @return [Boolean] true if dangerous patterns found
+          def contains_dangerous_patterns?(value)
+            return false if value.nil?
+
+            dangerous_patterns = [
+              /;/,           # Command separator
+              /\|/,          # Pipe
+              /`/,           # Backtick command substitution
+              /\$\(/,        # Command substitution
+              /\.\.\//,      # Path traversal
+              /&&/,          # AND operator
+              /\|\|/,        # OR operator
+              /\x00/         # Null byte
+            ]
+
+            dangerous_patterns.any? { |pattern| value.match?(pattern) }
           end
 
           # Remove a task-aware worktree

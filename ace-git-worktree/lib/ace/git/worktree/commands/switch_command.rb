@@ -34,6 +34,21 @@ module Ace
 
               validate_options(options)
 
+              # Handle list option
+              if options[:list]
+                result = @manager.list_all(format: :simple)
+                if result[:success] && result[:worktrees].any?
+                  result[:worktrees].each do |worktree|
+                    prefix = worktree.task_associated? ? "Task #{worktree.task_id}: " : ""
+                    puts "  #{prefix}#{worktree.branch || 'detached'} (#{worktree.path})"
+                  end
+                  return 0
+                else
+                  puts "No worktrees found. Use 'ace-git-worktree create' to create one."
+                  return 0
+                end
+              end
+
               result = @manager.switch(options[:identifier])
 
               if result[:success]
@@ -124,6 +139,12 @@ module Ace
               case arg
               when "--list", "-l"
                 options[:list] = true
+              when "--branch"
+                i += 1
+                options[:identifier] = args[i]
+              when "--task"
+                i += 1
+                options[:identifier] = args[i]
               when "--verbose", "-v"
                 options[:verbose] = true
               when "--help", "-h"

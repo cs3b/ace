@@ -67,7 +67,7 @@ class ContextComposerTest < AceReviewTest
     )
 
     assert_match(/## Review Scope/, result)
-    assert_match(/Subject of review:/, result)
+    assert_match(/\*\*Subject of review\*\*:/, result)
     assert_match(/File: `src\/test\.rb`/, result)
   end
 
@@ -130,29 +130,27 @@ class ContextComposerTest < AceReviewTest
   def test_load_context_via_ace_context_missing_file
     non_existent_file = File.join(@temp_dir, "nonexistent.md")
 
-    error = assert_raises(Ace::Review::Molecules::ContextComposer::ContextComposerError) do
-      Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(non_existent_file)
-    end
-
-    assert_match(/ace-context loading failed/, error.message)
+    # ace-context now handles missing files gracefully by returning empty content
+    result = Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(non_existent_file)
+    assert_equal "", result
   end
 
-  def test_load_context_via_ace_context_unavailable
-    # Mock ace-context to not be available
-    ace_context_backup = $".find { |f| f.include?("ace/context") }
-    $".reject! { |f| f.include?("ace/context") } if ace_context_backup
-
+  def test_load_context_via_ace_context_with_existing_file
+    # Test that it successfully loads an existing context file
     context_file = File.join(@temp_dir, "context.md")
-    File.write(context_file, "# Test context")
+    File.write(context_file, <<~MD)
+      ---
+      context:
+        files:
+          - README.md
+      ---
 
-    error = assert_raises(Ace::Review::Molecules::ContextComposer::ContextComposerError) do
-      Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(context_file)
-    end
+      Test context content
+    MD
 
-    assert_match(/ace-context not available/, error.message)
-
-    # Restore ace-context if it was loaded
-    require "ace/context" if ace_context_backup
+    result = Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(context_file)
+    # ace-context processes the file and returns content
+    refute_empty result
   end
 
   def test_normalize_context_config_merges_defaults

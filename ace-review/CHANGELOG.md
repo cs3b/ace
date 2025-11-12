@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Standardized internal metadata format (string keys for consistency)
   - Added `strip_composition_metadata` helper method for DRY code
 
+## [0.15.1] - 2025-11-11
+
+### Technical
+- Optimize test suite performance with mocking (2.2x faster, 2.03s → 0.93s)
+  - Add `Ace::Context.load_auto()` mocking in test_helper
+  - Add `GitExtractor` mocking (staged_diff, working_diff, tracking_branch)
+  - Remove real git operations from integration tests
+  - Fix test issues (super calls, initialization timing, assertions)
+  - All 108 tests passing (16 atoms + 53 molecules + 29 organisms + 10 integration)
+
 ## [0.15.0] - 2025-11-10
 
 ### Added
