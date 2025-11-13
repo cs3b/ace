@@ -119,7 +119,8 @@ module Ace
                   - root_path: Default worktree root directory
                   - task.auto_*: Automation settings for task workflows
                   - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
-                  - pr.branch_format: PR branch naming format (default: pr-{number})
+                  - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+                    Variables: {number}, {slug}, {title_slug}, {base_branch}
                   - hooks.after_create: Commands to run after worktree creation
 
               REQUIREMENTS:

@@ -127,7 +127,7 @@ git:
   worktree:
     pr:
       directory_format: "ace-pr-{number}"  # PR worktree directory
-      branch_format: "pr-{number}"         # Local branch name
+      branch_format: "pr-{number}-{slug}"   # Local branch name
       remote_name: "origin"                # Default remote
       fetch_before_create: true            # Auto-fetch remote
 

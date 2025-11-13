@@ -52,6 +52,42 @@ git:
       # If true, adds worktree info (branch, path, created_at) to task file
       add_worktree_metadata: true
 
+    # Pull Request-based naming and behavior configuration
+    pr:
+      # Directory naming format for PR worktrees
+      # Available variables: {number}, {slug}, {title_slug}, {base_branch}
+      # Examples:
+      #   "ace-pr-{number}"     -> ace-pr-26
+      #   "pr-{number}"         -> pr-26
+      #   "{number}-{slug}"     -> 26-create-ace-git-package
+      directory_format: "ace-pr-{number}"
+
+      # Branch naming format for PR worktrees
+      # Available variables: {number}, {slug}, {title_slug}, {base_branch}
+      # Examples:
+      #   "pr-{number}"                    -> pr-26
+      #   "pr-{number}-{slug}"             -> pr-26-create-ace-git-package
+      #   "{number}/{slug}"                -> 26/create-ace-git-package
+      #   "pr-{number}-{base_branch}-{slug}" -> pr-26-main-create-ace-git-package
+      branch_format: "pr-{number}-{slug}"
+
+      # Remote name to use for fetching PR branches
+      remote_name: "origin"
+
+      # Fetch latest PR information before creating worktree
+      # If true, runs 'git fetch {remote_name} {pr_branch}' before worktree creation
+      fetch_before_create: true
+
+    # Branch-based naming and behavior configuration
+    branch:
+      # Fetch branch from remote if it exists locally
+      # If true, attempts to fetch from remote before creating local worktree
+      fetch_if_remote: true
+
+      # Automatically detect remote name
+      # If true, searches for remotes that contain the target branch
+      auto_detect_remote: true
+
     # Cleanup policies for worktree management
     cleanup:
       # Automatically remove worktrees when their branches are merged
@@ -146,7 +182,10 @@ git:
 # {id}        -> Numeric task ID (e.g., 081)
 # {task_id}   -> Full task ID (e.g., task.081)
 # {release}   -> Release version (e.g., v.0.9.0)
-# {slug}      -> URL-safe slug from task title (e.g., fix-authentication-bug)
+# {slug}      -> URL-safe slug from title (e.g., fix-authentication-bug)
+# {number}    -> PR number (e.g., 26)
+# {title_slug}-> Alternative slug variable (same as {slug})
+# {base_branch}-> PR base branch (e.g., main, develop)
 
 # For more information, see:
 # - ace-git-worktree create --help

@@ -38,7 +38,7 @@ module Ace
             },
             "pr" => {
               "directory_format" => "ace-pr-{number}",
-              "branch_format" => "pr-{number}",
+              "branch_format" => "pr-{number}-{slug}",
               "remote_name" => "origin",
               "fetch_before_create" => true
             },
