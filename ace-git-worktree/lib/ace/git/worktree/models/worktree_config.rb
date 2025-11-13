@@ -40,7 +40,8 @@ module Ace
               "directory_format" => "ace-pr-{number}",
               "branch_format" => "pr-{number}-{slug}",
               "remote_name" => "origin",
-              "fetch_before_create" => true
+              "fetch_before_create" => true,
+              "configure_push_for_mismatch" => true
             },
             "branch" => {
               "fetch_if_remote" => true,
@@ -154,6 +155,13 @@ module Ace
           # @return [Array<Hash>] Array of hook definitions
           def after_create_hooks
             @hooks_config["after_create"] || []
+          end
+
+          # Check if push should be configured for PR branches with name mismatches
+          #
+          # @return [Boolean] true if push should be configured for mismatched branch names
+          def configure_push_for_mismatch?
+            @pr_config["configure_push_for_mismatch"]
           end
 
           # Check if hooks are configured
