@@ -18,6 +18,13 @@ class WorktreeConfigTest < Minitest::Test
         "commit_message_format" => "chore(task-{id}): mark as in-progress, creating worktree",
         "add_worktree_metadata" => true
       },
+      "pr" => {
+        "directory_format" => "ace-pr-{number}",
+        "branch_format" => "pr-{number}-{slug}",
+        "remote_name" => "origin",
+        "fetch_before_create" => true,
+        "configure_push_for_mismatch" => true
+      },
       "cleanup" => {
         "on_merge" => false,
         "on_delete" => true

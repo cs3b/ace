@@ -95,6 +95,9 @@ class PathExpanderTest < Minitest::Test
   end
 
   def test_writable_permission_denied
+    # Skip this test when running as root, as root can bypass permission checks
+    skip "Permission tests don't work as root" if Process.uid == 0
+
     # Create a directory and remove write permissions
     test_dir = File.join(@temp_dir, "readonly")
     FileUtils.mkdir_p(test_dir)
@@ -180,7 +183,7 @@ class PathExpanderTest < Minitest::Test
 
     relative = @expander.relative_to_git_root(outside_path, git_root)
     # Should return the normalized absolute path for outside paths
-    assert_match %r{/T/outside$}, relative
+    assert_match %r{/outside$}, relative
   end
 
   def test_expand_tilde_with_slash
