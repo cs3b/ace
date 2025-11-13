@@ -36,6 +36,16 @@ module Ace
               "commit_message_format" => "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}",
               "add_worktree_metadata" => true
             },
+            "pr" => {
+              "directory_format" => "ace-pr-{number}",
+              "branch_format" => "pr-{number}",
+              "remote_name" => "origin",
+              "fetch_before_create" => true
+            },
+            "branch" => {
+              "fetch_if_remote" => true,
+              "auto_detect_remote" => true
+            },
             "cleanup" => {
               "on_merge" => false,
               "on_delete" => true
@@ -48,7 +58,7 @@ module Ace
           # Configuration namespace paths
           CONFIG_NAMESPACE = ["git", "worktree"].freeze
 
-          attr_reader :root_path, :auto_navigate, :mise_trust_auto, :task_config, :cleanup_config, :hooks_config
+          attr_reader :root_path, :auto_navigate, :mise_trust_auto, :task_config, :pr_config, :branch_config, :cleanup_config, :hooks_config
 
           # Initialize a new WorktreeConfig
           #
@@ -208,26 +218,50 @@ module Ace
               errors << "root_path must be a non-empty string"
             end
 
-            # Validate template formats
+            # Validate task template formats
             unless directory_format.is_a?(String) && !directory_format.empty?
-              errors << "directory_format must be a non-empty string"
+              errors << "task.directory_format must be a non-empty string"
             end
 
             unless branch_format.is_a?(String) && !branch_format.empty?
-              errors << "branch_format must be a non-empty string"
+              errors << "task.branch_format must be a non-empty string"
             end
 
-            # Validate template variables
-            templates_with_requirements = {
-              directory_format => [%w[task_id], directory_format],
-              branch_format => [%w[id slug], branch_format],
-              commit_message_format => [%w[release task_id slug], commit_message_format]
+            # Validate PR template formats
+            pr_dir_format = @pr_config["directory_format"]
+            unless pr_dir_format.is_a?(String) && !pr_dir_format.empty?
+              errors << "pr.directory_format must be a non-empty string"
+            end
+
+            pr_branch_format = @pr_config["branch_format"]
+            unless pr_branch_format.is_a?(String) && !pr_branch_format.empty?
+              errors << "pr.branch_format must be a non-empty string"
+            end
+
+            # Validate template variables for task configuration
+            task_templates = {
+              "task.directory_format" => { template: directory_format, valid_vars: %w[task_id id slug release] },
+              "task.branch_format" => { template: branch_format, valid_vars: %w[id slug task_id release] },
+              "task.commit_message_format" => { template: commit_message_format, valid_vars: %w[release task_id slug id] }
             }
 
-            templates_with_requirements.each do |template_key, (required_vars, template_value)|
-              missing_vars = required_vars.reject { |var| template_value.include?("{#{var}}") }
-              if missing_vars.any?
-                errors << "#{template_value} should include common template variables: #{missing_vars.join(', ')}"
+            task_templates.each do |name, config|
+              invalid_vars = find_invalid_template_variables(config[:template], config[:valid_vars])
+              if invalid_vars.any?
+                errors << "#{name} contains invalid variables: #{invalid_vars.join(', ')}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
+              end
+            end
+
+            # Validate template variables for PR configuration
+            pr_templates = {
+              "pr.directory_format" => { template: pr_dir_format, valid_vars: %w[number slug title base_branch] },
+              "pr.branch_format" => { template: pr_branch_format, valid_vars: %w[number slug title base_branch] }
+            }
+
+            pr_templates.each do |name, config|
+              invalid_vars = find_invalid_template_variables(config[:template], config[:valid_vars])
+              if invalid_vars.any?
+                errors << "#{name} contains invalid variables: #{invalid_vars.join(', ')}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
               end
             end
 
@@ -249,6 +283,21 @@ module Ace
           end
 
           private
+
+          # Find invalid template variables in a template string
+          #
+          # @param template [String] Template string with {variable} placeholders
+          # @param valid_vars [Array<String>] List of valid variable names
+          # @return [Array<String>] List of invalid variable names
+          def find_invalid_template_variables(template, valid_vars)
+            return [] unless template.is_a?(String)
+
+            # Extract all variables from template
+            template_vars = template.scan(/\{(\w+)\}/).flatten
+
+            # Find variables that are not in the valid list
+            template_vars.uniq.reject { |var| valid_vars.include?(var) }
+          end
 
           # Extract worktree configuration from nested config hash
           #
@@ -289,6 +338,8 @@ module Ace
             @auto_navigate = @merged_config["auto_navigate"]
             @mise_trust_auto = @merged_config["mise_trust_auto"]
             @task_config = @merged_config["task"] || {}
+            @pr_config = @merged_config["pr"] || {}
+            @branch_config = @merged_config["branch"] || {}
             @cleanup_config = @merged_config["cleanup"] || {}
             @hooks_config = @merged_config["hooks"] || {}
           end
