@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-11-12
+
+### Added
+
+- **Workflow Migration**: Migrated 5 documentation generation workflows from dev-handbook
+  - `create-api-docs.wf.md` - Generate API documentation from code structure
+  - `create-user-docs.wf.md` - Create user-facing guides and tutorials
+  - `update-blueprint.wf.md` - Maintain architectural documentation
+  - `update-context-docs.wf.md` - Update project context documentation
+  - `create-cookbook.wf.md` - Generate practical how-to guides
+  - Consolidates all documentation workflows in ace-docs gem
+  - Workflows accessible via `ace-nav wfi://workflow-name` protocol
+
+### Changed
+
+- **Path Modernization**: Updated all workflow references to use protocol-based paths
+  - Replaced hardcoded `dev-handbook/workflow-instructions/load-project-context.wf.md` with `ace-nav wfi://load-context`
+  - Updated existing workflows (create-adr, maintain-adrs) for consistency
+  - All workflows now project-agnostic without hardcoded legacy paths
+
+### Fixed
+
+- **Frontmatter Corruption**: Restored proper YAML frontmatter in create-adr and maintain-adrs workflows
+  - Fixed ace-lint formatting issue that collapsed multi-line YAML
+
 ## [0.6.2] - 2025-11-01
 
 ### Changed

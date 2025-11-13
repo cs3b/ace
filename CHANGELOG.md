@@ -23,6 +23,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.128] - 2025-11-13
+
+### Added
+- **ace-docs v0.7.0**: Documentation workflow consolidation
+  - Migrated 5 documentation generation workflows from dev-handbook to ace-docs
+  - Added workflows: create-api-docs, create-user-docs, update-blueprint, update-context-docs, create-cookbook
+  - All workflows accessible via `ace-nav wfi://workflow-name` protocol
+  - Consolidates all documentation workflows in their proper architectural home
+
+### Changed
+- **ace-docs v0.7.0**: Path modernization and workflow consistency
+  - Updated all workflow references to use protocol-based paths (wfi://)
+  - Replaced hardcoded dev-handbook paths with project-agnostic references
+  - Updated existing workflows (create-adr, maintain-adrs) for consistency
+  - All workflows now work in any project context without legacy dependencies
+
+### Fixed
+- **ace-docs v0.7.0**: Workflow frontmatter restoration
+  - Fixed YAML frontmatter corruption in create-adr and maintain-adrs workflows
+  - Restored proper multi-line YAML structure after ace-lint formatting issue
+
 ## [0.9.126] - 2025-11-13
 
 ### Added
@@ -82,6 +103,10 @@ All notable changes to this project will be documented in this file.
   - Added missing CLI flags (--no-mise-trust, --force)
   - Enhanced security validation for user inputs
   - Fixed command test mocks to match actual API signatures
+
+## [0.9.123] - 2025-11-11
+
+### Fixed
 - **ace-review v0.15.1**: Optimize test suite performance with mocking (2.2x faster, 2.03s → 0.93s)
   - Add `Ace::Context.load_auto()` mocking in test_helper
   - Add `GitExtractor` mocking (staged_diff, working_diff, tracking_branch)
