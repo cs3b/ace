@@ -12,7 +12,7 @@ Capture a compact summary of the current session (what was done, next steps, key
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## High-Level Execution Plan
 

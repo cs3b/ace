@@ -235,10 +235,10 @@ ace-docs -h             # Help text, not practical usage
 For ADR lifecycle management (creation, evolution, archival, scope updates):
 
 **Creating new ADRs:**
-`ace-docs/handbook/workflow-instructions/create-adr.wf.md`
+`wfi://create-adr`
 
 **Maintaining existing ADRs:**
-`ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md`
+`wfi://maintain-adrs`
 
 ADR maintenance includes:
 - Evolution documentation when patterns change
@@ -250,7 +250,7 @@ ADR maintenance includes:
 
 For core context documents with specific requirements (line limits, update order, duplication prevention), see the specialized workflow:
 
-`dev-handbook/workflow-instructions/update-context-docs.wf.md`
+`wfi://update-context-docs`
 
 This workflow provides:
 - Specific update order to prevent duplication

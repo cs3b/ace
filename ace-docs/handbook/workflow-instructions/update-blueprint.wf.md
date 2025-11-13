@@ -26,23 +26,23 @@ how to navigate the codebase.
 
 ### Planning Phase
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Analyze current project structure
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Identify key directories and files
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Check for existing specialized
+* Analyze current project structure
+* Identify key directories and files
+* Check for existing specialized
   documentation (tools.md, etc.)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Determine what has changed since last
+* Determine what has changed since last
   update
-{: .task-list}
+
 
 ### Execution Phase
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Generate updated directory structure
+* Generate updated directory structure
   overview
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update key file descriptions
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Verify and update document links
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add read-only and ignored paths sections
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Save updated blueprint
-{: .task-list}
+* Update key file descriptions
+* Verify and update document links
+* Add read-only and ignored paths sections
+* Save updated blueprint
+
 
 ## Process Steps
 

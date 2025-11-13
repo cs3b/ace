@@ -4,7 +4,7 @@
 free of duplication.
 
 > **Note:** This workflow can now be enhanced with the `ace-docs` tool for automated document management. See
-> `ace-docs/handbook/workflow-instructions/update-docs.wf.md` for the tooling-based approach. Use `/update-docs` command
+> `wfi://update-docs` for the tooling-based approach. Use `/update-docs` command
 > for the automated workflow.
 
 ## Prerequisites
@@ -231,20 +231,20 @@ Format each decision as:
 
 Verify each document:
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />what-do-we-build.md is ultra-compact (~30
+* what-do-we-build.md is ultra-compact (~30
   lines)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />blueprint.md has navigation guidance only
+* blueprint.md has navigation guidance only
   (~50 lines)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />architecture.md focuses on
+* architecture.md focuses on
   patterns/decisions (~150 lines)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />tools.md has current tools only (~30
+* tools.md has current tools only (~30
   lines)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />decisions.md contains actionable ADR
+* decisions.md contains actionable ADR
   summaries
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />NO content is duplicated across documents
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update order was followed: vision →
+* NO content is duplicated across documents
+* Update order was followed: vision →
   blueprint → architecture → tools → decisions
-{: .task-list}
+
 
 ### 11. Run Ownership Validation
 

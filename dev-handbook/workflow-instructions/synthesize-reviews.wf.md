@@ -13,7 +13,7 @@ Synthesize multiple code review reports into a unified, actionable improvement p
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## Command Structure
 

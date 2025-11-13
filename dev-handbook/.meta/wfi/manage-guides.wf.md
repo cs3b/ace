@@ -13,7 +13,7 @@ Create, update, and maintain development guide files following established stand
 
 ## Project Context Loading
 
-* Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+* Read and follow: `wfi://load-project-context`
 * Load guide standards: `dev-handbook/.meta/gds/guides-definition.g.md`
 * Load markdown standards: `dev-handbook/.meta/gds/markdown-definition.g.md`
 * Load example guides: `dev-handbook/guides/project-management.g.md`

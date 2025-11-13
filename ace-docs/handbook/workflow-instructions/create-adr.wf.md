@@ -33,21 +33,21 @@ significant architectural decision, its context, rationale, and consequences.
 
 ### Planning Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Identify and validate the architectural
+* Identify and validate the architectural
   decision needs documentation
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Gather comprehensive context and
+* Gather comprehensive context and
   alternatives
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Determine ADR number and file naming
-{: .task-list}
+* Determine ADR number and file naming
+
 
 ### Execution Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Draft ADR using embedded template
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Review and validate ADR content
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Create ADR file in proper location
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update docs/decisions.md summary
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Commit changes
-{: .task-list}
+* Draft ADR using embedded template
+* Review and validate ADR content
+* Create ADR file in proper location
+* Update docs/decisions.md summary
+* Commit changes
+
 
 ## When to Create an ADR
 
@@ -223,7 +223,7 @@ ADRs may need maintenance over time as patterns evolve or become obsolete:
 * **Archival**: Patterns no longer used in current codebase → move to archive
 * **Scope Updates**: Implementation details change → update scope notes
 
-See `ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md` for complete lifecycle management.
+See `wfi://maintain-adrs` for complete lifecycle management.
 
 ## Input
 

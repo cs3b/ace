@@ -210,36 +210,36 @@ Common corrections:
 
 ### Pre-Integration Checks
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All regular workflows have commands
+* All regular workflows have commands
   (custom or generated)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All meta workflows have commands in
+* All meta workflows have commands in
   \_custom/meta-\*.md
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />No validation errors reported
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Registry JSON is valid and complete
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Dry-run shows expected changes
-{: .task-list}
+* No validation errors reported
+* Registry JSON is valid and complete
+* Dry-run shows expected changes
+
 
 ### Post-Integration Verification
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Commands appear in .claude/commands/
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Agents appear in .claude/agents/ (if
+* Commands appear in .claude/commands/
+* Agents appear in .claude/agents/ (if
   applicable)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Review installation summary for
+* Review installation summary for
   changes/unchanged items
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Check for any errors or warnings in
+* Check for any errors or warnings in
   output
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Verify no unintended overwrites occurred
-{: .task-list}
+* Verify no unintended overwrites occurred
+
 
 ### Quality Checks
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />YAML front-matter validates correctly
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Command descriptions are meaningful
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Tool restrictions are appropriate
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />No invalid tool specifications with
+* YAML front-matter validates correctly
+* Command descriptions are meaningful
+* Tool restrictions are appropriate
+* No invalid tool specifications with
   parentheses (e.g., no `Bash(command)`)
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Model preferences are set where needed
-{: .task-list}
+* Model preferences are set where needed
+
 
 ## Success Criteria
 

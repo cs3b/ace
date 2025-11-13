@@ -21,7 +21,7 @@ Perform automated semantic version bumping for a single ACE gem package by analy
 
 ## Project Context Loading
 
-* Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+* Read and follow: `wfi://load-project-context`
 * Load: Keep a Changelog and Semantic Versioning 2.0.0 specifications
 
 ## Process Steps
