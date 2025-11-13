@@ -5,6 +5,25 @@ All notable changes to ace-test-runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-11-13
+
+### Added
+- **Skipped Test Reporting**: Added comprehensive skipped test reporting to console output and suite summaries
+  - Displays count and visual indicators for skipped tests in execution summaries
+  - Shows detailed skipped test information including reason when available
+  - Includes skipped tests in final statistics with skip percentage
+  - Helper methods for status icons and skipped test text formatting
+
+### Changed
+- **Refactoring**: Extracted helper methods for status icons and skipped text handling
+  - Consolidated status icon generation into reusable helper methods
+  - Improved code organization for test result display formatting
+  - Enhanced maintainability of output formatting logic
+
+### Technical
+- Updated documentation references from ace-core to ace-support-core
+- Improved code hygiene based on code review feedback
+
 ## [0.1.6] - 2025-11-01
 
 ### Changed
