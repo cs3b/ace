@@ -79,6 +79,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-git
+      path: ace-git
+      group: tools
+      priority: 3
+
     - name: ace-support-markdown
       path: ace-support-markdown
       group: foundation
