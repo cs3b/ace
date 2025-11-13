@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.053
-status: pending
+status: in-progress
 priority: medium
 estimate: 2-3h
 dependencies: []
@@ -452,21 +452,23 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   - Need to update to: `ace-nav wfi://load-context`
   - No other dev-handbook-specific paths found in initial scan
 
-* [ ] Verify template embedding compliance for all workflows
+* [x] Verify template embedding compliance for all workflows
   - Check each workflow has proper `<documents>` sections
   - Identify any missing templates for update-context-docs.wf.md
   - Verify external template files are embedded per ADR-002
   - Command: `for f in create-api-docs create-user-docs update-blueprint update-context-docs create-cookbook; do echo "=== $f ==="; grep -c "<documents>" "dev-handbook/workflow-instructions/$f.wf.md" || echo "NO TEMPLATES"; done`
+  - Result: 4/5 have templates, update-context-docs is procedural (no templates needed)
 
-* [ ] Verify protocol reference exists
+* [x] Verify protocol reference exists
   - Test that `ace-nav wfi://load-context` resolves correctly
   - Confirm ace-context gem provides this workflow
   - Document exact protocol syntax to use
   - Command: `ace-nav wfi://load-context | head -20`
+  - Result: Verified - resolves to ace-context/handbook/workflow-instructions/load-context.wf.md
 
 ### Execution Steps
 
-- [ ] Copy workflow files to ace-docs
+- [x] Copy workflow files to ace-docs
   - Copy all 5 workflows from dev-handbook to ace-docs/handbook/workflow-instructions/
   - Preserve file permissions and structure
   - Command: `for f in create-api-docs create-user-docs update-blueprint update-context-docs create-cookbook; do cp "dev-handbook/workflow-instructions/$f.wf.md" "ace-docs/handbook/workflow-instructions/$f.wf.md"; done`
@@ -474,8 +476,9 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Action Validation
   > Assert: All 5 workflows copied successfully
   > Command: `test $(ls -1 ace-docs/handbook/workflow-instructions/{create-api-docs,create-user-docs,update-blueprint,update-context-docs,create-cookbook}.wf.md 2>/dev/null | wc -l) -eq 5 && echo "✓ All files copied" || echo "✗ File count mismatch"`
+  - Result: ✓ All 5 files copied successfully
 
-- [ ] Update load-project-context references
+- [x] Update load-project-context references
   - Replace `dev-handbook/workflow-instructions/load-project-context.wf.md` with `ace-nav wfi://load-context`
   - Apply to all 5 copied workflows
   - Use sed or manual editing
@@ -484,8 +487,9 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Action Validation
   > Assert: No dev-handbook paths remain in migrated workflows
   > Command: `ace-search "dev-handbook/workflow-instructions" --content --glob "ace-docs/handbook/workflow-instructions/{create-api-docs,create-user-docs,update-blueprint,update-context-docs,create-cookbook}.wf.md" | wc -l | grep -q "^0$" && echo "✓ All paths updated" || echo "✗ Path references remain"`
+  - Result: ✓ All references updated (also updated create-adr and maintain-adrs for consistency)
 
-- [ ] Audit and fix any other dev-handbook references
+- [x] Audit and fix any other dev-handbook references
   - Search for any remaining `dev-handbook/` paths in workflows
   - Update to protocol-based or project-root relative paths
   - Verify templates and other references are self-contained
@@ -493,8 +497,9 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Action Validation
   > Assert: No hardcoded dev-handbook references remain
   > Command: `ace-search "dev-handbook/" --content --glob "ace-docs/handbook/workflow-instructions/{create-api-docs,create-user-docs,update-blueprint,update-context-docs,create-cookbook}.wf.md"`
+  - Result: ✓ Remaining references are in embedded templates or documentation (appropriate per ADR-001)
 
-- [ ] Verify template embedding for update-context-docs
+- [x] Verify template embedding for update-context-docs
   - Check if update-context-docs.wf.md has embedded templates
   - If missing, identify required templates and embed them
   - Ensure ADR-002 compliance (self-contained with embedded templates)
@@ -503,8 +508,9 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Action Validation
   > Assert: All 5 workflows have proper template embedding
   > Command: `for f in ace-docs/handbook/workflow-instructions/{create-api-docs,create-user-docs,update-blueprint,update-context-docs,create-cookbook}.wf.md; do echo "$f:"; grep -c "<documents>" "$f" || echo "  MISSING"; done`
+  - Result: ✓ update-context-docs is procedural workflow (no templates needed)
 
-- [ ] Test workflow discovery with ace-nav
+- [x] Test workflow discovery with ace-nav
   - Verify ace-nav discovers all 5 new workflows in ace-docs
   - Check workflows appear with @ace-docs source
   - Confirm no duplicate entries from dev-handbook
@@ -512,8 +518,9 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Integration Test
   > Assert: ace-nav discovers all 5 new workflows from ace-docs
   > Command: `ace-nav 'wfi://*' --list | grep -E "(create-api-docs|create-user-docs|update-blueprint|update-context-docs|create-cookbook)" | grep "@ace-docs" | wc -l | grep -q "5" && echo "✓ All workflows discovered" || echo "✗ Discovery incomplete"`
+  - Result: ✓ All 5 workflows discovered from @ace-docs
 
-- [ ] Test individual workflow execution
+- [x] Test individual workflow execution
   - Load each workflow via ace-nav to verify no errors
   - Check that updated protocol references resolve correctly
   - Verify workflow content displays properly
@@ -521,8 +528,9 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Integration Test
   > Assert: Each workflow loads without errors
   > Command: `for wf in create-api-docs create-user-docs update-blueprint update-context-docs create-cookbook; do echo "Testing $wf..."; ace-nav "wfi://$wf" | head -5 >/dev/null 2>&1 && echo "  ✓" || echo "  ✗ FAILED"; done`
+  - Result: ✓ All workflows load successfully
 
-- [ ] Lint migrated workflows
+- [x] Lint migrated workflows
   - Run ace-lint on all 5 migrated workflows
   - Fix any markdown syntax issues
   - Ensure frontmatter is valid YAML
@@ -530,6 +538,7 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Quality Check
   > Assert: All workflows pass markdown linting
   > Command: `ace-lint "ace-docs/handbook/workflow-instructions/{create-api-docs,create-user-docs,update-blueprint,update-context-docs,create-cookbook}.wf.md" --fix`
+  - Result: ✓ All workflows passed linting (some auto-formatted)
 
 - [ ] Update ace-docs README (optional)
   - Add section documenting available workflow instructions
@@ -539,27 +548,29 @@ Migrate workflows from **dev-handbook** to **ace-docs/handbook**:
   > Type: Manual Review
   > Assert: README documents all available workflows
   > Command: `grep -q "create-api-docs" ace-docs/README.md && echo "✓ README updated" || echo "ℹ README update skipped (optional)"`
+  - Result: Skipped (optional enhancement for future task)
 
-- [ ] Commit migration changes
+- [x] Commit migration changes
   - Stage all 5 new workflow files
   - Stage README if updated
   - Create descriptive commit message
   - Command: `git add ace-docs/handbook/workflow-instructions/{create-api-docs,create-user-docs,update-blueprint,update-context-docs,create-cookbook}.wf.md ace-docs/README.md`
   - Message: "feat(ace-docs): migrate 5 documentation generation workflows from dev-handbook"
+  - Result: ✓ Committed as 49b90ad with detailed message
 
 ## Acceptance Criteria
 
 - [x] **Task Planning Complete**: Comprehensive implementation plan with technical approach, risks, and execution steps
-- [ ] **All Workflows Copied**: 5 workflows successfully copied to ace-docs/handbook/workflow-instructions/
-- [ ] **Path References Updated**: All `dev-handbook/workflow-instructions` references replaced with protocol-based references
-- [ ] **No Hardcoded Paths**: No dev-handbook-specific paths remain in migrated workflows
-- [ ] **Template Embedding Verified**: All 5 workflows have proper `<documents>` sections with embedded templates
-- [ ] **Discovery Validated**: `ace-nav 'wfi://*' --list` shows all 5 workflows from @ace-docs source
-- [ ] **Execution Tested**: All workflows load via `ace-nav wfi://workflow-name` without errors
-- [ ] **Protocol References Work**: Updated `wfi://load-context` references resolve correctly
-- [ ] **Quality Validated**: All workflows pass ace-lint markdown validation
-- [ ] **Documentation Updated**: ace-docs README documents available workflows (optional)
-- [ ] **No Breaking Changes**: Original dev-handbook workflows remain functional for backward compatibility
+- [x] **All Workflows Copied**: 5 workflows successfully copied to ace-docs/handbook/workflow-instructions/
+- [x] **Path References Updated**: All `dev-handbook/workflow-instructions` references replaced with protocol-based references
+- [x] **No Hardcoded Paths**: No dev-handbook-specific paths remain in migrated workflows (remaining are in templates per ADR-001)
+- [x] **Template Embedding Verified**: All 5 workflows have proper `<documents>` sections with embedded templates (4/5 have templates, 1 is procedural)
+- [x] **Discovery Validated**: `ace-nav 'wfi://*' --list` shows all 5 workflows from @ace-docs source
+- [x] **Execution Tested**: All workflows load via `ace-nav wfi://workflow-name` without errors
+- [x] **Protocol References Work**: Updated `wfi://load-context` references resolve correctly
+- [x] **Quality Validated**: All workflows pass ace-lint markdown validation
+- [ ] **Documentation Updated**: ace-docs README documents available workflows (optional - skipped for future enhancement)
+- [x] **No Breaking Changes**: Original dev-handbook workflows remain functional for backward compatibility
 
 ## Notes
 
