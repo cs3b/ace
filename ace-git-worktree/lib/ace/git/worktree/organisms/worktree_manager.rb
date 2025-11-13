@@ -576,11 +576,29 @@ module Ace
             # Simulate what would be created
             pr_config = @config.pr_config || {}
             directory_format = pr_config[:directory_format] || "ace-pr-{number}"
-            branch_format = pr_config[:branch_format] || "pr-{number}"
+            branch_format = pr_config[:branch_format] || "pr-{number}-{slug}"
             remote_name = pr_config[:remote_name] || "origin"
 
-            directory_name = directory_format.gsub("{number}", pr_number.to_s)
-            branch_name = branch_format.gsub("{number}", pr_number.to_s)
+            # Use the format_pr_name logic for proper variable substitution
+            require_relative "../atoms/slug_generator"
+
+            directory_name = directory_format.dup
+            directory_name.gsub!("{number}", pr_number.to_s)
+            if pr_data[:title]
+              slug = Atoms::SlugGenerator.from_title(pr_data[:title])
+              directory_name.gsub!("{slug}", slug)
+              directory_name.gsub!("{title_slug}", slug)
+            end
+            directory_name.gsub!("{base_branch}", pr_data[:base_branch].to_s) if pr_data[:base_branch]
+
+            branch_name = branch_format.dup
+            branch_name.gsub!("{number}", pr_number.to_s)
+            if pr_data[:title]
+              slug = Atoms::SlugGenerator.from_title(pr_data[:title])
+              branch_name.gsub!("{slug}", slug)
+              branch_name.gsub!("{title_slug}", slug)
+            end
+            branch_name.gsub!("{base_branch}", pr_data[:base_branch].to_s) if pr_data[:base_branch]
             worktree_path = File.join(@config.absolute_root_path, directory_name)
             tracking = "#{remote_name}/#{pr_data[:head_branch]}"
 

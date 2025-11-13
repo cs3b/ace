@@ -107,7 +107,7 @@ module Ace
               pr_config = config.pr_config || {}
               remote_name = pr_config[:remote_name] || "origin"
               directory_format = pr_config[:directory_format] || "ace-pr-{number}"
-              branch_format = pr_config[:branch_format] || "pr-{number}"
+              branch_format = pr_config[:branch_format] || "pr-{number}-{slug}"
 
               # Format directory and branch names
               directory_name = format_pr_name(directory_format, pr_data)
