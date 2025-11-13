@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-11-13
+
+### Added
+- **PR-based Worktree Creation**: `--pr <number>` flag to create worktrees from GitHub pull requests
+  - Automatically fetches PR metadata using GitHub CLI (`gh`)
+  - Creates worktree with remote tracking
+  - Detects and warns about fork PRs
+  - Configurable directory and branch naming via `.ace/git/worktree.yml`
+- **Branch-based Worktree Creation**: `-b <branch>` flag for local and remote branches
+  - Auto-detects remote vs. local branches
+  - Automatically fetches remote branches before creation
+  - Sets up tracking for remote branches
+  - Preserves full branch path to avoid naming collisions
+- **PrFetcher Molecule**: GitHub CLI integration with comprehensive error handling
+  - Custom exception classes for clear error types
+  - Timeout support (30s default)
+  - Input validation and security checks
+  - Fork PR detection
+- **Retry Logic**: Automatic retry with exponential backoff for transient network failures
+  - Up to 2 retries by default (configurable)
+  - Smart retry only for NetworkError, not permanent errors
+- **Performance**: Cached gh CLI availability check to avoid repeated system calls
+
+### Changed
+- Extended `WorktreeCreator` with `create_for_pr()` and `create_for_branch()` methods
+- Extended `WorktreeConfig` model with `pr` and `branch` configuration namespaces
+- Extended `WorktreeManager` with `create_pr()` and `create_branch()` orchestration
+- Improved branch naming to use full path and avoid collisions (e.g., `feature/auth/v1` → `feature-auth-v1`)
+- Enhanced CLI help text with PR and branch usage examples
+
+### Fixed
+- Branch name collision issue when multiple remote branches share the same last segment
+  - Changed from `branch.split("/").last` to full branch path preservation
+  - Example: Both `origin/feature/auth/v1` and `origin/login/auth/v1` now create unique worktrees
+
+### Documentation
+- Added "PR and Branch-Based Workflows" section to README
+- Comprehensive usage examples for `--pr` and `-b` options
+- Configuration examples with template variables
+- Requirements and troubleshooting guidance
+
+### Testing
+- Added 12 new unit tests for WorktreeCreator PR/branch methods
+- Added 14 unit tests for PrFetcher molecule
+- Test coverage for happy paths, error scenarios, and edge cases
+
+### Technical
+- Follows ATOM architecture pattern (Atoms → Molecules → Organisms)
+- GitHub CLI (`gh`) is required for PR functionality
+- Supports template variables: `{number}`, `{slug}`, `{base_branch}` for PR naming
+
 ## [0.2.2] - 2025-11-12
 
 ### Changed

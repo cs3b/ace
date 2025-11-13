@@ -37,6 +37,15 @@ gem 'ace-git-worktree'
 # Create a task-aware worktree
 ace-git-worktree create --task 081
 
+# Create a worktree for a GitHub PR
+ace-git-worktree create --pr 26
+
+# Create a worktree from a remote branch
+ace-git-worktree create -b origin/feature/auth
+
+# Create a worktree from a local branch
+ace-git-worktree create -b my-feature
+
 # List all worktrees with task associations
 ace-git-worktree list --show-tasks
 
@@ -49,6 +58,88 @@ ace-git-worktree remove --task 081
 # Clean up deleted worktrees
 ace-git-worktree prune
 ```
+
+## PR and Branch-Based Workflows
+
+**ace-git-worktree** supports creating worktrees directly from GitHub pull requests or specific branches, streamlining code review and feature development workflows.
+
+### PR Worktrees
+
+Create isolated worktrees for reviewing or working on pull requests:
+
+```bash
+# Create worktree for PR #26
+ace-git-worktree create --pr 26
+
+# Alternative syntax
+ace-git-worktree create --pull-request 26
+
+# With dry-run to preview
+ace-git-worktree create --pr 26 --dry-run
+```
+
+**Requirements:**
+- GitHub CLI (`gh`) must be installed and authenticated
+- Run `gh auth login` if not already authenticated
+
+**Features:**
+- Automatically fetches PR metadata and branch information
+- Creates worktree with remote tracking
+- Detects and warns about fork PRs
+- Configurable naming conventions
+
+**Default Behavior:**
+- Directory: `.ace-wt/ace-pr-26/`
+- Branch: `pr-26` tracking `origin/<pr-head-branch>`
+
+### Branch Worktrees
+
+Create worktrees from existing branches (local or remote):
+
+```bash
+# Remote branch (auto-fetches and sets up tracking)
+ace-git-worktree create -b origin/feature/authentication
+ace-git-worktree create --branch upstream/release/v2.0
+
+# Local branch (no tracking)
+ace-git-worktree create -b my-local-feature
+
+# Complex branch names (handles slashes)
+ace-git-worktree create -b origin/feature/auth/oauth2
+```
+
+**Features:**
+- Auto-detects remote vs. local branches
+- Automatically fetches remote branches before creation
+- Sets up tracking for remote branches
+- Preserves full branch path to avoid naming collisions
+
+**Naming:**
+- Remote `origin/feature/auth` → Branch: `feature/auth`, Dir: `feature-auth`
+- Local `my-feature` → Branch: `my-feature`, Dir: `my-feature`
+
+### Configuration
+
+Customize PR and branch worktree behavior in `.ace/git/worktree.yml`:
+
+```yaml
+git:
+  worktree:
+    pr:
+      directory_format: "ace-pr-{number}"  # PR worktree directory
+      branch_format: "pr-{number}"         # Local branch name
+      remote_name: "origin"                # Default remote
+      fetch_before_create: true            # Auto-fetch remote
+
+    branch:
+      fetch_if_remote: true                # Auto-fetch remote branches
+      auto_detect_remote: true             # Auto-detect remote vs local
+```
+
+**Template Variables for PR Format:**
+- `{number}` - PR number (e.g., `26`)
+- `{slug}` - Slugified PR title (e.g., `add-authentication`)
+- `{base_branch}` - Base branch name (e.g., `main`)
 
 ## Task-Aware Workflow
 

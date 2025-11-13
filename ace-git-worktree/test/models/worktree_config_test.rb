@@ -191,7 +191,7 @@ class WorktreeConfigTest < Minitest::Test
     )
     errors = config.validate
 
-    assert_includes errors, "directory_format must be a non-empty string"
+    assert_includes errors, "task.directory_format must be a non-empty string"
   end
 
   def test_validate_empty_branch_format
@@ -204,7 +204,7 @@ class WorktreeConfigTest < Minitest::Test
     )
     errors = config.validate
 
-    assert_includes errors, "branch_format must be a non-empty string"
+    assert_includes errors, "task.branch_format must be a non-empty string"
   end
 
   def test_validate_missing_template_variables
@@ -328,5 +328,99 @@ class WorktreeConfigTest < Minitest::Test
     config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
 
     assert_equal false, config.add_worktree_metadata?
+  end
+
+  def test_validate_invalid_task_template_variables
+    invalid_config = @default_config.dup
+    invalid_config["task"]["branch_format"] = "{id}-{invalid_var}-{slug}"
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      { "git" => { "worktree" => invalid_config } },
+      @project_root
+    )
+    errors = config.validate
+
+    # Should detect invalid_var as invalid
+    assert errors.any? { |error| error.include?("invalid_var") && error.include?("task.branch_format") }
+  end
+
+  def test_validate_invalid_pr_template_variables
+    invalid_config = @default_config.dup
+    invalid_config["pr"]["directory_format"] = "pr-{number}-{invalid_var}"
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      { "git" => { "worktree" => invalid_config } },
+      @project_root
+    )
+    errors = config.validate
+
+    # Should detect invalid_var as invalid
+    assert errors.any? { |error| error.include?("invalid_var") && error.include?("pr.directory_format") }
+  end
+
+  def test_validate_valid_pr_template_variables
+    valid_config = @default_config.dup
+    valid_config["pr"]["directory_format"] = "pr-{number}-{slug}"
+    valid_config["pr"]["branch_format"] = "pr/{number}-{title}"
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      { "git" => { "worktree" => valid_config } },
+      @project_root
+    )
+    errors = config.validate
+
+    # Should not have any errors about invalid variables
+    refute errors.any? { |error| error.include?("pr.directory_format") && error.include?("invalid") }
+    refute errors.any? { |error| error.include?("pr.branch_format") && error.include?("invalid") }
+  end
+
+  def test_validate_empty_pr_directory_format
+    invalid_config = @default_config.dup
+    invalid_config["pr"]["directory_format"] = ""
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      { "git" => { "worktree" => invalid_config } },
+      @project_root
+    )
+    errors = config.validate
+
+    assert_includes errors, "pr.directory_format must be a non-empty string"
+  end
+
+  def test_validate_empty_pr_branch_format
+    invalid_config = @default_config.dup
+    invalid_config["pr"]["branch_format"] = ""
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(
+      { "git" => { "worktree" => invalid_config } },
+      @project_root
+    )
+    errors = config.validate
+
+    assert_includes errors, "pr.branch_format must be a non-empty string"
+  end
+
+  def test_find_invalid_template_variables
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
+
+    # Test with valid variables
+    valid_template = "task-{id}-{slug}"
+    invalid = config.send(:find_invalid_template_variables, valid_template, %w[id slug])
+    assert_empty invalid
+
+    # Test with invalid variables
+    invalid_template = "task-{id}-{invalid}-{slug}"
+    invalid = config.send(:find_invalid_template_variables, invalid_template, %w[id slug])
+    assert_equal ["invalid"], invalid
+
+    # Test with multiple invalid variables
+    multi_invalid = "task-{id}-{bad1}-{bad2}-{slug}"
+    invalid = config.send(:find_invalid_template_variables, multi_invalid, %w[id slug])
+    assert_equal ["bad1", "bad2"], invalid.sort
+
+    # Test with no variables
+    no_vars = "just-text"
+    invalid = config.send(:find_invalid_template_variables, no_vars, %w[id slug])
+    assert_empty invalid
   end
 end

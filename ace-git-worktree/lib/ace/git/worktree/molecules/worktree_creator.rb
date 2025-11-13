@@ -83,6 +83,112 @@ module Ace
             end
           end
 
+          # Create a worktree for a Pull Request
+          #
+          # @param pr_data [Hash] PR data hash from PrFetcher
+          # @param config [WorktreeConfig] Worktree configuration
+          # @param git_root [String, nil] Git repository root (auto-detected if nil)
+          # @return [Hash] Result with :success, :worktree_path, :branch, :error
+          #
+          # @example
+          #   pr_data = { number: 26, title: "Add feature", head_branch: "feature/auth", base_branch: "main" }
+          #   result = creator.create_for_pr(pr_data, config)
+          #   # => { success: true, worktree_path: "/project/.ace-wt/pr-26", branch: "pr-26", tracking: "origin/feature/auth" }
+          def create_for_pr(pr_data, config, git_root: nil)
+            return error_result("PR data is required") unless pr_data
+            return error_result("Configuration is required") unless config
+
+            begin
+              # Determine git repository root
+              git_root ||= detect_git_root
+              return error_result("Not in a git repository") unless git_root
+
+              # Get PR-specific configuration (fallback to defaults)
+              pr_config = config.pr_config || {}
+              remote_name = pr_config[:remote_name] || "origin"
+              directory_format = pr_config[:directory_format] || "ace-pr-{number}"
+              branch_format = pr_config[:branch_format] || "pr-{number}"
+
+              # Format directory and branch names
+              directory_name = format_pr_name(directory_format, pr_data)
+              local_branch_name = format_pr_name(branch_format, pr_data)
+
+              # Build full path
+              worktree_path = File.join(config.absolute_root_path, directory_name)
+
+              # Validate worktree path
+              validation = validate_worktree_path(worktree_path, git_root)
+              return error_result(validation[:error]) unless validation[:valid]
+
+              # Fetch the remote branch
+              head_branch = pr_data[:head_branch]
+              fetch_result = fetch_remote_branch(remote_name, head_branch, git_root)
+              return error_result(fetch_result[:error]) unless fetch_result[:success]
+
+              # Create worktree with remote tracking
+              result = create_worktree_with_tracking(
+                worktree_path,
+                local_branch_name,
+                "#{remote_name}/#{head_branch}",
+                git_root
+              )
+              return result unless result[:success]
+
+              # Success - return worktree information
+              {
+                success: true,
+                worktree_path: worktree_path,
+                branch: local_branch_name,
+                tracking: "#{remote_name}/#{head_branch}",
+                directory_name: directory_name,
+                pr_number: pr_data[:number],
+                pr_title: pr_data[:title],
+                git_root: git_root,
+                error: nil
+              }
+            rescue StandardError => e
+              error_result("Unexpected error: #{e.message}")
+            end
+          end
+
+          # Create a worktree for a specific branch (local or remote)
+          #
+          # @param branch_name [String] Branch name (e.g., "feature" or "origin/feature")
+          # @param config [WorktreeConfig] Worktree configuration
+          # @param git_root [String, nil] Git repository root (auto-detected if nil)
+          # @return [Hash] Result with :success, :worktree_path, :branch, :error
+          #
+          # @example Remote branch
+          #   result = creator.create_for_branch("origin/feature/auth", config)
+          #   # => { success: true, worktree_path: "/project/.ace-wt/feature-auth", branch: "feature/auth", tracking: "origin/feature/auth" }
+          #
+          # @example Local branch
+          #   result = creator.create_for_branch("local-feature", config)
+          #   # => { success: true, worktree_path: "/project/.ace-wt/local-feature", branch: "local-feature", tracking: nil }
+          def create_for_branch(branch_name, config, git_root: nil)
+            return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
+            return error_result("Configuration is required") unless config
+
+            begin
+              # Determine git repository root
+              git_root ||= detect_git_root
+              return error_result("Not in a git repository") unless git_root
+
+              # Detect if this is a remote branch
+              remote_info = detect_remote_branch(branch_name)
+
+              if remote_info
+                # Remote branch - create with tracking
+                create_for_remote_branch(branch_name, remote_info, config, git_root)
+              else
+                # Local branch - create without tracking
+                create_for_local_branch(branch_name, config, git_root)
+              end
+            rescue StandardError => e
+              error_result("Unexpected error: #{e.message}")
+            end
+          end
+
           # Create a traditional worktree (not task-aware)
           #
           # @param branch_name [String] Branch name
@@ -314,6 +420,254 @@ module Ace
               branch: nil,
               error: message
             }
+          end
+
+          # Detect if a branch name refers to a remote branch
+          #
+          # @param branch_name [String] Branch name to check
+          # @return [Hash, nil] { remote: "origin", branch: "feature/auth" } or nil if local
+          #
+          # @example
+          #   detect_remote_branch("origin/feature/auth")
+          #   # => { remote: "origin", branch: "feature/auth" }
+          #
+          #   detect_remote_branch("local-branch")
+          #   # => nil
+          def detect_remote_branch(branch_name)
+            # Check if branch name contains a slash (remote/branch pattern)
+            return nil unless branch_name.include?("/")
+
+            # Split on first slash only
+            parts = branch_name.split("/", 2)
+            return nil if parts.length != 2
+
+            remote = parts[0]
+            branch = parts[1]
+
+            # Basic validation
+            return nil if remote.empty? || branch.empty?
+
+            { remote: remote, branch: branch }
+          end
+
+          # Validate that a git remote exists
+          #
+          # @param remote [String] Remote name (e.g., "origin")
+          # @param git_root [String] Git repository root
+          # @return [Hash] Result with :exists (Boolean) and :remotes (Array) for helpful error messages
+          def validate_remote_exists(remote, git_root)
+            require_relative "../atoms/git_command"
+
+            # Get list of remotes
+            result = Atoms::GitCommand.execute(
+              ["remote"],
+              timeout: 5
+            )
+
+            if result[:success]
+              remotes = result[:output].strip.split("\n")
+              exists = remotes.include?(remote)
+              { exists: exists, remotes: remotes }
+            else
+              # If we can't list remotes, assume it doesn't exist
+              { exists: false, remotes: [] }
+            end
+          end
+
+          # Fetch a remote branch
+          #
+          # @param remote [String] Remote name (e.g., "origin")
+          # @param branch [String] Branch name
+          # @param git_root [String] Git repository root
+          # @return [Hash] Result with :success, :error
+          def fetch_remote_branch(remote, branch, git_root)
+            require_relative "../atoms/git_command"
+
+            # Validate remote exists first
+            validation = validate_remote_exists(remote, git_root)
+            unless validation[:exists]
+              available = validation[:remotes].empty? ? "no remotes configured" : validation[:remotes].join(", ")
+              return {
+                success: false,
+                error: "Remote '#{remote}' not found. Available remotes: #{available}"
+              }
+            end
+
+            result = Atoms::GitCommand.execute(
+              ["fetch", remote, branch],
+              timeout: @timeout
+            )
+
+            if result[:success]
+              { success: true, error: nil }
+            else
+              { success: false, error: "Failed to fetch #{remote}/#{branch}: #{result[:error]}" }
+            end
+          end
+
+          # Create a worktree with remote tracking
+          #
+          # @param worktree_path [String] Path for the worktree
+          # @param local_branch_name [String] Local branch name
+          # @param remote_branch [String] Remote branch reference (e.g., "origin/feature")
+          # @param git_root [String] Git repository root
+          # @return [Hash] Result with :success, :worktree_path, :branch, :error
+          def create_worktree_with_tracking(worktree_path, local_branch_name, remote_branch, git_root)
+            require_relative "../atoms/git_command"
+
+            # Ensure parent directory exists
+            parent_dir = File.dirname(worktree_path)
+            FileUtils.mkdir_p(parent_dir) unless File.exist?(parent_dir)
+
+            # Create worktree with tracking: git worktree add <path> -b <local> <remote>
+            result = Atoms::GitCommand.worktree(
+              "add", worktree_path, "-b", local_branch_name, remote_branch,
+              timeout: @timeout
+            )
+
+            if result[:success]
+              {
+                success: true,
+                worktree_path: worktree_path,
+                branch: local_branch_name,
+                tracking: remote_branch,
+                git_root: git_root,
+                error: nil
+              }
+            else
+              error_result("Failed to create worktree: #{result[:error]}")
+            end
+          end
+
+          # Create a worktree for a remote branch
+          #
+          # @param branch_name [String] Full branch name (e.g., "origin/feature/auth")
+          # @param remote_info [Hash] Remote info from detect_remote_branch
+          # @param config [WorktreeConfig] Configuration
+          # @param git_root [String] Git repository root
+          # @return [Hash] Result hash
+          def create_for_remote_branch(branch_name, remote_info, config, git_root)
+            remote = remote_info[:remote]
+            branch = remote_info[:branch]
+
+            # Fetch the remote branch
+            fetch_result = fetch_remote_branch(remote, branch, git_root)
+            return error_result(fetch_result[:error]) unless fetch_result[:success]
+
+            # Generate local branch name (use full branch path to avoid collisions)
+            # For "feature/auth/v1" -> keep as "feature/auth/v1"
+            # For "feature/auth" -> keep as "feature/auth"
+            local_branch_name = branch
+
+            # Generate directory name by replacing slashes with dashes
+            # "feature/auth/v1" -> "feature-auth-v1"
+            directory_name = branch.gsub("/", "-").gsub(/[^a-zA-Z0-9\-_]/, "-")
+
+            # Build worktree path
+            worktree_path = File.join(config.absolute_root_path, directory_name)
+
+            # Validate worktree path
+            validation = validate_worktree_path(worktree_path, git_root)
+            return error_result(validation[:error]) unless validation[:valid]
+
+            # Create worktree with tracking
+            result = create_worktree_with_tracking(
+              worktree_path,
+              local_branch_name,
+              branch_name,
+              git_root
+            )
+            return result unless result[:success]
+
+            # Success
+            {
+              success: true,
+              worktree_path: worktree_path,
+              branch: local_branch_name,
+              tracking: branch_name,
+              directory_name: directory_name,
+              git_root: git_root,
+              error: nil
+            }
+          end
+
+          # Create a worktree for a local branch
+          #
+          # @param branch_name [String] Local branch name
+          # @param config [WorktreeConfig] Configuration
+          # @param git_root [String] Git repository root
+          # @return [Hash] Result hash
+          def create_for_local_branch(branch_name, config, git_root)
+            # Verify branch exists locally
+            require_relative "../atoms/git_command"
+            check_result = Atoms::GitCommand.execute(
+              ["show-ref", "--verify", "--quiet", "refs/heads/#{branch_name}"],
+              timeout: @timeout
+            )
+
+            unless check_result[:success]
+              return error_result("Local branch '#{branch_name}' not found")
+            end
+
+            # Generate directory name
+            directory_name = branch_name.gsub(/[^a-zA-Z0-9\-_]/, "-")
+
+            # Build worktree path
+            worktree_path = File.join(config.absolute_root_path, directory_name)
+
+            # Validate worktree path
+            validation = validate_worktree_path(worktree_path, git_root)
+            return error_result(validation[:error]) unless validation[:valid]
+
+            # Create worktree (no tracking for local branches)
+            result = create_worktree(worktree_path, branch_name, git_root)
+            return result unless result[:success]
+
+            # Success
+            {
+              success: true,
+              worktree_path: worktree_path,
+              branch: branch_name,
+              tracking: nil,
+              directory_name: directory_name,
+              git_root: git_root,
+              error: nil
+            }
+          end
+
+          # Format PR name using template
+          #
+          # @param template [String] Template string with {variables}
+          # @param pr_data [Hash] PR data hash
+          # @return [String] Formatted string
+          #
+          # @example
+          #   format_pr_name("pr-{number}-{slug}", { number: 26, title: "Add Feature" })
+          #   # => "pr-26-add-feature"
+          def format_pr_name(template, pr_data)
+            require_relative "../atoms/slug_generator"
+
+            result = template.dup
+
+            # Replace {number}
+            result.gsub!("{number}", pr_data[:number].to_s)
+
+            # Replace {slug} with slugified title
+            if pr_data[:title]
+              slug = Atoms::SlugGenerator.generate(pr_data[:title])
+              result.gsub!("{slug}", slug)
+            end
+
+            # Replace {title_slug} (alias for slug)
+            if pr_data[:title]
+              slug = Atoms::SlugGenerator.generate(pr_data[:title])
+              result.gsub!("{title_slug}", slug)
+            end
+
+            # Replace {base_branch}
+            result.gsub!("{base_branch}", pr_data[:base_branch].to_s) if pr_data[:base_branch]
+
+            result
           end
         end
       end

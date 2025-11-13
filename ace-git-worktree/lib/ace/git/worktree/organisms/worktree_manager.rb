@@ -115,6 +115,143 @@ module Ace
             end
           end
 
+          # Create a worktree for a Pull Request
+          #
+          # @param pr_number [Integer] PR number
+          # @param pr_data [Hash] PR data from PrFetcher
+          # @param options [Hash] Options for creation
+          # @return [Hash] Creation result
+          #
+          # @example
+          #   manager = WorktreeManager.new
+          #   pr_data = { number: 26, title: "Add feature", head_branch: "feature/auth" }
+          #   result = manager.create_pr(26, pr_data)
+          def create_pr(pr_number, pr_data, options = {})
+            begin
+              return error_result("PR number is required") if pr_number.nil?
+              return error_result("PR data is required") if pr_data.nil?
+
+              # Check if worktree already exists for this PR's branch
+              head_branch = pr_data[:head_branch]
+              existing = @worktree_lister.find_by_branch("pr-#{pr_number}") ||
+                        @worktree_lister.find_by_branch(head_branch)
+
+              if existing && !options[:force]
+                return error_result("Worktree already exists at: #{existing.path}")
+              end
+
+              # Handle dry run
+              if options[:dry_run]
+                return dry_run_pr_creation(pr_number, pr_data, options)
+              end
+
+              # Create the worktree
+              result = @worktree_creator.create_for_pr(
+                pr_data,
+                @config,
+                git_root: @project_root
+              )
+
+              if result[:success]
+                result[:pr_number] = pr_number
+                result[:pr_title] = pr_data[:title]
+                result[:message] = "PR worktree created successfully"
+
+                # Execute after-create hooks if configured
+                hooks = @config.after_create_hooks
+                if hooks && hooks.any?
+                  require_relative "../molecules/hook_executor"
+                  hook_executor = Molecules::HookExecutor.new
+                  hook_result = hook_executor.execute_hooks(
+                    hooks,
+                    worktree_path: result[:worktree_path],
+                    project_root: @project_root,
+                    task_data: nil,
+                    pr_data: pr_data
+                  )
+
+                  if hook_result[:success]
+                    result[:hooks_results] = hook_result[:results]
+                  else
+                    result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
+                    result[:hooks_results] = hook_result[:results]
+                  end
+                end
+              end
+
+              result
+            rescue StandardError => e
+              error_result("Unexpected error: #{e.message}")
+            end
+          end
+
+          # Create a worktree for a branch (local or remote)
+          #
+          # @param branch_name [String] Branch name (e.g., "feature" or "origin/feature")
+          # @param options [Hash] Options for creation
+          # @return [Hash] Creation result
+          #
+          # @example Remote branch
+          #   result = manager.create_branch("origin/feature/auth")
+          #
+          # @example Local branch
+          #   result = manager.create_branch("my-feature")
+          def create_branch(branch_name, options = {})
+            begin
+              return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
+
+              # Check if worktree already exists for this branch
+              # Extract just the branch name (remove remote prefix if present)
+              local_branch_name = branch_name.include?("/") ? branch_name.split("/").last : branch_name
+              existing = @worktree_lister.find_by_branch(local_branch_name) ||
+                        @worktree_lister.find_by_branch(branch_name)
+
+              if existing && !options[:force]
+                return error_result("Worktree already exists at: #{existing.path}")
+              end
+
+              # Handle dry run
+              if options[:dry_run]
+                return dry_run_branch_creation(branch_name, options)
+              end
+
+              # Create the worktree
+              result = @worktree_creator.create_for_branch(
+                branch_name,
+                @config,
+                git_root: @project_root
+              )
+
+              if result[:success]
+                result[:message] = "Branch worktree created successfully"
+
+                # Execute after-create hooks if configured
+                hooks = @config.after_create_hooks
+                if hooks && hooks.any?
+                  require_relative "../molecules/hook_executor"
+                  hook_executor = Molecules::HookExecutor.new
+                  hook_result = hook_executor.execute_hooks(
+                    hooks,
+                    worktree_path: result[:worktree_path],
+                    project_root: @project_root,
+                    task_data: nil
+                  )
+
+                  if hook_result[:success]
+                    result[:hooks_results] = hook_result[:results]
+                  else
+                    result[:warnings] = hook_result[:errors] if hook_result[:errors]&.any?
+                    result[:hooks_results] = hook_result[:results]
+                  end
+                end
+              end
+
+              result
+            rescue StandardError => e
+              error_result("Unexpected error: #{e.message}")
+            end
+          end
+
           # List all worktrees
           #
           # @param options [Hash] Listing options
@@ -430,6 +567,67 @@ module Ace
 
           # Create error result
           #
+          # Dry run PR worktree creation
+          #
+          # @param pr_number [Integer] PR number
+          # @param pr_data [Hash] PR data
+          # @param options [Hash] Options
+          # @return [Hash] Dry run result
+          def dry_run_pr_creation(pr_number, pr_data, options)
+            # Simulate what would be created
+            pr_config = @config.pr_config || {}
+            directory_format = pr_config[:directory_format] || "ace-pr-{number}"
+            branch_format = pr_config[:branch_format] || "pr-{number}"
+            remote_name = pr_config[:remote_name] || "origin"
+
+            directory_name = directory_format.gsub("{number}", pr_number.to_s)
+            branch_name = branch_format.gsub("{number}", pr_number.to_s)
+            worktree_path = File.join(@config.absolute_root_path, directory_name)
+            tracking = "#{remote_name}/#{pr_data[:head_branch]}"
+
+            {
+              success: true,
+              pr_number: pr_number,
+              pr_title: pr_data[:title],
+              would_create: {
+                worktree_path: worktree_path,
+                branch: branch_name,
+                tracking: tracking,
+                directory_name: directory_name
+              }
+            }
+          end
+
+          # Dry run branch worktree creation
+          #
+          # @param branch_name [String] Branch name
+          # @param options [Hash] Options
+          # @return [Hash] Dry run result
+          def dry_run_branch_creation(branch_name, options)
+            # Detect remote info
+            remote_info = @worktree_creator.send(:detect_remote_branch, branch_name)
+
+            local_branch = if remote_info
+                            remote_info[:branch].split("/").last
+                          else
+                            branch_name
+                          end
+
+            directory_name = local_branch.gsub(/[^a-zA-Z0-9\-_]/, "-")
+            worktree_path = File.join(@config.absolute_root_path, directory_name)
+            tracking = remote_info ? branch_name : nil
+
+            {
+              success: true,
+              would_create: {
+                worktree_path: worktree_path,
+                branch: local_branch,
+                tracking: tracking,
+                directory_name: directory_name
+              }
+            }
+          end
+
           # @param message [String] Error message
           # @return [Hash] Error result
           def error_result(message)

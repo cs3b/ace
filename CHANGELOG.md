@@ -4,7 +4,40 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.125] - 2025-11-13
+
+### Added
+- **ace-git-worktree v0.3.0**: PR and branch-based worktree creation
+  - **NEW**: `--pr <number>` flag to create worktrees from GitHub pull requests
+  - **NEW**: `-b <branch>` flag for worktrees from local/remote branches
+  - GitHub CLI integration with automatic PR metadata fetching
+  - Auto-detection of remote vs. local branches with smart tracking setup
+  - Retry logic with exponential backoff for transient network failures
+  - Fork PR detection with user warnings
+  - Comprehensive test coverage (43 tests total)
+  - Full documentation with usage examples and configuration guide
+
+### Changed
+- **ace-git-worktree v0.3.0**: Enhanced error messages and validation
+  - Error messages now include repository context (e.g., "PR #123 not found in owner/repo")
+  - Configuration validation detects invalid template variables with helpful suggestions
+  - Git remote validation prevents confusing errors from invalid remote names
+  - Code quality improvements with extracted helper methods
+
+### Fixed
+- **ace-git-worktree v0.3.0**: Branch naming collision resolution
+  - Fixed collision issue when multiple remote branches share same last segment
+  - Now uses full branch path: `origin/feature/auth/v1` → branch: `feature/auth/v1`, dir: `feature-auth-v1`
+
 ### Technical
+- **ace-git-worktree v0.3.0**: Architecture and performance improvements
+  - Added `PrFetcher` molecule following ATOM pattern
+  - Cached gh CLI availability check for performance
+  - Extended `WorktreeCreator`, `WorktreeConfig`, and `WorktreeManager`
+  - Template variable support: `{number}`, `{slug}`, `{base_branch}` for PR naming
+  - Repository name caching for better error messages
+  - Configuration validation with comprehensive template variable checking
+  - Remote validation before git fetch operations
 - **ace-git-worktree v0.2.2**: Test suite modernization and command enhancements
   - Simplified test architecture with 843 line reduction (focused smoke tests)
   - Added missing CLI flags (--no-mise-trust, --force)
