@@ -5,8 +5,11 @@ module Ace
     module Molecules
       # FileStager handles staging files for commit
       class FileStager
+        attr_reader :last_error
+
         def initialize(git_executor)
           @git = git_executor
+          @last_error = nil
         end
 
         # Stage specific files
@@ -15,15 +18,23 @@ module Ace
         def stage_files(files)
           return false if files.nil? || files.empty?
 
+          @last_error = nil
           @git.execute("add", *files)
           true
+        rescue GitError => e
+          @last_error = e.message
+          false
         end
 
         # Stage all changes in the repository
         # @return [Boolean] True if successful
         def stage_all
+          @last_error = nil
           @git.execute("add", "-A")
           true
+        rescue GitError => e
+          @last_error = e.message
+          false
         end
 
         # Unstage specific files

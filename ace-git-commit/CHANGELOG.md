@@ -5,6 +5,28 @@ All notable changes to ace-git-commit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.11.2] - 2025-11-12
+
+### Fixed
+- **Silent staging failures**: Staging operations now properly detect and report failures instead of continuing silently
+- **Misleading error messages**: Error messages now accurately reflect operation outcomes with clear indicators (✓/✗)
+- **Debug-only output**: Staging progress messages are now visible by default (not just in debug mode)
+- **Error visibility in quiet mode**: Critical errors always display, even in quiet mode, ensuring users are informed of failures
+
+### Added
+- **Verbosity control**: Added `--verbose` (default) and `--quiet` flags for output control
+- **Error context**: Staging failures now include specific error details and actionable suggestions
+- **StageResult model**: Infrastructure for tracking per-file staging outcomes
+- **Transparent feedback**: Clear staging progress and error reporting with actionable suggestions (documented in README)
+
+### Changed
+- **FileStager**: Now returns boolean success/failure status and stores error details in `last_error`
+- **CommitOrchestrator**: Enhanced with visible staging progress, proper error handling, and fail-fast behavior
+- **CommitOptions**: Extended with `verbose` (default: true) and `quiet` (default: false) options
+- **User feedback**: All staging operations now provide clear, immediate feedback on success or failure
+
 ## [0.11.1] - 2025-11-01
 
 ### Changed

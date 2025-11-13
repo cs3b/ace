@@ -12,6 +12,7 @@ LLM-powered git commit tool for streamlined, meaningful commit messages.
 - 📝 **Conventional commits** - Follows conventional commit format automatically
 - 🎯 **Intention-based commits** - Provide context for better message generation
 - 🚀 **Smart staging** - Automatically stages all changes by default
+- ✅ **Transparent feedback** - Clear staging progress and error reporting with actionable suggestions
 - 🔧 **Flexible configuration** - Customize via `.ace/git/config/git.yml`
 - 💎 **Ruby integration** - Direct integration with ace-llm (no subprocess overhead)
 
@@ -55,7 +56,11 @@ ace-git-commit --only-staged
 - `-s, --only-staged` - Commit only staged changes
 - `-n, --dry-run` - Preview without committing
 - `-d, --debug` - Enable debug output
+- `--verbose` - Enable verbose output (default: on, shows staging progress)
+- `-q, --quiet` - Suppress informational messages (errors only)
 - `-h, --help` - Show help
+
+**Note**: Staging progress messages are visible by default. Use `--quiet` to suppress them.
 
 ## Configuration
 

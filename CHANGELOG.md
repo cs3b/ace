@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.9.125] - 2025-11-13
+
+## [0.9.127] - 2025-11-13
+
+### Fixed
+- **ace-git-commit v0.11.2**: Resolve silent staging failures and improve error reporting
+  - Staging operations now properly detect and report failures with clear ✓/✗ indicators
+  - Error messages always visible even in quiet mode for critical issues
+  - Added `--verbose` (default) and `--quiet` flags for output control
+  - Enhanced user feedback with actionable suggestions on failures
+  - Improved error message format with file count feedback
+
 
 ### Added
 - **ace-test-runner v0.1.7**: Skipped test reporting functionality
