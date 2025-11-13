@@ -447,6 +447,10 @@ module Ace
 
             # Basic validation
             return nil if remote.empty? || branch.empty?
+            # Invalid if branch starts with / or ends with /
+            return nil if branch.start_with?("/") || branch.end_with?("/")
+            # Invalid if remote ends with / or starts with /
+            return nil if remote.start_with?("/") || remote.end_with?("/")
 
             { remote: remote, branch: branch }
           end

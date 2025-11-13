@@ -535,6 +535,7 @@ class WorktreeCreatorTest < Minitest::Test
         branch_format: "pr-{number}"
       }
     end
+    config.define_singleton_method(:configure_push_for_mismatch?) { true }
     config
   end
 

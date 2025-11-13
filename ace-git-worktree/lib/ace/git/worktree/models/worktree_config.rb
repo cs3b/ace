@@ -258,6 +258,13 @@ module Ace
               if invalid_vars.any?
                 errors << "#{name} contains invalid variables: #{invalid_vars.join(', ')}. Valid variables: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
               end
+
+              # Warn if template has no variables (except for commit_message_format which is optional)
+              unless name == "task.commit_message_format"
+                if config[:template] && !config[:template].match?(/\{[^}]+\}/)
+                  errors << "#{name} should include at least one template variable from: #{config[:valid_vars].map { |v| "{#{v}}" }.join(', ')}"
+                end
+              end
             end
 
             # Validate template variables for PR configuration

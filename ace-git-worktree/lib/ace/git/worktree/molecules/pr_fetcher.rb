@@ -196,6 +196,8 @@ module Ace
 
             # Parse JSON response
             parse_pr_json(stdout, pr_number)
+          rescue Timeout::Error
+            raise NetworkError, "Request timed out after #{@timeout} seconds. Check your network connection."
           rescue JSON::ParserError => e
             raise NetworkError, "Failed to parse GitHub response: #{e.message}"
           end
