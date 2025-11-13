@@ -13,7 +13,7 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## Process Steps
 

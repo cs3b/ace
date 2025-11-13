@@ -416,8 +416,8 @@ status: [draft|active|archived]
 
 - **Roadmap Definition Guide**: `dev-handbook/guides/roadmap-definition.g.md`
 - **Current Roadmap**: `.ace-taskflow/roadmap.md`
-- **Draft Release Workflow**: `ace-taskflow/handbook/workflow-instructions/draft-release.wf.md`
-- **Publish Release Workflow**: `ace-taskflow/handbook/workflow-instructions/publish-release.wf.md`
+- **Draft Release Workflow**: `wfi://draft-release`
+- **Publish Release Workflow**: `wfi://publish-release`
 - **ace-taskflow CLI**: For release queries and task analysis
 
 ---

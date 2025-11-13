@@ -3,8 +3,10 @@ source 'https://rubygems.org'
 # Local workspace gems - flat in root (ace-* prefix)
 gem 'ace-context', path: 'ace-context'
 gem 'ace-docs', path: 'ace-docs'
+gem 'ace-git', path: 'ace-git'
 gem 'ace-git-commit', path: 'ace-git-commit'
 gem 'ace-git-diff', path: 'ace-git-diff'
+gem 'ace-git-worktree', path: 'ace-git-worktree'
 gem 'ace-lint', path: 'ace-lint'
 gem 'ace-llm', path: 'ace-llm'
 gem 'ace-llm-providers-cli', path: 'ace-llm-providers-cli'
@@ -15,7 +17,6 @@ gem 'ace-support-core', path: 'ace-support-core'
 gem 'ace-support-mac-clipboard', path: 'ace-support-mac-clipboard'
 gem 'ace-support-markdown', path: 'ace-support-markdown'
 gem 'ace-taskflow', path: 'ace-taskflow'
-gem 'ace-git-worktree', path: 'ace-git-worktree'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
 # Shared dev/test tools for all gems

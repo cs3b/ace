@@ -13,7 +13,7 @@ Document significant work completed during a session that wasn't part of any pla
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## High-Level Execution Plan
 

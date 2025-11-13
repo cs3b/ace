@@ -12,7 +12,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## High-Level Execution Plan
 
