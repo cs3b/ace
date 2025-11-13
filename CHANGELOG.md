@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.125] - 2025-11-13
+
+### Added
+- **ace-test-runner v0.1.7**: Skipped test reporting functionality
+  - Added comprehensive skipped test reporting to console output and suite summaries
+  - Displays count and visual indicators for skipped tests in execution summaries
+  - Shows detailed skipped test information including reason when available
+  - Includes skipped tests in final statistics with skip percentage
+
 ## [Unreleased]
 
 ### Technical

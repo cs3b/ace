@@ -32,6 +32,7 @@ module Ace
             total_tests: results.sum { |r| r[:total] || 0 },
             total_passed: results.sum { |r| r[:passed] || 0 },
             total_failed: results.sum { |r| (r[:failed] || 0) + (r[:errors] || 0) },
+            total_skipped: results.sum { |r| r[:skipped] || 0 },
             total_assertions: total_assertions,
             assertions_failed: assertions_failed,
             total_duration: results.map { |r| r[:duration] || 0 }.max,
@@ -144,12 +145,12 @@ module Ace
 
           report << "## Package Results"
           report << ""
-          report << "| Package | Status | Tests | Passed | Failed | Duration |"
-          report << "|---------|--------|-------|--------|--------|----------|"
+          report << "| Package | Status | Tests | Passed | Failed | Skipped | Duration |"
+          report << "|---------|--------|-------|--------|--------|---------|----------|"
 
           summary[:results].each do |result|
             status = result[:success] ? "✅ Pass" : "❌ Fail"
-            report << "| #{result[:package]} | #{status} | #{result[:total]} | #{result[:passed]} | #{result[:failed] || 0} | #{sprintf('%.2f', result[:duration] || 0)}s |"
+            report << "| #{result[:package]} | #{status} | #{result[:total]} | #{result[:passed]} | #{result[:failed] || 0} | #{result[:skipped] || 0} | #{sprintf('%.2f', result[:duration] || 0)}s |"
           end
 
           report.join("\n")
