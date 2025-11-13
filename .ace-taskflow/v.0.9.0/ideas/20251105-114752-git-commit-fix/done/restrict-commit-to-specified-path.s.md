@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-11-13T10:13:42+00:00
+---
+
 # Idea
 
 # ace-git-commit whenever the path is passes should ...
