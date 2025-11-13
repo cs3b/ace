@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.125] - 2025-11-13
+
+### Added
+- **ace-review v0.16.0**: Preset Composition - DRY configuration for review presets
+  - New `presets:` array enables composing review presets from reusable base configurations
+  - Smart merging: arrays concatenate+deduplicate, hashes deep merge, scalars last-wins
+  - Circular dependency detection with max depth limit (10 levels)
+  - Path traversal prevention and preset name validation for security
+  - Intermediate caching for performance (beneficial for deeply nested presets)
+  - New PresetValidator atom for validation logic
+  - Enhanced PresetManager with recursive composition support
+  - Full backward compatibility - existing presets work unchanged
+  - Comprehensive test coverage: 56 tests (23 validator + 22 manager + 11 integration)
+  - Example presets demonstrating DRY pattern (code.yml, code-pr.yml, code-wip.yml)
+
 ### Technical
 - **ace-git-worktree v0.2.2**: Test suite modernization and command enhancements
   - Simplified test architecture with 843 line reduction (focused smoke tests)

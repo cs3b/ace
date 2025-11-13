@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2025-11-13
+
 ### Added
 - **Preset Composition**: Support for composing review presets from reusable base configurations
   - New `presets:` array at root level for preset composition
@@ -17,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `PresetValidator` atom for validation and circular dependency detection
   - Preset name validation (prevents path traversal, enforces length limits)
   - Enhanced `PresetManager` molecule with `load_preset_with_composition` method
-  - Comprehensive test coverage: 23 validator tests, 10 manager composition tests, 7 integration tests
+  - Comprehensive test coverage: 23 validator tests, 22 manager composition tests, 11 integration tests
 - **Example Preset Refactoring**: New DRY preset structure
   - `code.yml` base preset with common review instructions
   - `code-pr.yml` composed preset for pull request reviews
@@ -28,9 +30,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recursive loading with visited set tracking
   - Deep merge support for nested hash structures
   - Array deduplication during composition
-  - Caching prevents redundant composition (particularly beneficial for deeply nested presets)
+  - Intermediate caching prevents redundant composition (particularly beneficial for deeply nested presets)
   - Standardized internal metadata format (string keys for consistency)
+  - Deep metadata stripping from nested structures
   - Added `strip_composition_metadata` helper method for DRY code
+  - Performance instrumentation with debug mode support
+
+### Technical
+- Integrated test suite performance optimizations from v0.15.1
+- Updated test patterns to match new test helper structure
+- All 56 tests passing (23 validator + 22 manager + 11 integration)
 
 ## [0.15.1] - 2025-11-11
 
