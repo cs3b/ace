@@ -626,4 +626,84 @@ class WorktreeCreatorTest < Minitest::Test
       end
     end
   end
+
+  def test_create_worktree_with_tracking_configures_push_when_names_differ
+    Dir.mktmpdir do |worktree_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock successful worktree creation
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, { success: true, output: "", error: nil }) do
+        # Mock git config commands
+        config_calls = []
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:execute) do |*args|
+          config_calls << args
+          { success: true, output: "", error: nil }
+        end
+
+        result = creator.send(:create_worktree_with_tracking,
+                              worktree_path,
+                              "local-branch",
+                              "origin/remote-branch",
+                              "/tmp",
+                              configure_push: true)
+
+        assert result[:success]
+        assert_equal "local-branch", result[:branch]
+        assert_equal "origin/remote-branch", result[:tracking]
+
+        # Check that git config was called to set push behavior
+        assert config_calls.any? { |args| args.include?("push.default") && args.include?("upstream") }
+        assert config_calls.any? { |args| args.include?("push.autoSetupRemote") && args.include?("true") }
+      end
+    end
+  end
+
+  def test_create_worktree_with_tracking_skips_push_config_when_names_match
+    Dir.mktmpdir do |worktree_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock successful worktree creation
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, { success: true, output: "", error: nil }) do
+        # Mock git config commands
+        config_calls = []
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:execute) do |*args|
+          config_calls << args
+          { success: true, output: "", error: nil }
+        end
+
+        result = creator.send(:create_worktree_with_tracking,
+                              worktree_path,
+                              "feature-branch",
+                              "origin/feature-branch",
+                              "/tmp",
+                              configure_push: true)
+
+        assert result[:success]
+        assert_equal "feature-branch", result[:branch]
+        assert_equal "origin/feature-branch", result[:tracking]
+
+        # Check that git config was NOT called since branch names match
+        refute config_calls.any? { |args| args.include?("push.default") }
+      end
+    end
+  end
+
+  def test_configure_push_for_mismatch_config_option
+    # Test that the config option is available
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({
+      "git" => {
+        "worktree" => {
+          "pr" => {
+            "configure_push_for_mismatch" => false
+          }
+        }
+      }
+    })
+
+    refute config.configure_push_for_mismatch?, "Should return false when disabled in config"
+
+    # Test default (should be true)
+    default_config = Ace::Git::Worktree::Models::WorktreeConfig.new
+    assert default_config.configure_push_for_mismatch?, "Should default to true"
+  end
 end

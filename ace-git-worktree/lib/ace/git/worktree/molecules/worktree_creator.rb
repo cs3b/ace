@@ -130,7 +130,8 @@ module Ace
                 worktree_path,
                 local_branch_name,
                 "#{remote_name}/#{head_branch}",
-                git_root
+                git_root,
+                configure_push: config.configure_push_for_mismatch?
               )
               return result unless result[:success]
 
@@ -511,8 +512,9 @@ module Ace
           # @param local_branch_name [String] Local branch name
           # @param remote_branch [String] Remote branch reference (e.g., "origin/feature")
           # @param git_root [String] Git repository root
+          # @param configure_push [Boolean] Whether to configure push behavior for branch name mismatches
           # @return [Hash] Result with :success, :worktree_path, :branch, :error
-          def create_worktree_with_tracking(worktree_path, local_branch_name, remote_branch, git_root)
+          def create_worktree_with_tracking(worktree_path, local_branch_name, remote_branch, git_root, configure_push: true)
             require_relative "../atoms/git_command"
 
             # Ensure parent directory exists
@@ -525,18 +527,23 @@ module Ace
               timeout: @timeout
             )
 
-            if result[:success]
-              {
-                success: true,
-                worktree_path: worktree_path,
-                branch: local_branch_name,
-                tracking: remote_branch,
-                git_root: git_root,
-                error: nil
-              }
-            else
-              error_result("Failed to create worktree: #{result[:error]}")
+            unless result[:success]
+              return error_result("Failed to create worktree: #{result[:error]}")
             end
+
+            # Configure push behavior if local and remote branch names differ
+            if configure_push && local_branch_name != extract_remote_branch_name(remote_branch)
+              configure_push_for_worktree(worktree_path, local_branch_name, remote_branch)
+            end
+
+            {
+              success: true,
+              worktree_path: worktree_path,
+              branch: local_branch_name,
+              tracking: remote_branch,
+              git_root: git_root,
+              error: nil
+            }
           end
 
           # Create a worktree for a remote branch
@@ -571,11 +578,21 @@ module Ace
             return error_result(validation[:error]) unless validation[:valid]
 
             # Create worktree with tracking
+            # Check if we should configure push for branch name mismatches
+            configure_push = if config.respond_to?(:configure_push_for_mismatch?)
+                              config.configure_push_for_mismatch?
+                            else
+                              # For backward compatibility or when config is not available
+                              # Default to true for branch creation
+                              true
+                            end
+
             result = create_worktree_with_tracking(
               worktree_path,
               local_branch_name,
               branch_name,
-              git_root
+              git_root,
+              configure_push: configure_push
             )
             return result unless result[:success]
 
@@ -668,6 +685,33 @@ module Ace
             result.gsub!("{base_branch}", pr_data[:base_branch].to_s) if pr_data[:base_branch]
 
             result
+          end
+
+          # Extract just the branch name from a remote branch reference
+          #
+          # @param remote_branch [String] Remote branch reference (e.g., "origin/feature")
+          # @return [String] Branch name (e.g., "feature")
+          def extract_remote_branch_name(remote_branch)
+            remote_info = detect_remote_branch(remote_branch)
+            remote_info ? remote_info[:branch] : remote_branch
+          end
+
+          # Configure push behavior for a worktree when local and remote branch names differ
+          #
+          # @param worktree_path [String] Path to the worktree
+          # @param local_branch_name [String] Local branch name
+          # @param remote_branch [String] Remote branch reference
+          def configure_push_for_worktree(worktree_path, local_branch_name, remote_branch)
+            require_relative "../atoms/git_command"
+
+            # Run git config commands within the worktree
+            Dir.chdir(worktree_path) do
+              # Set push.default to "upstream" to push to the configured upstream regardless of name
+              Atoms::GitCommand.execute("config", "push.default", "upstream", timeout: 5)
+
+              # Set push.autoSetupRemote to true for convenience
+              Atoms::GitCommand.execute("config", "push.autoSetupRemote", "true", timeout: 5)
+            end
           end
         end
       end
