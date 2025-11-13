@@ -504,7 +504,7 @@ class WorktreeCreatorTest < Minitest::Test
     template = "pr-{number}-{slug}"
 
     # Mock slug generator
-    Ace::Git::Worktree::Atoms::SlugGenerator.stub(:generate, "add-authentication-feature") do
+    Ace::Git::Worktree::Atoms::SlugGenerator.stub(:from_title, "add-authentication-feature") do
       result = @creator.send(:format_pr_name, template, pr_data)
       assert_equal "pr-26-add-authentication-feature", result
     end

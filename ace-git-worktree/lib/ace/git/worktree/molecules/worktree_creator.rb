@@ -460,7 +460,7 @@ module Ace
 
             # Get list of remotes
             result = Atoms::GitCommand.execute(
-              ["remote"],
+              "remote",
               timeout: 5
             )
 
@@ -494,7 +494,7 @@ module Ace
             end
 
             result = Atoms::GitCommand.execute(
-              ["fetch", remote, branch],
+              "fetch", remote, branch,
               timeout: @timeout
             )
 
@@ -654,13 +654,13 @@ module Ace
 
             # Replace {slug} with slugified title
             if pr_data[:title]
-              slug = Atoms::SlugGenerator.generate(pr_data[:title])
+              slug = Atoms::SlugGenerator.from_title(pr_data[:title])
               result.gsub!("{slug}", slug)
             end
 
             # Replace {title_slug} (alias for slug)
             if pr_data[:title]
-              slug = Atoms::SlugGenerator.generate(pr_data[:title])
+              slug = Atoms::SlugGenerator.from_title(pr_data[:title])
               result.gsub!("{title_slug}", slug)
             end
 

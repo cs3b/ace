@@ -166,8 +166,7 @@ module Ace
                     hooks,
                     worktree_path: result[:worktree_path],
                     project_root: @project_root,
-                    task_data: nil,
-                    pr_data: pr_data
+                    task_data: pr_data
                   )
 
                   if hook_result[:success]
