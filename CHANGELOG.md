@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.126] - 2025-11-13
+
+### Added
+- **ace-git v0.1.0**: New workflow-first gem providing comprehensive git operation workflows
+  - Rebase workflow with CHANGELOG.md and version file preservation
+  - PR creation workflow with GitHub CLI integration and structured templates (default, feature, bugfix)
+  - Squash workflow for version-based commit squashing with automatic detection
+  - Four templates for consistent PR descriptions and commit messages
+  - ace-nav protocol integration (wfi:// and template://) for workflow discovery
+  - Minimal, preference-based configuration with sensible defaults
+
+### Fixed
+- **ace-git v0.1.0**: Code review improvements
+  - Removed built gem file from repository and added *.gem to .gitignore
+  - Added MIT license metadata to gemspec
+  - Differentiated gemspec URIs for better RubyGems.org display
+  - Clarified Git version requirement to >= 2.23.0 for modern features
+
 ## [0.9.125] - 2025-11-13
 
 ### Added
@@ -29,6 +47,8 @@ All notable changes to this project will be documented in this file.
   - Fixed collision issue when multiple remote branches share same last segment
   - Now uses full branch path: `origin/feature/auth/v1` → branch: `feature/auth/v1`, dir: `feature-auth-v1`
 
+## [0.9.124] - 2025-11-11
+
 ### Technical
 - **ace-git-worktree v0.3.0**: Architecture and performance improvements
   - Added `PrFetcher` molecule following ATOM pattern
@@ -43,10 +63,6 @@ All notable changes to this project will be documented in this file.
   - Added missing CLI flags (--no-mise-trust, --force)
   - Enhanced security validation for user inputs
   - Fixed command test mocks to match actual API signatures
-
-## [0.9.124] - 2025-11-11
-
-### Technical
 - **ace-review v0.15.1**: Optimize test suite performance with mocking (2.2x faster, 2.03s → 0.93s)
   - Add `Ace::Context.load_auto()` mocking in test_helper
   - Add `GitExtractor` mocking (staged_diff, working_diff, tracking_branch)
