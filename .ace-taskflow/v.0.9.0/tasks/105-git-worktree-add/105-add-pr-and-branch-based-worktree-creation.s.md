@@ -8,6 +8,38 @@ dependencies: []
 
 # Add PR and branch-based worktree creation to ace-git-worktree
 
+## Review Questions (Pending Human Input)
+
+### [RESOLVED] Implementation Decisions
+
+- [x] **GitHub CLI Requirement**: gh CLI is **required** for `--pr` feature (not optional)
+  - **Decision**: Hard requirement, clear error if gh not installed
+  - **Implementation**: Check gh availability early, fail fast with installation instructions
+
+- [x] **Fork-based PR Security**: User responsibility, but display warning for non-user branches
+  - **Decision**: Display clear information when PR is from fork/external contributor
+  - **Implementation**: Check if PR branch owner differs from repo owner, display warning message
+
+### [MEDIUM] Enhancement Questions
+
+- [ ] **Existing Worktree Conflict Handling**: For same branch worktrees, should we allow numbered suffixes (-2, -3) or hard error?
+  - **Research conducted**: Current implementation prevents duplicate worktrees
+  - **Found**: WorktreeManager checks for existing worktrees before creation
+  - **Suggested default**: Hard error with clear message showing existing location
+  - **Why needs human input**: UX preference between flexibility vs clarity
+
+- [ ] **PR Branch Naming Convention**: Should PR local branches match remote names or use `pr-<number>` format?
+  - **Research conducted**: Current task worktrees use `{id}-{slug}` format
+  - **Config pattern found**: Format templates with variable substitution
+  - **Suggested default**: Configurable via `pr_branch_format: "pr-{number}"` template
+  - **Why needs human input**: Team convention preferences may vary
+
+- [ ] **Branch Creation Without Fetch**: Should `-b/--branch` for remote branches work without fetch if branch exists locally?
+  - **Research conducted**: Git allows worktree creation from existing refs
+  - **Performance consideration**: Skipping fetch saves network time
+  - **Suggested default**: Check local refs first, fetch only if not found
+  - **Why needs human input**: Balance between performance and freshness
+
 ## Behavioral Specification
 
 ### User Experience
@@ -68,13 +100,14 @@ ace-git-worktree remove ace-pr-26        # Remove PR worktree
 ```
 
 **Error Handling:**
-- **gh CLI not available**: `Error: gh CLI not found. Install with: brew install gh`
+- **gh CLI not available**: `Error: gh CLI is required for PR worktrees. Install with: brew install gh`
 - **PR not found**: `Error: PR #26 not found in this repository`
 - **Branch not found**: `Error: Branch 'origin/nonexistent' not found`
 - **Remote not fetched**: `Error: Remote branch 'upstream/main' not found. Run: git fetch upstream`
 - **Conflicting options**: `Error: Cannot use --pr with --branch, --task, or positional branch name`
 - **Network issues**: `Error: Failed to fetch PR information. Check your network connection`
 - **Already exists**: `Error: Worktree already exists for branch 'origin/feature/auth' at: <path>`
+- **Fork PR warning**: `⚠️  This PR is from a fork (user/repo). Branch owner: external-contributor`
 
 **Edge Cases:**
 - **Fork-based PRs**: Detect and add fork remote if needed, then fetch branch
@@ -86,12 +119,13 @@ ace-git-worktree remove ace-pr-26        # Remove PR worktree
 
 ### Success Criteria
 
-- [ ] **PR Worktree Creation**: Users can create worktrees using `--pr <number>` with automatic remote tracking
+- [ ] **PR Worktree Creation**: Users can create worktrees using `--pr <number>` with automatic remote tracking (requires gh CLI)
 - [ ] **Branch Worktree Creation**: Users can create worktrees using `-b <branch>` for both local and remote branches
 - [ ] **Remote Tracking Setup**: Remote branches automatically configure tracking in the created worktree
 - [ ] **Local Branch Support**: Local branches create worktrees without tracking configuration
 - [ ] **Automatic Fetching**: Tool fetches remote branches before creating worktree if not already available
-- [ ] **GitHub CLI Integration**: PR information is fetched via `gh` CLI with proper error handling
+- [ ] **GitHub CLI Integration**: PR information is fetched via `gh` CLI with proper error handling and fork detection
+- [ ] **Fork PR Warning**: Display clear warning when PR is from fork/external contributor
 - [ ] **Configurable Naming**: Worktree names follow configurable format patterns
 - [ ] **Clear Error Messages**: All error conditions provide actionable guidance
 - [ ] **Dry Run Support**: Users can preview worktree creation with `--dry-run` flag
@@ -177,6 +211,63 @@ Enable developers to quickly create isolated git worktrees from GitHub pull requ
 - Existing ace-git-worktree task-aware workflow as reference pattern
 - Git worktree documentation for remote branch tracking best practices
 
+## Research Findings from Codebase Analysis
+
+### Current Architecture Assessment
+
+**ATOM Structure Verified**:
+- Well-organized ATOM architecture with 26 Ruby files
+- Clear separation: atoms (3), molecules (8), organisms (2), models (3), commands (6)
+- Key components already exist: GitCommand, WorktreeCreator, WorktreeManager, ConfigLoader
+
+**No Existing PR/Branch Features**:
+- Confirmed: No PR-based worktree creation exists
+- Confirmed: No gh CLI integration in ace-git-worktree
+- Pattern found: Legacy code uses gh with fallback (`gh repo clone` → `git clone`)
+
+**Configuration System Ready**:
+- Uses ace-core configuration cascade
+- Template variable substitution already implemented
+- Format patterns: `{id}`, `{slug}`, `{release}`, etc.
+- Easy to extend with `{number}`, `{title}` for PRs
+
+**Key Implementation Patterns Discovered**:
+1. **Manual CLI parsing**: No OptionParser/Thor, custom while-loop parser
+2. **Subprocess execution**: Shell out to ace-taskflow CLI for task data
+3. **Return pattern**: `{ success: bool, error: string, ...data }`
+4. **Hook system**: Variable interpolation with environment support
+5. **ace-git-diff integration**: Uses CommandExecutor for git commands
+
+### Implementation Recommendations Based on Research
+
+**PrFetcher Pattern** (mirror TaskFetcher):
+- Location: `molecules/pr_fetcher.rb`
+- Execute: `gh pr view <number> --json number,headRefName,title`
+- Parse JSON response
+- Return hash compatible with existing data structures
+
+**WorktreeCreator Extension**:
+- Add `create_for_pr` method parallel to `create_for_task`
+- Add `create_for_branch` with remote detection
+- Use existing GitCommand atom for git operations
+- Pattern: `GitCommand.worktree("add", path, "-b", branch, remote_branch)`
+
+**CreateCommand Integration**:
+- Add to existing parse_arguments loop (lines 126-145)
+- Follow pattern: `when "--pr"` → increment → assign
+- Validation: Prevent conflicts with `--task`
+- Delegate to manager methods
+
+**Configuration Extension**:
+```yaml
+pr_integration:
+  enabled: true
+  directory_format: "pr-{number}"
+  branch_format: "pr-{number}-{slug}"
+  fetch_before_create: true
+  gh_timeout: 30
+```
+
 ## Technical Approach
 
 ### Architecture Pattern
@@ -211,10 +302,11 @@ The implementation follows the existing ace-git-worktree ATOM architecture:
 ### Technology Stack
 
 **Dependencies:**
-- **GitHub CLI (`gh`)**: Required for PR metadata fetching
+- **GitHub CLI (`gh`)**: **REQUIRED** for PR metadata fetching (not optional)
   - Version: Any recent version (2.0+)
   - Availability check: `which gh` or `system("gh --version")`
   - User installation: `brew install gh` (macOS), documented in error messages
+  - Early validation: Fail fast if gh not available when `--pr` used
 
 - **Git**: Existing dependency, extended usage
   - New commands: `git fetch origin <branch>`, `git worktree add -b <local> origin/<remote>`
@@ -281,16 +373,26 @@ The implementation follows the existing ace-git-worktree ATOM architecture:
 
 **PR-Based Worktree Creation:**
 ```bash
-# 1. Fetch PR metadata
-gh pr view <pr_number> --json number,headRefName,baseRefName,title
+# 1. Check gh availability (fail fast if not installed)
+which gh || exit 1
 
-# 2. Parse response
+# 2. Fetch PR metadata (extended fields for fork detection)
+gh pr view <pr_number> --json number,headRefName,baseRefName,title,headRepositoryOwner,isCrossRepository
+
+# 3. Parse response
 # {
 #   "number": 26,
 #   "headRefName": "claude/task-09-work-011CV2wtrwECwjaB8UPQPwjr",
 #   "baseRefName": "main",
-#   "title": "Add authentication feature"
+#   "title": "Add authentication feature",
+#   "headRepositoryOwner": { "login": "external-contributor" },
+#   "isCrossRepository": true
 # }
+
+# 4. Check if fork-based PR and display warning
+if isCrossRepository:
+  echo "⚠️  This PR is from a fork (${headRepositoryOwner.login}/repo)"
+  echo "   Branch owner: ${headRepositoryOwner.login}"
 
 # 3. Fetch remote branch
 git fetch origin <headRefName>
@@ -475,6 +577,31 @@ git worktree add <worktree_path> <branch>
 
 None - this is a pure addition feature with no obsolete code to remove.
 
+## Additional Considerations from Research
+
+### Implementation Notes
+
+**Argument Parser Complexity**:
+- Current CreateCommand uses manual while-loop parsing (no OptionParser)
+- Adding `--pr` and `-b/--branch` requires careful index management
+- Consider refactoring to OptionParser in future (separate task)
+
+**gh CLI Detection Pattern**:
+- Check availability: `system("which gh > /dev/null 2>&1")`
+- Version check: `gh --version` (ensure 2.0+)
+- Auth check: `gh auth status` (parse output for auth state)
+
+**Existing Worktree Detection**:
+- WorktreeLister already provides `list` method returning array of WorktreeInfo
+- Can check for branch conflicts: `worktrees.any? { |w| w.branch == target_branch }`
+- Use existing path validation from PathExpander atom
+
+**Testing Considerations**:
+- Mock gh CLI responses in tests (JSON fixtures)
+- Test with various gh auth states
+- Test network timeouts and failures
+- Verify worktree state after errors
+
 ## Risk Assessment
 
 ### Technical Risks
@@ -483,10 +610,11 @@ None - this is a pure addition feature with no obsolete code to remove.
 - **Probability:** Medium (not installed by default on all systems)
 - **Impact:** High (PR worktree creation fails completely)
 - **Mitigation:**
-  - Early availability check in `PrFetcher.gh_available?`
-  - Clear error message: "Error: gh CLI not found. Install with: brew install gh"
-  - Fallback: None (gh is required for PR metadata, no alternative API access)
-- **Rollback:** Feature is opt-in, existing workflows unaffected
+  - Early availability check in `PrFetcher.gh_available?` - fail fast
+  - Clear error message: "Error: gh CLI is required for PR worktrees. Install with: brew install gh"
+  - No fallback: gh is a hard requirement for `--pr` feature
+  - Document requirement clearly in README and help text
+- **Rollback:** Feature is opt-in via `--pr` flag, existing workflows unaffected
 
 **Risk: GitHub CLI Authentication Failure**
 - **Probability:** Medium (first-time users, expired tokens)
@@ -654,10 +782,12 @@ None - this is a pure addition feature with no obsolete code to remove.
   > Command: bundle exec rake test TEST=test/molecules/pr_fetcher_test.rb TESTOPTS="--name=/availability/"
 
 - [ ] Implement PR fetching via gh CLI
-  - Add `fetch(pr_number)` method executing `gh pr view #{pr_number} --json number,headRefName,baseRefName,title`
+  - Add `fetch(pr_number)` method executing `gh pr view #{pr_number} --json number,headRefName,baseRefName,title,headRepositoryOwner,isCrossRepository`
   - Add input validation (pr_number must be positive integer)
   - Add timeout handling (30 seconds max)
   - Parse JSON response to Ruby hash
+  - Extract fork status from `isCrossRepository` field
+  - Store branch owner from `headRepositoryOwner.login`
   > TEST: PR Fetch Execution
   > Type: Integration Test (mocked gh)
   > Assert: Correctly executes gh command, parses response
@@ -781,6 +911,9 @@ None - this is a pure addition feature with no obsolete code to remove.
   - Add `create_pr_worktree(options)` method
   - Call `@manager.create_pr(options[:pr], options)`
   - Handle errors (gh not available, PR not found, network issues)
+  - Display fork warning if `pr_data[:is_cross_repository]` is true
+    - Show: `⚠️  This PR is from a fork (#{pr_data[:head_repository_owner]}/repo)`
+    - Show: `   Branch owner: #{pr_data[:head_repository_owner]}`
   - Format output showing PR title, branch, worktree location, tracking status
   > TEST: PR Creation Handler
   > Type: Integration Test
