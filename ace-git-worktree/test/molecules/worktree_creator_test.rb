@@ -305,11 +305,325 @@ class WorktreeCreatorTest < Minitest::Test
     end
   end
 
+  # Tests for PR worktree creation
+  def test_create_for_pr_success
+    pr_data = {
+      number: 26,
+      title: "Add authentication feature",
+      head_branch: "feature/auth",
+      base_branch: "main"
+    }
+
+    config = mock_pr_config(@temp_dir)
+
+    # Mock git root detection
+    @creator.stub(:detect_git_root, @temp_dir) do
+      # Mock path validation
+      @creator.stub(:validate_worktree_path, { valid: true, error: nil }) do
+        # Mock fetch
+        @creator.stub(:fetch_remote_branch, { success: true, error: nil }) do
+          # Mock worktree creation
+          @creator.stub(:create_worktree_with_tracking, {
+            success: true,
+            worktree_path: File.join(@temp_dir, "ace-pr-26"),
+            branch: "pr-26",
+            tracking: "origin/feature/auth",
+            git_root: @temp_dir,
+            error: nil
+          }) do
+            result = @creator.create_for_pr(pr_data, config)
+
+            assert result[:success]
+            assert_equal "pr-26", result[:branch]
+            assert_equal "origin/feature/auth", result[:tracking]
+            assert_equal 26, result[:pr_number]
+            assert_equal "Add authentication feature", result[:pr_title]
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_for_pr_without_pr_data
+    config = mock_pr_config(@temp_dir)
+    result = @creator.create_for_pr(nil, config)
+
+    refute result[:success]
+    assert_match /PR data is required/, result[:error]
+  end
+
+  def test_create_for_pr_without_config
+    pr_data = { number: 26, title: "Test", head_branch: "test", base_branch: "main" }
+    result = @creator.create_for_pr(pr_data, nil)
+
+    refute result[:success]
+    assert_match /Configuration is required/, result[:error]
+  end
+
+  def test_create_for_pr_fetch_failure
+    pr_data = {
+      number: 26,
+      title: "Test PR",
+      head_branch: "feature/test",
+      base_branch: "main"
+    }
+
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      @creator.stub(:validate_worktree_path, { valid: true, error: nil }) do
+        # Mock fetch failure
+        @creator.stub(:fetch_remote_branch, { success: false, error: "Network error" }) do
+          result = @creator.create_for_pr(pr_data, config)
+
+          refute result[:success]
+          assert_match /Network error/, result[:error]
+        end
+      end
+    end
+  end
+
+  # Tests for branch worktree creation
+  def test_create_for_branch_remote_success
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      # Mock remote branch detection
+      @creator.stub(:detect_remote_branch, { remote: "origin", branch: "feature/auth" }) do
+        # Mock create_for_remote_branch
+        @creator.stub(:create_for_remote_branch, {
+          success: true,
+          worktree_path: File.join(@temp_dir, "feature-auth"),
+          branch: "feature/auth",
+          tracking: "origin/feature/auth",
+          directory_name: "feature-auth",
+          git_root: @temp_dir,
+          error: nil
+        }) do
+          result = @creator.create_for_branch("origin/feature/auth", config)
+
+          assert result[:success]
+          assert_equal "feature/auth", result[:branch]
+          assert_equal "origin/feature/auth", result[:tracking]
+        end
+      end
+    end
+  end
+
+  def test_create_for_branch_local_success
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      # Mock local branch (no remote prefix)
+      @creator.stub(:detect_remote_branch, nil) do
+        # Mock create_for_local_branch
+        @creator.stub(:create_for_local_branch, {
+          success: true,
+          worktree_path: File.join(@temp_dir, "feature"),
+          branch: "feature",
+          tracking: nil,
+          directory_name: "feature",
+          git_root: @temp_dir,
+          error: nil
+        }) do
+          result = @creator.create_for_branch("feature", config)
+
+          assert result[:success]
+          assert_equal "feature", result[:branch]
+          assert_nil result[:tracking]
+        end
+      end
+    end
+  end
+
+  def test_create_for_branch_without_branch_name
+    config = mock_pr_config(@temp_dir)
+    result = @creator.create_for_branch(nil, config)
+
+    refute result[:success]
+    assert_match /Branch name is required/, result[:error]
+  end
+
+  def test_create_for_branch_empty_branch_name
+    config = mock_pr_config(@temp_dir)
+    result = @creator.create_for_branch("", config)
+
+    refute result[:success]
+    assert_match /Branch name is required/, result[:error]
+  end
+
+  def test_create_for_branch_without_config
+    result = @creator.create_for_branch("feature", nil)
+
+    refute result[:success]
+    assert_match /Configuration is required/, result[:error]
+  end
+
+  def test_detect_remote_branch_with_remote
+    remote_branches = {
+      "origin/feature" => { remote: "origin", branch: "feature" },
+      "upstream/main" => { remote: "upstream", branch: "main" },
+      "origin/feature/auth" => { remote: "origin", branch: "feature/auth" },
+      "fork/bugfix/123" => { remote: "fork", branch: "bugfix/123" }
+    }
+
+    remote_branches.each do |input, expected|
+      result = @creator.send(:detect_remote_branch, input)
+      assert_equal expected, result, "Failed for #{input}"
+    end
+  end
+
+  def test_detect_remote_branch_without_remote
+    local_branches = ["main", "feature", "bugfix-123", "release_v1.0"]
+
+    local_branches.each do |branch|
+      result = @creator.send(:detect_remote_branch, branch)
+      assert_nil result, "Should return nil for local branch: #{branch}"
+    end
+  end
+
+  def test_detect_remote_branch_invalid_format
+    invalid = ["origin/", "/feature", "/", "origin//feature"]
+
+    invalid.each do |input|
+      result = @creator.send(:detect_remote_branch, input)
+      assert_nil result, "Should return nil for invalid format: #{input}"
+    end
+  end
+
+  def test_format_pr_name_with_number
+    pr_data = { number: 26, title: "Add Feature" }
+    template = "pr-{number}"
+
+    result = @creator.send(:format_pr_name, template, pr_data)
+    assert_equal "pr-26", result
+  end
+
+  def test_format_pr_name_with_slug
+    pr_data = { number: 26, title: "Add Authentication Feature" }
+    template = "pr-{number}-{slug}"
+
+    # Mock slug generator
+    Ace::Git::Worktree::Atoms::SlugGenerator.stub(:generate, "add-authentication-feature") do
+      result = @creator.send(:format_pr_name, template, pr_data)
+      assert_equal "pr-26-add-authentication-feature", result
+    end
+  end
+
+  def test_format_pr_name_with_multiple_variables
+    pr_data = { number: 26, title: "Test Feature", base_branch: "main" }
+    template = "{base_branch}-pr-{number}"
+
+    result = @creator.send(:format_pr_name, template, pr_data)
+    assert_equal "main-pr-26", result
+  end
+
   private
 
   def mock_config(root_path)
     config = Object.new
     config.define_singleton_method(:absolute_root_path) { root_path }
     config
+  end
+
+  def mock_pr_config(root_path)
+    config = mock_config(root_path)
+    config.define_singleton_method(:pr_config) do
+      {
+        remote_name: "origin",
+        directory_format: "ace-pr-{number}",
+        branch_format: "pr-{number}"
+      }
+    end
+    config
+  end
+
+  def test_validate_remote_exists_with_valid_remote
+    Dir.mktmpdir do |root_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock git remote command to return "origin"
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "origin\nupstream\n" }) do
+        result = creator.send(:validate_remote_exists, "origin", root_path)
+
+        assert result[:exists]
+        assert_equal ["origin", "upstream"], result[:remotes]
+      end
+    end
+  end
+
+  def test_validate_remote_exists_with_invalid_remote
+    Dir.mktmpdir do |root_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock git remote command to return only "origin"
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "origin\n" }) do
+        result = creator.send(:validate_remote_exists, "invalid", root_path)
+
+        refute result[:exists]
+        assert_equal ["origin"], result[:remotes]
+      end
+    end
+  end
+
+  def test_validate_remote_exists_with_no_remotes
+    Dir.mktmpdir do |root_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock git remote command to return empty
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "" }) do
+        result = creator.send(:validate_remote_exists, "origin", root_path)
+
+        refute result[:exists]
+        assert_equal [""], result[:remotes]
+      end
+    end
+  end
+
+  def test_fetch_remote_branch_validates_remote
+    Dir.mktmpdir do |root_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock validation to return invalid remote
+      creator.stub(:validate_remote_exists, { exists: false, remotes: ["origin", "upstream"] }) do
+        result = creator.send(:fetch_remote_branch, "invalid", "main", root_path)
+
+        refute result[:success]
+        assert_match(/Remote 'invalid' not found/, result[:error])
+        assert_match(/origin, upstream/, result[:error])
+      end
+    end
+  end
+
+  def test_fetch_remote_branch_with_no_remotes_configured
+    Dir.mktmpdir do |root_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock validation to return no remotes
+      creator.stub(:validate_remote_exists, { exists: false, remotes: [] }) do
+        result = creator.send(:fetch_remote_branch, "origin", "main", root_path)
+
+        refute result[:success]
+        assert_match(/Remote 'origin' not found/, result[:error])
+        assert_match(/no remotes configured/, result[:error])
+      end
+    end
+  end
+
+  def test_fetch_remote_branch_proceeds_with_valid_remote
+    Dir.mktmpdir do |root_path|
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+      # Mock validation to return valid remote
+      creator.stub(:validate_remote_exists, { exists: true, remotes: ["origin"] }) do
+        # Mock fetch command to succeed
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, { success: true, output: "" }) do
+          result = creator.send(:fetch_remote_branch, "origin", "main", root_path)
+
+          assert result[:success]
+          assert_nil result[:error]
+        end
+      end
+    end
   end
 end
