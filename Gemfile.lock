@@ -22,7 +22,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.11.1)
+    ace-git-commit (0.11.2)
       ace-git-diff (~> 0.1.0)
       ace-llm (~> 0.9.0)
       ace-support-core (~> 0.10.0)

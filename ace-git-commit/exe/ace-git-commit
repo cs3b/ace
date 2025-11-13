@@ -64,6 +64,15 @@ module Ace
             options.debug = true
           end
 
+          opts.on("--verbose", "Enable verbose output (default: true)") do
+            options.verbose = true
+          end
+
+          opts.on("-q", "--quiet", "Suppress informational messages (errors only)") do
+            options.quiet = true
+            options.verbose = false
+          end
+
           opts.on("-f", "--force", "Force operation (for future use)") do
             options.force = true
           end

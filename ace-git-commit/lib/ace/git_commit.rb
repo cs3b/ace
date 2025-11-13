@@ -14,6 +14,7 @@ require_relative "git_commit/molecules/file_stager"
 require_relative "git_commit/molecules/commit_summarizer"
 require_relative "git_commit/organisms/commit_orchestrator"
 require_relative "git_commit/models/commit_options"
+require_relative "git_commit/models/stage_result"
 
 module Ace
   module GitCommit

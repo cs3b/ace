@@ -17,6 +17,11 @@ class CommitOrchestratorTest < TestCase
     @orchestrator.instance_variable_set(:@diff_analyzer, @mock_diff_analyzer)
     @orchestrator.instance_variable_set(:@file_stager, @mock_file_stager)
     @orchestrator.instance_variable_set(:@message_generator, @mock_message_generator)
+
+    # Add last_error method to mock_file_stager
+    def @mock_file_stager.last_error
+      nil
+    end
   end
 
   def test_validates_git_repository
@@ -32,10 +37,10 @@ class CommitOrchestratorTest < TestCase
 
   def test_returns_false_when_no_changes
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, false
 
-    result = @orchestrator.execute(create_options(message: "test"))
+    result = @orchestrator.execute(create_options(message: "test", quiet: true))
 
     refute result, "Should return false when no changes to commit"
     @mock_git.verify
@@ -44,14 +49,20 @@ class CommitOrchestratorTest < TestCase
 
   def test_commits_with_direct_message
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add test file"]
     @mock_git.expect :execute, "abc1234", ["rev-parse", "HEAD"]
     @mock_git.expect :execute, "abc1234 (HEAD -> main) feat: add test file", ["log", "--oneline", "abc1234", "-1"]
     @mock_git.expect :execute, " file.rb | 5 +++++\n 1 file changed, 5 insertions(+)", ["diff", "--stat", "abc1234~1", "abc1234"], capture_stderr: true
 
+    # Suppress stdout for clean test output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
     result = @orchestrator.execute(create_options(message: "feat: add test file"))
+
+    $stdout = original_stdout
 
     assert result, "Commit should succeed"
     @mock_git.verify
@@ -60,12 +71,16 @@ class CommitOrchestratorTest < TestCase
 
   def test_stages_specific_files
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_files, nil, [["file1.txt"]]
+    @mock_file_stager.expect :stage_files, true, [["file1.txt"]]  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add file1"]
     @mock_git.expect :execute, "def5678", ["rev-parse", "HEAD"]
     @mock_git.expect :execute, "def5678 feat: add file1", ["log", "--oneline", "def5678", "-1"]
     @mock_git.expect :execute, " file1.txt | 3 +++\n 1 file changed, 3 insertions(+)", ["diff", "--stat", "def5678~1", "def5678"], capture_stderr: true
+
+    # Suppress stdout for clean test output
+    original_stdout = $stdout
+    $stdout = StringIO.new
 
     result = @orchestrator.execute(
       create_options(
@@ -74,6 +89,8 @@ class CommitOrchestratorTest < TestCase
       )
     )
 
+    $stdout = original_stdout
+
     assert result, "Commit should succeed"
     @mock_git.verify
     @mock_file_stager.verify
@@ -81,12 +98,16 @@ class CommitOrchestratorTest < TestCase
 
   def test_stages_all_changes
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_all, nil
+    @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add all files"]
     @mock_git.expect :execute, "ghi9012", ["rev-parse", "HEAD"]
     @mock_git.expect :execute, "ghi9012 feat: add all files", ["log", "--oneline", "ghi9012", "-1"]
     @mock_git.expect :execute, " file1.rb | 3 +++\n file2.rb | 2 ++\n 2 files changed, 5 insertions(+)", ["diff", "--stat", "ghi9012~1", "ghi9012"], capture_stderr: true
+
+    # Suppress stdout for clean test output
+    original_stdout = $stdout
+    $stdout = StringIO.new
 
     result = @orchestrator.execute(
       create_options(
@@ -95,6 +116,8 @@ class CommitOrchestratorTest < TestCase
       )
     )
 
+    $stdout = original_stdout
+
     assert result, "Commit should succeed"
     @mock_git.verify
     @mock_file_stager.verify
@@ -102,7 +125,7 @@ class CommitOrchestratorTest < TestCase
 
   def test_dry_run_does_not_commit
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_file_stager.expect :staged_files, ["test.txt"]
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
@@ -116,7 +139,8 @@ class CommitOrchestratorTest < TestCase
       create_options(
         message: "feat: test",
         dry_run: true,
-        debug: true
+        debug: true,
+        quiet: true
       )
     )
 
@@ -130,7 +154,7 @@ class CommitOrchestratorTest < TestCase
 
   def test_handles_commit_failure_gracefully
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil do |*args|
       raise Ace::GitCommit::GitError, "pre-commit hook failed"
@@ -140,7 +164,7 @@ class CommitOrchestratorTest < TestCase
     original_stdout = $stdout
     $stdout = StringIO.new
 
-    result = @orchestrator.execute(create_options(message: "feat: test"))
+    result = @orchestrator.execute(create_options(message: "feat: test", quiet: true))
 
     $stdout = original_stdout
 
@@ -151,7 +175,7 @@ class CommitOrchestratorTest < TestCase
 
   def test_generates_message_with_llm_when_intention_provided
     @mock_git.expect :in_repository?, true
-    @mock_file_stager.expect :stage_all, nil  # Default behavior stages all
+    @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
     @mock_diff_analyzer.expect :changed_files, ["file.txt"] do |**kwargs|
@@ -165,11 +189,17 @@ class CommitOrchestratorTest < TestCase
     @mock_git.expect :execute, "jkl3456 feat: generated message", ["log", "--oneline", "jkl3456", "-1"]
     @mock_git.expect :execute, " file.txt | 10 ++++++++++\n 1 file changed, 10 insertions(+)", ["diff", "--stat", "jkl3456~1", "jkl3456"], capture_stderr: true
 
+    # Suppress stdout for clean test output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
     result = @orchestrator.execute(
       create_options(
         intention: "add feature"
       )
     )
+
+    $stdout = original_stdout
 
     assert result, "Commit with LLM should succeed"
     @mock_git.verify
@@ -189,7 +219,9 @@ class CommitOrchestratorTest < TestCase
       dry_run: false,
       debug: false,
       model: nil,
-      force: false
+      force: false,
+      verbose: true,
+      quiet: false
     }
 
     Ace::GitCommit::Models::CommitOptions.new(**defaults.merge(overrides))
