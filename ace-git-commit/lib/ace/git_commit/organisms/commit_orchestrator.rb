@@ -25,11 +25,17 @@ module Ace
           end
 
           # Stage files if needed
-          stage_changes(options)
+          staging_result = stage_changes(options)
+
+          # Stop if staging failed
+          unless staging_result
+            puts "\nCannot proceed with commit due to staging failure" unless options.quiet
+            return false
+          end
 
           # Ensure we have changes to commit
           unless @git.has_staged_changes?
-            puts "No changes to commit" if options.debug
+            puts "No changes to commit" unless options.quiet
             return false
           end
 
@@ -95,15 +101,66 @@ module Ace
 
         # Stage changes based on options
         # @param options [Models::CommitOptions] Options
+        # @return [Boolean] True if staging successful
         def stage_changes(options)
           if options.specific_files?
-            puts "Staging specific files: #{options.files.join(', ')}" if options.debug
-            @file_stager.stage_files(options.files)
+            stage_specific_files(options)
           elsif options.stage_all?
-            puts "Staging all changes" if options.debug
-            @file_stager.stage_all
+            stage_all_changes(options)
           else
-            puts "Using currently staged changes" if options.debug
+            # Using currently staged changes
+            puts "Using currently staged changes" if options.verbose && !options.quiet
+            true
+          end
+        end
+
+        # Stage specific files with progress feedback
+        # @param options [Models::CommitOptions] Options
+        # @return [Boolean] True if successful
+        def stage_specific_files(options)
+          puts "Staging specific files..." unless options.quiet
+
+          result = @file_stager.stage_files(options.files)
+
+          if result
+            puts "✓ Successfully staged #{options.files.length} file(s)" unless options.quiet
+            true
+          else
+            # Always show errors, even in quiet mode
+            puts "\n✗ Failed to stage files: #{options.files.length} file(s)"
+            puts "Error: #{@file_stager.last_error}" if @file_stager.last_error
+            # Suggestions only in verbose mode
+            unless options.quiet
+              puts "\nSuggestion: Check file permissions and paths"
+            end
+            false
+          end
+        end
+
+        # Stage all changes with progress feedback
+        # @param options [Models::CommitOptions] Options
+        # @return [Boolean] True if successful
+        def stage_all_changes(options)
+          puts "Staging all changes..." unless options.quiet
+
+          result = @file_stager.stage_all
+
+          if result
+            puts "✓ Changes staged successfully" unless options.quiet
+            true
+          else
+            # Always show errors, even in quiet mode
+            puts "\n✗ Failed to stage changes"
+            puts "Error: #{@file_stager.last_error}" if @file_stager.last_error
+
+            # Suggestions only in verbose mode
+            unless options.quiet
+              puts "\nSuggestions:"
+              puts "  1. Check file permissions"
+              puts "  2. Run 'git status' to see unstaged files"
+              puts "  3. Use --only-staged to commit existing staged files"
+            end
+            false
           end
         end
 
@@ -122,7 +179,7 @@ module Ace
         # @param options [Models::CommitOptions] Options
         # @return [String] Generated message
         def generate_message(options)
-          puts "Generating commit message..." if options.debug
+          puts "Generating commit message..." unless options.quiet
 
           # Get the diff
           diff = @diff_analyzer.get_staged_diff
@@ -141,7 +198,8 @@ module Ace
             files: files
           )
 
-          puts "Generated message:\n#{message}" if options.debug
+          puts "✓ Message generated" unless options.quiet
+          puts "\nMessage:\n#{message}" if options.debug
 
           message
         end
@@ -173,7 +231,7 @@ module Ace
         # @param options [Models::CommitOptions] Options
         # @return [Boolean] True if successful
         def perform_commit(message, options)
-          puts "Committing..." if options.debug
+          puts "Committing..." unless options.quiet
 
           # Execute commit
           @git.execute("commit", "-m", message)
@@ -182,13 +240,15 @@ module Ace
           commit_sha = @git.execute("rev-parse", "HEAD").strip
 
           # Display commit summary
-          summarizer = Molecules::CommitSummarizer.new(@git)
-          summary = summarizer.summarize(commit_sha)
-          puts summary
+          unless options.quiet
+            summarizer = Molecules::CommitSummarizer.new(@git)
+            summary = summarizer.summarize(commit_sha)
+            puts summary
+          end
 
           true
         rescue GitError => e
-          puts "Commit failed: #{e.message}"
+          puts "\n✗ Commit failed: #{e.message}"
           false
         end
       end

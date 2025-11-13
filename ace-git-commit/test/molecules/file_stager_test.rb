@@ -123,4 +123,44 @@ class FileStagerTest < TestCase
     assert result, "Should stage file with spaces"
     @mock_git.verify
   end
+
+  def test_stage_files_handles_errors
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "Permission denied"
+    end
+
+    result = @stager.stage_files(["protected.txt"])
+
+    refute result, "Should return false on error"
+    assert_match(/Permission denied/, @stager.last_error)
+    @mock_git.verify
+  end
+
+  def test_stage_all_handles_errors
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "fatal: not a git repository"
+    end
+
+    result = @stager.stage_all
+
+    refute result, "Should return false on error"
+    assert_match(/not a git repository/, @stager.last_error)
+    @mock_git.verify
+  end
+
+  def test_clears_last_error_on_success
+    # First fail
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "Error"
+    end
+    @stager.stage_files(["bad.txt"])
+    assert @stager.last_error
+
+    # Then succeed
+    @mock_git.expect :execute, nil, ["add", "good.txt"]
+    @stager.stage_files(["good.txt"])
+
+    assert_nil @stager.last_error, "Should clear last_error on success"
+    @mock_git.verify
+  end
 end
