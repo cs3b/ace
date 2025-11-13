@@ -35,16 +35,12 @@ module Ace
           end
 
           # Compact single-line summary with emoji status
-          status = if result.success?
-            "✅"
-          elsif result.errors > 0
-            "💥"
-          else
-            "❌"
-          end
+          status = status_icon(result)
 
           summary = "#{status} #{result.total_tests} tests, #{result.assertions} assertions, " +
-                   "#{result.failed} failures, #{result.errors} errors (#{format_duration(result.duration)})"
+                   "#{result.failed} failures, #{result.errors} errors"
+          summary += ", #{result.skipped} skipped" if result.has_skips?
+          summary += " (#{format_duration(result.duration)})"
           lines << summary
 
           # Add failure details if there are any
@@ -276,6 +272,23 @@ module Ace
         end
 
         private
+
+        # Determines the appropriate status icon based on test results
+        # Returns ⚠️ for successful tests with skips (informational)
+        # Returns ✅ for successful tests without skips
+        # Returns 💥 for tests with errors
+        # Returns ❌ for tests with failures
+        def status_icon(result)
+          if result.success? && !result.has_skips?
+            "✅"
+          elsif result.success? && result.has_skips?
+            "⚠️"
+          elsif result.errors > 0
+            "💥"
+          else
+            "❌"
+          end
+        end
 
         def result_color(result)
           case result
