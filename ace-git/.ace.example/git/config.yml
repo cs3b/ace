@@ -1,0 +1,29 @@
+# ACE Git Configuration
+# Minimal configuration for user preferences only
+# Workflows contain sensible defaults inline
+
+git:
+  # General preferences
+  default_branch: main  # Your preferred main branch name (main/master/develop)
+  remote: origin       # Your preferred remote name
+  verbose: false       # Enable verbose output
+
+  # Rebase configuration (optional - workflows have defaults)
+  # rebase:
+  #   preserve_files:
+  #     - CHANGELOG.md
+  #     - "**/version.rb"
+  #   auto_resolve: manual  # manual or ours
+
+  # PR configuration (optional - workflows have defaults)
+  # pr:
+  #   template: default     # default, feature, bugfix
+  #   draft: false         # Create as draft PR
+  #   reviewers: []        # Auto-assign reviewers
+  #   labels: []           # Auto-add labels
+
+  # Squash configuration (optional - workflows have defaults)
+  # squash:
+  #   strategy: version    # version, manual, interactive
+  #   interactive: false   # Use interactive mode
+  #   preserve_messages: true

@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.095
-status: pending
+status: done
 priority: medium
 estimate: 2-3 days
 dependencies: []
@@ -411,103 +411,103 @@ None - This is a new package creation
 
 ### Planning Steps
 
-- [ ] Review existing rebase workflows from dev-handbook
+- [x] Review existing rebase workflows from dev-handbook
   > TEST: Workflow Analysis
   > Type: Pre-condition Check
   > Assert: Key rebase patterns and conflict scenarios identified
   > Command: grep -r "rebase" dev-handbook/workflow-instructions/ | head -20
 
-- [ ] Analyze GitHub CLI PR creation patterns in existing code
+- [x] Analyze GitHub CLI PR creation patterns in existing code
   > TEST: PR Pattern Check
   > Type: Pre-condition Check
   > Assert: Common gh pr create usage patterns documented
   > Command: grep -r "gh pr create" . --include="*.md" | head -10
 
-- [ ] Study version tagging patterns in ace-taskflow
+- [x] Study version tagging patterns in ace-taskflow
   > TEST: Version Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Version tag formats understood (v.X.Y.Z pattern)
   > Command: git tag | grep -E "v\.[0-9]+" | tail -5
 
-- [ ] Research commit squashing best practices
-- [ ] Design configuration schema for all three workflows
+- [x] Research commit squashing best practices
+- [x] Design configuration schema for all three workflows
 
 ### Execution Steps
 
-- [ ] Create ace-git directory structure
+- [x] Create ace-git directory structure
   > TEST: Directory Creation
   > Type: Action Validation
   > Assert: ace-git directory exists with correct structure
   > Command: ls -la ace-git/
 
-- [ ] Create ace-git.gemspec with minimal dependencies
+- [x] Create ace-git.gemspec with minimal dependencies
   > TEST: Gemspec Validation
   > Type: Action Validation
   > Assert: Valid gemspec with ace-support-core dependency
   > Command: ruby -c ace-git/ace-git.gemspec
 
-- [ ] Create lib/ace/git/version.rb with VERSION constant
+- [x] Create lib/ace/git/version.rb with VERSION constant
   > TEST: Version File
   > Type: Action Validation
   > Assert: Version constant defined as 0.1.0
   > Command: grep "VERSION = " ace-git/lib/ace/git/version.rb
 
-- [ ] Create handbook/workflow-instructions/rebase.wf.md
+- [x] Create handbook/workflow-instructions/rebase.wf.md
   > TEST: Rebase Workflow
   > Type: Content Validation
   > Assert: Workflow includes conflict resolution and file preservation
   > Command: grep -E "(conflict|preserve|CHANGELOG)" ace-git/handbook/workflow-instructions/rebase.wf.md | head -5
 
-- [ ] Create handbook/workflow-instructions/create-pr.wf.md
+- [x] Create handbook/workflow-instructions/create-pr.wf.md
   > TEST: PR Workflow
   > Type: Content Validation
   > Assert: Workflow includes gh pr create examples
   > Command: grep "gh pr create" ace-git/handbook/workflow-instructions/create-pr.wf.md
 
-- [ ] Create handbook/workflow-instructions/squash-pr.wf.md
+- [x] Create handbook/workflow-instructions/squash-pr.wf.md
   > TEST: Squash Workflow
   > Type: Content Validation
   > Assert: Workflow includes version detection and interactive rebase
   > Command: grep -E "(rebase -i|version|squash)" ace-git/handbook/workflow-instructions/squash-pr.wf.md | head -5
 
-- [ ] Create configuration examples in .ace.example/git/
+- [x] Create configuration examples in .ace.example/git/
   > TEST: Config Examples
   > Type: File Validation
-  > Assert: All four config files exist
-  > Command: ls -la ace-git/.ace.example/git/*.yml | wc -l
+  > Assert: Configuration file exists (consolidated into single config.yml)
+  > Command: test -f ace-git/.ace.example/git/config.yml && echo "Config exists"
 
-- [ ] Write comprehensive README.md
+- [x] Write comprehensive README.md
   > TEST: README Content
   > Type: Documentation Check
   > Assert: README covers installation and all three workflows
   > Command: grep -E "(Installation|rebase|create-pr|squash)" ace-git/README.md | wc -l
 
-- [ ] Create CHANGELOG.md with initial release
+- [x] Create CHANGELOG.md with initial release
   > TEST: Changelog Format
   > Type: Format Validation
   > Assert: Follows Keep a Changelog format
   > Command: grep -E "## \[0.1.0\]" ace-git/CHANGELOG.md
 
-- [ ] Create minimal Rakefile
+- [x] Create minimal Rakefile
   > TEST: Rakefile Valid
   > Type: Syntax Check
   > Assert: Rakefile loads gem tasks
   > Command: ruby -c ace-git/Rakefile
 
-- [ ] Add MIT LICENSE file
+- [x] Add MIT LICENSE file
   > TEST: License Present
   > Type: File Check
   > Assert: LICENSE file exists
   > Command: test -f ace-git/LICENSE && echo "LICENSE exists"
 
-- [ ] Create bin/ace-git wrapper if needed for development
-- [ ] Test gem build locally
+- [x] Create bin/ace-git wrapper if needed for development
+- [x] Test gem build locally
   > TEST: Gem Build
   > Type: Build Validation
   > Assert: Gem builds without errors
   > Command: cd ace-git && gem build ace-git.gemspec
 
-- [ ] Verify handbook integration paths
+- [x] Verify handbook integration paths
   > TEST: Handbook Structure
   > Type: Integration Check
   > Assert: All workflows in correct location
@@ -516,15 +516,15 @@ None - This is a new package creation
 ## Acceptance Criteria
 
 - [x] ace-git gem package created with minimal structure
-- [ ] Three workflow instructions provide comprehensive guidance:
-  - [ ] rebase.wf.md: Complete rebase with changelog preservation
-  - [ ] create-pr.wf.md: Pull request creation with templates
-  - [ ] squash-pr.wf.md: Smart commit squashing by version
-- [ ] Configuration examples demonstrate customization for all workflows
-- [ ] Package follows ace-gems.g.md standards (CHANGELOG.md, version.rb, etc.)
-- [ ] Handbook integration enables Claude Code workflow access for all three workflows
-- [ ] No unnecessary Ruby implementation (workflow-focused)
-- [ ] README documents all three workflows clearly
+- [x] Three workflow instructions provide comprehensive guidance:
+  - [x] rebase.wf.md: Complete rebase with changelog preservation
+  - [x] create-pr.wf.md: Pull request creation with templates
+  - [x] squash-pr.wf.md: Smart commit squashing by version
+- [x] Configuration examples demonstrate customization for all workflows
+- [x] Package follows ace-gems.g.md standards (CHANGELOG.md, version.rb, etc.)
+- [x] Handbook integration enables Claude Code workflow access for all three workflows
+- [x] No unnecessary Ruby implementation (workflow-focused)
+- [x] README documents all three workflows clearly
 
 ## Out of Scope
 

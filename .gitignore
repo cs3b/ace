@@ -26,3 +26,4 @@ ace-taskflow/.ace-taskflow/
 # git - worktree 
 .ace-worktrees
 .ace-wt
+*.gem
