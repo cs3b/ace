@@ -16,27 +16,27 @@ follow single-purpose design, have proper response formats, and are correctly in
 
 ### Planning Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Determine if creating new agent or
+* Determine if creating new agent or
   updating existing
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Identify agent's single purpose and
+* Identify agent's single purpose and
   action keywords
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Plan expected parameters and tool
+* Plan expected parameters and tool
   requirements
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Consider agent composition needs
-{: .task-list}
+* Consider agent composition needs
+
 
 ### Execution Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Create/update agent file with proper
+* Create/update agent file with proper
   .ag.md extension
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add standardized metadata and response
+* Add standardized metadata and response
   format
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update symlinks in .claude/agents/
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update CLAUDE.md agent section if
+* Update symlinks in .claude/agents/
+* Update CLAUDE.md agent section if
   significant changes
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update settings.json if new tool
+* Update settings.json if new tool
   permissions needed
-{: .task-list}
+
 
 ## Process Steps
 

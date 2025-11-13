@@ -21,7 +21,7 @@ Systematically analyze and compact multiple reflection notes to extract actionab
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## High-Level Execution Plan
 

@@ -95,36 +95,66 @@ git rebase $target_branch
 
 When conflicts occur in CHANGELOG.md:
 
+**Strategy: Accept target branch, add your changes on top with NEW version number**
+
 ```bash
-# Open CHANGELOG.md and look for conflict markers
-# <<<<<<< HEAD (their changes - target branch)
-# =======
-# >>>>>>> commit-message (your changes - feature branch)
+# 1. Accept target branch version completely
+git checkout --theirs CHANGELOG.md
 
-# Strategy: Accept both changes
-git checkout --ours CHANGELOG.md      # Get feature branch version
-git checkout --theirs CHANGELOG.md && cp CHANGELOG.md CHANGELOG.md.theirs  # Save target branch version temporarily
+# 2. Find highest version number in CHANGELOG.md
+# Example: if target has [0.9.127], your new entries become [0.9.128]
 
-# Manual merge: Combine both CHANGELOGs
-# 1. Keep version headers from feature branch
-# 2. Merge entries chronologically
-# 3. Preserve all significant changes from both branches
+# 3. Edit CHANGELOG.md to add YOUR changes at the TOP
+#    - Insert new version section [0.9.XXX] after [Unreleased]
+#    - Increment version number from what target branch has
+#    - Copy your entries from feature branch to this new section
+#    - DO NOT modify existing entries from target branch
+
+# 4. Mark as resolved
+git add CHANGELOG.md
+git rebase --continue
 ```
 
-**CHANGELOG.md Merge Pattern**:
+**CRITICAL RULES:**
+- ❌ DO NOT merge chronologically
+- ❌ DO NOT modify past version entries from target branch
+- ✅ DO accept target branch history as-is
+- ✅ DO add your changes on top with incremented version number
+- ✅ DO preserve target branch's version numbers unchanged
+
+**Example:**
+
+Target branch (origin/main) has:
 ```markdown
-# Changelog
+## [0.9.127] - 2025-11-13
+### Fixed
+- Feature X
 
+## [0.9.126] - 2025-11-13
+### Added
+- Feature Y
+```
+
+Your feature branch adds ace-docs changes that were originally [0.9.125].
+
+**CORRECT resolution:**
+```markdown
 ## [Unreleased]
-### Added (from feature branch)
-- New feature A
-- New feature B
 
-### Fixed (from target branch)
-- Bug fix from main branch
+## [0.9.128] - 2025-11-13
+### Added
+- **ace-docs v0.7.0**: Your new feature
+  (your entries here)
 
-## [Previous Versions]
-(existing entries)
+## [0.9.127] - 2025-11-13
+### Fixed
+- Feature X
+  (unchanged from target)
+
+## [0.9.126] - 2025-11-13
+### Added
+- Feature Y
+  (unchanged from target)
 ```
 
 **After resolving**:

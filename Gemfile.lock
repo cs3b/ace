@@ -8,7 +8,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.6.2)
+    ace-docs (0.7.0)
       ace-git-diff (~> 0.1)
       ace-llm (~> 0.1)
       ace-support-core (~> 0.1)
@@ -41,6 +41,12 @@ PATH
       ace-git-diff (>= 0.1.0)
       ace-support-core (>= 0.9.0)
       ace-taskflow (>= 0.10.0)
+
+PATH
+  remote: ace-git
+  specs:
+    ace-git (0.1.0)
+      ace-support-core (~> 0.10.0)
 
 PATH
   remote: ace-handbook
@@ -239,6 +245,7 @@ PLATFORMS
 DEPENDENCIES
   ace-context!
   ace-docs!
+  ace-git!
   ace-git-commit!
   ace-git-diff!
   ace-git-worktree!

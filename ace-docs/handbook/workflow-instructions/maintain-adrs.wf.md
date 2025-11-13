@@ -17,37 +17,44 @@ update:
 
 ## Goal
 
-Keep ADRs accurate, relevant, and synchronized with current codebase state through evolution documentation, archival of obsolete patterns, and maintaining the decisions.md summary.
+Keep ADRs accurate, relevant, and synchronized with current codebase state through evolution documentation, archival of
+obsolete patterns, and maintaining the decisions.md summary.
 
 ## Prerequisites
 
-- Existing ADRs in `docs/decisions/`
-- Understanding of current codebase architecture
-- Access to search codebase for pattern usage
-- Ability to modify and commit documentation
+* Existing ADRs in `docs/decisions/`
+* Understanding of current codebase architecture
+* Access to search codebase for pattern usage
+* Ability to modify and commit documentation
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+* Read and follow: `ace-nav wfi://load-context`
 
 ## Maintenance Actions
 
 ### 1. Review ADRs
+
 Periodic review to identify stale, obsolete, or evolved patterns
 
 ### 2. Archive Obsolete ADRs
+
 When patterns are no longer used in current codebase
 
 ### 3. Document Evolution
+
 When patterns changed but principles remain valid
 
 ### 4. Update Scope
+
 When implementation details obsolete but concepts still apply
 
 ### 5. Sync with decisions.md
+
 Keep summary document synchronized with all ADRs
 
 ### 6. Check for Missing ADRs
+
 Identify gaps between files and summary
 
 ## Decision Criteria
@@ -55,59 +62,68 @@ Identify gaps between files and summary
 ### When to Archive Completely
 
 **Indicators:**
-- Pattern not used anywhere in current codebase
-- Technology/framework no longer in use
-- Decision superseded by fundamentally different approach
-- Only found in `_legacy/` directories
+
+* Pattern not used anywhere in current codebase
+* Technology/framework no longer in use
+* Decision superseded by fundamentally different approach
+* Only found in `_legacy/` directories
 
 **Process:**
-1. Research actual usage (grep searches)
-2. Verify only in legacy code
-3. Add deprecation notice to ADR
-4. Move to `docs/decisions/archive/`
-5. Update `docs/decisions.md`
+
+1.  Research actual usage (grep searches)
+2.  Verify only in legacy code
+3.  Add deprecation notice to ADR
+4.  Move to `docs/decisions/archive/`
+5.  Update `docs/decisions.md`
 
 **Examples from Production:**
-- **ADR-006**: CI-Aware VCR Configuration (VCR only in `_legacy/dev-tools/spec/support/vcr.rb`)
-- **ADR-007**: Zeitwerk Autoloading (only in `_legacy/dev-tools/lib/coding_agent_tools.rb`)
-- **ADR-008**: Observability with dry-monitor (only in `_legacy/dev-tools/`)
-- **ADR-009**: Centralized CLI Error Reporting (ErrorReporter only in `_legacy/dev-tools/`)
+
+* **ADR-006**: CI-Aware VCR Configuration (VCR only in `_legacy/dev-tools/spec/support/vcr.rb`)
+* **ADR-007**: Zeitwerk Autoloading (only in `_legacy/dev-tools/lib/coding_agent_tools.rb`)
+* **ADR-008**: Observability with dry-monitor (only in `_legacy/dev-tools/`)
+* **ADR-009**: Centralized CLI Error Reporting (ErrorReporter only in `_legacy/dev-tools/`)
 
 ### When to Add Evolution Section
 
 **Indicators:**
-- Core principles still valid
-- Implementation changed significantly
-- Pattern migrated to new architecture
-- Original decision provides valuable context
+
+* Core principles still valid
+* Implementation changed significantly
+* Pattern migrated to new architecture
+* Original decision provides valuable context
 
 **Process:**
-1. Keep original ADR content intact
-2. Update status line to indicate evolution
-3. Add evolution section at end
-4. Document current state vs original
-5. Provide examples from current codebase
+
+1.  Keep original ADR content intact
+2.  Update status line to indicate evolution
+3.  Add evolution section at end
+4.  Document current state vs original
+5.  Provide examples from current codebase
 
 **Examples from Production:**
-- **ADR-003**: Template Directory Separation (evolved from `dev-handbook/templates/` to `gem/handbook/`)
-- **ADR-004**: Consistent Path Standards (evolved to distributed gem/handbook/ pattern)
+
+* **ADR-003**: Template Directory Separation (evolved from `dev-handbook/templates/` to `gem/handbook/`)
+* **ADR-004**: Consistent Path Standards (evolved to distributed gem/handbook/ pattern)
 
 ### When to Update Scope
 
 **Indicators:**
-- General principles still apply
-- Specific implementation details outdated
-- Technology-specific parts obsolete
-- Core concepts remain best practice
+
+* General principles still apply
+* Specific implementation details outdated
+* Technology-specific parts obsolete
+* Core concepts remain best practice
 
 **Process:**
-1. Add scope note at document top
-2. Clarify what's still valid vs legacy
-3. Keep original content for context
-4. Reference current implementations
+
+1.  Add scope note at document top
+2.  Clarify what's still valid vs legacy
+3.  Keep original content for context
+4.  Reference current implementations
 
 **Examples from Production:**
-- **ADR-013**: Class Naming Conventions (naming principles valid, Zeitwerk-specific inflections legacy)
+
+* **ADR-013**: Class Naming Conventions (naming principles valid, Zeitwerk-specific inflections legacy)
 
 ## Research Process
 
@@ -115,55 +131,52 @@ Identify gaps between files and summary
 
 Before archiving or evolving, verify actual usage:
 
-```bash
-# Search for pattern in current gems
-grep -r "PATTERN_NAME" ace-*/lib/ ace-*/test/
-
-# Check if only in legacy code
-grep -r "PATTERN_NAME" _legacy/dev-tools/
-
-# Count occurrences by location
-grep -c "PATTERN_NAME" ace-*/lib/**/*.rb
-grep -c "PATTERN_NAME" _legacy/**/*.rb
-```
+    # Search for pattern in current gems
+    grep -r "PATTERN_NAME" ace-*/lib/ ace-*/test/
+    
+    # Check if only in legacy code
+    grep -r "PATTERN_NAME" _legacy/dev-tools/
+    
+    # Count occurrences by location
+    grep -c "PATTERN_NAME" ace-*/lib/**/*.rb
+    grep -c "PATTERN_NAME" _legacy/**/*.rb
+{: .language-bash}
 
 **Example Searches from October 2025 Review:**
-```bash
-# VCR usage
-grep -r "VCR" ace-*/test/ --type ruby
-# Result: No files found (only in _legacy)
 
-# Zeitwerk usage
-grep -r "Zeitwerk" ace-*/lib/ --type ruby
-# Result: Only in _legacy (current gems use explicit requires)
-
-# Faraday usage
-grep -r "Faraday" ace-*/lib/ --type ruby
-# Result: Found in ace-llm/lib/ace/llm/atoms/http_client.rb (still active!)
-```
+    # VCR usage
+    grep -r "VCR" ace-*/test/ --type ruby
+    # Result: No files found (only in _legacy)
+    
+    # Zeitwerk usage
+    grep -r "Zeitwerk" ace-*/lib/ --type ruby
+    # Result: Only in _legacy (current gems use explicit requires)
+    
+    # Faraday usage
+    grep -r "Faraday" ace-*/lib/ --type ruby
+    # Result: Found in ace-llm/lib/ace/llm/atoms/http_client.rb (still active!)
+{: .language-bash}
 
 ### Inspect Current Gem Structure
 
-```bash
-# List production gems
-ls -d ace-* | grep -v legacy | grep -v _
-
-# Check specific gem implementation
-ls ace-llm/lib/ace/llm/
-ls ace-core/lib/ace/core/
-
-# Verify pattern in current code
-cat ace-gem/lib/ace/gem/specific_file.rb
-```
+    # List production gems
+    ls -d ace-* | grep -v legacy | grep -v _
+    
+    # Check specific gem implementation
+    ls ace-llm/lib/ace/llm/
+    ls ace-core/lib/ace/core/
+    
+    # Verify pattern in current code
+    cat ace-gem/lib/ace/gem/specific_file.rb
+{: .language-bash}
 
 ## Archival Process
 
 ### 1. Create Archive Structure (First Time Only)
 
-```bash
-# Create archive directory
-mkdir -p docs/decisions/archive
-```
+    # Create archive directory
+    mkdir -p docs/decisions/archive
+{: .language-bash}
 
 ### 2. Create/Update Archive README
 
@@ -173,31 +186,32 @@ Use the embedded template below. Update with each new archival.
 
 ### 3. Add Deprecation Notice to ADR
 
-At the top of the ADR file, after the status line, use the deprecation notice template embedded below (see `tmpl://decisions/deprecation-notice`).
+At the top of the ADR file, after the status line, use the deprecation notice template embedded below (see
+`tmpl://decisions/deprecation-notice`).
 
 **Original ADR (for historical reference):**
-```
 
-Then keep all original content below for historical reference.
-
-### 4. Move File to Archive
-
-```bash
-mv docs/decisions/ADR-XXX-title.md docs/decisions/archive/
-```
+    
+    Then keep all original content below for historical reference.
+    
+    ### 4. Move File to Archive
+    
+    ```bash
+    mv docs/decisions/ADR-XXX-title.md docs/decisions/archive/
 
 ### 5. Update docs/decisions.md
 
 **Remove from main sections:**
-- Delete the entry from whichever section it was in
+
+* Delete the entry from whichever section it was in
 
 **Add to "Archived Decisions" section:**
-```markdown
-## Archived Decisions
 
-The following decisions are **archived** as they apply only to legacy code:
-- **ADR-XXX**: [Title] ([reason for archival])
-```
+    ## Archived Decisions
+    
+    The following decisions are **archived** as they apply only to legacy code:
+    - **ADR-XXX**: [Title] ([reason for archival])
+{: .language-markdown}
 
 ## Evolution Process
 
@@ -209,66 +223,62 @@ The following decisions are **archived** as they apply only to legacy code:
 
 Replace the status section:
 
-```markdown
-## Status
-
-Accepted - Evolved to [New Pattern Name] (see ADR-XXX)
-Date: YYYY-MM-DD (original)
-Evolution: YYYY-MM-DD
-```
+    ## Status
+    
+    Accepted - Evolved to [New Pattern Name] (see ADR-XXX)
+    Date: YYYY-MM-DD (original)
+    Evolution: YYYY-MM-DD
+{: .language-markdown}
 
 ### 3. Add Evolution Section at End
 
 After all original content, add:
 
-```markdown
-## Evolution: [New Pattern Name] (Month Year)
+    ## Evolution: [New Pattern Name] (Month Year)
+    
+    ### Current State
+    
+    The original [pattern name] has evolved with [context - e.g., mono-repo migration].
+{: .language-markdown}
 
-### Current State
+\[Current implementation structure/pattern\]
 
-The original [pattern name] has evolved with [context - e.g., mono-repo migration].
-
-```
-[Current implementation structure/pattern]
-```
-
-### Key Changes
-
-1. **Distribution**: [How pattern is distributed now]
-2. **Implementation**: [New implementation approach]
-3. **Integration**: [How it integrates with current system]
-4. **Discovery**: [How developers find/use it now]
-
-### Examples in Production Gems
-
-- **gem-name**: `path/to/example.rb` or `path/to/file.md`
-- **gem-name**: `path/to/another-example`
-
-### Relationship to Original Decision
-
-The **principles remain valid**:
-- ✅ [Core principle 1 still applies]
-- ✅ [Core principle 2 still applies]
-- ✅ [Core principle 3 still applies]
-
-The **implementation evolved**:
-- From: [Old pattern/location]
-- To: [New pattern/location]
-- Reason: [Why it changed - modularity, simplicity, etc.]
-
-See **ADR-XXX: [New Pattern ADR]** for complete details of current pattern.
-```
+    
+    ### Key Changes
+    
+    1. **Distribution**: [How pattern is distributed now]
+    2. **Implementation**: [New implementation approach]
+    3. **Integration**: [How it integrates with current system]
+    4. **Discovery**: [How developers find/use it now]
+    
+    ### Examples in Production Gems
+    
+    - **gem-name**: `path/to/example.rb` or `path/to/file.md`
+    - **gem-name**: `path/to/another-example`
+    
+    ### Relationship to Original Decision
+    
+    The **principles remain valid**:
+    - ✅ [Core principle 1 still applies]
+    - ✅ [Core principle 2 still applies]
+    - ✅ [Core principle 3 still applies]
+    
+    The **implementation evolved**:
+    - From: [Old pattern/location]
+    - To: [New pattern/location]
+    - Reason: [Why it changed - modularity, simplicity, etc.]
+    
+    See **ADR-XXX: [New Pattern ADR]** for complete details of current pattern.
 
 ### 4. Update docs/decisions.md
 
 Add evolution note to the entry:
 
-```markdown
-### Decision Title
-**Decision**: [Summary including evolution note]
-**Impact**: [Updated impact statement]
-**Details**: [ADR-XXX](decisions/ADR-XXX-title.md) (evolved to gem pattern, see ADR-YYY)
-```
+    ### Decision Title
+    **Decision**: [Summary including evolution note]
+    **Impact**: [Updated impact statement]
+    **Details**: [ADR-XXX](decisions/ADR-XXX-title.md) (evolved to gem pattern, see ADR-YYY)
+{: .language-markdown}
 
 ## Scope Update Process
 
@@ -276,17 +286,16 @@ Add evolution note to the entry:
 
 After the status section, before original context:
 
-```markdown
-## Scope Note (Month Year)
-
-**Current Relevance**: The **[core concept]** in this ADR still applies to current ace-* gems. The **[specific part]** is legacy-only (see ADR-XXX archive).
-
-**Current gems** (ace-llm, ace-core, etc.) use [new approach] instead of [old approach], but the [principle/pattern] remains best practice.
-
----
-
-**Original Context:**
-```
+    ## Scope Note (Month Year)
+    
+    **Current Relevance**: The **[core concept]** in this ADR still applies to current ace-* gems. The **[specific part]** is legacy-only (see ADR-XXX archive).
+    
+    **Current gems** (ace-llm, ace-core, etc.) use [new approach] instead of [old approach], but the [principle/pattern] remains best practice.
+    
+    ---
+    
+    **Original Context:**
+{: .language-markdown}
 
 Then keep all original content below.
 
@@ -294,86 +303,83 @@ Then keep all original content below.
 
 Add clarification note:
 
-```markdown
-### Decision Title
-**Decision**: [Summary]. Note: [Specific parts] are legacy; [principles] still apply.
-**Impact**: [Updated with scope clarification]
-**Details**: [ADR-XXX](decisions/ADR-XXX-title.md)
-```
+    ### Decision Title
+    **Decision**: [Summary]. Note: [Specific parts] are legacy; [principles] still apply.
+    **Impact**: [Updated with scope clarification]
+    **Details**: [ADR-XXX](decisions/ADR-XXX-title.md)
+{: .language-markdown}
 
 ## Synchronization with decisions.md
 
 ### Check Current State
 
-```bash
-# List all active ADRs
-ls docs/decisions/ADR-*.md | grep -v archive | sort
-
-# List archived ADRs
-ls docs/decisions/archive/ADR-*.md 2>/dev/null | sort
-
-# Count ADRs
-echo "Active: $(ls docs/decisions/ADR-*.md | grep -v archive | wc -l)"
-echo "Archived: $(ls docs/decisions/archive/ADR-*.md 2>/dev/null | wc -l)"
-```
+    # List all active ADRs
+    ls docs/decisions/ADR-*.md | grep -v archive | sort
+    
+    # List archived ADRs
+    ls docs/decisions/archive/ADR-*.md 2>/dev/null | sort
+    
+    # Count ADRs
+    echo "Active: $(ls docs/decisions/ADR-*.md | grep -v archive | wc -l)"
+    echo "Archived: $(ls docs/decisions/archive/ADR-*.md 2>/dev/null | wc -l)"
+{: .language-bash}
 
 ### Check for Missing ADRs in decisions.md
 
 Find ADRs that exist as files but aren't in decisions.md:
 
-```bash
-# Extract ADR numbers from files
-ls docs/decisions/ADR-*.md | grep -v archive | grep -o 'ADR-[0-9]*' | sort > /tmp/adr-files.txt
-
-# Extract ADR references from decisions.md (active sections only)
-grep -o 'ADR-[0-9]*' docs/decisions.md | grep -v "Archived Decisions" | sort -u > /tmp/adr-refs.txt
-
-# Find missing (in files but not in decisions.md)
-comm -23 /tmp/adr-files.txt /tmp/adr-refs.txt
-```
+    # Extract ADR numbers from files
+    ls docs/decisions/ADR-*.md | grep -v archive | grep -o 'ADR-[0-9]*' | sort > /tmp/adr-files.txt
+    
+    # Extract ADR references from decisions.md (active sections only)
+    grep -o 'ADR-[0-9]*' docs/decisions.md | grep -v "Archived Decisions" | sort -u > /tmp/adr-refs.txt
+    
+    # Find missing (in files but not in decisions.md)
+    comm -23 /tmp/adr-files.txt /tmp/adr-refs.txt
+{: .language-bash}
 
 ### Check for Orphaned References
 
 Find ADRs referenced in decisions.md but don't exist as files:
 
-```bash
-# Find references without files
-comm -13 /tmp/adr-files.txt /tmp/adr-refs.txt
-```
+    # Find references without files
+    comm -13 /tmp/adr-files.txt /tmp/adr-refs.txt
+{: .language-bash}
 
 ### Update decisions.md Structure
 
 Ensure proper sectioning:
 
-1. **Active Decisions** - Currently applicable patterns
-2. **Architecture Decisions** - System design choices
-3. **Gem Architecture Patterns** - Gem-specific patterns
-4. **Development Tool Decisions** - Tool and process patterns
-5. **Archived Decisions** - Obsolete patterns (list only, with reasons)
+1.  **Active Decisions** - Currently applicable patterns
+2.  **Architecture Decisions** - System design choices
+3.  **Gem Architecture Patterns** - Gem-specific patterns
+4.  **Development Tool Decisions** - Tool and process patterns
+5.  **Archived Decisions** - Obsolete patterns (list only, with reasons)
 
 ## Validation
 
 ### After Maintenance Actions
 
-```bash
-# Validate modified ADRs
-ace-docs validate docs/decisions/ADR-*.md
-
-# Validate decisions.md
-ace-docs validate docs/decisions.md
-
-# Check links (if ace-lint available)
-ace-lint docs/decisions/*.md
-```
+    # Validate modified ADRs
+    ace-docs validate docs/decisions/ADR-*.md
+    
+    # Validate decisions.md
+    ace-docs validate docs/decisions.md
+    
+    # Check links (if ace-lint available)
+    ace-lint docs/decisions/*.md
+{: .language-bash}
 
 ### Manual Checks
 
-- [ ] All ADR files have proper frontmatter
-- [ ] All archived ADRs have deprecation notices
-- [ ] All evolved ADRs have evolution sections
-- [ ] decisions.md entries match file names
-- [ ] No broken ADR cross-references
-- [ ] Archive README lists all archived ADRs
+* All ADR files have proper frontmatter
+* All archived ADRs have deprecation
+  notices
+* All evolved ADRs have evolution sections
+* decisions.md entries match file names
+* No broken ADR cross-references
+* Archive README lists all archived ADRs
+
 
 ## Common Maintenance Scenarios
 
@@ -382,11 +388,12 @@ ace-lint docs/decisions/*.md
 **Situation**: Found code pattern that might be obsolete
 
 **Process**:
-1. Research usage with grep searches
-2. Check current gems vs _legacy/
-3. If only in legacy → archive
-4. If in current gems → verify if evolution needed
-5. Update decisions.md accordingly
+
+1.  Research usage with grep searches
+2.  Check current gems vs \_legacy/
+3.  If only in legacy → archive
+4.  If in current gems → verify if evolution needed
+5.  Update decisions.md accordingly
 
 **Example**: October 2025 review found VCR, Zeitwerk, dry-monitor, ErrorReporter only in `_legacy/dev-tools/`
 
@@ -395,79 +402,91 @@ ace-lint docs/decisions/*.md
 **Situation**: Pattern migrated (e.g., mono-repo migration)
 
 **Process**:
-1. Verify new implementation in current gems
-2. Document both old and new patterns
-3. Add evolution section to original ADR
-4. Consider creating new ADR if fundamentally different
-5. Update decisions.md with evolution note
+
+1.  Verify new implementation in current gems
+2.  Document both old and new patterns
+3.  Add evolution section to original ADR
+4.  Consider creating new ADR if fundamentally different
+5.  Update decisions.md with evolution note
 
 **Example**: Template patterns evolved from `dev-handbook/templates/` to `gem/handbook/`
 
 ### Scenario 3: Quarterly ADR Review
 
 **Checklist**:
-- [ ] Check all ADRs for staleness
-- [ ] Verify examples still accurate
-- [ ] Update technology versions if referenced
-- [ ] Sync with current gem structure
-- [ ] Run missing ADR checks
-- [ ] Update decisions.md if needed
+
+* Check all ADRs for staleness
+* Verify examples still accurate
+* Update technology versions if referenced
+* Sync with current gem structure
+* Run missing ADR checks
+* Update decisions.md if needed
+
 
 ### Scenario 4: New ADR Supersedes Old
 
 **Process**:
-1. Create new ADR (see `create-adr.wf.md`)
-2. Add "Supersedes: ADR-XXX" to new ADR
-3. Archive or evolve old ADR appropriately
-4. Update decisions.md to reflect relationship
+
+1.  Create new ADR (see `create-adr.wf.md`)
+2.  Add "Supersedes: ADR-XXX" to new ADR
+3.  Archive or evolve old ADR appropriately
+4.  Update decisions.md to reflect relationship
 
 ## Integration with create-adr Workflow
 
 When creating new ADRs:
 
 **Check for supersession:**
-```bash
-# Search for related existing ADRs
-grep -i "pattern-name" docs/decisions/ADR-*.md
-```
+
+    # Search for related existing ADRs
+    grep -i "pattern-name" docs/decisions/ADR-*.md
+{: .language-bash}
 
 **If superseding:**
-1. Note in new ADR: "Supersedes: ADR-XXX"
-2. Archive old ADR with deprecation notice
-3. Cross-reference in decisions.md
+
+1.  Note in new ADR: "Supersedes: ADR-XXX"
+2.  Archive old ADR with deprecation notice
+3.  Cross-reference in decisions.md
 
 **Lifecycle:**
-- **Creation**: Use `create-adr.wf.md`
-- **Maintenance**: Use this workflow
-- **Both**: Update decisions.md for consistency
+
+* **Creation**: Use `create-adr.wf.md`
+* **Maintenance**: Use this workflow
+* **Both**: Update decisions.md for consistency
 
 ## Success Criteria
 
-- [ ] All ADRs reflect current codebase state
-- [ ] Obsolete patterns clearly marked as archived
-- [ ] Evolution documented with clear examples
-- [ ] decisions.md synchronized with all ADR files
-- [ ] No orphaned or undocumented decisions
-- [ ] Archive README up to date
-- [ ] All cross-references valid
+* All ADRs reflect current codebase state
+* Obsolete patterns clearly marked as
+  archived
+* Evolution documented with clear examples
+* decisions.md synchronized with all ADR
+  files
+* No orphaned or undocumented decisions
+* Archive README up to date
+* All cross-references valid
+
 
 ## Troubleshooting
 
 **Cannot determine if pattern is obsolete:**
-- Research with grep across entire codebase
-- Check both current gems and _legacy/
-- Look for alternative implementations
-- Consult recent commits for migration patterns
+
+* Research with grep across entire codebase
+* Check both current gems and \_legacy/
+* Look for alternative implementations
+* Consult recent commits for migration patterns
 
 **Unsure whether to archive or evolve:**
-- Archive if: Pattern completely replaced, no longer applicable
-- Evolve if: Same problem solved differently, principles still valid
-- Update scope if: General concept valid, specific tech obsolete
+
+* Archive if: Pattern completely replaced, no longer applicable
+* Evolve if: Same problem solved differently, principles still valid
+* Update scope if: General concept valid, specific tech obsolete
 
 **decisions.md sync errors:**
-- Use comm commands to find mismatches
-- Manually review each section
-- Ensure archived ADRs only in "Archived Decisions" section
+
+* Use comm commands to find mismatches
+* Manually review each section
+* Ensure archived ADRs only in "Archived Decisions" section
 
 <documents>
     <template path="tmpl://decisions/archive-readme"># Archived Architecture Decision Records
@@ -574,3 +593,4 @@ The **implementation evolved**:
 **See ADR-XXX: [New Pattern ADR]** for complete details of the current approach.
     </template>
 </documents>
+
