@@ -17,25 +17,25 @@ development work through systematic documentation of proven procedures.
 
 ### Planning Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Identify cookbook source material and
+* Identify cookbook source material and
   extract core patterns
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Determine appropriate cookbook category
+* Determine appropriate cookbook category
   and target audience
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Define cookbook scope and validation
+* Define cookbook scope and validation
   criteria
-{: .task-list}
+
 
 ### Execution Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Create cookbook file using embedded
+* Create cookbook file using embedded
   template and `create-path` tool
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Populate cookbook sections with
+* Populate cookbook sections with
   structured content
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Validate cookbook completeness and
+* Validate cookbook completeness and
   actionability
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Save cookbook in appropriate location
+* Save cookbook in appropriate location
   with standard naming
-{: .task-list}
+
 
 ## Process Steps
 

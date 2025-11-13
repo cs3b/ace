@@ -3,7 +3,7 @@
 **Goal:** Analyze repository changes and update the core context documents ensuring they remain accurate, focused, and free of duplication.
 
 > **Note:** This workflow can now be enhanced with the `ace-docs` tool for automated document management.
-> See `ace-docs/handbook/workflow-instructions/update-docs.wf.md` for the tooling-based approach.
+> See `wfi://update-docs` for the tooling-based approach.
 > Use `/update-docs` command for the automated workflow.
 
 ## Prerequisites
@@ -14,7 +14,7 @@
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## Core Context Documents
 

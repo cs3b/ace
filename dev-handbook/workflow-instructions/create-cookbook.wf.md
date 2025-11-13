@@ -10,7 +10,7 @@
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 
 ## High-Level Execution Plan
 
@@ -404,8 +404,8 @@ If you find issues or improvements for this cookbook, please:
 
 ## Related Workflows
 
-- `dev-handbook/workflow-instructions/create-reflection-note.wf.md` - Source material creation
-- `dev-handbook/workflow-instructions/synthesize-reflection-notes.wf.md` - Pattern synthesis
+- `wfi://create-reflection-note` - Source material creation
+- `wfi://synthesize-reflection-notes` - Pattern synthesis
 - Integration with `create-path` tool for file generation
 
 ---

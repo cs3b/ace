@@ -13,11 +13,11 @@ Create, update, and maintain workflow instruction files following established st
 
 ## Project Context Loading
 
-* Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+* Read and follow: `wfi://load-project-context`
 * Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
 * Load template embedding guide: `dev-handbook/.meta/gds/template-embedding.g.md`
-* Load example workflows: `dev-handbook/workflow-instructions/plan-task.wf.md`
-* Load batch processing example: `dev-handbook/workflow-instructions/draft-release.wf.md`
+* Load example workflows: `wfi://plan-task`
+* Load batch processing example: `wfi://draft-release`
 
 ## Process Steps
 

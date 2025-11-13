@@ -14,7 +14,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
 
 ## Project Context Loading
 
-- Read and follow: `dev-handbook/workflow-instructions/load-project-context.wf.md`
+- Read and follow: `wfi://load-project-context`
 - Load testing standards: `dev-tools/docs/development/guides/testing-with-vcr.md`
 - Load ATOM architecture reference: `docs/architecture-tools.md`
 

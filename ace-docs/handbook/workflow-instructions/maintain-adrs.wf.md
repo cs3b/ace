@@ -372,14 +372,14 @@ Ensure proper sectioning:
 
 ### Manual Checks
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All ADR files have proper frontmatter
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All archived ADRs have deprecation
+* All ADR files have proper frontmatter
+* All archived ADRs have deprecation
   notices
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All evolved ADRs have evolution sections
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />decisions.md entries match file names
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />No broken ADR cross-references
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Archive README lists all archived ADRs
-{: .task-list}
+* All evolved ADRs have evolution sections
+* decisions.md entries match file names
+* No broken ADR cross-references
+* Archive README lists all archived ADRs
+
 
 ## Common Maintenance Scenarios
 
@@ -415,13 +415,13 @@ Ensure proper sectioning:
 
 **Checklist**:
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Check all ADRs for staleness
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Verify examples still accurate
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update technology versions if referenced
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Sync with current gem structure
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Run missing ADR checks
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update decisions.md if needed
-{: .task-list}
+* Check all ADRs for staleness
+* Verify examples still accurate
+* Update technology versions if referenced
+* Sync with current gem structure
+* Run missing ADR checks
+* Update decisions.md if needed
+
 
 ### Scenario 4: New ADR Supersedes Old
 
@@ -456,16 +456,16 @@ When creating new ADRs:
 
 ## Success Criteria
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All ADRs reflect current codebase state
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Obsolete patterns clearly marked as
+* All ADRs reflect current codebase state
+* Obsolete patterns clearly marked as
   archived
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Evolution documented with clear examples
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />decisions.md synchronized with all ADR
+* Evolution documented with clear examples
+* decisions.md synchronized with all ADR
   files
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />No orphaned or undocumented decisions
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Archive README up to date
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All cross-references valid
-{: .task-list}
+* No orphaned or undocumented decisions
+* Archive README up to date
+* All cross-references valid
+
 
 ## Troubleshooting
 
