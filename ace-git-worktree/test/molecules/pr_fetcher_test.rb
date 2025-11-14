@@ -5,6 +5,9 @@ require_relative "../test_helper"
 class PrFetcherTest < Minitest::Test
   def setup
     @fetcher = Ace::Git::Worktree::Molecules::PrFetcher.new
+    # Mock sleep to prevent delays in retry tests (3 seconds per error test)
+    # Retry delays are: 1s (first retry), 2s (second retry) = 3s total per test
+    @fetcher.define_singleton_method(:sleep) { |_delay| nil }
   end
 
   def test_fetch_with_valid_pr_number
