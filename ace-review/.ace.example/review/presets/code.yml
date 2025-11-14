@@ -1,40 +1,40 @@
-# Code quality review - architecture and conventions
+# Base code review preset - common instructions and configuration
 
-description: "Code quality review - architecture and conventions"
+description: "Base code review configuration"
 
 instructions:
-  base: "prompt://base/system"
+  description: "Code review instructions"
   context:
+    base: "prompt://base/system"
     sections:
-      format:
+      review_focus:
+        title: "Files Under Review"
+        description: "Code changes and files being reviewed"
+        files:
+          - "prompt://focus/scope/tests"
+          - "prompt://focus/scope/docs"
+          - "prompt://focus/languages/ruby"
+          - "prompt://focus/architecture/atom"
+          - "prompt://focus/quality/security"
+          - "prompt://focus/quality/performance"
+
+      format_guidelines:
         title: "Format Guidelines"
         description: "Output formatting and structure guidelines"
         files:
           - "prompt://format/detailed"
-      focus:
-        title: "Review Focus Areas"
-        description: "Architecture and code quality focus"
-        files:
-          - "prompt://focus/architecture/atom"
-      guidelines:
+
+      review_guidelines:
         title: "Review Guidelines"
         description: "Communication style and visual indicators"
         files:
           - "prompt://guidelines/tone"
           - "prompt://guidelines/icons"
+
       project_context:
         title: "Project Context"
         description: "Project information and background"
         presets:
           - "project"
 
-context: "project"
-
-subject:
-  context:
-    sections:
-      code_changes:
-        title: "Recent Code Changes"
-        description: "Code changes from recent commits for review"
-        diffs:
-          - "HEAD~3..HEAD"
+model: gpro

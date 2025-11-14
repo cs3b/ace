@@ -109,6 +109,222 @@ class PresetManagerTest < AceReviewTest
     assert_includes resolved[:system_prompt]["focus"], "prompt://focus/quality/security"
   end
 
+  # Composition tests
+  def test_load_preset_with_composition_single_reference
+    create_test_preset("base", <<~YAML)
+      description: "Base preset"
+      model: "base-model"
+      instructions:
+        base: "prompt://base/system"
+    YAML
+
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - base
+      description: "Composed preset"
+      subject:
+        files:
+          - "test.rb"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
+    assert_equal "Composed preset", preset["description"]
+    assert_equal "base-model", preset["model"]
+    assert_equal "prompt://base/system", preset["instructions"]["base"]
+    assert_equal ["test.rb"], preset["subject"]["files"]
+  end
+
+  def test_load_preset_with_composition_multiple_references
+    create_test_preset("base1", <<~YAML)
+      description: "Base 1"
+      model: "model-1"
+    YAML
+
+    create_test_preset("base2", <<~YAML)
+      description: "Base 2"
+      context: "project"
+    YAML
+
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - base1
+        - base2
+      description: "Composed preset"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
+    assert_equal "Composed preset", preset["description"]
+    assert_equal "model-1", preset["model"]
+    assert_equal "project", preset["context"]
+  end
+
+  def test_load_preset_with_composition_multi_level
+    create_test_preset("base", <<~YAML)
+      description: "Base"
+      model: "base-model"
+    YAML
+
+    create_test_preset("middle", <<~YAML)
+      presets:
+        - base
+      description: "Middle"
+      context: "project"
+    YAML
+
+    create_test_preset("top", <<~YAML)
+      presets:
+        - middle
+      description: "Top"
+      output_format: "json"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("top")
+    assert_equal "Top", preset["description"]
+    assert_equal "base-model", preset["model"]
+    assert_equal "project", preset["context"]
+    assert_equal "json", preset["output_format"]
+  end
+
+  def test_load_preset_with_composition_array_merging
+    create_test_preset("base", <<~YAML)
+      description: "Base"
+      subject:
+        files:
+          - "file1.rb"
+          - "file2.rb"
+    YAML
+
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - base
+      description: "Composed"
+      subject:
+        files:
+          - "file2.rb"
+          - "file3.rb"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
+    # Arrays should be concatenated and deduplicated
+    expected_files = ["file1.rb", "file2.rb", "file3.rb"]
+    assert_equal expected_files, preset["subject"]["files"]
+  end
+
+  def test_load_preset_with_composition_hash_deep_merge
+    create_test_preset("base", <<~YAML)
+      description: "Base"
+      instructions:
+        base: "prompt://base/system"
+        context:
+          sections:
+            format:
+              title: "Format"
+    YAML
+
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - base
+      description: "Composed"
+      instructions:
+        context:
+          sections:
+            code:
+              title: "Code"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
+    assert_equal "prompt://base/system", preset["instructions"]["base"]
+    assert preset["instructions"]["context"]["sections"]["format"]
+    assert preset["instructions"]["context"]["sections"]["code"]
+  end
+
+  def test_load_preset_with_composition_scalar_last_wins
+    create_test_preset("base", <<~YAML)
+      description: "Base description"
+      model: "base-model"
+    YAML
+
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - base
+      description: "Composed description"
+      output_format: "json"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
+    assert_equal "Composed description", preset["description"]
+    assert_equal "base-model", preset["model"]
+    assert_equal "json", preset["output_format"]
+  end
+
+  def test_load_preset_with_composition_circular_dependency_error
+    create_test_preset("preset_a", <<~YAML)
+      presets:
+        - preset_b
+      description: "Preset A"
+    YAML
+
+    create_test_preset("preset_b", <<~YAML)
+      presets:
+        - preset_a
+      description: "Preset B"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("preset_a")
+    assert_nil preset
+  end
+
+  def test_load_preset_with_composition_missing_reference_error
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - nonexistent
+      description: "Composed"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("composed")
+    assert_nil preset
+  end
+
+  def test_load_preset_without_composition_backward_compatible
+    create_test_preset("simple", <<~YAML)
+      description: "Simple preset"
+      model: "simple-model"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset = manager.load_preset("simple")
+    assert_equal "Simple preset", preset["description"]
+    assert_equal "simple-model", preset["model"]
+  end
+
+  def test_load_preset_with_composition_caches_result
+    create_test_preset("base", <<~YAML)
+      description: "Base"
+      model: "base-model"
+    YAML
+
+    create_test_preset("composed", <<~YAML)
+      presets:
+        - base
+      description: "Composed"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    preset1 = manager.load_preset("composed")
+    preset2 = manager.load_preset("composed")
+
+    # Should return same cached object
+    assert_equal preset1.object_id, preset2.object_id
+  end
+
   # deep_stringify_keys tests
   def test_deep_stringify_keys_simple_hash
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
@@ -170,5 +386,52 @@ class PresetManagerTest < AceReviewTest
     assert_equal "string", manager.send(:deep_stringify_keys, "string")
     assert_equal 123, manager.send(:deep_stringify_keys, 123)
     assert_equal nil, manager.send(:deep_stringify_keys, nil)
+  end
+
+  # Security tests for path traversal prevention
+  def test_load_preset_validates_path_traversal_with_dotdot
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+
+    error = assert_raises(ArgumentError) do
+      manager.send(:load_preset_from_file, "../../../etc/passwd")
+    end
+
+    assert_match(/invalid preset name/i, error.message)
+    assert_match(/\.\./i, error.message)
+  end
+
+  def test_load_preset_validates_absolute_path
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+
+    error = assert_raises(ArgumentError) do
+      manager.send(:load_preset_from_file, "/etc/passwd")
+    end
+
+    assert_match(/invalid preset name/i, error.message)
+    assert_match(/absolute path/i, error.message)
+  end
+
+  def test_load_preset_validates_backslash_traversal
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+
+    error = assert_raises(ArgumentError) do
+      manager.send(:load_preset_from_file, "..\\..\\windows\\system32")
+    end
+
+    assert_match(/invalid preset name/i, error.message)
+  end
+
+  def test_load_preset_allows_valid_names
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+
+    # Create a valid preset file
+    preset_dir = File.join(@test_dir, ".ace/review/presets")
+    FileUtils.mkdir_p(preset_dir)
+    File.write(File.join(preset_dir, "valid-preset.yml"), "description: test\n")
+
+    # Should not raise error for valid preset name
+    result = manager.send(:load_preset_from_file, "valid-preset")
+    assert_instance_of Hash, result
+    assert_equal "test", result["description"]
   end
 end
