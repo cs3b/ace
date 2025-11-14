@@ -2,26 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
 
-## [0.9.127] - 2025-11-13
-
-### Fixed
-- **ace-git-commit v0.11.2**: Resolve silent staging failures and improve error reporting
-  - Staging operations now properly detect and report failures with clear ✓/✗ indicators
-  - Error messages always visible even in quiet mode for critical issues
-  - Added `--verbose` (default) and `--quiet` flags for output control
-  - Enhanced user feedback with actionable suggestions on failures
-  - Improved error message format with file count feedback
-
+## [0.9.129] - 2025-11-13
 
 ### Added
-- **ace-test-runner v0.1.7**: Skipped test reporting functionality
-  - Added comprehensive skipped test reporting to console output and suite summaries
-  - Displays count and visual indicators for skipped tests in execution summaries
-  - Shows detailed skipped test information including reason when available
-  - Includes skipped tests in final statistics with skip percentage
+- **ace-review v0.16.0**: Preset Composition - DRY configuration for review presets
+  - New `presets:` array enables composing review presets from reusable base configurations
+  - Smart merging: arrays concatenate+deduplicate, hashes deep merge, scalars last-wins
+  - Circular dependency detection with max depth limit (10 levels)
+  - Path traversal prevention and preset name validation for security
+  - Intermediate caching for performance (beneficial for deeply nested presets)
+  - New PresetValidator atom for validation logic
+  - Enhanced PresetManager with recursive composition support
+  - Full backward compatibility - existing presets work unchanged
+  - Comprehensive test coverage: 60 tests (23 validator + 26 manager + 11 integration)
+  - Example presets demonstrating DRY pattern (code.yml, code-pr.yml, code-wip.yml)
 
-## [Unreleased]
+### Fixed
+- **Security**: Preset name validation now properly enforced before filesystem access (prevents path traversal)
+  - Added explicit ArgumentError raising for invalid preset names
+  - Re-raise validation errors to prevent security check suppression
+  - Added comprehensive security tests for path traversal attempts
+- **Caching**: Intermediate caching now works correctly for shared base presets
+  - Removed `visited.empty?` guard that prevented caching during recursive composition
+  - Moved circular dependency check before cache lookup for correctness
+  - Shared base presets are now cached and reused across compositions
+
+### Improved
+- **Code Quality**: Extracted metadata keys to constant and added clarifying comments
+  - Added `COMPOSITION_METADATA_KEYS` constant to improve maintainability
+  - Added array merge strategy comment for clarity
+  - Added MAX_DEPTH explanation comment
 
 ## [0.9.128] - 2025-11-13
 
@@ -43,6 +55,23 @@ All notable changes to this project will be documented in this file.
 - **ace-docs v0.7.0**: Workflow frontmatter restoration
   - Fixed YAML frontmatter corruption in create-adr and maintain-adrs workflows
   - Restored proper multi-line YAML structure after ace-lint formatting issue
+
+## [0.9.127] - 2025-11-13
+
+### Fixed
+- **ace-git-commit v0.11.2**: Resolve silent staging failures and improve error reporting
+  - Staging operations now properly detect and report failures with clear ✓/✗ indicators
+  - Error messages always visible even in quiet mode for critical issues
+  - Added `--verbose` (default) and `--quiet` flags for output control
+  - Enhanced user feedback with actionable suggestions on failures
+  - Improved error message format with file count feedback
+
+### Added
+- **ace-test-runner v0.1.7**: Skipped test reporting functionality
+  - Added comprehensive skipped test reporting to console output and suite summaries
+  - Displays count and visual indicators for skipped tests in execution summaries
+  - Shows detailed skipped test information including reason when available
+  - Includes skipped tests in final statistics with skip percentage
 
 ## [0.9.126] - 2025-11-13
 
