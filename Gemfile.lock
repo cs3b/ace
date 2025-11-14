@@ -93,7 +93,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.15.1)
+    ace-review (0.16.0)
       ace-context (~> 0.9)
       ace-git-diff (~> 0.1)
       ace-llm (~> 0.1)
