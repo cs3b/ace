@@ -46,9 +46,15 @@ module Ace
         # @param generation_params [Hash] Generation parameters
         # @return [Hash] Request body
         def build_request_body(messages, generation_params)
+          # Handle system_append - use shared helper for deep copy and concatenation
+          processed_messages = process_messages_with_system_append(
+            messages,
+            generation_params[:system_append]
+          )
+
           request = {
             model: @model,
-            messages: messages
+            messages: processed_messages
           }
 
           # Add generation parameters
