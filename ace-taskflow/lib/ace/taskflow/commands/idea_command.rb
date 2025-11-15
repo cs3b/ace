@@ -290,6 +290,27 @@ module Ace
           exit 0
         end
 
+        # Validates idea file structure and reports any misplaced ideas.
+        #
+        # This command checks that all idea files are properly organized in subfolders
+        # within the ideas/ directory (e.g., ideas/folder-name/file.md) rather than
+        # as flat files directly in ideas/.
+        #
+        # @param args [Array<String>] command arguments (currently unused)
+        # @return [void]
+        # @note Exit codes:
+        #   - 0: All ideas are properly placed
+        #   - 1: One or more ideas are misplaced (includes suggested locations)
+        #
+        # @example Success case
+        #   validate_structure([])
+        #   # Output: ✓ All ideas properly organized in ideas/ subfolders
+        #   # Exit code: 0
+        #
+        # @example Failure case
+        #   validate_structure([])
+        #   # Output: ✗ Found 2 misplaced idea(s): ... with suggestions
+        #   # Exit code: 1
         def validate_structure(args)
           puts "Validating idea file structure..."
           puts ""
@@ -421,6 +442,7 @@ module Ace
           puts "    --before <ref>   Place before specific idea"
           puts "  to-task <id>       Convert idea to task"
           puts "  archive <id>       Archive an idea"
+          puts "  validate-structure Validate idea file organization"
           puts ""
           puts "Options:"
           puts "  --backlog          Work with backlog ideas"
@@ -452,11 +474,6 @@ module Ace
 
         private
 
-        # Format path relative to current working directory
-        def format_path_relative_to_pwd(path)
-          Pathname.new(path).relative_path_from(Pathname.new(Dir.pwd)).to_s
-        end
-
         # Print validation success message
         def print_validation_success(result)
           puts "✓ All ideas properly organized in ideas/ subfolders"
@@ -472,11 +489,11 @@ module Ace
 
           result[:misplaced].each do |misplaced|
             # Format path relative to current directory
-            relative_path = format_path_relative_to_pwd(misplaced[:path])
+            relative_path = Atoms::PathFormatter.format_relative_path(misplaced[:path])
             puts "  #{relative_path}"
             puts "    Reason: #{misplaced[:reason]}"
             if misplaced[:suggested_location]
-              suggested_relative = format_path_relative_to_pwd(misplaced[:suggested_location])
+              suggested_relative = Atoms::PathFormatter.format_relative_path(misplaced[:suggested_location])
               puts "    Suggested: #{suggested_relative}"
             end
             puts ""
