@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **ace-taskflow v0.9.0**: Idea folder structure validation and enforcement
+  - New `validate-structure` command checks idea file organization
+  - Enforces ideas must be in subfolders within ideas/ directory (e.g., ideas/folder-name/file.md)
+  - Provides clear error messages with suggested proper locations
+  - Warning shown in `ideas` list when misplaced ideas detected
+  - `idea create` now returns full file path instead of directory for better UX
+  - Environment variable `SKIP_IDEA_VALIDATION` for performance optimization
+  - Comprehensive YARD documentation with exit codes for CI/CD integration
+  - 26 comprehensive tests covering all validation scenarios
+- **ace-git v0.2.0**: PR Documentation Workflow - Automated PR title and description generation
+  - New `update-pr-description` workflow extracts metadata from changelog and task files
+  - Analyzes commit messages to identify change patterns
+  - Generates structured PR descriptions with summary, changes, breaking changes, and related tasks
+  - New `/ace:update-pr-desc` command for easy invocation
+  - Auto-detects PR from current branch or accepts PR number argument
+  - Uses conventional commits format for titles
+  - Comprehensive documentation with examples and best practices
+
 ## [0.9.132] - 2025-11-15
 
 ### Added
