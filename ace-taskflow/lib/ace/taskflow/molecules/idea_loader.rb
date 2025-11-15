@@ -7,6 +7,7 @@ require_relative "release_resolver"
 require_relative "config_loader"
 require_relative "../configuration"
 require_relative "../atoms/yaml_parser"
+require_relative "idea_structure_validator"
 
 module Ace
   module Taskflow
@@ -107,6 +108,13 @@ module Ace
           counts["backlog"] = count_ideas_in_directory(backlog_idea_dir)
 
           counts
+        end
+
+        # Detect misplaced ideas outside the proper ideas/ subdirectory structure
+        # @return [Hash] validation result with :valid, :misplaced, :total keys
+        def detect_misplaced_ideas
+          validator = IdeaStructureValidator.new(@root_path)
+          validator.validate_all
         end
 
         private

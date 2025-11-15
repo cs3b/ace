@@ -5,6 +5,23 @@ All notable changes to ace-git will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2025-11-15
+
+### Added
+
+- **PR Description Workflow** (`wfi://update-pr-description`): Automated PR title and description generation
+  - New `/ace:update-pr-desc` command for easy invocation from Claude Code
+  - Extracts metadata from CHANGELOG.md entries and task files
+  - Analyzes commit messages to identify change patterns and types
+  - Generates structured PR descriptions with summary, changes breakdown, breaking changes, and related tasks
+  - Auto-detects PR number from current branch or accepts explicit PR number argument
+  - Uses conventional commits format for PR titles (e.g., `feat(scope): description`)
+  - GitHub CLI integration for updating PR titles and descriptions
+  - Comprehensive documentation with examples and best practices
+  - Supports multi-line body formatting with heredoc for clean PR updates
+
 ## [0.1.0] - 2025-11-11
 
 ### Added

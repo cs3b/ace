@@ -41,6 +41,8 @@ module Ace
             convert_idea_to_task(args)
           when "archive"
             archive_idea(args)
+          when "validate-structure"
+            validate_structure(args)
           when "--help", "-h"
             show_help
             exit 0
@@ -288,6 +290,43 @@ module Ace
           exit 0
         end
 
+        # Validates idea file structure and reports any misplaced ideas.
+        #
+        # This command checks that all idea files are properly organized in subfolders
+        # within the ideas/ directory (e.g., ideas/folder-name/file.md) rather than
+        # as flat files directly in ideas/.
+        #
+        # @param args [Array<String>] command arguments (currently unused)
+        # @return [void]
+        # @note Exit codes:
+        #   - 0: All ideas are properly placed
+        #   - 1: One or more ideas are misplaced (includes suggested locations)
+        #
+        # @example Success case
+        #   validate_structure([])
+        #   # Output: ✓ All ideas properly organized in ideas/ subfolders
+        #   # Exit code: 0
+        #
+        # @example Failure case
+        #   validate_structure([])
+        #   # Output: ✗ Found 2 misplaced idea(s): ... with suggestions
+        #   # Exit code: 1
+        def validate_structure(args)
+          puts "Validating idea file structure..."
+          puts ""
+
+          # Detect misplaced ideas
+          result = @idea_loader.detect_misplaced_ideas
+
+          if result[:misplaced].empty?
+            print_validation_success(result)
+            exit 0
+          else
+            print_validation_failure(result)
+            exit 1
+          end
+        end
+
         def reschedule_idea(args)
           reference = args.shift
 
@@ -403,6 +442,7 @@ module Ace
           puts "    --before <ref>   Place before specific idea"
           puts "  to-task <id>       Convert idea to task"
           puts "  archive <id>       Archive an idea"
+          puts "  validate-structure Validate idea file organization"
           puts ""
           puts "Options:"
           puts "  --backlog          Work with backlog ideas"
@@ -430,6 +470,40 @@ module Ace
           puts "  ace-taskflow idea create 'Low priority' --anyday"
           puts "  ace-taskflow idea create 'New feature' --git-commit"
           puts "  ace-taskflow idea create 'Complex task' --llm-enhance --git-commit"
+        end
+
+        private
+
+        # Print validation success message
+        def print_validation_success(result)
+          puts "✓ All ideas properly organized in ideas/ subfolders"
+          puts ""
+          puts "Total ideas checked: #{result[:total]}"
+          puts "Properly placed: #{result[:valid].size}"
+        end
+
+        # Print validation failure message with details
+        def print_validation_failure(result)
+          puts "✗ Found #{result[:misplaced].size} misplaced idea(s):"
+          puts ""
+
+          result[:misplaced].each do |misplaced|
+            # Format path relative to current directory
+            relative_path = Atoms::PathFormatter.format_relative_path(misplaced[:path])
+            puts "  #{relative_path}"
+            puts "    Reason: #{misplaced[:reason]}"
+            if misplaced[:suggested_location]
+              suggested_relative = Atoms::PathFormatter.format_relative_path(misplaced[:suggested_location])
+              puts "    Suggested: #{suggested_relative}"
+            end
+            puts ""
+          end
+
+          puts "Total ideas checked: #{result[:total]}"
+          puts "Properly placed: #{result[:valid].size}"
+          puts "Misplaced: #{result[:misplaced].size}"
+          puts ""
+          puts "Please move misplaced ideas to their proper locations in the ideas/ subdirectory."
         end
       end
     end

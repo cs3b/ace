@@ -49,6 +49,46 @@ When using `--clipboard` on macOS, ace-taskflow automatically detects and saves:
 
 Non-macOS platforms fall back to text-only clipboard support.
 
+### Validate Idea Structure
+
+Ensure all ideas follow the proper directory organization:
+
+```bash
+# Validate that all ideas are in folders within ideas/ subdirectory
+ace-taskflow idea validate-structure
+```
+
+**Success case:**
+```
+✓ All ideas properly organized in ideas/ subfolders
+
+Total ideas checked: 218
+Properly placed: 218
+```
+
+**Failure case with suggestions:**
+```
+✗ Found 1 misplaced idea(s):
+
+  .ace-taskflow/v.0.9.0/misplaced-idea.s.md
+    Reason: File is at release root level, should be in ideas/folder/ subdirectory
+    Suggested: .ace-taskflow/v.0.9.0/ideas/misplaced-idea/misplaced-idea.s.md
+
+Total ideas checked: 219
+Properly placed: 218
+Misplaced: 1
+```
+
+**Required Structure:**
+
+All ideas must be in folders within the `ideas/` subdirectory:
+- ✅ `{release}/ideas/folder-name/file.md` - Properly organized
+- ✅ `{release}/ideas/done/folder-name/file.md` - Archived ideas
+- ❌ `{release}/ideas/file.md` - Flat file (misplaced)
+- ❌ `{release}/file.md` - Outside ideas/ (misplaced)
+
+**Folder Naming:** Folders are typically named with timestamp-slug pattern (e.g., `20251115-1200-feature-name`) or descriptive names (e.g., `bug-fix-authentication`)
+
 ### List Ideas
 
 Browse and filter ideas with flexible display options:
@@ -77,6 +117,8 @@ ace-taskflow ideas recent --days 3
 # Limit results
 ace-taskflow ideas --limit 10
 ```
+
+**Note**: The `ideas` command automatically checks for misplaced ideas and shows a warning if any are found. Use `validate-structure` for detailed information.
 
 #### Display Formats
 

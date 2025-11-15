@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.109
-status: pending
+status: done
 priority: low
 estimate: 30min
 dependencies: []
@@ -32,7 +32,7 @@ Idea captured: .ace-taskflow/v.0.9.0/ideas/20251113-105651-taskflow-test/test-cr
 ### Success Criteria
 - [x] **Folder Creation**: Ideas are already being created in proper folder structure ✅ (ALREADY WORKING)
 - [x] **File Creation**: .s.md files are created inside folders ✅ (ALREADY WORKING)
-- [ ] **Output Message**: Show full path to the .s.md file, not just the folder
+- [x] **Output Message**: Show full path to the .s.md file, not just the folder ✅ (COMPLETED)
 
 ## Objective
 
@@ -63,33 +63,26 @@ The `IdeaWriter.write()` method (line 118 in `idea_writer.rb`) returns the folde
 ### Planning Steps
 * [x] Identify that folder-based idea creation is already working ✅
 * [x] Confirm the only issue is output message ✅
-* [ ] Determine best approach to get file path
+* [x] Determine best approach to get file path ✅ (Chose Option A)
 
 ### Execution Steps
 
-- [ ] Update output to show full file path
-  **Option A**: Modify `IdeaWriter.write()` to return file path instead of folder path
-  ```ruby
-  # In idea_writer.rb line 118, instead of:
-  path  # Returns folder
-  # Return:
-  file_path  # Returns full path to .s.md file
-  ```
+- [x] Update output to show full file path ✅
+  **Implemented Option A**: Modified `IdeaWriter.write()` to return file path instead of folder path
 
-  **Option B**: Update `IdeaCommand.create_idea()` to construct full path
-  ```ruby
-  # In idea_command.rb after line 197:
-  # Get the actual file that was created
-  idea_files = Dir.glob(File.join(path, "*.s.md"))
-  file_path = idea_files.first || path
-  relative_path = Atoms::PathFormatter.format_relative_path(file_path, root_path)
-  ```
+  Changes made:
+  - Modified `ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb` line 118 to return `idea_file` instead of `path`
+  - Updated all test files to expect file paths instead of folder paths:
+    - `ace-taskflow/test/organisms/idea_writer_test.rb`
+    - `ace-taskflow/test/integration/idea_writer_integration_test.rb`
+    - `ace-taskflow/test/organisms/idea_writer_clipboard_test.rb`
 
-- [ ] Test the output shows full file path
+- [x] Test the output shows full file path ✅
   > TEST: Output shows file path
   > Type: Manual Test
   > Assert: Running `ace-taskflow idea create` shows path to .s.md file
-  > Command: ace-taskflow idea create -gc "test" and verify output
+  > Command: ace-taskflow idea create "test" and verify output
+  > Result: PASSED - Output shows `.ace-taskflow/v.0.9.0/ideas/20251115-085126-test-fix/final-test-of-task-109-output-fix.s.md`
 
 ## File Modifications
 
