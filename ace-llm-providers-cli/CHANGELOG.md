@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.10.0] - 2025-11-15
+
+### Added
+- **ClaudeCodeClient Enhancement**: Added support for `--append-system-prompt` flag
+  - Maps `system_append` option to Claude CLI's `--append-system-prompt` flag
+  - Enables flexible prompt composition with Claude models
+
+### Fixed
+- **ClaudeCodeClient Bug**: Fixed system prompt handling to use correct `--system-prompt` flag
+  - Changed from non-existent `--system` to proper `--system-prompt` flag
+  - Resolves issue where system prompts were ignored with Claude provider
+
+### Changed
+- **Dependency Update**: Updated ace-llm dependency to ~> 0.10.0
+  - Aligns with ace-llm minor version bump for system prompt control features
+
+### Technical
+- Added deprecation note for `append_system_prompt` option, prefer `system_append` for consistency
+
 ## [0.9.3] - 2025-10-08
 
 ### Changed

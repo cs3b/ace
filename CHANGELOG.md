@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.131] - 2025-11-15
+
+### Added
+- **ace-llm v0.10.0**: System Prompt Control with Code Quality Improvements
+  - New `--system-append` flag for flexible prompt composition
+  - Enhanced CLI help text with provider-specific behavior notes
+  - Comprehensive test coverage with 13 new tests for helper methods
+- **ace-llm-providers-cli v0.10.0**: Claude Provider Bug Fix and Enhancement
+  - Added support for `--append-system-prompt` flag mapping
+  - Enables flexible prompt composition with Claude models
+
+### Fixed
+- **ace-llm**: Fixed ClaudeCodeClient to use correct `--system-prompt` flag
+  - Resolves issue where system prompts were silently ignored with Claude
+  - Enables fast, deterministic responses with Claude Haiku for tools like ace-git-commit
+
+### Changed
+- **ace-llm**: Code organization improvements based on multi-LLM code review
+  - Made helper methods private for better encapsulation
+  - Relocated test file to align with ACE flat test structure
+  - Made system prompt separator configurable via constant
+  - Improved system prompt handling with shared helpers and deep copy pattern
+
+### Technical
+- **ace-llm**: Added deprecation note for `append_system_prompt` option, prefer `system_append`
+- **Dependencies**: Updated ace-git-commit and ace-llm-providers-cli to use ace-llm ~> 0.10.0
+
 ## [0.9.130] - 2025-11-15
 
 ### Added

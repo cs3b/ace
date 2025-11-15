@@ -62,6 +62,9 @@ module Ace
             end
           end
 
+          # Handle system_append - concatenate with existing system message
+          system_message = concatenate_system_prompts(system_message, generation_params[:system_append])
+
           request = {
             model: @model,
             messages: conversation_messages,

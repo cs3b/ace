@@ -57,8 +57,14 @@ ace-llm-query gflash "Creative story" --temperature 1.5
 # Limit output length
 ace-llm-query gflash "Summary" --max-tokens 200
 
-# Add system prompt
+# Add system prompt (replaces defaults)
 ace-llm-query gflash code.rb --system "You are a Ruby expert"
+
+# Append to system prompt (keeps defaults, adds context)
+ace-llm-query gflash code.rb --system-append "Focus on performance"
+
+# Combine both for layered control
+ace-llm-query gflash code.rb --system base-prompt.md --system-append context.md
 
 # Output as JSON
 ace-llm-query gflash "List 5 tips" --format json --output tips.json
@@ -72,6 +78,32 @@ ace-llm-query google --prompt "What is Ruby?"
 ace-llm-query gflash --prompt prompt.txt --output response.md
 ace-llm-query google --prompt 'Query with "quotes" and $vars'  # Avoid escaping issues
 ```
+
+### System Prompt Control
+
+Control how system prompts are handled by different providers:
+
+**Replace defaults entirely** (`--system`):
+```bash
+# Full control over system prompt - replaces provider defaults
+ace-llm-query claude:haiku --system "Generate only the commit message" --prompt "$(git diff --staged)"
+```
+
+**Append to defaults** (`--system-append`):
+```bash
+# Keeps provider defaults and adds your context
+ace-llm-query claude:sonnet --system-append "This project uses ATOM architecture" --prompt "Review this code"
+```
+
+**Layered prompts** (both flags):
+```bash
+# Base instructions + task-specific context
+ace-llm-query claude:haiku --system standards.md --system-append task-context.md --prompt "Generate code"
+```
+
+**Provider behavior**:
+- **Claude** (via Claude Code CLI): Maps to `--system-prompt` and `--append-system-prompt`
+- **API providers** (Anthropic, OpenAI, Google): Concatenates both into single system message
 
 ## Configuration
 

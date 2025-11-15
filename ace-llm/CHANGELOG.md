@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.10.0] - 2025-11-15
+
+### Added
+- **System Prompt Control**: Added `--system-append` flag to ace-llm-query for flexible prompt composition
+  - `--system` flag now fully replaces provider defaults (clarified behavior)
+  - `--system-append` flag appends to existing/default system prompts
+  - Both flags can be used together for layered prompt control
+  - Claude provider: Maps to `--system-prompt` and `--append-system-prompt` CLI flags
+  - API providers (Anthropic, OpenAI, Google): Concatenates prompts with clear separator
+- **Enhanced Help Text**: Added provider-specific behavior notes to CLI help for system prompt flags
+  - Clarifies Claude uses native flags while API providers concatenate
+  - Improves user understanding of flag behavior across different providers
+
+### Fixed
+- **Claude Provider Bug**: Fixed ClaudeCodeClient to use correct `--system-prompt` flag instead of non-existent `--system`
+  - Resolves issue where system prompts were silently ignored with Claude
+  - Enables fast, deterministic responses with Claude Haiku for tools like ace-git-commit
+
+### Changed
+- **Code Organization**: Improved BaseClient helper method encapsulation
+  - Made helper methods (`concatenate_system_prompts`, `process_messages_with_system_append`, `deep_copy_messages`) private
+  - Relocated test file from `test/integration/` to `test/organisms/base_client_helpers_test.rb`
+  - Aligns with ACE flat test structure (tests are unit tests for organism helpers)
+- **Configuration**: Made system prompt separator configurable via `DEFAULT_SYSTEM_PROMPT_SEPARATOR` constant
+  - Addresses potential markdown conflicts in concatenated prompts
+  - Can be overridden by subclasses if needed
+- **Improved System Prompt Handling**: Refactored implementation with shared helpers
+  - Extracted concatenation logic to reduce code duplication
+  - Added safety checks and comprehensive test coverage (13 new tests)
+  - Implemented deep copy pattern to prevent message mutations
+
+### Technical
+- Added deprecation note for `append_system_prompt` option, prefer `system_append` for consistency
+
 ## [0.9.5] - 2025-11-01
 
 ### Changed

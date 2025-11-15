@@ -28,6 +28,7 @@ module Ace
           temperature: nil,
           max_tokens: nil,
           system: nil,
+          system_append: nil,
           timeout: 30,
           force: false,
           debug: false,
@@ -125,8 +126,14 @@ module Ace
             @options[:max_tokens] = tokens
           end
 
-          opts.on("-s", "--system TEXT", "System instruction/prompt") do |system|
+          opts.on("-s", "--system TEXT", "System instruction/prompt (replaces provider defaults)",
+                  "  Claude: Uses --system-prompt flag | API providers: System message") do |system|
             @options[:system] = system
+          end
+
+          opts.on("--system-append TEXT", "Append to system prompt (keeps defaults, adds context)",
+                  "  Claude: Uses --append-system-prompt | APIs: Concatenates with separator") do |text|
+            @options[:system_append] = text
           end
 
           opts.on("--timeout SECONDS", Integer, "Request timeout in seconds") do |timeout|
@@ -243,6 +250,9 @@ module Ace
           messages << { role: "system", content: system_text }
         end
 
+        # Note: system_append is passed via generation_options, not messages
+        # This allows providers to handle it according to their capabilities
+
         # Add user message
         messages << { role: "user", content: prompt_text }
         messages
@@ -269,6 +279,14 @@ module Ace
         opts = {}
         opts[:temperature] = @options[:temperature] if @options[:temperature]
         opts[:max_tokens] = @options[:max_tokens] if @options[:max_tokens]
+
+        # Pass system_append for providers that support it
+        if @options[:system_append] && !@options[:system_append].empty?
+          file_handler = Ace::LLM::Molecules::FileIoHandler.new
+          append_content = file_handler.read_content(@options[:system_append])
+          opts[:system_append] = append_content unless append_content.nil? || append_content.empty?
+        end
+
         opts
       end
 
