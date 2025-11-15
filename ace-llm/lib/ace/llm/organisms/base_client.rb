@@ -16,6 +16,10 @@ module Ace
           top_k: nil
         }.freeze
 
+        # Default separator for concatenating system prompts
+        # Can be overridden by subclasses if needed
+        DEFAULT_SYSTEM_PROMPT_SEPARATOR = "\n\n---\n\n"
+
         attr_reader :model, :base_url, :api_key, :generation_config, :http_client
 
         # Initialize base client with common configuration
@@ -140,8 +144,70 @@ module Ace
           gen_opts[:top_p] = options[:top_p] if options[:top_p]
           gen_opts[:top_k] = options[:top_k] if options[:top_k]
 
+          # Pass through system_append for providers that support it
+          gen_opts[:system_append] = options[:system_append] if options[:system_append]
+
           # Remove nil values
           gen_opts.compact
+        end
+
+        private
+
+        # Concatenate system prompts with clear separator
+        # @param base_content [String, nil] Base system message
+        # @param append_content [String, nil] Content to append
+        # @return [String, nil] Concatenated system message or nil if both empty
+        def concatenate_system_prompts(base_content, append_content)
+          # Return nil if both are empty
+          return nil if (base_content.nil? || base_content.empty?) &&
+                       (append_content.nil? || append_content.empty?)
+
+          # Return base if append is empty
+          return base_content if append_content.nil? || append_content.empty?
+
+          # Return append if base is empty
+          return append_content if base_content.nil? || base_content.empty?
+
+          # Concatenate both with clear separator
+          "#{base_content}#{DEFAULT_SYSTEM_PROMPT_SEPARATOR}#{append_content}"
+        end
+
+        # Process messages array with system_append
+        # Handles concatenation of system_append with existing system message
+        # @param messages [Array<Hash>] Original messages
+        # @param system_append [String, nil] Content to append to system message
+        # @return [Array<Hash>] Processed messages with deep copies
+        def process_messages_with_system_append(messages, system_append)
+          return deep_copy_messages(messages) if system_append.nil? || system_append.empty?
+
+          # Deep copy to avoid mutating original
+          processed = deep_copy_messages(messages)
+
+          # Find existing system message
+          system_index = processed.find_index { |m| m[:role] == "system" }
+
+          if system_index
+            # Concatenate with existing system message
+            existing_content = processed[system_index][:content]
+            processed[system_index][:content] = concatenate_system_prompts(existing_content, system_append)
+          else
+            # Add new system message at the beginning
+            processed.unshift({ role: "system", content: system_append })
+          end
+
+          processed
+        end
+
+        # Deep copy messages array to avoid mutations
+        # @param messages [Array<Hash>] Original messages
+        # @return [Array<Hash>] Deep copied messages
+        def deep_copy_messages(messages)
+          messages.map do |msg|
+            {
+              role: msg[:role],
+              content: msg[:content]
+            }
+          end
         end
 
         # Create response structure

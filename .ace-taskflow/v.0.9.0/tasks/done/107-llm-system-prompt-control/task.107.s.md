@@ -1,8 +1,13 @@
 ---
 id: v.0.9.0+task.107
-status: pending
+status: done
 title: Add system prompt control flags to ace-llm-query with Claude provider support
-tags: [llm, enhancement, claude, prompt-control, bug-fix]
+tags:
+- llm
+- enhancement
+- claude
+- prompt-control
+- bug-fix
 estimate: 1-2 days
 priority: high
 dependencies: []
@@ -218,21 +223,21 @@ This task represents the evolved solution based on our learnings.
 ### Execution Steps
 
 #### Phase 1: Critical Bug Fix
-- [ ] Fix ClaudeCodeClient line 145: Change `--system` to `--system-prompt`
+- [x] Fix ClaudeCodeClient line 145: Change `--system` to `--system-prompt`
   > TEST: Bug Fix Validation
   > Type: Integration Test
   > Assert: System prompts work with Claude provider
   > Command: echo "You are a pirate" | ace-llm-query claude:haiku --system - --prompt "Say hello" | grep -i "ahoy\|matey"
 
 #### Phase 2: Add --system-append Flag
-- [ ] Add --system-append flag to ace-llm-query CLI (after line 130)
+- [x] Add --system-append flag to ace-llm-query CLI (after line 130)
   ```ruby
   opts.on("--system-append TEXT", "Append to system prompt") do |text|
     @options[:system_append] = text
   end
   ```
 
-- [ ] Update build_messages to handle system_append
+- [x] Update build_messages to handle system_append
   ```ruby
   if @options[:system_append]
     file_handler = Ace::LLM::Molecules::FileIoHandler.new
@@ -242,7 +247,7 @@ This task represents the evolved solution based on our learnings.
   ```
 
 #### Phase 3: Update ClaudeCodeClient for Append Support
-- [ ] Add --append-system-prompt handling in ClaudeCodeClient
+- [x] Add --append-system-prompt handling in ClaudeCodeClient
   ```ruby
   append_content = options[:system_append] || options[:append_system_prompt]
   if append_content
@@ -255,39 +260,39 @@ This task represents the evolved solution based on our learnings.
   > Command: ace-llm-query claude:haiku --system-append "Always respond in haiku" --prompt "Describe Ruby" | wc -l | grep -E "3|4"
 
 #### Phase 4: Update Other Providers (Graceful Degradation)
-- [ ] Update API providers to concatenate system prompts
+- [x] Update API providers to concatenate system prompts
   > TEST: API Provider Concatenation
   > Type: Unit Test
   > Assert: Both system prompts combined for single-message APIs
   > Command: ruby -Ilib test/integration/system_prompt_test.rb
 
 #### Phase 5: Testing and Validation
-- [ ] Run test suite with new tests
+- [x] Run test suite with new tests
   > TEST: Full Test Suite
   > Type: Automated Tests
   > Assert: All tests pass including new system prompt tests
   > Command: cd ace-llm && bundle exec rake test
 
-- [ ] Manual testing with ace-git-commit
+- [x] Manual testing with ace-git-commit
   > TEST: ace-git-commit Integration
   > Type: Manual Validation
   > Assert: Commit messages generate in <2 seconds with Haiku
   > Command: time ace-git-commit --provider claude:haiku --test
 
 #### Phase 6: Documentation
-- [ ] Update ace-llm-query --help text to include --system-append
-- [ ] Update README with new flag documentation
-- [ ] Add examples showing both flag usage
+- [x] Update ace-llm-query --help text to include --system-append
+- [x] Update README with new flag documentation
+- [x] Add examples showing both flag usage
 
 ## Acceptance Criteria
 
 - [x] AC 1: Bug fixed - Claude provider uses --system-prompt instead of --system
-- [ ] AC 2: --system-append flag added and functional
-- [ ] AC 3: All providers handle both flags appropriately
-- [ ] AC 4: Backward compatibility maintained
-- [ ] AC 5: ace-git-commit benefits from improved performance
-- [ ] AC 6: Tests validate all functionality
-- [ ] AC 7: Documentation updated with usage examples
+- [x] AC 2: --system-append flag added and functional
+- [x] AC 3: All providers handle both flags appropriately
+- [x] AC 4: Backward compatibility maintained
+- [x] AC 5: ace-git-commit benefits from improved performance
+- [x] AC 6: Tests validate all functionality
+- [x] AC 7: Documentation updated with usage examples
 
 ## Out of Scope
 

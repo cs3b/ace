@@ -142,7 +142,14 @@ module Ace
                            @generation_config[:system_prompt]
 
             if system_content
-              cmd << "--system" << system_content.to_s
+              cmd << "--system-prompt" << system_content.to_s
+            end
+
+            # Add append system prompt if provided
+            # Note: append_system_prompt is deprecated, use system_append instead
+            append_content = options[:system_append] || options[:append_system_prompt]
+            if append_content
+              cmd << "--append-system-prompt" << append_content.to_s
             end
 
             # Add temperature if provided
