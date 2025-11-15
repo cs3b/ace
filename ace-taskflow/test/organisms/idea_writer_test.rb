@@ -28,11 +28,12 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
         content = "This is a test idea"
         path = @writer.write(content)
 
-        # Verify path format: /test/ideas/YYYYMMDD-HHMMSS-test-idea
-        assert_match(%r{^/test/ideas/\d{8}-\d{6}-test-idea$}, path)
+        # Verify path format: /test/ideas/YYYYMMDD-HHMMSS-test-idea/test-content.s.md
+        assert_match(%r{^/test/ideas/\d{8}-\d{6}-test-idea/test-content\.s\.md$}, path)
 
-        # Verify directory was created
-        assert @mkdir_calls.include?(path), "Should create idea directory"
+        # Verify directory was created (extract folder from file path)
+        folder_path = File.dirname(path)
+        assert @mkdir_calls.include?(folder_path), "Should create idea directory"
 
         # Verify file was written
         assert @write_calls.any? { |call| call[:path].include?("test-content.s.md") }
@@ -50,8 +51,8 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
       mock_llm_query(response_text: mock_slug_resp) do
         path = writer.write("Test content")
 
-        # Verify path uses custom directory
-        assert_match(%r{^/custom/ideas/\d{8}-\d{6}-custom-dir$}, path)
+        # Verify path uses custom directory and includes file
+        assert_match(%r{^/custom/ideas/\d{8}-\d{6}-custom-dir/test-idea\.s\.md$}, path)
       end
     end
   end
@@ -65,7 +66,8 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
 
         # Verify mkdir_p was called (creates parent directories)
         assert @mkdir_calls.any?, "Should call mkdir_p"
-        assert_match(/nested-idea$/, path)
+        # Path should be a file, folder name should contain nested-idea
+        assert_match(/nested-idea\/test-content\.s\.md$/, path)
       end
     end
   end
@@ -103,8 +105,8 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
         content = "This is a long idea that should be truncated for title"
         path = @writer.write(content)
 
-        # Verify path contains folder slug
-        assert_match(/long-idea$/, path)
+        # Verify path contains folder slug and file
+        assert_match(/long-idea\/truncated-title\.s\.md$/, path)
 
         # Verify file slug is used in filename
         write_call = @write_calls.first
@@ -143,6 +145,29 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
         write_call = @write_calls.first
         # Content should be returned as-is (no template applied)
         assert_equal enhanced_content, write_call[:content]
+      end
+    end
+  end
+
+  def test_write_returns_file_path_not_directory
+    mock_slug_resp = mock_slug_response(folder_slug: "regression-test", file_slug: "file-path-return")
+
+    mock_filesystem do
+      mock_llm_query(response_text: mock_slug_resp) do
+        path = @writer.write("Regression test for file path return value")
+
+        # Verify it returns a file path (not directory)
+        assert_match(/\.s\.md$/, path), "Should return .s.md file path"
+
+        # Verify the path points to a file, not a directory
+        # (In our mock, we can verify the write_calls were made to the file)
+        assert @write_calls.any? { |call| call[:path] == path },
+               "Returned path should match the file that was written"
+
+        # Verify the directory component exists in mkdir_calls
+        folder_path = File.dirname(path)
+        assert @mkdir_calls.include?(folder_path),
+               "Parent directory should have been created"
       end
     end
   end

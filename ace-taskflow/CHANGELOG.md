@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-11-15
+
+### Added
+
+- **Idea Folder Structure Validation and Enforcement**: Comprehensive validation system for idea file organization
+  - New `validate-structure` command checks idea file organization with detailed error reporting
+  - Enforces ideas must be in subfolders within ideas/ directory (e.g., `ideas/folder-name/file.md`)
+  - Provides clear error messages with suggested proper locations for misplaced files
+  - Warning shown in `ideas` list command when misplaced ideas are detected
+  - Environment variable `SKIP_IDEA_VALIDATION` available for performance optimization in large repositories
+  - Comprehensive YARD documentation with exit codes (0=success, 1=failures) for CI/CD integration
+  - 26 comprehensive tests covering all validation scenarios including edge cases
+  - Command integrated into help text for easy discoverability
+
+### Changed
+
+- **Idea Create Output Enhancement**: Improved `ace-taskflow idea create` output to display full file path instead of just folder path
+  - Modified `IdeaWriter#write` to return complete path to created `.s.md` file
+  - Updated output message to show exact file created (e.g., `.ace-taskflow/v.0.9.0/ideas/20251115-085126-test/test.s.md`)
+  - Makes it immediately clear which file was created and easier to open in editors
+  - Added YARD documentation for `IdeaWriter#write` method with parameter and return value specifications
+  - Added regression test to ensure file path (not directory) is returned
+- **Code Quality Improvements**: Refactored path formatting for better maintainability
+  - Removed duplicate `format_path_relative_to_pwd` method from `IdeaCommand`
+  - Now uses `Atoms::PathFormatter.format_relative_path` for DRY principle
+  - Eliminates code duplication across command classes
+
 ## [0.18.4] - 2025-11-04
 
 ### Fixed
