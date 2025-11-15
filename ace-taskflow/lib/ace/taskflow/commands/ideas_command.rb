@@ -430,6 +430,9 @@ module Ace
         end
 
         def check_and_warn_misplaced_ideas
+          # Skip validation if disabled via environment variable (performance optimization)
+          return if ENV["SKIP_IDEA_VALIDATION"]
+
           # Only check once per command execution
           return if @misplaced_check_done
           @misplaced_check_done = true
