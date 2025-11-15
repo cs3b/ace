@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.092
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -335,7 +335,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
 
 ### Planning Steps
 
-* [ ] Review existing timestamp handling across ace-docs codebase
+* [x] Review existing timestamp handling across ace-docs codebase
   - Search for all Date.parse and Date.today usage
   - Identify all locations that format or display timestamps
   - Document current behavior for regression testing
@@ -364,7 +364,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
 
 ### Execution Steps
 
-- [ ] Create TimestampParser atom with TDD approach
+- [x] Create TimestampParser atom with TDD approach
   - Write test file: `ace-docs/test/atoms/timestamp_parser_test.rb`
   - Implement: `ace-docs/lib/ace/docs/atoms/timestamp_parser.rb`
   - Test coverage: parse date-only, parse date+time, validate formats, format output
@@ -373,7 +373,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
   > Assert: All timestamp parsing and validation tests pass
   > Command: cd ace-docs && bundle exec rake test TEST=test/atoms/timestamp_parser_test.rb
 
-- [ ] Extend FrontmatterManager to use TimestampParser
+- [x] Extend FrontmatterManager to use TimestampParser
   - Update `process_value` method to handle "now" special value
   - Add date+time format validation and passthrough
   - Delegate parsing to TimestampParser.parse_timestamp
@@ -382,7 +382,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
   > Assert: All frontmatter manager tests pass including new timestamp tests
   > Command: cd ace-docs && bundle exec rake test TEST=test/molecules/frontmatter_manager_test.rb
 
-- [ ] Update Document model timestamp methods
+- [x] Update Document model timestamp methods
   - Extend `last_updated` to return Time when time component present
   - Extend `last_checked` to return Time when time component present
   - Maintain backward compatibility for date-only values
@@ -401,7 +401,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
   > Assert: End-to-end timestamp updates work correctly with frontmatter preservation
   > Command: cd ace-docs && bundle exec rake test TEST=test/integration/*timestamp*.rb
 
-- [ ] Run full test suite to verify no regressions
+- [x] Run full test suite to verify no regressions
   - Execute all ace-docs tests
   - Verify existing date-only behavior unchanged
   - Check for any unexpected failures
@@ -410,7 +410,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
   > Assert: All tests pass, no regressions introduced
   > Command: cd ace-docs && bundle exec rake test
 
-- [ ] Update documentation with timestamp format examples
+- [x] Update documentation with timestamp format examples
   - Update `ace-docs/docs/usage.md` with timestamp documentation
   - Add examples for date+time format and special values
   - Update `ace-docs/README.md` quick start examples
@@ -419,7 +419,7 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
   > Assert: Documentation accurately reflects implementation
   > Command: ace-lint ace-docs/docs/usage.md ace-docs/README.md
 
-- [ ] Manual testing with real documents
+- [x] Manual testing with real documents
   - Test `ace-docs update README.md --set last-updated=now`
   - Test `ace-docs update CHANGELOG.md --set release-date="2025-11-01 14:30"`
   - Verify frontmatter preservation in real files
@@ -431,14 +431,14 @@ The implementation follows the ATOM architecture pattern used across ACE gems:
 
 ## Acceptance Criteria
 
-- [ ] TimestampParser atom created with comprehensive tests
-- [ ] FrontmatterManager handles "now" and date+time formats
-- [ ] Document model parses and returns Time objects for date+time values
-- [ ] All existing date-only functionality unchanged (backward compatible)
-- [ ] Frontmatter preservation verified in all update scenarios
-- [ ] Full test suite passes with no regressions
-- [ ] Documentation updated with timestamp format examples
-- [ ] Manual testing confirms end-to-end functionality
+- [x] TimestampParser atom created with comprehensive tests
+- [x] FrontmatterManager handles "now" and date+time formats
+- [x] Document model parses and returns Time objects for date+time values
+- [x] All existing date-only functionality unchanged (backward compatible)
+- [x] Frontmatter preservation verified in all update scenarios
+- [x] Full test suite passes with no regressions
+- [x] Documentation updated with timestamp format examples
+- [x] Manual testing confirms end-to-end functionality
 
 ## Out of Scope (Unchanged from Behavioral Spec)
 

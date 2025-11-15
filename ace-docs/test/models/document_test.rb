@@ -200,6 +200,146 @@ module Ace
     file&.close
     file&.unlink
   end
+
+  def test_last_updated_with_date_only_format
+    # Test that date-only timestamps return Date objects
+    content = <<~MARKDOWN
+      ---
+      doc-type: guide
+      purpose: Test date-only timestamp
+      ace-docs:
+        last-updated: 2025-11-01
+      ---
+
+      # Test Document
+    MARKDOWN
+
+    file = Tempfile.new(['test', '.md'])
+    file.write(content)
+    file.rewind
+
+    doc = Molecules::DocumentLoader.load_file(file.path)
+    last_updated = doc.last_updated
+
+    assert_instance_of Date, last_updated, "Date-only timestamp should return Date object"
+    assert_equal 2025, last_updated.year
+    assert_equal 11, last_updated.month
+    assert_equal 1, last_updated.day
+  ensure
+    file&.close
+    file&.unlink
+  end
+
+  def test_last_updated_with_datetime_format
+    # Test that date+time timestamps return Time objects
+    content = <<~MARKDOWN
+      ---
+      doc-type: guide
+      purpose: Test date+time timestamp
+      ace-docs:
+        last-updated: 2025-11-01 14:30
+      ---
+
+      # Test Document
+    MARKDOWN
+
+    file = Tempfile.new(['test', '.md'])
+    file.write(content)
+    file.rewind
+
+    doc = Molecules::DocumentLoader.load_file(file.path)
+    last_updated = doc.last_updated
+
+    assert_instance_of Time, last_updated, "Date+time timestamp should return Time object"
+    assert_equal 2025, last_updated.year
+    assert_equal 11, last_updated.month
+    assert_equal 1, last_updated.day
+    assert_equal 14, last_updated.hour
+    assert_equal 30, last_updated.min
+  ensure
+    file&.close
+    file&.unlink
+  end
+
+  def test_last_updated_legacy_namespace
+    # Test backward compatibility with legacy update namespace
+    content = <<~MARKDOWN
+      ---
+      doc-type: guide
+      purpose: Test legacy namespace
+      update:
+        last-updated: 2025-11-01 14:30
+      ---
+
+      # Test Document
+    MARKDOWN
+
+    file = Tempfile.new(['test', '.md'])
+    file.write(content)
+    file.rewind
+
+    doc = Molecules::DocumentLoader.load_file(file.path)
+    last_updated = doc.last_updated
+
+    assert_instance_of Time, last_updated, "Legacy namespace should also support date+time"
+    assert_equal 14, last_updated.hour
+    assert_equal 30, last_updated.min
+  ensure
+    file&.close
+    file&.unlink
+  end
+
+  def test_last_checked_with_datetime_format
+    # Test that last-checked also supports date+time format
+    content = <<~MARKDOWN
+      ---
+      doc-type: guide
+      purpose: Test last-checked timestamp
+      update:
+        last-checked: 2025-11-01 09:15
+      ---
+
+      # Test Document
+    MARKDOWN
+
+    file = Tempfile.new(['test', '.md'])
+    file.write(content)
+    file.rewind
+
+    doc = Molecules::DocumentLoader.load_file(file.path)
+    last_checked = doc.last_checked
+
+    assert_instance_of Time, last_checked, "last-checked should support date+time format"
+    assert_equal 9, last_checked.hour
+    assert_equal 15, last_checked.min
+  ensure
+    file&.close
+    file&.unlink
+  end
+
+  def test_last_updated_returns_nil_for_missing_field
+    # Test nil handling
+    content = <<~MARKDOWN
+      ---
+      doc-type: guide
+      purpose: Test missing timestamp
+      ---
+
+      # Test Document
+    MARKDOWN
+
+    file = Tempfile.new(['test', '.md'])
+    file.write(content)
+    file.rewind
+
+    doc = Molecules::DocumentLoader.load_file(file.path)
+    last_updated = doc.last_updated
+
+    assert_nil last_updated, "Missing timestamp should return nil"
+  ensure
+    file&.close
+    file&.unlink
+  end
 end
   end
 end

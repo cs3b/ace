@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.130] - 2025-11-15
+
+### Added
+- **ace-docs v0.8.0**: ISO 8601 UTC timestamp support with backward compatibility for date-only format. See ace-docs/CHANGELOG.md for details.
+
 ## [0.9.129] - 2025-11-13
 
 ### Added

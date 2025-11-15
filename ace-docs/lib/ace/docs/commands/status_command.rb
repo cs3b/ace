@@ -134,8 +134,16 @@ module Ace
         def format_date(date)
           return "-" unless date
 
-          days_ago = (Date.today - date).to_i
-          date_str = date.strftime("%Y-%m-%d")
+          # Normalize Time to Date for age calculation
+          date_for_calc = date.is_a?(Time) ? date.to_date : date
+          days_ago = (Date.today - date_for_calc).to_i
+
+          # Display with time component when available (ISO 8601 for Time objects)
+          date_str = if date.respond_to?(:hour)
+                       date.utc.strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 UTC
+                     else
+                       date.strftime("%Y-%m-%d")  # Date-only
+                     end
 
           if days_ago == 0
             "#{date_str} (today)".green

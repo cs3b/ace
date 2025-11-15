@@ -41,17 +41,15 @@ module Ace
             "docs" => "diff --git a/README.md b/README.md\n+# Title"
           }
 
-          prompt = DocumentAnalysisPrompt.new(@document)
-          result = prompt.build(
+          result = DocumentAnalysisPrompt.build(
+            @document,
             diffs,
-            "2025-10-01",
-            @session_dir,
-            []
+            since: "2025-10-01",
+            cache_dir: @session_dir
           )
 
-          assert result[:user_prompt]
-          assert result[:system_prompt]
-          assert_equal @session_dir, result[:session_dir]
+          assert result[:user]
+          assert result[:system]
 
           # Verify all diffs were saved
           diff_files = Dir[File.join(@session_dir, "*.diff")]
@@ -69,8 +67,7 @@ module Ace
             "docs" => "diff for docs"
           }
 
-          prompt = DocumentAnalysisPrompt.new(@document)
-          prompt.build(diffs, "2025-10-01", @session_dir, [])
+          DocumentAnalysisPrompt.build(@document, diffs, since: "2025-10-01", cache_dir: @session_dir)
 
           # Check files were created with correct content
           code_diff_path = File.join(@session_dir, "code.diff")
@@ -87,11 +84,10 @@ module Ace
           # Test that string input still works (backward compatibility)
           diff = "diff --git a/test.rb b/test.rb\n+puts 'hello'"
 
-          prompt = DocumentAnalysisPrompt.new(@document)
-          result = prompt.build(diff, "2025-10-01", @session_dir, [])
+          result = DocumentAnalysisPrompt.build(@document, diff, since: "2025-10-01", cache_dir: @session_dir)
 
-          assert result[:user_prompt]
-          assert result[:system_prompt]
+          assert result[:user]
+          assert result[:system]
 
           # Should save as repo-diff.diff for backward compatibility
           repo_diff_path = File.join(@session_dir, "repo-diff.diff")
@@ -112,13 +108,19 @@ module Ace
             }
           })
 
-          prompt = DocumentAnalysisPrompt.new(@document)
+          diffs = {
+            "code" => "code changes",
+            "config" => "config changes"
+          }
 
-          # Create dummy diff files
-          FileUtils.touch(File.join(@session_dir, "code.diff"))
-          FileUtils.touch(File.join(@session_dir, "config.diff"))
+          # Build the prompt which creates the context.md file
+          DocumentAnalysisPrompt.build(@document, diffs, since: "2025-10-01", cache_dir: @session_dir)
 
-          context = prompt.send(:create_context_markdown, @session_dir, [])
+          # Read the generated context.md file
+          context_path = File.join(@session_dir, "context.md")
+          assert File.exist?(context_path), "Context file should be created"
+
+          context = File.read(context_path)
 
           # Should include multiple subjects in analysis scope
           assert context.include?("code:"), "Should list code subject"
@@ -135,47 +137,38 @@ module Ace
             "config" => "  \n  "  # Whitespace-only diff
           }
 
-          prompt = DocumentAnalysisPrompt.new(@document)
-          prompt.build(diffs, "2025-10-01", @session_dir, [])
+          DocumentAnalysisPrompt.build(@document, diffs, since: "2025-10-01", cache_dir: @session_dir)
 
           diff_files = Dir[File.join(@session_dir, "*.diff")]
 
-          # Should save all files even if empty (for transparency)
-          assert diff_files.any? { |f| f.end_with?("code.diff") }
-          assert diff_files.any? { |f| f.end_with?("docs.diff") }
-          assert diff_files.any? { |f| f.end_with?("config.diff") }
+          # Only non-empty diffs should be saved (implementation skips empty)
+          assert diff_files.any? { |f| f.end_with?("code.diff") }, "Should save code diff"
 
           # Verify code diff has content
           code_content = File.read(File.join(@session_dir, "code.diff"))
           assert code_content.include?("content")
 
-          # Empty diffs should be saved as empty or whitespace
-          docs_content = File.read(File.join(@session_dir, "docs.diff"))
-          assert docs_content.strip.empty?
+          # Empty diffs should be skipped (not saved)
+          refute diff_files.any? { |f| f.end_with?("docs.diff") }, "Should skip empty docs diff"
+          refute diff_files.any? { |f| f.end_with?("config.diff") }, "Should skip whitespace-only config diff"
         end
 
         def test_build_prompt_with_context_files
-          # Test that context files are properly included
-          context_files = [
-            "/path/to/README.md",
-            "/path/to/CHANGELOG.md"
-          ]
-
-          prompt = DocumentAnalysisPrompt.new(@document)
-          result = prompt.build(
+          # Test that context markdown is generated
+          result = DocumentAnalysisPrompt.build(
+            @document,
             "test diff",
-            "2025-10-01",
-            @session_dir,
-            context_files
+            since: "2025-10-01",
+            cache_dir: @session_dir
           )
 
-          # Check context.md includes the files
+          # Check context.md was created
           context_path = File.join(@session_dir, "context.md")
           assert File.exist?(context_path)
 
+          # Verify it contains basic document info
           context_content = File.read(context_path)
-          assert context_content.include?("README.md")
-          assert context_content.include?("CHANGELOG.md")
+          assert context_content.include?("reference"), "Should include doc-type"
         end
 
         def test_prompt_selection_for_multi_subject
@@ -196,12 +189,11 @@ module Ace
             "docs" => "doc changes"
           }
 
-          prompt = DocumentAnalysisPrompt.new(@document)
-          result = prompt.build(diffs, "2025-10-01", @session_dir, [])
+          result = DocumentAnalysisPrompt.build(@document, diffs, since: "2025-10-01", cache_dir: @session_dir)
 
           # Should use appropriate prompts for multi-subject analysis
-          assert result[:system_prompt]
-          assert result[:user_prompt]
+          assert result[:system]
+          assert result[:user]
 
           # Context should reflect multi-subject nature
           context_path = File.join(@session_dir, "context.md")

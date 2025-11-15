@@ -28,7 +28,8 @@ Add ace-docs frontmatter to your documents:
 ace-docs:
   doc-type: guide
   purpose: Installation instructions
-  last-updated: 2025-01-21
+  last-updated: 2025-11-15T08:30:45Z  # ISO 8601 UTC format (recommended)
+  # Or use date-only: 2025-11-15
   subject:
     diff-filters:
       - "lib/**/*.rb"
@@ -86,11 +87,20 @@ ace-docs analyze-consistency --output json
 ### 5. Update Documents
 
 ```bash
-# Update document metadata
+# Update with current date only
 ace-docs update README.md --set last-updated=today
 
+# Update with current UTC date and time in ISO 8601 format
+ace-docs update README.md --set last-updated=now  # Generates: 2025-11-15T08:30:45Z
+
+# Set explicit ISO 8601 UTC timestamp
+ace-docs update CHANGELOG.md --set last-updated="2025-11-15T08:30:45Z"
+
+# Legacy format still supported (converted to UTC internally)
+ace-docs update CHANGELOG.md --set last-updated="2025-11-15 14:30"
+
 # Update all documents of a type
-ace-docs update --preset guides --set last-updated=today
+ace-docs update --preset guides --set last-updated=now
 ```
 
 ### 6. Validate Documents
@@ -181,6 +191,96 @@ ace-docs analyze-consistency --terminology
 ace-docs analyze-consistency --duplicates --threshold 80
 # Higher threshold = more similar content required
 ```
+
+## Migrating to ISO 8601 UTC Timestamps
+
+**v0.7.0+** introduced support for **ISO 8601 UTC timestamps** (`YYYY-MM-DDTHH:MM:SSZ`), the industry-standard format used by GitHub, Git, and most modern APIs. Your existing date-only timestamps continue to work without any changes.
+
+### Should You Migrate?
+
+**Migrate to ISO 8601 UTC if you:**
+- Publish multiple releases per day and need precise, unambiguous timestamps
+- Want timezone-independent timestamps that work globally
+- Need to correlate documentation changes with specific commit times
+- Want standards-compliant timestamps that integrate with CI/CD and APIs
+- Benefit from sortable timestamps (lexicographic sorting works correctly)
+
+**Keep date-only if you:**
+- Only update documents once per day or less frequently
+- Don't need time-of-day precision
+- Have external integrations that expect date-only format
+
+### Migration Approaches
+
+**Option 1: Selective Migration (Recommended)**
+```bash
+# Migrate critical documents to ISO 8601 UTC using "now"
+ace-docs update CHANGELOG.md --set last-updated=now
+ace-docs update docs/api.md --set last-updated=now
+# Generates: 2025-11-15T08:30:45Z
+
+# Keep other documents with date-only
+ace-docs update docs/guides/*.md --set last-updated=today
+# Generates: 2025-11-15
+```
+
+**Option 2: Bulk Migration**
+```bash
+# Update all managed documents to ISO 8601 UTC
+ace-docs update --all --set last-updated=now
+```
+
+**Option 3: Gradual Migration**
+```bash
+# New updates use ISO 8601 UTC going forward
+# Existing timestamps stay as-is until next update
+# Just change your workflow to use "now" instead of "today"
+ace-docs update README.md --set last-updated=now
+# Generates: 2025-11-15T08:30:45Z
+```
+
+### Format Reference
+
+```yaml
+---
+ace-docs:
+  # ISO 8601 UTC (recommended)
+  last-updated: 2025-11-15T08:30:45Z
+
+  # Date-only (still supported)
+  last-updated: 2025-11-15
+
+  # Legacy date+time (supported for backward compatibility, converted to UTC)
+  last-updated: 2025-11-15 14:30
+---
+```
+
+### Special Values
+
+- `today` → Date-only format (e.g., `2025-11-15`)
+- `now` → ISO 8601 UTC format (e.g., `2025-11-15T08:30:45Z`)
+
+### Timestamp Format Details
+
+**ISO 8601 UTC (Recommended)**
+- Format: `YYYY-MM-DDTHH:MM:SSZ`
+- Example: `2025-11-15T08:30:45Z`
+- Benefits:
+  - Unambiguous - `Z` suffix indicates UTC
+  - Universal - Same timestamp for all users globally
+  - Sortable - Lexicographic sorting works correctly
+  - Standards-compliant - Matches GitHub API, Git commits, ISO 8601
+
+**Date-only**
+- Format: `YYYY-MM-DD`
+- Example: `2025-11-15`
+- Use for: Documents updated less frequently
+
+**Legacy Format** (Backward Compatibility)
+- Format: `YYYY-MM-DD HH:MM`
+- Example: `2025-11-15 14:30`
+- Interpreted as local time, converted to UTC internally
+- Will be deprecated in future major version
 
 ## Configuration
 
