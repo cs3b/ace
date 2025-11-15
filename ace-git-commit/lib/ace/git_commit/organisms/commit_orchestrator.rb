@@ -10,6 +10,7 @@ module Ace
           @git = Atoms::GitExecutor.new
           @diff_analyzer = Molecules::DiffAnalyzer.new(@git)
           @file_stager = Molecules::FileStager.new(@git)
+          @path_resolver = Molecules::PathResolver.new(@git)
           @message_generator = Molecules::MessageGenerator.new(@config)
         end
 
@@ -118,16 +119,47 @@ module Ace
         # @param options [Models::CommitOptions] Options
         # @return [Boolean] True if successful
         def stage_specific_files(options)
-          puts "Staging specific files..." unless options.quiet
+          # Early validation: check for non-existent paths (exclude glob patterns)
+          non_glob_paths = options.files.reject { |f| @path_resolver.glob_pattern?(f) }
+          unless non_glob_paths.empty?
+            validation = @path_resolver.validate_paths(non_glob_paths)
+            if validation[:invalid].any?
+              puts "\n✗ Invalid path(s): #{validation[:invalid].join(', ')}"
+              puts "These paths do not exist. Please check the paths and try again."
+              return false
+            end
+          end
 
-          result = @file_stager.stage_files(options.files)
+          # Check if any paths are directories, glob patterns, or multiple files
+          has_directories = options.files.any? { |f| File.directory?(f) }
+          has_glob_patterns = options.files.any? { |f| @path_resolver.glob_pattern?(f) }
+
+          if has_directories || has_glob_patterns || options.files.length > 1
+            # Use path-restricted staging (reset + selective add)
+            # Resolve paths/patterns to actual file lists first
+            resolved_files = @path_resolver.resolve_paths(options.files)
+
+            if resolved_files.empty?
+              puts "\n✗ No files found matching the specified path(s) or pattern(s)"
+              puts "Glob patterns expand only to git-tracked files."
+              return false
+            end
+
+            puts "Staging files from specified path(s)..." unless options.quiet
+            result = @file_stager.stage_paths(resolved_files)
+          else
+            # Single file - use simple staging
+            puts "Staging specific files..." unless options.quiet
+            result = @file_stager.stage_files(options.files)
+          end
 
           if result
-            puts "✓ Successfully staged #{options.files.length} file(s)" unless options.quiet
+            staged_count = @file_stager.staged_files.length
+            puts "✓ Successfully staged #{staged_count} file(s)" unless options.quiet
             true
           else
             # Always show errors, even in quiet mode
-            puts "\n✗ Failed to stage files: #{options.files.length} file(s)"
+            puts "\n✗ Failed to stage files"
             puts "Error: #{@file_stager.last_error}" if @file_stager.last_error
             # Suggestions only in verbose mode
             unless options.quiet
