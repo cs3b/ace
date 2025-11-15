@@ -41,6 +41,8 @@ module Ace
             convert_idea_to_task(args)
           when "archive"
             archive_idea(args)
+          when "validate-structure"
+            validate_structure(args)
           when "--help", "-h"
             show_help
             exit 0
@@ -288,6 +290,22 @@ module Ace
           exit 0
         end
 
+        def validate_structure(args)
+          puts "Validating idea file structure..."
+          puts ""
+
+          # Detect misplaced ideas
+          result = @idea_loader.detect_misplaced_ideas
+
+          if result[:misplaced].empty?
+            print_validation_success(result)
+            exit 0
+          else
+            print_validation_failure(result)
+            exit 1
+          end
+        end
+
         def reschedule_idea(args)
           reference = args.shift
 
@@ -430,6 +448,45 @@ module Ace
           puts "  ace-taskflow idea create 'Low priority' --anyday"
           puts "  ace-taskflow idea create 'New feature' --git-commit"
           puts "  ace-taskflow idea create 'Complex task' --llm-enhance --git-commit"
+        end
+
+        private
+
+        # Format path relative to current working directory
+        def format_path_relative_to_pwd(path)
+          Pathname.new(path).relative_path_from(Pathname.new(Dir.pwd)).to_s
+        end
+
+        # Print validation success message
+        def print_validation_success(result)
+          puts "✓ All ideas properly organized in ideas/ subfolders"
+          puts ""
+          puts "Total ideas checked: #{result[:total]}"
+          puts "Properly placed: #{result[:valid].size}"
+        end
+
+        # Print validation failure message with details
+        def print_validation_failure(result)
+          puts "✗ Found #{result[:misplaced].size} misplaced idea(s):"
+          puts ""
+
+          result[:misplaced].each do |misplaced|
+            # Format path relative to current directory
+            relative_path = format_path_relative_to_pwd(misplaced[:path])
+            puts "  #{relative_path}"
+            puts "    Reason: #{misplaced[:reason]}"
+            if misplaced[:suggested_location]
+              suggested_relative = format_path_relative_to_pwd(misplaced[:suggested_location])
+              puts "    Suggested: #{suggested_relative}"
+            end
+            puts ""
+          end
+
+          puts "Total ideas checked: #{result[:total]}"
+          puts "Properly placed: #{result[:valid].size}"
+          puts "Misplaced: #{result[:misplaced].size}"
+          puts ""
+          puts "Please move misplaced ideas to their proper locations in the ideas/ subdirectory."
         end
       end
     end

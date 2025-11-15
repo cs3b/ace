@@ -266,6 +266,9 @@ module Ace
         end
 
         def display_ideas_with_preset(ideas, preset_config, original_count = nil, limit = nil, short = false)
+          # Check for misplaced ideas and show warning
+          check_and_warn_misplaced_ideas
+
           # Display three-line header
           release = preset_config[:release] || 'current'
 
@@ -426,7 +429,21 @@ module Ace
           Atoms::PathFormatter.format_relative_path(path, root_path)
         end
 
+        def check_and_warn_misplaced_ideas
+          # Only check once per command execution
+          return if @misplaced_check_done
+          @misplaced_check_done = true
 
+          # Detect misplaced ideas
+          result = @idea_loader.detect_misplaced_ideas
+
+          # Show warning if any misplaced ideas found
+          if result[:misplaced].any?
+            puts "⚠️  Warning: Found #{result[:misplaced].size} idea file(s) in incorrect locations."
+            puts "   Run 'ace-taskflow idea validate-structure' for details."
+            puts ""
+          end
+        end
 
         def show_help
           puts "Usage: ace-taskflow ideas [preset] [options]"
