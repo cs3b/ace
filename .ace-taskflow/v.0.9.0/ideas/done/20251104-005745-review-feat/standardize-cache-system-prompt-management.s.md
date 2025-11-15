@@ -4,8 +4,9 @@ filename_suggestion: feat-review-prompt-management
 enhanced_at: 2025-11-04 00:57:44
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-11-15T10:55:43+00:00
 ---
-
 # Standardize and Cache System Prompt Management in ace-review
 
 ## Problem
