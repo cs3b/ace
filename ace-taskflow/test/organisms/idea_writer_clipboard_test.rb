@@ -57,20 +57,20 @@ class IdeaWriterClipboardTest < AceTaskflowTestCase
 
       path = @writer.write("review these files", clipboard: true)
 
-      # Should create directory (not flat file)
-      assert Dir.exist?(path), "Expected directory to be created"
-      refute File.file?(path), "Should not be a flat file"
+      # Should return file path (not directory)
+      assert File.exist?(path), "Expected file to be created"
+      assert File.file?(path), "Should be a file"
 
-      # Should have idea.md inside
-      idea_file = File.join(path, "idea.md")
-      assert File.exist?(idea_file), "Expected idea.md to exist"
+      # Get directory from file path
+      folder_path = File.dirname(path)
+      assert Dir.exist?(folder_path), "Expected directory to be created"
 
-      # Should have attached files
-      assert File.exist?(File.join(path, "test1.rb"))
-      assert File.exist?(File.join(path, "test2.rb"))
+      # Should have attached files in the directory
+      assert File.exist?(File.join(folder_path, "test1.rb"))
+      assert File.exist?(File.join(folder_path, "test2.rb"))
 
-      # Content should reference files
-      content = File.read(idea_file)
+      # Content should reference files (path is now the idea file)
+      content = File.read(path)
       assert_match(/test1\.rb/, content)
       assert_match(/test2\.rb/, content)
     end

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Idea Create Output Enhancement**: Improved `ace-taskflow idea create` output to display full file path instead of just folder path
+  - Modified `IdeaWriter#write` to return complete path to created `.s.md` file
+  - Updated output message to show exact file created (e.g., `.ace-taskflow/v.0.9.0/ideas/20251115-085126-test/test.s.md`)
+  - Makes it immediately clear which file was created and easier to open in editors
+  - Added YARD documentation for `IdeaWriter#write` method with parameter and return value specifications
+  - Added regression test to ensure file path (not directory) is returned
+
 ## [0.18.4] - 2025-11-04
 
 ### Fixed
