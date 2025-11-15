@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.106
-status: pending
+status: done
 priority: high
 estimate: 1-2 days
 dependencies: []
@@ -232,30 +232,30 @@ This ensures a clean, predictable state where only files in the specified paths 
 
 ### Planning Steps
 
-* [ ] Analyze current staging flow in detail
+* [x] Analyze current staging flow in detail
   - Review how `stage_changes` determines staging strategy
   - Understand interaction between options.files and staging behavior
   - Document current state preservation requirements
 
-* [ ] Research git commands for path filtering
+* [x] Research git commands for path filtering
   - Test `git ls-files <path>` for finding tracked files
   - Test `git diff --name-only <path>` for changed files
   - Verify `git reset` and `git add` path handling
 
-* [ ] Design PathResolver interface
+* [x] Design PathResolver interface
   - Define methods for path resolution and filtering
   - Plan error handling strategy
   - Design integration with existing molecules
 
 ### Execution Steps
 
-- [ ] Create PathResolver molecule
+- [x] Create PathResolver molecule
   > TEST: PathResolver Creation
   > Type: File Creation
   > Assert: PathResolver class exists with required methods
   > Command: test -f lib/ace/git_commit/molecules/path_resolver.rb && ruby -r ./lib/ace/git_commit/molecules/path_resolver -e "puts Ace::GitCommit::Molecules::PathResolver.instance_methods(false).sort"
 
-- [ ] Implement PathResolver#resolve_paths method
+- [x] Implement PathResolver#resolve_paths method
   ```ruby
   # Expands directory paths to file lists
   # Returns array of files within specified paths
@@ -264,7 +264,7 @@ This ensures a clean, predictable state where only files in the specified paths 
   end
   ```
 
-- [ ] Implement PathResolver#filter_by_paths method
+- [x] Implement PathResolver#filter_by_paths method
   ```ruby
   # Filters list of files to only those within specified paths
   def filter_by_paths(all_files, allowed_paths)
@@ -272,7 +272,7 @@ This ensures a clean, predictable state where only files in the specified paths 
   end
   ```
 
-- [ ] Add FileStager#stage_paths method
+- [x] Add FileStager#stage_paths method
   ```ruby
   def stage_paths(paths)
     return false if paths.nil? || paths.empty?
@@ -293,7 +293,7 @@ This ensures a clean, predictable state where only files in the specified paths 
   > Assert: stage_paths method stages only files in specified paths
   > Command: ruby -r ./lib/ace/git_commit -e "puts Ace::GitCommit::Molecules::FileStager.instance_methods.include?(:stage_paths)"
 
-- [ ] Update CommitOrchestrator#stage_changes for path handling
+- [x] Update CommitOrchestrator#stage_changes for path handling
   ```ruby
   def stage_changes(options)
     if options.specific_files? && contains_directories?(options.files)
@@ -316,19 +316,19 @@ This ensures a clean, predictable state where only files in the specified paths 
   > Assert: CommitOrchestrator correctly routes path-based staging
   > Command: cd ace-git-commit && bundle exec rake test TEST=test/organisms/commit_orchestrator_test.rb
 
-- [ ] Create tests for PathResolver
+- [x] Create tests for PathResolver
   - Test single file path resolution
   - Test directory path expansion
   - Test multiple path handling
   - Test error cases
 
-- [ ] Create integration tests for path-restricted commits
+- [x] Create integration tests for path-restricted commits
   > TEST: Path Restriction Integration
   > Type: End-to-End Test
   > Assert: Full commit flow with paths works correctly
   > Command: cd ace-git-commit && bundle exec rake test:integration
 
-- [ ] Update CLI help text and examples
+- [x] Update CLI help text and examples
   ```bash
   # exe/ace-git-commit
   # Update help to show path usage examples
@@ -347,12 +347,12 @@ This ensures a clean, predictable state where only files in the specified paths 
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Running `ace-git-commit .ace-taskflow/` commits ONLY files within .ace-taskflow/
-- [ ] AC 2: Multiple paths can be specified and work correctly
-- [ ] AC 3: Backward compatibility maintained - no paths = current behavior
-- [ ] AC 4: Clear error messages for invalid paths
-- [ ] AC 5: All automated tests pass
-- [ ] AC 6: Integration with ace-git-worktree verified
+- [x] AC 1: Running `ace-git-commit .ace-taskflow/` commits ONLY files within .ace-taskflow/
+- [x] AC 2: Multiple paths can be specified and work correctly
+- [x] AC 3: Backward compatibility maintained - no paths = current behavior
+- [x] AC 4: Clear error messages for invalid paths
+- [x] AC 5: All automated tests pass
+- [x] AC 6: Integration with ace-git-worktree verified
 
 ## References
 

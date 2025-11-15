@@ -163,4 +163,72 @@ class FileStagerTest < TestCase
     assert_nil @stager.last_error, "Should clear last_error on success"
     @mock_git.verify
   end
+
+  # Tests for stage_paths
+  def test_stage_paths_resets_and_stages_paths
+    @mock_git.expect :execute, nil, ["reset", "--quiet"]
+    @mock_git.expect :execute, nil, ["add", "lib/"]
+    @mock_git.expect :execute, nil, ["add", "test/"]
+
+    result = @stager.stage_paths(["lib/", "test/"])
+
+    assert result, "Stage paths should succeed"
+    @mock_git.verify
+  end
+
+  def test_stage_paths_returns_false_for_empty_list
+    result = @stager.stage_paths([])
+
+    refute result, "Should return false for empty list"
+  end
+
+  def test_stage_paths_returns_false_for_nil
+    result = @stager.stage_paths(nil)
+
+    refute result, "Should return false for nil"
+  end
+
+  def test_stage_paths_handles_invalid_paths_via_git
+    @mock_git.expect :execute, nil, ["reset", "--quiet"]
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "pathspec 'nonexistent/' did not match any files"
+    end
+
+    result = @stager.stage_paths(["nonexistent/"])
+
+    refute result, "Should return false when git add fails"
+    assert_match(/did not match any files/, @stager.last_error)
+    @mock_git.verify
+  end
+
+  def test_stage_paths_handles_git_errors
+    @mock_git.expect :execute, nil, ["reset", "--quiet"]
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "Permission denied"
+    end
+
+    result = @stager.stage_paths(["lib/"])
+
+    refute result, "Should return false on git error"
+    assert_match(/Permission denied/, @stager.last_error)
+    @mock_git.verify
+  end
+
+  def test_stage_paths_clears_last_error_on_success
+    # First fail with git error
+    @mock_git.expect :execute, nil, ["reset", "--quiet"]
+    @mock_git.expect :execute, nil do |*args|
+      raise Ace::GitCommit::GitError, "error"
+    end
+    @stager.stage_paths(["bad/"])
+    assert @stager.last_error
+
+    # Then succeed
+    @mock_git.expect :execute, nil, ["reset", "--quiet"]
+    @mock_git.expect :execute, nil, ["add", "good/"]
+    @stager.stage_paths(["good/"])
+
+    assert_nil @stager.last_error, "Should clear last_error on success"
+    @mock_git.verify
+  end
 end

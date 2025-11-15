@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-11-15
+
+### Added
+- **Path restriction for targeted commits**: Support for committing only files within specified directories or paths
+- **Glob pattern support**: Full glob pattern support (`**/*.rb`, `lib/**/*.test.js`) for flexible file selection
+- **Repository boundary validation**: `within_repository?` method validates paths are within git repository boundaries
+- **Early path validation**: Validates path existence before git operations with clear error messages
+- **Comprehensive CLI documentation**: Updated help text with detailed path and pattern usage examples
+
+### Changed
+- **PathResolver architecture**: Made `glob_pattern?` public and consolidated path detection logic
+- **Staging strategy**: Intelligent routing between simple file staging and path-restricted staging based on input type
+- **Error messaging**: Enhanced error messages for invalid paths and empty glob pattern results
+
+### Technical
+- **Integration test coverage**: Added 4 comprehensive integration tests for path validation and glob pattern handling
+- **Unit test expansion**: Added 6 new unit tests for `glob_pattern?` and `within_repository?` methods
+- **Code quality improvements**: Removed method duplication between PathResolver and CommitOrchestrator
+
 ## [0.11.2] - 2025-11-12
 
 ### Fixed
