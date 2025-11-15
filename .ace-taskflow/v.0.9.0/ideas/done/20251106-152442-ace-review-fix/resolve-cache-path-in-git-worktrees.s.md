@@ -4,8 +4,9 @@ filename_suggestion: fix-review-worktree-path-resolution
 enhanced_at: 2025-11-06 15:24:40
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-11-15T10:33:43+00:00
 ---
-
 # Fix ace-review cache path resolution in git worktrees
 
 ## Problem
