@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "date"
+require "time"
+require_relative "../atoms/timestamp_parser"
 
 module Ace
   module Docs
@@ -37,7 +39,17 @@ module Ace
           @update_config["frequency"] || "on-change"
         end
 
-        # Get the last updated date
+        # Get the last updated date or datetime
+        #
+        # Polymorphic Return Type:
+        #   - Date object for date-only timestamps (YYYY-MM-DD)
+        #   - Time object (UTC) for ISO 8601 timestamps (YYYY-MM-DDTHH:MM:SSZ)
+        #   - Time object (UTC) for legacy datetime timestamps (YYYY-MM-DD HH:MM)
+        #
+        # This preserves the precision of the original timestamp format. When comparing
+        # dates for freshness calculations, Time objects are converted to Date objects.
+        #
+        # @return [Date, Time, nil] The last updated timestamp, or nil if not set
         def last_updated
           # Try ace-docs namespace first
           date_str = @ace_docs_config["last-updated"]
@@ -46,35 +58,45 @@ module Ace
 
           return nil unless date_str
 
-          case date_str
-          when Date
-            date_str
-          when Time
-            date_str.to_date
-          when String
-            Date.parse(date_str)
-          else
-            nil
-          end
+          result = case date_str
+                   when Date, Time
+                     date_str  # Return as-is
+                   when String
+                     Atoms::TimestampParser.parse_timestamp(date_str)
+                   else
+                     nil
+                   end
+
+          # Ensure Time objects are in UTC
+          result.is_a?(Time) ? result.utc : result
         rescue ArgumentError
           nil
         end
 
-        # Get the last checked date
+        # Get the last checked date or datetime
+        #
+        # Polymorphic Return Type:
+        #   - Date object for date-only timestamps (YYYY-MM-DD)
+        #   - Time object (UTC) for ISO 8601 timestamps (YYYY-MM-DDTHH:MM:SSZ)
+        #   - Time object (UTC) for legacy datetime timestamps (YYYY-MM-DD HH:MM)
+        #
+        # @return [Date, Time, nil] The last checked timestamp, or nil if not set
+        # @see #last_updated for detailed behavior documentation
         def last_checked
           date_str = @update_config["last-checked"]
           return nil unless date_str
 
-          case date_str
-          when Date
-            date_str
-          when Time
-            date_str.to_date
-          when String
-            Date.parse(date_str)
-          else
-            nil
-          end
+          result = case date_str
+                   when Date, Time
+                     date_str  # Return as-is
+                   when String
+                     Atoms::TimestampParser.parse_timestamp(date_str)
+                   else
+                     nil
+                   end
+
+          # Ensure Time objects are in UTC
+          result.is_a?(Time) ? result.utc : result
         rescue ArgumentError
           nil
         end
@@ -83,7 +105,9 @@ module Ace
         def needs_update?
           return true unless last_updated
 
-          days_since_update = (Date.today - last_updated).to_i
+          # Convert Time to Date for comparison
+          last_updated_date = last_updated.is_a?(Time) ? last_updated.to_date : last_updated
+          days_since_update = (Date.today - last_updated_date).to_i
 
           case update_frequency
           when "daily"
@@ -103,7 +127,9 @@ module Ace
         def freshness_status
           return :unknown unless last_updated
 
-          days_since_update = (Date.today - last_updated).to_i
+          # Convert Time to Date for comparison
+          last_updated_date = last_updated.is_a?(Time) ? last_updated.to_date : last_updated
+          days_since_update = (Date.today - last_updated_date).to_i
 
           case update_frequency
           when "daily"
