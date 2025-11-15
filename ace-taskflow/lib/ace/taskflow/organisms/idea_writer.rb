@@ -19,6 +19,18 @@ module Ace
           @debug = ENV["DEBUG"] == "true"
         end
 
+        # Writes an idea to the filesystem with optional enhancements
+        #
+        # @param content [String] the idea content to write
+        # @param options [Hash] options for idea creation
+        # @option options [Boolean] :git_commit auto-commit the idea file
+        # @option options [Boolean] :llm_enhance enhance content with LLM
+        # @option options [Boolean] :clipboard merge clipboard content
+        # @option options [String] :title custom title for the idea
+        # @option options [String] :location target location (active/backlog/release)
+        # @option options [String] :subdirectory subdirectory within ideas (maybe/anyday)
+        # @return [String] full path to the created idea file (*.s.md)
+        # @raise [IdeaWriterError] if no content is provided
         def write(content, options = {})
           # Merge options with config defaults
           options = merge_options_with_config(options)
@@ -115,7 +127,7 @@ module Ace
             commit_idea(path, metadata)
           end
 
-          path
+          idea_file
         end
 
         private

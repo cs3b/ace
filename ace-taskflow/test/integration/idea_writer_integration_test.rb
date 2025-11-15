@@ -35,20 +35,17 @@ class IdeaWriterIntegrationTest < AceTaskflowTestCase
         # Execute write
         path = writer.write(content, metadata)
 
+        # Verify it returns the file path
+        assert File.exist?(path), "Idea file should exist"
+        assert_match(/integration-test\/complete-workflow\.s\.md$/, path, "Should return full file path")
+
         # Verify directory was created
-        assert Dir.exist?(path), "Idea directory should exist"
-        assert_match(/integration-test$/, path, "Directory should contain folder slug")
+        folder_path = File.dirname(path)
+        assert Dir.exist?(folder_path), "Idea directory should exist"
+        assert_match(/integration-test$/, folder_path, "Directory should contain folder slug")
 
-        # Verify idea file was created
-        idea_files = Dir.glob(File.join(path, "*.s.md"))
-        assert_equal 1, idea_files.length, "Should have exactly one idea file"
-
-        idea_file = idea_files.first
-        assert File.exist?(idea_file), "Idea file should exist"
-        assert_match(/complete-workflow\.s\.md$/, idea_file, "File should use file slug")
-
-        # Verify file content
-        file_content = File.read(idea_file)
+        # Verify file content (path is now the file path)
+        file_content = File.read(path)
         assert_includes file_content, "# Integration Test", "Should include title"
         assert_includes file_content, content, "Should include original content"
         assert_includes file_content, "2025-01-01 12:00:00", "Should include timestamp"
@@ -90,15 +87,17 @@ class IdeaWriterIntegrationTest < AceTaskflowTestCase
       mock_llm_query(response_text: mock_slug_resp) do
         path = writer.write(enhanced_content)
 
+        # Verify file path is returned
+        assert File.exist?(path), "Idea file should exist"
+        assert_match(/llm-enhanced\/test-idea\.s\.md$/, path, "Should return full file path")
+
         # Verify directory structure
-        assert Dir.exist?(path)
-        assert_match(/llm-enhanced$/, path)
+        folder_path = File.dirname(path)
+        assert Dir.exist?(folder_path)
+        assert_match(/llm-enhanced$/, folder_path)
 
         # Verify content was written as-is (no template applied)
-        idea_files = Dir.glob(File.join(path, "*.s.md"))
-        assert idea_files.any?, "Should create idea file"
-
-        file_content = File.read(idea_files.first)
+        file_content = File.read(path)
         # Enhanced content should be preserved (starts with frontmatter)
         assert file_content.start_with?("---\n"), "Should preserve frontmatter"
         assert_includes file_content, "# LLM Enhanced Idea"
