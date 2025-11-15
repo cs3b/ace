@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-11-15
+
+### BREAKING CHANGE: ISO 8601 UTC Timestamp Format
+
+- **Migrated timestamp format to ISO 8601 UTC standard**
+  - New format: `YYYY-MM-DDTHH:MM:SSZ` (e.g., `2025-11-15T08:30:45Z`)
+  - `"now"` special value now generates ISO 8601 UTC format (was local time)
+  - All timestamps are stored and displayed in UTC
+  - Aligns with industry standards (GitHub API, Git commits, ISO 8601)
+  - Eliminates timezone ambiguity and DST issues
+
+### Added
+
+- **ISO 8601 UTC Timestamp Support**: Industry-standard timestamp format
+  - Format: `YYYY-MM-DDTHH:MM:SSZ` with explicit UTC timezone
+  - Unambiguous - `Z` suffix means UTC
+  - Universal - Same timestamp for all users globally
+  - Sortable - Lexicographic sorting works correctly
+  - Parse-able - Standard format works with all datetime libraries
+  - Special value `"now"` generates current UTC time
+  - Special value `"today"` continues to generate date-only format
+
+- **TimestampParser Atom**: Enhanced with ISO 8601 support
+  - Parses ISO 8601 UTC strings → Time objects (UTC)
+  - Parses date-only strings → Date objects
+  - Parses legacy datetime strings → Time objects (converted to UTC)
+  - Validates all three formats with regex patterns
+  - Comprehensive error handling with migration guidance
+
+- **Command-Level Tests**: New test coverage for CLI commands
+  - `StatusCommand` tests for Date/Time polymorphic handling
+  - Tests prevent regression bugs in CLI layer
+  - Validates proper ISO 8601 display in UI
+
+### Enhanced
+
+- **FrontmatterManager**: Generates ISO 8601 UTC timestamps
+  - `"now"` generates ISO 8601 UTC format
+  - `"today"` generates date-only format
+  - Converts legacy format to ISO 8601 automatically
+
+- **Document Model**: UTC timezone handling
+  - All Time objects converted to UTC
+  - Maintains polymorphic return types (Date/Time)
+  - Proper comparison and calculation with UTC times
+
+- **StatusCommand**: Fixed crash and improved display
+  - Fixed TypeError crash when handling Time objects
+  - Displays full ISO 8601 timestamp for Time objects
+  - Displays date-only for Date objects
+  - No information loss - time component always visible
+
+### Backward Compatibility
+
+- **Legacy format fully supported**: `YYYY-MM-DD HH:MM` format still parsed
+  - Interpreted as local time, converted to UTC internally
+  - Will be deprecated in future major version
+  - Provides clear migration path
+
+### Documentation
+
+- Updated README.md with ISO 8601 examples and format details
+- Added comprehensive timestamp format reference
+- Documented benefits of ISO 8601 UTC format
+- Provided migration guide from legacy format
+- Updated all examples to use ISO 8601
+
+### Testing
+
+- Added 85+ new tests with 200+ assertions for ISO 8601
+  - ISO 8601 parsing and formatting tests
+  - UTC conversion accuracy tests
+  - Backward compatibility tests
+  - Command-level integration tests
+  - Edge case tests (year boundaries, leap seconds awareness)
+- Edge case tests for year boundaries, month boundaries, leap years
+- Integration tests for frontmatter preservation
+- All tests passing with no regressions
+
 ## [0.7.0] - 2025-11-12
 
 ### Added

@@ -217,21 +217,34 @@ ace-docs update FILE [OPTIONS]
 - `--preset PRESET` - Update all documents matching preset
 
 **Supported Fields:**
-- `last-updated` - Update date (use "today" for current date)
-- `last-checked` - Last review date
+- `last-updated` - Update date/datetime (see Timestamp Formats below)
+- `last-checked` - Last review date/datetime (see Timestamp Formats below)
 - `version` - Document version
 - Any custom fields defined in frontmatter
 
+**Timestamp Formats:**
+- **Date-only**: `YYYY-MM-DD` (e.g., `2025-11-01`)
+- **Date+time**: `YYYY-MM-DD HH:MM` (e.g., `2025-11-01 14:30`)
+- **Special values**:
+  - `today` - Current date without time (e.g., `2025-11-01`)
+  - `now` - Current date and time (e.g., `2025-11-01 14:30`)
+
 **Examples:**
 ```bash
-# Update last-updated date
+# Update last-updated with current date only
 ace-docs update docs/guide.md --set last-updated:today
 
-# Update multiple fields
-ace-docs update docs/api.md --set last-updated:today --set version:2.0
+# Update last-updated with current date and time
+ace-docs update docs/guide.md --set last-updated:now
 
-# Bulk update by preset
-ace-docs update --preset standard --set last-checked:today
+# Set explicit date+time timestamp
+ace-docs update docs/changelog.md --set last-updated:"2025-11-01 14:30"
+
+# Update multiple fields
+ace-docs update docs/api.md --set last-updated:now --set version:2.0
+
+# Bulk update by preset with date+time
+ace-docs update --preset standard --set last-checked:now
 ```
 
 ### validate Command

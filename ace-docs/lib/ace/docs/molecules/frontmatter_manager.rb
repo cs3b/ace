@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require "date"
+require "time"
 require "ace/support/markdown"
+require_relative "../atoms/timestamp_parser"
 
 module Ace
   module Docs
@@ -65,10 +67,17 @@ module Ace
         def self.process_value(value)
           # Handle special values
           case value
-          when "today", "now"
+          when "today"
             Date.today.strftime("%Y-%m-%d")
-          when /^\d{4}-\d{2}-\d{2}$/
-            value  # Already a date string
+          when "now"
+            Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 UTC format
+          when Atoms::TimestampParser::DATE_ONLY_PATTERN
+            value  # Already a date-only string
+          when Atoms::TimestampParser::ISO8601_UTC_PATTERN
+            value  # Already ISO 8601 UTC
+          when Atoms::TimestampParser::DATETIME_PATTERN
+            # Legacy format - convert to ISO 8601 UTC
+            Time.parse(value).utc.strftime("%Y-%m-%dT%H:%M:%SZ")
           else
             value
           end
