@@ -4,24 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.133] - 2025-11-15
+
 ### Added
-- **ace-taskflow v0.9.0**: Idea folder structure validation and enforcement
-  - New `validate-structure` command checks idea file organization
-  - Enforces ideas must be in subfolders within ideas/ directory (e.g., ideas/folder-name/file.md)
-  - Provides clear error messages with suggested proper locations
-  - Warning shown in `ideas` list when misplaced ideas detected
+- **ace-taskflow v0.19.0**: Idea folder structure validation and enforcement
+  - New `validate-structure` command checks idea file organization with detailed error reporting
+  - Enforces ideas must be in subfolders within ideas/ directory (e.g., `ideas/folder-name/file.md`)
+  - Provides clear error messages with suggested proper locations for misplaced files
+  - Warning shown in `ideas` list command when misplaced ideas are detected
   - `idea create` now returns full file path instead of directory for better UX
-  - Environment variable `SKIP_IDEA_VALIDATION` for performance optimization
-  - Comprehensive YARD documentation with exit codes for CI/CD integration
-  - 26 comprehensive tests covering all validation scenarios
+  - Environment variable `SKIP_IDEA_VALIDATION` for performance optimization in large repositories
+  - Comprehensive YARD documentation with exit codes (0=success, 1=failures) for CI/CD integration
+  - 26 comprehensive tests covering all validation scenarios including edge cases
+  - Command integrated into help text for easy discoverability
 - **ace-git v0.2.0**: PR Documentation Workflow - Automated PR title and description generation
   - New `update-pr-description` workflow extracts metadata from changelog and task files
-  - Analyzes commit messages to identify change patterns
-  - Generates structured PR descriptions with summary, changes, breaking changes, and related tasks
-  - New `/ace:update-pr-desc` command for easy invocation
-  - Auto-detects PR from current branch or accepts PR number argument
-  - Uses conventional commits format for titles
+  - Analyzes commit messages to identify change patterns and types
+  - Generates structured PR descriptions with summary, changes breakdown, breaking changes, and related tasks
+  - New `/ace:update-pr-desc` command for easy invocation from Claude Code
+  - Auto-detects PR number from current branch or accepts explicit PR number argument
+  - Uses conventional commits format for titles (e.g., `feat(scope): description`)
+  - GitHub CLI integration for updating PR titles and descriptions
   - Comprehensive documentation with examples and best practices
+  - Supports multi-line body formatting with heredoc for clean PR updates
+
+### Changed
+- **ace-taskflow v0.19.0**: Code quality improvements for better maintainability
+  - Removed duplicate `format_path_relative_to_pwd` method from `IdeaCommand`
+  - Now uses `Atoms::PathFormatter.format_relative_path` following DRY principle
+  - Eliminates code duplication across command classes
 
 ## [0.9.132] - 2025-11-15
 
