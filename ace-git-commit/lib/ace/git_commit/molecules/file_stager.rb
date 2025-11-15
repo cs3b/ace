@@ -64,6 +64,32 @@ module Ace
           staged = staged_files
           files.all? { |f| staged.include?(f) }
         end
+
+        # Stage only files within specified paths
+        # Resets staging area first, then stages only files in paths
+        # @param paths [Array<String>] Paths to stage (files or directories)
+        # @return [Boolean] True if successful
+        def stage_paths(paths)
+          return false if paths.nil? || paths.empty?
+
+          @last_error = nil
+
+          begin
+            # Reset staging area to clear everything
+            @git.execute("reset", "--quiet")
+
+            # Stage only files in specified paths
+            # Let git add handle path validation (supports deleted files)
+            paths.each do |path|
+              @git.execute("add", path)
+            end
+
+            true
+          rescue GitError => e
+            @last_error = e.message
+            false
+          end
+        end
       end
     end
   end

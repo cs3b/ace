@@ -71,7 +71,18 @@ class CommitOrchestratorTest < TestCase
 
   def test_stages_specific_files
     @mock_git.expect :in_repository?, true
+
+    # Add path_resolver mock for single file (no glob)
+    mock_path_resolver = Minitest::Mock.new
+    @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
+
+    # Single file validation path
+    mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In non_glob_paths check
+    mock_path_resolver.expect :validate_paths, { valid: ["file1.txt"], invalid: [] }, [["file1.txt"]]
+    mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In has_glob_patterns check
+
     @mock_file_stager.expect :stage_files, true, [["file1.txt"]]  # Now returns boolean
+    @mock_file_stager.expect :staged_files, ["file1.txt"]
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add file1"]
     @mock_git.expect :execute, "def5678", ["rev-parse", "HEAD"]
@@ -94,6 +105,7 @@ class CommitOrchestratorTest < TestCase
     assert result, "Commit should succeed"
     @mock_git.verify
     @mock_file_stager.verify
+    mock_path_resolver.verify
   end
 
   def test_stages_all_changes
@@ -206,6 +218,163 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.verify
     @mock_diff_analyzer.verify
     @mock_message_generator.verify
+  end
+
+  # Integration tests for path validation and glob patterns
+  def test_early_path_validation_rejects_invalid_paths
+    @mock_git.expect :in_repository?, true
+
+    # Add path_resolver mock
+    mock_path_resolver = Minitest::Mock.new
+    @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
+
+    # Mock glob_pattern? to return false (non-glob paths)
+    mock_path_resolver.expect :glob_pattern?, false, ["nonexistent/"]
+
+    # Mock validate_paths to return invalid path
+    mock_path_resolver.expect :validate_paths,
+      { valid: [], invalid: ["nonexistent/"] },
+      [["nonexistent/"]]
+
+    # Capture output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    result = @orchestrator.execute(
+      create_options(message: "test", files: ["nonexistent/"], quiet: false)
+    )
+
+    output = $stdout.string
+    $stdout = original_stdout
+
+    refute result, "Should return false for invalid paths"
+    assert_match(/Invalid path\(s\)/, output)
+    assert_match(/nonexistent/, output)
+
+    @mock_git.verify
+    mock_path_resolver.verify
+  end
+
+  def test_glob_pattern_staging_with_resolved_files
+    @mock_git.expect :in_repository?, true
+
+    # Add path_resolver mock
+    mock_path_resolver = Minitest::Mock.new
+    @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
+
+    # Mock glob_pattern? - called multiple times (validation + has_directories/has_glob_patterns checks)
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.rb"]  # In validation
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.rb"]  # In has_glob_patterns check
+
+    # Mock resolve_paths to return file list
+    mock_path_resolver.expect :resolve_paths,
+      ["lib/file1.rb", "lib/file2.rb"],
+      [["**/*.rb"]]
+
+    # Mock stage_paths
+    @mock_file_stager.expect :stage_paths, true, [["lib/file1.rb", "lib/file2.rb"]]
+    @mock_file_stager.expect :staged_files, ["lib/file1.rb", "lib/file2.rb"]
+
+    @mock_git.expect :has_staged_changes?, true
+    @mock_git.expect :execute, "abc123", ["commit", "-m", "test message"]
+    @mock_git.expect :execute, "abc123", ["rev-parse", "HEAD"]
+
+    # Mock commit summarizer
+    mock_summarizer = Minitest::Mock.new
+    mock_summarizer.expect :summarize, "Commit summary", ["abc123"]
+
+    Ace::GitCommit::Molecules::CommitSummarizer.stub :new, mock_summarizer do
+      result = @orchestrator.execute(
+        create_options(message: "test message", files: ["**/*.rb"], quiet: true)
+      )
+
+      assert result, "Should successfully stage and commit with glob pattern"
+    end
+
+    @mock_git.verify
+    @mock_file_stager.verify
+    mock_path_resolver.verify
+  end
+
+  def test_multiple_paths_uses_path_restricted_staging
+    @mock_git.expect :in_repository?, true
+
+    # Add path_resolver mock
+    mock_path_resolver = Minitest::Mock.new
+    @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
+
+    # Mock validation for non-glob paths (each path checked twice: validation + has_glob_patterns)
+    mock_path_resolver.expect :glob_pattern?, false, ["lib/"]   # In validation
+    mock_path_resolver.expect :glob_pattern?, false, ["test/"]  # In validation
+    mock_path_resolver.expect :validate_paths,
+      { valid: ["lib/", "test/"], invalid: [] },
+      [["lib/", "test/"]]
+
+    # Mock has_directories and has_glob_patterns checks
+    mock_path_resolver.expect :glob_pattern?, false, ["lib/"]   # In has_glob_patterns
+    mock_path_resolver.expect :glob_pattern?, false, ["test/"]  # In has_glob_patterns
+
+    # Mock resolve_paths
+    mock_path_resolver.expect :resolve_paths,
+      ["lib/file1.rb", "test/file1_test.rb"],
+      [["lib/", "test/"]]
+
+    # Mock stage_paths (multiple paths trigger this)
+    @mock_file_stager.expect :stage_paths, true, [["lib/file1.rb", "test/file1_test.rb"]]
+    @mock_file_stager.expect :staged_files, ["lib/file1.rb", "test/file1_test.rb"]
+
+    @mock_git.expect :has_staged_changes?, true
+    @mock_git.expect :execute, "abc123", ["commit", "-m", "test"]
+    @mock_git.expect :execute, "abc123", ["rev-parse", "HEAD"]
+
+    # Mock commit summarizer
+    mock_summarizer = Minitest::Mock.new
+    mock_summarizer.expect :summarize, "Commit summary", ["abc123"]
+
+    Ace::GitCommit::Molecules::CommitSummarizer.stub :new, mock_summarizer do
+      result = @orchestrator.execute(
+        create_options(message: "test", files: ["lib/", "test/"], quiet: true)
+      )
+
+      assert result, "Should handle multiple paths"
+    end
+
+    @mock_git.verify
+    @mock_file_stager.verify
+    mock_path_resolver.verify
+  end
+
+  def test_empty_glob_pattern_results_shows_helpful_message
+    @mock_git.expect :in_repository?, true
+
+    # Add path_resolver mock
+    mock_path_resolver = Minitest::Mock.new
+    @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
+
+    # Mock glob_pattern? - called multiple times (validation + has_glob_patterns check)
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.xyz"]  # In validation
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.xyz"]  # In has_glob_patterns check
+
+    # Mock resolve_paths to return empty (no matching files)
+    mock_path_resolver.expect :resolve_paths, [], [["**/*.xyz"]]
+
+    # Capture output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    result = @orchestrator.execute(
+      create_options(message: "test", files: ["**/*.xyz"], quiet: false)
+    )
+
+    output = $stdout.string
+    $stdout = original_stdout
+
+    refute result, "Should return false when no files match pattern"
+    assert_match(/No files found matching/, output)
+    assert_match(/git-tracked files/, output)
+
+    @mock_git.verify
+    mock_path_resolver.verify
   end
 
   private

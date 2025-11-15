@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.132] - 2025-11-15
+
+### Added
+- **ace-git-commit v0.12.0**: Path restriction for targeted commits with glob pattern support
+  - Support for committing only files within specified directories or paths
+  - Full glob pattern support (`**/*.rb`, `lib/**/*.test.js`) for flexible file selection
+  - Repository boundary validation to ensure paths are within git repository
+  - Early path validation with clear error messages
+  - Comprehensive CLI documentation with detailed path and pattern usage examples
+
 ## [0.9.131] - 2025-11-15
 
 ### Added
