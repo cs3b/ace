@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2025-11-15
+
+### Changed
+
+- **Task 111 Completion**: Marked task 111 (Fix ace-review cache path resolution in git worktrees) as done
+  - Moved task file from `tasks/` to `tasks/done/` folder
+  - All success criteria met and verified
+  - Core fix implemented and tested
+
 ## [0.19.0] - 2025-11-15
 
 ### Added

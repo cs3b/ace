@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.134] - 2025-11-15
+
+### Fixed
+- **ace-review v0.16.1**: Git worktree cache path resolution
+  - Fixed cache directory creation to use project root instead of current working directory
+  - Resolves issue where caches were created in deeply nested, incorrect paths in git worktrees
+  - Added `ProjectRootFinder` integration for consistent path resolution across worktree and main repo contexts
+  - Each worktree now maintains its own cache at `.cache/ace-review/sessions/` relative to worktree root
+  - Added `test_finds_git_worktree_root` test to verify `.git` file (worktree) vs directory (main repo) handling
+  - All 161 ace-review tests pass with no breaking changes to main repo usage
+  - Transparent fix - tool "just works" in worktrees without user configuration
+
+### Changed
+- **ace-taskflow v0.19.1**: Task 111 completion
+  - Marked task 111 (Fix ace-review cache path resolution in git worktrees) as done
+  - All success criteria met and verified
+- **ace-support-core v0.10.1**: Test coverage improvements
+  - Added worktree detection test to ProjectRootFinder test suite
+  - Verified correct handling of `.git` as both file (worktree) and directory (main repo)
+
 ## [0.9.133] - 2025-11-15
 
 ### Added

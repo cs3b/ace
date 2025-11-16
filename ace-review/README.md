@@ -2,7 +2,22 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.15.0
+**Version:** 0.16.1
+
+## What's New in 0.16.1
+
+- **Git Worktree Support**: ace-review now works seamlessly in git worktrees created by ace-git-worktree (v0.16.1+)
+  - Cache directories are created at the correct project root location
+  - Each worktree maintains its own review cache
+  - No configuration needed - it just works!
+
+## What's New in 0.16.0
+
+- **Preset Composition**: Support for composing review presets from reusable base configurations
+  - Use `presets:` array to build DRY review configurations
+  - Recursive loading with circular dependency detection
+  - Smart merging strategies for arrays, hashes, and scalars
+  - See [CHANGELOG.md](CHANGELOG.md) for full details
 
 ## What's New in 0.15.0
 
