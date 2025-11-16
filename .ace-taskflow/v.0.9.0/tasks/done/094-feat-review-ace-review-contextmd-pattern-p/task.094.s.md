@@ -8,7 +8,7 @@ review_completed: 2025-11-04
 reviewed_by: User
 worktree:
   branch: '094-task-094'
-  path: ".ace-wt/task.094"
+  path: ".ace-wt/094"
   created_at: '2025-11-05 01:12:56'
   updated_at: '2025-11-05 01:12:56'
 ---

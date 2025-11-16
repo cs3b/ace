@@ -61,7 +61,7 @@ class TaskWorkflowIntegrationTest < AceTaskflowTestCase
 
         # 2. Reschedule tasks to v.0.8.0
         output = capture_stdout do
-          tasks_cmd.execute(["reschedule", "v.0.9.0+003,v.0.9.0+004", "v.0.8.0"])
+          tasks_cmd.execute(["reschedule", "v.0.9.0+task.003,v.0.9.0+task.004", "v.0.8.0"])
         end
         assert_match(/Rescheduled/, output)
 

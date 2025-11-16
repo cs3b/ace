@@ -66,5 +66,5 @@ bundle exec ace-git-commit --dry-run -i "Fixed API key loading"
 ## References
 
 - Commits: 95ad9402 - "fix(ace-llm): load API keys from .ace/.env on demand without polluting ENV"
-- Related tasks: Led to task.043 for proper refactoring
-- Follow-up needed: Refactor to centralize in ace-core (completed in task.043)
+- Related tasks: Led to 043 for proper refactoring
+- Follow-up needed: Refactor to centralize in ace-core (completed in 043)

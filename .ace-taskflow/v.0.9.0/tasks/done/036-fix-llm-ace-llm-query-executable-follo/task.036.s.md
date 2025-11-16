@@ -68,5 +68,5 @@ cli.run(ARGV)
 
 ## References
 
-- Related to: task.021 (Extract llm-query from dev-tools to ace-llm gem)
+- Related to: 021 (Extract llm-query from dev-tools to ace-llm gem)
 - Pattern follows: ace-nav, ace-taskflow, ace-test executables

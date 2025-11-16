@@ -57,14 +57,14 @@ completed_version: 0.3.0
 
 ## Review Questions (Resolved)
 
-### [HIGH] Configuration System Issues (Lessons from task.072)
+### [HIGH] Configuration System Issues (Lessons from 072)
 
 Task.072 revealed critical configuration mistakes that must not be repeated in ace-docs:
 
 ### ✅ [RESOLVED] Config Loading Pattern
 - **Original Priority**: HIGH
 - **Decision**: Add `Ace::Docs.config` method using `Ace::Core.config.get('ace', 'docs')`
-- **Rationale**: Follows established ACE pattern and avoids hardcoded paths mistake from task.072
+- **Rationale**: Follows established ACE pattern and avoids hardcoded paths mistake from 072
 - **Implementation Notes**:
   - Create `Ace::Docs.config` method using ace-core's config cascade
   - Add `Ace::Docs.default_config` for fallback values
@@ -395,8 +395,8 @@ Complete the ace-docs package with batch analysis capabilities that enable effic
 
 ## References
 
-- Task: .ace-taskflow/v.0.9.0/tasks/done/065-create-ace-docs-package/task.065.md
-- Dependency: .ace-taskflow/v.0.9.0/tasks/072-feat-lint-ace-lint-standalone-linting-ge/task.072.md (ace-lint gem - must complete first)
+- Task: .ace-taskflow/v.0.9.0/tasks/done/065-create-ace-docs-package/065.md
+- Dependency: .ace-taskflow/v.0.9.0/tasks/072-feat-lint-ace-lint-standalone-linting-ge/072.md (ace-lint gem - must complete first)
 - Ideas:
   - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-auto-generation-feature.md (OUT OF SCOPE)
   - .ace-taskflow/v.0.9.0/ideas/20251013-ace-docs-external-linter-integration.md (MOVED TO TASK 072)

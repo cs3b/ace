@@ -55,9 +55,9 @@ module TestFactory
   def self.sample_release_structure(version = "v.0.9.0")
     {
       "#{version}/release.md" => release_content(version),
-      "#{version}/tasks/001/task.s.md" => sample_task_content(id: "#{version}+task.001"),
-      "#{version}/tasks/002/task.s.md" => sample_task_content(id: "#{version}+task.002", status: "in-progress"),
-      "#{version}/tasks/003/task.s.md" => sample_task_content(id: "#{version}+task.003", status: "done"),
+      "#{version}/tasks/001/task.s.md" => sample_task_content(id: "#{version}+001"),
+      "#{version}/tasks/002/task.s.md" => sample_task_content(id: "#{version}+002", status: "in-progress"),
+      "#{version}/tasks/003/task.s.md" => sample_task_content(id: "#{version}+003", status: "done"),
       "#{version}/i/001.s.md" => sample_idea_content
     }
   end
@@ -162,7 +162,7 @@ module TestFactory
       File.write(
         File.join(task_dir, "task.#{task_num}.s.md"),
         sample_task_content(
-          id: "#{release}+task.#{task_num}",
+          id: "#{release}+#{task_num}",
           status: status,
           sort: (i + 1) * 100
         )
@@ -277,7 +277,7 @@ module TestFactory
     FileUtils.mkdir_p(task_dir)
 
     task_metadata = {
-      id: "#{version}+task.#{task_num}",
+      id: "#{version}+#{task_num}",
       status: spec[:status] || "pending",
       priority: spec[:priority] || "medium",
       estimate: spec[:estimate] || "4h",

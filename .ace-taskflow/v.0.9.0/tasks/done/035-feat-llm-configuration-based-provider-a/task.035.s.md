@@ -158,5 +158,5 @@ The implementation maintains backward compatibility while enabling future growth
 
 ## Related Tasks
 
-- task.021: Extract llm-query from dev-tools to ace-llm gem (completed)
+- 021: Extract llm-query from dev-tools to ace-llm gem (completed)
 - Future: Create separate provider gems (ace-llm-google, ace-llm-openai, etc.)

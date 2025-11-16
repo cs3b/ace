@@ -9,16 +9,16 @@ class TaskReferenceParserTest < Minitest::Test
   end
 
   def test_parse_qualified_reference
-    result = @parser.parse("v.0.9.0+018")
+    result = @parser.parse("v.0.9.0+task.018")
 
     assert_equal "v.0.9.0", result[:release]
     assert_equal "018", result[:number]
     assert result[:qualified]
-    assert_equal "v.0.9.0+018", result[:original]
+    assert_equal "v.0.9.0+task.018", result[:original]
   end
 
   def test_parse_backlog_reference
-    result = @parser.parse("backlog+025")
+    result = @parser.parse("backlog+task.025")
 
     assert_equal "backlog", result[:release]
     assert_equal "025", result[:number]
@@ -56,8 +56,8 @@ class TaskReferenceParserTest < Minitest::Test
   end
 
   def test_valid_predicate
-    assert @parser.valid?("v.0.9.0+018")
-    assert @parser.valid?("backlog+025")
+    assert @parser.valid?("v.0.9.0+task.018")
+    assert @parser.valid?("backlog+task.025")
     assert @parser.valid?("018")
     assert @parser.valid?("task.018")
 
@@ -66,8 +66,8 @@ class TaskReferenceParserTest < Minitest::Test
   end
 
   def test_qualified_predicate
-    assert @parser.qualified?("v.0.9.0+018")
-    assert @parser.qualified?("backlog+025")
+    assert @parser.qualified?("v.0.9.0+task.018")
+    assert @parser.qualified?("backlog+task.025")
     assert @parser.qualified?("current+018")
 
     refute @parser.qualified?("018")
@@ -84,8 +84,8 @@ class TaskReferenceParserTest < Minitest::Test
   end
 
   def test_format_qualified_reference
-    assert_equal "v.0.9.0+018", @parser.format("v.0.9.0", "18", qualified: true)
-    assert_equal "backlog+025", @parser.format("backlog", 25, qualified: true)
+    assert_equal "v.0.9.0+task.018", @parser.format("v.0.9.0", "18", qualified: true)
+    assert_equal "backlog+task.025", @parser.format("backlog", 25, qualified: true)
     assert_equal "current+018", @parser.format("current", 18, qualified: true)
     assert_equal "018", @parser.format("current", 18, qualified: false)
   end
@@ -93,17 +93,17 @@ class TaskReferenceParserTest < Minitest::Test
   def test_convert_reference_formats
     assert_equal "current+018", @parser.convert("018", :qualified)
     assert_equal "current+018", @parser.convert("018", :qualified, release: "current")
-    assert_equal "v.0.9.0+018", @parser.convert("018", :qualified, release: "v.0.9.0")
-    assert_equal "018", @parser.convert("v.0.9.0+018", :simple)
+    assert_equal "v.0.9.0+task.018", @parser.convert("018", :qualified, release: "v.0.9.0")
+    assert_equal "018", @parser.convert("v.0.9.0+task.018", :simple)
     assert_nil @parser.convert("invalid", :qualified)
   end
 
   def test_extract_references_from_text
-    text = "See tasks v.0.9.0+018 and backlog+025, also task.003"
+    text = "See tasks v.0.9.0+task.018 and backlog+task.025, also task.003"
     references = @parser.extract_references(text)
 
-    assert_includes references, "v.0.9.0+018"
-    assert_includes references, "backlog+025"
+    assert_includes references, "v.0.9.0+task.018"
+    assert_includes references, "backlog+task.025"
     assert_includes references, "task.003"
   end
 end

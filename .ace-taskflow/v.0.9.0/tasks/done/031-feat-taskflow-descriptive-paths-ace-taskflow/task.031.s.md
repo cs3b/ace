@@ -18,7 +18,7 @@ This task implements a new descriptive task file and folder naming convention th
 
 The new convention will use the format: `[task_id]-[type]-[context]-[keywords]/task.[task_id].md`
 
-Example: `025-feat-taskflow-idea-gc-llm/task.025.md`
+Example: `025-feat-taskflow-idea-gc-llm/025.md`
 
 Components:
 - `[task_id]`: Unique numerical identifier

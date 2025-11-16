@@ -83,6 +83,6 @@ ls -la bin/ace-*
 
 ## References
 
-- Related to: task.021 (Extract llm-query from dev-tools to ace-llm gem)
-- Related to: task.036 (Fix ace-llm-query executable pattern)
+- Related to: 021 (Extract llm-query from dev-tools to ace-llm gem)
+- Related to: 036 (Fix ace-llm-query executable pattern)
 - Pattern follows: bin/ace-context, bin/ace-nav, bin/ace-taskflow

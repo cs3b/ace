@@ -7,7 +7,7 @@ dependencies: []
 needs_review: false
 worktree:
   branch: 052-updated-direction-2025-11-05
-  path: ".ace-wt/task.052"
+  path: ".ace-wt/052"
   created_at: '2025-11-05 16:31:03'
   updated_at: '2025-11-05 16:31:03'
 ---
@@ -313,7 +313,7 @@ end
   - Impact: Enables local development and testing of gem
   - Integration: Follows existing pattern for all ace-* gems
 
-- **.ace-taskflow/v.0.9.0/tasks/maybe/052-create-ace-handbook-package/task.052.s.md**
+- **.ace-taskflow/v.0.9.0/tasks/maybe/052-create-ace-handbook-package/052.s.md**
   - Changes: Add complete implementation plan (this document)
   - Impact: Task ready for execution
   - Status: draft → pending

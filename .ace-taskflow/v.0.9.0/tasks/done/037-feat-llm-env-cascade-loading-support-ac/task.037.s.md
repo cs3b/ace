@@ -103,6 +103,6 @@ unset GEMINI_API_KEY && ./bin/ace-llm-query gflash "test"
 
 ## References
 
-- Related to: task.021 (Extract llm-query from dev-tools to ace-llm gem)
+- Related to: 021 (Extract llm-query from dev-tools to ace-llm gem)
 - Uses: ace-core's EnvLoader and ConfigDiscovery
 - No new dependencies added (leverages existing ace-core)

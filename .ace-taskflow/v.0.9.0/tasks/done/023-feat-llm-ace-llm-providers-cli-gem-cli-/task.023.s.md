@@ -311,6 +311,6 @@ Create a modular ace-llm-providers-cli gem that extends ace-llm with CLI-based L
 
 - Current implementation: dev-tools/lib/coding_agent_tools/organisms/claude_code_client.rb
 - Current implementation: dev-tools/lib/coding_agent_tools/organisms/codex_client.rb
-- Dependency on: ace-llm gem (task.021)
+- Dependency on: ace-llm gem (021)
 - Uses: Ruby stdlib Open3 for subprocess execution
 - Pattern: Plugin architecture for provider registration

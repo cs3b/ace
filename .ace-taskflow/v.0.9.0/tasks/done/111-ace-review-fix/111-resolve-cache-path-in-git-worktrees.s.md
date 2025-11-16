@@ -24,7 +24,7 @@ When a developer works in a git worktree and runs ace-review:
 5. Review results and session data are accessible in subsequent runs
 
 Currently, the tool creates caches in deeply nested, incorrect paths like:
-`/Users/mc/Ps/ace-meta/.ace-wt/task.094/ace-context/.cache/ace-review/sessions/`
+`/Users/mc/Ps/ace-meta/.ace-wt/094/ace-context/.cache/ace-review/sessions/`
 
 The expected path should be either:
 - `.cache/ace-review/sessions/` relative to worktree root, OR

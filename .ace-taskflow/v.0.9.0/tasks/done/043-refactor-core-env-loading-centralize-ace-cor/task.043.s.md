@@ -93,6 +93,6 @@ bundle exec ace-git-commit --dry-run -i "Test refactoring"
 ## References
 
 - Commits: 9ed1584e - "refactor(ace-core): centralize env cascade loading without polluting ENV"
-- Related tasks: Follows from task.042 initial fix
+- Related tasks: Follows from 042 initial fix
 - Documentation: Updated context docs in previous commits
 - Follow-up needed: None - refactoring complete

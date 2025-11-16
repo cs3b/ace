@@ -14,7 +14,7 @@ class TaskManagerTest < AceTaskflowTestCase
         task = manager.get_next_task(release: "v.0.9.0")
 
         assert task
-        # "next" preset includes in-progress tasks, so task.002 (in-progress) comes first
+        # "next" preset includes in-progress tasks, so 002 (in-progress) comes first
         assert_equal "v.0.9.0+task.002", task[:id]
         assert_equal "in-progress", task[:status]
       end
@@ -141,7 +141,7 @@ class TaskManagerTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
-        task = manager.show_task("v.0.8.0+001")
+        task = manager.show_task("v.0.8.0+task.001")
 
         assert task
         assert_equal "v.0.8.0+task.001", task[:id]

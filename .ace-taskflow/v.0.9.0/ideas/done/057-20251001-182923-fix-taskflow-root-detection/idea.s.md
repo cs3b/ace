@@ -52,9 +52,9 @@ v.0.9.0: 2/53 tasks • Mono-Repo Multiple Gems
 Ideas: 💡 8 | ✅ 7 • 15 total
 Tasks: ⚫ 9 | ⚪ 1 | 🟡 1 | 🟢 41 | 🔴 0 | ❓ 1 • 53 total • 77% complete
 ========================================
-  v.0.9.0+057     ⚪ Improve ace-test-runner reporter output for Minitest
+  v.0.9.0+task.057     ⚪ Improve ace-test-runner reporter output for Minitest
     .ace-taskflow/v.0.9.0/t/057-test-test-ace-test-runner-reporter-outpu/task.057.md
-  v.0.9.0+055     🟡 Add critical edge case tests to ACE packages
+  v.0.9.0+task.055     🟡 Add critical edge case tests to ACE packages
     .ace-taskflow/v.0.9.0/t/055-test-packages-critical-edge-case-tests/task.055.md
     Estimate: 3-5 days|
 ```

@@ -186,7 +186,7 @@ Replace ace-docs' custom frontmatter handling with ace-support-markdown's unifie
 
 ## References
 
-- **Parent Task**: task.079 - Create ace-support-markdown gem
+- **Parent Task**: 079 - Create ace-support-markdown gem
 - **API Documentation**: ace-support-markdown/README.md
 - **Files to Migrate**:
   - ace-docs/lib/ace/docs/molecules/frontmatter_manager.rb (5 usage points)

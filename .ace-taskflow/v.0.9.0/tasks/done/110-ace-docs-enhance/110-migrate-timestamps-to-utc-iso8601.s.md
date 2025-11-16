@@ -15,7 +15,7 @@ tags:
 
 ## Prerequisites
 
-**Critical Issues in PR #25 (task.092):**
+**Critical Issues in PR #25 (092):**
 
 PR #25 introduced date+time timestamp support but code review identified blocking issues that must be understood before proceeding with this migration:
 
@@ -40,7 +40,7 @@ PR #25 introduced date+time timestamp support but code review identified blockin
 
 ## Context
 
-PR #25 (task.092) introduced date+time timestamp support using local time format `YYYY-MM-DD HH:MM`. However, this creates ambiguity and inconsistency issues:
+PR #25 (092) introduced date+time timestamp support using local time format `YYYY-MM-DD HH:MM`. However, this creates ambiguity and inconsistency issues:
 
 **Current Problem:**
 - Local time is ambiguous (e.g., `2025-11-01 14:30` - which timezone?)

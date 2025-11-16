@@ -20,7 +20,7 @@ sort: 996
 **Current Structure (Problem):**
 ```bash
 # Tasks:
-.ace-taskflow/v.0.9.0/tasks/045-info-tasks-and-id-045/task.045.md
+.ace-taskflow/v.0.9.0/tasks/045-info-tasks-and-id-045/045.md
 
 # Ideas:
 .ace-taskflow/v.0.9.0/ideas/20251015-011423-enhancement-in-ace-taskflow-make-the-task-folde.md
@@ -117,7 +117,7 @@ sort: 996
 # Task commands (unchanged behavior):
 ace-taskflow task 085                    # Find by number
 ace-taskflow task show 085               # Show task details
-ace-taskflow task v.0.9.0+085           # Find by full reference
+ace-taskflow task v.0.9.0+task.085           # Find by full reference
 
 # Task creation (system generates hierarchical structure)
 ace-taskflow task create "Fix search default behavior"

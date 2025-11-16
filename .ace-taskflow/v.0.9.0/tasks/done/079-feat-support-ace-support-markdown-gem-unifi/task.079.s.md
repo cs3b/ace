@@ -85,7 +85,7 @@ Ace::Support::Markdown::SafeFileWriter.write_with_safety(
 
 # Document Building
 builder = Ace::Support::Markdown::DocumentBuilder.new
-builder.frontmatter({"id" => "task.079", "status" => "draft"})
+builder.frontmatter({"id" => "079", "status" => "draft"})
 builder.add_section(heading: "# Title", content: "Description")
 builder.to_markdown
 ```
@@ -183,8 +183,8 @@ Create a centralized, safe markdown editing gem that eliminates code duplication
 ## References
 
 - **Root Causes**:
-  - Task 076 corruption - `tasks/done/076-feat-context-preset-composition-support-ace/task.076.md` (337 lines → 3 lines)
-  - Task 078 corruption - `tasks/done/078-docs-docs-multi-subject-configuration-ac/task.078.md` (282 lines → 3 lines)
+  - Task 076 corruption - `tasks/done/076-feat-context-preset-composition-support-ace/076.md` (337 lines → 3 lines)
+  - Task 078 corruption - `tasks/done/078-docs-docs-multi-subject-configuration-ac/078.md` (282 lines → 3 lines)
 - **Current Implementations**:
   - `ace-docs/lib/ace/docs/molecules/frontmatter_manager.rb` - Frontmatter updates
   - `ace-docs/lib/ace/docs/atoms/frontmatter_parser.rb` - YAML parsing

@@ -24,7 +24,7 @@ Implemented comprehensive dependency management improvements for ace-taskflow, i
 
 ## Scope of Work
 
-- Updated task.034.md specification to remove critical-path and --ready references
+- Updated 034.md specification to remove critical-path and --ready references
 - Created DependencyResolver molecule for dependency logic
 - Implemented dependency-aware sorting in TaskFilter
 - Created DependencyTreeVisualizer for ASCII tree views
@@ -41,7 +41,7 @@ Implemented comprehensive dependency management improvements for ace-taskflow, i
 - `ace-taskflow/lib/ace/taskflow/molecules/task_filter.rb` - Added dependency-aware sorting
 - `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb` - Added tree formatter support
 - `ace-taskflow/lib/ace/taskflow/commands/task_command.rb` - Added tree view for individual tasks
-- `.ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/task.034.md` - Updated specification
+- `.ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/034.md` - Updated specification
 - `.ace-taskflow/v.0.9.0/t/034-feat-taskflow-dependency-management-ace-task/ux/usage.md` - Updated examples
 
 ## Implementation Summary
@@ -89,7 +89,7 @@ ace-taskflow task show 034 --tree
 
 ## References
 
-- Related to: task.034 (original dependency management task)
+- Related to: 034 (original dependency management task)
 - Files modified in this session:
   - Created 2 new molecule files for dependency handling
   - Updated 5 existing files for integration

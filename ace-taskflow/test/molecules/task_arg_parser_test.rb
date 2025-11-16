@@ -109,11 +109,11 @@ class TaskArgParserTest < Minitest::Test
   end
 
   def test_parse_dependency_args_with_qualified_refs
-    args = ["v.0.9.0+034", "--depends-on", "v.0.9.0+031"]
+    args = ["v.0.9.0+task.034", "--depends-on", "v.0.9.0+task.031"]
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_dependency_args(args)
 
-    assert_equal "v.0.9.0+034", result[:task_ref]
-    assert_equal "v.0.9.0+031", result[:depends_on_ref]
+    assert_equal "v.0.9.0+task.034", result[:task_ref]
+    assert_equal "v.0.9.0+task.031", result[:depends_on_ref]
   end
 
   def test_parse_dependency_args_missing_dependency_ref

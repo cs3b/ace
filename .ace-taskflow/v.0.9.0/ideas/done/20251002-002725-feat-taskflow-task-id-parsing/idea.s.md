@@ -14,7 +14,7 @@ llm_model: gflash
 ---
 
 ## Problem
-The `ace-taskflow` gem currently supports various task ID formats like `018`, `task.018`, `v.0.9.0+018`, and `backlog+025`. However, it explicitly fails to parse task IDs that combine a version prefix with the `task.` keyword, such as `v.0.9.0+task.060`. This inconsistency in parsing limits user flexibility and deviates from an intuitive understanding of how versioned task identifiers might be constructed, even though `v.0.9.0+060` and `task.060` are individually recognized.
+The `ace-taskflow` gem currently supports various task ID formats like `018`, `task.018`, `v.0.9.0+task.018`, and `backlog+task.025`. However, it explicitly fails to parse task IDs that combine a version prefix with the `task.` keyword, such as `v.0.9.0+task.060`. This inconsistency in parsing limits user flexibility and deviates from an intuitive understanding of how versioned task identifiers might be constructed, even though `v.0.9.0+task.060` and `task.060` are individually recognized.
 
 ## Solution
 Implement an enhancement to the `ace-taskflow` gem's task identifier parsing logic to correctly recognize and resolve task IDs formatted as `v.X.Y.Z+task.NNN`. This will involve updating the internal mechanisms responsible for extracting the version and task number from the provided string, ensuring that the explicit `task.` keyword is handled correctly when combined with a version prefix.
@@ -25,7 +25,7 @@ Implement an enhancement to the `ace-taskflow` gem's task identifier parsing log
 3.  **Leverage ace-core:** Ensure any file reading or path manipulation leverages `Ace::Core::Atoms::FileReader` or similar utilities if applicable for resolving paths.
 4.  **Testing:** Add comprehensive test cases to `ace-taskflow/test/` using `AceTestCase` from `ace-test-support`. These tests should cover:
     *   Successful parsing of `v.X.Y.Z+task.NNN` IDs.
-    *   Continued successful parsing of all existing valid formats (`060`, `task.060`, `v.0.9.0+060`, `backlog+025`).
+    *   Continued successful parsing of all existing valid formats (`060`, `task.060`, `v.0.9.0+task.060`, `backlog+task.025`).
     *   Appropriate error handling for genuinely invalid formats.
 
 ## Considerations
@@ -51,7 +51,7 @@ Ensure we support v.0.9.0+task.060 as valid task id
 
 ⏺ Bash(ace-taskflow task v.0.9.0+task.060 --path)
   ⎿  Error: Task 'v.0.9.0+task.060' not found.
-     Valid formats: 018, task.018, v.0.9.0+018, backlog+025
+     Valid formats: 018, task.018, v.0.9.0+task.018, backlog+task.025
 
 ⏺ Let me try with the correct format:
 

@@ -134,7 +134,7 @@ class TasksCommandTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          command.execute(["reschedule", "v.0.9.0+003,v.0.9.0+004", "v.0.8.0"])
+          command.execute(["reschedule", "v.0.9.0+task.003,v.0.9.0+task.004", "v.0.8.0"])
         end
 
         assert_match(/Rescheduled/, output)
@@ -158,7 +158,7 @@ class TasksCommandTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         command = Ace::Taskflow::Commands::TasksCommand.new
         output = capture_stdout do
-          command.execute(["reschedule", "v.0.9.0+999", "v.0.8.0"])
+          command.execute(["reschedule", "v.0.9.0+task.999", "v.0.8.0"])
         end
 
         assert_match(/not found/, output)

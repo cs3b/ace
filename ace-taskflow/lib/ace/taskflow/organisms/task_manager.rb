@@ -453,8 +453,8 @@ module Ace
         # @return [Hash] Statistics
         def get_statistics(release: "all")
           # Use glob pattern to include all tasks (including maybe/, anyday/, done/ subdirectories)
-          # Only match task files (task.*.s.md), not documentation files
-          tasks = list_tasks(release: release, glob: ["**/task.*.s.md"])
+          # Match both old format (task.NNN.s.md) and new hierarchical format (NNN-slug.s.md)
+          tasks = list_tasks(release: release, glob: ["**/task.[0-9][0-9][0-9].s.md", "**/[0-9][0-9][0-9]-*.s.md"])
 
           # Delegate to pure logic molecule
           Molecules::TaskStatistics.calculate(tasks)

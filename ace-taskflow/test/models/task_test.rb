@@ -118,7 +118,7 @@ class TaskModelTest < AceTaskflowTestCase
   def test_qualified_reference_accessor
     task = Ace::Taskflow::Models::Task.new(@task_data)
     # The qualified_reference uses task_number, not "task.XXX" format
-    assert_equal "v.0.9.0+001", task.qualified_reference
+    assert_equal "v.0.9.0+task.001", task.qualified_reference
   end
 
   def test_task_actionable_predicate

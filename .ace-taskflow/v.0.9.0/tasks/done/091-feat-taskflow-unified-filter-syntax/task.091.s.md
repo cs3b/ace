@@ -618,7 +618,7 @@ Task 093 was recently completed (Nov 3, 2025) and changed:
   - Simple matching: `--filter key:value` works
   - OR values: `--filter status:pending|in-progress` works
   - Negation: `--filter status:!done` works
-  - Array matching: `--filter dependencies:task.081` works
+  - Array matching: `--filter dependencies:081` works
   - Multiple filters (AND): `--filter status:pending --filter priority:high` works
 
 - [ ] **AC 4**: `--filter-clear` flag bypasses preset filters

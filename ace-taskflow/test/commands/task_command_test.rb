@@ -16,7 +16,7 @@ class TaskCommandTest < AceTaskflowTestCase
         end
 
         # Should select the in-progress task (prioritized over pending)
-        # Note: qualified_reference shows short form (v.0.9.0+002), full id shows long form (v.0.9.0+task.002)
+        # Note: qualified_reference shows short form (v.0.9.0+task.002), full id shows long form (v.0.9.0+task.002)
         assert_match(/v\.0\.9\.0\+(task\.)?002/, output)
         assert_match(/in-progress|🟡/, output)
       end
@@ -225,7 +225,7 @@ class TaskCommandTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         output = capture_stdout do
-          @command.execute(["v.0.8.0+001"])
+          @command.execute(["v.0.8.0+task.001"])
         end
 
         assert_match(/v\.0\.8\.0\+task\.001/, output)

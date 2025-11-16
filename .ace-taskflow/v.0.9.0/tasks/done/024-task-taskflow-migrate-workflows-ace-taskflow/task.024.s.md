@@ -19,7 +19,7 @@ Users interact with workflows via ace-taskflow commands:
 ```bash
 # Task management
 ace-taskflow task create "Task Title"       # Creates task and returns path
-ace-taskflow task [id]                      # Navigate to task (supports task.021, v.0.9.0+021, 021)
+ace-taskflow task [id]                      # Navigate to task (supports 021, v.0.9.0+task.021, 021)
 ace-taskflow tasks --status pending         # List tasks
 
 # Release management
@@ -104,8 +104,8 @@ ace-taskflow idea "New idea"               # Capture ideas
    - `task-manager create --release v.X.Y.Z --title "Task"` → `ace-taskflow task create "Task"`
    - `task-manager next` → `ace-taskflow task`
    - `task-manager list` → `ace-taskflow tasks`
-   - `nav-path file v.0.4.0+task.4` → `ace-taskflow task v.0.4.0+004`
-   - `nav-path file task.21` → `ace-taskflow task 021`
+   - `nav-path file v.0.4.0+4` → `ace-taskflow task v.0.4.0+task.004`
+   - `nav-path file 21` → `ace-taskflow task 021`
 
    **Release Management:**
    - `release-manager draft` → `ace-taskflow release create`
