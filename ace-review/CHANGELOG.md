@@ -5,6 +5,55 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1] - 2025-11-15
+
+### Fixed
+- **Git Worktree Cache Path Resolution**: Fixed cache directory creation to use project root instead of current working directory
+  - Resolves issue where caches were created in deeply nested, incorrect paths in git worktrees (e.g., `/path/.ace-wt/task.094/ace-context/.cache/ace-review/sessions/`)
+  - Modified `ReviewManager#create_cache_directory` to use `Ace::Core::Molecules::ProjectRootFinder.find_or_current`
+  - Added `require "ace/core/molecules/project_root_finder"` to review_manager.rb
+  - Each worktree now maintains its own cache at `.cache/ace-review/sessions/` relative to worktree root
+  - Updated tests to expect cache at project root location
+  - All 161 ace-review tests pass with no breaking changes to main repo usage
+  - Transparent fix - tool "just works" in worktrees without user configuration
+
+### Changed
+- **Dependencies**: Updated to use ace-support-core ~> 0.10.1 for worktree support
+
+## [0.16.0] - 2025-11-13
+
+### Added
+- **Preset Composition**: Support for composing review presets from reusable base configurations
+  - New `presets:` array at root level for preset composition
+  - Recursive preset loading with circular dependency detection (max depth: 10)
+  - Smart merging strategies: arrays concatenate+deduplicate, hashes deep merge, scalars last-wins
+  - **Composition order**: Base presets are loaded first, then the composing preset (last wins for scalars)
+  - Full backward compatibility - existing presets without `presets:` key continue to work unchanged
+  - New `PresetValidator` atom for validation and circular dependency detection
+  - Preset name validation (prevents path traversal, enforces length limits)
+  - Enhanced `PresetManager` molecule with `load_preset_with_composition` method
+  - Comprehensive test coverage: 23 validator tests, 22 manager composition tests, 11 integration tests
+- **Example Preset Refactoring**: New DRY preset structure
+  - `code.yml` base preset with common review instructions
+  - `code-pr.yml` composed preset for pull request reviews
+  - `code-wip.yml` composed preset for work-in-progress reviews
+
+### Changed
+- **PresetManager**: Enhanced to support preset composition while maintaining backward compatibility
+  - Recursive loading with visited set tracking
+  - Deep merge support for nested hash structures
+  - Array deduplication during composition
+  - Intermediate caching prevents redundant composition (particularly beneficial for deeply nested presets)
+  - Standardized internal metadata format (string keys for consistency)
+  - Deep metadata stripping from nested structures
+  - Added `strip_composition_metadata` helper method for DRY code
+  - Performance instrumentation with debug mode support
+
+### Technical
+- Integrated test suite performance optimizations from v0.15.1
+- Updated test patterns to match new test helper structure
+- All 56 tests passing (23 validator + 22 manager + 11 integration)
+
 ## [0.15.1] - 2025-11-11
 
 ### Technical

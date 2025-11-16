@@ -5,6 +5,7 @@ require "date"
 require "fileutils"
 require "yaml"
 require "ace/git_diff"
+require "ace/core/molecules/project_root_finder"
 
 module Ace
   module Docs
@@ -282,7 +283,8 @@ module Ace
         def self.git_root
           @git_root ||= begin
             stdout, _, status = Open3.capture3("git rev-parse --show-toplevel")
-            status.success? ? stdout.strip : Dir.pwd
+            # Use ProjectRootFinder as fallback to support both main repos and git worktrees
+            status.success? ? stdout.strip : Ace::Core::Molecules::ProjectRootFinder.find_or_current
           end
         end
 

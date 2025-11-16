@@ -275,6 +275,26 @@ module Ace
             end
           end
         end
+
+        def test_finds_git_worktree_root
+          # Create git worktree structure where .git is a file (not a directory)
+          worktree_dir = File.join(@test_dir, "worktree")
+          nested_dir = File.join(worktree_dir, "lib", "nested")
+          FileUtils.mkdir_p(nested_dir)
+
+          # In a worktree, .git is a file containing "gitdir: /path/to/main/.git/worktrees/name"
+          git_file_content = "gitdir: /fake/main/repo/.git/worktrees/worktree\n"
+          File.write(File.join(worktree_dir, ".git"), git_file_content)
+
+          Dir.chdir(nested_dir) do
+            finder = ProjectRootFinder.new
+            # Stub env_project_root to return nil (simulate clean environment)
+            finder.stub :env_project_root, nil do
+              # Should find the worktree root (where .git file exists)
+              assert_equal File.realpath(worktree_dir), File.realpath(finder.find)
+            end
+          end
+        end
       end
     end
   end
