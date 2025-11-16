@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "ace/core/molecules/project_root_finder"
 
 module Ace
   module Review
@@ -75,12 +76,8 @@ module Ace
         private
 
         def find_project_root
-          if defined?(Ace::Core)
-            require "ace/core"
-            discovery = Ace::Core::ConfigDiscovery.new
-            return discovery.project_root if discovery.project_root
-          end
-          Dir.pwd
+          # Use ProjectRootFinder to support both main repos and git worktrees
+          Ace::Core::Molecules::ProjectRootFinder.find_or_current
         end
 
         def resolve_protocol_uri(uri)

@@ -4,6 +4,7 @@ require "fileutils"
 require "time"
 require "yaml"
 require "open3"
+require "ace/core/molecules/project_root_finder"
 
 module Ace
   module Review
@@ -516,8 +517,10 @@ module Ace
         end
 
         def create_cache_directory
-          # Create cache directory in .cache/ace-review/sessions/
-          base_cache_path = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
+          # Create cache directory in .cache/ace-review/sessions/ relative to project root
+          # Use ProjectRootFinder to support both main repos and git worktrees
+          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          base_cache_path = File.join(project_root, ".cache", "ace-review", "sessions")
           FileUtils.mkdir_p(base_cache_path)
           base_cache_path
         end

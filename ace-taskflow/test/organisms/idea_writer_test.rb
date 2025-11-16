@@ -157,7 +157,7 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
         path = @writer.write("Regression test for file path return value")
 
         # Verify it returns a file path (not directory)
-        assert_match(/\.s\.md$/, path), "Should return .s.md file path"
+        assert_match(/\.s\.md$/, path, "Should return .s.md file path")
 
         # Verify the path points to a file, not a directory
         # (In our mock, we can verify the write_calls were made to the file)
