@@ -4,8 +4,9 @@ filename_suggestion: feat-llm-prompt-file-management
 enhanced_at: 2025-11-06 13:56:54
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-11-16T15:57:10+00:00
 ---
-
 # Implement `ace-prompt` command for file-based prompt management and archiving
 
 ## Problem
