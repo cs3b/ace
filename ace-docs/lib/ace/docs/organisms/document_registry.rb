@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "ace/core/molecules/project_root_finder"
 require_relative "../molecules/document_loader"
 require_relative "../models/document"
 require_relative "../atoms/type_inferrer"
@@ -17,7 +18,8 @@ module Ace
           @config = load_configuration
           @documents = []
           # Store the project root (where config was found) for document discovery
-          @project_root = @config_path ? File.dirname(File.dirname(File.dirname(@config_path))) : Dir.pwd
+          # Use ProjectRootFinder to support both main repos and git worktrees
+          @project_root = @config_path ? File.dirname(File.dirname(File.dirname(@config_path))) : Ace::Core::Molecules::ProjectRootFinder.find_or_current
           discover_documents
         end
 
@@ -97,8 +99,9 @@ module Ace
             "ace-docs.yaml"
           ]
 
-          # Start from current directory and walk up to find config
-          current_dir = Dir.pwd
+          # Start from project root (or current directory) and walk up to find config
+          # Use ProjectRootFinder to support both main repos and git worktrees
+          current_dir = Ace::Core::Molecules::ProjectRootFinder.find_or_current
 
           while current_dir && current_dir != "/" && current_dir != File.dirname(current_dir)
             config_locations.each do |location|

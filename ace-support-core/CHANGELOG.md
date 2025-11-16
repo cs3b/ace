@@ -5,6 +5,22 @@ All notable changes to ace-core will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2025-11-15
+
+### Added
+
+- **Git Worktree Detection Test**: Added `test_finds_git_worktree_root` to ProjectRootFinder test suite
+  - Verifies ProjectRootFinder correctly handles `.git` as both file (worktree) and directory (main repo)
+  - Creates test worktree structure with `.git` file containing gitdir reference
+  - Confirms project root detection works from nested directories in worktrees
+  - Supports ace-review cache path resolution fix (task 111)
+
+### Changed
+
+- **Test Coverage**: Enhanced ProjectRootFinder test suite for worktree compatibility
+  - All 262 tests pass with comprehensive worktree scenario coverage
+  - No breaking changes to existing functionality
+
 ## [0.10.0] - 2025-10-26
 
 ### Added

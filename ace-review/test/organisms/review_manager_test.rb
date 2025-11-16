@@ -124,7 +124,10 @@ class ReviewManagerTest < AceReviewTest
   def test_create_cache_directory
     cache_dir = @manager.send(:create_cache_directory)
 
-    assert_equal File.join(Dir.pwd, ".cache", "ace-review", "sessions"), cache_dir
+    # Cache should be created at project root (using ProjectRootFinder), not Dir.pwd
+    project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+    expected_cache_dir = File.join(project_root, ".cache", "ace-review", "sessions")
+    assert_equal expected_cache_dir, cache_dir
     assert Dir.exist?(cache_dir)
   end
 
@@ -210,8 +213,9 @@ class ReviewManagerTest < AceReviewTest
     assert result[:success], "Review should succeed: #{result[:error]}"
     assert result[:session_dir], "Should have session directory"
 
-    # Should create cache directory automatically
-    cache_dir = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
+    # Should create cache directory automatically at project root
+    project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+    cache_dir = File.join(project_root, ".cache", "ace-review", "sessions")
     assert Dir.exist?(cache_dir), "Cache directory should be created"
   end
 
