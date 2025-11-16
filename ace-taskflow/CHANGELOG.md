@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2025-11-16
+
+### Fixed
+
+- **Task Counting Bug**: Fixed statistics counting where pending tasks showed incorrect count (3 instead of 12)
+  - Updated `get_statistics` glob pattern to match both old format (`task.NNN.s.md`) and new hierarchical format (`NNN-slug.s.md`)
+  - Standardized all task IDs to canonical format (`v.0.9.0+task.NNN`) for consistent task reference resolution
+  - Updated test expectations to match canonical format
+  - Ensures accurate task statistics across all task naming formats
+
+### Technical
+
+- Updated capture-idea workflow documentation with current API and examples
+- Applied code review feedback improvements for better maintainability
+- Improved idea create output to show full file path instead of folder path
+
 ## [0.19.1] - 2025-11-15
 
 ### Changed

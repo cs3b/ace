@@ -134,7 +134,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.19.1)
+    ace-taskflow (0.19.2)
       ace-support-core (~> 0.10.0)
       ace-support-mac-clipboard (~> 0.1.0)
       ace-support-markdown (~> 0.1)
