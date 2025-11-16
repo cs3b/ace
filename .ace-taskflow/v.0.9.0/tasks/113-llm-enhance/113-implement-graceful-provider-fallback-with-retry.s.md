@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.113
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 8h
 dependencies: []
 ---
 
@@ -87,33 +87,273 @@ fallback:
 
 Improve reliability and user experience by making LLM-dependent operations resilient to temporary provider failures. Users should be able to work uninterrupted when providers have transient issues, with the system handling complexity transparently.
 
-## Scope of Work
+## Technical Approach
 
-- **User Experience Scope**: All ace-* tools that use ace-llm for LLM operations (ace-git-commit, ace-review, ace-llm-query, etc.)
-- **System Behavior Scope**: Retry logic, provider switching, status reporting, configuration management
-- **Interface Scope**: Existing CLI interfaces maintained, new configuration options for fallback behavior
+### Architecture Pattern
+- **Decorator Pattern**: Wrap QueryInterface with fallback orchestration
+- **Chain of Responsibility**: Provider chain execution with early termination on success
+- **Strategy Pattern**: Different retry strategies per error type
 
-### Deliverables
+### Technology Stack
+- **Ruby standard library**: No new external dependencies
+- **Existing ace-llm components**: BaseClient, ClientRegistry, HTTPClient
+- **Configuration via YAML**: Extend existing provider configuration format
 
-#### Behavioral Specifications
-- Retry and fallback behavior flow definitions
-- Provider switching decision logic
-- User feedback message specifications
+### Implementation Strategy
+- **Phase 1**: Core fallback mechanism in QueryInterface
+- **Phase 2**: Configuration schema and validation
+- **Phase 3**: Monitoring and metrics collection
+- **Phase 4**: Integration with dependent tools
 
-#### Validation Artifacts
-- Test scenarios for various failure modes
-- Performance benchmarks for fallback latency
-- User acceptance criteria for reliability
+## Tool Selection
+
+| Criteria | Option A: QueryInterface | Option B: ClientRegistry | Option C: BaseClient | Selected |
+|----------|-------------------------|-------------------------|---------------------|----------|
+| Performance | Excellent | Good | Fair | Option A |
+| Integration | Excellent | Good | Poor | Option A |
+| Maintenance | Excellent | Fair | Poor | Option A |
+| Flexibility | Excellent | Good | Poor | Option A |
+| Backwards Compat | Excellent | Good | Fair | Option A |
+
+**Selection Rationale:** QueryInterface is the main entry point for all LLM operations, making it the ideal place to implement fallback logic. It has access to the full configuration, can coordinate between multiple providers, and maintains clean separation of concerns.
+
+### Dependencies
+- No new gem dependencies required
+- Uses existing ace-llm infrastructure
+- Compatible with current Ruby version (3.0+)
+
+## File Modifications
+
+### Create
+- ace-llm/lib/ace/llm/molecules/fallback_orchestrator.rb
+  - Purpose: Orchestrate fallback chain execution
+  - Key components: Provider chain management, error classification, retry logic
+  - Dependencies: ClientRegistry, BaseClient
+
+- ace-llm/lib/ace/llm/atoms/error_classifier.rb
+  - Purpose: Classify errors for retry/fallback decisions
+  - Key components: Error type mapping, retry eligibility rules
+  - Dependencies: LLM error classes
+
+- ace-llm/lib/ace/llm/models/fallback_config.rb
+  - Purpose: Configuration model for fallback settings
+  - Key components: Config validation, default values
+  - Dependencies: None (pure data model)
+
+- ace-llm/test/molecules/fallback_orchestrator_test.rb
+  - Purpose: Test fallback orchestration logic
+  - Key components: Mock providers, error simulation
+  - Dependencies: Test support helpers
+
+- ace-llm/test/atoms/error_classifier_test.rb
+  - Purpose: Test error classification logic
+  - Key components: Error scenarios, classification rules
+  - Dependencies: Test support helpers
+
+### Modify
+- ace-llm/lib/ace/llm/query_interface.rb
+  - Changes: Add fallback parameter, integrate FallbackOrchestrator
+  - Impact: Main entry point gains fallback capability
+  - Integration points: Between client.generate and response formatting
+
+- ace-llm/lib/ace/llm/molecules/client_registry.rb
+  - Changes: Add fallback configuration loading
+  - Impact: Registry aware of fallback chains
+  - Integration points: Provider configuration loading
+
+- ace-llm/lib/ace/llm.rb
+  - Changes: Add new error types for fallback scenarios
+  - Impact: Better error reporting
+  - Integration points: Error hierarchy
+
+- ace-llm/providers/*.yml (all provider configs)
+  - Changes: Add optional fallback section
+  - Impact: Providers can define their fallback chains
+  - Integration points: Configuration schema
+
+### Delete
+- None required
+
+## Test Case Planning
+
+### Happy Path Scenarios
+1. **Primary provider succeeds**: No fallback needed
+2. **First fallback succeeds**: Primary fails with 503, fallback works
+3. **Configuration override**: User specifies custom fallback chain
+4. **Retry then succeed**: Primary fails once, retry succeeds
+
+### Edge Case Scenarios
+1. **All providers fail**: Exhausted fallback chain
+2. **Auth error skip**: 401 error skips to next provider without retry
+3. **Circular fallback**: Provider A → B → A detection
+4. **Empty fallback chain**: Fallback disabled
+5. **Partial response failure**: Streaming fails mid-response
+6. **Config reload**: Hot reload of fallback configuration
+
+### Error Condition Scenarios
+1. **503 Service Unavailable**: Retry with backoff, then fallback
+2. **429 Rate Limited**: Check retry-after header, wait or fallback
+3. **Timeout**: Immediate fallback without retry
+4. **401/403 Auth Error**: Skip provider, no retry
+5. **Network Error**: One retry, then fallback
+6. **Invalid model**: Skip to next provider
+
+### Integration Point Scenarios
+1. **ace-git-commit integration**: Commit message generation with fallback
+2. **ace-review integration**: Code review with fallback
+3. **ace-llm-query direct**: Query with explicit provider fallback
+4. **Configuration cascade**: Project vs user vs system config
+
+### Test Type Categorization
+
+**Unit Tests** (High Priority):
+- ErrorClassifier: Error type mapping
+- FallbackOrchestrator: Chain execution logic
+- FallbackConfig: Configuration validation
+- QueryInterface: Fallback integration
+
+**Integration Tests** (Medium Priority):
+- Provider switching flow
+- Configuration loading
+- Error propagation
+- Status message output
+
+**End-to-End Tests** (Context Dependent):
+- Full command execution with simulated failures
+- Multiple tool integration
+- Configuration changes during execution
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Infinite fallback loops
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Maintain visited provider set, limit chain depth
+  - **Rollback:** Feature flag to disable fallback
+
+- **Risk:** Performance degradation from retries
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Configurable timeout limits, circuit breaker pattern
+  - **Rollback:** Reduce retry count via config
+
+### Integration Risks
+- **Risk:** Breaking existing tools
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Backward compatible API, extensive testing
+  - **Monitoring:** Track fallback activation frequency
+
+- **Risk:** Configuration complexity
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Sensible defaults, clear documentation
+  - **Monitoring:** Config validation errors
+
+### Performance Risks
+- **Risk:** Cascading timeouts
+  - **Mitigation:** Total timeout limit across fallback chain
+  - **Monitoring:** Track total request time
+  - **Thresholds:** Max 30s for entire fallback chain
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze error patterns from production logs to identify common failure modes
+  > TEST: Error Pattern Analysis
+  > Type: Pre-condition Check
+  > Assert: Common error types and frequencies identified
+  > Command: grep "ProviderError\|503\|429" ~/.ace-llm/logs/*.log | wc -l
+
+* [ ] Research optimal retry strategies (exponential vs fibonacci backoff)
+* [ ] Design fallback chain configuration schema
+* [ ] Plan monitoring and metrics collection approach
+
+### Execution Steps
+
+- [ ] Step 1: Create ErrorClassifier atom for error categorization
+  > TEST: Error Classification
+  > Type: Unit Test
+  > Assert: All error types correctly classified for retry/fallback decisions
+  > Command: cd ace-llm && bundle exec ruby test/atoms/error_classifier_test.rb
+
+- [ ] Step 2: Create FallbackConfig model for configuration
+  > TEST: Config Validation
+  > Type: Unit Test
+  > Assert: Configuration validates correctly with defaults
+  > Command: cd ace-llm && bundle exec ruby test/models/fallback_config_test.rb
+
+- [ ] Step 3: Implement FallbackOrchestrator molecule
+  > TEST: Orchestrator Logic
+  > Type: Unit Test
+  > Assert: Provider chain executes correctly with mocked failures
+  > Command: cd ace-llm && bundle exec ruby test/molecules/fallback_orchestrator_test.rb
+
+- [ ] Step 4: Integrate FallbackOrchestrator into QueryInterface
+  > TEST: Integration Test
+  > Type: Integration Test
+  > Assert: QueryInterface uses fallback on provider failure
+  > Command: cd ace-llm && bundle exec ruby test/integration/query_interface_fallback_test.rb
+
+- [ ] Step 5: Update provider YAML configurations with fallback sections
+  > TEST: Config Loading
+  > Type: Integration Test
+  > Assert: Fallback configurations load from provider YAML
+  > Command: cd ace-llm && bundle exec ace-llm-query "test" --show-config | grep fallback
+
+- [ ] Step 6: Add status output for fallback events
+  > TEST: User Feedback
+  > Type: Integration Test
+  > Assert: Clear messages shown during fallback
+  > Command: cd ace-llm && ACE_LLM_MOCK_FAILURE=true bundle exec ace-llm-query "test" 2>&1 | grep "fallback"
+
+- [ ] Step 7: Update ace-git-commit to handle fallback responses
+  > TEST: Tool Integration
+  > Type: Integration Test
+  > Assert: ace-git-commit works with fallback
+  > Command: cd ace-git-commit && bundle exec ruby test/integration/fallback_test.rb
+
+- [ ] Step 8: Add configuration documentation
+  > TEST: Documentation
+  > Type: Manual Review
+  > Assert: Configuration clearly documented with examples
+  > Command: cat ace-llm/docs/fallback-configuration.md | grep -c "example"
+
+- [ ] Step 9: Implement metrics collection for fallback events
+  > TEST: Metrics Collection
+  > Type: Integration Test
+  > Assert: Fallback events logged with provider info
+  > Command: cd ace-llm && bundle exec ruby test/integration/metrics_test.rb
+
+- [ ] Step 10: Add feature flag for gradual rollout
+  > TEST: Feature Flag
+  > Type: Integration Test
+  > Assert: Fallback can be enabled/disabled via config
+  > Command: cd ace-llm && ACE_LLM_FALLBACK_ENABLED=false bundle exec ace-llm-query "test" --debug
+
+## Acceptance Criteria
+
+- [ ] AC 1: Provider failures trigger automatic fallback to configured alternatives
+- [ ] AC 2: Users see clear status messages about retry and fallback attempts
+- [ ] AC 3: Configuration allows customization of fallback behavior
+- [ ] AC 4: All existing ace-* tools work with fallback enabled
+- [ ] AC 5: Performance impact is minimal (< 2s overhead for fallback)
+- [ ] AC 6: All automated tests pass with fallback enabled
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: Specific retry algorithms, state machine design, provider adapter patterns
-- ❌ **Technology Decisions**: HTTP client libraries, async/threading model, caching strategies
-- ❌ **Performance Optimization**: Connection pooling, request batching, response caching
-- ❌ **Future Enhancements**: Provider health monitoring, automatic provider selection based on task type
+- ❌ Provider health monitoring dashboard
+- ❌ Automatic provider selection based on query type
+- ❌ Cost optimization between providers
+- ❌ Provider response quality comparison
+- ❌ Historical failure tracking and analysis
 
 ## References
 
 - Original issue: .ace-taskflow/v.0.9.0/ideas/done/20251002-201230-we-need-to-handle-the-api-errors-and-have-fallbac/idea.s.md
 - Error trace showing Google API 503 failure in ace-git-commit
 - Similar resilience patterns in ace-review preset fallback behavior
+- ace-llm architecture: ace-llm/lib/ace/llm/query_interface.rb
+- HTTP retry implementation: ace-llm/lib/ace/llm/atoms/http_client.rb
