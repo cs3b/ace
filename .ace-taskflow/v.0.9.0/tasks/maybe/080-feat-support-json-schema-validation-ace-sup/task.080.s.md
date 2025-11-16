@@ -3,7 +3,7 @@ id: v.0.9.0+task.080
 status: pending
 priority: medium
 estimate: 1-2 days
-dependencies: [task.079]
+dependencies: [079]
 ---
 
 # Add JSON Schema validation to ace-support-markdown (v0.2.0)
@@ -42,7 +42,7 @@ schema = {
 }
 
 # Validate with schema
-editor = Ace::Support::Markdown::DocumentEditor.new("task.079.md")
+editor = Ace::Support::Markdown::DocumentEditor.new("079.md")
 editor.update_frontmatter({"status" => "invalid"})
 result = editor.save!(validate: true, schema: schema)
 # Returns: {success: false, errors: ["status: must be one of draft, pending, in-progress, done, blocked"]}

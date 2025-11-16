@@ -137,7 +137,7 @@ ace-docs validate --syntax            # Still works (delegates to ace-lint)
 
 ## Objective
 
-Align ace-docs with ace-review's subject/context architecture pattern and complete the documented-but-unimplemented features from task.071. The primary need is subject diff filtering to reduce diff noise by showing only changes in files/directories relevant to each document (e.g., README.md only cares about ace-docs/ and CHANGELOG.md changes, not test file changes). Use the `ace-docs:` namespace for all configuration to avoid conflicts.
+Align ace-docs with ace-review's subject/context architecture pattern and complete the documented-but-unimplemented features from 071. The primary need is subject diff filtering to reduce diff noise by showing only changes in files/directories relevant to each document (e.g., README.md only cares about ace-docs/ and CHANGELOG.md changes, not test file changes). Use the `ace-docs:` namespace for all configuration to avoid conflicts.
 
 ## Scope of Work
 
@@ -203,7 +203,7 @@ Align ace-docs with ace-review's subject/context architecture pattern and comple
 
 ## References
 
-- Parent Task: .ace-taskflow/v.0.9.0/tasks/done/071-docs-docs-complete-ace-docs-batch-analys/task.071.md
+- Parent Task: .ace-taskflow/v.0.9.0/tasks/done/071-docs-docs-complete-ace-docs-batch-analys/071.md
 - Code with TODO: ace-docs/lib/ace/docs/molecules/change_detector.rb:252
 - Code with TODO: ace-docs/lib/ace/docs/organisms/validator.rb:82,87
 - Code with TODO: ace-docs/lib/ace/docs/commands/update_command.rb:40
@@ -264,7 +264,7 @@ Pattern: Extend existing molecules (ChangeDetector, Validator) following ATOM ar
 **Phase 4: Documentation (1h)**
 1. Update ux/usage.md with ace-docs namespace examples
 2. Update README.md frontmatter descriptions (already started by user)
-3. Update task.073.md with new architecture (this document)
+3. Update 073.md with new architecture (this document)
 4. Clean up TODO comments
 
 **Phase 5: Testing (0.5h)**
@@ -679,7 +679,7 @@ This task continues the pattern from task 071 of **deferring comprehensive test 
 - [ ] **Backward Compatible**: Documents with old update.focus.paths format still work via fallback
 - [ ] **Context Structure Aligned**: ace-docs.context matches ace-review's context pattern
 - [ ] **Semantic Validation Functional**: --semantic flag calls LLM and returns results
-- [ ] **Documentation Complete**: task.073.md, ux/usage.md, and README.md all use ace-docs namespace
+- [ ] **Documentation Complete**: 073.md, ux/usage.md, and README.md all use ace-docs namespace
 - [ ] **Architecture Alignment**: Consistent subject/context pattern with ace-review
 - [ ] **Code Quality**: All TODO comments cleaned up
 - [ ] **Validation Scenario Passed**: VS-073-001 (qa/ace-docs-readme.vs.md) passes all verification steps

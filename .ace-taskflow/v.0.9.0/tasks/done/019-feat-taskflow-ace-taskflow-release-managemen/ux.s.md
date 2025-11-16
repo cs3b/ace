@@ -2,7 +2,7 @@
 
 ## Overview
 
-ace-taskflow provides a unified interface for managing your development workflow through releases, tasks, and ideas. It features a clean directory structure (.ace-taskflow/), qualified task references (v.0.9.0+018, backlog+025), and simple release transitions (promote/demote).
+ace-taskflow provides a unified interface for managing your development workflow through releases, tasks, and ideas. It features a clean directory structure (.ace-taskflow/), qualified task references (v.0.9.0+task.018, backlog+task.025), and simple release transitions (promote/demote).
 
 ## Table of Contents
 
@@ -44,8 +44,8 @@ ace-taskflow task start 019               # Start working on a task
 ace-taskflow task done 019                # Mark task as complete
 
 # Qualified task references
-ace-taskflow task v.0.9.0+018             # Task from specific release
-ace-taskflow task backlog+025             # Task from backlog
+ace-taskflow task v.0.9.0+task.018             # Task from specific release
+ace-taskflow task backlog+task.025             # Task from backlog
 
 # Idea capture
 ace-taskflow idea "Quick thought"         # Capture to active release
@@ -71,8 +71,8 @@ Pending: 2 tasks
 # What did I work on recently?
 $ ace-taskflow tasks --recent --days 1
 Recent Tasks (last 24 hours):
-  ✓ task.018 - Create ace-nav gem (completed 2h ago)
-  ⚡ task.019 - Implement ace-taskflow commands (in-progress)
+  ✓ 018 - Create ace-nav gem (completed 2h ago)
+  ⚡ 019 - Implement ace-taskflow commands (in-progress)
 
 # What should I work on next?
 $ ace-taskflow task
@@ -97,7 +97,7 @@ Pending tasks in v.0.9.0:
 ```bash
 # Get task details (multiple ways)
 $ ace-taskflow task 019                   # Current context
-$ ace-taskflow task v.0.9.0+019           # Explicit release
+$ ace-taskflow task v.0.9.0+task.019           # Explicit release
 $ ace-taskflow task current+019           # Explicit current
 
 Task: 019
@@ -203,8 +203,8 @@ Release validation for v.0.9.0:
   ⚠ 2 pending tasks remain
 
 # Move pending tasks using qualified references
-$ ace-taskflow task move v.0.9.0+008 v.0.10.0
-$ ace-taskflow task move v.0.9.0+009 backlog
+$ ace-taskflow task move v.0.9.0+task.008 v.0.10.0
+$ ace-taskflow task move v.0.9.0+task.009 backlog
 Moved tasks to their destinations
 
 # Demote the release (active → done)
@@ -233,12 +233,12 @@ Status: draft
 
 # Create task in backlog
 $ ace-taskflow task create "Future feature" --backlog
-Created task: backlog+042
+Created task: backlog+task.042
 Path: .ace-taskflow/backlog/t/042/task.md
 
 # Create task in specific release
 $ ace-taskflow task create "Hotfix" --release v.0.9.1
-Created task: v.0.9.1+003
+Created task: v.0.9.1+task.003
 Path: .ace-taskflow/v.0.9.1/t/003/task.md
 ```
 
@@ -258,9 +258,9 @@ Backlog tasks:
 
 $ ace-taskflow tasks --all                # Everything
 All tasks:
-  v.0.9.0+018 - Nav gem (done)
-  v.0.10.0+001 - Caching (draft)
-  backlog+042 - Future feature (draft)
+  v.0.9.0+task.018 - Nav gem (done)
+  v.0.10.0+task.001 - Caching (draft)
+  backlog+task.042 - Future feature (draft)
 
 # Move through lifecycle
 $ ace-taskflow task start 001
@@ -273,8 +273,8 @@ $ ace-taskflow task done 001
 # High priority tasks only
 $ ace-taskflow tasks --priority high
 High priority tasks:
-  task.002 - Fix memory leak (pending)
-  task.005 - Security patch (pending)
+  002 - Fix memory leak (pending)
+  005 - Security patch (pending)
 
 # Sort by different criteria
 $ ace-taskflow tasks --sort priority:desc,created:asc
@@ -291,22 +291,22 @@ $ ace-taskflow tasks \
 
 ```bash
 # Reference tasks from any context
-$ ace-taskflow task v.0.9.0+018           # Specific release
-$ ace-taskflow task backlog+042           # From backlog
+$ ace-taskflow task v.0.9.0+task.018           # Specific release
+$ ace-taskflow task backlog+task.042           # From backlog
 $ ace-taskflow task current+001           # Explicit current
 
 # Move tasks between contexts
-$ ace-taskflow task move backlog+042 v.0.10.0
+$ ace-taskflow task move backlog+task.042 v.0.10.0
 Moved task 042: backlog → v.0.10.0
-New reference: v.0.10.0+003
+New reference: v.0.10.0+task.003
 
-$ ace-taskflow task move v.0.9.0+007 backlog
+$ ace-taskflow task move v.0.9.0+task.007 backlog
 Moved task 007: v.0.9.0 → backlog
-New reference: backlog+044
+New reference: backlog+task.044
 
 # Cross-release operations
-$ ace-taskflow task done v.0.9.1+002      # Complete in different release
-$ ace-taskflow task start backlog+043     # Start backlog task
+$ ace-taskflow task done v.0.9.1+task.002      # Complete in different release
+$ ace-taskflow task start backlog+task.043     # Start backlog task
 ```
 
 ---
@@ -374,7 +374,7 @@ Target release [active/v.0.10.0]: v.0.11.0
 Priority [medium]: high
 Estimate [TBD]: 3d
 
-Created: v.0.11.0+004
+Created: v.0.11.0+task.004
 Path: .ace-taskflow/backlog/v.0.11.0/t/004/task.md
 Idea archived to: .ace-taskflow/backlog/v.0.11.0/t/004/docs/original-idea.md
 ```
@@ -410,14 +410,14 @@ $ ace-taskflow release status --verbose
 
 # List all pending tasks with estimates
 $ ace-taskflow task list --status pending --format detailed
-task.001 [3d] Implement caching layer (high priority)
-task.002 [1d] Fix memory leak (high priority)
-task.003 [2d] Update documentation (medium priority)
-task.004 [4h] Add input validation (low priority)
+001 [3d] Implement caching layer (high priority)
+002 [1d] Fix memory leak (high priority)
+003 [2d] Update documentation (medium priority)
+004 [4h] Add input validation (low priority)
 Total: 6.5 days of work
 
 # Assign tasks for sprint (mark as in-progress)
-$ ace-taskflow task start task.001,task.002
+$ ace-taskflow task start 001,002
 Started 2 tasks
 Sprint capacity: 4d committed
 ```
@@ -428,13 +428,13 @@ Sprint capacity: 4d committed
 # Morning: Check status and pick task
 $ ace-taskflow release status --brief
 $ ace-taskflow task next
-$ ace-taskflow task start task.007
+$ ace-taskflow task start 007
 
 # During work: Capture ideas without context switching
 $ ace-taskflow idea "Refactor this module to use strategy pattern" --current
 
 # Afternoon: Complete task and pick next
-$ ace-taskflow task done task.007
+$ ace-taskflow task done 007
 $ ace-taskflow task next
 
 # End of day: Review progress
@@ -464,7 +464,7 @@ $ ace-taskflow release changelog
 ...
 
 ### Known Issues
-- Minor UI glitch in settings page (task.045)
+- Minor UI glitch in settings page (045)
 
 # Export metrics
 $ ace-taskflow release metrics --format json > metrics.json
@@ -479,7 +479,7 @@ $ ace-taskflow task create "Implement OAuth2 authentication" \
   --with-folder \
   --template feature
 Created task: v.0.10.0+task.010
-Created folder: tasks/task.010-implement-oauth2-authentication/
+Created folder: tasks/010-implement-oauth2-authentication/
   README.md
   research/
   design/
@@ -498,9 +498,9 @@ $ echo "# API Design" > docs/api-spec.md
 
 ```bash
 # Move multiple tasks using qualified references
-$ ace-taskflow task move v.0.9.0+020 backlog
-$ ace-taskflow task move v.0.9.0+021 backlog
-$ ace-taskflow task move backlog+030 v.0.11.0
+$ ace-taskflow task move v.0.9.0+task.020 backlog
+$ ace-taskflow task move v.0.9.0+task.021 backlog
+$ ace-taskflow task move backlog+task.030 v.0.11.0
 Moved 3 tasks to their destinations
 
 # Bulk operations with shell
@@ -554,9 +554,9 @@ done
 
 # Qualified (explicit context)
 current+019                    # Explicit current/active
-backlog+025                    # From backlog
-v.0.9.0+018                    # From specific release
-v.0.11.0+004                   # From backlog release
+backlog+task.025                    # From backlog
+v.0.9.0+task.018                    # From specific release
+v.0.11.0+task.004                   # From backlog release
 ```
 
 ---
@@ -579,7 +579,7 @@ taskflow:
 
   # Qualified references
   references:
-    allow_qualified: true            # Enable v.0.9.0+018 syntax
+    allow_qualified: true            # Enable v.0.9.0+task.018 syntax
     allow_cross_release: true        # Can reference other releases
 
   # Default contexts
@@ -606,7 +606,7 @@ alias idea='ace-taskflow idea'
 
 # Usage
 $ task              # See next task
-$ done task.019     # Complete task
+$ done 019     # Complete task
 $ idea "Quick thought"  # Capture idea
 ```
 

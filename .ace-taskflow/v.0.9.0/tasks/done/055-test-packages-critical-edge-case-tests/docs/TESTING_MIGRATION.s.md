@@ -152,9 +152,9 @@ Before:               After:                Target:
 1. **Easy Testing**
    ```ruby
    # No filesystem setup needed!
-   tasks = [{ id: "task.001", status: "pending" }]
+   tasks = [{ id: "001", status: "pending" }]
    result = TaskSelector.select_next(tasks)
-   assert_equal "task.001", result[:id]
+   assert_equal "001", result[:id]
    ```
 
 2. **Composability**

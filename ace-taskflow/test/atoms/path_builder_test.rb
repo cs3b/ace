@@ -189,13 +189,13 @@ class PathBuilderTest < AceTaskflowTestCase
   def test_build_qualified_reference
     result = @builder.build_qualified_reference("v.0.9.0", "18")
 
-    assert_equal "v.0.9.0+018", result
+    assert_equal "v.0.9.0+task.018", result
   end
 
   def test_build_qualified_reference_pads_number
     result = @builder.build_qualified_reference("backlog", 5)
 
-    assert_equal "backlog+005", result
+    assert_equal "backlog+task.005", result
   end
 
   def test_generate_task_filename_basic

@@ -11,7 +11,7 @@ dependencies: [v.0.9.0+task.006]
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Command-line invocations like `ace-taskflow release`, `ace-taskflow task`, `ace-taskflow idea "content"`, with qualified task references (e.g., `v.0.9.0+018`, `backlog+025`)
+- **Input**: Command-line invocations like `ace-taskflow release`, `ace-taskflow task`, `ace-taskflow idea "content"`, with qualified task references (e.g., `v.0.9.0+task.018`, `backlog+task.025`)
 - **Process**: Seamless navigation between releases, task lifecycle management across contexts (backlog/active/done), and idea capture with flexible targeting
 - **Output**: Clear status information, task listings with context indicators, release state transitions, and confirmation of actions
 
@@ -25,14 +25,14 @@ The ace-taskflow tool provides a unified interface for managing releases, tasks,
 4. **Context Awareness**: Commands work within active release by default, with `--backlog`, `--release` overrides
 5. **Simplified Structure**: Clean directory layout with `.ace-taskflow/v.X.Y.Z/t/NNN/task.md` paths
 
-The system supports tasks in backlog (without release assignment), qualified task references (e.g., `v.0.9.0+018`, `backlog+025`), and multiple active releases with automatic primary selection.
+The system supports tasks in backlog (without release assignment), qualified task references (e.g., `v.0.9.0+task.018`, `backlog+task.025`), and multiple active releases with automatic primary selection.
 
 ### Interface Contract
 
 ```bash
 # Task Management (Singular - operations on one)
 ace-taskflow task                         # Show next task from active release
-ace-taskflow task <ref>                   # Show task (018, v.0.9.0+018, backlog+025)
+ace-taskflow task <ref>                   # Show task (018, v.0.9.0+task.018, backlog+task.025)
 ace-taskflow task create <title>          # Create new task in active release
 ace-taskflow task start <ref>             # Mark as in-progress
 ace-taskflow task done <ref>              # Mark as completed
@@ -40,10 +40,10 @@ ace-taskflow task move <ref> <target>     # Move task (target: backlog, v.0.10.0
 ace-taskflow task update <ref>            # Update task metadata
 
 # Qualified task references:
-#   018 or task.018           - current context
+#   018 or 018           - current context
 #   current+018               - explicit current/active
-#   backlog+018               - from backlog
-#   v.0.9.0+018               - from specific release
+#   backlog+task.018               - from backlog
+#   v.0.9.0+task.018               - from specific release
 
 # Task Collections (Plural - browse/list many)
 ace-taskflow tasks                        # List tasks in active release
@@ -95,7 +95,7 @@ ace-taskflow ideas --recent [--days N]    # Recently captured ideas
 
 **Error Handling:**
 - [No active release]: Clear message, suggest promoting from backlog
-- [Invalid task reference]: Show valid formats (018, v.0.9.0+018, backlog+025)
+- [Invalid task reference]: Show valid formats (018, v.0.9.0+task.018, backlog+task.025)
 - [Missing configuration]: Use defaults (.ace-taskflow/, sensible structure)
 - [Invalid status transition]: Explain valid transitions
 - [Multiple active releases]: Show all, indicate primary (lowest version)
@@ -169,7 +169,7 @@ The implementation follows the ATOM architecture pattern established in ace-* ge
 ### Implementation Strategy
 Port and refactor existing functionality from dev-tools while:
 - Implementing new directory structure (.ace-taskflow/v.X.Y.Z/t/NNN/)
-- Supporting qualified task references (v.0.9.0+018, backlog+025)
+- Supporting qualified task references (v.0.9.0+task.018, backlog+task.025)
 - Using ace-core for configuration management
 - Following established patterns from ace-context and ace-test-runner
 
@@ -227,7 +227,7 @@ Port and refactor existing functionality from dev-tools while:
   - Dependencies: None (pure function)
 
 - ace-taskflow/lib/ace/taskflow/atoms/task_reference_parser.rb
-  - Purpose: Parse qualified task references (v.0.9.0+018, backlog+025)
+  - Purpose: Parse qualified task references (v.0.9.0+task.018, backlog+task.025)
   - Key components: Reference parsing, validation
   - Dependencies: None (pure function)
 
@@ -283,7 +283,7 @@ Port and refactor existing functionality from dev-tools while:
   - Design configuration for root directory
 
 * [ ] Design qualified task reference system
-  - Define reference formats (v.0.9.0+018, backlog+025, current+018)
+  - Define reference formats (v.0.9.0+task.018, backlog+task.025, current+018)
   - Plan parsing and resolution logic
   - Handle cross-release references
 
@@ -322,7 +322,7 @@ Port and refactor existing functionality from dev-tools while:
   > TEST: Task operations
   > Type: Integration test
   > Assert: Qualified references work correctly
-  > Command: bundle exec ace-taskflow task v.0.9.0+018
+  > Command: bundle exec ace-taskflow task v.0.9.0+task.018
 
 - [ ] Enhance idea command
   - [ ] Default to active release (not backlog)
@@ -370,7 +370,7 @@ Port and refactor existing functionality from dev-tools while:
 
 - [x] New directory structure implemented (.ace-taskflow/v.X.Y.Z/t/NNN/)
 - [x] Release transitions work (promote/demote, no complete)
-- [x] Qualified task references functional (v.0.9.0+018, backlog+025)
+- [x] Qualified task references functional (v.0.9.0+task.018, backlog+task.025)
 - [x] Backlog supports tasks without release assignment
 - [x] Multiple active releases handled with primary selection
 - [x] Context switching works (--backlog, --release)

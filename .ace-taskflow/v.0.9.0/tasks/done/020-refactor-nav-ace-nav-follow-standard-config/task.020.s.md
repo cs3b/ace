@@ -83,7 +83,7 @@ Successfully tested:
 ## References
 
 - Commits: cb533f87 "refactor(taskflow): implement release and task management commands"
-- Related: task.018 (original ace-nav implementation)
+- Related: 018 (original ace-nav implementation)
 - Follow-up needed: Performance optimization with caching
 
 ```

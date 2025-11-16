@@ -193,7 +193,7 @@ Replace ace-taskflow's direct file operations and custom markdown handling with 
 
 ## References
 
-- **Parent Task**: task.079 - Create ace-support-markdown gem
+- **Parent Task**: 079 - Create ace-support-markdown gem
 - **Related Issue**: Task 076/078 corruption incidents
 - **API Documentation**: ace-support-markdown/README.md
 - **Files to Migrate**:

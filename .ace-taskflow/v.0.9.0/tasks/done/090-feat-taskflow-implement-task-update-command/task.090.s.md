@@ -20,7 +20,7 @@ dependencies: []
 The system should provide a generic way to update any task metadata field through a simple CLI command. Users can update single or multiple fields in one command, with support for nested YAML keys using dot notation (e.g., `worktree.branch`). The command preserves all other task content while only modifying specified fields.
 
 Key behaviors:
-- Accept any valid task reference (081, task.081, v.0.9.0+task.081, or file path)
+- Accept any valid task reference (081, 081, v.0.9.0+task.081, or file path)
 - Support multiple `--field` flags for batch updates
 - Handle nested YAML structures with dot notation
 - Validate field values match YAML types (string, number, boolean, array)
@@ -43,7 +43,7 @@ ace-taskflow task update 081 --field priority=high --field estimate="2 weeks"
 # Update nested fields (for worktree metadata)
 ace-taskflow task update 081 \
   --field worktree.branch=081-fix-auth \
-  --field worktree.path=.ace-wt/task.081 \
+  --field worktree.path=.ace-wt/081 \
   --field worktree.created_at="2025-11-01 09:00:00"
 
 # Update arrays
@@ -53,9 +53,9 @@ ace-taskflow task update 081 --field "dependencies=[082, 083]"
 # Task updated: v.0.9.0+task.081
 # Updated fields:
 #   worktree.branch: 081-fix-auth
-#   worktree.path: .ace-wt/task.081
+#   worktree.path: .ace-wt/081
 #   worktree.created_at: 2025-11-01 09:00:00
-# Task path: /path/to/.ace-taskflow/v.0.9.0/tasks/081-fix-auth/task.081.md
+# Task path: /path/to/.ace-taskflow/v.0.9.0/tasks/081-fix-auth/081.md
 
 # Exit codes:
 # 0 - Success
@@ -400,7 +400,7 @@ The update command will follow the existing ace-taskflow patterns:
   > TEST: Real Task Update
   > Type: End-to-End Test
   > Assert: Actual task file updated correctly with backup
-  > Command: ace-taskflow task update 090 --field test_field=test_value && grep test_field .ace-taskflow/v.0.9.0/tasks/090*/task.090.md
+  > Command: ace-taskflow task update 090 --field test_field=test_value && grep test_field .ace-taskflow/v.0.9.0/tasks/090*/090.md
 
 - [ ] Update command help text and documentation
 - [ ] Run full test suite

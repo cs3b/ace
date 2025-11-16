@@ -312,7 +312,7 @@ ace-nav 'tmpl://forms/input*' --list   # Input forms from any source
 
 # Complex patterns
 ace-nav 'wfi://@ace-*/setup*' --list   # Setup workflows from ace- gems only
-ace-nav 'task://v.0.9.0+task.0[0-9]*' --list  # First 10 tasks of release
+ace-nav 'task://v.0.9.0+0[0-9]*' --list  # First 10 tasks of release
 ```
 
 ## 14. Shell Integration

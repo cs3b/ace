@@ -11,7 +11,7 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: `ace-nav task://[task-ref]` with any valid task reference format (018, task.018, v.0.9.0+task.018)
+- **Input**: `ace-nav task://[task-ref]` with any valid task reference format (018, 018, v.0.9.0+task.018)
 - **Process**: Seamless navigation to task resources through unified ace-nav interface that delegates to ace-taskflow
 - **Output**: Task information displayed (path, content, tree) matching ace-taskflow task command output
 
@@ -26,9 +26,9 @@ This creates a single entry point for developers: ace-nav handles all resource t
 ```bash
 # Core Task Navigation (v1 - Single Task Lookup)
 ace-nav task://018                     # Delegates to: ace-taskflow task 018
-ace-nav task://task.018                # Delegates to: ace-taskflow task task.018
+ace-nav task://018                # Delegates to: ace-taskflow task 018
 ace-nav task://v.0.9.0+task.018        # Delegates to: ace-taskflow task v.0.9.0+task.018
-ace-nav task://backlog+025             # Delegates to: ace-taskflow task backlog+025
+ace-nav task://backlog+task.025             # Delegates to: ace-taskflow task backlog+task.025
 
 # Display Options (pass-through to ace-taskflow)
 ace-nav task://018 --path              # Delegates to: ace-taskflow task 018 --path
@@ -50,13 +50,13 @@ ace-nav task://018 --tree              # Delegates to: ace-taskflow task 018 --t
 - Next task (no ref): `ace-nav task://` → delegates to `ace-taskflow task` (shows next task)
 - Ambiguous references: Let ace-taskflow handle disambiguation
 - Multiple matching tasks: ace-taskflow's lookup logic handles this
-- Cross-release references: Fully supported via delegation (v.0.9.0+task.018, backlog+025)
+- Cross-release references: Fully supported via delegation (v.0.9.0+task.018, backlog+task.025)
 
 ### Success Criteria
 
 - [ ] **Protocol Resolution**: task:// URIs correctly resolve to ace-taskflow task commands
 - [ ] **Argument Pass-through**: All flags (--path, --content, --tree) correctly delegate to ace-taskflow
-- [ ] **Reference Format Support**: All ace-taskflow reference formats work (018, task.018, v.0.9.0+task.018, backlog+025)
+- [ ] **Reference Format Support**: All ace-taskflow reference formats work (018, 018, v.0.9.0+task.018, backlog+task.025)
 - [ ] **Error Handling**: Errors from ace-taskflow are properly surfaced to users
 - [ ] **Exit Codes**: Exit codes match ace-taskflow behavior (0 success, 1 failure)
 - [ ] **Command Delegation Pattern**: Implemented using reusable "cmd" type for future protocol delegations
@@ -350,7 +350,7 @@ The implementation follows ace-nav's existing protocol architecture but adds a n
 
 - [ ] Create integration tests for task:// protocol
   - Path: `ace-nav/test/integration/task_protocol_test.rb`
-  - Test all reference formats (018, task.018, v.0.9.0+task.018)
+  - Test all reference formats (018, 018, v.0.9.0+task.018)
   - Test all options (--path, --content, --tree)
   - Test error cases (invalid ref, command not found)
   > TEST: Integration Test Coverage
@@ -388,7 +388,7 @@ The implementation follows ace-nav's existing protocol architecture but adds a n
 
 ## Acceptance Criteria
 
-- [ ] task:// protocol resolves correctly for all reference formats (018, task.018, v.0.9.0+task.018, backlog+025)
+- [ ] task:// protocol resolves correctly for all reference formats (018, 018, v.0.9.0+task.018, backlog+task.025)
 - [ ] All ace-taskflow task options work (--path, --content, --tree)
 - [ ] Exit codes correctly forwarded from ace-taskflow to ace-nav
 - [ ] Error messages clear when ace-taskflow not installed

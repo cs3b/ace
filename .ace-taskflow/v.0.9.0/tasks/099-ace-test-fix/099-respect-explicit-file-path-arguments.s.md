@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.099
-status: draft
+status: pending
 priority: high
 estimate: 2-4 hours
 dependencies: []
@@ -170,9 +170,207 @@ Enable developers and AI agents to run focused, efficient tests by respecting ex
   - Parallel execution optimization
   - Test result caching
 
+## Technical Approach
+
+### Architecture Pattern
+The fix follows the existing ACE ATOM architecture pattern, modifying the Organism layer (TestOrchestrator) to check for explicit files before determining execution mode. This ensures minimal changes while maintaining the existing architecture's integrity.
+
+### Root Cause Analysis
+The bug is in the `should_execute_sequentially?` method in `TestOrchestrator`. Currently it only checks:
+1. If `execution_mode == "grouped"`
+2. If the target exists in groups configuration
+
+It fails to check if explicit files were provided via `@configuration.files`, causing it to incorrectly enter group execution mode even when specific files are requested.
+
+### Technology Stack
+- Ruby (existing)
+- Minitest framework (existing)
+- Thor CLI framework (existing)
+- No new dependencies required
+
+## File Modifications
+
+### Modify
+- `ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb`
+  - Changes: Update `should_execute_sequentially?` method to check for explicit files first
+  - Impact: Ensures explicit files bypass group execution mode
+  - Integration points: Works with existing file resolution and execution logic
+
+### Create
+- `ace-test-runner/test/integration/explicit_file_execution_test.rb`
+  - Purpose: Integration tests for explicit file execution behavior
+  - Key components: Test cases for single files, multiple files, line numbers, precedence rules
+  - Dependencies: Minitest, test fixtures
+
+- `ace-test-runner/test/fixtures/sample_test_file.rb`
+  - Purpose: Simple test file fixture for integration testing
+  - Key components: Basic test class with multiple test methods
+  - Dependencies: Minitest
+
+## Test Case Planning
+
+### Happy Path Scenarios
+1. **Single file execution**: `ace-test path/to/test.rb` runs only that file
+2. **Line number execution**: `ace-test path/to/test.rb:42` runs only test at line 42
+3. **Multiple files**: `ace-test file1.rb file2.rb` runs only those files
+4. **Default behavior**: `ace-test` with no args continues group execution
+
+### Edge Case Scenarios
+1. **File precedence**: Files override group targets when both provided
+2. **Empty test file**: Handles files with no tests gracefully
+3. **Files outside test/**: Executes valid test files from any location
+4. **Mixed file types**: Handles both _test.rb and _spec.rb files
+
+### Error Condition Scenarios
+1. **Non-existent file**: Clear error message for missing files
+2. **Invalid line number**: Graceful handling of line numbers without tests
+3. **Non-test files**: Appropriate error or 0 tests for non-test files
+
+### Integration Test Structure
+```ruby
+class ExplicitFileExecutionTest < Minitest::Test
+  def test_single_file_execution
+    # Verify only specified file executes
+  end
+
+  def test_line_number_filtering
+    # Verify line-specific execution
+  end
+
+  def test_file_precedence_over_groups
+    # Verify files override group targets
+  end
+
+  def test_default_group_execution_preserved
+    # Verify no regression in group mode
+  end
+end
+```
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze current test orchestrator flow to understand execution paths
+  > TEST: Flow Understanding Check
+  > Type: Pre-condition Check
+  > Assert: Execution flow from CLI to TestOrchestrator is documented
+  > Command: # grep -n "should_execute_sequentially" ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb
+
+* [ ] Research Minitest's file:line filtering mechanism for proper integration
+  > Understanding how Minitest handles line number filtering internally
+
+* [ ] Review existing integration test patterns in ace-test-runner for consistency
+
+### Execution Steps
+
+- [ ] Step 1: Update `should_execute_sequentially?` method in TestOrchestrator
+  > TEST: Method Logic Verification
+  > Type: Action Validation
+  > Assert: Method returns false when explicit files are provided
+  > Command: # ruby -e "require './ace-test-runner/lib/ace/test_runner'; config = Ace::TestRunner::Models::TestConfiguration.new(files: ['test.rb']); puts 'Files check works' if config.files && !config.files.empty?"
+
+- [ ] Step 2: Add check for explicit files at the beginning of `should_execute_sequentially?`
+  > The fix: Return false immediately if `@configuration.files` is present and not empty
+  > TEST: Explicit Files Check
+  > Type: Action Validation
+  > Assert: Method bypasses group logic when files are specified
+  > Command: # ace-test test/atoms/path_expander_test.rb 2>&1 | grep -v "Running smoke"
+
+- [ ] Step 3: Create integration test file with comprehensive test cases
+  > TEST: Integration Test Creation
+  > Type: File Validation
+  > Assert: Integration test file exists with proper structure
+  > Command: # ls -la ace-test-runner/test/integration/explicit_file_execution_test.rb
+
+- [ ] Step 4: Create test fixture file for integration testing
+  > TEST: Fixture File Creation
+  > Type: File Validation
+  > Assert: Test fixture exists for integration tests to use
+  > Command: # ls -la ace-test-runner/test/fixtures/sample_test_file.rb
+
+- [ ] Step 5: Run integration tests to verify the fix works correctly
+  > TEST: Integration Test Execution
+  > Type: Test Validation
+  > Assert: All integration tests pass
+  > Command: # ace-test test/integration/explicit_file_execution_test.rb
+
+- [ ] Step 6: Test single file execution manually
+  > TEST: Single File Execution
+  > Type: Manual Validation
+  > Assert: Only specified file runs, no group execution
+  > Command: # ace-test test/atoms/path_expander_test.rb 2>&1 | grep "Running test/atoms/path_expander_test.rb"
+
+- [ ] Step 7: Test file with line number execution
+  > TEST: Line Number Execution
+  > Type: Manual Validation
+  > Assert: Only test at specified line runs
+  > Command: # ace-test test/atoms/path_expander_test.rb:20 2>&1 | grep "1 test"
+
+- [ ] Step 8: Test multiple file execution
+  > TEST: Multiple Files Execution
+  > Type: Manual Validation
+  > Assert: Only specified files run in order
+  > Command: # ace-test test/atoms/path_expander_test.rb test/atoms/test_detector_test.rb 2>&1 | grep "Running 2 files"
+
+- [ ] Step 9: Test precedence (file overrides group)
+  > TEST: Precedence Validation
+  > Type: Manual Validation
+  > Assert: File argument overrides group target
+  > Command: # ace-test atoms test/molecules/config_loader_test.rb 2>&1 | grep -v "Running atoms"
+
+- [ ] Step 10: Test default behavior is preserved
+  > TEST: Default Behavior Preservation
+  > Type: Regression Test
+  > Assert: Group execution still works when no files specified
+  > Command: # ace-test 2>&1 | grep "Running smoke"
+
+- [ ] Step 11: Update CHANGELOG.md with the bug fix
+  > Document the fix in the ace-test-runner CHANGELOG
+
+- [ ] Step 12: Run full test suite to ensure no regressions
+  > TEST: Full Test Suite
+  > Type: Regression Test
+  > Assert: All existing tests continue to pass
+  > Command: # cd ace-test-runner && bundle exec rake test
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Breaking existing group execution functionality
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Comprehensive regression testing, preserve default behavior
+  - **Rollback:** Git revert the single method change
+
+- **Risk:** Line number filtering might not work as expected
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Test with various line number scenarios
+  - **Monitoring:** Check Minitest's line filtering behavior
+
+### Integration Risks
+- **Risk:** Conflict with existing configuration precedence
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Clear precedence rules: CLI files > groups > defaults
+  - **Monitoring:** Test with various configuration combinations
+
+## Acceptance Criteria
+
+- [ ] Running `ace-test test/atoms/foo_test.rb` executes ONLY that file
+- [ ] Running `ace-test test/atoms/foo_test.rb:42` executes ONLY the test at line 42
+- [ ] Running `ace-test file1.rb file2.rb` executes ONLY those files
+- [ ] Running `ace-test` with no arguments continues to execute configured groups
+- [ ] File arguments always take precedence over group targets
+- [ ] Clear output indicates which files are being executed
+- [ ] All integration tests pass
+- [ ] No regression in existing test suite
+
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251105-130450-ace-test-fix/filter-runner-for-single-file-execution.s.md`
 - Related gem: `ace-test-runner/`
 - Bug example output showing current broken behavior documented in idea file
 - ACE testing patterns: `docs/testing-patterns.md`
+- UX/Usage documentation: `ux/usage.md`

@@ -49,8 +49,8 @@ Implement a reschedule subcommand for `ace-taskflow tasks` that allows reorderin
 - [x] `ace-taskflow tasks reschedule 025 026 027` uses configured default strategy
 - [x] `--add-next` flag places tasks before existing pending tasks
 - [x] `--add-at-end` flag places tasks after highest task
-- [x] `--after task.029` places tasks after task 029
-- [x] `--before task.029` places tasks before task 029
+- [x] `--after 029` places tasks after task 029
+- [x] `--before 029` places tasks before task 029
 - [x] Multiple tasks can be rescheduled in one command
 - [x] Sort values are properly updated in task frontmatter
 - [x] Command preserves relative order of specified tasks

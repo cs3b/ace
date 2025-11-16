@@ -69,14 +69,14 @@ Unified ace-taskflow display behavior with status-based colors and consistent so
 
 **Display Format**:
 - Combined Estimate and Dependencies on single line with pipe separator
-- Example: `Estimate: 2 days | Dependencies: task.021`
+- Example: `Estimate: 2 days | Dependencies: 021`
 
 ### Testing/Validation
 
 ```bash
 # Test single task command with new formatting
 ace-taskflow task
-# Output: Task: v.0.9.0+035 🟡 Implement configuration-based provider...
+# Output: Task: v.0.9.0+task.035 🟡 Implement configuration-based provider...
 
 # Test tasks command with limit
 ace-taskflow tasks next --limit 3

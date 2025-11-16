@@ -140,7 +140,7 @@ Enable ace-docs to support multiple subject configurations for more granular dif
 
 ## References
 
-- Current ace-docs implementation (task.071, task.073)
+- Current ace-docs implementation (071, 073)
 - ace-context integration patterns
 - Proposed dual analysis prompt improvements from user input
 
