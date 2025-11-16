@@ -1,4 +1,10 @@
-# Idea
+---
+title: ace-git-worktree - Comprehensive Review Improvements
+filename_suggestion: review-ace-git-worktree
+enhanced_at: 2025-11-11 20:24:43
+location: active
+llm_model: gflash
+---
 
 # ace-git-worktree - Comprehensive Review Improvements
 

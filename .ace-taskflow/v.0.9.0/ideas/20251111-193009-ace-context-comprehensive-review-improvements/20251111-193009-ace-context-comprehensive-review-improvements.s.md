@@ -1,4 +1,10 @@
-# Idea
+---
+title: ace-context - Comprehensive Review Improvements
+filename_suggestion: review-ace-context
+enhanced_at: 2025-11-11 19:30:09
+location: active
+llm_model: gflash
+---
 
 # ace-context - Comprehensive Review Improvements
 

@@ -1,4 +1,10 @@
-# Idea
+---
+title: ace-git-diff - Comprehensive Review Improvements
+filename_suggestion: review-ace-git-diff
+enhanced_at: 2025-11-11 20:18:05
+location: active
+llm_model: gflash
+---
 
 # ace-git-diff - Comprehensive Review Improvements
 

@@ -32,43 +32,70 @@ Use the ace-taskflow idea tool to capture and enhance raw ideas within project c
 2. **Choose Appropriate Command Options:**
    * **Basic usage** (most common):
      ```bash
-     ace-taskflow idea "your raw idea text here"
+     ace-taskflow idea create "your raw idea text here"
      ```
 
    * **From clipboard**:
      ```bash
-     ace-taskflow idea --clipboard
+     ace-taskflow idea create --clipboard
+     # OR combine with context:
+     ace-taskflow idea create "Main context" --clipboard
      ```
 
-   * **From file**:
+   * **With explicit note text**:
      ```bash
-     ace-taskflow idea --file path/to/idea-notes.txt
+     ace-taskflow idea create --note "Explicit idea text here"
      ```
 
-   * **For long ideas** (over 1000 words):
+   * **Scoped ideas**:
      ```bash
-     ace-taskflow idea "long idea text..." --big-user-input-allowed
+     # For active release (default):
+     ace-taskflow idea create "New feature idea"
+
+     # For backlog:
+     ace-taskflow idea create "Future feature" --backlog
+
+     # For specific release:
+     ace-taskflow idea create "Bug fix" --release v.0.9.1
+
+     # For uncertain ideas (maybe/ scope):
+     ace-taskflow idea create "Uncertain idea" --maybe
+
+     # For low priority (anyday/ scope):
+     ace-taskflow idea create "Low priority enhancement" --anyday
      ```
 
-   * **With debug information**:
+   * **With Git commit**:
      ```bash
-     ace-taskflow idea "idea text" --debug
+     ace-taskflow idea create "New feature" --git-commit
+     ```
+
+   * **With LLM enhancement**:
+     ```bash
+     ace-taskflow idea create "Complex idea" --llm-enhance
      ```
 
 3. **Execute Idea Capture:**
-   * Run the selected ace-taskflow idea command
+   * Run the selected `ace-taskflow idea create` command
    * The tool will automatically:
-     * Load current project context from all `docs/*.md` files
-     * Generate project-specific enhancement questions
-     * Create structured idea file with timestamp naming
-     * Store in `.ace-taskflow/backlog/ideas/` directory
+     * Create structured idea file with frontmatter metadata
+     * Generate timestamp-based subdirectory and filename
+     * Optionally enhance with LLM (if `--llm-enhance` or configured)
+     * Optionally commit to git (if `--git-commit` or configured)
+     * Store in appropriate scope directory based on flags
    * Monitor the output for the created file path
 
 4. **Verify Idea Creation:**
    * Check that the command completed successfully
-   * Note the output file path (format: `.ace-taskflow/backlog/ideas/YYYYMMDD-HHMM-idea-slug.md`)
-   * Verify the file exists and contains enhanced content
-   * Review the generated questions and context for quality
+   * Note the output file path showing:
+     - Release/backlog directory
+     - Scope subdirectory (if using --maybe or --anyday)
+     - Timestamp-based subdirectory (format: `YYYYMMDD-HHMMSS-slug/`)
+     - Idea file (format: `YYYYMMDD-HHMMSS-slug.s.md`)
+   * Verify the file exists and contains:
+     - Frontmatter with `title`, `filename_suggestion`, `enhanced_at`, `location`, `llm_model` (if enhanced)
+     - Content body with your idea details
+   * Review the generated content for quality
 
 5. **Document the Captured Idea:**
    * Record the path to the created idea file for future reference
@@ -90,67 +117,87 @@ Use the ace-taskflow idea tool to capture and enhance raw ideas within project c
 * The idea is just a quick note (simple text file may suffice)
 * You need immediate implementation (use work-on-task workflow)
 
-### Input Size Considerations
+### Scope Considerations
 
-* **Small ideas** (< 100 words): Perfect for basic capture
-* **Medium ideas** (100-1000 words): Standard usage, ideal size
-* **Large ideas** (> 1000 words): Use `--big-user-input-allowed` flag
-* **Very large content**: Consider breaking into multiple ideas
+* **Active release ideas** (default): Immediately actionable, relevant to current release
+* **Backlog ideas** (`--backlog`): Future work not tied to specific release
+* **Maybe scope** (`--maybe`): Uncertain if we should do it, needs evaluation
+* **Anyday scope** (`--anyday`): Good ideas but not urgent, low priority
+* **Done scope**: Completed or skipped ideas (moved via `ace-taskflow idea done`)
 
 ## Common Usage Patterns
 
-### Pattern 1: Quick Idea Capture
+### Pattern 1: Quick Idea Capture (Active Release)
 ```bash
-# Capture a brief concept immediately
-ace-taskflow idea "Add real-time notifications to the dashboard"
-# => Created: .ace-taskflow/backlog/ideas/20250730-1430-real-time-dashboard-notifications.md
+# Capture a brief concept immediately for current release
+ace-taskflow idea create "Add real-time notifications to the dashboard"
+# => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143000-real-time-notifications/20251116-143000-real-time-notifications.s.md
 ```
 
-### Pattern 2: Detailed Idea from Notes
+### Pattern 2: Backlog Idea
 ```bash
-# Capture from prepared notes file
-ace-taskflow idea --file brainstorm-session-notes.txt
-# => Created: .ace-taskflow/backlog/ideas/20250730-1432-brainstorm-session-insights.md
+# Capture future idea not tied to current release
+ace-taskflow idea create "Migrate to PostgreSQL" --backlog
+# => Created: .ace-taskflow/backlog/ideas/20251116-143200-migrate-postgresql/20251116-143200-migrate-postgresql.s.md
 ```
 
 ### Pattern 3: Clipboard Integration
 ```bash
 # Copy idea text to clipboard first, then:
-ace-taskflow idea --clipboard
-# => Created: .ace-taskflow/backlog/ideas/20250730-1434-clipboard-captured-idea.md
+ace-taskflow idea create --clipboard
+# OR combine with main context:
+ace-taskflow idea create "Dashboard improvements" --clipboard
+# => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143400-dashboard-improvements/20251116-143400-dashboard-improvements.s.md
 ```
 
-### Pattern 4: Long-form Idea Processing
+### Pattern 4: Enhanced Idea with Git Commit
 ```bash
-# For comprehensive ideas or requirements documents
-ace-taskflow idea --file detailed-requirements.md --big-user-input-allowed
-# => Created: .ace-taskflow/backlog/ideas/20250730-1436-detailed-requirements-analysis.md
+# Create enhanced idea and automatically commit
+ace-taskflow idea create "Complex refactoring task" --llm-enhance --git-commit
+# => LLM enhances idea, creates file, commits to git
+# => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143600-complex-refactoring/20251116-143600-complex-refactoring.s.md
+```
+
+### Pattern 5: Scoped Ideas (GTD Organization)
+```bash
+# Uncertain idea (maybe/ scope)
+ace-taskflow idea create "Consider switching to TypeScript" --maybe
+
+# Low priority idea (anyday/ scope)
+ace-taskflow idea create "Add dark mode theme" --anyday
+
+# Specific release
+ace-taskflow idea create "Critical bug fix" --release v.0.9.1
 ```
 
 ## Error Handling
 
 ### Common Issues and Solutions
 
-**"No input provided" Error:**
-* **Cause**: Missing idea text argument and no clipboard/file specified
-* **Solution**: Provide idea text: `ace-taskflow idea "your idea"`
-
-**"Input too large" Error:**
-* **Cause**: Idea text exceeds 1000 words without permission flag
-* **Solution**: Add `--big-user-input-allowed` flag to command
+**"No content provided" Error:**
+* **Cause**: Missing idea text argument and no clipboard/note specified
+* **Solution**: Provide idea text: `ace-taskflow idea create "your idea"`
+* **Alternative**: Use `--clipboard` or `--note "text"` flag
 
 **"Could not read from clipboard" Error:**
-* **Cause**: Clipboard tools not available on system
-* **Solution**: Use direct text input or install required clipboard tools (pbpaste/xclip/xsel)
+* **Cause**: Clipboard tools not available on system (pbpaste/pbcopy on macOS)
+* **Solution**: Use direct text input or ensure clipboard tools are available
+* **Note**: Clipboard functionality requires `ace-support-mac-clipboard` gem
 
-**"File not found" Error:**
-* **Cause**: Specified file path doesn't exist or isn't readable
-* **Solution**: Verify file path and permissions
+**"Release not found" Error:**
+* **Cause**: Specified release doesn't exist
+* **Solution**: Check available releases with `ace-taskflow release list` or use `--backlog`
 
 **LLM Enhancement Failures:**
-* **Cause**: API issues or model unavailability
-* **Result**: Tool saves raw idea without enhancement (degraded functionality)
-* **Action**: Check network/API keys, or proceed with raw idea file
+* **Cause**: API issues, model unavailability, or `--no-llm-enhance` flag
+* **Result**: Tool saves raw idea without LLM enhancement
+* **Action**: Check LLM configuration, network/API keys, or accept basic idea file
+* **Note**: Enhancement is optional; ideas work fine without it
+
+**Git Commit Failures:**
+* **Cause**: Git repository issues or `--no-git-commit` flag
+* **Result**: Idea file created but not committed
+* **Action**: Manually commit later or fix git configuration
 
 ## Success Criteria
 
