@@ -1,4 +1,10 @@
-# Idea
+---
+title: ace-git-commit - Comprehensive Review Improvements
+filename_suggestion: review-ace-git-commit
+enhanced_at: 2025-11-11 20:12:17
+location: active
+llm_model: gflash
+---
 
 # ace-git-commit - Comprehensive Review Improvements
 

@@ -1,4 +1,10 @@
-# Idea
+---
+title: ace-nav - Comprehensive Review Improvements
+filename_suggestion: review-ace-nav
+enhanced_at: 2025-11-11 21:20:16
+location: active
+llm_model: gflash
+---
 
 # ace-nav - Comprehensive Review Improvements
 

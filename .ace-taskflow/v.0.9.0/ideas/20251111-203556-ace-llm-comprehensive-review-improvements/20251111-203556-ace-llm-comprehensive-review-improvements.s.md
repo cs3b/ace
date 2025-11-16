@@ -1,4 +1,10 @@
-# Idea
+---
+title: ace-llm - Comprehensive Review Improvements
+filename_suggestion: review-ace-llm
+enhanced_at: 2025-11-11 20:35:56
+location: active
+llm_model: gflash
+---
 
 # ace-llm - Comprehensive Review Improvements
 
