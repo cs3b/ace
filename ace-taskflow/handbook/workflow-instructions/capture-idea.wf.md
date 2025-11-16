@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-09-24'
+  last-updated: '2025-11-16'
 ---
 
 # Capture Idea Workflow Instruction
@@ -201,12 +201,24 @@ ace-taskflow idea create "Critical bug fix" --release v.0.9.1
 
 ## Success Criteria
 
-* Idea successfully captured in `.ace-taskflow/backlog/ideas/` directory
-* Generated file contains enhanced idea with project context
-* File includes relevant questions for future specification
-* Timestamp-based filename created for easy organization
+* Idea successfully captured in appropriate directory:
+  - Active release: `.ace-taskflow/v.X.Y.Z/ideas/`
+  - Backlog: `.ace-taskflow/backlog/ideas/`
+  - Scoped: `.ace-taskflow/v.X.Y.Z/ideas/maybe/` or `.../anyday/`
+* Generated file structure includes:
+  - Timestamp-based subdirectory (e.g., `20251116-143000-slug/`)
+  - Idea file with frontmatter (e.g., `20251116-143000-slug.s.md`)
+* Frontmatter contains required metadata:
+  - `title`: Human-readable title
+  - `filename_suggestion`: Slug for file naming
+  - `enhanced_at`: Timestamp (if enhanced)
+  - `location`: Scope location
+  - `llm_model`: Model used (if enhanced)
+* File content includes idea description and details
 * Tool returns created file path for reference
 * No errors during capture process
+* Optional: Git commit created (if configured or requested)
+* Optional: LLM enhancement applied (if configured or requested)
 
 ## Integration with Other Workflows
 
@@ -226,22 +238,40 @@ ace-taskflow idea create "Critical bug fix" --release v.0.9.1
 ### Example 1: User Feedback Integration
 ```bash
 # After receiving user feedback: "Users want better mobile experience"
-ace-taskflow idea "Users report difficulties with mobile interface - want better responsive design and touch interactions"
+ace-taskflow idea create "Users report difficulties with mobile interface - want better responsive design and touch interactions" --llm-enhance
 # Output: Creates enhanced idea with mobile UX questions and project-specific considerations
+# => .ace-taskflow/v.0.9.0/ideas/20251116-150000-mobile-interface-improvements/...
 ```
 
 ### Example 2: Technical Improvement Ideas
 ```bash
 # During code review, note performance concerns
-ace-taskflow idea "Database queries in user dashboard are slow - consider caching layer and query optimization"
-# Output: Creates idea with technical questions about architecture and performance impact
+ace-taskflow idea create "Database queries in user dashboard are slow - consider caching layer and query optimization" --git-commit
+# Output: Creates idea and commits to git automatically
+# => .ace-taskflow/v.0.9.0/ideas/20251116-150200-database-query-optimization/...
 ```
 
-### Example 3: Feature Brainstorming Session
+### Example 3: Backlog Feature Ideas
 ```bash
-# Capture multiple ideas from team meeting
-ace-taskflow idea --file team-brainstorm-2025-01-30.txt --big-user-input-allowed
-# Output: Creates comprehensive idea file with context-aware enhancement questions
+# Capture future feature not for current release
+ace-taskflow idea create "Add GraphQL API alongside REST" --backlog --maybe
+# Output: Creates idea in backlog with 'maybe' scope for evaluation
+# => .ace-taskflow/backlog/ideas/maybe/20251116-150400-graphql-api/...
+```
+
+### Example 4: Configuration for Automatic Enhancement
+```yaml
+# .ace/taskflow/config.yml
+taskflow:
+  idea:
+    defaults:
+      git_commit: true     # Always commit new ideas
+      llm_enhance: true    # Always enhance with LLM
+```
+```bash
+# Now simple command does both
+ace-taskflow idea create "New feature concept"
+# => Automatically enhanced and committed
 ```
 
 ---
