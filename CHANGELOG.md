@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.138] - 2025-11-17
 
-### ace-review v0.17.0
+### ace-review v0.18.0
 - **Added**: GitHub Pull Request review mode with `gh` CLI integration
   - New `--pr` flag accepts PR number, URL, or owner/repo#number format
   - `--post-comment` flag to automatically post review as PR comment
@@ -23,15 +23,17 @@ All notable changes to this project will be documented in this file.
   - New atom: RetryWithBackoff for reusable retry logic
   - New error classes for GitHub integration (GhCliNotInstalledError, GhAuthenticationError, etc.)
   - Comprehensive README documentation with examples and troubleshooting
+- **Changed**: Reduced default GitHub CLI timeout from 600s to 30s for faster failure feedback
+- **Changed**: Extracted retry logic into reusable RetryWithBackoff atom
+- **Fixed**: Moved GhCliExecutor from atoms/ to molecules/ for architectural compliance
+- **Fixed**: Uncommented and fixed previously failing tests in gh_pr_fetcher_test.rb
+
+### ace-review v0.17.0
 - **Added**: Task integration with `--task` flag to save review reports to task directories
   - Accepts task references: `114`, `task.114`, `v.0.9.0+114`
   - Reports saved to `<task-dir>/reviews/` with timestamped filenames
   - Graceful degradation when ace-taskflow unavailable
   - New molecules: TaskResolver, TaskReportSaver
-- **Changed**: Reduced default GitHub CLI timeout from 600s to 30s for faster failure feedback
-- **Changed**: Extracted retry logic into reusable RetryWithBackoff atom
-- **Fixed**: Moved GhCliExecutor from atoms/ to molecules/ for architectural compliance
-- **Fixed**: Uncommented and fixed previously failing tests in gh_pr_fetcher_test.rb
 
 ## [0.9.137] - 2025-11-17
 

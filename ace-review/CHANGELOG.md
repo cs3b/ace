@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.17.0] - 2025-11-17
+## [0.18.0] - 2025-11-17
 
 ### Added
 - **GitHub Pull Request Review Mode**: Support for reviewing GitHub pull requests directly
@@ -36,15 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatically closes unclosed code fences to prevent broken GitHub comment rendering
   - Wraps review content in expandable section for better PR comment readability
 - **README Documentation**: Comprehensive guide for GitHub PR review mode with examples, timeout configuration, and troubleshooting
-- **Task Integration**: New `--task` flag to save review reports to task directories
-  - Accepts task references in multiple formats: `114`, `task.114`, `v.0.9.0+114`
-  - Reports saved to `<task-dir>/reviews/` with timestamped filenames
-  - Filename format: `YYYYMMDD-HHMMSS-{provider}-{preset}-review.md`
-  - Graceful degradation when ace-taskflow unavailable or task not found
-  - Created `TaskResolver` molecule for task reference resolution
-  - Created `TaskReportSaver` molecule for report persistence
-  - Updated `ReviewManager` organism to orchestrate task-aware saving
-  - Added ace-taskflow ~> 0.19 as runtime dependency
 
 ### Changed
 - **Default Timeout**: Reduced default timeout for GitHub CLI operations from 600 seconds (10 minutes) to 30 seconds
@@ -59,6 +50,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test Coverage**: Uncommented and fixed previously failing tests in `gh_pr_fetcher_test.rb`
   - Fixed complex mocking chain issues by extracting retry logic into testable atom
   - All failure path and retry exhaustion tests now pass
+
+## [0.17.0] - 2025-11-17
+
+### Added
+- **Task Integration**: New `--task` flag to save review reports to task directories
+  - Accepts task references in multiple formats: `114`, `task.114`, `v.0.9.0+114`
+  - Reports saved to `<task-dir>/reviews/` with timestamped filenames
+  - Filename format: `YYYYMMDD-HHMMSS-{provider}-{preset}-review.md`
+  - Graceful degradation when ace-taskflow unavailable or task not found
+  - Created `TaskResolver` molecule for task reference resolution
+  - Created `TaskReportSaver` molecule for report persistence
+  - Updated `ReviewManager` organism to orchestrate task-aware saving
+  - Added ace-taskflow ~> 0.19 as runtime dependency
 
 ## [0.16.1] - 2025-11-15
 
