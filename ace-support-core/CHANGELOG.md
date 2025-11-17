@@ -5,6 +5,52 @@ All notable changes to ace-core will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2025-11-17
+
+### Added
+
+- **PromptCacheManager Error Handling**: Enhanced robustness and validation
+  - Added `PromptCacheError` custom exception for clearer error reporting
+  - Comprehensive argument validation for all public methods with descriptive error messages
+  - File operation error handling for permissions, disk space, and I/O issues
+  - Configurable timestamp formatting via optional `timestamp_formatter` parameter
+  - Metadata schema validation with required field checks (`timestamp`, `gem`, `operation`)
+  - Optional validation support with `validate: false` parameter for flexibility
+  - Field type validation ensuring data integrity
+  - Enhanced test coverage: 17 tests, 55 assertions covering all new functionality
+
+## [Unreleased]
+
+### Changed
+
+- **PromptCacheManager Refactoring**: Simplified to stateless utility class
+  - Removed instance methods and `initialize` - all methods are now class methods
+  - Eliminated unnecessary state (gem_name, project_root) from instance variables
+  - Clarified stateless nature of the utility in class documentation
+  - Updated all tests to use stateless API (no breaking changes to public API)
+  - Improved code clarity and maintainability per code review feedback
+
+## [0.11.0] - 2025-11-16
+
+### Added
+
+- **PromptCacheManager Molecule**: Standardized prompt cache management for ace-* gems
+  - Provides `create_session(gem_name, operation)` for creating timestamped session directories
+  - Provides `save_system_prompt(content, session_dir)` for saving system prompts
+  - Provides `save_user_prompt(content, session_dir)` for saving user prompts
+  - Provides `save_metadata(metadata, session_dir)` for saving session metadata
+  - Uses standardized structure: `.cache/{gem}/sessions/{operation}-{timestamp}/`
+  - Uses standardized file names: `system.prompt.md`, `user.prompt.md`, `metadata.yml`
+  - Integrates with ProjectRootFinder for git worktree support
+  - Comprehensive test coverage: 9 tests, 25 assertions
+
+### Changed
+
+- **Code Style Improvement**: Refactored PromptCacheManager class method structure
+  - Updated from `private_class_method :save_prompt` to `class << self` block pattern
+  - Improved readability and follows common Ruby idioms
+  - Enhanced code organization for better maintainability
+
 ## [0.10.1] - 2025-11-15
 
 ### Added
