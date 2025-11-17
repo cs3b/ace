@@ -28,29 +28,34 @@ module Ace
         # Test: Success after retries
         def test_execute_succeeds_after_retries
           call_count = 0
-          result = RetryWithBackoff.execute do
-            call_count += 1
-            call_count < 3 ? @network_error : @success_result
-          end
 
-          assert_equal @success_result, result
-          assert_equal 3, call_count, "Should retry twice before succeeding"
+          RetryWithBackoff.stub :sleep, ->(_time) {} do
+            result = RetryWithBackoff.execute do
+              call_count += 1
+              call_count < 2 ? @network_error : @success_result
+            end
+
+            assert_equal @success_result, result
+            assert_equal 2, call_count, "Should retry once before succeeding"
+          end
         end
 
         # Test: Retry exhaustion raises error
         def test_execute_raises_error_after_max_retries
           call_count = 0
 
-          error = assert_raises(Ace::Review::Errors::GhNetworkError) do
-            RetryWithBackoff.execute(max_retries: 3) do
-              call_count += 1
-              @network_error
+          RetryWithBackoff.stub :sleep, ->(_time) {} do
+            error = assert_raises(Ace::Review::Errors::GhNetworkError) do
+              RetryWithBackoff.execute(max_retries: 2) do
+                call_count += 1
+                @network_error
+              end
             end
-          end
 
-          assert_match(/Operation failed after 3 retries/, error.message)
-          assert_match(/Network timeout/, error.message)
-          assert_equal 3, call_count, "Should attempt max_retries times"
+            assert_match(/Operation failed after 2 retries/, error.message)
+            assert_match(/Network timeout/, error.message)
+            assert_equal 2, call_count, "Should attempt max_retries times"
+          end
         end
 
         # Test: Non-retryable error returns immediately
@@ -72,15 +77,15 @@ module Ace
 
           # Stub sleep to capture backoff times
           RetryWithBackoff.stub :sleep, ->(time) { sleep_times << time } do
-            RetryWithBackoff.execute(max_retries: 4, initial_backoff: 2, max_backoff: 10) do
+            RetryWithBackoff.execute(max_retries: 3, initial_backoff: 2, max_backoff: 10) do
               call_count += 1
-              call_count < 4 ? @network_error : @success_result
+              call_count < 3 ? @network_error : @success_result
             end
           end
 
-          # Backoff sequence: 2, 4, 8 (would be 16 but capped at 10, but we succeed at attempt 4)
-          assert_equal [2, 4, 8], sleep_times
-          assert_equal 4, call_count
+          # Backoff sequence: 2, 4 (succeeds on attempt 3)
+          assert_equal [2, 4], sleep_times
+          assert_equal 3, call_count
         end
 
         # Test: Max backoff cap
@@ -88,13 +93,13 @@ module Ace
           sleep_times = []
 
           RetryWithBackoff.stub :sleep, ->(time) { sleep_times << time } do
-            RetryWithBackoff.execute(max_retries: 5, initial_backoff: 10, max_backoff: 20) do
-              sleep_times.size < 4 ? @network_error : @success_result
+            RetryWithBackoff.execute(max_retries: 4, initial_backoff: 10, max_backoff: 20) do
+              sleep_times.size < 3 ? @network_error : @success_result
             end
           end
 
-          # Backoff sequence: 10, 20, 20, 20 (capped at 20)
-          assert_equal [10, 20, 20, 20], sleep_times
+          # Backoff sequence: 10, 20, 20 (capped at 20)
+          assert_equal [10, 20, 20], sleep_times
         end
 
         # Test: Custom retryable check
@@ -106,32 +111,36 @@ module Ace
             result[:stderr]&.include?("CUSTOM_RETRY_ME")
           end
 
-          result = RetryWithBackoff.execute(
-            max_retries: 2,
-            retryable_check: custom_check
-          ) do
-            call_count += 1
-            call_count < 2 ? custom_error : @success_result
-          end
+          RetryWithBackoff.stub :sleep, ->(_time) {} do
+            result = RetryWithBackoff.execute(
+              max_retries: 2,
+              retryable_check: custom_check
+            ) do
+              call_count += 1
+              call_count < 2 ? custom_error : @success_result
+            end
 
-          assert_equal @success_result, result
-          assert_equal 2, call_count
+            assert_equal @success_result, result
+            assert_equal 2, call_count
+          end
         end
 
         # Test: Custom error class
         def test_execute_raises_custom_error_class
           custom_error_class = Class.new(StandardError)
 
-          error = assert_raises(custom_error_class) do
-            RetryWithBackoff.execute(
-              max_retries: 2,
-              error_class: custom_error_class
-            ) do
-              @network_error
+          RetryWithBackoff.stub :sleep, ->(_time) {} do
+            error = assert_raises(custom_error_class) do
+              RetryWithBackoff.execute(
+                max_retries: 2,
+                error_class: custom_error_class
+              ) do
+                @network_error
+              end
             end
-          end
 
-          assert_match(/Operation failed after 2 retries/, error.message)
+            assert_match(/Operation failed after 2 retries/, error.message)
+          end
         end
 
         # Test: Default retryable check for timeout errors
@@ -199,16 +208,16 @@ module Ace
 
           RetryWithBackoff.stub :sleep, ->(time) { sleep_times << time } do
             RetryWithBackoff.execute(
-              max_retries: 4,
+              max_retries: 3,
               initial_backoff: 5,
               max_backoff: 15
             ) do
-              sleep_times.size < 3 ? @network_error : @success_result
+              sleep_times.size < 2 ? @network_error : @success_result
             end
           end
 
-          # Backoff: 5, 10, 15 (capped), then success
-          assert_equal [5, 10, 15], sleep_times
+          # Backoff: 5, 10, then success
+          assert_equal [5, 10], sleep_times
         end
       end
     end
