@@ -263,6 +263,10 @@ module Ace
         end
 
         def should_execute_sequentially?
+          # If explicit files are provided via CLI, bypass group execution
+          # This ensures that commands like `ace-test test/atoms/foo_test.rb` run only that file
+          return false if @configuration.files && !@configuration.files.empty?
+
           # Only use sequential groups if execution_mode is "grouped"
           return false unless @configuration.execution_mode == "grouped"
 
