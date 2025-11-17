@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-11-17
+
+### Added
+- **Graceful Provider Fallback**: Implemented automatic provider fallback with retry logic
+  - Automatic retry with exponential backoff (configurable, default 3 attempts)
+  - Intelligent error classification (retryable, skip to next, terminal)
+  - Fallback provider chain with configurable alternatives
+  - Total timeout protection (default 30s) to prevent infinite retry loops
+  - Jitter (10-30%) added to retry delays to prevent thundering herd issues
+  - Configurable via environment variables (`ACE_LLM_FALLBACK_*`) and runtime parameters
+  - Status callbacks for user visibility during fallback operations
+  - Respects Retry-After headers for rate limit compliance
+
+### Changed
+- **Fallback Orchestrator Refactoring**: Improved code organization and maintainability
+  - Extracted error handling logic into dedicated `handle_error` method for better separation of concerns
+  - Refactored `FallbackConfig.from_hash` with helper method to support both symbol and string keys
+  - Enhanced retry delay calculation with jitter to prevent synchronized retry storms
+  - Improved test coverage with range-based assertions for jittered delays
+
+### Technical
+- Added comprehensive test coverage for fallback system (atoms, molecules, models, integration)
+- Follows ATOM architecture pattern with clear separation: ErrorClassifier (Atom), FallbackConfig (Model), FallbackOrchestrator (Molecule)
+- Fixed minor style issues (missing newline at end of files)
+
 ## [0.10.1] - 2025-11-16
 
 ### Changed

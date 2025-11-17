@@ -24,6 +24,8 @@ module Ace
       # @param debug [Boolean] Enable debug output (--debug)
       # @param model [String, nil] Model name (overrides PROVIDER[:MODEL] if both present) (--model MODEL)
       # @param prompt_override [String, nil] Prompt text (overrides positional prompt if both present) (--prompt PROMPT)
+      # @param fallback [Boolean, nil] Enable/disable fallback (nil = auto from env/config)
+      # @param fallback_providers [Array<String>, nil] Custom fallback provider list
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
@@ -37,7 +39,9 @@ module Ace
                     force: false,
                     debug: false,
                     model: nil,
-                    prompt_override: nil)
+                    prompt_override: nil,
+                    fallback: nil,
+                    fallback_providers: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -68,13 +72,6 @@ module Ace
         messages << { role: "system", content: system } if system && !system.empty?
         messages << { role: "user", content: final_prompt }
 
-        # Get client with timeout option
-        client = registry.get_client(
-          parse_result.provider,
-          model: final_model,
-          timeout: timeout
-        )
-
         # Build generation options
         generation_opts = {}
         generation_opts[:temperature] = temperature if temperature
@@ -88,8 +85,20 @@ module Ace
           $stderr.puts "Max tokens: #{max_tokens}" if max_tokens
         end
 
-        # Generate response
-        response = client.generate(messages, **generation_opts)
+        # Load fallback configuration
+        fallback_config = load_fallback_config(fallback, fallback_providers)
+
+        # Execute with or without fallback
+        response = execute_with_fallback(
+          provider: parse_result.provider,
+          model: final_model,
+          messages: messages,
+          generation_opts: generation_opts,
+          registry: registry,
+          fallback_config: fallback_config,
+          timeout: timeout,
+          debug: debug
+        )
 
         # Extract text content based on response structure
         text_content = extract_text_content(response)
@@ -130,6 +139,79 @@ module Ace
       end
 
       private
+
+      # Load fallback configuration from parameters and environment
+      # @param fallback [Boolean, nil] Explicit fallback enable/disable
+      # @param fallback_providers [Array<String>, nil] Custom provider list
+      # @return [Models::FallbackConfig] Fallback configuration
+      def self.load_fallback_config(fallback, fallback_providers)
+        # Check environment variable for enabled status
+        env_enabled = ENV["ACE_LLM_FALLBACK_ENABLED"]
+        enabled = if fallback.nil?
+                   env_enabled.nil? ? true : env_enabled.downcase == "true"
+                 else
+                   fallback
+                 end
+
+        # Check environment variable for provider list
+        env_providers = ENV["ACE_LLM_FALLBACK_PROVIDERS"]
+        providers = if fallback_providers
+                     fallback_providers
+                   elsif env_providers
+                     env_providers.split(",").map(&:strip)
+                   else
+                     []
+                   end
+
+        # Load other settings from environment
+        retry_count = ENV["ACE_LLM_FALLBACK_RETRY_COUNT"]&.to_i || 3
+        retry_delay = ENV["ACE_LLM_FALLBACK_RETRY_DELAY"]&.to_f || 1.0
+        max_total_timeout = ENV["ACE_LLM_FALLBACK_MAX_TIMEOUT"]&.to_f || 30.0
+
+        Models::FallbackConfig.new(
+          enabled: enabled,
+          retry_count: retry_count,
+          retry_delay: retry_delay,
+          providers: providers,
+          max_total_timeout: max_total_timeout
+        )
+      end
+
+      # Execute query with fallback support
+      # @param provider [String] Provider name
+      # @param model [String] Model name
+      # @param messages [Array<Hash>] Messages array
+      # @param generation_opts [Hash] Generation options
+      # @param registry [Molecules::ClientRegistry] Client registry
+      # @param fallback_config [Models::FallbackConfig] Fallback configuration
+      # @param timeout [Integer] Request timeout
+      # @param debug [Boolean] Debug mode
+      # @return [Hash] Response from provider
+      def self.execute_with_fallback(provider:, model:, messages:, generation_opts:,
+                                     registry:, fallback_config:, timeout:, debug:)
+        # If fallback is disabled, execute directly
+        if fallback_config.disabled?
+          client = registry.get_client(provider, model: model, timeout: timeout)
+          return client.generate(messages, **generation_opts)
+        end
+
+        # Create status callback for user feedback
+        status_callback = ->(msg) { $stderr.puts msg }
+
+        # Create orchestrator
+        orchestrator = Molecules::FallbackOrchestrator.new(
+          config: fallback_config,
+          status_callback: status_callback
+        )
+
+        # Build provider string with model if specified
+        primary_provider_string = model ? "#{provider}:#{model}" : provider
+
+        # Execute with fallback
+        orchestrator.execute(primary_provider: primary_provider_string, registry: registry) do |client|
+          client.generate(messages, **generation_opts)
+        end
+      end
 
       # Extract text content from various response formats
       # @param response [Hash] The response from the LLM client

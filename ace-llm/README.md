@@ -166,6 +166,140 @@ Provider configurations are loaded from (in order):
 
 First configuration found wins if there are duplicates.
 
+### Fallback Configuration
+
+ace-llm supports automatic provider fallback with retry logic for improved reliability. When a provider fails due to transient errors (503, 429, timeouts), the system will automatically retry with exponential backoff and fall back to alternative providers.
+
+#### Environment Variables
+
+Configure fallback behavior via environment variables:
+
+```bash
+# Enable/disable fallback (default: true)
+export ACE_LLM_FALLBACK_ENABLED=true
+
+# Number of retries before fallback (default: 3)
+export ACE_LLM_FALLBACK_RETRY_COUNT=3
+
+# Initial retry delay in seconds (default: 1.0)
+export ACE_LLM_FALLBACK_RETRY_DELAY=1.0
+
+# Maximum total timeout for all retries and fallbacks in seconds (default: 30.0)
+export ACE_LLM_FALLBACK_MAX_TOTAL_TIMEOUT=30.0
+
+# Fallback provider chain (comma-separated)
+export ACE_LLM_FALLBACK_PROVIDERS="anthropic:claude-3-5-sonnet,openai:gpt-4o"
+```
+
+#### YAML Configuration
+
+Create `.ace/llm/fallback.yml` for project-specific fallback settings:
+
+```yaml
+# .ace/llm/fallback.yml
+enabled: true
+retry_count: 3
+retry_delay: 1.0
+max_total_timeout: 30.0
+providers:
+  - anthropic:claude-3-5-sonnet
+  - openai:gpt-4o
+  - google:gemini-2.5-flash
+```
+
+Or configure in `~/.config/ace-llm/fallback.yml` for user-wide settings.
+
+#### Provider Chain Examples
+
+**Simple fallback chain** (same capability providers):
+```yaml
+providers:
+  - anthropic:claude-3-5-sonnet
+  - anthropic:claude-3-opus
+  - openai:gpt-4o
+```
+
+**Cost-optimized chain** (try cheaper models first):
+```yaml
+providers:
+  - google:gemini-2.5-flash   # Fast and cheap
+  - anthropic:claude-3-haiku  # Fast fallback
+  - openai:gpt-4o             # Premium fallback
+```
+
+**Multi-provider reliability** (different providers for resilience):
+```yaml
+providers:
+  - google:gemini-2.5-flash
+  - anthropic:claude-3-5-sonnet
+  - openai:gpt-4o-mini
+```
+
+**Local + Cloud hybrid**:
+```yaml
+providers:
+  - lmstudio:local-model      # Try local first
+  - google:gemini-2.5-flash   # Cloud fallback
+  - anthropic:claude-3-5-sonnet
+```
+
+#### How Fallback Works
+
+1. **Primary provider fails** → Retry with exponential backoff (default: 3 attempts)
+2. **Retries exhausted** → Move to next provider in fallback chain
+3. **Repeat** for each provider in the chain
+4. **All providers fail** → Return error with helpful diagnostics
+
+**Error Classification**:
+- **Retry with backoff**: 429 (rate limit), 500/502/503 (server errors), 504 (timeout)
+- **Skip to next immediately**: 401/403 (auth errors), timeouts, network failures
+- **Terminal**: Invalid requests, unsupported operations
+
+**User Feedback**:
+```bash
+$ ace-llm-query google "Generate commit message"
+⚠ google unavailable (503), retrying... (attempt 2/3)
+⚠ google unavailable after 3 retries
+ℹ Trying fallback provider anthropic:claude-3-5-sonnet...
+✓ Fallback to claude-3-5-sonnet successful
+```
+
+#### Performance Characteristics
+
+- **Overhead**: <2s for fallback scenarios (including retries)
+- **Exponential backoff**: 1s → 2s → 4s (with 10-30% jitter to prevent thundering herd)
+- **Retry-After header**: Respects rate limit headers when provided
+- **Total timeout**: Prevents infinite retry loops (default: 30s)
+- **Circular dependency detection**: Prevents trying the same provider twice
+
+#### Programmatic Usage
+
+```ruby
+require 'ace/llm'
+
+# Configure fallback
+config = Ace::LLM::Models::FallbackConfig.new(
+  enabled: true,
+  retry_count: 3,
+  retry_delay: 1.0,
+  providers: ['anthropic:claude-3-5-sonnet', 'openai:gpt-4o'],
+  max_total_timeout: 30.0
+)
+
+# Execute with fallback support
+orchestrator = Ace::LLM::Molecules::FallbackOrchestrator.new(
+  config: config,
+  status_callback: ->(msg) { puts msg }  # Optional status updates
+)
+
+result = orchestrator.execute(
+  primary_provider: 'google:gemini-2.5-flash',
+  registry: Ace::LLM::Molecules::ClientRegistry.instance
+) do |client|
+  client.complete("Your prompt here")
+end
+```
+
 ## Supported Providers
 
 All providers are now configuration-based and support dynamic loading:

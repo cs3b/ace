@@ -4,33 +4,43 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.138] - 2025-11-17
-
-### ace-review v0.17.0
-- **Added**: --task flag for saving review reports to task directories
-  - New TaskReportSaver molecule for organizing review outputs by task ID
-  - New TaskResolver molecule for flexible task reference resolution (supports task.114, 114, v.0.9.0+114 formats)
-  - Integrated with ReviewManager for automatic report saving to `.ace-taskflow/v.X.Y.Z/tasks/NNN-slug/reviews/`
-  - Improved error handling with specific exception catching and debug backtrace support
-  - Clarifying comments for optional dependency pattern
-  - Comprehensive test coverage for task resolution and report saving
-  - Optional feature - backward compatible with existing workflows
-
-### Task Management
-- **Completed**: Task 114 - Save ace-review reports to task directories with --task flag
-
 ## [0.9.137] - 2025-11-17
 
-### ace-test-runner v0.2.0
-- **Fixed**: Explicit file execution now respects file path arguments and bypasses group execution
-  - Running `ace-test test/atoms/foo_test.rb` executes only that file, not configured test groups
-  - File arguments always take precedence over group targets
-  - Supports single files, multiple files, and file:line syntax
-  - Dramatically improves feedback loop during development and debugging
-- **Technical**: Strengthened integration test assertions with deterministic expected values
-  - Replaced non-deterministic boolean assertions with specific assertions
-  - Added explicit target configuration for grouped execution tests
-  - Improved test documentation explaining behavior with config cascade
+### ace-llm v0.11.0
+- **Added**: Graceful LLM provider fallback with automatic retry logic
+  - Automatic retry with exponential backoff (configurable, default 3 attempts)
+  - Intelligent error classification (retryable, skip to next, terminal)
+  - Fallback provider chain with configurable alternatives
+  - Total timeout protection (default 30s) to prevent infinite retry loops
+  - Jitter (10-30%) added to retry delays to prevent thundering herd issues
+  - Configurable via environment variables (`ACE_LLM_FALLBACK_*`) and runtime parameters
+  - Status callbacks for user visibility during fallback operations
+  - Respects Retry-After headers for rate limit compliance
+  - Comprehensive fallback configuration documentation (134 lines in README)
+  - Environment variable reference for all `ACE_LLM_FALLBACK_*` settings with defaults
+  - YAML configuration examples for project and user-wide settings
+  - Provider chain examples: simple fallback, cost-optimized, multi-provider reliability, local + cloud hybrid
+  - Complete explanation of fallback mechanism with error classification details
+  - Performance characteristics: overhead, backoff strategy, timeout behavior
+  - Programmatic usage examples in Ruby
+- **Changed**: Improved fallback orchestrator code organization and maintainability
+  - Extracted error handling logic into dedicated `handle_error` method for better separation of concerns
+  - Refactored `FallbackConfig.from_hash` with helper method to support both symbol and string keys
+  - Enhanced retry delay calculation with jitter to prevent synchronized retry storms
+  - Improved test coverage with range-based assertions for jittered delays
+  - Refactored FallbackOrchestrator tests for better performance
+  - Extracted `sleep` call to protected `wait` method for easier stubbing
+  - Updated 4 tests to use method stubbing instead of actual delays
+  - Achieved 28% test performance improvement (1.7s → 1.22s)
+  - Follows project testing patterns from `docs/testing-patterns.md`
+- **Technical**: Comprehensive test coverage for fallback system (atoms, molecules, models, integration)
+  - Follows ATOM architecture: ErrorClassifier (Atom), FallbackConfig (Model), FallbackOrchestrator (Molecule)
+
+### ace-git-commit v0.12.2
+- **Technical**: Updated ace-llm dependency from `~> 0.10.0` to `~> 0.11.0` for graceful provider fallback support
+
+### ace-llm-providers-cli v0.10.1
+- **Technical**: Updated ace-llm dependency from `~> 0.10.0` to `~> 0.11.0` for graceful provider fallback support
 
 ## [0.9.136] - 2025-11-16
 

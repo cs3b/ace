@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2025-11-17
+
+### Technical
+- Updated ace-llm dependency from `~> 0.10.0` to `~> 0.11.0` for graceful provider fallback support
+
 ## [0.12.1] - 2025-11-16
 
 ### Changed
