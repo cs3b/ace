@@ -62,6 +62,7 @@ Automated review tool for the ACE framework. Provides preset-based analysis usin
 - **Flexible prompt composition** - Modular prompts with base, format, focus, and guidelines
 - **Prompt cascade** - Override built-in prompts at project or user level through ace-nav
 - **Multiple focus modules** - Combine architecture, language, and quality focuses
+- **Task integration** - Save review reports to task directories with `--task` flag
 - **Release integration** - Stores reviews in `.ace-taskflow/<release>/reviews/`
 - **LLM provider support** - Works with any provider supported by ace-llm
 - **Custom presets** - Create team-specific review configurations
@@ -95,6 +96,12 @@ ace-review
 
 # Security-focused review
 ace-review --preset security
+
+# Save review report to task directory
+ace-review --preset pr --task 114
+
+# Auto-execute with task integration
+ace-review --preset security --task 114 --auto-execute
 
 # List available presets
 ace-review --list-presets
@@ -148,6 +155,47 @@ For `--subject`, you can use simple string shortcuts:
 - `pr` → changes vs tracking branch
 - `HEAD~1..HEAD` → git range (auto-detected)
 - `lib/**/*.rb` → file pattern (auto-detected)
+
+## Task Integration
+
+The `--task` flag enables saving review reports directly to ace-taskflow task directories for improved traceability and context.
+
+### Usage
+
+```bash
+# Save review to task directory (accepts multiple reference formats)
+ace-review --preset pr --task 114
+ace-review --preset security --task task.114
+ace-review --preset comprehensive --task v.0.9.0+114
+
+# Combine with auto-execute
+ace-review --preset pr --task 114 --auto-execute
+```
+
+### Task Reference Formats
+
+All ace-taskflow reference formats are supported:
+- **Task number**: `114`
+- **Task prefix**: `task.114`
+- **Full task ID**: `v.0.9.0+114`
+
+### Output Location
+
+Reports are saved to `<task-dir>/reviews/` with timestamped filenames:
+- **Format**: `YYYYMMDD-HHMMSS-{provider}-{preset}-review.md`
+- **Examples**:
+  - `20251116-134500-google-pr-review.md`
+  - `20251116-140230-gpt-security-review.md`
+  - `20251116-143015-claude-comprehensive-review.md`
+
+### Error Handling
+
+Task integration uses graceful degradation:
+- **Task not found**: Warning displayed, review completes normally
+- **ace-taskflow unavailable**: Warning displayed, review completes normally
+- **Permission errors**: Warning displayed, review completes normally
+
+Reviews always succeed regardless of task integration status.
 
 ## Configuration
 

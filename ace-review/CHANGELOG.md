@@ -5,6 +5,19 @@ All notable changes to ace-review will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Task Integration**: New `--task` flag to save review reports to task directories
+  - Accepts task references in multiple formats: `114`, `task.114`, `v.0.9.0+114`
+  - Reports saved to `<task-dir>/reviews/` with timestamped filenames
+  - Filename format: `YYYYMMDD-HHMMSS-{provider}-{preset}-review.md`
+  - Graceful degradation when ace-taskflow unavailable or task not found
+  - Created `TaskResolver` molecule for task reference resolution
+  - Created `TaskReportSaver` molecule for report persistence
+  - Updated `ReviewManager` organism to orchestrate task-aware saving
+  - Added ace-taskflow ~> 0.19 as runtime dependency
+
 ## [0.16.1] - 2025-11-15
 
 ### Fixed
