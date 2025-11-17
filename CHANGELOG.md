@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.137] - 2025-11-17
+
+### ace-test-runner v0.2.0
+- **Fixed**: Explicit file execution now respects file path arguments and bypasses group execution
+  - Running `ace-test test/atoms/foo_test.rb` executes only that file, not configured test groups
+  - File arguments always take precedence over group targets
+  - Supports single files, multiple files, and file:line syntax
+  - Dramatically improves feedback loop during development and debugging
+- **Technical**: Strengthened integration test assertions with deterministic expected values
+  - Replaced non-deterministic boolean assertions with specific assertions
+  - Added explicit target configuration for grouped execution tests
+  - Improved test documentation explaining behavior with config cascade
+
 ## [0.9.136] - 2025-11-16
 
 ### ace-support-core v0.11.0
