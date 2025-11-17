@@ -1,45 +1,49 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Agent guidance for the Coding Agent Workflow Toolkit (Meta) repository.
 
-## Project Overview
+## Command Recognition
 
-This is the **Coding Agent Workflow Toolkit (Meta)** repository - a meta-repository that provides documentation and guidance for setting up AI-assisted
-development workflow systems. It contains three integrated components:
+Agents should recognize these command patterns:
 
-* **dev-handbook/**: Standardized development guides, workflow instructions, and templates *(integrated development)*
-* **.ace-taskflow/**: Unified task and release management structure *(migrated from dev-taskflow)*
-* **dev-tools/**: CLI tools for LLM integration and development automation *(integrated development)*
+- `@.claude/commands/ace/load-context.md` → Use ace-context
+- `@.claude/commands/*` → Follow specific command instructions
+- `@search` → Use search agent from `.claude/agents/`
+- `@research` → Use research agent from `.claude/agents/`
 
-**Main work focus**: The development work is now integrated across all three components as part of a unified meta-project. The **.ace-taskflow/** provides
-centralized task and release management for coordinated development across **dev-handbook/** (guides and workflows) and **dev-tools/** (executable tools).
+## Tool Usage
 
-## Agent Recommendations
+### ace-context: Load Context
 
-When working with specific tasks, use these specialized agents for focused, efficient execution. All agents follow single-purpose design and standardized response formats.
+**Purpose**: Load project context from presets, files, or protocols
+**Command**: `ace-context [input]`
+**Examples**:
 
-### Task Management
-- **`task-finder`** - FIND tasks only - list, filter, discover next actionable tasks
-- **`task-creator`** - CREATE tasks only - generate task files with content and metadata
-- **`release-navigator`** - NAVIGATE releases - discover current/all releases, track recent activity
+- `ace-context project` (default context)
+- `ace-context wfi://load-context` (protocol)
 
-### Git Operations  
-- **`git-all-commit`** - COMMIT ALL changes - fast execution without file selection
-- **`git-files-commit`** - COMMIT SPECIFIC files - requires file list
-- **`git-review-commit`** - REVIEW then COMMIT - analyze changes before committing
+### ace-nav: Navigate Resources
 
-### Development Tools
-- **`lint-files`** - LINT and FIX code quality - supports ruby, markdown, all types with autofix
-- **`create-path`** - CREATE files/directories - supports templates (NOT for tasks)
-- **`feature-research`** - RESEARCH gaps and missing features - outputs .fr.md reports
-- **`search`** - SEARCH code patterns and files - intelligent filtering across codebase
+**Purpose**: Resource discovery with protocol support
+**Command**: `ace-nav [protocol://resource]`
+**Protocols**: wfi://, guide://, prompt://, tmpl://
+**Examples**:
 
-### Agent Invocation
-- **Direct**: `@agent-name` or use the Task tool with `subagent_type: agent-name`
-- **With params**: Agents accept expected_params documented in their definitions
-- **Composition**: Agents delegate to each other for complex workflows
+- `ace-nav wfi://load-context` → Read output file path, then read that file
+- `ace-nav --sources` → List available resource sources
 
-### Agent Management
-- **Location**: All agents in `dev-handbook/.integrations/claude/agents/*.ag.md`
-- **Symlinks**: `.claude/agents/` contains symlinks to originals
-- **Workflow**: Use `@manage-agents` workflow for creating/updating agents
+## Available Agents
+
+**Location**: `.claude/agents/` (symlinks to ace-search/handbook/agents/)
+
+- **@search**: Code/file search and discovery
+- **@research**: Multi-search analysis and synthesis
+
+**Usage**: Direct invocation (`@agent`) or Task tool (`subagent_type: agent-name`)
+
+## Project Context
+
+For comprehensive project details, run: `ace-context project`
+This provides architecture, tools, conventions, and structure (1371 lines).
+
+**Key Point**: Do not duplicate project context in responses - reference ace-context output.

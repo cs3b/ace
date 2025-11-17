@@ -7,4 +7,4 @@ last_modified: '2025-10-24'
 source: ace-context
 ---
 
-read and run `ace-nav wfi://load-context`  
+Run `ace-context project`, read the output (stdo or file path). And follow the instructions.

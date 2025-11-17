@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-11-16
+
+### Changed
+
+- **Dependency Update**: Updated ace-support-core dependency from `~> 0.9` to `~> 0.11`
+  - Provides access to latest PromptCacheManager features and infrastructure improvements
+  - Maintains compatibility with standardized ACE ecosystem patterns
+
 ## [0.2.0] - 2025-11-15
 
 ### Added

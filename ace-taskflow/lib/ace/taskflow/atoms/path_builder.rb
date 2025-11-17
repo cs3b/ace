@@ -123,9 +123,9 @@ module Ace
         # Build qualified task reference
         # @param release [String] The release (v.0.9.0, backlog, current)
         # @param task_number [String, Integer] The task number
-        # @return [String] The qualified reference (e.g., v.0.9.0+018)
+        # @return [String] The qualified reference (e.g., v.0.9.0+task.018)
         def self.build_qualified_reference(release, task_number)
-          "#{release}+#{task_number.to_s.rjust(3, '0')}"
+          "#{release}+task.#{task_number.to_s.rjust(3, '0')}"
         end
 
         # Generate descriptive filename from title

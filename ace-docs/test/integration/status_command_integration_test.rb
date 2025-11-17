@@ -37,7 +37,7 @@ module Ace
         end
 
         def test_status_command_with_no_options
-          command = StatusCommand.new({})
+          command = StatusCommand.new({ project_root: @temp_dir })
 
           # Capture output
           output = capture_io do
@@ -50,7 +50,7 @@ module Ace
         end
 
         def test_status_command_with_type_filter
-          command = StatusCommand.new({ type: "api" })
+          command = StatusCommand.new({ type: "api", project_root: @temp_dir })
 
           output = capture_io do
             command.execute
@@ -61,7 +61,7 @@ module Ace
         end
 
         def test_status_command_with_needs_update_filter
-          command = StatusCommand.new({ needs_update: true })
+          command = StatusCommand.new({ needs_update: true, project_root: @temp_dir })
 
           output = capture_io do
             command.execute
@@ -72,7 +72,7 @@ module Ace
         end
 
         def test_status_command_with_freshness_filter
-          command = StatusCommand.new({ freshness: "current" })
+          command = StatusCommand.new({ freshness: "current", project_root: @temp_dir })
 
           output = capture_io do
             command.execute
@@ -86,7 +86,7 @@ module Ace
           # Remove all documents
           Dir.glob("*.md").each { |f| File.delete(f) }
 
-          command = StatusCommand.new({})
+          command = StatusCommand.new({ project_root: @temp_dir })
 
           output = capture_io do
             command.execute

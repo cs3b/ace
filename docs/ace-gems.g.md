@@ -108,6 +108,69 @@ Ace::Core.config.get('ace', 'lint', 'kramdown')  # Tool-specific
 
 Note: Module name remains `Ace::Core` even though gem is `ace-support-core`.
 
+## Prompt Caching Pattern
+
+For gems that generate prompts for LLM interactions (like ace-review, ace-docs), use the standardized PromptCacheManager from ace-support-core.
+
+### Standard Structure
+
+```
+.cache/
+└── {gem-name}/
+    └── sessions/
+        └── {operation}-{timestamp}/
+            ├── system.prompt.md    # System prompt
+            ├── user.prompt.md      # User prompt
+            └── metadata.yml        # Session metadata (optional)
+```
+
+### Usage
+
+```ruby
+require 'ace/core/molecules/prompt_cache_manager'
+
+# Create session directory
+session_dir = Ace::Core::Molecules::PromptCacheManager.create_session(
+  "ace-my-gem",
+  "my-operation"
+)
+# Returns: .cache/ace-my-gem/sessions/my-operation-20251116-143022/
+
+# Save prompts
+Ace::Core::Molecules::PromptCacheManager.save_system_prompt(
+  system_prompt_content,
+  session_dir
+)
+
+Ace::Core::Molecules::PromptCacheManager.save_user_prompt(
+  user_prompt_content,
+  session_dir
+)
+
+# Save metadata (optional)
+metadata = {
+  "timestamp" => Time.now.utc.iso8601,
+  "gem" => "ace-my-gem",
+  "operation" => "my-operation",
+  "model" => "google:gemini-2.5-flash",
+  "prompt_sizes" => { "system" => 1234, "user" => 5678 }
+}
+Ace::Core::Molecules::PromptCacheManager.save_metadata(metadata, session_dir)
+```
+
+### Benefits
+
+* **Consistent locations**: All prompt caches in predictable `.cache/{gem}/sessions/` structure
+* **Standard naming**: `system.prompt.md`, `user.prompt.md` across all gems
+* **Git worktree support**: Uses ProjectRootFinder internally
+* **Easy debugging**: Inspect exact prompts sent to LLMs
+* **Metadata tracking**: Optional standardized metadata format
+
+### Examples
+
+* **ace-docs**: Uses PromptCacheManager for analyze-consistency operation
+* **ace-review**: Already follows standard (migrating to use shared utility is optional)
+
 ## Handbook
 
 ```

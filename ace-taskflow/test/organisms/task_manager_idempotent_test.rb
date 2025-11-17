@@ -4,16 +4,13 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/organisms/task_manager"
 
 class TaskManagerIdempotentTest < AceTaskflowTestCase
-  def setup
-    @manager = Ace::Taskflow::Organisms::TaskManager.new
-  end
-
   # Test idempotent status updates
   def test_update_status_to_same_status_succeeds
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # Update a task to its current status
-        result = @manager.update_task_status("001", "done")
+        result = manager.update_task_status("001", "done")
 
         assert result[:success], "Should succeed when updating to same status"
         assert_match(/already has status/, result[:message])
@@ -24,17 +21,18 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_update_status_idempotent_multiple_times
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # First update
-        result1 = @manager.update_task_status("002", "in-progress")
+        result1 = manager.update_task_status("002", "in-progress")
         assert result1[:success]
 
         # Second update to same status (idempotent)
-        result2 = @manager.update_task_status("002", "in-progress")
+        result2 = manager.update_task_status("002", "in-progress")
         assert result2[:success], "Second update should succeed (idempotent)"
         assert_match(/already has status/, result2[:message])
 
         # Third update to same status (still idempotent)
-        result3 = @manager.update_task_status("002", "in-progress")
+        result3 = manager.update_task_status("002", "in-progress")
         assert result3[:success], "Third update should succeed (idempotent)"
         assert_match(/already has status/, result3[:message])
       end
@@ -45,8 +43,9 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_flexible_transition_pending_to_done
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # In flexible mode (default), can go directly from pending to done
-        result = @manager.update_task_status("003", "done")
+        result = manager.update_task_status("003", "done")
         assert result[:success], "Should allow pending → done in flexible mode"
       end
     end
@@ -55,6 +54,7 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_flexible_transition_draft_to_done
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # Create a task in draft status
         task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "050", "task.050.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
@@ -64,7 +64,7 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
         ))
 
         # In flexible mode, can go directly from draft to done
-        result = @manager.update_task_status("050", "done")
+        result = manager.update_task_status("050", "done")
         assert result[:success], "Should allow draft → done in flexible mode"
       end
     end
@@ -73,6 +73,7 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_flexible_transition_custom_status_to_done
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # Create a task with custom status
         task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "051", "task.051.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
@@ -82,7 +83,7 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
         ))
 
         # In flexible mode, can transition from custom status
-        result = @manager.update_task_status("051", "done")
+        result = manager.update_task_status("051", "done")
         assert result[:success], "Should allow custom → done in flexible mode"
       end
     end
@@ -92,16 +93,17 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_complete_task_idempotent
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # First complete
-        result1 = @manager.complete_task("003")
+        result1 = manager.complete_task("003")
         assert result1[:success], "First complete should succeed"
 
         # Get task to verify it's now in done status
-        task = @manager.show_task("003")
+        task = manager.show_task("003")
         assert_equal "done", task[:status]
 
         # Second complete (idempotent) - task already has done status
-        result2 = @manager.complete_task("003")
+        result2 = manager.complete_task("003")
         assert result2[:success], "Second complete should succeed (idempotent)"
       end
     end
@@ -110,8 +112,9 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_complete_already_done_task
     with_test_project do |dir|
       Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
         # Task 001 is already done in test fixtures
-        result = @manager.complete_task("001")
+        result = manager.complete_task("001")
 
         assert result[:success], "Completing already-done task should succeed"
         # Message should indicate it's already done

@@ -97,10 +97,14 @@ module Ace
 
           if qualified
             if release == "current"
-              # Even for current, if explicitly qualified, include it
+              # Even for current, if explicitly qualified, include it without task. prefix
               "current+#{number_str}"
+            elsif is_release_version?(release)
+              # Release versions get the task. prefix
+              "#{release}+task.#{number_str}"
             else
-              "#{release}+#{number_str}"
+              # Other releases (like backlog) get the task. prefix
+              "#{release}+task.#{number_str}"
             end
           else
             number_str
@@ -140,9 +144,18 @@ module Ace
 
           references = []
 
-          # Find qualified references (e.g., v.0.9.0+018, backlog+025)
+          # Find qualified references with task. prefix (e.g., v.0.9.0+task.018, backlog+task.025)
+          text.scan(/\b([\w\.-]+)\+task\.(\d+)\b/) do |release_str, number|
+            references << "#{release_str}+task.#{number}"
+          end
+
+          # Find qualified references without task. prefix (e.g., v.0.9.0+018, backlog+025)
+          # Only capture if not already captured with task. prefix
           text.scan(/\b([\w\.-]+)\+(\d+)\b/) do |release_str, number|
-            references << "#{release_str}+#{number}"
+            ref_with_task = "#{release_str}+task.#{number}"
+            ref_without_task = "#{release_str}+#{number}"
+            # Only add if the task. version wasn't already found
+            references << ref_without_task unless references.include?(ref_with_task)
           end
 
           # Find simple task references (e.g., task.003)

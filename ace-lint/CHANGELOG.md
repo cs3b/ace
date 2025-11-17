@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
+## [Unreleased]
+
+## [0.3.3] - 2025-11-16
+
+### Changed
+
+- **Dependency Update**: Updated ace-support-core dependency from `~> 0.9` to `~> 0.11`
+  - Ensures compatibility with latest PromptCacheManager features
+  - Aligns with standardized dependency versions across ACE ecosystem
+
 ## [0.3.2] - 2025-11-11
 
 ### Fixed
