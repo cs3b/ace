@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **GitHub Pull Request Review Mode**: Support for reviewing GitHub pull requests directly
   - New `--pr` option to specify pull request identifier (number, URL, or owner/repo#number)
-  - `--pr-post-comment` option to automatically post review as GitHub comment (requires `gh` CLI)
-  - `--pr-dry-run` option to preview comment without posting
+  - `--post-comment` option to automatically post review as GitHub comment (requires `gh` CLI)
+  - `--dry-run` option to preview comment without posting
   - Multiple PR identifier formats supported: `123`, `https://github.com/owner/repo/pull/123`, `owner/repo#123`
   - Automatic repository detection from git remote when using PR number only
   - Comprehensive error handling for authentication, network issues, and PR state
@@ -34,6 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatically closes unclosed code fences to prevent broken GitHub comment rendering
   - Wraps review content in expandable section for better PR comment readability
 - **README Documentation**: Comprehensive guide for GitHub PR review mode with examples, timeout configuration, and troubleshooting
+- **Task Integration**: New `--task` flag to save review reports to task directories
+  - Accepts task references in multiple formats: `114`, `task.114`, `v.0.9.0+114`
+  - Reports saved to `<task-dir>/reviews/` with timestamped filenames
+  - Filename format: `YYYYMMDD-HHMMSS-{provider}-{preset}-review.md`
+  - Graceful degradation when ace-taskflow unavailable or task not found
+  - Created `TaskResolver` molecule for task reference resolution
+  - Created `TaskReportSaver` molecule for report persistence
+  - Updated `ReviewManager` organism to orchestrate task-aware saving
+  - Added ace-taskflow ~> 0.19 as runtime dependency
 
 ### Changed
 - **Default Timeout**: Reduced default timeout for GitHub CLI operations from 600 seconds (10 minutes) to 30 seconds
