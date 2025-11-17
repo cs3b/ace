@@ -13,13 +13,11 @@ module Ace
       class DocumentRegistry
         attr_reader :documents, :config
 
-        def initialize(config_path: nil)
+        def initialize(config_path: nil, project_root: nil)
+          @project_root = project_root || determine_project_root(config_path)
           @config_path = config_path || find_config_path
           @config = load_configuration
           @documents = []
-          # Store the project root (where config was found) for document discovery
-          # Use ProjectRootFinder to support both main repos and git worktrees
-          @project_root = @config_path ? File.dirname(File.dirname(File.dirname(@config_path))) : Ace::Core::Molecules::ProjectRootFinder.find_or_current
           discover_documents
         end
 
@@ -90,6 +88,14 @@ module Ace
 
         private
 
+        def determine_project_root(config_path)
+          # If config_path is provided, derive project root from it
+          return File.dirname(File.dirname(File.dirname(config_path))) if config_path
+
+          # Otherwise use ProjectRootFinder to support both main repos and git worktrees
+          Ace::Core::Molecules::ProjectRootFinder.find_or_current
+        end
+
         def find_config_path
           # Look for config in standard locations
           config_locations = [
@@ -99,9 +105,8 @@ module Ace
             "ace-docs.yaml"
           ]
 
-          # Start from project root (or current directory) and walk up to find config
-          # Use ProjectRootFinder to support both main repos and git worktrees
-          current_dir = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          # Start from project root and walk up to find config
+          current_dir = @project_root
 
           while current_dir && current_dir != "/" && current_dir != File.dirname(current_dir)
             config_locations.each do |location|

@@ -97,16 +97,19 @@ module Ace
 
         def test_create_context_markdown_multi_subject_scope
           # Test that context shows multiple subject filters
-          @document.instance_variable_set(:@frontmatter, {
-            "doc-type" => "reference",
-            "purpose" => "Test",
-            "ace-docs" => {
-              "subject" => [
-                { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
-                { "config" => { "diff" => { "filters" => ["**/*.yml"] } } }
-              ]
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "reference",
+              "purpose" => "Test",
+              "ace-docs" => {
+                "subject" => [
+                  { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
+                  { "config" => { "diff" => { "filters" => ["**/*.yml"] } } }
+                ]
+              }
             }
-          })
+          )
 
           diffs = {
             "code" => "code changes",
@@ -114,7 +117,7 @@ module Ace
           }
 
           # Build the prompt which creates the context.md file
-          DocumentAnalysisPrompt.build(@document, diffs, since: "2025-10-01", cache_dir: @session_dir)
+          DocumentAnalysisPrompt.build(document, diffs, since: "2025-10-01", cache_dir: @session_dir)
 
           # Read the generated context.md file
           context_path = File.join(@session_dir, "context.md")
@@ -122,9 +125,10 @@ module Ace
 
           context = File.read(context_path)
 
+
           # Should include multiple subjects in analysis scope
-          assert context.include?("code:"), "Should list code subject"
-          assert context.include?("config:"), "Should list config subject"
+          assert context.include?("`code`:"), "Should list code subject"
+          assert context.include?("`config`:"), "Should list config subject"
           assert context.include?("**/*.rb"), "Should show code filters"
           assert context.include?("**/*.yml"), "Should show config filters"
         end
@@ -166,30 +170,34 @@ module Ace
           context_path = File.join(@session_dir, "context.md")
           assert File.exist?(context_path)
 
-          # Verify it contains basic document info
+          # Verify it contains analysis instructions
           context_content = File.read(context_path)
-          assert context_content.include?("reference"), "Should include doc-type"
+          assert context_content.include?("Change Analysis Instructions"), "Should include instructions"
+          assert context_content.include?("Analysis Scope"), "Should include scope section"
         end
 
         def test_prompt_selection_for_multi_subject
           # Test that multi-subject documents get appropriate prompts
-          @document.instance_variable_set(:@frontmatter, {
-            "doc-type" => "reference",
-            "purpose" => "Test",
-            "ace-docs" => {
-              "subject" => [
-                { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
-                { "docs" => { "diff" => { "filters" => ["**/*.md"] } } }
-              ]
+          document = Models::Document.new(
+            path: "test.md",
+            frontmatter: {
+              "doc-type" => "reference",
+              "purpose" => "Test",
+              "ace-docs" => {
+                "subject" => [
+                  { "code" => { "diff" => { "filters" => ["**/*.rb"] } } },
+                  { "docs" => { "diff" => { "filters" => ["**/*.md"] } } }
+                ]
+              }
             }
-          })
+          )
 
           diffs = {
             "code" => "code changes",
             "docs" => "doc changes"
           }
 
-          result = DocumentAnalysisPrompt.build(@document, diffs, since: "2025-10-01", cache_dir: @session_dir)
+          result = DocumentAnalysisPrompt.build(document, diffs, since: "2025-10-01", cache_dir: @session_dir)
 
           # Should use appropriate prompts for multi-subject analysis
           assert result[:system]
@@ -198,8 +206,8 @@ module Ace
           # Context should reflect multi-subject nature
           context_path = File.join(@session_dir, "context.md")
           context = File.read(context_path)
-          assert context.include?("code:")
-          assert context.include?("docs:")
+          assert context.include?("`code`:"), "Should list code subject"
+          assert context.include?("`docs`:"), "Should list docs subject"
         end
       end
     end

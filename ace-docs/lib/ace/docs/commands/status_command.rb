@@ -11,7 +11,7 @@ module Ace
       class StatusCommand
         def initialize(options = {})
           @options = options
-          @registry = Organisms::DocumentRegistry.new
+          @registry = options[:registry] || create_registry(options[:project_root])
         end
 
         def execute
@@ -27,6 +27,14 @@ module Ace
         end
 
         private
+
+        def create_registry(project_root = nil)
+          if project_root
+            Organisms::DocumentRegistry.new(project_root: project_root)
+          else
+            Organisms::DocumentRegistry.new
+          end
+        end
 
         def filter_documents
           documents = @registry.all
