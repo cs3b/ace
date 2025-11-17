@@ -251,7 +251,7 @@ Works seamlessly with:
 - Ruby >= 3.2.0
 - Git >= 2.23.0 (for `--force-with-lease` and modern rebase features)
 - GitHub CLI (optional, for PR creation workflow)
-- ace-support-core ~> 0.10.0 (installed automatically)
+- ace-support-core ~> 0.10 (installed automatically)
 
 ## Development
 
