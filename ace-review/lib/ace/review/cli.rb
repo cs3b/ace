@@ -122,6 +122,18 @@ module Ace
             @options[:task] = v
           end
 
+          opts.on("--pr IDENTIFIER", "Review GitHub PR (number, URL, or owner/repo#number)") do |v|
+            @options[:pr] = v
+          end
+
+          opts.on("--post-comment", "Post review as PR comment (requires --pr)") do
+            @options[:post_comment] = true
+          end
+
+          opts.on("--gh-timeout SECONDS", Integer, "Timeout for gh CLI operations in seconds (default: 30)") do |v|
+            @options[:gh_timeout] = v
+          end
+
           opts.on("-h", "--help", "Show this help") do
             @options[:help] = true
           end
@@ -139,6 +151,9 @@ module Ace
         puts "  ace-review --preset docs --output-dir ./reviews"
         puts "  ace-review --preset pr --task 114"
         puts "  ace-review --preset security --task 114 --auto-execute"
+        puts "  ace-review --pr 123 --auto-execute"
+        puts "  ace-review --pr https://github.com/owner/repo/pull/456 --preset security"
+        puts "  ace-review --pr owner/repo#789 --post-comment --auto-execute"
         puts "  ace-review --list-presets"
         puts "  ace-review --list-prompts"
       end
@@ -238,6 +253,7 @@ module Ace
       end
 
       def handle_success(result)
+        # Display review saved/prepared message
         if result[:output_file]
           puts "✓ Review saved: #{result[:output_file]}"
         elsif result[:session_dir]
@@ -262,6 +278,22 @@ module Ace
               puts "  ace-llm query --file #{result[:prompt_file]}"
             end
           end
+        end
+
+        # Display comment posting results
+        if result[:comment_url]
+          puts "✓ Review posted to PR: #{result[:comment_url]}"
+        elsif result[:comment_error]
+          puts "✗ Failed to post comment: #{result[:comment_error]}"
+          puts "  (Review saved locally - you can post manually)"
+        end
+
+        # Display dry-run preview
+        if result[:dry_run_preview]
+          puts
+          puts "=== Comment Preview (Dry Run) ==="
+          puts result[:dry_run_preview]
+          puts "=== End Preview ==="
         end
       end
 

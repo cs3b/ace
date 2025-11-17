@@ -31,6 +31,61 @@ module Ace
           super(message)
         end
       end
+
+      # Raised when gh CLI is not installed
+      class GhCliNotInstalledError < Error
+        def initialize
+          message = "GitHub CLI (gh) is not installed.\n"
+          message += "Install with:\n"
+          message += "  macOS: brew install gh\n"
+          message += "  Linux: See https://cli.github.com/manual/installation\n"
+          message += "  Windows: See https://cli.github.com/manual/installation"
+
+          super(message)
+        end
+      end
+
+      # Raised when user is not authenticated with GitHub
+      class GhAuthenticationError < Error
+        def initialize
+          message = "GitHub authentication required.\n"
+          message += "Run 'gh auth login' to authenticate with GitHub.\n"
+          message += "Check status: gh auth status"
+
+          super(message)
+        end
+      end
+
+      # Raised when a PR is not found
+      class PrNotFoundError < Error
+        attr_reader :pr_identifier
+
+        def initialize(pr_identifier, details = nil)
+          @pr_identifier = pr_identifier
+          message = "Pull request '#{pr_identifier}' not found."
+          message += "\n#{details}" if details
+
+          super(message)
+        end
+      end
+
+      # Raised when attempting to post to a closed/merged PR
+      class PrStateError < Error
+        attr_reader :pr_number, :state
+
+        def initialize(pr_number, state)
+          @pr_number = pr_number
+          @state = state
+
+          message = "Cannot post comment to PR ##{pr_number}.\n"
+          message += "PR is in '#{state}' state. Comments can only be posted to open PRs."
+
+          super(message)
+        end
+      end
+
+      # Raised when gh CLI encounters a network error
+      class GhNetworkError < Error; end
     end
   end
 end

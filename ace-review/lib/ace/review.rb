@@ -20,6 +20,7 @@ require_relative "review/errors"
 
 # Require atoms
 require_relative "review/atoms/context_normalizer"
+require_relative "review/atoms/preset_validator"
 
 # Require all necessary components explicitly
 require_relative "review/molecules/context_composer"
@@ -30,6 +31,10 @@ require_relative "review/molecules/prompt_composer"
 require_relative "review/molecules/nav_prompt_resolver"
 require_relative "review/molecules/prompt_resolver"  # Keep for backwards compatibility
 require_relative "review/molecules/subject_extractor"
+require_relative "review/molecules/gh_cli_executor"
+require_relative "review/molecules/pr_identifier_parser"
+require_relative "review/molecules/gh_pr_fetcher"
+require_relative "review/molecules/gh_comment_poster"
 
 require_relative "review/organisms/review_manager"
 
