@@ -29,6 +29,7 @@ ace-context $input
 ```
 
 **Input type detection:**
+
 - **Presets**: Simple names without path separators (e.g., `project`, `base`)
 - **Files**: Paths with `/`, `./`, `../`, or file extensions (e.g., `./context.md`, `/absolute/path.yml`)
 - **Protocols**: URLs with `://` pattern (e.g., `wfi://workflow-name`, `guide://testing`)
@@ -47,6 +48,7 @@ Read the ENTIRE file to understand the full project context.
 ### 3. Prepare Summary
 
 Analyze the loaded context and prepare a concise summary covering:
+
 - Project purpose and objectives
 - Technical architecture and design patterns
 - Development conventions and standards

@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.136] - 2025-11-16
+
+### ace-support-core v0.11.0
+- **Added**: Standardized prompt cache management via `PromptCacheManager`
+  - Stateless utility class with consistent file naming (`system.prompt.md`, `user.prompt.md`)
+  - Session-based caching with `.cache/{gem}/sessions/{operation}-{timestamp}/` pattern
+  - Git worktree support via ProjectRootFinder
+  - Comprehensive test coverage (26 tests) for reliable cross-gem functionality
+- **Changed**: Refactored PromptCacheManager class method structure
+  - Updated from private_class_method to class << self block pattern
+  - Enhanced code organization and maintainability following Ruby idioms
+
+### ace-docs v0.9.0
+- **Changed**: Migrated prompt caching to use the new `PromptCacheManager`
+  - File names: prompt-system.md → system.prompt.md, prompt-user.md → user.prompt.md
+  - Directory: .cache/ace-docs/ → .cache/ace-docs/sessions/
+  - Replace git rev-parse with PromptCacheManager (uses ProjectRootFinder)
+- **Fixed**: Test isolation issues in document registry and status command tests
+  - Tests now properly isolate to temporary directories
+  - Prevents discovery of real project files during testing
+
+### Dependency Updates
+- **ace-git-diff v0.1.3**: Updated ace-support-core dependency from `~> 0.9` to `~> 0.11`
+- **ace-search v0.11.4**: Updated ace-support-core dependency from `~> 0.9` to `~> 0.11`
+- **ace-lint v0.3.3**: Updated ace-support-core dependency from `~> 0.9` to `~> 0.11`
+
+### ace-taskflow v0.19.3
+- **Changed**: Standardize task reference format with 'task.' prefix
+  - Updated qualified references from `v.0.9.0+018` to `v.0.9.0+task.018`
+  - Ensures consistent and unambiguous format for task references across the system
+  - Maintains backward compatibility with both old and new reference formats
+
+### Documentation
+- **ace-gems.g.md**: Added comprehensive "Prompt Caching Pattern" section
+  - Documents structure, usage, benefits, and examples
+  - Provides guidance for future gems implementing prompt caching
+
+### Technical
+- **Dependency Standardization**: Coordinated version updates across ACE ecosystem
+  - Ensured all affected packages use consistent ace-support-core ~> 0.11 dependency
+  - Maintains backward compatibility while enabling access to latest features
+  - Simplified dependency management and reduces version conflicts
+
 ## [0.9.135] - 2025-11-16
 
 ### Fixed
