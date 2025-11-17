@@ -118,6 +118,10 @@ module Ace
             @options[:session_dir] = v
           end
 
+          opts.on("--task TASKREF", "Save review report to task directory (task number, task.NNN, or v.X.Y.Z+NNN)") do |v|
+            @options[:task] = v
+          end
+
           opts.on("-h", "--help", "Show this help") do
             @options[:help] = true
           end
@@ -133,6 +137,8 @@ module Ace
         puts "  ace-review --preset pr"
         puts "  ace-review --preset security --auto-execute"
         puts "  ace-review --preset docs --output-dir ./reviews"
+        puts "  ace-review --preset pr --task 114"
+        puts "  ace-review --preset security --task 114 --auto-execute"
         puts "  ace-review --list-presets"
         puts "  ace-review --list-prompts"
       end
