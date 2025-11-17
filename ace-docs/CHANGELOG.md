@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Test Isolation**: Fixed DocumentRegistry and StatusCommand test failures caused by ProjectRootFinder discovering actual project files
+  - Added `project_root` parameter to DocumentRegistry.new and StatusCommand.new for test isolation
+  - DocumentRegistry tests now pass `project_root: @temp_dir` to ensure isolation
+  - StatusCommand integration tests now pass `project_root: @temp_dir` to ensure isolation
+  - All 15 document_registry tests now pass (was 13 failures, 1 error)
+  - All 5 status_command_integration tests now pass (was 5 failures)
+  - Root cause: Tests were discovering real ace-docs handbook files instead of temp directory files
+
+- **Test Correctness**: Fixed DocumentAnalysisPromptTest assertions to match actual output format
+  - Multi-subject scope section uses backtick-wrapped subject names (e.g., "`code`:" not "code:")
+  - Fixed tests to properly create Document instances instead of using instance_variable_set
+  - All 7 prompt tests now pass (was 3 failures)
+  - Root cause: Tests were modifying @frontmatter without updating @ace_docs_config
+
+## [0.9.0] - 2025-11-16
+
+### Changed
+
+- **Standardized Prompt Cache Management**: Migrated to use PromptCacheManager from ace-support-core
+  - Cache location now: `.cache/ace-docs/sessions/analyze-consistency-{timestamp}/`
+  - System prompt file: `prompt-system.md` → `system.prompt.md`
+  - User prompt file: `prompt-user.md` → `user.prompt.md`
+  - Uses ProjectRootFinder for git worktree support (via PromptCacheManager)
+  - Consistent with ace-review and future ace-* gems
+  - **BREAKING**: Old cache file names no longer used (cache files are session-specific, not persistent)
+
+### Dependencies
+
+- Updated ace-support-core to `~> 0.11` (requires PromptCacheManager)
+
 ## [0.8.0] - 2025-11-15
 
 ### BREAKING CHANGE: ISO 8601 UTC Timestamp Format

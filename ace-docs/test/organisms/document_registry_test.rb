@@ -22,7 +22,7 @@ module Ace
         end
 
         def test_initialize_with_no_config
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
 
           assert_instance_of DocumentRegistry, registry
           assert_equal [], registry.documents
@@ -45,7 +45,7 @@ module Ace
           FileUtils.mkdir_p(".ace/docs")
           File.write(".ace/docs/config.yml", config_content)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
 
           assert_includes registry.document_types, "custom"
           assert_equal 500, registry.global_rules["max_lines"]
@@ -69,7 +69,7 @@ module Ace
 
           File.write("test-guide.md", content)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           docs = registry.all
 
           assert_equal 1, docs.size
@@ -94,7 +94,7 @@ module Ace
           # Create a workflow file without frontmatter
           File.write("test.wf.md", "# Workflow Document\n\nContent here.")
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           docs = registry.all
 
           assert_equal 1, docs.size
@@ -123,7 +123,7 @@ module Ace
           # Create a valid document
           File.write("valid.md", doc_content.sub("Should be ignored", "Valid document"))
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           docs = registry.all
 
           assert_equal 1, docs.size
@@ -143,7 +143,7 @@ module Ace
 
           File.write("doc1.md", content1)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           assert_equal 1, registry.all.size
 
           # Add another document
@@ -171,7 +171,7 @@ module Ace
         def test_by_type
           create_test_documents
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           guide_docs = registry.by_type("guide")
           api_docs = registry.by_type("api")
 
@@ -208,7 +208,7 @@ module Ace
           File.write("outdated.md", outdated_content)
           File.write("current.md", current_content)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           needing_update = registry.needing_update
 
           assert_equal 1, needing_update.size
@@ -218,7 +218,7 @@ module Ace
         def test_by_freshness
           create_freshness_test_documents
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
 
           current_docs = registry.by_freshness(:current)
           stale_docs = registry.by_freshness(:stale)
@@ -240,7 +240,7 @@ module Ace
 
           File.write("test.md", content)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
 
           # Test with relative path
           doc = registry.find_by_path("test.md")
@@ -258,7 +258,7 @@ module Ace
         def test_grouped_by_type
           create_test_documents
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           grouped = registry.grouped_by_type
 
           assert_includes grouped, "guide"
@@ -293,7 +293,7 @@ module Ace
           File.write("docs/guide.md", guide_content)
           File.write("api/reference.md", api_content)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           grouped = registry.grouped_by_directory
 
           assert_equal 2, grouped.size
@@ -305,7 +305,7 @@ module Ace
           create_test_documents
           create_freshness_test_documents
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           stats = registry.stats
 
           assert stats[:total] > 0
@@ -321,7 +321,7 @@ module Ace
           File.write(".ace/docs/config.yml", config_content)
 
           # Should not raise an error, but use default config
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
 
           assert_instance_of DocumentRegistry, registry
           assert_includes registry.config["document_types"], "guide" # Default config
@@ -350,7 +350,7 @@ module Ace
 
           File.write("test.md", content)
 
-          registry = DocumentRegistry.new
+          registry = DocumentRegistry.new(project_root: @temp_dir)
           docs = registry.all
 
           # Should only have one document, not duplicated
