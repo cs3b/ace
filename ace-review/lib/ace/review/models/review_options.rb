@@ -8,7 +8,7 @@ module Ace
         attr_accessor :preset, :output_dir, :output, :context, :subject,
                       :prompt_base, :prompt_format, :prompt_focus, :add_focus,
                       :prompt_guidelines, :model, :dry_run, :verbose,
-                      :auto_execute, :save_session, :session_dir,
+                      :auto_execute, :save_session, :session_dir, :task,
                       :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
@@ -37,6 +37,9 @@ module Ace
           # Session options
           @save_session = hash.fetch(:save_session, true)
           @session_dir = hash[:session_dir]
+
+          # Task integration
+          @task = hash[:task]
 
           # List commands
           @list_presets = hash[:list_presets] || false

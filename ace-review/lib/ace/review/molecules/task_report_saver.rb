@@ -1,0 +1,89 @@
+# frozen_string_literal: true
+
+require "fileutils"
+require "time"
+
+module Ace
+  module Review
+    module Molecules
+      # Save review reports to task directories with timestamped filenames
+      class TaskReportSaver
+        # Save a review report to a task's reviews/ directory
+        # @param task_dir [String] Path to the task directory
+        # @param session_dir [String] Path to the review session directory
+        # @param review_data [Hash] Review metadata (preset, model, etc.)
+        # @return [Hash] Result with :success, :path, or :error
+        def self.save(task_dir, session_dir, review_data)
+          # Validate inputs
+          return { success: false, error: "Task directory not found: #{task_dir}" } unless Dir.exist?(task_dir)
+          return { success: false, error: "Session directory not found: #{session_dir}" } unless Dir.exist?(session_dir)
+
+          # Create reviews/ subdirectory if it doesn't exist
+          reviews_dir = File.join(task_dir, "reviews")
+          begin
+            FileUtils.mkdir_p(reviews_dir)
+          rescue => e
+            return { success: false, error: "Cannot create reviews directory: #{e.message}" }
+          end
+
+          # Generate filename
+          filename = generate_filename(review_data)
+          output_path = File.join(reviews_dir, filename)
+
+          # Read review content from session directory
+          review_file = File.join(session_dir, "review.md")
+          unless File.exist?(review_file)
+            return { success: false, error: "Review file not found in session directory" }
+          end
+
+          # Copy review to task directory
+          begin
+            FileUtils.cp(review_file, output_path)
+            { success: true, path: output_path }
+          rescue => e
+            { success: false, error: "Failed to save review: #{e.message}" }
+          end
+        end
+
+        # Generate timestamped filename for review report
+        # @param review_data [Hash] Review metadata (preset, model, etc.)
+        # @return [String] Filename in format: YYYYMMDD-HHMMSS-provider-preset-review.md
+        def self.generate_filename(review_data)
+          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+
+          # Extract provider from model (e.g., "google:gemini-2.5-flash" -> "google")
+          # Or use simplified model name if no provider prefix
+          model = review_data[:model] || "unknown"
+          provider = extract_provider(model)
+
+          preset = review_data[:preset] || "default"
+
+          # Sanitize preset name for filename
+          preset_slug = preset.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase
+
+          "#{timestamp}-#{provider}-#{preset_slug}-review.md"
+        end
+
+        # Extract provider name from model string
+        # @param model [String] Model identifier (e.g., "google:gemini-2.5-flash", "gpt-4")
+        # @return [String] Provider name or sanitized model name
+        def self.extract_provider(model)
+          # Check for provider prefix (e.g., "google:", "openai:")
+          if model.include?(":")
+            provider = model.split(":").first
+            provider.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase
+          else
+            # Use first part of model name (e.g., "gpt-4" -> "gpt", "claude-3" -> "claude")
+            parts = model.split("-")
+            if parts.length > 1 && parts.first =~ /^[a-z]+$/i
+              parts.first.downcase
+            else
+              # Fallback: sanitize entire model name
+              model.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase.split('-').first
+            end
+          end
+        end
+      end
+    end
+  end
+end

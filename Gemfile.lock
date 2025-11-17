@@ -99,6 +99,7 @@ PATH
       ace-llm (~> 0.1)
       ace-nav (~> 0.9)
       ace-support-core (~> 0.9)
+      ace-taskflow (~> 0.19)
 
 PATH
   remote: ace-search

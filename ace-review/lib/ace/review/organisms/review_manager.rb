@@ -13,6 +13,7 @@ module Ace
       class ReviewManager
         attr_reader :preset_manager, :prompt_resolver, :prompt_composer,
                     :subject_extractor, :context_extractor
+        attr_accessor :task_reference
 
         def initialize
           @preset_manager = Ace::Review::Molecules::PresetManager.new
@@ -20,6 +21,7 @@ module Ace
           @prompt_composer = Ace::Review::Molecules::PromptComposer.new(resolver: @prompt_resolver)
           @subject_extractor = Ace::Review::Molecules::SubjectExtractor.new
           @context_extractor = Ace::Review::Molecules::ContextExtractor.new
+          @task_reference = nil
         end
 
         # Execute a code review with the given options
@@ -28,6 +30,9 @@ module Ace
         def execute_review(options)
           # Convert to ReviewOptions if needed
           options = ensure_review_options(options)
+
+          # Capture task reference for later use
+          @task_reference = options.task
 
           # Step 1: Prepare configuration
           config_result = prepare_review_config(options)
@@ -459,11 +464,21 @@ module Ace
             # Copy final review to release folder
             release_path = copy_to_release(session_dir, review_data)
 
+            # Save to task directory if --task flag provided
+            task_path = save_to_task_if_requested(review_data, session_dir)
+
+            # Build result message
+            messages = []
+            messages << "Review saved to #{release_path}" if release_path
+            messages << "Review saved to #{task_path}" if task_path
+            messages << "Review saved to #{result[:output_file]}" if messages.empty?
+
             # Return enhanced result with metadata for backward compatibility
             {
               success: true,
-              output_file: release_path || result[:output_file],
-              message: release_path ? "Review saved to #{release_path}" : "Review saved to #{result[:output_file]}",
+              output_file: release_path || task_path || result[:output_file],
+              message: messages.join("\n"),
+              task_path: task_path,
               usage: result[:usage],
               model_info: result[:model_info],
               provider_info: result[:provider_info]
@@ -584,6 +599,47 @@ module Ace
           METADATA
 
           metadata + response
+        end
+
+        # Save review report to task directory if --task flag provided
+        # @param review_data [Hash] Review metadata
+        # @param session_dir [String] Session directory path
+        # @return [String, nil] Path to saved report or nil if not saved
+        def save_to_task_if_requested(review_data, session_dir)
+          return nil unless @task_reference
+
+          begin
+            # Lazily require taskflow components to keep it an optional dependency.
+            # This allows ace-review to function even if ace-taskflow is not installed.
+            require_relative '../molecules/task_resolver'
+            require_relative '../molecules/task_report_saver'
+
+            # Resolve task reference to directory path
+            task_info = Molecules::TaskResolver.resolve(@task_reference)
+
+            unless task_info
+              warn "Warning: Task '#{@task_reference}' not found. Review completed but report not saved to task."
+              return nil
+            end
+
+            # Save report to task directory
+            result = Molecules::TaskReportSaver.save(task_info[:path], session_dir, review_data)
+
+            if result[:success]
+              result[:path]
+            else
+              warn "Warning: #{result[:error]}. Review completed but report not saved to task."
+              nil
+            end
+          rescue LoadError => e
+            # ace-taskflow not available
+            warn "Warning: ace-taskflow gem not available. Review completed but not saved to task." if $DEBUG
+            nil
+          rescue => e
+            # Unexpected error - log but don't fail the review
+            warn "Warning: Failed to save review to task: #{e.message}. Review completed." if $DEBUG
+            nil
+          end
         end
       end
     end

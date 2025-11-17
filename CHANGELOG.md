@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.138] - 2025-11-17
+
+### ace-review v0.17.0
+- **Added**: --task flag for saving review reports to task directories
+  - New TaskReportSaver molecule for organizing review outputs by task ID
+  - New TaskResolver molecule for flexible task reference resolution (supports task.114, 114, v.0.9.0+114 formats)
+  - Integrated with ReviewManager for automatic report saving to `.ace-taskflow/v.X.Y.Z/tasks/NNN-slug/reviews/`
+  - Improved error handling with specific exception catching and debug backtrace support
+  - Clarifying comments for optional dependency pattern
+  - Comprehensive test coverage for task resolution and report saving
+  - Optional feature - backward compatible with existing workflows
+
+### Task Management
+- **Completed**: Task 114 - Save ace-review reports to task directories with --task flag
+
 ## [0.9.137] - 2025-11-17
 
 ### ace-test-runner v0.2.0
