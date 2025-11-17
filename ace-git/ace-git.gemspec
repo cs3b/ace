@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-core', '~> 0.10.0'
+  spec.add_dependency 'ace-support-core', '~> 0.10'
 
   # Development dependencies managed in root Gemfile
 end
