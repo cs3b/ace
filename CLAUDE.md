@@ -32,6 +32,31 @@ Agents should recognize these command patterns:
 - `ace-nav wfi://load-context` → Read output file path, then read that file
 - `ace-nav --sources` → List available resource sources
 
+## Testing Constraints
+
+**CRITICAL**: NEVER use `bundle exec rake test` or `bundle exec ruby` for running tests in this project.
+
+**ALWAYS use `ace-test`** instead:
+
+### ace-test
+
+- `ace-test` - Run all tests in current package
+- `ace-test test/file_test.rb` - Run single test file
+- `ace-test atoms` - Run test group
+- `ace-test molecules --profile 10` - Profile slowest tests (optionally in a group)
+
+**Why**: ace-test provides consistent test execution across the mono-repo with proper dependency resolution.
+
+**Anti-pattern examples to AVOID**:
+❌ `cd ace-review && bundle exec rake test`
+❌ `bundle exec ruby test/some_test.rb`
+✅ `cd ace-review && ace-test`
+✅ `ace-test test/molecules/gh_pr_fetcher_test.rb`
+
+### **ace-test-suite**: Validate entire monorepo (final check before commits)
+
+- `ace-test-suite` - Run all tests across all packages
+
 ## Available Agents
 
 **Location**: `.claude/agents/` (symlinks to ace-search/handbook/agents/)
