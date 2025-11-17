@@ -5,6 +5,24 @@ All notable changes to ace-test-runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2025-11-17
+
+### Fixed
+- **Explicit File Execution**: Fixed ace-test to respect explicit file path arguments and bypass group execution
+  - Running `ace-test test/atoms/foo_test.rb` now executes ONLY that file, not configured test groups
+  - File arguments always take precedence over group targets
+  - Supports single files, multiple files, and file:line syntax
+  - Dramatically improves feedback loop during development and debugging
+  - Technical: Modified `TestOrchestrator#should_execute_sequentially?` to check for explicit files before entering group execution mode
+
+### Technical
+- Strengthened integration test assertions for explicit file execution
+  - Replaced non-deterministic boolean assertions with specific expected values
+  - Added explicit target configuration for grouped execution tests
+  - Improved test documentation explaining behavior with config cascade
+
 ## [0.1.7] - 2025-11-13
 
 ### Added
