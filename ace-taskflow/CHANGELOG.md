@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Task Reference Format Standardization**: Introduced 'task.' prefix for qualified references
+  - Updated qualified references from `v.0.9.0+018` to `v.0.9.0+task.018`
+  - Modified `PathBuilder` to include 'task.' prefix when constructing qualified references
+  - Updated `TaskReferenceParser` to parse both old and new formats for backward compatibility
+  - Adjusted `Task` model to use new format for qualified task identifiers
+  - Updated `TestFactory` to generate test data with standardized format
+  - Ensures consistent and unambiguous format for task references across the system
+
+## [0.19.3] - 2025-11-17
+
+### Changed
+
+- **Task Reference Format Standardization**: Introduced 'task.' prefix for qualified references
+  - Updated qualified references from `v.0.9.0+018` to `v.0.9.0+task.018`
+  - Modified `PathBuilder` to include 'task.' prefix when constructing qualified references
+  - Updated `TaskReferenceParser` to parse both old and new formats for backward compatibility
+  - Adjusted `Task` model to use new format for qualified task identifiers
+  - Updated `TestFactory` to generate test data with standardized format
+  - Ensures consistent and unambiguous format for task references across the system
+
 ## [0.19.2] - 2025-11-16
 
 ### Fixed

@@ -69,7 +69,7 @@ module Ace
           if release == "current"
             task_number
           else
-            "#{release}+#{task_number}"
+            "#{release}+task.#{task_number}"
           end
         end
 
