@@ -1,0 +1,146 @@
+# frozen_string_literal: true
+
+require "json"
+require_relative "../atoms/retry_with_backoff"
+
+module Ace
+  module Review
+    module Molecules
+      # Fetch PR diff and metadata via gh CLI
+      class GhPrFetcher
+        # Fetch PR diff content
+        #
+        # @param pr_identifier [String] PR identifier (number, URL, or owner/repo#number)
+        # @param options [Hash] Fetch options
+        # @option options [Integer] :max_retries Maximum retry attempts (default: 3)
+        # @option options [Integer] :initial_backoff Initial backoff in seconds (default: 1)
+        # @option options [Integer] :timeout Timeout in seconds for gh CLI (default: 30)
+        # @return [Hash] Result with :success, :diff, :error
+        def self.fetch_diff(pr_identifier, options = {})
+          # Parse identifier to get gh CLI format
+          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed[:gh_format]
+
+          # Default timeout for PR diff operations
+          timeout = options[:timeout] || 30
+
+          # Fetch diff with retry logic
+          result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
+            Ace::Review::Molecules::GhCliExecutor.execute("pr", ["diff", gh_format], timeout: timeout)
+          end
+
+          if result[:success]
+            {
+              success: true,
+              diff: result[:stdout],
+              identifier: gh_format,
+              parsed: parsed
+            }
+          else
+            handle_fetch_error(result, pr_identifier)
+          end
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+          # Re-raise authentication and installation errors
+          raise
+        rescue StandardError => e
+          {
+            success: false,
+            error: "Failed to fetch PR diff: #{e.message}"
+          }
+        end
+
+        # Fetch PR metadata (state, draft status, title, etc.)
+        #
+        # @param pr_identifier [String] PR identifier
+        # @param options [Hash] Fetch options
+        # @option options [Integer] :timeout Timeout in seconds for gh CLI (default: 30)
+        # @return [Hash] Result with :success, :metadata, :error
+        def self.fetch_metadata(pr_identifier, options = {})
+          # Parse identifier
+          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed[:gh_format]
+
+          # Default timeout for PR operations
+          timeout = options[:timeout] || 30
+
+          # Fetch metadata as JSON
+          fields = "number,state,isDraft,title,author,headRefName,baseRefName,url"
+
+          result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
+            Ace::Review::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+          end
+
+          if result[:success]
+            metadata = JSON.parse(result[:stdout])
+            {
+              success: true,
+              metadata: metadata,
+              identifier: gh_format,
+              parsed: parsed
+            }
+          else
+            handle_fetch_error(result, pr_identifier)
+          end
+        rescue JSON::ParserError => e
+          {
+            success: false,
+            error: "Failed to parse PR metadata: #{e.message}"
+          }
+        rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError
+          raise
+        rescue StandardError => e
+          {
+            success: false,
+            error: "Failed to fetch PR metadata: #{e.message}"
+          }
+        end
+
+        # Fetch both diff and metadata in one call
+        #
+        # @param pr_identifier [String] PR identifier
+        # @param options [Hash] Fetch options
+        # @return [Hash] Result with :success, :diff, :metadata, :error
+        def self.fetch_pr(pr_identifier, options = {})
+          # Fetch diff and metadata
+          diff_result = fetch_diff(pr_identifier, options)
+          return diff_result unless diff_result[:success]
+
+          metadata_result = fetch_metadata(pr_identifier, options)
+          return metadata_result unless metadata_result[:success]
+
+          {
+            success: true,
+            diff: diff_result[:diff],
+            metadata: metadata_result[:metadata],
+            identifier: diff_result[:identifier],
+            parsed: diff_result[:parsed]
+          }
+        end
+
+        # Handle fetch errors and return appropriate error response
+        #
+        # @param result [Hash] gh CLI result
+        # @param pr_identifier [String] Original PR identifier
+        # @return [Hash] Error response
+        def self.handle_fetch_error(result, pr_identifier)
+          error_msg = result[:stderr].to_s
+
+          # Check for specific error types
+          if error_msg.include?("not found") || error_msg.include?("Could not resolve")
+            raise Ace::Review::Errors::PrNotFoundError.new(pr_identifier, error_msg)
+          elsif error_msg.include?("authentication") || error_msg.include?("Unauthorized")
+            raise Ace::Review::Errors::GhAuthenticationError
+          end
+
+          # Generic error
+          {
+            success: false,
+            error: "Failed to fetch PR: #{error_msg}"
+          }
+        end
+
+        private_class_method :handle_fetch_error
+      end
+    end
+  end
+end

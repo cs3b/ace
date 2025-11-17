@@ -6,6 +6,7 @@ defaults:
   model: "google:gemini-2.5-flash-lite"
   output_format: "markdown"
   context: "project"
+  gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
 
 # Storage configuration
 # storage:

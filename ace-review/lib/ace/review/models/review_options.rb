@@ -8,7 +8,8 @@ module Ace
         attr_accessor :preset, :output_dir, :output, :context, :subject,
                       :prompt_base, :prompt_format, :prompt_focus, :add_focus,
                       :prompt_guidelines, :model, :dry_run, :verbose,
-                      :auto_execute, :save_session, :session_dir, :task,
+                      :auto_execute, :save_session, :session_dir,
+                      :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
                       :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
@@ -41,6 +42,12 @@ module Ace
           # Task integration
           @task = hash[:task]
 
+          # PR review options
+          @pr = hash[:pr]
+          @post_comment = hash[:post_comment] || false
+          @pr_metadata = hash[:pr_metadata]
+          @gh_timeout = hash[:gh_timeout]
+
           # List commands
           @list_presets = hash[:list_presets] || false
           @list_prompts = hash[:list_prompts] || false
@@ -59,6 +66,16 @@ module Ace
         # Check if this is a list command
         def list_command?
           list_presets || list_prompts || help
+        end
+
+        # Check if this is a PR review
+        def pr_review?
+          !pr.nil? && !pr.to_s.strip.empty?
+        end
+
+        # Check if comment posting should be triggered (includes dry-run preview)
+        def should_post_comment?
+          pr_review? && post_comment
         end
 
         # Check if output should be saved
@@ -94,6 +111,7 @@ module Ace
           @context ||= config["context"]
           @subject ||= config["subject"]
           @model ||= config["model"]
+          @gh_timeout ||= config["gh_timeout"]
 
           self
         end
