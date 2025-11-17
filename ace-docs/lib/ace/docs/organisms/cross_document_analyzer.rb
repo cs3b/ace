@@ -4,6 +4,7 @@ require 'fileutils'
 require 'json'
 require 'yaml'
 require 'colorize'
+require 'ace/core/molecules/prompt_cache_manager'
 require_relative '../organisms/document_registry'
 require_relative '../prompts/consistency_prompt'
 require_relative '../models/consistency_report'
@@ -40,12 +41,11 @@ module Ace
             return nil
           end
 
-          # Get git root for proper cache directory
-          git_root = `git rev-parse --show-toplevel`.strip
-          cache_dir = File.join(git_root, Ace::Docs.config["cache_dir"] || ".cache/ace-docs")
-          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-          session_dir = File.join(cache_dir, "analyze-consistency-#{timestamp}")
-          FileUtils.mkdir_p(session_dir)
+          # Create standardized session directory using PromptCacheManager
+          session_dir = Ace::Core::Molecules::PromptCacheManager.create_session(
+            "ace-docs",
+            "analyze-consistency"
+          )
 
           puts "Analyzing #{documents.count} documents for consistency issues...".cyan
           puts "Session directory: #{session_dir}".yellow
@@ -194,15 +194,19 @@ module Ace
           File.write(document_list_path, JSON.pretty_generate(document_list))
         end
 
-        # Save prompts to session directory
+        # Save prompts to session directory using standardized names
         def save_prompts(prompts, session_dir)
-          # Save system prompt
-          system_prompt_path = File.join(session_dir, "prompt-system.md")
-          File.write(system_prompt_path, format_prompt(prompts[:system], "System Prompt"))
+          # Save system prompt with standardized name
+          Ace::Core::Molecules::PromptCacheManager.save_system_prompt(
+            format_prompt(prompts[:system], "System Prompt"),
+            session_dir
+          )
 
-          # Save user prompt
-          user_prompt_path = File.join(session_dir, "prompt-user.md")
-          File.write(user_prompt_path, format_prompt(prompts[:user], "User Prompt"))
+          # Save user prompt with standardized name
+          Ace::Core::Molecules::PromptCacheManager.save_user_prompt(
+            format_prompt(prompts[:user], "User Prompt"),
+            session_dir
+          )
         end
 
         # Format prompt for saving
