@@ -112,18 +112,21 @@ module Ace
         def test_retry_with_backoff_succeeds_on_retry
           parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
 
-          PrIdentifierParser.stub(:parse, parsed) do
-            attempt = 0
-            GhCliExecutor.stub(:execute, ->(*args) {
-              attempt += 1
-              if attempt == 1
-                { success: false, stdout: "", stderr: "timeout", exit_code: 1 }
-              else
-                { success: true, stdout: "diff content", stderr: "", exit_code: 0 }
+          # Stub sleep to avoid actual delay in tests
+          Ace::Review::Atoms::RetryWithBackoff.stub :sleep, ->(_time) {} do
+            PrIdentifierParser.stub(:parse, parsed) do
+              attempt = 0
+              GhCliExecutor.stub(:execute, ->(*args) {
+                attempt += 1
+                if attempt == 1
+                  { success: false, stdout: "", stderr: "timeout", exit_code: 1 }
+                else
+                  { success: true, stdout: "diff content", stderr: "", exit_code: 0 }
+                end
+              }) do
+                response = @fetcher.fetch_diff("123", max_retries: 3)
+                assert response[:success]
               end
-            }) do
-              response = @fetcher.fetch_diff("123", max_retries: 3)
-              assert response[:success]
             end
           end
         end
