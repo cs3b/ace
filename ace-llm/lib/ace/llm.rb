@@ -13,12 +13,16 @@ require_relative "llm/version"
 require_relative "llm/atoms/env_reader"
 require_relative "llm/atoms/http_client"
 require_relative "llm/atoms/xdg_directory_resolver"
+require_relative "llm/atoms/error_classifier"
+
+require_relative "llm/models/fallback_config"
 
 require_relative "llm/molecules/file_io_handler"
 require_relative "llm/molecules/llm_alias_resolver"
 require_relative "llm/molecules/provider_model_parser"
 require_relative "llm/molecules/format_handlers"
 require_relative "llm/molecules/client_registry"
+require_relative "llm/molecules/fallback_orchestrator"
 
 require_relative "llm/query_interface"
 
@@ -41,5 +45,6 @@ module Ace
     module Atoms; end
     module Molecules; end
     module Organisms; end
+    module Models; end
   end
 end

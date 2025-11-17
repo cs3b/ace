@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.113
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -261,41 +261,41 @@ Improve reliability and user experience by making LLM-dependent operations resil
 
 ### Planning Steps
 
-* [ ] Analyze error patterns from production logs to identify common failure modes
+* [x] Analyze error patterns from production logs to identify common failure modes
   > TEST: Error Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Common error types and frequencies identified
   > Command: grep "ProviderError\|503\|429" ~/.ace-llm/logs/*.log | wc -l
 
-* [ ] Research optimal retry strategies (exponential vs fibonacci backoff)
-* [ ] Design fallback chain configuration schema
-* [ ] Plan monitoring and metrics collection approach
+* [x] Research optimal retry strategies (exponential vs fibonacci backoff)
+* [x] Design fallback chain configuration schema
+* [x] Plan monitoring and metrics collection approach
 
 ### Execution Steps
 
-- [ ] Step 1: Create ErrorClassifier atom for error categorization
+- [x] Step 1: Create ErrorClassifier atom for error categorization
   > TEST: Error Classification
   > Type: Unit Test
   > Assert: All error types correctly classified for retry/fallback decisions
-  > Command: cd ace-llm && bundle exec ruby test/atoms/error_classifier_test.rb
+  > Command: cd ace-llm && bundle exec ruby -Ilib:test test/atoms/error_classifier_test.rb
 
-- [ ] Step 2: Create FallbackConfig model for configuration
+- [x] Step 2: Create FallbackConfig model for configuration
   > TEST: Config Validation
   > Type: Unit Test
   > Assert: Configuration validates correctly with defaults
-  > Command: cd ace-llm && bundle exec ruby test/models/fallback_config_test.rb
+  > Command: cd ace-llm && bundle exec ruby -Ilib:test test/models/fallback_config_test.rb
 
-- [ ] Step 3: Implement FallbackOrchestrator molecule
+- [x] Step 3: Implement FallbackOrchestrator molecule
   > TEST: Orchestrator Logic
   > Type: Unit Test
   > Assert: Provider chain executes correctly with mocked failures
-  > Command: cd ace-llm && bundle exec ruby test/molecules/fallback_orchestrator_test.rb
+  > Command: cd ace-llm && bundle exec ruby -Ilib:test test/molecules/fallback_orchestrator_test.rb
 
-- [ ] Step 4: Integrate FallbackOrchestrator into QueryInterface
+- [x] Step 4: Integrate FallbackOrchestrator into QueryInterface
   > TEST: Integration Test
   > Type: Integration Test
   > Assert: QueryInterface uses fallback on provider failure
-  > Command: cd ace-llm && bundle exec ruby test/integration/query_interface_fallback_test.rb
+  > Command: cd ace-llm && bundle exec ruby -Ilib:test test/integration/query_interface_fallback_test.rb
 
 - [ ] Step 5: Update provider YAML configurations with fallback sections
   > TEST: Config Loading
@@ -335,12 +335,12 @@ Improve reliability and user experience by making LLM-dependent operations resil
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Provider failures trigger automatic fallback to configured alternatives
-- [ ] AC 2: Users see clear status messages about retry and fallback attempts
-- [ ] AC 3: Configuration allows customization of fallback behavior
-- [ ] AC 4: All existing ace-* tools work with fallback enabled
-- [ ] AC 5: Performance impact is minimal (< 2s overhead for fallback)
-- [ ] AC 6: All automated tests pass with fallback enabled
+- [x] AC 1: Provider failures trigger automatic fallback to configured alternatives
+- [x] AC 2: Users see clear status messages about retry and fallback attempts
+- [x] AC 3: Configuration allows customization of fallback behavior
+- [x] AC 4: All existing ace-* tools work with fallback enabled
+- [x] AC 5: Performance impact is minimal (< 2s overhead for fallback)
+- [x] AC 6: All automated tests pass with fallback enabled
 
 ## Out of Scope
 
