@@ -60,7 +60,8 @@ module Ace
             output: output_file,
             format: "text",
             timeout: 600,
-            force: true
+            force: true,
+            fallback: false  # Disable ace-llm fallback - ace-review handles retries
           )
 
           # Return structured result with rich metadata
