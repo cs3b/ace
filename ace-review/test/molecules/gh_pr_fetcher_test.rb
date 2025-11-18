@@ -35,22 +35,7 @@ module Ace
           end
         end
 
-        # Test: Fetch diff with failure (PR not found)
-        # Note: Complex stubbing interaction with RetryWithBackoff makes this difficult to test
-        # The error handling is verified through integration tests and handle_fetch_error unit tests
-        # def test_fetch_diff_failure
-        #   parsed = { owner: "test", repo: "repo", number: 999, gh_format: "test/repo#999" }
-        #   PrIdentifierParser.stub(:parse, parsed) do
-        #     result = { success: false, stdout: "", stderr: "Could not resolve to a PullRequest", exit_code: 1 }
-        #
-        #     assert_raises(Ace::Review::Errors::PrNotFoundError) do
-        #       GhCliExecutor.stub(:execute, result) do
-        #         @fetcher.fetch_diff("999")
-        #       end
-        #     end
-        #   end
-        # end
-
+  
         # Test: Fetch metadata successfully
         def test_fetch_metadata_success
           parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
