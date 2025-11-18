@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-11-17
+
+### Added
+- **GitHub Pull Request Review Mode**: Support for reviewing GitHub pull requests directly
+  - New `--pr` option to specify pull request identifier (number, URL, or owner/repo#number)
+  - `--post-comment` option to automatically post review as GitHub comment (requires `gh` CLI)
+  - `--dry-run` option to preview comment without posting
+  - Multiple PR identifier formats supported: `123`, `https://github.com/owner/repo/pull/123`, `owner/repo#123`
+  - Automatic repository detection from git remote when using PR number only
+  - Comprehensive error handling for authentication, network issues, and PR state
+  - Retry logic with exponential backoff (capped at 32 seconds) for network resilience
+  - PR state validation (prevents posting to closed/merged PRs)
+  - Rich PR metadata included in review context (title, author, branch names, state)
+  - Secure comment posting via tempfiles (prevents command injection)
+  - Review cache saved to `.cache/ace-review/sessions/review-{timestamp}/`
+- **New Molecules**:
+  - `GhCliExecutor`: Safe execution of GitHub CLI commands with timeout and error handling
+  - `PrIdentifierParser`: Parse and normalize PR identifiers to owner/repo/number format
+  - `GhPrFetcher`: Fetch PR diffs and metadata with retry logic
+  - `GhCommentPoster`: Post review comments to GitHub with dry-run support
+- **New Atoms**:
+  - `RetryWithBackoff`: Reusable retry logic with exponential backoff for operations with transient failures
+- **New Error Classes**: Specific errors for GitHub integration (`GhCliNotInstalledError`, `GhAuthenticationError`, `PrNotFoundError`, `PrStateError`, `GhNetworkError`)
+- **CLI Options**:
+  - `--gh-timeout <seconds>`: Configure timeout for GitHub CLI operations (default: 30 seconds)
+- **Markdown Sanitization**: LLM review output is now sanitized and wrapped in collapsible `<details>` tags
+  - Automatically closes unclosed code fences to prevent broken GitHub comment rendering
+  - Wraps review content in expandable section for better PR comment readability
+- **README Documentation**: Comprehensive guide for GitHub PR review mode with examples, timeout configuration, and troubleshooting
+
+### Changed
+- **Default Timeout**: Reduced default timeout for GitHub CLI operations from 600 seconds (10 minutes) to 30 seconds
+  - Provides faster failure feedback for network issues
+  - Users can override with `--gh-timeout` option for large PRs or slow connections
+- **Retry Logic Architecture**: Extracted retry logic from `GhPrFetcher` into reusable `RetryWithBackoff` atom
+  - Improves testability and code reusability
+  - Cleaner separation of concerns following ATOM architecture
+
+### Fixed
+- **Architectural Compliance**: Moved `GhCliExecutor` from `atoms/` to `molecules/` to properly reflect its side effects (shell command execution)
+- **Test Coverage**: Uncommented and fixed previously failing tests in `gh_pr_fetcher_test.rb`
+  - Fixed complex mocking chain issues by extracting retry logic into testable atom
+  - All failure path and retry exhaustion tests now pass
+
+## [0.17.0] - 2025-11-17
+
 ### Added
 - **Task Integration**: New `--task` flag to save review reports to task directories
   - Accepts task references in multiple formats: `114`, `task.114`, `v.0.9.0+114`

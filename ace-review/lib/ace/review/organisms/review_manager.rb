@@ -70,7 +70,7 @@ module Ace
 
           # Step 7: Execute or just prepare
           if options.auto_execute
-            execute_with_llm(review_data, session_dir)
+            execute_with_llm(review_data, session_dir, options)
           else
             {
               success: true,
@@ -124,6 +124,11 @@ module Ace
 
         # Step 2: Extract subject and context
         def extract_review_content(config, options)
+          # Handle PR mode
+          if options.pr_review?
+            return extract_pr_content(options.pr, config, options)
+          end
+
           # Extract subject (what to review)
           subject_config = options.subject || config[:subject]
           subject = extract_subject(subject_config)
@@ -148,6 +153,52 @@ module Ace
           }
         end
 
+        # Extract PR content (diff and metadata)
+        def extract_pr_content(pr_identifier, config, options)
+          # Fetch PR diff and metadata
+          fetch_options = options.gh_timeout ? { timeout: options.gh_timeout } : {}
+          result = Ace::Review::Molecules::GhPrFetcher.fetch_pr(pr_identifier, fetch_options)
+
+          unless result[:success]
+            return { success: false, error: result[:error] }
+          end
+
+          # Store PR metadata in options for later use
+          options.pr_metadata = result[:metadata]
+
+          # Create cache directory
+          cache_dir = options.session_dir || create_cache_directory
+
+          # Extract context (background info)
+          context_config = options.context || config[:context]
+          context = extract_context(context_config, cache_dir)
+
+          # Add PR metadata to context
+          pr_info = format_pr_metadata(result[:metadata])
+
+          {
+            success: true,
+            subject: result[:diff],
+            context: context.empty? ? pr_info : "#{context}\n\n#{pr_info}",
+            cache_dir: cache_dir,
+            pr_metadata: result[:metadata]
+          }
+        end
+
+        # Format PR metadata for context
+        def format_pr_metadata(metadata)
+          info = "## Pull Request Information\n\n"
+          info += "- **Title**: #{metadata['title']}\n"
+          info += "- **Number**: ##{metadata['number']}\n"
+          info += "- **Author**: #{metadata['author']['login']}\n" if metadata['author']
+          info += "- **State**: #{metadata['state']}\n"
+          info += "- **Draft**: #{metadata['isDraft'] ? 'Yes' : 'No'}\n"
+          info += "- **Base**: #{metadata['baseRefName']}\n"
+          info += "- **Head**: #{metadata['headRefName']}\n"
+          info += "- **URL**: #{metadata['url']}\n"
+          info
+        end
+
         # Step 3: Generate system and user prompts via ace-context
         def compose_review_prompt(config, context, subject, subject_config, session_dir)
           # Extract prompt composition and context config
@@ -166,6 +217,31 @@ module Ace
 
           # Step 3b: Create user.context.md with subject configuration
           subject_config = config["subject"] || config[:subject]
+
+          # If no subject config but we have subject content (e.g., from PR mode),
+          # save to file and create subject config referencing the file.
+          # This allows us to feed the PR diff into the standard ace-context composition
+          # process without altering the core workflow - the PR diff becomes just another
+          # context source that ace-context knows how to handle.
+          if !subject_config && subject && !subject.empty?
+            # Save PR diff to session file
+            pr_diff_path = File.join(session_dir, "pr-diff.patch")
+            File.write(pr_diff_path, subject)
+
+            # Create subject config referencing the file
+            subject_config = {
+              "context" => {
+                "sections" => {
+                  "pr_changes" => {
+                    "title" => "Pull Request Changes",
+                    "description" => "Code changes from GitHub Pull Request",
+                    "files" => [pr_diff_path]
+                  }
+                }
+              }
+            }
+          end
+
           unless subject_config
             return {
               success: false,
@@ -446,7 +522,7 @@ module Ace
           @context_extractor.extract(context_config, cache_dir)
         end
 
-        def execute_with_llm(review_data, session_dir)
+        def execute_with_llm(review_data, session_dir, options = nil)
           executor = Ace::Review::Molecules::LlmExecutor.new
 
           # v0.13.0 architecture: only supports system/user prompt format
@@ -467,22 +543,17 @@ module Ace
             # Save to task directory if --task flag provided
             task_path = save_to_task_if_requested(review_data, session_dir)
 
+            # Handle PR comment posting if requested
+            comment_result = handle_pr_comment_posting(options, result[:output_file], review_data)
+
             # Build result message
             messages = []
             messages << "Review saved to #{release_path}" if release_path
             messages << "Review saved to #{task_path}" if task_path
             messages << "Review saved to #{result[:output_file]}" if messages.empty?
 
-            # Return enhanced result with metadata for backward compatibility
-            {
-              success: true,
-              output_file: release_path || task_path || result[:output_file],
-              message: messages.join("\n"),
-              task_path: task_path,
-              usage: result[:usage],
-              model_info: result[:model_info],
-              provider_info: result[:provider_info]
-            }
+            # Build response with comment info if applicable
+            response = build_success_response(result, release_path, task_path, comment_result)
           else
             # Enhanced error information from Ruby API
             error_result = result.dup
@@ -491,6 +562,29 @@ module Ace
             end
             error_result
           end
+        end
+
+        # Post review comment to PR
+        def post_pr_comment(options, review_file, review_data)
+          return { success: false, error: "No review file to post" } unless File.exist?(review_file)
+
+          # Read review content
+          review_content = File.read(review_file)
+
+          # Prepare metadata for comment
+          metadata = {
+            preset: review_data[:preset],
+            model: review_data[:model],
+            timestamp: Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+          }
+
+          # Post comment
+          Ace::Review::Molecules::GhCommentPoster.post_comment(
+            options.pr,
+            review_content,
+            metadata: metadata,
+            dry_run: options.dry_run
+          )
         end
 
         def save_session_files(session_dir, review_data)
@@ -526,7 +620,10 @@ module Ace
 
           # Use cache directory (cache-first approach)
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+
+          # All reviews use the same naming pattern
           session_dir = File.join(cache_dir, "review-#{timestamp}")
+
           FileUtils.mkdir_p(session_dir)
           session_dir
         end
@@ -640,6 +737,58 @@ module Ace
             warn "Warning: Failed to save review to task: #{e.message}. Review completed." if $DEBUG
             nil
           end
+        end
+
+        # Handle PR comment posting workflow
+        # @param options [ReviewOptions] Review options
+        # @param review_file [String] Path to review file
+        # @param review_data [Hash] Review metadata
+        # @return [Hash, nil] Comment result or nil if no posting needed
+        def handle_pr_comment_posting(options, review_file, review_data)
+          return nil unless options && options.should_post_comment?
+          post_pr_comment(options, review_file, review_data)
+        end
+
+        # Build success response with optional comment info
+        # @param result [Hash] LLM execution result
+        # @param release_path [String] Path to saved release file
+        # @param task_path [String] Path to saved task file
+        # @param comment_result [Hash, nil] Comment posting result
+        # @return [Hash] Final response hash
+        def build_success_response(result, release_path, task_path, comment_result)
+          # Build result message
+          messages = []
+          messages << "Review saved to #{release_path}" if release_path
+          messages << "Review saved to #{task_path}" if task_path
+          messages << "Review saved to #{result[:output_file]}" if messages.empty?
+
+          # Build base response
+          response = {
+            success: true,
+            output_file: release_path || task_path || result[:output_file],
+            message: messages.join("\n"),
+            task_path: task_path,
+            usage: result[:usage],
+            model_info: result[:model_info],
+            provider_info: result[:provider_info]
+          }
+
+          # Add comment info to response
+          if comment_result && comment_result[:success]
+            if comment_result[:dry_run]
+              # Dry-run mode: add preview to response
+              response[:dry_run_preview] = comment_result[:preview]
+            else
+              # Actual posting: add comment URL
+              response[:comment_url] = comment_result[:comment_url]
+              response[:message] += "\n✓ Review posted to PR: #{comment_result[:comment_url]}"
+            end
+          elsif comment_result && !comment_result[:success]
+            response[:comment_error] = comment_result[:error]
+            response[:message] += "\n✗ Failed to post comment: #{comment_result[:error]}"
+          end
+
+          response
         end
       end
     end

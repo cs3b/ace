@@ -113,6 +113,190 @@ ace-review --list-prompts
 ace-review --preset pr --auto-execute
 ```
 
+## GitHub Pull Request Review Mode
+
+Review GitHub Pull Requests directly from the command line using the integrated `gh` CLI.
+
+### Prerequisites
+
+- **GitHub CLI** (`gh`) must be installed and authenticated
+  ```bash
+  # Install gh CLI (macOS)
+  brew install gh
+
+  # Authenticate with GitHub
+  gh auth login
+
+  # Verify authentication
+  gh auth status
+  ```
+
+### Basic Usage
+
+```bash
+# Review a PR by number (uses current repository)
+ace-review --pr 123 --auto-execute
+
+# Review with specific preset
+ace-review --pr 456 --preset security --auto-execute
+
+# Review PR from full GitHub URL
+ace-review --pr https://github.com/owner/repo/pull/789 --auto-execute
+
+# Review PR from different repository
+ace-review --pr owner/repo#123 --auto-execute
+```
+
+### Post Reviews as PR Comments
+
+```bash
+# Review and post comment to GitHub
+ace-review --pr 123 --post-comment --auto-execute
+
+# Preview comment without posting (dry run)
+ace-review --pr 123 --post-comment --dry-run --auto-execute
+
+# Security review with comment
+ace-review --pr 456 --preset security --post-comment --auto-execute
+```
+
+### Timeout Configuration
+
+The default timeout for GitHub CLI operations is 30 seconds. For large PRs or slow network connections, you can increase the timeout:
+
+```bash
+# Increase timeout to 60 seconds for large PRs
+ace-review --pr 123 --gh-timeout 60 --auto-execute
+
+# Timeout is applied to both diff fetching and metadata retrieval
+ace-review --pr 456 --gh-timeout 120 --post-comment --auto-execute
+```
+
+**Note**: The timeout applies to each `gh` CLI operation (diff fetch, metadata retrieval). Operations that fail due to network issues will be retried automatically (up to 3 attempts with exponential backoff).
+
+### PR Identifier Formats
+
+The `--pr` option accepts multiple formats:
+
+- **PR number**: `123` (uses current repository from git remote)
+- **Full URL**: `https://github.com/owner/repo/pull/456`
+- **Qualified reference**: `owner/repo#789`
+
+### How It Works
+
+1. **Fetches PR diff** via `gh pr diff` command
+2. **Extracts metadata** (title, state, author, etc.)
+3. **Analyzes with LLM** using your selected preset
+4. **Saves locally** to `.cache/ace-review/sessions/pr-review-{timestamp}/`
+5. **Optionally posts** formatted review as PR comment (with `--post-comment`)
+
+### Error Handling
+
+- **gh CLI not installed**: Clear error with installation instructions
+- **Not authenticated**: Directs to `gh auth login`
+- **PR not found**: Reports invalid PR identifier
+- **Closed/merged PR**: Blocks comment posting with clear message
+- **Network issues**: Retries with exponential backoff (3 attempts)
+
+### Cached Reviews
+
+PR reviews are cached locally for debugging and reference:
+
+```bash
+# Review structure
+.cache/ace-review/sessions/pr-review-20251116-140530/
+├── system.prompt.md          # System prompt used
+├── user.prompt.md            # User prompt with PR diff
+├── metadata.yml              # Review metadata
+└── review-report-*.md        # LLM analysis output
+```
+
+### Security Considerations
+
+**Command Execution Safety**:
+- All external commands (`gh` CLI) use array-based execution to prevent shell injection
+- PR identifiers are validated using strict regex patterns before use
+- Tempfiles are used for multiline content to avoid command-line injection
+- No user input is directly interpolated into shell commands
+
+**Authentication**:
+- GitHub CLI (`gh`) handles all authentication
+- Uses your existing GitHub credentials via `gh auth login`
+- Never stores or transmits credentials directly
+- Respects GitHub's rate limiting automatically
+
+**Input Validation**:
+- PR numbers validated as numeric only
+- Repository names validated against GitHub's naming conventions (alphanumeric, hyphens, dots only)
+- URL parsing uses strict regex patterns
+- Invalid inputs rejected with clear error messages
+
+**Network Safety**:
+- Retry logic with exponential backoff (capped at 32 seconds)
+- Maximum 3 retry attempts for transient failures
+- Non-retryable errors (auth, not found) fail immediately
+- Timeout protection on all network operations (default: 30 seconds)
+
+### Troubleshooting
+
+**"gh CLI not installed" error**:
+```bash
+# macOS
+brew install gh
+
+# Linux
+# See https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+
+# Windows
+# See https://github.com/cli/cli#installation
+```
+
+**"Not authenticated with GitHub" error**:
+```bash
+# Authenticate with GitHub
+gh auth login
+
+# Verify authentication
+gh auth status
+
+# Check which account is active
+gh auth status --show-token
+```
+
+**"PR not found" error**:
+- Verify PR number is correct
+- Ensure you have access to the repository
+- Check repository name format: `owner/repo#123`
+- For private repos, ensure `gh` is authenticated with correct account
+
+**"Cannot post comment to closed/merged PR" error**:
+- This is expected behavior for closed or merged PRs
+- Review the PR locally without `--post-comment` flag
+- PR state must be "OPEN" to accept new comments
+
+**Network timeout errors**:
+- Check your internet connection
+- GitHub may be experiencing issues (check https://www.githubstatus.com/)
+- Tool automatically retries up to 3 times with exponential backoff
+- For persistent issues, try again later or increase timeout with `--timeout` option
+
+**Rate limiting errors**:
+- GitHub API has rate limits (5000/hour for authenticated users)
+- Wait an hour or check your rate limit status:
+  ```bash
+  gh api rate_limit
+  ```
+
+### Limitations
+
+- **GitHub CLI Required**: Must have `gh` CLI installed and authenticated
+- **Repository Access**: Can only review PRs you have read access to
+- **Open PRs Only**: Comment posting requires PR to be in "OPEN" state
+- **Single Repository**: Assumes `origin` remote when using PR number only
+- **Public & Private Repos**: Works with both, requires appropriate authentication
+- **Rate Limiting**: Subject to GitHub API rate limits (usually not an issue for normal use)
+- **Network Dependent**: Requires internet connection to fetch PR data
+
 ## Subject and Context Configuration
 
 Since v0.9.6, ace-review uses ace-context for unified content aggregation. Both `--subject` and `--context` accept YAML configuration with these keys:
@@ -516,6 +700,11 @@ Options:
 - `--verbose` - Enable verbose output
 - `--[no-]save-session` - Save session files (default: true)
 - `--session-dir <dir>` - Custom session directory
+
+GitHub Pull Request options:
+- `--pr <identifier>` - Review GitHub PR (number, URL, or owner/repo#number)
+- `--post-comment` - Post review as PR comment (requires --pr)
+- `--gh-timeout <seconds>` - Timeout for gh CLI operations in seconds (default: 30)
 
 Advanced options for prompt composition:
 - `--prompt-base <module>` - Override base prompt
