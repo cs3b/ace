@@ -544,10 +544,7 @@ module Ace
             task_path = save_to_task_if_requested(review_data, session_dir)
 
             # Handle PR comment posting if requested
-            comment_result = nil
-            if options && options.should_post_comment?
-              comment_result = post_pr_comment(options, result[:output_file], review_data)
-            end
+            comment_result = handle_pr_comment_posting(options, result[:output_file], review_data)
 
             # Build result message
             messages = []
@@ -556,32 +553,7 @@ module Ace
             messages << "Review saved to #{result[:output_file]}" if messages.empty?
 
             # Build response with comment info if applicable
-            response = {
-              success: true,
-              output_file: release_path || task_path || result[:output_file],
-              message: messages.join("\n"),
-              task_path: task_path,
-              usage: result[:usage],
-              model_info: result[:model_info],
-              provider_info: result[:provider_info]
-            }
-
-            # Add comment info to response
-            if comment_result && comment_result[:success]
-              if comment_result[:dry_run]
-                # Dry-run mode: add preview to response
-                response[:dry_run_preview] = comment_result[:preview]
-              else
-                # Actual posting: add comment URL
-                response[:comment_url] = comment_result[:comment_url]
-                response[:message] += "\n✓ Review posted to PR: #{comment_result[:comment_url]}"
-              end
-            elsif comment_result && !comment_result[:success]
-              response[:comment_error] = comment_result[:error]
-              response[:message] += "\n✗ Failed to post comment: #{comment_result[:error]}"
-            end
-
-            response
+            response = build_success_response(result, release_path, task_path, comment_result)
           else
             # Enhanced error information from Ruby API
             error_result = result.dup
@@ -765,6 +737,58 @@ module Ace
             warn "Warning: Failed to save review to task: #{e.message}. Review completed." if $DEBUG
             nil
           end
+        end
+
+        # Handle PR comment posting workflow
+        # @param options [ReviewOptions] Review options
+        # @param review_file [String] Path to review file
+        # @param review_data [Hash] Review metadata
+        # @return [Hash, nil] Comment result or nil if no posting needed
+        def handle_pr_comment_posting(options, review_file, review_data)
+          return nil unless options && options.should_post_comment?
+          post_pr_comment(options, review_file, review_data)
+        end
+
+        # Build success response with optional comment info
+        # @param result [Hash] LLM execution result
+        # @param release_path [String] Path to saved release file
+        # @param task_path [String] Path to saved task file
+        # @param comment_result [Hash, nil] Comment posting result
+        # @return [Hash] Final response hash
+        def build_success_response(result, release_path, task_path, comment_result)
+          # Build result message
+          messages = []
+          messages << "Review saved to #{release_path}" if release_path
+          messages << "Review saved to #{task_path}" if task_path
+          messages << "Review saved to #{result[:output_file]}" if messages.empty?
+
+          # Build base response
+          response = {
+            success: true,
+            output_file: release_path || task_path || result[:output_file],
+            message: messages.join("\n"),
+            task_path: task_path,
+            usage: result[:usage],
+            model_info: result[:model_info],
+            provider_info: result[:provider_info]
+          }
+
+          # Add comment info to response
+          if comment_result && comment_result[:success]
+            if comment_result[:dry_run]
+              # Dry-run mode: add preview to response
+              response[:dry_run_preview] = comment_result[:preview]
+            else
+              # Actual posting: add comment URL
+              response[:comment_url] = comment_result[:comment_url]
+              response[:message] += "\n✓ Review posted to PR: #{comment_result[:comment_url]}"
+            end
+          elsif comment_result && !comment_result[:success]
+            response[:comment_error] = comment_result[:error]
+            response[:message] += "\n✗ Failed to post comment: #{comment_result[:error]}"
+          end
+
+          response
         end
       end
     end
