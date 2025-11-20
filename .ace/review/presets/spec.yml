@@ -1,0 +1,26 @@
+# Documentation review - completeness and clarity
+
+description: "Specification review - completeness and clarity"
+
+instructions:
+  context:
+    base: "prompt://base/system"
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Standard output formatting and structure guidelines"
+        files:
+          - "prompt://format/standard"
+      docs_focus:
+        title: "Documentation Review Focus"
+        description: "Focus areas for documentation completeness and clarity"
+        files:
+          - "prompt://focus/scope/docs"
+      communication:
+        title: "Communication Style"
+        description: "Professional communication guidelines"
+        files:
+          - "prompt://guidelines/tone"
+      context-project:
+        presets:
+          - "project"
