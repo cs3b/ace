@@ -11,6 +11,7 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
+
 - **Input**: Users provide context configuration with files/presets/commands and use `--embed-source` flag
 - **Process**: ace-context aggregates context AND ensures the source document content is embedded in the output
 - **Output**: Complete context with embedded source document, ready for consumption by other tools
@@ -42,16 +43,19 @@ ace-context --embed-source --stdin < prompt-with-frontmatter.md
 ```
 
 **Behavior**:
+
 - When `--embed-source` is present, the source document content is always included
 - The embedding respects the existing `embed_document_source: true` in frontmatter
 - If both flag and frontmatter setting exist, the flag takes precedence
 - The source is embedded with clear markers for identification
 
 **Error Handling:**
+
 - Missing source file: Include error message in context output
 - Invalid frontmatter: Process as plain text, still embed
 
 **Edge Cases:**
+
 - Empty source file: Still embed with empty content marker
 - Binary files: Skip embedding, add note about binary content
 - Very large files: Embed with truncation warning if needed
@@ -69,8 +73,8 @@ ace-context --embed-source --stdin < prompt-with-frontmatter.md
 
 - [x] **Flag Priority**: Should CLI flag override frontmatter setting? (Yes, flag takes precedence)
 - [x] **Embedding Location**: Where in output should source be embedded? (After context, clearly marked)
-- [ ] **Large File Handling**: Should there be a size limit for embedding?
-- [ ] **Binary File Handling**: How to handle non-text files?
+- [x] **Large File Handling**: Should there be a size limit for embedding? (No)
+- [x] **Binary File Handling**: How to handle non-text files? (so far we handle only text files)
 
 ## Objective
 
@@ -79,16 +83,19 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 ## Scope of Work
 
 ### User Experience Scope
+
 - Command-line flag for embedding source documents
 - Consistent behavior across all output formats
 - Clear markers for embedded content
 
 ### System Behavior Scope
+
 - Process context aggregation as normal
 - Add source document embedding when flag is present
 - Maintain backward compatibility
 
 ### Interface Scope
+
 - New `--embed-source` CLI flag with `-e` short form
 - Works with existing ace-context options
 - Compatible with stdin input for programmatic use
@@ -96,11 +103,13 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 ### Deliverables
 
 #### Behavioral Specifications
+
 - CLI flag behavior documentation
 - Integration patterns for ace-prompt
 - Output format examples with embedded content
 
 #### Validation Artifacts
+
 - Test cases for flag behavior
 - Integration tests with ace-prompt
 - Edge case handling verification
@@ -123,25 +132,30 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 ### Current ace-context Architecture
 
 **CLI Structure**: Thor-based CLI in `ace-context/lib/ace/context/cli.rb`
+
 - Existing options: `--output`, `--format`, `--params`
 - Need to add: `--embed-source` with `-e` alias
 
 **Context Aggregation**: `ContextAggregator` organism
+
 - Already supports `embed_document_source` in frontmatter
 - Need to expose as CLI flag
 
 **Output Formatting**: Multiple format support
+
 - Markdown, markdown-xml, yaml, json
 - Embedding should work with all formats
 
 ### Implementation Approach
 
 **Flag Addition**:
+
 - Add Thor option to CLI
 - Pass flag through to aggregator
 - Override frontmatter setting when flag is present
 
 **Source Embedding Logic**:
+
 - Check for flag OR frontmatter setting
 - Embed source after context sections
 - Use clear markers for identification
@@ -151,18 +165,22 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 ### Modify Files
 
 **ace-context/lib/ace/context/cli.rb**:
+
 - Add `option :embed_source, aliases: "-e", type: :boolean, desc: "Embed source document in output"`
 - Pass option to aggregator
 
 **ace-context/lib/ace/context/organisms/context_aggregator.rb**:
+
 - Check for CLI flag in addition to frontmatter
 - Ensure source embedding when flag is true
 
 **ace-context/test/cli_test.rb**:
+
 - Add tests for new flag
 - Test flag precedence over frontmatter
 
 **ace-context/docs/usage.md**:
+
 - Document new flag
 - Add examples with ace-prompt integration
 
@@ -170,18 +188,20 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 
 ### Planning Steps
 
-* [ ] Review current ace-context CLI implementation
-* [ ] Understand embed_document_source existing behavior
-* [ ] Design flag precedence logic
-* [ ] Plan test scenarios
+- [ ] Review current ace-context CLI implementation
+- [ ] Understand embed_document_source existing behavior
+- [ ] Design flag precedence logic
+- [ ] Plan test scenarios
 
 ### Execution Steps
 
 - [ ] Add --embed-source flag to CLI
+
   ```ruby
   option :embed_source, aliases: "-e", type: :boolean,
          desc: "Embed source document in output"
   ```
+
   > TEST: Flag Recognition
   > Type: Unit Test
   > Assert: CLI accepts --embed-source and -e flags
@@ -221,10 +241,12 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 ### Technical Risks
 
 **Backward Compatibility**:
+
 - Risk: Breaking existing ace-context usage
 - Mitigation: Flag is optional, default behavior unchanged
 
 **Performance Impact**:
+
 - Risk: Large source files slow down processing
 - Mitigation: Consider size limits or streaming
 
@@ -235,3 +257,4 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 - Precedence over frontmatter
 - Integration with ace-prompt
 - All output format compatibility
+
