@@ -118,6 +118,36 @@ class ContextLoaderBaseTest < AceTestCase
     end
   end
 
+  def test_extension_less_file_resolution
+    Dir.chdir(@env.project_dir) do
+      context = Ace::Context.load_preset("extensionless-base")
+
+      # Should load file content, not treat filename as inline content
+      assert context.content.include?("README content for testing"),
+             "Should include README file content"
+
+      # Verify it was loaded as file, not inline
+      assert_equal 'file', context.metadata[:base_type],
+                   "Should be loaded as file type, not inline"
+      assert context.metadata[:base_path], "Should have base_path metadata"
+      assert_equal "README", context.metadata[:base_ref]
+    end
+  end
+
+  def test_inline_base_content
+    Dir.chdir(@env.project_dir) do
+      context = Ace::Context.load_preset("inline-base")
+
+      # Should use the literal string as content
+      assert_equal "This is inline base content", context.content.strip
+
+      # Verify it was treated as inline
+      assert_equal 'inline', context.metadata[:base_type]
+      assert_equal "This is inline base content", context.metadata[:base_ref]
+      refute context.metadata[:base_path], "Inline content should not have base_path"
+    end
+  end
+
   private
 
   def create_base_files
@@ -135,6 +165,13 @@ class ContextLoaderBaseTest < AceTestCase
 
     # Create empty base file for testing
     File.write(File.join(base_dir, "empty.md"), "")
+
+    # Create extension-less file for testing (like README, CONTEXT, etc.)
+    File.write(File.join(@env.project_dir, "README"), <<~README)
+      # README content for testing
+
+      This file has no extension but should be resolved as a file, not inline content.
+    README
 
     # Create sample section content
     sections_dir = File.join(@env.project_dir, "test", "sections")
@@ -225,6 +262,24 @@ class ContextLoaderBaseTest < AceTestCase
       description: "Preset with base only"
       context:
         base: "./test/base/system.md"
+      ---
+    PRESET
+
+    # Preset with extension-less file (README, CONTEXT, etc.)
+    File.write(File.join(presets_dir, "extensionless-base.md"), <<~PRESET)
+      ---
+      description: "Preset with extension-less base file"
+      context:
+        base: "README"
+      ---
+    PRESET
+
+    # Preset with inline base content
+    File.write(File.join(presets_dir, "inline-base.md"), <<~PRESET)
+      ---
+      description: "Preset with inline base content"
+      context:
+        base: "This is inline base content"
       ---
     PRESET
   end

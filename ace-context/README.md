@@ -44,6 +44,10 @@ ace-context -p base -f config.yml -p extended # Mix in any order
 # Inspect configuration without execution
 ace-context -f config.yml --inspect-config # View merged configuration
 
+# Embed source document in output (overrides frontmatter setting)
+ace-context prompt.md --embed-source   # CLI flag overrides embed_document_source
+ace-context prompt.md -e               # Short form
+
 # Load via protocol (ace-nav integration)
 ace-context wfi://create-task          # Load workflow
 ace-context guide://testing            # Load guide

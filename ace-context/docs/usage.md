@@ -166,6 +166,47 @@ Show the resolved configuration without processing content.
 ace-context project-base --inspect-config
 ```
 
+#### `--embed-source`, `-e`
+Embed the source document content in the output. This flag overrides the `embed_document_source` frontmatter setting.
+
+```bash
+# Embed source document in output
+ace-context prompt.md --embed-source
+
+# Short form
+ace-context prompt.md -e
+
+# Combine with other options
+ace-context prompt.md --embed-source --output stdio
+```
+
+**Use Cases:**
+- **ace-prompt integration**: Enables ace-prompt to delegate all context aggregation to ace-context
+- **Single-file output**: Get both context and source document in one output
+- **CLI override**: Override frontmatter `embed_document_source: false` setting
+
+**Behavior:**
+- When enabled, includes the source document content in the output
+- Overrides the `embed_document_source` frontmatter setting
+- Works with all output formats (markdown, markdown-xml, yaml, json)
+- Maintains backward compatibility (default: false)
+
+**Example with ace-prompt:**
+```bash
+# ace-prompt can delegate to ace-context for context aggregation
+# Create prompt file with frontmatter and context configuration
+cat > prompt.md <<'EOF'
+---
+context:
+  presets: [base]
+---
+My prompt content
+EOF
+
+# Load with embedded source
+ace-context prompt.md --embed-source --output stdio
+```
+
 ### Processing Options
 
 #### `--max-size`
