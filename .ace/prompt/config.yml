@@ -14,7 +14,7 @@ prompt:
 
   # Context loading (delegated to ace-context)
   context:
-    enabled: false  # Set to true to load context by default
+    enabled: true  # Set to true to load context by default
     # CLI flags (-c, --ace-context, --no-context) override this
 
   # Enhancement (LLM-powered prompt refinement)

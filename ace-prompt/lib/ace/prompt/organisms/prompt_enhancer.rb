@@ -77,7 +77,7 @@ module Ace
           escaped_content = content.gsub("'", "'\\''")
           escaped_system = system_prompt.gsub("'", "'\\''")
 
-          "ace-llm query --model '#{model}' --temperature #{temp} --system '#{escaped_system}' '#{escaped_content}'"
+          "ace-llm-query '#{model}' '#{escaped_content}' --system '#{escaped_system}' --temperature #{temp}"
         end
 
         def default_system_prompt
