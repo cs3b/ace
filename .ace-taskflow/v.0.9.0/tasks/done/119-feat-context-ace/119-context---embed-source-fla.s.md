@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.119
-status: pending
+status: done
 priority: high
 estimate: 2-3h
 dependencies: []
@@ -62,12 +62,12 @@ ace-context --embed-source --stdin < prompt-with-frontmatter.md
 
 ### Success Criteria
 
-- [ ] **Flag Implementation**: `--embed-source` flag works from CLI
-- [ ] **Source Embedding**: Source document content is always included in output
-- [ ] **Frontmatter Respect**: Works with existing `embed_document_source` setting
-- [ ] **ace-prompt Integration**: ace-prompt can delegate entirely to ace-context
-- [ ] **Format Support**: Works with all output formats (markdown, markdown-xml, yaml, json)
-- [ ] **Backward Compatibility**: Doesn't break existing ace-context usage
+- [x] **Flag Implementation**: `--embed-source` flag works from CLI
+- [x] **Source Embedding**: Source document content is always included in output
+- [x] **Frontmatter Respect**: Works with existing `embed_document_source` setting
+- [x] **ace-prompt Integration**: ace-prompt can delegate entirely to ace-context
+- [x] **Format Support**: Works with all output formats (markdown, markdown-xml, yaml, json)
+- [x] **Backward Compatibility**: Doesn't break existing ace-context usage
 
 ### Validation Questions
 
@@ -195,7 +195,7 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
 
 ### Execution Steps
 
-- [ ] Add --embed-source flag to CLI
+- [x] Add --embed-source flag to CLI
 
   ```ruby
   option :embed_source, aliases: "-e", type: :boolean,
@@ -207,30 +207,30 @@ Enable ace-prompt to delegate all context aggregation to ace-context by ensuring
   > Assert: CLI accepts --embed-source and -e flags
   > Command: ace-context --help | grep embed-source
 
-- [ ] Pass flag to ContextAggregator
-  - [ ] Update aggregator initialization
-  - [ ] Add embed_source parameter
+- [x] Pass flag to ContextAggregator
+  - [x] Update aggregator initialization
+  - [x] Add embed_source parameter
 
-- [ ] Implement flag precedence in aggregator
-  - [ ] Check CLI flag first
-  - [ ] Fall back to frontmatter setting
-  - [ ] Default to false if neither present
+- [x] Implement flag precedence in aggregator
+  - [x] Check CLI flag first
+  - [x] Fall back to frontmatter setting
+  - [x] Default to false if neither present
   > TEST: Precedence Logic
   > Type: Integration Test
   > Assert: CLI flag overrides frontmatter setting
   > Command: echo "---\nembed_document_source: false\n---\nTest" | ace-context --embed-source --stdin
 
-- [ ] Add tests for new functionality
-  - [ ] Unit test for flag parsing
-  - [ ] Integration test for embedding behavior
-  - [ ] Test with various output formats
+- [x] Add tests for new functionality
+  - [x] Unit test for flag parsing
+  - [x] Integration test for embedding behavior
+  - [x] Test with various output formats
 
-- [ ] Update documentation
-  - [ ] Add flag to usage guide
-  - [ ] Include ace-prompt integration example
-  - [ ] Document precedence behavior
+- [x] Update documentation
+  - [x] Add flag to usage guide
+  - [x] Include ace-prompt integration example
+  - [x] Document precedence behavior
 
-- [ ] Test ace-prompt integration
+- [x] Test ace-prompt integration
   > TEST: ace-prompt Integration
   > Type: Integration Test
   > Assert: ace-prompt can delegate to ace-context successfully
