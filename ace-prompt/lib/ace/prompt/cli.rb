@@ -39,14 +39,13 @@ module Ace
         processor = Organisms::PromptProcessor.new
         content = processor.process(options.transform_keys(&:to_sym))
         puts content
-        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        1
+        exit 1
       rescue => e
         warn "Unexpected error: #{e.message}"
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        1
+        exit 1
       end
 
       desc "setup", "Initialize prompt with base template"
@@ -70,14 +69,13 @@ module Ace
           force: options[:force]
         )
         puts "Prompt initialized: #{path}"
-        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        1
+        exit 1
       rescue => e
         warn "Unexpected error: #{e.message}"
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        1
+        exit 1
       end
 
       desc "reset", "Reset prompt to base template (archives current)"
@@ -97,14 +95,13 @@ module Ace
         path = initializer.reset(template_uri: options[:template])
         puts "Prompt reset: #{path}"
         puts "Previous prompt archived"
-        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        1
+        exit 1
       rescue => e
         warn "Unexpected error: #{e.message}"
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        1
+        exit 1
       end
     end
   end
