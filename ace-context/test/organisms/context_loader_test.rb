@@ -309,4 +309,93 @@ class ContextLoaderTest < AceTestCase
     end
   end
 
+  def test_embed_source_cli_flag_enables_embedding
+    with_temp_dir do
+      # Create sample file
+      File.write("test.md", "Test content")
+
+      # Create template file WITHOUT embed_document_source in frontmatter
+      File.write("prompt.md", <<~MARKDOWN
+        ---
+        context:
+          files:
+            - test.md
+        ---
+        This is the prompt content
+      MARKDOWN
+      )
+
+      # Load with embed_source flag enabled via CLI
+      loader = Ace::Context::Organisms::ContextLoader.new(
+        base_dir: Dir.pwd,
+        embed_source: true
+      )
+      context = loader.load_file("prompt.md")
+
+      # Should embed the source document even though frontmatter doesn't have embed_document_source
+      assert context.content.include?("This is the prompt content"), "Should embed source content"
+      assert context.content.include?("Test content"), "Should embed referenced files"
+      assert_equal 1, context.file_count, "Should have 1 file embedded"
+    end
+  end
+
+  def test_embed_source_flag_overrides_frontmatter
+    with_temp_dir do
+      # Create sample file
+      File.write("test.md", "Test content")
+
+      # Create template file WITH embed_document_source: false in frontmatter
+      File.write("prompt.md", <<~MARKDOWN
+        ---
+        context:
+          embed_document_source: false
+          files:
+            - test.md
+        ---
+        This is the prompt content
+      MARKDOWN
+      )
+
+      # Load with embed_source flag enabled via CLI (should override frontmatter)
+      loader = Ace::Context::Organisms::ContextLoader.new(
+        base_dir: Dir.pwd,
+        embed_source: true
+      )
+      context = loader.load_file("prompt.md")
+
+      # Should embed despite frontmatter saying false
+      assert context.content.include?("This is the prompt content"), "Should embed source content (CLI flag overrides)"
+      assert context.content.include?("Test content"), "Should embed referenced files"
+      assert_equal 1, context.file_count, "Should have 1 file embedded"
+    end
+  end
+
+  def test_no_embed_source_flag_respects_frontmatter
+    with_temp_dir do
+      # Create sample file
+      File.write("test.md", "Test content")
+
+      # Create template file WITH embed_document_source: false
+      File.write("prompt.md", <<~MARKDOWN
+        ---
+        context:
+          embed_document_source: false
+          files:
+            - test.md
+        ---
+        This is the prompt content
+      MARKDOWN
+      )
+
+      # Load WITHOUT embed_source flag
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_file("prompt.md")
+
+      # Should NOT embed source when frontmatter says false and no CLI flag
+      refute context.content.include?("This is the prompt content"), "Should not embed source content when disabled"
+      # Files should still be included in formatted output but not embedded separately
+      assert context.content.include?("Test content"), "Should still show file content in formatted output"
+    end
+  end
+
 end

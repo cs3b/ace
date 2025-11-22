@@ -63,15 +63,13 @@ module Ace
           end
 
           # Determine format - respect explicit format requests but default to markdown-xml for embedded sources
-          context_config = preset[:context] || {}
-
           # Check for explicit format request in preset or params
           explicit_format = preset[:format] || params['format'] || params[:format] || merged_options[:format]
 
           if explicit_format
             # Use the explicitly requested format
             format = explicit_format
-          elsif context_config['embed_document_source']
+          elsif preset.dig(:context, 'embed_document_source')
             # Default to markdown-xml format when embed_document_source is true and no explicit format requested
             format = 'markdown-xml'
           else
@@ -309,7 +307,7 @@ module Ace
           # Process files
           file_paths.each do |file_path|
             begin
-              context = load_file_as_preset(file_path)
+              context = load_file(file_path)
               context.metadata[:source_type] = 'file'
               context.metadata[:source_path] = file_path
               contexts << context
@@ -412,6 +410,9 @@ module Ace
             if params.is_a?(Hash)
               @options = @options.merge(params)
             end
+
+            # Apply CLI overrides to config (CLI takes precedence)
+            config = apply_cli_overrides(config)
 
             # Process the config (loads embedded files from context.files)
             context = process_template_config(config)
@@ -523,6 +524,10 @@ module Ace
         def load_from_preset_config(preset, options)
           context_config = preset[:context] || {}
 
+          # Apply CLI overrides to context config (CLI takes precedence)
+          context_config = apply_cli_overrides(context_config)
+          preset[:context] = context_config
+
           context = Models::ContextData.new(
             preset_name: preset[:name],
             metadata: preset[:metadata] || {}
@@ -609,6 +614,23 @@ module Ace
         end
 
         private
+
+        # Apply CLI overrides to configuration
+        # CLI options take precedence over frontmatter/config settings
+        #
+        # This method is called at multiple points in the loading pipeline to ensure
+        # CLI flags consistently override configuration at all entry points:
+        # - load_template: For files with frontmatter
+        # - load_from_preset_config: For preset-based loading
+        # - process_template_config: For template processing
+        def apply_cli_overrides(config)
+          config = config || {}  # Guard against nil config
+          if @options[:embed_source]
+            config.merge('embed_document_source' => true)
+          else
+            config
+          end
+        end
 
         # Check if a file has YAML frontmatter
         def has_frontmatter?(path)
@@ -702,6 +724,9 @@ module Ace
         end
 
         def process_template_config(config)
+          # Apply CLI overrides to config (CLI takes precedence)
+          config = apply_cli_overrides(config)
+
           data = {
             files: [],
             commands: [],
@@ -1059,35 +1084,56 @@ module Ace
         end
 
         # Process base content from context.base field
+        #
+        # Supports both file paths and inline content strings:
+        # - File paths: Resolved via protocol or filesystem (e.g., "path/to/file.md", "wfi://context", "README")
+        # - Inline content: Simple strings without path indicators (e.g., "System instructions")
+        #
+        # Resolution strategy prioritizes file existence to correctly handle extension-less files
+        # (README, CONTEXT, etc.) while still supporting inline strings for simple use cases.
         def process_base_content(context, context_config, options)
           base_ref = context_config['base'] || context_config[:base]
           return unless base_ref && !base_ref.to_s.strip.empty?
 
-          # Resolve protocol reference
+          # Check if base_ref looks like a file reference (has protocol, slashes, or is a known path pattern)
+          # This heuristic helps prioritize file resolution for extension-less files
+          has_protocol = base_ref.match?(/^[\w-]+:\/\//)
+          has_path_separators = base_ref.match?(/[\/\\]/)
+          looks_like_file_ref = has_protocol || has_path_separators
+
+          # Try to resolve as file reference first (handles extension-less files like README, CONTEXT)
           resolved_path = resolve_file_reference(base_ref)
-          unless resolved_path
-            context.metadata[:base_error] = "Failed to resolve base reference: #{base_ref}"
-            warn "Warning: Failed to resolve base reference: #{base_ref}" if options[:debug]
-            return
-          end
 
-          # Check if file exists
-          unless File.exist?(resolved_path)
-            context.metadata[:base_error] = "Base file not found: #{resolved_path}"
-            warn "Warning: Base file not found: #{resolved_path}" if options[:debug]
-            return
-          end
+          # Check if we successfully resolved to an existing file
+          if resolved_path && File.exist?(resolved_path)
+            # Load base content from file
+            base_content = File.read(resolved_path).strip
+            if base_content.empty?
+              warn "Warning: Base file is empty: #{resolved_path}" if options[:debug]
+            end
 
-          # Load base content
-          base_content = File.read(resolved_path).strip
-          if base_content.empty?
-            warn "Warning: Base file is empty: #{resolved_path}" if options[:debug]
+            # Store base content as primary content
+            context.content = base_content
+            context.metadata[:base_path] = resolved_path
+            context.metadata[:base_ref] = base_ref
+            context.metadata[:base_type] = 'file'
+          elsif looks_like_file_ref
+            # It looks like a file reference but resolution failed - set error
+            if !resolved_path
+              context.metadata[:base_error] = "Failed to resolve base reference: #{base_ref}"
+              warn "Warning: Failed to resolve base reference: #{base_ref}" if options[:debug]
+            else
+              context.metadata[:base_error] = "Base file not found: #{resolved_path}"
+              warn "Warning: Base file not found: #{resolved_path}" if options[:debug]
+            end
+          else
+            # Simple string without path indicators - treat as inline content
+            # This allows direct definition of base context without requiring separate files
+            # Example: base: "System instructions for the task"
+            context.content = base_ref.to_s.strip
+            context.metadata[:base_type] = 'inline'
+            context.metadata[:base_ref] = base_ref
           end
-
-          # Store base content as primary content
-          context.content = base_content
-          context.metadata[:base_path] = resolved_path
-          context.metadata[:base_ref] = base_ref
         end
 
         # Helper methods to detect content types in sections

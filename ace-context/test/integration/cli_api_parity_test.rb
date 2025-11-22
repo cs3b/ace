@@ -3,7 +3,7 @@
 require "test_helper"
 require "tmpdir"
 
-class CliApiParityTest < AceContextTest
+class CliApiParityTest < AceTestCase
   def setup
     @temp_dir = Dir.mktmpdir
   end
