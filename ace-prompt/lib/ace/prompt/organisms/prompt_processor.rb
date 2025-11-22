@@ -4,6 +4,7 @@ require_relative "../molecules/prompt_reader"
 require_relative "../molecules/prompt_archiver"
 require_relative "../molecules/context_loader"
 require_relative "../molecules/config_loader"
+require_relative "../molecules/enhancement_tracker"
 require_relative "../atoms/task_path_resolver"
 require_relative "prompt_enhancer"
 
@@ -126,41 +127,42 @@ module Ace
 
           # Enhance only the content part (not frontmatter)
           # Pass frontmatter for context-based enhancement
+          # CRITICAL FIX: Use the passed content parameter (which may have context) instead of prompt_data[:content]
           enhancer = PromptEnhancer.new(@config)
           enhanced_content_only = enhancer.enhance(
-            prompt_data[:content],
+            content,
             frontmatter: prompt_data[:frontmatter]
           )
 
-          # Determine enhancement tracking fields
-          if prompt_data[:frontmatter]&.key?("enhancement_of")
-            # Continuing enhancement chain
-            base = prompt_data[:frontmatter]["enhancement_of"]
-            iteration = (prompt_data[:frontmatter]["enhancement_iteration"] || 0) + 1
-          else
-            # First enhancement - find the archived original
-            archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
-            archives = Dir.glob(File.join(archive_dir, "*.md")).sort
-            latest = archives.last
-            base = latest ? "archive/#{File.basename(latest)}" : "archive/unknown.md"
-            iteration = 1
-          end
+          # Track enhancement using molecule (cleaner separation of concerns)
+          tracking_result = Molecules::EnhancementTracker.track_enhancement(
+            prompt_path,
+            enhanced_content_only,
+            prompt_data[:frontmatter],
+            @config["archive_subdir"]
+          )
 
-          # Merge original frontmatter with enhancement tracking
-          # Preserve original keys (including enhancement config)
-          merged_frontmatter = (prompt_data[:frontmatter] || {}).merge({
-            "enhancement_of" => base,
-            "enhancement_iteration" => iteration,
-            "context_used" => prompt_data[:frontmatter]&.dig("enhancement", "context") ? true : false
-          })
-
-          # Reconstruct with merged frontmatter
+          # Format with frontmatter
           require 'yaml'
-          frontmatter_yaml = YAML.dump(merged_frontmatter)
-          full_enhanced_content = "#{frontmatter_yaml}---\n\n#{enhanced_content_only}"
+          frontmatter_yaml = YAML.dump(tracking_result[:frontmatter])
+          full_enhanced_content = "#{frontmatter_yaml}---\n\n#{tracking_result[:content]}"
 
           # Write back to the-prompt.md (WITH enhancement tracking)
           File.write(prompt_path, full_enhanced_content)
+
+          # Archive the enhanced version immediately with proper _eXXX suffix
+          archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
+          archived_path = Molecules::PromptArchiver.archive(
+            prompt_path,
+            archive_dir,
+            enhancement_iteration: tracking_result[:iteration]
+          )
+
+          # Update symlink to point to the enhanced version
+          if archived_path
+            symlink_path = File.join(File.dirname(prompt_path), "_previous.md")
+            Molecules::PromptArchiver.update_symlink(archived_path, symlink_path)
+          end
 
           full_enhanced_content
         end

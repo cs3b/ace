@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+begin
+  require "ace/nav"
+  require "ace/nav/organisms/navigation_engine"
+rescue LoadError
+  # ace-nav not available
+end
+
 module Ace
   module Prompt
     module Molecules
@@ -14,12 +21,15 @@ module Ace
         def self.resolve(protocol_uri)
           return protocol_uri unless protocol_uri.start_with?("tmpl://")
 
-          # Try ace-nav first
-          cmd = "ace-nav '#{protocol_uri}' 2>&1"
-          output = `#{cmd}`.strip
-
-          if $?.success? && File.exist?(output)
-            return output
+          # Try ace-nav Ruby API first (security fix)
+          if available?
+            begin
+              engine = Ace::Nav::Organisms::NavigationEngine.new
+              resolved_path = engine.resolve(protocol_uri)
+              return resolved_path if resolved_path && File.exist?(resolved_path)
+            rescue => e
+              # Fall through to local resolution
+            end
           end
 
           # Fallback: resolve from gem directly for ace-prompt templates
@@ -39,9 +49,9 @@ module Ace
         end
 
         # Check if ace-nav is available
-        # @return [Boolean] True if ace-nav command exists
+        # @return [Boolean] True if ace-nav gem is loaded
         def self.available?
-          system("which ace-nav > /dev/null 2>&1")
+          defined?(Ace::Nav::Organisms::NavigationEngine)
         end
       end
     end

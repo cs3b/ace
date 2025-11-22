@@ -1,12 +1,55 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "time"
 
 module Ace
   module Prompt
     module Molecules
       # Track enhancement chains in archive
       class EnhancementTracker
+        # Track enhancement with proper metadata (simplified API for PromptProcessor)
+        # @param prompt_path [String] Path to the prompt file
+        # @param enhanced_content [String] The enhanced content (without frontmatter)
+        # @param original_frontmatter [Hash] Original frontmatter from the prompt
+        # @param archive_subdir [String] Archive subdirectory name
+        # @return [Hash] Result with :content, :frontmatter, :iteration, :base
+        def self.track_enhancement(prompt_path, enhanced_content, original_frontmatter = {}, archive_subdir = "archive")
+          # Determine enhancement lineage
+          if original_frontmatter&.key?("enhancement_of")
+            # Continuing enhancement chain
+            base = original_frontmatter["enhancement_of"]
+            iteration = (original_frontmatter["enhancement_iteration"] || 0) + 1
+          else
+            # First enhancement - find the archived original
+            archive_dir = File.join(File.dirname(prompt_path), archive_subdir)
+            archives = Dir.glob(File.join(archive_dir, "*.md"))
+              .reject { |f| File.basename(f).match?(/_e\d+\.md$/) }
+              .sort
+            latest = archives.last
+            base = latest ? "archive/#{File.basename(latest)}" : "archive/unknown.md"
+            iteration = 1
+          end
+
+          # Build tracking metadata
+          metadata = {
+            "enhancement_of" => base,
+            "enhancement_iteration" => iteration,
+            "context_used" => original_frontmatter&.dig("enhancement", "context") ? true : false,
+            "enhanced_at" => Time.now.utc.iso8601
+          }
+
+          # Merge with original frontmatter (preserving enhancement config and other fields)
+          merged_frontmatter = (original_frontmatter || {}).merge(metadata)
+
+          {
+            content: enhanced_content,
+            frontmatter: merged_frontmatter,
+            iteration: iteration,
+            base: base
+          }
+        end
+
         # Find next enhancement iteration number by reading frontmatter
         # @param original_path [String] Path to original archived prompt
         # @param archive_dir [String] Archive directory to search

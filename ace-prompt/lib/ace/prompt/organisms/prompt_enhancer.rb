@@ -84,12 +84,22 @@ module Ace
         def load_system_prompt(uri)
           prompt_uri = uri || @config.dig("enhancement", "system_prompt") || "prompt://ace-prompt/base/enhance"
 
-          # Try to load via ace-nav
+          # Try to load via ace-nav Ruby API (security fix)
           if prompt_uri.start_with?("prompt://")
-            cmd = "ace-nav '#{prompt_uri}' 2>&1"
-            path = `#{cmd}`.strip
-            return File.read(path) if $?.success? && File.exist?(path)
+            begin
+              require "ace/nav"
+              require "ace/nav/organisms/navigation_engine"
+
+              engine = Ace::Nav::Organisms::NavigationEngine.new
+              path = engine.resolve(prompt_uri)
+              return File.read(path) if path && File.exist?(path)
+            rescue LoadError, StandardError => e
+              # Fall through to default
+            end
           end
+
+          # Direct file path
+          return File.read(prompt_uri) if File.exist?(prompt_uri)
 
           # Fallback to default system prompt
           default_system_prompt
