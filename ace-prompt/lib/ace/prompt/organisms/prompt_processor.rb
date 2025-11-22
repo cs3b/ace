@@ -125,8 +125,12 @@ module Ace
           prompt_data = Molecules::PromptReader.read(prompt_path)
 
           # Enhance only the content part (not frontmatter)
+          # Pass frontmatter for context-based enhancement
           enhancer = PromptEnhancer.new(@config)
-          enhanced_content_only = enhancer.enhance(prompt_data[:content])
+          enhanced_content_only = enhancer.enhance(
+            prompt_data[:content],
+            frontmatter: prompt_data[:frontmatter]
+          )
 
           # Determine enhancement tracking fields
           if prompt_data[:frontmatter]&.key?("enhancement_of")
@@ -142,11 +146,12 @@ module Ace
             iteration = 1
           end
 
-          # Merge original context with enhancement tracking
+          # Merge original frontmatter with enhancement tracking
+          # Preserve original keys (including enhancement config)
           merged_frontmatter = (prompt_data[:frontmatter] || {}).merge({
             "enhancement_of" => base,
             "enhancement_iteration" => iteration,
-            "context_used" => false  # TODO: detect if context was actually used
+            "context_used" => prompt_data[:frontmatter]&.dig("enhancement", "context") ? true : false
           })
 
           # Reconstruct with merged frontmatter

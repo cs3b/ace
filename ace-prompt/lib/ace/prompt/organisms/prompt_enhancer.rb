@@ -18,8 +18,15 @@ module Ace
         # Enhance prompt content via LLM
         # @param content [String] Content to enhance
         # @param system_prompt_uri [String] System prompt URI
+        # @param frontmatter [Hash] Optional frontmatter for context-based enhancement
         # @return [String] Enhanced content
-        def enhance(content, system_prompt_uri: nil)
+        def enhance(content, system_prompt_uri: nil, frontmatter: nil)
+          # Use context-based enhancement if frontmatter has enhancement.context
+          if frontmatter && frontmatter.dig("enhancement", "context")
+            return enhance_with_context(content, frontmatter)
+          end
+
+          # Otherwise use simple enhancement (backward compatible)
           cache_key = Atoms::ContentHasher.hash(content)
 
           # Check cache first
@@ -34,11 +41,23 @@ module Ace
           content
         end
 
+        # Enhance with context using materialized session files
+        # @param content [String] Content to enhance
+        # @param frontmatter [Hash] Frontmatter with enhancement.context config
+        # @return [String] Enhanced content
+        def enhance_with_context(content, frontmatter)
+          require_relative "enhancement_session_manager"
+
+          session_manager = EnhancementSessionManager.new(@config)
+          session_manager.enhance_with_context(content, frontmatter)
+        rescue => e
+          warn "Warning: Context-based enhancement failed: #{e.message}. Using original content."
+          content
+        end
+
         private
 
         def call_llm(content, system_prompt_uri)
-          require 'ace/llm/query_interface'
-
           model = resolve_model
           system_prompt = load_system_prompt(system_prompt_uri)
           temperature = @config.dig("enhancement", "temperature") || 0.3
