@@ -103,6 +103,42 @@ module Ace
         warn e.backtrace.join("\n") if ENV["DEBUG"]
         exit 1
       end
+
+      desc "enhance", "Enhance prompt via LLM (standalone command)"
+      long_desc <<-LONGDESC
+        Enhance the prompt using LLM for clarity and specificity.
+
+        This command:
+        - Reads the current prompt
+        - Archives original (if first enhancement)
+        - Enhances via LLM
+        - Archives enhanced version with _e001, _e002, etc. suffix
+        - Writes enhanced content back to the-prompt.md
+        - Outputs enhanced content to stdout
+
+        Can be used standalone or combined with other commands via process -e flag.
+
+        Examples:
+          $ ace-prompt enhance                # Enhance current prompt
+          $ ace-prompt enhance --task 117     # Enhance task-specific prompt
+          $ ace-prompt enhance --ace-context  # Enhance with context loaded
+      LONGDESC
+      option :task, type: :numeric, aliases: "-t", desc: "Use task-specific prompt"
+      option :ace_context, type: :boolean, aliases: "-c", desc: "Load context before enhancement"
+      def enhance
+        processor = Organisms::PromptProcessor.new
+        # Force enhancement on
+        opts = options.transform_keys(&:to_sym).merge(enhance: true)
+        content = processor.process(opts)
+        puts content
+      rescue Ace::Prompt::Error => e
+        warn "Error: #{e.message}"
+        exit 1
+      rescue => e
+        warn "Unexpected error: #{e.message}"
+        warn e.backtrace.join("\n") if ENV["DEBUG"]
+        exit 1
+      end
     end
   end
 end

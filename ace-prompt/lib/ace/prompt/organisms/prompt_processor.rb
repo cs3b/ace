@@ -31,12 +31,14 @@ module Ace
           # Read prompt
           prompt_data = Molecules::PromptReader.read(prompt_path)
 
-          # Archive original
-          archive_original(prompt_path)
-
           # Determine processing flags
           should_load_context = should_load_context?(prompt_data, options)
           should_enhance = should_enhance?(options)
+
+          # Archive original ONLY if not enhancing or if first enhancement
+          if !should_enhance || should_archive_for_enhancement?(prompt_path)
+            archive_original(prompt_path)
+          end
 
           # Process content
           content = prompt_data[:full_text]
@@ -66,6 +68,32 @@ module Ace
           else
             File.join(@config["default_dir"], @config["default_file"])
           end
+        end
+
+        def should_archive_for_enhancement?(prompt_path)
+          # Check if this is the first enhancement or if we need a new base
+          archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
+
+          # Get all archives
+          all_archives = Dir.glob(File.join(archive_dir, "*.md")).sort
+
+          # If no archives exist, this is first time - archive it
+          return true if all_archives.empty?
+
+          # Find latest base (without _e suffix)
+          base_archives = all_archives.reject { |path| path.match?(/_e\d+\.md$/) }
+
+          # If no base exists, we need to create one
+          return true if base_archives.empty?
+
+          # Check if enhancement chain exists for the latest base
+          latest_base = base_archives.last
+          require_relative "../molecules/enhancement_tracker"
+          iteration = Molecules::EnhancementTracker.next_iteration(latest_base, archive_dir)
+
+          # If iteration is 1, no enhancements exist yet, so archive
+          # If iteration > 1, enhancement chain exists, don't re-archive
+          iteration == 1
         end
 
         def archive_original(prompt_path)
@@ -104,27 +132,66 @@ module Ace
         end
 
         def enhance_content(content, prompt_path)
+          # Get enhanced content from LLM
           enhancer = PromptEnhancer.new(@config)
-          enhanced = enhancer.enhance(content)
+          enhanced_content = enhancer.enhance(content)
 
-          # Archive enhanced version
+          # Archive the enhanced version with tracking
+          archive_enhanced_version(enhanced_content, prompt_path)
+
+          # Write enhanced content back to the-prompt.md (without frontmatter)
+          File.write(prompt_path, enhanced_content)
+
+          enhanced_content
+        end
+
+        def archive_enhanced_version(enhanced_content, prompt_path)
           archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
 
-          # Find latest archived file to determine iteration
-          archives = Dir.glob(File.join(archive_dir, "*.md")).sort
-          if archives.any?
-            latest = archives.last
-            iteration = 1  # For now, simple increment
+          # Find the base/original archived file (most recent without _e suffix)
+          all_archives = Dir.glob(File.join(archive_dir, "*.md")).sort
+          base_archive = all_archives.reverse.find { |path| !path.match?(/_e\d+\.md$/) }
 
-            # Archive with enhancement suffix
-            Molecules::PromptArchiver.archive(
-              prompt_path,
-              archive_dir,
-              enhancement_iteration: iteration
-            )
-          end
+          return unless base_archive  # No base archive yet, skip enhancement tracking
 
-          enhanced
+          # Determine next iteration using EnhancementTracker
+          require_relative "../molecules/enhancement_tracker"
+          iteration = Molecules::EnhancementTracker.next_iteration(base_archive, archive_dir)
+
+          # Generate enhancement frontmatter
+          frontmatter = Molecules::EnhancementTracker.generate_frontmatter(
+            base_archive,
+            iteration,
+            context_used: false  # TODO: track if context was used
+          )
+
+          # Add frontmatter to enhanced content
+          content_with_frontmatter = Molecules::EnhancementTracker.add_frontmatter(
+            enhanced_content,
+            frontmatter
+          )
+
+          # Create temporary file with enhanced content + frontmatter
+          temp_file = File.join(archive_dir, ".tmp_enhanced.md")
+          File.write(temp_file, content_with_frontmatter)
+
+          # Archive with current timestamp and enhancement iteration suffix
+          require_relative "../atoms/timestamp_generator"
+          current_timestamp = Atoms::TimestampGenerator.generate
+          enhanced_filename = "#{current_timestamp}_e#{format('%03d', iteration)}.md"
+          enhanced_archive_path = File.join(archive_dir, enhanced_filename)
+
+          FileUtils.cp(temp_file, enhanced_archive_path)
+          FileUtils.rm(temp_file)
+
+          # Update symlink to point to enhanced version
+          symlink_path = File.join(File.dirname(prompt_path), "_previous.md")
+          Molecules::PromptArchiver.update_symlink(enhanced_archive_path, symlink_path)
+
+          enhanced_archive_path
+        rescue => e
+          warn "Warning: Failed to archive enhanced version: #{e.message}"
+          nil
         end
       end
     end

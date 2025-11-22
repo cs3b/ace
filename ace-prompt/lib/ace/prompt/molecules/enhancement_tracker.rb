@@ -1,31 +1,38 @@
 # frozen_string_literal: true
 
+require "yaml"
+
 module Ace
   module Prompt
     module Molecules
       # Track enhancement chains in archive
       class EnhancementTracker
-        # Find next enhancement iteration number
+        # Find next enhancement iteration number by reading frontmatter
         # @param original_path [String] Path to original archived prompt
         # @param archive_dir [String] Archive directory to search
         # @return [Integer] Next iteration number (1, 2, 3, etc.)
         def self.next_iteration(original_path, archive_dir)
-          base_name = File.basename(original_path, ".md")
+          # Find all files with _e suffix in archive
+          all_enhanced = Dir.glob(File.join(archive_dir, "*_e*.md"))
 
-          # Find all enhancement files for this base
-          pattern = File.join(archive_dir, "#{base_name}_e*.md")
-          existing = Dir.glob(pattern)
+          # Read frontmatter from each to find those referencing this base
+          base_filename = "archive/#{File.basename(original_path)}"
+          iterations = []
 
-          # Extract iteration numbers and find max
-          iterations = existing.map do |path|
-            if path =~ /_e(\d+)\.md$/
-              $1.to_i
-            else
-              0
+          all_enhanced.each do |enhanced_file|
+            content = File.read(enhanced_file)
+            if content =~ /\A---\n(.*?)\n---/m
+              frontmatter = YAML.safe_load($1)
+              if frontmatter&.dig("enhancement_of") == base_filename
+                iterations << frontmatter["enhancement_iteration"]
+              end
             end
+          rescue => e
+            # Skip files that can't be parsed
+            warn "Warning: Could not parse #{enhanced_file}: #{e.message}" if ENV["DEBUG"]
           end
 
-          (iterations.max || 0) + 1
+          (iterations.compact.max || 0) + 1
         end
 
         # Generate enhancement frontmatter
