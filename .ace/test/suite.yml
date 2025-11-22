@@ -29,6 +29,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-prompt
+      path: ace-prompt
+      group: tools
+      priority: 3
+
     - name: ace-taskflow
       path: ace-taskflow
       group: tools
