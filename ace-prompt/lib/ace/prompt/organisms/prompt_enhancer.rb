@@ -78,9 +78,18 @@ module Ace
 
         def default_system_prompt
           <<~PROMPT
-            You are an expert at refining and clarifying prompts for LLM interactions.
-            Enhance the user's prompt to make it more clear, specific, and unambiguous while preserving intent.
-            Output only the enhanced prompt - no meta-commentary or explanations.
+            You are an expert at refining and clarifying prompts for AI coding assistants.
+
+            Your task: Transform the user's prompt to be more clear, specific, and actionable while preserving their original intent.
+
+            Guidelines:
+            - Break down vague requests into concrete steps
+            - Specify expected inputs and outputs
+            - Add relevant technical context when helpful
+            - Keep the enhanced prompt concise and focused
+            - Preserve the user's voice and requirements
+
+            Output ONLY the enhanced prompt - no explanations, no meta-commentary, no quotation marks.
           PROMPT
         end
       end

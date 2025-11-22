@@ -132,17 +132,29 @@ module Ace
         end
 
         def enhance_content(content, prompt_path)
-          # Get enhanced content from LLM
+          # Read original prompt data to preserve frontmatter
+          prompt_data = Molecules::PromptReader.read(prompt_path)
+
+          # Enhance only the content part (not frontmatter)
           enhancer = PromptEnhancer.new(@config)
-          enhanced_content = enhancer.enhance(content)
+          enhanced_content_only = enhancer.enhance(prompt_data[:content])
+
+          # Reconstruct full content with original frontmatter + enhanced content
+          full_enhanced_content = if prompt_data[:frontmatter] && !prompt_data[:frontmatter].empty?
+            require 'yaml'
+            frontmatter_yaml = YAML.dump(prompt_data[:frontmatter])
+            "---\n#{frontmatter_yaml}---\n\n#{enhanced_content_only}"
+          else
+            enhanced_content_only
+          end
 
           # Archive the enhanced version with tracking
-          archive_enhanced_version(enhanced_content, prompt_path)
+          archive_enhanced_version(full_enhanced_content, prompt_path)
 
-          # Write enhanced content back to the-prompt.md (without frontmatter)
-          File.write(prompt_path, enhanced_content)
+          # Write enhanced content back to the-prompt.md (WITH frontmatter preserved)
+          File.write(prompt_path, full_enhanced_content)
 
-          enhanced_content
+          full_enhanced_content
         end
 
         def archive_enhanced_version(enhanced_content, prompt_path)
