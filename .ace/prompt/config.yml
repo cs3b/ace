@@ -1,0 +1,32 @@
+# ace-prompt configuration
+# Simple queue-based prompt workflow for AI development
+
+prompt:
+  # File locations
+  default_dir: .cache/ace-prompt/prompts
+  default_file: the-prompt.md
+  archive_subdir: archive
+
+  # Template for setup/reset
+  # Note: tmpl:// protocol will work once fully supported in ace-nav
+  # For now, uses gem-relative path fallback
+  template: tmpl://ace-prompt/base-prompt
+
+  # Context loading (delegated to ace-context)
+  context:
+    enabled: false  # Set to true to load context by default
+    # CLI flags (-c, --ace-context, --no-context) override this
+
+  # Enhancement (LLM-powered prompt refinement)
+  enhancement:
+    enabled: false  # Set to true to enhance prompts by default
+    model: glite    # Alias for google:gemini-2.0-flash-lite
+    temperature: 0.3
+    system_prompt: prompt://ace-prompt/base/enhance
+    # CLI flags (-e, --enhance, --raw) override this
+
+# Model aliases (built-in, can be overridden)
+# glite   -> google:gemini-2.0-flash-lite (default, fast)
+# gflash  -> google:gemini-2.0-flash
+# claude  -> anthropic:claude-3.5-sonnet
+# haiku   -> anthropic:claude-3-haiku
