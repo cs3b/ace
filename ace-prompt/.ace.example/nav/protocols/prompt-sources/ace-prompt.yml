@@ -1,0 +1,8 @@
+source:
+  name: ace-prompt
+  gem: ace-prompt
+  paths:
+    - handbook/prompts
+  categories:
+    base:
+      enhance: "Enhancement system prompt for clarity improvements"

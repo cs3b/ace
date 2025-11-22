@@ -1,0 +1,22 @@
+# ace-prompt configuration example
+# Copy to ~/.ace/prompt/config.yml or project-specific .ace/prompt/config.yml
+
+prompt:
+  # File locations
+  default_dir: .cache/ace-prompt/prompts
+  default_file: the-prompt.md
+  archive_subdir: archive
+
+  # Template using tmpl:// protocol
+  template: tmpl://ace-prompt/base-prompt
+
+  # Context loading (delegated to ace-context)
+  context:
+    enabled: false  # CLI flags override this
+
+  # Enhancement (with chain tracking)
+  enhancement:
+    enabled: false  # CLI flags override this
+    model: glite    # Alias for google:gemini-2.0-flash-lite
+    temperature: 0.3
+    system_prompt: prompt://ace-prompt/base/enhance
