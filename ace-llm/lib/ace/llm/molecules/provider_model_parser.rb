@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "client_registry"
+require_relative "llm_alias_resolver"
 
 module Ace
   module LLM
