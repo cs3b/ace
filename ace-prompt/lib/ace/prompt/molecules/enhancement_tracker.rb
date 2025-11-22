@@ -64,8 +64,8 @@ module Ace
 
           all_enhanced.each do |enhanced_file|
             content = File.read(enhanced_file)
-            if content =~ /\A---\n(.*?)\n---/m
-              frontmatter = YAML.safe_load($1)
+            if match = content.match(/\A---\n(.*?)\n---/m)
+              frontmatter = YAML.safe_load(match[1])
               if frontmatter&.dig("enhancement_of") == base_filename
                 iterations << frontmatter["enhancement_iteration"]
               end

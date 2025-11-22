@@ -7,12 +7,22 @@ module Ace
     module Molecules
       # Load configuration from ace config cascade
       class ConfigLoader
+        # Get gem root using Gem.loaded_specs for more reliable path resolution
+        def self.gem_root
+          if Gem.loaded_specs["ace-prompt"]
+            Gem.loaded_specs["ace-prompt"].full_gem_path
+          else
+            # Fallback to __dir__ if gem spec not available (development mode)
+            File.expand_path("../..", __dir__)
+          end
+        end
+
         DEFAULT_CONFIG = {
           "default_dir" => ".cache/ace-prompt/prompts",
           "default_file" => "the-prompt.md",
           "archive_subdir" => "archive",
-          # Use gem-relative path until tmpl:// protocol is fully supported in ace-nav
-          "template" => File.expand_path("../../../../handbook/templates/base-prompt.template.md", __dir__),
+          # Use gem-relative path with Gem.loaded_specs for reliable resolution
+          "template" => File.join(gem_root, "handbook", "templates", "base-prompt.template.md"),
           "context" => {
             "enabled" => false
           },

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "thor"
+require_relative "../prompt"
 require_relative "organisms/prompt_processor"
 require_relative "organisms/prompt_initializer"
 
@@ -39,13 +40,16 @@ module Ace
         processor = Organisms::PromptProcessor.new
         content = processor.process(options.transform_keys(&:to_sym))
         puts content
+        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        exit 1
+        warn "Hint: Check your configuration and ensure required directories exist." if e.message.include?("not found")
+        1
       rescue => e
         warn "Unexpected error: #{e.message}"
+        warn "Hint: This may be a bug. Please report it with the command you were running."
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        exit 1
+        1
       end
 
       desc "setup", "Initialize prompt with base template"
@@ -69,13 +73,16 @@ module Ace
           force: options[:force]
         )
         puts "Prompt initialized: #{path}"
+        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        exit 1
+        warn "Hint: Check your configuration and ensure required directories exist." if e.message.include?("not found")
+        1
       rescue => e
         warn "Unexpected error: #{e.message}"
+        warn "Hint: This may be a bug. Please report it with the command you were running."
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        exit 1
+        1
       end
 
       desc "reset", "Reset prompt to base template (archives current)"
@@ -95,13 +102,16 @@ module Ace
         path = initializer.reset(template_uri: options[:template])
         puts "Prompt reset: #{path}"
         puts "Previous prompt archived"
+        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        exit 1
+        warn "Hint: Check your configuration and ensure required directories exist." if e.message.include?("not found")
+        1
       rescue => e
         warn "Unexpected error: #{e.message}"
+        warn "Hint: This may be a bug. Please report it with the command you were running."
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        exit 1
+        1
       end
 
       desc "enhance", "Enhance prompt via LLM (standalone command)"
@@ -131,13 +141,16 @@ module Ace
         opts = options.transform_keys(&:to_sym).merge(enhance: true)
         content = processor.process(opts)
         puts content
+        0
       rescue Ace::Prompt::Error => e
         warn "Error: #{e.message}"
-        exit 1
+        warn "Hint: Check your configuration and ensure required directories exist." if e.message.include?("not found")
+        1
       rescue => e
         warn "Unexpected error: #{e.message}"
+        warn "Hint: This may be a bug. Please report it with the command you were running."
         warn e.backtrace.join("\n") if ENV["DEBUG"]
-        exit 1
+        1
       end
     end
   end

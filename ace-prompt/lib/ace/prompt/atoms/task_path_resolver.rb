@@ -32,8 +32,8 @@ module Ace
 
           id_str = task_id.to_s.strip
           # Extract number from formats: "117", "task.117", "v.0.9.0+task.117"
-          if id_str.match(/(\d+)/)
-            $1
+          if match = id_str.match(/(\d+)/)
+            match[1]
           else
             nil
           end

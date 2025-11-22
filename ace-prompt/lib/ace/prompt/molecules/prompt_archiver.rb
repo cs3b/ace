@@ -8,6 +8,14 @@ module Ace
     module Molecules
       # Archive prompt file with timestamp and symlink management
       class PromptArchiver
+        # Class-level mutex for thread-safe symlink operations
+        @symlink_mutex = Mutex.new
+
+        # Get the class-level mutex
+        # @return [Mutex]
+        def self.symlink_mutex
+          @symlink_mutex
+        end
         # Archive prompt to timestamped file
         # @param source_path [String] Path to source prompt file
         # @param archive_dir [String] Directory to store archived prompts
@@ -36,14 +44,17 @@ module Ace
         # @param symlink_path [String] Path where symlink should be created
         # @return [Boolean] True if successful
         def self.update_symlink(target_path, symlink_path)
-          # Remove existing symlink if present
-          FileUtils.rm_f(symlink_path) if File.exist?(symlink_path) || File.symlink?(symlink_path)
+          # Use mutex to prevent race conditions in concurrent symlink operations
+          symlink_mutex.synchronize do
+            # Remove existing symlink if present
+            FileUtils.rm_f(symlink_path) if File.exist?(symlink_path) || File.symlink?(symlink_path)
 
-          # Create relative symlink
-          target_relative = File.basename(File.dirname(target_path)) + "/" + File.basename(target_path)
-          FileUtils.ln_s(target_relative, symlink_path)
+            # Create relative symlink
+            target_relative = File.basename(File.dirname(target_path)) + "/" + File.basename(target_path)
+            FileUtils.ln_s(target_relative, symlink_path)
 
-          true
+            true
+          end
         rescue => e
           warn "Warning: Failed to update symlink: #{e.message}"
           false

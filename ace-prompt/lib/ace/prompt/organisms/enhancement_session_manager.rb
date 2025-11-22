@@ -2,7 +2,20 @@
 
 require "yaml"
 require "fileutils"
-require "ace/context"
+
+# Try to require ace-context, but don't fail if it's not available
+begin
+  require "ace/context"
+rescue LoadError
+  # ace-context not available, will use graceful fallback
+end
+
+# Try to require ace-llm, but don't fail if it's not available
+begin
+  require "ace/llm"
+rescue LoadError
+  # ace-llm not available, will use graceful fallback
+end
 
 module Ace
   module Prompt
@@ -106,8 +119,17 @@ module Ace
         end
 
         def execute_ace_context(input_file, output_file)
+          # Check if ace-context is available
+          unless ace_context_available?
+            warn "Warning: ace-context gem not available. Using original content."
+            warn "Hint: Install ace-context with 'gem install ace-context' to enable context loading."
+            # Copy input to output as-is
+            FileUtils.cp(input_file, output_file)
+            return true
+          end
+
           # Use ace-context Ruby API (same as ace-review)
-          context_result = Ace::Context.load_file(input_file)
+          context_result = Ace::Context.load_file(input_file, embed_source: true)
 
           # Check for errors
           if context_result.metadata[:error]
@@ -123,6 +145,13 @@ module Ace
         end
 
         def execute_llm(user_prompt, system_prompt, session_dir)
+          # Check if ace-llm is available
+          unless ace_llm_available?
+            warn "Warning: ace-llm gem not available. Returning original prompt."
+            warn "Hint: Install ace-llm with 'gem install ace-llm' to enable AI enhancement."
+            return user_prompt.strip
+          end
+
           model = resolve_model
           temperature = @config.dig("enhancement", "temperature") || 0.3
           output_file = File.join(session_dir, "enhanced.md")
@@ -146,6 +175,21 @@ module Ace
         def resolve_model
           model = @config.dig("enhancement", "model") || "glite"
           Atoms::ModelAliasResolver.resolve(model)
+        end
+
+        # Check if ace-context is available
+        # @return [Boolean] True if ace-context gem is loaded and functional
+        def ace_context_available?
+          defined?(Ace::Context) &&
+            Ace::Context.respond_to?(:load_file)
+        end
+
+        # Check if ace-llm is available
+        # @return [Boolean] True if ace-llm gem is loaded and functional
+        def ace_llm_available?
+          defined?(Ace::LLM) &&
+            defined?(Ace::LLM::QueryInterface) &&
+            Ace::LLM::QueryInterface.respond_to?(:query)
         end
       end
     end
