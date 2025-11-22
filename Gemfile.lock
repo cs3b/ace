@@ -91,6 +91,16 @@ PATH
       ace-support-core (~> 0.1)
 
 PATH
+  remote: ace-prompt
+  specs:
+    ace-prompt (0.1.0)
+      ace-context (~> 0.5)
+      ace-llm (~> 0.5)
+      ace-nav (~> 0.5)
+      ace-support-core (~> 0.10)
+      thor (~> 1.2)
+
+PATH
   remote: ace-review
   specs:
     ace-review (0.18.0)
@@ -256,6 +266,7 @@ DEPENDENCIES
   ace-llm!
   ace-llm-providers-cli!
   ace-nav!
+  ace-prompt!
   ace-review!
   ace-search!
   ace-support-core!

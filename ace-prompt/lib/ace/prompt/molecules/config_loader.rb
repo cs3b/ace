@@ -11,7 +11,8 @@ module Ace
           "default_dir" => ".cache/ace-prompt/prompts",
           "default_file" => "the-prompt.md",
           "archive_subdir" => "archive",
-          "template" => "tmpl://ace-prompt/base-prompt",
+          # Use gem-relative path until tmpl:// protocol is fully supported in ace-nav
+          "template" => File.expand_path("../../../../handbook/templates/base-prompt.template.md", __dir__),
           "context" => {
             "enabled" => false
           },

@@ -1,0 +1,19 @@
+---
+# Template Sources Protocol Configuration for ace-prompt gem
+# This enables template discovery from the installed ace-prompt gem
+
+name: ace-prompt
+type: gem
+description: Prompt templates from ace-prompt gem
+priority: 10
+
+# Configuration for template discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/templates
+
+  # Pattern for finding template files
+  pattern: "*.md"
+
+  # Enable discovery
+  enabled: true
