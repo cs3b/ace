@@ -37,18 +37,24 @@ module Ace
         private
 
         def call_llm(content, system_prompt_uri)
+          require 'ace/llm/query_interface'
+
           model = resolve_model
           system_prompt = load_system_prompt(system_prompt_uri)
+          temperature = @config.dig("enhancement", "temperature") || 0.3
 
-          # Build ace-llm command
-          cmd = build_llm_command(model, system_prompt, content)
-          output = `#{cmd} 2>&1`
+          # Use ace-llm API directly instead of shelling out
+          response = Ace::LLM::QueryInterface.query(
+            model,
+            content,
+            system: system_prompt,
+            temperature: temperature,
+            format: "text"
+          )
 
-          unless $?.success?
-            raise EnhancementError, "LLM call failed: #{output}"
-          end
-
-          output.strip
+          response[:text].strip
+        rescue => e
+          raise EnhancementError, "LLM call failed: #{e.message}"
         end
 
         def resolve_model
@@ -68,16 +74,6 @@ module Ace
 
           # Fallback to default system prompt
           default_system_prompt
-        end
-
-        def build_llm_command(model, system_prompt, content)
-          temp = @config.dig("enhancement", "temperature") || 0.3
-
-          # Escape content for shell
-          escaped_content = content.gsub("'", "'\\''")
-          escaped_system = system_prompt.gsub("'", "'\\''")
-
-          "ace-llm-query '#{model}' '#{escaped_content}' --system '#{escaped_system}' --temperature #{temp}"
         end
 
         def default_system_prompt
