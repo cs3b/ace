@@ -143,7 +143,8 @@ module Ace
           full_enhanced_content = if prompt_data[:frontmatter] && !prompt_data[:frontmatter].empty?
             require 'yaml'
             frontmatter_yaml = YAML.dump(prompt_data[:frontmatter])
-            "---\n#{frontmatter_yaml}---\n\n#{enhanced_content_only}"
+            # YAML.dump already includes leading ---, just add trailing --- and content
+            "#{frontmatter_yaml}---\n\n#{enhanced_content_only}"
           else
             enhanced_content_only
           end
@@ -170,22 +171,29 @@ module Ace
           require_relative "../molecules/enhancement_tracker"
           iteration = Molecules::EnhancementTracker.next_iteration(base_archive, archive_dir)
 
-          # Generate enhancement frontmatter
-          frontmatter = Molecules::EnhancementTracker.generate_frontmatter(
-            base_archive,
-            iteration,
-            context_used: false  # TODO: track if context was used
-          )
+          # Parse enhanced_content to extract frontmatter and content separately
+          require_relative "../atoms/frontmatter_extractor"
+          original_frontmatter, content_only = Atoms::FrontmatterExtractor.extract(enhanced_content)
 
-          # Add frontmatter to enhanced content
-          content_with_frontmatter = Molecules::EnhancementTracker.add_frontmatter(
-            enhanced_content,
-            frontmatter
-          )
+          # Generate enhancement tracking fields
+          enhancement_fields = {
+            "enhancement_of" => "archive/#{File.basename(base_archive)}",
+            "enhancement_iteration" => iteration,
+            "context_used" => false  # TODO: track if context was used
+          }
 
-          # Create temporary file with enhanced content + frontmatter
+          # Merge enhancement fields with original frontmatter
+          merged_frontmatter = enhancement_fields.merge(original_frontmatter || {})
+
+          # Create final content with merged frontmatter
+          require 'yaml'
+          frontmatter_yaml = YAML.dump(merged_frontmatter)
+          # YAML.dump already includes leading ---, just add trailing --- and content
+          final_content = "#{frontmatter_yaml}---\n\n#{content_only}"
+
+          # Create temporary file
           temp_file = File.join(archive_dir, ".tmp_enhanced.md")
-          File.write(temp_file, content_with_frontmatter)
+          File.write(temp_file, final_content)
 
           # Archive with current timestamp and enhancement iteration suffix
           require_relative "../atoms/timestamp_generator"
@@ -203,6 +211,7 @@ module Ace
           enhanced_archive_path
         rescue => e
           warn "Warning: Failed to archive enhanced version: #{e.message}"
+          warn e.backtrace.join("\n") if ENV["DEBUG"]
           nil
         end
       end
