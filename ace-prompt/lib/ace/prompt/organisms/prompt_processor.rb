@@ -85,19 +85,7 @@ module Ace
           return true if options[:ace_context]
 
           # Check config default
-          config_enabled = @config.dig("context", "enabled")
-          return true if config_enabled
-
-          # Check if frontmatter has context key with actual content
-          context = prompt_data[:frontmatter]["context"]
-          return false unless context.is_a?(Hash)
-
-          # Only load context if there's actual content (non-empty arrays/values)
-          has_files = context["files"]&.is_a?(Array) && !context["files"].empty?
-          has_commands = context["commands"]&.is_a?(Array) && !context["commands"].empty?
-          has_presets = context["presets"]&.is_a?(Array) && !context["presets"].empty?
-
-          has_files || has_commands || has_presets
+          @config.dig("context", "enabled") || false
         end
 
         def should_enhance?(options)

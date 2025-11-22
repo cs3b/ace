@@ -17,8 +17,9 @@ module Ace
           end
 
           # Delegate to ace-context with --embed-source flag
-          cmd = "ace-context --embed-source --stdin < #{prompt_path}"
-          output = `#{cmd} 2>&1`
+          # ace-context handles empty context gracefully - just passes through
+          cmd = "ace-context '#{prompt_path}' --embed-source 2>&1"
+          output = `#{cmd}`
 
           if $?.success?
             output
