@@ -35,10 +35,8 @@ module Ace
           should_load_context = should_load_context?(prompt_data, options)
           should_enhance = should_enhance?(options)
 
-          # Archive original ONLY if not enhancing or if first enhancement
-          if !should_enhance || should_archive_for_enhancement?(prompt_path)
-            archive_original(prompt_path)
-          end
+          # Always archive before processing (with appropriate suffix if enhanced)
+          archive_original(prompt_path)
 
           # Process content
           content = prompt_data[:full_text]
@@ -70,36 +68,27 @@ module Ace
           end
         end
 
-        def should_archive_for_enhancement?(prompt_path)
-          # Check if this is the first enhancement or if we need a new base
-          archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
-
-          # Get all archives
-          all_archives = Dir.glob(File.join(archive_dir, "*.md")).sort
-
-          # If no archives exist, this is first time - archive it
-          return true if all_archives.empty?
-
-          # Find latest base (without _e suffix)
-          base_archives = all_archives.reject { |path| path.match?(/_e\d+\.md$/) }
-
-          # If no base exists, we need to create one
-          return true if base_archives.empty?
-
-          # Check if enhancement chain exists for the latest base
-          latest_base = base_archives.last
-          require_relative "../molecules/enhancement_tracker"
-          iteration = Molecules::EnhancementTracker.next_iteration(latest_base, archive_dir)
-
-          # If iteration is 1, no enhancements exist yet, so archive
-          # If iteration > 1, enhancement chain exists, don't re-archive
-          iteration == 1
-        end
-
         def archive_original(prompt_path)
-          archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
-          archived_path = Molecules::PromptArchiver.archive(prompt_path, archive_dir)
+          # Read current content to check enhancement state
+          prompt_data = Molecules::PromptReader.read(prompt_path)
 
+          archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
+
+          # Determine archive filename based on enhancement state
+          if prompt_data[:frontmatter]&.key?("enhancement_of")
+            # Already enhanced - use _eXXX suffix
+            iteration = prompt_data[:frontmatter]["enhancement_iteration"] || 1
+            archived_path = Molecules::PromptArchiver.archive(
+              prompt_path,
+              archive_dir,
+              enhancement_iteration: iteration
+            )
+          else
+            # Original content - no suffix
+            archived_path = Molecules::PromptArchiver.archive(prompt_path, archive_dir)
+          end
+
+          # Update symlink
           if archived_path
             symlink_path = File.join(File.dirname(prompt_path), "_previous.md")
             Molecules::PromptArchiver.update_symlink(archived_path, symlink_path)
@@ -132,87 +121,43 @@ module Ace
         end
 
         def enhance_content(content, prompt_path)
-          # Read original prompt data to preserve frontmatter
+          # Read original to get current state
           prompt_data = Molecules::PromptReader.read(prompt_path)
 
           # Enhance only the content part (not frontmatter)
           enhancer = PromptEnhancer.new(@config)
           enhanced_content_only = enhancer.enhance(prompt_data[:content])
 
-          # Reconstruct full content with original frontmatter + enhanced content
-          full_enhanced_content = if prompt_data[:frontmatter] && !prompt_data[:frontmatter].empty?
-            require 'yaml'
-            frontmatter_yaml = YAML.dump(prompt_data[:frontmatter])
-            # YAML.dump already includes leading ---, just add trailing --- and content
-            "#{frontmatter_yaml}---\n\n#{enhanced_content_only}"
+          # Determine enhancement tracking fields
+          if prompt_data[:frontmatter]&.key?("enhancement_of")
+            # Continuing enhancement chain
+            base = prompt_data[:frontmatter]["enhancement_of"]
+            iteration = (prompt_data[:frontmatter]["enhancement_iteration"] || 0) + 1
           else
-            enhanced_content_only
+            # First enhancement - find the archived original
+            archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
+            archives = Dir.glob(File.join(archive_dir, "*.md")).sort
+            latest = archives.last
+            base = latest ? "archive/#{File.basename(latest)}" : "archive/unknown.md"
+            iteration = 1
           end
 
-          # Archive the enhanced version with tracking
-          archive_enhanced_version(full_enhanced_content, prompt_path)
+          # Merge original context with enhancement tracking
+          merged_frontmatter = (prompt_data[:frontmatter] || {}).merge({
+            "enhancement_of" => base,
+            "enhancement_iteration" => iteration,
+            "context_used" => false  # TODO: detect if context was actually used
+          })
 
-          # Write enhanced content back to the-prompt.md (WITH frontmatter preserved)
+          # Reconstruct with merged frontmatter
+          require 'yaml'
+          frontmatter_yaml = YAML.dump(merged_frontmatter)
+          full_enhanced_content = "#{frontmatter_yaml}---\n\n#{enhanced_content_only}"
+
+          # Write back to the-prompt.md (WITH enhancement tracking)
           File.write(prompt_path, full_enhanced_content)
 
           full_enhanced_content
-        end
-
-        def archive_enhanced_version(enhanced_content, prompt_path)
-          archive_dir = File.join(File.dirname(prompt_path), @config["archive_subdir"])
-
-          # Find the base/original archived file (most recent without _e suffix)
-          all_archives = Dir.glob(File.join(archive_dir, "*.md")).sort
-          base_archive = all_archives.reverse.find { |path| !path.match?(/_e\d+\.md$/) }
-
-          return unless base_archive  # No base archive yet, skip enhancement tracking
-
-          # Determine next iteration using EnhancementTracker
-          require_relative "../molecules/enhancement_tracker"
-          iteration = Molecules::EnhancementTracker.next_iteration(base_archive, archive_dir)
-
-          # Parse enhanced_content to extract frontmatter and content separately
-          require_relative "../atoms/frontmatter_extractor"
-          original_frontmatter, content_only = Atoms::FrontmatterExtractor.extract(enhanced_content)
-
-          # Generate enhancement tracking fields
-          enhancement_fields = {
-            "enhancement_of" => "archive/#{File.basename(base_archive)}",
-            "enhancement_iteration" => iteration,
-            "context_used" => false  # TODO: track if context was used
-          }
-
-          # Merge enhancement fields with original frontmatter
-          merged_frontmatter = enhancement_fields.merge(original_frontmatter || {})
-
-          # Create final content with merged frontmatter
-          require 'yaml'
-          frontmatter_yaml = YAML.dump(merged_frontmatter)
-          # YAML.dump already includes leading ---, just add trailing --- and content
-          final_content = "#{frontmatter_yaml}---\n\n#{content_only}"
-
-          # Create temporary file
-          temp_file = File.join(archive_dir, ".tmp_enhanced.md")
-          File.write(temp_file, final_content)
-
-          # Archive with current timestamp and enhancement iteration suffix
-          require_relative "../atoms/timestamp_generator"
-          current_timestamp = Atoms::TimestampGenerator.generate
-          enhanced_filename = "#{current_timestamp}_e#{format('%03d', iteration)}.md"
-          enhanced_archive_path = File.join(archive_dir, enhanced_filename)
-
-          FileUtils.cp(temp_file, enhanced_archive_path)
-          FileUtils.rm(temp_file)
-
-          # Update symlink to point to enhanced version
-          symlink_path = File.join(File.dirname(prompt_path), "_previous.md")
-          Molecules::PromptArchiver.update_symlink(enhanced_archive_path, symlink_path)
-
-          enhanced_archive_path
-        rescue => e
-          warn "Warning: Failed to archive enhanced version: #{e.message}"
-          warn e.backtrace.join("\n") if ENV["DEBUG"]
-          nil
         end
       end
     end
