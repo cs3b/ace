@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.118
-status: pending
+status: in-progress
 priority: high
 estimate: 8-12h
-dependencies: [v.0.9.0+task.119]  # ace-context --embed-source flag
+dependencies:
+- v.0.9.0+task.119
 ---
 
 # ace-prompt-queue: Simple Queue Workflow for AI Prompts
