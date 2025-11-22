@@ -5,7 +5,76 @@ priority: high
 estimate: 8-12h
 dependencies:
 - v.0.9.0+task.119
+needs_review: false
 ---
+
+## Review Questions (Last Review: 2025-11-22)
+
+### Status: Implementation Ready ✓
+
+All critical questions have been resolved through research and validation. Task 119 dependency is complete, and implementation can proceed without blocking issues.
+
+### [RESOLVED] Implementation Questions
+
+#### 1. Task 119 Dependency Status
+- **Question**: Is the `--embed-source` flag fully implemented in ace-context?
+- **Research**: Verified implementation exists in ace-context/lib/ace/context/organisms/context_loader.rb
+- **Evidence**: CLI help shows `-e, --embed-source` flag, integration tests pass
+- **Answer**: ✓ COMPLETE - Task 119 is done, flag works as specified
+- **Impact**: No blocker - can proceed with ace-context delegation pattern
+
+#### 2. Gem Structure and Naming
+- **Question**: Should ace-prompt follow standard ace-* gem pattern or ace-support-* pattern?
+- **Research**: Checked docs/ace-gems.g.md naming conventions
+- **Answer**: ace-prompt (functional gem with CLI tool) - has executable, user-facing
+- **Evidence**: Pattern matches ace-search, ace-lint, ace-taskflow
+- **Impact**: Gem name confirmed, follow standard structure
+
+#### 3. Protocol Registration Pattern
+- **Question**: How should tmpl:// and prompt:// protocols be registered?
+- **Research**: Found working pattern in .ace/nav/protocols/tmpl-sources/ace-taskflow.yml
+- **Answer**: Use `.ace.example/nav/protocols/` in gem with yml config files
+- **Implementation**: Two files needed:
+  - `tmpl-sources/ace-prompt.yml` for templates
+  - `prompt-sources/ace-prompt.yml` for system prompts
+- **Impact**: Clear implementation path for protocol discovery
+
+#### 4. Enhancement Chain Tracking
+- **Question**: Should enhancement iterations use separate archive directory or unified?
+- **Research**: Analyzed task spec's "Enhancement Tracking Design" section
+- **Answer**: Unified archive with suffix pattern (_e001, _e002, etc.)
+- **Rationale**: Simpler structure, clear history, easier browsing
+- **Implementation**: Add frontmatter with enhancement_of, enhancement_iteration
+- **Impact**: Clearer specification for PromptArchiver and EnhancementTracker
+
+#### 5. Context Loading Delegation
+- **Question**: Does ace-prompt need merging logic or full delegation to ace-context?
+- **Research**: Verified ace-context --embed-source returns complete output
+- **Answer**: Full delegation - no merging needed
+- **Evidence**: Task 119 spec confirms "complete output that includes both context AND the original source"
+- **Impact**: Simplified design - ContentMerger organism not needed (already removed from spec)
+
+#### 6. Default Command Behavior
+- **Question**: Should default command require arguments or work with zero args?
+- **Research**: Checked ace-lint pattern (default_task :lint with file handling)
+- **Answer**: Zero args default - reads from default location
+- **Pattern**: Use Thor's default_task :process
+- **Impact**: Confirmed interface design is correct
+
+#### 7. Model Alias Resolution
+- **Question**: Should model aliases be hardcoded or configurable?
+- **Research**: Checked ace-llm patterns and common usage
+- **Answer**: Start with built-in aliases (glite, claude, haiku), allow config override
+- **Implementation**: ModelAliasResolver atom with default mappings
+- **Impact**: Simple default behavior with flexibility
+
+#### 8. Archive Location for Task-Specific Prompts
+- **Question**: Should task prompts use shared archive or task-local archive?
+- **Research**: Analyzed task spec structure and isolation needs
+- **Answer**: Task-local archive (within task directory)
+- **Rationale**: Each task is isolated workspace, archive should be co-located
+- **Structure**: `.ace-taskflow/v.0.9.0/tasks/117-*/prompts/archive/`
+- **Impact**: Confirms spec's task-specific structure is correct
 
 # ace-prompt-queue: Simple Queue Workflow for AI Prompts
 
@@ -428,11 +497,21 @@ None (starting fresh, not modifying task 117 implementation)
 
 ### Planning Steps
 
-* [ ] Review task 117 implementation for reusable components
-* [ ] Design configuration schema with all options
-* [ ] Plan cache key strategy for enhanced prompts
-* [ ] Research symlink compatibility across filesystems
-* [ ] Design error recovery strategies
+* [x] Review task 117 implementation for reusable components
+  - **Result**: Don't reuse - task 117 went wrong direction, start fresh
+  - **Evidence**: Task 117 marked as superseded, implemented wrong requirements
+* [x] Design configuration schema with all options
+  - **Result**: Schema complete in "Configuration Specification" section
+  - **Default model**: glite (google:gemini-2.0-flash-lite)
+* [x] Plan cache key strategy for enhanced prompts
+  - **Result**: Use unified archive with _e001, _e002 suffixes
+  - **Tracking**: Frontmatter with enhancement_of and enhancement_iteration
+* [x] Research symlink compatibility across filesystems
+  - **Result**: Use FileUtils.ln_s with rescue block for graceful degradation
+  - **Strategy**: Warn user but continue if symlink fails
+* [x] Design error recovery strategies
+  - **Result**: All operations use rescue blocks with warnings, never block output
+  - **Pattern**: Archive failures warn but don't stop execution
 
 ### Execution Steps
 
