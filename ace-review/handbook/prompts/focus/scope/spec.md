@@ -5,6 +5,7 @@
 When reviewing specifications, proposals, or task definitions, analyze:
 
 ### Goal Clarity
+
 - Single, well-defined objective stated clearly
 - No ambiguous terms ("appropriate", "etc.", "and/or", "as needed")
 - Purpose is immediately understandable
@@ -12,6 +13,7 @@ When reviewing specifications, proposals, or task definitions, analyze:
 - Scope boundaries are clear (what's in vs out)
 
 ### Usage Expectations
+
 - Target audience/user clearly identified
 - Usage scenarios or user stories provided
 - Expected inputs and outputs defined
@@ -19,6 +21,7 @@ When reviewing specifications, proposals, or task definitions, analyze:
 - Constraints and limitations stated
 
 ### Test Strategy
+
 - Acceptance criteria are testable and verifiable
 - Test scenarios or examples provided
 - Edge cases and error conditions considered
@@ -26,6 +29,7 @@ When reviewing specifications, proposals, or task definitions, analyze:
 - Validation approach defined
 
 ### Completeness Check
+
 - All required sections present
 - Dependencies identified and documented
 - Assumptions explicitly stated
@@ -33,6 +37,7 @@ When reviewing specifications, proposals, or task definitions, analyze:
 - No undefined references or placeholders
 
 ### Implementation Feasibility
+
 - Requirements are technically achievable
 - Effort estimates are realistic
 - Required resources/dependencies available
@@ -40,6 +45,7 @@ When reviewing specifications, proposals, or task definitions, analyze:
 - Constraints are reasonable and achievable
 
 ### Consistency & Traceability
+
 - Terminology used consistently throughout
 - No contradicting statements
 - Requirements traceable to goals
