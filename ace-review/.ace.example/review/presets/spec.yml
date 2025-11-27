@@ -1,0 +1,35 @@
+# Specification review - clarity, completeness, and feasibility
+
+description: "Specification review - goal clarity, usage expectations, tests, completeness"
+
+instructions:
+  base: "prompt://base/system"
+  context:
+    sections:
+      format:
+        title: "Format Guidelines"
+        description: "Standard output formatting and structure guidelines"
+        files:
+          - "prompt://format/standard"
+      spec_focus:
+        title: "Specification Focus"
+        description: "Specification clarity, completeness, and feasibility review"
+        files:
+          - "prompt://focus/scope/spec"
+      guidelines:
+        title: "Communication Guidelines"
+        description: "Professional communication style"
+        files:
+          - "prompt://guidelines/tone"
+
+subject:
+  context:
+    sections:
+      spec_changes:
+        title: "Specification Changes"
+        description: "Specification files to review"
+        diffs:
+          ranges:
+            - "origin/main...HEAD"
+          filters:
+            - "**/*.s.md"
