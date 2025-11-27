@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class EnhancementSessionManagerTest < AceTestCase
+class EnhancementSessionManagerTest < Ace::Prompt::TestCase
   def setup
     @temp_dir = Dir.mktmpdir
     @config = {

@@ -19,4 +19,4 @@ prompt:
     enabled: false  # CLI flags override this
     model: glite    # Alias for google:gemini-2.0-flash-lite
     temperature: 0.3
-    system_prompt: prompt://ace-prompt/base/enhance
+    system_prompt: prompt://enhance-instructions.system

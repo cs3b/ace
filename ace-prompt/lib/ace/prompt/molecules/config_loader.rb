@@ -30,7 +30,7 @@ module Ace
             "enabled" => false,
             "model" => "glite",
             "temperature" => 0.3,
-            "system_prompt" => "prompt://ace-prompt/base/enhance"
+            "system_prompt" => "prompt://enhance-instructions.system"
           }
         }.freeze
 

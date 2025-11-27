@@ -44,6 +44,9 @@ module Ace
         # @param symlink_path [String] Path where symlink should be created
         # @return [Boolean] True if successful
         def self.update_symlink(target_path, symlink_path)
+          # Check if target exists before creating symlink
+          return false unless File.exist?(target_path)
+
           # Use mutex to prevent race conditions in concurrent symlink operations
           symlink_mutex.synchronize do
             # Remove existing symlink if present

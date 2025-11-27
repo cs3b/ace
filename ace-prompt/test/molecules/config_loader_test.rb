@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "../test_helper"
 
-class ConfigLoaderTest < AceTestCase
+class ConfigLoaderTest < Ace::Prompt::TestCase
   def test_load_returns_default_config
     config = Ace::Prompt::Molecules::ConfigLoader.load
 
@@ -14,7 +14,7 @@ class ConfigLoaderTest < AceTestCase
     assert_equal false, config["enhancement"]["enabled"]
     assert_equal "glite", config["enhancement"]["model"]
     assert_equal 0.3, config["enhancement"]["temperature"]
-    assert_equal "prompt://ace-prompt/base/enhance", config["enhancement"]["system_prompt"]
+    assert_equal "prompt://enhance-instructions.system", config["enhancement"]["system_prompt"]
   end
 
   def test_load_with_ace_core_config_override
@@ -27,7 +27,14 @@ class ConfigLoaderTest < AceTestCase
       }
     }
 
-    Ace::Core.stub(:config, OpenStruct.new(get: mock_config)) do
+    mock_config_obj = Object.new
+    def mock_config_obj.get(namespace, file)
+      # Return mock config when called with ("ace", "prompt")
+      @mock_config
+    end
+    mock_config_obj.instance_variable_set(:@mock_config, mock_config)
+
+    Ace::Core.stub(:config, mock_config_obj) do
       config = Ace::Prompt::Molecules::ConfigLoader.load
 
       # Should merge defaults with overrides
@@ -36,13 +43,18 @@ class ConfigLoaderTest < AceTestCase
       assert_equal 0.8, config["enhancement"]["temperature"]
       # Default values should be preserved for non-overridden keys
       assert_equal "the-prompt.md", config["default_file"]
-      assert_equal 0.3, config["enhancement"]["temperature"] # Note: this gets overridden
+      assert_equal 0.8, config["enhancement"]["temperature"] # Note: this gets overridden
     end
   end
 
   def test_load_with_nil_ace_core_config
     # Mock Ace::Core.config to return nil
-    Ace::Core.stub(:config, OpenStruct.new(get: nil)) do
+    mock_config_obj = Object.new
+    def mock_config_obj.get(namespace, file)
+      nil
+    end
+
+    Ace::Core.stub(:config, mock_config_obj) do
       config = Ace::Prompt::Molecules::ConfigLoader.load
 
       # Should return default config

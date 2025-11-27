@@ -2,10 +2,19 @@
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
+# Add parent directories for local ace dependencies during development
+$LOAD_PATH.unshift File.expand_path("../../ace-support-core/lib", __dir__)
+$LOAD_PATH.unshift File.expand_path("../../ace-context/lib", __dir__)
+$LOAD_PATH.unshift File.expand_path("../../ace-llm/lib", __dir__)
+$LOAD_PATH.unshift File.expand_path("../../ace-nav/lib", __dir__)
+$LOAD_PATH.unshift File.expand_path("../../ace-git/lib", __dir__)
+$LOAD_PATH.unshift File.expand_path("../../ace-git-diff/lib", __dir__)
+
 require "ace/prompt"
 require "minitest/autorun"
 require "fileutils"
 require "tmpdir"
+require "ostruct"
 
 class Ace::Prompt::TestCase < Minitest::Test
   def setup

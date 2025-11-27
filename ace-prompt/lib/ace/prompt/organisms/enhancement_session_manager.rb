@@ -33,29 +33,41 @@ module Ace
         # @param frontmatter [Hash] Parsed frontmatter with enhancement.context config
         # @return [String] Enhanced content
         def enhance_with_context(content, frontmatter)
+          warn "[DEBUG] Starting context-based enhancement"
+
           session_dir = create_session_directory
+          warn "[DEBUG] Session directory created: #{session_dir}"
 
           begin
             # Create context configuration files
             user_context_path = create_user_context_file(session_dir, content, frontmatter)
             system_context_path = create_system_context_file(session_dir, frontmatter)
+            warn "[DEBUG] Context files created: user=#{user_context_path}, system=#{system_context_path}"
 
             # Process context files with ace-context
             user_prompt_path = File.join(session_dir, "user.prompt.md")
             system_prompt_path = File.join(session_dir, "system.prompt.md")
 
+            warn "[DEBUG] Starting ace-context processing"
             execute_ace_context(user_context_path, user_prompt_path)
             execute_ace_context(system_context_path, system_prompt_path)
+            warn "[DEBUG] ace-context processing completed"
 
             # Read materialized prompts
+            warn "[DEBUG] Reading materialized prompts"
             user_prompt = File.read(user_prompt_path)
             system_prompt = File.read(system_prompt_path)
+            warn "[DEBUG] Materialized prompts read: user=#{user_prompt.length} chars, system=#{system_prompt.length} chars"
 
             # Call LLM with materialized prompts
+            warn "[DEBUG] Starting LLM enhancement"
             enhanced = execute_llm(user_prompt, system_prompt, session_dir)
+            warn "[DEBUG] LLM enhancement completed"
 
             enhanced
           rescue => e
+            warn "[DEBUG] Enhancement session failed: #{e.class}: #{e.message}"
+            warn "[DEBUG] Backtrace: #{e.backtrace.first(3).join(', ')}"
             raise EnhancementError, "Enhancement session failed: #{e.message}"
           end
         end
@@ -65,24 +77,36 @@ module Ace
         def create_session_directory
           # Use configured default directory, not current working directory
           base_dir = @config["default_dir"]
+          warn "[DEBUG] Base directory from config: #{base_dir}"
           session_dir = File.join(base_dir, "enhancement")
+          warn "[DEBUG] Session directory path: #{session_dir}"
 
           FileUtils.mkdir_p(session_dir)
+          warn "[DEBUG] Session directory created successfully"
+
           session_dir
+        rescue => e
+          warn "[DEBUG] Failed to create session directory: #{e.message}"
+          raise
         end
 
         def create_user_context_file(session_dir, content, frontmatter)
-          # Extract enhancement context config from frontmatter
-          enhancement_config = frontmatter.dig("enhancement", "context") || {}
+          # Extract user context config for agent reporting
+          user_context_config = frontmatter["context"] || {}
 
-          # Build ace-context configuration for user prompt
-          ace_context_config = {
-            "description" => "User prompt to enhance with context",
-            "context" => enhancement_config
-          }
+          # Extract the pure user prompt content (without any metadata)
+          prompt_content = extract_user_prompt_content(content)
 
-          # Create context.md with frontmatter + user content as body
-          context_content = "---\n#{YAML.dump(ace_context_config)}---\n\n#{content}"
+          # Create user context.md with:
+          # 1. YAML frontmatter containing user context config
+          # 2. User prompt as the body content
+          frontmatter_content = user_context_config.empty? ? "" : "#{YAML.dump(user_context_config)}"
+
+          if frontmatter_content.empty?
+            context_content = prompt_content
+          else
+            context_content = "---\n#{frontmatter_content}---\n\n#{prompt_content}"
+          end
 
           context_path = File.join(session_dir, "user.context.md")
           File.write(context_path, context_content)
@@ -91,31 +115,100 @@ module Ace
         end
 
         def create_system_context_file(session_dir, frontmatter)
+          # Extract enhancement context config from frontmatter
+          enhancement_config = frontmatter.dig("enhancement", "context") || {}
+
           # Get system prompt URI from config or frontmatter
           system_prompt_uri = frontmatter.dig("enhancement", "system_prompt") ||
                               @config.dig("enhancement", "system_prompt") ||
-                              "prompt://ace-prompt/base/enhance"
+                              "prompt://enhance-instructions.system"
 
-          # Build ace-context configuration for system prompt
-          ace_context_config = {
-            "description" => "System prompt for enhancement",
-            "context" => {
-              "sections" => {
-                "instructions" => {
-                  "title" => "Enhancement Instructions",
-                  "files" => [system_prompt_uri]
-                }
-              }
-            }
-          }
+          # Load the system prompt content
+          system_prompt_content = load_system_prompt_content(system_prompt_uri)
 
-          # Create context.md with frontmatter only (no body needed)
-          context_content = "---\n#{YAML.dump(ace_context_config)}---\n\n"
+          # Create system context.md with:
+          # 1. YAML frontmatter containing enhancement.context
+          # 2. System prompt as the body content
+          frontmatter_content = enhancement_config.empty? ? "" : "#{YAML.dump(enhancement_config)}"
+
+          if frontmatter_content.empty?
+            context_content = system_prompt_content
+          else
+            context_content = "---\n#{frontmatter_content}---\n\n#{system_prompt_content}"
+          end
 
           context_path = File.join(session_dir, "system.context.md")
           File.write(context_path, context_content)
 
           context_path
+        end
+
+        # Extract user prompt content from enhancement-processed content
+        # @param content [String] Content that may include enhancement metadata
+        # @return [String] Pure user prompt content
+        def extract_user_prompt_content(content)
+          # Remove enhancement tracking frontmatter if present
+          # Pattern: enhancement_of, enhancement_iteration, etc.
+          if content.match?(/\A---\n.*?enhancement_of:.*?\n---\n/m)
+            # Remove enhancement metadata and extract only the user prompt part
+            cleaned_content = content.sub(/\A---\n.*?enhancement_of:.*?\n---\n/m, "")
+
+            # Look for the original user frontmatter pattern
+            if cleaned_content.match?(/\A---\n.*?\n---\n/m)
+              cleaned_content.sub(/\A---\n.*?\n---\n/m, "")
+            else
+              cleaned_content
+            end
+          elsif content.match?(/\A---\n.*?\n---\n/m)
+            # Simple case: just remove the frontmatter
+            content.sub(/\A---\n.*?\n---\n/m, "")
+          else
+            # No frontmatter found, return as-is
+            content
+          end
+        end
+
+        # Load system prompt content from URI
+        # @param system_prompt_uri [String] URI to system prompt file
+        # @return [String] System prompt content
+        def load_system_prompt_content(system_prompt_uri)
+          # Try to resolve via ace-nav if it's a prompt:// URI
+          if system_prompt_uri.start_with?("prompt://")
+            begin
+              require "ace/nav"
+              require "ace/nav/organisms/navigation_engine"
+
+              engine = Ace::Nav::Organisms::NavigationEngine.new
+              path = engine.resolve(system_prompt_uri)
+              return File.read(path) if path && File.exist?(path)
+            rescue LoadError, StandardError
+              # Fall through to direct file path
+            end
+          end
+
+          # Direct file path
+          return File.read(system_prompt_uri) if File.exist?(system_prompt_uri)
+
+          # Fallback to basic system prompt
+          default_system_prompt
+        end
+
+        # Fallback system prompt if loading fails
+        def default_system_prompt
+          <<~PROMPT
+            You are an expert at refining and clarifying prompts for AI coding assistants.
+
+            Your task: Transform the user's prompt to be more clear, specific, and actionable while preserving their original intent.
+
+            Guidelines:
+            - Break down vague requests into concrete steps
+            - Specify expected inputs and outputs
+            - Add relevant technical context when helpful
+            - Keep the enhanced prompt concise and focused
+            - Preserve the user's voice and requirements
+
+            Output ONLY the enhanced prompt - no explanations, no meta-commentary, no quotation marks.
+          PROMPT
         end
 
         def execute_ace_context(input_file, output_file)

@@ -18,8 +18,14 @@ module Ace
             raise PromptNotFoundError, "Prompt file not found: #{path}"
           end
 
+          warn "[DEBUG] PromptReader.read called for: #{path}"
           full_text = File.read(path)
+          warn "[DEBUG] Full text length: #{full_text.length}"
+          warn "[DEBUG] Full text first 200 chars: #{full_text[0, 200].inspect}"
+
           frontmatter, content = Atoms::FrontmatterExtractor.extract(full_text)
+          warn "[DEBUG] PromptReader extracted frontmatter: #{frontmatter.inspect}"
+          warn "[DEBUG] PromptReader extracted content length: #{content.length}"
 
           {
             frontmatter: frontmatter,

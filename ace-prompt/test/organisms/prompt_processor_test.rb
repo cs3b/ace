@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class PromptProcessorTest < AceTestCase
+class PromptProcessorTest < Ace::Prompt::TestCase
   def setup
     @processor = Ace::Prompt::Organisms::PromptProcessor.new
     @temp_dir = Dir.mktmpdir

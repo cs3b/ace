@@ -21,11 +21,17 @@ module Ace
         # @param frontmatter [Hash] Optional frontmatter for context-based enhancement
         # @return [String] Enhanced content
         def enhance(content, system_prompt_uri: nil, frontmatter: nil)
+          warn "[DEBUG] PromptEnhancer.enhance called"
+          warn "[DEBUG] Frontmatter present: #{!frontmatter.nil?}"
+          warn "[DEBUG] Enhancement context: #{frontmatter&.dig('enhancement', 'context')&.inspect || 'nil'}"
+
           # Use context-based enhancement if frontmatter has enhancement.context
           if frontmatter && frontmatter.dig("enhancement", "context")
+            warn "[DEBUG] Using context-based enhancement"
             return enhance_with_context(content, frontmatter)
           end
 
+          warn "[DEBUG] Using basic enhancement (no context found)"
           # Otherwise use simple enhancement (backward compatible)
           cache_key = Atoms::ContentHasher.hash(content)
 
@@ -82,7 +88,7 @@ module Ace
         end
 
         def load_system_prompt(uri)
-          prompt_uri = uri || @config.dig("enhancement", "system_prompt") || "prompt://ace-prompt/base/enhance"
+          prompt_uri = uri || @config.dig("enhancement", "system_prompt") || "prompt://enhance-instructions.system"
 
           # Try to load via ace-nav Ruby API (security fix)
           if prompt_uri.start_with?("prompt://")

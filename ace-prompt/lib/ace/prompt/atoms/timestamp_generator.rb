@@ -6,9 +6,9 @@ module Ace
       # Generate timestamp in YYYYMMDD-HHMMSS format for archive filenames
       class TimestampGenerator
         # Generate timestamp for current time
-        # @return [String] Timestamp in format YYYYMMDD-HHMMSS
+        # @return [String] Timestamp in format YYYYMMDD-HHMMSS-microseconds
         def self.generate(time = Time.now)
-          time.strftime("%Y%m%d-%H%M%S")
+          time.strftime("%Y%m%d-%H%M%S") + "-#{time.usec.to_s.rjust(6, '0')}"
         end
 
         # Generate timestamp with enhancement suffix

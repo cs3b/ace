@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "../test_helper"
 require "ace/prompt/molecules/prompt_reader"
 
 class PromptReaderTest < Ace::Prompt::TestCase

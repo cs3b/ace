@@ -29,8 +29,24 @@ module Ace
           # Determine prompt path
           prompt_path = determine_prompt_path(options[:task])
 
-          # Read prompt
-          prompt_data = Molecules::PromptReader.read(prompt_path)
+          # Read prompt and capture original frontmatter immediately
+          warn "[DEBUG] Reading prompt from: #{prompt_path}"
+
+          # Read the raw file content first
+          raw_content = File.read(prompt_path) if File.exist?(prompt_path)
+
+          # Extract frontmatter immediately using our own method to avoid race conditions
+          frontmatter, content = extract_frontmatter_safely(raw_content)
+          warn "[DEBUG] Captured frontmatter: #{frontmatter.inspect}"
+
+          # Create prompt_data with captured frontmatter
+          prompt_data = {
+            frontmatter: frontmatter,
+            content: content,
+            full_text: raw_content
+          }
+
+          warn "[DEBUG] Enhancement context in captured frontmatter: #{frontmatter.dig('enhancement', 'context')&.inspect || 'nil'}"
 
           # Determine processing flags
           should_load_context = should_load_context?(prompt_data, options)
@@ -39,7 +55,7 @@ module Ace
           # Always archive before processing (with appropriate suffix if enhanced)
           archive_original(prompt_path)
 
-          # Process content
+          # Process content using the captured full_text (not re-reading the file)
           content = prompt_data[:full_text]
 
           # Phase 1: Context loading (if needed)
@@ -49,7 +65,8 @@ module Ace
 
           # Phase 2: Enhancement (if needed)
           if should_enhance
-            content = enhance_content(content, prompt_path)
+            warn "[DEBUG] About to enhance with captured frontmatter: #{prompt_data[:frontmatter]&.dig('enhancement', 'context')&.inspect || 'nil'}"
+            content = enhance_content(content, prompt_path, prompt_data[:frontmatter])
           end
 
           content
@@ -121,24 +138,24 @@ module Ace
           File.read(prompt_path)
         end
 
-        def enhance_content(content, prompt_path)
-          # Read original to get current state
-          prompt_data = Molecules::PromptReader.read(prompt_path)
+        def enhance_content(content, prompt_path, frontmatter)
+          warn "[DEBUG] enhance_content called with passed frontmatter"
+          warn "[DEBUG] passed frontmatter: #{frontmatter&.inspect || 'nil'}"
+          warn "[DEBUG] enhancement.context in frontmatter: #{frontmatter&.dig('enhancement', 'context')&.inspect || 'nil'}"
 
           # Enhance only the content part (not frontmatter)
           # Pass frontmatter for context-based enhancement
-          # CRITICAL FIX: Use the passed content parameter (which may have context) instead of prompt_data[:content]
           enhancer = PromptEnhancer.new(@config)
           enhanced_content_only = enhancer.enhance(
             content,
-            frontmatter: prompt_data[:frontmatter]
+            frontmatter: frontmatter
           )
 
           # Track enhancement using molecule (cleaner separation of concerns)
           tracking_result = Molecules::EnhancementTracker.track_enhancement(
             prompt_path,
             enhanced_content_only,
-            prompt_data[:frontmatter],
+            frontmatter,
             @config["archive_subdir"]
           )
 
@@ -165,6 +182,65 @@ module Ace
           end
 
           full_enhanced_content
+        end
+
+        # Extract frontmatter safely using our own logic to avoid race conditions
+        # @param raw_content [String] Raw file content
+        # @return [Array] Tuple of [frontmatter_hash, content_without_frontmatter]
+        def extract_frontmatter_safely(raw_content)
+          # Handle nil content
+          return [{}, ""] if raw_content.nil?
+
+          # Look for the pattern: ---\n...content...\n---\n
+          if raw_content.match?(/\A---\s*\n(.*?)\n---\s*\n(.*)\z/m)
+            yaml_content = $1
+            content_part = $2
+
+            warn "[DEBUG] Raw YAML content: #{yaml_content.inspect}"
+            warn "[DEBUG] Content part: #{content_part[0, 50].inspect}"
+
+            begin
+              # Parse YAML safely
+              require "yaml"
+              frontmatter = YAML.safe_load(yaml_content) || {}
+              warn "[DEBUG] Successfully parsed frontmatter: #{frontmatter.inspect}"
+              [frontmatter, content_part]
+            rescue => e
+              warn "[DEBUG] YAML parsing failed: #{e.message}, using empty frontmatter"
+              [{}, raw_content]
+            end
+          else
+            # No frontmatter found
+            warn "[DEBUG] No frontmatter pattern found in content"
+            [{}, raw_content]
+          end
+        end
+
+        # Read a prompt file using the PromptReader molecule
+        # @param path [String] Path to the prompt file
+        # @return [String] The prompt content
+        def read_prompt_file(path)
+          prompt_data = Molecules::PromptReader.read(path)
+          prompt_data[:full_text]
+        end
+
+        # Enhance prompt content using EnhancementSessionManager
+        # @param content [String] Original content
+        # @param frontmatter [Hash] Frontmatter for context
+        # @return [String] Enhanced content or original on failure
+        def enhance_prompt(content, frontmatter = {})
+          manager = create_enhancement_session_manager(@config)
+          manager.enhance_with_context(content, frontmatter)
+        rescue => e
+          warn "Enhancement failed: #{e.message}, using original content"
+          content
+        end
+
+        # Create an EnhancementSessionManager instance
+        # @param config [Hash] Configuration
+        # @return [EnhancementSessionManager] Manager instance
+        def create_enhancement_session_manager(config)
+          EnhancementSessionManager.new(config)
         end
       end
     end

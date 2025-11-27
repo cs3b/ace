@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "../test_helper"
 
-class PromptArchiverTest < AceTestCase
+class PromptArchiverTest < Ace::Prompt::TestCase
   def setup
-    @temp_dir = Dir.mktmpdir
+    super
+    @temp_dir = @test_dir
     @prompts_dir = File.join(@temp_dir, "prompts")
     @archive_dir = File.join(@temp_dir, "archive")
     FileUtils.mkdir_p(@prompts_dir)
@@ -12,10 +13,14 @@ class PromptArchiverTest < AceTestCase
 
     @source_path = File.join(@prompts_dir, "the-prompt.md")
     @symlink_path = File.join(@prompts_dir, "_previous.md")
+
+    # Create a default source file for testing
+    File.write(@source_path, "Test prompt content")
   end
 
   def teardown
-    FileUtils.rm_rf(@temp_dir)
+    # Don't need custom teardown since parent handles cleanup
+    super
   end
 
   def test_archive_basic_prompt

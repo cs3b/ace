@@ -25,10 +25,10 @@ categories:
 # Notes for users
 notes: |
   ace-prompt provides prompts for enhancement:
-  - base.enhance: System prompt for enhancing user prompts with clarity
+  - enhance-instructions.system: System prompt for enhancing user prompts with clarity
     and specificity improvements
 
   Use prompt:// URIs to reference these prompts in your enhancement configurations.
   Users can override by creating:
-    - .ace/handbook/prompts/base.enhance.md (project)
-    - ~/.ace/handbook/prompts/base.enhance.md (user)
+    - .ace/handbook/prompts/enhance-instructions.system.md (project)
+    - ~/.ace/handbook/prompts/enhance-instructions.system.md (user)
