@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-11-27
+
 ### Added
 - **Specification Review Focus**: New `scope/spec` focus for reviewing specifications and proposals
   - Goal clarity validation (single objective, no ambiguous terms, clear success criteria)
