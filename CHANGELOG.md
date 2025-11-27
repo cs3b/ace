@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.139] - 2025-11-27
+
+### ace-review v0.19.0
+- **Added**: Specification review focus (`scope/spec`) for reviewing specifications and proposals
+  - Goal clarity validation (single objective, no ambiguous terms, clear success criteria)
+  - Usage expectations analysis (target audience, scenarios, inputs/outputs)
+  - Test strategy evaluation (testable criteria, edge cases, validation approach)
+  - Completeness checking (required sections, dependencies, assumptions)
+  - Implementation feasibility assessment (achievable requirements, realistic estimates)
+  - Consistency and traceability verification
+- **Added**: New `spec.yml` preset for specification reviews
+  - Default subject: `origin/main...HEAD` filtered to `**/*.s.md` (task specs)
+  - Combines spec focus with standard format and tone guidelines
+
 ## [0.9.138] - 2025-11-17
 
 ### ace-review v0.18.0

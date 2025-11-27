@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-11-27
+
+### Added
+- **Specification Review Focus**: New `scope/spec` focus for reviewing specifications and proposals
+  - Goal clarity validation (single objective, no ambiguous terms, clear success criteria)
+  - Usage expectations analysis (target audience, scenarios, inputs/outputs)
+  - Test strategy evaluation (testable criteria, edge cases, validation approach)
+  - Completeness checking (required sections, dependencies, assumptions)
+  - Implementation feasibility assessment (achievable requirements, realistic estimates)
+  - Consistency and traceability verification
+- **Spec Preset**: New `spec.yml` preset for specification reviews
+  - Default subject: `origin/main...HEAD` filtered to `**/*.s.md` (task specs)
+  - Combines spec focus with standard format and tone guidelines
+
 ## [0.18.0] - 2025-11-17
 
 ### Added

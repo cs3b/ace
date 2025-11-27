@@ -4,6 +4,8 @@ require_relative "molecules/client_registry"
 require_relative "molecules/provider_model_parser"
 require_relative "molecules/format_handlers"
 require_relative "molecules/file_io_handler"
+require_relative "molecules/fallback_orchestrator"
+require_relative "models/fallback_config"
 
 module Ace
   module LLM
