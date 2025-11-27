@@ -28,8 +28,5 @@ subject:
       spec_changes:
         title: "Specification Changes"
         description: "Specification files to review"
-        diffs:
-          ranges:
-            - "origin/main...HEAD"
-          filters:
-            - "**/*.s.md"
+        commands:
+          - "git diff origin/main...HEAD -- '**/*.s.md'"
