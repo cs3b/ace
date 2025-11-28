@@ -63,7 +63,12 @@ module Ace
         end
 
         # Get qualified reference
+        # For subtasks (which have a full ID like v.0.9.0+task.122.04), return the ID directly
+        # For regular tasks, construct the qualified reference from release + task_number
         def qualified_reference
+          # If we have a full ID from frontmatter, use it (handles subtasks correctly)
+          return id if id && id.include?("+task.")
+
           return nil unless release && task_number
 
           if release == "current"

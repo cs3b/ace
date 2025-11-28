@@ -1,8 +1,8 @@
 ---
 description: Work On Task
-allowed-tools: Read, Write, TodoWrite, Bash
+allowed-tools: Read, Write, Edit, TodoWrite, Bash, Task, AskUserQuestion
 argument-hint: "[task-id]"
-last_modified: '2025-09-24'
+last_modified: '2025-11-27'
 source: ace-taskflow
 ---
 

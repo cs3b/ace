@@ -12,12 +12,24 @@ taskflow:
   # Set to true for rigid status validation (legacy behavior)
   strict_transitions: false
 
+  # Terminal statuses for orchestrator auto-completion
+  # When all subtasks have one of these statuses, the orchestrator auto-completes
+  terminal_statuses:
+    - done        # Task completed successfully
+    - cancelled   # Task cancelled/abandoned intentionally
+    - suspended   # Task suspended indefinitely (may resume later)
+    - superseded  # Task replaced by another task
+
   # Default locations for new items
   defaults:
     idea_location: "active"      # Where to save ideas: active, backlog, or v.X.Y.Z
     task_location: "active"      # Where to create tasks: active or v.X.Y.Z
     git_commit: false            # Auto-commit new ideas
     llm_enhance: false           # Use LLM to enhance ideas
+
+  # Display parameters
+  params:
+    subtasks: enabled            # Subtask display: enabled, disabled
 
   # Idea configuration
   idea:

@@ -115,6 +115,10 @@ module Ace
               options[:release] = version
             end
 
+            opts.on("--child-of PARENT", "-p PARENT", "Create as subtask under parent task") do |parent|
+              options[:parent_ref] = parent
+            end
+
             opts.on("-h", "--help", "Show this help message") do
               puts opts
               exit 0

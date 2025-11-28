@@ -9,12 +9,15 @@ require_relative "../molecules/task_field_updater"
 require 'stringio'
 require_relative "../models/task"
 require_relative "../atoms/path_formatter"
+require_relative "helpers"
 
 module Ace
   module Taskflow
     module Commands
       # Handle task subcommand
       class TaskCommand
+        include Helpers
+
         def initialize
           @manager = Organisms::TaskManager.new
           @preset_manager = Molecules::ListPresetManager.new
@@ -168,7 +171,17 @@ module Ace
             exit 1
           end
 
-          result = @manager.create_task(title, release: options[:release], metadata: options[:metadata])
+          # Route based on parent_ref presence
+          result = if options[:parent_ref]
+            @manager.create_subtask(
+              options[:parent_ref],
+              title,
+              release: options[:release],
+              metadata: options[:metadata] || {}
+            )
+          else
+            @manager.create_task(title, release: options[:release], metadata: options[:metadata])
+          end
 
           if result[:success]
             puts result[:message]
@@ -464,8 +477,11 @@ module Ace
 
           status_str = status_icon(task.status)
           ref = task.qualified_reference || task.task_number || task.id
+          display_title = strip_task_id_from_title(task.title)
+          # Only add orchestrator marker if not already in the title
+          orchestrator_marker = task_data[:is_orchestrator] && !display_title.include?("Orchestrator") ? " (Orchestrator)" : ""
 
-          puts "Task: #{ref} #{status_str} #{task.title}"
+          puts "Task: #{ref} #{status_str} #{display_title}#{orchestrator_marker}"
 
           # Show path on second line
           if task.path
@@ -480,6 +496,35 @@ module Ace
 
           if details.any?
             puts "  #{details.join(' | ')}"
+          end
+
+          # Show subtasks for orchestrator tasks
+          if task_data[:is_orchestrator] || task_data[:subtask_ids]&.any?
+            display_subtasks_for_orchestrator(task_data)
+          end
+
+          0  # Return success exit code
+        end
+
+        # Display subtasks for an orchestrator task
+        def display_subtasks_for_orchestrator(orchestrator_data)
+          subtask_ids = orchestrator_data[:subtask_ids] || []
+          return if subtask_ids.empty?
+
+          # Load subtasks
+          subtasks = subtask_ids.map do |subtask_id|
+            @manager.show_task(subtask_id)
+          end.compact
+
+          return if subtasks.empty?
+
+          puts "  Subtasks:"
+          subtasks.sort_by { |s| s[:id] || "" }.each_with_index do |subtask, idx|
+            connector = idx == subtasks.length - 1 ? "└─" : "├─"
+            status_str = status_icon(subtask[:status])
+            ref = subtask[:id] || subtask[:task_number] || "unknown"
+            display_title = strip_task_id_from_title(subtask[:title])
+            puts "    #{connector} #{ref} #{status_str} #{display_title}"
           end
         end
 
@@ -524,6 +569,7 @@ module Ace
           puts "    --tree           Show task dependency tree"
           puts "  create [TITLE]     Create new task"
           puts "    --title TITLE    Task title (alternative to positional)"
+          puts "    --child-of REF, -p REF  Create as subtask under parent task"
           puts "    --status STATUS  Initial status (pending, draft, in-progress, done, blocked)"
           puts "    --estimate EST   Effort estimate (e.g., 2h, 1d, TBD)"
           puts "    --dependencies DEPS  Comma-separated dependency list (e.g., 018,019)"
@@ -559,6 +605,8 @@ module Ace
           puts "  ace-taskflow task create 'Add caching layer'"
           puts "  ace-taskflow task create --title 'Fix bug' --status draft --estimate 2h"
           puts "  ace-taskflow task create 'Write tests' --dependencies 041,042"
+          puts "  ace-taskflow task create 'Archive output' --child-of 121"
+          puts "  ace-taskflow task create 'Setup & Reset' -p 121"
           puts "  ace-taskflow task start 019"
           puts "  ace-taskflow task done 019"
           puts "  ace-taskflow task move backlog+025 v.0.10.0"

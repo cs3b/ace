@@ -99,6 +99,38 @@ module Ace
           end
         end
 
+        # Filter tasks by parent ID (get subtasks of a specific parent)
+        # @param tasks [Array<Hash>] Tasks to filter
+        # @param parent_id [String] Parent task ID to filter by
+        # @return [Array<Hash>] Subtasks of the specified parent
+        def self.filter_by_parent(tasks, parent_id)
+          return [] if parent_id.nil?
+
+          tasks.select { |task| task[:parent_id] == parent_id }
+        end
+
+        # Filter to only top-level tasks (exclude subtasks)
+        # Returns orchestrators, single tasks, and tasks without parents
+        # @param tasks [Array<Hash>] Tasks to filter
+        # @return [Array<Hash>] Top-level tasks only
+        def self.filter_top_level(tasks)
+          tasks.reject { |task| task[:parent_id] }
+        end
+
+        # Filter to only orchestrator tasks (parents with subtasks)
+        # @param tasks [Array<Hash>] Tasks to filter
+        # @return [Array<Hash>] Orchestrator tasks only
+        def self.filter_orchestrators(tasks)
+          tasks.select { |task| task[:is_orchestrator] }
+        end
+
+        # Filter to only subtasks (tasks with parent_id set)
+        # @param tasks [Array<Hash>] Tasks to filter
+        # @return [Array<Hash>] Subtasks only
+        def self.filter_subtasks(tasks)
+          tasks.select { |task| task[:parent_id] }
+        end
+
         # Apply multiple filters
         # @param tasks [Array<Hash>] Tasks to filter
         # @param filters [Hash] Filter criteria
