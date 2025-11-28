@@ -29,6 +29,7 @@ module Ace
             @task_committer = Molecules::TaskCommitter.new
             @task_pusher = Molecules::TaskPusher.new
             @worktree_creator = Molecules::WorktreeCreator.new
+            @pr_creator = Molecules::PrCreator.new
           end
 
           # Create a worktree for a task with complete workflow
@@ -131,9 +132,54 @@ module Ace
               workflow_result[:worktree_path] = worktree_result[:worktree_path]
               workflow_result[:branch] = worktree_result[:branch]
               workflow_result[:directory_name] = worktree_result[:directory_name]
+              workflow_result[:start_point] = worktree_result[:start_point]
               workflow_result[:steps_completed] << "worktree_created"
 
-              # Step 9: Run after-create hooks if configured
+              # Step 9: Setup upstream for worktree branch if configured
+              should_setup_upstream = @config.auto_setup_upstream? && !options[:no_upstream]
+              if should_setup_upstream
+                upstream_result = setup_upstream_for_worktree(worktree_result, options)
+                if upstream_result[:success]
+                  workflow_result[:steps_completed] << "upstream_setup"
+                  workflow_result[:pushed_branch] = upstream_result[:branch]
+                else
+                  # Upstream setup is non-blocking - failure becomes warning
+                  workflow_result[:warnings] ||= []
+                  workflow_result[:warnings] << "Failed to setup upstream: #{upstream_result[:error]}"
+                end
+              end
+
+              # Step 10: Create draft PR if configured
+              should_create_pr = @config.auto_create_pr? && !options[:no_pr]
+              upstream_succeeded = workflow_result[:steps_completed].include?("upstream_setup")
+              if should_create_pr && upstream_succeeded
+                pr_result = create_pr_for_task(task_data, worktree_result, options)
+                if pr_result[:success]
+                  workflow_result[:steps_completed] << "pr_created"
+                  workflow_result[:pr_number] = pr_result[:pr_number]
+                  workflow_result[:pr_url] = pr_result[:pr_url]
+                  workflow_result[:pr_existing] = pr_result[:existing]
+
+                  # Step 11: Save PR metadata to task
+                  save_pr_result = save_pr_to_task(task_data, pr_result)
+                  if save_pr_result
+                    workflow_result[:steps_completed] << "pr_saved_to_task"
+                  else
+                    workflow_result[:warnings] ||= []
+                    workflow_result[:warnings] << "Failed to save PR metadata to task"
+                  end
+                else
+                  # PR creation is non-blocking - failure becomes warning
+                  workflow_result[:warnings] ||= []
+                  workflow_result[:warnings] << "Failed to create PR: #{pr_result[:error]}"
+                end
+              elsif should_create_pr && !upstream_succeeded
+                # Skip PR creation if upstream setup failed
+                workflow_result[:warnings] ||= []
+                workflow_result[:warnings] << "Skipped PR creation: branch not pushed to remote"
+              end
+
+              # Step 12: Run after-create hooks if configured
               hooks = @config.after_create_hooks
               if hooks && hooks.any?
                 require_relative "../molecules/hook_executor"
@@ -189,6 +235,11 @@ module Ace
               directory_name = @config.format_directory(task_data)
               branch_name = @config.format_branch(task_data)
               worktree_path = File.join(@config.absolute_root_path, directory_name)
+              base_branch = options[:source] || "main"
+
+              # Determine upstream/PR settings (considering options)
+              should_setup_upstream = @config.auto_setup_upstream? && !options[:no_upstream]
+              should_create_pr = @config.auto_create_pr? && !options[:no_pr] && should_setup_upstream
 
               workflow_result[:would_create] = {
                 worktree_path: worktree_path,
@@ -199,6 +250,10 @@ module Ace
                 task_commit: @config.auto_commit_task?,
                 task_push: @config.auto_push_task?,
                 push_remote: @config.push_remote,
+                upstream_push: should_setup_upstream,
+                create_pr: should_create_pr,
+                pr_title: should_create_pr ? @config.format_pr_title(task_data) : nil,
+                pr_base: should_create_pr ? base_branch : nil,
                 hooks_count: @config.after_create_hooks.length
               }
 
@@ -209,6 +264,9 @@ module Ace
                 ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
                 ("push_to_#{workflow_result[:would_create][:push_remote]}" if workflow_result[:would_create][:task_push] && workflow_result[:would_create][:task_commit]),
                 "create_worktree",
+                ("setup_upstream_tracking" if should_setup_upstream),
+                ("create_draft_pr" if should_create_pr),
+                ("save_pr_metadata" if should_create_pr),
                 ("execute_#{workflow_result[:would_create][:hooks_count]}_hooks" if workflow_result[:would_create][:hooks_count] > 0)
               ].compact
 
@@ -494,6 +552,89 @@ module Ace
           def remove_worktree_metadata_from_task(task_data)
             # This would need implementation to find and update the task file
             false
+          end
+
+          # Setup upstream tracking for worktree branch
+          #
+          # Pushes the new branch to remote with -u flag to setup upstream tracking.
+          # Uses the worktree path to run git push from within the worktree.
+          #
+          # @param worktree_result [Hash] Worktree creation result with :worktree_path, :branch
+          # @param options [Hash] Options hash (may include :push_remote)
+          # @return [Hash] Result with :success, :branch, :remote, :error
+          def setup_upstream_for_worktree(worktree_result, options)
+            worktree_path = worktree_result[:worktree_path]
+            branch = worktree_result[:branch]
+            remote = options[:push_remote] || @config.push_remote || "origin"
+
+            begin
+              # Change to worktree directory and push with -u flag
+              Dir.chdir(worktree_path) do
+                result = @task_pusher.push(remote: remote, set_upstream: true)
+
+                if result[:success]
+                  {
+                    success: true,
+                    branch: branch,
+                    remote: remote,
+                    error: nil
+                  }
+                else
+                  {
+                    success: false,
+                    branch: branch,
+                    remote: remote,
+                    error: result[:error] || "Push failed"
+                  }
+                end
+              end
+            rescue StandardError => e
+              {
+                success: false,
+                branch: branch,
+                remote: remote,
+                error: e.message
+              }
+            end
+          end
+
+          # Create draft PR for task
+          #
+          # Creates a draft PR targeting the source branch (start_point) from which
+          # the worktree branch was created.
+          #
+          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param worktree_result [Hash] Worktree creation result with :branch, :start_point
+          # @param options [Hash] Options (may include :source for base branch override)
+          # @return [Hash] Result with :success, :pr_number, :pr_url, :existing, :error
+          def create_pr_for_task(task_data, worktree_result, options)
+            branch = worktree_result[:branch]
+            base = options[:source] || worktree_result[:start_point] || "main"
+            title = @config.format_pr_title(task_data)
+
+            # Create draft PR
+            @pr_creator.create_draft(
+              branch: branch,
+              base: base,
+              title: title
+            )
+          end
+
+          # Save PR metadata to task file
+          #
+          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param pr_result [Hash] PR creation result with :pr_number, :pr_url
+          # @return [Boolean] true if successful
+          def save_pr_to_task(task_data, pr_result)
+            task_id = extract_task_id(task_data)
+
+            pr_data = {
+              number: pr_result[:pr_number],
+              url: pr_result[:pr_url],
+              created_at: Time.now
+            }
+
+            @task_status_updater.add_pr_metadata(task_id, pr_data)
           end
 
           # Create success workflow result

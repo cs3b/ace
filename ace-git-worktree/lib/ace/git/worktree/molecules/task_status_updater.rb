@@ -157,6 +157,31 @@ module Ace
             add_worktree_metadata_via_cli(task_ref, worktree_metadata)
           end
 
+          # Add PR metadata to task
+          #
+          # @param task_ref [String] Task reference
+          # @param pr_data [Hash] PR data with :number, :url, :created_at
+          # @return [Boolean] true if metadata was added successfully
+          #
+          # @example
+          #   pr_data = { number: 456, url: "https://github.com/owner/repo/pull/456", created_at: Time.now }
+          #   success = updater.add_pr_metadata("081", pr_data)
+          def add_pr_metadata(task_ref, pr_data)
+            return false unless pr_data.is_a?(Hash)
+            return false unless pr_data[:number] && pr_data[:url]
+
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            # Try Ruby API first (preferred in mono-repo)
+            if use_ruby_api?
+              return add_pr_metadata_via_api(task_ref, pr_data)
+            end
+
+            # Fallback to CLI for standalone installations
+            add_pr_metadata_via_cli(task_ref, pr_data)
+          end
+
           # Remove worktree metadata from task
           #
           # @param task_ref [String] Task reference
@@ -291,6 +316,60 @@ module Ace
             metadata_hash.each do |field, value|
               field_path = "worktree.#{field}"
               result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "#{field_path}=#{value}")
+              success &&= result[:success]
+            end
+
+            success
+          end
+
+          # Add PR metadata using Ruby API
+          #
+          # @param task_ref [String] Task reference
+          # @param pr_data [Hash] PR data
+          # @return [Boolean] true if successful
+          def add_pr_metadata_via_api(task_ref, pr_data)
+            begin
+              # Use TaskManager for field updates
+              task_manager = Ace::Taskflow::Organisms::TaskManager.new
+
+              # Convert PR data to field updates
+              field_updates = {
+                "pr.number" => pr_data[:number].to_s,
+                "pr.url" => pr_data[:url].to_s
+              }
+              field_updates["pr.created_at"] = pr_data[:created_at].iso8601 if pr_data[:created_at]
+
+              result = task_manager.update_task_fields(task_ref, field_updates)
+              result[:success]
+            rescue StandardError => e
+              # Fall back to CLI on API error
+              add_pr_metadata_via_cli(task_ref, pr_data)
+            end
+          end
+
+          # Add PR metadata using CLI
+          #
+          # @param task_ref [String] Task reference
+          # @param pr_data [Hash] PR data
+          # @return [Boolean] true if successful
+          def add_pr_metadata_via_cli(task_ref, pr_data)
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            success = true
+
+            # Update PR number
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "pr.number=#{pr_data[:number]}")
+            success &&= result[:success]
+
+            # Update PR URL
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "pr.url=#{pr_data[:url]}")
+            success &&= result[:success]
+
+            # Update created_at if present
+            if pr_data[:created_at]
+              timestamp = pr_data[:created_at].respond_to?(:iso8601) ? pr_data[:created_at].iso8601 : pr_data[:created_at].to_s
+              result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "pr.created_at=#{timestamp}")
               success &&= result[:success]
             end
 

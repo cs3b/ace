@@ -93,6 +93,8 @@ module Ace
                   --no-status-update      Skip marking task as in-progress (task mode only)
                   --no-commit             Skip committing task changes (task mode only)
                   --no-push               Skip pushing task changes to remote (task mode only)
+                  --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+                  --no-pr                 Skip creating draft PR (task mode only)
                   --push-remote <name>    Remote to push to (default: origin) (task mode only)
                   --no-auto-navigate      Stay in current directory (default: navigate to worktree)
                   --commit-message <msg>  Custom commit message for task updates (task mode only)
@@ -158,6 +160,8 @@ module Ace
               no_status_update: false,
               no_commit: false,
               no_push: false,
+              no_upstream: false,
+              no_pr: false,
               push_remote: nil,
               no_auto_navigate: false,
               commit_message: nil,
@@ -193,6 +197,10 @@ module Ace
                 options[:no_commit] = true
               when "--no-push"
                 options[:no_push] = true
+              when "--no-upstream"
+                options[:no_upstream] = true
+              when "--no-pr"
+                options[:no_pr] = true
               when "--push-remote"
                 i += 1
                 options[:push_remote] = args[i]
@@ -335,6 +343,8 @@ module Ace
               no_status_update: options[:no_status_update],
               no_commit: options[:no_commit],
               no_push: options[:no_push],
+              no_upstream: options[:no_upstream],
+              no_pr: options[:no_pr],
               push_remote: options[:push_remote],
               commit_message: options[:commit_message],
               no_mise_trust: options[:no_mise_trust],
@@ -560,6 +570,12 @@ module Ace
               if result[:would_create][:task_push]
                 puts "Would push to: #{result[:would_create][:push_remote]}"
               end
+              if result[:would_create][:upstream_push]
+                puts "Would setup upstream: #{result[:would_create][:push_remote]}/#{result[:would_create][:branch]}"
+              end
+              if result[:would_create][:create_pr]
+                puts "Would create draft PR: #{result[:would_create][:pr_title]}"
+              end
               puts "\nPlanned steps:"
               result[:steps_planned].each_with_index do |step, i|
                 puts "  #{i + 1}. #{step.gsub('_', ' ')}"
@@ -571,7 +587,15 @@ module Ace
               puts "Worktree path: #{result[:worktree_path]}"
               puts "Branch: #{result[:branch]}"
               puts "Directory: #{result[:directory_name]}" if result[:directory_name]
+              puts "Start point: #{result[:start_point]}" if result[:start_point]
               puts "Pushed to: #{result[:pushed_to]}" if result[:pushed_to]
+
+              # Display PR info if created
+              if result[:pr_number]
+                existing_label = result[:pr_existing] ? " (existing)" : ""
+                puts "PR: ##{result[:pr_number]}#{existing_label} - #{result[:pr_url]}"
+              end
+
               puts "\nSteps completed:"
               result[:steps_completed].each_with_index do |step, i|
                 puts "  ✓ #{step.gsub('_', ' ')}"
