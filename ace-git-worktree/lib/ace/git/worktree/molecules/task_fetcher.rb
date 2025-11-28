@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-# Try to require ace-taskflow API for direct integration
+require_relative "../atoms/task_id_extractor"
+
+# Try to require ace-taskflow API for direct integration (organism level only)
 begin
-  require "ace/taskflow/molecules/task_loader"
+  require "ace/taskflow/organisms/task_manager"
 rescue LoadError
   # ace-taskflow not available
 end
@@ -13,13 +15,17 @@ module Ace
       module Molecules
         # Task fetcher molecule
         #
-        # Fetches task data from ace-taskflow by delegating to its TaskLoader.
-        # Provides a simple interface for retrieving task information.
+        # Fetches task data from ace-taskflow by delegating to its TaskManager.
+        # Uses organism-level API which handles all path resolution internally.
         #
         # @example Fetch task data
         #   fetcher = TaskFetcher.new
         #   task = fetcher.fetch("081")
         #   task[:title] # => "Fix authentication bug"
+        #
+        # @example Fetch subtask data
+        #   task = fetcher.fetch("121.01")
+        #   task[:id] # => "v.0.9.0+task.121.01"
         #
         # @example Handle non-existent task
         #   task = fetcher.fetch("999")
@@ -27,36 +33,37 @@ module Ace
         class TaskFetcher
           # Initialize a new TaskFetcher
           #
-          # @param root_path [String] Project root path (optional, defaults to current dir)
-          def initialize(root_path: nil)
-            @root_path = root_path || ENV["PROJECT_ROOT_PATH"] || Dir.pwd
+          # TaskManager handles all path resolution internally, no configuration needed.
+          def initialize
+            # TaskManager handles all path resolution internally
           end
 
           # Fetch task data by reference
           #
-          # @param task_ref [String] Task reference (081, task.081, v.0.9.0+081)
+          # @param task_ref [String] Task reference (081, 121.01, task.081, v.0.9.0+task.121.01)
           # @return [Hash, nil] Task data hash or nil if not found
           #
           # @example
           #   fetcher = TaskFetcher.new
           #   task = fetcher.fetch("081")
-          #   task = fetcher.fetch("task.081")
-          #   task = fetcher.fetch("v.0.9.0+081")
+          #   task = fetcher.fetch("121.01")  # subtask
+          #   task = fetcher.fetch("task.121.01")
+          #   task = fetcher.fetch("v.0.9.0+task.121.01")
           def fetch(task_ref)
             return nil if task_ref.nil? || task_ref.empty?
 
             # Validate basic input for security
             return nil unless valid_task_reference?(task_ref)
 
-            # Try direct API first
+            # Try organism-level API first (preferred)
             if ace_taskflow_available?
               begin
-                loader = Ace::Taskflow::Molecules::TaskLoader.new(@root_path)
-                result = loader.find_task_by_reference(task_ref)
-                puts "DEBUG: TaskLoader result: #{result.inspect}" if ENV["DEBUG"]
+                manager = Ace::Taskflow::Organisms::TaskManager.new
+                result = manager.show_task(task_ref)
+                puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
                 return result if result
               rescue StandardError => e
-                puts "DEBUG: TaskLoader exception: #{e.message}" if ENV["DEBUG"]
+                puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
                 puts "DEBUG: Backtrace: #{e.backtrace.first(3).join(', ')}" if ENV["DEBUG"]
                 # Fall through to CLI approach
               end
@@ -71,7 +78,7 @@ module Ace
           #
           # @return [Boolean] true if ace-taskflow API is available
           def ace_taskflow_available?
-            defined?(Ace::Taskflow::Molecules::TaskLoader)
+            defined?(Ace::Taskflow::Organisms::TaskManager)
           end
 
           # Get helpful error message when ace-taskflow is unavailable
@@ -123,9 +130,9 @@ module Ace
             require "open3"
 
             begin
-              # Use ace-taskflow CLI to get task data
+              # Use ace-taskflow CLI to get task data (runs in current directory)
               cmd = ["bundle", "exec", "ace-taskflow", "task", "show", task_ref.to_s, "--content"]
-              stdout, stderr, status = Open3.capture3(*cmd, chdir: @root_path)
+              stdout, stderr, status = Open3.capture3(*cmd)
 
               return nil unless status.success?
 
@@ -164,11 +171,7 @@ module Ace
               # Parse header information
               if line.start_with?("Task: ")
                 task_data[:id] = line.sub(/^Task:\s+/, "")
-                # Extract task number from ID
-                if match = task_data[:id].match(/task\.(\d+)$/)
-                  task_data[:task_number] = match[1]
-                end
-                # Extract release from ID
+                # Extract release from ID (task_number derived later via TaskIDExtractor)
                 if match = task_data[:id].match(/^(v\.[\d.]+)\+task\./)
                   task_data[:release] = match[1]
                 end
@@ -195,6 +198,9 @@ module Ace
             # Set content
             task_data[:content] = content_lines.join("\n").strip
             task_data[:metadata]["status"] = task_data[:status] if task_data[:status]
+
+            # Derive task_number using shared extractor (handles subtasks correctly)
+            task_data[:task_number] = Atoms::TaskIDExtractor.extract(task_data)
 
             # Validate that we have the minimum required information
             return nil unless task_data[:id] && task_data[:title]

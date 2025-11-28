@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-11-28
+
+### Added
+- **TaskIDExtractor Atom**: Shared helper for consistent task ID extraction across all components
+  - Properly handles hierarchical subtask IDs (e.g., `121.01`)
+  - Provides `extract()` for task data hashes and `normalize()` for reference strings
+  - Uses ace-taskflow's `TaskReferenceParser` when available, with regex fallback
+- **PR and Branch Worktree Creation**: Create worktrees from GitHub pull requests or branches
+  - `--pr <number>` flag fetches PR metadata and creates worktree
+  - `-b <branch>` flag for local and remote branches
+
+### Changed
+- **TaskFetcher**: Now uses `TaskManager` (organism-level API) instead of `TaskLoader` (molecule)
+  - Let ace-taskflow handle all path resolution internally
+  - Simplified initialization (no root_path needed)
+  - Uses `TaskIDExtractor` in `parse_cli_output` for deriving task numbers
+- **Unified Task ID Extraction**: All components now use `TaskIDExtractor` for consistent subtask support
+  - `worktree_info.rb`: Uses `TaskIDExtractor.normalize()` for path/branch extraction
+  - `worktree_manager.rb`: Uses `TaskIDExtractor.normalize()` in `find_worktree_by_identifier`
+  - `task_worktree_orchestrator.rb`: Uses `TaskIDExtractor` for task ref normalization
+  - `task_status_updater.rb`: Uses `TaskIDExtractor.normalize()`
+  - `worktree_creator.rb`: Uses `TaskIDExtractor.extract()`
+  - `worktree_config.rb`: Uses `TaskIDExtractor.extract()`
+  - `remove_command.rb`: Uses `TaskIDExtractor` for task matching
+
+### Fixed
+- **Subtask ID Handling**: Fixed critical bug where subtask IDs (e.g., `121.01`) were stripped to parent ID (`121`)
+  - Worktree operations now correctly distinguish between parent tasks and subtasks
+  - Prevents accidental operations on wrong tasks (e.g., deleting `task.121` instead of `task.121.01`)
+- **Worktree Lookup by Subtask**: Fixed `remove --task 121.01` not finding worktrees
+  - `find_worktree_by_identifier` now correctly matches subtask worktrees
+  - `WorktreeInfo.extract_task_id` preserves subtask suffix in parsed output
+- All failing tests from PR/branch worktree integration
+
+### Technical
+- Mocked sleep in `pr_fetcher` tests for 65% speedup
+- Configured push for mismatched branch names
+
 ## [0.3.0] - 2025-11-13
 
 ### Added

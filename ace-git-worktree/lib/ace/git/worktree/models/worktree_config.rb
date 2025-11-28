@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/task_id_extractor"
+
 module Ace
   module Git
     module Worktree
@@ -33,6 +35,8 @@ module Ace
               "branch_format" => "{id}-{slug}",
               "auto_mark_in_progress" => true,
               "auto_commit_task" => true,
+              "auto_push_task" => true,
+              "push_remote" => "origin",
               "commit_message_format" => "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}",
               "add_worktree_metadata" => true
             },
@@ -113,6 +117,20 @@ module Ace
           # @return [Boolean] true if task changes should be committed
           def auto_commit_task?
             @task_config["auto_commit_task"]
+          end
+
+          # Check if task changes should be pushed automatically
+          #
+          # @return [Boolean] true if task changes should be pushed
+          def auto_push_task?
+            @task_config["auto_push_task"] != false
+          end
+
+          # Get the remote for pushing task changes
+          #
+          # @return [String] Remote name (default: "origin")
+          def push_remote
+            @task_config["push_remote"] || "origin"
           end
 
           # Get the commit message format for task updates
@@ -399,16 +417,8 @@ module Ace
           # @param task_data [Hash] Task data hash
           # @return [String] Task number (e.g., "094")
           def extract_task_number(task_data)
-            # Use task_number if available, otherwise extract from id
-            return task_data[:task_number] if task_data[:task_number]
-
-            # Extract from id field (e.g., "v.0.9.0+task.094" -> "094")
-            if task_data[:id]
-              match = task_data[:id].match(/task\.(\d+)$/)
-              return match[1] if match
-            end
-
-            "unknown"
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.extract(task_data)
           end
 
           # Extract release from task data

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/task_id_extractor"
+
 module Ace
   module Git
     module Worktree
@@ -398,16 +400,8 @@ module Ace
           # @param task_data [Hash] Task data hash from ace-taskflow
           # @return [String] Task ID (e.g., "094")
           def extract_task_id_from_data(task_data)
-            # Use task_number if available, otherwise extract from id
-            return task_data[:task_number] if task_data[:task_number]
-
-            # Extract from id field (e.g., "v.0.9.0+task.094" -> "094")
-            if task_data[:id]
-              match = task_data[:id].match(/task\.(\d+)$/)
-              return match[1] if match
-            end
-
-            "unknown"
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.extract(task_data)
           end
 
           # Create an error result hash
