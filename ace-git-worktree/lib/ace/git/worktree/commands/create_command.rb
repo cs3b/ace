@@ -90,6 +90,8 @@ module Ace
                   --dry-run               Show what would be created without creating
                   --no-status-update      Skip marking task as in-progress (task mode only)
                   --no-commit             Skip committing task changes (task mode only)
+                  --no-push               Skip pushing task changes to remote (task mode only)
+                  --push-remote <name>    Remote to push to (default: origin) (task mode only)
                   --no-auto-navigate      Stay in current directory (default: navigate to worktree)
                   --commit-message <msg>  Custom commit message for task updates (task mode only)
                   --force                 Create even if worktree already exists
@@ -146,6 +148,8 @@ module Ace
               dry_run: false,
               no_status_update: false,
               no_commit: false,
+              no_push: false,
+              push_remote: nil,
               no_auto_navigate: false,
               commit_message: nil,
               force: false,
@@ -175,6 +179,11 @@ module Ace
                 options[:no_status_update] = true
               when "--no-commit"
                 options[:no_commit] = true
+              when "--no-push"
+                options[:no_push] = true
+              when "--push-remote"
+                i += 1
+                options[:push_remote] = args[i]
               when "--no-auto-navigate"
                 options[:no_auto_navigate] = true
               when "--commit-message"
@@ -312,6 +321,8 @@ module Ace
               dry_run: options[:dry_run],
               no_status_update: options[:no_status_update],
               no_commit: options[:no_commit],
+              no_push: options[:no_push],
+              push_remote: options[:push_remote],
               commit_message: options[:commit_message],
               no_mise_trust: options[:no_mise_trust],
               force: options[:force]
@@ -532,6 +543,9 @@ module Ace
               puts "Would create branch: #{result[:would_create][:branch]}"
               puts "Task ID: #{result[:task_id]}"
               puts "Task title: #{result[:task_title]}"
+              if result[:would_create][:task_push]
+                puts "Would push to: #{result[:would_create][:push_remote]}"
+              end
               puts "\nPlanned steps:"
               result[:steps_planned].each_with_index do |step, i|
                 puts "  #{i + 1}. #{step.gsub('_', ' ')}"
@@ -543,6 +557,7 @@ module Ace
               puts "Worktree path: #{result[:worktree_path]}"
               puts "Branch: #{result[:branch]}"
               puts "Directory: #{result[:directory_name]}" if result[:directory_name]
+              puts "Pushed to: #{result[:pushed_to]}" if result[:pushed_to]
               puts "\nSteps completed:"
               result[:steps_completed].each_with_index do |step, i|
                 puts "  ✓ #{step.gsub('_', ' ')}"

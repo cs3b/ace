@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/task_id_extractor"
+
 module Ace
   module Git
     module Worktree
@@ -306,19 +308,12 @@ module Ace
           # Extract task ID from a string using common patterns
           #
           # @param string [String, nil] String to search
-          # @return [String, nil] Extracted task ID or nil
+          # @return [String, nil] Extracted task ID or nil (preserves subtask IDs like "121.01")
           def self.extract_task_id_from_string(string)
             return nil if string.nil? || string.empty?
 
-            # Pattern 1: task.081 or task-081
-            match = string.match(/(?:task[-.]|^)(\d+)/i)
-            return match[1] if match
-
-            # Pattern 2: Just a number at start (e.g., 081-something)
-            match = string.match(/^(\d+)/)
-            return match[1] if match
-
-            nil
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.normalize(string)
           end
         end
       end

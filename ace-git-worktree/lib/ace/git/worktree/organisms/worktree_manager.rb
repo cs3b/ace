@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/task_id_extractor"
+
 module Ace
   module Git
     module Worktree
@@ -536,9 +538,10 @@ module Ace
           # @param identifier [String] Worktree identifier
           # @return [WorktreeInfo, nil] Worktree info or nil
           def find_worktree_by_identifier(identifier)
-            # Try as task ID first
-            if identifier.match(/^\d+$/)
-              worktree = @worktree_lister.find_by_task_id(identifier)
+            # Try as task ID first (handles subtasks like "121.01")
+            normalized_task_id = Atoms::TaskIDExtractor.normalize(identifier)
+            if normalized_task_id
+              worktree = @worktree_lister.find_by_task_id(normalized_task_id)
               return worktree if worktree
             end
 
@@ -553,13 +556,6 @@ module Ace
             # Try as path
             worktree = @worktree_lister.find_by_path(identifier)
             return worktree if worktree
-
-            # Try as full task reference (task.081, v.0.9.0+081)
-            task_id_match = identifier.match(/(?:task[-.]|^|.*\+)(\d+)/i)
-            if task_id_match
-              worktree = @worktree_lister.find_by_task_id(task_id_match[1])
-              return worktree if worktree
-            end
 
             nil
           end
