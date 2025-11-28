@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.143] - 2025-11-28
+
+### ace-prompt v0.2.0
+- **Added**: Setup command for template initialization (Task 121.02)
+  - `ace-prompt setup` initializes workspace with template
+  - Template resolution via `tmpl://` protocol (ace-nav Ruby API)
+  - Short form template support (`--template bug` → `tmpl://ace-prompt/the-prompt-bug`)
+  - `--no-archive` and `--force` options to skip archiving existing prompts
+  - Archive functionality by default (consolidated from removed reset command)
+- **Changed**: Setup uses project root directory via ProjectRootFinder (Task 121.08)
+  - Prompts now created in `{project_root}/.cache/ace-prompt/prompts/` not home directory
+  - Consolidated reset command into setup (reset removed from CLI)
+  - Template naming pattern: `the-prompt-{name}.template.md`
+  - Template resolution uses ace-nav Ruby API (no shell execution)
+- **Fixed**: CLI exit code handling for Thor Array return (Task 121.08)
+
 ## [0.9.142] - 2025-11-28
 
 ### ace-git-worktree v0.4.1
