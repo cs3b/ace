@@ -4,4 +4,4 @@
 require "ace/prompt"
 
 exit_code = Ace::Prompt::CLI.start(ARGV)
-exit(exit_code || 0)
+exit(exit_code.is_a?(Integer) ? exit_code : 0)
