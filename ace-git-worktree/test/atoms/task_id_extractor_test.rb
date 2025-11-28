@@ -1,0 +1,135 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require "ace/git/worktree/atoms/task_id_extractor"
+
+class TaskIDExtractorTest < Minitest::Test
+  include TestHelper
+
+  def setup
+    @extractor = Ace::Git::Worktree::Atoms::TaskIDExtractor
+  end
+
+  # Tests for .extract method
+
+  def test_extract_from_simple_task_id
+    task_data = { id: "v.0.9.0+task.121" }
+    assert_equal "121", @extractor.extract(task_data)
+  end
+
+  def test_extract_from_subtask_id
+    task_data = { id: "v.0.9.0+task.121.01" }
+    assert_equal "121.01", @extractor.extract(task_data)
+  end
+
+  def test_extract_from_orchestrator_id
+    task_data = { id: "v.0.9.0+task.121.00" }
+    assert_equal "121.00", @extractor.extract(task_data)
+  end
+
+  def test_extract_from_backlog_task
+    task_data = { id: "backlog+task.005" }
+    assert_equal "005", @extractor.extract(task_data)
+  end
+
+  def test_extract_from_backlog_subtask
+    task_data = { id: "backlog+task.005.02" }
+    assert_equal "005.02", @extractor.extract(task_data)
+  end
+
+  def test_extract_with_task_number_fallback
+    task_data = { task_number: "081" }
+    assert_equal "081", @extractor.extract(task_data)
+  end
+
+  def test_extract_prefers_id_over_task_number
+    # When both are present, :id should be used (it has subtask info)
+    task_data = { id: "v.0.9.0+task.121.01", task_number: "121" }
+    assert_equal "121.01", @extractor.extract(task_data)
+  end
+
+  def test_extract_with_nil_data
+    assert_equal "unknown", @extractor.extract(nil)
+  end
+
+  def test_extract_with_empty_hash
+    assert_equal "unknown", @extractor.extract({})
+  end
+
+  def test_extract_with_invalid_id
+    task_data = { id: "invalid-id-format" }
+    assert_equal "unknown", @extractor.extract(task_data)
+  end
+
+  # Tests for .normalize method
+
+  def test_normalize_simple_number
+    assert_equal "121", @extractor.normalize("121")
+  end
+
+  def test_normalize_subtask_number
+    assert_equal "121.01", @extractor.normalize("121.01")
+  end
+
+  def test_normalize_orchestrator_number
+    assert_equal "121.00", @extractor.normalize("121.00")
+  end
+
+  def test_normalize_with_task_prefix
+    assert_equal "121", @extractor.normalize("task.121")
+  end
+
+  def test_normalize_subtask_with_task_prefix
+    assert_equal "121.01", @extractor.normalize("task.121.01")
+  end
+
+  def test_normalize_fully_qualified_id
+    assert_equal "121", @extractor.normalize("v.0.9.0+task.121")
+  end
+
+  def test_normalize_fully_qualified_subtask_id
+    assert_equal "121.01", @extractor.normalize("v.0.9.0+task.121.01")
+  end
+
+  def test_normalize_backlog_id
+    assert_equal "005", @extractor.normalize("backlog+task.005")
+  end
+
+  def test_normalize_backlog_subtask_id
+    assert_equal "005.02", @extractor.normalize("backlog+task.005.02")
+  end
+
+  def test_normalize_with_nil
+    assert_nil @extractor.normalize(nil)
+  end
+
+  def test_normalize_with_empty_string
+    assert_nil @extractor.normalize("")
+  end
+
+  def test_normalize_with_whitespace
+    assert_nil @extractor.normalize("   ")
+  end
+
+  def test_normalize_strips_whitespace
+    assert_equal "121.01", @extractor.normalize("  121.01  ")
+  end
+
+  # Edge cases
+
+  def test_extract_with_three_digit_task_number
+    task_data = { id: "v.0.9.0+task.001" }
+    assert_equal "001", @extractor.extract(task_data)
+  end
+
+  def test_normalize_three_digit_subtask
+    assert_equal "001.01", @extractor.normalize("001.01")
+  end
+
+  def test_extract_does_not_match_partial_patterns
+    # Should not match "121.1" (subtask must be 2 digits)
+    task_data = { id: "v.0.9.0+task.121.1" }
+    # Falls back to simple pattern since .1 doesn't match .XX
+    assert_equal "121", @extractor.extract(task_data)
+  end
+end

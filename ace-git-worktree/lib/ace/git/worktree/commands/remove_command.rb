@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/task_id_extractor"
+
 module Ace
   module Git
     module Worktree
@@ -481,14 +483,8 @@ module Ace
           # @param task_data [Hash] Task data
           # @return [String] Task number
           def extract_task_number(task_data)
-            return task_data[:task_number].to_s if task_data[:task_number]
-
-            if task_data[:id]
-              match = task_data[:id].match(/task\.(\d+)$/)
-              return match[1] if match
-            end
-
-            ""
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.extract(task_data)
           end
 
           # Normalize task ID for worktree matching
@@ -496,17 +492,8 @@ module Ace
           # @param task_ref [String] Task reference
           # @return [String] Normalized task ID
           def normalize_task_id_for_matching(task_ref)
-            # Handle various formats: "090", "task.090", "v.0.9.0+task.090"
-            if task_ref.match?(/\A(\d+)\z/)
-              task_ref # Already numeric
-            elsif task_ref.match?(/\Atask\.?(\d+)\z/)
-              task_ref.match(/\Atask\.?(\d+)\z/)[1]
-            elsif task_ref.match?(/\Av\.[\d.]+\+task\.(\d+)\z/)
-              task_ref.match(/\Av\.[\d.]+\+task\.(\d+)\z/)[1]
-            else
-              # Try to extract numeric part
-              task_ref.scan(/\d+/).last || task_ref
-            end
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.normalize(task_ref) || task_ref
           end
 
           # Find branch associated with a task
