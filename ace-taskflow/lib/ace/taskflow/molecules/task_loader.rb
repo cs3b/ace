@@ -4,14 +4,24 @@ require "set"
 require "ace/support/markdown"
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/path_builder"
+require_relative "../atoms/task_reference_parser"
 require_relative "../configuration"
 
 module Ace
   module Taskflow
     module Molecules
       # Load and parse task files
+      # Supports hierarchical task structures (orchestrators + subtasks)
       class TaskLoader
         attr_reader :root_path
+
+        # File pattern recognition for hierarchical tasks
+        # Orchestrator: 121.00-orchestrator.s.md
+        ORCHESTRATOR_PATTERN = /^(\d+)\.00-.*\.s\.md$/
+        # Subtask: 121.01-archive.s.md (NN > 00)
+        SUBTASK_PATTERN = /^(\d+)\.(\d{2})-.*\.s\.md$/
+        # Single task: 119-feature.s.md (no dot before hyphen)
+        SINGLE_TASK_PATTERN = /^(\d+)-[^.][^\/]*\.s\.md$/
 
         def initialize(root_path = nil)
           @root_path = root_path || default_root_path
@@ -34,7 +44,14 @@ module Ace
           task_number = Atoms::PathBuilder.extract_task_number(path)
           release = Atoms::PathBuilder.extract_release(path)
 
-          # Build task data
+          # Classify file type based on filename
+          filename = File.basename(path)
+          file_type = classify_task_file(filename)
+
+          # Extract parent_id from frontmatter or derive from filename for subtasks
+          parent_id = frontmatter["parent"]
+
+          # Build task data with hierarchical fields
           {
             id: frontmatter["id"],
             status: frontmatter["status"] || "pending",
@@ -47,7 +64,12 @@ module Ace
             path: path,
             task_number: task_number,
             release: release,
-            metadata: frontmatter
+            metadata: frontmatter,
+            # Hierarchical fields
+            parent_id: parent_id,
+            subtask_ids: frontmatter["subtasks"] || [],
+            is_orchestrator: file_type == :orchestrator || (frontmatter["subtasks"] && !frontmatter["subtasks"].empty?),
+            file_type: file_type
           }
         rescue StandardError => e
           nil
@@ -65,18 +87,14 @@ module Ace
           # Iterate through task directories in main t/ directory
           # Supports both old format (t/001/) and new format (t/001-feat-taskflow/)
           Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "done" }.each do |task_folder|
-            # Find .s.md files in the task folder (not in subfolders)
+            # Find ALL .s.md files in the task folder (not in subfolders)
+            # This includes orchestrators (121.00-*.s.md) and subtasks (121.01-*.s.md)
             md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
-            # Find the task file - supports both formats:
-            # - Old format: task.NNN.s.md (where NNN is task number)
-            # - New format: NNN-{description}.s.md (where NNN is task number)
-            task_file = md_files.find do |file|
-              has_task_frontmatter?(file)
-            end
-
-            if task_file
-              task_data = load_task(task_file)
+            # Load ALL task files with valid frontmatter (supports hierarchical tasks)
+            md_files.each do |file|
+              next unless has_task_frontmatter?(file)
+              task_data = load_task(file)
               tasks << task_data if task_data
             end
           end
@@ -85,22 +103,98 @@ module Ace
           done_dir = File.join(task_dir, @config.done_dir)
           if File.directory?(done_dir)
             Dir.glob(File.join(done_dir, "*")).select { |d| File.directory?(d) }.each do |task_folder|
-              # Find .s.md files in the task folder
+              # Find ALL .s.md files in the task folder
               md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
-              # Find the task file - the one with YAML frontmatter containing task metadata
-              task_file = md_files.find do |file|
-                has_task_frontmatter?(file)
-              end
-
-              if task_file
-                task_data = load_task(task_file)
+              # Load ALL task files with valid frontmatter
+              md_files.each do |file|
+                next unless has_task_frontmatter?(file)
+                task_data = load_task(file)
                 tasks << task_data if task_data
               end
             end
           end
 
+          # Build parent-child relationships after loading all tasks
+          build_task_relationships(tasks)
+
           tasks
+        end
+
+        # Build parent-child relationships between orchestrators and subtasks
+        # @param tasks [Array<Hash>] Array of tasks to process (modified in place)
+        # @return [void]
+        def build_task_relationships(tasks)
+          # Group tasks by their parent number (from filename or frontmatter)
+          # Orchestrators and subtasks share the same parent number
+          orchestrators = {}  # parent_number -> orchestrator task
+          subtasks_by_parent = {}  # parent_number -> [subtask tasks]
+
+          tasks.each do |task|
+            filename = File.basename(task[:path] || "")
+            parent_num = extract_parent_number(filename)
+
+            case task[:file_type]
+            when :orchestrator
+              orchestrators[parent_num] = task if parent_num
+            when :subtask
+              if parent_num
+                subtasks_by_parent[parent_num] ||= []
+                subtasks_by_parent[parent_num] << task
+              end
+            end
+          end
+
+          # Link subtasks to their orchestrators
+          subtasks_by_parent.each do |parent_num, subtasks|
+            orchestrator = orchestrators[parent_num]
+
+            subtasks.each do |subtask|
+              # Set parent_id from frontmatter or derive from orchestrator
+              if subtask[:parent_id].nil? && orchestrator
+                subtask[:parent_id] = orchestrator[:id]
+              elsif subtask[:parent_id].nil?
+                # Virtual parent - no orchestrator file exists
+                # Derive parent_id from filename pattern
+                # e.g., for subtask 121.01, parent would be v.0.9.0+task.121
+                subtask[:parent_id] = derive_parent_id(subtask, parent_num)
+              end
+            end
+
+            # Populate orchestrator's subtask_ids
+            # Merge frontmatter subtasks with discovered ones, actual files are authoritative
+            if orchestrator
+              frontmatter_ids = orchestrator[:subtask_ids] || []
+              discovered_ids = subtasks.map { |s| s[:id] }.compact.sort
+              orchestrator[:subtask_ids] = (frontmatter_ids + discovered_ids).uniq
+              orchestrator[:is_orchestrator] = true
+            end
+          end
+
+          # Also mark orchestrators without subtasks
+          orchestrators.each do |parent_num, orchestrator|
+            orchestrator[:is_orchestrator] = true unless orchestrator[:is_orchestrator]
+          end
+        end
+
+        # Derive a parent_id for a subtask when no orchestrator file exists
+        # @param subtask [Hash] The subtask data
+        # @param parent_num [String] The parent task number
+        # @return [String] The derived parent_id
+        def derive_parent_id(subtask, parent_num)
+          # Extract release from subtask's canonical ID to stay stable across folder moves
+          # e.g., "v.0.9.0+task.121.01" -> "v.0.9.0"
+          # This is needed because subtask[:release] comes from PathBuilder which returns
+          # "done" for archived tasks, but the canonical ID in frontmatter is always correct
+          release = if subtask[:id]
+            parsed = Atoms::TaskReferenceParser.parse(subtask[:id])
+            parsed ? parsed[:release] : (subtask[:release] || "current")
+          else
+            subtask[:release] || "current"
+          end
+
+          padded = parent_num.to_s.rjust(3, '0')
+          "#{release}+task.#{padded}"
         end
 
         # Load all tasks across all releases
@@ -164,34 +258,72 @@ module Ace
           tasks
         end
 
-        # Find task by qualified reference
-        # @param reference [String] Qualified reference (e.g., v.0.9.0+018)
+        # Find task by qualified reference with hierarchical lookup support
+        #
+        # Lookup Strategy:
+        # - Qualified references (v.0.9.0+task.121): Direct canonical ID match within specified release
+        # - Simple references (121): Multi-step precedence lookup with orchestrator priority
+        #
+        # Simple Reference Precedence:
+        # 1. Exact canonical ID match (highest precedence)
+        # 2. Orchestrator task with this number (user likely wants the parent task)
+        # 3. Any task with matching task_number (fallback for single tasks)
+        #
+        # Why orchestrators get priority: When users reference "121", they typically want
+        # the orchestrator task rather than a specific subtask, as orchestrators represent
+        # the primary work item. Subtasks should be referenced explicitly (121.01, etc.).
+        #
+        # Supports hierarchical references: 121, 121.00, 121.01, v.0.9.0+task.121.01
+        # @param reference [String] Qualified reference (e.g., v.0.9.0+018, 121.01)
+        # @param tasks [Array<Hash>, nil] Optional pre-loaded tasks for testing
         # @return [Hash, nil] Task data or nil if not found
-        def find_task_by_reference(reference)
-          require_relative "../atoms/task_reference_parser"
-
+        def find_task_by_reference(reference, tasks: nil)
           parsed = Atoms::TaskReferenceParser.parse(reference)
           return nil unless parsed
 
-          # Determine search scope
-          if parsed[:qualified]
+          # Use provided tasks or load based on reference type
+          tasks ||= if parsed[:qualified]
             # Qualified reference: search specific release only
             release_path = resolve_release_to_path(parsed[:release])
             return nil unless release_path
-            tasks = load_tasks_from_release(release_path)
+            load_tasks_from_release(release_path)
           else
             # Simple reference: search globally across all tasks
-            tasks = load_all_tasks
+            load_all_tasks
           end
 
           # Create a simple release resolver for normalization
           resolver = ContextResolver.new(@root_path)
           canonical_id = Atoms::TaskReferenceParser.normalize_to_canonical_id(reference, resolver)
 
-          # Search by ID field (primary) or by task_number (fallback for compatibility)
-          tasks.find do |t|
-            t[:id] == canonical_id ||
-            (t[:task_number] == parsed[:number] && t[:id]&.include?(parsed[:release]))
+          # Handle hierarchical references
+          if parsed[:subtask]
+            # Looking for specific subtask (121.01) or orchestrator (121.00)
+            # Match by canonical ID
+            tasks.find { |t| t[:id] == canonical_id }
+          else
+            # Simple reference (e.g., "121") lookup precedence:
+            # 1. Exact match by canonical ID (highest precedence)
+            # 2. Orchestrator task with this number (user likely wants parent)
+            # 3. Any task with matching task_number (fallback for single tasks)
+            #
+            # Step 1: First try exact match by canonical ID
+            exact_match = tasks.find { |t| t[:id] == canonical_id }
+            return exact_match if exact_match
+
+            # Step 2: Look for orchestrator with this task number
+            orchestrator = tasks.find do |t|
+              t[:is_orchestrator] &&
+              t[:task_number] == parsed[:number] &&
+              (parsed[:release] == "current" || t[:id]&.include?(parsed[:release]))
+            end
+            return orchestrator if orchestrator
+
+            # Step 3: Fallback to any task with matching task_number (single tasks)
+            tasks.find do |t|
+              t[:task_number] == parsed[:number] &&
+              (parsed[:release] == "current" || t[:id]&.include?(parsed[:release]))
+            end
           end
         end
 
@@ -384,6 +516,48 @@ module Ace
             !!(frontmatter["id"] && frontmatter["status"])
           rescue StandardError
             false
+          end
+        end
+
+        # Classify a task file based on filename pattern
+        # @param filename [String] The filename (basename) to classify
+        # @return [Symbol] :orchestrator, :subtask, :single, or :unknown
+        def classify_task_file(filename)
+          case filename
+          when ORCHESTRATOR_PATTERN
+            :orchestrator
+          when SUBTASK_PATTERN
+            # Subtask pattern matches both orchestrators and subtasks
+            # Check if it's actually .00 (orchestrator) or .01-.99 (subtask)
+            if filename.match(/^(\d+)\.00-/)
+              :orchestrator
+            else
+              :subtask
+            end
+          when SINGLE_TASK_PATTERN
+            :single
+          else
+            :unknown
+          end
+        end
+
+        # Extract subtask number from filename (e.g., "121.01-foo.s.md" -> "01")
+        # @param filename [String] The filename
+        # @return [String, nil] The subtask number or nil
+        def extract_subtask_number(filename)
+          if match = filename.match(SUBTASK_PATTERN)
+            match[2]
+          end
+        end
+
+        # Extract parent task number from filename (e.g., "121.01-foo.s.md" -> "121")
+        # @param filename [String] The filename
+        # @return [String, nil] The parent task number or nil
+        def extract_parent_number(filename)
+          if match = filename.match(SUBTASK_PATTERN)
+            match[1]
+          elsif match = filename.match(ORCHESTRATOR_PATTERN)
+            match[1]
           end
         end
 

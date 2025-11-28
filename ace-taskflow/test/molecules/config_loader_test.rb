@@ -251,4 +251,34 @@ class ConfigLoaderTest < AceTaskflowTestCase
       end
     end
   end
+
+  def test_default_terminal_statuses
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        config = Ace::Taskflow::Molecules::ConfigLoader.load
+
+        assert_equal %w[done cancelled suspended superseded], config["terminal_statuses"]
+      end
+    end
+  end
+
+  def test_custom_terminal_statuses
+    with_test_project do |dir|
+      config_dir = File.join(dir, ".ace", "taskflow")
+      FileUtils.mkdir_p(config_dir)
+      File.write(File.join(config_dir, "config.yml"), <<~YAML)
+        taskflow:
+          terminal_statuses:
+            - done
+            - cancelled
+            - archived
+      YAML
+
+      Dir.chdir(dir) do
+        config = Ace::Taskflow::Molecules::ConfigLoader.load
+
+        assert_equal %w[done cancelled archived], config["terminal_statuses"]
+      end
+    end
+  end
 end

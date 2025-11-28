@@ -136,6 +136,14 @@ taskflow:
 
       cancelled: []  # Terminal state
 
+  # Terminal statuses for orchestrator auto-completion
+  # When all subtasks have one of these statuses, the orchestrator auto-completes
+  terminal_statuses:
+    - done
+    - cancelled
+    - suspended
+    - superseded
+
   # Release management
   releases:
     # Current release version

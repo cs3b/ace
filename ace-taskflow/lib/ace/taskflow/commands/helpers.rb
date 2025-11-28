@@ -17,6 +17,16 @@ module Ace
           filtered = glob.select { |pattern| pattern.start_with?("#{type_dir}/") || !pattern.include?('/') }
           filtered.empty? ? nil : filtered
         end
+
+        # Strip task ID prefix from title (e.g., "122.04 - Orchestration Workflow" -> "Orchestration Workflow")
+        # Handles patterns like: "122 - Title", "122.04 - Title", "122.04- Title", "122.04 – Title"
+        # @param title [String, nil] Title potentially with ID prefix
+        # @return [String, nil] Title without ID prefix
+        def strip_task_id_from_title(title)
+          return title unless title
+
+          title.sub(/^\d+(\.\d+)?\s*[-–]\s*/, "")
+        end
       end
     end
   end

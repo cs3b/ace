@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.140] - 2025-11-27
+
+### ace-taskflow v0.20.0
+- **Added**: Comprehensive subtask workflow support for hierarchical task execution (Task 122)
+  - Hierarchical task ID parser supporting `121`, `121.00`, `121.01` formats for parent-child relationships
+  - Task scanner enhancement for orchestrator + subtask patterns with automatic relationship detection
+  - CLI integration with `--child-of` flag for creating hierarchical task relationships
+  - New `work-on-subtasks.wf.md` orchestration workflow with worktree-per-subtask isolation
+  - Subtask display modes: `--subtasks/--no-subtasks/--flat` for flexible hierarchy viewing
+  - Configurable terminal statuses through project configuration (`terminal_statuses` in `.ace/taskflow/config.yml`)
+  - Dynamic PR base branch handling for subtask pull requests targeting parent branches
+  - Comprehensive cascade handling for subtask completion and status updates
+- **Fixed**: Task manager test configuration to use configured task_dir instead of hardcoded paths
+  - Ensures proper test isolation and respects project configuration settings
+  - Prevents test pollution across different task directory configurations
+- **Technical**: Updated test fixtures and clarified documentation for subtask workflow patterns
+
 ## [0.9.139] - 2025-11-27
 
 ### ace-review v0.19.0

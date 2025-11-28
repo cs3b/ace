@@ -89,6 +89,18 @@ module Ace
         config.dig("defaults", "task_location") || "active"
       end
 
+      # Get subtasks display mode
+      # @return [String] "enabled" or "disabled"
+      def subtasks_display_mode
+        config.dig("params", "subtasks") || "enabled"
+      end
+
+      # Get terminal statuses for orchestrator auto-completion
+      # @return [Array<String>] List of statuses that indicate task completion
+      def terminal_statuses
+        config["terminal_statuses"] || %w[done cancelled suspended superseded]
+      end
+
       # Get idea-specific configuration
       def idea_config
         config["idea"] || default_idea_config
@@ -199,6 +211,10 @@ module Ace
             defaults:
               idea_location: "active"          # Where ideas go by default
               task_location: "active"          # Where new tasks go by default
+
+            # Display parameters
+            params:
+              subtasks: enabled               # Show subtasks in task list (enabled/disabled)
 
             # Idea configuration
             idea:

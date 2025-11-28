@@ -4,7 +4,16 @@ module Ace
   module Taskflow
     module Atoms
       # Pure function to parse qualified task references (v.0.9.0+018, backlog+025)
+      # Supports hierarchical task IDs for subtasks (121, 121.00, 121.01, v.0.9.0+task.121.01)
       class TaskReferenceParser
+        # Regular expression for qualified task references with subtasks
+        # Supports: v.0.9.0+task.121.01, backlog+task.025.03
+        HIERARCHICAL_QUALIFIED_PATTERN = /^([\w\.-]+)\+(?:task\.)?(\d+)\.(\d{2})$/
+
+        # Regular expression for simple hierarchical task references
+        # Supports: 121.01, task.121.00
+        HIERARCHICAL_SIMPLE_PATTERN = /^(?:task\.)?(\d+)\.(\d{2})$/
+
         # Regular expression for qualified task references
         # Supports: v.0.9.0+018, v.0.9.0+task.018, backlog+025, backlog+task.025
         QUALIFIED_REFERENCE_PATTERN = /^([\w\.-]+)\+(?:task\.)?(\d+)$/
@@ -17,11 +26,38 @@ module Ace
 
         # Parse a task reference into its components
         # @param reference [String] The task reference to parse
-        # @return [Hash, nil] Hash with :release and :number, or nil if invalid
+        # @return [Hash, nil] Hash with :release, :number, :subtask, or nil if invalid
         def self.parse(reference)
           return nil if reference.nil? || reference.empty?
 
           reference = reference.to_s.strip
+
+          # Check for hierarchical qualified reference (e.g., v.0.9.0+task.121.01)
+          # Must be checked before non-hierarchical patterns (more specific)
+          if match = reference.match(HIERARCHICAL_QUALIFIED_PATTERN)
+            release_str = match[1]
+            number = match[2]
+            subtask = match[3]
+
+            return {
+              release: normalize_release(release_str),
+              number: number,
+              subtask: subtask,
+              qualified: true,
+              original: reference
+            }
+          end
+
+          # Check for hierarchical simple reference (e.g., 121.01, task.121.00)
+          if match = reference.match(HIERARCHICAL_SIMPLE_PATTERN)
+            return {
+              release: "current",
+              number: match[1],
+              subtask: match[2],
+              qualified: false,
+              original: reference
+            }
+          end
 
           # Check for qualified reference (e.g., v.0.9.0+018, backlog+025)
           if match = reference.match(QUALIFIED_REFERENCE_PATTERN)
@@ -31,6 +67,7 @@ module Ace
             return {
               release: normalize_release(release_str),
               number: number,
+              subtask: nil,
               qualified: true,
               original: reference
             }
@@ -41,6 +78,7 @@ module Ace
             return {
               release: "current",
               number: match[1],
+              subtask: nil,
               qualified: false,
               original: reference
             }
@@ -63,6 +101,44 @@ module Ace
         def self.qualified?(reference)
           result = parse(reference)
           result && result[:qualified]
+        end
+
+        # Check if a parsed result represents an orchestrator task (subtask .00)
+        # @param parsed [Hash] The parsed result from parse()
+        # @return [Boolean] True if orchestrator, false otherwise
+        def self.is_orchestrator?(parsed)
+          return false unless parsed.is_a?(Hash)
+
+          parsed[:subtask] == "00"
+        end
+
+        # Check if a parsed result represents a subtask (subtask .01-.99)
+        # @param parsed [Hash] The parsed result from parse()
+        # @return [Boolean] True if subtask, false otherwise
+        def self.is_subtask?(parsed)
+          return false unless parsed.is_a?(Hash)
+
+          !parsed[:subtask].nil? && parsed[:subtask] != "00"
+        end
+
+        # Check if a parsed result has any subtask notation (.00 or .01-.99)
+        # @param parsed [Hash] The parsed result from parse()
+        # @return [Boolean] True if hierarchical, false otherwise
+        def self.is_hierarchical?(parsed)
+          return false unless parsed.is_a?(Hash)
+
+          !parsed[:subtask].nil?
+        end
+
+        # Get the parent task number from a parsed result
+        # For subtasks, this is the main task number (e.g., "121" from "121.01")
+        # @param parsed [Hash] The parsed result from parse()
+        # @return [String, nil] The parent number, or nil if not hierarchical
+        def self.parent_number(parsed)
+          return nil unless parsed.is_a?(Hash)
+
+          # For both orchestrators (.00) and subtasks (.01-.99), the parent is the main number
+          parsed[:number]
         end
 
         # Normalize a release string
@@ -90,24 +166,26 @@ module Ace
         # Format a task reference
         # @param release [String] The release
         # @param number [String, Integer] The task number
+        # @param subtask [String, Integer, nil] Optional subtask number (e.g., "01", 1)
         # @param qualified [Boolean] Whether to create qualified reference
         # @return [String] The formatted reference
-        def self.format(release, number, qualified: true)
+        def self.format(release, number, subtask: nil, qualified: true)
           number_str = number.to_s.rjust(3, '0')
+          subtask_suffix = subtask.nil? ? "" : ".#{subtask.to_s.rjust(2, '0')}"
 
           if qualified
             if release == "current"
               # Even for current, if explicitly qualified, include it without task. prefix
-              "current+#{number_str}"
+              "current+#{number_str}#{subtask_suffix}"
             elsif is_release_version?(release)
               # Release versions get the task. prefix
-              "#{release}+task.#{number_str}"
+              "#{release}+task.#{number_str}#{subtask_suffix}"
             else
               # Other releases (like backlog) get the task. prefix
-              "#{release}+task.#{number_str}"
+              "#{release}+task.#{number_str}#{subtask_suffix}"
             end
           else
-            number_str
+            "#{number_str}#{subtask_suffix}"
           end
         end
 
@@ -127,16 +205,30 @@ module Ace
               parsed[:original]
             else
               # Convert simple to qualified with provided release
-              format(release, parsed[:number], qualified: true)
+              # Preserve subtask if present
+              format(release, parsed[:number], subtask: parsed[:subtask], qualified: true)
             end
           when :simple
-            parsed[:number].to_s.rjust(3, '0')
+            # Build simple reference, preserving subtask suffix if present
+            simple = parsed[:number].to_s.rjust(3, '0')
+            parsed[:subtask] ? "#{simple}.#{parsed[:subtask]}" : simple
           else
             nil
           end
         end
 
-        # Extract all task references from text
+        # Extract all task references from text using 6-pass scanning strategy
+        #
+        # Strategy Overview:
+        # We scan from most specific to least specific patterns to avoid false positives
+        # and prevent capturing the same reference in multiple formats. Each pass includes
+        # exclusion logic to skip matches that were already found in more specific patterns.
+        #
+        # Why this order matters:
+        # - Hierarchical patterns (with subtasks) must be scanned before simple patterns
+        # - Qualified references (with releases) must be scanned before unqualified ones
+        # - Negative lookbehind prevents partial matches within larger references
+        #
         # @param text [String] The text to search
         # @return [Array<String>] Array of found references
         def self.extract_references(text)
@@ -144,23 +236,52 @@ module Ace
 
           references = []
 
-          # Find qualified references with task. prefix (e.g., v.0.9.0+task.018, backlog+task.025)
-          text.scan(/\b([\w\.-]+)\+task\.(\d+)\b/) do |release_str, number|
-            references << "#{release_str}+task.#{number}"
+          # 1. Qualified with task. prefix AND subtask (e.g., v.0.9.0+task.121.01)
+          # Must be scanned first (more specific pattern)
+          text.scan(/\b([\w\.-]+)\+task\.(\d+)\.(\d{2})\b/) do |release_str, number, subtask|
+            references << "#{release_str}+task.#{number}.#{subtask}"
           end
 
-          # Find qualified references without task. prefix (e.g., v.0.9.0+018, backlog+025)
-          # Only capture if not already captured with task. prefix
+          # 2. Qualified with task. prefix, NO subtask (e.g., v.0.9.0+task.018)
+          text.scan(/\b([\w\.-]+)\+task\.(\d+)\b/) do |release_str, number|
+            ref = "#{release_str}+task.#{number}"
+            # Only add if hierarchical version wasn't already found
+            references << ref unless references.any? { |r| r.start_with?(ref + ".") }
+          end
+
+          # 3. Qualified without task. prefix + subtask (e.g., v.0.9.0+121.01)
+          text.scan(/\b([\w\.-]+)\+(\d+)\.(\d{2})\b/) do |release_str, number, subtask|
+            ref = "#{release_str}+#{number}.#{subtask}"
+            ref_with_task = "#{release_str}+task.#{number}.#{subtask}"
+            references << ref unless references.include?(ref_with_task)
+          end
+
+          # 4. Qualified without task. prefix, NO subtask (e.g., v.0.9.0+018, backlog+025)
           text.scan(/\b([\w\.-]+)\+(\d+)\b/) do |release_str, number|
             ref_with_task = "#{release_str}+task.#{number}"
             ref_without_task = "#{release_str}+#{number}"
-            # Only add if the task. version wasn't already found
-            references << ref_without_task unless references.include?(ref_with_task)
+            # Only add if task. version or hierarchical version wasn't already found
+            next if references.include?(ref_with_task)
+            next if references.any? { |r| r.start_with?(ref_without_task + ".") }
+            references << ref_without_task
           end
 
-          # Find simple task references (e.g., task.003)
-          text.scan(/\btask\.(\d+)\b/) do |number|
-            references << "task.#{number[0]}"
+          # 5. Simple task references WITH subtask (e.g., task.121.01)
+          # Use negative lookbehind to avoid matching within qualified references
+          text.scan(/(?<!\+)task\.(\d+)\.(\d{2})\b/) do |number, subtask|
+            ref = "task.#{number}.#{subtask}"
+            # Skip if this is part of a qualified reference we already found
+            next if references.any? { |r| r.end_with?(ref) }
+            references << ref
+          end
+
+          # 6. Simple task references, NO subtask (e.g., task.003)
+          # Use negative lookbehind to avoid matching within qualified references
+          text.scan(/(?<!\+)task\.(\d+)\b/) do |number|
+            ref = "task.#{number[0]}"
+            # Only add if not already found and hierarchical version wasn't already found
+            next if references.any? { |r| r.end_with?(ref) || r.end_with?(ref + ".") || r.start_with?(ref + ".") }
+            references << ref unless references.any? { |r| r.start_with?(ref + ".") }
           end
 
           references.uniq
@@ -169,7 +290,7 @@ module Ace
         # Normalize a reference to canonical ID format
         # @param reference [String] The task reference to normalize
         # @param release_resolver [#resolve_release] Object that can resolve "current" to actual release
-        # @return [String, nil] Canonical ID (e.g., "v.0.9.0+task.072") or nil if invalid
+        # @return [String, nil] Canonical ID (e.g., "v.0.9.0+task.072" or "v.0.9.0+task.121.01") or nil if invalid
         def self.normalize_to_canonical_id(reference, release_resolver)
           parsed = parse(reference)
           return nil unless parsed
@@ -183,10 +304,11 @@ module Ace
             parsed[:release]
           end
 
-          # Build canonical ID: release+task.number
+          # Build canonical ID: release+task.number[.subtask]
           # Ensure number is zero-padded to 3 digits
           padded_number = parsed[:number].to_s.rjust(3, '0')
-          "#{release}+task.#{padded_number}"
+          subtask_suffix = parsed[:subtask] ? ".#{parsed[:subtask]}" : ""
+          "#{release}+task.#{padded_number}#{subtask_suffix}"
         end
       end
     end

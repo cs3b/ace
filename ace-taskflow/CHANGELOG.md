@@ -7,15 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+## [0.20.0] - 2025-11-27
 
-- **Task Reference Format Standardization**: Introduced 'task.' prefix for qualified references
-  - Updated qualified references from `v.0.9.0+018` to `v.0.9.0+task.018`
-  - Modified `PathBuilder` to include 'task.' prefix when constructing qualified references
-  - Updated `TaskReferenceParser` to parse both old and new formats for backward compatibility
-  - Adjusted `Task` model to use new format for qualified task identifiers
-  - Updated `TestFactory` to generate test data with standardized format
-  - Ensures consistent and unambiguous format for task references across the system
+### Added
+
+- **Subtask Workflow Support**: Comprehensive hierarchical task execution workflow for task 122
+  - Added CLI support for subtasks with `--child-of` flag for creating hierarchical task relationships
+  - Added task scanner support for orchestrator + subtask patterns to identify parent-child relationships
+  - Added orchestration workflow for subtask execution with automated cascade handling
+  - Honor `--release/--backlog` with `--child-of` for proper task placement in context hierarchy
+  - Fixed display formatting and lifecycle management for hierarchical tasks
+  - Made terminal statuses configurable through project configuration
+  - Addressed code review feedback across multiple subtasks (122.03, 122.04, 122.05, 122.07, 122.08)
+  - Updated task_manager test fixture to use configured task_dir for proper test isolation
+
+### Fixed
+
+- **Task Manager Test Configuration**: Fixed test fixture to use configured task_dir instead of hardcoded paths
+  - Ensures proper test isolation and respects project configuration settings
+  - Prevents test pollution across different task directory configurations
+
+### Technical
+
+- Clarified dynamic PR base branch documentation in work-on-subtasks workflow
 
 ## [0.19.3] - 2025-11-17
 
@@ -233,6 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update tests to use release parameter
 - Rename infrastructure gems (ace-core → ace-support-core, ace-test-support → ace-support-test-helpers)
 - Bump versions for dependency updates (0.15.0, 0.15.1)
+
 ## [0.15.2] - 2025-11-01
 
 ### Changed
@@ -240,7 +255,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependency Migration**: Updated to use renamed infrastructure gems
   - Changed dependency from `ace-core` to `ace-support-core`
   - Part of ecosystem-wide naming convention alignment for infrastructure gems
-
 
 ## [0.15.1] - 2025-11-01
 
@@ -263,6 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Complete terminology change across the entire codebase for improved clarity. The term "release" better reflects the purpose of identifying which version/scope an item belongs to.
 
 **Affected Components:**
+
 - **Models**: `Task#context` → `Task#release`, `Idea#context` → `Idea#release`
 - **Commands**: All CLI commands now use `--release` instead of `--context`
 - **Configuration**: Preset YAML files now use `release:` key instead of `context:`
@@ -272,6 +287,7 @@ Complete terminology change across the entire codebase for improved clarity. The
 **Migration Guide:**
 
 For Ruby API usage:
+
 ```ruby
 # Before
 loader.load_all(context: "current")
@@ -283,6 +299,7 @@ task = Task.new(release: "v.1.0.0")
 ```
 
 For YAML preset files:
+
 ```yaml
 # Before
 context: current
@@ -292,6 +309,7 @@ release: current
 ```
 
 For CLI commands:
+
 ```bash
 # Before
 ace-taskflow tasks --context v.0.9.0
@@ -336,21 +354,25 @@ ace-taskflow tasks --release v.0.9.0
 ## [0.14.2] - 2025-11-01
 
 ### Added
+
 - Use .s.md extension and clarify GTD scope
 
 ## [0.14.1] - 2025-11-01
 
 ### Added
+
 - Implement .s.md extension and remove backward compatibility
 - Implement glob-based preset system for ideas and tasks
 
 ### Fixed
+
 - Adjust universal presets and statistics logic
 - Require configuration and update universal preset expectations
 - Fix glob patterns to be relative to ideas directory
 - Address PR review feedback and fix failing tests
 
 ### Changed
+
 - Clarify comments and refine exception handling
 - Make presets universal and parse status/priority
 
@@ -359,12 +381,14 @@ ace-taskflow tasks --release v.0.9.0
 ### 🚨 Breaking Changes
 
 #### File Extension Migration
+
 - **All spec files now use `.s.md` extension** (specification markdown)
   - Ideas: `*.md` → `*.s.md` (212 files migrated)
   - Tasks: `task.*.md` → `task.*.s.md` (623 files migrated)
   - Clear separation: `.s.md` = specifications, `.md` = documentation only
 
 #### API Changes
+
 - **`IdeaLoader#load_all` signature changed**:
   - **Removed**: `scope` parameter
   - **Added**: `glob` parameter (optional, defaults to `["**/*.s.md"]`)
@@ -372,12 +396,14 @@ ace-taskflow tasks --release v.0.9.0
 - **Removed backward compatibility**: `PRESET_TO_SCOPE` constant deleted from IdeasCommand
 
 #### Configuration Changes
+
 - Simplified config: `ideas: "ideas"` (folder name only, not path)
 - Removed path-splitting logic duplication from configuration
 
 ### Migration Guide
 
 For custom scripts using the API:
+
 ```ruby
 # Before
 loader.load_all(context: "current", scope: :maybe)
@@ -387,6 +413,7 @@ loader.load_all(context: "current", glob: ["maybe/**/*.s.md"])
 ```
 
 For file references in custom scripts:
+
 ```bash
 # Update any hardcoded .md extensions to .s.md
 # Ideas: 20251026-123456-title.md → 20251026-123456-title.s.md
@@ -396,6 +423,7 @@ For file references in custom scripts:
 **Note**: All existing files have been automatically migrated. This only affects new integrations.
 
 ### Added
+
 - **Glob-Based Preset System**: Eliminated configuration duplication with self-defining presets
   - Presets now declare content via glob patterns that work universally across contexts
   - Simplified patterns: `maybe/**/*.s.md` vs previous complex type-specific patterns
@@ -408,6 +436,7 @@ For file references in custom scripts:
   - Statistics display with emoji indicators: 💡 (pending), 🤔 (maybe), 📅 (anyday), ✅ (done)
 
 ### Changed
+
 - **Architecture Improvements**:
   - Added `determine_context_root()` to IdeaLoader - returns release/backlog root path
   - Refactored `determine_idea_directory()` to use context_root + folder name
@@ -421,6 +450,7 @@ For file references in custom scripts:
   - Add validate_subdirectory_exclusivity helper for mutual exclusivity checks
 
 ### Technical
+
 - Updated all 835 spec files to use `.s.md` extension
 - Updated test fixtures and assertions for new extension
 - Add glob pattern validation in ListPresetManager
@@ -432,6 +462,7 @@ For file references in custom scripts:
 ## [0.13.2] - 2025-10-25
 
 ### Fixed
+
 - **Task Sorting**: Correct task sorting logic for string/symbol keys in preset configurations
   - Tasks were displayed in reverse order when using `ace-taskflow tasks next` command
   - Fixed apply_preset_sorting to handle both string and symbol keys from YAML configs
@@ -450,6 +481,7 @@ For file references in custom scripts:
 ## [0.13.0] - 2025-10-23
 
 ### Added
+
 - **task:// Protocol Configuration**: Added `.ace.example/nav/protocols/task.yml` for ace-nav integration
   - Enables `ace-nav task://083` to delegate to `ace-taskflow task 083`
   - Provides unified navigation interface across all ACE resources

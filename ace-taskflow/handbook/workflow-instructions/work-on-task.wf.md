@@ -92,6 +92,24 @@ For experienced users, here's the condensed workflow:
    * If structure is invalid, STOP and report the issue
    * Review the task's Objective to ensure understanding
 
+   **Task Type Detection:**
+   After loading the task, determine if it's an orchestrator or regular task:
+
+   1. **Orchestrator Task** - if any of these apply:
+      - Task file has `subtasks:` array in frontmatter
+      - Filename matches pattern `*.00-*.s.md` (e.g., `122.00-orchestrator.s.md`)
+
+      **Note:** The system discovers subtasks from filenames (`.XX-*.s.md` pattern) and merges them with any `subtasks:` list in frontmatter. Actual files on disk are authoritative for determining the complete subtask set.
+
+      **→ Redirect to work-on-subtasks workflow:**
+      ```
+      Read and execute: ace-nav wfi://work-on-subtasks
+      Pass context: orchestrator task path and pending subtasks
+      ```
+
+   2. **Regular Task** - if neither condition above applies:
+      - Continue with standard work-on-task workflow below
+
 3. **Update Task Status:**
    * Change task status from `pending` to `in-progress`:
 

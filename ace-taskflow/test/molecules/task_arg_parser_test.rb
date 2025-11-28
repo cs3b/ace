@@ -290,4 +290,58 @@ class TaskArgParserTest < Minitest::Test
       $stdout = original_stdout
     end
   end
+
+  # Tests for --child-of / -p flag (subtask creation)
+
+  def test_parse_create_args_with_child_of_long_flag
+    args = ["Subtask", "--child-of", "121"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Subtask", result[:title]
+    assert_equal "121", result[:parent_ref]
+  end
+
+  def test_parse_create_args_with_child_of_short_flag
+    args = ["-p", "121", "Subtask title"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Subtask title", result[:title]
+    assert_equal "121", result[:parent_ref]
+  end
+
+  def test_parse_create_args_child_of_with_qualified_ref
+    args = ["Subtask", "--child-of", "v.0.9.0+task.121"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Subtask", result[:title]
+    assert_equal "v.0.9.0+task.121", result[:parent_ref]
+  end
+
+  def test_parse_create_args_child_of_with_backlog_release
+    args = ["Subtask", "--child-of", "121", "--backlog"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Subtask", result[:title]
+    assert_equal "121", result[:parent_ref]
+    assert_equal "backlog", result[:release]
+  end
+
+  def test_parse_create_args_child_of_with_explicit_release
+    args = ["Subtask", "--child-of", "121", "--release", "v.0.10.0"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Subtask", result[:title]
+    assert_equal "121", result[:parent_ref]
+    assert_equal "v.0.10.0", result[:release]
+  end
+
+  def test_parse_create_args_child_of_with_metadata
+    args = ["Subtask", "--child-of", "121", "--status", "draft", "--estimate", "2h"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Subtask", result[:title]
+    assert_equal "121", result[:parent_ref]
+    assert_equal "draft", result[:metadata][:status]
+    assert_equal "2h", result[:metadata][:estimate]
+  end
 end
