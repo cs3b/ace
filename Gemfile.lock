@@ -37,7 +37,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.3.0)
+    ace-git-worktree (0.4.1)
       ace-git-diff (>= 0.1.0)
       ace-support-core (>= 0.9.0)
       ace-taskflow (>= 0.10.0)
@@ -89,6 +89,13 @@ PATH
   specs:
     ace-nav (0.10.2)
       ace-support-core (~> 0.1)
+
+PATH
+  remote: ace-prompt
+  specs:
+    ace-prompt (0.1.0)
+      ace-support-core (~> 0.10)
+      thor (~> 1.3)
 
 PATH
   remote: ace-review
@@ -256,6 +263,7 @@ DEPENDENCIES
   ace-llm!
   ace-llm-providers-cli!
   ace-nav!
+  ace-prompt!
   ace-review!
   ace-search!
   ace-support-core!

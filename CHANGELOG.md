@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.142] - 2025-11-28
+
+### ace-git-worktree v0.4.1
+- **Fixed**: TaskPusher module loading bug that prevented remove command from working
+  - Added missing require statement in main loader file
+  - Restores functionality of `ace-git-worktree remove --task` command
+  - Fixes "uninitialized constant Ace::Git::Worktree::Molecules::TaskPusher" error
+
+## [0.9.141] - 2025-11-28
+
+### ace-git-worktree v0.4.0
+- **Added**: TaskIDExtractor atom for consistent hierarchical task ID handling across all components
+  - Properly handles subtask IDs (e.g., `121.01`) without stripping to parent number
+  - Shared `extract()` and `normalize()` methods used by all worktree operations
+- **Changed**: TaskFetcher now uses `TaskManager` (organism-level API) instead of `TaskLoader`
+  - Simplified integration with ace-taskflow through high-level API only
+- **Changed**: All worktree components now use TaskIDExtractor
+  - `worktree_info.rb`, `worktree_manager.rb`, `task_worktree_orchestrator.rb`
+  - `task_status_updater.rb`, `worktree_creator.rb`, `worktree_config.rb`, `remove_command.rb`
+- **Fixed**: Critical bug where subtask worktree operations affected wrong tasks
+  - Worktrees for `121.01` no longer match or affect `121` parent task
+  - Create, remove, and status operations now correctly isolate subtasks
+- **Fixed**: `remove --task 121.01` not finding worktrees (lookup preserved subtask ID)
+
 ## [0.9.140] - 2025-11-27
 
 ### ace-taskflow v0.20.0

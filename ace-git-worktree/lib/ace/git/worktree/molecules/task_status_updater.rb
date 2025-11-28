@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-# Try to require ace-taskflow API for direct integration
+# Try to require ace-taskflow API for direct integration (organism level only)
 begin
   require "ace/taskflow/organisms/task_manager"
-  require "ace/taskflow/molecules/task_loader"
 rescue LoadError
   # ace-taskflow not available - will fall back to CLI
 end
+
+require_relative "../atoms/task_id_extractor"
 
 module Ace
   module Git
@@ -205,7 +206,7 @@ module Ace
           #
           # @return [Boolean] true if Ruby API is available
           def use_ruby_api?
-            defined?(Ace::Taskflow::Organisms::TaskManager) && defined?(Ace::Taskflow::Molecules::TaskLoader)
+            defined?(Ace::Taskflow::Organisms::TaskManager)
           end
 
           # Update task status using Ruby API
@@ -298,14 +299,12 @@ module Ace
 
           # Normalize task reference to a standard format
           #
+          # Preserves hierarchical task IDs (e.g., "121.01" stays "121.01")
+          #
           # @param task_ref [String] Input task reference
           # @return [String, nil] Normalized reference or nil if invalid
           def normalize_task_reference(task_ref)
-            ref = task_ref.to_s.strip
-
-            # Extract numeric ID from various formats
-            match = ref.match(/(\d+)/)
-            match ? match[1] : nil
+            Atoms::TaskIDExtractor.normalize(task_ref)
           end
 
           # Execute ace-taskflow command

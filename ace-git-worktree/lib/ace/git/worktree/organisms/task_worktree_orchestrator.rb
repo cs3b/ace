@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/task_id_extractor"
+
 module Ace
   module Git
     module Worktree
@@ -25,6 +27,7 @@ module Ace
             @task_fetcher = Molecules::TaskFetcher.new
             @task_status_updater = Molecules::TaskStatusUpdater.new
             @task_committer = Molecules::TaskCommitter.new
+            @task_pusher = Molecules::TaskPusher.new
             @worktree_creator = Molecules::WorktreeCreator.new
           end
 
@@ -82,7 +85,16 @@ module Ace
               worktree_metadata = create_worktree_metadata(task_data)
               workflow_result[:steps_completed] << "metadata_prepared"
 
-              # Step 5: Commit task changes if configured (and not overridden)
+              # Step 5: Add worktree metadata to task file (BEFORE commit so it's included)
+              if @config.add_worktree_metadata?
+                if add_worktree_metadata_to_task(task_data, worktree_metadata)
+                  workflow_result[:steps_completed] << "metadata_added"
+                else
+                  workflow_result[:warnings] << "Failed to add worktree metadata to task"
+                end
+              end
+
+              # Step 6: Commit task changes if configured (includes status + metadata)
               should_commit = options[:no_commit] ? false : @config.auto_commit_task?
               if should_commit && should_update_status
                 commit_message = options[:commit_message] || "in-progress"
@@ -94,7 +106,20 @@ module Ace
                 end
               end
 
-              # Step 6: Create the worktree
+              # Step 7: Push task changes if configured (so PR shows updates)
+              should_push = options[:no_push] ? false : @config.auto_push_task?
+              if should_push && should_commit && workflow_result[:steps_completed].include?("task_committed")
+                push_remote = options[:push_remote] || @config.push_remote
+                if push_task_changes(push_remote)
+                  workflow_result[:steps_completed] << "task_pushed"
+                  workflow_result[:pushed_to] = push_remote
+                else
+                  # Continue even if push fails, but note it
+                  workflow_result[:warnings] << "Failed to push task changes"
+                end
+              end
+
+              # Step 8: Create the worktree
               worktree_result = create_worktree_for_task(task_data, worktree_metadata)
               return error_workflow_result(worktree_result[:error], workflow_result) unless worktree_result[:success]
 
@@ -103,16 +128,7 @@ module Ace
               workflow_result[:directory_name] = worktree_result[:directory_name]
               workflow_result[:steps_completed] << "worktree_created"
 
-              # Step 7: Add worktree metadata to task file
-              if @config.add_worktree_metadata?
-                if add_worktree_metadata_to_task(task_data, worktree_metadata)
-                  workflow_result[:steps_completed] << "metadata_added"
-                else
-                  workflow_result[:warnings] << "Failed to add worktree metadata to task"
-                end
-              end
-
-              # Step 8: Run after-create hooks if configured
+              # Step 9: Run after-create hooks if configured
               hooks = @config.after_create_hooks
               if hooks && hooks.any?
                 require_relative "../molecules/hook_executor"
@@ -174,17 +190,20 @@ module Ace
                 branch: branch_name,
                 directory_name: directory_name,
                 task_status_update: @config.auto_mark_in_progress? && task_data[:status] != "in-progress",
-                task_commit: @config.auto_commit_task?,
                 metadata_addition: @config.add_worktree_metadata?,
+                task_commit: @config.auto_commit_task?,
+                task_push: @config.auto_push_task?,
+                push_remote: @config.push_remote,
                 hooks_count: @config.after_create_hooks.length
               }
 
               workflow_result[:steps_planned] = [
                 "fetch_task_data",
                 ("update_task_status" if workflow_result[:would_create][:task_status_update]),
-                ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
-                "create_worktree",
                 ("add_worktree_metadata" if workflow_result[:would_create][:metadata_addition]),
+                ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
+                ("push_to_#{workflow_result[:would_create][:push_remote]}" if workflow_result[:would_create][:task_push] && workflow_result[:would_create][:task_commit]),
+                "create_worktree",
                 ("execute_#{workflow_result[:would_create][:hooks_count]}_hooks" if workflow_result[:would_create][:hooks_count] > 0)
               ].compact
 
@@ -273,7 +292,7 @@ module Ace
                 worktrees = worktree_lister.list_all.select(&:task_associated?)
                 task_ids = worktrees.map(&:task_id).compact.uniq
               else
-                task_ids = Array(task_refs).map { |ref| ref.to_s.match(/(\d+)/)[1] }.compact
+                task_ids = Array(task_refs).map { |ref| Atoms::TaskIDExtractor.normalize(ref) }.compact
               end
 
               status_info = {
@@ -330,20 +349,11 @@ module Ace
 
           # Normalize task ID for worktree matching
           #
-          # @param task_ref [String] Task reference
-          # @return [String] Normalized task ID
+          # @param task_ref [String] Task reference (e.g., "090", "121.01", "task.121.01")
+          # @return [String] Normalized task ID (preserves subtask suffix)
           def normalize_task_id_for_matching(task_ref)
-            # Handle various formats: "090", "task.090", "v.0.9.0+task.090"
-            if task_ref.match?(/\A(\d+)\z/)
-              task_ref # Already numeric
-            elsif task_ref.match?(/\Atask\.?(\d+)\z/)
-              task_ref.match(/\Atask\.?(\d+)\z/)[1]
-            elsif task_ref.match?(/\Av\.[\d.]+\+task\.(\d+)\z/)
-              task_ref.match(/\Av\.[\d.]+\+task\.(\d+)\z/)[1]
-            else
-              # Try to extract numeric part
-              task_ref.scan(/\d+/).last || task_ref
-            end
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.normalize(task_ref) || task_ref
           end
 
           # Initialize workflow result structure
@@ -427,6 +437,15 @@ module Ace
             @task_committer.commit_all_changes(status, task_id)
           end
 
+          # Push task changes to remote
+          #
+          # @param remote [String] Remote name (default: "origin")
+          # @return [Boolean] true if successful
+          def push_task_changes(remote = "origin")
+            result = @task_pusher.push(remote: remote)
+            result[:success]
+          end
+
           # Create worktree for task
           #
           # @param task_data [Hash] Task data hash from ace-taskflow
@@ -500,16 +519,8 @@ module Ace
           # @param task_data [Hash] Task data hash
           # @return [String] Task ID (e.g., "094")
           def extract_task_id(task_data)
-            # Use task_number if available, otherwise extract from id
-            return task_data[:task_number] if task_data[:task_number]
-
-            # Extract from id field (e.g., "v.0.9.0+task.094" -> "094")
-            if task_data[:id]
-              match = task_data[:id].match(/task\.(\d+)$/)
-              return match[1] if match
-            end
-
-            "unknown"
+            # Use shared extractor that preserves subtask IDs (e.g., "121.01")
+            Atoms::TaskIDExtractor.extract(task_data)
           end
 
           # Create error result
