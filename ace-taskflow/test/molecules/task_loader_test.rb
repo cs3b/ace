@@ -233,4 +233,353 @@ class TaskLoaderTest < AceTaskflowTestCase
     result = @loader.update_task_status("/nonexistent/file.md", "done")
     refute result, "Should return false for nonexistent file"
   end
+
+  # ========== Hierarchical Task Tests (Subtask Support) ==========
+
+  def test_classify_task_file_orchestrator
+    loader = Ace::Taskflow::Molecules::TaskLoader.new
+    assert_equal :orchestrator, loader.send(:classify_task_file, "121.00-orchestrator.s.md")
+    assert_equal :orchestrator, loader.send(:classify_task_file, "001.00-main.s.md")
+  end
+
+  def test_classify_task_file_subtask
+    loader = Ace::Taskflow::Molecules::TaskLoader.new
+    assert_equal :subtask, loader.send(:classify_task_file, "121.01-archive.s.md")
+    assert_equal :subtask, loader.send(:classify_task_file, "121.99-final.s.md")
+    assert_equal :subtask, loader.send(:classify_task_file, "001.05-feature.s.md")
+  end
+
+  def test_classify_task_file_single
+    loader = Ace::Taskflow::Molecules::TaskLoader.new
+    assert_equal :single, loader.send(:classify_task_file, "119-feature.s.md")
+    assert_equal :single, loader.send(:classify_task_file, "001-task.s.md")
+  end
+
+  def test_classify_task_file_unknown
+    loader = Ace::Taskflow::Molecules::TaskLoader.new
+    assert_equal :unknown, loader.send(:classify_task_file, "task.001.s.md")
+    assert_equal :unknown, loader.send(:classify_task_file, "README.md")
+  end
+
+  def test_extract_parent_number
+    loader = Ace::Taskflow::Molecules::TaskLoader.new
+    assert_equal "121", loader.send(:extract_parent_number, "121.01-archive.s.md")
+    assert_equal "121", loader.send(:extract_parent_number, "121.00-orchestrator.s.md")
+    assert_nil loader.send(:extract_parent_number, "119-feature.s.md")
+  end
+
+  def test_extract_subtask_number
+    loader = Ace::Taskflow::Molecules::TaskLoader.new
+    assert_equal "01", loader.send(:extract_subtask_number, "121.01-archive.s.md")
+    assert_equal "00", loader.send(:extract_subtask_number, "121.00-orchestrator.s.md")
+    assert_nil loader.send(:extract_subtask_number, "119-feature.s.md")
+  end
+
+  def test_load_task_includes_hierarchical_fields
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "001", "task.001.s.md")
+        task = @loader.load_task(task_file)
+
+        assert task
+        # Should have hierarchical fields
+        assert_includes task.keys, :parent_id
+        assert_includes task.keys, :subtask_ids
+        assert_includes task.keys, :is_orchestrator
+        assert_includes task.keys, :file_type
+      end
+    end
+  end
+
+  def test_load_orchestrator_with_subtasks
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = loader.load_tasks_from_release(release_path)
+
+        # Find orchestrator
+        orchestrator = tasks.find { |t| t[:file_type] == :orchestrator }
+        assert orchestrator, "Should find orchestrator"
+        assert orchestrator[:is_orchestrator], "Orchestrator should be marked as orchestrator"
+        assert_equal :orchestrator, orchestrator[:file_type]
+
+        # Orchestrator should have subtask_ids populated
+        refute_empty orchestrator[:subtask_ids], "Orchestrator should have subtask_ids"
+      end
+    end
+  end
+
+  def test_load_subtasks_have_parent_id
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = loader.load_tasks_from_release(release_path)
+
+        # Find subtasks
+        subtasks = tasks.select { |t| t[:file_type] == :subtask }
+        assert subtasks.length >= 2, "Should find at least 2 subtasks"
+
+        subtasks.each do |subtask|
+          assert subtask[:parent_id], "Subtask should have parent_id"
+          assert_equal :subtask, subtask[:file_type]
+        end
+      end
+    end
+  end
+
+  # ========== find_task_by_reference Tests ==========
+  # These tests verify hierarchical lookup through find_task_by_reference
+
+  def test_find_task_by_reference_returns_orchestrator
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+
+        # Preload tasks since find_task_by_reference uses load_all_tasks
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = loader.load_tasks_from_release(release_path)
+
+        # Simple reference should find orchestrator
+        task = loader.find_task_by_reference("121", tasks: tasks)
+        assert task, "Should find task by simple reference"
+        assert_equal "v.0.9.0+task.121", task[:id]
+        assert task[:is_orchestrator], "Should return orchestrator for simple ref"
+      end
+    end
+  end
+
+  def test_find_task_by_reference_returns_subtask
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+
+        # Preload tasks
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = loader.load_tasks_from_release(release_path)
+
+        # Subtask reference
+        subtask = loader.find_task_by_reference("121.01", tasks: tasks)
+        assert subtask, "Should find subtask by reference"
+        assert_equal "v.0.9.0+task.121.01", subtask[:id]
+        assert_equal :subtask, subtask[:file_type]
+      end
+    end
+  end
+
+  def test_subtask_ids_syncs_with_actual_files
+    # Test that subtask_ids includes both frontmatter and discovered subtasks
+    # by modifying an existing test project
+    Dir.mktmpdir do |dir|
+      TestFactory.with_stubbed_project_root(dir) do
+        # Create test project structure
+        taskflow_root = File.join(dir, ".ace-taskflow")
+        config_dir = File.join(dir, ".ace", "taskflow")
+        FileUtils.mkdir_p(config_dir)
+        File.write(File.join(config_dir, "config.yml"), <<~YAML)
+          taskflow:
+            root: .ace-taskflow
+            task_dir: t
+          YAML
+
+        # Create release directory
+        release_dir = File.join(taskflow_root, "v.0.9.0")
+        FileUtils.mkdir_p(release_dir)
+        File.write(File.join(release_dir, ".active"), "")
+
+        # Create orchestrator with explicit frontmatter subtasks
+        orchestrator_dir = File.join(release_dir, "t", "999-test-orchestrator")
+        FileUtils.mkdir_p(orchestrator_dir)
+
+        orchestrator_content = <<~CONTENT
+---
+id: v.0.9.0+task.999
+status: in-progress
+priority: medium
+subtasks:
+  - v.0.9.0+task.999.01
+  - v.0.9.0+task.999.02
+---
+
+# 999 - Test Orchestrator
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.00-orchestrator.s.md"), orchestrator_content)
+
+        # Add subtask files (including one not in frontmatter)
+        subtask01_content = <<~CONTENT
+---
+id: v.0.9.0+task.999.01
+status: pending
+parent: v.0.9.0+task.999
+---
+
+# 999.01 - First Subtask
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.01-first-subtask.s.md"), subtask01_content)
+
+        subtask02_content = <<~CONTENT
+---
+id: v.0.9.0+task.999.02
+status: pending
+parent: v.0.9.0+task.999
+---
+
+# 999.02 - Second Subtask
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.02-second-subtask.s.md"), subtask02_content)
+
+        # This subtask is NOT in frontmatter but exists as file
+        subtask03_content = <<~CONTENT
+---
+id: v.0.9.0+task.999.03
+status: pending
+parent: v.0.9.0+task.999
+---
+
+# 999.03 - Third Subtask (not in frontmatter)
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.03-third-subtask.s.md"), subtask03_content)
+
+        Dir.chdir(dir) do
+          loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+          release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+          tasks = loader.load_tasks_from_release(release_path)
+
+          # Find the orchestrator
+          orchestrator = tasks.find { |t| t[:id] == "v.0.9.0+task.999" }
+          assert orchestrator, "Should find orchestrator"
+          assert_equal true, orchestrator[:is_orchestrator]
+
+          # subtask_ids should include ALL subtasks (frontmatter + discovered)
+          expected_ids = [
+            "v.0.9.0+task.999.01",  # In frontmatter and file
+            "v.0.9.0+task.999.02",  # In frontmatter and file
+            "v.0.9.0+task.999.03"   # Only in file, not in frontmatter
+          ]
+          assert_equal expected_ids, orchestrator[:subtask_ids].sort
+        end
+      end
+    end
+  end
+
+  def test_find_task_by_reference_with_qualified_ref
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+
+        # Preload tasks
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = loader.load_tasks_from_release(release_path)
+
+        # Qualified reference
+        task = loader.find_task_by_reference("v.0.9.0+task.121.01", tasks: tasks)
+        assert task, "Should find by qualified reference"
+        assert_equal "v.0.9.0+task.121.01", task[:id]
+      end
+    end
+  end
+
+  def test_find_task_by_reference_unknown_returns_nil
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+
+        # Preload tasks
+        release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+        tasks = loader.load_tasks_from_release(release_path)
+
+        task = loader.find_task_by_reference("999", tasks: tasks)
+        assert_nil task, "Should return nil for unknown reference"
+      end
+    end
+  end
+
+  def test_derive_parent_id_uses_canonical_id_not_path
+    with_hierarchical_project do |dir|
+      Dir.chdir(dir) do
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+
+        # Simulate an archived subtask with :release = "done" but :id still canonical
+        subtask = {
+          id: "v.0.9.0+task.121.01",
+          release: "done",  # This is what PathBuilder returns for archived tasks
+          path: "somewhere/done/121-test/121.01-subtask.s.md"
+        }
+
+        parent_id = loader.send(:derive_parent_id, subtask, "121")
+
+        # Should use release from :id, not from :release field
+        assert_equal "v.0.9.0+task.121", parent_id
+        refute_equal "done+task.121", parent_id
+      end
+    end
+  end
+
+  private
+
+  # Create a test project with hierarchical tasks (orchestrator + subtasks)
+  def with_hierarchical_project
+    Dir.mktmpdir do |dir|
+      # Create directory structure (use "t" as default task directory when no config exists)
+      task_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "121-hierarchical-test")
+      FileUtils.mkdir_p(task_dir)
+
+      # Create orchestrator file
+      orchestrator_content = <<~CONTENT
+---
+id: v.0.9.0+task.121
+status: in-progress
+priority: high
+estimate: 8h
+dependencies: []
+subtasks:
+  - v.0.9.0+task.121.01
+  - v.0.9.0+task.121.02
+---
+
+# 121 - Hierarchical Test Task (Orchestrator)
+
+This is the orchestrator task.
+      CONTENT
+      File.write(File.join(task_dir, "121.00-orchestrator.s.md"), orchestrator_content)
+
+      # Create subtask 01
+      subtask01_content = <<~CONTENT
+---
+id: v.0.9.0+task.121.01
+status: pending
+priority: high
+estimate: 2h
+dependencies: []
+parent: v.0.9.0+task.121
+---
+
+# 121.01 - First Subtask
+
+First subtask description.
+      CONTENT
+      File.write(File.join(task_dir, "121.01-first-subtask.s.md"), subtask01_content)
+
+      # Create subtask 02
+      subtask02_content = <<~CONTENT
+---
+id: v.0.9.0+task.121.02
+status: pending
+priority: medium
+estimate: 3h
+dependencies:
+  - v.0.9.0+task.121.01
+parent: v.0.9.0+task.121
+---
+
+# 121.02 - Second Subtask
+
+Second subtask description.
+      CONTENT
+      File.write(File.join(task_dir, "121.02-second-subtask.s.md"), subtask02_content)
+
+      yield dir
+    end
+  end
 end

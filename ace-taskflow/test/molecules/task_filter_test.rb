@@ -232,4 +232,93 @@ class TaskFilterTest < AceTaskflowTestCase
     assert_equal "v.0.9.0+task.087", result[2][:id], "Task 087 (sort: 996) should be third when descending"
     assert_equal "v.0.9.0+task.088", result[3][:id], "Task 088 (sort: 995) should be fourth when descending"
   end
+
+  # ========== Hierarchical Filter Tests (Subtask Support) ==========
+
+  def test_filter_by_parent
+    tasks_with_hierarchy = [
+      { id: "task.121", parent_id: nil, is_orchestrator: true },
+      { id: "task.121.01", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.121.02", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.122", parent_id: nil, is_orchestrator: false },
+      { id: "task.122.01", parent_id: "task.122", is_orchestrator: false }
+    ]
+
+    result = @filter.filter_by_parent(tasks_with_hierarchy, "task.121")
+
+    assert_equal 2, result.length
+    assert result.all? { |t| t[:parent_id] == "task.121" }
+    assert_includes result.map { |t| t[:id] }, "task.121.01"
+    assert_includes result.map { |t| t[:id] }, "task.121.02"
+  end
+
+  def test_filter_by_parent_with_nil
+    tasks_with_hierarchy = [
+      { id: "task.121", parent_id: nil },
+      { id: "task.121.01", parent_id: "task.121" }
+    ]
+
+    result = @filter.filter_by_parent(tasks_with_hierarchy, nil)
+
+    assert_empty result
+  end
+
+  def test_filter_top_level
+    tasks_with_hierarchy = [
+      { id: "task.121", parent_id: nil, is_orchestrator: true },
+      { id: "task.121.01", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.121.02", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.122", parent_id: nil, is_orchestrator: false }
+    ]
+
+    result = @filter.filter_top_level(tasks_with_hierarchy)
+
+    assert_equal 2, result.length
+    assert result.all? { |t| t[:parent_id].nil? }
+    assert_includes result.map { |t| t[:id] }, "task.121"
+    assert_includes result.map { |t| t[:id] }, "task.122"
+  end
+
+  def test_filter_orchestrators
+    tasks_with_hierarchy = [
+      { id: "task.121", parent_id: nil, is_orchestrator: true },
+      { id: "task.121.01", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.122", parent_id: nil, is_orchestrator: false },
+      { id: "task.123", parent_id: nil, is_orchestrator: true }
+    ]
+
+    result = @filter.filter_orchestrators(tasks_with_hierarchy)
+
+    assert_equal 2, result.length
+    assert result.all? { |t| t[:is_orchestrator] }
+    assert_includes result.map { |t| t[:id] }, "task.121"
+    assert_includes result.map { |t| t[:id] }, "task.123"
+  end
+
+  def test_filter_subtasks
+    tasks_with_hierarchy = [
+      { id: "task.121", parent_id: nil, is_orchestrator: true },
+      { id: "task.121.01", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.121.02", parent_id: "task.121", is_orchestrator: false },
+      { id: "task.122", parent_id: nil, is_orchestrator: false }
+    ]
+
+    result = @filter.filter_subtasks(tasks_with_hierarchy)
+
+    assert_equal 2, result.length
+    assert result.all? { |t| t[:parent_id] }
+    assert_includes result.map { |t| t[:id] }, "task.121.01"
+    assert_includes result.map { |t| t[:id] }, "task.121.02"
+  end
+
+  def test_filter_orchestrators_with_no_orchestrators
+    tasks_without_orchestrators = [
+      { id: "task.119", parent_id: nil, is_orchestrator: false },
+      { id: "task.120", parent_id: nil, is_orchestrator: false }
+    ]
+
+    result = @filter.filter_orchestrators(tasks_without_orchestrators)
+
+    assert_empty result
+  end
 end

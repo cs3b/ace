@@ -12,6 +12,7 @@ module Ace
           "task_dir" => "t",
           "active_strategy" => "lowest",
           "allow_multiple_active" => true,
+          "terminal_statuses" => %w[done cancelled suspended superseded],
           "references" => {
             "allow_qualified" => true,
             "allow_cross_release" => true
@@ -185,6 +186,8 @@ module Ace
           config["task"] = taskflow_section["task"] if taskflow_section["task"]
           config["tasks"] = taskflow_section["tasks"] if taskflow_section["tasks"]
           config["release"] = taskflow_section["release"] if taskflow_section["release"]
+          config["params"] = taskflow_section["params"] if taskflow_section["params"]
+          config["terminal_statuses"] = taskflow_section["terminal_statuses"] if taskflow_section["terminal_statuses"]
 
           config
         end

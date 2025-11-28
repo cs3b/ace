@@ -134,10 +134,118 @@ module Ace
               success: true,
               message: "Created task #{task_id}",
               task_id: task_id,
+              task_number: task_number,
               path: task_file
             }
           rescue StandardError => e
             { success: false, message: "Failed to create task: #{e.message}" }
+          end
+        end
+
+        # Create a new subtask under a parent task
+        # @param parent_ref [String] Parent task reference (e.g., "121", "v.0.9.0+task.121")
+        # @param title [String] Subtask title
+        # @param release [String, nil] Optional release override (from --release/--backlog CLI flags)
+        # @param metadata [Hash] Additional metadata
+        # @return [Hash] Result with :success, :message, :task_id, :path
+        def create_subtask(parent_ref, title, release: nil, metadata: {})
+          # 1. Parse parent reference
+          parsed = Atoms::TaskReferenceParser.parse(parent_ref)
+          unless parsed
+            return { success: false, message: "Invalid parent reference: #{parent_ref}" }
+          end
+
+          # 2. Check if trying to create subtask of subtask (not supported)
+          if parsed[:subtask] && parsed[:subtask] != "00"
+            return {
+              success: false,
+              message: "Cannot create subtask of subtask (#{parent_ref}). Subtasks can only be one level deep."
+            }
+          end
+
+          # 3. Resolve release path
+          # Priority: 1. Explicit release from CLI, 2. Qualified parent ref, 3. Default to current
+          resolved_release = if release
+            release  # Use explicit release from CLI (--release/--backlog)
+          elsif parsed[:qualified]
+            parsed[:release]  # Use release from qualified parent ref
+          else
+            "current"  # Default to current
+          end
+          release_path = resolve_release_path(resolved_release)
+          unless release_path
+            return { success: false, message: "Release not found: #{resolved_release}" }
+          end
+
+          # 4. Find parent task directory
+          parent_number = parsed[:number]
+          parent_dir = find_parent_task_directory(release_path, parent_number)
+
+          unless parent_dir
+            return {
+              success: false,
+              message: "Parent task #{parent_number} not found. Create the parent task first."
+            }
+          end
+
+          # 5. Check parent is orchestrator or has subtasks already
+          unless is_orchestrator_directory?(parent_dir, parent_number)
+            return {
+              success: false,
+              message: "Task #{parent_number} is not an orchestrator. Create `#{parent_number}.00-orchestrator.s.md` first or convert it to an orchestrator."
+            }
+          end
+
+          # 6. Get next subtask number
+          subtask_num = get_next_subtask_number(parent_dir, parent_number)
+
+          if subtask_num > 99
+            return { success: false, message: "Maximum subtask limit (99) reached for task #{parent_number}" }
+          end
+
+          # 7. Generate subtask ID and slugs
+          formatted_subtask = subtask_num.to_s.rjust(2, '0')
+          resolved_release = resolve_release_name(release_path)
+          subtask_id = "#{resolved_release}+task.#{parent_number}.#{formatted_subtask}"
+
+          # Generate slug using LLM
+          require_relative "../molecules/llm_slug_generator"
+          slug_gen = Molecules::LlmSlugGenerator.new(debug: ENV["DEBUG"] == "true")
+          slug_result = slug_gen.generate_task_slugs(title, metadata)
+          file_slug = slug_result[:file_slug]
+
+          # 8. Build dependencies (previous subtask if exists)
+          dependencies = if subtask_num > 1
+            prev_subtask = (subtask_num - 1).to_s.rjust(2, '0')
+            ["#{resolved_release}+task.#{parent_number}.#{prev_subtask}"]
+          else
+            []
+          end
+
+          # 9. Generate subtask content
+          parent_id = "#{resolved_release}+task.#{parent_number}"
+          content = generate_subtask_template(subtask_id, title, parent_id, dependencies, metadata)
+
+          # 10. Write file
+          filename = "#{parent_number}.#{formatted_subtask}-#{file_slug}.s.md"
+          subtask_file = File.join(parent_dir, filename)
+
+          begin
+            Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              subtask_file,
+              content,
+              backup: false,
+              validate: true
+            )
+
+            {
+              success: true,
+              message: "Created subtask #{subtask_id}",
+              task_id: subtask_id,
+              path: subtask_file
+            }
+          rescue StandardError => e
+            { success: false, message: "Failed to create subtask: #{e.message}" }
           end
         end
 
@@ -148,62 +256,151 @@ module Ace
           update_task_status(reference, "in-progress")
         end
 
-        # Mark task as done and move to done/
+        # Mark task as done and optionally move to done/
+        # For subtasks: only update status, don't move folder (folder belongs to orchestrator)
+        # For orchestrators: move folder only when ALL subtasks have terminal status
+        # For single tasks: move folder as usual
         # @param reference [String] Task reference
         # @return [Hash] Result with :success and :message
         def complete_task(reference)
           task = @task_loader.find_task_by_reference(reference)
-          unless task
-            return { success: false, message: "Task #{reference} not found" }
-          end
+          return { success: false, message: "Task #{reference} not found" } unless task
 
           # Update status first
           status_result = update_task_status(reference, "done")
-          unless status_result[:success]
-            return status_result
-          end
+          return status_result unless status_result[:success]
 
           # Check if status update was idempotent (already done)
           was_already_done = status_result[:message].include?("already has status")
 
-          # Move task to done directory
+          # Handle completion based on task type
+          if task[:parent_id]
+            handle_subtask_completion(task, reference)
+          elsif task[:is_orchestrator]
+            handle_orchestrator_completion(task, reference, was_already_done)
+          else
+            handle_single_task_completion(task, reference, was_already_done)
+          end
+        end
+
+        private
+
+        # Handle completion of a subtask
+        # Subtasks don't move folders - they stay with the orchestrator
+        # @param task [Hash] Subtask data
+        # @param reference [String] Task reference
+        # @return [Hash] Result with :success and :message
+        def handle_subtask_completion(task, reference)
+          orchestrator_message = check_and_complete_orchestrator(task[:parent_id])
+          message = "Subtask #{reference} marked as done"
+          message += "\n#{orchestrator_message}" if orchestrator_message
+          { success: true, message: message }
+        end
+
+        # Handle completion of an orchestrator task
+        # Only moves folder if all subtasks have terminal status
+        # @param task [Hash] Orchestrator task data
+        # @param reference [String] Task reference
+        # @param was_already_done [Boolean] Whether status was already done
+        # @return [Hash] Result with :success and :message
+        def handle_orchestrator_completion(task, reference, was_already_done)
+          if all_subtasks_terminal?(task)
+            move_result = move_task_to_done(task)
+            format_completion_message(reference, was_already_done, move_result)
+          else
+            pending_subtasks = count_pending_subtasks(task)
+            { success: true, message: "Orchestrator #{reference} marked as done (#{pending_subtasks} subtask(s) still pending)" }
+          end
+        end
+
+        # Handle completion of a single (non-orchestrator, non-subtask) task
+        # Moves folder to done/ directory
+        # @param task [Hash] Task data
+        # @param reference [String] Task reference
+        # @param was_already_done [Boolean] Whether status was already done
+        # @return [Hash] Result with :success and :message
+        def handle_single_task_completion(task, reference, was_already_done)
+          move_result = move_task_to_done(task)
+          format_completion_message(reference, was_already_done, move_result)
+        end
+
+        # Move task folder to done directory
+        # @param task [Hash] Task data
+        # @return [Hash] Move result
+        def move_task_to_done(task)
           require_relative "../molecules/task_directory_mover"
           mover = Molecules::TaskDirectoryMover.new
-          move_result = mover.move_to_done(task[:path])
+          mover.move_to_done(task[:path])
+        end
 
+        # Format completion message based on status and move results
+        # @param reference [String] Task reference
+        # @param was_already_done [Boolean] Was already marked as done
+        # @param move_result [Hash] Move operation result
+        # @return [Hash] Formatted result message
+        def format_completion_message(reference, was_already_done, move_result)
           if move_result[:success]
-            # Check if move was also idempotent
             was_already_moved = move_result[:message].include?("already in done")
 
             if was_already_done && was_already_moved
-              {
-                success: true,
-                message: "Task #{reference} already completed"
-              }
+              { success: true, message: "Task #{reference} already completed" }
             elsif was_already_done
-              {
-                success: true,
-                message: "Task #{reference} already marked as done, moved to done/"
-              }
+              { success: true, message: "Task #{reference} already marked as done, moved to done/" }
             elsif was_already_moved
-              {
-                success: true,
-                message: "Task #{reference} marked as done (already in done/)"
-              }
+              { success: true, message: "Task #{reference} marked as done (already in done/)" }
             else
-              {
-                success: true,
-                message: "Task #{reference} marked as done and moved to done/"
-              }
+              { success: true, message: "Task #{reference} marked as done and moved to done/" }
             end
           else
-            # Status was updated but move failed
-            {
-              success: true,
-              message: "Task #{reference} marked as done (move to done/ failed: #{move_result[:message]})"
-            }
+            { success: true, message: "Task #{reference} marked as done (move to done/ failed: #{move_result[:message]})" }
           end
         end
+
+        # Check if all subtasks have terminal status
+        # @param orchestrator [Hash] Orchestrator task data
+        # @return [Boolean] True if all subtasks are terminal
+        def all_subtasks_terminal?(orchestrator)
+          subtask_ids = orchestrator[:subtask_ids] || []
+          return true if subtask_ids.empty?
+
+          terminal_statuses = Ace::Taskflow.configuration.terminal_statuses
+          subtask_ids.all? do |subtask_id|
+            subtask = @task_loader.find_task_by_reference(subtask_id)
+            subtask && terminal_statuses.include?(subtask[:status]&.downcase)
+          end
+        end
+
+        # Count pending (non-terminal) subtasks
+        # @param orchestrator [Hash] Orchestrator task data
+        # @return [Integer] Count of pending subtasks
+        def count_pending_subtasks(orchestrator)
+          subtask_ids = orchestrator[:subtask_ids] || []
+          terminal_statuses = Ace::Taskflow.configuration.terminal_statuses
+
+          subtask_ids.count do |subtask_id|
+            subtask = @task_loader.find_task_by_reference(subtask_id)
+            !subtask || !terminal_statuses.include?(subtask[:status]&.downcase)
+          end
+        end
+
+        # Check if orchestrator should auto-complete when all subtasks are done
+        # @param orchestrator_id [String] Orchestrator task ID
+        # @return [String, nil] Message if orchestrator was auto-completed, nil otherwise
+        def check_and_complete_orchestrator(orchestrator_id)
+          orchestrator = @task_loader.find_task_by_reference(orchestrator_id)
+          return nil unless orchestrator
+          return nil unless orchestrator[:is_orchestrator]
+
+          # Check if all subtasks are now terminal
+          if all_subtasks_terminal?(orchestrator)
+            # Auto-complete the orchestrator
+            update_task_status(orchestrator_id, "done")
+            move_task_to_done(orchestrator)
+            "Orchestrator #{orchestrator_id} auto-completed (all subtasks done)"
+          end
+        end
+
+        public
 
         # Add dependency to a task
         # @param reference [String] Task reference
@@ -580,6 +777,109 @@ module Ace
               dirname.start_with?("#{task_number}-")
             end
           end
+        end
+
+        # Find parent task directory by task number
+        # @param release_path [String] Path to release directory
+        # @param parent_number [String] Parent task number (e.g., "121")
+        # @return [String, nil] Path to parent task directory or nil
+        def find_parent_task_directory(release_path, parent_number)
+          task_config = Ace::Taskflow.configuration
+          tasks_dir = File.join(release_path, task_config.task_dir)
+
+          # Try new naming convention first: {number}-{slug}/
+          dir = Dir.glob(File.join(tasks_dir, "#{parent_number}-*")).find { |d| File.directory?(d) }
+          return dir if dir
+
+          # Fallback to old naming convention: {number}/
+          old_dir = File.join(tasks_dir, parent_number)
+          return old_dir if File.directory?(old_dir)
+
+          nil
+        end
+
+        # Check if directory contains orchestrator file or subtasks
+        # @param parent_dir [String] Path to task directory
+        # @param parent_number [String] Parent task number
+        # @return [Boolean] true if orchestrator or has subtasks
+        def is_orchestrator_directory?(parent_dir, parent_number)
+          # Has .00 file (orchestrator)
+          orchestrator = Dir.glob(File.join(parent_dir, "#{parent_number}.00-*.s.md")).any?
+          # Has any subtask files (NN > 00)
+          subtasks = Dir.glob(File.join(parent_dir, "#{parent_number}.[0-9][0-9]-*.s.md")).any?
+          orchestrator || subtasks
+        end
+
+        # Get next available subtask number for a parent
+        # @param parent_dir [String] Path to parent task directory
+        # @param parent_number [String] Parent task number
+        # @return [Integer] Next subtask number (1-99)
+        def get_next_subtask_number(parent_dir, parent_number)
+          # Scan for existing subtask files
+          pattern = File.join(parent_dir, "#{parent_number}.[0-9][0-9]-*.s.md")
+          existing = Dir.glob(pattern).map do |f|
+            basename = File.basename(f)
+            match = basename.match(/^\d+\.(\d{2})-/)
+            match ? match[1].to_i : nil
+          end.compact
+
+          # Return next number (max + 1), skipping 00 (orchestrator)
+          existing_without_zero = existing.reject { |n| n == 0 }
+          existing_without_zero.empty? ? 1 : existing_without_zero.max + 1
+        end
+
+        # Resolve release name from path
+        # @param release_path [String] Full path to release
+        # @return [String] Release name (e.g., "v.0.9.0", "backlog")
+        def resolve_release_name(release_path)
+          basename = File.basename(release_path)
+          if basename == "backlog"
+            "backlog"
+          else
+            basename
+          end
+        end
+
+        # Generate subtask template content
+        # @param id [String] Subtask ID
+        # @param title [String] Subtask title
+        # @param parent_id [String] Parent task ID
+        # @param dependencies [Array<String>] Dependencies list
+        # @param metadata [Hash] Additional metadata
+        # @return [String] Template content
+        def generate_subtask_template(id, title, parent_id, dependencies, metadata)
+          deps_yaml = if dependencies.empty?
+            "[]"
+          else
+            "\n  - #{dependencies.join("\n  - ")}"
+          end
+
+          <<~TEMPLATE
+            ---
+            id: #{id}
+            status: #{metadata[:status] || 'pending'}
+            priority: #{metadata[:priority] || 'medium'}
+            estimate: #{metadata[:estimate] || 'TBD'}
+            dependencies: #{deps_yaml}
+            parent: #{parent_id}
+            ---
+
+            # #{title}
+
+            ## Scope
+
+            [Describe the scope of this subtask]
+
+            ## Deliverables
+
+            - [ ] [Deliverable 1]
+            - [ ] [Deliverable 2]
+
+            ## Acceptance Criteria
+
+            - [ ] [Criterion 1]
+            - [ ] [Criterion 2]
+          TEMPLATE
         end
       end
     end

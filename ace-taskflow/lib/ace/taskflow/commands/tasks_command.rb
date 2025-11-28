@@ -118,6 +118,16 @@ module Ace
             when "--list"
               filters[:list] = true
               i += 1
+            # Hierarchical display flags
+            when "--subtasks"
+              filters[:subtasks_display] = :show
+              i += 1
+            when "--no-subtasks"
+              filters[:subtasks_display] = :hide
+              i += 1
+            when "--flat"
+              filters[:flat] = true
+              i += 1
             # KEPT: Release selection flags (not filters)
             when "--backlog"
               filters[:release] = "backlog"
@@ -211,8 +221,20 @@ module Ace
             display_paths_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
           elsif additional_filters[:list]
             display_list_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:flat]
+            display_flat_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:subtasks_display] == :show
+            display_hierarchical_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          elsif additional_filters[:subtasks_display] == :hide
+            display_no_subtasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
           else
-            display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+            # Default: use config to determine subtask display mode
+            subtasks_mode = Taskflow.configuration.subtasks_display_mode
+            if subtasks_mode == "enabled"
+              display_hierarchical_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+            else
+              display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+            end
           end
         end
 
@@ -325,8 +347,9 @@ module Ace
 
           status_str = status_icon(task.status)
           ref = task.qualified_reference || task.task_number || task.id || "unknown"
+          display_title = strip_task_id_from_title(task.title)
 
-          puts "  #{ref.ljust(15)} #{status_str} #{task.title}"
+          puts "  #{ref.ljust(15)} #{status_str} #{display_title}"
 
           # Show path on second line
           if task.path
@@ -361,8 +384,6 @@ module Ace
           else "?"
           end
         end
-
-        # Priority indicator removed - using status colors instead
 
         def execute_reschedule(args)
           require_relative "../organisms/task_scheduler"
@@ -501,6 +522,9 @@ module Ace
           puts "  --tree               Show dependency tree view"
           puts "  --path               Show paths only"
           puts "  --list               Show simple list format"
+          puts "  --subtasks           Show hierarchical task display with tree chars"
+          puts "  --no-subtasks        Hide subtasks, show count instead"
+          puts "  --flat               Show all tasks without hierarchy grouping"
           puts "  --sort <field>       Sort by field (priority, status, id, modified)"
           puts ""
           puts "Reschedule Options:"
@@ -626,6 +650,133 @@ module Ace
           end
 
           0
+        end
+
+        # Hierarchical display with tree characters
+        def display_hierarchical_with_preset(tasks, preset_config, original_count = nil, limit = nil)
+          release = preset_config[:release] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            release: release
+          )
+          puts header
+
+          if tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return 0
+          end
+
+          # Separate orchestrators, subtasks, and single tasks
+          orchestrators = tasks.select { |t| t[:is_orchestrator] }
+          subtasks_by_parent = tasks.select { |t| t[:parent_id] }.group_by { |t| t[:parent_id] }
+          singles = tasks.reject { |t| t[:is_orchestrator] || t[:parent_id] }
+
+          # Display orchestrators with their subtasks
+          orchestrators.each do |orch|
+            display_task_line(orch)
+            children = subtasks_by_parent[orch[:id]] || []
+            children.sort_by { |s| s[:id] || "" }.each_with_index do |subtask, idx|
+              connector = idx == children.length - 1 ? "└─" : "├─"
+              display_subtask_line(subtask, connector)
+            end
+          end
+
+          # Display subtasks whose parents are not in the result set (orphan subtasks)
+          orphan_subtasks = tasks.select do |t|
+            t[:parent_id] && !orchestrators.any? { |o| o[:id] == t[:parent_id] }
+          end
+          orphan_subtasks.each { |task| display_task_line(task) }
+
+          # Display single tasks
+          singles.each { |task| display_task_line(task) }
+
+          0
+        end
+
+        # Display without subtasks, showing count instead
+        def display_no_subtasks_with_preset(tasks, preset_config, original_count = nil, limit = nil)
+          release = preset_config[:release] || 'current'
+
+          # Filter out subtasks for display
+          top_level_tasks = tasks.reject { |t| t[:parent_id] }
+          subtask_counts = tasks.select { |t| t[:parent_id] }.group_by { |t| t[:parent_id] }
+                               .transform_values(&:count)
+
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: top_level_tasks.size,
+            release: release
+          )
+          puts header
+
+          if top_level_tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return 0
+          end
+
+          top_level_tasks.each do |task|
+            subtask_count = subtask_counts[task[:id]] || 0
+            display_task_line_with_subtask_count(task, subtask_count)
+          end
+
+          0
+        end
+
+        # Flat display (no hierarchy grouping)
+        def display_flat_with_preset(tasks, preset_config, original_count = nil, limit = nil)
+          release = preset_config[:release] || 'current'
+          header = @stats_formatter.format_header(
+            command_type: :tasks,
+            displayed_count: tasks.size,
+            release: release
+          )
+          puts header
+
+          if tasks.empty?
+            puts ""
+            puts "No tasks found for preset '#{preset_config[:name]}'."
+            return 0
+          end
+
+          # Sort all tasks by ID for flat display
+          sorted_tasks = tasks.sort_by { |t| t[:id] || t[:task_number] || "" }
+          sorted_tasks.each { |task| display_task_line(task) }
+
+          0
+        end
+
+        # Display a subtask with tree connector
+        def display_subtask_line(task_data, connector)
+          task = Models::Task.new(task_data)
+
+          status_str = status_icon(task.status)
+          ref = task.qualified_reference || task.task_number || task.id || "unknown"
+          display_title = strip_task_id_from_title(task.title)
+
+          puts "    #{connector} #{ref.ljust(12)} #{status_str} #{display_title}"
+        end
+
+        # Display task with subtask count indicator
+        def display_task_line_with_subtask_count(task_data, subtask_count)
+          task = Models::Task.new(task_data)
+
+          status_str = status_icon(task.status)
+          ref = task.qualified_reference || task.task_number || task.id || "unknown"
+          display_title = strip_task_id_from_title(task.title)
+
+          count_str = subtask_count > 0 ? " (#{subtask_count} subtasks)" : ""
+          orchestrator_marker = task_data[:is_orchestrator] ? " (Orchestrator)" : ""
+
+          puts "  #{ref.ljust(15)} #{status_str} #{display_title}#{orchestrator_marker}#{count_str}"
+
+          # Show path on second line
+          if task.path
+            relative_path = format_relative_path(task.path)
+            puts "    #{relative_path}"
+          end
         end
       end
     end
