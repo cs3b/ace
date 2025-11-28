@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Branch Source Bug**: New worktree branches now correctly use the current branch as their start-point
+  - Previously, worktrees created from within another worktree would base their branch on main worktree's HEAD
+  - Now `git worktree add` explicitly passes the current branch (or commit SHA) as the start-point
+  - Added `--source <ref>` option to specify a custom git ref as branch start-point (e.g., `--source main`)
+  - Handles detached HEAD state by using the commit SHA as start-point
+
+### Added
+- `GitCommand.ref_exists?`: New method to validate that a git ref exists before using it
+- `--source` CLI option for `create` command: Explicitly specify which git ref to base the new branch on
+- Result hash now includes `start_point` field showing which ref was used as the branch base
+
 ## [0.4.1] - 2025-11-28
 
 ### Fixed

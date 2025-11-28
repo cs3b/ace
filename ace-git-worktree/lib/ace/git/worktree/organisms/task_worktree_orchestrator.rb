@@ -35,6 +35,7 @@ module Ace
           #
           # @param task_ref [String] Task reference (081, task.081, v.0.9.0+081)
           # @param options [Hash] Options for worktree creation
+          # @option options [String] :source Git ref to use as branch start-point (default: current branch)
           # @return [Hash] Result with workflow details
           #
           # @example
@@ -48,6 +49,10 @@ module Ace
           #   #   steps_completed: ["task_fetched", "status_updated", "worktree_created", "mise_trusted"],
           #   #   error: nil
           #   # }
+          #
+          # @example With explicit source
+          #   result = orchestrator.create_for_task("081", source: "main")
+          #   # => Creates branch based on 'main' instead of current branch
           def create_for_task(task_ref, options = {})
             workflow_result = initialize_workflow_result
 
@@ -120,7 +125,7 @@ module Ace
               end
 
               # Step 8: Create the worktree
-              worktree_result = create_worktree_for_task(task_data, worktree_metadata)
+              worktree_result = create_worktree_for_task(task_data, worktree_metadata, source: options[:source])
               return error_workflow_result(worktree_result[:error], workflow_result) unless worktree_result[:success]
 
               workflow_result[:worktree_path] = worktree_result[:worktree_path]
@@ -450,9 +455,10 @@ module Ace
           #
           # @param task_data [Hash] Task data hash from ace-taskflow
           # @param worktree_metadata [WorktreeMetadata] Worktree metadata
+          # @param source [String, nil] Git ref to use as branch start-point
           # @return [Hash] Worktree creation result
-          def create_worktree_for_task(task_data, worktree_metadata)
-            @worktree_creator.create_for_task(task_data, @config)
+          def create_worktree_for_task(task_data, worktree_metadata, source: nil)
+            @worktree_creator.create_for_task(task_data, @config, source: source)
           end
 
           # Add worktree metadata to task

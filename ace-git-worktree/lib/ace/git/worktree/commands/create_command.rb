@@ -87,6 +87,8 @@ module Ace
 
               OPTIONS:
                   --path <path>           Custom worktree path (default: from config)
+                  --source <ref>          Git ref to use as branch start-point (default: current branch)
+                                        Examples: main, origin/develop, HEAD~3, commit-sha
                   --dry-run               Show what would be created without creating
                   --no-status-update      Skip marking task as in-progress (task mode only)
                   --no-commit             Skip committing task changes (task mode only)
@@ -101,6 +103,9 @@ module Ace
                   # Create task-aware worktree
                   ace-git-worktree create --task 081
 
+                  # Create task worktree based on main instead of current branch
+                  ace-git-worktree create --task 081 --source main
+
                   # Create PR worktree
                   ace-git-worktree create --pr 26
 
@@ -112,6 +117,9 @@ module Ace
 
                   # Create traditional worktree
                   ace-git-worktree create feature-branch
+
+                  # Create traditional worktree based on specific commit
+                  ace-git-worktree create feature-branch --source HEAD~3
 
                   # Custom path and dry run
                   ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
@@ -145,6 +153,7 @@ module Ace
               pr: nil,
               branch: nil,
               path: nil,
+              source: nil,
               dry_run: false,
               no_status_update: false,
               no_commit: false,
@@ -173,6 +182,9 @@ module Ace
               when "--path"
                 i += 1
                 options[:path] = args[i]
+              when "--source"
+                i += 1
+                options[:source] = args[i]
               when "--dry-run"
                 options[:dry_run] = true
               when "--no-status-update"
@@ -318,6 +330,7 @@ module Ace
             # Prepare creation options
             creation_options = {
               path: options[:path],
+              source: options[:source],
               dry_run: options[:dry_run],
               no_status_update: options[:no_status_update],
               no_commit: options[:no_commit],
@@ -516,6 +529,7 @@ module Ace
             # Prepare creation options
             creation_options = {
               path: options[:path],
+              source: options[:source],
               no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact

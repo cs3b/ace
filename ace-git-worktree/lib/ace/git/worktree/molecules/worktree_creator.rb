@@ -38,6 +38,8 @@ module Ace
           # @param config [WorktreeConfig] Worktree configuration
           # @param counter [Integer, nil] Counter for multiple worktrees of same task
           # @param git_root [String, nil] Git repository root (auto-detected if nil)
+          # @param source [String, nil] Git ref to use as start-point for the new branch
+          #   If nil, uses current branch (default behavior - fixes the branch source bug)
           # @return [Hash] Result with :success, :worktree_path, :branch, :error
           #
           # @example
@@ -46,7 +48,11 @@ module Ace
           #   config = ConfigLoader.new.load
           #   result = creator.create_for_task(task_data, config)
           #   # => { success: true, worktree_path: "/project/.ace-wt/task.081", branch: "081-fix-auth", error: nil }
-          def create_for_task(task_data, config, counter: nil, git_root: nil)
+          #
+          # @example With explicit source
+          #   result = creator.create_for_task(task_data, config, source: "main")
+          #   # => Creates branch based on 'main' instead of current branch
+          def create_for_task(task_data, config, counter: nil, git_root: nil, source: nil)
             return error_result("Task data is required") unless task_data
             return error_result("Configuration is required") unless config
 
@@ -66,8 +72,8 @@ module Ace
               validation = validate_worktree_path(worktree_path, git_root)
               return error_result(validation[:error]) unless validation[:valid]
 
-              # Create the worktree
-              result = create_worktree(worktree_path, branch_name, git_root)
+              # Create the worktree with source as start-point
+              result = create_worktree(worktree_path, branch_name, git_root, start_point: source)
               return result unless result[:success]
 
               # Success - return worktree information
@@ -75,6 +81,7 @@ module Ace
                 success: true,
                 worktree_path: worktree_path,
                 branch: branch_name,
+                start_point: result[:start_point],
                 directory_name: directory_name,
                 task_id: extract_task_id_from_data(task_data),
                 git_root: git_root,
@@ -197,11 +204,16 @@ module Ace
           # @param branch_name [String] Branch name
           # @param worktree_path [String, nil] Worktree path (auto-generated if nil)
           # @param git_root [String, nil] Git repository root (auto-detected if nil)
+          # @param source [String, nil] Git ref to use as start-point for the new branch
+          #   If nil, uses current branch (default behavior)
           # @return [Hash] Result with :success, :worktree_path, :branch, :error
           #
           # @example
           #   result = creator.create_traditional("feature-branch", "/tmp/worktree")
-          def create_traditional(branch_name, worktree_path = nil, git_root: nil)
+          #
+          # @example With explicit source
+          #   result = creator.create_traditional("feature-branch", nil, source: "main")
+          def create_traditional(branch_name, worktree_path = nil, git_root: nil, source: nil)
             return error_result("Branch name is required") if branch_name.nil? || branch_name.empty?
 
             begin
@@ -221,8 +233,8 @@ module Ace
               # Validate branch name
               return error_result("Invalid branch name") unless valid_branch_name?(branch_name)
 
-              # Create the worktree
-              create_worktree(worktree_path, branch_name, git_root)
+              # Create the worktree with source as start-point
+              create_worktree(worktree_path, branch_name, git_root, start_point: source)
             rescue StandardError => e
               error_result("Unexpected error: #{e.message}")
             end
@@ -311,22 +323,35 @@ module Ace
           # @param worktree_path [String] Path for the worktree
           # @param branch_name [String] Branch name
           # @param git_root [String] Git repository root
+          # @param start_point [String, nil] Git ref to use as start-point for the new branch
+          #   If nil, uses current branch (or commit SHA if in detached HEAD state)
           # @return [Hash] Result with :success, :worktree_path, :branch, :error
-          def create_worktree(worktree_path, branch_name, git_root)
+          def create_worktree(worktree_path, branch_name, git_root, start_point: nil)
             require_relative "../atoms/git_command"
 
             # Ensure parent directory exists
             parent_dir = File.dirname(worktree_path)
             FileUtils.mkdir_p(parent_dir) unless File.exist?(parent_dir)
 
-            # Create the worktree
-            result = Atoms::GitCommand.worktree("add", worktree_path, "-b", branch_name, timeout: @timeout)
+            # Default to current branch if no start_point provided
+            # This ensures new branches are based on the current branch, not main worktree HEAD
+            start_point ||= Atoms::GitCommand.current_branch
+            return error_result("Cannot determine current branch for start-point") unless start_point
+
+            # Validate start_point exists
+            unless Atoms::GitCommand.ref_exists?(start_point)
+              return error_result("Source ref '#{start_point}' does not exist")
+            end
+
+            # Create the worktree with explicit start-point
+            result = Atoms::GitCommand.worktree("add", worktree_path, "-b", branch_name, start_point, timeout: @timeout)
 
             if result[:success]
               {
                 success: true,
                 worktree_path: worktree_path,
                 branch: branch_name,
+                start_point: start_point,
                 git_root: git_root,
                 error: nil
               }

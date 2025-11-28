@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.143] - 2025-11-28
-
 ### ace-prompt v0.2.0
 - **Added**: Setup command for template initialization (Task 121.02)
   - `ace-prompt setup` initializes workspace with template
@@ -19,6 +17,17 @@ All notable changes to this project will be documented in this file.
   - Template naming pattern: `the-prompt-{name}.template.md`
   - Template resolution uses ace-nav Ruby API (no shell execution)
 - **Fixed**: CLI exit code handling for Thor Array return (Task 121.08)
+
+## [0.9.143] - 2025-11-28
+
+### ace-git-worktree v0.4.2
+- **Fixed**: Branch source bug - worktrees now correctly use current branch as start-point
+  - Previously, worktrees created from feature branches would base their branch on main worktree HEAD
+  - Now `git worktree add` explicitly passes current branch (or commit SHA if detached) as start-point
+- **Added**: `--source <ref>` option to specify custom git ref as branch start-point
+  - Allows explicit control: `ace-git-worktree create --task 123 --source main`
+- **Added**: `GitCommand.ref_exists?` method for git ref validation
+- **Added**: Result hash includes `start_point` field showing which ref was used
 
 ## [0.9.142] - 2025-11-28
 
