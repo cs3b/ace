@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-11-28
+
+### Fixed
+- **TaskPusher Loading**: Add missing require statement for TaskPusher module
+  - Fixes "uninitialized constant Ace::Git::Worktree::Molecules::TaskPusher" error
+  - Restores functionality of `ace-git-worktree remove --task` command
+
 ## [0.4.0] - 2025-11-28
 
 ### Added
