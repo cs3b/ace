@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.142] - 2025-11-28
+
+### ace-git-worktree v0.4.1
+- **Fixed**: TaskPusher module loading bug that prevented remove command from working
+  - Added missing require statement in main loader file
+  - Restores functionality of `ace-git-worktree remove --task` command
+  - Fixes "uninitialized constant Ace::Git::Worktree::Molecules::TaskPusher" error
+
 ## [0.9.141] - 2025-11-28
 
 ### ace-git-worktree v0.4.0
