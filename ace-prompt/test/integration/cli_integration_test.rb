@@ -106,6 +106,222 @@ class CLIIntegrationTest < Minitest::Test
     assert_match(/Review this code for security issues/, output)
   end
 
+  def test_process_with_context_flag_integration
+    # Create prompt with frontmatter
+    File.write(@prompt_file, <<~MARKDOWN, encoding: "utf-8")
+      ---
+      context:
+        enabled: true
+        sources:
+          - file: "README.md"
+      ---
+      Review this feature implementation.
+    MARKDOWN
+
+    # Mock ContextLoader to simulate successful context loading
+    mock_context = "# Feature Context\nImplementation details for the feature.\n\n## Original Prompt\nReview this feature implementation."
+    Ace::Prompt::Molecules::ContextLoader.stub(:call, mock_context) do
+      # Run CLI with --context flag
+      output, _error = run_cli(["process", "--context"])
+
+      # Should include context content
+      assert_match(/Feature Context/, output)
+      assert_match(/Implementation details/, output)
+      assert_match(/Review this feature implementation/, output)
+    end
+  end
+
+  def test_process_with_no_context_flag_override
+    # Create prompt with frontmatter enabling context
+    File.write(@prompt_file, <<~MARKDOWN, encoding: "utf-8")
+      ---
+      context:
+        enabled: true
+        sources:
+          - file: "docs/architecture.md"
+      ---
+      Analyze this system design.
+    MARKDOWN
+
+    # Run CLI with --no-context to override frontmatter
+    output, _error = run_cli(["process", "--no-context"])
+
+    # Should only include body content (no context)
+    refute_match(/System Architecture/, output)
+    assert_match(/Analyze this system design/, output)
+  end
+
+  def test_process_with_short_context_flag
+    # Create prompt with frontmatter
+    File.write(@prompt_file, <<~MARKDOWN, encoding: "utf-8")
+      ---
+      context:
+        sources:
+          - preset: "coding-standards"
+      ---
+      Check code quality and standards compliance.
+    MARKDOWN
+
+    # Mock ContextLoader
+    mock_context = "# Coding Standards\nProject coding standards and guidelines.\n\n## Original Prompt\nCheck code quality and standards compliance."
+    Ace::Prompt::Molecules::ContextLoader.stub(:call, mock_context) do
+      # Run CLI with short -c flag
+      output, _error = run_cli(["process", "-c"])
+
+      # Should include context
+      assert_match(/Coding Standards/, output)
+      assert_match(/Project coding standards/, output)
+      assert_match(/Check code quality/, output)
+    end
+  end
+
+  def test_end_to_end_context_loading_workflow
+    # Test complete workflow: setup prompt with context → process with context
+    prompt_with_context = <<~MARKDOWN
+      ---
+      context:
+        enabled: true
+        sources:
+          - file: "CHANGELOG.md"
+          - command: "git log --oneline -3"
+      tags: [review, security]
+      ---
+      Review this security enhancement.
+    MARKDOWN
+
+    # Write the prompt
+    File.write(@prompt_file, prompt_with_context, encoding: "utf-8")
+
+    # Mock context loading that returns expanded content
+    expanded_context = <<~MARKDOWN
+      # Security Review Context
+
+      ## Recent Changes
+      - feat: add authentication middleware
+      - fix: resolve XSS vulnerability
+      - docs: update security guidelines
+
+      ## Original Prompt
+      Review this security enhancement.
+    MARKDOWN
+
+    Ace::Prompt::Molecules::ContextLoader.stub(:call, expanded_context) do
+      # Process the prompt
+      output, _error = run_cli(["process", "--context"])
+
+      # Verify end-to-end workflow
+      assert_match(/Security Review Context/, output)
+      assert_match(/Recent Changes/, output)
+      assert_match(/Review this security enhancement/, output)
+
+      # Verify archiving worked correctly
+      assert File.directory?(@archive_dir)
+      archive_files = Dir.glob(File.join(@archive_dir, "*.md"))
+      assert_equal 1, archive_files.length
+
+      # Verify archived content includes original frontmatter
+      archived_content = File.read(archive_files.first)
+      assert_includes archived_content, "context:"
+      assert_includes archived_content, "tags:"
+      assert_includes archived_content, "Review this security enhancement"
+    end
+  end
+
+  def test_context_loading_graceful_degradation
+    # Create prompt that would require context loading
+    File.write(@prompt_file, <<~MARKDOWN, encoding: "utf-8")
+      ---
+      context:
+        enabled: true
+        sources:
+          - file: "nonexistent.md"
+          - command: "invalid-command"
+      ---
+      Handle missing context gracefully.
+    MARKDOWN
+
+    # Mock ContextLoader to return empty string (simulating failure)
+    Ace::Prompt::Molecules::ContextLoader.stub(:call, "") do
+      # Run CLI with context enabled
+      output, _error = run_cli(["process", "--context"])
+
+      # Should gracefully fallback to body content
+      refute_match(/# Project Context/, output)
+      assert_match(/Handle missing context gracefully/, output)
+
+      # Should still succeed and create archive
+      assert File.directory?(@archive_dir)
+    end
+  end
+
+  def test_error_scenario_context_loading_with_malformed_frontmatter
+    # Create prompt with malformed YAML
+    File.write(@prompt_file, <<~MARKDOWN, encoding: "utf-8")
+      ---
+      context:
+        enabled: true
+        sources:
+          - invalid_type: "unsupported"
+        malformed: yaml: content
+          - not_properly: structured
+      ---
+      Process malformed frontmatter.
+    MARKDOWN
+
+    # Run CLI - should handle gracefully
+    output, _error = run_cli(["process", "--context"])
+
+    # Should still return content (treating malformed frontmatter as body)
+    assert_match(/context:/, output)
+    assert_match(/malformed: yaml: content/, output)
+    assert_match(/Process malformed frontmatter/, output)
+  end
+
+  def test_setup_command_integration
+    # Test setup command with template
+    template_content = <<~MARKDOWN
+      # Bug Report Template
+
+      **Issue**: [Describe the bug]
+
+      **Steps to Reproduce**:
+      1.
+      2.
+      3.
+
+      **Expected Behavior**: [What should happen]
+
+      **Actual Behavior**: [What actually happens]
+    MARKDOWN
+
+    # Create a temporary template file
+    template_file = File.join(@tmpdir, "template.md")
+    File.write(template_file, template_content)
+
+    # Mock TemplateResolver to return our template file path
+    Ace::Prompt::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: template_file } }) do
+      # Run setup command
+      output, _error = run_cli(["setup"])
+
+      # Should create prompt file
+      assert File.exist?(@prompt_file)
+      content = File.read(@prompt_file)
+      assert_match(/Bug Report Template/, content)
+      assert_match(/\*\*Issue\*\*:/, content)
+      assert_match(/\*\*Steps to Reproduce\*\*:/, content)
+
+      # Archive directory may or may not be created during setup
+    end
+  end
+
+  def test_version_command_integration
+    # Test version command
+    output, _error = run_cli(["version"])
+
+    # Should output version
+    assert_match(/^\d+\.\d+\.\d+/, output.strip)
+  end
+
   private
 
   def run_cli(args)

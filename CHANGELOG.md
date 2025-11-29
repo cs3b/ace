@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.145] - 2025-11-29
+
+### ace-prompt v0.3.0 (Task 121.03)
+- **Added**: Context loading via ace-context integration
+  - FrontmatterExtractor atom for parsing YAML frontmatter from prompts
+  - ContextLoader molecule integrating with ace-context Ruby API
+  - PromptProcessor enhanced with context embedding via `--context` flag
+- **Changed**: Global configuration via ace-support-core config cascade
+  - Simplified ContextLoader using ace-context Ruby API directly
+
 ## [0.9.144] - 2025-11-29
 
 ### Fixed

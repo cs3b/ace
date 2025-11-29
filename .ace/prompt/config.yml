@@ -1,0 +1,11 @@
+# ace-prompt configuration
+# Place this in .ace/prompt/config.yml in your project
+#
+# Configuration cascade: ./.ace/prompt/config.yml → ~/.ace/prompt/config.yml
+# Values in project config take precedence over home directory config.
+
+# Context loading configuration
+# When enabled, ace-prompt will load project context via ace-context
+# based on frontmatter in the prompt file.
+context:
+  enabled: false

@@ -36,7 +36,7 @@ module Ace
                 {
                   success: false,
                   path: nil,
-                  error: "Template not found: #{normalized_uri}"
+                  error: "Error: Template not found: #{normalized_uri}"
                 }
               end
             end
@@ -44,7 +44,7 @@ module Ace
             {
               success: false,
               path: nil,
-              error: "Failed to resolve template: #{e.message}"
+              error: "Error: Failed to resolve template: #{e.message}"
             }
           end
 

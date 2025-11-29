@@ -33,6 +33,15 @@ module Ace
           # Explicit stdout
           $ ace-prompt --output -
 
+          # Load context from frontmatter
+          $ ace-prompt --context
+
+          # Short flag for context
+          $ ace-prompt -c
+
+          # Explicitly disable context
+          $ ace-prompt --no-context
+
         OUTPUT:
 
           By default, content is printed to stdout.
@@ -40,9 +49,16 @@ module Ace
       DESC
       option :output, type: :string, aliases: "-o",
                       desc: "Write content to file instead of stdout (use '-' for explicit stdout)"
+      option :context, type: :boolean, aliases: "-c",
+                       desc: "Load context via ace-context (from frontmatter)"
+      option :no_context, type: :boolean,
+                          desc: "Explicitly disable context loading (override config)"
       def process
+        # Determine context flag
+        context_enabled = determine_context_enabled(options)
+
         # Process prompt
-        result = Organisms::PromptProcessor.call
+        result = Organisms::PromptProcessor.call(context: context_enabled)
 
         unless result[:success]
           warn "Error: #{result[:error]}"
@@ -69,7 +85,7 @@ module Ace
             $stdout.puts "  Output:  #{File.expand_path(output_mode)}"
             return 0
           rescue StandardError => e
-            warn "Error writing output file: #{e.message}"
+            warn "Error: Failed to write output file: #{e.message}"
             return 1
           end
         end
@@ -130,7 +146,7 @@ module Ace
         )
 
         unless result[:success]
-          warn "Setup failed: #{result[:error]}"
+          warn "Error: Setup failed: #{result[:error]}"
           return 1
         end
 
@@ -141,7 +157,7 @@ module Ace
         end
         0
       rescue StandardError => e
-        warn "Setup failed: #{e.message}"
+        warn "Error: Setup failed: #{e.message}"
         1
       end
 
@@ -151,6 +167,21 @@ module Ace
       end
 
       map %w[-v --version] => :version
+
+      private
+
+      # Determine if context loading should be enabled
+      # Priority: CLI flags > config file
+      def determine_context_enabled(options)
+        # Explicit --no-context disables
+        return false if options[:no_context]
+
+        # Explicit --context enables
+        return true if options[:context]
+
+        # Fall back to config
+        Ace::Prompt.config.dig("context", "enabled") || false
+      end
     end
   end
 end
