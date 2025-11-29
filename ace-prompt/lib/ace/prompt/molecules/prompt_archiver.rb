@@ -19,7 +19,7 @@ module Ace
         # @param timestamp [String, nil] Optional timestamp (default: generated)
         # @return [Hash] Hash with :archive_path, :symlink_path, :success, :error keys
         def self.call(content:, timestamp: nil)
-          return { success: false, error: "Content is nil" } if content.nil?
+          return { success: false, error: "Error: Content to archive cannot be nil" } if content.nil?
 
           project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
           archive_dir = File.join(project_root, DEFAULT_ARCHIVE_DIR)
@@ -57,7 +57,7 @@ module Ace
             archive_path: nil,
             symlink_path: nil,
             success: false,
-            error: "Error archiving file: #{e.message}"
+            error: "Error: Failed to archive file: #{e.message}"
           }
         end
 
@@ -80,7 +80,7 @@ module Ace
 
           { success: true, error: nil }
         rescue StandardError => e
-          { success: false, error: "Error updating symlink: #{e.message}" }
+          { success: false, error: "Error: Failed to update symlink: #{e.message}" }
         end
       end
     end

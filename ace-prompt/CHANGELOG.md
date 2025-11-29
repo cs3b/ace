@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-11-28
+
+### Added
+- Global configuration via `Ace::Prompt.config` using ace-core config cascade
+- Configuration file support at `.ace/prompt/config.yml`
+- `context.enabled` config option to control context loading behavior
+- Example config at `.ace.example/prompt/config.yml`
+
+### Changed
+- CLI now uses `Ace::Prompt.config` instead of custom ConfigLoader molecule
+- Removed `ConfigLoader` molecule (replaced by standard ace-* config pattern)
+- Simplified `ContextLoader` to pass file path directly to ace-context
+
 ## [0.2.0] - 2025-11-28
 
 ### Added
