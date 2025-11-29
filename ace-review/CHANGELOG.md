@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2025-11-29
+
+### Fixed
+- Fix PR diff generation to use actual PR content instead of origin...HEAD when using `--pr` flag with presets
+- Remove problematic default subject from `code-pr.yml` preset that contained `origin...HEAD`
+- Add comprehensive integration tests for PR diff generation behavior
+
 ## [0.19.0] - 2025-11-27
 
 ### Added
