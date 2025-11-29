@@ -94,7 +94,6 @@ PATH
   remote: ace-prompt
   specs:
     ace-prompt (0.2.0)
-      ace-context (~> 0.8)
       ace-nav (~> 0.8)
       ace-support-core (~> 0.10)
       thor (~> 1.3)

@@ -52,7 +52,8 @@ module Ace
             content_result[:context],
             content_result[:subject],
             options.subject,  # Pass original subject configuration
-            session_dir
+            session_dir,
+            options  # Pass options to check for PR mode
           )
           return prompt_result unless prompt_result[:success]
 
@@ -200,7 +201,7 @@ module Ace
         end
 
         # Step 3: Generate system and user prompts via ace-context
-        def compose_review_prompt(config, context, subject, subject_config, session_dir)
+        def compose_review_prompt(config, context, subject, subject_config, session_dir, options = nil)
           # Extract prompt composition and context config
           system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
           context_config = config[:context] || config["context"] || "project"
@@ -218,17 +219,14 @@ module Ace
           # Step 3b: Create user.context.md with subject configuration
           subject_config = config["subject"] || config[:subject]
 
-          # If no subject config but we have subject content (e.g., from PR mode),
-          # save to file and create subject config referencing the file.
-          # This allows us to feed the PR diff into the standard ace-context composition
-          # process without altering the core workflow - the PR diff becomes just another
-          # context source that ace-context knows how to handle.
-          if !subject_config && subject && !subject.empty?
+          # Config merging: Load preset config first, then overwrite with PR-specific content
+          # if --pr flag is used. This follows the "merge config then merge --pr" approach.
+          if subject && !subject.empty? && options&.pr_review?
             # Save PR diff to session file
             pr_diff_path = File.join(session_dir, "pr-diff.patch")
             File.write(pr_diff_path, subject)
 
-            # Create subject config referencing the file
+            # Overwrite subject config with PR-specific content
             subject_config = {
               "context" => {
                 "sections" => {
