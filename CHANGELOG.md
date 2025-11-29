@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.144] - 2025-11-29
+
+### Fixed
+- **ace-review v0.19.1**: Fix PR diff generation to use actual PR content instead of origin...HEAD when using `--pr` flag with presets
+- Remove problematic default subject from `code-pr.yml` preset that contained `origin...HEAD`
+- Add comprehensive integration tests for PR diff generation behavior
+
 ### ace-prompt v0.2.0
 - **Added**: Setup command for template initialization (Task 121.02)
   - `ace-prompt setup` initializes workspace with template
