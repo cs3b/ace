@@ -189,13 +189,18 @@ class PrCreatorTest < Minitest::Test
 
     # Create fresh instance to avoid cache issues
     creator = Ace::Git::Worktree::Molecules::PrCreator.new(timeout: 5)
+    # Reset cache to ensure stubs work
+    creator.instance_variable_set(:@gh_available, nil)
+    creator.instance_variable_set(:@gh_authenticated, nil)
 
     creator.stub :gh_available?, true do
       creator.stub :gh_authenticated?, true do
         creator.stub :find_existing_pr, nil do
           # Mock the execute_with_timeout to simulate success
           mock_execute = lambda { |_cmd, _timeout|
-            [pr_url, "", Minitest::Mock.new.tap { |m| m.expect(:success?, true) }]
+            mock_status = Minitest::Mock.new
+            mock_status.expect(:success?, true)
+            [pr_url, "", mock_status]
           }
 
           creator.stub :execute_with_timeout, mock_execute do
@@ -269,15 +274,20 @@ class PrCreatorTest < Minitest::Test
 
     # Create fresh instance to avoid cache issues
     creator = Ace::Git::Worktree::Molecules::PrCreator.new(timeout: 5)
+    # Reset cache to ensure stubs work
+    creator.instance_variable_set(:@gh_available, nil)
 
     creator.stub :gh_available?, true do
       mock_execute = lambda { |_cmd, _timeout|
-        [pr_json, "", Minitest::Mock.new.tap { |m| m.expect(:success?, true) }]
+        mock_status = Minitest::Mock.new
+        mock_status.expect(:success?, true)
+        [pr_json, "", mock_status]
       }
 
       creator.stub :execute_with_timeout, mock_execute do
         result = creator.find_existing_pr(branch: "existing-branch")
 
+        refute_nil result, "Expected result to be a hash, got nil"
         assert_equal 42, result[:number]
         assert_equal "https://github.com/owner/repo/pull/42", result[:url]
       end
