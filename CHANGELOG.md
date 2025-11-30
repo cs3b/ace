@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ace-git-worktree v0.4.3
+- **Fixed**: Metadata commit bug - task changes now properly commit when metadata is added
+  - Previously, commits only happened when task status was updated
+  - Now commits happen when either status is updated OR metadata is added
+  - Ensures worktree metadata is committed before detaching to new worktree
+- **Fixed**: Dry run (`--dry-run`) now accurately reflects when commit/push will happen
+
 ## [0.9.145] - 2025-11-29
 
 ### ace-prompt v0.3.0 (Task 121.03)
