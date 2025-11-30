@@ -8,11 +8,16 @@
 # When enabled, ace-prompt will load project context via ace-context
 # based on frontmatter in the prompt file.
 context:
-  enabled: false
+  enabled: true
   # sources:
   #   - file: "docs/architecture.md"
   #   - preset: "project-overview"
   #   - command: "git status --short"
+
+task:
+  detection: true
+  branch_patterns:
+    - '^(\d+(?:\.\d+)?)-'  # Default: 121-feature, 121.01-archive
 
 # Security configuration
 # Controls security limits and validation for context loading
@@ -28,7 +33,8 @@ debug:
 # Enhancement configuration
 # Controls LLM-powered prompt enhancement via `ace-prompt -e`
 enhance:
-  model: gflash           # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
+  enabled: false
+  model: glite           # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
   temperature: 0.3        # Lower = more focused, higher = more creative
   # system_prompt: prompt://custom-enhance-instructions  # Optional custom system prompt
 

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require_relative "../molecules/prompt_reader"
 require_relative "../molecules/prompt_archiver"
 require_relative "../atoms/frontmatter_extractor"
@@ -14,15 +15,18 @@ module Ace
       class PromptProcessor
         # Process prompt: read, archive, optionally load context and/or enhance, return content
         #
-        # @param input_path [String, nil] Optional custom input path
+        # @param input_path [String, nil] Optional custom input path (resolved by CLI)
         # @param context [Boolean] Whether to load context from frontmatter
         # @param enhance [Boolean] Whether to enhance prompt via LLM
         # @param model [String, nil] LLM model alias or provider:model
         # @param system_prompt [String, nil] Custom system prompt path
         # @return [Hash] Hash with :content, :archive_path, :success, :error keys
         def self.call(input_path: nil, context: false, enhance: false, model: nil, system_prompt: nil)
+          # Use provided input path (already resolved by CLI)
+          final_input_path = input_path
+
           # Read prompt
-          read_result = Molecules::PromptReader.call(path: input_path)
+          read_result = Molecules::PromptReader.call(path: final_input_path)
           unless read_result[:success]
             return {
               content: nil,
@@ -34,8 +38,20 @@ module Ace
 
           original_content = read_result[:content]
 
+          # Determine archive directory and symlink path based on prompt location
+          archive_dir, symlink_path = if final_input_path
+                                        prompt_dir = File.dirname(final_input_path)
+                                        [File.join(prompt_dir, "archive"), File.join(prompt_dir, "_previous.md")]
+                                      else
+                                        [nil, nil] # Use defaults
+                                      end
+
           # Archive ORIGINAL content (before context expansion)
-          archive_result = Molecules::PromptArchiver.call(content: original_content)
+          archive_result = Molecules::PromptArchiver.call(
+            content: original_content,
+            archive_dir: archive_dir,
+            symlink_path: symlink_path
+          )
           unless archive_result[:success]
             return {
               content: original_content,
@@ -135,6 +151,7 @@ module Ace
             error: nil
           }
         end
+
       end
     end
   end

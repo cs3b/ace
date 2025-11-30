@@ -22,6 +22,7 @@ end
 require_relative "prompt/atoms/timestamp_generator"
 require_relative "prompt/atoms/content_hasher"
 require_relative "prompt/atoms/frontmatter_extractor"
+require_relative "prompt/atoms/task_path_resolver"
 
 # Molecules
 require_relative "prompt/molecules/prompt_reader"
@@ -30,6 +31,7 @@ require_relative "prompt/molecules/template_resolver"
 require_relative "prompt/molecules/template_manager"
 require_relative "prompt/molecules/context_loader"
 require_relative "prompt/molecules/enhancement_tracker"
+require_relative "prompt/molecules/git_branch_reader"
 
 # Organisms
 require_relative "prompt/organisms/prompt_processor"
@@ -49,8 +51,8 @@ module Ace
     # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
-        base_config = Ace::Core.config
-        user_config = base_config.get("ace", "prompt") || {}
+        # Use Ace::Core.get for namespace resolution (searches .ace/prompt/config.yml)
+        user_config = Ace::Core.get("prompt", file: "config") || {}
         merge_config(default_config, user_config)
       rescue StandardError => e
         warn "Warning: Could not load ace-prompt config: #{e.message}"
@@ -70,6 +72,10 @@ module Ace
           "model" => DEFAULT_MODEL,
           "temperature" => 0.3,
           "system_prompt" => "prompt://prompt-enhance-instructions.system"
+        },
+        "task" => {
+          "detection" => false,
+          "branch_patterns" => ['^(\d+(?:\.\d+)?)-']
         },
         "security" => {
           "max_file_size_mb" => 10

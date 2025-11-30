@@ -13,26 +13,56 @@ class CLIIntegrationTest < Minitest::Test
     @prompt_file = File.join(@prompt_dir, "the-prompt.md")
     @prompt_content = "Review this code for security issues"
 
-    # Mock ProjectRootFinder to return tmpdir
-    @original_finder = Ace::Core::Molecules::ProjectRootFinder.method(:find_or_current)
-    tmpdir = @tmpdir
-    Ace::Core::Molecules::ProjectRootFinder.define_singleton_method(:find_or_current) do
-      tmpdir
-    end
+    # Reset config cache to ensure clean state
+    Ace::Prompt.reset_config!
+
+    # Store default config for use in tests
+    @default_config = Ace::Prompt.default_config
   end
 
   def teardown
-    # Restore original finder
-    Ace::Core::Molecules::ProjectRootFinder.define_singleton_method(:find_or_current, @original_finder)
+    Ace::Prompt.reset_config!
     FileUtils.rm_rf(@tmpdir)
   end
+
+  private
+
+  # Helper to run CLI with proper stubs for isolation
+  def run_cli_isolated(args, config: nil)
+    test_config = config || @default_config
+    tmpdir = @tmpdir
+
+    result = nil
+    Ace::Prompt.stub :config, test_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+        result = run_cli(args)
+      end
+    end
+    result
+  end
+
+  # Helper to run CLI for exit code with proper stubs
+  def run_cli_isolated_for_exit_code(args, config: nil)
+    test_config = config || @default_config
+    tmpdir = @tmpdir
+
+    exit_code = nil
+    Ace::Prompt.stub :config, test_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+        exit_code = run_cli_for_exit_code(args)
+      end
+    end
+    exit_code
+  end
+
+  public
 
   def test_process_with_stdout_output_returns_zero
     # Create prompt file
     File.write(@prompt_file, @prompt_content, encoding: "utf-8")
 
     # Run CLI
-    output, _error = run_cli(["process"])
+    output, _error = run_cli_isolated(["process"])
 
     # Verify content output
     assert_match(/Review this code for security issues/, output)
@@ -54,7 +84,7 @@ class CLIIntegrationTest < Minitest::Test
     output_file = File.join(@tmpdir, "output.md")
 
     # Run CLI with --output
-    output, _error = run_cli(["process", "--output", output_file])
+    output, _error = run_cli_isolated(["process", "--output", output_file])
 
     # Verify file created
     assert File.exist?(output_file)
@@ -77,7 +107,7 @@ class CLIIntegrationTest < Minitest::Test
     output_file = File.join(@tmpdir, "nested/dir/output.md")
 
     # Run CLI with --output to non-existent directory
-    output, _error = run_cli(["process", "--output", output_file])
+    output, _error = run_cli_isolated(["process", "--output", output_file])
 
     # Verify file created with parent directories
     assert File.exist?(output_file)
@@ -89,7 +119,7 @@ class CLIIntegrationTest < Minitest::Test
     # Don't create prompt file
 
     # Run CLI and capture exit code
-    exit_code = run_cli_for_exit_code(["process"])
+    exit_code = run_cli_isolated_for_exit_code(["process"])
 
     # Verify returns 1
     assert_equal 1, exit_code
@@ -100,7 +130,7 @@ class CLIIntegrationTest < Minitest::Test
     File.write(@prompt_file, @prompt_content, encoding: "utf-8")
 
     # Run CLI with --output -
-    output, _error = run_cli(["process", "--output", "-"])
+    output, _error = run_cli_isolated(["process", "--output", "-"])
 
     # Verify content output
     assert_match(/Review this code for security issues/, output)
@@ -122,7 +152,7 @@ class CLIIntegrationTest < Minitest::Test
     mock_context = "# Feature Context\nImplementation details for the feature.\n\n## Original Prompt\nReview this feature implementation."
     Ace::Prompt::Molecules::ContextLoader.stub(:call, mock_context) do
       # Run CLI with --context flag
-      output, _error = run_cli(["process", "--context"])
+      output, _error = run_cli_isolated(["process", "--context"])
 
       # Should include context content
       assert_match(/Feature Context/, output)
@@ -144,7 +174,7 @@ class CLIIntegrationTest < Minitest::Test
     MARKDOWN
 
     # Run CLI with --no-context to override frontmatter
-    output, _error = run_cli(["process", "--no-context"])
+    output, _error = run_cli_isolated(["process", "--no-context"])
 
     # Should only include body content (no context)
     refute_match(/System Architecture/, output)
@@ -166,7 +196,7 @@ class CLIIntegrationTest < Minitest::Test
     mock_context = "# Coding Standards\nProject coding standards and guidelines.\n\n## Original Prompt\nCheck code quality and standards compliance."
     Ace::Prompt::Molecules::ContextLoader.stub(:call, mock_context) do
       # Run CLI with short -c flag
-      output, _error = run_cli(["process", "-c"])
+      output, _error = run_cli_isolated(["process", "-c"])
 
       # Should include context
       assert_match(/Coding Standards/, output)
@@ -207,7 +237,7 @@ class CLIIntegrationTest < Minitest::Test
 
     Ace::Prompt::Molecules::ContextLoader.stub(:call, expanded_context) do
       # Process the prompt
-      output, _error = run_cli(["process", "--context"])
+      output, _error = run_cli_isolated(["process", "--context"])
 
       # Verify end-to-end workflow
       assert_match(/Security Review Context/, output)
@@ -243,7 +273,7 @@ class CLIIntegrationTest < Minitest::Test
     # Mock ContextLoader to return empty string (simulating failure)
     Ace::Prompt::Molecules::ContextLoader.stub(:call, "") do
       # Run CLI with context enabled
-      output, _error = run_cli(["process", "--context"])
+      output, _error = run_cli_isolated(["process", "--context"])
 
       # Should gracefully fallback to body content
       refute_match(/# Project Context/, output)
@@ -269,7 +299,7 @@ class CLIIntegrationTest < Minitest::Test
     MARKDOWN
 
     # Run CLI - should handle gracefully
-    output, _error = run_cli(["process", "--context"])
+    output, _error = run_cli_isolated(["process", "--context"])
 
     # Should still return content (treating malformed frontmatter as body)
     assert_match(/context:/, output)
@@ -301,7 +331,7 @@ class CLIIntegrationTest < Minitest::Test
     # Mock TemplateResolver to return our template file path
     Ace::Prompt::Molecules::TemplateResolver.stub(:call, ->(**_) { { success: true, path: template_file } }) do
       # Run setup command
-      output, _error = run_cli(["setup"])
+      output, _error = run_cli_isolated(["setup"])
 
       # Should create prompt file
       assert File.exist?(@prompt_file)
@@ -316,7 +346,7 @@ class CLIIntegrationTest < Minitest::Test
 
   def test_version_command_integration
     # Test version command
-    output, _error = run_cli(["version"])
+    output, _error = run_cli_isolated(["version"])
 
     # Should output version
     assert_match(/^\d+\.\d+\.\d+/, output.strip)
@@ -344,7 +374,7 @@ class CLIIntegrationTest < Minitest::Test
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
       # Run CLI with --enhance and specify system prompt file
-      output, _error = run_cli(["process", "--enhance", "--system-prompt", system_prompt_file])
+      output, _error = run_cli_isolated(["process", "--enhance", "--system-prompt", system_prompt_file])
 
       # Verify enhanced content output
       assert_match(/Enhanced:/, output)
@@ -391,7 +421,7 @@ class CLIIntegrationTest < Minitest::Test
     }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
-      run_cli(["process", "--enhance", "--model", "claude", "--system-prompt", system_prompt_file])
+      run_cli_isolated(["process", "--enhance", "--model", "claude", "--system-prompt", system_prompt_file])
       assert_equal "claude", model_used
     end
   end
@@ -414,8 +444,144 @@ class CLIIntegrationTest < Minitest::Test
     mock_query = ->(_model, _prompt, **_opts) { { text: enhanced_content } }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
-      output, _error = run_cli(["process", "-e", "--system-prompt", system_prompt_file])
+      output, _error = run_cli_isolated(["process", "-e", "--system-prompt", system_prompt_file])
       assert_match(/Enhanced prompt/, output)
+    end
+  end
+
+  # ============================================
+  # Task-specific prompt tests
+  # ============================================
+
+  def test_process_with_task_flag_uses_task_prompts_directory
+    # Create task directory structure
+    task_dir = File.join(@tmpdir, ".ace-taskflow/v.0.9.0/tasks/117-feature-name")
+    task_prompts_dir = File.join(task_dir, "prompts")
+    task_archive_dir = File.join(task_prompts_dir, "archive")
+    FileUtils.mkdir_p(task_prompts_dir)
+
+    # Create task file (required for TaskManager to find the task)
+    task_file = File.join(task_dir, "task.117.s.md")
+    File.write(task_file, "# Task 117\n\nTask description", encoding: "utf-8")
+
+    # Create prompt in task directory
+    task_prompt_file = File.join(task_prompts_dir, "the-prompt.md")
+    task_prompt_content = "Task-specific prompt content for feature 117"
+    File.write(task_prompt_file, task_prompt_content, encoding: "utf-8")
+
+    # Mock TaskPathResolver to return our test task directory
+    mock_result = {
+      path: task_dir,
+      prompts_path: task_prompts_dir,
+      found: true,
+      error: nil
+    }
+
+    Ace::Prompt::Atoms::TaskPathResolver.stub :resolve, mock_result do
+      output, _error = run_cli_isolated(["process", "--task", "117"])
+
+      # Verify content output
+      assert_match(/Task-specific prompt content/, output)
+
+      # Verify archive created in task directory
+      assert File.directory?(task_archive_dir), "Archive directory should be created in task prompts"
+      archive_files = Dir.glob(File.join(task_archive_dir, "*.md"))
+      assert_equal 1, archive_files.length, "One archive file should be created"
+
+      # Verify symlink created in task directory
+      symlink_path = File.join(task_prompts_dir, "_previous.md")
+      assert File.symlink?(symlink_path), "_previous.md symlink should be created"
+    end
+  end
+
+  def test_process_with_invalid_task_returns_error
+    # Mock TaskPathResolver to return not found
+    mock_result = {
+      path: nil,
+      prompts_path: nil,
+      found: false,
+      error: "Task not found: 999"
+    }
+
+    Ace::Prompt::Atoms::TaskPathResolver.stub :resolve, mock_result do
+      exit_code = run_cli_isolated_for_exit_code(["process", "--task", "999"])
+      assert_equal 1, exit_code, "Should return error exit code for invalid task"
+    end
+  end
+
+  def test_setup_with_task_flag_creates_prompt_in_task_directory
+    # Create task directory structure
+    task_dir = File.join(@tmpdir, ".ace-taskflow/v.0.9.0/tasks/118-new-task")
+    task_prompts_dir = File.join(task_dir, "prompts")
+    FileUtils.mkdir_p(task_dir)
+
+    # Mock TaskPathResolver
+    mock_result = {
+      path: task_dir,
+      prompts_path: task_prompts_dir,
+      found: true,
+      error: nil
+    }
+
+    # Create a template
+    template_content = "# Task Template\n\nDescribe your task here."
+    template_file = File.join(@tmpdir, "template.md")
+    File.write(template_file, template_content)
+
+    Ace::Prompt::Atoms::TaskPathResolver.stub :resolve, mock_result do
+      Ace::Prompt::Molecules::TemplateResolver.stub :call, ->(**_) { { success: true, path: template_file } } do
+        output, _error = run_cli_isolated(["setup", "--task", "118"])
+
+        # Verify prompt created in task directory
+        task_prompt_file = File.join(task_prompts_dir, "the-prompt.md")
+        assert File.exist?(task_prompt_file), "Prompt should be created in task prompts directory"
+
+        content = File.read(task_prompt_file)
+        assert_match(/Task Template/, content)
+
+        # Verify output message
+        assert_match(/Prompt initialized/, output)
+      end
+    end
+  end
+
+  def test_process_with_auto_detection_from_branch
+    # Create task directory structure
+    task_dir = File.join(@tmpdir, ".ace-taskflow/v.0.9.0/tasks/121-feature")
+    task_prompts_dir = File.join(task_dir, "prompts")
+    FileUtils.mkdir_p(task_prompts_dir)
+
+    # Create prompt in task directory
+    task_prompt_file = File.join(task_prompts_dir, "the-prompt.md")
+    File.write(task_prompt_file, "Auto-detected task prompt", encoding: "utf-8")
+
+    # Mock TaskPathResolver
+    mock_result = {
+      path: task_dir,
+      prompts_path: task_prompts_dir,
+      found: true,
+      error: nil
+    }
+
+    # Enable task detection in config
+    config_with_detection = Ace::Prompt.default_config.merge(
+      "task" => { "detection" => true }
+    )
+
+    tmpdir = @tmpdir
+    Ace::Prompt.stub :config, config_with_detection do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+        Ace::Prompt::Molecules::GitBranchReader.stub :current_branch, "121-feature-branch" do
+          Ace::Prompt::Atoms::TaskPathResolver.stub :extract_from_branch, "121" do
+            Ace::Prompt::Atoms::TaskPathResolver.stub :resolve, mock_result do
+              output, _error = run_cli(["process"])
+
+              # Verify auto-detected task prompt was used
+              assert_match(/Auto-detected task prompt/, output)
+            end
+          end
+        end
+      end
     end
   end
 

@@ -70,62 +70,131 @@ module Ace
           end
 
           # Process system prompt through ace-context
+          # Loads presets from frontmatter and combines with instructions
           #
           # @param uri_or_path [String] Original URI or path
           # @param content [String] Raw system prompt content
           # @return [Hash] Result with processed content
           def process_with_context(uri_or_path, content)
-            path = resolve_to_path(uri_or_path)
+            extracted = Atoms::FrontmatterExtractor.extract(content)
+            frontmatter = extracted[:frontmatter] || {}
+            instructions = extracted[:body] || content
 
-            unless path && File.exist?(path)
-              warn "Warning: Cannot resolve system prompt to file path for context loading"
+            # Get presets from frontmatter
+            presets = frontmatter.dig("context", "presets") || []
+
+            if presets.empty?
               return {
-                content: strip_frontmatter(content),
+                content: instructions,
                 context_loaded: false,
-                error: "Cannot resolve to file path"
+                error: nil
               }
             end
 
             begin
-              require "ace/context"
+              # Load each preset and combine
+              context_parts = []
 
-              # Use ace-context to process the system prompt file
-              # format: markdown (we want clean output, not XML-wrapped)
-              # embed_source: false (we don't need the prompt file embedded)
-              context_data = Ace::Context.load_file(
-                path,
-                format: "markdown",
-                embed_source: false
-              )
+              presets.each do |preset|
+                # Use ace-context API to load preset (Ruby API first, CLI fallback)
+                preset_content = load_preset_via_api(preset)
+                context_parts << preset_content if preset_content && !preset_content.empty?
+              end
 
-              if context_data&.content.is_a?(String) && !context_data.content.empty?
-                {
-                  content: context_data.content,
-                  context_loaded: true,
-                  error: nil
-                }
-              else
-                {
-                  content: strip_frontmatter(content),
+              if context_parts.empty?
+                return {
+                  content: instructions,
                   context_loaded: false,
-                  error: "Empty context result"
+                  error: "No preset content loaded"
                 }
               end
-            rescue LoadError => e
-              warn "Warning: ace-context not available: #{e.message}"
+
+              # Combine: context section + instructions section
+              combined = build_combined_prompt(context_parts.join("\n\n"), instructions)
+
               {
-                content: strip_frontmatter(content),
-                context_loaded: false,
-                error: "ace-context not available"
+                content: combined,
+                context_loaded: true,
+                error: nil
               }
             rescue StandardError => e
               warn "Warning: Context loading failed: #{e.message}"
               {
-                content: strip_frontmatter(content),
+                content: instructions,
                 context_loaded: false,
                 error: e.message
               }
             end
+          end
+
+          # Load preset content via ace-context
+          # Tries Ruby API first (faster, in-process), falls back to CLI
+          #
+          # @param preset [String] Preset name
+          # @return [String, nil] Preset content or nil
+          def load_preset_via_api(preset)
+            # Try Ruby API first (faster, in-process, testable)
+            begin
+              require "ace/context"
+              context_data = Ace::Context.load_preset(preset)
+              content = context_data&.content
+              return content if content && !content.strip.empty?
+
+              warn "Warning: ace-context returned empty content for preset '#{preset}'" unless ENV["ACE_QUIET"]
+              nil
+            rescue LoadError
+              # ace-context gem not available, try CLI fallback
+              load_preset_via_cli(preset)
+            rescue StandardError => e
+              warn "Warning: ace-context API failed for '#{preset}': #{e.message}" unless ENV["ACE_QUIET"]
+              # Try CLI as fallback
+              load_preset_via_cli(preset)
+            end
+          end
+
+          # Load preset content via ace-context CLI (fallback)
+          #
+          # @param preset [String] Preset name
+          # @return [String, nil] Preset content or nil
+          def load_preset_via_cli(preset)
+            require "open3"
+
+            stdout, stderr, status = Open3.capture3("ace-context", preset, "--output", "stdio")
+
+            if status.success? && !stdout.strip.empty?
+              stdout
+            else
+              warn "Warning: ace-context CLI failed for preset '#{preset}': #{stderr}" unless ENV["ACE_QUIET"]
+              nil
+            end
+          rescue Errno::ENOENT
+            warn "Warning: ace-context CLI not found on PATH. Install ace-context or ensure it's in your PATH." unless ENV["ACE_QUIET"]
+            nil
+          rescue StandardError => e
+            warn "Warning: ace-context CLI error: #{e.message}" unless ENV["ACE_QUIET"]
+            nil
+          end
+
+          # Build combined prompt with clear sections
+          #
+          # @param context [String] Project context content
+          # @param instructions [String] Enhancement instructions
+          # @return [String] Combined prompt
+          def build_combined_prompt(context, instructions)
+            <<~PROMPT
+              # Project Context (Reference)
+
+              The following is project context to help you understand the codebase.
+              Use this knowledge when enhancing prompts, but focus on the instructions below.
+
+              #{context}
+
+              ---
+
+              # Enhancement Instructions
+
+              #{instructions}
+            PROMPT
           end
 
           # Resolve protocol URI to file path

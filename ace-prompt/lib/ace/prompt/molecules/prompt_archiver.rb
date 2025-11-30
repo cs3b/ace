@@ -17,12 +17,14 @@ module Ace
         #
         # @param content [String] Content to archive
         # @param timestamp [String, nil] Optional timestamp (default: generated)
+        # @param archive_dir [String, nil] Optional custom archive directory
+        # @param symlink_path [String, nil] Optional custom symlink path
         # @return [Hash] Hash with :archive_path, :symlink_path, :success, :error keys
-        def self.call(content:, timestamp: nil)
+        def self.call(content:, timestamp: nil, archive_dir: nil, symlink_path: nil)
           return { success: false, error: "Error: Content to archive cannot be nil" } if content.nil?
 
           project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          archive_dir = File.join(project_root, DEFAULT_ARCHIVE_DIR)
+          archive_dir ||= File.join(project_root, DEFAULT_ARCHIVE_DIR)
           FileUtils.mkdir_p(archive_dir)
 
           # Generate or use provided timestamp
@@ -42,7 +44,7 @@ module Ace
           File.write(archive_path, content, encoding: "utf-8")
 
           # Update symlink
-          symlink_path = File.join(project_root, PREVIOUS_SYMLINK)
+          symlink_path ||= File.join(project_root, PREVIOUS_SYMLINK)
           update_symlink_result = update_symlink(symlink_path, archive_path)
 
           {

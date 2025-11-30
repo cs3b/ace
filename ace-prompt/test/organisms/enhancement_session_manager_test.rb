@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "open3"
+require "ostruct"
 
 class EnhancementSessionManagerTest < Minitest::Test
   def setup
@@ -80,16 +82,17 @@ class EnhancementSessionManagerTest < Minitest::Test
       # Create a mock context data object
       mock_context_data = Object.new
       def mock_context_data.content
-        "Loaded context content\n\nYou are a helpful assistant."
+        "Loaded context content"
       end
 
-      Ace::Context.stub :load_file, mock_context_data do
+      Ace::Context.stub :load_preset, mock_context_data do
         result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 
         # Context was loaded
         assert result[:context_loaded]
         assert_nil result[:error]
         assert_includes result[:content], "Loaded context content"
+        assert_includes result[:content], "You are a helpful assistant."
       end
     end
   end
@@ -116,15 +119,18 @@ class EnhancementSessionManagerTest < Minitest::Test
     File.write(prompt_path, system_prompt)
 
     Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      # Stub ace-context to raise an error
-      Ace::Context.stub :load_file, ->(*_args) { raise StandardError, "Context loading failed" } do
-        result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
+      # Stub ace-context to raise an error (simulates API failure)
+      # Also stub CLI fallback to fail
+      Ace::Context.stub :load_preset, ->(*_args) { raise StandardError, "Context loading failed" } do
+        Open3.stub :capture3, ["", "CLI failed", OpenStruct.new(success?: false)] do
+          result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 
-        # Should fall back to body without context
-        refute result[:context_loaded]
-        assert_equal "Context loading failed", result[:error]
-        # Still has content (the body)
-        assert_includes result[:content], "You are a helpful assistant."
+          # Should fall back to body without context
+          refute result[:context_loaded]
+          assert_equal "No preset content loaded", result[:error]
+          # Still has content (the body)
+          assert_includes result[:content], "You are a helpful assistant."
+        end
       end
     end
   end
@@ -191,14 +197,17 @@ class EnhancementSessionManagerTest < Minitest::Test
         ""
       end
 
-      Ace::Context.stub :load_file, mock_context_data do
-        result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
+      # Stub API to return empty content, and CLI fallback to also fail
+      Ace::Context.stub :load_preset, mock_context_data do
+        Open3.stub :capture3, ["", "", OpenStruct.new(success?: false)] do
+          result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 
-        # Should fall back since context is empty
-        refute result[:context_loaded]
-        assert_equal "Empty context result", result[:error]
-        # Still has content (the body)
-        assert_includes result[:content], "You are a helpful assistant."
+          # Should fall back since context is empty
+          refute result[:context_loaded]
+          assert_equal "No preset content loaded", result[:error]
+          # Still has content (the body)
+          assert_includes result[:content], "You are a helpful assistant."
+        end
       end
     end
   end

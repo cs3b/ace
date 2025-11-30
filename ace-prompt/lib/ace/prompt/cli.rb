@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "thor"
 require_relative "organisms/prompt_processor"
 require_relative "organisms/prompt_initializer"
@@ -61,6 +62,8 @@ module Ace
                      desc: "LLM model (default: #{Ace::Prompt::DEFAULT_MODEL})"
       option :system_prompt, type: :string,
                              desc: "Custom system prompt path"
+      option :task, type: :string,
+                    desc: "Use task's prompts directory (e.g., '117' or '121.01')"
       def process
         # Determine context flag
         context_enabled = determine_context_enabled(options)
@@ -68,8 +71,12 @@ module Ace
         # Determine enhance flag
         enhance_enabled = determine_enhance_enabled(options)
 
+        # Resolve task prompt path (handles both explicit --task and auto-detection)
+        task_prompt_path = resolve_task_prompt_path(options[:task])
+
         # Process prompt
         result = Organisms::PromptProcessor.call(
+          input_path: task_prompt_path,
           context: context_enabled,
           enhance: enhance_enabled,
           model: options[:model],
@@ -152,13 +159,21 @@ module Ace
                           desc: "Skip archiving existing prompt file"
       option :force, type: :boolean, aliases: "-f",
                      desc: "Skip archiving (alias for --no-archive)"
+      option :task, type: :string,
+                    desc: "Use task's prompts directory (e.g., '117' or '121.01')"
       def setup
         template_uri = options[:template] || Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
         force = options[:force] || options[:no_archive] || false
 
+        # Resolve task prompt path (handles both explicit --task and auto-detection)
+        task_prompt_path = resolve_task_prompt_path(options[:task])
+        # Extract target directory from resolved path
+        target_dir = task_prompt_path ? File.dirname(task_prompt_path) : nil
+
         result = Organisms::PromptInitializer.setup(
           template_uri: template_uri,
-          force: force
+          force: force,
+          target_dir: target_dir
         )
 
         unless result[:success]
@@ -210,6 +225,51 @@ module Ace
 
         # Fall back to config
         Ace::Prompt.config.dig("enhance", "enabled") || false
+      end
+
+      # Resolve task prompt path from explicit task ID or auto-detection
+      # This is the global task resolution used by ALL commands
+      #
+      # @param task_option [String, nil] Explicit task ID from --task flag
+      # @return [String, nil] Path to the-prompt.md in task's prompts directory, or nil for default
+      def resolve_task_prompt_path(task_option)
+        require_relative "atoms/task_path_resolver"
+        require_relative "molecules/git_branch_reader"
+
+        # If task ID is explicitly provided, use it
+        if task_option
+          result = Atoms::TaskPathResolver.resolve(task_option)
+          raise Error, result[:error] unless result[:found]
+
+          prompts_dir = result[:prompts_path]
+          FileUtils.mkdir_p(prompts_dir)
+          return File.join(prompts_dir, "the-prompt.md")
+        end
+
+        # Check if auto-detection is enabled in config
+        return nil unless Ace::Prompt.config.dig("task", "detection")
+
+        # Try to extract task ID from current branch (via molecule for I/O)
+        branch = Molecules::GitBranchReader.current_branch
+        return nil unless branch
+
+        extracted_task_id = Atoms::TaskPathResolver.extract_from_branch(branch)
+        return nil unless extracted_task_id
+
+        # Resolve task path
+        result = Atoms::TaskPathResolver.resolve(extracted_task_id)
+        return nil unless result[:found]
+
+        prompts_dir = result[:prompts_path]
+        FileUtils.mkdir_p(prompts_dir)
+        File.join(prompts_dir, "the-prompt.md")
+      rescue StandardError => e
+        # For explicit --task, re-raise the error
+        raise if task_option
+
+        # For auto-detection, notify user and continue without task context
+        warn "[ace-prompt] Task auto-detection skipped: #{e.message}"
+        nil
       end
     end
   end

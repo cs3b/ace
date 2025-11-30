@@ -24,7 +24,7 @@ module Ace
           # Setup prompt with template
           #
           # @param template_uri [String] Template URI (default: DEFAULT_TEMPLATE_URI)
-          # @param target_dir [String] Target directory (default: project-local .cache dir)
+          # @param target_dir [String] Target directory (default: project-local .cache dir, resolved by CLI)
           # @param force [Boolean] Skip archiving existing file (overwrite directly)
           # @return [Hash] Result with :success, :path, :archive_path, :error keys
           def setup(template_uri: DEFAULT_TEMPLATE_URI, target_dir: nil, force: false)
@@ -106,7 +106,7 @@ module Ace
           # Reset prompt to template (archive current)
           #
           # @param template_uri [String] Template URI (default: DEFAULT_TEMPLATE_URI)
-          # @param target_dir [String] Target directory (default: project-local .cache dir)
+          # @param target_dir [String] Target directory (default: project-local .cache dir, resolved by CLI)
           # @param force [Boolean] Skip archiving current file
           # @return [Hash] Result with :success, :path, :archive_path, :error keys
           def reset(template_uri: DEFAULT_TEMPLATE_URI, target_dir: nil, force: false)
@@ -158,6 +158,7 @@ module Ace
               error: "Reset failed: #{e.message}"
             }
           end
+
         end
       end
     end

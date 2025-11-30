@@ -41,8 +41,8 @@ class Ace::TestPrompt < Minitest::Test
   end
 
   def test_config_returns_hash
-    # Stub the Core.config to return empty hash
-    Ace::Core.stub :config, MockConfig.new({}) do
+    # Stub Ace::Core.get to return empty hash (simulating no config file)
+    Ace::Core.stub :get, nil do
       config = Ace::Prompt.config
 
       assert config.is_a?(Hash)
@@ -50,9 +50,9 @@ class Ace::TestPrompt < Minitest::Test
   end
 
   def test_config_merges_with_defaults
-    # Mock returns data at the ace.prompt path
-    mock_data = { "ace" => { "prompt" => { "context" => { "enabled" => true } } } }
-    Ace::Core.stub :config, MockConfig.new(mock_data) do
+    # Mock returns user config with context.enabled = true
+    user_config = { "context" => { "enabled" => true } }
+    Ace::Core.stub :get, user_config do
       config = Ace::Prompt.config
 
       assert_equal true, config["context"]["enabled"]
@@ -60,7 +60,8 @@ class Ace::TestPrompt < Minitest::Test
   end
 
   def test_config_uses_defaults_when_user_config_empty
-    Ace::Core.stub :config, MockConfig.new({}) do
+    # Stub to return nil (no config file found)
+    Ace::Core.stub :get, nil do
       config = Ace::Prompt.config
 
       assert_equal false, config["context"]["enabled"]
@@ -68,7 +69,7 @@ class Ace::TestPrompt < Minitest::Test
   end
 
   def test_reset_config_clears_cache
-    Ace::Core.stub :config, MockConfig.new({}) do
+    Ace::Core.stub :get, nil do
       config1 = Ace::Prompt.config
       Ace::Prompt.reset_config!
 
@@ -78,23 +79,6 @@ class Ace::TestPrompt < Minitest::Test
       # Both should have defaults, but be different object instances
       # due to cache reset
       assert_equal config1["context"]["enabled"], config2["context"]["enabled"]
-    end
-  end
-
-  # Mock config class for testing
-  class MockConfig
-    def initialize(data)
-      @data = data
-    end
-
-    def get(*keys)
-      result = @data
-      keys.each do |key|
-        return nil unless result.is_a?(Hash)
-
-        result = result[key]
-      end
-      result
     end
   end
 end

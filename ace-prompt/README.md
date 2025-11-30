@@ -194,9 +194,61 @@ context:
 Please evaluate this feature request against our project goals and current roadmap.
 ```
 
+## Task-Specific Prompts
+
+ace-prompt integrates with [ace-taskflow](https://github.com/your-org/ace-taskflow) to manage prompts per task. This keeps your prompts organized alongside task documentation.
+
+### Using Task-Specific Prompts
+
+```bash
+# Use prompts from a specific task directory
+ace-prompt --task 121
+
+# Works with subtask IDs
+ace-prompt --task 121.01
+
+# Works with qualified task references
+ace-prompt --task v.0.9.0+task.121
+
+# Setup a new prompt in task directory
+ace-prompt setup --task 117
+```
+
+When using `--task`, prompts are stored in:
+```
+.ace-taskflow/v.X.Y.Z/tasks/{task-id}-{name}/prompts/
+├── the-prompt.md      # Active prompt
+├── _previous.md       # Symlink to last archived
+└── archive/           # Archived prompts
+```
+
+### Auto-Detection from Git Branch
+
+Enable automatic task detection based on your current git branch:
+
+```yaml
+# .ace/prompt/config.yml
+task:
+  detection: true
+```
+
+With this enabled, if your branch is named `121-feature-name`, ace-prompt automatically uses the prompts directory for task 121. No `--task` flag needed.
+
+```bash
+# On branch 121.06-task-folder-support
+ace-prompt  # Automatically uses task 121 prompts
+```
+
+### Task Resolution
+
+Task IDs are resolved using ace-taskflow's API, which means:
+- Tasks in `tasks/`, `tasks/maybe/`, and `tasks/done/` are all found
+- Subtasks (e.g., `121.01`) fall back to parent task directory if needed
+- Full qualified references (e.g., `v.0.9.0+task.121`) are supported
+
 ## What It Does
 
-1. Reads `.cache/ace-prompt/prompts/the-prompt.md`
+1. Reads `.cache/ace-prompt/prompts/the-prompt.md` (or task-specific directory)
 2. Archives it to `archive/YYYYMMDD-HHMMSS.md`
 3. Updates `_previous.md` symlink
 4. Outputs content to stdout (or file with `--output`)

@@ -116,12 +116,15 @@ class CLITest < Minitest::Test
     cli = Ace::Prompt::CLI.new
     options = {}
 
-    # Should call Ace::Prompt.config.dig("context", "enabled")
-    # Let it use the actual config system
-    result = cli.send(:determine_context_enabled, options)
+    # Mock config to return defaults (no user config found)
+    # This ensures test is isolated from actual .ace/prompt/config.yml
+    default_config = Ace::Prompt.default_config
+    Ace::Prompt.stub(:config, default_config) do
+      result = cli.send(:determine_context_enabled, options)
 
-    # Default should be false based on default_config
-    assert_equal false, result
+      # Default should be false based on default_config
+      assert_equal false, result
+    end
   end
 
   def test_short_flag_c_functionality

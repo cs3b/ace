@@ -6,21 +6,38 @@ require 'ace/prompt/molecules/context_loader'
 class ContextLoaderSecurityTest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
-    @project_root = @tmpdir
-    @prompt_dir = File.join(@tmpdir, ".cache", "ace-prompt", "prompts")
+    # Use realpath to get canonical path (handles /var -> /private/var on macOS)
+    @project_root = File.realpath(@tmpdir)
+    @prompt_dir = File.join(@project_root, ".cache", "ace-prompt", "prompts")
     FileUtils.mkdir_p(@prompt_dir)
 
-    # Mock project root finder
-    @original_finder = Ace::Core::Molecules::ProjectRootFinder.method(:find_or_current)
-    Ace::Core::Molecules::ProjectRootFinder.define_singleton_method(:find_or_current) do
-      @project_root
-    end
+    # Reset config cache
+    Ace::Prompt.reset_config!
+
+    # Store defaults for use in tests
+    @default_config = Ace::Prompt.default_config
   end
 
   def teardown
-    Ace::Core::Molecules::ProjectRootFinder.define_singleton_method(:find_or_current, @original_finder)
+    Ace::Prompt.reset_config!
     FileUtils.rm_rf(@tmpdir)
   end
+
+  private
+
+  # Helper to run with isolated stubs
+  def with_isolated_stubs(config: nil)
+    test_config = config || @default_config
+    project_root = @project_root
+
+    Ace::Prompt.stub :config, test_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, project_root do
+        yield
+      end
+    end
+  end
+
+  public
 
   def test_rejects_basic_path_traversal
     # Test with basic ../ pattern
@@ -66,7 +83,7 @@ class ContextLoaderSecurityTest < Minitest::Test
 
   def test_rejects_shell_injection_backtick
     # Test with backtick shell injection
-    result = Ace::Prompt::ContextLoader.call("test.md `rm -rf /`")
+    result = Ace::Prompt::Molecules::ContextLoader.call("test.md `rm -rf /`")
     assert_equal "", result
   end
 
@@ -88,7 +105,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   end
 
   def test_rejects_empty_path
-    result = Ace::Prompt::ContextLoader.call("")
+    result = Ace::Prompt::Molecules::ContextLoader.call("")
     assert_equal "", result
   end
 
@@ -98,7 +115,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   end
 
   def test_rejects_newline_path
-    result = Ace::Prompt::PromptMolecules::ContextLoader.call("\n")
+    result = Ace::Prompt::Molecules::ContextLoader.call("\n")
     assert_equal "", result
   end
 
@@ -192,7 +209,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     broken_symlink = File.join(@prompt_dir, "broken.md")
     File.symlink("nonexistent.md", broken_symlink)
 
-    result = Ace::Prompt::PromptMolecules::ContextLoader.call(broken_symlink)
+    result = Ace::Prompt::Molecules::ContextLoader.call(broken_symlink)
     assert_equal "", result, "Should handle broken symlinks gracefully"
   end
 
@@ -255,13 +272,16 @@ class ContextLoaderSecurityTest < Minitest::Test
     File.write(test_file, "# Debug test")
 
     # Test debug_log with matching category
-    original_warn = method(:warn)
     debug_messages = []
 
-    Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
-      result = Ace::Prompt::ContextLoader.call(test_file)
-      assert_equal "", result, "Should process with debug logging enabled"
-      assert debug_messages.any? { |msg| msg.include?("Loading context from:") }, "Should log context loading debug messages"
+    Ace::Prompt.stub :config, mock_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+        Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
+          result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
+          assert_equal "", result, "Should process with debug logging enabled"
+          assert debug_messages.any? { |msg| msg.include?("Loading context from:") }, "Should log context loading debug messages"
+        end
+      end
     end
   end
 
@@ -277,20 +297,23 @@ class ContextLoaderSecurityTest < Minitest::Test
     File.write(test_file, "# Filtered test")
 
     # Test debug_log with filtered category
-    original_warn = method(:warn)
     debug_messages = []
 
-    Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
-      result = Ace::Prompt::ContextLoader.call(test_file)
-      assert_equal "", result, "Should process with debug enabled but category filtered"
-      refute debug_messages.any? { |msg| msg.include?("Loading context from:") }, "Should filter context loading debug messages"
+    Ace::Prompt.stub :config, mock_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+        Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
+          result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
+          assert_equal "", result, "Should process with debug enabled but category filtered"
+          refute debug_messages.any? { |msg| msg.include?("Loading context from:") }, "Should filter context loading debug messages"
+        end
+      end
     end
   end
 
   def test_debug_logging_disabled
     # Mock config with debug disabled
     mock_config = {
-      "curl" => { "enabled" => false },
+      "context" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 10 },
       "debug" => { "enabled" => false, "context_loading" => false }
     }
@@ -299,13 +322,16 @@ class ContextLoaderSecurityTest < Minitest::Test
     File.write(test_file, "# No debug test")
 
     # Verify no debug messages when disabled
-    original_warn = method(:warn)
     debug_messages = []
 
-    Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
-      result = Ace::Prompt::ContextLoader.call(test_file)
-      assert_equal "", result, "Should process without debug logging"
-      refute debug_messages.any?, "Should not output debug messages when disabled"
+    Ace::Prompt.stub :config, mock_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+        Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
+          result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
+          assert_equal "", result, "Should process without debug logging"
+          refute debug_messages.any?, "Should not output debug messages when disabled"
+        end
+      end
     end
   end
 
@@ -351,11 +377,20 @@ class ContextLoaderSecurityTest < Minitest::Test
     test_file = File.join(@prompt_dir, "oversize.md")
     File.write(test_file, large_content)
 
-    original_warn = method(:warn)
     error_message = ""
 
-    Object.stub(:warn, ->(msg) { error_message = msg }) do
-      result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
+    mock_config = {
+      "context" => { "enabled" => false },
+      "security" => { "max_file_size_mb" => 10 },
+      "debug" => { "enabled" => false }
+    }
+
+    Ace::Prompt.stub :config, mock_config do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+        Object.stub(:warn, ->(msg) { error_message = msg }) do
+          result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
+        end
+      end
     end
 
     # Error message should include actual file size
