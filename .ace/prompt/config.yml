@@ -9,9 +9,26 @@
 # based on frontmatter in the prompt file.
 context:
   enabled: false
+  # sources:
+  #   - file: "docs/architecture.md"
+  #   - preset: "project-overview"
+  #   - command: "git status --short"
+
+# Security configuration
+# Controls security limits and validation for context loading
+security:
+  max_file_size_mb: 10  # Maximum file size for context loading (10MB default)
+
+# Debug configuration
+# Enables debug logging for troubleshooting and development
+debug:
+  enabled: false          # Enable debug logging globally
+  context_loading: false # Detailed context loading logs
 
 # Enhancement configuration
-# Model used when running `ace-prompt -e` to enhance prompts via LLM
+# Controls LLM-powered prompt enhancement via `ace-prompt -e`
 enhance:
-  model: glite
-  temperature: 0.3
+  model: gflash           # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
+  temperature: 0.3        # Lower = more focused, higher = more creative
+  # system_prompt: prompt://custom-enhance-instructions  # Optional custom system prompt
+
