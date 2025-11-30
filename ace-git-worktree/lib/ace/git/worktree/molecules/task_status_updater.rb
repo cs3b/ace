@@ -182,6 +182,28 @@ module Ace
             add_pr_metadata_via_cli(task_ref, pr_data)
           end
 
+          # Add started_at timestamp to task
+          #
+          # @param task_ref [String] Task reference
+          # @return [Boolean] true if timestamp was added successfully
+          #
+          # @example
+          #   success = updater.add_started_at_timestamp("081")
+          def add_started_at_timestamp(task_ref)
+            started_at = Time.now
+
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            # Try Ruby API first (preferred in mono-repo)
+            if use_ruby_api?
+              return add_started_at_via_api(task_ref, started_at)
+            end
+
+            # Fallback to CLI for standalone installations
+            add_started_at_via_cli(task_ref, started_at)
+          end
+
           # Remove worktree metadata from task
           #
           # @param task_ref [String] Task reference
@@ -374,6 +396,40 @@ module Ace
             end
 
             success
+          end
+
+          # Add started_at timestamp using Ruby API
+          #
+          # @param task_ref [String] Task reference
+          # @param started_at [Time] Start timestamp
+          # @return [Boolean] true if successful
+          def add_started_at_via_api(task_ref, started_at)
+            begin
+              # Use TaskManager for field updates
+              task_manager = Ace::Taskflow::Organisms::TaskManager.new
+
+              field_updates = { "started_at" => started_at.iso8601 }
+
+              result = task_manager.update_task_fields(task_ref, field_updates)
+              result[:success]
+            rescue StandardError => e
+              # Fall back to CLI on API error
+              add_started_at_via_cli(task_ref, started_at)
+            end
+          end
+
+          # Add started_at timestamp using CLI
+          #
+          # @param task_ref [String] Task reference
+          # @param started_at [Time] Start timestamp
+          # @return [Boolean] true if successful
+          def add_started_at_via_cli(task_ref, started_at)
+            normalized_ref = normalize_task_reference(task_ref)
+            return false unless normalized_ref
+
+            timestamp = started_at.respond_to?(:iso8601) ? started_at.iso8601 : started_at.to_s
+            result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "started_at=#{timestamp}")
+            result[:success]
           end
 
           # Normalize task reference to a standard format

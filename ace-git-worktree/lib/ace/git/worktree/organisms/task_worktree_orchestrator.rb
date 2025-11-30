@@ -152,9 +152,22 @@ module Ace
                 end
               end
 
-              # Step 10: Create draft PR if configured
-              should_create_pr = @config.auto_create_pr? && !options[:no_pr]
+              # Step 9.5: Add started_at timestamp to task IN WORKTREE (creates initial commit for PR)
+              # Only do this if we're going to create a PR and upstream succeeded
               upstream_succeeded = workflow_result[:steps_completed].include?("upstream_setup")
+              should_create_pr = @config.auto_create_pr? && !options[:no_pr]
+              if should_create_pr && upstream_succeeded
+                started_result = add_started_timestamp_in_worktree(task_data, worktree_result, options)
+                if started_result[:success]
+                  workflow_result[:steps_completed] << "started_at_added"
+                else
+                  # Non-blocking - PR creation may still work if branch already has commits
+                  workflow_result[:warnings] ||= []
+                  workflow_result[:warnings] << "Failed to add started_at: #{started_result[:error]}"
+                end
+              end
+
+              # Step 10: Create draft PR if configured
               if should_create_pr && upstream_succeeded
                 pr_result = create_pr_for_task(task_data, worktree_result, options)
                 if pr_result[:success]
@@ -261,6 +274,7 @@ module Ace
                 task_push: @config.auto_push_task? && would_commit,
                 push_remote: @config.push_remote,
                 upstream_push: should_setup_upstream,
+                add_started_at: should_create_pr && should_setup_upstream,
                 create_pr: should_create_pr,
                 pr_title: should_create_pr ? @config.format_pr_title(task_data) : nil,
                 pr_base: should_create_pr ? base_branch : nil,
@@ -275,6 +289,7 @@ module Ace
                 ("push_to_#{workflow_result[:would_create][:push_remote]}" if workflow_result[:would_create][:task_push]),
                 "create_worktree",
                 ("setup_upstream_tracking" if should_setup_upstream),
+                ("add_started_at_in_worktree" if workflow_result[:would_create][:add_started_at]),
                 ("create_draft_pr" if should_create_pr),
                 ("save_pr_metadata" if should_create_pr),
                 ("execute_#{workflow_result[:would_create][:hooks_count]}_hooks" if workflow_result[:would_create][:hooks_count] > 0)
@@ -645,6 +660,39 @@ module Ace
             }
 
             @task_status_updater.add_pr_metadata(task_id, pr_data)
+          end
+
+          # Add started_at timestamp to task file IN WORKTREE
+          #
+          # This creates an initial commit in the worktree branch, enabling PR creation
+          # (GitHub requires at least one commit difference between branches for a PR).
+          #
+          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param worktree_result [Hash] Worktree creation result with :worktree_path
+          # @param options [Hash] Options (may include :push_remote)
+          # @return [Hash] Result with :success, :error
+          def add_started_timestamp_in_worktree(task_data, worktree_result, options)
+            worktree_path = worktree_result[:worktree_path]
+            task_id = extract_task_id(task_data)
+            remote = options[:push_remote] || @config.push_remote || "origin"
+
+            Dir.chdir(worktree_path) do
+              # Update task file with started_at
+              if @task_status_updater.add_started_at_timestamp(task_id)
+                # Commit the change
+                if @task_committer.commit_all_changes("started", task_id)
+                  # Push to remote
+                  result = @task_pusher.push(remote: remote)
+                  return result
+                else
+                  return { success: false, error: "Failed to commit started_at change" }
+                end
+              else
+                return { success: false, error: "Failed to update task file with started_at" }
+              end
+            end
+          rescue StandardError => e
+            { success: false, error: e.message }
           end
 
           # Create success workflow result
