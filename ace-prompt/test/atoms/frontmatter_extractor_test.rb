@@ -173,4 +173,33 @@ class FrontmatterExtractorTest < Minitest::Test
     assert_includes result[:frontmatter]["description"], "multi-line"
     assert_equal "Body content.\n", result[:body]
   end
+
+  def test_extract_returns_raw_frontmatter
+    content = <<~MARKDOWN
+      ---
+      context:
+        presets: []
+        files: []
+      ---
+      Body content.
+    MARKDOWN
+
+    result = Ace::Prompt::Atoms::FrontmatterExtractor.extract(content)
+
+    assert result[:has_frontmatter]
+    assert_includes result[:raw_frontmatter], "context:"
+    assert_includes result[:raw_frontmatter], "presets: []"
+    assert_includes result[:raw_frontmatter], "files: []"
+    # Verify raw_frontmatter preserves exact YAML formatting
+    refute_includes result[:raw_frontmatter], "---"
+  end
+
+  def test_extract_no_frontmatter_returns_nil_raw
+    content = "Just plain content."
+
+    result = Ace::Prompt::Atoms::FrontmatterExtractor.extract(content)
+
+    refute result[:has_frontmatter]
+    assert_nil result[:raw_frontmatter]
+  end
 end

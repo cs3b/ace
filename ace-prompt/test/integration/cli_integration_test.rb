@@ -322,6 +322,103 @@ class CLIIntegrationTest < Minitest::Test
     assert_match(/^\d+\.\d+\.\d+/, output.strip)
   end
 
+  def test_process_with_enhance_flag_integration
+    # Create prompt file
+    File.write(@prompt_file, @prompt_content, encoding: "utf-8")
+
+    # Create a mock system prompt
+    system_prompt_file = File.join(@tmpdir, "system-prompt.md")
+    File.write(system_prompt_file, "You are a prompt enhancer.", encoding: "utf-8")
+
+    # Skip if ace-llm not available
+    begin
+      require "ace/llm"
+    rescue LoadError
+      skip "ace-llm not available for integration testing"
+    end
+
+    enhanced_content = "Enhanced: Review this code for security issues with detailed analysis"
+
+    # Mock the LLM call
+    mock_query = ->(_model, _prompt, **_opts) { { text: enhanced_content } }
+
+    Ace::LLM::QueryInterface.stub :query, mock_query do
+      # Run CLI with --enhance and specify system prompt file
+      output, _error = run_cli(["process", "--enhance", "--system-prompt", system_prompt_file])
+
+      # Verify enhanced content output
+      assert_match(/Enhanced:/, output)
+      assert_match(/detailed analysis/, output)
+
+      # Verify archive created with enhancement file
+      assert File.directory?(@archive_dir)
+      archive_files = Dir.glob(File.join(@archive_dir, "*.md"))
+      assert archive_files.length >= 2 # Original + enhanced (_e001)
+
+      # Check for enhanced archive file
+      enhanced_files = archive_files.select { |f| f.include?("_e") }
+      assert_equal 1, enhanced_files.length
+
+      # Verify symlink points to enhanced version
+      symlink_path = File.join(@prompt_dir, "_previous.md")
+      assert File.symlink?(symlink_path)
+      symlink_target = File.readlink(symlink_path)
+      assert_match(/_e001\.md$/, symlink_target)
+    end
+  end
+
+  def test_process_with_enhance_flag_and_model_option
+    # Create prompt file
+    File.write(@prompt_file, @prompt_content, encoding: "utf-8")
+
+    # Create a mock system prompt
+    system_prompt_file = File.join(@tmpdir, "system-prompt.md")
+    File.write(system_prompt_file, "You are a prompt enhancer.", encoding: "utf-8")
+
+    begin
+      require "ace/llm"
+    rescue LoadError
+      skip "ace-llm not available for integration testing"
+    end
+
+    enhanced_content = "Enhanced prompt"
+    model_used = nil
+
+    # Mock LLM to capture model parameter
+    mock_query = lambda { |model, _prompt, **_opts|
+      model_used = model
+      { text: enhanced_content }
+    }
+
+    Ace::LLM::QueryInterface.stub :query, mock_query do
+      run_cli(["process", "--enhance", "--model", "claude", "--system-prompt", system_prompt_file])
+      assert_equal "claude", model_used
+    end
+  end
+
+  def test_process_with_short_enhance_flag
+    # Create prompt file
+    File.write(@prompt_file, @prompt_content, encoding: "utf-8")
+
+    # Create a mock system prompt
+    system_prompt_file = File.join(@tmpdir, "system-prompt.md")
+    File.write(system_prompt_file, "You are a prompt enhancer.", encoding: "utf-8")
+
+    begin
+      require "ace/llm"
+    rescue LoadError
+      skip "ace-llm not available for integration testing"
+    end
+
+    enhanced_content = "Enhanced prompt"
+    mock_query = ->(_model, _prompt, **_opts) { { text: enhanced_content } }
+
+    Ace::LLM::QueryInterface.stub :query, mock_query do
+      output, _error = run_cli(["process", "-e", "--system-prompt", system_prompt_file])
+      assert_match(/Enhanced prompt/, output)
+    end
+  end
+
   private
 
   def run_cli(args)

@@ -5,6 +5,19 @@ require_relative "prompt/version"
 # Load ace-core for config management
 require "ace/core"
 
+module Ace
+  module Prompt
+    class Error < StandardError; end
+
+    # Default LLM model for enhancement
+    DEFAULT_MODEL = "glite"
+
+    # Valid temperature range for LLM generation
+    TEMPERATURE_MIN = 0.0
+    TEMPERATURE_MAX = 2.0
+  end
+end
+
 # Atoms
 require_relative "prompt/atoms/timestamp_generator"
 require_relative "prompt/atoms/content_hasher"
@@ -16,17 +29,20 @@ require_relative "prompt/molecules/prompt_archiver"
 require_relative "prompt/molecules/template_resolver"
 require_relative "prompt/molecules/template_manager"
 require_relative "prompt/molecules/context_loader"
+require_relative "prompt/molecules/enhancement_tracker"
 
 # Organisms
 require_relative "prompt/organisms/prompt_processor"
 require_relative "prompt/organisms/prompt_initializer"
+require_relative "prompt/organisms/enhancement_session_manager"
+require_relative "prompt/organisms/prompt_enhancer"
 
-# CLI
+# CLI (loaded after constants defined)
 require_relative "prompt/cli"
 
+# Reopen module for additional methods
 module Ace
   module Prompt
-    class Error < StandardError; end
 
     # Load ace-prompt configuration using ace-core config cascade
     # Follows ace-* pattern: ./.ace/prompt/config.yml → ~/.ace/prompt/config.yml
@@ -48,6 +64,12 @@ module Ace
       {
         "context" => {
           "enabled" => false
+        },
+        "enhance" => {
+          "enabled" => false,
+          "model" => DEFAULT_MODEL,
+          "temperature" => 0.3,
+          "system_prompt" => "prompt://prompt-enhance-instructions.system"
         },
         "security" => {
           "max_file_size_mb" => 10

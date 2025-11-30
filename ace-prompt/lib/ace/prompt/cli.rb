@@ -53,12 +53,28 @@ module Ace
                        desc: "Load context via ace-context (from frontmatter)"
       option :no_context, type: :boolean,
                           desc: "Explicitly disable context loading (override config)"
+      option :enhance, type: :boolean, aliases: "-e",
+                       desc: "Enhance prompt via LLM"
+      option :no_enhance, type: :boolean,
+                          desc: "Explicitly disable LLM enhancement (override config)"
+      option :model, type: :string,
+                     desc: "LLM model (default: #{Ace::Prompt::DEFAULT_MODEL})"
+      option :system_prompt, type: :string,
+                             desc: "Custom system prompt path"
       def process
         # Determine context flag
         context_enabled = determine_context_enabled(options)
 
+        # Determine enhance flag
+        enhance_enabled = determine_enhance_enabled(options)
+
         # Process prompt
-        result = Organisms::PromptProcessor.call(context: context_enabled)
+        result = Organisms::PromptProcessor.call(
+          context: context_enabled,
+          enhance: enhance_enabled,
+          model: options[:model],
+          system_prompt: options[:system_prompt]
+        )
 
         unless result[:success]
           warn "Error: #{result[:error]}"
@@ -181,6 +197,19 @@ module Ace
 
         # Fall back to config
         Ace::Prompt.config.dig("context", "enabled") || false
+      end
+
+      # Determine if enhancement should be enabled
+      # Priority: CLI flags > config file
+      def determine_enhance_enabled(options)
+        # Explicit --no-enhance disables
+        return false if options[:no_enhance]
+
+        # Explicit --enhance enables
+        return true if options[:enhance]
+
+        # Fall back to config
+        Ace::Prompt.config.dig("enhance", "enabled") || false
       end
     end
   end

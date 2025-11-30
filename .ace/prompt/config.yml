@@ -9,3 +9,9 @@
 # based on frontmatter in the prompt file.
 context:
   enabled: false
+
+# Enhancement configuration
+# Model used when running `ace-prompt -e` to enhance prompts via LLM
+enhance:
+  model: glite
+  temperature: 0.3

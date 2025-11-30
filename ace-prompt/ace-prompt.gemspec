@@ -39,6 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-core', '~> 0.10'
   spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-context', '~> 0.8'
+  spec.add_dependency 'ace-llm', '~> 0.8'
   spec.add_dependency 'thor', '~> 1.3'
 
   # Development dependencies managed in root Gemfile
