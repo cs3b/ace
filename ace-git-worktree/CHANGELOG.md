@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2025-11-30
+
+### Added
+- **Initial Worktree Commit**: Adds `started_at` timestamp to task before PR creation
+  - Creates initial commit in worktree branch enabling PR creation
+  - GitHub requires at least one commit difference between branches for PRs
+  - New step 9.5 in workflow: update task → commit → push → then create PR
+  - Uses `TaskStatusUpdater.add_started_at_timestamp()` method
+
 ## [0.4.4] - 2025-11-30
 
 ### Fixed

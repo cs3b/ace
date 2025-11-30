@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ace-git-worktree v0.4.5
+- **Added**: Initial worktree commit with `started_at` timestamp before PR creation
+  - Creates initial commit in worktree branch enabling PR creation
+  - GitHub requires at least one commit difference between branches for PRs
+  - New step 9.5 in workflow: update task → commit → push → then create PR
+
 ### ace-git-worktree v0.4.4
 - **Fixed**: PR creation bug - always pass `--body` flag when creating draft PRs
   - `gh pr create` requires both `--title` and `--body` in non-interactive mode
