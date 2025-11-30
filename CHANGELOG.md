@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ace-git-worktree v0.4.4
+- **Fixed**: PR creation bug - always pass `--body` flag when creating draft PRs
+  - `gh pr create` requires both `--title` and `--body` in non-interactive mode
+  - Now defaults `--body` to the PR title when no body is provided
+
 ### ace-git-worktree v0.4.3
 - **Fixed**: Metadata commit bug - task changes now properly commit when metadata is added
   - Previously, commits only happened when task status was updated
