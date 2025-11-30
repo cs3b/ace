@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2025-11-30
+
+### Fixed
+- **Metadata Commit Bug**: Task changes now properly commit when metadata is added
+  - Previously, commits only happened when task status was updated
+  - Now commits happen when either status is updated OR metadata is added
+  - Ensures worktree metadata is committed before detaching to new worktree
+- Dry run (`--dry-run`) now accurately reflects when commit/push will happen
+
+## [0.4.2] - 2025-11-29
+
 ### Fixed
 - **Branch Source Bug**: New worktree branches now correctly use the current branch as their start-point
   - Previously, worktrees created from within another worktree would base their branch on main worktree's HEAD
