@@ -85,7 +85,7 @@ module Ace
 
             # Build gh command
             cmd = ["gh", "pr", "create", "--draft", "--head", branch, "--base", base, "--title", title]
-            cmd += ["--body", body] if body
+            cmd += ["--body", body || title]
 
             # Execute command
             stdout, stderr, status = execute_with_timeout(cmd, @timeout)
