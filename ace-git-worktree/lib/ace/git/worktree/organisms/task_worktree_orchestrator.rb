@@ -101,8 +101,11 @@ module Ace
               end
 
               # Step 6: Commit task changes if configured (includes status + metadata)
+              # Commit when either status was updated or metadata was added
               should_commit = options[:no_commit] ? false : @config.auto_commit_task?
-              if should_commit && should_update_status
+              metadata_was_added = workflow_result[:steps_completed].include?("metadata_added")
+              has_changes_to_commit = should_update_status || metadata_was_added
+              if should_commit && has_changes_to_commit
                 commit_message = options[:commit_message] || "in-progress"
                 if commit_task_changes(task_data, commit_message)
                   workflow_result[:steps_completed] << "task_committed"
@@ -241,14 +244,21 @@ module Ace
               should_setup_upstream = @config.auto_setup_upstream? && !options[:no_upstream]
               should_create_pr = @config.auto_create_pr? && !options[:no_pr] && should_setup_upstream
 
+              # Determine if there will be changes to commit
+              # Commit when either status would be updated or metadata would be added
+              would_update_status = @config.auto_mark_in_progress? && task_data[:status] != "in-progress"
+              would_add_metadata = @config.add_worktree_metadata?
+              has_changes_to_commit = would_update_status || would_add_metadata
+              would_commit = @config.auto_commit_task? && has_changes_to_commit
+
               workflow_result[:would_create] = {
                 worktree_path: worktree_path,
                 branch: branch_name,
                 directory_name: directory_name,
-                task_status_update: @config.auto_mark_in_progress? && task_data[:status] != "in-progress",
-                metadata_addition: @config.add_worktree_metadata?,
-                task_commit: @config.auto_commit_task?,
-                task_push: @config.auto_push_task?,
+                task_status_update: would_update_status,
+                metadata_addition: would_add_metadata,
+                task_commit: would_commit,
+                task_push: @config.auto_push_task? && would_commit,
                 push_remote: @config.push_remote,
                 upstream_push: should_setup_upstream,
                 create_pr: should_create_pr,
@@ -262,7 +272,7 @@ module Ace
                 ("update_task_status" if workflow_result[:would_create][:task_status_update]),
                 ("add_worktree_metadata" if workflow_result[:would_create][:metadata_addition]),
                 ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
-                ("push_to_#{workflow_result[:would_create][:push_remote]}" if workflow_result[:would_create][:task_push] && workflow_result[:would_create][:task_commit]),
+                ("push_to_#{workflow_result[:would_create][:push_remote]}" if workflow_result[:would_create][:task_push]),
                 "create_worktree",
                 ("setup_upstream_tracking" if should_setup_upstream),
                 ("create_draft_pr" if should_create_pr),
