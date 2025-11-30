@@ -24,3 +24,10 @@ security:
 debug:
   enabled: false          # Enable debug logging globally
   context_loading: false # Detailed context loading logs
+
+# Enhancement configuration
+# Controls LLM-powered prompt enhancement via `ace-prompt -e`
+enhance:
+  model: gflash           # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
+  temperature: 0.3        # Lower = more focused, higher = more creative
+  # system_prompt: prompt://custom-enhance-instructions  # Optional custom system prompt

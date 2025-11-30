@@ -46,6 +46,31 @@ ace-prompt -o /tmp/prompt.md        # Output to file
 - Updates `_previous.md` symlink
 - Outputs content to stdout or file
 
+### Enhancement Options (v0.3.0)
+
+Enhance prompts via LLM before output:
+
+```bash
+ace-prompt --enhance                # Enhance with default model (glite)
+ace-prompt -e                       # Short flag
+ace-prompt -e --model claude        # Use specific model
+ace-prompt -e --model google:gemini-2.0-flash  # Use provider:model format
+ace-prompt -e --system-prompt /path/to/prompt.md  # Custom system prompt
+```
+
+**Enhancement Behavior:**
+- Archives original prompt first
+- Sends to LLM with enhancement system prompt
+- Archives enhanced version with `_eNNN` suffix
+- Updates symlink to point to enhanced version
+- Outputs enhanced content
+
+**Supported Models:**
+- `glite` - Google Gemini 2.0 Flash Lite (default, fast)
+- `claude` - Anthropic Claude Sonnet 4
+- `haiku` - Anthropic Claude 3 Haiku
+- Or use full `provider:model` format (e.g., `google:gemini-pro`)
+
 ### version
 
 ```bash
@@ -90,7 +115,24 @@ context:
   sources:
     - file: "docs/what-do-we-build.md"  # Default sources when enabled
     - preset: "project-overview"
+
+enhance:
+  enabled: false  # Enable LLM enhancement by default
+  model: glite    # Default model alias (glite, claude, haiku) or provider:model
+  temperature: 0.3  # LLM temperature (0.0-1.0)
+  system_prompt: prompt://prompt-enhance-instructions.system  # System prompt URI
 ```
+
+### Enhancement Configuration
+
+The `enhance` section controls LLM-powered prompt improvement:
+
+- **enabled**: When `true`, `ace-prompt` enhances by default (use `--no-enhance` to skip)
+- **model**: Default model for enhancement. Accepts:
+  - Aliases: `glite`, `claude`, `haiku`
+  - Full format: `provider:model` (e.g., `google:gemini-pro`, `anthropic:claude-3-opus`)
+- **temperature**: Controls randomness (lower = more focused, higher = more creative)
+- **system_prompt**: URI or path to system prompt. Use `prompt://` protocol for built-in prompts
 
 ### Context Loading
 

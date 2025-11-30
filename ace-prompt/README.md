@@ -16,6 +16,60 @@ ace-prompt
 ace-prompt --output /tmp/prompt.md
 ```
 
+## LLM Enhancement
+
+ace-prompt can enhance your prompts using LLM before output. This helps improve prompt quality by adding clarity, structure, and detail.
+
+### Enable Enhancement
+
+```bash
+# Enhance prompt via LLM (uses default model: glite)
+ace-prompt --enhance
+
+# Use short flag
+ace-prompt -e
+
+# Specify a different model
+ace-prompt --enhance --model claude
+
+# Use a custom system prompt
+ace-prompt --enhance --system-prompt /path/to/system-prompt.md
+
+# Combine with output file
+ace-prompt --enhance --output /tmp/enhanced-prompt.md
+```
+
+### Configuration
+
+Configure default enhancement behavior in `.ace/prompt/config.yml`:
+
+```yaml
+enhance:
+  enabled: false           # Default: disabled
+  model: glite             # Model alias (glite, claude, haiku) or provider:model
+  temperature: 0.3         # LLM temperature for generation
+  system_prompt: prompt://prompt-enhance-instructions.system  # System prompt URI
+```
+
+### How It Works
+
+1. Reads your prompt from `the-prompt.md`
+2. Archives the original prompt with timestamp
+3. Sends to LLM with enhancement system prompt
+4. Archives enhanced version with `_eNNN` suffix (e.g., `20251129-143000_e001.md`)
+5. Updates `_previous.md` symlink to point to enhanced version
+6. Outputs enhanced content
+
+### Caching
+
+Enhanced prompts are cached based on:
+- Original content
+- Model used
+- System prompt URI
+- Temperature setting
+
+Identical requests return cached results for faster iteration.
+
 ## Context Integration
 
 ace-prompt supports automatic context loading via [ace-context](https://github.com/your-org/ace-context). This allows prompts to automatically include relevant project context.

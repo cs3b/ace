@@ -95,6 +95,7 @@ PATH
   specs:
     ace-prompt (0.3.0)
       ace-context (~> 0.8)
+      ace-llm (~> 0.8)
       ace-nav (~> 0.8)
       ace-support-core (~> 0.10)
       thor (~> 1.3)

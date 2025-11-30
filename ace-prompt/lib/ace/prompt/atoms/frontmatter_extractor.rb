@@ -41,6 +41,7 @@ module Ace
 
           {
             frontmatter: frontmatter,
+            raw_frontmatter: frontmatter_yaml,
             body: body,
             has_frontmatter: true,
             error: nil
@@ -51,6 +52,7 @@ module Ace
         def self.empty_result(content, error: nil)
           {
             frontmatter: {},
+            raw_frontmatter: nil,
             body: content || "",
             has_frontmatter: false,
             error: error
