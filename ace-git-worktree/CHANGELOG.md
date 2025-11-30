@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2025-11-30
+
+### Fixed
+- **Worktree Task Update**: Set `PROJECT_ROOT_PATH` env var when updating task in worktree
+  - Ensures TaskManager updates the task file in the worktree, not the main project
+  - Fixes "No commits between branches" error when creating PRs
+  - The `started_at` timestamp is now correctly committed to the worktree branch
+
 ## [0.4.5] - 2025-11-30
 
 ### Added

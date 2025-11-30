@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ace-git-worktree v0.4.6
+- **Fixed**: Worktree task update - set `PROJECT_ROOT_PATH` env var when updating task
+  - Ensures TaskManager updates task file in worktree, not main project
+  - Fixes "No commits between branches" PR creation error
+
 ### ace-git-worktree v0.4.5
 - **Added**: Initial worktree commit with `started_at` timestamp before PR creation
   - Creates initial commit in worktree branch enabling PR creation
