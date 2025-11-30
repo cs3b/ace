@@ -677,18 +677,32 @@ module Ace
             remote = options[:push_remote] || @config.push_remote || "origin"
 
             Dir.chdir(worktree_path) do
-              # Update task file with started_at
-              if @task_status_updater.add_started_at_timestamp(task_id)
-                # Commit the change
-                if @task_committer.commit_all_changes("started", task_id)
-                  # Push to remote
-                  result = @task_pusher.push(remote: remote)
-                  return result
+              # Set PROJECT_ROOT_PATH to worktree so TaskManager updates the right files
+              # (otherwise it finds and updates the main project's task files)
+              original_project_root = ENV["PROJECT_ROOT_PATH"]
+              ENV["PROJECT_ROOT_PATH"] = worktree_path
+
+              begin
+                # Update task file with started_at
+                if @task_status_updater.add_started_at_timestamp(task_id)
+                  # Commit the change
+                  if @task_committer.commit_all_changes("started", task_id)
+                    # Push to remote
+                    result = @task_pusher.push(remote: remote)
+                    return result
+                  else
+                    return { success: false, error: "Failed to commit started_at change" }
+                  end
                 else
-                  return { success: false, error: "Failed to commit started_at change" }
+                  return { success: false, error: "Failed to update task file with started_at" }
                 end
-              else
-                return { success: false, error: "Failed to update task file with started_at" }
+              ensure
+                # Restore original PROJECT_ROOT_PATH
+                if original_project_root
+                  ENV["PROJECT_ROOT_PATH"] = original_project_root
+                else
+                  ENV.delete("PROJECT_ROOT_PATH")
+                end
               end
             end
           rescue StandardError => e
