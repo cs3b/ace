@@ -1,0 +1,120 @@
+# frozen_string_literal: true
+
+require "fileutils"
+require "digest"
+require "ace/core/molecules/project_root_finder"
+
+module Ace
+  module Prompt
+    module Molecules
+      # Tracks enhancement iterations and manages enhancement cache
+      class EnhancementTracker
+        # Cache directory for enhanced prompts
+        CACHE_DIR = ".cache/ace-prompt/enhance-cache"
+        ARCHIVE_DIR = ".cache/ace-prompt/prompts/archive"
+
+        # Calculate cache key including all parameters that affect output
+        #
+        # @param content [String] Content to enhance
+        # @param model [String] Model identifier
+        # @param system_prompt_content [String] Resolved system prompt content (not URI)
+        # @param temperature [Float] Temperature for LLM generation
+        # @return [String] SHA256 hash of combined parameters
+        # @note Uses resolved system prompt content so cache invalidates when prompt changes
+        def self.cache_key(content, model, system_prompt_content, temperature)
+          # Hash the system prompt content to keep cache key manageable
+          system_prompt_hash = Digest::SHA256.hexdigest(system_prompt_content || "")
+          key_material = "#{content}|#{model}|#{system_prompt_hash}|#{temperature}"
+          Digest::SHA256.hexdigest(key_material)
+        end
+
+        # Calculate content hash for cache lookup (legacy - content only)
+        #
+        # @param content [String] Content to hash
+        # @return [String] SHA256 hash
+        # @deprecated Use cache_key instead for full parameter tracking
+        def self.content_hash(content)
+          Digest::SHA256.hexdigest(content)
+        end
+
+        # Check if content exists in cache
+        #
+        # @param hash [String] Content hash
+        # @return [Boolean] True if cached
+        def self.cached?(hash)
+          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          cache_path = File.join(project_root, CACHE_DIR, "#{hash}.md")
+          File.exist?(cache_path)
+        end
+
+        # Get cached content
+        #
+        # @param hash [String] Content hash
+        # @return [String, nil] Cached content or nil if not found
+        def self.get_cached(hash)
+          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          cache_path = File.join(project_root, CACHE_DIR, "#{hash}.md")
+          return nil unless File.exist?(cache_path)
+
+          File.read(cache_path, encoding: "utf-8")
+        rescue StandardError => e
+          warn "Warning: Failed to read cache: #{e.message}"
+          nil
+        end
+
+        # Store content in cache
+        #
+        # @param hash [String] Content hash
+        # @param content [String] Content to cache
+        # @return [Boolean] True if successful
+        def self.store_cache(hash, content)
+          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          cache_dir = File.join(project_root, CACHE_DIR)
+          FileUtils.mkdir_p(cache_dir)
+
+          cache_path = File.join(cache_dir, "#{hash}.md")
+          File.write(cache_path, content, encoding: "utf-8")
+          true
+        rescue StandardError => e
+          warn "Warning: Failed to store cache: #{e.message}"
+          false
+        end
+
+        # Calculate next iteration number for a timestamp
+        #
+        # @param timestamp [String] Timestamp (e.g., "20251129-143000")
+        # @return [Integer] Next iteration number (1, 2, 3, etc.)
+        def self.next_iteration(timestamp)
+          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          archive_dir = File.join(project_root, ARCHIVE_DIR)
+
+          return 1 unless Dir.exist?(archive_dir)
+
+          # Find all enhancement files for this timestamp
+          pattern = File.join(archive_dir, "#{timestamp}_e*.md")
+          existing_files = Dir.glob(pattern)
+
+          return 1 if existing_files.empty?
+
+          # Extract iteration numbers and find max
+          iterations = existing_files.map do |file|
+            basename = File.basename(file, ".md")
+            match = basename.match(/_e(\d+)$/)
+            match ? match[1].to_i : 0
+          end
+
+          iterations.max + 1
+        end
+
+        # Generate enhancement archive filename
+        #
+        # @param timestamp [String] Timestamp (e.g., "20251129-143000")
+        # @param iteration [Integer] Iteration number
+        # @return [String] Filename (e.g., "20251129-143000_e001.md")
+        def self.enhancement_filename(timestamp, iteration)
+          "#{timestamp}_e#{iteration.to_s.rjust(3, '0')}.md"
+        end
+      end
+    end
+  end
+end
