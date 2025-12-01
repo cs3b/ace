@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.147] - 2025-12-01
+
+### ace-review v0.19.2 (Task 114)
+- **Fixed**: Task integration (`--task` flag) now works correctly
+  - Add missing require for TaskManager class
+  - Pass actual review file path to TaskReportSaver
+  - Add defensive guard for missing task paths
+- **Changed**: Refactored tests to use Minitest::Mock consistently
+
 ## [0.9.146] - 2025-12-01
 
 ### ace-prompt v0.4.0 (NEW GEM - Task 121)

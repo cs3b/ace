@@ -539,7 +539,7 @@ module Ace
             release_path = copy_to_release(session_dir, review_data)
 
             # Save to task directory if --task flag provided
-            task_path = save_to_task_if_requested(review_data, session_dir)
+            task_path = save_to_task_if_requested(review_data, result[:output_file])
 
             # Handle PR comment posting if requested
             comment_result = handle_pr_comment_posting(options, result[:output_file], review_data)
@@ -698,9 +698,9 @@ module Ace
 
         # Save review report to task directory if --task flag provided
         # @param review_data [Hash] Review metadata
-        # @param session_dir [String] Session directory path
+        # @param review_file [String] Path to the review file to save
         # @return [String, nil] Path to saved report or nil if not saved
-        def save_to_task_if_requested(review_data, session_dir)
+        def save_to_task_if_requested(review_data, review_file)
           return nil unless @task_reference
 
           begin
@@ -718,7 +718,7 @@ module Ace
             end
 
             # Save report to task directory
-            result = Molecules::TaskReportSaver.save(task_info[:path], session_dir, review_data)
+            result = Molecules::TaskReportSaver.save(task_info[:path], review_file, review_data)
 
             if result[:success]
               result[:path]
