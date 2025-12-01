@@ -1,10 +1,10 @@
 ---
 id: v.0.9.0+task.125
-status: in-progress
+status: done
 priority: high
 estimate: 4-6h
 dependencies:
-  - v.0.9.0+task.124
+- v.0.9.0+task.124
 ---
 
 # ace-git-worktree: Upstream Setup and PR Creation
