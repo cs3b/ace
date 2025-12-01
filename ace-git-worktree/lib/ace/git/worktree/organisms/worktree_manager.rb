@@ -66,7 +66,8 @@ module Ace
               result = @worktree_creator.create_traditional(
                 branch_name,
                 options[:path],
-                git_root: @project_root
+                git_root: @project_root,
+                source: options[:source]
               )
 
               if result[:success]

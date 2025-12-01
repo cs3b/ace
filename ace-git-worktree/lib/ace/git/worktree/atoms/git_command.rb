@@ -101,15 +101,31 @@ module Ace
               result[:success] && !result[:output].strip.empty?
             end
 
-            # Get current git branch name
+            # Get current git branch name or commit SHA if in detached HEAD state
             #
-            # @return [String, nil] Current branch name or nil if not on a branch
+            # @return [String, nil] Current branch name, commit SHA (if detached), or nil on error
             def current_branch
               result = execute("branch", "--show-current", timeout: 5)
               return nil unless result[:success]
 
               branch = result[:output].strip
-              branch.empty? ? nil : branch
+              return branch unless branch.empty?
+
+              # Detached HEAD - return commit SHA
+              sha_result = execute("rev-parse", "HEAD", timeout: 5)
+              return nil unless sha_result[:success]
+
+              sha = sha_result[:output].strip
+              sha.empty? ? nil : sha
+            end
+
+            # Check if a git ref (branch, tag, commit SHA) exists
+            #
+            # @param ref [String] Git ref to validate
+            # @return [Boolean] true if ref exists
+            def ref_exists?(ref)
+              result = execute("rev-parse", "--verify", "--quiet", ref, timeout: 5)
+              result[:success]
             end
 
             # Get git repository root directory

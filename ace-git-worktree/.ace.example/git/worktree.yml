@@ -52,6 +52,28 @@ git:
       # If true, adds worktree info (branch, path, created_at) to task file
       add_worktree_metadata: true
 
+      # Automatically push task changes after commit
+      # If true, pushes commits to remote after task status updates
+      auto_push_task: true
+
+      # Remote name for pushing task changes
+      push_remote: "origin"
+
+      # Automatically push new branch to remote with upstream tracking
+      # If true, runs 'git push -u origin <branch>' after worktree creation
+      # NOTE: Defaults to false - enable explicitly for automated workflows
+      auto_setup_upstream: false
+
+      # Automatically create draft PR after pushing branch
+      # If true, creates a draft PR via 'gh pr create --draft'
+      # Requires: gh CLI installed and authenticated
+      # NOTE: Defaults to false - enable explicitly for automated workflows
+      auto_create_pr: false
+
+      # PR title format when auto-creating PRs
+      # Available variables: {id}, {task_id}, {release}, {slug}
+      pr_title_format: "{id} - {slug}"
+
     # Pull Request-based naming and behavior configuration
     pr:
       # Directory naming format for PR worktrees
@@ -177,6 +199,18 @@ git:
 #       after_create:
 #         - command: "mise trust mise*.toml"
 #         - command: "bundle install --quiet"
+
+# Example 4: Full automation with upstream push and PR creation
+# Enables complete worktree-to-PR workflow in one command
+# git:
+#   worktree:
+#     task:
+#       auto_mark_in_progress: true
+#       auto_commit_task: true
+#       auto_push_task: true
+#       auto_setup_upstream: true    # Push branch with -u flag
+#       auto_create_pr: true         # Create draft PR automatically
+#       pr_title_format: "{id} - {slug}"
 
 # Template Variable Reference:
 # {id}        -> Numeric task ID (e.g., 081)

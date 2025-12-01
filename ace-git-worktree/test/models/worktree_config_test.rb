@@ -430,4 +430,102 @@ class WorktreeConfigTest < Minitest::Test
     invalid = config.send(:find_invalid_template_variables, no_vars, %w[id slug])
     assert_empty invalid
   end
+
+  # Tests for upstream and PR automation config (task 125)
+
+  def test_auto_setup_upstream_default_false
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
+    assert_equal false, config.auto_setup_upstream?
+  end
+
+  def test_auto_setup_upstream_can_be_enabled
+    config_data = {
+      "git" => {
+        "worktree" => {
+          "task" => {
+            "auto_setup_upstream" => true
+          }
+        }
+      }
+    }
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
+    assert_equal true, config.auto_setup_upstream?
+  end
+
+  def test_auto_create_pr_default_false
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
+    assert_equal false, config.auto_create_pr?
+  end
+
+  def test_auto_create_pr_can_be_enabled
+    config_data = {
+      "git" => {
+        "worktree" => {
+          "task" => {
+            "auto_create_pr" => true
+          }
+        }
+      }
+    }
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
+    assert_equal true, config.auto_create_pr?
+  end
+
+  def test_pr_title_format_default
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
+    assert_equal "{id} - {slug}", config.pr_title_format
+  end
+
+  def test_pr_title_format_custom
+    config_data = {
+      "git" => {
+        "worktree" => {
+          "task" => {
+            "pr_title_format" => "[{release}] {id}: {slug}"
+          }
+        }
+      }
+    }
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
+    assert_equal "[{release}] {id}: {slug}", config.pr_title_format
+  end
+
+  def test_format_pr_title
+    task_data = {
+      id: "v.0.9.0+task.125",
+      task_number: "125",
+      title: "Upstream Setup and PR Creation",
+      status: "pending",
+      release: "v.0.9.0"
+    }
+
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
+    formatted = config.format_pr_title(task_data)
+
+    assert_equal "125 - upstream-setup-and-pr-creation", formatted
+  end
+
+  def test_format_pr_title_with_custom_template
+    task_data = {
+      id: "v.0.9.0+task.125",
+      task_number: "125",
+      title: "Fix Bug",
+      status: "pending",
+      release: "v.0.9.0"
+    }
+
+    config_data = {
+      "git" => {
+        "worktree" => {
+          "task" => {
+            "pr_title_format" => "[{release}] task-{id}: {slug}"
+          }
+        }
+      }
+    }
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
+    formatted = config.format_pr_title(task_data)
+
+    assert_equal "[v.0.9.0] task-125: fix-bug", formatted
+  end
 end

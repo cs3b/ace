@@ -297,10 +297,14 @@ class WorktreeCreatorTest < Minitest::Test
     git_result = { success: true, output: "", error: nil }
     Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
       Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
-        result = creator.create_traditional("test-branch", nil, git_root: @temp_dir)
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "main") do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+            result = creator.create_traditional("test-branch", nil, git_root: @temp_dir)
 
-        assert result[:success]
-        assert_match %r{custom-worktrees/test-branch}, result[:worktree_path]
+            assert result[:success]
+            assert_match %r{custom-worktrees/test-branch}, result[:worktree_path]
+          end
+        end
       end
     end
   end
@@ -706,5 +710,178 @@ class WorktreeCreatorTest < Minitest::Test
     # Test default (should be true)
     default_config = Ace::Git::Worktree::Models::WorktreeConfig.new
     assert default_config.configure_push_for_mismatch?, "Should default to true"
+  end
+
+  # Tests for start_point (source) parameter
+  def test_create_traditional_uses_current_branch_as_default_start_point
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    captured_args = nil
+    worktree_stub = lambda do |*args, **opts|
+      captured_args = args
+      { success: true, output: "", error: nil }
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "feature-branch") do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+            result = creator.create_traditional("new-branch", nil, git_root: @temp_dir)
+
+            assert result[:success]
+            # The worktree command should include the start_point (current branch)
+            assert_includes captured_args, "feature-branch", "Should pass current branch as start-point"
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_traditional_with_explicit_source
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    captured_args = nil
+    worktree_stub = lambda do |*args, **opts|
+      captured_args = args
+      { success: true, output: "", error: nil }
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "feature-branch") do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+            result = creator.create_traditional("new-branch", nil, git_root: @temp_dir, source: "main")
+
+            assert result[:success]
+            # The worktree command should use the explicit source instead of current branch
+            assert_includes captured_args, "main", "Should pass explicit source as start-point"
+            refute_includes captured_args, "feature-branch", "Should not use current branch when source specified"
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_traditional_returns_start_point_in_result
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    git_result = { success: true, output: "", error: nil }
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "develop") do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+            result = creator.create_traditional("new-branch", nil, git_root: @temp_dir)
+
+            assert result[:success]
+            assert_equal "develop", result[:start_point], "Should include start_point in result"
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_traditional_fails_with_invalid_source
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "main") do
+        # ref_exists? returns false for invalid refs
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, false) do
+          result = creator.create_traditional("new-branch", nil, git_root: @temp_dir, source: "nonexistent-ref")
+
+          refute result[:success]
+          assert_match(/Source ref.*does not exist/, result[:error])
+        end
+      end
+    end
+  end
+
+  def test_create_traditional_fails_when_current_branch_unknown
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+      # Simulate inability to determine current branch
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, nil) do
+        result = creator.create_traditional("new-branch", nil, git_root: @temp_dir)
+
+        refute result[:success]
+        assert_match(/Cannot determine current branch/, result[:error])
+      end
+    end
+  end
+
+  def test_create_for_task_with_source_parameter
+    task_data = { id: "v.0.9.0+task.081", title: "Fix auth bug", status: "pending" }
+    config = mock_task_config(@temp_dir)
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "feature-x") do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+          captured_args = nil
+          worktree_stub = lambda do |*args, **opts|
+            captured_args = args
+            { success: true, output: "", error: nil }
+          end
+
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
+            creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+            result = creator.create_for_task(task_data, config, source: "main")
+
+            assert result[:success]
+            assert_includes captured_args, "main", "Should use explicit source"
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_for_task_uses_current_branch_by_default
+    task_data = { id: "v.0.9.0+task.081", title: "Fix auth bug", status: "pending" }
+    config = mock_task_config(@temp_dir)
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "feature-x") do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+          captured_args = nil
+          worktree_stub = lambda do |*args, **opts|
+            captured_args = args
+            { success: true, output: "", error: nil }
+          end
+
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
+            creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+            result = creator.create_for_task(task_data, config)
+
+            assert result[:success]
+            assert_includes captured_args, "feature-x", "Should use current branch as default start-point"
+          end
+        end
+      end
+    end
+  end
+
+  private
+
+  def mock_task_config(root_path)
+    config = Object.new
+    config.define_singleton_method(:absolute_root_path) { root_path }
+    config.define_singleton_method(:format_directory) { |task_data, counter = nil| "task.081" }
+    config.define_singleton_method(:format_branch) { |task_data| "081-fix-auth-bug" }
+    config
   end
 end
