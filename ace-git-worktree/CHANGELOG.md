@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.7] - 2025-12-01
+
+### Changed
+- **Default Behavior**: `auto_setup_upstream` and `auto_create_pr` now default to `false`
+  - Pushing branches and creating PRs now require explicit opt-in via config or CLI flags
+  - Follows principle of least surprise - network/remote operations should not happen unexpectedly
+  - To enable: set `git.worktree.task.auto_setup_upstream: true` and `auto_create_pr: true` in config
+
+### Fixed
+- **Detached HEAD PR Base**: When creating PR from a detached HEAD (SHA as start_point):
+  - Now creates a branch on remote (`base-{sha-short}`) for the commit SHA
+  - Uses that branch as PR base instead of failing with invalid `--base` argument
+  - Falls back to `main` only if remote branch creation fails
+
+## [0.4.6] - 2025-11-30
+
+### Fixed
+- **Worktree Task Update**: Set `PROJECT_ROOT_PATH` env var when updating task in worktree
+  - Ensures TaskManager updates the task file in the worktree, not the main project
+  - Fixes "No commits between branches" error when creating PRs
+  - The `started_at` timestamp is now correctly committed to the worktree branch
+
+## [0.4.5] - 2025-11-30
+
+### Added
+- **Initial Worktree Commit**: Adds `started_at` timestamp to task before PR creation
+  - Creates initial commit in worktree branch enabling PR creation
+  - GitHub requires at least one commit difference between branches for PRs
+  - New step 9.5 in workflow: update task → commit → push → then create PR
+  - Uses `TaskStatusUpdater.add_started_at_timestamp()` method
+
+## [0.4.4] - 2025-11-30
+
+### Fixed
+- **PR Creation Bug**: Always pass `--body` flag when creating draft PRs
+  - `gh pr create` requires both `--title` and `--body` in non-interactive mode
+  - Now defaults `--body` to the PR title when no body is provided
+
+## [0.4.3] - 2025-11-30
+
+### Fixed
+- **Metadata Commit Bug**: Task changes now properly commit when metadata is added
+  - Previously, commits only happened when task status was updated
+  - Now commits happen when either status is updated OR metadata is added
+  - Ensures worktree metadata is committed before detaching to new worktree
+- Dry run (`--dry-run`) now accurately reflects when commit/push will happen
+
+## [0.4.2] - 2025-11-29
+
+### Fixed
+- **Branch Source Bug**: New worktree branches now correctly use the current branch as their start-point
+  - Previously, worktrees created from within another worktree would base their branch on main worktree's HEAD
+  - Now `git worktree add` explicitly passes the current branch (or commit SHA) as the start-point
+  - Added `--source <ref>` option to specify a custom git ref as branch start-point (e.g., `--source main`)
+  - Handles detached HEAD state by using the commit SHA as start-point
+
+### Added
+- `GitCommand.ref_exists?`: New method to validate that a git ref exists before using it
+- `--source` CLI option for `create` command: Explicitly specify which git ref to base the new branch on
+- Result hash now includes `start_point` field showing which ref was used as the branch base
+
 ## [0.4.1] - 2025-11-28
 
 ### Fixed
