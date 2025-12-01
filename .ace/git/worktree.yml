@@ -1,21 +1,11 @@
-# ace-git-worktree configuration
-#
-# This file provides default configuration for task-aware git worktree management.
-# Copy this file to .ace/git/worktree.yml and customize as needed.
-#
-# Configuration is loaded in this priority (highest to lowest):
-# 1. .ace/git/worktree.yml (project-specific)
-# 2. ~/.ace/git/worktree.yml (user-specific)
-# 3. .ace.example/git/worktree.yml (these defaults)
-
 git:
   worktree:
     # Root directory for all worktrees (relative to project root)
     # This is where worktree directories will be created
-    root_path: "../"
+    root_path: ".ace-wt"
 
     # Automatically navigate to worktree after creation
-    # If true, changes directory to the created worktree
+    # If true, provides enhanced navigation experience after worktree creation
     auto_navigate: true
 
     # Task-based naming and behavior configuration
@@ -23,10 +13,10 @@ git:
       # Directory naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
       # Examples:
-      #   "task.{id}"        -> task.081
+      #   "task.{task_id}"   -> task.081
       #   "{id}"             -> 081
       #   "{release}/{id}"   -> v.0.9.0/081
-      directory_format: "ace-task.{task_id}"
+      directory_format: "task.{task_id}"
 
       # Branch naming format for task worktrees
       # Available variables: {id}, {task_id}, {release}, {slug}
@@ -52,6 +42,64 @@ git:
       # If true, adds worktree info (branch, path, created_at) to task file
       add_worktree_metadata: true
 
+      # Automatically push task changes after commit
+      # If true, pushes commits to remote after task status updates
+      auto_push_task: true
+
+      # Remote name for pushing task changes
+      push_remote: "origin"
+
+      # Automatically push new branch to remote with upstream tracking
+      # If true, runs 'git push -u origin <branch>' after worktree creation
+      # NOTE: Defaults to false - enable explicitly for automated workflows
+      auto_setup_upstream: true
+
+      # Automatically create draft PR after pushing branch
+      # If true, creates a draft PR via 'gh pr create --draft'
+      # Requires: gh CLI installed and authenticated
+      # NOTE: Defaults to false - enable explicitly for automated workflows
+      auto_create_pr: true
+
+      # PR title format when auto-creating PRs
+      # Available variables: {id}, {task_id}, {release}, {slug}
+      pr_title_format: "{id} - {slug}"
+
+    # Pull Request-based naming and behavior configuration
+    pr:
+      # Directory naming format for PR worktrees
+      # Available variables: {number}, {slug}, {title_slug}, {base_branch}
+      # Examples:
+      #   "ace-pr-{number}"     -> ace-pr-26
+      #   "pr-{number}"         -> pr-26
+      #   "{number}-{slug}"     -> 26-create-ace-git-package
+      directory_format: "ace-pr-{number}"
+
+      # Branch naming format for PR worktrees
+      # Available variables: {number}, {slug}, {title_slug}, {base_branch}
+      # Examples:
+      #   "pr-{number}"                    -> pr-26
+      #   "pr-{number}-{slug}"             -> pr-26-create-ace-git-package
+      #   "{number}/{slug}"                -> 26/create-ace-git-package
+      #   "pr-{number}-{base_branch}-{slug}" -> pr-26-main-create-ace-git-package
+      branch_format: "pr-{number}-{slug}"
+
+      # Remote name to use for fetching PR branches
+      remote_name: "origin"
+
+      # Fetch latest PR information before creating worktree
+      # If true, runs 'git fetch {remote_name} {pr_branch}' before worktree creation
+      fetch_before_create: true
+
+    # Branch-based naming and behavior configuration
+    branch:
+      # Fetch branch from remote if it exists locally
+      # If true, attempts to fetch from remote before creating local worktree
+      fetch_if_remote: true
+
+      # Automatically detect remote name
+      # If true, searches for remotes that contain the target branch
+      auto_detect_remote: true
+
     # Cleanup policies for worktree management
     cleanup:
       # Automatically remove worktrees when their branches are merged
@@ -63,27 +111,48 @@ git:
       on_delete: true
 
     # Hooks: Commands to run at specific lifecycle points
-    # Commands run from project root by default
-    # Available variables: {worktree_path}, {task_id}, {task_title}, {release}
-    # Environment: $ACE_PROJECT_ROOT, $ACE_WORKTREE_PATH, $ACE_TASK_ID, etc.
+    # Commands execute sequentially from the PROJECT ROOT by default
+    # Available variables: {worktree_path}, {task_id}, {task_title}, {release}, {worktree_dir}
+    # Environment variables: ACE_PROJECT_ROOT, ACE_WORKTREE_PATH, ACE_TASK_ID, ACE_TASK_TITLE, ACE_RELEASE
     hooks:
       # after_create: Commands to run after worktree creation
-      # Each hook supports: command, working_dir, timeout, continue_on_error, env
+      # Hook configuration:
+      #   command: Shell command to execute (required)
+      #   working_dir: Directory to run in (default: project root)
+      #     - "." or empty: project root (default)
+      #     - "worktree": the worktree directory
+      #     - relative path: relative to project root
+      #     - absolute path: as specified
+      #   timeout: Maximum execution time in seconds (default: 30, max: 300)
+      #   continue_on_error: Continue if this hook fails (default: false)
+      #   env: Additional environment variables (key-value pairs)
       after_create:
-        # Trust all mise configuration files in the worktree
+        # Example 1: Trust all mise configuration files in the worktree
         - command: "find {worktree_path} -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
-          timeout: 5
+          timeout: 30
           continue_on_error: true
 
-        # Alternative using environment variable:
+        # Example 2: Same using environment variable
         # - command: "find $ACE_WORKTREE_PATH -maxdepth 1 -name 'mise*.toml' -exec mise trust {} \\;"
         #   timeout: 30
         #   continue_on_error: true
 
-        # Optional: Run custom setup script if it exists
-        # - command: "[ -f .ace/git/worktree/hooks/setup.sh ] && .ace/git/worktree/hooks/setup.sh || true"
+        # Example 3: Run command IN the worktree directory
+        # - command: "bundle install --quiet"
+        #   working_dir: "worktree"
+        #   timeout: 120
+        #   continue_on_error: true
+
+        # Example 4: Run custom setup script from project root
+        # - command: "[ -f .ace/git/worktree/hooks/setup.sh ] && bash .ace/git/worktree/hooks/setup.sh || true"
         #   timeout: 60
         #   continue_on_error: false
+
+        # Example 5: With custom environment and variable interpolation
+        # - command: "echo 'Setup complete for task {task_id} at {worktree_path}'"
+        #   env:
+        #     CUSTOM_VAR: "value"
+        #   continue_on_error: true
 
 # Additional configuration examples:
 
@@ -99,30 +168,50 @@ git:
 # git:
 #   worktree:
 #     root_path: ".worktrees"
-#     mise_trust_auto: false
 #     task:
 #       auto_mark_in_progress: false
 #       auto_commit_task: false
 #       add_worktree_metadata: true
+#     hooks:
+#       after_create: []  # No hooks
 
 # Example 3: Development-focused setup
 # git:
 #   worktree:
 #     root_path: ".dev"
-#     mise_trust_auto: true
 #     task:
 #       directory_format: "{id}-dev"
 #       branch_format: "dev/{id}-{slug}"
 #       auto_mark_in_progress: true
 #       auto_commit_task: true
 #       add_worktree_metadata: true
+#     hooks:
+#       after_create:
+#         - command: "mise trust mise*.toml"
+#         - command: "bundle install --quiet"
+
+# Example 4: Full automation with upstream push and PR creation
+# Enables complete worktree-to-PR workflow in one command
+# git:
+#   worktree:
+#     task:
+#       auto_mark_in_progress: true
+#       auto_commit_task: true
+#       auto_push_task: true
+#       auto_setup_upstream: true    # Push branch with -u flag
+#       auto_create_pr: true         # Create draft PR automatically
+#       pr_title_format: "{id} - {slug}"
 
 # Template Variable Reference:
 # {id}        -> Numeric task ID (e.g., 081)
 # {task_id}   -> Full task ID (e.g., task.081)
 # {release}   -> Release version (e.g., v.0.9.0)
-# {slug}      -> URL-safe slug from task title (e.g., fix-authentication-bug)
+# {slug}      -> URL-safe slug from title (e.g., fix-authentication-bug)
+# {number}    -> PR number (e.g., 26)
+# {title_slug}-> Alternative slug variable (same as {slug})
+# {base_branch}-> PR base branch (e.g., main, develop)
 
 # For more information, see:
 # - ace-git-worktree create --help
 # - ace-git-worktree config --help
+
