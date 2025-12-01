@@ -12,6 +12,7 @@ module Ace
           # Try to load ace-taskflow
           begin
             require 'ace/taskflow'
+            require 'ace/taskflow/organisms/task_manager'
           rescue LoadError
             return nil
           end
@@ -24,6 +25,8 @@ module Ace
 
           # Extract task directory from task file path
           task_file_path = task[:path]
+          return nil unless task_file_path.to_s.strip != ""
+
           task_dir = File.dirname(task_file_path)
 
           {

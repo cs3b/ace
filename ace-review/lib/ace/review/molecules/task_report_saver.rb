@@ -10,13 +10,13 @@ module Ace
       class TaskReportSaver
         # Save a review report to a task's reviews/ directory
         # @param task_dir [String] Path to the task directory
-        # @param session_dir [String] Path to the review session directory
+        # @param review_file [String] Path to the review file to copy
         # @param review_data [Hash] Review metadata (preset, model, etc.)
         # @return [Hash] Result with :success, :path, or :error
-        def self.save(task_dir, session_dir, review_data)
+        def self.save(task_dir, review_file, review_data)
           # Validate inputs
           return { success: false, error: "Task directory not found: #{task_dir}" } unless Dir.exist?(task_dir)
-          return { success: false, error: "Session directory not found: #{session_dir}" } unless Dir.exist?(session_dir)
+          return { success: false, error: "Review file not found: #{review_file}" } unless File.exist?(review_file)
 
           # Create reviews/ subdirectory if it doesn't exist
           reviews_dir = File.join(task_dir, "reviews")
@@ -29,12 +29,6 @@ module Ace
           # Generate filename
           filename = generate_filename(review_data)
           output_path = File.join(reviews_dir, filename)
-
-          # Read review content from session directory
-          review_file = File.join(session_dir, "review.md")
-          unless File.exist?(review_file)
-            return { success: false, error: "Review file not found in session directory" }
-          end
 
           # Copy review to task directory
           begin
