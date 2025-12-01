@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-14'
+  last-updated: '2025-12-01'
 ---
 
 # Project Decisions
@@ -45,7 +45,7 @@ This document provides actionable decisions from Architecture Decision Records (
 ### Mono-Repo Migration to ace-* Gems
 **Decision**: Migrate from multi-repository submodule architecture to mono-repo with modular ace-* Ruby gems.
 **Impact**: When working with the codebase:
-- All new functionality goes into appropriate ace-* gems at the repository root (15+ gems completed)
+- All new functionality goes into appropriate ace-* gems at the repository root (20+ gems completed)
 - Follow ATOM architecture (atoms/, molecules/, organisms/, models/) in each gem
 - Use the root Gemfile for development dependencies
 - Run commands with `bundle exec` during development

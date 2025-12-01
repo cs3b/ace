@@ -93,7 +93,7 @@ PATH
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.3.0)
+    ace-prompt (0.4.0)
       ace-context (~> 0.8)
       ace-llm (~> 0.8)
       ace-nav (~> 0.8)
