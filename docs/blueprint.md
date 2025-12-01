@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-14'
+  last-updated: '2025-12-01'
 ---
 
 # Project Blueprint: ACE (Agent Coding Environment)
@@ -18,11 +18,11 @@ This document provides navigation guidance for the ACE codebase, highlighting wh
 ## Repository Structure
 
 ```
-ace-*/          # Ruby gems following ATOM architecture (15+ production gems)
+ace-*/          # Ruby gems following ATOM architecture (20+ production gems)
                 # ace-support-core, ace-context, ace-taskflow, ace-nav, ace-llm,
-                # ace-git-commit, ace-search, ace-review, ace-docs, ace-lint,
-                # ace-test-runner, ace-test-support, ace-llm-providers-cli,
-                # ace-support-mac-clipboard
+                # ace-git-commit, ace-git-worktree, ace-prompt, ace-search,
+                # ace-review, ace-docs, ace-lint, ace-test, ace-test-support,
+                # ace-llm-providers-cli, ace-support-mac-clipboard
 dev-handbook/   # Workflows, agents, guides (migrating to ace-handbook gem)
 .ace-taskflow/  # Task and release management
 dev-tools/      # Legacy CLI tools (mostly migrated to ace-* gems)

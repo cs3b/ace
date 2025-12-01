@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-14'
+  last-updated: '2025-12-01'
 ---
 
 # ACE Gem Development Guide
@@ -19,7 +19,7 @@ ACE gems follow a strict naming pattern to clarify their purpose:
 
 ### ace-* Pattern (Functional Gems with CLI Tools)
 - **Purpose**: Provide direct functionality to users through CLI commands
-- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review
+- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review, ace-prompt
 - **Characteristics**:
   - Have executables in `exe/` directory
   - Registered in gemspec: `spec.executables = ['ace-tool']`
@@ -169,6 +169,7 @@ Ace::Core::Molecules::PromptCacheManager.save_metadata(metadata, session_dir)
 ### Examples
 
 * **ace-docs**: Uses PromptCacheManager for analyze-consistency operation
+* **ace-prompt**: Uses caching for enhanced prompts with content-based deduplication
 * **ace-review**: Already follows standard (migrating to use shared utility is optional)
 
 ## Handbook

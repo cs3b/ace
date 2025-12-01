@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-10-08'
+  last-updated: '2025-12-01'
 ---
 
 # Testing Patterns for ACE
