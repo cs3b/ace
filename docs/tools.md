@@ -13,13 +13,13 @@ update:
 
 | Tool | Purpose | Key Commands |
 |------|---------|--------------|
-| **ace-context** | Load project context | `ace-context project`, `ace-context --list` |
+| **ace-context** | Load project context | `ace-context project`, `ace-context --list`, `ace-context --embed-source` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
-| **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged` |
+| **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
-| **ace-review** | Code review | `ace-review --preset pr`, `ace-review --auto-execute` |
+| **ace-review** | Code review | `ace-review --preset pr`, `ace-review --task 121`, `ace-review --auto-execute` |
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
 | **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
@@ -51,6 +51,7 @@ ace-lint "**/*.md" --type markdown      # Lint all markdown files
 # Git commits
 ace-git-commit                          # Generate commit for all changes
 ace-git-commit --staged                 # Commit only staged files
+ace-git-commit --path "src/**"          # Commit only matching paths
 
 # Search
 ace-search "TODO"                       # Auto-detect: search content
@@ -60,11 +61,13 @@ ace-search "config" --staged            # Search only staged files
 
 # Code review
 ace-review --preset pr                  # Review PR changes
+ace-review --preset pr --task 121       # Save review to task directory
 ace-review --preset security --auto-execute  # Security review with LLM
 ace-review --subject 'diff: {ranges: ["origin/main...HEAD"]}'  # Review vs main branch
 
 # Navigation and context
 ace-context project --output stdio      # Load context to stdout
+ace-context project --embed-source      # Include source document inline
 ace-nav 'wfi://*task*' --list          # Find workflow patterns
 
 # Test execution
