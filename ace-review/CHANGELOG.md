@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2025-12-01
+
+### Fixed
+- **Task Integration Fixes**: Multiple fixes to ensure `--task` flag works correctly
+  - Add missing `require` for `ace/taskflow/organisms/task_manager` in TaskResolver
+  - Pass actual review file path to TaskReportSaver instead of session directory
+  - Add defensive guard for nil/empty `task[:path]` to prevent crashes
+
+### Changed
+- **Test Consistency**: Refactored TaskResolver tests to use `Minitest::Mock` consistently
+
 ## [0.19.1] - 2025-11-29
 
 ### Fixed

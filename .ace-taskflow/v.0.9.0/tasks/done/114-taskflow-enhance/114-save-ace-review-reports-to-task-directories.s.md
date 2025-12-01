@@ -4,6 +4,11 @@ status: done
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 114-save-ace-review-reports-to-task-directories-with-task-flag
+  path: "../ace-task.114"
+  created_at: '2025-12-01 17:53:30'
+  updated_at: '2025-12-01 17:53:30'
 ---
 
 # Save ace-review reports to task directories with --task flag
@@ -55,11 +60,11 @@ ace-review --preset comprehensive --task <taskref>
 - [Task directory missing reviews/]: Create reviews/ subdirectory automatically
 
 ### Success Criteria
-- [ ] **Task Integration**: ace-review successfully integrates with ace-taskflow API to resolve task paths
-- [ ] **Report Persistence**: Review reports are saved to `<task-dir>/reviews/` with timestamped filenames
-- [ ] **User Feedback**: Clear confirmation message shows where report was saved
-- [ ] **Error Resilience**: Graceful handling when task not found or ace-taskflow unavailable
-- [ ] **Filename Uniqueness**: Generated filenames are deterministic and unique (timestamp + provider)
+- [x] **Task Integration**: ace-review successfully integrates with ace-taskflow API to resolve task paths
+- [x] **Report Persistence**: Review reports are saved to `<task-dir>/reviews/` with timestamped filenames
+- [x] **User Feedback**: Clear confirmation message shows where report was saved
+- [x] **Error Resilience**: Graceful handling when task not found or ace-taskflow unavailable
+- [x] **Filename Uniqueness**: Generated filenames are deterministic and unique (timestamp + provider)
 
 ### Validation Questions
 - [ ] **Default Behavior**: Should --task flag be required explicitly or auto-detect current task context?
@@ -247,14 +252,14 @@ Enable persistent storage of ace-review reports within ace-taskflow task directo
 
 ## Acceptance Criteria
 
-- [ ] ace-review accepts --task flag with various task reference formats
-- [ ] Task references are correctly resolved to task directory paths
-- [ ] Review reports are saved to `<task-dir>/reviews/` subdirectory
-- [ ] Filenames follow pattern: YYYYMMDD-HHMMSS-provider-preset-review.md
-- [ ] User receives clear confirmation of save location
-- [ ] Graceful degradation when ace-taskflow unavailable
-- [ ] All automated tests pass
-- [ ] Documentation updated with usage examples
+- [x] ace-review accepts --task flag with various task reference formats
+- [x] Task references are correctly resolved to task directory paths
+- [x] Review reports are saved to `<task-dir>/reviews/` subdirectory
+- [x] Filenames follow pattern: YYYYMMDD-HHMMSS-provider-preset-review.md
+- [x] User receives clear confirmation of save location
+- [x] Graceful degradation when ace-taskflow unavailable
+- [x] All automated tests pass (265 tests, 0 failures)
+- [x] Documentation updated with usage examples (README.md lines 65, 100-104, 343-382)
 
 ## Out of Scope
 

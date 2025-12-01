@@ -16,7 +16,8 @@ class TaskReportSaverTest < Minitest::Test
     FileUtils.mkdir_p(@session_dir)
 
     # Create mock review file in session directory
-    File.write(File.join(@session_dir, "review.md"), "# Test Review\nThis is a test review.")
+    @review_file = File.join(@session_dir, "review-report-test.md")
+    File.write(@review_file, "# Test Review\nThis is a test review.")
   end
 
   def teardown
@@ -26,7 +27,7 @@ class TaskReportSaverTest < Minitest::Test
   def test_save_creates_reviews_directory
     review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
 
-    result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @session_dir, review_data)
+    result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @review_file, review_data)
 
     assert result[:success], "Expected save to succeed"
     assert Dir.exist?(File.join(@task_dir, "reviews")), "Expected reviews/ directory to be created"
@@ -35,7 +36,7 @@ class TaskReportSaverTest < Minitest::Test
   def test_save_copies_review_file
     review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
 
-    result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @session_dir, review_data)
+    result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @review_file, review_data)
 
     assert result[:success], "Expected save to succeed"
     assert File.exist?(result[:path]), "Expected review file to exist at #{result[:path]}"
@@ -92,7 +93,7 @@ class TaskReportSaverTest < Minitest::Test
     review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
     non_existent_dir = File.join(@temp_dir, "nonexistent")
 
-    result = Ace::Review::Molecules::TaskReportSaver.save(non_existent_dir, @session_dir, review_data)
+    result = Ace::Review::Molecules::TaskReportSaver.save(non_existent_dir, @review_file, review_data)
 
     refute result[:success], "Expected save to fail"
     assert_includes result[:error], "Task directory not found"
@@ -100,11 +101,9 @@ class TaskReportSaverTest < Minitest::Test
 
   def test_save_returns_error_for_missing_review_file
     review_data = { preset: "pr", model: "google:gemini-2.5-flash" }
+    non_existent_file = File.join(@session_dir, "nonexistent.md")
 
-    # Remove review.md from session directory
-    FileUtils.rm(File.join(@session_dir, "review.md"))
-
-    result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, @session_dir, review_data)
+    result = Ace::Review::Molecules::TaskReportSaver.save(@task_dir, non_existent_file, review_data)
 
     refute result[:success], "Expected save to fail"
     assert_includes result[:error], "Review file not found"
