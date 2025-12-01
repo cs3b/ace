@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.114
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 114-save-ace-review-reports-to-task-directories-with-task-flag
+  path: "../ace-task.114"
+  created_at: '2025-12-01 17:53:30'
+  updated_at: '2025-12-01 17:53:30'
 ---
 
 # Save ace-review reports to task directories with --task flag
