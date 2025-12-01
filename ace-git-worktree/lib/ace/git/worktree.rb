@@ -49,6 +49,7 @@ module Ace
       require_relative "worktree/molecules/config_loader"
       require_relative "worktree/molecules/task_fetcher"
       require_relative "worktree/molecules/pr_fetcher"
+      require_relative "worktree/molecules/pr_creator"
       require_relative "worktree/molecules/task_committer"
       require_relative "worktree/molecules/task_pusher"
       require_relative "worktree/molecules/task_status_updater"

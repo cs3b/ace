@@ -38,7 +38,10 @@ module Ace
               "auto_push_task" => true,
               "push_remote" => "origin",
               "commit_message_format" => "chore({release}-{task_id}): mark as in-progress, creating worktree for {slug}",
-              "add_worktree_metadata" => true
+              "add_worktree_metadata" => true,
+              "auto_setup_upstream" => false,
+              "auto_create_pr" => false,
+              "pr_title_format" => "{id} - {slug}"
             },
             "pr" => {
               "directory_format" => "ace-pr-{number}",
@@ -145,6 +148,39 @@ module Ace
           # @return [Boolean] true if metadata should be added
           def add_worktree_metadata?
             @task_config["add_worktree_metadata"]
+          end
+
+          # Check if new worktree branch should be pushed to remote with upstream tracking
+          #
+          # @return [Boolean] true if upstream setup is enabled
+          def auto_setup_upstream?
+            @task_config["auto_setup_upstream"]
+          end
+
+          # Check if draft PR should be created automatically
+          #
+          # @return [Boolean] true if auto PR creation is enabled
+          def auto_create_pr?
+            @task_config["auto_create_pr"]
+          end
+
+          # Get the PR title format template
+          #
+          # @return [String] PR title format template
+          def pr_title_format
+            @task_config["pr_title_format"]
+          end
+
+          # Format a PR title using task data
+          #
+          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @return [String] Formatted PR title
+          #
+          # @example
+          #   config.format_pr_title(task) # => "081 - fix-authentication-bug"
+          def format_pr_title(task_data)
+            template = pr_title_format
+            apply_template_variables(template, task_data)
           end
 
           # Get the root path for worktrees (expanded and absolute)
