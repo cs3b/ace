@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.146] - 2025-12-01
+
+### ace-prompt v0.4.0 (NEW GEM - Task 121)
+New prompt workspace management gem with ATOM architecture. Features: archive with timestamps, setup command with template resolution (`tmpl://`), context loading via ace-context, LLM-powered enhancement (`--enhance/-e`), and task folder support (`--task/-t`) with branch detection.
+
+### ace-git-worktree v0.4.7 (Task 124, 125)
+Major workflow improvements: fixed branch source bug (now uses current branch as start-point), added `--source` option, upstream push and draft PR creation automation, and changed `auto_setup_upstream`/`auto_create_pr` to default `false` (opt-in for network operations).
+
+### ace-review v0.19.1
+Fixed PR diff generation to use actual PR content instead of origin...HEAD when using `--pr` flag with presets.
+
+## [0.9.145] - 2025-11-29
+
+### ace-prompt v0.3.0 (Task 121.03)
+- **Added**: Context loading via ace-context integration
+  - FrontmatterExtractor atom for parsing YAML frontmatter from prompts
+  - ContextLoader molecule integrating with ace-context Ruby API
+  - PromptProcessor enhanced with context embedding via `--context` flag
+- **Changed**: Global configuration via ace-support-core config cascade
+  - Simplified ContextLoader using ace-context Ruby API directly
+
+## [0.9.144] - 2025-11-29
+
+### Fixed
+- **ace-review v0.19.1**: Fix PR diff generation to use actual PR content instead of origin...HEAD when using `--pr` flag with presets
+- Remove problematic default subject from `code-pr.yml` preset that contained `origin...HEAD`
+- Add comprehensive integration tests for PR diff generation behavior
+
+### ace-prompt v0.2.0
+- **Added**: Setup command for template initialization (Task 121.02)
+  - `ace-prompt setup` initializes workspace with template
+  - Template resolution via `tmpl://` protocol (ace-nav Ruby API)
+  - Short form template support (`--template bug` → `tmpl://ace-prompt/the-prompt-bug`)
+  - `--no-archive` and `--force` options to skip archiving existing prompts
+  - Archive functionality by default (consolidated from removed reset command)
+- **Changed**: Setup uses project root directory via ProjectRootFinder (Task 121.08)
+  - Prompts now created in `{project_root}/.cache/ace-prompt/prompts/` not home directory
+  - Consolidated reset command into setup (reset removed from CLI)
+  - Template naming pattern: `the-prompt-{name}.template.md`
+  - Template resolution uses ace-nav Ruby API (no shell execution)
+- **Fixed**: CLI exit code handling for Thor Array return (Task 121.08)
+
+## [0.9.143] - 2025-11-28
+
+### ace-git-worktree v0.4.2
+- **Fixed**: Branch source bug - worktrees now correctly use current branch as start-point
+  - Previously, worktrees created from feature branches would base their branch on main worktree HEAD
+  - Now `git worktree add` explicitly passes current branch (or commit SHA if detached) as start-point
+- **Added**: `--source <ref>` option to specify custom git ref as branch start-point
+  - Allows explicit control: `ace-git-worktree create --task 123 --source main`
+- **Added**: `GitCommand.ref_exists?` method for git ref validation
+- **Added**: Result hash includes `start_point` field showing which ref was used
+
 ## [0.9.142] - 2025-11-28
 
 ### ace-git-worktree v0.4.1
