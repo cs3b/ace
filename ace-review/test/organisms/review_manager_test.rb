@@ -5,8 +5,31 @@ require "test_helper"
 class ReviewManagerTest < AceReviewTest
   def setup
     super  # IMPORTANT: Call parent to stub ace-context for fast tests
-    @manager = Ace::Review::Organisms::ReviewManager.new
     @temp_dir = Dir.mktmpdir
+
+    # Create test fixture for "pr" preset - tests should not depend on .ace/ directory
+    create_test_preset("pr", <<~YAML)
+      description: "Test PR preset"
+      instructions:
+        base: "prompt://base/system"
+        context:
+          sections:
+            format:
+              title: "Format Guidelines"
+              files:
+                - "prompt://format/standard"
+      context: "project"
+      subject:
+        context:
+          sections:
+            code_changes:
+              title: "Code Changes"
+              diffs:
+                - "origin/main...HEAD"
+    YAML
+
+    # Use @test_dir as project root for test isolation
+    @manager = Ace::Review::Organisms::ReviewManager.new(project_root: @test_dir)
   end
 
   def teardown
@@ -127,9 +150,8 @@ class ReviewManagerTest < AceReviewTest
   def test_create_cache_directory
     cache_dir = @manager.send(:create_cache_directory)
 
-    # Cache should be created at project root (using ProjectRootFinder), not Dir.pwd
-    project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-    expected_cache_dir = File.join(project_root, ".cache", "ace-review", "sessions")
+    # Cache should be created relative to project_root (uses @test_dir for isolation)
+    expected_cache_dir = File.join(@test_dir, ".cache", "ace-review", "sessions")
     assert_equal expected_cache_dir, cache_dir
     assert Dir.exist?(cache_dir)
   end
@@ -235,9 +257,8 @@ class ReviewManagerTest < AceReviewTest
     assert result[:success], "Review should succeed: #{result[:error]}"
     assert result[:session_dir], "Should have session directory"
 
-    # Should create cache directory automatically at project root
-    project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-    cache_dir = File.join(project_root, ".cache", "ace-review", "sessions")
+    # Should create cache directory automatically relative to project_root (uses @test_dir for isolation)
+    cache_dir = File.join(@test_dir, ".cache", "ace-review", "sessions")
     assert Dir.exist?(cache_dir), "Cache directory should be created"
   end
 
