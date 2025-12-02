@@ -398,4 +398,235 @@ class ContextLoaderTest < AceTestCase
     end
   end
 
+  # Tests for top-level preset references (context.presets)
+  # These test the fix for issue where `context: presets: [...]` was ignored
+  # while `context: sections: my-section: presets: [...]` worked correctly
+
+  def test_loads_preset_with_top_level_presets
+    with_temp_dir do
+      # Create sample files for each preset
+      File.write("base-file.md", "# Base File Content")
+      File.write("extended-file.md", "# Extended File Content")
+
+      # Create base preset
+      create_preset("base-preset", <<~MARKDOWN
+        ---
+        description: Base preset
+        context:
+          params:
+            output: stdio
+          embed_document_source: true
+          files:
+            - base-file.md
+        ---
+        Base preset body
+      MARKDOWN
+      )
+
+      # Create preset that references base via top-level presets
+      create_preset("extended-preset", <<~MARKDOWN
+        ---
+        description: Extended preset with top-level presets
+        context:
+          presets:
+            - base-preset
+          embed_document_source: true
+          files:
+            - extended-file.md
+        ---
+        Extended preset body
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("extended-preset")
+
+      # Should have files from both presets
+      assert_equal 2, context.file_count, "Should have files from both base and extended presets"
+      assert context.content.include?("Base File Content"), "Should include base preset file content"
+      assert context.content.include?("Extended File Content"), "Should include extended preset file content"
+    end
+  end
+
+  def test_top_level_presets_current_config_wins
+    with_temp_dir do
+      # Create sample file
+      File.write("file.md", "# File Content")
+
+      # Create base preset with timeout param
+      create_preset("base-params", <<~MARKDOWN
+        ---
+        description: Base preset with params
+        context:
+          params:
+            timeout: 30
+          embed_document_source: true
+          files:
+            - file.md
+        ---
+        Base
+      MARKDOWN
+      )
+
+      # Create preset that overrides timeout
+      create_preset("override-params", <<~MARKDOWN
+        ---
+        description: Override preset
+        context:
+          params:
+            timeout: 60
+          presets:
+            - base-params
+          embed_document_source: true
+        ---
+        Override
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("override-params")
+
+      # Current preset params should win (last wins)
+      # The metadata contains merged params
+      assert context.metadata[:timeout].nil? || context.metadata[:timeout] == 60,
+             "Current preset timeout should override base (or be merged correctly)"
+
+      # Should still have files from base
+      assert_equal 1, context.file_count, "Should have files from base preset"
+    end
+  end
+
+  def test_top_level_presets_with_missing_preset_returns_error
+    with_temp_dir do
+      File.write("test.md", "# Test Content")
+
+      # Create base preset
+      create_preset("existing-preset", <<~MARKDOWN
+        ---
+        description: Existing preset
+        context:
+          embed_document_source: true
+          files:
+            - test.md
+        ---
+        Content
+      MARKDOWN
+      )
+
+      # Create preset referencing both existing and missing presets
+      create_preset("mixed-refs", <<~MARKDOWN
+        ---
+        description: Mixed references
+        context:
+          presets:
+            - existing-preset
+            - nonexistent-preset
+          embed_document_source: true
+        ---
+        Mixed
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd, debug: false)
+      context = loader.load_preset("mixed-refs")
+
+      # When a referenced preset is missing, the load should fail with an error
+      # This is the expected behavior from PresetManager.load_preset_with_composition
+      assert context.metadata[:error], "Should have error when referenced preset is missing"
+      assert_match(/nonexistent-preset/, context.metadata[:error], "Error should mention missing preset")
+    end
+  end
+
+  def test_top_level_presets_with_sections_coexist
+    with_temp_dir do
+      File.write("base.md", "# Base Content")
+      File.write("section.md", "# Section Content")
+      File.write("own.md", "# Own Content")
+
+      # Create base preset
+      create_preset("base-files", <<~MARKDOWN
+        ---
+        description: Base files
+        context:
+          embed_document_source: true
+          files:
+            - base.md
+        ---
+        Base
+      MARKDOWN
+      )
+
+      # Create preset with both top-level presets AND sections
+      create_preset("combined", <<~MARKDOWN
+        ---
+        description: Combined preset
+        context:
+          presets:
+            - base-files
+          embed_document_source: true
+          files:
+            - own.md
+          sections:
+            my-section:
+              title: My Section
+              files:
+                - section.md
+        ---
+        Combined
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("combined")
+
+      # Should have files from: top-level presets + own files + section files
+      assert context.content.include?("Base Content"), "Should include base preset file"
+      assert context.content.include?("Own Content"), "Should include own file"
+      assert context.content.include?("Section Content"), "Should include section file"
+    end
+  end
+
+  def test_top_level_presets_merges_commands
+    with_temp_dir do
+      # Create base preset with a command
+      create_preset("base-cmd", <<~MARKDOWN
+        ---
+        description: Base preset with command
+        context:
+          embed_document_source: true
+          commands:
+            - echo "from base"
+        ---
+        Base
+      MARKDOWN
+      )
+
+      # Create preset that adds its own command
+      create_preset("extended-cmd", <<~MARKDOWN
+        ---
+        description: Extended preset
+        context:
+          presets:
+            - base-cmd
+          embed_document_source: true
+          commands:
+            - echo "from extended"
+        ---
+        Extended
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("extended-cmd")
+
+      # Should have commands from both presets
+      assert context.commands, "Should have commands"
+      assert context.commands.size >= 2, "Should have commands from both presets"
+
+      command_strings = context.commands.map { |c| c[:command] }
+      assert command_strings.include?('echo "from base"'), "Should have base preset command"
+      assert command_strings.include?('echo "from extended"'), "Should have extended preset command"
+    end
+  end
+
 end

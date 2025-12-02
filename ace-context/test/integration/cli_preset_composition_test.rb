@@ -105,4 +105,37 @@ class CLIPresetCompositionTest < AceTestCase
     refute_match(/Test file 1 content/, stdout)
     refute_match(/Test file 2 content/, stdout)
   end
+
+  # Test for top-level preset references (context.presets)
+  # This specifically tests the fix for the issue where context.presets was ignored
+  def test_cli_loads_top_level_presets_in_single_preset
+    # The "extended" preset has: context: presets: [base]
+    # Loading just "extended" should compose with base preset
+    stdout, stderr, status = run_ace_context("-p", "extended")
+
+    assert status.success?, "Command should succeed: #{stderr}"
+
+    # Key verification: composition happened correctly
+    # The output should show that both presets were composed
+    assert_match(/composed.*true/i, stdout, "Should show that preset was composed")
+    assert_match(/composed_from.*base.*extended/i, stdout, "Should show composition chain includes both presets")
+
+    # Both preset bodies should be present
+    assert_match(/Base preset content/, stdout, "Should include base preset body")
+    assert_match(/Extended preset content/, stdout, "Should include extended preset body")
+  end
+
+  def test_cli_top_level_presets_with_inspect_config
+    # Loading just "extended" should show merged config from "base"
+    stdout, stderr, status = run_ace_context("-p", "extended", "--inspect-config")
+
+    assert status.success?, "Command should succeed: #{stderr}"
+
+    # Should show merged files from both presets
+    assert_match(/test1.md/, stdout, "Should include base preset files in merged config")
+    assert_match(/test2.md/, stdout, "Should include extended preset files in merged config")
+
+    # Should show extended's timeout (current wins over referenced)
+    assert_match(/timeout:\s*60/, stdout, "Current preset timeout should win")
+  end
 end
