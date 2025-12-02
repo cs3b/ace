@@ -41,21 +41,20 @@ module Ace
 
         # Generate timestamped filename for review report
         # @param review_data [Hash] Review metadata (preset, model, etc.)
-        # @return [String] Filename in format: YYYYMMDD-HHMMSS-provider-preset-review.md
+        # @return [String] Filename in format: YYYYMMDD-HHMMSS-model-preset-review.md
         def self.generate_filename(review_data)
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
 
-          # Extract provider from model (e.g., "google:gemini-2.5-flash" -> "google")
-          # Or use simplified model name if no provider prefix
+          # Use full model slug for uniqueness (e.g., "google:gemini-2.5-flash" -> "google-gemini-2-5-flash")
           model = review_data[:model] || "unknown"
-          provider = extract_provider(model)
+          model_slug = Ace::Review::Atoms::SlugGenerator.generate(model)
 
           preset = review_data[:preset] || "default"
 
           # Sanitize preset name for filename
-          preset_slug = preset.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase
+          preset_slug = Ace::Review::Atoms::SlugGenerator.generate(preset)
 
-          "#{timestamp}-#{provider}-#{preset_slug}-review.md"
+          "#{timestamp}-#{model_slug}-#{preset_slug}-review.md"
         end
 
         # Extract provider name from model string

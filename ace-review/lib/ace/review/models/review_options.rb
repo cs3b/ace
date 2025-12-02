@@ -7,14 +7,14 @@ module Ace
       class ReviewOptions
         attr_accessor :preset, :output_dir, :output, :context, :subject,
                       :prompt_base, :prompt_format, :prompt_focus, :add_focus,
-                      :prompt_guidelines, :model, :dry_run, :verbose,
+                      :prompt_guidelines, :model, :models, :dry_run, :verbose,
                       :auto_execute, :save_session, :session_dir,
                       :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
                       :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
           # Core options
-          @preset = hash[:preset] || "pr"
+          @preset = hash[:preset] || Ace::Review.get("defaults", "preset")
           @output_dir = hash[:output_dir]
           @output = hash[:output]
 
@@ -31,9 +31,10 @@ module Ace
 
           # Execution options
           @model = hash[:model]
+          @models = hash[:models]
           @dry_run = hash[:dry_run] || false
           @verbose = hash[:verbose] || false
-          @auto_execute = hash[:auto_execute] || false
+          @auto_execute = hash[:auto_execute] || Ace::Review.get("defaults", "auto_execute") || false
 
           # Session options
           @save_session = hash.fetch(:save_session, true)
@@ -83,9 +84,36 @@ module Ace
           !dry_run && save_session
         end
 
-        # Get effective model
+        # Get effective model (single model for backward compatibility)
+        # Priority: model scalar > first model in models array > config_model > default
         def effective_model(config_model = nil)
-          model || config_model || "google:gemini-2.5-flash"
+          return model if model
+          return models.first if models&.any?
+          config_model || "google:gemini-2.5-flash"
+        end
+
+        # Get effective models array
+        # Returns array of models, handling both single model and multi-model cases
+        # Priority: models array > model scalar > config_models > default
+        def effective_models(config_models = nil)
+          # If models array is set (from CLI), use it
+          return models if models&.any?
+
+          # If model scalar is set (backward compatibility), wrap in array
+          return [model] if model
+
+          # If config provides models array, use it
+          if config_models.is_a?(Array) && config_models.any?
+            return config_models
+          end
+
+          # If config provides single model, wrap in array
+          if config_models.is_a?(String) && !config_models.empty?
+            return [config_models]
+          end
+
+          # Default to single model
+          ["google:gemini-2.5-flash"]
         end
 
         # Merge with config values
@@ -110,7 +138,17 @@ module Ace
           # Merge other config values
           @context ||= config["context"]
           @subject ||= config["subject"]
-          @model ||= config["model"]
+
+          # Handle models from config (backward compatible)
+          # CLI models override preset models
+          unless @models&.any?
+            if config["models"].is_a?(Array) && config["models"].any?
+              @models = config["models"]
+            elsif config["model"]
+              @model ||= config["model"]
+            end
+          end
+
           @gh_timeout ||= config["gh_timeout"]
 
           self
