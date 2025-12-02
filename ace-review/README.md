@@ -113,6 +113,66 @@ ace-review --list-prompts
 ace-review --preset code-pr --auto-execute
 ```
 
+## Multi-Model Reviews
+
+Run code reviews against multiple LLM models simultaneously for diverse perspectives.
+
+### CLI Usage
+
+```bash
+# Comma-separated models
+ace-review --preset code-pr --model "gemini,gpt-4,claude" --auto-execute
+
+# Multiple --model flags
+ace-review --preset code-pr --model gemini --model gpt-4 --auto-execute
+
+# Full provider:model format
+ace-review --preset security --model "google:gemini-2.5-flash,openai:gpt-4" --auto-execute
+```
+
+### Preset Configuration
+
+Configure multi-model in preset files:
+
+```yaml
+# .ace/review/presets/code-multi.yml
+presets:
+  - code
+
+description: "Multi-model code review"
+
+models:
+  - claude:opus
+  - codex:gpt-5.1-codex-max
+  - gpro
+```
+
+### Configuration Options
+
+Set defaults in `.ace/review/config.yml`:
+
+```yaml
+defaults:
+  preset: code-pr                    # Default preset
+  auto_execute: true                 # Auto-run LLM queries
+  max_concurrent_models: 3           # Parallel model limit
+  llm_timeout: 300                   # Per-model timeout (seconds)
+```
+
+### Output Structure
+
+Multi-model reviews save separate files per model:
+
+```
+.cache/ace-review/sessions/review-20251202-104235/
+├── system.prompt.md
+├── user.prompt.md
+├── metadata.yml
+├── review-google-gemini-2-5-flash.md
+├── review-openai-gpt-4.md
+└── review-anthropic-claude-3-opus.md
+```
+
 ## GitHub Pull Request Review Mode
 
 Review GitHub Pull Requests directly from the command line using the integrated `gh` CLI.
@@ -618,6 +678,25 @@ While YAML anchors (`&ref`, `*ref`) provide similar functionality, preset compos
 - **Version Control**: Each preset file can be versioned independently
 
 **YAML anchors are still useful** for repetition within a single preset file, while preset composition handles cross-file modularity.
+
+### Preset Resolution Chain
+
+ace-review resolves presets in this order (first match wins):
+
+1. **Project presets**: `.ace/review/presets/*.yml` (your customizations)
+2. **Gem presets**: `ace-review/.ace.example/review/presets/*.yml` (built-in defaults)
+
+This allows you to:
+- Override built-in presets by creating a file with the same name
+- Create project-specific presets that don't exist in the gem
+- See available presets with `ace-review --list-presets`
+
+**Example**: To customize the `code-pr` preset:
+```bash
+# Copy and modify the default
+cp ace-review/.ace.example/review/presets/code-pr.yml .ace/review/presets/code-pr.yml
+# Edit .ace/review/presets/code-pr.yml with your changes
+```
 
 ## Prompt System
 

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.151] - 2025-12-03
+
+### ace-review v0.20.6
+- **Fixed**: SlugGenerator removes trailing hyphen after max_length truncation
+- **Documentation**: Added Multi-Model Reviews section to README
+- **Documentation**: Added Preset Resolution Chain section to README
+
 ## [0.9.150] - 2025-12-03
 
 ### ace-review v0.20.0 → v0.20.5 (Task 126.01)
