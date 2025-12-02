@@ -105,6 +105,15 @@ class SlugGeneratorTest < AceReviewTest
     assert_equal "short", result
   end
 
+  def test_removes_trailing_hyphen_after_truncation
+    # "model-name-provider" truncated at 11 chars would be "model-name-"
+    result = @generator.generate("model-name-provider", max_length: 11)
+
+    # Should be "model-name" not "model-name-"
+    assert_equal "model-name", result
+    refute result.end_with?("-")
+  end
+
   # Edge case: empty/nil input
   def test_handles_nil_input
     result = @generator.generate(nil)
