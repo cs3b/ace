@@ -4,7 +4,7 @@ All notable changes to ace-context will be documented in this file.
 
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
-## \[Unreleased\]
+## [Unreleased]
 
 ### Added
 
@@ -41,7 +41,23 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * **File Loading Method Reference**: Corrected `load_file` reference in multi-file processing (was incorrectly calling
   `load_file_as_preset`)
 
-## \[0.18.1\] - 2025-11-16
+## [0.18.2] - 2025-12-02
+
+### Fixed
+
+* **Top-Level Preset Support**: Enable `context.presets` at configuration root level
+  * Process preset references in top-level context configuration (not just within sections)
+  * Merge files, commands, and params from referenced presets
+  * Apply "current config wins" precedence for overrides
+* **Fail-Fast Error Handling**: Improve error handling for preset loading
+  * Raise clear error when any referenced preset fails to load
+  * Remove silent debug-only warnings for preset failures
+  * Consistent error propagation through load chain
+* **Code Quality**: Remove `.send()` usage for merge_preset_data
+  * Make merge_preset_data public method instead of using reflection
+  * Cleaner API surface for preset composition
+
+## [0.18.1] - 2025-11-16
 
 ### Changed
 
@@ -49,7 +65,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Provides access to latest PromptCacheManager features and infrastructure improvements
   * Maintains compatibility with standardized ACE ecosystem patterns
 
-## \[0.18.0\] - 2025-11-10
+## [0.18.0] - 2025-11-10
 
 ### Added
 
@@ -68,7 +84,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Fixes inconsistency where sections worked in presets but not in direct file loading
   * ace-review integration now generates full section content (1613 lines vs 29 before)
 
-## \[0.17.6\] - 2025-11-10
+## [0.17.6] - 2025-11-10
 
 ### Added
 
@@ -80,7 +96,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Comprehensive test coverage with 16 unit tests for format normalization
   * Updated documentation with clear examples and format comparison guide
 
-## \[0.17.5\] - 2025-11-09
+## [0.17.5] - 2025-11-09
 
 ### Fixed
 
@@ -97,7 +113,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Added refactoring guidance for deep nesting scenarios
   * Performance impact table showing load time vs maintainability trade-offs
 
-## \[0.17.4\] - 2025-11-07
+## [0.17.4] - 2025-11-07
 
 ### Fixed
 
@@ -118,7 +134,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * All 27 integration tests passing with no regressions
 * Verified XML output format with proper section tags and file order preservation
 
-## \[0.17.3\] - 2025-11-07
+## [0.17.3] - 2025-11-07
 
 ### Added
 
@@ -137,7 +153,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * No regressions introduced with new functionality
 * Enhanced test coverage for section-based workflows and preset composition
 
-## \[0.17.2\] - 2025-11-06
+## [0.17.2] - 2025-11-06
 
 ### Added
 
@@ -168,7 +184,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Updated all tests to work with simplified validation approach
   * All 91 tests now passing (0 failures, 0 errors)
 
-## \[0.17.1\] - 2025-11-06
+## [0.17.1] - 2025-11-06
 
 ### Fixed
 
@@ -181,7 +197,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Fixed infinite recursion bug in format\_sections\_for\_yaml method
 * **Test Suite**: All ace-context tests now passing (91 tests, 0 failures, 0 errors)
 
-## \[0.17.0\] - 2025-11-06
+## [0.17.0] - 2025-11-06
 
 ### Added
 
@@ -211,7 +227,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Enhanced validation and error handling systems
 * Improved content merging algorithms for mixed data types
 
-## \[0.16.1\] - 2025-11-01
+## [0.16.1] - 2025-11-01
 
 ### Changed
 
@@ -219,7 +235,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Changed dependency from `ace-core` to `ace-support-core`
   * Part of ecosystem-wide naming convention alignment for infrastructure gems
 
-## \[0.16.0\] - 2025-10-24
+## [0.16.0] - 2025-10-24
 
 ### Added
 
@@ -239,7 +255,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Update README and documentation examples for flexible input
 * Update slash command to thin interface pattern (delegates to wfi://load-context)
 
-## \[0.15.1\] - 2025-10-24
+## [0.15.1] - 2025-10-24
 
 ### Fixed
 
@@ -250,7 +266,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Standardize diff/diffs API documentation to ace-git-diff format
 * Update changelog and version documentation
 
-## \[0.15.0\] - 2025-10-23
+## [0.15.0] - 2025-10-23
 
 ### Changed
 
@@ -265,7 +281,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Maintains full backward compatibility for all public APIs
 * extract\_diff() still uses direct git command for detailed error reporting
 
-## \[0.14.2\] - 2025-10-18
+## [0.14.2] - 2025-10-18
 
 ### Fixed
 
@@ -274,7 +290,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Body content included in preset\_data structure for content formatting
 * Files embedded as XML when `embed_document_source` is true (calls `format_context`)
 
-## \[0.14.1\] - 2025-10-18
+## [0.14.1] - 2025-10-18
 
 ### Fixed
 
@@ -285,7 +301,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   correctly wins over all presets)
 * Correct argument format for `merge_preset_data` calls - wrapped contexts in preset structures
 
-## \[0.14.0\] - 2025-10-18
+## [0.14.0] - 2025-10-18
 
 ### Added
 
@@ -306,7 +322,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   YAML)
 * Added input auto-detection documentation to README
 
-## \[0.13.0\] - 2025-10-17
+## [0.13.0] - 2025-10-17
 
 ### Added
 
@@ -323,13 +339,13 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 * Store preset output mode in metadata for multi-preset loading
 * Cache filename generation for multi-preset mode
 
-## \[0.12.0\] - 2025-10-14
+## [0.12.0] - 2025-10-14
 
 ### Added
 
 * Standardize Rakefile test commands and add CI fallback
 
-## \[0.11.4\] - 2025-10-07
+## [0.11.4] - 2025-10-07
 
 ### Changed
 
@@ -350,7 +366,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   * Now both methods use `<files>` and `<file>` tags consistently
   * Default format is now `markdown-xml` when `embed_document_source: true`
 
-## \[0.11.3\] - 2025-10-07
+## [0.11.3] - 2025-10-07
 
 ### Fixed
 
@@ -391,7 +407,7 @@ New structure (required):
       files: [...]
 {: .language-yaml}
 
-## \[0.11.2\] - 2025-10-06
+## [0.11.2] - 2025-10-06
 
 ### Changed
 
@@ -408,7 +424,7 @@ New structure (required):
   * Original YAML frontmatter now output with `---` delimiters instead of bulleted list
   * Applies to both `markdown` and `markdown-xml` output formats when using `embed_document_source`
 
-## \[0.11.1\] - 2025-10-06
+## [0.11.1] - 2025-10-06
 
 ### Fixed
 
@@ -424,7 +440,7 @@ New structure (required):
   * Added `exclude:` parameter support in file aggregation
   * **Impact**: Patterns like `lib/**/*.rb` now correctly expand to matching files
 
-## \[0.11.0\] - 2025-10-06
+## [0.11.0] - 2025-10-06
 
 ### Added
 
@@ -455,7 +471,7 @@ New structure (required):
 * Protocol resolution integrated in both preset and template config processing
 * Maintains backward compatibility with existing file paths, presets, and inline YAML
 
-## \[0.10.0\] - 2025-10-06
+## [0.10.0] - 2025-10-06
 
 ### Added
 
@@ -470,7 +486,7 @@ New structure (required):
 * ace-core `OutputFormatter` now handles diffs section in all formats
 * README updated with Content Sources section documenting all supported types
 
-## \[0.9.0\] - 2025-10-05
+## [0.9.0] - 2025-10-05
 
 Initial release with preset management, file aggregation, and command execution support.
 
