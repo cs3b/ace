@@ -501,6 +501,7 @@ module Ace
             subject: content[:subject],
             context: content[:context],
             model: options.effective_model(config[:model]),
+            models: options.effective_models(config[:models]),
             cache_dir: cache_dir,
             system_prompt: prompt_result[:system_prompt],
             user_prompt: prompt_result[:user_prompt],
@@ -521,13 +522,27 @@ module Ace
         end
 
         def execute_with_llm(review_data, session_dir, options = nil)
+          models = review_data[:models]
+
+          # Detect single vs multi-model execution
+          if models.size == 1
+            # Single model execution (existing path)
+            execute_single_model(review_data, session_dir, options, models.first)
+          else
+            # Multi-model execution (new path)
+            execute_multi_model(review_data, session_dir, options, models)
+          end
+        end
+
+        # Execute single model review (existing behavior)
+        def execute_single_model(review_data, session_dir, options, model)
           executor = Ace::Review::Molecules::LlmExecutor.new
 
           # v0.13.0 architecture: only supports system/user prompt format
           result = executor.execute(
             system_prompt: review_data[:system_prompt],
             user_prompt: review_data[:user_prompt],
-            model: review_data[:model],
+            model: model,
             session_dir: session_dir
           )
 
@@ -559,6 +574,39 @@ module Ace
               error_result[:enhanced_error] = "#{result[:error_type]}: #{result[:error]}"
             end
             error_result
+          end
+        end
+
+        # Execute multi-model review (new capability)
+        def execute_multi_model(review_data, session_dir, options, models)
+          require_relative '../molecules/multi_model_executor'
+          executor = Ace::Review::Molecules::MultiModelExecutor.new
+
+          # Execute all models concurrently
+          result = executor.execute(
+            models: models,
+            system_prompt: review_data[:system_prompt],
+            user_prompt: review_data[:user_prompt],
+            session_dir: session_dir
+          )
+
+          if result[:success]
+            # Save metadata for all models
+            save_multi_model_metadata(session_dir, result)
+
+            # For multi-model, we don't copy to a single release location
+            # Each model has its own output file already in session_dir
+
+            # Handle task saving if requested (save all reviews)
+            task_paths = save_multi_model_to_task(review_data, result[:results]) if @task_reference
+
+            # Build multi-model success response
+            build_multi_model_response(result, session_dir, task_paths)
+          else
+            {
+              success: false,
+              error: "All models failed to execute"
+            }
           end
         end
 
@@ -681,6 +729,83 @@ module Ace
             "raw_metadata" => result[:metadata]
           }
           File.write(metadata_file, YAML.dump(metadata_content))
+        end
+
+        # Save metadata for multi-model execution
+        def save_multi_model_metadata(session_dir, result)
+          metadata_file = File.join(session_dir, "metadata.yml")
+          models_metadata = result[:results].map do |model, model_result|
+            {
+              "name" => model,
+              "status" => model_result[:success] ? "success" : "failed",
+              "duration" => model_result[:duration],
+              "output_file" => model_result[:output_file] ? File.basename(model_result[:output_file]) : nil,
+              "error" => model_result[:error],
+              "model_slug" => model_result[:model_slug]
+            }
+          end
+
+          metadata_content = {
+            "timestamp" => Time.now.iso8601,
+            "models" => models_metadata,
+            "summary" => result[:summary]
+          }
+
+          File.write(metadata_file, YAML.dump(metadata_content))
+        end
+
+        # Save all model reviews to task directory
+        def save_multi_model_to_task(review_data, model_results)
+          return [] unless @task_reference
+
+          begin
+            require_relative '../molecules/task_resolver'
+            require_relative '../molecules/task_report_saver'
+
+            task_info = Molecules::TaskResolver.resolve(@task_reference)
+            unless task_info
+              warn "Warning: Task '#{@task_reference}' not found. Reviews completed but reports not saved to task."
+              return []
+            end
+
+            # Save each successful model's review
+            task_paths = []
+            model_results.each do |model, model_result|
+              next unless model_result[:success] && model_result[:output_file]
+
+              result = Molecules::TaskReportSaver.save(task_info[:path], model_result[:output_file], review_data)
+              task_paths << result[:task_path] if result[:success]
+            end
+
+            task_paths
+          rescue => e
+            warn "Warning: Failed to save reviews to task: #{e.message}"
+            []
+          end
+        end
+
+        # Build response for multi-model execution
+        def build_multi_model_response(result, session_dir, task_paths = nil)
+          successful_models = result[:results].select { |_, r| r[:success] }
+          failed_models = result[:results].reject { |_, r| r[:success] }
+
+          response = {
+            success: true,
+            session_dir: session_dir,
+            summary: result[:summary],
+            models: result[:results].keys,
+            successful_models: successful_models.keys,
+            failed_models: failed_models.keys
+          }
+
+          # Add task paths if available
+          response[:task_paths] = task_paths if task_paths&.any?
+
+          # Add output files
+          output_files = successful_models.values.map { |r| r[:output_file] }.compact
+          response[:output_files] = output_files
+
+          response
         end
 
         def add_review_metadata(response, review_data)

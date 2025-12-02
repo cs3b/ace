@@ -16,8 +16,9 @@ module Ace
         # @param user_prompt [String] user prompt
         # @param model [String] the model to use
         # @param session_dir [String] the session directory for output
+        # @param output_file [String, nil] optional custom output file path
         # @return [Hash] result with success, response, output_file, metadata, and error keys
-        def execute(system_prompt:, user_prompt:, model: nil, session_dir:)
+        def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil)
           model ||= @default_model
 
           # Check if ace-llm Ruby API is available
@@ -30,7 +31,7 @@ module Ace
           end
 
           # Use Ruby API directly for v0.13.0 architecture
-          execute_with_ruby_api(system_prompt, user_prompt, model, session_dir)
+          execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, output_file)
         rescue StandardError => e
           {
             success: false,
@@ -47,10 +48,15 @@ module Ace
         end
 
         # Execute using Ruby API with system/user prompts
-        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir)
-          # Extract model short name for output filename
-          model_short = model.include?(":") ? model.split(":", 2).last : model
-          output_file = File.join(session_dir, "review-report-#{model_short}.md")
+        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil)
+          # Use custom output file if provided, otherwise generate default
+          output_file = if custom_output_file
+                         custom_output_file
+                       else
+                         # Extract model short name for output filename
+                         model_short = model.include?(":") ? model.split(":", 2).last : model
+                         File.join(session_dir, "review-report-#{model_short}.md")
+                       end
 
           # Use Ruby API directly - no temp files needed!
           result = Ace::LLM::QueryInterface.query(
