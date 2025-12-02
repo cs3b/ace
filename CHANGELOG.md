@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
   - Remove silent debug-only warnings for preset failures
 - **Changed**: Make `merge_preset_data` public method (remove `.send()` usage)
 
+### ace-taskflow v0.20.1
+- **Fixed**: IdeaDirectoryMover normalization - move entire folder when passed file path
+- **Changed**: Update `draft-task.wf.md` documentation for idea done command
+
 ## [0.9.147] - 2025-12-01
 
 ### ace-review v0.19.2 (Task 114)

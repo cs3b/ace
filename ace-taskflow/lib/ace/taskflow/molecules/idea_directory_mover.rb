@@ -16,14 +16,23 @@ module Ace
           return { success: false, message: "Idea path not provided" } unless idea_path
           return { success: false, message: "Idea not found: #{idea_path}" } unless File.exist?(idea_path) || Dir.exist?(idea_path)
 
-          is_directory = Dir.exist?(idea_path) && !File.file?(idea_path)
+          # Normalize: if it's a file, we need to move its parent folder
+          # This ensures consistent behavior whether user passes file or folder
+          is_file = File.file?(idea_path)
+          if is_file
+            idea_folder = File.dirname(idea_path)
+            idea_name = File.basename(idea_folder)
+            ideas_dir = File.dirname(idea_folder)
+            is_directory = true  # We're moving the folder, not the file
+          else
+            idea_folder = idea_path
+            idea_name = File.basename(idea_folder)
+            ideas_dir = File.dirname(idea_folder)
+            is_directory = true
+          end
 
-          # Get parent directory and name
-          idea_dir = File.dirname(idea_path)
-          idea_name = File.basename(idea_path)
-
-          # Create done directory if it doesn't exist
-          done_dir = File.join(idea_dir, "done")
+          # Create done directory at ideas level (sibling to idea folders)
+          done_dir = File.join(ideas_dir, "done")
           FileUtils.mkdir_p(done_dir) unless File.directory?(done_dir)
 
           # Target path in done directory
@@ -39,17 +48,19 @@ module Ace
 
           begin
             # Update idea frontmatter before moving
-            if is_directory
-              # Update idea.md inside directory
-              idea_file = File.join(idea_path, "idea.md")
-              update_idea_completion_metadata(idea_file, timestamp) if File.exist?(idea_file)
+            # Always working with the folder now (normalized above)
+            # Look for idea.md or any .md file in the folder
+            idea_file = File.join(idea_folder, "idea.md")
+            if File.exist?(idea_file)
+              update_idea_completion_metadata(idea_file, timestamp)
             else
-              # Update flat file
-              update_idea_completion_metadata(idea_path, timestamp)
+              # Try to find any .md file in the folder
+              md_files = Dir.glob(File.join(idea_folder, "*.md"))
+              update_idea_completion_metadata(md_files.first, timestamp) if md_files.any?
             end
 
-            # Perform atomic move (works for both files and directories)
-            FileUtils.mv(idea_path, target_path)
+            # Perform atomic move of the folder
+            FileUtils.mv(idea_folder, target_path)
 
             {
               success: true,
