@@ -15,8 +15,9 @@ module Ace
                     :subject_extractor, :context_extractor
         attr_accessor :task_reference
 
-        def initialize
-          @preset_manager = Ace::Review::Molecules::PresetManager.new
+        def initialize(project_root: nil)
+          @project_root = project_root
+          @preset_manager = Ace::Review::Molecules::PresetManager.new(project_root: project_root)
           @prompt_resolver = Ace::Review::Molecules::NavPromptResolver.new
           @prompt_composer = Ace::Review::Molecules::PromptComposer.new(resolver: @prompt_resolver)
           @subject_extractor = Ace::Review::Molecules::SubjectExtractor.new
@@ -683,9 +684,9 @@ module Ace
 
         def create_cache_directory
           # Create cache directory in .cache/ace-review/sessions/ relative to project root
-          # Use ProjectRootFinder to support both main repos and git worktrees
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          base_cache_path = File.join(project_root, ".cache", "ace-review", "sessions")
+          # Use @project_root if set (e.g., in tests), otherwise use ProjectRootFinder
+          root = @project_root || Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          base_cache_path = File.join(root, ".cache", "ace-review", "sessions")
           FileUtils.mkdir_p(base_cache_path)
           base_cache_path
         end
