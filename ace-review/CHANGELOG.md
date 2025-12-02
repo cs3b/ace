@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.6] - 2025-12-02
+
+### Fixed
+- **SlugGenerator**: Remove trailing hyphen after max_length truncation
+
+### Documentation
+- **Multi-Model Reviews**: Add section documenting CLI usage, preset config, and output structure
+- **Preset Resolution Chain**: Document preset lookup order (project → gem defaults)
+
 ## [0.20.5] - 2025-12-02
 
 ### Technical
