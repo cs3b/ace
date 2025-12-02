@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2025-12-02
+
+### Fixed
+
+- **IdeaDirectoryMover Normalization**: Fix `move_to_done` to normalize file paths to folder paths
+  - When passed a file path inside an idea folder, now moves entire folder (not just the file)
+  - Consistent behavior whether file or folder reference is passed
+  - Prevents incorrect `ideas/IDEA/done/` subfolder structure
+
+### Changed
+
+- **Documentation**: Update `draft-task.wf.md` for idea done command
+  - Clarify to use folder reference, not file path
+  - Document correct behavior: moves entire folder to `ideas/done/`
+
 ## [0.20.0] - 2025-11-27
 
 ### Added

@@ -107,8 +107,9 @@ Create high-level behavioral specifications that define WHAT the system should d
      * List all idea files referenced during behavioral specification
      * Note: Multiple idea files may be combined into one task
    * For EACH source idea file:
-     * Mark idea as done using ace-taskflow: `ace-taskflow idea done <idea-reference>`
-       * This moves the idea to `ideas/done/` subdirectory in its current location
+     * Mark idea as done using ace-taskflow: `ace-taskflow idea done <idea-folder-reference>`
+       * Use the idea folder name (e.g., `20251128-224153-my-idea`), not a file path
+       * This moves the entire idea folder to `ideas/done/<idea-folder>/`
        * Updates idea frontmatter with completion status and timestamp
    * Update task references:
      * Update the task file's References section with new idea file locations
