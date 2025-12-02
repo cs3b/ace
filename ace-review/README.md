@@ -98,7 +98,7 @@ ace-review
 ace-review --preset security
 
 # Save review report to task directory
-ace-review --preset pr --task 114
+ace-review --preset code-pr --task 114
 
 # Auto-execute with task integration
 ace-review --preset security --task 114 --auto-execute
@@ -110,7 +110,7 @@ ace-review --list-presets
 ace-review --list-prompts
 
 # Execute review with LLM automatically
-ace-review --preset pr --auto-execute
+ace-review --preset code-pr --auto-execute
 ```
 
 ## GitHub Pull Request Review Mode
@@ -348,12 +348,12 @@ The `--task` flag enables saving review reports directly to ace-taskflow task di
 
 ```bash
 # Save review to task directory (accepts multiple reference formats)
-ace-review --preset pr --task 114
+ace-review --preset code-pr --task 114
 ace-review --preset security --task task.114
 ace-review --preset comprehensive --task v.0.9.0+114
 
 # Combine with auto-execute
-ace-review --preset pr --task 114 --auto-execute
+ace-review --preset code-pr --task 114 --auto-execute
 ```
 
 ### Task Reference Formats
@@ -687,7 +687,7 @@ ace-review [options]
 ```
 
 Options:
-- `--preset <name>` - Use specific preset (default: pr)
+- `--preset <name>` - Use specific preset (default: code)
 - `--subject <config>` - What to review (YAML config, git range, keyword, or file pattern)
 - `--context <config>` - Background information (YAML config or preset name)
 - `--output-dir <path>` - Custom output directory

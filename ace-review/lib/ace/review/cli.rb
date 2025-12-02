@@ -8,7 +8,6 @@ module Ace
     class CLI
       def initialize
         @options = {
-          preset: "pr",
           save_session: true
         }
       end
@@ -46,7 +45,7 @@ module Ace
           opts.separator ""
           opts.separator "Options:"
 
-          opts.on("--preset NAME", "Review preset from configuration (default: pr)") do |v|
+          opts.on("--preset NAME", "Review preset from configuration (or set defaults.preset in config)") do |v|
             @options[:preset] = v
           end
 
@@ -86,8 +85,11 @@ module Ace
             @options[:prompt_guidelines] = v
           end
 
-          opts.on("--model MODEL", "LLM model to use") do |v|
-            @options[:model] = v
+          opts.on("--model MODELS", "LLM model(s) to use (comma-separated or multiple flags)") do |v|
+            # Initialize models array if not present
+            @options[:models] ||= []
+            # Split comma-separated values, strip whitespace, and filter blanks
+            @options[:models].concat(v.split(",").map(&:strip).reject(&:empty?))
           end
 
           opts.on("--list-presets", "List available presets") do
@@ -140,20 +142,44 @@ module Ace
         end
 
         @parser.parse!(argv)
+
+        # Deduplicate and validate models if present
+        if @options[:models]
+          @options[:models].uniq!
+          validate_model_names(@options[:models])
+        end
+      end
+
+      # Validate model names contain only expected characters
+      # @param models [Array<String>] model names to validate
+      # @raise [ArgumentError] if model name contains invalid characters
+      def validate_model_names(models)
+        models.each do |model|
+          unless model.match?(/\A[a-zA-Z0-9\-_:.]+\z/)
+            raise ArgumentError, "Invalid model name '#{model}'. Model names can only contain alphanumeric characters, hyphens, underscores, colons, and dots."
+          end
+        end
       end
 
       def show_help
         puts @parser
         puts
         puts "Examples:"
-        puts "  ace-review --preset pr"
+        puts "  ace-review --preset code-pr"
         puts "  ace-review --preset security --auto-execute"
         puts "  ace-review --preset docs --output-dir ./reviews"
-        puts "  ace-review --preset pr --task 114"
+        puts "  ace-review --preset code-pr --task 114"
         puts "  ace-review --preset security --task 114 --auto-execute"
         puts "  ace-review --pr 123 --auto-execute"
         puts "  ace-review --pr https://github.com/owner/repo/pull/456 --preset security"
         puts "  ace-review --pr owner/repo#789 --post-comment --auto-execute"
+        puts
+        puts "Multi-model examples:"
+        puts "  ace-review --preset code-pr --model \"gemini,gpt-4,claude\" --auto-execute"
+        puts "  ace-review --preset code-pr --model gemini --model gpt-4 --auto-execute"
+        puts "  ace-review --preset security --model \"google:gemini-2.5-flash,openai:gpt-4\" --auto-execute"
+        puts
+        puts "List commands:"
         puts "  ace-review --list-presets"
         puts "  ace-review --list-prompts"
       end
@@ -253,6 +279,12 @@ module Ace
       end
 
       def handle_success(result)
+        # Handle multi-model results
+        if result[:summary]
+          handle_multi_model_success(result)
+          return
+        end
+
         # Display review saved/prepared message
         if result[:output_file]
           puts "✓ Review saved: #{result[:output_file]}"
@@ -295,6 +327,43 @@ module Ace
           puts result[:dry_run_preview]
           puts "=== End Preview ==="
         end
+      end
+
+      def handle_multi_model_success(result)
+        puts
+        puts "Reviews saved (#{result[:summary][:success_count]} of #{result[:summary][:total_models]} succeeded):"
+        puts "  Session directory: #{result[:session_dir]}"
+        puts
+
+        if result[:output_files]&.any?
+          result[:output_files].each do |file|
+            puts "  ✓ #{File.basename(file)}"
+          end
+        end
+
+        if result[:failed_models]&.any?
+          puts
+          puts "Failed models:"
+          result[:failed_models].each do |model|
+            puts "  ✗ #{model}"
+          end
+        end
+
+        if result[:task_paths]&.any?
+          puts
+          puts "Saved to task directory:"
+          # Extract common directory from first path and make it relative
+          first_path = result[:task_paths].first
+          task_dir = File.dirname(first_path)
+          relative_dir = task_dir.sub("#{Dir.pwd}/", "")
+          puts "  #{relative_dir}/"
+          result[:task_paths].each do |path|
+            puts "  ✓ #{File.basename(path)}"
+          end
+        end
+
+        puts
+        puts "Total duration: #{result[:summary][:total_duration]}s"
       end
 
       def handle_error(result)

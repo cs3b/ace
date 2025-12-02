@@ -21,6 +21,7 @@ require_relative "review/errors"
 # Require atoms
 require_relative "review/atoms/context_normalizer"
 require_relative "review/atoms/preset_validator"
+require_relative "review/atoms/slug_generator"
 
 # Require all necessary components explicitly
 require_relative "review/molecules/context_composer"
@@ -54,8 +55,7 @@ module Ace
       # Configuration accessor
       def config
         @config ||= begin
-          base_config = Ace::Core.config
-          base_config.get("ace", "review") || default_config
+          Ace::Core.get("review", file: "config") || default_config
         rescue StandardError
           default_config
         end
@@ -67,7 +67,8 @@ module Ace
           "defaults" => {
             "model" => "google:gemini-2.5-flash",
             "output_format" => "markdown",
-            "context" => "project"
+            "context" => "project",
+            "max_concurrent_models" => 3
           },
           "presets" => default_presets
         }
