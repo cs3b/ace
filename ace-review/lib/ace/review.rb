@@ -36,6 +36,7 @@ require_relative "review/molecules/gh_cli_executor"
 require_relative "review/molecules/pr_identifier_parser"
 require_relative "review/molecules/gh_pr_fetcher"
 require_relative "review/molecules/gh_comment_poster"
+require_relative "review/molecules/multi_model_executor"
 
 require_relative "review/organisms/review_manager"
 

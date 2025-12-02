@@ -10,8 +10,31 @@ class PRDiffGenerationTest < AceReviewTest
 
   def setup
     super  # IMPORTANT: Calls parent to stub ace-context and git-extractor for fast tests
-    @manager = Ace::Review::Organisms::ReviewManager.new
     @temp_dir = Dir.mktmpdir
+
+    # Create test fixture for "pr" preset - tests should not depend on .ace/ directory
+    create_test_preset("pr", <<~YAML)
+      description: "Test PR preset"
+      instructions:
+        base: "prompt://base/system"
+        context:
+          sections:
+            format:
+              title: "Format Guidelines"
+              files:
+                - "prompt://format/standard"
+      context: "project"
+      subject:
+        context:
+          sections:
+            code_changes:
+              title: "Code Changes"
+              diffs:
+                - "origin/main...HEAD"
+    YAML
+
+    # Use @test_dir as project root for test isolation
+    @manager = Ace::Review::Organisms::ReviewManager.new(project_root: @test_dir)
   end
 
   def teardown
