@@ -27,6 +27,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_execute_review_with_default_preset
     options = {
+      preset: "pr",
       subject: "def test; end",
       auto_execute: false  # Don't actually call LLM
     }
@@ -70,6 +71,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_execute_review_with_cache_first_storage
     options = {
+      preset: "pr",
       subject: "def test; end",
       session_dir: File.join(@temp_dir, "custom_session"),
       auto_execute: false
@@ -87,6 +89,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_v0_13_0_architecture_system_user_prompt_separation
     options = {
+      preset: "pr",
       subject: "def test_method; puts 'hello'; end",
       context: "project",
       auto_execute: false
@@ -197,6 +200,24 @@ class ReviewManagerTest < AceReviewTest
     assert_match(/Preset 'nonexistent-preset' not found/, result[:error])
   end
 
+  def test_execute_review_without_preset_returns_helpful_error
+    # When no preset is specified and no default configured, should return helpful error
+    options = {
+      subject: "def test; end",
+      auto_execute: false
+    }
+
+    # Stub config to return nil for defaults.preset
+    Ace::Review.stub :get, nil do
+      result = @manager.execute_review(options)
+
+      refute result[:success]
+      assert_match(/No preset specified/, result[:error])
+      assert_match(/--preset NAME/, result[:error])
+      assert_match(/defaults\.preset/, result[:error])
+    end
+  end
+
   # NOTE: test_execute_review_with_no_subject removed because all presets provide
   # default subject configurations, making it impossible to test nil subject behavior
   # without creating custom test presets (which requires test directory management)
@@ -204,6 +225,7 @@ class ReviewManagerTest < AceReviewTest
   def test_backward_compatibility_without_cache_dir
     # Test that existing code still works
     options = {
+      preset: "pr",
       subject: "def test; end",
       auto_execute: false
     }

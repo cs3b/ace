@@ -95,6 +95,9 @@ module Ace
           preset = load_preset(preset_name)
           return nil unless preset
 
+          # Resolve models with backward compatibility
+          models_config = resolve_models_config(preset, overrides)
+
           {
             description: preset["description"],
             # Extract prompt composition for ace-context frontmatter (but let ace-context process it)
@@ -103,7 +106,9 @@ module Ace
             instructions: preset["instructions"],
             context: resolve_context_config(preset["context"], overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
-            model: overrides[:model] || preset["model"] || default_model,
+            models: models_config,
+            # Keep model for backward compatibility (first model in array)
+            model: models_config.first,
             output_format: overrides[:output_format] || preset["output_format"] || default_output_format
           }
         end
@@ -482,6 +487,33 @@ module Ace
         def resolve_subject_config(preset_subject, override_subject)
           return override_subject if override_subject
           preset_subject
+        end
+
+        # Resolve models configuration with backward compatibility
+        # Priority: override models > override model > preset models > preset model > default
+        def resolve_models_config(preset, overrides)
+          # If override provides models array, use it
+          if overrides[:models].is_a?(Array) && overrides[:models].any?
+            return overrides[:models]
+          end
+
+          # If override provides single model, wrap in array
+          if overrides[:model]
+            return [overrides[:model]]
+          end
+
+          # If preset has models array, use it
+          if preset["models"].is_a?(Array) && preset["models"].any?
+            return preset["models"]
+          end
+
+          # If preset has single model, wrap in array
+          if preset["model"]
+            return [preset["model"]]
+          end
+
+          # Fallback to default model
+          [default_model]
         end
 
         def current_release
