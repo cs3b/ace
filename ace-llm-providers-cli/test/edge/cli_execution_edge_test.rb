@@ -186,8 +186,8 @@ describe "CLI Execution Edge Cases" do
     end
 
     it "handles command not found gracefully" do
-      # Mock the windsurf_available? method to return false
-      @client.define_singleton_method(:windsurf_available?) { false }
+      # Mock the opencode_available? method to return false
+      @client.define_singleton_method(:opencode_available?) { false }
 
       err = assert_raises(Ace::LLM::Error) do
         @client.generate([{ role: "user", content: "test" }])
