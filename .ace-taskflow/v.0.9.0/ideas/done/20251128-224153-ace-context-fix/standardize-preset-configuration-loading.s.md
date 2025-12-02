@@ -4,8 +4,9 @@ filename_suggestion: fix-context-config-loading
 enhanced_at: 2025-11-28 22:41:52
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-12-01T18:16:09+00:00
 ---
-
 # Standardize ace-context Preset Configuration Loading
 
 ## Problem
