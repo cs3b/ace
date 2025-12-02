@@ -9,7 +9,7 @@
 # Usage: ace-review [options]
 #
 # Examples:
-#   ace-review --preset pr
+#   ace-review --preset code-pr
 #   ace-review --preset security --auto-execute
 #   ace-review --list-presets
 #

@@ -1,9 +1,15 @@
-# Pull request review - extends code.yml with PR-specific subject
+# Pull request review - extends code with PR-specific subject
 
 presets:
   - code
 
 description: "Pull request review - comprehensive code changes review"
 
-# Note: No default subject since this preset is designed to work with --pr flag
-# When used with --pr, the system will automatically create PR-specific subject configuration
+subject:
+  context:
+    sections:
+      code_changes:
+        title: "Code Changes"
+        description: "Code changes to review from pull request"
+        diffs:
+          - "origin...HEAD"
