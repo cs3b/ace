@@ -97,8 +97,6 @@ module Ace
           merged
         end
 
-        private
-
         # Merge multiple preset data structures
         # Arrays are concatenated and deduplicated (first occurrence wins)
         # Scalars follow "last wins" strategy
@@ -213,6 +211,8 @@ module Ace
 
           merged
         end
+
+        private
 
         # Deep merge two hashes (similar to ContextMerger but simpler)
         def deep_merge_hash(hash1, hash2)

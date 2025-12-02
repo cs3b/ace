@@ -20,6 +20,9 @@ module Ace
     module Organisms
       # Main context loader that orchestrates preset loading using ace-core components
       class ContextLoader
+        # Error raised when preset loading fails
+        class PresetLoadError < StandardError; end
+
         def initialize(options = {})
           @options = options
           @preset_manager = Molecules::PresetManager.new
@@ -52,7 +55,15 @@ module Ace
           merged_options = @options.merge(params)
 
           # Process the preset context configuration
-          context = load_from_preset_config(preset, merged_options)
+          begin
+            context = load_from_preset_config(preset, merged_options)
+          rescue PresetLoadError => e
+            # Handle errors from top-level preset processing (fail-fast behavior)
+            return Models::ContextData.new(
+              preset_name: preset_name,
+              metadata: { error: e.message }
+            )
+          end
           context.metadata[:preset_name] = preset_name
           context.metadata[:output] = preset[:output]  # Store default output mode
 
@@ -526,6 +537,11 @@ module Ace
 
           # Apply CLI overrides to context config (CLI takes precedence)
           context_config = apply_cli_overrides(context_config)
+
+          # Process top-level preset references (context.presets)
+          # This merges files, commands, and params from referenced presets
+          context_config = process_top_level_presets(context_config)
+
           preset[:context] = context_config
 
           context = Models::ContextData.new(
@@ -630,6 +646,54 @@ module Ace
           else
             config
           end
+        end
+
+        # Process top-level preset references in context configuration
+        #
+        # When a preset or file has `context: presets: [preset-name]` at the top level,
+        # this method loads each referenced preset and merges their content (files,
+        # commands, params) into the current configuration.
+        #
+        # Merge order: referenced presets first, then current config (current wins).
+        # This is consistent with section-based preset handling.
+        #
+        # @param context_config [Hash] The context configuration to process
+        # @return [Hash] Merged configuration with preset content incorporated
+        def process_top_level_presets(context_config)
+          return context_config unless context_config
+
+          preset_refs = context_config['presets'] || context_config[:presets]
+          return context_config unless preset_refs&.any?
+
+          # Load all referenced presets, collecting any errors
+          preset_contexts = []
+          errors = []
+
+          preset_refs.each do |preset_name|
+            preset = @preset_manager.load_preset_with_composition(preset_name)
+            if preset[:success]
+              preset_contexts << { context: preset[:context] }
+            else
+              errors << "#{preset_name}: #{preset[:error]}"
+            end
+          end
+
+          # Fail fast if any referenced preset failed to load
+          if errors.any?
+            raise PresetLoadError, "Failed to load referenced presets: #{errors.join('; ')}"
+          end
+
+          return context_config unless preset_contexts.any?
+
+          # Merge: referenced presets first, then current config (current wins)
+          merged = @preset_manager.merge_preset_data(preset_contexts + [{ context: context_config }])
+          merged_config = merged[:context]
+
+          # Remove presets key from merged config (already processed)
+          merged_config.delete('presets')
+          merged_config.delete(:presets)
+
+          merged_config
         end
 
         # Check if a file has YAML frontmatter

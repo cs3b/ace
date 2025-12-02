@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.148] - 2025-12-02
+
+### ace-context v0.18.2 (Task 127)
+- **Fixed**: Top-level preset support - enable `context.presets` at configuration root level
+  - Process preset references in top-level context configuration (not just within sections)
+  - Merge files, commands, and params from referenced presets
+  - Apply "current config wins" precedence for overrides
+- **Fixed**: Fail-fast error handling for preset loading
+  - Raise clear error when any referenced preset fails to load
+  - Remove silent debug-only warnings for preset failures
+- **Changed**: Make `merge_preset_data` public method (remove `.send()` usage)
+
 ## [0.9.147] - 2025-12-01
 
 ### ace-review v0.19.2 (Task 114)
