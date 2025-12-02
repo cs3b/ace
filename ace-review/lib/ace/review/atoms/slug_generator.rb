@@ -33,7 +33,7 @@ module Ace
         #
         # @example Long text truncation
         #   SlugGenerator.generate("very-long-model-name...", max_length: 10)
-        #   #=> "very-long-" (truncated to 10 chars)
+        #   #=> "very-long" (truncated, trailing hyphen removed)
         def self.generate(text, max_length: DEFAULT_MAX_LENGTH)
           return "" if text.nil? || text.empty?
 
@@ -43,6 +43,7 @@ module Ace
             .gsub(/\A-|-\z/, "")          # Remove leading/trailing hyphens
             .downcase
             .slice(0, max_length)         # Truncate to max length
+            .gsub(/-\z/, "")              # Remove trailing hyphen after truncation
         end
       end
     end
