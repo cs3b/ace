@@ -98,7 +98,7 @@ diffs: ["origin/main...HEAD"]            # Use diff: {ranges: [...]} instead
 **Simple String Shortcuts** (for `--subject`):
 - `"staged"` → staged changes
 - `"working"` → unstaged changes
-- `"pr"` → changes vs tracking branch
+- `"code-pr"` → changes vs tracking branch
 - `"HEAD~1..HEAD"` → git range (auto-detected)
 - `"lib/**/*.rb"` → file pattern (auto-detected)
 
@@ -116,10 +116,10 @@ ace-review --help           # Full command documentation
 ### Daily PR Review
 ```bash
 # Simple: uses default subject (staged + working changes)
-ace-review --preset pr --auto-execute
+ace-review --preset code-pr --auto-execute
 
 # Explicit: review changes vs main branch
-ace-review --preset pr --subject 'diff: {ranges: ["origin/main...HEAD"]}' --auto-execute
+ace-review --preset code-pr --subject 'diff: {ranges: ["origin/main...HEAD"]}' --auto-execute
 ```
 
 ### Pre-Commit Check
@@ -282,7 +282,7 @@ subject:
 ### Debug Mode
 ```bash
 # See what would be executed
-ace-review --preset pr --dry-run
+ace-review --preset code-pr --dry-run
 
 # Verify subject extraction
 ace-review --subject 'files: ["lib/**/*.rb"]' --dry-run --verbose

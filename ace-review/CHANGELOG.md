@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.5] - 2025-12-02
+
+### Technical
+- Update documentation to use `code-pr` preset instead of deprecated `pr` preset
+
+## [0.20.4] - 2025-12-02
+
+### Added
+- **LLM Timeout**: Configurable timeout (default: 300s) to prevent indefinite hangs
+  - Set via `defaults.llm_timeout` in config
+- **Model Name Validation**: CLI validates model names contain only safe characters
+
+### Fixed
+- **Example Config**: Default preset changed from 'pr' to 'code' (existing preset)
+
+## [0.20.3] - 2025-12-02
+
+### Fixed
+- **Config Loading**: Use correct `Ace::Core.get` API to load `.ace/review/config.yml`
+  - Was using `Ace::Core.config.get("ace", "review")` which returned nil
+  - Now `defaults.preset` and other settings are properly read from config
+
+## [0.20.2] - 2025-12-02
+
+### Changed
+- **Config-based Preset Default**: `defaults.preset` in config now used instead of hardcoded "pr" fallback
+  - CLI `--preset NAME` overrides config default
+  - Helpful error message when no preset specified and no config default set
+
+## [0.20.1] - 2025-12-02
+
+### Added
+- **Config-based Settings**: Move runtime options from ENV to config file
+  - `max_concurrent_models` - configurable in `defaults` section
+  - `auto_execute` - skip confirmation prompt when set to `true`
+- **Improved CLI Output**: Task directory output now shows directory once, then lists filenames
+
+### Changed
+- **Preset Consolidation**: Replace duplicated `pr.yml` with DRY `code-pr.yml` extending `code`
+- **Concurrency Guard**: Clamp `max_concurrent_models` to minimum 1 to prevent crashes
+- **Input Validation**: Filter blank entries from comma-separated model lists
+
+## [0.20.0] - 2025-12-02
+
+### Added
+- **Multi-Model Concurrent Execution**: Run code reviews against multiple LLM models simultaneously
+  - New `--model` flag accepts comma-separated models or multiple flags (e.g., `--model claude:opus,gpro`)
+  - Configurable concurrency via `ACE_REVIEW_MAX_CONCURRENT_MODELS` environment variable (default: 3)
+  - Thread-safe parallel execution with progress indicators
+  - Individual model failures don't stop other executions
+  - Preset support via `models:` array in YAML configuration
+
+### Fixed
+- **Output File Handling**: Pass `output_file` parameter to LlmExecutor for correct file creation
+- **Effective Model Logic**: `effective_model` now respects `models` array for metadata and filenames
+- **Task Report Filenames**: Use full model slug in filenames to prevent overwrites when using same-provider models
+- **Task Path Propagation**: Fix result key from `:task_path` to `:path` so saved locations surface in CLI output
+
 ## [0.19.2] - 2025-12-01
 
 ### Fixed

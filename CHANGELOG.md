@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.150] - 2025-12-03
+
+### ace-review v0.20.0 → v0.20.5 (Task 126.01)
+
+**Multi-Model Concurrent Execution**
+- Run code reviews against multiple LLM models simultaneously
+- New `--model` flag accepts comma-separated models or multiple flags
+- Thread-safe parallel execution with progress indicators
+- Preset support via `models:` array in YAML configuration
+
+**Configuration Improvements**
+- Config-based settings: `max_concurrent_models`, `auto_execute`, `llm_timeout`, `defaults.preset`
+- Moved runtime options from ENV to `.ace/review/config.yml`
+- Config-based preset default replaces hardcoded "pr" fallback
+- LLM timeout (300s default) to prevent indefinite hangs
+
+**Fixes & Hardening**
+- Model name validation in CLI to prevent malformed strings
+- Correct `Ace::Core.get` API for config loading
+- Output file handling - pass `output_file` to LlmExecutor correctly
+- Task report filenames use full model slug to prevent overwrites
+- Concurrency guard - clamp to minimum 1, filter blank model entries
+
+**Refactoring**
+- Preset consolidation - replaced duplicated `pr.yml` with DRY `code-pr.yml`
+- Improved CLI output - task directory shown once, then filenames listed
+- Documentation updated to use `code-pr` preset
+
 ## [0.9.149] - 2025-12-03
 
 ### ace-git-worktree v0.4.8
