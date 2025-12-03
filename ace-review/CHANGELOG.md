@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2025-12-03
+
+### Added
+- **Multi-Model Report Synthesis**: Automatically synthesize reviews from multiple LLM models
+  - New `ace-review synthesize --session <dir>` standalone command
+  - Auto-triggered after multi-model execution when 2+ models succeed
+  - Identifies consensus findings, strong recommendations, unique insights, and conflicting views
+  - Produces prioritized action items combining all model feedback
+  - Configurable synthesis model via `--synthesis-model` or `synthesis.model` config
+  - Disable with `--no-synthesize` flag or `synthesis.enabled: false` config
+- **ReportSynthesizer Molecule**: LLM-powered report consolidation with structured prompt
+- **Synthesis Prompt Template**: `handbook/prompts/synthesis-review-reports.system.md`
+- **E2E Integration Test**: Full test coverage for multi-model auto-synthesis flow
+
+### Changed
+- **Default Synthesis Model**: `claude:sonnet` (was `google:gemini-2.5-flash`)
+
+### Documentation
+- **Configuration Defaults**: Clarify gem defaults in README
+  - Default preset is `code` (basic single-model review)
+  - Default `auto_execute` is `false` (prompts for confirmation)
+  - Projects can override in their `.ace/review/config.yml`
+
 ## [0.20.6] - 2025-12-02
 
 ### Fixed

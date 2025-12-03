@@ -13,6 +13,19 @@ module Ace
       end
 
       def run(argv)
+        # Check for subcommand
+        if argv.first && !argv.first.start_with?("-")
+          subcommand = argv.shift
+          case subcommand
+          when "synthesize"
+            run_synthesize(argv)
+            return
+          else
+            # Not a recognized subcommand, put it back
+            argv.unshift(subcommand)
+          end
+        end
+
         parse_options(argv)
 
         # Handle list commands
@@ -90,6 +103,14 @@ module Ace
             @options[:models] ||= []
             # Split comma-separated values, strip whitespace, and filter blanks
             @options[:models].concat(v.split(",").map(&:strip).reject(&:empty?))
+          end
+
+          opts.on("--no-synthesize", "Skip synthesis for multi-model reviews") do
+            @options[:no_synthesize] = true
+          end
+
+          opts.on("--synthesis-model MODEL", "Model to use for synthesis (default: gemini-2.5-flash)") do |v|
+            @options[:synthesis_model] = v
           end
 
           opts.on("--list-presets", "List available presets") do
@@ -178,6 +199,12 @@ module Ace
         puts "  ace-review --preset code-pr --model \"gemini,gpt-4,claude\" --auto-execute"
         puts "  ace-review --preset code-pr --model gemini --model gpt-4 --auto-execute"
         puts "  ace-review --preset security --model \"google:gemini-2.5-flash,openai:gpt-4\" --auto-execute"
+        puts "  ace-review --preset code-pr --model \"gemini,gpt-4\" --no-synthesize --auto-execute"
+        puts
+        puts "Synthesis examples:"
+        puts "  ace-review synthesize --session .cache/ace-review/sessions/review-20251201-143022/"
+        puts "  ace-review synthesize --session ./session --synthesis-model gpt-4"
+        puts "  ace-review synthesize --reports report1.md report2.md --output synthesis.md"
         puts
         puts "List commands:"
         puts "  ace-review --list-presets"
@@ -368,6 +395,100 @@ module Ace
 
       def handle_error(result)
         puts "✗ Error: #{result[:error]}"
+        exit 1
+      end
+
+      # Run synthesis subcommand
+      def run_synthesize(argv)
+        options = {}
+
+        parser = OptionParser.new do |opts|
+          opts.banner = "Usage: ace-review synthesize [options]"
+          opts.separator ""
+          opts.separator "Synthesize multiple review reports into a consolidated report"
+          opts.separator ""
+          opts.separator "Options:"
+
+          opts.on("--session DIR", "Session directory containing review reports") do |v|
+            options[:session_dir] = v
+          end
+
+          opts.on("--reports FILES", Array, "Explicit report files to synthesize (comma-separated)") do |v|
+            options[:report_files] = v
+          end
+
+          opts.on("--synthesis-model MODEL", "Model to use for synthesis") do |v|
+            options[:synthesis_model] = v
+          end
+
+          opts.on("--output FILE", "Output file path (default: synthesis-report.md)") do |v|
+            options[:output] = v
+          end
+
+          opts.on("-v", "--verbose", "Verbose output") do
+            options[:verbose] = true
+          end
+
+          opts.on("-h", "--help", "Show this help") do
+            puts opts
+            exit
+          end
+        end
+
+        parser.parse!(argv)
+
+        # Validate inputs
+        if options[:session_dir].nil? && options[:report_files].nil?
+          puts "✗ Error: Either --session or --reports is required"
+          puts
+          puts parser
+          exit 1
+        end
+
+        # Determine report paths
+        report_paths = if options[:report_files]
+                        options[:report_files]
+                      else
+                        # Find all review-*.md files in session directory
+                        session_dir = options[:session_dir]
+                        unless Dir.exist?(session_dir)
+                          puts "✗ Error: Session directory not found: #{session_dir}"
+                          exit 1
+                        end
+                        Dir.glob(File.join(session_dir, "review-*.md"))
+                      end
+
+        # Determine session directory for output
+        session_dir = if options[:session_dir]
+                       options[:session_dir]
+                     elsif options[:report_files] && options[:report_files].any?
+                       File.dirname(options[:report_files].first)
+                     else
+                       Dir.pwd
+                     end
+
+        # Execute synthesis
+        require_relative "molecules/report_synthesizer"
+        synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
+
+        result = synthesizer.synthesize(
+          report_paths: report_paths,
+          model: options[:synthesis_model],
+          session_dir: session_dir,
+          output_file: options[:output]
+        )
+
+        if result[:success]
+          # Success message already displayed by synthesizer
+          exit 0
+        else
+          puts "✗ Synthesis failed: #{result[:error]}"
+          puts result[:backtrace].join("\n") if options[:verbose] && result[:backtrace]
+          exit 1
+        end
+      rescue StandardError => e
+        puts "✗ Error: #{e.message}"
+        puts e.backtrace if options[:verbose]
         exit 1
       end
     end
