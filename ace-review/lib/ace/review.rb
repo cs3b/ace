@@ -37,6 +37,7 @@ require_relative "review/molecules/pr_identifier_parser"
 require_relative "review/molecules/gh_pr_fetcher"
 require_relative "review/molecules/gh_comment_poster"
 require_relative "review/molecules/multi_model_executor"
+require_relative "review/molecules/report_synthesizer"
 
 require_relative "review/organisms/review_manager"
 
@@ -120,6 +121,11 @@ module Ace
         keys.reduce(config) do |hash, key|
           hash.is_a?(Hash) ? hash[key.to_s] : nil
         end
+      end
+
+      # Reset cached configuration (useful for testing)
+      def reset_config!
+        @config = nil
       end
 
       # Check if running in debug mode
