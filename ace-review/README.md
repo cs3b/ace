@@ -445,6 +445,61 @@ Task integration uses graceful degradation:
 
 Reviews always succeed regardless of task integration status.
 
+## Auto-Save Feature
+
+Auto-save automatically detects task IDs from your git branch name and saves reviews to the appropriate task directory without requiring the `--task` flag.
+
+### Enabling Auto-Save
+
+Auto-save is **opt-in by default**. Add to `.ace/review/config.yml`:
+
+```yaml
+defaults:
+  auto_save: true                          # Enable auto-save (opt-in, default: false)
+  auto_save_branch_patterns:               # Patterns to extract task ID from branch
+    - '^(\d+(?:\.\d+)?)-'                  # Standard: 121-feature, 121.01-subtask
+    - '^feature/(\d+)-'                    # Feature branches: feature/123-name
+  auto_save_release_fallback: true         # Save to release dir when no task detected
+```
+
+See `.ace.example/review/config.yml` for the full example configuration.
+
+### How It Works
+
+1. **Branch Detection**: Reads current git branch name (e.g., `126.03-auto-save-detection`)
+2. **Pattern Matching**: Extracts task ID using configured regex patterns (e.g., `126.03`)
+3. **Task Resolution**: Finds the task directory via ace-taskflow
+4. **Report Saving**: Saves review reports to `<task-dir>/reviews/`
+
+### Disabling Auto-Save
+
+```bash
+# Disable for a single command
+ace-review --preset code-pr --no-auto-save
+
+# Or disable in config
+defaults:
+  auto_save: false
+```
+
+### Priority Order
+
+1. **Explicit `--task` flag**: Highest priority, always used if provided
+2. **Auto-detected from branch**: Used when `auto_save: true` and no explicit `--task`
+3. **Release directory fallback**: Used when task not found and `auto_save_release_fallback: true`
+
+### Default Patterns
+
+The default pattern `'^(\d+(?:\.\d+)?)-'` matches:
+- `121-feature-name` → task `121`
+- `121.01-subtask-name` → task `121.01`
+- `126.03-auto-save-detection` → task `126.03`
+
+Does not match:
+- `main` → no task
+- `feature-123` → no task (number not at start)
+- `HEAD` → no task (detached HEAD)
+
 ## Configuration
 
 ### Main Configuration
@@ -783,6 +838,7 @@ Options:
 - `--verbose` - Enable verbose output
 - `--[no-]save-session` - Save session files (default: true)
 - `--session-dir <dir>` - Custom session directory
+- `--no-auto-save` - Disable auto-save to task directory for this command
 
 GitHub Pull Request options:
 - `--pr <identifier>` - Review GitHub PR (number, URL, or owner/repo#number)

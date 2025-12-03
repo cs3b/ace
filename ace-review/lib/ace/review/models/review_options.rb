@@ -10,7 +10,7 @@ module Ace
                       :prompt_guidelines, :model, :models, :dry_run, :verbose,
                       :auto_execute, :save_session, :session_dir,
                       :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
-                      :no_synthesize, :synthesis_model,
+                      :no_synthesize, :synthesis_model, :no_auto_save,
                       :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
@@ -53,6 +53,9 @@ module Ace
           # Synthesis options
           @no_synthesize = hash[:no_synthesize] || false
           @synthesis_model = hash[:synthesis_model]
+
+          # Auto-save options
+          @no_auto_save = hash[:no_auto_save] || false
 
           # List commands
           @list_presets = hash[:list_presets] || false

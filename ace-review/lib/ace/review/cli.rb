@@ -145,6 +145,10 @@ module Ace
             @options[:task] = v
           end
 
+          opts.on("--no-auto-save", "Disable auto-save even if enabled in config") do
+            @options[:no_auto_save] = true
+          end
+
           opts.on("--pr IDENTIFIER", "Review GitHub PR (number, URL, or owner/repo#number)") do |v|
             @options[:pr] = v
           end
