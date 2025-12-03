@@ -564,6 +564,9 @@ module Ace
             # Save to task directory if --task flag provided
             task_path = save_to_task_if_requested(review_data, result[:output_file])
 
+            # Auto-save if enabled and no explicit task flag
+            auto_save_path = auto_save_review_if_enabled(review_data, result[:output_file], options) unless task_path
+
             # Handle PR comment posting if requested
             comment_result = handle_pr_comment_posting(options, result[:output_file], review_data)
 
@@ -571,10 +574,11 @@ module Ace
             messages = []
             messages << "Review saved to #{release_path}" if release_path
             messages << "Review saved to #{task_path}" if task_path
+            messages << "Review auto-saved to #{auto_save_path}" if auto_save_path
             messages << "Review saved to #{result[:output_file]}" if messages.empty?
 
             # Build response with comment info if applicable
-            response = build_success_response(result, release_path, task_path, comment_result)
+            response = build_success_response(result, release_path, task_path || auto_save_path, comment_result)
           else
             # Enhanced error information from Ruby API
             error_result = result.dup
@@ -608,16 +612,30 @@ module Ace
             # Handle task saving if requested (save all reviews)
             task_paths = save_multi_model_to_task(review_data, result[:results]) if @task_reference
 
+            # Auto-save individual model reports if enabled (when no explicit --task)
+            auto_saved_paths = auto_save_multi_model_reports(review_data, result[:results], options) unless @task_reference
+
             # Auto-synthesis after multi-model execution (if enabled)
             synthesis_result = nil
             if should_synthesize?(result, options)
               synthesis_result = auto_synthesize(result, session_dir, review_data, options)
               # Add synthesis file to task paths if synthesis succeeded
-              if synthesis_result && synthesis_result[:success] && @task_reference
-                synthesis_task_path = save_synthesis_to_task(review_data, synthesis_result[:output_file])
-                task_paths << synthesis_task_path if synthesis_task_path
+              if synthesis_result && synthesis_result[:success]
+                if @task_reference
+                  synthesis_task_path = save_synthesis_to_task(review_data, synthesis_result[:output_file])
+                  task_paths << synthesis_task_path if synthesis_task_path
+                else
+                  # Auto-save synthesis report if enabled
+                  synthesis_data = review_data.merge(report_type: 'synthesis')
+                  auto_save_path = auto_save_review_if_enabled(synthesis_data, synthesis_result[:output_file], options)
+                  auto_saved_paths ||= []
+                  auto_saved_paths << auto_save_path if auto_save_path
+                end
               end
             end
+
+            # Use auto_saved_paths as task_paths for response if no explicit --task
+            task_paths = auto_saved_paths unless @task_reference
 
             # Build multi-model success response
             build_multi_model_response(result, session_dir, task_paths, synthesis_result)
@@ -822,6 +840,118 @@ module Ace
         # @param review_data [Hash] Review metadata
         # @param review_file [String] Path to the review file to save
         # @return [String, nil] Path to saved report or nil if not saved
+        # Auto-save review to task or release directory if enabled
+        # @param review_data [Hash] Review metadata
+        # @param review_file [String] Path to review file
+        # @param options [ReviewOptions] Review options
+        # @return [String, nil] Path to saved file or nil
+        def auto_save_review_if_enabled(review_data, review_file, options)
+          # Check if auto-save is disabled by flag
+          return nil if options.no_auto_save
+
+          # Check if auto-save is enabled in config
+          auto_save_enabled = Ace::Review.get("defaults", "auto_save")
+          return nil unless auto_save_enabled
+
+          # Priority order:
+          # 1. Explicit --task flag (highest priority) - handled by save_to_task_if_requested
+          # 2. Auto-detected from branch
+          # 3. Release directory fallback
+
+          # If explicit --task is set, don't auto-detect
+          return nil if @task_reference
+
+          begin
+            require_relative '../atoms/task_auto_detector'
+            require_relative '../molecules/git_branch_reader'
+            require_relative '../molecules/task_resolver'
+            require_relative '../molecules/task_report_saver'
+
+            # Get current branch
+            branch_name = Molecules::GitBranchReader.current_branch
+            return auto_save_to_release(review_file, review_data) unless branch_name
+
+            # Extract task ID from branch
+            patterns = Ace::Review.get("defaults", "auto_save_branch_patterns")
+            task_id = Atoms::TaskAutoDetector.extract_from_branch(branch_name, patterns: patterns)
+
+            if task_id
+              # Try to save to detected task
+              task_info = Molecules::TaskResolver.resolve(task_id)
+
+              if task_info
+                result = Molecules::TaskReportSaver.save(task_info[:path], review_file, review_data)
+                return result[:path] if result[:success]
+
+                warn "Warning: #{result[:error]}. Falling back to release directory."
+              else
+                warn "Warning: Task '#{task_id}' not found. Falling back to release directory."
+              end
+            end
+
+            # Fallback to release directory if configured
+            auto_save_to_release(review_file, review_data)
+          rescue LoadError => e
+            # Dependencies not available - warn user
+            warn "Warning: Auto-save skipped (dependencies not available: #{e.message})"
+            nil
+          rescue => e
+            # Unexpected error - warn user but don't fail the review
+            warn "Warning: Auto-save failed: #{e.message}"
+            nil
+          end
+        end
+
+        # Auto-save all multi-model reports to task/release directory
+        # @param review_data [Hash] Review metadata
+        # @param model_results [Hash] Results keyed by model name
+        # @param options [ReviewOptions] Review options
+        # @return [Array<String>] Paths to saved files
+        def auto_save_multi_model_reports(review_data, model_results, options)
+          # Check if auto-save is disabled by flag
+          return [] if options.no_auto_save
+
+          # Check if auto-save is enabled in config
+          auto_save_enabled = Ace::Review.get("defaults", "auto_save")
+          return [] unless auto_save_enabled
+
+          saved_paths = []
+
+          model_results.each do |model, model_result|
+            next unless model_result[:success] && model_result[:output_file]
+
+            # Merge model into review_data for unique filenames per model
+            model_review_data = review_data.merge(model: model)
+            path = auto_save_review_if_enabled(model_review_data, model_result[:output_file], options)
+            saved_paths << path if path
+          end
+
+          saved_paths
+        end
+
+        # Save to release directory
+        # @param review_file [String] Path to review file
+        # @param review_data [Hash] Review metadata
+        # @return [String, nil] Path to saved file or nil
+        def auto_save_to_release(review_file, review_data)
+          # Check if release fallback is enabled
+          fallback_enabled = Ace::Review.get("defaults", "auto_save_release_fallback")
+          return nil unless fallback_enabled
+
+          require_relative '../molecules/task_report_saver'
+          result = Molecules::TaskReportSaver.save_to_release(review_file, review_data)
+
+          if result[:success]
+            result[:path]
+          else
+            warn "Warning: #{result[:error]}. Review completed but not saved to release."
+            nil
+          end
+        rescue => e
+          warn "Warning: Failed to save to release: #{e.message}"
+          nil
+        end
+
         def save_to_task_if_requested(review_data, review_file)
           return nil unless @task_reference
 
@@ -849,12 +979,12 @@ module Ace
               nil
             end
           rescue LoadError => e
-            # ace-taskflow not available
-            warn "Warning: ace-taskflow gem not available. Review completed but not saved to task." if $DEBUG
+            # ace-taskflow not available - warn user
+            warn "Warning: Cannot save to task (ace-taskflow gem not available)"
             nil
           rescue => e
-            # Unexpected error - log but don't fail the review
-            warn "Warning: Failed to save review to task: #{e.message}. Review completed." if $DEBUG
+            # Unexpected error - warn user but don't fail the review
+            warn "Warning: Failed to save review to task: #{e.message}"
             nil
           end
         end
@@ -988,7 +1118,7 @@ module Ace
 
             result[:success] ? result[:path] : nil
           rescue => e
-            warn "Warning: Failed to save synthesis to task: #{e.message}" if $DEBUG
+            warn "Warning: Failed to save synthesis to task: #{e.message}"
             nil
           end
         end
