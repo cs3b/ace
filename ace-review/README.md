@@ -2,7 +2,15 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.21.0
+**Version:** 0.22.0
+
+## What's New in 0.22.0
+
+- **Auto-Save Feature**: Automatically save reviews to task directories based on git branch name
+  - Enable with `auto_save: true` in `.ace/review/config.yml`
+  - Configurable branch patterns via `auto_save_branch_patterns`
+  - Release directory fallback via `auto_save_release_fallback`
+  - Disable per-command with `--no-auto-save` CLI flag
 
 ## What's New in 0.21.0
 
