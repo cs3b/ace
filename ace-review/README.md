@@ -2,14 +2,16 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.16.1
+**Version:** 0.21.0
 
-## What's New in 0.16.1
+## What's New in 0.21.0
 
-- **Git Worktree Support**: ace-review now works seamlessly in git worktrees created by ace-git-worktree (v0.16.1+)
-  - Cache directories are created at the correct project root location
-  - Each worktree maintains its own review cache
-  - No configuration needed - it just works!
+- **Multi-Model Report Synthesis**: Automatically synthesize reviews from multiple LLM models into a unified, actionable report
+  - Standalone command: `ace-review synthesize --session <dir>`
+  - Auto-triggered after multi-model execution with 2+ models
+  - Identifies consensus findings, strong recommendations, unique insights, and conflicting views
+  - Configurable synthesis model via `--synthesis-model` or `synthesis.model` config
+  - Skip with `--no-synthesize` flag or `synthesis.enabled: false` config
 
 ## What's New in 0.16.0
 
@@ -91,7 +93,7 @@ gem install ace-review
 ## Quick Start
 
 ```bash
-# Review pull request changes (default)
+# Review with default preset (code)
 ace-review
 
 # Security-focused review
@@ -153,11 +155,13 @@ Set defaults in `.ace/review/config.yml`:
 
 ```yaml
 defaults:
-  preset: code-pr                    # Default preset
-  auto_execute: true                 # Auto-run LLM queries
+  preset: code                       # Default preset (basic code review)
+  auto_execute: false                # Prompt for confirmation before LLM queries
   max_concurrent_models: 3           # Parallel model limit
   llm_timeout: 300                   # Per-model timeout (seconds)
 ```
+
+**Note**: The gem ships with conservative defaults (`code` preset, confirmation prompts). Override these in your project's `.ace/review/config.yml` for different behavior.
 
 ### Output Structure
 

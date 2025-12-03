@@ -38,5 +38,10 @@ defaults:
 #   base_path: ".ace-taskflow/%{release}/reviews"
 #   auto_organize: true
 
+# Synthesis configuration for multi-model review reports
+synthesis:
+  enabled: true  # Set to false to disable automatic synthesis
+  model: "claude:sonnet"  # Model to use for synthesis (best format compliance)
+
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability
