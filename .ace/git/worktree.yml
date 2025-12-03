@@ -52,6 +52,18 @@ git:
       # If true, adds worktree info (branch, path, created_at) to task file
       add_worktree_metadata: true
 
+      # Automatically push task changes after commit
+      # If true, pushes commits to remote after task status updates
+      auto_push_task: true
+
+      # Remote name for pushing task changes
+      push_remote: "origin"
+
+      # Automatically push new branch to remote with upstream tracking
+      # If true, runs 'git push -u origin <branch>' after worktree creation
+      # Falls back to 'git branch --set-upstream-to' if push fails but remote branch exists
+      auto_setup_upstream: true
+
     # Cleanup policies for worktree management
     cleanup:
       # Automatically remove worktrees when their branches are merged

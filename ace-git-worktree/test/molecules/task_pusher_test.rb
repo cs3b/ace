@@ -145,4 +145,73 @@ class TaskPusherTest < Minitest::Test
     pusher = Ace::Git::Worktree::Molecules::TaskPusher.new(timeout: 120)
     assert_equal 120, pusher.instance_variable_get(:@timeout)
   end
+
+  # set_upstream tests
+
+  def test_set_upstream_returns_success_when_tracking_set
+    mock_result = { success: true, output: "Branch 'feature' set up to track 'origin/feature'.", error: "" }
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
+      @pusher.stub(:current_branch, "feature") do
+        result = @pusher.set_upstream(remote: "origin")
+        assert result[:success]
+        assert_equal "origin", result[:remote]
+        assert_equal "feature", result[:branch]
+      end
+    end
+  end
+
+  def test_set_upstream_returns_failure_when_remote_branch_missing
+    mock_result = { success: false, output: "", error: "error: the requested upstream branch 'origin/nonexistent' does not exist" }
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
+      @pusher.stub(:current_branch, "nonexistent") do
+        result = @pusher.set_upstream(remote: "origin")
+        refute result[:success]
+        assert_match(/does not exist/, result[:error])
+      end
+    end
+  end
+
+  def test_set_upstream_returns_failure_when_no_branch
+    @pusher.stub(:current_branch, nil) do
+      result = @pusher.set_upstream(remote: "origin")
+      refute result[:success]
+      assert_match(/branch/, result[:error])
+    end
+  end
+
+  def test_set_upstream_uses_provided_branch
+    mock_result = { success: true, output: "", error: "" }
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
+      result = @pusher.set_upstream(branch: "custom-branch", remote: "origin")
+      assert result[:success]
+      assert_equal "custom-branch", result[:branch]
+    end
+  end
+
+  def test_set_upstream_uses_provided_remote
+    mock_result = { success: true, output: "", error: "" }
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
+      @pusher.stub(:current_branch, "main") do
+        result = @pusher.set_upstream(remote: "upstream")
+        assert result[:success]
+        assert_equal "upstream", result[:remote]
+      end
+    end
+  end
+
+  def test_set_upstream_defaults_to_origin_remote
+    mock_result = { success: true, output: "", error: "" }
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, mock_result) do
+      @pusher.stub(:current_branch, "feature") do
+        result = @pusher.set_upstream
+        assert result[:success]
+        assert_equal "origin", result[:remote]
+      end
+    end
+  end
 end

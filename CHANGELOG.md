@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.149] - 2025-12-03
+
+### ace-git-worktree v0.4.8
+- **Fixed**: Upstream branch tracking reliability - enhanced with fallback mechanism
+  - Added `set_upstream` method using `git branch --set-upstream-to`
+  - `setup_upstream_for_worktree` tries `git push -u` first, falls back to `--set-upstream-to` if push fails but remote branch exists
+  - Added `remote_branch_exists?` helper for remote branch detection
+  - Enabled `auto_setup_upstream` and `auto_push_task` in project config
+
 ## [0.9.148] - 2025-12-02
 
 ### ace-context v0.18.2 (Task 127)

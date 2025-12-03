@@ -104,6 +104,36 @@ module Ace
             result[:success]
           end
 
+          # Set upstream tracking for a branch
+          #
+          # Uses `git branch --set-upstream-to` to configure tracking without pushing.
+          # Useful when the remote branch already exists or push is not desired.
+          #
+          # @param branch [String, nil] Branch to configure (default: current)
+          # @param remote [String] Remote name (default: "origin")
+          # @return [Hash] Result with :success, :output, :error, :remote, :branch
+          #
+          # @example
+          #   pusher.set_upstream(branch: "feature", remote: "origin")
+          #   # => { success: true, branch: "feature", remote: "origin", ... }
+          def set_upstream(branch: nil, remote: "origin")
+            branch ||= current_branch
+            return failure_result("Could not determine current branch") unless branch
+
+            result = Atoms::GitCommand.execute(
+              "branch", "--set-upstream-to=#{remote}/#{branch}", branch,
+              timeout: @timeout
+            )
+
+            {
+              success: result[:success],
+              output: result[:output],
+              error: result[:error],
+              remote: remote,
+              branch: branch
+            }
+          end
+
           # Get the upstream remote/branch for current branch
           #
           # @param branch [String, nil] Branch to check (default: current)
