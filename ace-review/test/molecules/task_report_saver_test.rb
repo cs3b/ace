@@ -91,6 +91,15 @@ class TaskReportSaverTest < Minitest::Test
     assert_match(/my-custom-preset/, filename)
   end
 
+  def test_generate_filename_for_synthesis_report
+    review_data = { preset: "code-multi", model: "google:gemini-2.5-flash", report_type: 'synthesis' }
+
+    filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
+
+    # Should match pattern: YYYYMMDD-HHMMSS-synthesis.md
+    assert_match(/^\d{8}-\d{6}-synthesis\.md$/, filename)
+  end
+
   def test_extract_provider_from_prefixed_model
     provider = Ace::Review::Molecules::TaskReportSaver.extract_provider("google:gemini-2.5-flash")
     assert_equal "google", provider
