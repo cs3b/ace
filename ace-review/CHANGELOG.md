@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2025-12-03
+
+### Added
+- **Auto-Save Feature**: Automatically save reviews to task directories based on git branch name
+  - Enable with `auto_save: true` in config
+  - Configurable branch patterns via `auto_save_branch_patterns`
+  - Release directory fallback via `auto_save_release_fallback`
+  - Disable per-command with `--no-auto-save` flag
+- **Multi-Model Auto-Save**: Individual model reports now saved to task directory (not just synthesis)
+- **Auto-Save Integration Tests**: Comprehensive test coverage for branch detection and task resolution
+
+### Fixed
+- **Multi-Model Auto-Save**: All model reports now saved to task directory, matching explicit `--task` behavior
+
+### Technical
+- Remove unused `project_root` variable in TaskReportSaver
+- Stabilize GitBranchReader tests with Open3 mocking and real detached HEAD test
+
 ## [0.21.0] - 2025-12-03
 
 ### Added

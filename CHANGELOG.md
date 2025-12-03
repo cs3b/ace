@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.152] - 2025-12-03
+
+### ace-review v0.22.0 (Task 126.03)
+
+**Auto-Save Feature**
+- Automatically save reviews to task directories based on git branch name
+- Enable with `auto_save: true` in `.ace/review/config.yml`
+- Configurable branch patterns via `auto_save_branch_patterns`
+- Release directory fallback via `auto_save_release_fallback`
+- Disable per-command with `--no-auto-save` CLI flag
+
+**Multi-Model Auto-Save Fix**
+- Individual model reports now saved to task directory (not just synthesis)
+- Matches explicit `--task` flag behavior
+
+**Code Quality Improvements**
+- Integration tests for auto-save flow (branch detection → task resolution)
+- GitBranchReader tests stabilized with Open3 mocking
+- Removed unused `project_root` variable in TaskReportSaver
+
 ## [0.9.151] - 2025-12-03
 
 ### ace-review v0.21.0 (Task 126.02)
