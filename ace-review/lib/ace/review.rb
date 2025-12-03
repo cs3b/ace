@@ -67,6 +67,7 @@ module Ace
       def default_config
         {
           "defaults" => {
+            "preset" => "code",
             "model" => "google:gemini-2.5-flash",
             "output_format" => "markdown",
             "context" => "project",
