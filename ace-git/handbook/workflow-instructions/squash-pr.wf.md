@@ -41,6 +41,61 @@ Squash multiple commits into version-based commits for clean, maintainable git h
 - `$version`: Version to squash (e.g., v0.9.0, v.0.9.0) - auto-detected by default
 - `$base_commit`: Starting point for squash (default: last version tag)
 - `$strategy`: Squashing strategy (version, manual, interactive)
+- `$pr_number`: PR number when squashing for a specific PR
+
+## Prerequisites - PR Base Detection
+
+> ⚠️ **CRITICAL**: Before squashing ANY PR, you MUST determine the correct base commit.
+> Do NOT assume `origin/main` is the correct base - PRs can be based on feature branches!
+
+### Step 1: Get PR's Base Branch
+
+```bash
+# Get the PR's target base branch (NOT always main!)
+PR_NUMBER=<your-pr-number>
+base_ref=$(gh pr view $PR_NUMBER --json baseRefName -q '.baseRefName')
+echo "PR is based on: $base_ref"
+
+# If base_ref is NOT 'main', this PR likely depends on another PR
+if [ "$base_ref" != "main" ]; then
+  echo "⚠️ WARNING: This PR is based on '$base_ref', not 'main'"
+  echo "Verify parent PR is merged before proceeding!"
+fi
+```
+
+### Step 2: Find Correct Merge Base
+
+```bash
+# Find the merge-base with the PR's actual base branch
+git fetch origin $base_ref
+base_commit=$(git merge-base HEAD origin/$base_ref)
+echo "Squash base commit: $base_commit"
+```
+
+### Step 3: Verify Commit Scope
+
+```bash
+# Show commits that WILL be squashed - review carefully!
+echo "=== Commits to be squashed ==="
+git log --oneline $base_commit..HEAD
+
+# Count commits
+commit_count=$(git rev-list --count $base_commit..HEAD)
+echo "Total commits to squash: $commit_count"
+```
+
+### Step 4: Check for Parent PRs
+
+```bash
+# Check if PR body mentions dependencies
+gh pr view $PR_NUMBER --json body -q '.body' | grep -oE 'Depends on: #[0-9]+' || echo "No dependencies found"
+
+# If parent PR exists, verify it's merged before proceeding
+# The parent's merge commit should be your base_commit
+```
+
+**WARNING**: If `base_ref` is NOT `main`, the PR likely depends on another PR.
+Always verify the parent PR is merged before squashing the child PR.
 
 ## Instructions
 
@@ -63,6 +118,9 @@ git log v0.8.0..HEAD --oneline
 ```
 
 ### 2. Identify Version Boundaries
+
+> ⚠️ **IMPORTANT**: If you're squashing a PR, run the **Prerequisites - PR Base Detection** section first!
+> The methods below assume you're squashing to `main`, which may not be correct for all PRs.
 
 #### Auto-detect Version (Recommended)
 
