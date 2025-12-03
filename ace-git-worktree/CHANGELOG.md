@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8] - 2025-12-03
+
+### Fixed
+- **Upstream Branch Reliability**: Enhanced upstream tracking setup with fallback mechanism
+  - Added `set_upstream` method to TaskPusher using `git branch --set-upstream-to`
+  - `setup_upstream_for_worktree` now tries `git push -u` first, falls back to `--set-upstream-to` if push fails but remote branch exists
+  - Added `remote_branch_exists?` helper to check remote branch availability
+  - Fixes inconsistent upstream tracking when creating task worktrees
+
 ## [0.4.7] - 2025-12-01
 
 ### Changed

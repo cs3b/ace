@@ -582,36 +582,53 @@ module Ace
           # Setup upstream tracking for worktree branch
           #
           # Pushes the new branch to remote with -u flag to setup upstream tracking.
-          # Uses the worktree path to run git push from within the worktree.
+          # If push fails but remote branch exists, falls back to git branch --set-upstream-to.
+          # Uses the worktree path to run git commands from within the worktree.
           #
           # @param worktree_result [Hash] Worktree creation result with :worktree_path, :branch
           # @param options [Hash] Options hash (may include :push_remote)
-          # @return [Hash] Result with :success, :branch, :remote, :error
+          # @return [Hash] Result with :success, :branch, :remote, :error, :method
           def setup_upstream_for_worktree(worktree_result, options)
             worktree_path = worktree_result[:worktree_path]
             branch = worktree_result[:branch]
             remote = options[:push_remote] || @config.push_remote || "origin"
 
             begin
-              # Change to worktree directory and push with -u flag
               Dir.chdir(worktree_path) do
+                # Try push with -u first
                 result = @task_pusher.push(remote: remote, set_upstream: true)
 
                 if result[:success]
-                  {
+                  return {
                     success: true,
                     branch: branch,
                     remote: remote,
-                    error: nil
-                  }
-                else
-                  {
-                    success: false,
-                    branch: branch,
-                    remote: remote,
-                    error: result[:error] || "Push failed"
+                    error: nil,
+                    method: :push
                   }
                 end
+
+                # Push failed - check if remote branch exists and set upstream directly
+                if remote_branch_exists?(remote, branch)
+                  upstream_result = @task_pusher.set_upstream(branch: branch, remote: remote)
+                  if upstream_result[:success]
+                    return {
+                      success: true,
+                      branch: branch,
+                      remote: remote,
+                      error: nil,
+                      method: :set_upstream
+                    }
+                  end
+                end
+
+                # Both methods failed
+                {
+                  success: false,
+                  branch: branch,
+                  remote: remote,
+                  error: result[:error] || "Failed to setup upstream"
+                }
               end
             rescue StandardError => e
               {
@@ -621,6 +638,16 @@ module Ace
                 error: e.message
               }
             end
+          end
+
+          # Check if a branch exists on the remote
+          #
+          # @param remote [String] Remote name (e.g., "origin")
+          # @param branch [String] Branch name to check
+          # @return [Boolean] true if remote branch exists
+          def remote_branch_exists?(remote, branch)
+            result = Atoms::GitCommand.execute("ls-remote", "--heads", remote, branch, timeout: 10)
+            result[:success] && result[:output]&.include?(branch)
           end
 
           # Create draft PR for task
