@@ -608,8 +608,19 @@ module Ace
             # Handle task saving if requested (save all reviews)
             task_paths = save_multi_model_to_task(review_data, result[:results]) if @task_reference
 
+            # Auto-synthesis after multi-model execution (if enabled)
+            synthesis_result = nil
+            if should_synthesize?(result, options)
+              synthesis_result = auto_synthesize(result, session_dir, review_data, options)
+              # Add synthesis file to task paths if synthesis succeeded
+              if synthesis_result && synthesis_result[:success] && @task_reference
+                synthesis_task_path = save_synthesis_to_task(review_data, synthesis_result[:output_file])
+                task_paths << synthesis_task_path if synthesis_task_path
+              end
+            end
+
             # Build multi-model success response
-            build_multi_model_response(result, session_dir, task_paths)
+            build_multi_model_response(result, session_dir, task_paths, synthesis_result)
           else
             {
               success: false,
@@ -794,30 +805,6 @@ module Ace
           end
         end
 
-        # Build response for multi-model execution
-        def build_multi_model_response(result, session_dir, task_paths = nil)
-          successful_models = result[:results].select { |_, r| r[:success] }
-          failed_models = result[:results].reject { |_, r| r[:success] }
-
-          response = {
-            success: true,
-            session_dir: session_dir,
-            summary: result[:summary],
-            models: result[:results].keys,
-            successful_models: successful_models.keys,
-            failed_models: failed_models.keys
-          }
-
-          # Add task paths if available
-          response[:task_paths] = task_paths if task_paths&.any?
-
-          # Add output files
-          output_files = successful_models.values.map { |r| r[:output_file] }.compact
-          response[:output_files] = output_files
-
-          response
-        end
-
         def add_review_metadata(response, review_data)
           metadata = <<~METADATA
             ---
@@ -920,6 +907,122 @@ module Ace
             response[:comment_error] = comment_result[:error]
             response[:message] += "\n✗ Failed to post comment: #{comment_result[:error]}"
           end
+
+          response
+        end
+
+        # Determine if synthesis should be triggered
+        # @param result [Hash] multi-model execution result
+        # @param options [ReviewOptions, nil] review options
+        # @return [Boolean] true if synthesis should run
+        def should_synthesize?(result, options)
+          # Check if synthesis is enabled in config (default: true)
+          config_enabled = Ace::Review.get("synthesis", "enabled")
+          config_enabled = true if config_enabled.nil? # Default to enabled
+
+          # Check CLI flag override
+          cli_disabled = options&.no_synthesize == true
+
+          # Check if we have 2+ successful results
+          success_count = result[:results].count { |_, r| r[:success] }
+
+          config_enabled && !cli_disabled && success_count >= 2
+        end
+
+        # Auto-synthesize multiple model reports
+        # @param result [Hash] multi-model execution result
+        # @param session_dir [String] session directory
+        # @param review_data [Hash] review metadata
+        # @param options [ReviewOptions, nil] review options
+        # @return [Hash, nil] synthesis result or nil on failure
+        def auto_synthesize(result, session_dir, review_data, options)
+          require_relative '../molecules/report_synthesizer'
+
+          # Collect successful report files
+          report_paths = result[:results].select { |_, r| r[:success] }
+                                        .map { |_, r| r[:output_file] }
+                                        .compact
+
+          return nil if report_paths.size < 2
+
+          # Determine synthesis model
+          synthesis_model = options&.synthesis_model ||
+                           review_data[:synthesis_model] ||
+                           Ace::Review.get("synthesis", "model") ||
+                           "google:gemini-2.5-flash"
+
+          # Invoke synthesizer
+          synthesizer = Molecules::ReportSynthesizer.new
+          synthesizer.synthesize(
+            report_paths: report_paths,
+            model: synthesis_model,
+            session_dir: session_dir
+          )
+        rescue => e
+          # Log error but don't fail the review
+          warn "Warning: Synthesis failed: #{e.message}"
+          { success: false, error: e.message }
+        end
+
+        # Save synthesis report to task directory
+        # @param review_data [Hash] review metadata
+        # @param synthesis_file [String] path to synthesis report
+        # @return [String, nil] path to saved synthesis or nil
+        def save_synthesis_to_task(review_data, synthesis_file)
+          return nil unless @task_reference
+          return nil unless File.exist?(synthesis_file)
+
+          begin
+            require_relative '../molecules/task_resolver'
+            require_relative '../molecules/task_report_saver'
+
+            task_info = Molecules::TaskResolver.resolve(@task_reference)
+            return nil unless task_info
+
+            # Save synthesis with special filename
+            result = Molecules::TaskReportSaver.save(
+              task_info[:path],
+              synthesis_file,
+              review_data.merge(report_type: 'synthesis')
+            )
+
+            result[:success] ? result[:path] : nil
+          rescue => e
+            warn "Warning: Failed to save synthesis to task: #{e.message}" if $DEBUG
+            nil
+          end
+        end
+
+        # Build multi-model response with optional synthesis info
+        # @param result [Hash] multi-model execution result
+        # @param session_dir [String] session directory
+        # @param task_paths [Array<String>, nil] task file paths
+        # @param synthesis_result [Hash, nil] synthesis result
+        # @return [Hash] response hash
+        def build_multi_model_response(result, session_dir, task_paths = nil, synthesis_result = nil)
+          successful_models = result[:results].select { |_, r| r[:success] }
+          failed_models = result[:results].reject { |_, r| r[:success] }
+
+          response = {
+            success: true,
+            session_dir: session_dir,
+            summary: result[:summary],
+            models: result[:results].keys,
+            successful_models: successful_models.keys,
+            failed_models: failed_models.keys
+          }
+
+          # Add task paths if available
+          response[:task_paths] = task_paths if task_paths&.any?
+
+          # Add output files (including synthesis if successful)
+          output_files = successful_models.values.map { |r| r[:output_file] }.compact
+          if synthesis_result && synthesis_result[:success]
+            output_files << synthesis_result[:output_file]
+            response[:synthesis_file] = synthesis_result[:output_file]
+            response[:synthesis_summary] = synthesis_result[:summary]
+          end
+          response[:output_files] = output_files
 
           response
         end
