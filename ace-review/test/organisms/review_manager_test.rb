@@ -831,4 +831,266 @@ class ReviewManagerTest < AceReviewTest
 
     assert_equal({ "model" => "claude", "other" => "value" }, result)
   end
+
+  # ============================================================================
+  # Auto-save orchestration tests
+  # ============================================================================
+
+  def test_auto_save_review_if_enabled_with_no_auto_save_flag
+    # Create a mock options object with no_auto_save = true
+    options = Struct.new(:no_auto_save).new(true)
+
+    review_data = { preset: "pr", model: "claude" }
+    review_file = "/tmp/review.md"
+
+    result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+    assert_nil result, "Should return nil when no_auto_save flag is set"
+  end
+
+  def test_auto_save_review_if_enabled_when_disabled_in_config
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = "/tmp/review.md"
+
+    # Stub config to return auto_save = false
+    Ace::Review.stub :get, ->(section, key) {
+      return false if section == "defaults" && key == "auto_save"
+      nil
+    } do
+      result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+      assert_nil result, "Should return nil when auto_save is disabled in config"
+    end
+  end
+
+  def test_auto_save_review_if_enabled_with_explicit_task_reference
+    # When @task_reference is set, auto-save should not run (explicit --task takes precedence)
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = "/tmp/review.md"
+
+    # Set explicit task reference
+    @manager.instance_variable_set(:@task_reference, "126")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      nil
+    } do
+      result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+      assert_nil result, "Should return nil when explicit @task_reference is set"
+    end
+  ensure
+    @manager.instance_variable_set(:@task_reference, nil)
+  end
+
+  def test_auto_save_review_if_enabled_falls_back_to_release_on_no_branch
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return false if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      # Stub GitBranchReader to return nil (no branch)
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, nil do
+        result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+        # Falls back to release, but release fallback is disabled
+        assert_nil result, "Should return nil when no branch and release fallback disabled"
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_task_resolution_success
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    # Create task directory structure
+    task_dir = File.join(@temp_dir, "tasks", "126-test")
+    FileUtils.mkdir_p(task_dir)
+
+    expected_path = File.join(task_dir, "reviews", "saved-review.md")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      nil
+    } do
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+        Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
+          { path: task_dir, task_id: task_id } if task_id == "126"
+        } do
+          Ace::Review::Molecules::TaskReportSaver.stub :save, ->(task_path, file, data) {
+            { success: true, path: expected_path }
+          } do
+            result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+            assert_equal expected_path, result, "Should return saved path on success"
+          end
+        end
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_task_not_found_falls_back_to_release
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      return false if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+        Ace::Review::Molecules::TaskResolver.stub :resolve, nil do
+          output = capture_io do
+            result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+            # Task not found, fallback disabled
+            assert_nil result
+          end
+          assert_match(/Task '126' not found/, output[1], "Should warn about task not found")
+        end
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_handles_invalid_branch_gracefully
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      return false if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      # Branch doesn't match pattern (no task ID extractable)
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "main" do
+        result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+        # No task ID from "main", release fallback disabled
+        assert_nil result
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_handles_head_state
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return false if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      # Detached HEAD returns nil from GitBranchReader
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, nil do
+        result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+        assert_nil result, "Should handle detached HEAD gracefully"
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_release_fallback_on_no_branch_success
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    expected_path = "/releases/v1.0/reviews/saved-review.md"
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return true if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      # No branch available
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, nil do
+        Ace::Review::Molecules::TaskReportSaver.stub :save_to_release, ->(file, data) {
+          { success: true, path: expected_path }
+        } do
+          result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+          assert_equal expected_path, result, "Should save to release when no branch and fallback enabled"
+        end
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_release_fallback_on_task_not_found_success
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    expected_path = "/releases/v1.0/reviews/saved-review.md"
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      return true if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+        # Task resolution returns nil (not found)
+        Ace::Review::Molecules::TaskResolver.stub :resolve, nil do
+          Ace::Review::Molecules::TaskReportSaver.stub :save_to_release, ->(file, data) {
+            { success: true, path: expected_path }
+          } do
+            output = capture_io do
+              result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+              assert_equal expected_path, result, "Should fall back to release when task not found"
+            end
+            assert_match(/Task '126' not found.*Falling back/, output[1])
+          end
+        end
+      end
+    end
+  end
+
+  def test_auto_save_review_if_enabled_release_fallback_on_task_save_failure
+    options = Struct.new(:no_auto_save).new(false)
+    review_data = { preset: "pr", model: "claude" }
+    review_file = File.join(@temp_dir, "review.md")
+    File.write(review_file, "# Test Review")
+
+    task_dir = File.join(@temp_dir, "tasks", "126-test")
+    FileUtils.mkdir_p(task_dir)
+    expected_release_path = "/releases/v1.0/reviews/saved-review.md"
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      return true if section == "defaults" && key == "auto_save_release_fallback"
+      nil
+    } do
+      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+        Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
+          { path: task_dir, task_id: task_id } if task_id == "126"
+        } do
+          # Task save fails
+          Ace::Review::Molecules::TaskReportSaver.stub :save, ->(task_path, file, data) {
+            { success: false, error: "Disk full" }
+          } do
+            Ace::Review::Molecules::TaskReportSaver.stub :save_to_release, ->(file, data) {
+              { success: true, path: expected_release_path }
+            } do
+              output = capture_io do
+                result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
+                assert_equal expected_release_path, result, "Should fall back to release when task save fails"
+              end
+              assert_match(/Disk full.*Falling back/, output[1])
+            end
+          end
+        end
+      end
+    end
+  end
 end
