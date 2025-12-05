@@ -2,6 +2,7 @@
 
 require "net/http"
 require "uri"
+require "openssl"
 
 module Ace
   module LLM
@@ -25,6 +26,11 @@ module Ace
               http.open_timeout = TIMEOUT
               http.read_timeout = TIMEOUT
 
+              if http.use_ssl?
+                http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+                http.cert_store = build_cert_store
+              end
+
               request = Net::HTTP::Get.new(uri.request_uri)
               request["User-Agent"] = "ace-llm-models-dev/#{VERSION}"
               request["Accept"] = "application/json"
@@ -43,6 +49,17 @@ module Ace
                    Net::OpenTimeout, Net::ReadTimeout, SocketError,
                    OpenSSL::SSL::SSLError => e
               raise NetworkError, "Network error fetching API: #{e.message}"
+            end
+
+            private
+
+            # Build a cert store with system CA certificates
+            # Uses default paths without CRL checking (OpenSSL 3.x compatibility)
+            # @return [OpenSSL::X509::Store]
+            def build_cert_store
+              store = OpenSSL::X509::Store.new
+              store.set_default_paths
+              store
             end
           end
         end
