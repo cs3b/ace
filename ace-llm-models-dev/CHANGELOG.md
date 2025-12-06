@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-12-06
+
 ### Fixed
 
 - CLI commands now return status codes instead of calling `exit 1` directly
@@ -20,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ApiFetcher test coverage for network failures and error handling
 - Modality type validation warning in ModelInfo
+
+### Changed
+
+- Provider config paths updated to use `.ace.example/llm/providers/` pattern
 
 ## [0.3.0] - 2025-12-06
 
