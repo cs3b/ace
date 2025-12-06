@@ -7,18 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-12-06
+
 ### Added
 - **x.ai (Grok) Provider**: New LLM provider for x.ai's Grok models
-  - Supports grok-3, grok-3-fast, grok-3-mini, grok-4, grok-4-fast, grok-4-1-fast, grok-2
+  - Supports grok-4, grok-4-fast, grok-4-1-fast, grok-code-fast-1, grok-3, grok-3-fast, grok-3-mini, grok-2
   - OpenAI-compatible API with full generation options
-  - Global aliases: `grok` → xai:grok-3, `grok4` → xai:grok-4, `grok4fast` → xai:grok-4-fast
+  - Default model: grok-4 with max_tokens: 4096
+  - Global aliases: `grok` → xai:grok-4, `grokfast` → xai:grok-4-1-fast, `grokcode` → xai:grok-code-fast-1
   - Environment variable: `XAI_API_KEY`
 
 ### Changed
-- **XAIClient**: Improved implementation
-  - Set default `max_tokens: 4096` to match provider config
-  - Refactored parameter building to use constant-driven iteration
-  - Use explicit `rescue StandardError` instead of bare rescue
+- **Provider Config Migration**: Moved provider configs from `providers/` to `.ace.example/llm/providers/`
+  - Eliminates duplication between gem and project configs
+  - Example configs now serve as the canonical source
+- **XAIClient**: Uses constant-driven GENERATION_KEYS iteration pattern
+  - Explicit `rescue StandardError` instead of bare rescue
 
 ## [0.11.0] - 2025-11-17
 

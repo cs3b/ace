@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.154] - 2025-12-06
+
+### ace-llm v0.12.0 (Task 128.01)
+
+**x.ai (Grok) Provider**
+- New LLM provider for x.ai's Grok models via OpenAI-compatible API
+- Supports grok-4, grok-4-fast, grok-4-1-fast, grok-code-fast-1, grok-3 variants, grok-2
+- Default model: grok-4 with max_tokens: 4096
+- Global aliases: `grok` → xai:grok-4, `grokfast`, `grokcode`
+- Environment variable: `XAI_API_KEY`
+
+**Provider Config Migration**
+- Moved provider configs from `ace-llm/providers/` to `.ace.example/llm/providers/`
+- Eliminates duplication between gem and project configurations
+- Example configs serve as canonical source for gem distribution
+
+### ace-llm-models-dev v0.3.1
+
+- Provider config paths updated to use `.ace.example/llm/providers/` pattern
+- CLI commands now return status codes instead of calling `exit 1` directly
+- Various bug fixes and test improvements
+
 ## [0.9.153] - 2025-12-03
 
 ### ace-review v0.22.0 (Task 126.03)
