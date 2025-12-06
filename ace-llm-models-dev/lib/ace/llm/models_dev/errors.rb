@@ -38,6 +38,9 @@ module Ace
         end
       end
 
+      # Configuration errors
+      class ConfigError < Error; end
+
       # Provider not found error
       class ProviderNotFoundError < ValidationError
         attr_reader :provider_id

@@ -16,6 +16,9 @@ require_relative "models_dev/atoms/api_fetcher"
 require_relative "models_dev/atoms/json_parser"
 require_relative "models_dev/atoms/file_reader"
 require_relative "models_dev/atoms/file_writer"
+require_relative "models_dev/atoms/model_filter"
+require_relative "models_dev/atoms/provider_config_reader"
+require_relative "models_dev/atoms/provider_config_writer"
 
 # Models - Data structures
 require_relative "models_dev/models/provider_info"
@@ -29,9 +32,16 @@ require_relative "models_dev/molecules/model_validator"
 require_relative "models_dev/molecules/cost_calculator"
 require_relative "models_dev/molecules/diff_generator"
 require_relative "models_dev/molecules/model_searcher"
+require_relative "models_dev/molecules/provider_sync_diff"
 
 # Organisms - Business logic
 require_relative "models_dev/organisms/sync_orchestrator"
+require_relative "models_dev/organisms/provider_sync_orchestrator"
+
+# CLI subcommands (must be after molecules/organisms are loaded)
+require_relative "models_dev/cli/cache_cli"
+require_relative "models_dev/cli/providers_cli"
+require_relative "models_dev/cli/models_cli"
 
 module Ace
   module LLM

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "thor"
+require "json"
 
 module Ace
   module LLM
@@ -8,167 +9,61 @@ module Ace
       # CLI for ace-llm-models
       class CLI < Thor
         def self.exit_on_failure?
-          true
+          false
         end
 
-        desc "sync", "Sync models from models.dev API"
-        option :force, type: :boolean, aliases: "-f", desc: "Force sync even if cache is fresh"
-        def sync
-          result = Organisms::SyncOrchestrator.new.sync(force: options[:force])
+        # Register subcommands
+        desc "cache SUBCOMMAND", "Manage local cache"
+        subcommand "cache", Commands::CacheCLI
 
-          case result[:status]
-          when :success
-            puts result[:message]
-            puts "Duration: #{result[:duration]}s"
-          when :skipped
-            puts result[:message]
-            puts "Last synced: #{result[:last_sync_at]}"
-          when :error
-            warn "Error: #{result[:message]}"
-            exit 1
-          end
-        end
+        desc "providers SUBCOMMAND", "Manage providers"
+        subcommand "providers", Commands::ProvidersCLI
 
-        desc "validate MODEL_ID", "Validate a model exists"
-        def validate(model_id)
-          model = Molecules::ModelValidator.new.validate(model_id)
-          puts "✓ #{model.full_id} is valid"
-          puts "  Name: #{model.name}"
-          puts "  Provider: #{model.provider_id}"
-          puts "  Status: #{model.status || 'active'}"
-        rescue ProviderNotFoundError => e
-          warn "✗ Provider '#{e.provider_id}' not found"
-          exit 1
-        rescue ModelNotFoundError => e
-          warn "✗ #{e.message}"
-          exit 1
-        rescue CacheError => e
-          warn "Error: #{e.message}"
-          exit 1
-        end
+        desc "models SUBCOMMAND", "Work with models"
+        subcommand "models", Commands::ModelsCLI
 
-        desc "cost MODEL_ID", "Show pricing for a model"
-        option :input, type: :numeric, aliases: "-i", default: 1000, desc: "Input tokens"
-        option :output, type: :numeric, aliases: "-o", default: 500, desc: "Output tokens"
-        option :reasoning, type: :numeric, aliases: "-r", default: 0, desc: "Reasoning tokens"
-        def cost(model_id)
-          calculator = Molecules::CostCalculator.new
-          result = calculator.calculate(
-            model_id,
-            input_tokens: options[:input],
-            output_tokens: options[:output],
-            reasoning_tokens: options[:reasoning]
-          )
-
-          puts calculator.format(result)
-        rescue ProviderNotFoundError, ModelNotFoundError => e
-          warn "Error: #{e.message}"
-          exit 1
-        rescue CacheError => e
-          warn "Error: #{e.message}"
-          exit 1
-        end
-
-        desc "diff", "Show changes since last sync"
-        def diff
-          result = Molecules::DiffGenerator.new.generate
-
-          unless result.any_changes?
-            puts "No changes since last sync"
-            return
-          end
-
-          if result.added_providers.any?
-            puts "New providers:"
-            result.added_providers.each { |p| puts "  + #{p}" }
-            puts
-          end
-
-          if result.removed_providers.any?
-            puts "Removed providers:"
-            result.removed_providers.each { |p| puts "  - #{p}" }
-            puts
-          end
-
-          if result.added_models.any?
-            puts "New models:"
-            result.added_models.each { |m| puts "  + #{m}" }
-            puts
-          end
-
-          if result.removed_models.any?
-            puts "Removed models:"
-            result.removed_models.each { |m| puts "  - #{m}" }
-            puts
-          end
-
-          if result.updated_models.any?
-            puts "Updated models:"
-            result.updated_models.each do |update|
-              puts "  ~ #{update.model_id}: #{update.summary}"
-            end
-            puts
-          end
-
-          puts "Summary: #{result.summary}"
-        rescue CacheError => e
-          warn "Error: #{e.message}"
-          exit 1
-        end
-
-        desc "search QUERY", "Search for models"
+        # Top-level shortcuts for common operations
+        desc "search [QUERY]", "Search models (shortcut for: models search)"
         option :provider, type: :string, aliases: "-p", desc: "Limit to provider"
         option :limit, type: :numeric, aliases: "-l", default: 20, desc: "Max results"
-        def search(query)
-          searcher = Molecules::ModelSearcher.new
-          models = searcher.search(query, provider: options[:provider], limit: options[:limit])
-
-          if models.empty?
-            puts "No models found matching '#{query}'"
-            return
-          end
-
-          puts "Found #{models.size} model(s):"
-          models.each do |model|
-            status = model.deprecated? ? " (deprecated)" : ""
-            puts "  #{model.full_id}#{status}"
-            puts "    #{model.name}"
-          end
-        rescue CacheError => e
-          warn "Error: #{e.message}"
-          exit 1
+        option :filter, type: :array, aliases: "-f", desc: "Filter by key:value (repeatable)"
+        option :json, type: :boolean, desc: "Output as JSON"
+        def search(query = nil)
+          Commands::ModelsCLI.new([], options).search(query)
         end
 
-        desc "stats", "Show statistics about cached data"
-        def stats
-          status = Organisms::SyncOrchestrator.new.status
+        desc "info MODEL_ID", "Show model info (shortcut for: models info)"
+        option :full, type: :boolean, desc: "Show complete details"
+        option :json, type: :boolean, desc: "Output as JSON"
+        def info(model_id)
+          Commands::ModelsCLI.new([], options).info(model_id)
+        end
 
-          unless status[:cached]
-            warn "No cache data. Run 'ace-llm-models sync' first."
-            exit 1
-          end
-
-          puts "Cache Status:"
-          puts "  Cached: Yes"
-          puts "  Fresh: #{status[:fresh] ? 'Yes' : 'No (stale)'}"
-          puts "  Last sync: #{status[:last_sync_at]}"
-          puts
-
-          if status[:stats]
-            puts "Statistics:"
-            puts "  Providers: #{status[:stats][:provider_count]}"
-            puts "  Models: #{status[:stats][:model_count]}"
-            puts
-            puts "Top providers by model count:"
-            status[:stats][:top_providers].each do |provider, count|
-              puts "  #{provider}: #{count}"
-            end
-          end
+        desc "sync", "Sync from models.dev (shortcut for: cache sync)"
+        option :force, type: :boolean, aliases: "-f", desc: "Force sync even if cache is fresh"
+        option :json, type: :boolean, desc: "Output as JSON"
+        def sync
+          Commands::CacheCLI.new([], options).sync
         end
 
         desc "version", "Show version"
         def version
           puts "ace-llm-models-dev #{VERSION}"
+        end
+
+        desc "help [COMMAND]", "Describe available commands"
+        def help(command = nil)
+          if command.nil?
+            puts "ace-llm-models - Query models.dev data"
+            puts
+            puts "Quick Start:"
+            puts "  ace-llm-models sync                              # Download model data"
+            puts "  ace-llm-models search gpt-4                      # Search for models"
+            puts "  ace-llm-models info openai:gpt-4o                # Get model details"
+            puts "  ace-llm-models providers sync -p openai --apply  # Sync provider config"
+            puts
+          end
+          super
         end
 
         # Default to help

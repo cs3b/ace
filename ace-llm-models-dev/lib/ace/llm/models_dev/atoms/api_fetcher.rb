@@ -1,17 +1,19 @@
 # frozen_string_literal: true
 
-require "net/http"
-require "uri"
-require "openssl"
+require "faraday"
+require "faraday/retry"
 
 module Ace
   module LLM
     module ModelsDev
       module Atoms
-        # Fetches data from the models.dev API
+        # Fetches data from the models.dev API using Faraday (ADR-010 compliant)
         class ApiFetcher
           API_URL = "https://models.dev/api.json"
           TIMEOUT = 30
+          OPEN_TIMEOUT = 10
+          MAX_RETRIES = 2
+          RETRY_INTERVAL = 0.5
 
           class << self
             # Fetch the API JSON
@@ -20,46 +22,51 @@ module Ace
             # @raise [NetworkError] on network failures
             # @raise [ApiError] on non-200 responses
             def fetch(url = API_URL)
-              uri = URI.parse(url)
-              http = Net::HTTP.new(uri.host, uri.port)
-              http.use_ssl = uri.scheme == "https"
-              http.open_timeout = TIMEOUT
-              http.read_timeout = TIMEOUT
+              response = connection.get(url)
 
-              if http.use_ssl?
-                http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-                http.cert_store = build_cert_store
-              end
-
-              request = Net::HTTP::Get.new(uri.request_uri)
-              request["User-Agent"] = "ace-llm-models-dev/#{VERSION}"
-              request["Accept"] = "application/json"
-
-              response = http.request(request)
-
-              unless response.is_a?(Net::HTTPSuccess)
+              unless response.success?
                 raise ApiError.new(
-                  "API request failed: #{response.code} #{response.message}",
-                  status_code: response.code.to_i
+                  "API request failed: #{response.status} #{response.reason_phrase}",
+                  status_code: response.status
                 )
               end
 
               response.body
-            rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ETIMEDOUT,
-                   Net::OpenTimeout, Net::ReadTimeout, SocketError,
-                   OpenSSL::SSL::SSLError => e
+            rescue Faraday::TimeoutError => e
+              raise NetworkError, "Request timed out: #{e.message}"
+            rescue Faraday::ConnectionFailed => e
+              raise NetworkError, "Connection failed: #{e.message}"
+            rescue Faraday::SSLError => e
+              raise NetworkError, "SSL error: #{e.message}"
+            rescue Faraday::Error => e
               raise NetworkError, "Network error fetching API: #{e.message}"
             end
 
             private
 
-            # Build a cert store with system CA certificates
-            # Uses default paths without CRL checking (OpenSSL 3.x compatibility)
-            # @return [OpenSSL::X509::Store]
-            def build_cert_store
-              store = OpenSSL::X509::Store.new
-              store.set_default_paths
-              store
+            # Build Faraday connection with retry middleware
+            # @return [Faraday::Connection]
+            def connection
+              @connection ||= Faraday.new do |faraday|
+                faraday.options.timeout = TIMEOUT
+                faraday.options.open_timeout = OPEN_TIMEOUT
+
+                # Retry middleware for transient failures (ADR-010)
+                faraday.request :retry, {
+                  max: MAX_RETRIES,
+                  interval: RETRY_INTERVAL,
+                  interval_randomness: 0.5,
+                  backoff_factor: 2,
+                  retry_statuses: [429, 500, 502, 503, 504],
+                  methods: [:get]
+                }
+
+                # Set headers
+                faraday.headers["User-Agent"] = "ace-llm-models-dev/#{VERSION}"
+                faraday.headers["Accept"] = "application/json"
+
+                faraday.adapter Faraday.default_adapter
+              end
             end
           end
         end

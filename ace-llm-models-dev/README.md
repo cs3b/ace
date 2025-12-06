@@ -10,78 +10,23 @@ gem install ace-llm-models-dev
 
 ## Usage
 
-### Sync Models
+The CLI uses git-style subcommands organized into three groups:
 
-Download and cache model data:
+- `cache` - Manage local models.dev cache
+- `providers` - Work with provider configurations
+- `models` - Search, query, and price models
 
-```bash
-ace-llm-models sync
-# Synced 847 models from 69 providers
+Top-level shortcuts are available for common operations.
 
-ace-llm-models sync --force  # Force refresh
-```
-
-### Validate Models
-
-Check if a model exists:
+### Cache Commands
 
 ```bash
-ace-llm-models validate openai:gpt-4o
-# ✓ openai:gpt-4o is valid
-#   Name: GPT-4o
-#   Provider: openai
-#   Status: active
+# Sync from models.dev API
+ace-llm-models cache sync
+ace-llm-models cache sync --force  # Force refresh
 
-ace-llm-models validate xai:grok-99
-# ✗ Model 'xai:grok-99' not found. Did you mean: grok-3, grok-4?
-```
-
-### Calculate Costs
-
-Estimate query costs:
-
-```bash
-ace-llm-models cost openai:gpt-4o --input 10000 --output 2000
-# Model: GPT-4o (openai:gpt-4o)
-#
-# Input:     10K tokens × $2.50/M = $0.025
-# Output:    2K tokens × $10.00/M = $0.020
-#
-# Total: $0.045
-```
-
-### Show Changes
-
-See what's changed since last sync:
-
-```bash
-ace-llm-models diff
-# New models:
-#   + anthropic:claude-4-opus
-# Updated models:
-#   ~ openai:gpt-4o: cost.output: 10.00 → 7.50
-# Removed models:
-#   - google:gemini-1.0-pro
-```
-
-### Search Models
-
-Find models by name:
-
-```bash
-ace-llm-models search gpt
-# Found 12 model(s):
-#   openai:gpt-4o
-#     GPT-4o
-#   openai:gpt-4o-mini
-#     GPT-4o Mini
-#   ...
-```
-
-### View Statistics
-
-```bash
-ace-llm-models stats
+# View cache status
+ace-llm-models cache status
 # Cache Status:
 #   Cached: Yes
 #   Fresh: Yes
@@ -90,7 +35,126 @@ ace-llm-models stats
 # Statistics:
 #   Providers: 69
 #   Models: 847
+
+# Show changes since last sync
+ace-llm-models cache diff
+# New models:
+#   + anthropic:claude-4-opus
+# Updated models:
+#   ~ openai:gpt-4o: cost.output: 10.00 → 7.50
+
+# Clear cache
+ace-llm-models cache clear
 ```
+
+### Provider Commands
+
+```bash
+# List all providers with model counts
+ace-llm-models providers list
+# Providers (69):
+#   openrouter: 127 models
+#   openai: 36 models
+#   ...
+
+# Show provider details
+ace-llm-models providers show openai
+# Provider: openai
+# Models (36):
+#   gpt-4o
+#     GPT-4o
+#   gpt-4o-mini
+#     GPT-4o mini
+#   ...
+
+# Sync provider YAML configs with models.dev
+ace-llm-models providers sync
+ace-llm-models providers sync --apply  # Apply changes
+```
+
+### Model Commands
+
+```bash
+# Search models
+ace-llm-models models search gpt
+# Showing 20 of 207 results:
+#   openai:gpt-4o
+#     GPT-4o
+#   ...
+
+# Search with filters
+ace-llm-models models search --provider openai --limit 10
+ace-llm-models models search --filter "tool_call:true"
+
+# Model info (brief by default)
+ace-llm-models models info openai:gpt-4o
+# GPT-4o (openai:gpt-4o)
+#   Provider: openai
+#   Status: active
+#   Context: 128,000 tokens
+#   Pricing: $2.50/M input, $10.00/M output
+#   Capabilities: tools, structured
+#
+# Use --full for complete details
+
+# Full model info
+ace-llm-models models info openai:gpt-4o --full
+
+# Calculate costs
+ace-llm-models models cost openai:gpt-4o --input 10000 --output 2000
+# Model: GPT-4o (openai:gpt-4o)
+#
+# Input:     10K tokens × $2.50/M = $0.025
+# Output:    2K tokens × $10.00/M = $0.020
+#
+# Total: $0.045
+```
+
+### Top-Level Shortcuts
+
+Common operations available at the top level:
+
+```bash
+ace-llm-models search gpt      # → models search gpt
+ace-llm-models info gpt-4o     # → models info gpt-4o
+ace-llm-models sync            # → cache sync
+```
+
+### JSON Output
+
+All commands support `--json` for machine-readable output:
+
+```bash
+ace-llm-models cache status --json
+ace-llm-models providers list --json
+ace-llm-models models search gpt --json
+ace-llm-models models info openai:gpt-4o --json
+```
+
+#### Search JSON Structure
+
+The `search` command returns a paginated result object:
+
+```json
+{
+  "models": [
+    {
+      "provider_id": "openai",
+      "model_id": "gpt-4o",
+      "name": "GPT-4o",
+      "description": "...",
+      "pricing": { "input": 2.5, "output": 10.0 },
+      "capabilities": { ... }
+    }
+  ],
+  "showing": 20,
+  "total": 207
+}
+```
+
+- `models`: Array of model objects (limited by `--limit`)
+- `showing`: Number of models in this response
+- `total`: Total matching models (before limit)
 
 ## Ruby API
 
