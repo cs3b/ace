@@ -44,6 +44,9 @@ ace-llm-query --list-providers
 - `sonnet` → anthropic:claude-3-5-sonnet-20241022
 - `gpt4o` → openai:gpt-4o
 - `o4mini` → openai:gpt-4o-mini
+- `grok` → xai:grok-3
+- `grok4` → xai:grok-4
+- `grok4fast` → xai:grok-4-fast
 
 ### Advanced Options
 
@@ -117,6 +120,7 @@ export OPENAI_API_KEY="your-key"
 export ANTHROPIC_API_KEY="your-key"
 export MISTRAL_API_KEY="your-key"
 export TOGETHER_API_KEY="your-key"    # or TOGETHERAI_API_KEY
+export XAI_API_KEY="your-key"         # x.ai / Grok
 ```
 
 ### Aliases Configuration
@@ -162,7 +166,7 @@ default_options:
 Provider configurations are loaded from (in order):
 1. Project `.ace/llm/providers/` directory
 2. User config `~/.config/ace-llm/providers/`
-3. Gem built-in `providers/` directory
+3. Gem built-in `.ace.example/llm/providers/` directory
 
 First configuration found wins if there are duplicates.
 
@@ -307,6 +311,7 @@ All providers are now configuration-based and support dynamic loading:
 - **Google** (Gemini models) - `gemini-2.5-flash`, `gemini-2.5-pro`
 - **OpenAI** (GPT models) - `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`
 - **Anthropic** (Claude models) - `claude-3-5-sonnet`, `claude-3-opus`
+- **x.ai** (Grok models) - `grok-3`, `grok-4`, `grok-4-fast`
 - **Mistral** - `mistral-large-latest`, `mistral-small-latest`
 - **Together AI** - Various open-source models
 - **LM Studio** (local models) - Custom local models
