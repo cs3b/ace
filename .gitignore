@@ -30,6 +30,9 @@ _current
 .ace-taskflow/**/prompts/archive/
 .ace-taskflow/**/prompts/_previous.md
 
+# ace-review generated reviews in task folders
+.ace-taskflow/**/reviews/
+
 # git - worktree 
 .ace-worktrees
 .ace-wt

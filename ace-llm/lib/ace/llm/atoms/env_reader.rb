@@ -127,6 +127,8 @@ module Ace
             ["TOGETHER_API_KEY", "TOGETHERAI_API_KEY"]
           when "lmstudio"
             return nil # No API key needed for local
+          when "xai"
+            ["XAI_API_KEY"]
           else
             # Try generic pattern
             ["#{provider.upcase}_API_KEY"]
