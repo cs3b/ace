@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CLI commands now return status codes instead of calling `exit 1` directly
+- Executable properly handles exit codes from CLI.start
+- Race condition in `writable?` check using SecureRandom for unique test filenames
+- Search optimization to avoid loading all results twice (single fetch with total count)
+- Levenshtein pre-filter by length before expensive distance calculations
+- Provider sync continues with remaining providers after individual failures
+
+### Added
+
+- ApiFetcher test coverage for network failures and error handling
+- Modality type validation warning in ModelInfo
+
+## [0.3.0] - 2025-12-06
+
+### Added
+
+- Git-style subcommand structure with `cache`, `providers`, and `models` groups
+- New `cache clear` command - Clear local cache files
+- New `providers list` command - List all providers with model counts
+- New `providers show PROVIDER` command - Show provider details and models
+- New `cache status` command (replaces `stats`)
+- `--json` flag available on all commands for machine-readable output
+- Search truncation message: "Showing X of Y results" when results are limited
+- `--full` flag for `models info` command to show complete details
+- Early model ID format validation to fail fast on invalid input
+- Flow-style YAML array detection with helpful error messages
+
+### Fixed
+
+- CLI `exit_on_failure?` now returns false per project patterns
+- Extracted hardcoded cache staleness constant `PROVIDER_SYNC_CACHE_MAX_AGE`
+
+### Changed
+
+- **BREAKING**: Refactored `ApiFetcher` to use Faraday with retry middleware (ADR-010 compliant)
+  - Added automatic retries for transient network failures (429, 500, 502, 503, 504)
+  - Added exponential backoff with jitter
+- **BREAKING**: CLI restructured into git-style subcommands
+  - `sync` → `cache sync` (top-level shortcut still available)
+  - `stats` → `cache status`
+  - `diff` → `cache diff`
+  - `sync-providers` → `providers sync`
+  - `search` → `models search` (top-level shortcut still available)
+  - `info` → `models info` (top-level shortcut still available)
+  - `cost` → `models cost`
+- `models info` now shows brief output by default; use `--full` for complete details
+- `validate` command merged into `models info` (brief output validates model existence)
+
+### Removed
+
+- `stats` command (replaced by `cache status`)
+- `validate` command (merged into `models info`)
+
+---
+
+## [0.2.0] - 2024-12-05
+
+### Added
+
+- `info` command - Display complete model information with human-readable or JSON output
+- `--json` flag for `info`, `cost`, and `search` commands - Output structured JSON for scripting
+- `--filter` flag for `search` command - Filter models by key:value pairs (repeatable)
+  - Supported filters: `provider`, `reasoning`, `tool_call`, `attachment`, `structured_output`, `temperature`, `open_weights`, `modality`, `min_context`, `max_input_cost`
+- Optional query in `search` command - Omit query to list all models matching filters
+- `ModelFilter` atom - Reusable filter predicates for model queries
+
+### Changed
+
+- `search` command now accepts optional query parameter (was required)
+- `ModelSearcher.search` now accepts `filters:` parameter for additional filtering
+
 ## [0.1.0] - 2024-12-04
 
 ### Added

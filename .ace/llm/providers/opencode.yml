@@ -1,21 +1,28 @@
 name: opencode
+last_synced: 2025-12-05
 class: Ace::LLM::Providers::CLI::OpenCodeClient
 gem: ace-llm-providers-cli
 models:
-  - google/gemini-2.5-flash
-  - google/gemini-2.0-flash-experimental
-  - google/gemini-1.5-pro
-  - anthropic/claude-3-5-sonnet
-  - anthropic/claude-3-5-haiku
-  - openai/gpt-4o
-  - openai/gpt-4o-mini
+  - alpha-doubao-seed-code
+  - alpha-minimax-m2
+  - big-pickle
+  - claude-haiku-4-5
+  - claude-opus-4-5
+  - claude-sonnet-4-5
+  - gemini-3-pro
+  - glm-4.6
+  - gpt-5.1
+  - gpt-5.1-codex
+  - gpt-5.1-codex-max
+  - kimi-k2
+  - kimi-k2-thinking
 aliases:
   global:
-    oc: opencode:google/gemini-2.5-flash
+    oc: opencode:glm-4.6
   model:
-    gemini: google/gemini-2.5-flash
-    claude: anthropic/claude-3-5-sonnet
-    gpt4: openai/gpt-4o
+    google: google/gemini-3-pro
+    claude: anthropic/claude-opus-4-5
+    codex: openai/gpt-5.1-codex 
 capabilities:
   - text_generation
   - streaming

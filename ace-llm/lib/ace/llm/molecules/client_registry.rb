@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "date"
 require "pathname"
 require_relative "../atoms/env_reader"
 
@@ -229,8 +230,13 @@ module Ace
 
         # Load a single configuration file
         # @param file_path [String] Path to YAML configuration file
+        # @note Uses YAML.load_file with permitted_classes: [Symbol, Date] for backward
+        #       compatibility with existing configs that may use symbol keys. Provider configs
+        #       are considered trusted sources (located in .ace/ cascade or gem directories).
+        #       For untrusted input, use YAML.safe_load with string keys only.
+        # @see .ace-taskflow/v.0.9.0/ideas/20251206-011207-llm-enhance/ for migration to string-only keys
         def load_configuration_file(file_path)
-          config = YAML.load_file(file_path)
+          config = YAML.load_file(file_path, permitted_classes: [Symbol, Date])
 
           # Validate required fields
           unless config["name"] && config["class"]
