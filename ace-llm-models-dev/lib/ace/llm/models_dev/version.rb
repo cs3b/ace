@@ -3,7 +3,7 @@
 module Ace
   module LLM
     module ModelsDev
-      VERSION = "0.3.0"
+      VERSION = "0.3.1"
     end
   end
 end
