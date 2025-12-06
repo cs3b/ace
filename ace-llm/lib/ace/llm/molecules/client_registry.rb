@@ -195,8 +195,8 @@ module Ace
           user_config = File.expand_path("~/.config/ace-llm/providers")
           paths << user_config if File.directory?(user_config)
 
-          # Gem's built-in providers (for defaults)
-          gem_providers = File.expand_path("../../../../providers", __dir__)
+          # Gem's built-in providers (from .ace.example/ - single source of truth)
+          gem_providers = File.expand_path("../../../../.ace.example/llm/providers", __dir__)
           paths << gem_providers if File.directory?(gem_providers)
 
           paths

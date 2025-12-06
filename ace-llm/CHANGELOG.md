@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **x.ai (Grok) Provider**: New LLM provider for x.ai's Grok models
+  - Supports grok-3, grok-3-fast, grok-3-mini, grok-4, grok-4-fast, grok-4-1-fast, grok-2
+  - OpenAI-compatible API with full generation options
+  - Global aliases: `grok` → xai:grok-3, `grok4` → xai:grok-4, `grok4fast` → xai:grok-4-fast
+  - Environment variable: `XAI_API_KEY`
+
+### Changed
+- **XAIClient**: Improved implementation
+  - Set default `max_tokens: 4096` to match provider config
+  - Refactored parameter building to use constant-driven iteration
+  - Use explicit `rescue StandardError` instead of bare rescue
+
 ## [0.11.0] - 2025-11-17
 
 ### Added
