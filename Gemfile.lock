@@ -71,7 +71,9 @@ PATH
 PATH
   remote: ace-llm-models-dev
   specs:
-    ace-llm-models-dev (0.1.0)
+    ace-llm-models-dev (0.3.0)
+      faraday (~> 2.0)
+      faraday-retry (~> 2.0)
       thor (~> 1.3)
 
 PATH
@@ -203,6 +205,8 @@ GEM
       logger
     faraday-net_http (3.4.2)
       net-http (~> 0.5)
+    faraday-retry (2.3.2)
+      faraday (~> 2.0)
     ffi (1.17.2)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-aarch64-linux-musl)

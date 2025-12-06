@@ -100,6 +100,11 @@ module Ace
           def self.parse_modalities(hash)
             return { input: [], output: [] } if hash.nil?
 
+            unless hash.is_a?(Hash)
+              warn "[ModelInfo] Unexpected modalities type: #{hash.class}, expected Hash"
+              return { input: [], output: [] }
+            end
+
             {
               input: Array(hash["input"]),
               output: Array(hash["output"])

@@ -13,35 +13,62 @@ module Ace
           end
 
           # Search for models matching query
-          # @param query [String] Search query
+          # @param query [String, nil] Search query (nil = match all)
           # @param provider [String, nil] Limit to specific provider
           # @param limit [Integer] Max results
-          # @return [Array<Models::ModelInfo>] Matching models
-          def search(query, provider: nil, limit: 20)
+          # @param filters [Hash, nil] Additional filters (key-value pairs)
+          # @param with_total [Boolean] Return hash with models and total count
+          # @return [Array<Models::ModelInfo>, Hash] Matching models or {models:, total:}
+          #
+          # Memory optimization: Defers ModelInfo instantiation until after pagination.
+          # This avoids materializing thousands of objects for large caches with broad queries.
+          def search(query = nil, provider: nil, limit: 20, filters: nil, with_total: false)
             data = load_data
             results = []
 
             providers_to_search = provider ? [provider] : data.keys
 
+            # Phase 1: Collect lightweight hashes with scores (no ModelInfo instantiation)
             providers_to_search.each do |provider_id|
               provider_data = data[provider_id]
               next unless provider_data
 
               (provider_data["models"] || {}).each do |model_id, model_data|
-                score = match_score(query, model_id, model_data["name"])
+                # If no query provided, match all (score = 1)
+                score = query ? match_score(query, model_id, model_data["name"]) : 1
                 if score > 0
                   results << {
-                    model: Models::ModelInfo.from_hash(model_data, provider_id: provider_id),
+                    data: model_data,
+                    provider_id: provider_id,
                     score: score
                   }
                 end
               end
             end
 
-            # Sort by score and return models
-            results.sort_by { |r| -r[:score] }
-                   .first(limit)
-                   .map { |r| r[:model] }
+            # Phase 2: Sort by score (still lightweight hashes)
+            sorted = results.sort_by { |r| -r[:score] }
+
+            # Phase 3: Apply filters if provided (requires ModelInfo for capability checks)
+            if filters
+              # Must instantiate to filter, but filter early before limit
+              models = sorted.map { |r| Models::ModelInfo.from_hash(r[:data], provider_id: r[:provider_id]) }
+              models = Atoms::ModelFilter.apply(models, filters)
+              total = models.size
+              limited = models.first(limit)
+            else
+              # No filters: instantiate only the limited set
+              total = sorted.size
+              limited = sorted.first(limit).map do |r|
+                Models::ModelInfo.from_hash(r[:data], provider_id: r[:provider_id])
+              end
+            end
+
+            if with_total
+              { models: limited, total: total }
+            else
+              limited
+            end
           end
 
           # List all models
