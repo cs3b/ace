@@ -11,3 +11,4 @@ models:
   - codex:gpt-5.1-codex-max  # Code-focused, implementation details
   - gpro                     # Fast, broad coverage
   - google:pro-preview
+  - xai:fast
