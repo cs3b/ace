@@ -34,6 +34,7 @@ require_relative "llm/organisms/mistral_client"
 require_relative "llm/organisms/togetherai_client"
 require_relative "llm/organisms/lmstudio_client"
 require_relative "llm/organisms/xai_client"
+require_relative "llm/organisms/openrouter_client"
 
 module Ace
   module LLM

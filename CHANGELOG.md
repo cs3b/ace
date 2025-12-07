@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.155] - 2025-12-06
+
+### ace-llm v0.13.0 (Task 128.02)
+
+**OpenRouter Provider**
+- New LLM provider for OpenRouter's unified API (400+ models)
+- OpenAI-compatible API with optional attribution headers (HTTP-Referer, X-Title)
+- Focus: Exclusive providers (DeepSeek, Kimi, Qwen) + fast inference via `:nitro` routing (Groq/Cerebras)
+- Fast inference aliases: `gpt-oss-nitro`, `kimi-nitro`, `qwen3-nitro`, `gpt-oss-small-nitro`
+- Provider aliases: `deepseek`, `deepseek-r1`, `kimi`, `kimi-think`, `qwen-coder`, `qwq`, `hermes`, `glm`, `minimax`, `reka`, `devstral`
+- Environment variable: `OPENROUTER_API_KEY`
+- Robust error handling for non-JSON responses (HTML from 502 errors)
+- Explicit nil checks for generation params (allows temperature: 0)
+
 ## [0.9.154] - 2025-12-06
 
 ### ace-llm v0.12.0 (Task 128.01)
