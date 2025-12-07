@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.156] - 2025-12-06
+
+### ace-llm v0.14.0 (Task 128.03)
+
+**Groq Provider**
+- New LLM provider for Groq's ultra-fast inference API
+- Supports GPT-OSS 120B/20B, Kimi K2, and Mistral Saba models
+- OpenAI-compatible API with ultra-fast inference
+- Global aliases: `groq`, `groq-fast`, `groq-kimi`, `groq-saba`
+- Model aliases: `gpt-oss`, `gpt-oss-120b`, `gpt-oss-20b`, `kimi-k2`, `saba`
+- Environment variable: `GROQ_API_KEY`
+- Comprehensive test coverage with mocked HTTP client
+
+**Fixes (PR Review Feedback)**
+- Zero-valued generation params now preserved (temperature: 0, frequency_penalty: 0)
+- Stream flag explicitly disabled (streaming not implemented)
+
 ## [0.9.155] - 2025-12-06
 
 ### ace-llm v0.13.0 (Task 128.02)
