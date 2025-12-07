@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2025-12-06
+
+### Technical
+- Updated ace-llm dependency from `~> 0.12.0` to `~> 0.13.0` for OpenRouter provider support
+
 ## [0.12.2] - 2025-11-17
 
 ### Technical
