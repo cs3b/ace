@@ -3,6 +3,9 @@
 require_relative "../test_helper"
 
 class OpenRouterClientTest < AceTestCase
+  # Alias for shorter reference
+  LLMResponses = Ace::TestSupport::Fixtures::HTTPMocks::LLMResponses
+
   def setup
     @api_key = "test_openrouter_key"
     @client = Ace::LLM::Organisms::OpenRouterClient.new(api_key: @api_key)
@@ -14,11 +17,10 @@ class OpenRouterClientTest < AceTestCase
   def create_successful_response(content: "Hello", finish_reason: "stop", id: "test-id", model: nil)
     mock = Minitest::Mock.new
     mock.expect :success?, true
-    body = {
-      "choices" => [{ "message" => { "content" => content }, "finish_reason" => finish_reason }],
-      "id" => id
-    }
-    body["model"] = model if model
+    # Use shared fixture for base body structure
+    body = LLMResponses.chat_completion(content: content, model: model || "test-model")
+    body["id"] = id
+    body["choices"][0]["finish_reason"] = finish_reason
     mock.expect :body, body
     mock
   end

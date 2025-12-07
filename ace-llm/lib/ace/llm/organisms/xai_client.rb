@@ -60,9 +60,9 @@ module Ace
             messages: processed_messages
           }
 
-          # Add generation parameters
+          # Add generation parameters (use nil? to preserve zero values like temperature: 0)
           GENERATION_KEYS.each do |key|
-            request[key] = generation_params[key] if generation_params.key?(key) && generation_params[key]
+            request[key] = generation_params[key] unless generation_params[key].nil?
           end
 
           # Add streaming flag (always false for now)
@@ -77,9 +77,9 @@ module Ace
         def extract_generation_options(options)
           gen_opts = super(options)
 
-          # Add x.ai-specific options (same as OpenAI)
-          gen_opts[:frequency_penalty] = options[:frequency_penalty] if options[:frequency_penalty]
-          gen_opts[:presence_penalty] = options[:presence_penalty] if options[:presence_penalty]
+          # Add x.ai-specific options (use nil? to preserve zero values)
+          gen_opts[:frequency_penalty] = options[:frequency_penalty] unless options[:frequency_penalty].nil?
+          gen_opts[:presence_penalty] = options[:presence_penalty] unless options[:presence_penalty].nil?
 
           gen_opts.compact
         end

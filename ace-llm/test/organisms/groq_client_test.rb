@@ -4,7 +4,7 @@ require_relative "../test_helper"
 
 class GroqClientTest < AceTestCase
   def setup
-    @mock_http_client = MockHTTPClient.new
+    @mock_http_client = Ace::TestSupport::Fixtures::HTTPMocks::MockHTTPClient.new
   end
 
   # ============================================================
@@ -469,53 +469,4 @@ class GroqClientTest < AceTestCase
     }
   end
 
-  # Mock HTTP client for testing
-  class MockHTTPClient
-    attr_reader :last_request
-
-    def initialize
-      @response = nil
-      @error_response = nil
-      @last_request = nil
-    end
-
-    def set_response(body)
-      @response = body
-      @error_response = nil
-    end
-
-    def set_error_response(status, message)
-      @error_response = { status: status, message: message }
-      @response = nil
-    end
-
-    def post(url, body, headers: {})
-      @last_request = { url: url, body: body, headers: headers }
-
-      if @error_response
-        MockResponse.new(
-          success: false,
-          status: @error_response[:status],
-          body: { "error" => { "message" => @error_response[:message], "type" => "api_error" } }
-        )
-      else
-        MockResponse.new(success: true, status: 200, body: @response)
-      end
-    end
-  end
-
-  # Mock response object
-  class MockResponse
-    attr_reader :status, :body
-
-    def initialize(success:, status:, body:)
-      @success = success
-      @status = status
-      @body = body
-    end
-
-    def success?
-      @success
-    end
-  end
 end

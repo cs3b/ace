@@ -39,7 +39,7 @@ ace-llm-models cache status
 # Show changes since last sync
 ace-llm-models cache diff
 # New models:
-#   + anthropic:claude-4-opus
+#   + anthropic:claude-opus-4-5
 # Updated models:
 #   ~ openai:gpt-4o: cost.output: 10.00 → 7.50
 
