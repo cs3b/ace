@@ -28,6 +28,7 @@ require_relative "llm/query_interface"
 
 require_relative "llm/organisms/base_client"
 require_relative "llm/organisms/google_client"
+require_relative "llm/organisms/groq_client"
 require_relative "llm/organisms/openai_client"
 require_relative "llm/organisms/anthropic_client"
 require_relative "llm/organisms/mistral_client"

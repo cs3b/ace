@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2025-12-07
+
+### Added
+- **Groq Provider**: New LLM provider for Groq's ultra-fast inference API
+  - Supports GPT-OSS 120B/20B, Kimi K2, and Mistral Saba models
+  - OpenAI-compatible API with ultra-fast inference
+  - Default model: openai/gpt-oss-120b with max_tokens: 4096
+  - Global aliases: `groq`, `groq-fast`, `groq-kimi`, `groq-saba`
+  - Model aliases: `gpt-oss`, `gpt-oss-120b`, `gpt-oss-20b`, `kimi-k2`, `saba`
+  - Environment variable: `GROQ_API_KEY`
+  - Supports `stop` sequences parameter
+
+### Fixed
+- **Zero-valued generation params**: Changed from truthiness checks to nil checks
+  - Allows `temperature: 0`, `frequency_penalty: 0`, `presence_penalty: 0`
+  - Affects GroqClient and ensures consistent behavior with OpenRouterClient
+
+### Changed
+- Stream flag explicitly disabled (streaming not implemented)
+- Parameter extraction refactored to use `Hash#slice` for cleaner code
+
+### Breaking Changes
+None
+
 ## [0.13.0] - 2025-12-06
 
 ### Added
