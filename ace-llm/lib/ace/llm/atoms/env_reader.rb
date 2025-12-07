@@ -129,6 +129,8 @@ module Ace
             return nil # No API key needed for local
           when "xai"
             ["XAI_API_KEY"]
+          when "openrouter"
+            ["OPENROUTER_API_KEY"]
           else
             # Try generic pattern
             ["#{provider.upcase}_API_KEY"]
