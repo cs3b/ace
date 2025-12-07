@@ -121,6 +121,8 @@ export ANTHROPIC_API_KEY="your-key"
 export MISTRAL_API_KEY="your-key"
 export TOGETHER_API_KEY="your-key"    # or TOGETHERAI_API_KEY
 export XAI_API_KEY="your-key"         # x.ai / Grok
+export GROQ_API_KEY="your-key"        # Groq ultra-fast inference
+export OPENROUTER_API_KEY="your-key"  # OpenRouter unified API
 ```
 
 ### Aliases Configuration
@@ -312,6 +314,8 @@ All providers are now configuration-based and support dynamic loading:
 - **OpenAI** (GPT models) - `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`
 - **Anthropic** (Claude models) - `claude-3-5-sonnet`, `claude-3-opus`
 - **x.ai** (Grok models) - `grok-3`, `grok-4`, `grok-4-fast`
+- **Groq** (Ultra-fast inference) - `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `moonshotai/kimi-k2-instruct-0905`, `mistral-saba-24b`
+- **OpenRouter** (400+ models) - Access models via unified API
 - **Mistral** - `mistral-large-latest`, `mistral-small-latest`
 - **Together AI** - Various open-source models
 - **LM Studio** (local models) - Custom local models
