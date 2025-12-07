@@ -16,6 +16,7 @@ require_relative "test_support/test_environment"
 require_relative "test_support/performance_helpers"  # Performance testing utilities
 require_relative "test_support/fixtures/context_mocks"  # Shared context mocks
 require_relative "test_support/fixtures/git_mocks"  # Shared git mocks
+require_relative "test_support/fixtures/http_mocks"  # Shared HTTP mocks for LLM testing
 
 # Configure Minitest reporters by default
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
