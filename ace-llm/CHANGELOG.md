@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-12-06
+
+### Added
+- **OpenRouter Provider**: New LLM provider for OpenRouter's unified API (400+ models)
+  - OpenAI-compatible API with optional attribution headers (HTTP-Referer, X-Title)
+  - Focus: Exclusive providers (DeepSeek, Kimi, Qwen) + fast inference via `:nitro` routing (Groq/Cerebras)
+  - Default model: openai/gpt-oss-120b:nitro with temperature: 0.7, max_tokens: 4096
+  - Fast inference aliases: `gpt-oss-nitro`, `kimi-nitro`, `qwen3-nitro`, `gpt-oss-small-nitro`
+  - Provider aliases: `deepseek`, `deepseek-r1`, `kimi`, `kimi-think`, `qwen-coder`, `qwq`, `hermes`, `glm`, `minimax`, `reka`, `devstral`
+  - Environment variable: `OPENROUTER_API_KEY`
+  - Handles non-JSON error responses (e.g., HTML from 502 errors)
+  - Explicit nil checks for generation params (allows temperature: 0, frequency_penalty: 0)
+  - Preserves `native_finish_reason` metadata from OpenRouter
+
 ## [0.12.0] - 2025-12-06
 
 ### Added
