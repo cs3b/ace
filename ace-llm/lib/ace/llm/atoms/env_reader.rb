@@ -117,6 +117,8 @@ module Ace
           key_names = case provider.downcase
           when "google", "gemini"
             ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
+          when "groq"
+            ["GROQ_API_KEY"]
           when "openai"
             ["OPENAI_API_KEY"]
           when "anthropic"

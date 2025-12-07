@@ -1,0 +1,29 @@
+name: groq
+class: Ace::LLM::Organisms::GroqClient
+gem: ace-llm
+models:
+  - openai/gpt-oss-120b
+  - openai/gpt-oss-20b
+  - moonshotai/kimi-k2-instruct-0905
+  - mistral-saba-24b
+aliases:
+  global:
+    groq: groq:openai/gpt-oss-120b
+    groq-fast: groq:openai/gpt-oss-20b
+    groq-kimi: groq:moonshotai/kimi-k2-instruct-0905
+    groq-saba: groq:mistral-saba-24b
+  model:
+    gpt-oss: openai/gpt-oss-120b
+    gpt-oss-120b: openai/gpt-oss-120b
+    gpt-oss-20b: openai/gpt-oss-20b
+    kimi-k2: moonshotai/kimi-k2-instruct-0905
+    saba: mistral-saba-24b
+api_key:
+  env: GROQ_API_KEY
+  required: true
+  description: Groq API key
+capabilities:
+  - text_generation
+default_options:
+  temperature: 0.7
+  max_tokens: 4096
