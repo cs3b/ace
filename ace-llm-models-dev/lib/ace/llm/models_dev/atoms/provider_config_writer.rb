@@ -89,7 +89,11 @@ module Ace
             end
 
             def write_file(path, content)
+              # Validate YAML before writing to catch regex manipulation errors
+              YAML.safe_load(content, permitted_classes: [Symbol, Date])
               File.write(path, content)
+            rescue Psych::SyntaxError => e
+              raise ConfigError, "Generated invalid YAML for #{path}: #{e.message}"
             rescue Errno::EACCES => e
               raise ConfigError, "Permission denied writing #{path}: #{e.message}"
             rescue Errno::ENOSPC => e
