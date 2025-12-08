@@ -17,22 +17,22 @@ models:
   - z-ai/glm-4.6
   - minimax/minimax-m1
 aliases:
-  models:
+  model:
     # Fast inference (nitro = throughput)
-    oss-nitro: openrouter:openai/gpt-oss-120b:nitro
-    ss-small-nitro: openrouter:openai/gpt-oss-20b:nitro
-    kimi-nitro: openrouter:moonshotai/kimi-k2-0905:nitro
-    qwen3: openrouter:qwen/qwen3-max
+    oss-nitro: openai/gpt-oss-120b:nitro
+    oss-small-nitro: openai/gpt-oss-20b:nitro
+    kimi-nitro: moonshotai/kimi-k2-0905:nitro
+    qwen3: qwen/qwen3-max
     # Kimi
-    kimi: openrouter:moonshotai/kimi-k2-0905
-    kimi-think: openrouter:moonshotai/kimi-k2-thinking
+    kimi: moonshotai/kimi-k2-0905
+    kimi-think: moonshotai/kimi-k2-thinking
     # DeepSeek
-    deepseek: openrouter:deepseek/deepseek-v3.2
+    deepseek: deepseek/deepseek-v3.2
     # Qwen
-    qwen-coder: openrouter:qwen/qwen3-coder
+    qwen-coder: qwen/qwen3-coder
     # Others
-    glm: openrouter:z-ai/glm-4.6
-    minimax: openrouter:minimax/minimax-m1
+    glm: z-ai/glm-4.6
+    minimax: minimax/minimax-m1
 api_key:
   env: OPENROUTER_API_KEY
   required: true
