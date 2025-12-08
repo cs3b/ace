@@ -71,7 +71,7 @@ PATH
 PATH
   remote: ace-llm-models-dev
   specs:
-    ace-llm-models-dev (0.3.1)
+    ace-llm-models-dev (0.3.2)
       faraday (~> 2.0)
       faraday-retry (~> 2.0)
       thor (~> 1.3)
