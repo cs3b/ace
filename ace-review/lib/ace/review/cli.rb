@@ -153,6 +153,10 @@ module Ace
             @options[:pr] = v
           end
 
+          opts.on("--[no-]pr-comments", "Include PR comments as feedback source (default: true for --pr)") do |v|
+            @options[:pr_comments] = v
+          end
+
           opts.on("--post-comment", "Post review as PR comment (requires --pr)") do
             @options[:post_comment] = true
           end

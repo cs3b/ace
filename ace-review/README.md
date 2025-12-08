@@ -2,7 +2,14 @@
 
 Automated review tool for the ACE framework. Provides preset-based analysis using LLM-powered insights with configurable focus areas and flexible prompt composition.
 
-**Version:** 0.22.0
+**Version:** 0.23.0
+
+## What's New in 0.23.0
+
+- **PR Comment Developer Feedback**: Extract and include developer feedback from PR comments and inline review threads
+  - New `--[no-]pr-comments` flag (default: true for `--pr` reviews)
+  - Creates `review-dev-feedback.md` alongside LLM reviews
+  - Integrates with multi-model synthesis for complete picture
 
 ## What's New in 0.22.0
 
@@ -217,6 +224,37 @@ ace-review --pr https://github.com/owner/repo/pull/789 --auto-execute
 
 # Review PR from different repository
 ace-review --pr owner/repo#123 --auto-execute
+```
+
+### Developer Feedback from PR Comments
+
+By default, PR reviews include developer feedback extracted from PR comments and review threads. This creates a `review-dev-feedback.md` file alongside the LLM reviews.
+
+```bash
+# Include PR comments in review (default)
+ace-review --pr 123 --auto-execute
+
+# Explicitly include PR comments
+ace-review --pr 123 --pr-comments --auto-execute
+
+# Skip PR comments (LLM analysis only)
+ace-review --pr 123 --no-pr-comments --auto-execute
+```
+
+The developer feedback includes:
+- **Issue comments**: General PR discussion
+- **Review comments**: Inline code review threads with file:line references
+- **Review state**: Approvals and change requests
+
+When multi-model synthesis is enabled, developer feedback is included in the synthesis report to provide a complete picture combining LLM insights with human reviewer comments.
+
+**Configuration**: Control PR comments in `.ace/review/config.yml`:
+
+```yaml
+defaults:
+  pr_comments: true          # Include PR comments by default (default: true)
+  include_resolved: false    # Include resolved review threads (default: false)
+  include_bots: false        # Include bot comments (default: false)
 ```
 
 ### Post Reviews as PR Comments
@@ -850,6 +888,7 @@ Options:
 
 GitHub Pull Request options:
 - `--pr <identifier>` - Review GitHub PR (number, URL, or owner/repo#number)
+- `--[no-]pr-comments` - Include PR comments as developer feedback (default: true for --pr)
 - `--post-comment` - Post review as PR comment (requires --pr)
 - `--gh-timeout <seconds>` - Timeout for gh CLI operations in seconds (default: 30)
 
