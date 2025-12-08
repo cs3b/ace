@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.157] - 2025-12-08
+
+### ace-llm-models-dev v0.3.2 (Task 128.09)
+
+**OpenRouter Model Canonicalization**
+- Fixed sync false positives for OpenRouter models with routing suffixes (`:nitro`, `:floor`, `:online`, etc.)
+- New ModelNameCanonicalizer atom strips known OpenRouter suffixes before comparing against models.dev
+- Supports all 7 OpenRouter suffixes: `:nitro`, `:floor`, `:online`, `:free`, `:extended`, `:exacto`, `:thinking`
+- Provider-aware: only applies canonicalization to OpenRouter provider
+- Comprehensive tests following ADR-017 flat test structure
+
 ## [0.9.156] - 2025-12-06
 
 ### ace-llm v0.14.0 (Task 128.03)
