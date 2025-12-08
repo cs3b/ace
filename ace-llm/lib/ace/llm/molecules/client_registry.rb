@@ -230,13 +230,17 @@ module Ace
 
         # Load a single configuration file
         # @param file_path [String] Path to YAML configuration file
-        # @note Uses YAML.load_file with permitted_classes: [Symbol, Date] for backward
+        # @note Uses YAML.safe_load with permitted_classes: [Symbol, Date] for backward
         #       compatibility with existing configs that may use symbol keys. Provider configs
         #       are considered trusted sources (located in .ace/ cascade or gem directories).
         #       For untrusted input, use YAML.safe_load with string keys only.
-        # @see .ace-taskflow/v.0.9.0/ideas/20251206-011207-llm-enhance/ for migration to string-only keys
+        #       The aliases: true enables YAML anchor/alias support for DRY configs.
+        # @deprecated Symbol key support will be removed in v1.0.0. Please use string keys
+        #       in provider YAML configurations. See idea file:
+        #       .ace-taskflow/v.0.9.0/ideas/20251206-011207-llm-enhance/migrate-ace-llm-yaml-config-loading-from-symbol-to.s.md
         def load_configuration_file(file_path)
-          config = YAML.load_file(file_path, permitted_classes: [Symbol, Date])
+          content = File.read(file_path)
+          config = YAML.safe_load(content, permitted_classes: [Symbol, Date], aliases: true)
 
           # Validate required fields
           unless config["name"] && config["class"]

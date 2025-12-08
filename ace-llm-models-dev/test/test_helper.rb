@@ -2,11 +2,12 @@
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
-require "minitest/autorun"
+require "ace/test_support"
 require "ace/llm/models_dev"
 
 # Base test case for ace-llm-models-dev
-class ModelsDevTestCase < Minitest::Test
+# Inherits from AceTestCase for common utilities (fixture helpers, subprocess runner, etc.)
+class ModelsDevTestCase < AceTestCase
   # Sample provider data for tests
   def sample_provider_data
     {

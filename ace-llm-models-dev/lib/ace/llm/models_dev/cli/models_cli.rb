@@ -44,6 +44,13 @@ Examples:
           option :filter, type: :array, aliases: "-f", desc: "Filter by key:value (repeatable)"
           option :json, type: :boolean, desc: "Output as JSON"
           def search(query = nil)
+            # Validate filters before searching
+            filter_errors = Atoms::ModelFilter.validate(options[:filter])
+            unless filter_errors.empty?
+              filter_errors.each { |e| warn "Error: #{e}" }
+              return 1
+            end
+
             searcher = Molecules::ModelSearcher.new
             filters = parse_filters(options[:filter])
             limit = options[:limit] || 20
