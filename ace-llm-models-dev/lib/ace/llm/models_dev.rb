@@ -19,6 +19,7 @@ require_relative "models_dev/atoms/file_writer"
 require_relative "models_dev/atoms/model_filter"
 require_relative "models_dev/atoms/provider_config_reader"
 require_relative "models_dev/atoms/provider_config_writer"
+require_relative "models_dev/atoms/model_name_canonicalizer"
 
 # Models - Data structures
 require_relative "models_dev/models/provider_info"
