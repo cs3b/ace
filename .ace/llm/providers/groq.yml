@@ -5,7 +5,6 @@ models:
   - openai/gpt-oss-120b
   - openai/gpt-oss-20b
   - moonshotai/kimi-k2-instruct-0905
-  - mistral-saba-24b
 aliases:
   global:
     groq: groq:openai/gpt-oss-120b
