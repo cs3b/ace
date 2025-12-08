@@ -3,5 +3,5 @@
 require "ace/core"
 require "ace/test_support"
 
-# AceTestCase is now provided by ace-test-support
+# AceTestCase is now provided by ace-support-test-helpers
 # It includes all the helper methods we need

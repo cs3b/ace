@@ -7,4 +7,4 @@ gemspec
 
 # Use local ace-* gems in development
 gem "ace-support-core", path: "../ace-support-core"
-gem "ace-test-support", path: "../ace-test-support", group: [:development, :test]
+gem "ace-support-test-helpers", path: "../ace-support-test-helpers", group: [:development, :test]

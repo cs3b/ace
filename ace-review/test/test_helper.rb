@@ -41,7 +41,7 @@ class AceReviewTest < Minitest::Test
   def stub_ace_context
     return unless defined?(Ace::Context)
 
-    # Use shared fixtures from ace-test-support
+    # Use shared fixtures from ace-support-test-helpers
     @original_context_methods = {}
     Ace::TestSupport::Fixtures::ContextMocks.stub_load_file(@original_context_methods)
     Ace::TestSupport::Fixtures::ContextMocks.stub_load_auto(@original_context_methods)
@@ -59,7 +59,7 @@ class AceReviewTest < Minitest::Test
   def stub_git_extractor
     return unless defined?(Ace::Context::Atoms::GitExtractor)
 
-    # Use shared fixtures from ace-test-support
+    # Use shared fixtures from ace-support-test-helpers
     @original_git_methods = {}
     Ace::TestSupport::Fixtures::ContextMocks.stub_git_extractor(@original_git_methods)
   end

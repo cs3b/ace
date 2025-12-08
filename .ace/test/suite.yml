@@ -4,11 +4,6 @@ test_suite:
 
   # Packages to test in order of priority
   packages:
-    - name: ace-test-support
-      path: ace-test-support
-      group: foundation
-      priority: 2
-
     - name: ace-support-core
       path: ace-support-core
       group: foundation
