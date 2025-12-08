@@ -24,7 +24,7 @@ jobs:
         ruby: ['3.2', '3.3', '3.4']
         package:
           - ace-support-core
-          - ace-test-support
+          - ace-support-test-helpers
           - ace-test-runner
           - ace-context
           - ace-nav

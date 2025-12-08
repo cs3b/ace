@@ -7,4 +7,4 @@ gemspec
 
 gem "rake", "~> 13.0"
 gem "minitest", "~> 5.0"
-gem "ace-test-support", "~> 0.1", path: "../ace-test-support"
+gem "ace-support-test-helpers", "~> 0.9", path: "../ace-support-test-helpers"

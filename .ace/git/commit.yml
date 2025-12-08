@@ -22,7 +22,7 @@ git:
         - ace-nav
         - ace-taskflow
         - ace-test-runner
-        - ace-test-support
+        - ace-support-test-helpers
 
         # Project areas
         - dev-handbook
