@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-12-08
+
+### Fixed
+
+- OpenRouter model sync false positives for suffixed models (`:nitro`, `:floor`, `:online`, etc.)
+- ModelNameCanonicalizer now strips known routing suffixes before comparing against models.dev
+
+### Added
+
+- ModelNameCanonicalizer atom for OpenRouter model name canonicalization
+- Comprehensive tests for canonicalization following ADR-017 flat structure
+
 ## [0.3.1] - 2025-12-06
 
 ### Fixed
