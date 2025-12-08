@@ -6,43 +6,33 @@ models:
   - openai/gpt-oss-120b:nitro
   - openai/gpt-oss-20b:nitro
   - moonshotai/kimi-k2-0905:nitro
-  - qwen/qwen3-235b-a22b-2507:nitro
+  - qwen/qwen3-max
   # DeepSeek (exclusive to OpenRouter)
   - deepseek/deepseek-v3.2
-  - deepseek/deepseek-r1
   # Kimi/Moonshot
   - moonshotai/kimi-k2-thinking
   # Qwen
   - qwen/qwen3-coder
-  - qwen/qwq-32b
   # Others
-  - nousresearch/hermes-4-70b
   - z-ai/glm-4.6
   - minimax/minimax-m1
-  - rekaai/reka-flash-3
-  - mistralai/devstral-medium-2507
 aliases:
-  global:
+  models:
     # Fast inference (nitro = throughput)
-    gpt-oss-nitro: openrouter:openai/gpt-oss-120b:nitro
-    gpt-oss-small-nitro: openrouter:openai/gpt-oss-20b:nitro
+    oss-nitro: openrouter:openai/gpt-oss-120b:nitro
+    ss-small-nitro: openrouter:openai/gpt-oss-20b:nitro
     kimi-nitro: openrouter:moonshotai/kimi-k2-0905:nitro
-    qwen3-nitro: openrouter:qwen/qwen3-235b-a22b-2507:nitro
+    qwen3: openrouter:qwen/qwen3-max
     # Kimi
     kimi: openrouter:moonshotai/kimi-k2-0905
     kimi-think: openrouter:moonshotai/kimi-k2-thinking
     # DeepSeek
     deepseek: openrouter:deepseek/deepseek-v3.2
-    deepseek-r1: openrouter:deepseek/deepseek-r1
     # Qwen
     qwen-coder: openrouter:qwen/qwen3-coder
-    qwq: openrouter:qwen/qwq-32b
     # Others
-    hermes: openrouter:nousresearch/hermes-4-70b
     glm: openrouter:z-ai/glm-4.6
     minimax: openrouter:minimax/minimax-m1
-    reka: openrouter:rekaai/reka-flash-3
-    devstral: openrouter:mistralai/devstral-medium-2507
 api_key:
   env: OPENROUTER_API_KEY
   required: true

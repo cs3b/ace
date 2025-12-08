@@ -4,39 +4,20 @@ class: Ace::LLM::Organisms::XAIClient
 gem: ace-llm
 models:
   - grok-4
-  - grok-4-fast
   - grok-4-1-fast
   - grok-4-1-fast-non-reasoning
   - grok-4-fast-non-reasoning
   - grok-code-fast-1
-  - grok-3
-  - grok-3-fast
-  - grok-3-mini
-  - grok-2
 aliases:
   global:
     grok: xai:grok-4
     grokfast: xai:grok-4-1-fast
     grokcode: xai:grok-code-fast-1
-    grok4: xai:grok-4
-    grok4fast: xai:grok-4-fast
-    grok3: xai:grok-3
-    grok3fast: xai:grok-3-fast
   model:
     grok: grok-4
     fast: grok-4-1-fast
     fast-non: grok-4-1-fast-non-reasoning
     code: grok-code-fast-1
-    grok-4: grok-4
-    grok-4-fast: grok-4-fast
-    grok-4-1-fast: grok-4-1-fast
-    grok-4-1-fast-non-reasoning: grok-4-1-fast-non-reasoning
-    grok-4-fast-non-reasoning: grok-4-fast-non-reasoning
-    grok-code-fast-1: grok-code-fast-1
-    grok-3: grok-3
-    grok-3-fast: grok-3-fast
-    grok-3-mini: grok-3-mini
-    grok-2: grok-2
 api_key:
   env: XAI_API_KEY
   required: true
