@@ -1,7 +1,8 @@
-name: openai
+name: codex
 last_synced: 2025-12-05
-class: Ace::LLM::Organisms::OpenAIClient
-gem: ace-llm
+class: Ace::LLM::Providers::CLI::CodexClient
+gem: ace-llm-providers-cli
+models_dev_id: openai
 models:
   - gpt-5.1
   - gpt-5.1-chat-latest
@@ -9,24 +10,15 @@ models:
   - gpt-5.1-codex-max
   - gpt-5.1-codex-mini
 aliases:
-  global:
-    oagpt: openai:gpt
-    oacodex: openai:codex
-    oamax: openai:max
   model:
     gpt: gpt-5.1
-    codex: gpt-5.1-codex
     max: gpt-5.1-codex-max
-api_key:
-  env: OPENAI_API_KEY
-  required: true
-  description: OpenAI API key
+    codex: gpt-5.1-codex
+    mini: gpt-5.1-codex-mini
 capabilities:
   - text_generation
-  - streaming
+  - code_generation
   - function_calling
-  - vision
-  - embeddings
 default_options:
   temperature: 0.7
   max_tokens: 4096

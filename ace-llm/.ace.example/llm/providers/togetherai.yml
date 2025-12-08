@@ -1,19 +1,18 @@
 name: togetherai
+last_synced: 2025-12-05
 class: Ace::LLM::Organisms::TogetherAIClient
 gem: ace-llm
 models:
-  - meta-llama/Llama-3-70b-chat-hf
-  - meta-llama/Llama-3-8b-chat-hf
-  - mistralai/Mixtral-8x7B-Instruct-v0.1
-  - NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO
+  - Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
+  - deepseek-ai/DeepSeek-V3
+  - moonshotai/Kimi-K2-Instruct
+  - openai/gpt-oss-120b
 aliases:
-  global:
-    llama3: togetherai:llama70b
-    mixtral: togetherai:mixtral
   model:
-    llama70b: meta-llama/Llama-3-70b-chat-hf
-    llama8b: meta-llama/Llama-3-8b-chat-hf
-    mixtral: mistralai/Mixtral-8x7B-Instruct-v0.1
+    qwen: Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
+    deepseek: deepseek-ai/DeepSeek-V3
+    kimi: moonshotai/Kimi-K2-Instruct
+    oss: openai/gpt-oss-120b
 api_key:
   env: TOGETHER_API_KEY
   required: true
