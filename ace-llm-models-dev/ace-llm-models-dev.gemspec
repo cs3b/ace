@@ -37,5 +37,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "faraday-retry", "~> 2.0"
 
+  # Optional runtime dependencies:
+  # - ace-support-core (~> 0.10): Enhanced project root detection (auto-discovered)
+  #   Without it, falls back to relative path detection from gem location
+
   # Development dependencies managed in root Gemfile
 end
