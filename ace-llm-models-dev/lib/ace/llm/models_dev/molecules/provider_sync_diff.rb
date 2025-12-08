@@ -58,7 +58,7 @@ module Ace
               filter_date = determine_filter_date(config, since_date, show_all)
 
               # Generate diff for this provider
-              results[provider_name] = diff_provider(config, provider_data, since_date: filter_date)
+              results[provider_name] = diff_provider(config, provider_data, since_date: filter_date, provider_name: provider_name)
               results[provider_name][:last_synced] = Atoms::ProviderConfigReader.extract_last_synced(config)
               results[provider_name][:models_dev_id] = models_dev_id if models_dev_id != provider_name
             end
@@ -70,10 +70,23 @@ module Ace
           # @param config [Hash] Current provider config
           # @param provider_data [Hash] models.dev provider data
           # @param since_date [Date, nil] Only include models released after this date
+          # @param provider_name [String, nil] Provider name for canonicalization (e.g., "openrouter")
           # @return [Hash] Diff result
-          def diff_provider(config, provider_data, since_date: nil)
+          def diff_provider(config, provider_data, since_date: nil, provider_name: nil)
             current_models = Set.new(Atoms::ProviderConfigReader.extract_models(config))
             models_dev_models = extract_models_dev_models(provider_data)
+
+            # Build a set of canonical model names from models.dev for efficient lookup
+            models_dev_canonical = Set.new(models_dev_models.keys)
+
+            # Build a mapping of canonical names to original names for current models
+            # This handles cases like "model:nitro" -> "model"
+            current_canonical_to_original = {}
+            current_models.each do |model_id|
+              canonical = Atoms::ModelNameCanonicalizer.canonicalize(model_id, provider: provider_name)
+              current_canonical_to_original[canonical] ||= []
+              current_canonical_to_original[canonical] << model_id
+            end
 
             added = []
             added_with_dates = {}
@@ -82,8 +95,12 @@ module Ace
             deprecated = []
 
             # Check models.dev models against current config
+            # Use canonical names for matching
             models_dev_models.each do |model_id, model_data|
-              if current_models.include?(model_id)
+              # Check if any current model (or its canonical form) matches this models.dev model
+              has_match = current_canonical_to_original.key?(model_id)
+
+              if has_match
                 if model_data[:status] == "deprecated"
                   deprecated << model_id
                 else
@@ -106,8 +123,10 @@ module Ace
             end
 
             # Check for removed models (in config but not in models.dev)
+            # Use canonical names to avoid false positives for suffixed models
             current_models.each do |model_id|
-              unless models_dev_models.key?(model_id)
+              canonical = Atoms::ModelNameCanonicalizer.canonicalize(model_id, provider: provider_name)
+              unless models_dev_canonical.include?(canonical)
                 removed << model_id
               end
             end
