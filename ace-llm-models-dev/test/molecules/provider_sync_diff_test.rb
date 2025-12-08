@@ -348,4 +348,140 @@ class ProviderSyncDiffTest < ModelsDevTestCase
     assert_equal ["new-model"], result["anthropic"][:added]
     @cache_manager.verify
   end
+
+  # OpenRouter canonicalization tests (model suffix handling)
+
+  def test_diff_provider_does_not_report_nitro_suffix_as_removed_for_openrouter
+    # Config has model:nitro, models.dev has model (canonical)
+    config = { "models" => ["openai/gpt-4:nitro", "anthropic/claude-3"] }
+    provider_data = {
+      "models" => {
+        "openai/gpt-4" => { "name" => "GPT-4" },
+        "anthropic/claude-3" => { "name" => "Claude 3" }
+      }
+    }
+
+    result = @diff.diff_provider(config, provider_data, provider_name: "openrouter")
+
+    assert_equal :ok, result[:status]
+    assert_empty result[:removed], "Model with :nitro suffix should not be marked as removed"
+    assert_includes result[:unchanged], "openai/gpt-4"
+    assert_includes result[:unchanged], "anthropic/claude-3"
+  end
+
+  def test_diff_provider_handles_multiple_openrouter_suffixes
+    config = { "models" => [
+      "openai/gpt-4:nitro",
+      "meta/llama-3:free",
+      "anthropic/claude-3:floor",
+      "deepseek/deepseek-r1:online"
+    ] }
+    provider_data = {
+      "models" => {
+        "openai/gpt-4" => { "name" => "GPT-4" },
+        "meta/llama-3" => { "name" => "Llama 3" },
+        "anthropic/claude-3" => { "name" => "Claude 3" },
+        "deepseek/deepseek-r1" => { "name" => "DeepSeek R1" }
+      }
+    }
+
+    result = @diff.diff_provider(config, provider_data, provider_name: "openrouter")
+
+    assert_equal :ok, result[:status]
+    assert_empty result[:removed], "Models with suffixes should not be marked as removed"
+  end
+
+  def test_diff_provider_reports_truly_removed_models_for_openrouter
+    # Model that doesn't exist in models.dev even without suffix
+    config = { "models" => ["nonexistent/model:nitro", "openai/gpt-4"] }
+    provider_data = {
+      "models" => {
+        "openai/gpt-4" => { "name" => "GPT-4" }
+      }
+    }
+
+    result = @diff.diff_provider(config, provider_data, provider_name: "openrouter")
+
+    assert_equal :ok, result[:status]
+    assert_includes result[:removed], "nonexistent/model:nitro"
+    assert_equal 1, result[:removed].size
+  end
+
+  def test_diff_provider_matches_suffixed_model_as_unchanged
+    # When config has model:nitro and models.dev has model, it should be unchanged
+    config = { "models" => ["moonshotai/kimi-k2-0905:nitro"] }
+    provider_data = {
+      "models" => {
+        "moonshotai/kimi-k2-0905" => { "name" => "Kimi K2" }
+      }
+    }
+
+    result = @diff.diff_provider(config, provider_data, provider_name: "openrouter")
+
+    assert_equal :ok, result[:status]
+    assert_empty result[:removed]
+    assert_includes result[:unchanged], "moonshotai/kimi-k2-0905"
+  end
+
+  def test_diff_provider_real_openrouter_scenario
+    # Real-world scenario from the issue
+    config = { "models" => [
+      "openai/gpt-oss-120b:nitro",
+      "openai/gpt-oss-20b:nitro",
+      "moonshotai/kimi-k2-0905:nitro",
+      "qwen/qwen3-235b-a22b-2507:nitro",
+      "deepseek/deepseek-v3.2"  # No suffix
+    ] }
+    provider_data = {
+      "models" => {
+        "openai/gpt-oss-120b" => { "name" => "GPT-OSS 120B" },
+        "openai/gpt-oss-20b" => { "name" => "GPT-OSS 20B" },
+        "moonshotai/kimi-k2-0905" => { "name" => "Kimi K2" },
+        "qwen/qwen3-235b-a22b-2507" => { "name" => "Qwen3 235B" },
+        "deepseek/deepseek-v3.2" => { "name" => "DeepSeek V3.2" }
+      }
+    }
+
+    result = @diff.diff_provider(config, provider_data, provider_name: "openrouter")
+
+    assert_equal :ok, result[:status]
+    assert_empty result[:removed], "No models should be marked as removed"
+    assert_empty result[:added], "No models should be marked as added"
+  end
+
+  def test_diff_provider_non_openrouter_ignores_canonicalization
+    # Non-OpenRouter provider should NOT strip suffixes
+    config = { "models" => ["model:nitro"] }
+    provider_data = {
+      "models" => {
+        "model" => { "name" => "Model" }
+      }
+    }
+
+    result = @diff.diff_provider(config, provider_data, provider_name: "anthropic")
+
+    assert_equal :ok, result[:status]
+    assert_includes result[:removed], "model:nitro"
+  end
+
+  def test_generate_passes_provider_name_for_openrouter_canonicalization
+    models_dev_data = {
+      "openrouter" => {
+        "models" => {
+          "openai/gpt-4" => { "name" => "GPT-4" }
+        }
+      }
+    }
+    @cache_manager.expect :read, models_dev_data
+
+    current_configs = {
+      "openrouter" => { "name" => "openrouter", "models" => ["openai/gpt-4:nitro"] }
+    }
+
+    result = @diff.generate(current_configs, show_all: true)
+
+    assert_equal :ok, result["openrouter"][:status]
+    assert_empty result["openrouter"][:removed]
+    @cache_manager.verify
+  end
 end
