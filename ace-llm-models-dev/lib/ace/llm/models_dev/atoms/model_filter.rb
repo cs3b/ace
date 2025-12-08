@@ -75,6 +75,20 @@ module Ace
               end
             end
 
+            # Validate filter strings and return errors for invalid ones
+            # @param filter_strings [Array<String>] Array of "key:value" strings
+            # @return [Array<String>] Array of error messages (empty if all valid)
+            def validate(filter_strings)
+              return [] if filter_strings.nil? || filter_strings.empty?
+
+              errors = []
+              filter_strings.each do |filter_string|
+                parsed = parse(filter_string)
+                errors << "Invalid filter format '#{filter_string}'. Use key:value" if parsed.nil?
+              end
+              errors
+            end
+
             private
 
             # Parse boolean string value

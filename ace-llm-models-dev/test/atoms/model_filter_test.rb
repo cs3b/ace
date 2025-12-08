@@ -186,6 +186,39 @@ class ModelFilterTest < ModelsDevTestCase
     assert_equal({}, result)
   end
 
+  # Test validate method
+  def test_validate_all_valid_filters
+    result = @filter.validate(["provider:openai", "reasoning:true"])
+
+    assert_empty result
+  end
+
+  def test_validate_returns_errors_for_invalid_filters
+    result = @filter.validate(["provider:openai", "badfilter", "another_bad"])
+
+    assert_equal 2, result.size
+    assert_includes result[0], "badfilter"
+    assert_includes result[1], "another_bad"
+  end
+
+  def test_validate_empty_array
+    result = @filter.validate([])
+
+    assert_empty result
+  end
+
+  def test_validate_nil
+    result = @filter.validate(nil)
+
+    assert_empty result
+  end
+
+  def test_validate_error_message_format
+    result = @filter.validate(["invalid"])
+
+    assert_equal ["Invalid filter format 'invalid'. Use key:value"], result
+  end
+
   private
 
   def create_test_models
