@@ -33,21 +33,21 @@ module TestHelper
   end
 
   def stub_ace_core_config(config_data = {})
-    # Use shared fixtures from ace-test-support
+    # Use shared fixtures from ace-support-test-helpers
     Ace::TestSupport::Fixtures::GitMocks.stub_ace_core_config(config_data) do
       yield
     end
   end
 
   def stub_ace_taskflow_output(task_id, output)
-    # Use shared fixtures from ace-test-support
+    # Use shared fixtures from ace-support-test-helpers
     Ace::TestSupport::Fixtures::GitMocks.stub_ace_taskflow_output(task_id, output) do
       yield
     end
   end
 
   def stub_git_command(output: "", error: "", exit_status: 0)
-    # Use shared fixtures from ace-test-support
+    # Use shared fixtures from ace-support-test-helpers
     Ace::TestSupport::Fixtures::GitMocks.stub_git_command(output: output, error: error, exit_status: exit_status) do
       yield
     end

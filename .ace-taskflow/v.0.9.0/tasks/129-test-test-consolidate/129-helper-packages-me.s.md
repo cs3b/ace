@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.129
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -28,10 +28,10 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 ```
 
 ### Success Criteria
-- [ ] `ace-test-support/` directory is deleted
-- [ ] `ace-git-worktree` gemspec updated to use `ace-support-test-helpers`
-- [ ] All tests pass via `ace-test-suite`
-- [ ] `bundle install` completes without errors
+- [x] `ace-test-support/` directory is deleted
+- [x] `ace-git-worktree` gemspec updated to use `ace-support-test-helpers`
+- [x] All tests pass via `ace-test-suite`
+- [x] `bundle install` completes without errors
 
 ## Objective
 
@@ -70,31 +70,26 @@ Only `ace-git-worktree` still depends on the old package.
 
 ## Execution Steps
 
-- [ ] Update `ace-git-worktree/ace-git-worktree.gemspec:48`
+- [x] Update `ace-git-worktree/ace-git-worktree.gemspec:48`
   - Change: `spec.add_development_dependency 'ace-test-support'`
   - To: `spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9'`
 
-- [ ] Update comments in test_helper.rb files (hygiene)
+- [x] Update comments in test_helper.rb files (hygiene)
   - `ace-support-core/test/test_helper.rb:6`
   - `ace-context/test/test_helper.rb:7`
   - `ace-docs/test/test_helper.rb:6`
   - `ace-git-worktree/test/test_helper.rb:36,43,50`
   - `ace-review/test/test_helper.rb:44,62`
 
-- [ ] Delete `ace-test-support/` directory
-  ```bash
-  rm -rf ace-test-support/
-  ```
+- [x] Delete `ace-test-support/` directory
 
-- [ ] Regenerate Gemfile.lock
-  ```bash
-  bundle install
-  ```
+- [x] Update Gemfiles in individual gems (ace-nav, ace-review, ace-support-markdown)
 
-- [ ] Run full test suite
-  ```bash
-  ace-test-suite
-  ```
+- [x] Update config files (.ace/test/suite.yml, .ace/git/commit.yml, .github/workflows/test.yml)
+
+- [x] Regenerate Gemfile.lock (bundle install)
+
+- [x] Run full test suite - all tests pass
 
 ## Out of Scope
 

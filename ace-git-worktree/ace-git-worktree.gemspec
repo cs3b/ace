@@ -45,6 +45,6 @@ Gem::Specification.new do |spec|
   # Development dependencies are managed in the root Gemfile
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'minitest'
-  spec.add_development_dependency 'ace-test-support'
+  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9'
 end
 
