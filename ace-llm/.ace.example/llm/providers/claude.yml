@@ -1,0 +1,27 @@
+name: claude
+last_synced: 2025-12-05
+class: Ace::LLM::Providers::CLI::ClaudeCodeClient
+gem: ace-llm-providers-cli
+models_dev_id: anthropic
+models:
+  - claude-haiku-4-5
+  - claude-opus-4-5
+  - claude-sonnet-4-5
+aliases:
+  global:
+    cc: claude:sonnet
+    cc-opus: claude:opus
+    cc-sonnet: claude:sonnet
+    cc-haiku: claude:haiku
+  model:
+    opus: claude-opus-4-5
+    sonnet: claude-sonnet-4-5
+    haiku: claude-haiku-4-5
+capabilities:
+  - text_generation
+  - streaming
+  - function_calling
+  - vision
+default_options:
+  temperature: 0.7
+  max_tokens: 4096

@@ -1,9 +1,10 @@
 name: lmstudio
+last_synced: 2025-12-05
 class: Ace::LLM::Organisms::LMStudioClient
 gem: ace-llm
+# Models are user-defined locally in LM Studio and not synced from models.dev.
+# This list is intentionally empty.
 models:
-  - local-model
-  - custom-model
 aliases:
   global:
     local: lmstudio:local
