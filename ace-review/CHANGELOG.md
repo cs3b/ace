@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2025-12-08
+
+### Added
+- **PR Comment Developer Feedback**: Extract developer feedback from PR comments and inline review threads
+  - New `--[no-]pr-comments` flag to control inclusion (default: true for `--pr` reviews)
+  - Creates `review-dev-feedback.md` report alongside LLM reviews
+  - Includes issue comments, review comments, and approval/change-request state
+  - Integrated into synthesis reports when multi-model review is used
+- **GhCommentResolver**: New molecule to reply to PRs and resolve review threads
+  - `reply` - Post comment with commit reference
+  - `resolve_thread` - Resolve review threads via GitHub GraphQL API
+  - `reply_and_resolve` - Combined operation for workflow automation
+- **Empty-Body Review Support**: Approvals and change-requests without body text now included with placeholder
+
+### Fixed
+- **Thread ID Validation**: Added format validation (`PRRT_xxx` pattern) to prevent GraphQL injection
+- **Markdown Table Safety**: Escape pipe characters in table preview to prevent broken rendering
+
+### Changed
+- **Pagination Warnings**: Warn when GraphQL results are truncated (>100 threads or >50 comments per thread)
+- **Comment Fetch Failure Logging**: Log warning instead of silent failure when PR comment fetch fails
+- **Table Readability**: Wrap IDs in backticks for improved readability in markdown tables
+
+### Documentation
+- **README Updated**: Document `--[no-]pr-comments` flag and developer feedback feature
+- **CLI Reference**: Added `--[no-]pr-comments` to GitHub PR options section
+
 ## [0.22.0] - 2025-12-03
 
 ### Added

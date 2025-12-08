@@ -144,6 +144,46 @@ class MultiModelCliTest < Minitest::Test
     # should use default when nothing is set
     assert_equal "google:gemini-2.5-flash", options.effective_model
   end
+
+  def test_cli_parses_pr_comments_flag_enabled
+    cli = Ace::Review::CLI.new
+
+    argv = ["--pr", "123", "--pr-comments", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    assert_equal true, options[:pr_comments]
+  end
+
+  def test_cli_parses_no_pr_comments_flag
+    cli = Ace::Review::CLI.new
+
+    argv = ["--pr", "123", "--no-pr-comments", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    assert_equal false, options[:pr_comments]
+  end
+
+  def test_cli_pr_comments_default_when_not_specified
+    cli = Ace::Review::CLI.new
+
+    argv = ["--pr", "123", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # When not specified, pr_comments should be nil (defaults handled by ReviewOptions)
+    assert_nil options[:pr_comments]
+  end
 end
 
 class MultiModelExecutorTest < Minitest::Test
