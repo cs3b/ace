@@ -10,6 +10,7 @@ module Ace
                       :prompt_guidelines, :model, :models, :dry_run, :verbose,
                       :auto_execute, :save_session, :session_dir,
                       :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
+                      :pr_comments, :pr_comment_data,
                       :no_synthesize, :synthesis_model, :no_auto_save,
                       :list_presets, :list_prompts, :help
 
@@ -50,6 +51,10 @@ module Ace
           @pr_metadata = hash[:pr_metadata]
           @gh_timeout = hash[:gh_timeout]
 
+          # PR comment options
+          @pr_comments = hash[:pr_comments]  # nil = use default, true/false = explicit
+          @pr_comment_data = nil  # Populated during execution
+
           # Synthesis options
           @no_synthesize = hash[:no_synthesize] || false
           @synthesis_model = hash[:synthesis_model]
@@ -85,6 +90,19 @@ module Ace
         # Check if comment posting should be triggered (includes dry-run preview)
         def should_post_comment?
           pr_review? && post_comment
+        end
+
+        # Check if PR comments should be included as feedback source
+        # Enabled by default for PR reviews, can be disabled with --no-pr-comments
+        def include_pr_comments?
+          return false unless pr_review?
+
+          # Explicit flag overrides everything
+          return pr_comments unless pr_comments.nil?
+
+          # Check config default (defaults to true for PR reviews)
+          config_default = Ace::Review.get("defaults", "pr_comments")
+          config_default.nil? ? true : config_default
         end
 
         # Check if output should be saved

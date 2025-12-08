@@ -175,6 +175,20 @@ module Ace
           # Store PR metadata in options for later use
           options.pr_metadata = result[:metadata]
 
+          # Fetch PR comments if enabled
+          if options.include_pr_comments?
+            comments_result = Ace::Review::Molecules::GhPrCommentFetcher.fetch(pr_identifier, fetch_options)
+            if comments_result[:success]
+              if Ace::Review::Molecules::GhPrCommentFetcher.has_comments?(comments_result)
+                options.pr_comment_data = comments_result
+              end
+            else
+              # Log warning but continue with review (comments are optional enhancement)
+              warn "Warning: Failed to fetch PR comments: #{comments_result[:error]}. " \
+                   "Review will proceed without developer feedback."
+            end
+          end
+
           # Create cache directory
           cache_dir = options.session_dir || create_cache_directory
 
@@ -517,6 +531,9 @@ module Ace
             user_prompt_path: prompt_result[:user_prompt_path]
           }
 
+          # Include PR comment data if available
+          review_data[:pr_comment_data] = options.pr_comment_data if options.pr_comment_data
+
           review_data
         end
 
@@ -677,6 +694,15 @@ module Ace
           # Save metadata (committable - no .tmp extension)
           metadata = create_metadata(review_data)
           File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
+
+          # Save PR comments as developer feedback report if available
+          if review_data[:pr_comment_data]
+            feedback_report = Ace::Review::Atoms::PrCommentFormatter.format(review_data[:pr_comment_data])
+            if feedback_report && !feedback_report.empty?
+              feedback_file = File.join(session_dir, "review-dev-feedback.md")
+              File.write(feedback_file, feedback_report)
+            end
+          end
         end
 
         def save_review_output(response, review_data, session_dir)
@@ -1072,6 +1098,10 @@ module Ace
           report_paths = result[:results].select { |_, r| r[:success] }
                                         .map { |_, r| r[:output_file] }
                                         .compact
+
+          # Include dev-feedback report if it exists (PR comments)
+          dev_feedback_path = File.join(session_dir, "review-dev-feedback.md")
+          report_paths << dev_feedback_path if File.exist?(dev_feedback_path)
 
           return nil if report_paths.size < 2
 

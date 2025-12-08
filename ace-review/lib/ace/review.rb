@@ -22,6 +22,7 @@ require_relative "review/errors"
 require_relative "review/atoms/context_normalizer"
 require_relative "review/atoms/preset_validator"
 require_relative "review/atoms/slug_generator"
+require_relative "review/atoms/pr_comment_formatter"
 
 # Require all necessary components explicitly
 require_relative "review/molecules/context_composer"
@@ -35,7 +36,9 @@ require_relative "review/molecules/subject_extractor"
 require_relative "review/molecules/gh_cli_executor"
 require_relative "review/molecules/pr_identifier_parser"
 require_relative "review/molecules/gh_pr_fetcher"
+require_relative "review/molecules/gh_pr_comment_fetcher"
 require_relative "review/molecules/gh_comment_poster"
+require_relative "review/molecules/gh_comment_resolver"
 require_relative "review/molecules/multi_model_executor"
 require_relative "review/molecules/report_synthesizer"
 

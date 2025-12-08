@@ -139,10 +139,13 @@ module Ace
           basename = File.basename(path, ".md")
 
           # Handle different filename patterns:
+          # review-dev-feedback.md -> Developer Feedback (special case for PR comments)
           # review-report-gemini-2.5-flash.md -> gemini-2.5-flash
           # review-gemini-2-5-flash.md -> gemini-2-5-flash
           # review-report-gpt-4.md -> gpt-4
-          if basename.start_with?("review-report-")
+          if basename == "review-dev-feedback"
+            "Developer Feedback"
+          elsif basename.start_with?("review-report-")
             basename.sub(/^review-report-/, "")
           elsif basename.start_with?("review-")
             basename.sub(/^review-/, "")
