@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-12-09
+
+### Added
+- New 6-section default template structure: Purpose, Variables, Codebase Structure, Instructions, Workflow, Report
+- Updated enhance system prompt output format to match new template sections
+
 ## [0.4.0] - 2025-12-01
 
 ### Added
