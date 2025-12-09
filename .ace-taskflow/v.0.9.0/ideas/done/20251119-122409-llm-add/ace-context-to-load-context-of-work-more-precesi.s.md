@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-12-09T00:49:52+00:00
+---
+
 # Idea
 
 # ace-context to load context of work more precesise...

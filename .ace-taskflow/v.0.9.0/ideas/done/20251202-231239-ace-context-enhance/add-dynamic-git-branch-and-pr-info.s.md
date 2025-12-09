@@ -4,8 +4,9 @@ filename_suggestion: feat-context-git-pr-branch-info
 enhanced_at: 2025-12-02 23:12:38
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-12-09T00:49:46+00:00
 ---
-
 # Enhance ace-context with Dynamic Git Branch and PR Information
 
 ## Problem
