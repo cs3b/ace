@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2025-12-09
+
+### Fixed
+
+- **Convert to Orchestrator**: Create proper orchestrator + subtask structure
+  - Previously just renamed task file to `.00-orchestrator.s.md`, losing original as actionable work
+  - Now creates new orchestrator file (`.00`) with minimal template
+  - Moves original task content to subtask `.01` with updated ID and parent field
+  - Enables expected workflow where converting preserves original work as first subtask
+
+### Changed
+
+- **Task Reorganization Docs**: Update `reorganize-tasks.wf.md` for new convert behavior
+  - Document that original task becomes subtask `.01`
+  - Update example output to show orchestrator and subtask paths
+
+## [0.21.0] - 2025-12-09
+
+### Added
+
+- **Task Reorganization Workflow**: Restructure task hierarchy with `move --child-of`
+  - `ace-taskflow task move SUBTASK --child-of` promotes subtask to standalone task
+  - `ace-taskflow task move TASK --child-of PARENT` demotes task to subtask under parent
+  - `ace-taskflow task move TASK --child-of self` converts standalone to orchestrator
+  - `--dry-run` flag previews operations without executing
+  - New `reorganize-tasks.wf.md` workflow documentation
+  - Preserves auxiliary files (docs/, notes) during demotion
+
+### Changed
+
+- **Task Move Command**: Enhanced with `--child-of` option for hierarchy reorganization
+  - Coexists with existing release move functionality (`--release`, `--backlog`)
+  - Improved argument parsing with OptionParser
+
 ## [0.20.2] - 2025-12-09
 
 ### Fixed

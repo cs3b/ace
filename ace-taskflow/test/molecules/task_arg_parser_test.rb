@@ -344,4 +344,183 @@ class TaskArgParserTest < Minitest::Test
     assert_equal "draft", result[:metadata][:status]
     assert_equal "2h", result[:metadata][:estimate]
   end
+
+  # Tests for --dry-run in create
+
+  def test_parse_create_args_dry_run_long_flag
+    args = ["Test task", "--dry-run"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Test task", result[:title]
+    assert_equal true, result[:dry_run]
+  end
+
+  def test_parse_create_args_dry_run_short_flag
+    args = ["Test task", "-n"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Test task", result[:title]
+    assert_equal true, result[:dry_run]
+  end
+
+  def test_parse_create_args_dry_run_with_all_options
+    args = ["--title", "Test", "--status", "draft", "--dry-run", "--backlog"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal "Test", result[:title]
+    assert_equal "draft", result[:metadata][:status]
+    assert_equal true, result[:dry_run]
+    assert_equal "backlog", result[:release]
+  end
+
+  def test_parse_create_args_dry_run_defaults_to_false
+    args = ["Test task"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_create_args_with_optparse(args)
+
+    assert_equal false, result[:dry_run]
+  end
+
+  # Tests for parse_move_args_with_optparse
+
+  def test_parse_move_args_task_ref_only
+    args = ["019"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_nil result[:child_of]
+    assert_equal false, result[:dry_run]
+    assert_nil result[:release]
+  end
+
+  def test_parse_move_args_with_release_positional
+    args = ["019", "backlog"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "backlog", result[:release]
+  end
+
+  def test_parse_move_args_with_release_flag
+    args = ["019", "--release", "v.0.10.0"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "v.0.10.0", result[:release]
+  end
+
+  def test_parse_move_args_with_backlog_flag
+    args = ["019", "--backlog"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "backlog", result[:release]
+  end
+
+  def test_parse_move_args_child_of_with_parent
+    args = ["019", "--child-of", "121"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "121", result[:child_of]
+  end
+
+  def test_parse_move_args_child_of_short_flag
+    args = ["019", "-p", "121"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "121", result[:child_of]
+  end
+
+  def test_parse_move_args_child_of_promote_subtask
+    # --child-of without argument means promote subtask to standalone
+    args = ["121.01", "--child-of"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "121.01", result[:task_ref]
+    assert_equal :promote, result[:child_of]
+  end
+
+  def test_parse_move_args_child_of_self_for_orchestrator
+    args = ["019", "--child-of", "self"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "self", result[:child_of]
+  end
+
+  def test_parse_move_args_with_dry_run_long
+    args = ["019", "--child-of", "121", "--dry-run"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "121", result[:child_of]
+    assert_equal true, result[:dry_run]
+  end
+
+  def test_parse_move_args_with_dry_run_short
+    args = ["019", "-n", "--child-of", "121"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "121", result[:child_of]
+    assert_equal true, result[:dry_run]
+  end
+
+  def test_parse_move_args_qualified_ref
+    args = ["v.0.9.0+task.019", "--child-of", "v.0.9.0+task.121"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "v.0.9.0+task.019", result[:task_ref]
+    assert_equal "v.0.9.0+task.121", result[:child_of]
+  end
+
+  def test_parse_move_args_empty
+    args = []
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_nil result[:task_ref]
+    assert_nil result[:child_of]
+    assert_equal false, result[:dry_run]
+    assert_nil result[:release]
+  end
+
+  def test_parse_move_args_all_options
+    args = ["019", "--child-of", "121", "--dry-run", "--release", "v.0.10.0"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "121", result[:child_of]
+    assert_equal true, result[:dry_run]
+    assert_equal "v.0.10.0", result[:release]
+  end
+
+  def test_parse_move_args_help_flag_exits
+    args = ["--help"]
+
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    begin
+      assert_raises(SystemExit) do
+        Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+      end
+
+      output = $stdout.string
+      assert_includes output, "Usage: ace-taskflow task move"
+      assert_includes output, "--child-of"
+      assert_includes output, "--dry-run"
+    ensure
+      $stdout = original_stdout
+    end
+  end
+
+  def test_parse_move_args_release_flag_overrides_positional
+    # When both positional release and --release flag are provided, flag wins
+    args = ["019", "backlog", "--release", "v.0.10.0"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "019", result[:task_ref]
+    assert_equal "v.0.10.0", result[:release]
+  end
 end
