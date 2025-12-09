@@ -3,7 +3,7 @@ id: v.0.9.0+task.080
 status: pending
 priority: medium
 estimate: 1-2 days
-dependencies: [079]
+dependencies: [v.0.9.0+task.079]
 ---
 
 # Add JSON Schema validation to ace-support-markdown (v0.2.0)

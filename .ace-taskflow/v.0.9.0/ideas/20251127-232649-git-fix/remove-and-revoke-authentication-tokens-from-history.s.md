@@ -1,5 +1,5 @@
 ---
-title: Secure Git History: Remove and Revoke Authentication Tokens
+title: "Secure Git History: Remove and Revoke Authentication Tokens"
 filename_suggestion: fix-git-security-token-history
 enhanced_at: 2025-11-27 23:26:48
 location: active

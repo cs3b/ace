@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2025-12-09
+
+### Fixed
+
+- **Doctor Health Checks**: Improve scanning exclusions and validation
+  - Exclude `review/`, `docs/`, `qa/`, and `.backup.*` files from task scanning
+  - Accept terminal states (`superseded`, `cancelled`, `skipped`) in done/ directory
+  - Support hierarchical subtask IDs in frontmatter validation (e.g., `v.X.Y.Z+task.NNN.NN`)
+- **Task Directory Mover**: Add backup file cleanup before moving to done/
+  - Automatically remove `.backup.*` files when moving tasks to done/ directory
+- **Statistics Counting**: Restrict glob to `tasks/` directory only
+  - Prevents matching idea files with task-like naming patterns in `docs/ideas/`
+  - Ensures accurate task counts and completion percentages
+
 ## [0.20.1] - 2025-12-02
 
 ### Fixed

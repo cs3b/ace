@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Idea
 
 # ace-taskflow task done -> fuckup the file (we were...
