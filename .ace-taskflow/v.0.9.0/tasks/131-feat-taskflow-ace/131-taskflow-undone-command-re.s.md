@@ -10,17 +10,17 @@ dependencies: []
 
 ## Description
 
-Implement a new `ace-taskflow undone <task_identifier>` command that allows reopening of completed tasks. This command will locate a task in the `.ace-taskflow/done` directory, move it back to the active release folder, and update its status to `in-progress` with an updated timestamp. This addresses a critical gap in task lifecycle management where tasks need to be reactivated due to new information, incomplete work, or shifting priorities.
+Implement a new `ace-taskflow undone <task_identifier>` command that allows reopening of completed tasks. This command will locate a task in the `.ace-taskflow/<release>/tasks/done` directory, move it back to the active tasks folder, and update its status to `in-progress` with an updated timestamp. This addresses a critical gap in task lifecycle management where tasks need to be reactivated due to new information, incomplete work, or shifting priorities.
 
 ## Problem Statement
 
-Currently, tasks moved to the `.ace-taskflow/done` directory are considered permanently closed. There is no standardized CLI command to revert a completed task back to an active state, requiring manual file system operations and metadata editing. This limitation hinders agile development practices and creates friction for both human developers and AI agents managing task workflows.
+Currently, tasks moved to the `.ace-taskflow/<release>/tasks/done` directory are considered permanently closed. There is no standardized CLI command to revert a completed task back to an active state, requiring manual file system operations and metadata editing. This limitation hinders agile development practices and creates friction for both human developers and AI agents managing task workflows.
 
 ## Acceptance Criteria
 
 - [ ] **CLI Command**: `ace-taskflow undone <task_identifier>` command is implemented and functional
-- [ ] **Task Discovery**: Locates task file in `.ace-taskflow/done` directory by task ID, partial title, or filename
-- [ ] **File Movement**: Moves task markdown file from `done/` directory back to active `.ace-taskflow/vX.Y/release` folder
+- [ ] **Task Discovery**: Locates task file in `.ace-taskflow/<release>/tasks/done` directory by task ID, partial title, or filename
+- [ ] **File Movement**: Moves task markdown file from `done/` directory back to active `.ace-taskflow/<release>/tasks` folder
 - [ ] **Status Update**: Updates frontmatter `status` field to `in-progress` (or configurable default active status)
 - [ ] **Timestamp Update**: Updates `last-updated` timestamp in task frontmatter
 - [ ] **Target Release Detection**: Intelligently determines the current active release folder
@@ -37,21 +37,25 @@ Currently, tasks moved to the `.ace-taskflow/done` directory are considered perm
 ### Architecture (ATOM Pattern)
 
 **CLI Command** (`lib/ace/taskflow/commands/cli.rb`):
+
 - Add new `undone` command using Thor
 - Accept task identifier as argument
 - Invoke TaskReopener organism
 
 **Organism** (`Ace::Taskflow::Organisms::TaskReopener`):
+
 - Orchestrate entire reopening process
 - Coordinate between TaskFinder, FileManager, and FrontmatterManager
 - Handle error cases and validation
 
 **Molecules**:
+
 - `Ace::Taskflow::Molecules::TaskFinder`: Locate task file in done directory
 - `Ace::Taskflow::Molecules::FileManager`: Handle file movement operations
 - `Ace::Core::Molecules::FrontmatterManager`: Read, modify, and write task frontmatter
 
 **Atoms**:
+
 - Pure functions for path manipulation
 - YAML parsing/serialization helpers
 - String operations for task identification
@@ -65,6 +69,7 @@ Currently, tasks moved to the `.ace-taskflow/done` directory are considered perm
 ### Task Identification Strategy
 
 Support multiple identifier formats:
+
 - Task ID (e.g., `v.0.9.0+task.123` or `task.123` or `T-123`)
 - Partial title match (e.g., "undone command")
 - Filename pattern
