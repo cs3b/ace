@@ -237,7 +237,29 @@ Actions:
 4. Report results
 ```
 
-#### 3.7 Mark Subtask Complete
+#### 3.7 Commit Subtask Changes
+
+**IMPORTANT:** Commit after each subtask completes, before moving to the next.
+
+```bash
+# In worktree directory (or main repo if not using worktrees)
+git add -A
+git commit -m "feat(component): Implement [subtask-title]
+
+Completes subtask [subtask-id] of orchestrator [orchestrator-id]
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
+
+**Rationale:**
+- Each subtask's changes are isolated in their own commit
+- Enables granular review and rollback per subtask
+- If later subtasks fail, earlier work is preserved
+- Makes PR reviews more manageable
+
+#### 3.8 Mark Subtask Complete
 
 After all validations pass:
 
@@ -415,6 +437,7 @@ If subtask has unmet dependencies:
 - Each subtask has:
   - Worktree created/reused
   - Implementation completed by subagent
+  - **Changes committed** (one commit per subtask)
   - PR created targeting parent branch
   - Review cycle completed (max 2)
   - User validation passed
@@ -422,6 +445,7 @@ If subtask has unmet dependencies:
   - Status marked `done`
 - Progress summarized after each subtask
 - Final orchestrator summary provided
+- **Git history shows one commit per subtask** (not batched)
 
 ## Usage Example
 

@@ -113,9 +113,33 @@ If git tagging fails:
 - Add to warnings list
 - Include in final summary
 
-**2.5 Progress Update:**
+**2.5 Commit Changes:**
+
+**IMPORTANT:** Commit after each task completes, not at the end of the batch.
+
+```bash
+# Stage and commit changes for this task
+git add -A
+git commit -m "feat(component): Brief description of changes
+
+Completes task [task-id]: [task-title]
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
+
+**Rationale:**
+- Provides granular git history for easier review and rollback
+- Each task's changes are isolated in their own commit
+- Enables cherry-picking individual task implementations
+- Makes code review more manageable
+- If a later task fails, earlier tasks are already committed
+
+**2.6 Progress Update:**
 - Brief summary of work completed
 - Status transition confirmed (pending→done or pending→blocked)
+- Commit hash for this task's changes
 - Current success/failure count
 - Move to next task
 
@@ -228,4 +252,4 @@ Provide comprehensive summary including:
 - Maintain detailed progress logs
 - Continue on failure (collect all results)
 - Always provide comprehensive final summary
-- Commit changes are handled by individual work-on-task workflows
+- **Commit after each task** - do not batch all commits at the end

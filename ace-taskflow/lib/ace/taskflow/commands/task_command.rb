@@ -154,11 +154,11 @@ module Ace
           # Parse options using new OptionParser-based method
           begin
             options = Molecules::TaskArgParser.parse_create_args_with_optparse(args)
-          rescue OptionParser::InvalidOption => e
+          rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
             puts "Error: #{e.message}"
             puts "\nUsage: ace-taskflow task create [TITLE] [options]"
             puts "Run 'ace-taskflow task create --help' for full usage"
-            exit 1
+            return 1
           end
 
           title = options[:title]
@@ -168,7 +168,13 @@ module Ace
             puts "\nUsage: ace-taskflow task create <title> [options]"
             puts "   or: ace-taskflow task create --title 'Task title' [options]"
             puts "\nRun 'ace-taskflow task create --help' for full usage"
-            exit 1
+            return 1
+          end
+
+          # Handle dry-run mode
+          if options[:dry_run]
+            display_create_dry_run(title, options)
+            return 0
           end
 
           # Route based on parent_ref presence
@@ -186,10 +192,40 @@ module Ace
           if result[:success]
             puts result[:message]
             puts "Path: #{result[:path]}"
+            0
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            1
           end
+        end
+
+        def display_create_dry_run(title, options)
+          puts "[DRY-RUN] Would create task:"
+          puts "  Title: #{title}"
+          puts "  Release: #{options[:release]}"
+
+          if options[:parent_ref]
+            puts "  Parent: #{options[:parent_ref]} (subtask)"
+          end
+
+          metadata = options[:metadata] || {}
+          puts "  Status: #{metadata[:status] || 'pending'}"
+          puts "  Estimate: #{metadata[:estimate] || 'TBD'}"
+
+          if metadata[:dependencies]&.any?
+            puts "  Dependencies: #{metadata[:dependencies].join(', ')}"
+          end
+
+          # Show estimated path pattern
+          release_display = options[:release] == "current" ? "<current-release>" : options[:release]
+          if options[:parent_ref]
+            puts "  Path: .ace-taskflow/#{release_display}/tasks/<parent-dir>/<id>-<slug>.s.md"
+          else
+            puts "  Path: .ace-taskflow/#{release_display}/tasks/<id>-<slug>/<id>-<slug>.s.md"
+          end
+
+          puts ""
+          puts "No files created (dry-run mode)"
         end
 
         def start_task(args)
@@ -233,24 +269,78 @@ module Ace
         end
 
         def move_task(args)
-          reference = args[0]
-          target = args[1]
-
-          unless reference && target
-            puts "Usage: ace-taskflow task move <reference> <target>"
-            puts "Examples:"
-            puts "  ace-taskflow task move 019 backlog"
-            puts "  ace-taskflow task move backlog+025 v.0.10.0"
-            exit 1
+          # Parse arguments using new OptionParser-based method
+          begin
+            options = Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+          rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
+            puts "Error: #{e.message}"
+            puts "\nUsage: ace-taskflow task move TASK_REF [options]"
+            puts "Run 'ace-taskflow task move --help' for full usage"
+            return 1
           end
 
-          result = @manager.move_task(reference, target)
+          reference = options[:task_ref]
+
+          unless reference
+            puts "Error: Task reference required"
+            puts "\nUsage: ace-taskflow task move TASK_REF [options]"
+            puts "Run 'ace-taskflow task move --help' for full usage"
+            return 1
+          end
+
+          # Route based on --child-of value
+          result = case options[:child_of]
+          when :promote
+            # --child-of without value: promote subtask to standalone
+            @manager.promote_to_standalone(reference, dry_run: options[:dry_run])
+          when "self"
+            # --child-of self: convert to orchestrator
+            @manager.convert_to_orchestrator(reference, dry_run: options[:dry_run])
+          when String
+            # --child-of PARENT: demote to subtask
+            @manager.demote_to_subtask(reference, options[:child_of], dry_run: options[:dry_run])
+          else
+            # No --child-of: release move (dry-run not yet supported for release moves)
+            release_target = options[:release]
+            unless release_target
+              puts "Error: Target release required (use --release VERSION, --backlog, or positional argument)"
+              puts "\nUsage: ace-taskflow task move TASK_REF TARGET_RELEASE"
+              puts "   or: ace-taskflow task move TASK_REF --release VERSION"
+              puts "   or: ace-taskflow task move TASK_REF --child-of PARENT"
+              return 1
+            end
+            if options[:dry_run]
+              # TODO: Implement full dry-run support for release moves (show file operations)
+              puts "Note: --dry-run is not yet supported for release moves. Showing what would happen:"
+              puts "  - Move task #{reference} to release #{release_target}"
+              return 0
+            end
+            @manager.move_task(reference, release_target)
+          end
 
           if result[:success]
             puts result[:message]
+            if result[:dry_run] && result[:operations]
+              puts "\nOperations that would be performed:"
+              result[:operations].each { |op| puts "  - #{op}" }
+            end
+            if result[:new_reference]
+              puts "New reference: #{result[:new_reference]}"
+            end
+            if result[:subtask_id] && !result[:dry_run]
+              puts "Subtask: #{result[:subtask_id]}"
+            end
+            # Handle both new_path (legacy) and orchestrator_path/subtask_path (convert_to_orchestrator)
+            if result[:orchestrator_path] && !result[:dry_run]
+              puts "Orchestrator: #{result[:orchestrator_path]}"
+              puts "Subtask file: #{result[:subtask_path]}" if result[:subtask_path]
+            elsif result[:new_path] && !result[:dry_run]
+              puts "Path: #{result[:new_path]}"
+            end
+            0
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            1
           end
         end
 
@@ -575,10 +665,18 @@ module Ace
           puts "    --dependencies DEPS  Comma-separated dependency list (e.g., 018,019)"
           puts "    --backlog        Create in backlog"
           puts "    --release <name> Create in specific release"
+          puts "    --dry-run, -n    Preview what would be created without creating"
           puts "    -h, --help       Show create command help"
           puts "  start <reference>  Mark task as in-progress"
           puts "  done <reference>   Mark task as completed"
-          puts "  move <ref> <target> Move task to different release"
+          puts "  move <ref> [options] Move or reorganize task"
+          puts "    <target>         Move to release (positional, e.g., backlog)"
+          puts "    --release VER    Move to specific release"
+          puts "    --backlog        Move to backlog"
+          puts "    --child-of PARENT Demote to subtask under PARENT"
+          puts "    --child-of       Promote subtask to standalone (no argument)"
+          puts "    --child-of self  Convert standalone to orchestrator"
+          puts "    --dry-run, -n    Preview without executing"
           puts "  update <reference> Update task metadata"
           puts "  add-dependency <ref> --depends-on <dep>"
           puts "                     Add dependency to task"

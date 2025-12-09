@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.162] - 2025-12-09
+
+### ace-taskflow v0.21.1
+
+**Convert to Orchestrator Fix**
+- Fixed `--child-of self` to create proper orchestrator + subtask structure
+- Original task content now becomes subtask `.01` (preserves work as actionable item)
+- New orchestrator file (`.00`) created with minimal template
+- Updated workflow documentation for new behavior
+
+## [0.9.161] - 2025-12-09
+
+### ace-taskflow v0.21.0
+
+**Task Reorganization Workflow**
+- New `move --child-of` command for restructuring task hierarchy
+- Promote subtasks to standalone: `task move SUBTASK --child-of`
+- Demote tasks to subtasks: `task move TASK --child-of PARENT`
+- Convert to orchestrator: `task move TASK --child-of self`
+- `--dry-run` flag previews operations without executing
+- Preserves auxiliary files (docs/, notes) during demotion
+- New `reorganize-tasks.wf.md` workflow documentation
+
 ## [0.9.160] - 2025-12-09
 
 ### ace-prompt v0.5.1
