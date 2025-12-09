@@ -1,0 +1,45 @@
+---
+id: v.0.9.0+task.137
+status: draft
+priority: medium
+estimate: TBD
+dependencies: []
+---
+
+# REFACTOR: Rename done folder to archive in ace-taskflow
+
+## Description
+
+Rename the `done` folder in ace-taskflow to `archive` to avoid confusion with the task status "done". The current naming creates ambiguity since "done" is also a valid task status value. Using "archive" clarifies that this folder is for completed/archived tasks that are no longer active in the workflow.
+
+This is a terminology consistency improvement that will make the codebase clearer and reduce potential confusion for users and contributors.
+
+## Acceptance Criteria
+
+- [ ] Rename `.ace-taskflow/*/done/` folder to `.ace-taskflow/*/archive/`
+- [ ] Update all code references from `done` folder to `archive` folder
+- [ ] Update all documentation references from "done folder" to "archive folder"
+- [ ] Update CLI commands and help text that reference the done folder
+- [ ] Ensure backward compatibility or provide migration path for existing done folders
+- [ ] All tests pass with the new folder name
+- [ ] Update any examples or usage documentation
+
+## Implementation Notes
+
+**Scope**: This refactor affects:
+- Folder structure in `.ace-taskflow/`
+- ace-taskflow CLI commands that interact with done/archive folder
+- Documentation and help text
+- Tests that reference the done folder
+- Migration logic for existing repositories with done folders
+
+**Technical considerations**:
+- Consider auto-migration: detect old `done` folder and rename to `archive` on first run
+- Update path constants/configuration
+- Check for hardcoded "done" strings in the codebase
+- Verify git history preservation during folder rename
+
+**Related terminology**:
+- Task status values: draft, planned, active, done, blocked, cancelled
+- Folder names: ideas, tasks, archive (previously done)
+- This change makes it clear that "archive" is for tasks moved out of active workflow, while "done" is a status value
