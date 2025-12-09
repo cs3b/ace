@@ -5,14 +5,26 @@ context:
   commands: []
 ---
 
-# Prompt
+# Purpose
 
-[Your prompt here]
+[Describe what this prompt aims to accomplish]
 
-## Context Requirements
+## Variables
 
-[Describe what context is needed]
+[List any variables, parameters, or inputs needed]
 
-## Expected Output
+## Codebase Structure
 
-[Describe expected results]
+[Describe relevant codebase areas, files, or patterns]
+
+## Instructions
+
+[Step-by-step instructions for the task]
+
+## Workflow
+
+[Describe the workflow or process to follow]
+
+## Report
+
+[Describe expected output format and deliverables]
