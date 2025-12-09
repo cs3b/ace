@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2025-12-09
+
+### Added
+
+- **Bug Workflows**: Two complementary workflows for systematic bug handling
+  - `analyze-bug.wf.md`: Gathers bug info, attempts reproduction, identifies root cause, proposes regression tests, creates fix plan
+  - `fix-bug.wf.md`: Executes fix plan, creates regression tests, verifies resolution
+  - Claude command wrappers: `/ace:analyze-bug`, `/ace:fix-bug`
+  - Analysis caching in `.cache/ace-taskflow/bug-analysis/` for workflow continuity
+
 ## [0.21.1] - 2025-12-09
 
 ### Fixed
