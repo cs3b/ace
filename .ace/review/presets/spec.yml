@@ -6,6 +6,9 @@ instructions:
   base: "prompt://base/system"
   context:
     sections:
+      project_context:
+        presets: 
+          - project
       format:
         title: "Format Guidelines"
         description: "Standard output formatting and structure guidelines"
@@ -21,6 +24,13 @@ instructions:
         description: "Professional communication style"
         files:
           - "prompt://guidelines/tone"
+
+models:
+  - claude:opus              # Deep reasoning, architecture analysis
+  - codex:gpt-5.1-codex-max  # Code-focused, implementation details
+  - google:pro-preview
+  - xai:fast
+
 
 subject:
   context:
