@@ -15,6 +15,7 @@ require_relative "../atoms/task_reference_parser"
 require_relative "../atoms/path_builder"
 require_relative "../atoms/yaml_parser"
 require_relative "../atoms/dependency_validator"
+require_relative "../molecules/llm_slug_generator"
 
 module Ace
   module Taskflow
@@ -637,6 +638,349 @@ module Ace
           end
         end
 
+        # Promote a subtask to a standalone task
+        # @param reference [String] Subtask reference (e.g., "121.01", "v.0.9.0+task.121.01")
+        # @param dry_run [Boolean] If true, show what would happen without executing
+        # @return [Hash] Result with :success, :message, :new_reference, :new_path
+        def promote_to_standalone(reference, dry_run: false)
+          # Find the subtask
+          task = @task_loader.find_task_by_reference(reference)
+          unless task
+            return { success: false, message: "Subtask #{reference} not found" }
+          end
+
+          # Verify it's actually a subtask
+          unless task[:parent_id]
+            return { success: false, message: "Task #{reference} is not a subtask (no parent)" }
+          end
+
+          # Get release info
+          parsed = Atoms::TaskReferenceParser.parse(reference)
+          release = parsed[:qualified] ? parsed[:release] : "current"
+          release_path = resolve_release_path(release)
+          unless release_path
+            return { success: false, message: "Release not found: #{release}" }
+          end
+
+          # Generate new standalone task number and ID
+          new_number = generate_task_number(release_path)
+          new_id = generate_task_id(resolve_release_name(release_path), new_number)
+
+          # Generate slug for new task (skip LLM during dry-run for performance)
+          task_title = task[:title] || "Untitled Task"
+          slug_result = generate_slugs(task_title, task[:metadata] || {}, dry_run: dry_run)
+          folder_slug = slug_result[:folder_slug]
+          file_slug = slug_result[:file_slug]
+
+          # Build new paths
+          task_config = Ace::Taskflow.configuration
+          new_dir = File.join(release_path, task_config.task_dir, "#{new_number}-#{folder_slug}")
+          new_filename = "#{new_number}-#{file_slug}.s.md"
+          new_path = File.join(new_dir, new_filename)
+
+          new_reference = Atoms::TaskReferenceParser.format(resolve_release_name(release_path), new_number)
+
+          if dry_run
+            return {
+              success: true,
+              message: "[DRY-RUN] Would promote subtask #{reference} to standalone task #{new_reference}",
+              dry_run: true,
+              new_reference: new_reference,
+              new_path: new_path,
+              operations: [
+                "Create directory: #{new_dir}",
+                "Copy file: #{task[:path]} -> #{new_path}",
+                "Update ID in file: #{task[:id]} -> #{new_id}",
+                "Remove parent field from frontmatter",
+                "Delete original: #{task[:path]}"
+              ]
+            }
+          end
+
+          begin
+            # Create new directory
+            FileUtils.mkdir_p(new_dir)
+            FileUtils.mkdir_p(File.join(new_dir, "docs"))
+            FileUtils.mkdir_p(File.join(new_dir, "qa"))
+
+            # Read original content and update using YAML parsing for reliability
+            content = File.read(task[:path])
+            content = update_frontmatter(
+              content,
+              updates: { "id" => new_id },
+              remove: ["parent"]
+            )
+
+            # Write to new location
+            write_result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              new_path,
+              content,
+              backup: false,
+              validate: true
+            )
+
+            unless write_result[:success]
+              return { success: false, message: "Failed to write file: #{write_result[:errors].join(', ')}" }
+            end
+
+            # Delete original subtask file
+            File.delete(task[:path])
+
+            {
+              success: true,
+              message: "Promoted subtask #{reference} to standalone task #{new_reference}",
+              new_reference: new_reference,
+              new_path: new_path
+            }
+          rescue StandardError => e
+            { success: false, message: "Failed to promote subtask: #{e.message}" }
+          end
+        end
+
+        # Convert a standalone task to a subtask under a parent task
+        # @param task_ref [String] Task reference to demote (e.g., "019")
+        # @param parent_ref [String] Parent task reference (e.g., "121")
+        # @param dry_run [Boolean] If true, show what would happen without executing
+        # @return [Hash] Result with :success, :message, :new_reference, :new_path
+        def demote_to_subtask(task_ref, parent_ref, dry_run: false)
+          # Find the task to demote
+          task = @task_loader.find_task_by_reference(task_ref)
+          unless task
+            return { success: false, message: "Task #{task_ref} not found" }
+          end
+
+          # Verify it's not already a subtask
+          if task[:parent_id]
+            return { success: false, message: "Task #{task_ref} is already a subtask of #{task[:parent_id]}" }
+          end
+
+          # Find parent task
+          parent = @task_loader.find_task_by_reference(parent_ref)
+          unless parent
+            return { success: false, message: "Parent task #{parent_ref} not found" }
+          end
+
+          # Get parent release and path
+          parent_parsed = Atoms::TaskReferenceParser.parse(parent[:id] || parent_ref)
+          release = parent_parsed[:qualified] ? parent_parsed[:release] : "current"
+          release_path = resolve_release_path(release)
+          unless release_path
+            return { success: false, message: "Release not found: #{release}" }
+          end
+
+          # Find parent directory
+          parent_number = parent_parsed[:number]
+          parent_dir = find_parent_task_directory(release_path, parent_number)
+          unless parent_dir
+            return { success: false, message: "Parent task directory not found for #{parent_ref}" }
+          end
+
+          # Verify parent is an orchestrator
+          unless is_orchestrator_directory?(parent_dir, parent_number)
+            return {
+              success: false,
+              message: "Parent task #{parent_ref} is not an orchestrator. Convert it to orchestrator first."
+            }
+          end
+
+          # Get next subtask number
+          subtask_num = get_next_subtask_number(parent_dir, parent_number)
+          if subtask_num > 99
+            return { success: false, message: "Maximum subtask limit (99) reached for task #{parent_number}" }
+          end
+
+          # Generate new subtask ID
+          formatted_subtask = subtask_num.to_s.rjust(2, '0')
+          resolved_release = resolve_release_name(release_path)
+          new_id = "#{resolved_release}+task.#{parent_number}.#{formatted_subtask}"
+          parent_id = "#{resolved_release}+task.#{parent_number}"
+
+          # Generate slug for new subtask file (skip LLM during dry-run for performance)
+          task_title = task[:title] || "Untitled Task"
+          slug_result = generate_slugs(task_title, task[:metadata] || {}, dry_run: dry_run)
+          file_slug = slug_result[:file_slug]
+
+          # Build new path
+          new_filename = "#{parent_number}.#{formatted_subtask}-#{file_slug}.s.md"
+          new_path = File.join(parent_dir, new_filename)
+          new_reference = "#{resolved_release}+task.#{parent_number}.#{formatted_subtask}"
+
+          if dry_run
+            return {
+              success: true,
+              message: "[DRY-RUN] Would demote task #{task_ref} to subtask #{new_reference}",
+              dry_run: true,
+              new_reference: new_reference,
+              new_path: new_path,
+              operations: [
+                "Copy file: #{task[:path]} -> #{new_path}",
+                "Update ID in file: #{task[:id]} -> #{new_id}",
+                "Add parent field: #{parent_id}",
+                "Delete original directory: #{File.dirname(task[:path])}"
+              ]
+            }
+          end
+
+          begin
+            # Read original content and update using YAML parsing for reliability
+            content = File.read(task[:path])
+            content = update_frontmatter(
+              content,
+              updates: { "id" => new_id, "parent" => parent_id }
+            )
+
+            # Write to new location
+            write_result = Ace::Support::Markdown::Organisms::SafeFileWriter.write(
+              new_path,
+              content,
+              backup: false,
+              validate: true
+            )
+
+            unless write_result[:success]
+              return { success: false, message: "Failed to write file: #{write_result[:errors].join(', ')}" }
+            end
+
+            # Delete original task directory (with safety checks)
+            old_dir = File.dirname(task[:path])
+
+            # Safety check: only delete directories within .ace-taskflow
+            unless old_dir.include?(".ace-taskflow")
+              return {
+                success: false,
+                message: "Safety check failed: refusing to delete directory outside .ace-taskflow: #{old_dir}"
+              }
+            end
+
+            # Check for auxiliary files that would be lost
+            auxiliary_files = Dir.glob(File.join(old_dir, "**", "*")).select { |f| File.file?(f) }
+            auxiliary_files -= [task[:path]] # Exclude the task file itself
+            if auxiliary_files.any?
+              # Copy auxiliary files to new location (parent orchestrator directory)
+              dest_dir = File.dirname(new_path)
+              auxiliary_files.each do |aux_file|
+                rel_path = aux_file.sub(old_dir + "/", "")
+                dest_path = File.join(dest_dir, rel_path)
+                FileUtils.mkdir_p(File.dirname(dest_path))
+                FileUtils.cp(aux_file, dest_path)
+              end
+            end
+
+            FileUtils.rm_rf(old_dir)
+
+            {
+              success: true,
+              message: "Demoted task #{task_ref} to subtask #{new_reference}",
+              new_reference: new_reference,
+              new_path: new_path
+            }
+          rescue StandardError => e
+            { success: false, message: "Failed to demote task: #{e.message}" }
+          end
+        end
+
+        # Convert a standalone task to an orchestrator with the original task as first subtask
+        # @param reference [String] Task reference (e.g., "019")
+        # @param dry_run [Boolean] If true, show what would happen without executing
+        # @return [Hash] Result with :success, :message, :orchestrator_path, :subtask_path
+        def convert_to_orchestrator(reference, dry_run: false)
+          # Find the task
+          task = @task_loader.find_task_by_reference(reference)
+          unless task
+            return { success: false, message: "Task #{reference} not found" }
+          end
+
+          # Verify it's not a subtask
+          if task[:parent_id]
+            return { success: false, message: "Task #{reference} is a subtask. Cannot convert subtask to orchestrator." }
+          end
+
+          # Verify it's not already an orchestrator
+          if task[:is_orchestrator]
+            return { success: false, message: "Task #{reference} is already an orchestrator." }
+          end
+
+          # Get task info from reference
+          parsed = Atoms::TaskReferenceParser.parse(reference)
+          task_number = parsed[:number]
+          release = parsed[:qualified] ? parsed[:release] : "current"
+          release_path = resolve_release_path(release)
+          resolved_release = resolve_release_name(release_path)
+
+          # Build paths
+          task_dir = File.dirname(task[:path])
+          orchestrator_filename = "#{task_number}.00-orchestrator.s.md"
+          orchestrator_path = File.join(task_dir, orchestrator_filename)
+
+          # Generate slug for subtask file
+          task_title = task[:title] || "Untitled Task"
+          slug_result = generate_slugs(task_title, task[:metadata] || {}, dry_run: dry_run)
+          file_slug = slug_result[:file_slug]
+
+          subtask_filename = "#{task_number}.01-#{file_slug}.s.md"
+          subtask_path = File.join(task_dir, subtask_filename)
+
+          # Build IDs
+          orchestrator_id = "#{resolved_release}+task.#{task_number}"
+          subtask_id = "#{resolved_release}+task.#{task_number}.01"
+
+          if dry_run
+            return {
+              success: true,
+              message: "[DRY-RUN] Would convert task #{reference} to orchestrator with first subtask",
+              dry_run: true,
+              orchestrator_path: orchestrator_path,
+              subtask_path: subtask_path,
+              subtask_id: subtask_id,
+              operations: [
+                "Create orchestrator: #{orchestrator_path}",
+                "Move original to subtask: #{subtask_path}",
+                "Update subtask ID: #{task[:id]} -> #{subtask_id}",
+                "Add parent field: #{orchestrator_id}",
+                "Delete original: #{task[:path]}"
+              ]
+            }
+          end
+
+          begin
+            # Read original task content
+            original_content = File.read(task[:path])
+
+            # Create orchestrator content (minimal auto-generated)
+            orchestrator_content = build_orchestrator_content(
+              task: task,
+              orchestrator_id: orchestrator_id,
+              subtask_title: task_title
+            )
+
+            # Update original content for subtask: change ID and add parent
+            subtask_content = update_frontmatter(
+              original_content,
+              updates: { id: subtask_id, parent: orchestrator_id },
+              remove: []
+            )
+
+            # Write orchestrator file
+            File.write(orchestrator_path, orchestrator_content)
+
+            # Write subtask file
+            File.write(subtask_path, subtask_content)
+
+            # Delete original file
+            File.delete(task[:path])
+
+            {
+              success: true,
+              message: "Converted task #{reference} to orchestrator with subtask .01",
+              orchestrator_path: orchestrator_path,
+              subtask_path: subtask_path,
+              subtask_id: subtask_id
+            }
+          rescue StandardError => e
+            { success: false, message: "Failed to convert to orchestrator: #{e.message}" }
+          end
+        end
+
         # Get recent tasks
         # @param days [Integer] Number of days to look back
         # @param release [String] Release to search
@@ -839,6 +1183,125 @@ module Ace
           else
             basename
           end
+        end
+
+        # Factory method for creating slug generator
+        # @param debug [Boolean] Enable debug output
+        # @return [Molecules::LlmSlugGenerator] Slug generator instance
+        def create_slug_generator(debug: false)
+          Molecules::LlmSlugGenerator.new(debug: debug)
+        end
+
+        # Check if debug mode is enabled via ENV
+        # @return [Boolean] true if DEBUG=true
+        def debug_mode?
+          ENV["DEBUG"] == "true"
+        end
+
+        # Generate slugs for a task, returning preview slugs during dry-run
+        # @param task_title [String] Task title
+        # @param metadata [Hash] Task metadata
+        # @param dry_run [Boolean] Skip LLM for performance during dry-run
+        # @return [Hash] Slug result with :folder_slug and :file_slug
+        def generate_slugs(task_title, metadata, dry_run:)
+          if dry_run
+            { folder_slug: "preview-slug", file_slug: "preview-slug" }
+          else
+            slug_gen = create_slug_generator(debug: debug_mode?)
+            slug_gen.generate_task_slugs(task_title, metadata)
+          end
+        end
+
+        # Build orchestrator content from task data (minimal auto-generated)
+        # @param task [Hash] Task data with :title, :status, :priority, :metadata
+        # @param orchestrator_id [String] ID for the orchestrator
+        # @param subtask_title [String] Title of the first subtask
+        # @return [String] Orchestrator file content
+        def build_orchestrator_content(task:, orchestrator_id:, subtask_title:)
+          frontmatter = {
+            "id" => orchestrator_id,
+            "status" => task[:status] || "draft",
+            "priority" => task[:priority] || "medium"
+          }
+
+          # Copy dependencies if present
+          if task[:dependencies] && !task[:dependencies].empty?
+            frontmatter["dependencies"] = task[:dependencies]
+          end
+
+          # Copy estimate if present
+          if task[:metadata] && task[:metadata]["estimate"]
+            frontmatter["estimate"] = task[:metadata]["estimate"]
+          end
+
+          yaml_content = frontmatter.to_yaml.sub(/\A---\n?/, "")
+
+          body = <<~BODY
+
+            # #{task[:title] || 'Orchestrator'}
+
+            ## Overview
+
+            [Add orchestrator scope and overview]
+
+            ## Subtasks
+
+            - **01**: #{subtask_title}
+          BODY
+
+          "---\n#{yaml_content}---\n#{body}"
+        end
+
+        # Update frontmatter fields using YAML parsing for reliable manipulation
+        # @param content [String] File content with YAML frontmatter
+        # @param updates [Hash] Fields to add/update (string keys)
+        # @param remove [Array<String>] Fields to remove
+        # @return [String] Updated content
+        def update_frontmatter(content, updates: {}, remove: [])
+          # Extract frontmatter and body
+          result = Ace::Support::Markdown::Atoms::FrontmatterExtractor.extract(content)
+
+          unless result[:valid]
+            # If YAML parsing fails, fall back to original content
+            return content
+          end
+
+          frontmatter = result[:frontmatter]
+          body = result[:body]
+
+          # Apply updates
+          updates.each { |key, value| frontmatter[key.to_s] = value }
+
+          # Remove specified fields
+          remove.each { |key| frontmatter.delete(key.to_s) }
+
+          # Rebuild content with ordered frontmatter
+          rebuild_content_with_frontmatter(frontmatter, body)
+        end
+
+        # Rebuild content with ordered frontmatter
+        # @param frontmatter [Hash] Frontmatter data
+        # @param body [String] Body content
+        # @return [String] Rebuilt content
+        def rebuild_content_with_frontmatter(frontmatter, body)
+          # Define preferred key order for readability
+          key_order = %w[id status priority estimate dependencies parent subtasks]
+
+          ordered_fm = {}
+          key_order.each do |key|
+            ordered_fm[key] = frontmatter[key] if frontmatter.key?(key)
+          end
+          # Add remaining keys not in preferred order
+          frontmatter.each do |key, value|
+            ordered_fm[key] = value unless ordered_fm.key?(key)
+          end
+
+          # Use YAML dump and clean up the output
+          yaml_output = ordered_fm.to_yaml
+          # Remove the leading "---\n" from YAML output (we'll add our own)
+          yaml_content = yaml_output.sub(/\A---\n?/, "")
+
+          "---\n#{yaml_content}---\n#{body}"
         end
 
         # Generate subtask template content
