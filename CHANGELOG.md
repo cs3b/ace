@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.159] - 2025-12-09
+
+### ace-prompt v0.5.0
+
+**New 6-Section Template Structure**
+- Updated default template to use Purpose, Variables, Codebase Structure, Instructions, Workflow, Report sections
+- Synchronized enhance system prompt output format with new template structure
+
 ## [0.9.158] - 2025-12-09
 
 ### ace-taskflow v0.20.2
