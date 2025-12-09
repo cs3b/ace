@@ -1,10 +1,15 @@
+---
+status: done
+completed_at: 2025-12-09T00:29:56+00:00
+---
+
 # Idea
 
-# ace-test should be allow to run whole package e.g:...
+# ace-taskflow - rename done folder as archive so we...
 
 ## Description
 
-ace-test should be allow to run whole package e.g: ace-test ace-context (or any other valid path for folder with tests folder) it should run the same way someone will run the ace-test from the folder (e.g. ace-context)
+ace-taskflow - rename done folder as archive so we don't mix with task done
 
 ## Implementation Approach
 
@@ -26,8 +31,8 @@ _[This section will be enhanced with LLM integration]_
 ## Context
 
 - Location: active
-- Created: 2025-11-17 18:59:50
+- Created: 2025-12-05 18:40:06
 
 
 ---
-Captured: 2025-11-17 18:59:49
+Captured: 2025-12-05 18:39:56

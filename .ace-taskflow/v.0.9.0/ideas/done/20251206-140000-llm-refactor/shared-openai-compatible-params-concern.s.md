@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-12-09T00:23:09+00:00
+---
+
 # Idea
 
 Create shared OpenAICompatibleParams concern for LLM providers

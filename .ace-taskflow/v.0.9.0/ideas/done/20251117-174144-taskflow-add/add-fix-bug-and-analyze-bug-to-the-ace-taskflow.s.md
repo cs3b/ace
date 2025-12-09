@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2025-12-09T00:32:54+00:00
+---
+
 # Idea
 
 # add fix-bug and analyze-bug to the ace-taskflow pa...

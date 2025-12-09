@@ -4,8 +4,9 @@ filename_suggestion: feat-taskflow-task-reopen
 enhanced_at: 2025-11-27 22:34:08
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-12-09T00:19:36+00:00
 ---
-
 # Implement ace-taskflow undone command to reopen tasks
 
 ## Problem

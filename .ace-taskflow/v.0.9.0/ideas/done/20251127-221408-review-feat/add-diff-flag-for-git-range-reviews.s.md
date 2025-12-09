@@ -4,8 +4,9 @@ filename_suggestion: feat-review-diff-flag
 enhanced_at: 2025-11-27 22:14:07
 location: active
 llm_model: gflash
+status: done
+completed_at: 2025-12-09T00:24:44+00:00
 ---
-
 # Add `--diff` flag to `ace-review` for Git range-based code reviews
 
 ## Problem
