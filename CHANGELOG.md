@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.160] - 2025-12-09
+
+### ace-prompt v0.5.1
+
+**Questions Section Restored**
+- Added Questions section back to template structure (now 7 sections)
+
 ## [0.9.159] - 2025-12-09
 
 ### ace-prompt v0.5.0
