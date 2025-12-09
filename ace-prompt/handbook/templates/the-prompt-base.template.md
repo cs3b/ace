@@ -28,3 +28,7 @@ context:
 ## Report
 
 [Describe expected output format and deliverables]
+
+## Questions
+
+[List any clarifying questions or decision points]

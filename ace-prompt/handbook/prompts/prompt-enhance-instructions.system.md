@@ -35,8 +35,7 @@ context:
     [One sentence: what to accomplish, using project terminology]
 
     ## Variables
-    [Key inputs, parameters, or decision points - include questions here]
-    - [Variable]? → Suggested: [most probable value]
+    [Key inputs, parameters, or known values]
 
     ## Codebase Structure
     [Relevant files, gems, ATOM layers to work with]
@@ -50,6 +49,10 @@ context:
 
     ## Report
     [Expected output format and success criteria]
+
+    ## Questions
+    [Always include for key decisions - scope, approach, format]
+    - [Question]? → Suggested: [most probable answer]
   </output-format>
 
   <examples>
@@ -60,8 +63,7 @@ context:
 Refactor ace-prompt CLI to return status codes instead of exit calls (ADR-018).
 
 ## Variables
-- Scope? → Suggested: ace-prompt only
-- Include deprecation warnings? → Suggested: no
+- Target gem: ace-prompt
 
 ## Codebase Structure
 - `lib/ace/prompt/cli.rb` - CLI entry point
@@ -78,6 +80,10 @@ Modify CLI → update executable → add tests → verify
 
 ## Report
 All exit calls replaced with return codes; tests pass
+
+## Questions
+- Scope? → Suggested: ace-prompt only
+- Include deprecation warnings? → Suggested: no
       </output>
     </example>
 
@@ -93,7 +99,8 @@ Make linting agent
 Create lint-staged agent with auto-fix in ace-lint gem.
 
 ## Variables
-- Output format? → Suggested: summary with file count
+- Target gem: ace-lint
+- Fix support: enabled
 
 ## Codebase Structure
 - `ace-lint/handbook/agents/` - agent location
@@ -109,6 +116,9 @@ Create agent → test command → symlink
 
 ## Report
 Agent file created and symlinked; runs ace-lint with --fix on staged files
+
+## Questions
+- Output format? → Suggested: summary with file count
       </output>
     </example>
   </examples>
