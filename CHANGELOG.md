@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.163] - 2025-12-09
+
+### ace-taskflow v0.22.0
+
+**Bug Analysis and Fix Workflows**
+- New `analyze-bug.wf.md` workflow for systematic bug analysis
+  - Gathers bug info (logs, stack traces, reproduction steps)
+  - Attempts reproduction and records status
+  - Identifies root cause through investigation
+  - Proposes regression tests to catch the bug
+  - Creates structured fix plan
+- New `fix-bug.wf.md` workflow for executing bug fixes
+  - Loads fix plan from analysis phase
+  - Implements fixes with minimal changes
+  - Creates regression tests (fail before / pass after)
+  - Verifies resolution with full test suite
+- Claude command wrappers: `/ace:analyze-bug`, `/ace:fix-bug`
+- Analysis caching in `.cache/ace-taskflow/bug-analysis/` for workflow continuity
+- ADR-002/005 compliant with embedded `<documents>` templates
+
 ## [0.9.162] - 2025-12-09
 
 ### ace-taskflow v0.21.1
