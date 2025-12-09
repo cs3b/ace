@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Idea
 
 # ace-taskflow idea create -- save the idea file in ...

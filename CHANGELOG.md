@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.158] - 2025-12-09
+
+### ace-taskflow v0.20.2
+
+**Doctor Health Checks & Statistics Fixes**
+- Exclude `review/`, `docs/`, `qa/`, and `.backup.*` files from task scanning
+- Accept terminal states (`superseded`, `cancelled`, `skipped`) in done/ directory
+- Support hierarchical subtask IDs in frontmatter validation (e.g., `v.X.Y.Z+task.NNN.NN`)
+- Add backup file cleanup when moving tasks to done/ directory
+- Restrict statistics glob to `tasks/` directory only (fixes phantom pending task counts)
+
 ## [0.9.157] - 2025-12-08
 
 ### ace-llm-models-dev v0.3.2 (Task 128.09)

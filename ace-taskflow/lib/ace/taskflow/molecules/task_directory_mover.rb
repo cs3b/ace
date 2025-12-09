@@ -50,6 +50,9 @@ module Ace
           end
 
           begin
+            # Clean up backup files before moving
+            cleanup_backup_files(task_dir)
+
             # Perform atomic move
             FileUtils.mv(task_dir, target_dir)
 
@@ -120,6 +123,19 @@ module Ace
               success: false,
               message: "Failed to restore task directory: #{e.message}"
             }
+          end
+        end
+
+        private
+
+        # Remove backup files from a directory before moving to done/
+        # @param dir_path [String] Path to the directory to clean
+        def cleanup_backup_files(dir_path)
+          return unless File.directory?(dir_path)
+
+          # Find and remove all .backup.* files recursively
+          Dir.glob(File.join(dir_path, "**", "*.backup.*")).each do |backup_file|
+            File.delete(backup_file) if File.file?(backup_file)
           end
         end
       end

@@ -201,6 +201,7 @@ module Ace
 
             # Detect component type
             component_type = detect_component_type(file)
+            next if component_type == :skip  # Skip review/docs/qa/backup files
             next if component_type == :unknown && !options[:verbose]
 
             result = Molecules::FrontmatterValidator.validate_file(file, component_type)
@@ -337,10 +338,12 @@ module Ace
 
           is_in_done = file.include?("/done/")
           status = frontmatter["status"]
+          # Terminal states that are valid in done/ directory
+          terminal_states = %w[done superseded cancelled skipped]
 
-          if status == "done" && !is_in_done
-            add_issue(:warning, "Task marked as done but not in done/ directory", file)
-          elsif status != "done" && is_in_done
+          if terminal_states.include?(status) && !is_in_done
+            add_issue(:warning, "Task with terminal status '#{status}' not in done/ directory", file)
+          elsif !terminal_states.include?(status) && is_in_done
             add_issue(:error, "Task in done/ directory but status is '#{status}'", file)
           end
         end
@@ -370,6 +373,13 @@ module Ace
         end
 
         def detect_component_type(file)
+          # Skip non-content files (review reports, docs, qa artifacts, backups)
+          # These are supporting files in task directories, not tasks themselves
+          return :skip if file.include?("/review/") ||
+                          file.include?("/docs/") ||
+                          file.include?("/qa/") ||
+                          file.match?(/\.backup\./)
+
           # Get configured directory names
           config = Ace::Taskflow.configuration
           task_dir = config.task_dir       # e.g., "tasks"

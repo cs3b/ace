@@ -109,9 +109,9 @@ module Ace
             issues << { type: :warning, message: "Missing recommended field: priority", file: file_path }
           end
 
-          # Validate ID format
-          if frontmatter["id"] && !frontmatter["id"].to_s.match?(/^v\.\d+\.\d+\.\d+\+task\.\d+$/)
-            issues << { type: :warning, message: "Non-standard ID format: #{frontmatter["id"]} (expected format: v.X.Y.Z+task.NNN)", file: file_path }
+          # Validate ID format (supports base tasks and hierarchical subtasks)
+          if frontmatter["id"] && !frontmatter["id"].to_s.match?(/^v\.\d+\.\d+\.\d+\+task\.\d+(\.\d+)*$/)
+            issues << { type: :warning, message: "Non-standard ID format: #{frontmatter["id"]} (expected format: v.X.Y.Z+task.NNN or v.X.Y.Z+task.NNN.NN)", file: file_path }
           end
 
           # Validate dependencies
