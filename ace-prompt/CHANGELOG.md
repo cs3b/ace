@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-12-09
+
+### Fixed
+- Added Questions section back to template structure (now 7 sections)
+
 ## [0.5.0] - 2025-12-09
 
 ### Added
