@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "base_client"
+require_relative "../molecules/openai_compatible_params"
 
 module Ace
   module LLM
     module Organisms
       # OpenAIClient handles interactions with OpenAI's API
       class OpenAIClient < BaseClient
+        include Molecules::OpenAICompatibleParams
         API_BASE_URL = "https://api.openai.com"
         DEFAULT_MODEL = "gpt-4o"
         DEFAULT_GENERATION_CONFIG = {
@@ -57,12 +59,12 @@ module Ace
             messages: processed_messages
           }
 
-          # Add generation parameters
-          request[:temperature] = generation_params[:temperature] if generation_params[:temperature]
-          request[:max_tokens] = generation_params[:max_tokens] if generation_params[:max_tokens]
-          request[:top_p] = generation_params[:top_p] if generation_params[:top_p]
-          request[:frequency_penalty] = generation_params[:frequency_penalty] if generation_params[:frequency_penalty]
-          request[:presence_penalty] = generation_params[:presence_penalty] if generation_params[:presence_penalty]
+          # Add generation parameters (use nil checks to preserve zero values)
+          request[:temperature] = generation_params[:temperature] unless generation_params[:temperature].nil?
+          request[:max_tokens] = generation_params[:max_tokens] unless generation_params[:max_tokens].nil?
+          request[:top_p] = generation_params[:top_p] unless generation_params[:top_p].nil?
+          request[:frequency_penalty] = generation_params[:frequency_penalty] unless generation_params[:frequency_penalty].nil?
+          request[:presence_penalty] = generation_params[:presence_penalty] unless generation_params[:presence_penalty].nil?
 
           # Add streaming flag (always false for now)
           request[:stream] = false
@@ -76,9 +78,8 @@ module Ace
         def extract_generation_options(options)
           gen_opts = super(options)
 
-          # Add OpenAI-specific options
-          gen_opts[:frequency_penalty] = options[:frequency_penalty] if options[:frequency_penalty]
-          gen_opts[:presence_penalty] = options[:presence_penalty] if options[:presence_penalty]
+          # Add OpenAI-compatible options
+          extract_openai_compatible_options(options, gen_opts)
 
           gen_opts.compact
         end

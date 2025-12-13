@@ -221,6 +221,79 @@ module Ace
         assert_equal "Provider1::Client", provider["class"]
         assert_equal ["model1"], provider["models"]
       end
+
+      def test_yaml_config_string_keys_work
+        # Verify string keys work correctly (explicit test for migration)
+        provider_dir = File.join(@temp_dir, "providers")
+        Dir.mkdir(provider_dir)
+
+        config = {
+          "name" => "string-key-provider",
+          "class" => "TestProviders::TestClient",
+          "gem" => "test-gem",
+          "models" => ["model-1"]
+        }
+
+        File.write(File.join(provider_dir, "test.yml"), config.to_yaml)
+
+        registry = Molecules::ClientRegistry.new(config_paths: [provider_dir])
+        assert registry.provider_exists?("string-key-provider")
+
+        provider = registry.get_provider("string-key-provider")
+        assert_equal "string-key-provider", provider["name"]
+        assert_equal "TestProviders::TestClient", provider["class"]
+      end
+
+      def test_yaml_config_with_symbol_keys_rejected
+        provider_dir = File.join(@temp_dir, "providers")
+        Dir.mkdir(provider_dir)
+
+        # YAML with explicit symbol key (YAML syntax: :symbol_key)
+        # Note: YAML.safe_load without Symbol in permitted_classes will raise
+        # Psych::DisallowedClass when encountering symbol syntax
+        yaml_content = <<~YAML
+          name: test-provider
+          class: TestProviders::TestClient
+          :symbol_key: "this should not be allowed"
+        YAML
+
+        File.write(File.join(provider_dir, "test.yml"), yaml_content)
+
+        # Should fail to load due to symbol key - provider should not exist
+        # The registry catches and warns about errors during loading
+        _output, err = capture_io do
+          registry = Molecules::ClientRegistry.new(config_paths: [provider_dir])
+          refute registry.provider_exists?("test-provider")
+        end
+
+        # Verify the warning message indicates symbol keys are not permitted
+        assert_match(/Invalid YAML/, err, "Should warn about invalid YAML")
+        assert_match(/symbol keys not permitted/, err, "Should mention symbol keys are not permitted")
+      end
+
+      def test_yaml_config_date_fields_supported
+        # Verify that Date fields in YAML are handled correctly
+        # Date class is permitted for timestamp fields like last_synced
+        provider_dir = File.join(@temp_dir, "providers")
+        Dir.mkdir(provider_dir)
+
+        yaml_content = <<~YAML
+          name: date-test-provider
+          class: TestProviders::TestClient
+          gem: test-gem
+          last_synced: 2025-12-05
+        YAML
+
+        File.write(File.join(provider_dir, "test.yml"), yaml_content)
+
+        registry = Molecules::ClientRegistry.new(config_paths: [provider_dir])
+        assert registry.provider_exists?("date-test-provider")
+
+        provider = registry.get_provider("date-test-provider")
+        # Date is parsed as Date object (permitted for timestamp fields)
+        assert_instance_of Date, provider["last_synced"]
+        assert_equal Date.new(2025, 12, 5), provider["last_synced"]
+      end
     end
   end
 end
