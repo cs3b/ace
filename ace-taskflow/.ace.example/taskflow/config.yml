@@ -10,11 +10,12 @@ taskflow:
   task_dir: "t"
 
   # Directory structure (underscore prefix for system directories)
+  # GTD-inspired naming: anyday (tasks for anytime), maybe (ideas that might happen)
   directories:
     completed: "_archive"         # Completed tasks/ideas (default: _archive)
     backlog: "_backlog"           # Future releases (default: _backlog)
-    deferred: "_deferred"         # Tasks to revisit later (default: _deferred)
-    parked: "_parked"             # Ideas that are good but not now (default: _parked)
+    anyday: "_anyday"             # Tasks for anytime, no urgency (default: _anyday)
+    maybe: "_maybe"               # Ideas that might happen (default: _maybe)
 
   # Active release selection strategy
   # "lowest" - Select the release with lowest version number (default)

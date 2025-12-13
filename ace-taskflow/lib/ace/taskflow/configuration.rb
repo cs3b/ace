@@ -51,14 +51,14 @@ module Ace
         config.dig("directories", "backlog") || "_backlog"
       end
 
-      # Get parked directory name
-      def parked_dir
-        config.dig("directories", "parked") || "_parked"
+      # Get maybe directory name (GTD: ideas that might happen)
+      def maybe_dir
+        config.dig("directories", "maybe") || "_maybe"
       end
 
-      # Get deferred directory name
-      def deferred_dir
-        config.dig("directories", "deferred") || "_deferred"
+      # Get anyday directory name (GTD: tasks for anytime, no urgency)
+      def anyday_dir
+        config.dig("directories", "anyday") || "_anyday"
       end
 
       # Get default glob pattern for all spec files

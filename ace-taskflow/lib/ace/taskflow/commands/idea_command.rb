@@ -432,7 +432,7 @@ module Ace
           # Move idea to parked
           require_relative "../molecules/idea_directory_mover"
           mover = Molecules::IdeaDirectoryMover.new
-          result = mover.move_to_parked(idea[:path])
+          result = mover.move_to_maybe(idea[:path])
 
           if result[:success]
             puts "Idea '#{reference}' parked (moved to _parked/)"
@@ -464,7 +464,7 @@ module Ace
           # Restore idea from parked
           require_relative "../molecules/idea_directory_mover"
           mover = Molecules::IdeaDirectoryMover.new
-          result = mover.restore_from_parked(idea[:path])
+          result = mover.restore_from_maybe(idea[:path])
 
           if result[:success]
             puts "Idea '#{reference}' restored from _parked/"
@@ -496,7 +496,7 @@ module Ace
           # Move idea to parked
           require_relative "../molecules/idea_directory_mover"
           mover = Molecules::IdeaDirectoryMover.new
-          result = mover.move_to_parked(idea[:path])
+          result = mover.move_to_maybe(idea[:path])
 
           if result[:success]
             puts "Idea '#{reference}' parked (moved to _parked/)"
@@ -528,7 +528,7 @@ module Ace
           # Restore idea from parked
           require_relative "../molecules/idea_directory_mover"
           mover = Molecules::IdeaDirectoryMover.new
-          result = mover.restore_from_parked(idea[:path])
+          result = mover.restore_from_maybe(idea[:path])
 
           if result[:success]
             puts "Idea '#{reference}' restored from _parked/"

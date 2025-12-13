@@ -155,7 +155,7 @@ module Ace
         # Move an idea file or directory to _parked/ subdirectory atomically
         # @param idea_path [String] Full path to the idea file or directory
         # @return [Hash] Result with :success, :new_path, and :message
-        def move_to_parked(idea_path)
+        def move_to_maybe(idea_path)
           return { success: false, message: "Idea path not provided" } unless idea_path
           return { success: false, message: "Idea not found: #{idea_path}" } unless File.exist?(idea_path) || Dir.exist?(idea_path)
 
@@ -172,18 +172,18 @@ module Ace
           end
 
           # Create parked directory at ideas level (sibling to idea folders)
-          parked_dir_name = Ace::Taskflow.configuration.parked_dir
-          parked_dir = File.join(ideas_dir, parked_dir_name)
-          FileUtils.mkdir_p(parked_dir) unless File.directory?(parked_dir)
+          maybe_dir_name = Ace::Taskflow.configuration.maybe_dir
+          maybe_dir = File.join(ideas_dir, maybe_dir_name)
+          FileUtils.mkdir_p(maybe_dir) unless File.directory?(maybe_dir)
 
           # Target path in parked directory
-          target_path = File.join(parked_dir, idea_name)
+          target_path = File.join(maybe_dir, idea_name)
 
           # Check if target already exists
           if File.exist?(target_path) || Dir.exist?(target_path)
             return {
               success: false,
-              message: "Target already exists in #{parked_dir_name}/: #{target_path}"
+              message: "Target already exists in #{maybe_dir_name}/: #{target_path}"
             }
           end
 
@@ -204,7 +204,7 @@ module Ace
             {
               success: true,
               new_path: target_path,
-              message: "Idea moved to #{Ace::Taskflow.configuration.parked_dir}/"
+              message: "Idea moved to #{Ace::Taskflow.configuration.maybe_dir}/"
             }
           rescue StandardError => e
             {
@@ -217,26 +217,26 @@ module Ace
         # Move an idea file or directory back from _parked/ subdirectory
         # @param idea_path [String] Full path to the idea file or directory in _parked/
         # @return [Hash] Result with :success, :new_path, and :message
-        def restore_from_parked(idea_path)
+        def restore_from_maybe(idea_path)
           return { success: false, message: "Idea path not provided" } unless idea_path
           return { success: false, message: "Idea not found: #{idea_path}" } unless File.exist?(idea_path) || Dir.exist?(idea_path)
 
           # Get parked directory name from configuration
-          parked_dir_name = Ace::Taskflow.configuration.parked_dir
+          maybe_dir_name = Ace::Taskflow.configuration.maybe_dir
 
           # Verify idea is in parked directory
-          unless idea_path.include?("/#{parked_dir_name}/")
+          unless idea_path.include?("/#{maybe_dir_name}/")
             return {
               success: false,
-              message: "Idea is not in #{parked_dir_name}/ directory"
+              message: "Idea is not in #{maybe_dir_name}/ directory"
             }
           end
 
           is_directory = Dir.exist?(idea_path) && !File.file?(idea_path)
 
           # Get idea name and determine restoration path
-          parked_dir = File.dirname(idea_path)
-          parent_dir = File.dirname(parked_dir)
+          maybe_dir = File.dirname(idea_path)
+          parent_dir = File.dirname(maybe_dir)
           idea_name = File.basename(idea_path)
 
           # Target path in parent directory
@@ -265,7 +265,7 @@ module Ace
             {
               success: true,
               new_path: target_path,
-              message: "Idea restored from #{Ace::Taskflow.configuration.parked_dir}/"
+              message: "Idea restored from #{Ace::Taskflow.configuration.maybe_dir}/"
             }
           rescue StandardError => e
             {
