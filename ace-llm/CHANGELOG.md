@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-12-14
+
+### Added
+- **OpenAICompatibleParams module**: Shared concern for extracting OpenAI-compatible parameters
+  - Extracts `frequency_penalty` and `presence_penalty` using nil-safe logic
+  - Preserves zero values (uses `nil?` check, not truthiness)
+  - Included in XAIClient, OpenAIClient, and OpenRouterClient
+  - DRYs up code across OpenAI-compatible providers
+
+### Fixed
+- **OpenAIClient zero-value handling**: Fixed bug where zero-valued penalties were dropped
+  - `build_request_body` now uses nil checks for all generation parameters
+  - Zero values for `frequency_penalty`, `presence_penalty`, `temperature`, `max_tokens`, `top_p` are preserved
+- **YAML security hardening**: Removed Symbol from `permitted_classes` in `YAML.safe_load`
+  - Prevents potential DoS attacks via symbol table exhaustion
+  - All provider YAML configs already use string keys (no breaking changes)
+  - Added specific `Psych::DisallowedClass` warning for better debugging
+
+### Technical
+- Added comprehensive OpenAIClient test suite (15 new tests)
+- Added zero-value regression tests to XAIClient tests
+- Improved symbol rejection test with warning message assertions
+
 ## [0.14.0] - 2025-12-07
 
 ### Added

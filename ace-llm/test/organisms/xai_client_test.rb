@@ -177,6 +177,31 @@ class XAIClientTest < AceTestCase
     refute result.key?(:top_p)
   end
 
+  # Regression tests: zero values should be preserved (not filtered out)
+  def test_build_request_body_preserves_zero_frequency_penalty
+    @client.instance_variable_set(:@model, "grok-3")
+
+    messages = [{role: "user", content: "Test"}]
+    generation_params = {temperature: 0.7, frequency_penalty: 0}
+
+    result = @client.send(:build_request_body, messages, generation_params)
+
+    assert result.key?(:frequency_penalty), "frequency_penalty should be present with value 0"
+    assert_equal 0, result[:frequency_penalty]
+  end
+
+  def test_build_request_body_preserves_zero_presence_penalty
+    @client.instance_variable_set(:@model, "grok-3")
+
+    messages = [{role: "user", content: "Test"}]
+    generation_params = {temperature: 0.7, presence_penalty: 0}
+
+    result = @client.send(:build_request_body, messages, generation_params)
+
+    assert result.key?(:presence_penalty), "presence_penalty should be present with value 0"
+    assert_equal 0, result[:presence_penalty]
+  end
+
   def test_build_request_body_with_system_append
     @client.instance_variable_set(:@model, "grok-3")
 
