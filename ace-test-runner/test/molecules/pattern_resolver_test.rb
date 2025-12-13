@@ -57,8 +57,38 @@ class PatternResolverTest < Minitest::Test
   end
 
   def test_resolve_target_with_unknown_target
-    assert_raises(ArgumentError) do
+    error = assert_raises(ArgumentError) do
       @resolver.resolve_target("unknown")
+    end
+    assert_match(/Unknown target: unknown/, error.message)
+    assert_match(/Available targets:/, error.message)
+  end
+
+  def test_resolve_target_with_nonexistent_file_path_with_slash
+    File.stub :exist?, false do
+      error = assert_raises(ArgumentError) do
+        @resolver.resolve_target("test/nonexistent_test.rb")
+      end
+      assert_match(/File not found: test\/nonexistent_test\.rb/, error.message)
+      assert_match(/Make sure you're running from the correct directory/, error.message)
+    end
+  end
+
+  def test_resolve_target_with_nonexistent_rb_file
+    File.stub :exist?, false do
+      error = assert_raises(ArgumentError) do
+        @resolver.resolve_target("nonexistent_test.rb")
+      end
+      assert_match(/File not found: nonexistent_test\.rb/, error.message)
+    end
+  end
+
+  def test_resolve_target_with_deep_nonexistent_path
+    File.stub :exist?, false do
+      error = assert_raises(ArgumentError) do
+        @resolver.resolve_target("foo/bar/baz/test.rb")
+      end
+      assert_match(/File not found: foo\/bar\/baz\/test\.rb/, error.message)
     end
   end
 
