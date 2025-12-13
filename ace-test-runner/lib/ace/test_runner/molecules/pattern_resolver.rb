@@ -24,6 +24,9 @@ module Ace
             resolve_group(target_key)
           elsif @patterns.key?(target_key)
             expand_pattern(@patterns[target_key])
+          elsif looks_like_file_path?(target)
+            raise ArgumentError, "File not found: #{target}. " \
+              "Make sure you're running from the correct directory or use an absolute path."
           else
             raise ArgumentError, "Unknown target: #{target}. Available targets: #{available_targets.join(', ')}"
           end
@@ -69,6 +72,10 @@ module Ace
         end
 
         private
+
+        def looks_like_file_path?(target)
+          target.include?("/") || target.end_with?(".rb")
+        end
 
         def normalize_keys(hash)
           hash.transform_keys(&:to_s)
