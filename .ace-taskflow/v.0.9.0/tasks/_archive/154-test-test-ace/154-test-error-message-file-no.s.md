@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.154
-status: in-progress
+status: done
 priority: low
 estimate: 1-2h
 dependencies: []
