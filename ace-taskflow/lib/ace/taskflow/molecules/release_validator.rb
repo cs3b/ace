@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/release_resolver"
+require_relative "../configuration"
 
 module Ace
   module Taskflow
@@ -165,21 +166,22 @@ module Ace
           unless config
             config = Ace::Taskflow.configuration
           end
-          task_done_dir = File.join(release_path, config.task_dir, "done")
+          archive_dir = config.done_dir
+          task_done_dir = File.join(release_path, config.task_dir, archive_dir)
           unless Dir.exist?(task_done_dir)
             issues << {
               type: :info,
-              message: "Missing #{config.task_dir}/done/ directory for completed tasks",
+              message: "Missing #{config.task_dir}/#{archive_dir}/ directory for completed tasks",
               location: release_path
             }
           end
 
           # Check for done subdirectory in ideas
-          idea_done_dir = File.join(release_path, config.release_ideas_subdir, "done")
+          idea_done_dir = File.join(release_path, config.release_ideas_subdir, archive_dir)
           unless Dir.exist?(idea_done_dir)
             issues << {
               type: :info,
-              message: "Missing #{config.release_ideas_subdir}/done/ directory for completed ideas",
+              message: "Missing #{config.release_ideas_subdir}/#{archive_dir}/ directory for completed ideas",
               location: release_path
             }
           end
@@ -225,7 +227,8 @@ module Ace
         end
 
         def determine_actual_location(path)
-          if path.include?("/backlog/")
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
+          if path.include?("/#{backlog_dir}/")
             :backlog
           elsif path.include?("/pending/")
             :pending

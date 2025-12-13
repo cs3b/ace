@@ -504,7 +504,7 @@ parent: v.0.9.0+task.999
         subtask = {
           id: "v.0.9.0+task.121.01",
           release: "done",  # This is what PathBuilder returns for archived tasks
-          path: "somewhere/done/121-test/121.01-subtask.s.md"
+          path: "somewhere/_archive/121-test/121.01-subtask.s.md"
         }
 
         parent_id = loader.send(:derive_parent_id, subtask, "121")

@@ -9,7 +9,7 @@ class TestFactoryTest < AceTaskflowTestCase
 
       assert Dir.exist?(taskflow_root)
       assert Dir.exist?(File.join(taskflow_root, "backlog"))
-      assert Dir.exist?(File.join(taskflow_root, "done"))
+      assert Dir.exist?(File.join(taskflow_root, "_archive"))
 
       # Should NOT have default v.0.9.0 release
       refute Dir.exist?(File.join(taskflow_root, "v.0.9.0"))

@@ -3,6 +3,7 @@
 require "pathname"
 require_relative "release_resolver"
 require_relative "config_loader"
+require_relative "../configuration"
 
 module Ace
   module Taskflow
@@ -21,10 +22,11 @@ module Ace
           retro_dir = resolve_retro_directory(release)
           return nil unless retro_dir && Dir.exist?(retro_dir)
 
-          # Search in both active (retro/) and done (retro/done/) directories
+          # Search in both active (retro/) and archive (retro/_archive/) directories
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
           search_dirs = [
             retro_dir,
-            File.join(retro_dir, "done")
+            File.join(retro_dir, archive_dir_name)
           ].select { |dir| Dir.exist?(dir) }
 
           # Find matching retro file
@@ -57,12 +59,13 @@ module Ace
             .compact
         end
 
-        # List retros from retro/done/ directory only
+        # List retros from retro/archive directory only
         def list_done_retros(release: "current")
           retro_dir = resolve_retro_directory(release)
           return [] unless retro_dir
 
-          done_dir = File.join(retro_dir, "done")
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+          done_dir = File.join(retro_dir, archive_dir_name)
           return [] unless Dir.exist?(done_dir)
 
           Dir.glob(File.join(done_dir, "*.md"))
@@ -123,7 +126,8 @@ module Ace
             primary = @release_resolver.find_primary_active
             primary ? File.join(primary[:path], retro_dirname) : nil
           when "backlog"
-            File.join(@root_path, "backlog", retro_dirname)
+            backlog_dir = Ace::Taskflow.configuration.backlog_dir
+            File.join(@root_path, backlog_dir, retro_dirname)
           when "all"
             # For "all", return root; caller will need to iterate releases
             @root_path

@@ -381,7 +381,8 @@ module Ace
 
         def determine_location_context(path)
           # Extract location from path
-          if path.include?("/backlog/")
+          backlog_dir = @config.backlog_dir
+          if path.include?("/#{backlog_dir}/")
             "backlog"
           elsif match = path.match(/\/(v\.\d+\.\d+\.\d+)\//)
             match[1]

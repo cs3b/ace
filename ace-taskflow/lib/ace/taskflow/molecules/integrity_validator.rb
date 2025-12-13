@@ -74,7 +74,8 @@ module Ace
           end
 
           # Load from backlog
-          backlog_path = File.join(@root_path, "backlog")
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
+          backlog_path = File.join(@root_path, backlog_dir)
           if Dir.exist?(backlog_path)
             backlog_tasks = @task_loader.load_tasks_from_release(backlog_path)
             tasks.concat(backlog_tasks)

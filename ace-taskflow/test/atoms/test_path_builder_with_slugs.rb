@@ -62,10 +62,10 @@ module Ace
         def test_backward_compatibility
           # Ensure old format paths still work
           old_path = PathBuilder.build_task_path("/root", "backlog", "042")
-          assert_equal "/root/backlog/t/042", old_path
+          assert_equal "/root/_backlog/t/042", old_path
 
           old_file = PathBuilder.build_task_file_path("/root", "backlog", "042", "custom-name.md")
-          assert_equal "/root/backlog/t/042/custom-name.md", old_file
+          assert_equal "/root/_backlog/t/042/custom-name.md", old_file
         end
       end
     end
