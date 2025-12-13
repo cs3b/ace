@@ -51,11 +51,6 @@ module Ace
         config.dig("directories", "backlog") || "_backlog"
       end
 
-      # Get pending directory name
-      def pending_dir
-        config.dig("directories", "pending") || "pending"
-      end
-
       # Get parked directory name
       def parked_dir
         config.dig("directories", "parked") || "_parked"

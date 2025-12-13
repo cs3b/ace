@@ -98,7 +98,7 @@ module Ace
 
           # Check for standard directories (using configured names)
           config = Ace::Taskflow.configuration
-          [config.backlog_dir, config.pending_dir, config.done_dir, config.deferred_dir].each do |dir|
+          [config.backlog_dir, config.done_dir, config.deferred_dir].each do |dir|
             path = File.join(@root_path, dir)
             unless Dir.exist?(path)
               issues << { type: :warning, message: "Missing standard directory: #{dir}/", location: @root_path }
@@ -127,14 +127,6 @@ module Ace
           if Dir.exist?(backlog_dir)
             Dir.glob(File.join(backlog_dir, "v.*")).each do |release_dir|
               validate_release_internal(release_dir, :backlog, issues, stats)
-            end
-          end
-
-          # Check pending releases
-          pending_dir = File.join(@root_path, "pending")
-          if Dir.exist?(pending_dir)
-            Dir.glob(File.join(pending_dir, "v.*")).each do |release_dir|
-              validate_release_internal(release_dir, :pending, issues, stats)
             end
           end
 
