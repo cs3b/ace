@@ -163,7 +163,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.2.0)
+    ace-test-runner (0.2.1)
       ace-support-core (~> 0.1)
       ace-support-test-helpers (~> 0.1)
       minitest (~> 5.0)
