@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "base_client"
+require_relative "../molecules/openai_compatible_params"
 
 module Ace
   module LLM
@@ -8,6 +9,7 @@ module Ace
       # OpenRouterClient handles interactions with OpenRouter's API
       # OpenRouter provides unified access to 400+ models through OpenAI-compatible API
       class OpenRouterClient < BaseClient
+        include Molecules::OpenAICompatibleParams
         API_BASE_URL = "https://openrouter.ai/api/v1"
         DEFAULT_MODEL = "openai/gpt-oss-120b:nitro"
 
@@ -87,9 +89,8 @@ module Ace
         def extract_generation_options(options)
           gen_opts = super(options)
 
-          # Add OpenRouter-specific options (use nil checks to allow valid 0 values)
-          gen_opts[:frequency_penalty] = options[:frequency_penalty] unless options[:frequency_penalty].nil?
-          gen_opts[:presence_penalty] = options[:presence_penalty] unless options[:presence_penalty].nil?
+          # Add OpenAI-compatible options
+          extract_openai_compatible_options(options, gen_opts)
 
           gen_opts.compact
         end

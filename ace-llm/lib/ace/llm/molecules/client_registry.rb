@@ -230,17 +230,12 @@ module Ace
 
         # Load a single configuration file
         # @param file_path [String] Path to YAML configuration file
-        # @note Uses YAML.safe_load with permitted_classes: [Symbol, Date] for backward
-        #       compatibility with existing configs that may use symbol keys. Provider configs
-        #       are considered trusted sources (located in .ace/ cascade or gem directories).
-        #       For untrusted input, use YAML.safe_load with string keys only.
+        # @note Uses YAML.safe_load with string keys only (Date permitted for timestamp fields).
+        #       Provider configs are trusted sources (.ace/ cascade or gem directories).
         #       The aliases: true enables YAML anchor/alias support for DRY configs.
-        # @deprecated Symbol key support will be removed in v1.0.0. Please use string keys
-        #       in provider YAML configurations. See idea file:
-        #       .ace-taskflow/v.0.9.0/ideas/20251206-011207-llm-enhance/migrate-ace-llm-yaml-config-loading-from-symbol-to.s.md
         def load_configuration_file(file_path)
           content = File.read(file_path)
-          config = YAML.safe_load(content, permitted_classes: [Symbol, Date], aliases: true)
+          config = YAML.safe_load(content, permitted_classes: [Date], aliases: true)
 
           # Validate required fields
           unless config["name"] && config["class"]
@@ -254,6 +249,8 @@ module Ace
           unless @providers.key?(provider_name)
             @providers[provider_name] = config
           end
+        rescue Psych::DisallowedClass => e
+          warn "Invalid YAML in #{file_path}: #{e.message} (symbol keys not permitted)"
         rescue StandardError => e
           warn "Error loading provider configuration from #{file_path}: #{e.message}"
         end

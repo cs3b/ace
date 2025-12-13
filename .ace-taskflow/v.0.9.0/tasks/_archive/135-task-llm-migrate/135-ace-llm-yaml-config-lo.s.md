@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.135
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -18,13 +18,13 @@ Migrate ace-llm YAML configuration loading from permitting Symbol keys to String
 
 ## Acceptance Criteria
 
-- [ ] `client_registry.rb` YAML loading removes Symbol from permitted_classes
-- [ ] Date support is retained if still needed for last_synced fields
-- [ ] All existing provider YAML configs continue to work (they already use string keys)
-- [ ] Tests verify that symbol keys are NOT supported (add regression test)
-- [ ] Tests verify that string keys continue to work correctly
-- [ ] Deprecation notice in comments is removed (the one added in the original code)
-- [ ] All ace-llm tests pass
+- [x] `client_registry.rb` YAML loading removes Symbol from permitted_classes
+- [x] Date support is retained if still needed for last_synced fields
+- [x] All existing provider YAML configs continue to work (they already use string keys)
+- [x] Tests verify that symbol keys are NOT supported (add regression test)
+- [x] Tests verify that string keys continue to work correctly
+- [x] Deprecation notice in comments is removed (the one added in the original code)
+- [x] All ace-llm tests pass
 
 ## Implementation Notes
 

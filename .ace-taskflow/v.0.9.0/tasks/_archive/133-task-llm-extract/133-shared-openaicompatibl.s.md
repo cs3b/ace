@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.133
-status: in-progress
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -19,13 +19,13 @@ Extract shared OpenAI-compatible parameter extraction logic from individual prov
 
 ## Acceptance Criteria
 
-- [ ] Create `OpenAICompatibleParams` concern/module in `ace-llm/lib/ace/llm/molecules/`
-- [ ] Concern extracts `frequency_penalty` and `presence_penalty` parameters using nil-safe logic
-- [ ] Concern preserves zero values (uses `nil?` check, not truthiness)
-- [ ] XAIClient includes and uses the concern, removing duplicated code
-- [ ] OpenAIClient includes and uses the concern, removing duplicated code
-- [ ] All existing tests for XAIClient and OpenAIClient continue to pass
-- [ ] Add unit tests for the new concern in `ace-llm/test/molecules/`
+- [x] Create `OpenAICompatibleParams` concern/module in `ace-llm/lib/ace/llm/molecules/`
+- [x] Concern extracts `frequency_penalty` and `presence_penalty` parameters using nil-safe logic
+- [x] Concern preserves zero values (uses `nil?` check, not truthiness)
+- [x] XAIClient includes and uses the concern, removing duplicated code
+- [x] OpenAIClient includes and uses the concern, removing duplicated code
+- [x] All existing tests for XAIClient and OpenAIClient continue to pass
+- [x] Add unit tests for the new concern in `ace-llm/test/molecules/`
 
 ## Implementation Notes
 
