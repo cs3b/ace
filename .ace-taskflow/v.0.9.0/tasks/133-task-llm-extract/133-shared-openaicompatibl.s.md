@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.133
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 133-extract-shared-openaicompatibleparams-concern-for-llm-providers
+  path: "../ace-task.133"
+  created_at: '2025-12-13 23:36:31'
+  updated_at: '2025-12-13 23:36:31'
 ---
 
 # Extract shared OpenAICompatibleParams concern for LLM providers
