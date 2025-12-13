@@ -7,14 +7,14 @@ doc-type: workflow
 purpose: version-based commit squashing workflow
 update:
   frequency: on-change
-  last-updated: '2025-11-11'
+  last-updated: '2025-12-13'
 ---
 
 # Version-Based Commit Squashing Workflow
 
 ## Purpose
 
-Squash multiple commits into version-based commits for clean, maintainable git history. One commit per version makes merging, cherry-picking, and history navigation significantly easier.
+Squash multiple commits into cohesive, logical commits for clean, maintainable git history. Group related changes together - this often means 2-5 commits rather than one, making history easier to understand, review, and revert if needed.
 
 ## Context
 
@@ -24,11 +24,12 @@ Squash multiple commits into version-based commits for clean, maintainable git h
 - Review feedback commits
 - Documentation updates
 
-**Solution**: Squash related commits into cohesive version-based commits:
-- One commit per version/release
+**Solution**: Squash related commits into cohesive logical groups:
+- **Prefer 2-5 logical commits** over one massive commit
+- Group by: feature work, configuration/review fixes, unrelated changes
 - Clear commit messages with consolidated changes
 - Preserved CHANGELOG entries
-- Easier to merge and maintain
+- Easier to understand, review, and revert if needed
 
 **Use Cases**:
 - Preparing feature branch for merge
@@ -317,9 +318,57 @@ git log origin/$(git branch --show-current) -5 --oneline
 
 ## Squashing Strategies
 
-### Strategy 1: One Commit Per Version
+> **RECOMMENDED**: Use **Logical Grouping** for most PRs.
+> Squashing to a single commit loses valuable context about what changed and why.
+> Example: 16 commits → 3 logical commits (features, fixes, unrelated work)
 
-**Best for**: Release management, version-based history
+### Strategy 1: Logical Grouping (Recommended)
+
+**Best for**: Most PRs, feature branches, multi-topic work
+
+Group commits by logical concern rather than squashing everything into one:
+
+```bash
+# Analyze commits by type
+git log $base_commit..HEAD --format="%s" | sort
+
+# Common groupings:
+# 1. Core feature commits → single "feat:" commit
+# 2. Review/fix commits → single "chore:" or "fix:" commit
+# 3. Unrelated changes → keep separate
+
+# Use merge --squash for each group
+git checkout -b squash-temp $base_commit
+git merge --squash <last-commit-of-group-1>
+git commit -m "feat: Core feature implementation"
+git merge --squash <last-commit-of-group-2>
+git commit -m "chore: Review fixes and configuration"
+# ... continue for each group
+```
+
+**Why this is better:**
+- Preserves logical separation of concerns
+- Easier to review, understand, and revert
+- Cherry-picking specific changes remains possible
+- History tells a coherent story
+
+### Strategy 2: Commit Per Feature
+
+**Best for**: PRs with multiple independent features
+
+```bash
+# Keep one commit per major feature
+# Squash only WIP and fix commits within each feature
+
+# Example result:
+# feat: OAuth authentication (squashed from 5 WIP commits)
+# feat: Session management (squashed from 3 commits)
+# docs: API documentation updates
+```
+
+### Strategy 3: One Commit Per Version
+
+**Best for**: Simple PRs, single-feature work, release tags
 
 ```bash
 # Squash all commits since last version tag
@@ -330,35 +379,46 @@ git commit -m "v0.9.0: Complete feature set for Q4 release
 [Comprehensive list of changes]"
 ```
 
-### Strategy 2: Logical Grouping
+**When to use**: Only when all commits are tightly related to a single logical change.
 
-**Best for**: Feature branches, topic branches
+### Real-World Example: PR #72 (16 → 3 commits)
 
-```bash
-# Squash related commits manually
-git rebase -i HEAD~10
-
-# Group by:
-# - Feature implementation
-# - Bug fixes
-# - Documentation
-# - Refactoring
+**Before** (16 commits):
+```
+feat: Rename done → _archive (131.02)
+feat: Rename backlog → _backlog (131.04)
+feat: Implement undone command (131.03)
+feat: Add _parked folder support (131.07)
+feat: Add migrate command (131.05)
+feat: Add _deferred folder support (131.06)
+chore: Archive task 131
+fix: PR review critical items
+fix: PR review high/medium/low items
+chore: Configure Ruby tool
+feat: ADR-022 config pattern
+feat: Implement ADR-022
+refactor: Remove fallback constant
+fix: PR review items + bump version
+fix: undone command crash
+chore: Create task 154
 ```
 
-### Strategy 3: Commit Per Feature
-
-**Best for**: Multi-feature branches
-
-```bash
-# Keep one commit per major feature
-# Squash only WIP and fix commits
-
-# Example:
-# keep: feat: OAuth authentication
-# squash: WIP commits
-# keep: feat: Session management
-# squash: Fix commits
+**After** (3 logical commits):
 ```
+1. feat(taskflow): v0.23.0 - Folder reorganization and task lifecycle
+   (All Task 131 feature work squashed together)
+
+2. chore(taskflow): ADR-022 configuration pattern and PR review fixes
+   (Config pattern + all review fixes + bug fixes)
+
+3. chore(task-154): Create task for ace-test error message improvement
+   (Unrelated work kept separate)
+```
+
+**Why 3 commits, not 1:**
+- Commit 1: Core feature work (logical unit)
+- Commit 2: Supporting work (config + fixes)
+- Commit 3: Unrelated change (shouldn't be mixed with PR scope)
 
 ## Advanced Patterns
 
