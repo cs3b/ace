@@ -26,11 +26,11 @@ taskflow:
     # Each release has its own ideas/ folder at the same level as tasks/
     ideas: "ideas"
 
-    # Completed tasks - default: "done"
-    done: "done"
+    # Completed tasks - default: "_archive"
+    done: "_archive"
 
-    # Backlog directory - default: "backlog"
-    backlog: "backlog"
+    # Backlog directory - default: "_backlog"
+    backlog: "_backlog"
 
     # Pending directory - default: "pending"
     pending: "pending"

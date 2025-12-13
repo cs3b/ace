@@ -257,7 +257,7 @@ module Ace
           update_task_status(reference, "in-progress")
         end
 
-        # Mark task as done and optionally move to done/
+        # Mark task as done and optionally move to _archive/
         # For subtasks: only update status, don't move folder (folder belongs to orchestrator)
         # For orchestrators: move folder only when ALL subtasks have terminal status
         # For single tasks: move folder as usual
@@ -284,6 +284,34 @@ module Ace
           end
         end
 
+        # Reopen a completed task (move from _archive/ and update status)
+        # For subtasks: only update status, don't move folder (folder belongs to orchestrator)
+        # For orchestrators: restore folder from _archive/
+        # For single tasks: restore folder from _archive/
+        # @param reference [String] Task reference
+        # @param status [String] Status to set (default: "in-progress")
+        # @return [Hash] Result with :success and :message
+        def reopen_task(reference, status: "in-progress")
+          task = @task_loader.find_task_by_reference(reference)
+          return { success: false, message: "Task #{reference} not found" } unless task
+
+          archive_dir = Ace::Taskflow.configuration.done_dir
+
+          # Check if task is in archive directory
+          in_archive = task[:path].include?("/#{archive_dir}/")
+
+          # Handle based on task type
+          if task[:parent_id]
+            # Subtask: only update status
+            handle_subtask_reopen(task, reference, status)
+          elsif task[:is_orchestrator] || !task[:parent_id]
+            # Orchestrator or single task: restore from archive and update status
+            handle_task_reopen(task, reference, status, in_archive)
+          else
+            { success: false, message: "Unknown task type for #{reference}" }
+          end
+        end
+
         private
 
         # Handle completion of a subtask
@@ -296,6 +324,57 @@ module Ace
           message = "Subtask #{reference} marked as done"
           message += "\n#{orchestrator_message}" if orchestrator_message
           { success: true, message: message }
+        end
+
+        # Handle reopening a subtask
+        # Subtasks don't move folders - just update status
+        # @param task [Hash] Subtask data
+        # @param reference [String] Task reference
+        # @param status [String] New status
+        # @return [Hash] Result with :success and :message
+        def handle_subtask_reopen(task, reference, status)
+          status_result = update_task_status(reference, status)
+          return status_result unless status_result[:success]
+
+          { success: true, message: "Subtask #{reference} reopened and set to #{status}" }
+        end
+
+        # Handle reopening a task (orchestrator or single task)
+        # Restores from archive if necessary and updates status
+        # @param task [Hash] Task data
+        # @param reference [String] Task reference
+        # @param status [String] New status
+        # @param in_archive [Boolean] Whether task is currently in archive
+        # @return [Hash] Result with :success and :message
+        def handle_task_reopen(task, reference, status, in_archive)
+          # Restore from archive if in archive directory
+          if in_archive
+            require_relative "../molecules/task_directory_mover"
+            mover = Molecules::TaskDirectoryMover.new
+            restore_result = mover.restore_from_archive(task[:path])
+
+            return restore_result unless restore_result[:success]
+
+            # Update status using the new path
+            task_loader_temp = Molecules::TaskLoader.new(@root_path)
+            restored_task = task_loader_temp.find_task_by_reference(reference)
+
+            unless restored_task
+              return { success: false, message: "Task restored but could not be found for status update" }
+            end
+
+            status_result = @task_loader.update_task_status(restored_task[:path], status)
+            return status_result unless status_result[:success]
+
+            archive_dir = Ace::Taskflow.configuration.done_dir
+            { success: true, message: "Task #{reference} restored from #{archive_dir}/ and set to #{status}" }
+          else
+            # Task not in archive, just update status
+            status_result = update_task_status(reference, status)
+            return status_result unless status_result[:success]
+
+            { success: true, message: "Task #{reference} set to #{status}" }
+          end
         end
 
         # Handle completion of an orchestrator task
@@ -325,13 +404,19 @@ module Ace
           format_completion_message(reference, was_already_done, move_result)
         end
 
-        # Move task folder to done directory
+        # Move task folder to archive directory
         # @param task [Hash] Task data
         # @return [Hash] Move result
-        def move_task_to_done(task)
+        def move_task_to_archive(task)
           require_relative "../molecules/task_directory_mover"
           mover = Molecules::TaskDirectoryMover.new
-          mover.move_to_done(task[:path])
+          mover.move_to_archive(task[:path])
+        end
+
+        # Backward compatibility alias
+        # @deprecated Use move_task_to_archive instead
+        def move_task_to_done(task)
+          move_task_to_archive(task)
         end
 
         # Format completion message based on status and move results
@@ -340,20 +425,21 @@ module Ace
         # @param move_result [Hash] Move operation result
         # @return [Hash] Formatted result message
         def format_completion_message(reference, was_already_done, move_result)
+          archive_dir = Ace::Taskflow.configuration.done_dir
           if move_result[:success]
-            was_already_moved = move_result[:message].include?("already in done")
+            was_already_moved = move_result[:message].include?("already in #{archive_dir}")
 
             if was_already_done && was_already_moved
               { success: true, message: "Task #{reference} already completed" }
             elsif was_already_done
-              { success: true, message: "Task #{reference} already marked as done, moved to done/" }
+              { success: true, message: "Task #{reference} already marked as done, moved to #{archive_dir}/" }
             elsif was_already_moved
-              { success: true, message: "Task #{reference} marked as done (already in done/)" }
+              { success: true, message: "Task #{reference} marked as done (already in #{archive_dir}/)" }
             else
-              { success: true, message: "Task #{reference} marked as done and moved to done/" }
+              { success: true, message: "Task #{reference} marked as done and moved to #{archive_dir}/" }
             end
           else
-            { success: true, message: "Task #{reference} marked as done (move to done/ failed: #{move_result[:message]})" }
+            { success: true, message: "Task #{reference} marked as done (move to #{archive_dir}/ failed: #{move_result[:message]})" }
           end
         end
 
@@ -981,6 +1067,68 @@ module Ace
           end
         end
 
+        # Defer a task (move to _deferred/ and update status)
+        # @param reference [String] Task reference
+        # @return [Hash] Result with :success and :message
+        def defer_task(reference)
+          task = @task_loader.find_task_by_reference(reference)
+          return { success: false, message: "Task #{reference} not found" } unless task
+
+          # Update status to deferred first
+          status_result = update_task_status(reference, "deferred")
+          return status_result unless status_result[:success]
+
+          # Move to deferred directory
+          require_relative "../molecules/task_directory_mover"
+          mover = Molecules::TaskDirectoryMover.new
+          move_result = mover.move_to_deferred(task[:path])
+
+          if move_result[:success]
+            deferred_dir = Ace::Taskflow.configuration.deferred_dir
+            { success: true, message: "Task #{reference} deferred and moved to #{deferred_dir}/" }
+          else
+            { success: true, message: "Task #{reference} status set to deferred (move to #{Ace::Taskflow.configuration.deferred_dir}/ failed: #{move_result[:message]})" }
+          end
+        end
+
+        # Restore a deferred task (move from _deferred/ and update status)
+        # @param reference [String] Task reference
+        # @param status [String] Status to set (default: "pending")
+        # @return [Hash] Result with :success and :message
+        def undefer_task(reference, status: "pending")
+          task = @task_loader.find_task_by_reference(reference)
+          return { success: false, message: "Task #{reference} not found" } unless task
+
+          deferred_dir_name = Ace::Taskflow.configuration.deferred_dir
+
+          # Check if task is in deferred directory
+          in_deferred = task[:path].include?("/#{deferred_dir_name}/")
+
+          unless in_deferred
+            return { success: false, message: "Task #{reference} is not in #{deferred_dir_name}/" }
+          end
+
+          # Restore from deferred directory
+          require_relative "../molecules/task_directory_mover"
+          mover = Molecules::TaskDirectoryMover.new
+          restore_result = mover.restore_from_deferred(task[:path])
+
+          return restore_result unless restore_result[:success]
+
+          # Update status using the new path
+          task_loader_temp = Molecules::TaskLoader.new(@root_path)
+          restored_task = task_loader_temp.find_task_by_reference(reference)
+
+          unless restored_task
+            return { success: false, message: "Task restored but could not be found for status update" }
+          end
+
+          status_result = @task_loader.update_task_status(restored_task[:path], status)
+          return status_result unless status_result[:success]
+
+          { success: true, message: "Task #{reference} restored from #{deferred_dir_name}/ and set to #{status}" }
+        end
+
         # Get recent tasks
         # @param days [Integer] Number of days to look back
         # @param release [String] Release to search
@@ -1010,7 +1158,7 @@ module Ace
             primary = @release_resolver.find_primary_active
             primary ? primary[:path] : nil
           when "backlog"
-            File.join(@root_path, "backlog")
+            File.join(@root_path, @config.backlog_dir)
           when "all"
             @root_path
           else
@@ -1105,10 +1253,10 @@ module Ace
 
         def task_id_exists?(release_path, task_id)
           config = Ace::Taskflow.configuration
-          # Check both active and done directories for existing task IDs
+          # Check both active and archive directories for existing task IDs
           dirs = [
             File.join(release_path, config.task_dir),
-            File.join(release_path, "done")
+            File.join(release_path, config.done_dir)
           ]
 
           dirs.any? do |dir|

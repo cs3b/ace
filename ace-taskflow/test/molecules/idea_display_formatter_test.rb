@@ -131,7 +131,7 @@ class IdeaDisplayFormatterTest < Minitest::Test
     result = Ace::Taskflow::Molecules::IdeaDisplayFormatter.format_done_confirmation("idea-001", timestamp)
 
     assert_equal 2, result.length
-    assert_equal "Idea 'idea-001' marked as done and moved to done/", result[0]
+    assert_equal "Idea 'idea-001' marked as done and moved to _archive/", result[0]
     assert_equal "Completed at: 2025-10-01 14:30:00", result[1]
   end
 

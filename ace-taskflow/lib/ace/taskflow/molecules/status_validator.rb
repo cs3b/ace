@@ -8,10 +8,11 @@ module Ace
       # Supports both strict (rigid) and flexible (forgiving) transition modes
       class StatusValidator
         TRANSITIONS = {
-          "draft" => ["pending", "blocked"],
-          "pending" => ["in-progress", "blocked"],
-          "in-progress" => ["done", "pending", "blocked"],
-          "blocked" => ["pending", "in-progress"],
+          "draft" => ["pending", "blocked", "deferred"],
+          "pending" => ["in-progress", "blocked", "deferred"],
+          "in-progress" => ["done", "pending", "blocked", "deferred"],
+          "blocked" => ["pending", "in-progress", "deferred"],
+          "deferred" => ["pending", "in-progress"],
           "done" => ["pending"] # Allow reopening
         }.freeze
 

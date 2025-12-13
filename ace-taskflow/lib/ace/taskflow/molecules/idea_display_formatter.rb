@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../configuration"
+
 module Ace
   module Taskflow
     module Molecules
@@ -64,8 +66,9 @@ module Ace
         # @param timestamp [Time] Completion timestamp
         # @return [Array<String>] Confirmation lines
         def self.format_done_confirmation(reference, timestamp = Time.now)
+          archive_dir = Ace::Taskflow.configuration.done_dir
           [
-            "Idea '#{reference}' marked as done and moved to done/",
+            "Idea '#{reference}' marked as done and moved to #{archive_dir}/",
             "Completed at: #{timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
           ]
         end

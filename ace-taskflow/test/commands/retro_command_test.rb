@@ -76,7 +76,7 @@ module Ace
           assert_match(/Usage: ace-taskflow retro/, output)
           assert_match(/create/, output)
           assert_match(/show/, output)
-          assert_match(/done/, output)
+          assert_match(/_archive/, output)
         end
       end
     end

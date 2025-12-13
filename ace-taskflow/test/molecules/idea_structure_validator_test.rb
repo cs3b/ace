@@ -55,8 +55,8 @@ module Ace
         end
 
         def test_properly_placed_idea_in_done_release
-          # Create properly placed idea in done/v.0.1.0/ideas/folder/
-          done_idea_folder = File.join(@test_dir, "done", "v.0.1.0", "ideas", "archived-idea-folder")
+          # Create properly placed idea in _archive/v.0.1.0/ideas/folder/
+          done_idea_folder = File.join(@test_dir, "_archive", "v.0.1.0", "ideas", "archived-idea-folder")
           FileUtils.mkdir_p(done_idea_folder)
           idea_file = File.join(done_idea_folder, "archived-idea.s.md")
           File.write(idea_file, "# Archived Idea\n\nContent")
@@ -174,8 +174,8 @@ module Ace
         end
 
         def test_misplaced_idea_in_done_release
-          # Test nested path suggestion for done/v.X.Y.Z structure
-          done_release_dir = File.join(@test_dir, "done", "v.0.1.0")
+          # Test nested path suggestion for _archive/v.X.Y.Z structure
+          done_release_dir = File.join(@test_dir, "_archive", "v.0.1.0")
           FileUtils.mkdir_p(done_release_dir)
           idea_file = File.join(done_release_dir, "misplaced-in-done.s.md")
           File.write(idea_file, "# Misplaced Idea\n\nContent")
@@ -184,8 +184,8 @@ module Ace
 
           assert_equal 1, result[:misplaced].size
           misplaced = result[:misplaced].first
-          # Should suggest: done/v.0.1.0/ideas/folder/file.md
-          assert_includes misplaced[:suggested_location], "done/v.0.1.0/ideas/misplaced-in-done/misplaced-in-done.s.md"
+          # Should suggest: _archive/v.0.1.0/ideas/folder/file.md
+          assert_includes misplaced[:suggested_location], "_archive/v.0.1.0/ideas/misplaced-in-done/misplaced-in-done.s.md"
         end
 
         def test_misplaced_idea_in_other_subdirectory

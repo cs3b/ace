@@ -40,17 +40,27 @@ module Ace
 
       # Get done directory name
       def done_dir
-        config.dig("directories", "done") || "done"
+        config.dig("directories", "done") || "_archive"
       end
 
       # Get backlog directory name
       def backlog_dir
-        config.dig("directories", "backlog") || "backlog"
+        config.dig("directories", "backlog") || "_backlog"
       end
 
       # Get pending directory name
       def pending_dir
         config.dig("directories", "pending") || "pending"
+      end
+
+      # Get parked directory name
+      def parked_dir
+        config.dig("directories", "parked") || "_parked"
+      end
+
+      # Get deferred directory name
+      def deferred_dir
+        config.dig("directories", "deferred") || "_deferred"
       end
 
       # Get default glob pattern for all spec files

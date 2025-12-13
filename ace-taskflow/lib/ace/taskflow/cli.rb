@@ -39,6 +39,9 @@ module Ace
         when "migrate-paths"
           require_relative "cli/migrate_paths"
           Commands::MigratePaths.run(args)
+        when "migrate"
+          require_relative "commands/migrate_command"
+          Commands::MigrateCommand.new.execute(args)
         when "config"
           show_config
           0
@@ -96,6 +99,7 @@ module Ace
         puts ""
         puts "System Maintenance:"
         puts "  doctor   - Run health checks and auto-fix issues"
+        puts "  migrate  - Migrate folder structure to new naming convention"
         puts ""
         puts "Configuration:"
         puts "  config   - Show current configuration"

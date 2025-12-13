@@ -156,7 +156,8 @@ module Ace
                    when "current", "active"
                      @release_resolver.find_primary_active
                    when "backlog"
-                     { name: "Backlog", path: File.join(@root_path, "backlog"), release: "backlog" }
+                     backlog_dir = Ace::Taskflow.configuration.backlog_dir
+                     { name: "Backlog", path: File.join(@root_path, backlog_dir), release: "backlog" }
                    when "all"
                      { name: "All Releases", path: @root_path, release: "all" }
                    else

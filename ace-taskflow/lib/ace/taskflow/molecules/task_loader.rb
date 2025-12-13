@@ -86,7 +86,8 @@ module Ace
 
           # Iterate through task directories in main t/ directory
           # Supports both old format (t/001/) and new format (t/001-feat-taskflow/)
-          Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "done" }.each do |task_folder|
+          archive_dir = @config.done_dir
+          Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != archive_dir }.each do |task_folder|
             # Find ALL .s.md files in the task folder (not in subfolders)
             # This includes orchestrators (121.00-*.s.md) and subtasks (121.01-*.s.md)
             md_files = Dir.glob(File.join(task_folder, "*.s.md"))
@@ -209,7 +210,7 @@ module Ace
           end
 
           # Load from backlog
-          backlog_path = File.join(root_path, "backlog")
+          backlog_path = File.join(root_path, @config.backlog_dir)
           if File.directory?(backlog_path)
             # Direct backlog tasks
             tasks.concat(load_tasks_from_release(backlog_path))
@@ -222,7 +223,7 @@ module Ace
           end
 
           # Load from done releases
-          done_path = File.join(root_path, "done")
+          done_path = File.join(root_path, @config.done_dir)
           if File.directory?(done_path)
             Dir.glob(File.join(done_path, "v.*")).each do |release_path|
               next unless File.directory?(release_path)
@@ -487,7 +488,7 @@ module Ace
             primary = resolver.find_primary_active
             primary ? primary[:path] : nil
           elsif release_name == "backlog"
-            File.join(root_path, "backlog")
+            File.join(root_path, @config.backlog_dir)
           else
             # Try to find as release
             require_relative "release_resolver"

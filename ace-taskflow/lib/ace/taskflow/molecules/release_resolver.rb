@@ -26,7 +26,8 @@ module Ace
           end
 
           # Find backlog releases
-          backlog_path = File.join(root_path, "backlog")
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
+          backlog_path = File.join(root_path, backlog_dir)
           if File.directory?(backlog_path)
             Dir.glob(File.join(backlog_path, "v.*")).each do |path|
               next unless File.directory?(path)
@@ -44,7 +45,8 @@ module Ace
           end
 
           # Find done releases
-          done_path = File.join(root_path, "done")
+          archive_dir = Ace::Taskflow.configuration.done_dir
+          done_path = File.join(root_path, archive_dir)
           if File.directory?(done_path)
             Dir.glob(File.join(done_path, "v.*")).each do |path|
               next unless File.directory?(path)
@@ -99,7 +101,8 @@ module Ace
             primary = find_primary_active
             primary ? primary[:path] : nil
           when "backlog"
-            File.join(root_path, "backlog")
+            backlog_dir = Ace::Taskflow.configuration.backlog_dir
+            File.join(root_path, backlog_dir)
           when "pending"
             File.join(root_path, "pending")
           else

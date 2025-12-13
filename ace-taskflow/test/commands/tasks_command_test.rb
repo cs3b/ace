@@ -24,7 +24,7 @@ class TasksCommandTest < AceTaskflowTestCase
         assert_match(/v\.0\.9\.0\+task\.005/, output)
 
         # Should show status
-        assert_match(/done/, output)
+        assert_match(/_archive/, output)
         assert_match(/in-progress/, output)
         assert_match(/pending/, output)
       end

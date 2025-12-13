@@ -74,6 +74,7 @@ class StatusValidatorFlexibleTest < AceTaskflowTestCase
     assert @validator.valid_status?("pending", flexible: false)
     assert @validator.valid_status?("done", flexible: false)
     assert @validator.valid_status?("in-progress", flexible: false)
+    assert @validator.valid_status?("deferred", flexible: false)
 
     refute @validator.valid_status?("ready-for-review", flexible: false)
     refute @validator.valid_status?("custom", flexible: false)
@@ -93,10 +94,10 @@ class StatusValidatorFlexibleTest < AceTaskflowTestCase
   def test_allowed_transitions_strict_mode
     # In strict mode, use predefined matrix
     pending_transitions = @validator.allowed_transitions("pending", flexible: false)
-    assert_equal ["in-progress", "blocked"], pending_transitions
+    assert_equal ["in-progress", "blocked", "deferred"], pending_transitions
 
     in_progress_transitions = @validator.allowed_transitions("in-progress", flexible: false)
-    assert_equal ["done", "pending", "blocked"], in_progress_transitions
+    assert_equal ["done", "pending", "blocked", "deferred"], in_progress_transitions
   end
 
   def test_all_statuses_returns_known_statuses
@@ -107,5 +108,6 @@ class StatusValidatorFlexibleTest < AceTaskflowTestCase
     assert all.include?("in-progress")
     assert all.include?("blocked")
     assert all.include?("draft")
+    assert all.include?("deferred")
   end
 end

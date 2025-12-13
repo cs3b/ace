@@ -108,11 +108,11 @@ module TestFactory
     CONFIG
 
     # Create standard structure in .ace-taskflow
-    %w[v.0.9.0 backlog done].each do |dir|
+    %w[v.0.9.0 _backlog _archive].each do |dir|
       FileUtils.mkdir_p(File.join(taskflow_root, dir))
     end
-    # Create v.0.8.0 in done directory since it's completed
-    FileUtils.mkdir_p(File.join(taskflow_root, "done", "v.0.8.0"))
+    # Create v.0.8.0 in _archive directory since it's completed
+    FileUtils.mkdir_p(File.join(taskflow_root, "_archive", "v.0.8.0"))
 
     # Create release files
     File.write(File.join(taskflow_root, "v.0.9.0", "release.md"), <<~RELEASE)
@@ -126,7 +126,7 @@ module TestFactory
       Test release
     RELEASE
 
-    File.write(File.join(taskflow_root, "done", "v.0.8.0", "release.md"), <<~RELEASE)
+    File.write(File.join(taskflow_root, "_archive", "v.0.8.0", "release.md"), <<~RELEASE)
       ---
       version: v.0.8.0
       status: completed
@@ -139,12 +139,12 @@ module TestFactory
 
     # Create sample tasks
     create_task_structure(taskflow_root, "v.0.9.0", 5)
-    create_task_structure(File.join(taskflow_root, "done"), "v.0.8.0", 3)
-    create_task_structure(taskflow_root, "backlog", 10)
+    create_task_structure(File.join(taskflow_root, "_archive"), "v.0.8.0", 3)
+    create_task_structure(taskflow_root, "_backlog", 10)
 
     # Create sample ideas
     create_idea_structure(taskflow_root, "v.0.9.0", 3)
-    create_idea_structure(taskflow_root, "backlog", 5)
+    create_idea_structure(taskflow_root, "_backlog", 5)
   end
 
   def self.create_task_structure(base_dir, release, count)
@@ -210,7 +210,7 @@ module TestFactory
         File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
         # Create standard directories but no content
-        %w[backlog done].each do |subdir|
+        %w[_backlog _archive].each do |subdir|
           FileUtils.mkdir_p(File.join(taskflow_root, subdir))
         end
 
@@ -232,9 +232,9 @@ module TestFactory
                    when "active"
                      File.join(taskflow_root, version)
                    when "backlog"
-                     File.join(taskflow_root, "backlog", version)
+                     File.join(taskflow_root, "_backlog", version)
                    when "done"
-                     File.join(taskflow_root, "done", version)
+                     File.join(taskflow_root, "_archive", version)
                    else
                      File.join(taskflow_root, version)
                    end

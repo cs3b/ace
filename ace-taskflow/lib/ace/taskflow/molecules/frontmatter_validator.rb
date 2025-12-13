@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/safe_yaml_parser"
+require_relative "../configuration"
 
 module Ace
   module Taskflow

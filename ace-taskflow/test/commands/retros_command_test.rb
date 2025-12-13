@@ -28,7 +28,7 @@ module Ace
             "# Reflection: Test 2\n\nContent"
           )
           File.write(
-            ".ace-taskflow/v.0.9.0/retros/done/2025-09-30-done-retro.md",
+            ".ace-taskflow/v.0.9.0/retros/_archive/2025-09-30-done-retro.md",
             "# Reflection: Done\n\nContent"
           )
 

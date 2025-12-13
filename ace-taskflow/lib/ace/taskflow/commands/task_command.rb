@@ -47,6 +47,12 @@ module Ace
             start_task(args)
           when "done"
             complete_task(args)
+          when "undone"
+            reopen_task(args)
+          when "defer"
+            defer_task(args)
+          when "undefer"
+            undefer_task(args)
           when "move"
             move_task(args)
           when "update"
@@ -262,6 +268,66 @@ module Ace
           if result[:success]
             puts result[:message]
             puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
+        def reopen_task(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow task undone <reference>"
+            puts "Example: ace-taskflow task undone 019"
+            exit 1
+          end
+
+          result = @manager.reopen_task(reference)
+
+          if result[:success]
+            puts result[:message]
+            puts "Reopened at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
+        def defer_task(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow task defer <reference>"
+            puts "Example: ace-taskflow task defer 019"
+            exit 1
+          end
+
+          result = @manager.defer_task(reference)
+
+          if result[:success]
+            puts result[:message]
+            puts "Deferred at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            exit 1
+          end
+        end
+
+        def undefer_task(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow task undefer <reference>"
+            puts "Example: ace-taskflow task undefer 019"
+            exit 1
+          end
+
+          result = @manager.undefer_task(reference)
+
+          if result[:success]
+            puts result[:message]
+            puts "Restored at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           else
             puts "Error: #{result[:message]}"
             exit 1
@@ -669,6 +735,9 @@ module Ace
           puts "    -h, --help       Show create command help"
           puts "  start <reference>  Mark task as in-progress"
           puts "  done <reference>   Mark task as completed"
+          puts "  undone <reference> Reopen completed task"
+          puts "  defer <reference>  Defer task to future release"
+          puts "  undefer <reference> Restore deferred task"
           puts "  move <ref> [options] Move or reorganize task"
           puts "    <target>         Move to release (positional, e.g., backlog)"
           puts "    --release VER    Move to specific release"
