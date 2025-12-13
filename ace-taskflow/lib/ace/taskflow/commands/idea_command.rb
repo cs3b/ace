@@ -434,8 +434,9 @@ module Ace
           mover = Molecules::IdeaDirectoryMover.new
           result = mover.move_to_maybe(idea[:path])
 
+          maybe_dir = Ace::Taskflow.configuration.maybe_dir
           if result[:success]
-            puts "Idea '#{reference}' parked (moved to _parked/)"
+            puts "Idea '#{reference}' parked (moved to #{maybe_dir}/)"
             puts "Good idea but not now - restore with 'idea unpark #{reference}'"
           else
             puts "Error: #{result[:message]}"
@@ -466,76 +467,13 @@ module Ace
           mover = Molecules::IdeaDirectoryMover.new
           result = mover.restore_from_maybe(idea[:path])
 
+          maybe_dir = Ace::Taskflow.configuration.maybe_dir
           if result[:success]
-            puts "Idea '#{reference}' restored from _parked/"
+            puts "Idea '#{reference}' restored from #{maybe_dir}/"
             puts "Moved back to active ideas"
           else
             puts "Error: #{result[:message]}"
             return 1
-          end
-        end
-
-        def park_idea(args)
-          reference = args.first
-
-          unless reference
-            puts "Usage: ace-taskflow idea park <reference>"
-            puts "Example: ace-taskflow idea park future-feature"
-            exit 1
-          end
-
-          # Find the idea
-          release = parse_release(args[1..-1] || [])
-          idea = @idea_loader.find_by_partial_name(reference, release: release)
-
-          unless idea
-            puts "No idea found matching '#{reference}' in #{release_name(release)}."
-            exit 1
-          end
-
-          # Move idea to parked
-          require_relative "../molecules/idea_directory_mover"
-          mover = Molecules::IdeaDirectoryMover.new
-          result = mover.move_to_maybe(idea[:path])
-
-          if result[:success]
-            puts "Idea '#{reference}' parked (moved to _parked/)"
-            puts "Good idea but not now - restore with 'idea unpark #{reference}'"
-          else
-            puts "Error: #{result[:message]}"
-            exit 1
-          end
-        end
-
-        def unpark_idea(args)
-          reference = args.first
-
-          unless reference
-            puts "Usage: ace-taskflow idea unpark <reference>"
-            puts "Example: ace-taskflow idea unpark future-feature"
-            exit 1
-          end
-
-          # Find the idea in parked directory
-          release = parse_release(args[1..-1] || [])
-          idea = @idea_loader.find_by_partial_name(reference, release: release)
-
-          unless idea
-            puts "No idea found matching '#{reference}' in #{release_name(release)}."
-            exit 1
-          end
-
-          # Restore idea from parked
-          require_relative "../molecules/idea_directory_mover"
-          mover = Molecules::IdeaDirectoryMover.new
-          result = mover.restore_from_maybe(idea[:path])
-
-          if result[:success]
-            puts "Idea '#{reference}' restored from _parked/"
-            puts "Moved back to active ideas"
-          else
-            puts "Error: #{result[:message]}"
-            exit 1
           end
         end
 
@@ -543,11 +481,12 @@ module Ace
         def show_help
           puts "Usage: ace-taskflow idea [subcommand] [options]"
           puts ""
+          maybe_dir = Ace::Taskflow.configuration.maybe_dir
           puts "Scopes (GTD-based organization):"
           puts "  next     - Top-level ideas (immediately actionable, default)"
           puts "  maybe/   - Uncertain if we should do it"
           puts "  anyday/  - Good idea but not urgent"
-          puts "  _parked/ - Good ideas for later (not now)"
+          puts "  #{maybe_dir}/ - Good ideas for later (not now)"
           puts "  done/    - Completed or skipped"
           puts ""
           puts "Note: Scope (folder location) is separate from status (draft/pending/done)."
@@ -567,9 +506,9 @@ module Ace
           puts "    --no-git-commit     Don't commit (overrides config)"
           puts "    --llm-enhance, -llm Enhance with LLM suggestions"
           puts "    --no-llm-enhance    Don't enhance (overrides config)"
-          puts "  done <reference>   Mark idea as done and move to done/"
-          puts "  park <reference>   Park idea for later (move to _parked/)"
-          puts "  unpark <reference> Restore idea from _parked/"
+          puts "  done <reference>   Mark idea as done and move to _archive/"
+          puts "  park <reference>   Park idea for later (move to #{maybe_dir}/)"
+          puts "  unpark <reference> Restore idea from #{maybe_dir}/"
           puts "  reschedule <ref>   Reorder idea position"
           puts "    --add-next       Place before other pending ideas"
           puts "    --add-at-end     Place after all ideas"

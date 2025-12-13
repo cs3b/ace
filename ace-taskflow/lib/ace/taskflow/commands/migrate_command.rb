@@ -135,7 +135,13 @@ module Ace
           end
         end
 
-        # Find taskflow root by walking up directory tree
+        # Find taskflow root by walking up directory tree.
+        #
+        # This is a local implementation to avoid coupling with ConfigLoader,
+        # which has dependencies on the full project structure that create
+        # issues during testing (fixture isolation, mock complexity).
+        # See reflection note for PR #72 for more context.
+        #
         # @return [String, nil] Path to .ace-taskflow directory or nil if not found
         def find_taskflow_root
           current = Dir.pwd
