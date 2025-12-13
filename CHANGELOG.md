@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.166] - 2025-12-13
+
+### ace-test-runner v0.2.1
+
+**Improved Error Message for File Not Found**
+- Changed confusing "Unknown target: <path>" to clear "File not found: <path>"
+- Added helpful guidance: "Make sure you're running from the correct directory or use an absolute path"
+- Distinguishes between file paths (contain "/" or end with ".rb") and unknown target names
+
 ## [0.9.165] - 2025-12-13
 
 ### ace-taskflow v0.23.1
