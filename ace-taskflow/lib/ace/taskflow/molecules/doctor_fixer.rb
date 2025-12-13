@@ -3,6 +3,7 @@
 require "fileutils"
 require "ace/support/markdown"
 require_relative "../atoms/safe_yaml_parser"
+require_relative "../configuration"
 
 module Ace
   module Taskflow
@@ -119,15 +120,18 @@ module Ace
           # Determine target path
           dir_path = File.dirname(file_path)
 
-          # Check if already in done
-          return false if dir_path.include?("/done/")
+          # Get archive directory name from configuration
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+
+          # Check if already in archive
+          return false if dir_path.include?("/#{archive_dir_name}/")
 
           # Find parent t/ directory
           t_dir = find_parent_t_directory(dir_path)
           return false unless t_dir
 
-          # Create done directory if needed
-          done_dir = File.join(t_dir, "done")
+          # Create archive directory if needed
+          done_dir = File.join(t_dir, archive_dir_name)
           FileUtils.mkdir_p(done_dir) unless @dry_run
 
           # Get task folder name
@@ -141,7 +145,7 @@ module Ace
             FileUtils.mkdir_p(target_folder)
             FileUtils.mv(Dir.glob(File.join(dir_path, "*")), target_folder)
             FileUtils.rmdir(dir_path) if Dir.empty?(dir_path)
-            log_fix(dir_path, "Moved task folder to done: #{target_folder}")
+            log_fix(dir_path, "Moved task folder to #{archive_dir_name}: #{target_folder}")
           end
 
           @fixed_count += 1
@@ -259,10 +263,11 @@ module Ace
 
         def find_parent_done_directory(path)
           current = File.expand_path(path)
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
 
           while current != "/" && current != File.expand_path("~")
             basename = File.basename(current)
-            return current if basename == "done" && File.basename(File.dirname(current)) == "t"
+            return current if basename == archive_dir_name && File.basename(File.dirname(current)) == "t"
 
             parent = File.dirname(current)
             break if parent == current

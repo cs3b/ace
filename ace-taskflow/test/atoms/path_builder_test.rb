@@ -8,7 +8,7 @@ class PathBuilderTest < AceTaskflowTestCase
   def setup
     @builder = Ace::Taskflow::Atoms::PathBuilder
     @root = "/path/to/.ace-taskflow"
-    @mock_config = OpenStruct.new(task_dir: "tasks")
+    @mock_config = OpenStruct.new(task_dir: "tasks", backlog_dir: "_backlog")
   end
 
   # Helper to run tests with stubbed config
@@ -44,7 +44,7 @@ class PathBuilderTest < AceTaskflowTestCase
     with_config do
       result = @builder.build_task_path(@root, "backlog", "042", "feature-x")
 
-      assert_equal "/path/to/.ace-taskflow/backlog/tasks/042-feature-x", result
+      assert_equal "/path/to/.ace-taskflow/_backlog/tasks/042-feature-x", result
     end
   end
 
@@ -81,13 +81,13 @@ class PathBuilderTest < AceTaskflowTestCase
   def test_build_release_path_backlog
     result = @builder.build_release_path(@root, "v.1.0.0", "backlog")
 
-    assert_equal "/path/to/.ace-taskflow/backlog/v.1.0.0", result
+    assert_equal "/path/to/.ace-taskflow/_backlog/v.1.0.0", result
   end
 
   def test_build_release_path_done
     result = @builder.build_release_path(@root, "v.0.8.0", "done")
 
-    assert_equal "/path/to/.ace-taskflow/done/v.0.8.0", result
+    assert_equal "/path/to/.ace-taskflow/_archive/v.0.8.0", result
   end
 
   def test_build_release_path_default_status
@@ -99,7 +99,7 @@ class PathBuilderTest < AceTaskflowTestCase
   def test_build_ideas_path_in_backlog
     result = @builder.build_ideas_path(@root, "backlog")
 
-    assert_equal "/path/to/.ace-taskflow/backlog/ideas", result
+    assert_equal "/path/to/.ace-taskflow/_backlog/ideas", result
   end
 
   def test_build_ideas_path_in_release
@@ -159,21 +159,21 @@ class PathBuilderTest < AceTaskflowTestCase
   end
 
   def test_extract_release_version_returns_nil_for_backlog
-    path = "/path/to/.ace-taskflow/backlog/tasks/001/task.md"
+    path = "/path/to/.ace-taskflow/_backlog/tasks/001/task.md"
     result = @builder.extract_release_version(path)
 
     assert_nil result
   end
 
   def test_extract_release_from_backlog_path
-    path = "/path/to/.ace-taskflow/backlog/tasks/001/task.md"
+    path = "/path/to/.ace-taskflow/_backlog/tasks/001/task.md"
     result = @builder.extract_release(path)
 
     assert_equal "backlog", result
   end
 
   def test_extract_release_from_done_path
-    path = "/path/to/.ace-taskflow/done/v.0.8.0/tasks/001/task.md"
+    path = "/path/to/.ace-taskflow/_archive/v.0.8.0/tasks/001/task.md"
     result = @builder.extract_release(path)
 
     assert_equal "done", result

@@ -54,7 +54,7 @@ class TaskCommandTest < AceTaskflowTestCase
         end
 
         assert_match(/v\.0\.9\.0\+task\.001/, output)
-        assert_match(/done/, output)
+        assert_match(/_archive/, output)
       end
     end
   end

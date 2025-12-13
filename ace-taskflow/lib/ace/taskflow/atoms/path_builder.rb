@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../configuration"
+
 module Ace
   module Taskflow
     module Atoms
@@ -13,14 +15,23 @@ module Ace
         # @param config [Configuration] Optional configuration object
         # @return [String] The complete path to the task directory
         def self.build_task_path(root, release, task_number, slug_part = nil, config_param = nil)
-          task_dir = (config_param || config).task_dir
+          config_obj = (config_param || config)
+          task_dir = config_obj.task_dir
 
           task_dir_name = if slug_part
             "#{task_number.to_s.rjust(3, '0')}-#{slug_part}"
           else
             task_number.to_s
           end
-          File.join(root, release, task_dir, task_dir_name)
+
+          # Map logical "backlog" to configured backlog directory
+          actual_release = if release == "backlog"
+            config_obj.backlog_dir
+          else
+            release
+          end
+
+          File.join(root, actual_release, task_dir, task_dir_name)
         end
 
         # Build task file path (with optional filename)
@@ -43,13 +54,15 @@ module Ace
         # @param status [String] The release status (backlog, pending, active, done)
         # @return [String] The complete path to the release directory
         def self.build_release_path(root, release_name, status = "active")
+          archive_dir = Ace::Taskflow.configuration.done_dir
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
           case status
           when "backlog"
-            File.join(root, "backlog", release_name)
+            File.join(root, backlog_dir, release_name)
           when "pending"
             File.join(root, "pending", release_name)
           when "done"
-            File.join(root, "done", release_name)
+            File.join(root, archive_dir, release_name)
           when "active"
             File.join(root, release_name)
           else
@@ -62,8 +75,9 @@ module Ace
         # @param release [String] The release (backlog, v.X.Y.Z, current)
         # @return [String] The path to the ideas directory
         def self.build_ideas_path(root, release)
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
           if release == "backlog"
-            File.join(root, "backlog", "ideas")
+            File.join(root, backlog_dir, "ideas")
           else
             File.join(root, release, "ideas")
           end
@@ -109,11 +123,13 @@ module Ace
         # @param path [String] The file or directory path
         # @return [String] The release (backlog, pending, active release version, or done)
         def self.extract_release(path)
-          if path.include?("/backlog/")
+          archive_dir = Ace::Taskflow.configuration.done_dir
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
+          if path.include?("/#{backlog_dir}/")
             "backlog"
           elsif path.include?("/pending/")
             "pending"
-          elsif path.include?("/done/")
+          elsif path.include?("/#{archive_dir}/")
             "done"
           else
             extract_release_version(path) || "unknown"

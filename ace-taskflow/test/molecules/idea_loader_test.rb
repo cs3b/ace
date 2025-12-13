@@ -29,8 +29,8 @@ class IdeaLoaderTest < AceTaskflowTestCase
   def test_load_ideas_from_backlog
     with_test_project do |dir|
       Dir.chdir(dir) do
-        # Create test idea in .ace-taskflow/backlog/ideas
-        idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        # Create test idea in .ace-taskflow/_backlog/ideas
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
         File.write(File.join(idea_dir, "20250102-130000-backlog-idea.s.md"), "# Backlog Idea")
 
@@ -48,7 +48,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         # Create ideas in multiple locations
         v090_ideas = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
-        backlog_ideas = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        backlog_ideas = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(v090_ideas)
         FileUtils.mkdir_p(backlog_ideas)
 
@@ -71,7 +71,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
   def test_find_next_idea
     with_test_project do |dir|
       Dir.chdir(dir) do
-        idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
         File.write(File.join(idea_dir, "20250101-100000-first.s.md"), "# First")
         File.write(File.join(idea_dir, "20250102-100000-second.s.md"), "# Second")
@@ -87,7 +87,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
   def test_find_by_partial_name
     with_test_project do |dir|
       Dir.chdir(dir) do
-        idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
         File.write(File.join(idea_dir, "20250101-100000-dark-mode-feature.s.md"), "# Dark Mode")
         File.write(File.join(idea_dir, "20250102-100000-light-theme.s.md"), "# Light Theme")
@@ -137,7 +137,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
   def test_load_ideas_without_content
     with_test_project do |dir|
       Dir.chdir(dir) do
-        idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
         File.write(File.join(idea_dir, "20250101-100000-test.s.md"), "# Test\n\nLong content here")
 
@@ -153,7 +153,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
   def test_extract_title_from_filename
     with_test_project do |dir|
       Dir.chdir(dir) do
-        idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
         File.write(File.join(idea_dir, "20250101-100000-add-dark-mode-feature.s.md"), "Content")
 
@@ -180,7 +180,7 @@ class IdeaLoaderTest < AceTaskflowTestCase
   def test_find_by_partial_name_case_insensitive
     with_test_project do |dir|
       Dir.chdir(dir) do
-        idea_dir = File.join(dir, ".ace-taskflow", "backlog", "ideas")
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
         FileUtils.mkdir_p(idea_dir)
         File.write(File.join(idea_dir, "20250101-100000-UPPERCASE-IDEA.s.md"), "# Test")
 

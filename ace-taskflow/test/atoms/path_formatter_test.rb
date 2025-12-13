@@ -106,10 +106,10 @@ class PathFormatterTest < AceTaskflowTestCase
   end
 
   def test_format_display_path_preserves_structure_for_ace_taskflow
-    path = "/Users/developer/projects/myapp/.ace-taskflow/backlog/v.1.0.0/t/042/task.md"
+    path = "/Users/developer/projects/myapp/.ace-taskflow/_backlog/v.1.0.0/t/042/task.md"
     result = @formatter.format_display_path(path, @root, max_length: 100)
 
-    assert_equal ".ace-taskflow/backlog/v.1.0.0/t/042/task.md", result
+    assert_equal ".ace-taskflow/_backlog/v.1.0.0/t/042/task.md", result
   end
 
   def test_format_display_path_truncation_symmetry

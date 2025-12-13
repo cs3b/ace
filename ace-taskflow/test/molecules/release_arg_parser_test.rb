@@ -201,11 +201,11 @@ class ReleaseArgParserTest < Minitest::Test
 
   def test_parse_reschedule_args_no_reference
     result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_reschedule_args([
-      "--status", "done"
+      "--status", "_archive"
     ])
 
     assert_nil result[:reference]
-    assert_equal "done", result[:options][:status]
+    assert_equal "_archive", result[:options][:status]
   end
 
   def test_parse_demote_args_with_name_only
@@ -239,7 +239,7 @@ class ReleaseArgParserTest < Minitest::Test
   def test_parse_demote_args_no_name
     skip "Test needs fix - will be reviewed in Phase 9"
     result = Ace::Taskflow::Molecules::ReleaseArgParser.parse_demote_args([
-      "--to", "done"
+      "--to", "_archive"
     ])
 
     assert_nil result[:name]

@@ -91,7 +91,7 @@ class TaskManagerTest < AceTaskflowTestCase
         refute Dir.exist?(old_dir)
 
         # Verify new file created
-        new_file = Dir.glob(File.join(dir, ".ace-taskflow", "done", "v.0.8.0", "t", "004", "*.s.md")).first
+        new_file = Dir.glob(File.join(dir, ".ace-taskflow", "_archive", "v.0.8.0", "t", "004", "*.s.md")).first
         assert new_file
         assert File.exist?(new_file)
       end
@@ -278,13 +278,13 @@ class TaskManagerTest < AceTaskflowTestCase
         content = File.read(subtask_file)
         assert_match(/status: done/, content)
 
-        # Verify parent folder NOT moved to done/
+        # Verify parent folder NOT moved to _archive/
         parent_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "121-hierarchical-test")
         assert Dir.exist?(parent_dir), "Parent folder should NOT be moved when other subtasks still pending"
 
         # Verify done directory doesn't contain the orchestrator
-        done_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "done", "121-hierarchical-test")
-        refute Dir.exist?(done_dir), "Orchestrator should NOT be in done/ yet"
+        done_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "_archive", "121-hierarchical-test")
+        refute Dir.exist?(done_dir), "Orchestrator should NOT be in _archive/ yet"
       end
     end
   end
@@ -300,15 +300,15 @@ class TaskManagerTest < AceTaskflowTestCase
 
         assert result[:success], "Should complete subtask: #{result[:message]}"
 
-        # Orchestrator should be auto-completed and moved to done/ (inside t/done/)
-        done_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "done")
+        # Orchestrator should be auto-completed and moved to _archive/ (inside t/_archive/)
+        done_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "_archive")
         orchestrator_in_done = Dir.glob(File.join(done_dir, "*121*")).first
 
-        assert orchestrator_in_done, "Orchestrator should be moved to t/done/ when all subtasks complete"
+        assert orchestrator_in_done, "Orchestrator should be moved to t/_archive/ when all subtasks complete"
 
         # Verify orchestrator status is done
         orchestrator_file = Dir.glob(File.join(done_dir, "*121*", "121.00-*.s.md")).first
-        assert orchestrator_file, "Orchestrator file should exist in done/"
+        assert orchestrator_file, "Orchestrator file should exist in _archive/"
         content = File.read(orchestrator_file)
         assert_match(/status: done/, content)
       end
@@ -333,7 +333,7 @@ class TaskManagerTest < AceTaskflowTestCase
         content = File.read(orchestrator_file)
         assert_match(/status: done/, content)
 
-        # Verify folder NOT moved to done/
+        # Verify folder NOT moved to _archive/
         parent_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "121-hierarchical-test")
         assert Dir.exist?(parent_dir), "Folder should NOT be moved when subtasks pending"
       end
@@ -349,12 +349,12 @@ class TaskManagerTest < AceTaskflowTestCase
         result = manager.complete_task("123")
 
         assert result[:success], "Should complete task: #{result[:message]}"
-        assert_match(/moved to done/, result[:message])
+        assert_match(/moved to _archive/, result[:message])
 
-        # Verify task moved to done/ (inside t/done/)
-        done_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "done")
+        # Verify task moved to _archive/ (inside t/_archive/)
+        done_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "_archive")
         task_in_done = Dir.glob(File.join(done_dir, "*123*")).first
-        assert task_in_done, "Task should be moved to t/done/"
+        assert task_in_done, "Task should be moved to t/_archive/"
 
         # Verify original location is empty
         original_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "123-regular-task")
@@ -647,6 +647,111 @@ This is a regular task, not an orchestrator.
         File.write(File.join(task_dir, "123-regular-task.s.md"), task_content)
 
         yield dir
+      end
+    end
+  end
+
+  # Tests for reopen_task (undone command)
+  def test_reopen_single_task_from_archive
+    with_regular_task_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+
+        # First complete the task (moves to archive)
+        complete_result = manager.complete_task("123")
+        assert complete_result[:success], "Should complete task"
+
+        # Verify it's in archive
+        archive_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "_archive")
+        task_in_archive = Dir.glob(File.join(archive_dir, "*123*")).first
+        assert task_in_archive, "Task should be in archive"
+
+        # Now reopen the task
+        reopen_result = manager.reopen_task("123")
+        assert reopen_result[:success], "Should reopen task: #{reopen_result[:message]}"
+        assert_match(/restored from _archive/, reopen_result[:message])
+
+        # Verify task is back in active tasks directory
+        active_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t")
+        task_in_active = Dir.glob(File.join(active_dir, "*123*")).reject { |p| p.include?("_archive") }.first
+        assert task_in_active, "Task should be restored to active tasks"
+
+        # Verify task is no longer in archive
+        task_still_in_archive = Dir.glob(File.join(archive_dir, "*123*")).first
+        refute task_still_in_archive, "Task should not be in archive anymore"
+
+        # Verify status was updated to in-progress
+        task_file = Dir.glob(File.join(task_in_active, "*.s.md")).first
+        content = File.read(task_file)
+        assert_match(/status: in-progress/, content)
+      end
+    end
+  end
+
+  def test_reopen_task_not_in_archive_updates_status_only
+    with_regular_task_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+
+        # Update task to done status without moving to archive
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "123-regular-task", "123-regular-task.s.md")
+        content = File.read(task_file)
+        File.write(task_file, content.gsub(/status: pending/, "status: done"))
+
+        # Now reopen the task (should only update status since not in archive)
+        reopen_result = manager.reopen_task("123")
+        assert reopen_result[:success], "Should reopen task: #{reopen_result[:message]}"
+        assert_match(/set to in-progress/, reopen_result[:message])
+
+        # Verify status was updated
+        content_after = File.read(task_file)
+        assert_match(/status: in-progress/, content_after)
+
+        # Verify task is still in same location (not moved)
+        assert File.exist?(task_file), "Task should still be in original location"
+      end
+    end
+  end
+
+  def test_reopen_subtask_updates_status_only
+    with_orchestrator_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+
+        # Mark subtask as done
+        subtask_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "121-hierarchical-test", "121.01-first-subtask.s.md")
+        content = File.read(subtask_file)
+        File.write(subtask_file, content.gsub(/status: done/, "status: done")) # Already done in fixture
+
+        # Reopen the subtask
+        reopen_result = manager.reopen_task("121.01")
+        assert reopen_result[:success], "Should reopen subtask: #{reopen_result[:message]}"
+        assert_match(/reopened and set to in-progress/, reopen_result[:message])
+
+        # Verify status was updated
+        content_after = File.read(subtask_file)
+        assert_match(/status: in-progress/, content_after)
+
+        # Verify subtask file is still in same location (not moved)
+        assert File.exist?(subtask_file), "Subtask should remain in orchestrator directory"
+      end
+    end
+  end
+
+  def test_reopen_task_not_found
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+
+        result = manager.reopen_task("999")
+        refute result[:success]
+        assert_match(/not found/, result[:message])
       end
     end
   end

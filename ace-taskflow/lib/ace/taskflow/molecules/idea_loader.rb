@@ -264,7 +264,7 @@ module Ace
         # Determine the release root directory (backlog or release)
         # This is used for glob-based loading where patterns start from release root
         def determine_release_root(release_name)
-          backlog_dir = @config.dig("taskflow", "directories", "backlog") || "backlog"
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
 
           case release_name
           when "current", "active", nil

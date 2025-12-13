@@ -21,8 +21,8 @@ class IdeaDirectoryMoverTest < AceTaskflowTestCase
         result = @mover.move_to_done(idea_folder)
 
         assert result[:success], "Should succeed: #{result[:message]}"
-        assert_equal File.join(ideas_dir, "done", "20250101-120000-test-idea"), result[:new_path]
-        assert Dir.exist?(result[:new_path]), "Done folder should exist"
+        assert_equal File.join(ideas_dir, "_archive", "20250101-120000-test-idea"), result[:new_path]
+        assert Dir.exist?(result[:new_path]), "Archive folder should exist"
         refute Dir.exist?(idea_folder), "Original folder should not exist"
       end
     end
@@ -43,13 +43,13 @@ class IdeaDirectoryMoverTest < AceTaskflowTestCase
 
         assert result[:success], "Should succeed: #{result[:message]}"
         # Should move the FOLDER, not just the file
-        expected_folder = File.join(ideas_dir, "done", "20250101-120000-test-idea")
+        expected_folder = File.join(ideas_dir, "_archive", "20250101-120000-test-idea")
         assert_equal expected_folder, result[:new_path]
-        assert Dir.exist?(expected_folder), "Done folder should exist at ideas/done/"
+        assert Dir.exist?(expected_folder), "Archive folder should exist at ideas/_archive/"
         assert File.exist?(File.join(expected_folder, "my-idea.s.md")), "File should be inside moved folder"
         refute Dir.exist?(idea_folder), "Original folder should not exist"
         # Ensure no incorrect done/ subfolder was created
-        refute Dir.exist?(File.join(ideas_dir, "20250101-120000-test-idea", "done")),
+        refute Dir.exist?(File.join(ideas_dir, "20250101-120000-test-idea", "_archive")),
                "Should NOT create done/ inside idea folder"
       end
     end
@@ -91,21 +91,173 @@ class IdeaDirectoryMoverTest < AceTaskflowTestCase
   def test_restore_from_done
     with_test_project do |dir|
       Dir.chdir(dir) do
-        # Create done idea folder
+        # Create archived idea folder
         ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
-        done_dir = File.join(ideas_dir, "done")
-        idea_folder = File.join(done_dir, "20250101-120000-test-idea")
+        archive_dir = File.join(ideas_dir, "_archive")
+        idea_folder = File.join(archive_dir, "20250101-120000-test-idea")
         FileUtils.mkdir_p(idea_folder)
         File.write(File.join(idea_folder, "idea.md"), "---\nstatus: done\ncompleted_at: 2025-01-01\n---\n# Test Idea")
 
-        # Restore from done
+        # Restore from archive
         result = @mover.restore_from_done(idea_folder)
 
         assert result[:success], "Should succeed: #{result[:message]}"
         expected_path = File.join(ideas_dir, "20250101-120000-test-idea")
         assert_equal expected_path, result[:new_path]
         assert Dir.exist?(expected_path), "Restored folder should exist"
-        refute Dir.exist?(idea_folder), "Done folder should not exist"
+        refute Dir.exist?(idea_folder), "Archive folder should not exist"
+      end
+    end
+  end
+
+  def test_move_to_parked_with_folder_path
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create test idea folder structure
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        idea_folder = File.join(ideas_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: pending\n---\n# Test Idea")
+
+        # Move to parked using folder path
+        result = @mover.move_to_parked(idea_folder)
+
+        assert result[:success], "Should succeed: #{result[:message]}"
+        assert_equal File.join(ideas_dir, "_parked", "20250101-120000-test-idea"), result[:new_path]
+        assert Dir.exist?(result[:new_path]), "Parked folder should exist"
+        refute Dir.exist?(idea_folder), "Original folder should not exist"
+      end
+    end
+  end
+
+  def test_move_to_parked_with_file_path_moves_entire_folder
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create test idea folder structure
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        idea_folder = File.join(ideas_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        idea_file = File.join(idea_folder, "my-idea.s.md")
+        File.write(idea_file, "---\nstatus: pending\n---\n# My Idea")
+
+        # Move to parked using FILE path (should move entire folder)
+        result = @mover.move_to_parked(idea_file)
+
+        assert result[:success], "Should succeed: #{result[:message]}"
+        # Should move the FOLDER, not just the file
+        expected_folder = File.join(ideas_dir, "_parked", "20250101-120000-test-idea")
+        assert_equal expected_folder, result[:new_path]
+        assert Dir.exist?(expected_folder), "Parked folder should exist at ideas/_parked/"
+        assert File.exist?(File.join(expected_folder, "my-idea.s.md")), "File should be inside moved folder"
+        refute Dir.exist?(idea_folder), "Original folder should not exist"
+        # Ensure no incorrect _parked/ subfolder was created
+        refute Dir.exist?(File.join(ideas_dir, "20250101-120000-test-idea", "_parked")),
+               "Should NOT create _parked/ inside idea folder"
+      end
+    end
+  end
+
+  def test_move_to_parked_updates_frontmatter
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create test idea folder structure
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        idea_folder = File.join(ideas_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: pending\n---\n# Test Idea")
+
+        # Move to parked
+        result = @mover.move_to_parked(idea_folder)
+
+        assert result[:success]
+        # Check frontmatter was updated
+        content = File.read(File.join(result[:new_path], "idea.md"))
+        assert_match(/status: parked/, content)
+      end
+    end
+  end
+
+  def test_move_to_parked_with_nonexistent_path
+    result = @mover.move_to_parked("/nonexistent/path")
+    refute result[:success]
+    assert_match(/not found/i, result[:message])
+  end
+
+  def test_move_to_parked_with_nil_path
+    result = @mover.move_to_parked(nil)
+    refute result[:success]
+    assert_match(/not provided/i, result[:message])
+  end
+
+  def test_restore_from_parked
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create parked idea folder
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        parked_dir = File.join(ideas_dir, "_parked")
+        idea_folder = File.join(parked_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: parked\n---\n# Test Idea")
+
+        # Restore from parked
+        result = @mover.restore_from_parked(idea_folder)
+
+        assert result[:success], "Should succeed: #{result[:message]}"
+        expected_path = File.join(ideas_dir, "20250101-120000-test-idea")
+        assert_equal expected_path, result[:new_path]
+        assert Dir.exist?(expected_path), "Restored folder should exist"
+        refute Dir.exist?(idea_folder), "Parked folder should not exist"
+      end
+    end
+  end
+
+  def test_restore_from_parked_updates_status
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create parked idea folder
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        parked_dir = File.join(ideas_dir, "_parked")
+        idea_folder = File.join(parked_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: parked\n---\n# Test Idea")
+
+        # Restore from parked
+        result = @mover.restore_from_parked(idea_folder)
+
+        assert result[:success]
+        # Check frontmatter was updated back to pending
+        content = File.read(File.join(result[:new_path], "idea.md"))
+        assert_match(/status: pending/, content)
+      end
+    end
+  end
+
+  def test_restore_from_parked_with_nonexistent_path
+    result = @mover.restore_from_parked("/nonexistent/path")
+    refute result[:success]
+    assert_match(/not found/i, result[:message])
+  end
+
+  def test_restore_from_parked_with_nil_path
+    result = @mover.restore_from_parked(nil)
+    refute result[:success]
+    assert_match(/not provided/i, result[:message])
+  end
+
+  def test_restore_from_parked_with_non_parked_path
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create idea in regular location (not parked)
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        idea_folder = File.join(ideas_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: pending\n---\n# Test Idea")
+
+        # Try to restore from parked (should fail)
+        result = @mover.restore_from_parked(idea_folder)
+
+        refute result[:success]
+        assert_match(/not in _parked/i, result[:message])
       end
     end
   end

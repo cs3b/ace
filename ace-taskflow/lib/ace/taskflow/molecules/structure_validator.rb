@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
+require_relative "../configuration"
 
 module Ace
   module Taskflow
@@ -120,7 +121,8 @@ module Ace
           end
 
           # Check backlog releases
-          backlog_dir = File.join(@root_path, "backlog")
+          backlog_dir_name = Ace::Taskflow.configuration.backlog_dir
+          backlog_dir = File.join(@root_path, backlog_dir_name)
           if Dir.exist?(backlog_dir)
             Dir.glob(File.join(backlog_dir, "v.*")).each do |release_dir|
               validate_release_internal(release_dir, :backlog, issues, stats)
@@ -136,7 +138,8 @@ module Ace
           end
 
           # Check done releases
-          done_dir = File.join(@root_path, "done")
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+          done_dir = File.join(@root_path, archive_dir_name)
           if Dir.exist?(done_dir)
             Dir.glob(File.join(done_dir, "v.*")).each do |release_dir|
               validate_release_internal(release_dir, :done, issues, stats)
@@ -180,16 +183,18 @@ module Ace
         def validate_task_structure(task_dir, issues, stats)
           return unless Dir.exist?(task_dir)
 
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+
           # Check tasks in main directory
           Dir.glob(File.join(task_dir, "*")).each do |task_folder|
             next unless File.directory?(task_folder)
-            next if File.basename(task_folder) == "done"
+            next if File.basename(task_folder) == archive_dir_name
 
             validate_task_folder(task_folder, :active, issues, stats)
           end
 
           # Check done tasks
-          done_dir = File.join(task_dir, "done")
+          done_dir = File.join(task_dir, archive_dir_name)
           if Dir.exist?(done_dir)
             Dir.glob(File.join(done_dir, "*")).each do |task_folder|
               next unless File.directory?(task_folder)
@@ -239,9 +244,11 @@ module Ace
         def validate_idea_structure(idea_dir, issues, stats)
           return unless Dir.exist?(idea_dir)
 
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+
           # Check ideas in main directory
           Dir.glob(File.join(idea_dir, "*")).each do |item|
-            next if File.basename(item) == "done"
+            next if File.basename(item) == archive_dir_name
 
             if File.file?(item) && item.end_with?(".md")
               validate_idea_file(item, :pending, issues, stats)
@@ -251,7 +258,7 @@ module Ace
           end
 
           # Check done ideas
-          done_dir = File.join(idea_dir, "done")
+          done_dir = File.join(idea_dir, archive_dir_name)
           if Dir.exist?(done_dir)
             Dir.glob(File.join(done_dir, "*")).each do |item|
               if File.file?(item) && item.end_with?(".md")

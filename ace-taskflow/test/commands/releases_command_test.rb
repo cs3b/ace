@@ -63,7 +63,7 @@ class ReleasesCommandTest < AceTaskflowTestCase
   def test_list_completed_releases
     with_test_project do |dir|
       # Create a done release (need .ace-taskflow prefix)
-      done_dir = File.join(dir, ".ace-taskflow", "done", "v.0.7.0")
+      done_dir = File.join(dir, ".ace-taskflow", "_archive", "v.0.7.0")
       FileUtils.mkdir_p(done_dir)
       File.write(File.join(done_dir, "release.md"), "# v.0.7.0\n\nCompleted release")
 
@@ -84,7 +84,7 @@ class ReleasesCommandTest < AceTaskflowTestCase
     with_test_project do |dir|
       # Create additional releases (need .ace-taskflow prefix)
       FileUtils.mkdir_p(File.join(dir, ".ace-taskflow", "v.0.10.0"))
-      FileUtils.mkdir_p(File.join(dir, ".ace-taskflow", "done", "v.0.7.0"))
+      FileUtils.mkdir_p(File.join(dir, ".ace-taskflow", "_archive", "v.0.7.0"))
 
       Dir.chdir(dir) do
         output = capture_stdout do
@@ -111,7 +111,7 @@ class ReleasesCommandTest < AceTaskflowTestCase
       # Add more tasks to v.0.8.0 (need .ace-taskflow/done prefix)
       5.times do |i|
         task_num = sprintf("%03d", i + 4)
-        task_dir = File.join(dir, ".ace-taskflow", "done", "v.0.8.0", "t", task_num)
+        task_dir = File.join(dir, ".ace-taskflow", "_archive", "v.0.8.0", "t", task_num)
         FileUtils.mkdir_p(task_dir)
         File.write(File.join(task_dir, "task.#{task_num}.md"), TestFactory.sample_task_content)
       end

@@ -259,9 +259,9 @@ class ReleaseManagerTest < AceTaskflowTestCase
     when "active"
       release_dir = File.join(taskflow_root, name)
     when "backlog"
-      release_dir = File.join(taskflow_root, "backlog", name)
+      release_dir = File.join(taskflow_root, "_backlog", name)
     when "done"
-      release_dir = File.join(taskflow_root, "done", name)
+      release_dir = File.join(taskflow_root, "_archive", name)
     end
 
     FileUtils.mkdir_p(release_dir)
