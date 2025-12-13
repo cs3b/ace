@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-12-13
+
+### Changed
+
+- **Squash Workflow Enhancement**: Updated `wfi://squash-pr` to recommend logical grouping over single-commit squashing
+  - Reframed purpose: "cohesive, logical commits" instead of "one commit per version"
+  - Added RECOMMENDED banner for Logical Grouping strategy
+  - Reordered strategies: Logical Grouping (1st), Commit Per Feature (2nd), One Commit (3rd)
+  - Added real-world example: PR #72 squashed 16 → 3 logical commits
+  - Rationale: Single-commit squashing loses valuable context; logical grouping preserves separation of concerns
+
 ## [0.2.1] - 2025-11-16
 
 ### Changed
