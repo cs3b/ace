@@ -4,6 +4,50 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.164] - 2025-12-13
+
+### ace-taskflow v0.23.0
+
+**Folder Reorganization and Task Lifecycle (Task 131)**
+
+- **Directory Renaming**: System folders now use underscore prefix
+  - `done/` → `_archive/` (completed releases/tasks/ideas)
+  - `backlog/` → `_backlog/` (future releases)
+  - New `_deferred/` folder for tasks to revisit later
+  - New `_parked/` folder for ideas that are good but not now
+
+- **Task Lifecycle Commands**:
+  - `ace-taskflow task undone <ref>` - Reopen completed task from archive
+  - `ace-taskflow task defer <ref>` - Move task to `_deferred/`
+  - `ace-taskflow task undefer <ref>` - Restore from `_deferred/`
+
+- **Idea Lifecycle Commands**:
+  - `ace-taskflow idea park <ref>` - Move idea to `_parked/`
+  - `ace-taskflow idea unpark <ref>` - Restore from `_parked/`
+
+- **Migration Command**: `ace-taskflow migrate` for upgrading existing projects
+  - Renames old folder structure to new underscore-prefixed format
+  - Supports `--dry-run`, `--verbose`, `--no-git` flags
+  - Uses `git mv` when in git repository to preserve history
+
+- **ADR-022 Configuration Pattern**: Default config loading from `.ace.example/`
+  - Single source of truth for defaults
+  - Raise error if default file missing (packaging error detection)
+  - Backward compatible: old `done` config key still works
+
+- **Bug Fixes**:
+  - Fixed `task undone` crash on Boolean return value
+  - Fixed deprecation warning in `mark_idea_done`
+
+### ace-git v0.2.2
+
+**Squash Workflow Enhancement**
+- Updated `wfi://squash-pr` to recommend logical grouping over single-commit squashing
+- Reframed purpose: "cohesive, logical commits" instead of "one commit per version"
+- Added RECOMMENDED banner for Logical Grouping strategy
+- Reordered strategies: Logical Grouping (1st), Commit Per Feature (2nd), One Commit (3rd)
+- Added real-world example: PR #72 squashed 16 → 3 logical commits
+
 ## [0.9.163] - 2025-12-09
 
 ### ace-taskflow v0.22.0
