@@ -334,66 +334,6 @@ module Ace
           end
         end
 
-        def reopen_task(args)
-          reference = args.first
-
-          unless reference
-            puts "Usage: ace-taskflow task undone <reference>"
-            puts "Example: ace-taskflow task undone 019"
-            exit 1
-          end
-
-          result = @manager.reopen_task(reference)
-
-          if result[:success]
-            puts result[:message]
-            puts "Reopened at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
-          else
-            puts "Error: #{result[:message]}"
-            exit 1
-          end
-        end
-
-        def defer_task(args)
-          reference = args.first
-
-          unless reference
-            puts "Usage: ace-taskflow task defer <reference>"
-            puts "Example: ace-taskflow task defer 019"
-            exit 1
-          end
-
-          result = @manager.defer_task(reference)
-
-          if result[:success]
-            puts result[:message]
-            puts "Deferred at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
-          else
-            puts "Error: #{result[:message]}"
-            exit 1
-          end
-        end
-
-        def undefer_task(args)
-          reference = args.first
-
-          unless reference
-            puts "Usage: ace-taskflow task undefer <reference>"
-            puts "Example: ace-taskflow task undefer 019"
-            exit 1
-          end
-
-          result = @manager.undefer_task(reference)
-
-          if result[:success]
-            puts result[:message]
-            puts "Restored at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
-          else
-            puts "Error: #{result[:message]}"
-            exit 1
-          end
-        end
-
         def move_task(args)
           # Parse arguments using new OptionParser-based method
           begin
