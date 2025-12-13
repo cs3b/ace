@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.165] - 2025-12-13
+
+### ace-taskflow v0.23.1
+
+**GTD Naming and PR Review Fixes**
+
+- **GTD Naming Convention**: Renamed internal directory concepts to align with GTD methodology
+  - `deferred` → `anyday` (tasks for anytime, no urgency)
+  - `parked` → `maybe` (ideas that might happen)
+  - Config keys updated: `anyday_dir`, `maybe_dir`
+
+- **Dynamic Folder Names**: CLI messages now use configuration values instead of hardcoded folder names
+
+- **Code Cleanup**: Removed duplicate method definitions in idea_command.rb and task_command.rb
+
 ## [0.9.164] - 2025-12-13
 
 ### ace-taskflow v0.23.0
