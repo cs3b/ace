@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.135
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 1h
 dependencies: []
 ---
 
@@ -83,3 +83,135 @@ Migrate ace-llm YAML configuration loading from permitting Symbol keys to String
 - `/Users/mc/Ps/ace-meta/ace-llm/lib/ace/llm/molecules/client_registry.rb` (primary change)
 - `/Users/mc/Ps/ace-meta/ace-llm/test/molecules/client_registry_test.rb` (add tests)
 - `/Users/mc/Ps/ace-meta/ace-llm/.ace.example/llm/providers/*.yml` (verify compatibility)
+
+---
+
+## Implementation Plan
+
+### Analysis Summary
+
+**Current code** (`client_registry.rb:243`):
+```ruby
+config = YAML.safe_load(content, permitted_classes: [Symbol, Date], aliases: true)
+```
+
+**Date usage investigation**:
+- `last_synced: 2025-12-05` appears in all provider YAML files
+- `last_synced` is NOT referenced anywhere in the codebase (grep returns no matches in lib/)
+- Date is parsed but stored as metadata only, never programmatically used
+- Can safely remove Date from permitted_classes
+
+**Symbol usage investigation**:
+- All provider configs use string keys (verified in .ace.example/)
+- All tests use string keys (verified in client_registry_test.rb)
+- No code accesses config with symbol keys
+- Removal is purely defensive hardening
+
+### Step 1: Update YAML.safe_load call
+
+**File**: `ace-llm/lib/ace/llm/molecules/client_registry.rb`
+
+Change line 243 from:
+```ruby
+config = YAML.safe_load(content, permitted_classes: [Symbol, Date], aliases: true)
+```
+
+To:
+```ruby
+config = YAML.safe_load(content, aliases: true)
+```
+
+**Rationale**:
+- Remove Symbol for security (prevents symbol table exhaustion DoS)
+- Remove Date since `last_synced` is just metadata stored as string, not parsed
+
+### Step 2: Update comments/docstring
+
+Remove deprecation notice (lines 233-240) since we're completing the migration.
+
+Update docstring to:
+```ruby
+# Load a single configuration file
+# @param file_path [String] Path to YAML configuration file
+# @note Uses YAML.safe_load with string keys only for security.
+#       Provider configs are trusted sources (.ace/ cascade or gem directories).
+#       The aliases: true enables YAML anchor/alias support for DRY configs.
+```
+
+### Step 3: Add regression tests
+
+**File**: `ace-llm/test/molecules/client_registry_test.rb`
+
+Add tests:
+
+```ruby
+def test_yaml_config_with_symbol_keys_fails_gracefully
+  provider_dir = File.join(@temp_dir, "providers")
+  Dir.mkdir(provider_dir)
+
+  # YAML with symbol key (should fail to load or be ignored)
+  yaml_content = <<~YAML
+    name: test-provider
+    class: TestProviders::TestClient
+    :symbol_key: "this should not be allowed"
+  YAML
+
+  File.write(File.join(provider_dir, "test.yml"), yaml_content)
+
+  # Capture stderr warnings
+  captured_warnings = []
+  original_warn = method(:warn)
+  define_method(:warn) { |msg| captured_warnings << msg }
+
+  registry = Molecules::ClientRegistry.new(config_paths: [provider_dir])
+
+  # Restore
+  define_method(:warn, original_warn)
+
+  # Provider should not be loaded (invalid YAML with symbol)
+  refute registry.provider_exists?("test-provider")
+end
+
+def test_yaml_config_string_keys_work
+  # Existing tests already cover this, but add explicit verification
+  provider_dir = File.join(@temp_dir, "providers")
+  Dir.mkdir(provider_dir)
+
+  config = {
+    "name" => "string-key-provider",
+    "class" => "TestProviders::TestClient"
+  }
+
+  File.write(File.join(provider_dir, "test.yml"), config.to_yaml)
+
+  registry = Molecules::ClientRegistry.new(config_paths: [provider_dir])
+  assert registry.provider_exists?("string-key-provider")
+end
+```
+
+### Step 4: Update provider YAML files (if needed)
+
+Verify `last_synced` field still works when Date class not permitted:
+- YAML parses `2025-12-05` as string when Date not in permitted_classes
+- This is fine since we don't use it as Date object
+
+**No changes needed** to provider YAML files.
+
+### Step 5: Run tests
+
+```bash
+cd ace-llm && ace-test
+```
+
+### Files to Modify
+
+1. **Modify**: `ace-llm/lib/ace/llm/molecules/client_registry.rb` (lines 233-243)
+2. **Modify**: `ace-llm/test/molecules/client_registry_test.rb` (add 2 tests)
+
+### Risk Assessment
+
+**Very low risk**:
+- All existing configs use string keys
+- All tests use string keys
+- Date removal only affects metadata field storage type
+- Breaking change only for undocumented symbol key usage (none found)
