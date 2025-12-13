@@ -156,14 +156,15 @@ module Ace
           # Determine target path
           dir_path = File.dirname(file_path)
 
-          # Check if in done
-          return false unless dir_path.include?("/done/")
+          # Check if in archive directory
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+          return false unless dir_path.include?("/#{archive_dir_name}/")
 
           # Find parent t/ directory
-          done_dir = find_parent_done_directory(dir_path)
-          return false unless done_dir
+          archive_dir = find_parent_archive_directory(dir_path)
+          return false unless archive_dir
 
-          t_dir = File.dirname(done_dir)
+          t_dir = File.dirname(archive_dir)
 
           # Get task folder name
           task_folder = File.basename(dir_path)
@@ -261,7 +262,7 @@ module Ace
           nil
         end
 
-        def find_parent_done_directory(path)
+        def find_parent_archive_directory(path)
           current = File.expand_path(path)
           archive_dir_name = Ace::Taskflow.configuration.done_dir
 

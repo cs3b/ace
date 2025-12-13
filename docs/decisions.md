@@ -53,14 +53,15 @@ This document provides actionable decisions from Architecture Decision Records (
 - Legacy dev-tools mostly migrated; dev-handbook migrating to ace-handbook gem
 **Details**: [ADR-015](decisions/ADR-015-mono-repo-ace-gems-migration.md)
 
-### ACE Gem Configuration Patterns
-**Decision**: All ace-* gems use ace-core's config cascade with standardized .ace/ directory structure.
+### ACE Gem Configuration Default and Override Pattern
+**Decision**: All ace-* gems load defaults from `.ace.example/` files and merge with user overrides from `.ace/` cascade.
 **Impact**: When creating or modifying gems:
-- NEVER use hardcoded config paths or custom config loaders
-- Use `Ace::Core.config.get('ace', 'gem_name')` for loading configuration
-- Place example configs in `.ace.example/gem-name/` within gem directory
-- Support both flat structure (main configs) and nested structure (general configs)
-**Details**: [ADR-019](decisions/ADR-019-configuration-architecture.md)
+- Put complete defaults in `.ace.example/gem-name/config.yml` (single source of truth)
+- Load defaults from `.ace.example/` at runtime, not hardcoded in Ruby
+- Merge user config over defaults (deep merge)
+- Support backward compatibility for renamed keys with deprecation path
+- Use semantic key names (`completed` not `done` for directories)
+**Details**: [ADR-022](decisions/ADR-022-configuration-default-and-override-pattern.md) (supersedes ADR-019)
 
 ## Gem Architecture Patterns
 

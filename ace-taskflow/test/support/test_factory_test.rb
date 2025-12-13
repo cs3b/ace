@@ -8,7 +8,7 @@ class TestFactoryTest < AceTaskflowTestCase
       taskflow_root = File.join(dir, ".ace-taskflow")
 
       assert Dir.exist?(taskflow_root)
-      assert Dir.exist?(File.join(taskflow_root, "backlog"))
+      assert Dir.exist?(File.join(taskflow_root, "_backlog"))
       assert Dir.exist?(File.join(taskflow_root, "_archive"))
 
       # Should NOT have default v.0.9.0 release
@@ -63,9 +63,9 @@ class TestFactoryTest < AceTaskflowTestCase
       TestFactory.create_known_ideas(dir, "v.1.0.0", 3)
 
       taskflow_root = File.join(dir, ".ace-taskflow")
-      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "i", "001.md"))
-      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "i", "002.md"))
-      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "i", "003.md"))
+      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "i", "001.s.md"))
+      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "i", "002.s.md"))
+      assert File.exist?(File.join(taskflow_root, "v.1.0.0", "i", "003.s.md"))
     end
   end
 end

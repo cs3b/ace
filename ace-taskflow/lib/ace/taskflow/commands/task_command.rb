@@ -38,7 +38,7 @@ module Ace
             unless reference
               puts "Error: 'show' requires a task reference"
               puts "Usage: ace-taskflow task show <reference>"
-              exit 1
+              return 1
             end
             show_task(reference, display_mode: display_mode)
           when "create"
@@ -69,7 +69,7 @@ module Ace
           end
         rescue StandardError => e
           puts "Error: #{e.message}"
-          exit 1
+          return 1
         end
 
         private
@@ -152,7 +152,7 @@ module Ace
           else
             puts "Task '#{reference}' not found."
             puts "Valid formats: 018, task.018, v.0.9.0+018, backlog+025"
-            exit 1
+            return 1
           end
         end
 
@@ -240,7 +240,7 @@ module Ace
           unless reference
             puts "Usage: ace-taskflow task start <reference>"
             puts "Example: ace-taskflow task start 019"
-            exit 1
+            return 1
           end
 
           result = @manager.start_task(reference)
@@ -250,7 +250,7 @@ module Ace
             puts "Started at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            return 1
           end
         end
 
@@ -260,7 +260,7 @@ module Ace
           unless reference
             puts "Usage: ace-taskflow task done <reference>"
             puts "Example: ace-taskflow task done 019"
-            exit 1
+            return 1
           end
 
           result = @manager.complete_task(reference)
@@ -270,7 +270,67 @@ module Ace
             puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            return 1
+          end
+        end
+
+        def reopen_task(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow task undone <reference>"
+            puts "Example: ace-taskflow task undone 019"
+            return 1
+          end
+
+          result = @manager.reopen_task(reference)
+
+          if result[:success]
+            puts result[:message]
+            puts "Reopened at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            return 1
+          end
+        end
+
+        def defer_task(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow task defer <reference>"
+            puts "Example: ace-taskflow task defer 019"
+            return 1
+          end
+
+          result = @manager.defer_task(reference)
+
+          if result[:success]
+            puts result[:message]
+            puts "Deferred at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            return 1
+          end
+        end
+
+        def undefer_task(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow task undefer <reference>"
+            puts "Example: ace-taskflow task undefer 019"
+            return 1
+          end
+
+          result = @manager.undefer_task(reference)
+
+          if result[:success]
+            puts result[:message]
+            puts "Restored at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            return 1
           end
         end
 
@@ -494,7 +554,7 @@ module Ace
             puts relative_path
           else
             puts "# Task has no path"
-            exit 1
+            return 1
           end
         end
 
@@ -547,7 +607,7 @@ module Ace
           if task_ref.nil? || depends_on_ref.nil?
             puts "Usage: ace-taskflow task add-dependency <task_ref> --depends-on <dependency_ref>"
             puts "Example: ace-taskflow task add-dependency 034 --depends-on 031"
-            exit 1
+            return 1
           end
 
           # Add the dependency
@@ -557,7 +617,7 @@ module Ace
             puts result[:message]
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            return 1
           end
         end
 
@@ -577,7 +637,7 @@ module Ace
           if task_ref.nil? || depends_on_ref.nil?
             puts "Usage: ace-taskflow task remove-dependency <task_ref> --depends-on <dependency_ref>"
             puts "Example: ace-taskflow task remove-dependency 034 --depends-on 031"
-            exit 1
+            return 1
           end
 
           # Remove the dependency
@@ -587,7 +647,7 @@ module Ace
             puts result[:message]
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            return 1
           end
         end
 

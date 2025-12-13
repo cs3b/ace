@@ -141,12 +141,14 @@ module Ace
         # Backward compatibility alias for move_to_archive
         # @deprecated Use move_to_archive instead
         def move_to_done(idea_path, timestamp = Time.now)
+          warn "[DEPRECATION] `move_to_done` is deprecated. Use `move_to_archive` instead."
           move_to_archive(idea_path, timestamp)
         end
 
         # Backward compatibility alias for restore_from_archive
         # @deprecated Use restore_from_archive instead
         def restore_from_done(idea_path)
+          warn "[DEPRECATION] `restore_from_done` is deprecated. Use `restore_from_archive` instead."
           restore_from_archive(idea_path)
         end
 

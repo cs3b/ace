@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2025-12-13
+
+### Added
+
+- **Folder Migration Command**: `ace-taskflow migrate` renames old folder structure to new underscore-prefixed format
+  - Renames `done/` → `_archive/`, `backlog/` → `_backlog/`
+  - Supports `--dry-run`, `--verbose`, `--no-git` flags
+  - Uses `git mv` when in git repository to preserve history
+  - Cross-platform path handling with Pathname
+
+- **Task Lifecycle Commands**:
+  - `ace-taskflow task defer TASK_REF` - Move task to `_deferred/` folder for later revisit
+  - `ace-taskflow task undone TASK_REF` - Reopen completed task, restore from `_archive/`
+  - `ace-taskflow idea park IDEA_REF` - Move idea to `_parked/` folder
+
+- **ADR-022 Configuration Pattern**: Default config loading from `.ace.example/`
+  - Single source of truth for defaults in `.ace.example/taskflow/config.yml`
+  - Runtime loading with error on missing file (packaging error detection)
+  - Deep merge of user config over gem defaults
+  - `reset_gem_defaults!` method for test isolation
+
+### Changed
+
+- **Directory Naming**: System directories now use underscore prefix for clarity
+  - `done/` → `_archive/` (completed tasks)
+  - `backlog/` → `_backlog/` (future releases)
+  - New `_deferred/` (tasks to revisit later)
+  - New `_parked/` (ideas that are good but not now)
+
+- **Configuration Key Rename**: `directories.done` → `directories.completed`
+  - Backward compatible: old key still works
+  - Semantic naming to avoid confusion with `done` status value
+
+### Fixed
+
+- **Deprecation Warning**: `mark_idea_done` now uses `move_to_archive` instead of deprecated `move_to_done`
+- **Path Handling**: FolderMigrator uses `Pathname#relative_path_from` for cross-platform robustness
+
 ## [0.22.0] - 2025-12-09
 
 ### Added

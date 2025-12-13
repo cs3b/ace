@@ -16,7 +16,7 @@ module Ace
 
           # Create basic structure
           FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros")
-          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros/done")
+          FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros/_archive")
 
           # Create test retros
           File.write(
