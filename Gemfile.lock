@@ -45,7 +45,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.2.0)
+    ace-git (0.2.2)
       ace-support-core (~> 0.10)
 
 PATH
