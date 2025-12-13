@@ -363,8 +363,9 @@ module Ace
               return { success: false, message: "Task restored but could not be found for status update" }
             end
 
-            status_result = @task_loader.update_task_status(restored_task[:path], status)
-            return status_result unless status_result[:success]
+            # task_loader.update_task_status returns Boolean, not Hash
+            success = @task_loader.update_task_status(restored_task[:path], status)
+            return { success: false, message: "Failed to update task status" } unless success
 
             archive_dir = Ace::Taskflow.configuration.done_dir
             { success: true, message: "Task #{reference} restored from #{archive_dir}/ and set to #{status}" }
@@ -1073,6 +1074,12 @@ module Ace
         def defer_task(reference)
           task = @task_loader.find_task_by_reference(reference)
           return { success: false, message: "Task #{reference} not found" } unless task
+
+          # Check if task is already deferred (idempotent check)
+          deferred_dir_name = Ace::Taskflow.configuration.deferred_dir
+          if task[:path].include?("/#{deferred_dir_name}/")
+            return { success: true, message: "Task #{reference} is already deferred" }
+          end
 
           # Update status to deferred first
           status_result = update_task_status(reference, "deferred")

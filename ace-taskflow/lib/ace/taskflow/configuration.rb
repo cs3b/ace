@@ -38,9 +38,12 @@ module Ace
         config.dig("directories", "release_ideas") || "ideas"
       end
 
-      # Get done directory name
+      # Get done directory name (completed tasks folder)
+      # Reads from "completed" key, with backward compatibility for "done"
       def done_dir
-        config.dig("directories", "done") || "_archive"
+        config.dig("directories", "completed") ||
+          config.dig("directories", "done") ||
+          "_archive"
       end
 
       # Get backlog directory name
@@ -207,6 +210,13 @@ module Ace
 
             # Task directory name
             task_dir: "t"
+
+            # Directory structure (underscore prefix for system directories)
+            directories:
+              completed: "_archive"         # Completed tasks/ideas
+              backlog: "_backlog"           # Future releases
+              deferred: "_deferred"         # Tasks to revisit later
+              parked: "_parked"             # Ideas that are good but not now
 
             # Release management
             active_strategy: "lowest"          # How to pick primary active release

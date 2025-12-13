@@ -6,3 +6,6 @@
 PROJECT_ROOT_PATH = "{{ config_root }}"
 ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
 _.path = ["./bin", "./dev-tools/exe"]
+
+[tools]
+ruby = "latest"

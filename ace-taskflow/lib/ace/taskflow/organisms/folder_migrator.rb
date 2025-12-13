@@ -172,10 +172,12 @@ module Ace
         # @param old_path [String] Source path
         # @param new_path [String] Destination path
         def git_mv(old_path, new_path)
-          # Get relative paths from git root
-          git_root = `git rev-parse --show-toplevel`.strip
-          old_relative = old_path.sub(git_root + "/", "")
-          new_relative = new_path.sub(git_root + "/", "")
+          require "pathname"
+
+          # Get relative paths from git root using Pathname for cross-platform robustness
+          git_root = Pathname.new(`git rev-parse --show-toplevel`.strip)
+          old_relative = Pathname.new(old_path).relative_path_from(git_root).to_s
+          new_relative = Pathname.new(new_path).relative_path_from(git_root).to_s
 
           # Execute git mv
           result = system("git", "mv", old_relative, new_relative)

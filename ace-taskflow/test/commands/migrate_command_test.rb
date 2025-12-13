@@ -4,6 +4,16 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/commands/migrate_command"
 
 class MigrateCommandTest < AceTaskflowTestCase
+  # Helper to create a minimal test directory for migration tests
+  # Does NOT create _archive or _backlog folders (so we can test migrating done/backlog)
+  def with_minimal_project
+    Dir.mktmpdir do |dir|
+      taskflow_root = File.join(dir, ".ace-taskflow")
+      FileUtils.mkdir_p(taskflow_root)
+      yield dir, taskflow_root
+    end
+  end
+
   def test_migrate_help_flag
     with_test_project do |dir|
       Dir.chdir(dir) do
@@ -23,9 +33,7 @@ class MigrateCommandTest < AceTaskflowTestCase
   end
 
   def test_migrate_executes_successfully
-    with_test_project do |dir|
-      taskflow_root = File.join(dir, ".ace-taskflow")
-
+    with_minimal_project do |dir, taskflow_root|
       # Create old "done" folder
       done_dir = File.join(taskflow_root, "done")
       FileUtils.mkdir_p(done_dir)
@@ -52,9 +60,7 @@ class MigrateCommandTest < AceTaskflowTestCase
   end
 
   def test_migrate_dry_run_does_not_modify
-    with_test_project do |dir|
-      taskflow_root = File.join(dir, ".ace-taskflow")
-
+    with_minimal_project do |dir, taskflow_root|
       # Create old "done" folder
       done_dir = File.join(taskflow_root, "done")
       FileUtils.mkdir_p(done_dir)
@@ -177,9 +183,7 @@ class MigrateCommandTest < AceTaskflowTestCase
   end
 
   def test_migrate_with_no_git_flag
-    with_test_project do |dir|
-      taskflow_root = File.join(dir, ".ace-taskflow")
-
+    with_minimal_project do |dir, taskflow_root|
       # Initialize git repo
       system("git", "init", "-q", dir)
 
@@ -207,9 +211,7 @@ class MigrateCommandTest < AceTaskflowTestCase
   end
 
   def test_migrate_multiple_folders
-    with_test_project do |dir|
-      taskflow_root = File.join(dir, ".ace-taskflow")
-
+    with_minimal_project do |dir, taskflow_root|
       # Create multiple old folders
       done_dir = File.join(taskflow_root, "done")
       backlog_dir = File.join(taskflow_root, "backlog")

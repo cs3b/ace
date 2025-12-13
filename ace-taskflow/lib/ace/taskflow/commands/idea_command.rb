@@ -49,14 +49,14 @@ module Ace
             validate_structure(args)
           when "--help", "-h"
             show_help
-            exit 0
+            return 0
           else
             # Try to show specific idea by partial name, or create if not found
             show_idea_or_create(subaction, args)
           end
         rescue => e
           puts "Error: #{e.message}"
-          exit 1
+          return 1
         end
 
         private
@@ -107,7 +107,7 @@ module Ace
             display_idea(full_idea)
           else
             puts "No idea found matching '#{reference}' in #{release_name(release)}."
-            exit 1
+            return 1
           end
         end
 
@@ -150,7 +150,7 @@ module Ace
             puts "  --anyday             Create in anyday/ subdirectory"
             puts "  --git-commit, -gc    Auto-commit the idea file"
             puts "  --llm-enhance, -llm  Enhance with LLM suggestions"
-            exit 1
+            return 1
           end
 
           # Determine target location
@@ -170,7 +170,7 @@ module Ace
               config["directory"] = File.join(release_path, "ideas")
             else
               puts "Error: Release '#{location}' not found"
-              exit 1
+              return 1
             end
           else
             # Active release (default or explicit --current)
@@ -183,7 +183,7 @@ module Ace
               if explicit_current
                 puts "Error: No current release found."
                 puts "Use 'ace-taskflow release create' to create a release, or omit --current to save to backlog."
-                exit 1
+                return 1
               end
               # Fall back to backlog if no active release (implicit/default behavior)
               config["directory"] = File.join(@root_path, "backlog", "ideas")
@@ -341,7 +341,7 @@ module Ace
             puts "  --add-at-end       Place after all ideas"
             puts "  --after <ref>      Place after specific idea"
             puts "  --before <ref>     Place before specific idea"
-            exit 1
+            return 1
           end
 
           # Parse options
@@ -375,7 +375,7 @@ module Ace
             puts result[:message]
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            return 1
           end
         end
 
@@ -385,7 +385,7 @@ module Ace
           unless reference
             puts "Usage: ace-taskflow idea done <reference>"
             puts "Example: ace-taskflow idea done implement-caching"
-            exit 1
+            return 1
           end
 
           # Find the idea
@@ -394,20 +394,84 @@ module Ace
 
           unless idea
             puts "No idea found matching '#{reference}' in #{release_name(release)}."
-            exit 1
+            return 1
           end
 
-          # Move idea to done
+          # Move idea to archive
           require_relative "../molecules/idea_directory_mover"
           mover = Molecules::IdeaDirectoryMover.new
-          result = mover.move_to_done(idea[:path])
+          result = mover.move_to_archive(idea[:path])
 
           if result[:success]
-            puts "Idea '#{reference}' marked as done and moved to done/"
+            puts "Idea '#{reference}' marked as done and moved to _archive/"
             puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           else
             puts "Error: #{result[:message]}"
-            exit 1
+            return 1
+          end
+        end
+
+        def park_idea(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow idea park <reference>"
+            puts "Example: ace-taskflow idea park future-feature"
+            return 1
+          end
+
+          # Find the idea
+          release = parse_release(args[1..-1] || [])
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
+
+          unless idea
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
+            return 1
+          end
+
+          # Move idea to parked
+          require_relative "../molecules/idea_directory_mover"
+          mover = Molecules::IdeaDirectoryMover.new
+          result = mover.move_to_parked(idea[:path])
+
+          if result[:success]
+            puts "Idea '#{reference}' parked (moved to _parked/)"
+            puts "Good idea but not now - restore with 'idea unpark #{reference}'"
+          else
+            puts "Error: #{result[:message]}"
+            return 1
+          end
+        end
+
+        def unpark_idea(args)
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow idea unpark <reference>"
+            puts "Example: ace-taskflow idea unpark future-feature"
+            return 1
+          end
+
+          # Find the idea in parked directory
+          release = parse_release(args[1..-1] || [])
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
+
+          unless idea
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
+            return 1
+          end
+
+          # Restore idea from parked
+          require_relative "../molecules/idea_directory_mover"
+          mover = Molecules::IdeaDirectoryMover.new
+          result = mover.restore_from_parked(idea[:path])
+
+          if result[:success]
+            puts "Idea '#{reference}' restored from _parked/"
+            puts "Moved back to active ideas"
+          else
+            puts "Error: #{result[:message]}"
+            return 1
           end
         end
 
