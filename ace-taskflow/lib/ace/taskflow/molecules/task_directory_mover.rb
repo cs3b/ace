@@ -150,7 +150,7 @@ module Ace
         # Move a task directory to _deferred/ subdirectory atomically
         # @param task_path [String] Full path to the task file
         # @return [Hash] Result with :success, :new_path, and :message
-        def move_to_deferred(task_path)
+        def move_to_anyday(task_path)
           return { success: false, message: "Task path not provided" } unless task_path
           return { success: false, message: "Task file not found: #{task_path}" } unless File.exist?(task_path)
 
@@ -162,24 +162,24 @@ module Ace
           parent_dir = File.dirname(task_dir)
 
           # Get deferred directory name from configuration
-          deferred_dir_name = Ace::Taskflow.configuration.deferred_dir
+          anyday_dir_name = Ace::Taskflow.configuration.anyday_dir
 
           # Check if task is already in deferred directory (idempotent operation)
-          if task_path.include?("/#{deferred_dir_name}/")
+          if task_path.include?("/#{anyday_dir_name}/")
             task_filename = File.basename(task_path)
             return {
               success: true,
               new_path: task_path,
-              message: "Task already in #{deferred_dir_name}/"
+              message: "Task already in #{anyday_dir_name}/"
             }
           end
 
           # Create deferred directory if it doesn't exist
-          deferred_dir = File.join(parent_dir, deferred_dir_name)
-          FileUtils.mkdir_p(deferred_dir) unless File.directory?(deferred_dir)
+          anyday_dir = File.join(parent_dir, anyday_dir_name)
+          FileUtils.mkdir_p(anyday_dir) unless File.directory?(anyday_dir)
 
           # Target path in deferred directory
-          target_dir = File.join(deferred_dir, task_dir_name)
+          target_dir = File.join(anyday_dir, task_dir_name)
 
           # Check if target already exists (idempotent - task already moved)
           if File.exist?(target_dir)
@@ -188,7 +188,7 @@ module Ace
             return {
               success: true,
               new_path: new_task_path,
-              message: "Task already in #{deferred_dir_name}/"
+              message: "Task already in #{anyday_dir_name}/"
             }
           end
 
@@ -206,7 +206,7 @@ module Ace
             {
               success: true,
               new_path: new_task_path,
-              message: "Task moved to #{deferred_dir_name}/"
+              message: "Task moved to #{anyday_dir_name}/"
             }
           rescue StandardError => e
             {
@@ -219,26 +219,26 @@ module Ace
         # Move a task directory back from _deferred/ subdirectory
         # @param task_path [String] Full path to the task file in _deferred/
         # @return [Hash] Result with :success, :new_path, and :message
-        def restore_from_deferred(task_path)
+        def restore_from_anyday(task_path)
           return { success: false, message: "Task path not provided" } unless task_path
           return { success: false, message: "Task file not found: #{task_path}" } unless File.exist?(task_path)
 
           # Get deferred directory name from configuration
-          deferred_dir_name = Ace::Taskflow.configuration.deferred_dir
+          anyday_dir_name = Ace::Taskflow.configuration.anyday_dir
 
           # Verify task is in deferred directory
-          unless task_path.include?("/#{deferred_dir_name}/")
+          unless task_path.include?("/#{anyday_dir_name}/")
             return {
               success: false,
-              message: "Task is not in #{deferred_dir_name}/ directory"
+              message: "Task is not in #{anyday_dir_name}/ directory"
             }
           end
 
           # Get task directory and determine restoration path
           task_dir = File.dirname(task_path)
           task_dir_name = File.basename(task_dir)
-          deferred_dir = File.dirname(task_dir)
-          parent_dir = File.dirname(deferred_dir)
+          anyday_dir = File.dirname(task_dir)
+          parent_dir = File.dirname(anyday_dir)
 
           # Target path in parent directory
           target_dir = File.join(parent_dir, task_dir_name)
@@ -262,7 +262,7 @@ module Ace
             {
               success: true,
               new_path: new_task_path,
-              message: "Task restored from #{Ace::Taskflow.configuration.deferred_dir}/"
+              message: "Task restored from #{Ace::Taskflow.configuration.anyday_dir}/"
             }
           rescue StandardError => e
             {

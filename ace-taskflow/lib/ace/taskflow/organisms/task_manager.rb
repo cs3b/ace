@@ -1076,8 +1076,8 @@ module Ace
           return { success: false, message: "Task #{reference} not found" } unless task
 
           # Check if task is already deferred (idempotent check)
-          deferred_dir_name = Ace::Taskflow.configuration.deferred_dir
-          if task[:path].include?("/#{deferred_dir_name}/")
+          anyday_dir_name = Ace::Taskflow.configuration.anyday_dir
+          if task[:path].include?("/#{anyday_dir_name}/")
             return { success: true, message: "Task #{reference} is already deferred" }
           end
 
@@ -1088,13 +1088,13 @@ module Ace
           # Move to deferred directory
           require_relative "../molecules/task_directory_mover"
           mover = Molecules::TaskDirectoryMover.new
-          move_result = mover.move_to_deferred(task[:path])
+          move_result = mover.move_to_anyday(task[:path])
 
           if move_result[:success]
-            deferred_dir = Ace::Taskflow.configuration.deferred_dir
-            { success: true, message: "Task #{reference} deferred and moved to #{deferred_dir}/" }
+            anyday_dir = Ace::Taskflow.configuration.anyday_dir
+            { success: true, message: "Task #{reference} deferred and moved to #{anyday_dir}/" }
           else
-            { success: true, message: "Task #{reference} status set to deferred (move to #{Ace::Taskflow.configuration.deferred_dir}/ failed: #{move_result[:message]})" }
+            { success: true, message: "Task #{reference} status set to deferred (move to #{Ace::Taskflow.configuration.anyday_dir}/ failed: #{move_result[:message]})" }
           end
         end
 
@@ -1106,19 +1106,19 @@ module Ace
           task = @task_loader.find_task_by_reference(reference)
           return { success: false, message: "Task #{reference} not found" } unless task
 
-          deferred_dir_name = Ace::Taskflow.configuration.deferred_dir
+          anyday_dir_name = Ace::Taskflow.configuration.anyday_dir
 
           # Check if task is in deferred directory
-          in_deferred = task[:path].include?("/#{deferred_dir_name}/")
+          in_deferred = task[:path].include?("/#{anyday_dir_name}/")
 
           unless in_deferred
-            return { success: false, message: "Task #{reference} is not in #{deferred_dir_name}/" }
+            return { success: false, message: "Task #{reference} is not in #{anyday_dir_name}/" }
           end
 
           # Restore from deferred directory
           require_relative "../molecules/task_directory_mover"
           mover = Molecules::TaskDirectoryMover.new
-          restore_result = mover.restore_from_deferred(task[:path])
+          restore_result = mover.restore_from_anyday(task[:path])
 
           return restore_result unless restore_result[:success]
 
@@ -1133,7 +1133,7 @@ module Ace
           status_result = @task_loader.update_task_status(restored_task[:path], status)
           return status_result unless status_result[:success]
 
-          { success: true, message: "Task #{reference} restored from #{deferred_dir_name}/ and set to #{status}" }
+          { success: true, message: "Task #{reference} restored from #{anyday_dir_name}/ and set to #{status}" }
         end
 
         # Get recent tasks
