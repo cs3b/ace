@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-12-13
+
+### Fixed
+
+- **File Not Found Error Message**: Improved error message when target file doesn't exist
+  - Changed from confusing "Unknown target: <path>" to clear "File not found: <path>"
+  - Added helpful guidance: "Make sure you're running from the correct directory or use an absolute path"
+  - Distinguishes between file paths (contain "/" or end with ".rb") and unknown target names
+  - Location: `lib/ace/test_runner/molecules/pattern_resolver.rb:27-29,76-78`
+
 ## [0.2.0] - 2025-11-17
 
 ### Fixed
