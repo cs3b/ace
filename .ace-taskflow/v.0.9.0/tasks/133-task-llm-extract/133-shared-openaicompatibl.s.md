@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.133
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
@@ -70,3 +70,102 @@ Then update XAIClient and OpenAIClient to:
 ### Future Extensions
 
 This pattern can be extended to handle additional OpenAI-compatible parameters (e.g., `stop`, `logit_bias`, `user`) as more providers adopt them.
+
+---
+
+## Implementation Plan
+
+### Analysis Summary
+
+Current state of `extract_generation_options` across OpenAI-compatible clients:
+
+| Client | Pattern | Preserves Zero? | Parameters |
+|--------|---------|-----------------|------------|
+| XAIClient | `unless .nil?` | ✅ Yes | frequency_penalty, presence_penalty |
+| OpenAIClient | `if options[:]` | ❌ No | frequency_penalty, presence_penalty |
+| OpenRouterClient | `unless .nil?` | ✅ Yes | frequency_penalty, presence_penalty |
+| GroqClient | `if options.key?()` | ✅ Yes | frequency_penalty, presence_penalty, stop |
+
+**Key finding**: OpenAIClient has a bug - it uses truthiness check which doesn't preserve `0` values. The shared concern should standardize on `unless .nil?` pattern.
+
+### Step 1: Create the shared module
+
+**File**: `ace-llm/lib/ace/llm/molecules/openai_compatible_params.rb`
+
+```ruby
+# frozen_string_literal: true
+
+module Ace
+  module LLM
+    module Molecules
+      # Shared parameter extraction for OpenAI-compatible providers
+      # Preserves zero values using nil? check (0 is a valid penalty value)
+      module OpenAICompatibleParams
+        # Extract OpenAI-compatible generation options
+        # @param options [Hash] Raw options from caller
+        # @param gen_opts [Hash] Generation options to augment
+        # @return [Hash] Augmented generation options
+        def extract_openai_compatible_options(options, gen_opts)
+          gen_opts[:frequency_penalty] = options[:frequency_penalty] unless options[:frequency_penalty].nil?
+          gen_opts[:presence_penalty] = options[:presence_penalty] unless options[:presence_penalty].nil?
+          gen_opts
+        end
+      end
+    end
+  end
+end
+```
+
+### Step 2: Update clients to use the module
+
+**2.1 XAIClient** (`ace-llm/lib/ace/llm/organisms/xai_client.rb`):
+- Add require for the module
+- Include `Molecules::OpenAICompatibleParams`
+- Replace manual extraction with `extract_openai_compatible_options(options, gen_opts)`
+
+**2.2 OpenAIClient** (`ace-llm/lib/ace/llm/organisms/openai_client.rb`):
+- Add require for the module
+- Include `Molecules::OpenAICompatibleParams`
+- Replace manual extraction with `extract_openai_compatible_options(options, gen_opts)`
+- **Bug fix**: This changes behavior from truthiness to nil? check
+
+**2.3 OpenRouterClient** (`ace-llm/lib/ace/llm/organisms/openrouter_client.rb`):
+- Add require for the module
+- Include `Molecules::OpenAICompatibleParams`
+- Replace manual extraction with `extract_openai_compatible_options(options, gen_opts)`
+
+**2.4 GroqClient** - Consider separately (uses `key?` pattern + includes `stop`)
+
+### Step 3: Add unit tests for the module
+
+**File**: `ace-llm/test/molecules/openai_compatible_params_test.rb`
+
+Test cases:
+1. Zero values preserved (`frequency_penalty: 0`)
+2. Nil values not included
+3. Positive values included
+4. Negative values preserved (valid for penalties)
+5. Both params work independently
+
+### Step 4: Verify existing tests pass
+
+Run `ace-test` in ace-llm to ensure no regressions.
+
+### Files to Modify
+
+1. **Create**: `ace-llm/lib/ace/llm/molecules/openai_compatible_params.rb`
+2. **Modify**: `ace-llm/lib/ace/llm/organisms/xai_client.rb`
+3. **Modify**: `ace-llm/lib/ace/llm/organisms/openai_client.rb`
+4. **Modify**: `ace-llm/lib/ace/llm/organisms/openrouter_client.rb`
+5. **Create**: `ace-llm/test/molecules/openai_compatible_params_test.rb`
+
+### Out of Scope
+
+- GroqClient: Uses different pattern (`key?`) and includes `stop` parameter
+- TogetherAI: Uses `repetition_penalty` (different param name)
+- These can be addressed in follow-up tasks if needed
+
+### Risk Assessment
+
+**Low risk** - Behavior-preserving refactor for XAI and OpenRouter.
+**Bug fix** for OpenAI - changes from falsy to nil check (unlikely to affect real usage since `penalty: 0` is uncommon).
