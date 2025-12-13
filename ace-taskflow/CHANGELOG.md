@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2025-12-13
+
+### Changed
+
+- **GTD Naming Convention**: Renamed internal directory concepts to align with GTD methodology
+  - `deferred` → `anyday` (tasks for anytime, no urgency)
+  - `parked` → `maybe` (ideas that might happen)
+  - Config keys updated: `anyday_dir`, `maybe_dir`
+
+- **Dynamic Folder Names**: User messages in CLI now use configuration values instead of hardcoded folder names
+  - `idea park/unpark` commands show actual folder from `maybe_dir` config
+  - Help text reflects configured directory names
+
+### Fixed
+
+- **Duplicate Method Definitions**: Removed duplicate `park_idea`, `unpark_idea` methods in idea_command.rb
+- **Duplicate Method Definitions**: Removed duplicate `defer_task`, `undefer_task`, `reopen_task` methods in task_command.rb
+
+### Technical
+
+- Added explanatory comment to `find_taskflow_root` in migrate_command.rb documenting why it's a local implementation
+- Removed unused `pending` directory config
+
 ## [0.23.0] - 2025-12-13
 
 ### Added
