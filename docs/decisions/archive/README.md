@@ -28,6 +28,11 @@ Archived ADRs preserve historical context and help understand the evolution of t
 - **Reason**: ErrorReporter module only used in legacy dev-tools. Current gems use standard error handling.
 - **Current State**: Thor CLI commands handle errors with standard Ruby exception patterns (see ADR-018)
 
+### ADR-019: Configuration Architecture
+- **Archived**: December 13, 2025
+- **Reason**: Superseded by ADR-022 which adds explicit guidance for default configuration loading from `.ace.example/` files
+- **Current State**: Use ADR-022 for configuration patterns in ace-* gems
+
 ## Migration Context
 
 These ADRs were created during the **legacy dev-tools phase** (pre-v0.9.0) before the mono-repo migration (ADR-015). The migration to ace-* gems (v0.9.0+, October 2025) introduced new patterns:

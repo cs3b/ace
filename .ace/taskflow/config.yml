@@ -27,7 +27,7 @@ taskflow:
     ideas: "ideas"
 
     # Completed tasks - default: "_archive"
-    done: "_archive"
+    completed: "_archive"
 
     # Backlog directory - default: "_backlog"
     backlog: "_backlog"

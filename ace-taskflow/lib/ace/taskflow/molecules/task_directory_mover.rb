@@ -80,6 +80,7 @@ module Ace
         # Backward compatibility alias for move_to_archive
         # @deprecated Use move_to_archive instead
         def move_to_done(task_path)
+          warn "[DEPRECATION] `move_to_done` is deprecated. Use `move_to_archive` instead."
           move_to_archive(task_path)
         end
 
@@ -142,6 +143,7 @@ module Ace
         # Backward compatibility alias for restore_from_archive
         # @deprecated Use restore_from_archive instead
         def restore_from_done(task_path)
+          warn "[DEPRECATION] `restore_from_done` is deprecated. Use `restore_from_archive` instead."
           restore_from_archive(task_path)
         end
 

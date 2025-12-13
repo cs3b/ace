@@ -281,4 +281,87 @@ class ConfigLoaderTest < AceTaskflowTestCase
       end
     end
   end
+
+  # ADR-022: Gem default loading tests
+
+  def test_load_gem_defaults_returns_hash
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+    defaults = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_kind_of Hash, defaults
+    assert_equal ".ace-taskflow", defaults["root"]
+    assert_equal "t", defaults["task_dir"]
+  end
+
+  def test_gem_defaults_have_all_expected_keys
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+    defaults = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+
+    # Core configuration
+    assert_equal "lowest", defaults["active_strategy"]
+    assert_equal true, defaults["allow_multiple_active"]
+    assert_includes defaults["terminal_statuses"], "done"
+    assert_includes defaults["terminal_statuses"], "cancelled"
+
+    # References section
+    assert_kind_of Hash, defaults["references"]
+    assert_equal true, defaults["references"]["allow_qualified"]
+    assert_equal true, defaults["references"]["allow_cross_release"]
+
+    # Defaults section
+    assert_kind_of Hash, defaults["defaults"]
+    assert_equal "active", defaults["defaults"]["idea_location"]
+    assert_equal "active", defaults["defaults"]["task_location"]
+
+    # Tasks section
+    assert_kind_of Hash, defaults["tasks"]
+    assert_equal "add_next", defaults.dig("tasks", "defaults", "reschedule_strategy")
+  end
+
+  def test_gem_defaults_are_cached
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+    first_load = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+    second_load = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_same first_load, second_load
+  end
+
+  def test_reset_gem_defaults_clears_cache
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+    first_load = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+    second_load = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+
+    # After reset, should be a different object (re-loaded from file)
+    refute_same first_load, second_load
+  end
+
+  def test_user_config_overrides_gem_defaults
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+
+    with_test_project do |dir|
+      config_dir = File.join(dir, ".ace", "taskflow")
+      FileUtils.mkdir_p(config_dir)
+      File.write(File.join(config_dir, "config.yml"), <<~YAML)
+        taskflow:
+          active_strategy: "highest"
+          references:
+            allow_cross_release: false
+      YAML
+
+      Dir.chdir(dir) do
+        config = Ace::Taskflow::Molecules::ConfigLoader.load
+
+        # Overridden values
+        assert_equal "highest", config["active_strategy"]
+        assert_equal false, config["references"]["allow_cross_release"]
+
+        # Non-overridden values from gem defaults
+        assert_equal true, config["allow_multiple_active"]
+        assert_equal true, config["references"]["allow_qualified"]
+        assert_equal "active", config["defaults"]["idea_location"]
+      end
+    end
+  end
+
 end

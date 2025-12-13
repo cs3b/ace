@@ -37,7 +37,7 @@ module Ace
           end
 
           puts "Migrating folder structure to new naming convention..."
-          puts "Git repository detected - using git mv" if in_git_repo
+          puts "Git repository detected - using git mv" if in_git_repo && !options[:no_git]
           puts ""
 
           # Run migration
@@ -135,6 +135,8 @@ module Ace
           end
         end
 
+        # Find taskflow root by walking up directory tree
+        # @return [String, nil] Path to .ace-taskflow directory or nil if not found
         def find_taskflow_root
           current = Dir.pwd
           while current != "/"
@@ -146,8 +148,9 @@ module Ace
         end
 
         def git_repository?
-          # Check if we're in a git repository
-          system("git rev-parse --git-dir > /dev/null 2>&1")
+          # Check if we're in a git repository (cached)
+          return @git_repository unless @git_repository.nil?
+          @git_repository = system("git rev-parse --git-dir > /dev/null 2>&1")
         end
 
         def show_help

@@ -3,6 +3,7 @@
 require "fileutils"
 require "time"
 require "ace/support/markdown"
+require_relative "../configuration"
 require_relative "../molecules/git_executor"
 require_relative "../molecules/idea_enhancer"
 require_relative "../atoms/clipboard_reader"
@@ -381,7 +382,7 @@ module Ace
 
         def determine_location_context(path)
           # Extract location from path
-          backlog_dir = @config.backlog_dir
+          backlog_dir = Ace::Taskflow.configuration.backlog_dir
           if path.include?("/#{backlog_dir}/")
             "backlog"
           elsif match = path.match(/\/(v\.\d+\.\d+\.\d+)\//)

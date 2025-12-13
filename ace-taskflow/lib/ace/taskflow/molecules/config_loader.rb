@@ -6,40 +6,48 @@ module Ace
   module Taskflow
     module Molecules
       # Load configuration using ace-core patterns
+      # Follows ADR-022: Configuration Default and Override Pattern
+      #
+      # Configuration priority (highest to lowest):
+      # 1. CLI options (handled by commands)
+      # 2. Project config: .ace/taskflow/config.yml (nearest wins)
+      # 3. User config: ~/.ace/taskflow/config.yml
+      # 4. Gem defaults: ace-taskflow/.ace.example/taskflow/config.yml
       class ConfigLoader
-        DEFAULT_CONFIG = {
-          "root" => ".ace-taskflow",
-          "task_dir" => "t",
-          "active_strategy" => "lowest",
-          "allow_multiple_active" => true,
-          "terminal_statuses" => %w[done cancelled suspended superseded],
-          "references" => {
-            "allow_qualified" => true,
-            "allow_cross_release" => true
-          },
-          "defaults" => {
-            "idea_location" => "active",
-            "task_location" => "active"
-          },
-          "tasks" => {
-            "defaults" => {
-              "reschedule_strategy" => "add_next"
-            }
-          }
-        }.freeze
+        # Load gem defaults from .ace.example/taskflow/config.yml
+        # This file is shipped with the gem and is the single source of truth
+        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
+        # @return [Hash] Default configuration from gem
+        # @raise [RuntimeError] If default config file is missing (gem packaging error)
+        def self.load_gem_defaults
+          @gem_defaults ||= begin
+            gem_root = File.expand_path("../../../..", __dir__)
+            default_file = File.join(gem_root, ".ace.example", "taskflow", "config.yml")
+
+            unless File.exist?(default_file)
+              raise "Default config not found: #{default_file}. " \
+                    "This is a gem packaging error - .ace.example/ must be included in the gem."
+            end
+
+            content = YAML.load_file(default_file)
+            extract_taskflow_config(content&.dig("taskflow") || {})
+          end
+        end
+
+        # Reset cached gem defaults (for testing)
+        def self.reset_gem_defaults!
+          @gem_defaults = nil
+        end
 
         # Load configuration from cascade
         # @return [Hash] Merged configuration
         def self.load
-          config = DEFAULT_CONFIG.dup
+          config = load_gem_defaults.dup
 
           # Look for config files in cascade order
-          config_paths = find_config_paths
-
-          config_paths.each do |path|
+          find_config_paths.each do |path|
             if File.exist?(path)
-              file_config = load_file(path)
-              config = deep_merge(config, file_config)
+              config = deep_merge(config, load_file(path))
             end
           end
 
@@ -84,7 +92,7 @@ module Ace
 
           # 2. Get configured taskflow root directory name
           config = load
-          root_dir = config["root"] || DEFAULT_CONFIG["root"]
+          root_dir = config["root"] || ".ace-taskflow"
 
           # 3. Build absolute path: project_root + taskflow_root
           # Handle absolute paths in configuration (for special cases)
@@ -155,11 +163,12 @@ module Ace
           # Extract directory configuration (support both old flat and new nested formats)
           if taskflow_section["directories"]
             config["directories"] = taskflow_section["directories"]
-            # Also set task_dir for backward compatibility
+            # Also set task_dir from directories.tasks for backward compatibility
             config["task_dir"] = taskflow_section["directories"]["tasks"] if taskflow_section["directories"]["tasks"]
-          elsif taskflow_section["task_dir"]
-            config["task_dir"] = taskflow_section["task_dir"]
           end
+
+          # Top-level task_dir takes precedence (can override directories.tasks)
+          config["task_dir"] = taskflow_section["task_dir"] if taskflow_section["task_dir"]
 
           config["active_strategy"] = taskflow_section["active_strategy"] if taskflow_section["active_strategy"]
           config["allow_multiple_active"] = taskflow_section["allow_multiple_active"] unless taskflow_section["allow_multiple_active"].nil?

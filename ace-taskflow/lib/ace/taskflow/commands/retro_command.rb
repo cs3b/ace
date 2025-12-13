@@ -194,7 +194,7 @@ module Ace
           puts "  show <reference>    Display specific reflection note"
           puts "  <reference>         Shorthand for show"
           puts ""
-          puts "  done <reference>    Mark retro as done (move to done/)"
+          puts "  done <reference>    Mark retro as done (move to _archive/)"
           puts ""
           puts "Options:"
           puts "  --release <version> Work with specific release"
