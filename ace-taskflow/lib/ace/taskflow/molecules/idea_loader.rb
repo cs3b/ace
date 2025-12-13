@@ -19,10 +19,10 @@ module Ace
         #   - maybe/: Uncertain if we should do it
         #   - anyday/: Good idea but not urgent
         #   - _archive/: Completed or skipped (configurable via done_dir)
-        #   - _parked/: Good idea but not now (configurable via parked_dir)
+        #   - _maybe/: Good idea but not now (configurable via parked_dir)
         # Note: Scope is independent from status (draft/pending/in-progress/done/obsolete)
         # These values are used as fallback; configuration takes precedence
-        SCOPE_SUBDIRECTORIES = %w[_archive _parked maybe anyday].freeze
+        SCOPE_SUBDIRECTORIES = %w[_archive _maybe maybe anyday].freeze
 
         def initialize(root_path = nil)
           @root_path = root_path || ConfigLoader.find_root

@@ -98,7 +98,7 @@ module Ace
 
           # Check for standard directories (using configured names)
           config = Ace::Taskflow.configuration
-          [config.backlog_dir, config.done_dir, config.deferred_dir].each do |dir|
+          [config.backlog_dir, config.done_dir, config.anyday_dir].each do |dir|
             path = File.join(@root_path, dir)
             unless Dir.exist?(path)
               issues << { type: :warning, message: "Missing standard directory: #{dir}/", location: @root_path }
@@ -178,13 +178,13 @@ module Ace
 
           config = Ace::Taskflow.configuration
           archive_dir_name = config.done_dir
-          deferred_dir_name = config.deferred_dir
+          anyday_dir_name = config.anyday_dir
 
           # Check tasks in main directory
           Dir.glob(File.join(task_dir, "*")).each do |task_folder|
             next unless File.directory?(task_folder)
             next if File.basename(task_folder) == archive_dir_name
-            next if File.basename(task_folder) == deferred_dir_name
+            next if File.basename(task_folder) == anyday_dir_name
 
             validate_task_folder(task_folder, :active, issues, stats)
           end
@@ -199,9 +199,9 @@ module Ace
           end
 
           # Check deferred tasks
-          deferred_dir = File.join(task_dir, deferred_dir_name)
-          if Dir.exist?(deferred_dir)
-            Dir.glob(File.join(deferred_dir, "*")).each do |task_folder|
+          anyday_dir = File.join(task_dir, anyday_dir_name)
+          if Dir.exist?(anyday_dir)
+            Dir.glob(File.join(anyday_dir, "*")).each do |task_folder|
               next unless File.directory?(task_folder)
               validate_task_folder(task_folder, :deferred, issues, stats)
             end
@@ -251,12 +251,12 @@ module Ace
 
           config = Ace::Taskflow.configuration
           archive_dir_name = config.done_dir
-          parked_dir_name = config.parked_dir
+          maybe_dir_name = config.maybe_dir
 
           # Check ideas in main directory
           Dir.glob(File.join(idea_dir, "*")).each do |item|
             next if File.basename(item) == archive_dir_name
-            next if File.basename(item) == parked_dir_name
+            next if File.basename(item) == maybe_dir_name
 
             if File.file?(item) && item.end_with?(".md")
               validate_idea_file(item, :pending, issues, stats)
@@ -278,9 +278,9 @@ module Ace
           end
 
           # Check parked ideas
-          parked_dir = File.join(idea_dir, parked_dir_name)
-          if Dir.exist?(parked_dir)
-            Dir.glob(File.join(parked_dir, "*")).each do |item|
+          maybe_dir = File.join(idea_dir, maybe_dir_name)
+          if Dir.exist?(maybe_dir)
+            Dir.glob(File.join(maybe_dir, "*")).each do |item|
               if File.file?(item) && item.end_with?(".md")
                 validate_idea_file(item, :parked, issues, stats)
               elsif File.directory?(item)
