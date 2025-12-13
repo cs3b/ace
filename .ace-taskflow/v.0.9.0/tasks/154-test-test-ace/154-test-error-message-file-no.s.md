@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.154
-status: pending
+status: in-progress
 priority: low
 estimate: 1-2h
 dependencies: []
+worktree:
+  branch: 154-improve-ace-test-error-message-for-file-not-found
+  path: "../ace-task.154"
+  created_at: '2025-12-13 23:12:58'
+  updated_at: '2025-12-13 23:12:58'
 ---
 
 # Improve ace-test error message for file not found
