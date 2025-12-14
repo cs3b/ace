@@ -9,6 +9,10 @@ module Ace
       class GroqClient < BaseClient
         API_BASE_URL = "https://api.groq.com/openai/v1"
         DEFAULT_MODEL = "openai/gpt-oss-120b"
+
+        # Generation parameters to include in API request
+        GENERATION_KEYS = %i[temperature max_tokens top_p frequency_penalty presence_penalty stop].freeze
+
         DEFAULT_GENERATION_CONFIG = {
           temperature: 0.7,
           max_tokens: 4096,
@@ -59,9 +63,10 @@ module Ace
             messages: processed_messages
           }
 
-          # Add allowed generation parameters (extract_generation_options already .compact removes nils)
-          allowed_params = %i[temperature max_tokens top_p frequency_penalty presence_penalty stop]
-          request.merge!(generation_params.slice(*allowed_params))
+          # Add generation parameters (use nil? to preserve zero values like temperature: 0)
+          GENERATION_KEYS.each do |key|
+            request[key] = generation_params[key] unless generation_params[key].nil?
+          end
 
           # Streaming disabled (not implemented in ace-llm)
           request[:stream] = false
