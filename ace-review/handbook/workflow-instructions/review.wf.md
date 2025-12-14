@@ -1,325 +1,104 @@
 ---
+name: review
+description: Review code with preset and plan feedback application
+argument-hint: "[preset] [subject]"
+allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
 update:
-  update_frequency: on-change
-  auto_generate:
-  - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-11-10'
+  last-updated: '2025-12-14'
 ---
 
-# Code Review Workflow Instruction
+# Code Review Workflow
 
 ## Goal
 
-Perform comprehensive code review using the `ace-review` command with preset configurations and automated execution.
+Review code using ace-review, read the synthesis report, and create a plan for applying feedback.
 
-## Context Loading
+## Arguments
 
-**FIRST: Load the code review context for all reference information:**
-```bash
-ace-review --list-presets
-ace-review --list-prompts
-```
+- `$1`: Preset name (default: `code-pr`). Run `ace-review --list-presets` to see options.
+- `$2`: Subject (optional) - what to review:
+  - `staged` - staged changes
+  - `working` - unstaged changes
+  - `origin/main...HEAD` - git range (auto-detected)
+  - `lib/**/*.rb` - file pattern (auto-detected)
+  - `'diff: {ranges: ["origin/main...HEAD"]}'` - explicit YAML
 
-This provides:
-- Complete command help and options
-- All available presets with descriptions
-- Available prompt modules (base, format, focus, guidelines)
-- Tool documentation and examples
+## Instructions
 
-**Note**: Since v0.9.6, ace-review uses ace-context for unified content aggregation, supporting `files:`, `diffs:`, `commands:`, and `presets:` in configuration.
-
-## ⚠️ CRITICAL: AI Agent Instructions ⚠️
-
-**FOR AI CODING AGENTS - READ THIS FIRST**
-
-### What TO DO:
-1. **Run `ace-review --list-presets`** for reference
-2. **Select appropriate preset** or compose custom configuration
-3. **Execute `ace-review`** with `--auto-execute` flag
-4. **Review generated report** for insights
-
-### What NOT TO DO:
-- ❌ Use Read tool on individual source files (do not run git show and git diff directly - only run ace-review)
-- ❌ Manually run ace-llm-query (handled by --auto-execute)
-- ❌ Create tasks (user's responsibility after reviewing reports)
-- ❌ Skip the context loading step
-
-## Prerequisites
-
-- Access to `ace-review` command
-- LLM provider configured (default: google:gemini-2.5-flash)
-
-## Primary Workflow: Multi-Repository Review
-
-### The Main Command Pattern
+### Step 1: Run Code Review
 
 ```bash
-# Multi-repository review with git diffs
-ace-review \
-  --preset ruby-atom \
-  --context 'presets: [project]' \
-  --subject 'diff: {ranges: ["8e7882c~1..HEAD", "origin/main...HEAD"]}' \
-  --add-focus 'scope/tests,scope/docs' \
-  --model "google:gemini-2.5-flash" \
-  --auto-execute
+# With preset only (uses preset's default subject)
+ace-review --preset ${1:-code-pr} --auto-execute
 
-# Review specific files with context
-ace-review \
-  --preset code \
-  --subject 'files: ["lib/ace/review/**/*.rb"]' \
-  --context 'presets: [project]' \
-  --auto-execute
+# With custom subject
+ace-review --preset ${1:-code-pr} --subject "$2" --auto-execute
 ```
 
-### Key Parameters Explained
+Wait for the review to complete. Note the synthesis report path from the output.
 
-- **`--preset`**: Base configuration (see `ace-review --list-presets`)
-- **`--context`**: Background docs to include (YAML config or preset name)
-- **`--subject`**: What to review (YAML config, git range, keyword, or file pattern)
-- **`--add-focus`**: Additional focus modules to layer on preset
-- **`--auto-execute`**: Run LLM query immediately (no manual steps)
+The review generates:
+- LLM model reviews (e.g., `review-gemini.md`)
+- Synthesis combining all findings (`synthesis-report.md`)
 
-### Configuration Schema (ace-context v0.9.6+)
+### Step 2: Read Synthesis Report
 
-Both `--subject` and `--context` accept unified YAML configuration:
+Read the synthesis report path shown in the command output.
 
-```yaml
-# ✅ CORRECT: Use these keys (both diff: and diffs: work identically)
-files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
-diff: {ranges: ["origin/main...HEAD"]}   # Git diff via ace-git-diff (NEW)
-commands: ["git log --oneline -5"]       # Shell commands to execute
-presets: [project, architecture]         # ace-context preset names
+Focus on:
+- **Prioritized Action Items** - what needs fixing
+- **Priority levels** - Critical, High, Medium, Low
+- **Locations** - file:line references
 
-# ❌ DEPRECATED: Old array format (still works but not recommended)
-diffs: ["origin/main...HEAD"]            # Use diff: {ranges: [...]} instead
-```
+### Step 3: Create Feedback Plan
 
-**Simple String Shortcuts** (for `--subject`):
-- `"staged"` → staged changes
-- `"working"` → unstaged changes
-- `"code-pr"` → changes vs tracking branch
-- `"HEAD~1..HEAD"` → git range (auto-detected)
-- `"lib/**/*.rb"` → file pattern (auto-detected)
+Based on the synthesis report's **Prioritized Action Items**, create a plan:
 
-## Quick Discovery Commands
+1. List all action items by priority (Critical → High → Medium → Low)
+2. For each item, note:
+   - Location (file:line)
+   - Description of the issue
+   - Recommended fix
+3. Identify which items to implement now vs capture as ideas for later
+
+### Step 4: Present Plan and Wait for Confirmation
+
+Present the plan to the user with a summary:
+- Number of items per priority level
+- Estimated scope of changes
+- Any items recommended to defer
+
+Use AskUserQuestion to confirm:
+- "Which items should I implement?"
+- Options: All items, High priority only, Custom selection
+
+Only proceed with implementation after user confirmation.
+
+### Step 5: Implement Fixes
+
+Implement the confirmed fixes. After each fix:
+- Commit with a clear message referencing the issue
+- Mark completion in the plan
+
+## Quick Reference
 
 ```bash
-# See what's available
-ace-review --list-presets   # All preset configurations
-ace-review --list-prompts   # All modular components
-ace-review --help           # Full command documentation
-```
+# Discovery
+ace-review --list-presets   # Available presets
+ace-review --list-prompts   # Available prompt modules
 
-## Common Scenarios
+# Common patterns
+ace-review --preset code-pr --auto-execute                    # PR changes
+ace-review --preset code --subject staged --auto-execute      # Staged only
+ace-review --preset ruby-atom --subject 'origin/main...HEAD' --auto-execute  # vs main
 
-### Daily PR Review
-```bash
-# Simple: uses default subject (staged + working changes)
-ace-review --preset code-pr --auto-execute
-
-# Explicit: review changes vs main branch
-ace-review --preset code-pr --subject 'diff: {ranges: ["origin/main...HEAD"]}' --auto-execute
-```
-
-### Pre-Commit Check
-```bash
-# Review staged changes
-ace-review --preset code --subject staged --auto-execute
-
-# Or explicitly
-ace-review --preset code --subject 'diff: {ranges: ["staged"]}' --auto-execute
-```
-
-### Review Specific Files
-```bash
-# Review files matching pattern
-ace-review --preset code \
-  --subject 'files: ["lib/ace/review/**/*.rb"]' \
-  --auto-execute
-
-# Multiple file patterns
-ace-review --preset code \
-  --subject 'files: ["lib/**/*.rb", "spec/**/*_spec.rb"]' \
-  --auto-execute
-```
-
-### Architecture Compliance
-```bash
-# Review with architectural context
-ace-review --preset ruby-atom \
-  --context 'presets: [project]' \
-  --auto-execute
-```
-
-### Compose Multiple Sources
-```bash
-# Review files + diffs with full context
-ace-review --preset code \
-  --subject 'files: ["new-feature/**/*.rb"], diff: {ranges: ["HEAD~5..HEAD"]}' \
-  --context 'presets: [project], files: ["docs/architecture.md"]' \
-  --auto-execute
-```
-
-## Using Context Files
-
-When review parameters are complex, store them in a preset file:
-
-```yaml
-# .ace/review/presets/multi-repo.yml
-description: "Review changes across main repo and submodules"
-
-subject:
-  diff:
-    ranges:
-      - "8e7882c~1..HEAD"                  # Main repo: specific commit range
-      - "origin/main...HEAD"               # All changes vs main
-  files:
-    - "docs/CHANGELOG.md"                  # Include changelog
-
-context:
-  presets: [project]                       # Load project documentation
-  files: ["docs/architecture.md"]          # Specific architectural docs
-
-# New instructions format with section-based organization
-instructions:
-  context:
-    sections:
-      review_focus:
-        title: "Review Focus Areas"
-        description: "Architecture and code quality focus"
-        files:
-          - "prompt://focus/architecture/atom"
-          - "prompt://focus/languages/ruby"
-```
-
-Then use the preset:
-```bash
-ace-review --preset multi-repo --auto-execute
-```
-
-## Section-Based Instructions Format (New in 0.15.0)
-
-The new `instructions` format allows structured, section-based organization of review prompts for better clarity and composability.
-
-### Benefits
-
-- **Structured Organization**: Organize prompts into logical sections with titles and descriptions
-- **Protocol Support**: Use `prompt://` protocol for dynamic prompt loading
-- **Better Integration**: Leverages ace-context's section-based processing
-- **Backward Compatible**: Legacy `prompt_composition` format still works
-
-### Example: Section-Based Preset
-
-```yaml
-# .ace/review/presets/comprehensive.yml
-description: "Comprehensive code review with structured prompts"
-
-instructions:
-  context:
-    base: "prompt://base/system"   # Base system instructions
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Standard output formatting"
-        files:
-          - "prompt://format/standard"
-      focus:
-        title: "Review Focus"
-        description: "What to look for in code"
-        files:
-          - "prompt://focus/architecture/atom"
-          - "prompt://focus/languages/ruby"
-          - "prompt://focus/quality/best-practices"
-      guidelines:
-        title: "Communication Guidelines"
-        description: "How to present findings"
-        files:
-          - "prompt://guidelines/tone"
-
-subject:
-  diff:
-    ranges:
-      - "origin/main...HEAD"
-
-context:
-  presets: [project]
-```
-
-### Legacy Format (Still Supported)
-
-The traditional `prompt_composition` format continues to work:
-
-```yaml
-# .ace/review/presets/legacy-style.yml
-description: "Review using legacy format"
-
-prompt_composition:
-  base: "base/code-review"
-  format: "format/standard"
-  focus:
-    - "architecture/atom"
-    - "languages/ruby"
-  guidelines: "guidelines/professional"
-
-subject:
-  diff:
-    ranges: ["origin/main...HEAD"]
-```
-
-## Essential Tips
-
-### Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "No code to review" | Use `diff: {ranges: [...]}` → `--subject 'diff: {ranges: ["origin/main...HEAD"]}'` |
-| "Preset not found" | Run `ace-review --list-presets` to see available presets |
-| "Git diff empty" | Check git range: `git log origin/main...HEAD` |
-| "LLM timeout" | Narrow the review scope or use faster model |
-| "Invalid git range" | Verify range exists: `git diff origin/main...HEAD` |
-
-### Debug Mode
-```bash
-# See what would be executed
-ace-review --preset code-pr --dry-run
-
-# Verify subject extraction
-ace-review --subject 'files: ["lib/**/*.rb"]' --dry-run --verbose
-
-# Check preset configuration
-ace-review --list-presets
-cat .ace/review/presets/ruby-atom.yml
+# Debug
+ace-review --preset code-pr --dry-run   # See what would run
 ```
 
 ## Success Criteria
 
-- ✅ Available presets and prompts listed
-- ✅ Appropriate preset or configuration selected
-- ✅ Subject correctly specified using `files:`, `diff:`, or keywords
-- ✅ Context properly configured (optional but recommended)
-- ✅ Command executed with `--auto-execute`
-- ✅ Review report generated and saved to session directory
-- ✅ No manual ace-llm-query execution needed
-
-## Summary
-
-1. **Discovery**: Run `ace-review --list-presets` and `--list-prompts`
-2. **Configure**: Choose preset and specify subject/context
-   - Use `files:` for file patterns
-   - Use `diff: {ranges: [...]}` for git ranges (delegates to ace-git-diff)
-   - Use `presets:` for ace-context presets
-   - Compose multiple sources as needed
-3. **Execute**: Single command with `--auto-execute`
-4. **Review**: Read generated report for insights
-
-**Remember**:
-- This workflow generates review reports only
-- Use `diff: {ranges: [...]}` for git diffs (delegates to ace-git-diff)
-- Both `diff:` and `diffs:` keys work identically
-- All content extraction delegated to ace-context for unified aggregation
-- Task creation is the user's responsibility after reviewing reports
-
----
-
-*For complete reference, always run `context --preset ace-review` first.*
+- [ ] Review completed with synthesis report
+- [ ] Feedback plan created and confirmed by user
+- [ ] Confirmed items implemented with commits
