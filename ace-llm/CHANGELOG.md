@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Standardized GENERATION_KEYS pattern**: All LLM clients now use declarative constants
+  - OpenAIClient, OpenRouterClient, GroqClient, MistralClient, AnthropicClient use `GENERATION_KEYS`
+  - GoogleClient uses `GENERATION_KEY_MAPPING` (maps internal keys to Gemini camelCase API keys)
+  - XAIClient already used this pattern (model implementation)
+  - Replaces inline nil checks with cleaner iteration loop
+  - Single point of truth for each client's supported parameters
+
+### Fixed
+- **MistralClient zero-value handling**: Fixed bug where `temperature: 0` was dropped
+  - Changed from truthiness checks to nil checks
+- **AnthropicClient zero-value handling**: Fixed bug where `temperature: 0` was dropped
+  - Changed from truthiness checks to nil checks
+- **GoogleClient zero-value handling**: Fixed bug where `temperature: 0` was dropped
+  - Changed from truthiness checks to nil checks
+
 ## [0.15.0] - 2025-12-14
 
 ### Added

@@ -9,6 +9,10 @@ module Ace
       class MistralClient < BaseClient
         API_BASE_URL = "https://api.mistral.ai"
         DEFAULT_MODEL = "mistral-large-latest"
+
+        # Generation parameters to include in API request
+        GENERATION_KEYS = %i[temperature max_tokens top_p random_seed].freeze
+
         DEFAULT_GENERATION_CONFIG = {
           temperature: 0.7,
           max_tokens: nil,
@@ -50,11 +54,10 @@ module Ace
             messages: messages
           }
 
-          # Add generation parameters
-          request[:temperature] = generation_params[:temperature] if generation_params[:temperature]
-          request[:max_tokens] = generation_params[:max_tokens] if generation_params[:max_tokens]
-          request[:top_p] = generation_params[:top_p] if generation_params[:top_p]
-          request[:random_seed] = generation_params[:random_seed] if generation_params[:random_seed]
+          # Add generation parameters (use nil? to preserve zero values like temperature: 0)
+          GENERATION_KEYS.each do |key|
+            request[key] = generation_params[key] unless generation_params[key].nil?
+          end
 
           request
         end

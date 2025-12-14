@@ -13,6 +13,9 @@ module Ace
         API_BASE_URL = "https://openrouter.ai/api/v1"
         DEFAULT_MODEL = "openai/gpt-oss-120b:nitro"
 
+        # Generation parameters to include in API request
+        GENERATION_KEYS = %i[temperature max_tokens top_p frequency_penalty presence_penalty].freeze
+
         # Get the provider name
         # @return [String] Provider name
         def self.provider_name
@@ -70,12 +73,10 @@ module Ace
             messages: processed_messages
           }
 
-          # Add generation parameters (use nil checks to allow valid 0/false values)
-          request[:temperature] = generation_params[:temperature] unless generation_params[:temperature].nil?
-          request[:max_tokens] = generation_params[:max_tokens] unless generation_params[:max_tokens].nil?
-          request[:top_p] = generation_params[:top_p] unless generation_params[:top_p].nil?
-          request[:frequency_penalty] = generation_params[:frequency_penalty] unless generation_params[:frequency_penalty].nil?
-          request[:presence_penalty] = generation_params[:presence_penalty] unless generation_params[:presence_penalty].nil?
+          # Add generation parameters (use nil? to preserve zero values like temperature: 0)
+          GENERATION_KEYS.each do |key|
+            request[key] = generation_params[key] unless generation_params[key].nil?
+          end
 
           # Add streaming flag (always false for now)
           request[:stream] = false
