@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.168] - 2025-12-14
+
+### ace-review v0.23.2
+
+**Upstream Dependency Fixes**
+
+- ace-llm dependency fixes benefit ace-review users
+- Zero-value generation parameters (`temperature: 0`) now preserved in MistralClient, AnthropicClient, GoogleClient
+- All LLM clients standardized with GENERATION_KEYS pattern for consistency
+
 ## [0.9.167] - 2025-12-14
 
 ### ace-review v0.23.1
