@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.2] - 2025-12-14
+
 ### Fixed
 - **Upstream bug fixes**: ace-llm dependency fixes benefit ace-review users
   - Zero-value generation parameters (`temperature: 0`) now preserved in MistralClient, AnthropicClient, GoogleClient
