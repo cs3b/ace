@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.167] - 2025-12-14
+
+### ace-review v0.23.1
+
+**Workflow Simplification**
+
+- Simplified `review.wf.md` to match `review-pr.wf.md` pattern with full cycle workflow (review → plan → confirm → implement)
+- Reduced from 326 lines to 105 lines (68% reduction)
+- Added proper frontmatter: `name`, `argument-hint`, `allowed-tools`
+- Removed configuration documentation (available via `ace-review --help`)
+
 ## [0.9.166] - 2025-12-13
 
 ### ace-test-runner v0.2.1
