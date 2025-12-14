@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2025-12-14
+
+### Changed
+- **Workflow Simplification**: Simplified `review.wf.md` to match `review-pr.wf.md` pattern with full cycle workflow (review → plan → confirm → implement)
+
 ## [0.23.0] - 2025-12-08
 
 ### Added
