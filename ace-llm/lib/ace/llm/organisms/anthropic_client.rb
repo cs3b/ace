@@ -10,6 +10,10 @@ module Ace
         API_BASE_URL = "https://api.anthropic.com"
         DEFAULT_MODEL = "claude-3-5-sonnet-20241022"
         API_VERSION = "2023-06-01"
+
+        # Generation parameters to include in API request (max_tokens handled separately as required)
+        GENERATION_KEYS = %i[temperature top_p top_k].freeze
+
         DEFAULT_GENERATION_CONFIG = {
           temperature: 0.7,
           max_tokens: 4096,  # Anthropic requires max_tokens
@@ -74,10 +78,10 @@ module Ace
           # Add system message if present
           request[:system] = system_message if system_message
 
-          # Add other generation parameters
-          request[:temperature] = generation_params[:temperature] if generation_params[:temperature]
-          request[:top_p] = generation_params[:top_p] if generation_params[:top_p]
-          request[:top_k] = generation_params[:top_k] if generation_params[:top_k]
+          # Add other generation parameters (use nil? to preserve zero values like temperature: 0)
+          GENERATION_KEYS.each do |key|
+            request[key] = generation_params[key] unless generation_params[key].nil?
+          end
 
           request
         end

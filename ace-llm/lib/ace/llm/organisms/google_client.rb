@@ -9,6 +9,15 @@ module Ace
       class GoogleClient < BaseClient
         API_BASE_URL = "https://generativelanguage.googleapis.com"
         DEFAULT_MODEL = "gemini-2.5-flash"
+
+        # Mapping from internal keys to Gemini API camelCase keys
+        GENERATION_KEY_MAPPING = {
+          temperature: :temperature,
+          max_tokens: :maxOutputTokens,
+          top_p: :topP,
+          top_k: :topK
+        }.freeze
+
         DEFAULT_GENERATION_CONFIG = {
           temperature: 0.7,
           max_tokens: nil,
@@ -63,14 +72,13 @@ module Ace
             contents: contents
           }
 
-          # Add generation config if parameters provided
-          if generation_params.any?
-            request[:generationConfig] = {}
-            request[:generationConfig][:temperature] = generation_params[:temperature] if generation_params[:temperature]
-            request[:generationConfig][:maxOutputTokens] = generation_params[:max_tokens] if generation_params[:max_tokens]
-            request[:generationConfig][:topP] = generation_params[:top_p] if generation_params[:top_p]
-            request[:generationConfig][:topK] = generation_params[:top_k] if generation_params[:top_k]
+          # Add generation config (use nil? to preserve zero values like temperature: 0)
+          generation_config = {}
+          GENERATION_KEY_MAPPING.each do |internal_key, api_key|
+            value = generation_params[internal_key]
+            generation_config[api_key] = value unless value.nil?
           end
+          request[:generationConfig] = generation_config unless generation_config.empty?
 
           request
         end
