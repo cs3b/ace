@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2025-12-14
+
 ### Changed
 - **Standardized GENERATION_KEYS pattern**: All LLM clients now use declarative constants
   - OpenAIClient, OpenRouterClient, GroqClient, MistralClient, AnthropicClient use `GENERATION_KEYS`
