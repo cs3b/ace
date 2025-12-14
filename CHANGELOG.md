@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.169] - 2025-12-14
+
+### ace-llm v0.15.1
+
+**Standardized GENERATION_KEYS Pattern**
+
+- All LLM clients now use declarative `GENERATION_KEYS` constants
+- OpenAIClient, OpenRouterClient, GroqClient, MistralClient, AnthropicClient use `GENERATION_KEYS`
+- GoogleClient uses `GENERATION_KEY_MAPPING` (maps internal keys to Gemini camelCase API keys)
+- Fixed zero-value handling bugs in MistralClient, AnthropicClient, GoogleClient (`temperature: 0` was dropped)
+
 ## [0.9.168] - 2025-12-14
 
 ### ace-review v0.23.2
