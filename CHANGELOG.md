@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.171] - 2025-12-16
+
+### ace-context v0.19.1
+
+**Nested Context Config Support**
+
+- **Fixed**: `load_inline_yaml` now unwraps nested `context:` key for template processing
+  - Fixes empty content issue when using ace-review typed subjects (`diff:`, `files:`, `task:`)
+  - Both flat (`diffs: [...]`) and nested (`context: { diffs: [...] }`) configs now work identically
+- **Improved**: PR processing format guard ensures consistent output formatting
+
+### ace-review v0.24.0
+
+**Subprocess Timeout and Documentation**
+
+- **Added**: 10-second timeout on `ace-taskflow` subprocess prevents indefinite hangs
+  - New `CommandTimeoutError` with command and timeout details
+- **Added**: Dual extraction paths documentation in `SubjectExtractor` class
+- **Fixed**: Comment accuracy in `SubjectExtractor#use_ace_context`
+
 ## [0.9.170] - 2025-12-16
 
 ### ace-context v0.19.0
