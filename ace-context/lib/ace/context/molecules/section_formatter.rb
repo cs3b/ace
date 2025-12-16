@@ -150,12 +150,26 @@ module Ace
 
           diffs = section_data[:_processed_diffs] || section_data['_processed_diffs'] || []
           diffs.each do |diff_data|
-            output << "  <output command=\"git diff #{diff_data[:range]}\">"
+            command = diff_command_for(diff_data)
+            output << "  <output command=\"#{command}\">"
             output << format_diff_output(diff_data[:output])
             output << "  </output>"
           end
 
           output.join("\n")
+        end
+
+        # Returns the appropriate command string for a diff based on its source
+        def diff_command_for(diff_data)
+          source = diff_data[:source] || diff_data['source']
+          range = diff_data[:range] || diff_data['range']
+
+          case source
+          when :pr, 'pr'
+            "gh pr diff #{range.to_s.sub(/^pr:/, '')}"
+          else
+            "git diff #{range}"
+          end
         end
 
         # Formats inline content section
