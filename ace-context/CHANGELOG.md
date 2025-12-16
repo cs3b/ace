@@ -6,8 +6,19 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-12-16
+
 ### Added
 
+* **PR Diff Support**: New `pr:` configuration key enables loading GitHub Pull Request diffs via `gh` CLI
+  * Supports three PR identifier formats: simple number (`123`), qualified reference (`owner/repo#456`), and GitHub URL (`https://github.com/owner/repo/pull/789`)
+  * Single PR: `pr: 123` or multiple PRs: `pr: [123, "owner/repo#456"]`
+  * PR diffs wrapped in `<diff source="pr:{id}">` tags in output
+  * Graceful error handling for gh not installed, authentication failures, and PR not found errors
+  * Continues processing other sources if individual PR fetches fail
+  * Added `PrIdentifierParser` atom for parsing PR identifiers (22 tests, 100% coverage)
+  * Added `GhPrExecutor` molecule for safe gh CLI execution with comprehensive error handling (12 tests)
+  * Integrated into `ContextLoader.process_template_config` alongside existing diff processing
 * **CLI Flag for Source Embedding**: New `--embed-source` (`-e`) flag enables embedding source documents in output
   * Overrides `embed_document_source` frontmatter setting when present
   * Enables ace-prompt to delegate all context aggregation to ace-context
