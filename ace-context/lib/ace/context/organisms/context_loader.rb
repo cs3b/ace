@@ -363,7 +363,7 @@ module Ace
           elsif input.match?(/\A[\w-]+\z/)
             # Looks like a preset name
             load_preset(input)
-          elsif input.include?('files:') || input.include?('commands:') || input.include?('include:') || input.include?('diffs:') || input.include?('presets:')
+          elsif input.include?('files:') || input.include?('commands:') || input.include?('include:') || input.include?('diffs:') || input.include?('presets:') || input.include?('pr:')
             # Looks like inline YAML
             load_inline_yaml(input)
           else
@@ -380,7 +380,21 @@ module Ace
           begin
             require 'yaml'
             config = YAML.safe_load(yaml_string)
-            process_template_config(config)
+            # Unwrap 'context' key if present (typed subjects use nested structure)
+            # This allows both flat configs (diffs: [...]) and nested (context: { diffs: [...] })
+            template_config = config['context'] || config
+            context = process_template_config(template_config)
+            # Process PR references if present (uses same unwrapped config)
+            pr_processed = process_pr_config(context, template_config, @options)
+            # Re-format context if PR processing added sections
+            # Note: process_template_config already formats files/diffs/commands into context.content
+            # We only need to re-format if process_pr_config added new sections (PR diffs)
+            # If PR had no changes or failed, has_sections? returns false and we keep existing content
+            if context.has_sections? || pr_processed
+              format = config['format'] || @options[:format] || 'markdown-xml'
+              format_context(context, format)
+            end
+            context
           rescue => e
             context = Models::ContextData.new
             context.metadata[:error] = "Failed to parse inline YAML: #{e.message}"
@@ -431,6 +445,9 @@ module Ace
 
             # Process base content if present (for template files with context.base)
             process_base_content(context, config, @options)
+
+            # Process PR references (context.pr)
+            process_pr_config(context, config, @options)
 
             # Process sections if present (same as preset loading)
             preset_like_config = { 'context' => config }
@@ -899,41 +916,6 @@ module Ace
             end
           end
 
-          # Process PRs
-          if config['pr']
-            data[:diffs] ||= []
-            pr_refs = config['pr'].is_a?(Array) ? config['pr'] : [config['pr']]
-
-            pr_refs.each do |pr_ref|
-              begin
-                executor = Molecules::GhPrExecutor.new(pr_ref)
-                result = executor.fetch_diff
-
-                if result[:success]
-                  data[:diffs] << {
-                    range: result[:source],
-                    output: result[:diff],
-                    success: true,
-                    source: :pr
-                  }
-                end
-              rescue Molecules::GhPrExecutor::GhNotInstalledError,
-                     Molecules::GhPrExecutor::GhAuthenticationError,
-                     Molecules::GhPrExecutor::PrNotFoundError,
-                     Molecules::GhPrExecutor::GhCommandError,
-                     Molecules::GhPrExecutor::TimeoutError => e
-                data[:errors] << "PR fetch failed for '#{pr_ref}': #{e.message}"
-                data[:diffs] << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
-              rescue ArgumentError => e
-                data[:errors] << "Invalid PR identifier '#{pr_ref}': #{e.message}"
-                data[:diffs] << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
-              rescue StandardError => e
-                data[:errors] << "Unexpected error fetching PR '#{pr_ref}': #{e.message}"
-                data[:diffs] << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
-              end
-            end
-          end
-
           # Format output
           formatter = Ace::Core::Molecules::OutputFormatter.new(
             config['format'] || @options[:format] || 'markdown-xml'
@@ -1112,12 +1094,13 @@ module Ace
 
         # Process top-level PR configuration
         # This handles context.pr at preset level, adding results to a diffs section
+        # @return [Boolean] true if PR config was present (even if fetch failed), false otherwise
         def process_pr_config(context, context_config, options)
           pr_refs = context_config['pr'] || context_config[:pr]
-          return unless pr_refs
+          return false unless pr_refs
 
           pr_refs = pr_refs.is_a?(Array) ? pr_refs : [pr_refs]
-          return if pr_refs.empty?
+          return false if pr_refs.empty?
 
           processed_diffs = []
 
@@ -1148,13 +1131,15 @@ module Ace
             end
           end
 
-          return if processed_diffs.empty?
+          # Return true even if all fetches failed - PR config was present and attempted
+          return true if processed_diffs.empty?
 
           # Add PR diffs to a "diffs" section for section-based formatting
           context.sections ||= {}
           context.sections['diffs'] ||= { title: 'Diffs', _processed_diffs: [] }
           context.sections['diffs'][:_processed_diffs] ||= []
           context.sections['diffs'][:_processed_diffs].concat(processed_diffs)
+          true
         end
 
         # Process diffs section content
