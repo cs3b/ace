@@ -450,6 +450,58 @@ For `--subject`, you can use simple string shortcuts:
 - `HEAD~1..HEAD` → git range (auto-detected)
 - `lib/**/*.rb` → file pattern (auto-detected)
 
+### Unified Subject Syntax (v0.24.0+)
+
+Clean, type-safe subject specification using `type:value` syntax:
+
+```bash
+# Git diff ranges
+ace-review --subject diff:origin/main..HEAD --preset code
+
+# GitHub pull requests (subject-only mode)
+ace-review --subject pr:123 --preset code
+
+# File patterns
+ace-review --subject files:lib/**/*.rb --preset code
+
+# Multiple files (comma-separated)
+ace-review --subject files:lib/**/*.rb,test/**/* --preset code
+
+# Task references
+ace-review --subject task:145 --preset spec
+ace-review --subject task:145.02 --preset spec
+
+# Keywords (existing shortcuts)
+ace-review --subject staged --preset code
+ace-review --subject working --preset code
+```
+
+**Subject Type Resolution:**
+
+| Input | Resolves To (ace-context config) |
+|-------|----------------------------------|
+| `diff:range` | `{ "context" => { "diffs" => ["range"] } }` |
+| `pr:123` | `{ "context" => { "pr" => "123" } }` |
+| `files:pattern` | `{ "context" => { "files" => ["pattern"] } }` |
+| `task:ref` | Task lookup → `{ "context" => { "files" => ["task-dir/**/*.s.md"] } }` |
+| `staged` | Auto-detect (legacy path) |
+| `working` | Auto-detect (legacy path) |
+
+**Parsing Precedence:**
+
+Subject input is parsed in this order (first match wins):
+
+1. **Typed subjects** (`type:value`) - explicit, highest priority
+2. **YAML detection** - starts with `{` or contains valid YAML keys
+3. **Keywords** (`staged`, `working`) - convenience shortcuts
+4. **Auto-detect** - git range patterns, file globs
+
+**Backward Compatible:** YAML syntax and auto-detection still work.
+
+**Note:** `--pr` vs `--subject pr:` - The `--pr` flag provides full PR mode (includes metadata, comments) using ace-review's GhPrFetcher. The `--subject pr:` syntax only fetches diff content through ace-context (subject-only mode).
+
+**Note:** `task:` subject scope - The `task:` subject type reviews task specification files (`*.s.md`) only, not the implementation code. To review code implemented for a task, use `diff:` or `files:` subjects with the appropriate patterns.
+
 ## Task Integration
 
 The `--task` flag enables saving review reports directly to ace-taskflow task directories for improved traceability and context.

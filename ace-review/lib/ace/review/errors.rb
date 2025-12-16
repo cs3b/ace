@@ -86,6 +86,42 @@ module Ace
 
       # Raised when gh CLI encounters a network error
       class GhNetworkError < Error; end
+
+      # Raised when ace-taskflow cannot find task
+      class TaskNotFoundError < Error
+        attr_reader :task_ref
+
+        def initialize(task_ref)
+          @task_ref = task_ref
+          message = "Task '#{task_ref}' not found.\n"
+          message += "Run 'ace-taskflow task #{task_ref}' for details."
+          super(message)
+        end
+      end
+
+      # Raised when task exists but has no path
+      class TaskPathNotFoundError < Error
+        attr_reader :task_ref
+
+        def initialize(task_ref)
+          @task_ref = task_ref
+          message = "Task '#{task_ref}' exists but has no path.\n"
+          message += "Check task status with: ace-taskflow task #{task_ref}"
+          super(message)
+        end
+      end
+
+      # Raised when a subprocess command times out
+      class CommandTimeoutError < Error
+        attr_reader :command, :timeout_seconds
+
+        def initialize(command, timeout_seconds)
+          @command = command
+          @timeout_seconds = timeout_seconds
+          message = "Command '#{command}' timed out after #{timeout_seconds} seconds."
+          super(message)
+        end
+      end
     end
   end
 end
