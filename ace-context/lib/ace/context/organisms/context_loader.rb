@@ -579,6 +579,10 @@ module Ace
             end
           end
 
+          # Process top-level PR references (works with both sections and legacy formats)
+          # Called after section processing so PR diffs merge into existing sections
+          process_pr_config(context, context_config, options)
+
           # If embed_document_source is true, set content to trigger XML formatting
           if context_config['embed_document_source'] && preset[:body] && !preset[:body].empty?
             context.content = preset[:body]
@@ -1104,6 +1108,53 @@ module Ace
 
           # Add commands to context (always, like in legacy processing)
           context.commands = (context.commands || []) + processed_commands
+        end
+
+        # Process top-level PR configuration
+        # This handles context.pr at preset level, adding results to a diffs section
+        def process_pr_config(context, context_config, options)
+          pr_refs = context_config['pr'] || context_config[:pr]
+          return unless pr_refs
+
+          pr_refs = pr_refs.is_a?(Array) ? pr_refs : [pr_refs]
+          return if pr_refs.empty?
+
+          processed_diffs = []
+
+          pr_refs.each do |pr_ref|
+            begin
+              executor = Molecules::GhPrExecutor.new(pr_ref)
+              result = executor.fetch_diff
+
+              if result[:success]
+                processed_diffs << {
+                  range: result[:source],
+                  output: result[:diff],
+                  success: true,
+                  source: :pr
+                }
+              end
+            rescue Molecules::GhPrExecutor::GhNotInstalledError,
+                   Molecules::GhPrExecutor::GhAuthenticationError,
+                   Molecules::GhPrExecutor::PrNotFoundError,
+                   Molecules::GhPrExecutor::GhCommandError,
+                   Molecules::GhPrExecutor::TimeoutError => e
+              context.metadata[:errors] ||= []
+              context.metadata[:errors] << "PR fetch failed for '#{pr_ref}': #{e.message}"
+              processed_diffs << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
+            rescue ArgumentError => e
+              context.metadata[:errors] ||= []
+              context.metadata[:errors] << "Invalid PR identifier '#{pr_ref}': #{e.message}"
+            end
+          end
+
+          return if processed_diffs.empty?
+
+          # Add PR diffs to a "diffs" section for section-based formatting
+          context.sections ||= {}
+          context.sections['diffs'] ||= { title: 'Diffs', _processed_diffs: [] }
+          context.sections['diffs'][:_processed_diffs] ||= []
+          context.sections['diffs'][:_processed_diffs].concat(processed_diffs)
         end
 
         # Process diffs section content
