@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.19.1] - 2025-12-16
+
+### Fixed
+
+* **Nested Context Config Support**: Fixed `load_inline_yaml` to unwrap nested `context:` key for template processing
+  * Typed subjects from ace-review use nested structure like `context: { diffs: [...] }`
+  * `process_template_config` now receives the unwrapped config, matching flat config behavior
+  * Both `diffs: [HEAD~1]` and `context: { diffs: [HEAD~1] }` now produce identical output
+  * Fixes empty content issue when using ace-review typed subjects (`diff:`, `files:`, `task:`)
+
+* **PR Processing Format Guard**: Improved `load_inline_yaml` to format context after PR processing
+  * `process_pr_config` now returns boolean indicating whether PR config was present
+  * `format_context` is called when either sections exist OR PR processing was attempted
+  * Ensures consistent output formatting even when PR fetches fail or return empty
+
+* **Inline YAML PR Handling**: Fixed `load_inline_yaml` to properly format PR diffs into output content
+  * PR diffs added via `process_pr_config` were not being formatted into `context.content`
+  * Added `format_context` call after PR processing when sections are present
+  * Also added `pr:` keyword detection in `load_auto` for proper inline YAML routing
+  * Enables direct API usage like `Ace::Context.load_auto("pr: 123")` to return formatted PR diff content
+
 ## [0.19.0] - 2025-12-16
 
 ### Added

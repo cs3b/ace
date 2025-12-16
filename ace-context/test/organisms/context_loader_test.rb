@@ -653,4 +653,92 @@ class ContextLoaderTest < AceTestCase
     end
   end
 
+  # Tests for load_inline_yaml with nested context key
+  # This ensures ace-review typed subjects (diff:, files:, pr:) work correctly
+
+  def test_load_inline_yaml_with_flat_diffs_config
+    with_temp_dir do
+      # Create a git repo with commits
+      system("git init --initial-branch=main > /dev/null 2>&1")
+      system("git config user.email 'test@test.com' && git config user.name 'Test'")
+      File.write("test.rb", "# Initial content")
+      system("git add . && git commit -m 'Initial' > /dev/null 2>&1")
+      File.write("test.rb", "# Updated content\n# Line 2")
+      system("git add . && git commit -m 'Update' > /dev/null 2>&1")
+
+      # Flat config (traditional usage)
+      yaml_string = <<~YAML
+        diffs:
+          - HEAD~1..HEAD
+        ---
+      YAML
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.send(:load_inline_yaml, yaml_string)
+
+      # Should contain diff output
+      assert context.content.length > 50, "Expected substantial content from diff"
+      assert context.content.include?("test.rb"), "Should include filename in diff"
+    end
+  end
+
+  def test_load_inline_yaml_with_nested_context_diffs_config
+    with_temp_dir do
+      # Create a git repo with commits
+      system("git init --initial-branch=main > /dev/null 2>&1")
+      system("git config user.email 'test@test.com' && git config user.name 'Test'")
+      File.write("test.rb", "# Initial content")
+      system("git add . && git commit -m 'Initial' > /dev/null 2>&1")
+      File.write("test.rb", "# Updated content\n# Line 2")
+      system("git add . && git commit -m 'Update' > /dev/null 2>&1")
+
+      # Nested config (ace-review typed subject format)
+      yaml_string = <<~YAML
+        context:
+          diffs:
+            - HEAD~1..HEAD
+        ---
+      YAML
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.send(:load_inline_yaml, yaml_string)
+
+      # Should contain diff output (same as flat config)
+      assert context.content.length > 50, "Expected substantial content from nested diff config"
+      assert context.content.include?("test.rb"), "Should include filename in diff from nested config"
+    end
+  end
+
+  def test_load_inline_yaml_flat_and_nested_produce_same_output
+    with_temp_dir do
+      # Create a git repo with commits
+      system("git init --initial-branch=main > /dev/null 2>&1")
+      system("git config user.email 'test@test.com' && git config user.name 'Test'")
+      File.write("test.rb", "# Test content")
+      system("git add . && git commit -m 'Initial' > /dev/null 2>&1")
+
+      flat_yaml = <<~YAML
+        files:
+          - test.rb
+        ---
+      YAML
+
+      nested_yaml = <<~YAML
+        context:
+          files:
+            - test.rb
+        ---
+      YAML
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      flat_context = loader.send(:load_inline_yaml, flat_yaml)
+      nested_context = loader.send(:load_inline_yaml, nested_yaml)
+
+      # Both should produce equivalent content
+      assert flat_context.content.include?("Test content"), "Flat config should include file content"
+      assert nested_context.content.include?("Test content"), "Nested config should include file content"
+      assert_equal flat_context.file_count, nested_context.file_count, "Both should have same file count"
+    end
+  end
+
 end
