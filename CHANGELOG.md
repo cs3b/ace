@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.173] - 2025-12-16
+
+### ace-context v0.19.2
+
+**PR Array Handling and Diff Merging Refinements**
+
+- **Fixed**: `pr:` array handling where multiple PRs only showed the first one
+  - Arrays like `pr: [123, 456]` now correctly fetch and display all PR diffs
+- **Improved**: Context diff detection and PR subject parsing
+- **Refactored**: Extract ContentChecker atom and improve diff merging logic
+  - Added PR reference validation for better error handling
+
+### ace-review v0.24.2
+
+**PR Subject Parsing and Architecture Improvements**
+
+- **Fixed**: Refined context diff detection and PR subject parsing for more reliable PR reviews
+  - Improved handling of PR references in subject configurations
+  - Better validation of PR references before fetching
+- **Refactored**: Diff merging logic into dedicated ContentChecker component
+  - Cleaner architecture for content validation
+
 ## [0.9.172] - 2025-12-16
 
 ### ace-review v0.24.1
