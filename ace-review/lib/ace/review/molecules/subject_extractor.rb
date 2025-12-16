@@ -128,7 +128,7 @@ module Ace
           when /^diff:$/
             raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)"
           when /^pr:(.+)$/
-            { "context" => { "pr" => ::Regexp.last_match(1) } }
+            { "context" => { "pr" => [::Regexp.last_match(1)] } }
           when /^pr:$/
             raise ArgumentError, "Empty value for pr: subject. Usage: pr:NUMBER (e.g., pr:123)"
           when /^files:(.+)$/

@@ -339,7 +339,7 @@ class SubjectExtractorTest < AceReviewTest
   # parse_typed_subject_config tests - returns config hash without extraction
   def test_parse_typed_subject_config_for_pr
     config = @extractor.parse_typed_subject_config("pr:77")
-    assert_equal({ "context" => { "pr" => "77" } }, config)
+    assert_equal({ "context" => { "pr" => ["77"] } }, config)
   end
 
   def test_parse_typed_subject_config_for_diff
