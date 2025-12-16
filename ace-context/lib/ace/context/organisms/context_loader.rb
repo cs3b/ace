@@ -15,6 +15,7 @@ require_relative '../molecules/section_formatter'
 require_relative '../molecules/gh_pr_executor'
 require_relative '../models/context_data'
 require_relative '../atoms/git_extractor'
+require_relative '../atoms/content_checker'
 
 module Ace
   module Context
@@ -818,14 +819,15 @@ module Ace
         end
 
         # Check if context has sections with actual processed content
-        # Returns true only if sections have _processed_files or _processed_commands
+        # Returns true if sections have _processed_files, _processed_commands, or _processed_diffs
         def has_processed_section_content?(context)
           return false unless context.has_sections?
 
           context.sections.any? do |_name, data|
             processed_files = data[:_processed_files] || data['_processed_files'] || []
             processed_commands = data[:_processed_commands] || data['_processed_commands'] || []
-            processed_files.any? || processed_commands.any?
+            processed_diffs = data[:_processed_diffs] || data['_processed_diffs'] || []
+            processed_files.any? || processed_commands.any? || processed_diffs.any?
           end
         end
 
@@ -1293,26 +1295,22 @@ module Ace
         end
 
         # Helper methods to detect content types in sections
+        # Delegates to shared ContentChecker atom for consistency
 
-        # Checks if section has files content
         def has_files_content?(section_data)
-          !!(section_data[:files] || section_data['files'])
+          Atoms::ContentChecker.has_files_content?(section_data)
         end
 
-        # Checks if section has commands content
         def has_commands_content?(section_data)
-          !!(section_data[:commands] || section_data['commands'])
+          Atoms::ContentChecker.has_commands_content?(section_data)
         end
 
-        # Checks if section has diffs content
         def has_diffs_content?(section_data)
-          !!(section_data[:ranges] || section_data['ranges'] ||
-                section_data[:diffs] || section_data['diffs'])
+          Atoms::ContentChecker.has_diffs_content?(section_data)
         end
 
-        # Checks if section has inline content
         def has_content_content?(section_data)
-          !!(section_data[:content] || section_data['content'])
+          Atoms::ContentChecker.has_content_content?(section_data)
         end
 
         def project_root

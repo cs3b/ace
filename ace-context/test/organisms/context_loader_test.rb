@@ -741,4 +741,90 @@ class ContextLoaderTest < AceTestCase
     end
   end
 
+  # Test has_processed_section_content? returns true for sections with _processed_diffs
+  def test_has_processed_section_content_with_processed_diffs
+    with_temp_dir do
+      # Create a mock context with sections containing _processed_diffs
+      create_preset("test-preset", <<~MARKDOWN
+        ---
+        description: Test preset
+        context:
+          params:
+            output: stdio
+          sections:
+            pr_diffs:
+              title: PR Diffs
+        ---
+        Test
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("test-preset")
+
+      # Manually add _processed_diffs to simulate PR processing
+      # This simulates what happens when PRs are fetched and processed
+      if context.sections && context.sections.key?('pr_diffs')
+        context.sections['pr_diffs'][:_processed_diffs] = ['diff content from PR']
+      end
+
+      # Now test the helper method
+      assert loader.send(:has_processed_section_content?, context),
+             "Should return true when sections have _processed_diffs"
+    end
+  end
+
+  def test_has_processed_section_content_with_processed_files
+    with_temp_dir do
+      create_preset("test-preset", <<~MARKDOWN
+        ---
+        description: Test preset
+        context:
+          params:
+            output: stdio
+          sections:
+            files_section:
+              title: Files
+        ---
+        Test
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("test-preset")
+
+      # Manually add _processed_files
+      if context.sections && context.sections.key?('files_section')
+        context.sections['files_section'][:_processed_files] = [{ path: 'test.rb', content: 'content' }]
+      end
+
+      assert loader.send(:has_processed_section_content?, context),
+             "Should return true when sections have _processed_files"
+    end
+  end
+
+  def test_has_processed_section_content_returns_false_for_no_processed_content
+    with_temp_dir do
+      create_preset("empty-preset", <<~MARKDOWN
+        ---
+        description: Empty preset
+        context:
+          params:
+            output: stdio
+          sections:
+            empty_section:
+              title: Empty
+        ---
+        Test
+      MARKDOWN
+      )
+
+      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      context = loader.load_preset("empty-preset")
+
+      refute loader.send(:has_processed_section_content?, context),
+             "Should return false when sections have no processed content"
+    end
+  end
+
 end
