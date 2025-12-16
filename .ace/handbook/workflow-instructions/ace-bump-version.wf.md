@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-14'
+  last-updated: '2025-12-16'
 ---
 
 # ACE Bump Version Workflow
@@ -104,7 +104,16 @@ sed -i '' 's/VERSION = "OLD_VERSION"/VERSION = "NEW_VERSION"/' \
 ruby -c ace-[package]/lib/ace/[package]/version.rb
 ```
 
-### 5. Update Changelog
+### 5. Update Gemfile.lock
+
+After updating version.rb, run bundle to update the lockfile:
+```bash
+bundle install
+```
+
+This ensures Gemfile.lock reflects the new version for mono-repo workspace dependencies.
+
+### 6. Update Changelog
 
 **Categorize commits by type:**
 - `feat:` → **Added**
@@ -136,7 +145,7 @@ ruby -c ace-[package]/lib/ace/[package]/version.rb
 - Capitalize first letter
 - Add bullet point
 
-### 6. Commit Changes
+### 7. Commit Changes
 
 Use `ace-git-commit` with specific files and direct message:
 ```bash
