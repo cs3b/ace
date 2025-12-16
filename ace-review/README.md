@@ -461,6 +461,9 @@ ace-review --subject diff:origin/main..HEAD --preset code
 # GitHub pull requests (subject-only mode)
 ace-review --subject pr:123 --preset code
 
+# Multiple GitHub pull requests (comma-separated)
+ace-review --subject pr:123,456,789 --preset code
+
 # File patterns
 ace-review --subject files:lib/**/*.rb --preset code
 
@@ -481,7 +484,8 @@ ace-review --subject working --preset code
 | Input | Resolves To (ace-context config) |
 |-------|----------------------------------|
 | `diff:range` | `{ "context" => { "diffs" => ["range"] } }` |
-| `pr:123` | `{ "context" => { "pr" => "123" } }` |
+| `pr:123` | `{ "context" => { "pr" => ["123"] } }` |
+| `pr:123,456` | `{ "context" => { "pr" => ["123", "456"] } }` (multiple PRs, comma-separated) |
 | `files:pattern` | `{ "context" => { "files" => ["pattern"] } }` |
 | `task:ref` | Task lookup → `{ "context" => { "files" => ["task-dir/**/*.s.md"] } }` |
 | `staged` | Auto-detect (legacy path) |

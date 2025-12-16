@@ -128,7 +128,16 @@ module Ace
           when /^diff:$/
             raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)"
           when /^pr:(.+)$/
-            { "context" => { "pr" => [::Regexp.last_match(1)] } }
+            pr_refs = ::Regexp.last_match(1).split(",").map(&:strip).reject(&:empty?).uniq
+            if pr_refs.empty?
+              raise ArgumentError, "No valid PR references provided. Usage: pr:NUMBER (e.g., pr:123 or pr:123,456)"
+            end
+            # Validate that all PR references are numeric
+            invalid_refs = pr_refs.reject { |ref| ref =~ /\A\d+\z/ }
+            unless invalid_refs.empty?
+              raise ArgumentError, "PR references must be numeric: #{invalid_refs.join(', ')}. Usage: pr:123 or pr:123,456"
+            end
+            { "context" => { "pr" => pr_refs } }
           when /^pr:$/
             raise ArgumentError, "Empty value for pr: subject. Usage: pr:NUMBER (e.g., pr:123)"
           when /^files:(.+)$/

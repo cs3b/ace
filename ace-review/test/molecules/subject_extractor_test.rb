@@ -147,6 +147,26 @@ class SubjectExtractorTest < AceReviewTest
     assert_kind_of String, result
   end
 
+  def test_pr_typed_subject_multiple_prs
+    # Verify the config parsing produces correct PR array
+    config = @extractor.parse_typed_subject_config("pr:123,456")
+    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+
+    # Also verify extraction returns a string
+    result = @extractor.extract("pr:123,456")
+    assert_kind_of String, result
+  end
+
+  def test_pr_typed_subject_multiple_prs_with_whitespace
+    # Verify whitespace is properly trimmed from PR refs
+    config = @extractor.parse_typed_subject_config("pr: 123 , 456 ")
+    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+
+    # Also verify extraction returns a string
+    result = @extractor.extract("pr: 123 , 456")
+    assert_kind_of String, result
+  end
+
   def test_files_typed_subject_single
     result = @extractor.extract("files:lib/**/*.rb")
     assert_kind_of String, result
@@ -307,6 +327,51 @@ class SubjectExtractorTest < AceReviewTest
     end
     assert_includes error.message, "Empty value for pr: subject"
     assert_includes error.message, "pr:NUMBER"
+  end
+
+  def test_pr_trailing_comma_rejects_empty_refs
+    # Trailing comma should not produce empty string in PR array
+    config = @extractor.parse_typed_subject_config("pr:123,")
+    assert_equal({ "context" => { "pr" => ["123"] } }, config)
+  end
+
+  def test_pr_multiple_commas_rejects_empty_refs
+    # Multiple commas should not produce empty strings
+    config = @extractor.parse_typed_subject_config("pr:123,,456")
+    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+  end
+
+  def test_pr_duplicate_refs_deduped
+    # Duplicate PR refs should be deduplicated
+    config = @extractor.parse_typed_subject_config("pr:123,456,123")
+    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+  end
+
+  def test_pr_only_commas_raises_error
+    # Only commas (no valid refs) should raise error
+    error = assert_raises ArgumentError do
+      @extractor.extract("pr:,,,")
+    end
+    assert_includes error.message, "No valid PR references"
+  end
+
+  def test_pr_non_numeric_ref_raises_error
+    # Non-numeric PR refs should raise error
+    error = assert_raises ArgumentError do
+      @extractor.extract("pr:abc")
+    end
+    assert_includes error.message, "PR references must be numeric"
+    assert_includes error.message, "abc"
+  end
+
+  def test_pr_mixed_numeric_non_numeric_raises_error
+    # Mixed numeric and non-numeric should raise error listing invalid refs
+    error = assert_raises ArgumentError do
+      @extractor.extract("pr:123,abc,456,def")
+    end
+    assert_includes error.message, "PR references must be numeric"
+    assert_includes error.message, "abc"
+    assert_includes error.message, "def"
   end
 
   def test_empty_files_value_raises_helpful_error
