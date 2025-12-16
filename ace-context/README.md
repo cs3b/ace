@@ -203,6 +203,21 @@ context:
   #   - "origin/main...HEAD"
 ```
 
+**PRs**: Include GitHub Pull Request diffs (requires [GitHub CLI](https://cli.github.com/))
+```yaml
+context:
+  # Single PR
+  pr: 123
+
+  # Multiple PRs with different formats
+  pr:
+    - 123                                        # Simple PR number
+    - "owner/repo#456"                           # Qualified reference
+    - "https://github.com/owner/repo/pull/789"   # GitHub URL
+```
+
+PR diffs are fetched using the `gh` CLI tool. Ensure you're authenticated (`gh auth login`).
+
 **Presets**: Include other ace-context presets
 ```yaml
 context:

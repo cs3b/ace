@@ -12,6 +12,7 @@ require 'ace/core/atoms/file_reader'
 require_relative '../molecules/preset_manager'
 require_relative '../molecules/section_processor'
 require_relative '../molecules/section_formatter'
+require_relative '../molecules/gh_pr_executor'
 require_relative '../models/context_data'
 require_relative '../atoms/git_extractor'
 
@@ -870,6 +871,41 @@ module Ace
                   error: result[:error]
                 }
                 data[:errors] << "Git diff failed for '#{diff_range}': #{result[:error]}"
+              end
+            end
+          end
+
+          # Process PRs
+          if config['pr']
+            data[:diffs] ||= []
+            pr_refs = config['pr'].is_a?(Array) ? config['pr'] : [config['pr']]
+
+            pr_refs.each do |pr_ref|
+              begin
+                executor = Molecules::GhPrExecutor.new(pr_ref)
+                result = executor.fetch_diff
+
+                if result[:success]
+                  data[:diffs] << {
+                    range: result[:source],
+                    output: result[:diff],
+                    success: true,
+                    source: :pr
+                  }
+                end
+              rescue Molecules::GhPrExecutor::GhNotInstalledError,
+                     Molecules::GhPrExecutor::GhAuthenticationError,
+                     Molecules::GhPrExecutor::PrNotFoundError,
+                     Molecules::GhPrExecutor::GhCommandError,
+                     Molecules::GhPrExecutor::TimeoutError => e
+                data[:errors] << "PR fetch failed for '#{pr_ref}': #{e.message}"
+                data[:diffs] << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
+              rescue ArgumentError => e
+                data[:errors] << "Invalid PR identifier '#{pr_ref}': #{e.message}"
+                data[:diffs] << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
+              rescue StandardError => e
+                data[:errors] << "Unexpected error fetching PR '#{pr_ref}': #{e.message}"
+                data[:diffs] << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
               end
             end
           end
