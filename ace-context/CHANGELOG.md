@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.19.2] - 2025-12-16
+
+### Fixed
+
+* **PR Array Handling**: Fixed `pr:` array handling where multiple PRs only showed the first one
+  * Arrays like `pr: [123, 456]` now correctly fetch and display all PR diffs
+  * Improved context diff detection and PR subject parsing
+
+### Changed
+
+* **Diff Merging Refinement**: Extract ContentChecker atom and improve diff merging logic
+  * Added PR reference validation for better error handling
+  * Refactored internal diff processing for cleaner architecture
+
+### Technical
+
+* Added comprehensive test coverage for PR and section processing features
+
 ## [0.19.1] - 2025-12-16
 
 ### Fixed

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../atoms/section_validator'
+require_relative '../atoms/content_checker'
 
 module Ace
   module Context
@@ -487,11 +488,29 @@ module Ace
           end
 
           # Merge diffs/ranges arrays
-          if has_diffs_content?(merged) || has_diffs_content?(new_section)
-            merged['ranges'] = ((merged['ranges'] || []) + (new_section['ranges'] || [])).uniq
-            merged['diffs'] = ((merged['diffs'] || []) + (new_section['diffs'] || [])).uniq
-            merged.delete(:ranges) if merged.key?(:ranges) # Remove symbol key if string key exists
-            merged.delete(:diffs) if merged.key?(:diffs) # Remove symbol key if string key exists
+          # Only set ranges/diffs when either side actually has values (not for _processed_diffs-only sections)
+          # This prevents empty arrays from triggering downstream diff-handling paths
+          merged_ranges = merged['ranges'] || merged[:ranges]
+          new_ranges = new_section['ranges'] || new_section[:ranges]
+          merged_diffs_arr = merged['diffs'] || merged[:diffs]
+          new_diffs_arr = new_section['diffs'] || new_section[:diffs]
+
+          if merged_ranges || new_ranges
+            merged['ranges'] = ((merged_ranges || []) + (new_ranges || [])).uniq
+            merged.delete(:ranges) if merged.key?(:ranges)
+          end
+          if merged_diffs_arr || new_diffs_arr
+            merged['diffs'] = ((merged_diffs_arr || []) + (new_diffs_arr || [])).uniq
+            merged.delete(:diffs) if merged.key?(:diffs)
+          end
+
+          # Also merge processed diffs (from PR fetches)
+          # Deduplicate to prevent prompt size bloat when same PR/section is merged repeatedly
+          merged_processed = merged[:_processed_diffs] || merged['_processed_diffs'] || []
+          new_processed = new_section[:_processed_diffs] || new_section['_processed_diffs'] || []
+          if merged_processed.any? || new_processed.any?
+            merged[:_processed_diffs] = (merged_processed + new_processed).uniq
+            merged.delete('_processed_diffs') if merged.key?('_processed_diffs')
           end
 
           # Merge content (concatenate)
@@ -551,26 +570,22 @@ module Ace
         end
 
         # Helper methods to detect content types in sections
+        # Delegates to shared ContentChecker atom for consistency
 
-        # Checks if section has files content
         def has_files_content?(section_data)
-          !!(section_data[:files] || section_data['files'])
+          Atoms::ContentChecker.has_files_content?(section_data)
         end
 
-        # Checks if section has commands content
         def has_commands_content?(section_data)
-          !!(section_data[:commands] || section_data['commands'])
+          Atoms::ContentChecker.has_commands_content?(section_data)
         end
 
-        # Checks if section has diffs content
         def has_diffs_content?(section_data)
-          !!(section_data[:ranges] || section_data['ranges'] ||
-                section_data[:diffs] || section_data['diffs'])
+          Atoms::ContentChecker.has_diffs_content?(section_data)
         end
 
-        # Checks if section has inline content
         def has_content_content?(section_data)
-          !!(section_data[:content] || section_data['content'])
+          Atoms::ContentChecker.has_content_content?(section_data)
         end
 
       end
