@@ -54,7 +54,8 @@ module Ace
             content_result[:subject],
             options.subject,  # Pass original subject configuration
             session_dir,
-            options  # Pass options to check for PR mode
+            options,  # Pass options to check for PR mode
+            content_result[:typed_subject_config]  # Pass typed subject config directly
           )
           return prompt_result unless prompt_result[:success]
 
@@ -140,6 +141,30 @@ module Ace
 
           # Extract subject (what to review)
           subject_config = options.subject || config[:subject]
+
+          # Check for typed subject - pass config directly to ace-context (no extraction)
+          # This avoids extracting content only to save it and re-read it
+          if subject_config.is_a?(String)
+            typed_config = @subject_extractor.parse_typed_subject_config(subject_config)
+            if typed_config
+              # Create cache directory for context.md if not provided
+              cache_dir = options.session_dir || create_cache_directory
+
+              # Extract context (background info)
+              context_config = options.context || config[:context]
+              context = extract_context(context_config, cache_dir)
+
+              return {
+                success: true,
+                typed_subject_config: typed_config,  # Pass config, not content
+                subject: nil,  # No pre-extracted content
+                context: context,
+                cache_dir: cache_dir
+              }
+            end
+          end
+
+          # Fall back to legacy flow for non-typed subjects
           subject = extract_subject(subject_config)
 
           if subject.nil? || subject.empty?
@@ -223,7 +248,7 @@ module Ace
         end
 
         # Step 3: Generate system and user prompts via ace-context
-        def compose_review_prompt(config, context, subject, subject_config, session_dir, options = nil)
+        def compose_review_prompt(config, context, subject, cli_subject, session_dir, options = nil, typed_subject_config = nil)
           # Extract prompt composition and context config
           system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
           context_config = config[:context] || config["context"] || "project"
@@ -239,28 +264,14 @@ module Ace
           system_context_path = create_context_file(session_dir, instructions_config, context_config, "system.context.md")
 
           # Step 3b: Create user.context.md with subject configuration
-          subject_config = config["subject"] || config[:subject]
-
-          # Config merging: Load preset config first, then overwrite with PR-specific content
-          # if --pr flag is used. This follows the "merge config then merge --pr" approach.
-          if subject && !subject.empty? && options&.pr_review?
-            # Save PR diff to session file
-            pr_diff_path = File.join(session_dir, "pr-diff.patch")
-            File.write(pr_diff_path, subject)
-
-            # Overwrite subject config with PR-specific content
-            subject_config = {
-              "context" => {
-                "sections" => {
-                  "pr_changes" => {
-                    "title" => "Pull Request Changes",
-                    "description" => "Code changes from GitHub Pull Request",
-                    "files" => [pr_diff_path]
-                  }
-                }
-              }
-            }
-          end
+          subject_config = resolve_subject_config(
+            config: config,
+            subject: subject,
+            cli_subject: cli_subject,
+            session_dir: session_dir,
+            options: options,
+            typed_subject_config: typed_subject_config
+          )
 
           unless subject_config
             return {
@@ -537,6 +548,62 @@ module Ace
           review_data
         end
 
+        # Resolve subject configuration from multiple sources
+        # Priority: typed subject config > --pr flag > legacy --subject > preset subject config
+        # @param config [Hash] Preset configuration
+        # @param subject [String, nil] Pre-extracted subject content
+        # @param cli_subject [String, nil] Original CLI --subject value
+        # @param session_dir [String] Session directory for saving intermediate files
+        # @param options [ReviewOptions, nil] Review options
+        # @param typed_subject_config [Hash, nil] Parsed typed subject (pr:, files:, diff:, task:)
+        # @return [Hash, nil] Resolved subject configuration for ace-context
+        def resolve_subject_config(config:, subject:, cli_subject:, session_dir:, options:, typed_subject_config:)
+          # Handle typed subject config (pr:, files:, diff:, task:) - pass directly to ace-context
+          # This is the optimized path - no content extraction, ace-context handles it
+          if typed_subject_config
+            return typed_subject_config
+          end
+
+          # Handle --pr flag (full PR mode with GhPrFetcher)
+          if subject && !subject.empty? && options&.pr_review?
+            pr_diff_path = File.join(session_dir, "pr-diff.patch")
+            File.write(pr_diff_path, subject)
+
+            return {
+              "context" => {
+                "sections" => {
+                  "pr_changes" => {
+                    "title" => "Pull Request Changes",
+                    "description" => "Code changes from GitHub Pull Request",
+                    "files" => [pr_diff_path]
+                  }
+                }
+              }
+            }
+          end
+
+          # Handle legacy CLI --subject with pre-extracted content
+          if cli_subject && !cli_subject.empty? && subject && !subject.empty?
+            subject_content_path = File.join(session_dir, "subject-content.md")
+            File.write(subject_content_path, subject)
+
+            return {
+              "context" => {
+                "sections" => {
+                  "review_subject" => {
+                    "title" => "Code to Review",
+                    "description" => "Content from --subject flag",
+                    "files" => [subject_content_path]
+                  }
+                }
+              }
+            }
+          end
+
+          # Fallback to preset subject config
+          config["subject"] || config[:subject]
+        end
+
         def extract_subject(subject_config)
           return "" unless subject_config
           @subject_extractor.extract(subject_config)
@@ -774,10 +841,10 @@ module Ace
             "timestamp" => Time.now.iso8601,
             "preset" => review_data[:preset],
             "model" => review_data[:model],
-            "has_context" => !review_data[:context].empty?,
-            "subject_size" => review_data[:subject].length,
-            "system_prompt_size" => review_data[:system_prompt].length,
-            "user_prompt_size" => review_data[:user_prompt].length
+            "has_context" => !review_data[:context].to_s.empty?,
+            "subject_size" => review_data[:subject]&.length || 0,
+            "system_prompt_size" => review_data[:system_prompt]&.length || 0,
+            "user_prompt_size" => review_data[:user_prompt]&.length || 0
           }
         end
 
