@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.170] - 2025-12-16
+
+### ace-context v0.19.0
+
+**PR Diff Support and CLI Enhancements**
+
+- **PR Diff Support**: New `pr:` configuration key for loading GitHub Pull Request diffs via `gh` CLI
+  - Supports simple numbers (`123`), qualified refs (`owner/repo#456`), and GitHub URLs
+  - Graceful error handling for gh not installed, auth failures, and PR not found
+  - Added `PrIdentifierParser` atom and `GhPrExecutor` molecule
+- **CLI Flag for Source Embedding**: New `--embed-source` (`-e`) flag
+  - Overrides `embed_document_source` frontmatter setting
+  - Enables ace-prompt to delegate context aggregation to ace-context
+- **Inline Base Content**: `context.base` now supports inline strings (not just file paths)
+- **Bug Fixes**: Nil guard in CLI overrides, extension-less file resolution, load_file method reference
+
 ## [0.9.169] - 2025-12-14
 
 ### ace-llm v0.15.1
