@@ -754,7 +754,20 @@ module Ace
         end
 
         def merge_contexts(contexts)
-          # Convert ContextData objects to hashes for merging
+          return Models::ContextData.new if contexts.empty?
+
+          # Single context with actual processed section content: preserve sections
+          # This handles presets with explicit `sections:` that have real content
+          if contexts.size == 1 && has_processed_section_content?(contexts.first)
+            result = contexts.first
+            result.metadata[:merged] = true
+            result.metadata[:total_contexts] = 1
+            result.metadata[:sources] = [result.metadata[:preset_name] || result.metadata[:source_path]].compact
+            return format_context(result, @options[:format] || 'markdown-xml')
+          end
+
+          # Default path: use original merge logic for backward compatibility
+          # This creates a new context without sections (uses OutputFormatter with metadata)
           context_hashes = contexts.map do |context|
             {
               files: context.files,
@@ -765,27 +778,34 @@ module Ace
             }
           end
 
-          # Use the merger to combine contexts
           merged = @merger.merge_contexts(context_hashes)
 
-          # Create new ContextData from merged result
           result = Models::ContextData.new(
             metadata: merged[:metadata] || {}
           )
 
-          # Add all merged files
           merged[:files]&.each do |file|
             result.add_file(file[:path], file[:content])
           end
 
-          # Add merged metadata
           result.metadata[:merged] = true
           result.metadata[:total_contexts] = merged[:total_contexts]
           result.metadata[:sources] = merged[:sources]
           result.metadata[:errors] = merged[:errors] if merged[:errors]&.any?
 
-          # Format the merged content
           format_context(result, @options[:format] || 'markdown-xml')
+        end
+
+        # Check if context has sections with actual processed content
+        # Returns true only if sections have _processed_files or _processed_commands
+        def has_processed_section_content?(context)
+          return false unless context.has_sections?
+
+          context.sections.any? do |_name, data|
+            processed_files = data[:_processed_files] || data['_processed_files'] || []
+            processed_commands = data[:_processed_commands] || data['_processed_commands'] || []
+            processed_files.any? || processed_commands.any?
+          end
         end
 
         def process_template_config(config)
