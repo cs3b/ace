@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2025-12-16
+
+### Fixed
+- **pr: Array Consistency**: Changed `pr:` typed subject to return array format (`{"pr" => ["77"]}`) for consistency with `diffs:` and `files:` which are always arrays
+
 ## [0.24.0] - 2025-12-16
 
 ### Added
