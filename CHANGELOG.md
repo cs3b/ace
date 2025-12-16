@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.172] - 2025-12-16
+
+### ace-review v0.24.1
+
+**pr: Array Consistency**
+
+- **Fixed**: `pr:` typed subject now returns array format (`{"pr" => ["77"]}`) for consistency with `diffs:` and `files:` which are always arrays
+
 ## [0.9.171] - 2025-12-16
 
 ### ace-context v0.19.1
