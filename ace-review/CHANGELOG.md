@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2025-12-16
+
+### Added
+- **Subprocess Timeout Protection**: Added 10-second timeout to `ace-taskflow` subprocess in `task:` subject resolution
+  - Prevents indefinite hangs when task lookup is stuck
+  - New `CommandTimeoutError` provides clear error message with command and timeout details
+  - Uses Ruby's `Timeout` module wrapping `Open3.capture3`
+- **Dual Extraction Paths Documentation**: Added class-level documentation to `SubjectExtractor` explaining the two code paths
+  - Direct extraction via `extract()` for immediate content
+  - Config passthrough via `parse_typed_subject_config()` for optimized ReviewManager flow
+
+### Fixed
+- **Comment Accuracy**: Updated misleading comment in `SubjectExtractor#use_ace_context`
+  - Comment now correctly reflects that ace-context supports both flat keys and nested `context:` structure
+
 ## [0.23.2] - 2025-12-14
 
 ### Fixed
