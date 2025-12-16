@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.2] - 2025-12-16
+
+### Fixed
+
+* **PR Subject Parsing**: Refined context diff detection and PR subject parsing for more reliable PR reviews
+  * Improved handling of PR references in subject configurations
+  * Better validation of PR references before fetching
+
+### Changed
+
+* **ContentChecker Extraction**: Refactored diff merging logic into dedicated ContentChecker component
+  * Cleaner architecture for content validation
+  * Improved maintainability of review subject processing
+
+### Technical
+
+* Added test coverage for PR and section processing features
+
 ## [0.24.1] - 2025-12-16
 
 ### Fixed
