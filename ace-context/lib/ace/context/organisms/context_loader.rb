@@ -13,6 +13,7 @@ require_relative '../molecules/preset_manager'
 require_relative '../molecules/section_processor'
 require_relative '../molecules/section_formatter'
 require_relative '../molecules/gh_pr_executor'
+require_relative 'pr_context_loader'
 require_relative '../models/context_data'
 require_relative '../atoms/git_extractor'
 require_relative '../atoms/content_checker'
@@ -1104,80 +1105,13 @@ module Ace
         end
 
         # Process top-level PR configuration
-        # This handles context.pr at preset level, adding results to a diffs section
+        # Delegates to PrContextLoader for PR fetching and section integration
         # @return [Boolean] true if PR config was present (even if fetch failed), false otherwise
         def process_pr_config(context, context_config, options)
-          pr_refs = context_config['pr'] || context_config[:pr]
+          pr_refs = context_config["pr"] || context_config[:pr]
           return false unless pr_refs
 
-          # Normalize to array, remove nils/empty strings, deduplicate to prevent duplicate fetches
-          # (e.g., if preset merges with itself or duplicates exist in config)
-          pr_refs = normalize_pr_refs(pr_refs)
-          return false if pr_refs.empty?
-
-          processed_diffs = []
-
-          pr_refs.each do |pr_ref|
-            begin
-              executor = Molecules::GhPrExecutor.new(pr_ref)
-              result = executor.fetch_diff
-
-              if result[:success]
-                processed_diffs << {
-                  range: result[:source],
-                  output: result[:diff],
-                  success: true,
-                  source: :pr
-                }
-              end
-            rescue Molecules::GhPrExecutor::GhNotInstalledError,
-                   Molecules::GhPrExecutor::GhAuthenticationError,
-                   Molecules::GhPrExecutor::PrNotFoundError,
-                   Molecules::GhPrExecutor::GhCommandError,
-                   Molecules::GhPrExecutor::TimeoutError => e
-              context.metadata[:errors] ||= []
-              context.metadata[:errors] << "PR fetch failed for '#{pr_ref}': #{e.message}"
-              processed_diffs << { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
-            rescue ArgumentError => e
-              context.metadata[:errors] ||= []
-              context.metadata[:errors] << "Invalid PR identifier '#{pr_ref}': #{e.message}"
-            end
-          end
-
-          # Return false if no successful diffs were fetched - signals no content was loaded
-          successful_diffs = processed_diffs.select { |d| d[:success] }
-          if successful_diffs.empty?
-            # Surface errors to content so callers see failures without inspecting metadata
-            # This is especially important for inline YAML callers
-            if context.metadata[:errors]&.any?
-              error_notice = context.metadata[:errors].map { |e| "- #{e}" }.join("\n")
-              context.content = "**PR Fetch Errors:**\n#{error_notice}\n\n" + (context.content || "")
-            end
-            return false
-          end
-
-          # Add PR diffs to a "diffs" section for section-based formatting
-          context.sections ||= {}
-          context.sections['diffs'] ||= { title: 'Diffs', _processed_diffs: [] }
-          context.sections['diffs'][:_processed_diffs] ||= []
-          context.sections['diffs'][:_processed_diffs].concat(processed_diffs)
-          true
-        end
-
-        # Normalize PR refs to array, deduplicate, and remove empty/nil values
-        # Handles both string refs and hash refs (for future extensibility)
-        # @param pr_refs [String, Array, Hash, nil] PR reference(s)
-        # @return [Array<String>] Normalized, deduplicated PR refs
-        def normalize_pr_refs(pr_refs)
-          refs = pr_refs.is_a?(Array) ? pr_refs.flatten : [pr_refs]
-          refs.map do |ref|
-            # Handle both string refs and hash refs (e.g., {number: 123, repo: "owner/repo"})
-            case ref
-            when String then ref.strip
-            when Hash then ref[:number]&.to_s || ref['number']&.to_s
-            else ref&.to_s
-            end
-          end.compact.reject(&:empty?).uniq
+          PrContextLoader.new(options).process(context, pr_refs)
         end
 
         # Process diffs section content
