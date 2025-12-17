@@ -509,11 +509,14 @@ ace-review --preset docs --subject staged --subject files:README.md
 |-------|----------------------------------|
 | `diff:range` | `{ "context" => { "diffs" => ["range"] } }` |
 | `pr:123` | `{ "context" => { "pr" => ["123"] } }` |
-| `pr:123,456` | `{ "context" => { "pr" => ["123", "456"] } }` (multiple PRs, comma-separated) |
+| `pr:123,456` | `{ "context" => { "pr" => ["123", "456"] } }` (comma splits into array) |
 | `files:pattern` | `{ "context" => { "files" => ["pattern"] } }` |
+| `files:a.rb,b.rb` | `{ "context" => { "files" => ["a.rb", "b.rb"] } }` (comma splits into array) |
 | `task:ref` | Task lookup → `{ "context" => { "files" => ["task-dir/**/*.s.md"] } }` |
 | `staged` | Auto-detect (legacy path) |
 | `working` | Auto-detect (legacy path) |
+
+**Note:** Comma-separated values within a typed subject (e.g., `pr:1,2,3` or `files:a.rb,b.rb`) are split into arrays. Empty entries are automatically filtered out.
 
 **Parsing Precedence:**
 
