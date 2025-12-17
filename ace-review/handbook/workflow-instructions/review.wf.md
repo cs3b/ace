@@ -1,11 +1,11 @@
 ---
 name: review
 description: Review code with preset and plan feedback application
-argument-hint: "[preset] [subject]"
+argument-hint: "[preset] [subjects...]"
 allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
 update:
   frequency: on-change
-  last-updated: '2025-12-14'
+  last-updated: '2025-12-17'
 ---
 
 # Code Review Workflow
@@ -17,23 +17,26 @@ Review code using ace-review, read the synthesis report, and create a plan for a
 ## Arguments
 
 - `$1`: Preset name (default: `code-pr`). Run `ace-review --list-presets` to see options.
-- `$2`: Subject (optional) - what to review:
-  - `staged` - staged changes
-  - `working` - unstaged changes
-  - `origin/main...HEAD` - git range (auto-detected)
-  - `lib/**/*.rb` - file pattern (auto-detected)
-  - `'diff: {ranges: ["origin/main...HEAD"]}'` - explicit YAML
+- `$2+`: Subject(s) using `type:value` syntax (optional, additive to preset):
+  - `staged`, `working` - keywords
+  - `diff:origin/main..HEAD` - git range
+  - `pr:123` - PR diff
+  - `files:lib/**/*.rb` - file pattern
+  - `task:145` - task context
 
 ## Instructions
 
 ### Step 1: Run Code Review
 
 ```bash
-# With preset only (uses preset's default subject)
+# Preset only (uses preset's default subject)
 ace-review --preset ${1:-code-pr} --auto-execute
 
-# With custom subject
+# With subject(s) - additive to preset
 ace-review --preset ${1:-code-pr} --subject "$2" --auto-execute
+
+# Multiple subjects merge automatically
+ace-review --preset code-pr --subject pr:76 --subject files:CHANGELOG.md --auto-execute
 ```
 
 Wait for the review to complete. Note the synthesis report path from the output.
@@ -88,10 +91,19 @@ Implement the confirmed fixes. After each fix:
 ace-review --list-presets   # Available presets
 ace-review --list-prompts   # Available prompt modules
 
+# Subject types (type:value syntax)
+--subject staged                    # Staged changes (keyword)
+--subject working                   # Unstaged changes (keyword)
+--subject diff:origin/main..HEAD    # Git range
+--subject pr:123                    # PR diff
+--subject files:lib/**/*.rb         # File pattern
+--subject task:145                  # Task context
+
 # Common patterns
-ace-review --preset code-pr --auto-execute                    # PR changes
-ace-review --preset code --subject staged --auto-execute      # Staged only
-ace-review --preset ruby-atom --subject 'origin/main...HEAD' --auto-execute  # vs main
+ace-review --preset code-pr --auto-execute                       # PR changes
+ace-review --preset code --subject staged --auto-execute         # Staged only
+ace-review --preset code --subject diff:origin/main..HEAD --auto-execute  # vs main
+ace-review --preset code-pr --subject pr:76 --subject files:README.md --auto-execute  # Combined
 
 # Debug
 ace-review --preset code-pr --dry-run   # See what would run
