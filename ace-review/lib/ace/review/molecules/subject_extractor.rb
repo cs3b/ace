@@ -74,46 +74,13 @@ module Ace
         private
 
         # Deep merge configs with array concatenation, dedup, and recursive hash merging
-        #
-        # NOTE: Consider migrating to Ace::Core::Atoms::DeepMerger with :union strategy
-        # once it supports scalar-to-array coercion. Current implementation handles:
-        # - Array deduplication and blank removal
-        # - Scalar-to-array conversion when merging mixed types
+        # Delegates to Ace::Core::Atoms::DeepMerger with :coerce_union strategy
         #
         # @param base [Hash] base configuration hash
         # @param overlay [Hash] overlay configuration hash
         # @return [Hash] merged configuration (new hash, does not mutate inputs)
         def deep_merge_arrays(base, overlay)
-          result = base.dup
-          overlay.each do |key, value|
-            if result[key].is_a?(Hash) && value.is_a?(Hash)
-              # Both hashes: recurse
-              result[key] = deep_merge_arrays(result[key], value)
-            elsif result[key].is_a?(Array) && value.is_a?(Array)
-              # Both arrays: concatenate, remove blanks, deduplicate
-              result[key] = normalize_array(result[key] + value)
-            elsif result[key].is_a?(Array)
-              # Base is array, value is scalar: append, normalize
-              result[key] = normalize_array(result[key] + [value])
-            elsif result.key?(key) && value.is_a?(Array)
-              # Base is scalar, overlay is array: prepend base to array
-              result[key] = normalize_array([result[key]] + value)
-            elsif result.key?(key)
-              # Both scalars: convert to array
-              result[key] = normalize_array([result[key], value])
-            else
-              # Key doesn't exist: set directly (normalize if array)
-              result[key] = value.is_a?(Array) ? normalize_array(value) : value
-            end
-          end
-          result
-        end
-
-        # Normalize array by removing empty strings/nils and deduplicating
-        # @param arr [Array] array to normalize
-        # @return [Array] normalized array
-        def normalize_array(arr)
-          arr.reject { |v| v.nil? || (v.respond_to?(:empty?) && v.empty?) }.uniq
+          Ace::Core::Atoms::DeepMerger.merge(base, overlay, array_strategy: :coerce_union)
         end
 
         # Resolve a single subject to ace-context config
