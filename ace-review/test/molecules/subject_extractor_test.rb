@@ -479,4 +479,245 @@ class SubjectExtractorTest < AceReviewTest
     # With mocked ace-context, should return mock content
     assert result.length > 0, "Expected non-empty result from mock"
   end
+
+  def test_deep_merge_arrays_both_arrays
+    # Both base and overlay have arrays: concatenate
+    base = { "files" => ["a.rb"] }
+    overlay = { "files" => ["b.rb"] }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "files" => ["a.rb", "b.rb"] }, result)
+  end
+
+  def test_deep_merge_arrays_base_array_overlay_scalar
+    # Base is array, overlay is scalar: append
+    base = { "files" => ["a.rb"] }
+    overlay = { "files" => "b.rb" }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "files" => ["a.rb", "b.rb"] }, result)
+  end
+
+  def test_deep_merge_arrays_both_scalars
+    # Both scalars: convert to array
+    base = { "pr" => "123" }
+    overlay = { "pr" => "456" }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "pr" => ["123", "456"] }, result)
+  end
+
+  def test_deep_merge_arrays_new_key
+    # Overlay has new key: add directly
+    base = { "files" => ["a.rb"] }
+    overlay = { "diffs" => ["HEAD~3"] }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "files" => ["a.rb"], "diffs" => ["HEAD~3"] }, result)
+  end
+
+  def test_deep_merge_arrays_preserves_both_keys
+    # Multiple different keys should all be preserved
+    base = { "files" => ["a.rb"] }
+    overlay = { "diffs" => ["HEAD~3"], "pr" => ["123"] }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "files" => ["a.rb"], "diffs" => ["HEAD~3"], "pr" => ["123"] }, result)
+  end
+
+  def test_deep_merge_arrays_nested_hashes
+    # Two typed subjects produce nested { "context" => { ... } } structures
+    # Must recurse into nested hashes to merge correctly
+    base = { "context" => { "diffs" => ["HEAD~3"] } }
+    overlay = { "context" => { "diffs" => ["HEAD"] } }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "context" => { "diffs" => ["HEAD~3", "HEAD"] } }, result)
+  end
+
+  def test_deep_merge_arrays_nested_hashes_different_keys
+    # Nested hashes with different keys should merge
+    base = { "context" => { "diffs" => ["HEAD~3"] } }
+    overlay = { "context" => { "files" => ["*.rb"] } }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "context" => { "diffs" => ["HEAD~3"], "files" => ["*.rb"] } }, result)
+  end
+
+  def test_deep_merge_arrays_deeply_nested
+    # Test 3+ levels of nesting
+    base = { "a" => { "b" => { "c" => ["1"] } } }
+    overlay = { "a" => { "b" => { "c" => ["2"] } } }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "a" => { "b" => { "c" => ["1", "2"] } } }, result)
+  end
+
+  def test_deep_merge_arrays_does_not_mutate_input
+    # Verify immutability - input hashes should not be modified
+    base = { "context" => { "diffs" => ["HEAD~3"] } }
+    overlay = { "context" => { "diffs" => ["HEAD"] } }
+    base_original = Marshal.load(Marshal.dump(base))
+    overlay_original = Marshal.load(Marshal.dump(overlay))
+
+    @extractor.send(:deep_merge_arrays, base, overlay)
+
+    assert_equal base_original, base, "base hash was mutated"
+    assert_equal overlay_original, overlay, "overlay hash was mutated"
+  end
+
+  def test_resolve_single_subject_string_typed
+    # Typed subject string should parse to config
+    result = @extractor.send(:resolve_single_subject, "diff:HEAD~3")
+    assert_equal({ "context" => { "diffs" => ["HEAD~3"] } }, result)
+  end
+
+  def test_resolve_single_subject_string_keyword
+    # Keyword should parse to config
+    result = @extractor.send(:resolve_single_subject, "staged")
+    assert_equal({ "diffs" => ["--staged"] }, result)
+  end
+
+  def test_resolve_single_subject_hash
+    # Hash should pass through directly
+    config = { "files" => ["*.rb"] }
+    result = @extractor.send(:resolve_single_subject, config)
+    assert_equal config, result
+  end
+
+  def test_resolve_single_subject_invalid_type
+    # Invalid type should return empty hash
+    result = @extractor.send(:resolve_single_subject, 123)
+    assert_equal({}, result)
+  end
+
+  def test_parse_legacy_to_config_staged
+    result = @extractor.send(:parse_legacy_to_config, "staged")
+    assert_equal({ "diffs" => ["--staged"] }, result)
+  end
+
+  def test_parse_legacy_to_config_working
+    result = @extractor.send(:parse_legacy_to_config, "working")
+    assert_equal({ "diffs" => [""] }, result)
+  end
+
+  def test_parse_legacy_to_config_git_range
+    result = @extractor.send(:parse_legacy_to_config, "HEAD~3..HEAD")
+    assert_equal({ "diffs" => ["HEAD~3..HEAD"] }, result)
+  end
+
+  def test_parse_legacy_to_config_file_pattern
+    result = @extractor.send(:parse_legacy_to_config, "lib/**/*.rb")
+    assert_equal({ "files" => ["lib/**/*.rb"] }, result)
+  end
+
+  def test_parse_legacy_to_config_default_to_diff
+    result = @extractor.send(:parse_legacy_to_config, "main")
+    assert_equal({ "diffs" => ["main"] }, result)
+  end
+
+  # merge_typed_subject_configs tests - returns merged config without extraction
+  def test_merge_typed_subject_configs_returns_merged_config
+    # Should merge multiple typed subjects into single config
+    subjects = ["diff:HEAD~3", "files:*.rb"]
+    config = @extractor.merge_typed_subject_configs(subjects)
+
+    assert_kind_of Hash, config
+    assert config.key?("context"), "Should have context key"
+    assert config["context"].key?("diffs"), "Should have diffs"
+    assert config["context"].key?("files"), "Should have files"
+    assert_equal ["HEAD~3"], config["context"]["diffs"]
+    assert_equal ["*.rb"], config["context"]["files"]
+  end
+
+  def test_merge_typed_subject_configs_merges_same_type
+    # Multiple PRs should merge into array
+    subjects = ["pr:77", "pr:79"]
+    config = @extractor.merge_typed_subject_configs(subjects)
+
+    assert_equal({ "context" => { "pr" => ["77", "79"] } }, config)
+  end
+
+  def test_merge_typed_subject_configs_merges_diffs
+    # Multiple diffs should merge into array
+    subjects = ["diff:HEAD~3", "diff:origin/main..HEAD"]
+    config = @extractor.merge_typed_subject_configs(subjects)
+
+    assert_equal({ "context" => { "diffs" => ["HEAD~3", "origin/main..HEAD"] } }, config)
+  end
+
+  def test_merge_typed_subject_configs_merges_files
+    # Multiple file patterns should merge
+    subjects = ["files:lib/**/*.rb", "files:test/**/*.rb"]
+    config = @extractor.merge_typed_subject_configs(subjects)
+
+    assert_equal({ "context" => { "files" => ["lib/**/*.rb", "test/**/*.rb"] } }, config)
+  end
+
+  def test_merge_typed_subject_configs_handles_mixed_types
+    # Mix of typed and legacy subjects
+    subjects = ["pr:77", "files:README.md", "staged"]
+    config = @extractor.merge_typed_subject_configs(subjects)
+
+    assert_kind_of Hash, config
+    # pr:77 produces { "context" => { "pr" => "77" } }
+    # files:README.md produces { "context" => { "files" => ["README.md"] } }
+    # staged produces { "diffs" => ["--staged"] } (legacy, no context wrapper)
+    assert config["context"]["pr"]
+    assert config["context"]["files"]
+    assert config["diffs"], "Legacy subject should add top-level diffs"
+  end
+
+  def test_merge_typed_subject_configs_returns_nil_for_empty_array
+    assert_nil @extractor.merge_typed_subject_configs([])
+  end
+
+  def test_merge_typed_subject_configs_returns_nil_for_non_array
+    assert_nil @extractor.merge_typed_subject_configs("single_subject")
+    assert_nil @extractor.merge_typed_subject_configs(nil)
+    assert_nil @extractor.merge_typed_subject_configs({ "files" => ["*.rb"] })
+  end
+
+  def test_merge_typed_subject_configs_handles_hash_subjects
+    # Hash subjects should pass through directly
+    subjects = [
+      "diff:HEAD~3",
+      { "files" => ["lib/**/*.rb"] }
+    ]
+    config = @extractor.merge_typed_subject_configs(subjects)
+
+    assert_kind_of Hash, config
+    assert config["context"]["diffs"]
+    assert config["files"], "Hash subject should add top-level files"
+  end
+
+  # Additional nested hash merge test (PR #79 feedback)
+  def test_deep_merge_arrays_nested_mixed_keys_and_arrays
+    # Test deeply nested hash merge where inner keys differ
+    base = { "context" => { "diffs" => ["a"], "pr" => "1" } }
+    overlay = { "context" => { "diffs" => ["b"], "files" => ["*.rb"] } }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+
+    # Should merge nested hashes: preserve pr, concatenate diffs, add files
+    expected = { "context" => { "diffs" => ["a", "b"], "pr" => "1", "files" => ["*.rb"] } }
+    assert_equal expected, result
+  end
+
+  def test_deep_merge_arrays_three_level_nesting_with_arrays
+    # Test 3+ levels with arrays at leaf
+    base = { "context" => { "sections" => { "code" => { "files" => ["a.rb"] } } } }
+    overlay = { "context" => { "sections" => { "code" => { "files" => ["b.rb"] } } } }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+
+    expected = { "context" => { "sections" => { "code" => { "files" => ["a.rb", "b.rb"] } } } }
+    assert_equal expected, result
+  end
+
+  def test_deep_merge_arrays_preserves_sibling_keys
+    # Ensure sibling keys at same level are preserved during merge
+    base = { "context" => { "diffs" => ["a"], "title" => "Base Title" } }
+    overlay = { "context" => { "diffs" => ["b"], "description" => "Overlay Desc" } }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+
+    expected = {
+      "context" => {
+        "diffs" => ["a", "b"],
+        "title" => "Base Title",
+        "description" => "Overlay Desc"
+      }
+    }
+    assert_equal expected, result
+  end
 end

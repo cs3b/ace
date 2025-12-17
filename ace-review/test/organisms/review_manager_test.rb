@@ -1093,4 +1093,167 @@ class ReviewManagerTest < AceReviewTest
       end
     end
   end
+
+  # ============================================================================
+  # Multiple --subject flag integration tests (PR #79)
+  # ============================================================================
+
+  def test_extract_review_content_with_array_subjects
+    # Create preset that we'll use
+    create_test_preset("array-test", <<~YAML)
+      description: "Test array subjects preset"
+      instructions:
+        base: "prompt://base/system"
+        context:
+          sections:
+            format:
+              title: "Format Guidelines"
+              files:
+                - "prompt://format/standard"
+      context: "project"
+      subject:
+        context:
+          sections:
+            code_changes:
+              title: "Code Changes"
+              diffs:
+                - "origin/main...HEAD"
+    YAML
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "array-test",
+      subject: ["diff:HEAD~3", "files:*.md"],  # Array of subjects
+      auto_execute: false
+    )
+
+    # Prepare config first
+    config_result = @manager.send(:prepare_review_config, options)
+    assert config_result[:success], "Config preparation should succeed: #{config_result[:error]}"
+
+    # Test extract_review_content with array subjects
+    result = @manager.send(:extract_review_content, config_result[:config], options)
+
+    assert result[:success], "Should succeed with array subjects: #{result[:error]}"
+    assert result[:typed_subject_config], "Should have merged typed_subject_config"
+    assert_nil result[:subject], "Should not have pre-extracted subject content"
+
+    # Verify merged config structure
+    typed_config = result[:typed_subject_config]
+    assert typed_config["context"], "Should have context key"
+    assert typed_config["context"]["diffs"], "Should have diffs from diff:HEAD~3"
+    assert typed_config["context"]["files"], "Should have files from files:*.md"
+    assert_equal ["HEAD~3"], typed_config["context"]["diffs"]
+    assert_equal ["*.md"], typed_config["context"]["files"]
+  end
+
+  def test_extract_review_content_merges_same_type_subjects
+    create_test_preset("merge-test", <<~YAML)
+      description: "Test merge preset"
+      instructions:
+        base: "prompt://base/system"
+      context: "project"
+      subject:
+        context:
+          sections:
+            code_changes:
+              title: "Code Changes"
+              diffs:
+                - "origin/main...HEAD"
+    YAML
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "merge-test",
+      subject: ["diff:HEAD~3", "diff:origin/main..HEAD"],  # Multiple diffs
+      auto_execute: false
+    )
+
+    config_result = @manager.send(:prepare_review_config, options)
+    assert config_result[:success]
+
+    result = @manager.send(:extract_review_content, config_result[:config], options)
+
+    assert result[:success]
+    typed_config = result[:typed_subject_config]
+
+    # Both diffs should be merged into array
+    assert_equal ["HEAD~3", "origin/main..HEAD"], typed_config["context"]["diffs"]
+  end
+
+  def test_extract_review_content_preserves_context_override
+    create_test_preset("context-test", <<~YAML)
+      description: "Test context override preset"
+      instructions:
+        base: "prompt://base/system"
+      context: "minimal"
+      subject:
+        context:
+          sections:
+            code_changes:
+              title: "Code Changes"
+              diffs:
+                - "origin/main...HEAD"
+    YAML
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "context-test",
+      subject: ["pr:77", "files:README.md"],
+      context: "custom-context",  # Context override
+      auto_execute: false
+    )
+
+    config_result = @manager.send(:prepare_review_config, options)
+    assert config_result[:success]
+
+    result = @manager.send(:extract_review_content, config_result[:config], options)
+
+    assert result[:success]
+    # Context should be extracted using the override
+    assert result.key?(:context), "Should have context in result"
+    assert result[:typed_subject_config], "Should have typed_subject_config"
+  end
+
+  def test_resolve_subject_config_with_typed_subject_config
+    # Test that resolve_subject_config passes through typed_subject_config directly
+    session_dir = File.join(@temp_dir, "resolve_test")
+    FileUtils.mkdir_p(session_dir)
+
+    typed_config = { "context" => { "diffs" => ["HEAD~3"], "files" => ["*.md"] } }
+    config = { "subject" => { "diffs" => ["default"] } }
+
+    result = @manager.send(
+      :resolve_subject_config,
+      config: config,
+      subject: nil,
+      session_dir: session_dir,
+      options: nil,
+      typed_subject_config: typed_config
+    )
+
+    # typed_subject_config should be returned directly (highest priority)
+    assert_equal typed_config, result
+  end
+
+  def test_resolve_subject_config_falls_back_to_preset_without_typed
+    session_dir = File.join(@temp_dir, "fallback_test")
+    FileUtils.mkdir_p(session_dir)
+
+    config = {
+      "subject" => {
+        "context" => { "diffs" => ["default-diff"] }
+      }
+    }
+
+    result = @manager.send(
+      :resolve_subject_config,
+      config: config,
+      subject: nil,
+      session_dir: session_dir,
+      options: nil,
+      typed_subject_config: nil  # No typed config
+    )
+
+    # Should fall back to preset subject config
+    expected = { "context" => { "diffs" => ["default-diff"] } }
+    assert_equal expected, result
+  end
 end
