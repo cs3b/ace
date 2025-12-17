@@ -519,13 +519,21 @@ module Ace
             # Load context using ace-context Ruby API
             context_result = Ace::Context.load_file(input_file)
 
-            # Check for errors in metadata
+            # Check for fatal error in metadata
             if context_result.metadata[:error]
               error_message = context_result.metadata[:error]
               raise Errors::ContextProcessingError.new(
                 "Failed to process context file: #{error_message}",
                 { input_file: input_file, error: error_message }
               )
+            end
+
+            # Surface non-fatal errors (e.g., PR fetch failures) as warnings
+            # These are stored in metadata[:errors] array by ace-context
+            if context_result.metadata[:errors]&.any?
+              context_result.metadata[:errors].each do |error_msg|
+                warn "[ace-review] Warning: #{error_msg}"
+              end
             end
 
             # Write the rendered content to output file

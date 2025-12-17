@@ -355,23 +355,23 @@ class SubjectExtractorTest < AceReviewTest
     assert_includes error.message, "No valid PR references"
   end
 
-  def test_pr_non_numeric_ref_raises_error
-    # Non-numeric PR refs should raise error
-    error = assert_raises ArgumentError do
-      @extractor.extract("pr:abc")
-    end
-    assert_includes error.message, "PR references must be numeric"
-    assert_includes error.message, "abc"
+  def test_pr_qualified_ref_accepted
+    # Qualified PR refs (owner/repo#number) should be accepted
+    # Validation is delegated to ace-context's PrIdentifierParser
+    config = @extractor.parse_typed_subject_config("pr:owner/repo#456")
+    assert_equal({ "context" => { "pr" => ["owner/repo#456"] } }, config)
   end
 
-  def test_pr_mixed_numeric_non_numeric_raises_error
-    # Mixed numeric and non-numeric should raise error listing invalid refs
-    error = assert_raises ArgumentError do
-      @extractor.extract("pr:123,abc,456,def")
-    end
-    assert_includes error.message, "PR references must be numeric"
-    assert_includes error.message, "abc"
-    assert_includes error.message, "def"
+  def test_pr_github_url_accepted
+    # GitHub URL refs should be accepted
+    config = @extractor.parse_typed_subject_config("pr:https://github.com/owner/repo/pull/789")
+    assert_equal({ "context" => { "pr" => ["https://github.com/owner/repo/pull/789"] } }, config)
+  end
+
+  def test_pr_mixed_formats_accepted
+    # Mixed numeric and qualified refs should all be accepted
+    config = @extractor.parse_typed_subject_config("pr:123,owner/repo#456,789")
+    assert_equal({ "context" => { "pr" => ["123", "owner/repo#456", "789"] } }, config)
   end
 
   def test_empty_files_value_raises_helpful_error
