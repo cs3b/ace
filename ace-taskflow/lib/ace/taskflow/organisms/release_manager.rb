@@ -47,6 +47,12 @@ module Ace
           end
         end
 
+        # Get current/primary active release
+        # @return [Hash, nil] Primary active release info or nil if no active release
+        def current_release
+          @resolver.find_primary_active
+        end
+
         # Create new release in backlog (legacy method for backward compatibility)
         # @param name [String] Release name (e.g., v.0.10.0)
         # @return [Hash] Result with :success and :message
