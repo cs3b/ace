@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-12-17
+
 ### Added
 - **Current Task Symlink**: Creates `_current` symlink inside worktree when creating task worktrees
   - Symlink created at worktree root (e.g., `.ace-wt/task.145/_current`)
