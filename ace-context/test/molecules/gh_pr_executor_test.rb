@@ -13,9 +13,11 @@ module Ace
 
           protected
 
-          def execute_gh_command(args)
+          # Override run_command to return mock data
+          # Returns [stdout, stderr, status, pid] to match new signature
+          def run_command(args)
             @last_args = args
-            [@mock_stdout, @mock_stderr, @mock_status]
+            [@mock_stdout, @mock_stderr, @mock_status, nil]
           end
         end
 
@@ -155,11 +157,11 @@ module Ace
 
         def test_gh_not_installed_error
           # Create a real executor that will actually try to run gh
-          # We'll make it raise Errno::ENOENT by stubbing execute_gh_command
+          # We'll make it raise Errno::ENOENT by stubbing run_command
           executor = Class.new(GhPrExecutor) do
             protected
 
-            def execute_gh_command(args)
+            def run_command(args)
               raise Errno::ENOENT, "No such file or directory - gh"
             end
           end.new("123")
@@ -204,9 +206,9 @@ module Ace
           executor = Class.new(GhPrExecutor) do
             protected
 
-            def execute_gh_command(args)
+            def run_command(args)
               sleep 0.2  # Simulate slow command
-              ["", "", Minitest::Mock.new.tap { |m| m.expect(:success?, true) }]
+              ["", "", Minitest::Mock.new.tap { |m| m.expect(:success?, true) }, nil]
             end
           end.new("123", timeout: 0.05)
 

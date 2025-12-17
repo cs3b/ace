@@ -656,9 +656,16 @@ class ContextLoaderTest < AceTestCase
       mock_status = Object.new
       mock_status.define_singleton_method(:success?) { true }
 
-      # Stub Open3.capture3 to intercept gh pr diff calls
-      Open3.stub(:capture3, ->(*args) {
-        [mock_diff, "", mock_status]
+      # Stub Open3.popen3 to intercept gh pr diff calls
+      # The block receives stdin, stdout, stderr, wait_thr
+      Open3.stub(:popen3, ->(*args, &block) {
+        stdin = StringIO.new
+        stdout = StringIO.new(mock_diff)
+        stderr = StringIO.new("")
+        wait_thr = Minitest::Mock.new
+        wait_thr.expect(:pid, 12345)
+        wait_thr.expect(:value, mock_status)
+        block.call(stdin, stdout, stderr, wait_thr) if block
       }) do
         loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
@@ -694,10 +701,17 @@ class ContextLoaderTest < AceTestCase
       mock_status = Object.new
       mock_status.define_singleton_method(:success?) { true }
 
-      Open3.stub(:capture3, ->(*args) {
+      # Stub Open3.popen3 to intercept gh pr diff calls
+      Open3.stub(:popen3, ->(*args, &block) {
         diff = call_count == 0 ? mock_diff_123 : mock_diff_456
         call_count += 1
-        [diff, "", mock_status]
+        stdin = StringIO.new
+        stdout = StringIO.new(diff)
+        stderr = StringIO.new("")
+        wait_thr = Minitest::Mock.new
+        wait_thr.expect(:pid, 12345)
+        wait_thr.expect(:value, mock_status)
+        block.call(stdin, stdout, stderr, wait_thr) if block
       }) do
         loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
