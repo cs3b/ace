@@ -631,8 +631,86 @@ class ContextLoaderTest < AceTestCase
 
   # Test PR processing with mocked executor
   # This test verifies that PR diffs are integrated into context output
+  # Uses load_inline_yaml which properly processes PR config (load_file just reads raw content)
   def test_pr_config_processes_with_mocked_executor
-    skip "PR executor mocking requires complex setup - covered by unit tests"
+    with_temp_dir do
+      # Inline YAML config with PR reference
+      yaml_config = <<~YAML
+        context:
+          pr: "123"
+      YAML
+
+      # Mock the gh command response
+      mock_diff = <<~DIFF
+        diff --git a/lib/foo.rb b/lib/foo.rb
+        index abc123..def456 100644
+        --- a/lib/foo.rb
+        +++ b/lib/foo.rb
+        @@ -1,3 +1,4 @@
+         class Foo
+        +  def bar; end
+         end
+      DIFF
+
+      # Create a simple status object with success? method
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+
+      # Stub Open3.capture3 to intercept gh pr diff calls
+      Open3.stub(:capture3, ->(*args) {
+        [mock_diff, "", mock_status]
+      }) do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.load_inline_yaml(yaml_config)
+
+        # Verify PR diff was integrated into context sections
+        assert context.sections, "Should have sections"
+        assert context.sections['diffs'], "Should have diffs section"
+        assert context.sections['diffs'][:_processed_diffs], "Should have processed diffs"
+        assert_equal 1, context.sections['diffs'][:_processed_diffs].size
+        assert context.sections['diffs'][:_processed_diffs][0][:success], "PR fetch should succeed"
+        assert_includes context.sections['diffs'][:_processed_diffs][0][:output], "def bar", "Should include PR diff content"
+      end
+    end
+  end
+
+  # Test that multiple PRs are processed and merged correctly
+  def test_pr_config_processes_multiple_prs
+    with_temp_dir do
+      # Inline YAML config with multiple PR references
+      yaml_config = <<~YAML
+        context:
+          pr:
+            - "123"
+            - "456"
+      YAML
+
+      mock_diff_123 = "diff --git a/foo.rb b/foo.rb\n+line from PR 123"
+      mock_diff_456 = "diff --git a/bar.rb b/bar.rb\n+line from PR 456"
+
+      call_count = 0
+
+      # Create simple status objects
+      mock_status = Object.new
+      mock_status.define_singleton_method(:success?) { true }
+
+      Open3.stub(:capture3, ->(*args) {
+        diff = call_count == 0 ? mock_diff_123 : mock_diff_456
+        call_count += 1
+        [diff, "", mock_status]
+      }) do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.load_inline_yaml(yaml_config)
+
+        # Verify both PR diffs were integrated into sections
+        assert context.sections, "Should have sections"
+        assert context.sections['diffs'], "Should have diffs section"
+        processed = context.sections['diffs'][:_processed_diffs]
+        assert_equal 2, processed.size, "Should have 2 processed PR diffs"
+        assert_includes processed[0][:output], "PR 123", "Should include first PR diff"
+        assert_includes processed[1][:output], "PR 456", "Should include second PR diff"
+      end
+    end
   end
 
   def test_pr_config_handles_errors_gracefully

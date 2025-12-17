@@ -205,13 +205,12 @@ module Ace
           when /^pr:(.+)$/
             pr_refs = ::Regexp.last_match(1).split(",").map(&:strip).reject(&:empty?).uniq
             if pr_refs.empty?
-              raise ArgumentError, "No valid PR references provided. Usage: pr:NUMBER (e.g., pr:123 or pr:123,456)"
+              raise ArgumentError, "No valid PR references provided. Usage: pr:REF (e.g., pr:123, pr:owner/repo#456)"
             end
-            # Validate that all PR references are numeric
-            invalid_refs = pr_refs.reject { |ref| ref =~ /\A\d+\z/ }
-            unless invalid_refs.empty?
-              raise ArgumentError, "PR references must be numeric: #{invalid_refs.join(', ')}. Usage: pr:123 or pr:123,456"
-            end
+            # PR validation is delegated to ace-context's PrIdentifierParser which supports:
+            # - Simple numbers: 123
+            # - Qualified refs: owner/repo#456
+            # - GitHub URLs: https://github.com/owner/repo/pull/789
             { "context" => { "pr" => pr_refs } }
           when /^pr:$/
             raise ArgumentError, "Empty value for pr: subject. Usage: pr:NUMBER (e.g., pr:123)"
