@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/task_id_extractor"
+require_relative "../molecules/current_task_linker"
 
 module Ace
   module Git
@@ -138,6 +139,25 @@ module Ace
               workflow_result[:start_point] = worktree_result[:start_point]
               workflow_result[:steps_completed] << "worktree_created"
 
+              # Step 8.5: Create _current symlink in worktree if configured
+              if @config.create_current_symlink?
+                current_linker = Molecules::CurrentTaskLinker.new(
+                  project_root: worktree_result[:worktree_path],
+                  symlink_name: @config.current_symlink_name
+                )
+                # Task path relative to worktree (same structure as main repo)
+                worktree_task_path = File.join(worktree_result[:worktree_path], relative_task_path(task_data[:path]))
+                link_result = current_linker.link(worktree_task_path)
+                if link_result[:success]
+                  workflow_result[:steps_completed] << "current_symlink_created"
+                  workflow_result[:current_symlink] = link_result[:symlink_path]
+                else
+                  # Symlink creation is non-blocking - failure becomes warning
+                  workflow_result[:warnings] ||= []
+                  workflow_result[:warnings] << "Failed to create _current symlink: #{link_result[:error]}"
+                end
+              end
+
               # Step 9: Setup upstream for worktree branch if configured
               should_setup_upstream = @config.auto_setup_upstream? && !options[:no_upstream]
               if should_setup_upstream
@@ -264,6 +284,13 @@ module Ace
               has_changes_to_commit = would_update_status || would_add_metadata
               would_commit = @config.auto_commit_task? && has_changes_to_commit
 
+              # Determine if current symlink would be created (in worktree)
+              would_create_current_symlink = @config.create_current_symlink?
+              current_symlink_path = would_create_current_symlink ? File.join(worktree_path, @config.current_symlink_name) : nil
+              # Task path relative to worktree (same structure as main repo)
+              relative_task = would_create_current_symlink ? relative_task_path(task_data[:path]) : nil
+              worktree_task_path = would_create_current_symlink ? File.join(worktree_path, relative_task) : nil
+
               workflow_result[:would_create] = {
                 worktree_path: worktree_path,
                 branch: branch_name,
@@ -273,6 +300,9 @@ module Ace
                 task_commit: would_commit,
                 task_push: @config.auto_push_task? && would_commit,
                 push_remote: @config.push_remote,
+                current_symlink: would_create_current_symlink,
+                current_symlink_path: current_symlink_path,
+                current_symlink_target: worktree_task_path,
                 upstream_push: should_setup_upstream,
                 add_started_at: should_create_pr && should_setup_upstream,
                 create_pr: should_create_pr,
@@ -288,6 +318,7 @@ module Ace
                 ("commit_task_changes" if workflow_result[:would_create][:task_commit]),
                 ("push_to_#{workflow_result[:would_create][:push_remote]}" if workflow_result[:would_create][:task_push]),
                 "create_worktree",
+                ("create_current_symlink" if workflow_result[:would_create][:current_symlink]),
                 ("setup_upstream_tracking" if should_setup_upstream),
                 ("add_started_at_in_worktree" if workflow_result[:would_create][:add_started_at]),
                 ("create_draft_pr" if should_create_pr),
@@ -810,6 +841,19 @@ module Ace
           def extract_task_id(task_data)
             # Use shared extractor that preserves subtask IDs (e.g., "121.01")
             Atoms::TaskIDExtractor.extract(task_data)
+          end
+
+          # Get relative task path from absolute path
+          #
+          # Extracts the relative path portion from an absolute task path.
+          # E.g., "/project/.ace-taskflow/v.0.9.0/tasks/145-feat/" -> ".ace-taskflow/v.0.9.0/tasks/145-feat/"
+          #
+          # @param absolute_path [String] Absolute path to task directory
+          # @return [String] Relative path from project root
+          def relative_task_path(absolute_path)
+            return absolute_path unless absolute_path&.start_with?("/")
+
+            Pathname.new(absolute_path).relative_path_from(Pathname.new(@project_root)).to_s
           end
 
           # Create error result

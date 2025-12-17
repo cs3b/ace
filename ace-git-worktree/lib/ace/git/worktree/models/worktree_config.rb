@@ -41,7 +41,9 @@ module Ace
               "add_worktree_metadata" => true,
               "auto_setup_upstream" => false,
               "auto_create_pr" => false,
-              "pr_title_format" => "{id} - {slug}"
+              "pr_title_format" => "{id} - {slug}",
+              "create_current_symlink" => true,
+              "current_symlink_name" => "_current"
             },
             "pr" => {
               "directory_format" => "ace-pr-{number}",
@@ -169,6 +171,20 @@ module Ace
           # @return [String] PR title format template
           def pr_title_format
             @task_config["pr_title_format"]
+          end
+
+          # Check if _current symlink should be created
+          #
+          # @return [Boolean] true if symlink should be created
+          def create_current_symlink?
+            @task_config["create_current_symlink"] != false
+          end
+
+          # Get the name for the _current symlink
+          #
+          # @return [String] Symlink name (default: "_current")
+          def current_symlink_name
+            @task_config["current_symlink_name"] || "_current"
           end
 
           # Format a PR title using task data

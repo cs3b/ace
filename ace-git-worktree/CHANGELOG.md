@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Current Task Symlink**: Creates `_current` symlink inside worktree when creating task worktrees
+  - Symlink created at worktree root (e.g., `.ace-wt/task.145/_current`)
+  - Points to the task directory within the worktree (e.g., `.ace-taskflow/v.0.9.0/tasks/145-feat/`)
+  - Quick access from worktree: `cat _current/*.s.md`, `ls _current/`
+  - Uses relative paths for portability
+  - Configurable: `task.create_current_symlink` (default: `true`) and `task.current_symlink_name` (default: `"_current"`)
+  - Non-blocking: symlink failure doesn't abort worktree creation
+  - New `CurrentTaskLinker` molecule handles symlink lifecycle
+  - Dry-run shows planned symlink creation
+
 ## [0.4.8] - 2025-12-03
 
 ### Fixed
