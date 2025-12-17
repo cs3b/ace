@@ -3,6 +3,7 @@
 require "yaml"
 require "open3"
 require "timeout"
+require "ace/core/atoms/deep_merger"
 require_relative "../errors"
 
 module Ace
