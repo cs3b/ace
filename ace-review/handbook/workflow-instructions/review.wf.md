@@ -16,7 +16,7 @@ Review code using ace-review, read the synthesis report, and create a plan for a
 
 ## Arguments
 
-- `$1`: Preset name (default: `code-pr`). Run `ace-review --list-presets` to see options.
+- `$1`: Preset name (optional). Run `ace-review --list-presets` to see options.
 - `$2+`: Subject(s) using `type:value` syntax (optional, additive to preset):
   - `staged`, `working` - keywords
   - `diff:origin/main..HEAD` - git range
@@ -29,14 +29,17 @@ Review code using ace-review, read the synthesis report, and create a plan for a
 ### Step 1: Run Code Review
 
 ```bash
-# Preset only (uses preset's default subject)
-ace-review --preset ${1:-code-pr} --auto-execute
+# Default preset
+ace-review --auto-execute
+
+# With preset
+ace-review --preset $1 --auto-execute
 
 # With subject(s) - additive to preset
-ace-review --preset ${1:-code-pr} --subject "$2" --auto-execute
+ace-review --subject "$2" --auto-execute
 
 # Multiple subjects merge automatically
-ace-review --preset code-pr --subject pr:76 --subject files:CHANGELOG.md --auto-execute
+ace-review --subject pr:76 --subject files:CHANGELOG.md --auto-execute
 ```
 
 Wait for the review to complete. Note the synthesis report path from the output.
@@ -100,13 +103,13 @@ ace-review --list-prompts   # Available prompt modules
 --subject task:145                  # Task context
 
 # Common patterns
-ace-review --preset code-pr --auto-execute                       # PR changes
-ace-review --preset code --subject staged --auto-execute         # Staged only
-ace-review --preset code --subject diff:origin/main..HEAD --auto-execute  # vs main
-ace-review --preset code-pr --subject pr:76 --subject files:README.md --auto-execute  # Combined
+ace-review --auto-execute                                  # Default preset
+ace-review --subject staged --auto-execute                 # Staged only
+ace-review --subject diff:origin/main..HEAD --auto-execute # vs main
+ace-review --subject pr:76 --subject files:README.md --auto-execute  # Combined
 
 # Debug
-ace-review --preset code-pr --dry-run   # See what would run
+ace-review --dry-run   # See what would run
 ```
 
 ## Success Criteria
