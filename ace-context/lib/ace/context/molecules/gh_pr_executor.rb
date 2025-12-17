@@ -27,6 +27,11 @@ module Ace
         # Error raised when command times out
         class TimeoutError < StandardError; end
 
+        # Error message patterns from gh CLI (tested with gh 2.40+)
+        # Update if gh CLI changes error message format in future versions
+        PR_NOT_FOUND_PATTERN = /not found|Could not resolve/i
+        AUTH_ERROR_PATTERN = /authentication|Unauthorized|not logged in|auth login/i
+
         def initialize(identifier, timeout: DEFAULT_TIMEOUT)
           @identifier = identifier
           @timeout = timeout
@@ -111,13 +116,6 @@ module Ace
           [stdout_str, stderr_str, status, pid]
         end
 
-        # Execute gh command - can be overridden in tests for mocking
-        # @deprecated Use run_command instead
-        def execute_gh_command(args)
-          stdout, stderr, status, _pid = run_command(args)
-          [stdout, stderr, status]
-        end
-
         private
 
         # Terminate a process gracefully, then forcefully if needed
@@ -154,12 +152,9 @@ module Ace
         def handle_error(stderr, status)
           error_message = stderr.to_s
 
-          # Error detection based on gh CLI stderr output.
-          # Verified against gh version 2.x (tested with 2.40+). Error message patterns
-          # may change in future versions - update regex patterns if gh output changes.
-          if error_message.match?(/not found|Could not resolve/i)
+          if error_message.match?(PR_NOT_FOUND_PATTERN)
             raise PrNotFoundError, "PR not found: #{@parsed.gh_format}"
-          elsif error_message.match?(/authentication|Unauthorized|not logged in|auth login/i)
+          elsif error_message.match?(AUTH_ERROR_PATTERN)
             raise GhAuthenticationError, "Not authenticated with GitHub. Run: gh auth login"
           else
             raise GhCommandError, "gh pr diff failed (exit #{status.exitstatus}): #{error_message}"
