@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.174] - 2025-12-17
+
+### ace-review v0.25.0
+
+**Multiple `--subject` Flags with Config Merging**
+
+- **Added**: Support for combining multiple subject sources in a single review
+  - `ace-review --subject pr:77 --subject files:README.md --subject pr:79`
+  - Subjects merged into unified ace-context config via `merge_typed_subject_configs()`
+- **Fixed**: Recursive nested hash merging in `deep_merge_arrays`
+  - Two typed subjects like `diff:HEAD~3` and `diff:HEAD` now correctly merge their nested `context.diffs` arrays
+  - Made merge operation immutable (no longer mutates input hashes)
+- **Changed**: Simplified subject extraction architecture
+  - Removed legacy content extraction paths (`extract(Array)`, `extract_and_merge_multiple`, `subject-content.md`)
+  - All subjects now use config passthrough to ace-context
+
 ## [0.9.173] - 2025-12-16
 
 ### ace-context v0.19.2

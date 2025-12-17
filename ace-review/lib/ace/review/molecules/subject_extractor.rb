@@ -8,35 +8,28 @@ require_relative "../errors"
 module Ace
   module Review
     module Molecules
-      # Extracts review subject (code to review) from various sources
-      # Delegates to ace-context for unified content aggregation
+      # Parses review subjects and returns ace-context configuration
+      # Delegates actual content extraction to ace-context
       #
-      # == Dual Extraction Paths
+      # == Config Passthrough API
       #
-      # This class supports two code paths for typed subjects (pr:, diff:, files:, task:):
+      # The primary API returns ace-context config hashes that ReviewManager
+      # passes directly to ace-context via user.context.md:
       #
-      # 1. **Direct extraction** via {#extract}:
-      #    - Parses typed subject → builds ace-context config → calls ace-context → returns content
-      #    - Used when caller needs immediate content (e.g., legacy flows)
-      #    - Example: `extract("diff:HEAD~3")` → returns diff content string
+      # - {#parse_typed_subject_config} - Single typed subject (pr:, diff:, files:, task:)
+      # - {#merge_typed_subject_configs} - Multiple subjects merged into one config
       #
-      # 2. **Config passthrough** via {#parse_typed_subject_config}:
-      #    - Parses typed subject → returns config hash for caller to pass to ace-context later
-      #    - Used by ReviewManager for optimized flow (avoids double extraction)
-      #    - Example: `parse_typed_subject_config("pr:77")` → returns `{"context"=>{"pr"=>"77"}}`
-      #
-      # The config passthrough path is preferred for performance - it allows ReviewManager to
-      # pass the config directly to ace-context when generating prompts, avoiding the overhead
-      # of extracting content only to save it to a file and re-read it.
+      # This avoids extracting content only to save it to a file and re-read it.
       #
       class SubjectExtractor
         def initialize
           @git = Ace::Context::Atoms::GitExtractor
         end
 
-        # Extract subject from configuration
+        # Extract subject from configuration (legacy API)
         # @param subject_config [String, Hash] subject configuration
         # @return [String] extracted subject content
+        # @note Prefer parse_typed_subject_config or merge_typed_subject_configs for new code
         def extract(subject_config)
           return "" unless subject_config
 
@@ -60,7 +53,80 @@ module Ace
           parse_typed_subject(input)
         end
 
+        # Merge multiple subjects into unified ace-context config
+        # Does NOT extract content - returns merged config for direct use with ace-context
+        # @param subjects [Array<String, Hash>] array of subject configurations
+        # @return [Hash, nil] merged ace-context config hash or nil if empty
+        def merge_typed_subject_configs(subjects)
+          return nil unless subjects.is_a?(Array) && subjects.any?
+
+          merged_config = subjects.reduce({}) do |merged, subject|
+            config = resolve_single_subject(subject)
+            deep_merge_arrays(merged, config)
+          end
+
+          merged_config.empty? ? nil : merged_config
+        end
+
         private
+
+        # Deep merge configs with array concatenation and recursive hash merging
+        # @param base [Hash] base configuration hash
+        # @param overlay [Hash] overlay configuration hash
+        # @return [Hash] merged configuration (new hash, does not mutate inputs)
+        def deep_merge_arrays(base, overlay)
+          result = base.dup
+          overlay.each do |key, value|
+            if result[key].is_a?(Hash) && value.is_a?(Hash)
+              # Both hashes: recurse
+              result[key] = deep_merge_arrays(result[key], value)
+            elsif result[key].is_a?(Array) && value.is_a?(Array)
+              # Both arrays: concatenate
+              result[key] = result[key] + value
+            elsif result[key].is_a?(Array)
+              # Base is array, value is scalar: append
+              result[key] = result[key] + [value]
+            elsif result.key?(key)
+              # Base exists and is scalar: convert both to array
+              result[key] = [result[key], value].flatten
+            else
+              # Key doesn't exist: set directly
+              result[key] = value
+            end
+          end
+          result
+        end
+
+        # Resolve a single subject to ace-context config
+        # @param subject [String, Hash] single subject configuration
+        # @return [Hash] ace-context config hash
+        def resolve_single_subject(subject)
+          case subject
+          when String
+            # Parse typed subject or fall back to legacy auto-detect
+            parse_typed_subject(subject) || parse_legacy_to_config(subject)
+          when Hash
+            subject
+          else
+            {}
+          end
+        end
+
+        # Parse legacy string subjects to config hash
+        # Wraps extract_from_string logic to return config instead of content
+        # @param input [String] legacy subject string
+        # @return [Hash] ace-context config hash
+        def parse_legacy_to_config(input)
+          # Try to parse as YAML first
+          begin
+            parsed = YAML.safe_load(input)
+            return parsed if parsed.is_a?(Hash)
+          rescue Psych::SyntaxError
+            # Continue with string processing
+          end
+
+          parse_keyword_or_pattern(input)
+        end
 
         def extract_from_string(input)
           # Try typed subject first (new)
@@ -76,30 +142,39 @@ module Ace
             # Continue with string processing
           end
 
-          # Handle special keywords (updated to use ace-context)
+          use_ace_context(parse_keyword_or_pattern(input))
+        end
+
+        # Parse special keywords and auto-detect patterns
+        # @param input [String] input string to parse
+        # @return [Hash] ace-context config hash
+        def parse_keyword_or_pattern(input)
           case input.downcase
           when "staged"
-            return use_ace_context({ "diffs" => ["--staged"] })
+            { "diffs" => ["--staged"] }
           when "working", "unstaged"
-            return use_ace_context({ "diffs" => [""] })
+            { "diffs" => [""] }
           when "pr", "pull-request"
             tracking = @git.tracking_branch
             range = tracking ? "#{tracking}...HEAD" : "origin/main...HEAD"
-            return use_ace_context({ "diffs" => [range] })
+            { "diffs" => [range] }
+          else
+            auto_detect_pattern(input)
           end
+        end
 
-          # Check if it's a git range
+        # Auto-detect whether input is a git range or file pattern
+        # @param input [String] input string to analyze
+        # @return [Hash] ace-context config hash
+        def auto_detect_pattern(input)
           if looks_like_git_range?(input)
-            return use_ace_context({ "diffs" => [input] })
+            { "diffs" => [input] }
+          elsif input.include?("*") || input.include?("/")
+            { "files" => [input] }
+          else
+            # Default to git diff
+            { "diffs" => [input] }
           end
-
-          # Check if it's a file pattern
-          if input.include?("*") || input.include?("/")
-            return use_ace_context({ "files" => [input] })
-          end
-
-          # Default to git diff
-          use_ace_context({ "diffs" => [input] })
         end
 
         def extract_from_hash(config)

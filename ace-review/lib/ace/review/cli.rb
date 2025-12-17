@@ -74,8 +74,13 @@ module Ace
             @options[:context] = v
           end
 
-          opts.on("--subject CONFIG", "Subject configuration (git range or YAML)") do |v|
-            @options[:subject] = v
+          opts.on("--subject CONFIG", "Subject configuration (can be specified multiple times, merged together)") do |v|
+            # Skip empty or whitespace-only values
+            next if v.nil? || v.strip.empty?
+            # Initialize subjects array if not present
+            @options[:subjects] ||= []
+            # Accumulate subject values into array (stripped)
+            @options[:subjects] << v.strip
           end
 
           opts.on("--prompt-base MODULE", "Base prompt module") do |v|
@@ -172,6 +177,16 @@ module Ace
 
         @parser.parse!(argv)
 
+        # Normalize subjects to single :subject key for ReviewOptions
+        # Single value: pass as-is (backward compatible)
+        # Multiple values: pass as array (deduplicated)
+        if @options[:subjects]&.any?
+          # Deduplicate subjects (order preserved)
+          @options[:subjects].uniq!
+          @options[:subject] = @options[:subjects].size == 1 ? @options[:subjects].first : @options[:subjects]
+          @options.delete(:subjects)  # Clean up intermediate key
+        end
+
         # Deduplicate and validate models if present
         if @options[:models]
           @options[:models].uniq!
@@ -202,6 +217,13 @@ module Ace
         puts "  ace-review --pr 123 --auto-execute"
         puts "  ace-review --pr https://github.com/owner/repo/pull/456 --preset security"
         puts "  ace-review --pr owner/repo#789 --post-comment --auto-execute"
+        puts
+        puts "Multi-subject examples (subjects are merged - same types concatenate):"
+        puts "  ace-review --preset code --subject diff:HEAD~3 --subject files:docs/**/*.md"
+        puts "  ace-review --preset security --subject files:lib/**/*.rb --subject files:test/**/*_test.rb"
+        puts "  ace-review --preset code-pr --subject pr:123 --subject files:CHANGELOG.md"
+        puts "  ace-review --preset docs --subject staged --subject files:README.md"
+        puts "  # Note: Multiple diffs/files/prs merge into arrays; duplicates are removed"
         puts
         puts "Multi-model examples:"
         puts "  ace-review --preset code-pr --model \"gemini,gpt-4,claude\" --auto-execute"

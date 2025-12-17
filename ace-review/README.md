@@ -479,6 +479,30 @@ ace-review --subject staged --preset code
 ace-review --subject working --preset code
 ```
 
+### Multiple --subject Flags (v0.25.0+)
+
+Combine multiple subjects in a single review with multiple `--subject` flags:
+
+```bash
+# Review both code changes and documentation
+ace-review --preset code --subject diff:HEAD~3 --subject files:docs/**/*.md
+
+# Multiple file patterns
+ace-review --preset security --subject files:lib/**/*.rb --subject files:test/**/*_test.rb
+
+# PR with additional context files
+ace-review --preset code-pr --subject pr:123 --subject files:CHANGELOG.md
+
+# Staged changes plus specific files
+ace-review --preset docs --subject staged --subject files:README.md
+```
+
+**Merge Behavior:**
+- Same-type subjects are concatenated into arrays (`--subject files:a.rb --subject files:b.rb` → `{ files: ["a.rb", "b.rb"] }`)
+- Different-type subjects are combined (`--subject diff:HEAD --subject files:*.md` → both in config)
+- Duplicate subjects are automatically removed
+- Empty or whitespace-only subjects are filtered out
+
 **Subject Type Resolution:**
 
 | Input | Resolves To (ace-context config) |

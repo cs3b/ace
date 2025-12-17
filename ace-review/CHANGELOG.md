@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2025-12-17
+
+### Added
+
+* **Multiple `--subject` Flags**: Support combining multiple subject sources in a single review
+  * `ace-review --subject pr:77 --subject files:README.md --subject pr:79`
+  * Subjects are merged into unified ace-context config
+  * New `merge_typed_subject_configs()` public API for config merging
+
+### Fixed
+
+* **Nested Hash Merging**: Fixed `deep_merge_arrays` to recursively merge nested hashes
+  * Two typed subjects like `diff:HEAD~3` and `diff:HEAD` now correctly merge their nested `context.diffs` arrays
+  * Made merge operation immutable (no longer mutates input hashes)
+
+### Changed
+
+* **Simplified Subject Extraction**: Removed legacy content extraction paths
+  * Removed `extract(Array)` - arrays now handled via `merge_typed_subject_configs`
+  * Removed `extract_and_merge_multiple` - replaced by config passthrough
+  * Removed `subject-content.md` creation - all subjects use ace-context config passthrough
+  * Cleaner API: `parse_typed_subject_config` for single, `merge_typed_subject_configs` for multiple
+
+### Technical
+
+* Removed 17 tests for deprecated array extraction functionality
+* Added 8 tests for `merge_typed_subject_configs` merged config validation
+* Cleaned up `:subjects` intermediate key in CLI options
+
 ## [0.24.2] - 2025-12-16
 
 ### Fixed
