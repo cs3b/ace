@@ -195,7 +195,7 @@ module Ace
                 elsif has_frontmatter?(input)
                   if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
                     frontmatter = YAML.safe_load($1, aliases: true, permitted_classes: [Symbol]) || {}
-                    config = frontmatter['context'] || frontmatter
+                    config = unwrap_context_config(frontmatter)
                   end
                 end
 
@@ -383,7 +383,7 @@ module Ace
             config = YAML.safe_load(yaml_string)
             # Unwrap 'context' key if present (typed subjects use nested structure)
             # This allows both flat configs (diffs: [...]) and nested (context: { diffs: [...] })
-            template_config = config['context'] || config
+            template_config = unwrap_context_config(config)
             context = process_template_config(template_config)
             # Process PR references if present (uses same unwrapped config)
             pr_processed = process_pr_config(context, template_config, @options)
@@ -430,7 +430,7 @@ module Ace
           if frontmatter['context'].is_a?(Hash) ||
              (frontmatter.keys & %w[files commands include exclude diffs]).any?
             # Use frontmatter as the main config
-            config = frontmatter['context'] || frontmatter
+            config = unwrap_context_config(frontmatter)
 
             # Merge params into options if present
             params = config['params']
@@ -653,6 +653,14 @@ module Ace
         end
 
         private
+
+        # Unwrap context configuration from wrapper if present
+        # Handles both nested (context: { ... }) and flat ({ ... }) formats
+        # @param config [Hash] Configuration hash, possibly with 'context' key
+        # @return [Hash] The context configuration
+        def unwrap_context_config(config)
+          config['context'] || config
+        end
 
         # Apply CLI overrides to configuration
         # CLI options take precedence over frontmatter/config settings
