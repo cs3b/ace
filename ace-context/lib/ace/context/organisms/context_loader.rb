@@ -1101,7 +1101,9 @@ module Ace
           pr_refs = context_config['pr'] || context_config[:pr]
           return false unless pr_refs
 
-          pr_refs = pr_refs.is_a?(Array) ? pr_refs : [pr_refs]
+          # Normalize to array, remove nils/empty strings, deduplicate to prevent duplicate fetches
+          # (e.g., if preset merges with itself or duplicates exist in config)
+          pr_refs = normalize_pr_refs(pr_refs)
           return false if pr_refs.empty?
 
           processed_diffs = []
@@ -1135,7 +1137,15 @@ module Ace
 
           # Return false if no successful diffs were fetched - signals no content was loaded
           successful_diffs = processed_diffs.select { |d| d[:success] }
-          return false if successful_diffs.empty?
+          if successful_diffs.empty?
+            # Surface errors to content so callers see failures without inspecting metadata
+            # This is especially important for inline YAML callers
+            if context.metadata[:errors]&.any?
+              error_notice = context.metadata[:errors].map { |e| "- #{e}" }.join("\n")
+              context.content = "**PR Fetch Errors:**\n#{error_notice}\n\n" + (context.content || "")
+            end
+            return false
+          end
 
           # Add PR diffs to a "diffs" section for section-based formatting
           context.sections ||= {}
@@ -1143,6 +1153,22 @@ module Ace
           context.sections['diffs'][:_processed_diffs] ||= []
           context.sections['diffs'][:_processed_diffs].concat(processed_diffs)
           true
+        end
+
+        # Normalize PR refs to array, deduplicate, and remove empty/nil values
+        # Handles both string refs and hash refs (for future extensibility)
+        # @param pr_refs [String, Array, Hash, nil] PR reference(s)
+        # @return [Array<String>] Normalized, deduplicated PR refs
+        def normalize_pr_refs(pr_refs)
+          refs = pr_refs.is_a?(Array) ? pr_refs.flatten : [pr_refs]
+          refs.map do |ref|
+            # Handle both string refs and hash refs (e.g., {number: 123, repo: "owner/repo"})
+            case ref
+            when String then ref.strip
+            when Hash then ref[:number]&.to_s || ref['number']&.to_s
+            else ref&.to_s
+            end
+          end.compact.reject(&:empty?).uniq
         end
 
         # Process diffs section content

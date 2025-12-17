@@ -183,7 +183,7 @@ class SubjectExtractorTest < AceReviewTest
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
 
-    Open3.stub :capture3, [mock_output, "", mock_status] do
+    @extractor.stub :run_taskflow_command, [mock_output, "", mock_status, nil] do
       result = @extractor.extract("task:145")
       assert_kind_of String, result
     end
@@ -197,7 +197,7 @@ class SubjectExtractorTest < AceReviewTest
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
 
-    Open3.stub :capture3, [mock_output, "", mock_status] do
+    @extractor.stub :run_taskflow_command, [mock_output, "", mock_status, nil] do
       result = @extractor.extract("task:145.02")
       assert_kind_of String, result
     end
@@ -210,7 +210,7 @@ class SubjectExtractorTest < AceReviewTest
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, false
 
-    Open3.stub :capture3, ["", "Task not found", mock_status] do
+    @extractor.stub :run_taskflow_command, ["", "Task not found", mock_status, nil] do
       error = assert_raises Ace::Review::Errors::TaskNotFoundError do
         @extractor.extract("task:999")
       end
@@ -226,7 +226,7 @@ class SubjectExtractorTest < AceReviewTest
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
 
-    Open3.stub :capture3, ["", "", mock_status] do
+    @extractor.stub :run_taskflow_command, ["", "", mock_status, nil] do
       error = assert_raises Ace::Review::Errors::TaskPathNotFoundError do
         @extractor.extract("task:145")
       end
@@ -250,7 +250,7 @@ class SubjectExtractorTest < AceReviewTest
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
 
-    Open3.stub :capture3, [mock_output, "", mock_status] do
+    @extractor.stub :run_taskflow_command, [mock_output, "", mock_status, nil] do
       result = @extractor.extract("task:v.0.9.0+task.145")
       assert_kind_of String, result
     end
@@ -260,7 +260,7 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_task_missing_ace_taskflow
     # Test that missing ace-taskflow raises helpful error
-    Open3.stub :capture3, ->(*_args) { raise Errno::ENOENT, "ace-taskflow" } do
+    @extractor.stub :run_taskflow_command, ->(_ref) { raise Errno::ENOENT, "ace-taskflow" } do
       error = assert_raises Ace::Review::Errors::MissingDependencyError do
         @extractor.extract("task:145")
       end
@@ -427,7 +427,7 @@ class SubjectExtractorTest < AceReviewTest
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
 
-    Open3.stub :capture3, [mock_output, "", mock_status] do
+    @extractor.stub :run_taskflow_command, [mock_output, "", mock_status, nil] do
       config = @extractor.parse_typed_subject_config("task:145")
       assert_equal({ "context" => { "files" => ["/path/to/task/**/*.s.md"] } }, config)
     end
@@ -494,6 +494,14 @@ class SubjectExtractorTest < AceReviewTest
     overlay = { "files" => "b.rb" }
     result = @extractor.send(:deep_merge_arrays, base, overlay)
     assert_equal({ "files" => ["a.rb", "b.rb"] }, result)
+  end
+
+  def test_deep_merge_arrays_base_scalar_overlay_array
+    # Base is scalar, overlay is array: prepend base to array
+    base = { "files" => "a.rb" }
+    overlay = { "files" => ["b.rb", "c.rb"] }
+    result = @extractor.send(:deep_merge_arrays, base, overlay)
+    assert_equal({ "files" => ["a.rb", "b.rb", "c.rb"] }, result)
   end
 
   def test_deep_merge_arrays_both_scalars
