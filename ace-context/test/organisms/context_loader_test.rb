@@ -640,18 +640,6 @@ class ContextLoaderTest < AceTestCase
           pr: "123"
       YAML
 
-      # Mock the gh command response
-      mock_diff = <<~DIFF
-        diff --git a/lib/foo.rb b/lib/foo.rb
-        index abc123..def456 100644
-        --- a/lib/foo.rb
-        +++ b/lib/foo.rb
-        @@ -1,3 +1,4 @@
-         class Foo
-        +  def bar; end
-         end
-      DIFF
-
       # Create a simple status object with success? method
       mock_status = Object.new
       mock_status.define_singleton_method(:success?) { true }
@@ -660,7 +648,7 @@ class ContextLoaderTest < AceTestCase
       # The block receives stdin, stdout, stderr, wait_thr
       Open3.stub(:popen3, ->(*args, &block) {
         stdin = StringIO.new
-        stdout = StringIO.new(mock_diff)
+        stdout = StringIO.new(PrMockFixtures::MOCK_DIFF_STANDARD)
         stderr = StringIO.new("")
         wait_thr = Minitest::Mock.new
         wait_thr.expect(:pid, 12345)
@@ -692,9 +680,6 @@ class ContextLoaderTest < AceTestCase
             - "456"
       YAML
 
-      mock_diff_123 = "diff --git a/foo.rb b/foo.rb\n+line from PR 123"
-      mock_diff_456 = "diff --git a/bar.rb b/bar.rb\n+line from PR 456"
-
       call_count = 0
 
       # Create simple status objects
@@ -703,7 +688,7 @@ class ContextLoaderTest < AceTestCase
 
       # Stub Open3.popen3 to intercept gh pr diff calls
       Open3.stub(:popen3, ->(*args, &block) {
-        diff = call_count == 0 ? mock_diff_123 : mock_diff_456
+        diff = call_count == 0 ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
         call_count += 1
         stdin = StringIO.new
         stdout = StringIO.new(diff)

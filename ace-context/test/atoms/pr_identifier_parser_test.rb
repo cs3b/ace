@@ -168,6 +168,15 @@ module Ace
           assert_equal "123", result.gh_format
         end
 
+        def test_parse_normalizes_single_digit_with_leading_zeros
+          # Bond-style PR number: "007" normalizes to "7"
+          result = PrIdentifierParser.parse("007")
+
+          assert_equal "7", result.number
+          assert_equal "7", result.gh_format
+          assert_nil result.repo
+        end
+
         def test_parse_result_is_data_object
           result = PrIdentifierParser.parse("123")
 
