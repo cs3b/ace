@@ -184,6 +184,108 @@ class MultiModelCliTest < Minitest::Test
     # When not specified, pr_comments should be nil (defaults handled by ReviewOptions)
     assert_nil options[:pr_comments]
   end
+
+  # Multi-subject CLI parsing tests (PR #79 feedback)
+  def test_cli_parses_single_subject_flag
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "diff:HEAD~3", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # Single subject should be passed as string (backward compatible)
+    assert_equal "diff:HEAD~3", options[:subject]
+    assert_nil options[:subjects]  # Intermediate key should be cleaned up
+  end
+
+  def test_cli_parses_multiple_subject_flags_as_array
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "diff:HEAD~3", "--subject", "files:*.md", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # Multiple subjects should be passed as array
+    assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
+    assert_nil options[:subjects]  # Intermediate key should be cleaned up
+  end
+
+  def test_cli_normalizes_three_or_more_subjects
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "pr:77", "--subject", "files:README.md", "--subject", "diff:HEAD~1", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # Three or more subjects should all be in the array
+    assert_equal ["pr:77", "files:README.md", "diff:HEAD~1"], options[:subject]
+    assert_nil options[:subjects]
+  end
+
+  def test_cli_deduplicates_subjects
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "diff:HEAD~3", "--subject", "diff:HEAD~3", "--subject", "files:*.md", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # Duplicate subjects should be removed
+    assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
+  end
+
+  def test_cli_rejects_empty_subject_strings
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "", "--subject", "diff:HEAD~3", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # Empty subjects should be filtered out
+    assert_equal "diff:HEAD~3", options[:subject]
+  end
+
+  def test_cli_rejects_whitespace_only_subjects
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "   ", "--subject", "diff:HEAD~3", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # Whitespace-only subjects should be filtered out
+    assert_equal "diff:HEAD~3", options[:subject]
+  end
+
+  def test_cli_no_subject_when_all_empty
+    cli = Ace::Review::CLI.new
+
+    argv = ["--preset", "pr", "--subject", "", "--subject", "   ", "--dry-run"]
+
+    cli.instance_variable_set(:@options, { save_session: true })
+    cli.send(:parse_options, argv)
+
+    options = cli.instance_variable_get(:@options)
+
+    # When all subjects are empty, subject should be nil
+    assert_nil options[:subject]
+  end
 end
 
 class MultiModelExecutorTest < Minitest::Test
