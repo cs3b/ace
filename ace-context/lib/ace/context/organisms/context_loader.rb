@@ -1133,8 +1133,9 @@ module Ace
             end
           end
 
-          # Return true even if all fetches failed - PR config was present and attempted
-          return true if processed_diffs.empty?
+          # Return false if no successful diffs were fetched - signals no content was loaded
+          successful_diffs = processed_diffs.select { |d| d[:success] }
+          return false if successful_diffs.empty?
 
           # Add PR diffs to a "diffs" section for section-based formatting
           context.sections ||= {}
