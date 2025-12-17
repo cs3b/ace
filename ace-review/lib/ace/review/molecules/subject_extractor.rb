@@ -4,6 +4,7 @@ require "yaml"
 require "open3"
 require "timeout"
 require "ace/core/atoms/deep_merger"
+require "ace/core/atoms/process_terminator"
 require_relative "../errors"
 
 module Ace
@@ -270,7 +271,7 @@ module Ace
             raise Errors::MissingDependencyError.new("ace-taskflow", install_command: "gem install ace-taskflow")
           rescue Timeout::Error
             # Ensure child process is terminated on timeout
-            terminate_process(pid) if pid
+            Ace::Core::Atoms::ProcessTerminator.terminate(pid) if pid
             raise Errors::CommandTimeoutError.new("ace-taskflow task #{ref} --path", timeout_seconds)
           end
 
@@ -295,24 +296,6 @@ module Ace
           end
 
           [stdout_str, stderr_str, status, pid]
-        end
-
-        # Terminate a process gracefully, then forcefully if needed
-        # @param pid [Integer] Process ID to terminate
-        def terminate_process(pid)
-          return unless pid
-
-          begin
-            # Try graceful termination first (SIGTERM)
-            Process.kill("TERM", pid)
-            # Give it a moment to terminate
-            sleep(0.1)
-            # Check if still running and force kill if needed
-            Process.kill(0, pid) # Check if process exists
-            Process.kill("KILL", pid)
-          rescue Errno::ESRCH, Errno::EPERM
-            # Process already terminated or we don't have permission - that's fine
-          end
         end
 
         def looks_like_git_range?(input)

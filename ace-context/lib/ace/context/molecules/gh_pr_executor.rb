@@ -2,6 +2,7 @@
 
 require "open3"
 require "timeout"
+require "ace/core/atoms/process_terminator"
 require_relative "../atoms/pr_identifier_parser"
 
 module Ace
@@ -85,7 +86,7 @@ module Ace
             end
           rescue Timeout::Error
             # Ensure child process is terminated on timeout
-            terminate_process(pid) if pid
+            Ace::Core::Atoms::ProcessTerminator.terminate(pid) if pid
             raise TimeoutError, "gh pr diff timed out after #{timeout_seconds}s for #{@parsed.gh_format}"
           end
 
@@ -117,24 +118,6 @@ module Ace
         end
 
         private
-
-        # Terminate a process gracefully, then forcefully if needed
-        # @param pid [Integer] Process ID to terminate
-        def terminate_process(pid)
-          return unless pid
-
-          begin
-            # Try graceful termination first (SIGTERM)
-            Process.kill("TERM", pid)
-            # Give it a moment to terminate
-            sleep(0.1)
-            # Check if still running and force kill if needed
-            Process.kill(0, pid) # Check if process exists
-            Process.kill("KILL", pid)
-          rescue Errno::ESRCH, Errno::EPERM
-            # Process already terminated or we don't have permission - that's fine
-          end
-        end
 
         def build_gh_command
           args = ["gh", "pr", "diff", @parsed.gh_format]
