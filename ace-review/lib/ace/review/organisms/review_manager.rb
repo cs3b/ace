@@ -52,7 +52,6 @@ module Ace
             config_result[:config],
             content_result[:context],
             content_result[:subject],
-            options.subject,  # Pass original subject configuration
             session_dir,
             options,  # Pass options to check for PR mode
             content_result[:typed_subject_config]  # Pass typed subject config directly
@@ -141,6 +140,25 @@ module Ace
 
           # Extract subject (what to review)
           subject_config = options.subject || config[:subject]
+
+          # Handle array of subjects - merge configs without extraction
+          # This allows multiple --subject flags to be combined into a single ace-context config
+          if subject_config.is_a?(Array)
+            merged_config = @subject_extractor.merge_typed_subject_configs(subject_config)
+            if merged_config
+              cache_dir = options.session_dir || create_cache_directory
+              context_config = options.context || config[:context]
+              context = extract_context(context_config, cache_dir)
+
+              return {
+                success: true,
+                typed_subject_config: merged_config,  # Pass merged config, not content
+                subject: nil,  # No pre-extracted content
+                context: context,
+                cache_dir: cache_dir
+              }
+            end
+          end
 
           # Check for typed subject - pass config directly to ace-context (no extraction)
           # This avoids extracting content only to save it and re-read it
@@ -248,7 +266,7 @@ module Ace
         end
 
         # Step 3: Generate system and user prompts via ace-context
-        def compose_review_prompt(config, context, subject, cli_subject, session_dir, options = nil, typed_subject_config = nil)
+        def compose_review_prompt(config, context, subject, session_dir, options = nil, typed_subject_config = nil)
           # Extract prompt composition and context config
           system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
           context_config = config[:context] || config["context"] || "project"
@@ -267,7 +285,6 @@ module Ace
           subject_config = resolve_subject_config(
             config: config,
             subject: subject,
-            cli_subject: cli_subject,
             session_dir: session_dir,
             options: options,
             typed_subject_config: typed_subject_config
@@ -549,17 +566,16 @@ module Ace
         end
 
         # Resolve subject configuration from multiple sources
-        # Priority: typed subject config > --pr flag > legacy --subject > preset subject config
+        # Priority: typed subject config > --pr flag > preset subject config
         # @param config [Hash] Preset configuration
-        # @param subject [String, nil] Pre-extracted subject content
-        # @param cli_subject [String, nil] Original CLI --subject value
+        # @param subject [String, nil] Pre-extracted subject content (for --pr flag only)
         # @param session_dir [String] Session directory for saving intermediate files
         # @param options [ReviewOptions, nil] Review options
         # @param typed_subject_config [Hash, nil] Parsed typed subject (pr:, files:, diff:, task:)
         # @return [Hash, nil] Resolved subject configuration for ace-context
-        def resolve_subject_config(config:, subject:, cli_subject:, session_dir:, options:, typed_subject_config:)
+        def resolve_subject_config(config:, subject:, session_dir:, options:, typed_subject_config:)
           # Handle typed subject config (pr:, files:, diff:, task:) - pass directly to ace-context
-          # This is the optimized path - no content extraction, ace-context handles it
+          # This is the primary path - ace-context handles all content extraction
           if typed_subject_config
             return typed_subject_config
           end
@@ -576,24 +592,6 @@ module Ace
                     "title" => "Pull Request Changes",
                     "description" => "Code changes from GitHub Pull Request",
                     "files" => [pr_diff_path]
-                  }
-                }
-              }
-            }
-          end
-
-          # Handle legacy CLI --subject with pre-extracted content
-          if cli_subject && !cli_subject.empty? && subject && !subject.empty?
-            subject_content_path = File.join(session_dir, "subject-content.md")
-            File.write(subject_content_path, subject)
-
-            return {
-              "context" => {
-                "sections" => {
-                  "review_subject" => {
-                    "title" => "Code to Review",
-                    "description" => "Content from --subject flag",
-                    "files" => [subject_content_path]
                   }
                 }
               }
