@@ -547,8 +547,9 @@ class ReviewManagerTest < AceReviewTest
       config,
       {}, # context
       {}, # subject
-      {}, # subject_config
-      session_dir
+      session_dir,
+      nil, # options
+      nil  # typed_subject_config (nil to use preset's subject config)
     )
 
     assert result[:success], "compose_review_prompt should succeed with new format"

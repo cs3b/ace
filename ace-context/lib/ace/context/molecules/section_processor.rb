@@ -509,8 +509,10 @@ module Ace
           merged_processed = merged[:_processed_diffs] || merged['_processed_diffs'] || []
           new_processed = new_section[:_processed_diffs] || new_section['_processed_diffs'] || []
           if merged_processed.any? || new_processed.any?
-            # Use source-based dedup to handle same PR merged from different sections
-            merged[:_processed_diffs] = (merged_processed + new_processed).uniq { |d| d[:source] || d['source'] || d[:range] || d['range'] }
+            # Use source-based dedup for hashes, identity for strings
+            merged[:_processed_diffs] = (merged_processed + new_processed).uniq { |d|
+              d.is_a?(Hash) ? (d[:source] || d['source'] || d[:range] || d['range'] || d) : d
+            }
             merged.delete('_processed_diffs') if merged.key?('_processed_diffs')
           end
 
