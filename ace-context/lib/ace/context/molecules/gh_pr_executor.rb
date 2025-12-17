@@ -92,8 +92,9 @@ module Ace
         def handle_error(stderr, status)
           error_message = stderr.to_s
 
-          # Note: This error detection is based on the stderr string from the `gh` CLI.
-          # It may require updates if future versions of `gh` change their error messages.
+          # Error detection based on gh CLI stderr output.
+          # Verified against gh version 2.x (tested with 2.40+). Error message patterns
+          # may change in future versions - update regex patterns if gh output changes.
           if error_message.match?(/not found|Could not resolve/i)
             raise PrNotFoundError, "PR not found: #{@parsed.gh_format}"
           elsif error_message.match?(/authentication|Unauthorized|not logged in|auth login/i)

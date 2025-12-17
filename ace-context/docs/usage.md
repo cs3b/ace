@@ -290,6 +290,32 @@ ace-context --preset base --context '{"files": ["src/auth/**/*.rb"]}' --format m
 ace-context code-review --output review.md --format markdown-xml
 ```
 
+### Pull Request Review Workflow
+
+```bash
+# Load PR diff for review (single PR)
+ace-context --context '{"pr": [123]}'
+
+# Load multiple PRs at once
+ace-context --context '{"pr": [123, 456, 789]}'
+
+# Load PR with qualified reference (cross-repo)
+ace-context --context '{"pr": ["owner/repo#123"]}'
+
+# Combine PR with file patterns
+ace-context --context '{"pr": [123], "files": ["docs/**/*.md"]}'
+
+# PR diff from GitHub URL
+ace-context --context '{"pr": ["https://github.com/owner/repo/pull/123"]}'
+```
+
+**Note:** The `pr` configuration accepts:
+- Simple PR numbers: `123`
+- Qualified references: `owner/repo#456`
+- GitHub URLs: `https://github.com/owner/repo/pull/789`
+
+Arrays are supported for reviewing multiple PRs in a single context.
+
 ### Project Setup Workflow
 
 ```bash

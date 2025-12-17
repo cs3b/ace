@@ -505,11 +505,12 @@ module Ace
           end
 
           # Also merge processed diffs (from PR fetches)
-          # Deduplicate to prevent prompt size bloat when same PR/section is merged repeatedly
+          # Deduplicate by source (e.g., pr:123) to prevent prompt size bloat from same PR
           merged_processed = merged[:_processed_diffs] || merged['_processed_diffs'] || []
           new_processed = new_section[:_processed_diffs] || new_section['_processed_diffs'] || []
           if merged_processed.any? || new_processed.any?
-            merged[:_processed_diffs] = (merged_processed + new_processed).uniq
+            # Use source-based dedup to handle same PR merged from different sections
+            merged[:_processed_diffs] = (merged_processed + new_processed).uniq { |d| d[:source] || d['source'] || d[:range] || d['range'] }
             merged.delete('_processed_diffs') if merged.key?('_processed_diffs')
           end
 

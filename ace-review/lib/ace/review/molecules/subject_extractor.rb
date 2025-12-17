@@ -70,7 +70,13 @@ module Ace
 
         private
 
-        # Deep merge configs with array concatenation and recursive hash merging
+        # Deep merge configs with array concatenation, dedup, and recursive hash merging
+        #
+        # NOTE: Consider migrating to Ace::Core::Atoms::DeepMerger with :union strategy
+        # once it supports scalar-to-array coercion. Current implementation handles:
+        # - Array deduplication and blank removal
+        # - Scalar-to-array conversion when merging mixed types
+        #
         # @param base [Hash] base configuration hash
         # @param overlay [Hash] overlay configuration hash
         # @return [Hash] merged configuration (new hash, does not mutate inputs)
@@ -81,20 +87,27 @@ module Ace
               # Both hashes: recurse
               result[key] = deep_merge_arrays(result[key], value)
             elsif result[key].is_a?(Array) && value.is_a?(Array)
-              # Both arrays: concatenate
-              result[key] = result[key] + value
+              # Both arrays: concatenate, remove blanks, deduplicate
+              result[key] = normalize_array(result[key] + value)
             elsif result[key].is_a?(Array)
-              # Base is array, value is scalar: append
-              result[key] = result[key] + [value]
+              # Base is array, value is scalar: append, normalize
+              result[key] = normalize_array(result[key] + [value])
             elsif result.key?(key)
-              # Base exists and is scalar: convert both to array
-              result[key] = [result[key], value].flatten
+              # Base exists and is scalar: convert both to array, normalize
+              result[key] = normalize_array([result[key], value].flatten)
             else
-              # Key doesn't exist: set directly
-              result[key] = value
+              # Key doesn't exist: set directly (normalize if array)
+              result[key] = value.is_a?(Array) ? normalize_array(value) : value
             end
           end
           result
+        end
+
+        # Normalize array by removing empty strings/nils and deduplicating
+        # @param arr [Array] array to normalize
+        # @return [Array] normalized array
+        def normalize_array(arr)
+          arr.reject { |v| v.nil? || (v.respond_to?(:empty?) && v.empty?) }.uniq
         end
 
         # Resolve a single subject to ace-context config
@@ -207,15 +220,20 @@ module Ace
             if pr_refs.empty?
               raise ArgumentError, "No valid PR references provided. Usage: pr:REF (e.g., pr:123, pr:owner/repo#456)"
             end
-            # PR validation is delegated to ace-context's PrIdentifierParser which supports:
-            # - Simple numbers: 123
-            # - Qualified refs: owner/repo#456
-            # - GitHub URLs: https://github.com/owner/repo/pull/789
+            # Pre-validate PR refs for early error feedback using ace-context's parser
+            # Supports: simple numbers (123), qualified refs (owner/repo#456), GitHub URLs
+            pr_refs.each do |ref|
+              Ace::Context::Atoms::PrIdentifierParser.parse(ref)
+            end
             { "context" => { "pr" => pr_refs } }
           when /^pr:$/
             raise ArgumentError, "Empty value for pr: subject. Usage: pr:NUMBER (e.g., pr:123)"
           when /^files:(.+)$/
-            { "context" => { "files" => ::Regexp.last_match(1).split(",").map(&:strip) } }
+            file_patterns = ::Regexp.last_match(1).split(",").map(&:strip).reject(&:empty?)
+            if file_patterns.empty?
+              raise ArgumentError, "No valid file patterns provided. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
+            end
+            { "context" => { "files" => file_patterns } }
           when /^files:$/
             raise ArgumentError, "Empty value for files: subject. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
           when /^task:(.+)$/
