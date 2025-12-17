@@ -828,13 +828,14 @@ module Ace
 
         # Check if context has sections with actual processed content
         # Returns true if sections have _processed_files, _processed_commands, or _processed_diffs
+        # Note: Section data is normalized to symbol keys by SectionProcessor
         def has_processed_section_content?(context)
           return false unless context.has_sections?
 
           context.sections.any? do |_name, data|
-            processed_files = data[:_processed_files] || data['_processed_files'] || []
-            processed_commands = data[:_processed_commands] || data['_processed_commands'] || []
-            processed_diffs = data[:_processed_diffs] || data['_processed_diffs'] || []
+            processed_files = data[:_processed_files] || []
+            processed_commands = data[:_processed_commands] || []
+            processed_diffs = data[:_processed_diffs] || []
             processed_files.any? || processed_commands.any? || processed_diffs.any?
           end
         end

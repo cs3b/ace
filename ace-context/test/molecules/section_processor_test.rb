@@ -58,7 +58,62 @@ class SectionProcessorTest < AceTestCase
     merged = @processor.send(:merge_section_data, existing_section, new_section)
 
     assert_equal ['existing diff'], merged[:_processed_diffs]
-    assert_equal ['test.rb'], merged['files']
+    # Keys are now normalized to symbols
+    assert_equal ['test.rb'], merged[:files]
+  end
+
+  # Test symbolize_keys_deep helper
+  def test_symbolize_keys_deep_converts_string_keys
+    input = { 'title' => 'Test', 'nested' => { 'key' => 'value' } }
+    result = @processor.send(:symbolize_keys_deep, input)
+
+    assert_equal({ title: 'Test', nested: { key: 'value' } }, result)
+  end
+
+  def test_symbolize_keys_deep_preserves_symbol_keys
+    input = { title: 'Test', nested: { key: 'value' } }
+    result = @processor.send(:symbolize_keys_deep, input)
+
+    assert_equal({ title: 'Test', nested: { key: 'value' } }, result)
+  end
+
+  def test_symbolize_keys_deep_handles_arrays
+    input = { 'items' => [{ 'name' => 'a' }, { 'name' => 'b' }] }
+    result = @processor.send(:symbolize_keys_deep, input)
+
+    assert_equal({ items: [{ name: 'a' }, { name: 'b' }] }, result)
+  end
+
+  def test_symbolize_keys_deep_handles_mixed_keys
+    input = { 'string_key' => 1, symbol_key: 2 }
+    result = @processor.send(:symbolize_keys_deep, input)
+
+    assert_equal({ string_key: 1, symbol_key: 2 }, result)
+  end
+
+  # Test that merge_section_data normalizes string keys to symbols
+  def test_merge_section_data_normalizes_string_keys
+    existing = { 'title' => 'Original', 'files' => ['a.rb'] }
+    new_section = { 'files' => ['b.rb'], 'content' => 'New content' }
+
+    merged = @processor.send(:merge_section_data, existing, new_section)
+
+    # Result should have symbol keys only
+    assert_equal 'Original', merged[:title]
+    assert_equal ['a.rb', 'b.rb'], merged[:files]
+    assert_equal 'New content', merged[:content]
+    refute merged.key?('title'), "Should not have string key 'title'"
+    refute merged.key?('files'), "Should not have string key 'files'"
+  end
+
+  def test_merge_section_data_handles_mixed_keys
+    existing = { title: 'Symbol', 'files' => ['a.rb'] }
+    new_section = { 'title' => 'String', files: ['b.rb'] }
+
+    merged = @processor.send(:merge_section_data, existing, new_section)
+
+    assert_equal 'String', merged[:title]  # new wins for scalar
+    assert_equal ['a.rb', 'b.rb'], merged[:files]
   end
 
   # Test has_diffs_content? returns true for sections with only _processed_diffs
@@ -142,10 +197,10 @@ class SectionProcessorTest < AceTestCase
 
     merged = @processor.send(:merge_section_data, existing_section, new_section)
 
-    # All content types should be merged
-    assert_equal ['file1.rb', 'file2.rb'], merged['files']
-    assert_equal ['HEAD~1..HEAD'], merged['ranges']
-    assert_equal ['origin/main...HEAD'], merged['diffs']
+    # All content types should be merged (normalized to symbol keys)
+    assert_equal ['file1.rb', 'file2.rb'], merged[:files]
+    assert_equal ['HEAD~1..HEAD'], merged[:ranges]
+    assert_equal ['origin/main...HEAD'], merged[:diffs]
     assert_equal ['processed 1', 'processed 2'], merged[:_processed_diffs]
   end
 end

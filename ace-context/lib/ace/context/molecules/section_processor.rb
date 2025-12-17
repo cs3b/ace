@@ -126,9 +126,8 @@ module Ace
             # Merge preset content into section
             processed[section_name] = merge_preset_content_into_section(section_data, merged_preset_content)
 
-            # Remove the presets reference after processing
+            # Remove the presets reference after processing (normalized to symbol)
             processed[section_name].delete(:presets)
-            processed[section_name].delete('presets')
           end
 
           processed
@@ -282,6 +281,23 @@ module Ace
         end
 
         private
+
+        # Recursively converts all string keys to symbols
+        # @param obj [Hash, Array, Object] object to symbolize
+        # @return [Hash, Array, Object] object with symbolized keys
+        def symbolize_keys_deep(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(key, value), result|
+              sym_key = key.respond_to?(:to_sym) ? key.to_sym : key
+              result[sym_key] = symbolize_keys_deep(value)
+            end
+          when Array
+            obj.map { |item| symbolize_keys_deep(item) }
+          else
+            obj
+          end
+        end
 
         # Extracts sections configuration from the main config
         def extract_sections_config(config)
@@ -472,78 +488,60 @@ module Ace
         end
 
         # Merges two section data hashes
+        # Normalizes keys to symbols for consistent internal access
         def merge_section_data(existing, new_section)
-          merged = deep_copy(existing)
+          # Normalize keys for consistent internal access
+          existing_normalized = symbolize_keys_deep(existing)
+          new_normalized = symbolize_keys_deep(new_section)
+          merged = deep_copy(existing_normalized)
 
           # Merge files arrays
-          if has_files_content?(merged) || has_files_content?(new_section)
-            merged['files'] = ((merged['files'] || []) + (new_section['files'] || [])).uniq
-            merged.delete(:files) if merged.key?(:files) # Remove symbol key if string key exists
+          if merged[:files] || new_normalized[:files]
+            merged[:files] = ((merged[:files] || []) + (new_normalized[:files] || [])).uniq
           end
 
           # Merge commands arrays
-          if has_commands_content?(merged) || has_commands_content?(new_section)
-            merged['commands'] = ((merged['commands'] || []) + (new_section['commands'] || [])).uniq
-            merged.delete(:commands) if merged.key?(:commands) # Remove symbol key if string key exists
+          if merged[:commands] || new_normalized[:commands]
+            merged[:commands] = ((merged[:commands] || []) + (new_normalized[:commands] || [])).uniq
           end
 
-          # Merge diffs/ranges arrays
-          # Only set ranges/diffs when either side actually has values (not for _processed_diffs-only sections)
-          # This prevents empty arrays from triggering downstream diff-handling paths
-          merged_ranges = merged['ranges'] || merged[:ranges]
-          new_ranges = new_section['ranges'] || new_section[:ranges]
-          merged_diffs_arr = merged['diffs'] || merged[:diffs]
-          new_diffs_arr = new_section['diffs'] || new_section[:diffs]
-
-          if merged_ranges || new_ranges
-            merged['ranges'] = ((merged_ranges || []) + (new_ranges || [])).uniq
-            merged.delete(:ranges) if merged.key?(:ranges)
-          end
-          if merged_diffs_arr || new_diffs_arr
-            merged['diffs'] = ((merged_diffs_arr || []) + (new_diffs_arr || [])).uniq
-            merged.delete(:diffs) if merged.key?(:diffs)
+          # Merge ranges arrays (skip if only _processed_diffs present)
+          if merged[:ranges] || new_normalized[:ranges]
+            merged[:ranges] = ((merged[:ranges] || []) + (new_normalized[:ranges] || [])).uniq
           end
 
-          # Also merge processed diffs (from PR fetches)
-          # Deduplicate by source (e.g., pr:123) to prevent prompt size bloat from same PR
-          merged_processed = merged[:_processed_diffs] || merged['_processed_diffs'] || []
-          new_processed = new_section[:_processed_diffs] || new_section['_processed_diffs'] || []
+          # Merge diffs arrays (legacy format)
+          if merged[:diffs] || new_normalized[:diffs]
+            merged[:diffs] = ((merged[:diffs] || []) + (new_normalized[:diffs] || [])).uniq
+          end
+
+          # Merge processed diffs with source-based deduplication
+          merged_processed = merged[:_processed_diffs] || []
+          new_processed = new_normalized[:_processed_diffs] || []
           if merged_processed.any? || new_processed.any?
-            # Use source-based dedup for hashes, identity for strings
             merged[:_processed_diffs] = (merged_processed + new_processed).uniq { |d|
-              d.is_a?(Hash) ? (d[:source] || d['source'] || d[:range] || d['range'] || d) : d
+              d.is_a?(Hash) ? (d[:source] || d[:range] || d) : d
             }
-            merged.delete('_processed_diffs') if merged.key?('_processed_diffs')
           end
 
           # Merge content (concatenate)
-          if has_content_content?(merged) || has_content_content?(new_section)
-            existing_content = merged['content'] || merged[:content] || ''
-            new_content = new_section['content'] || new_section[:content] || ''
+          if merged[:content] || new_normalized[:content]
+            existing_content = merged[:content] || ''
+            new_content = new_normalized[:content] || ''
 
             if !new_content.empty?
-              if existing_content.empty?
-                merged['content'] = new_content
-              else
-                merged['content'] = existing_content + "\n\n#{new_content}"
-              end
+              merged[:content] = existing_content.empty? ? new_content : "#{existing_content}\n\n#{new_content}"
             end
-            merged.delete(:content) if merged.key?(:content) # Remove symbol key if string key exists
           end
 
           # Merge exclude patterns
-          if merged['exclude'] || new_section['exclude']
-            merged['exclude'] = ((merged['exclude'] || []) + (new_section['exclude'] || [])).uniq
+          if merged[:exclude] || new_normalized[:exclude]
+            merged[:exclude] = ((merged[:exclude] || []) + (new_normalized[:exclude] || [])).uniq
           end
 
           # Override non-array fields with new values
-          %w[title priority description template].each do |field|
-            merged[field] = new_section[field] if new_section[field]
-          end
-
-          # Preserve content_type if present in either section
-          if new_section['content_type']
-            merged['content_type'] = new_section['content_type']
+          %i[title priority description template content_type].each do |field|
+            merged[field] = new_normalized[field] if new_normalized[field]
           end
 
           merged
