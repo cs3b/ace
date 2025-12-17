@@ -22,8 +22,11 @@ module Ace
       # This avoids extracting content only to save it to a file and re-read it.
       #
       class SubjectExtractor
-        def initialize
+        # @param options [Hash] Configuration options
+        # @option options [Integer] :taskflow_timeout Timeout for ace-taskflow subprocess (default: 10s)
+        def initialize(options = {})
           @git = Ace::Context::Atoms::GitExtractor
+          @taskflow_timeout = options[:taskflow_timeout] || TASKFLOW_TIMEOUT
         end
 
         # Extract subject from configuration (legacy API)
@@ -92,9 +95,12 @@ module Ace
             elsif result[key].is_a?(Array)
               # Base is array, value is scalar: append, normalize
               result[key] = normalize_array(result[key] + [value])
+            elsif result.key?(key) && value.is_a?(Array)
+              # Base is scalar, overlay is array: prepend base to array
+              result[key] = normalize_array([result[key]] + value)
             elsif result.key?(key)
-              # Base exists and is scalar: convert both to array, normalize
-              result[key] = normalize_array([result[key], value].flatten)
+              # Both scalars: convert to array
+              result[key] = normalize_array([result[key], value])
             else
               # Key doesn't exist: set directly (normalize if array)
               result[key] = value.is_a?(Array) ? normalize_array(value) : value
@@ -237,7 +243,7 @@ module Ace
           when /^files:$/
             raise ArgumentError, "Empty value for files: subject. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
           when /^task:(.+)$/
-            resolve_task_subject(::Regexp.last_match(1))
+            resolve_task_subject(::Regexp.last_match(1), timeout: @taskflow_timeout)
           when /^task:$/
             raise ArgumentError, "Empty value for task: subject. Usage: task:REF (e.g., task:145)"
           else
@@ -246,30 +252,21 @@ module Ace
         end
 
         # Default timeout for ace-taskflow subprocess (in seconds)
+        # Can be overridden via options for environments with slow I/O
         TASKFLOW_TIMEOUT = 10
 
-        def resolve_task_subject(ref)
+        def resolve_task_subject(ref, timeout: TASKFLOW_TIMEOUT)
           # Validate ref format to prevent injection (alphanumeric, dots, dashes, plus only)
           # Plus is needed for qualified task refs like v.0.9.0+task.145
           unless ref.match?(/\A[\w.\-+]+\z/)
             raise ArgumentError, "Invalid task reference format: #{ref}"
           end
 
-          # Use Open3 with array args for safe subprocess execution
-          # Add timeout to prevent hanging on stuck ace-taskflow lookups
-          begin
-            stdout = nil
-            status = nil
-            Timeout.timeout(TASKFLOW_TIMEOUT) do
-              stdout, _stderr, status = Open3.capture3("ace-taskflow", "task", ref, "--path")
-            end
-          rescue Errno::ENOENT
-            raise Errors::MissingDependencyError.new("ace-taskflow", install_command: "gem install ace-taskflow")
-          rescue Timeout::Error
-            raise Errors::CommandTimeoutError.new("ace-taskflow task #{ref} --path", TASKFLOW_TIMEOUT)
-          end
+          # Use Open3.popen3 with PID tracking for proper timeout handling
+          # Ensures child process is terminated on timeout (prevents orphaned processes)
+          stdout, status = execute_taskflow_with_timeout(ref, timeout)
 
-          unless status.success?
+          unless status&.success?
             raise Errors::TaskNotFoundError, ref
           end
 
@@ -284,6 +281,70 @@ module Ace
           # solution files (*.s.md) within it - this includes the main task
           # and any subtasks (145.01.s.md, 145.02.s.md, etc.)
           { "context" => { "files" => ["#{File.dirname(task_path)}/**/*.s.md"] } }
+        end
+
+        # Execute ace-taskflow with timeout and proper process cleanup
+        # @param ref [String] Task reference
+        # @param timeout_seconds [Integer] Timeout in seconds
+        # @return [Array] stdout, status
+        # @raise [Errors::MissingDependencyError] if ace-taskflow not installed
+        # @raise [Errors::CommandTimeoutError] if command exceeds timeout
+        def execute_taskflow_with_timeout(ref, timeout_seconds)
+          pid = nil
+          stdout_str = ""
+          status = nil
+
+          begin
+            Timeout.timeout(timeout_seconds) do
+              stdout_str, _stderr, status, pid = run_taskflow_command(ref)
+            end
+          rescue Errno::ENOENT
+            raise Errors::MissingDependencyError.new("ace-taskflow", install_command: "gem install ace-taskflow")
+          rescue Timeout::Error
+            # Ensure child process is terminated on timeout
+            terminate_process(pid) if pid
+            raise Errors::CommandTimeoutError.new("ace-taskflow task #{ref} --path", timeout_seconds)
+          end
+
+          [stdout_str, status]
+        end
+
+        # Run ace-taskflow command - can be stubbed in tests
+        # Uses Open3.popen3 with PID tracking for proper process cleanup on timeout
+        # @param ref [String] Task reference
+        # @return [Array] [stdout, stderr, status, pid]
+        def run_taskflow_command(ref)
+          stdout_str = ""
+          stderr_str = ""
+          status = nil
+          pid = nil
+
+          Open3.popen3("ace-taskflow", "task", ref, "--path") do |_stdin, stdout, stderr, wait_thr|
+            pid = wait_thr.pid
+            stdout_str = stdout.read
+            stderr_str = stderr.read
+            status = wait_thr.value
+          end
+
+          [stdout_str, stderr_str, status, pid]
+        end
+
+        # Terminate a process gracefully, then forcefully if needed
+        # @param pid [Integer] Process ID to terminate
+        def terminate_process(pid)
+          return unless pid
+
+          begin
+            # Try graceful termination first (SIGTERM)
+            Process.kill("TERM", pid)
+            # Give it a moment to terminate
+            sleep(0.1)
+            # Check if still running and force kill if needed
+            Process.kill(0, pid) # Check if process exists
+            Process.kill("KILL", pid)
+          rescue Errno::ESRCH, Errno::EPERM
+            # Process already terminated or we don't have permission - that's fine
+          end
         end
 
         def looks_like_git_range?(input)

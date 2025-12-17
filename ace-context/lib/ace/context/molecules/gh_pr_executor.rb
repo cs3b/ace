@@ -41,9 +41,7 @@ module Ace
           raise ArgumentError, "Invalid PR identifier: #{@identifier}" if @parsed.nil?
 
           args = build_gh_command
-          stdout, stderr, status = Timeout.timeout(@timeout) do
-            execute_gh_command(args)
-          end
+          stdout, stderr, status = execute_with_timeout(args, @timeout)
 
           if status.success?
             {
@@ -57,24 +55,88 @@ module Ace
           end
         rescue Errno::ENOENT
           raise GhNotInstalledError, "GitHub CLI (gh) not installed. Install with: brew install gh"
-        rescue Timeout::Error
-          raise TimeoutError, "gh pr diff timed out after #{@timeout}s for #{@parsed.gh_format}"
         end
 
         protected
 
-        # Execute gh command - can be overridden in tests for mocking
+        # Execute command with timeout and proper process cleanup
         #
+        # Uses Open3.popen3 with PID tracking to ensure child processes are
+        # terminated on timeout, preventing orphaned processes.
+        #
+        # @param args [Array<String>] Command arguments
+        # @param timeout_seconds [Integer] Timeout in seconds
+        # @return [Array] stdout, stderr, status
+        # @raise [TimeoutError] if command exceeds timeout
+        def execute_with_timeout(args, timeout_seconds)
+          pid = nil
+          stdout_str = ""
+          stderr_str = ""
+          status = nil
+
+          begin
+            Timeout.timeout(timeout_seconds) do
+              stdout_str, stderr_str, status, pid = run_command(args)
+            end
+          rescue Timeout::Error
+            # Ensure child process is terminated on timeout
+            terminate_process(pid) if pid
+            raise TimeoutError, "gh pr diff timed out after #{timeout_seconds}s for #{@parsed.gh_format}"
+          end
+
+          [stdout_str, stderr_str, status]
+        end
+
+        # Run command and return output - can be overridden in tests for mocking
+        #
+        # Uses Open3.popen3 with PID tracking for proper process cleanup on timeout.
         # Uses LC_ALL=C to ensure consistent English error messages across locales
         # for reliable error detection.
         #
         # @param args [Array<String>] Command arguments
-        # @return [Array] stdout, stderr, status
+        # @return [Array] [stdout, stderr, status, pid]
+        def run_command(args)
+          stdout_str = ""
+          stderr_str = ""
+          status = nil
+          pid = nil
+
+          Open3.popen3({ "LC_ALL" => "C" }, *args) do |_stdin, stdout, stderr, wait_thr|
+            pid = wait_thr.pid
+            stdout_str = stdout.read
+            stderr_str = stderr.read
+            status = wait_thr.value
+          end
+
+          [stdout_str, stderr_str, status, pid]
+        end
+
+        # Execute gh command - can be overridden in tests for mocking
+        # @deprecated Use run_command instead
         def execute_gh_command(args)
-          Open3.capture3({ "LC_ALL" => "C" }, *args)
+          stdout, stderr, status, _pid = run_command(args)
+          [stdout, stderr, status]
         end
 
         private
+
+        # Terminate a process gracefully, then forcefully if needed
+        # @param pid [Integer] Process ID to terminate
+        def terminate_process(pid)
+          return unless pid
+
+          begin
+            # Try graceful termination first (SIGTERM)
+            Process.kill("TERM", pid)
+            # Give it a moment to terminate
+            sleep(0.1)
+            # Check if still running and force kill if needed
+            Process.kill(0, pid) # Check if process exists
+            Process.kill("KILL", pid)
+          rescue Errno::ESRCH, Errno::EPERM
+            # Process already terminated or we don't have permission - that's fine
+          end
+        end
 
         def build_gh_command
           args = ["gh", "pr", "diff", @parsed.gh_format]
