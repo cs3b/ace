@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.175] - 2025-12-18
+
+### ace-git-worktree v0.5.0
+
+**Current Task Symlink in Worktrees**
+
+- **Added**: Creates `_current` symlink inside worktree when creating task worktrees
+  - Symlink at worktree root (e.g., `.ace-wt/task.145/_current`) points to task directory
+  - Quick access from worktree: `cat _current/*.s.md`, `ls _current/`
+  - Configurable via `task.create_current_symlink` and `task.current_symlink_name`
+  - Uses relative paths for portability
+  - Non-blocking: symlink failure doesn't abort worktree creation
+- **Added**: New `CurrentTaskLinker` molecule for symlink lifecycle management
+- **Added**: Dry-run shows planned symlink creation
+
 ## [0.9.174] - 2025-12-17
 
 ### ace-review v0.25.0
