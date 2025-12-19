@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.136
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 136-ace-test-should-allow-running-whole-package-from-any-directory
+  path: "../ace-task.136"
+  created_at: '2025-12-19 16:15:00'
+  updated_at: '2025-12-19 16:15:00'
 ---
 
 # ace-test should allow running whole package from any directory
