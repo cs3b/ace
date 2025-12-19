@@ -145,9 +145,10 @@ module Ace
                   project_root: worktree_result[:worktree_path],
                   symlink_name: @config.current_symlink_name
                 )
-                # Task path relative to worktree (same structure as main repo)
-                worktree_task_path = File.join(worktree_result[:worktree_path], relative_task_path(task_data[:path]))
-                link_result = current_linker.link(worktree_task_path)
+                # Task directory relative to worktree (same structure as main repo)
+                # task_data[:path] is the task file path, we need the parent directory
+                worktree_task_dir = File.dirname(File.join(worktree_result[:worktree_path], relative_task_path(task_data[:path])))
+                link_result = current_linker.link(worktree_task_dir)
                 if link_result[:success]
                   workflow_result[:steps_completed] << "current_symlink_created"
                   workflow_result[:current_symlink] = link_result[:symlink_path]
@@ -287,9 +288,10 @@ module Ace
               # Determine if current symlink would be created (in worktree)
               would_create_current_symlink = @config.create_current_symlink?
               current_symlink_path = would_create_current_symlink ? File.join(worktree_path, @config.current_symlink_name) : nil
-              # Task path relative to worktree (same structure as main repo)
+              # Task directory relative to worktree (same structure as main repo)
+              # task_data[:path] is the task file path, we need the parent directory
               relative_task = would_create_current_symlink ? relative_task_path(task_data[:path]) : nil
-              worktree_task_path = would_create_current_symlink ? File.join(worktree_path, relative_task) : nil
+              worktree_task_dir = would_create_current_symlink ? File.dirname(File.join(worktree_path, relative_task)) : nil
 
               workflow_result[:would_create] = {
                 worktree_path: worktree_path,
@@ -302,7 +304,7 @@ module Ace
                 push_remote: @config.push_remote,
                 current_symlink: would_create_current_symlink,
                 current_symlink_path: current_symlink_path,
-                current_symlink_target: worktree_task_path,
+                current_symlink_target: worktree_task_dir,
                 upstream_push: should_setup_upstream,
                 add_started_at: should_create_pr && should_setup_upstream,
                 create_pr: should_create_pr,
