@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.139
-status: pending
+status: in-progress
 priority: medium
 estimate: 16-24h
 dependencies: []
+worktree:
+  branch: 139-secure-git-history-remove-and-revoke-authentication-tokens
+  path: "../ace-task.139"
+  created_at: '2025-12-20 20:19:37'
+  updated_at: '2025-12-20 20:19:37'
 ---
 
 # Secure Git History: Remove and Revoke Authentication Tokens
