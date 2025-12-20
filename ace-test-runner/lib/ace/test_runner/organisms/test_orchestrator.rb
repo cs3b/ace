@@ -14,38 +14,54 @@ module Ace
         attr_reader :configuration, :result
 
         def initialize(options = {})
-          @configuration = build_configuration(options)
-          @pattern_resolver = Molecules::PatternResolver.new(@configuration)
-          @test_detector = Atoms::TestDetector.new(patterns: @configuration.patterns)
+          @package_dir = options[:package_dir]
+          @original_dir = Dir.pwd
+          @options = options
+
+          # Fail fast: validate package_dir exists before proceeding
+          if @package_dir && !Dir.exist?(@package_dir)
+            raise Error, "Package directory not found: #{@package_dir}"
+          end
 
           # Track if user explicitly specified --report-dir to avoid auto-detection override
           @report_dir_override = options[:report_dir] ? :user_specified : nil
 
-          # Use SmartTestExecutor for intelligent subprocess/direct execution choice
-          require_relative "../molecules/smart_test_executor"
-          force_mode = options[:direct] ? :direct : (options[:subprocess] ? :subprocess : nil)
-          @test_executor = Molecules::SmartTestExecutor.new(
-            timeout: @configuration.timeout,
-            force_mode: force_mode
-          )
-          @result_parser = Atoms::ResultParser.new
-          @failure_analyzer = Molecules::FailureAnalyzer.new
-          @report_generator = ReportGenerator.new(@configuration)
-
-          # Initialize formatter - will be updated after pattern resolution
-          formatter_options = @configuration.to_h
-          if @configuration.failure_limits
-            formatter_options[:max_failures_to_display] = @configuration.failure_limits[:max_display]
+          # Component initialization strategy:
+          # - Package mode: defer setup to run() when we're in the correct directory
+          # - Non-package mode: set up immediately for backward compatibility
+          #   (callers may access @configuration after initialize)
+          if @package_dir
+            @configuration = nil
+            @components_initialized = false
+          else
+            setup_components
+            @components_initialized = true
           end
-          # Disable group headers in on_test_complete to avoid duplicates with on_group_start/complete
-          formatter_options[:show_groups] = false
-          @formatter = @configuration.formatter_class.new(formatter_options)
         end
 
         def run
+          # Change to package directory if specified - this is done in run to ensure
+          # the ensure block always restores the directory, even on initialization errors
+          Dir.chdir(@package_dir) if @package_dir
+
+          # Initialize components if not already done (package mode)
+          setup_components unless @components_initialized
+
+          run_with_package_context
+        ensure
+          # Restore original directory if we changed it
+          Dir.chdir(@original_dir) if @package_dir && Dir.pwd != @original_dir
+        end
+
+        def run_with_package_context
           validate_configuration!
 
           start_time = Time.now
+
+          # Print package context if running in different directory
+          if @package_dir
+            puts "Running tests in #{File.basename(@package_dir)}..."
+          end
 
           # Check if sequential group execution should be used
           if should_execute_sequentially?
@@ -159,6 +175,32 @@ module Ace
         end
 
         private
+
+        def setup_components
+          @configuration = build_configuration(@options)
+          @pattern_resolver = Molecules::PatternResolver.new(@configuration)
+          @test_detector = Atoms::TestDetector.new(patterns: @configuration.patterns)
+
+          # Use SmartTestExecutor for intelligent subprocess/direct execution choice
+          require_relative "../molecules/smart_test_executor"
+          force_mode = @options[:direct] ? :direct : (@options[:subprocess] ? :subprocess : nil)
+          @test_executor = Molecules::SmartTestExecutor.new(
+            timeout: @configuration.timeout,
+            force_mode: force_mode
+          )
+          @result_parser = Atoms::ResultParser.new
+          @failure_analyzer = Molecules::FailureAnalyzer.new
+          @report_generator = ReportGenerator.new(@configuration)
+
+          # Initialize formatter - will be updated after pattern resolution
+          formatter_options = @configuration.to_h
+          if @configuration.failure_limits
+            formatter_options[:max_failures_to_display] = @configuration.failure_limits[:max_display]
+          end
+          # Disable group headers in on_test_complete to avoid duplicates with on_group_start/complete
+          formatter_options[:show_groups] = false
+          @formatter = @configuration.formatter_class.new(formatter_options)
+        end
 
         def run_sequential_groups(start_time)
           # Resolve groups sequentially

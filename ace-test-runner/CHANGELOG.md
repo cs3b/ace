@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-12-20
+
+### Added
+- **Package Argument Support**: Run tests for any package in the mono-repo from any directory
+  - `ace-test ace-context` runs all tests in ace-context package
+  - `ace-test ace-nav atoms` runs only atom tests in ace-nav
+  - `ace-test ./ace-search` supports relative paths
+  - `ace-test /path/to/ace-docs` supports absolute paths
+  - `ace-test ace-context/test/foo_test.rb` supports package-prefixed file paths
+  - `ace-test ace-context/test/foo_test.rb:42` supports package-prefixed file paths with line numbers
+  - Automatically detects and changes to package directory for test execution
+  - Restores original directory after test completion
+  - New `PackageResolver` atom for package name/path resolution
+  - Integration tests for package argument functionality
+
+### Changed
+- CLI help updated with package examples
+- README updated with package argument documentation
+
 ## [0.2.1] - 2025-12-13
 
 ### Fixed

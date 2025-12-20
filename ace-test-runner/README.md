@@ -37,6 +37,51 @@ Run all tests with default AI-friendly format:
 ace-test
 ```
 
+### Running Tests for a Specific Package
+
+In a mono-repo with multiple ace-* packages, you can run tests for any package from any directory:
+
+```bash
+# Run all tests in a package by name
+ace-test ace-context
+
+# Run specific test group in a package
+ace-test ace-nav atoms
+
+# Run with options
+ace-test ace-lint --profile 10
+
+# Using relative paths
+ace-test ./ace-search
+
+# Using absolute paths
+ace-test /path/to/ace-docs
+```
+
+When running from within a different package directory, this allows you to easily run tests across the mono-repo without changing directories:
+
+```bash
+cd ace-search
+ace-test ace-context atoms  # Run ace-context atom tests from within ace-search
+```
+
+#### Usage Matrix
+
+| Command | What It Runs |
+|---------|--------------|
+| `ace-test` | All tests in current package |
+| `ace-test atoms` | Only atom tests in current package |
+| `ace-test ace-nav` | All tests in ace-nav package |
+| `ace-test ace-nav atoms` | Only atom tests in ace-nav |
+| `ace-test ace-nav/test/file.rb` | Specific file in ace-nav (from project root) |
+| `ace-test ace-nav/test/file.rb:42` | Specific line in ace-nav (from project root) |
+| `ace-test ./ace-nav` | All tests using relative path |
+| `ace-test test/atoms/file.rb` | Specific file in current package |
+
+**Note:** Package names match `ace-*` directories in the mono-repo root, enabling shell tab completion.
+
+**Shell Completion:** For bash/zsh completion support, add: `complete -C ace-test ace-test`
+
 ### Explicit File Execution
 
 Run specific test files or line numbers for focused testing during development:
@@ -57,7 +102,16 @@ When explicit file paths are provided, ace-test will execute **only** those file
 ### Command Line Options
 
 ```bash
-ace-test [options] [file-paths]
+ace-test [package] [target] [options] [file-paths]
+```
+
+**Arguments:**
+- `package` - Optional package name (e.g., `ace-context`) or path (`./ace-search`, `/path/to/ace-docs`)
+- `target` - Optional test group (e.g., `atoms`, `molecules`, `unit`, `all`)
+- `file-paths` - Optional specific test files to run
+
+**Options:**
+```bash
   --format FORMAT        # Output format: progress (default), progress-file, json
   --report-dir DIR      # Report storage directory (default: test-reports/)
   --no-save             # Skip saving detailed reports
@@ -68,6 +122,7 @@ ace-test [options] [file-paths]
   --filter PATTERN      # Run only tests matching pattern
   --verbose             # Show detailed test execution
   --per-file           # Execute each test file separately (slower, for debugging)
+  --profile [N]        # Show N slowest tests (default: 10)
   --help                # Display help information
 ```
 

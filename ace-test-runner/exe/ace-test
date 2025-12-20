@@ -7,6 +7,7 @@ ENV["MT_NO_AUTORUN"] = "1"
 
 require "optparse"
 require "ace/test_runner"
+require "ace/test_runner/molecules/cli_argument_parser"
 
 options = {
   format: "progress",  # Default to per-test progress
@@ -19,7 +20,12 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: ace-test [target] [options] [files...]"
+  opts.banner = "Usage: ace-test [package] [target] [options] [files...]"
+  opts.separator ""
+  opts.separator "Package (optional):"
+  opts.separator "  ace-*         Run tests in specified package (e.g., ace-context, ace-nav)"
+  opts.separator "  ./path        Run tests in package at relative path"
+  opts.separator "  /path         Run tests in package at absolute path"
   opts.separator ""
   opts.separator "Targets:"
   opts.separator "  atoms       Run atom tests only"
@@ -161,6 +167,12 @@ parser = OptionParser.new do |opts|
   opts.separator "  ace-test --profile 20            # Show 20 slowest tests"
   opts.separator "  ace-test --cleanup-reports       # Clean up old test reports"
   opts.separator ""
+  opts.separator "Package Examples:"
+  opts.separator "  ace-test ace-context             # Run all tests in ace-context package"
+  opts.separator "  ace-test ace-nav atoms           # Run only atom tests in ace-nav"
+  opts.separator "  ace-test ace-lint --profile 10   # Profile slowest tests in ace-lint"
+  opts.separator "  ace-test ./ace-search            # Run tests using relative path"
+  opts.separator ""
   opts.separator "Rake Integration Examples:"
   opts.separator "  ace-test --set-default-rake-test   # Set ace-test as default for 'rake test'"
   opts.separator "  ace-test --check-rake-test         # Check current rake test configuration"
@@ -177,36 +189,16 @@ rescue OptionParser::InvalidArgument => e
   exit 1
 end
 
-# Parse target argument (first non-option argument)
-known_targets = %w[atoms molecules organisms models unit integration system all quick]
-target = nil
-test_files = []
-
-ARGV.each do |arg|
-  if arg =~ /^(.+):(\d+)$/
-    # File with line number - validate file exists
-    file_part = $1
-    unless File.exist?(file_part)
-      puts "Error: File not found: #{file_part}"
-      exit 1
-    end
-    # Store complete "file:line" format for Minitest to handle
-    test_files << arg
-  elsif File.exist?(arg) && arg.end_with?(".rb")
-    # Specific test file
-    test_files << arg
-  elsif known_targets.include?(arg)
-    # Test target (atoms, molecules, unit, etc.)
-    target = arg
-  elsif !arg.start_with?("-") && target.nil? && !File.exist?(arg)
-    # Unrecognized target - will be handled by PatternResolver
-    target = arg
-  end
+# Parse arguments: [package] [target] [files...]
+# Uses CliArgumentParser to handle complex argument parsing
+begin
+  arg_parser = Ace::TestRunner::Molecules::CliArgumentParser.new(ARGV)
+  parsed_args = arg_parser.parse
+  options.merge!(parsed_args)
+rescue ArgumentError => e
+  puts "Error: #{e.message}"
+  exit 1
 end
-
-# Set target and files in options
-options[:target] = target if target
-options[:files] = test_files unless test_files.empty?
 
 # Removed clean-test-reports command - use --cleanup-reports instead
 
@@ -296,8 +288,16 @@ end
 begin
   exit_code = Ace::TestRunner.run(options)
 
-  # Use exit! to skip at_exit handlers (prevents Minitest from auto-running again)
-  # This is necessary because in-process execution loads test files into the current process
+  # Flush IO buffers before exit! (which skips at_exit handlers including finalizers)
+  $stdout.flush
+  $stderr.flush
+
+  # IMPORTANT: Use exit! (not exit) to skip Ruby's at_exit handlers.
+  # This prevents Minitest from auto-running again via its at_exit hook.
+  # When ace-test uses in-process (direct) execution, test files are loaded
+  # into the current process. Minitest registers an at_exit handler that would
+  # re-run all tests on normal exit. Using exit! bypasses this.
+  # See docs/testing-patterns.md for details on this pattern.
   exit! exit_code
 rescue Ace::TestRunner::Error => e
   puts "Error: #{e.message}"
