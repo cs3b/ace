@@ -24,7 +24,7 @@ update:
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
 | **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
 | **ace-prompt** | Prompt workspace | `ace-prompt`, `ace-prompt --enhance`, `ace-prompt --task 121` |
-| **ace-test** | Run tests | `ace-test`, `ace-test --fail-fast`, `ace-test atoms` |
+| **ace-test** | Run tests | `ace-test`, `ace-test atoms`, `ace-test ace-context`, `ace-test ace-nav atoms` |
 
 ## Quick Examples
 
@@ -74,6 +74,13 @@ ace-nav 'wfi://*task*' --list          # Find workflow patterns
 ace-test                                # Run all tests with progress
 ace-test --fail-fast                    # Stop on first failure
 ace-test atoms                          # Run only atom tests
+ace-test ace-context                    # Run all tests in ace-context package
+ace-test ace-nav atoms                  # Run atom tests in ace-nav package
+ace-test ace-lint --profile 10          # Profile slowest tests in ace-lint
+
+ace-test test/atoms/foo_test.rb         # Single file (from inside package)
+ace-test ace-search/test/atoms/foo_test.rb  # Single file (from outside with package prefix)
+ace-test ace-nav/test/foo_test.rb:42    # Single test at line number
 
 # Prompt management
 ace-prompt                              # Process and archive current prompt

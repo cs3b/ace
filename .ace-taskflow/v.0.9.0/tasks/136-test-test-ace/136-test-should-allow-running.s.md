@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.136
-status: in-progress
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -114,20 +114,20 @@ Enable developers to run tests for any package in the mono-repo from any directo
 
 ### Planning Steps
 
-* [ ] Analyze current argument parsing in exe/ace-test to understand precedence rules
+* [x] Analyze current argument parsing in exe/ace-test to understand precedence rules
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Documented flow from CLI args to orchestrator
   > Command: # Review exe/ace-test line 180-210 for argument handling
 
-* [ ] Research how ProjectRootFinder discovers the mono-repo root
+* [x] Research how ProjectRootFinder discovers the mono-repo root
   > TEST: Pattern Understanding
   > Type: Pre-condition Check
   > Assert: Clear understanding of root detection for package lookup
 
 ### Execution Steps
 
-- [ ] Create `PackageResolver` atom in `ace-test-runner/lib/ace/test_runner/atoms/package_resolver.rb`
+- [x] Create `PackageResolver` atom in `ace-test-runner/lib/ace/test_runner/atoms/package_resolver.rb`
   - Implement `resolve(name_or_path)` method returning absolute path or nil
   - Implement `available_packages` method listing all ace-* packages
   - Use ProjectRootFinder to locate mono-repo root
@@ -138,7 +138,7 @@ Enable developers to run tests for any package in the mono-repo from any directo
   > Assert: File exists with resolve method
   > Command: # ace-test test/atoms/package_resolver_test.rb
 
-- [ ] Create unit tests for PackageResolver in `test/atoms/package_resolver_test.rb`
+- [x] Create unit tests for PackageResolver in `test/atoms/package_resolver_test.rb`
   - Test package name resolution (ace-context -> full path)
   - Test relative path resolution
   - Test absolute path resolution
@@ -149,7 +149,7 @@ Enable developers to run tests for any package in the mono-repo from any directo
   > Assert: All unit tests pass
   > Command: # cd ace-test-runner && ace-test test/atoms/package_resolver_test.rb
 
-- [ ] Update exe/ace-test to detect and handle package argument
+- [x] Update exe/ace-test to detect and handle package argument
   - Add package detection logic after option parsing
   - Check if first non-option arg is a valid package (before target check)
   - Pass package_dir in options hash to TestRunner.run()
@@ -159,7 +159,7 @@ Enable developers to run tests for any package in the mono-repo from any directo
   > Assert: ace-test ace-context --help shows valid usage
   > Command: # ace-test ace-context --help (should not error on package name)
 
-- [ ] Modify TestOrchestrator to handle package_dir option
+- [x] Modify TestOrchestrator to handle package_dir option
   - Accept package_dir in options
   - Change working directory if package_dir specified
   - Ensure config loading, test discovery, report saving use package context
@@ -169,16 +169,9 @@ Enable developers to run tests for any package in the mono-repo from any directo
   > Assert: Tests run in package directory
   > Command: # ace-test ace-support-core atoms (from repo root)
 
-- [ ] Update ConfigLoader to accept optional base_dir parameter
-  - Modify find_and_load_config to search from base_dir
-  - Fall back to current directory if base_dir not provided
-  - Maintain backward compatibility for existing callers
-  > TEST: Config Loading
-  > Type: Action Validation
-  > Assert: Package-local config used when package specified
-  > Command: # Verify config path in verbose output
+- [x] ~~Update ConfigLoader to accept optional base_dir parameter~~ (Not needed - directory change approach used instead)
 
-- [ ] Create integration tests in `test/integration/package_argument_test.rb`
+- [x] Create integration tests in `test/integration/package_argument_test.rb`
   - Test running tests for a package by name from repo root
   - Test running tests for a package from different directory
   - Test combining package with target (ace-test ace-nav atoms)
@@ -189,7 +182,7 @@ Enable developers to run tests for any package in the mono-repo from any directo
   > Assert: All integration scenarios work
   > Command: # cd ace-test-runner && ace-test test/integration/package_argument_test.rb
 
-- [ ] Update documentation with package argument usage
+- [x] Update documentation with package argument usage
   - Add section to README.md or docs/usage.md
   - Include examples for common use cases
   - Document error messages and troubleshooting
@@ -198,7 +191,7 @@ Enable developers to run tests for any package in the mono-repo from any directo
   > Assert: Documentation reflects new capability
   > Command: # Review updated docs
 
-- [ ] Run full test suite to verify no regressions
+- [x] Run full test suite to verify no regressions
   > TEST: Full Test Suite
   > Type: Action Validation
   > Assert: All existing tests still pass
@@ -259,13 +252,13 @@ Enable developers to run tests for any package in the mono-repo from any directo
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `ace-test <package-name>` runs all tests for the specified package from any directory
-- [ ] AC 2: `ace-test <package-path>` accepts both relative and absolute paths
-- [ ] AC 3: Behavior identical to running `ace-test` from within package directory
-- [ ] AC 4: Works with all existing ace-test options and arguments
-- [ ] AC 5: Helpful error messages for invalid packages
-- [ ] AC 6: Documentation updated
-- [ ] AC 7: All new and existing tests pass
+- [x] AC 1: `ace-test <package-name>` runs all tests for the specified package from any directory
+- [x] AC 2: `ace-test <package-path>` accepts both relative and absolute paths
+- [x] AC 3: Behavior identical to running `ace-test` from within package directory
+- [x] AC 4: Works with all existing ace-test options and arguments
+- [x] AC 5: Helpful error messages for invalid packages
+- [x] AC 6: Documentation updated
+- [x] AC 7: All new and existing tests pass
 
 ## Out of Scope
 
