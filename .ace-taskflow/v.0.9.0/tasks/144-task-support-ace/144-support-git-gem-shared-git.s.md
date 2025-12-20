@@ -1,12 +1,17 @@
 ---
 id: v.0.9.0+task.144
-status: draft
+status: superseded
 priority: medium
 estimate: TBD
 dependencies: []
+superseded_by: v.0.9.0+task.140
 ---
 
 # ace-support-git gem for shared git utilities
+
+> **SUPERSEDED**: This task has been merged into [Task 140](../140-feat-context-ace/140.00-orchestrator.s.md).
+> The unique items from this task (repository state detection, edge case handling) have been incorporated into Task 140.01 (Create ace-git package).
+> See Task 140.01 for the combined implementation plan.
 
 ## Behavioral Specification
 
