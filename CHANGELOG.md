@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.176] - 2025-12-20
+
+### ace-test-runner v0.3.0
+
+**Package Argument Support for Mono-repo Testing**
+
+- **Added**: Run tests for any package from any directory in the mono-repo
+  - `ace-test ace-context` runs all tests in ace-context package
+  - `ace-test ace-nav atoms` runs only atom tests in ace-nav
+  - `ace-test ./ace-search` supports relative paths
+  - `ace-test /path/to/ace-docs` supports absolute paths
+  - `ace-test ace-context/test/foo_test.rb` supports package-prefixed file paths
+  - `ace-test ace-context/test/foo_test.rb:42` supports file paths with line numbers
+- **Added**: New `PackageResolver` atom for package name/path resolution
+- **Added**: Automatic directory change and restoration for package context
+- **Changed**: CLI help and README updated with package examples
+
 ## [0.9.175] - 2025-12-18
 
 ### ace-git-worktree v0.5.0

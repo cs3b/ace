@@ -44,6 +44,13 @@ module TestHelper
       end
     end
   end
+
+  # Find the mono-repo root directory.
+  # Delegates to the shared ProjectRootFinder to avoid reimplementing root detection logic.
+  # @return [String] Absolute path to mono-repo root
+  def find_mono_repo_root
+    Ace::Core::Molecules::ProjectRootFinder.find
+  end
 end
 
 class Minitest::Test

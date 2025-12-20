@@ -1,0 +1,275 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+require "open3"
+require "tmpdir"
+require "fileutils"
+
+class PackageArgumentTest < Minitest::Test
+  def setup
+    @original_dir = Dir.pwd
+    @project_root = find_mono_repo_root
+  end
+
+  def teardown
+    Dir.chdir(@original_dir) if Dir.pwd != @original_dir
+  end
+
+  # Test running tests for a package by name from repo root
+
+  def test_run_tests_for_package_by_name
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-context", "atoms")
+
+      assert status.success?, "Should run tests successfully, got: #{output}"
+      assert_match(/Running tests in ace-context/, output)
+    end
+  end
+
+  def test_run_all_tests_for_package
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-context")
+
+      assert status.success?, "Should run all tests successfully"
+      assert_match(/Running tests in ace-context/, output)
+    end
+  end
+
+  # Test running tests from different directory
+
+  def test_run_tests_from_different_directory
+    ace_search_dir = File.join(@project_root, "ace-search")
+    Dir.chdir(ace_search_dir) do
+      output, status = run_ace_test("ace-context", "atoms")
+
+      assert status.success?, "Should run tests from different directory"
+      assert_match(/Running tests in ace-context/, output)
+    end
+  end
+
+  # Test combining package with target
+
+  def test_package_with_target
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-nav", "atoms")
+
+      assert status.success?, "Should run specific target for package"
+      assert_match(/Running tests in ace-nav/, output)
+    end
+  end
+
+  # Test combining package with options
+
+  def test_package_with_profile_option
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-context", "atoms", "--profile", "5")
+
+      assert status.success?, "Should run with profile option"
+      assert_match(/Running tests in ace-context/, output)
+      # Profile output should be present
+      assert_match(/Slowest Tests/i, output)
+    end
+  end
+
+  def test_package_with_verbose_option
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-context", "atoms", "--verbose")
+
+      assert status.success?, "Should run with verbose option"
+    end
+  end
+
+  # Test error handling for invalid packages
+
+  def test_error_for_nonexistent_package_name
+    # Non-existent package names that don't look like paths
+    # are passed through to the PatternResolver as potential targets
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("nonexistent-package-xyz")
+
+      refute status.success?, "Should fail for unknown target"
+      # The error comes from PatternResolver, not PackageResolver
+      assert_match(/Unknown target.*nonexistent-package-xyz/i, output)
+    end
+  end
+
+  def test_error_for_invalid_path
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("/nonexistent/path/to/package")
+
+      refute status.success?, "Should fail for invalid path"
+      assert_match(/Package not found/, output)
+    end
+  end
+
+  # Test relative path resolution
+
+  def test_relative_path_with_dot_slash
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("./ace-context", "atoms")
+
+      assert status.success?, "Should resolve ./ace-context"
+      assert_match(/Running tests in ace-context/, output)
+    end
+  end
+
+  def test_relative_path_with_double_dot
+    ace_context_dir = File.join(@project_root, "ace-context")
+    Dir.chdir(ace_context_dir) do
+      output, status = run_ace_test("../ace-nav", "atoms")
+
+      assert status.success?, "Should resolve ../ace-nav"
+      assert_match(/Running tests in ace-nav/, output)
+    end
+  end
+
+  # Test that existing behavior is preserved
+
+  def test_target_still_works_without_package
+    Dir.chdir(File.join(@project_root, "ace-context")) do
+      output, status = run_ace_test("atoms")
+
+      assert status.success?, "Should run target without package"
+      refute_match(/Running tests in/, output) # No package context message
+    end
+  end
+
+  def test_specific_file_still_works
+    Dir.chdir(File.join(@project_root, "ace-context")) do
+      output, status = run_ace_test("test/atoms/content_checker_test.rb")
+
+      assert status.success?, "Should run specific file"
+    end
+  end
+
+  def test_package_with_file_and_line_number
+    # Verify that ace-test ace-context test/foo_test.rb:42 works correctly
+    Dir.chdir(@project_root) do
+      # Find a test file in ace-context with at least one test
+      test_file = "test/atoms/content_checker_test.rb"
+      # Line 10 should be within the test class
+      output, status = run_ace_test("ace-context", "#{test_file}:10")
+
+      assert status.success?, "Should run package with file:line syntax, got: #{output}"
+      assert_match(/Running tests in ace-context/, output)
+      # Should only run tests near line 10
+      assert_match(/\d+ tests?/, output)
+    end
+  end
+
+  # Test package-prefixed file path syntax (ace-context/test/foo_test.rb)
+  # Note: When a file path exists directly (e.g., from project root), it runs as a direct file.
+  # Package context is only used when the file doesn't exist relative to current directory.
+
+  def test_package_prefixed_file_path
+    # When file exists from current directory, run it directly (no package context)
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-context/test/atoms/content_checker_test.rb")
+
+      assert status.success?, "Should run package-prefixed file path, got: #{output}"
+      # File exists at this path, so runs directly without package context
+      refute_match(/Package not found/, output)
+    end
+  end
+
+  def test_package_prefixed_file_path_with_line_number
+    # When file exists from current directory, run it directly with line number
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("ace-context/test/atoms/content_checker_test.rb:10")
+
+      assert status.success?, "Should run package-prefixed file:line, got: #{output}"
+      refute_match(/Package not found/, output)
+      # Should only run tests near line 10
+      assert_match(/\d+ tests?/, output)
+    end
+  end
+
+  def test_package_prefixed_file_path_from_different_directory
+    # From a different directory, package resolution is needed
+    ace_search_dir = File.join(@project_root, "ace-search")
+    Dir.chdir(ace_search_dir) do
+      output, status = run_ace_test("ace-context/test/atoms/content_checker_test.rb")
+
+      assert status.success?, "Should run package-prefixed file from different dir, got: #{output}"
+      # Package context is used because file doesn't exist relative to current dir
+      assert_match(/Running tests in ace-context/, output)
+    end
+  end
+
+  # Test relative file path handling (bug fix: ./path/file.rb was misclassified as package)
+
+  def test_relative_file_path_with_dot_slash
+    # Verify ./ace-context/test/file.rb works without "Package not found" error
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("./ace-context/test/atoms/content_checker_test.rb")
+
+      assert status.success?, "Should run ./path/file.rb directly, got: #{output}"
+      # Should NOT show "Running tests in" because it's treated as a direct file path
+      refute_match(/Package not found/, output)
+    end
+  end
+
+  def test_relative_file_path_with_dot_slash_and_line_number
+    # Verify ./ace-context/test/file.rb:10 works
+    Dir.chdir(@project_root) do
+      output, status = run_ace_test("./ace-context/test/atoms/content_checker_test.rb:10")
+
+      assert status.success?, "Should run ./path/file.rb:line directly, got: #{output}"
+      refute_match(/Package not found/, output)
+    end
+  end
+
+  def test_relative_file_path_from_subdirectory
+    # Verify ../ace-context/test/file.rb works from within another package
+    ace_search_dir = File.join(@project_root, "ace-search")
+    Dir.chdir(ace_search_dir) do
+      output, status = run_ace_test("../ace-context/test/atoms/content_checker_test.rb")
+
+      assert status.success?, "Should run ../path/file.rb directly, got: #{output}"
+      refute_match(/Package not found/, output)
+    end
+  end
+
+  # Test working directory restoration
+
+  def test_original_directory_preserved
+    Dir.chdir(@project_root) do
+      original = Dir.pwd
+      run_ace_test("ace-context", "atoms")
+
+      assert_equal original, Dir.pwd, "Should restore original directory"
+    end
+  end
+
+  def test_directory_restored_on_error
+    # Verify that working directory is restored even if tests fail
+    Dir.chdir(@project_root) do
+      original = Dir.pwd
+
+      # Run tests that will fail (force an error by running nonexistent target)
+      run_ace_test("ace-context", "nonexistent-target-xyz")
+
+      assert_equal original, Dir.pwd, "Should restore original directory even on error"
+    end
+  end
+
+  def test_directory_restored_on_invalid_package
+    # Verify that working directory is restored when package directory doesn't exist
+    Dir.chdir(@project_root) do
+      original = Dir.pwd
+
+      # This will fail early because the path doesn't exist
+      run_ace_test("/nonexistent/path")
+
+      assert_equal original, Dir.pwd, "Should restore original directory on invalid package"
+    end
+  end
+
+  private
+
+  def run_ace_test(*args)
+    cmd = ["bundle", "exec", "ruby", File.join(@project_root, "ace-test-runner/exe/ace-test")] + args
+    stdout, stderr, status = Open3.capture3(*cmd)
+    [stdout + stderr, status]
+  end
+end
