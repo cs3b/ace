@@ -1,14 +1,14 @@
 name: opencode
-last_synced: 2025-12-05
+last_synced: 2025-12-21
 class: Ace::LLM::Providers::CLI::OpenCodeClient
 gem: ace-llm-providers-cli
 models:
   - alpha-doubao-seed-code
-  - alpha-minimax-m2
   - big-pickle
   - claude-haiku-4-5
   - claude-opus-4-5
   - claude-sonnet-4-5
+  - gemini-3-flash
   - gemini-3-pro
   - glm-4.6
   - gpt-5.1

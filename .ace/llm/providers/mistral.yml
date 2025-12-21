@@ -1,11 +1,14 @@
 name: mistral
-last_synced: 2025-12-05
+last_synced: 2025-12-21
 class: Ace::LLM::Organisms::MistralClient
 gem: ace-llm
 models:
   - codestral-latest
+  - devstral-2512
   - devstral-medium-2507
+  - devstral-medium-latest
   - devstral-small-2507
+  - labs-devstral-small-2512
   - mistral-large-latest
   - mistral-medium-2508
   - mistral-medium-latest
@@ -18,7 +21,9 @@ aliases:
     large: mistral-large-latest
     medium: mistral-medium-latest
     small: mistral-small-latest
-    code: codestral-latest
+    dev-m: devstral-medium-latest
+    dev-s: labs-devstral-small-2512
+    dev: devstral-2512
 api_key:
   env: MISTRAL_API_KEY
   required: true

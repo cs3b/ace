@@ -1,4 +1,5 @@
 name: openrouter
+last_synced: 2025-12-21
 class: Ace::LLM::Organisms::OpenRouterClient
 gem: ace-llm
 models:
@@ -16,6 +17,10 @@ models:
   # Others
   - z-ai/glm-4.6
   - minimax/minimax-m1
+  - google/gemini-3-flash-preview
+  - openai/gpt-5.2
+  - openai/gpt-5.2-chat-latest
+  - openai/gpt-5.2-pro
 aliases:
   model:
     # Fast inference (nitro = throughput)
