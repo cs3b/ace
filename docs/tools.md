@@ -16,6 +16,7 @@ update:
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list`, `ace-context --embed-source` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
+| **ace-git-secrets** | Detect and remove tokens | `ace-git-secrets scan`, `ace-git-secrets revoke`, `ace-git-secrets rewrite-history` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
 | **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
@@ -33,9 +34,10 @@ update:
 ace-taskflow task create "Add feature"              # Create task with positional title
 ace-taskflow task create --title "Fix bug" --status draft --estimate 2h  # Create with metadata
 ace-taskflow task 019                   # Find and show task by number/reference
-ace-taskflow task show 019              # Show task details
 ace-taskflow task done 019              # Mark complete & move to done/
 ace-taskflow tasks all                  # All tasks in current release
+ace-taskflow task move 139 --child-of self    # Convert task to orchestrator
+ace-taskflow task move 156 --child-of 139     # Demote task to subtask
 
 # Documentation management
 ace-docs status --needs-update          # Check documents needing updates
@@ -52,6 +54,14 @@ ace-lint "**/*.md" --type markdown      # Lint all markdown files
 ace-git-commit                          # Generate commit for all changes
 ace-git-commit --staged                 # Commit only staged files
 ace-git-commit --path "src/**"          # Commit only matching paths
+
+# Security scanning
+ace-git-secrets scan                    # Scan git history for tokens
+ace-git-secrets scan --since "1 week ago"  # Scan recent commits only
+ace-git-secrets revoke                  # Revoke detected tokens via API
+ace-git-secrets revoke --scan-file scan.json  # Revoke from saved scan
+ace-git-secrets rewrite-history --dry-run  # Preview history rewrite
+ace-git-secrets check-release --strict  # Pre-release security gate
 
 # Search
 ace-search "TODO"                       # Auto-detect: search content
