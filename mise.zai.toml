@@ -1,16 +1,19 @@
 # mise configuration for ace-meta monorepo
 # This file configures the development environment for the ace-meta project
 
+[vars]
+_.file = ["~/.ace/.env"]
+
 [env]
 # Add the bin directory to PATH for executable commands
 PROJECT_ROOT_PATH = "{{ config_root }}"
 ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
 _.path = ["./bin"]
 
-ANTHROPIC_AUTH_TOKEN = { value = "literal:[REDACTED:zai-auth-token]", redact = true }
-ANTHROPIC_BASE_URL = "https://api.z.ai/api/anthropic"
+ANTHROPIC_AUTH_TOKEN = { value = "{{vars.ZAI_API_KEY}}", redact = true }
+ANTHROPIC_BASE_URL = "{{vars.ZAI_BASE_URL}}"
 API_TIMEOUT_MS = "3000000"
 
-ANTHROPIC_DEFAULT_OPUS_MODEL = "GLM-4.6"
-ANTHROPIC_DEFAULT_SONNET_MODEL = "GLM-4.6"
-ANTHROPIC_DEFAULT_HAIKU_MODEL = "GLM-4.5-Air"
+ANTHROPIC_DEFAULT_OPUS_MODEL = "{{vars.ZAI_MODEL_L}}"
+ANTHROPIC_DEFAULT_SONNET_MODEL = "{{vars.ZAI_MODEL_M}}"
+ANTHROPIC_DEFAULT_HAIKU_MODEL = "{{vars.ZAI_MODEL_S}}"
