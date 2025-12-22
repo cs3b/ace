@@ -1,0 +1,48 @@
+# ace-git-secrets configuration for ace-task project
+# Uses token-pattern based whitelisting (not file paths) for security
+
+# Custom gitleaks patterns (extend via .ace/git-secrets/gitleaks.toml)
+# These detect token formats not covered by gitleaks default patterns
+patterns:
+  - name: zai_auth_token
+    regex: "[a-f0-9]{32}\\.[A-Za-z0-9]{16}"
+    confidence: high
+    description: "z.ai/GLM Auth Token"
+
+whitelist:
+  # Test fixture tokens - known fake values
+  - pattern: "ghp_test123456789012345678901234567890AB"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "key-ABCDEFGHIJKLMNOPQRSTU1234"
+    reason: "Test fixture - fake API key"
+  - pattern: "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTU"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "ghp_GitHubPatClassicABCDEFGHIJKLMNOPQRST"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "ghp_TestFixtureTokenABCDEFGHIJKLMNOPQRST"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "ghp_DocumentationExampleTokenABCDEFGHIJK"
+    reason: "Documentation example - fake GitHub PAT"
+  - pattern: "ghp_test1234567890123456789012345678901A"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "ghp_test1234567890123456789012345678901B"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "sk-test123456789012345678901234567890ABCDEF"
+    reason: "Test fixture - fake API key"
+  - pattern: "AKIA1234567890ABCDEF"
+    reason: "Test fixture - fake AWS key"
+  - pattern: "ghp_example12345678901234567890123456789"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "ghp_placeholder12345678901234567890abcd"
+    reason: "Test fixture - placeholder token"
+  - pattern: "ghp_test_key_1234567890abcdefghijklmnop"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "ghp_example1234567890abcdefghijklmnopqrs"
+    reason: "Test fixture - fake GitHub PAT"
+  - pattern: "invalid-key-12345"
+    reason: "Test fixture - intentionally invalid key"
+  - pattern: "sk_test_abcdef123456789012345678901234567890"
+    reason: "Test fixture - Stripe test token"
+
+output:
+  directory: .cache/ace-git-secrets

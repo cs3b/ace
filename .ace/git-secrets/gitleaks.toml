@@ -1,0 +1,12 @@
+# Gitleaks configuration for ace-task project
+# ADR-022: User overrides in .ace/git-secrets/ (defaults in .ace.example/)
+# Extends default gitleaks rules with custom patterns
+
+[extend]
+useDefault = true
+
+# Custom rules for tokens not covered by default patterns
+[[rules]]
+id = "zai-auth-token"
+description = "z.ai/GLM Auth Token"
+regex = '''[a-f0-9]{32}\.[A-Za-z0-9]{16}'''
