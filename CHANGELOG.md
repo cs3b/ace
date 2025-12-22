@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.177] - 2025-12-22
+
+### ace-git-secrets v0.2.0
+
+**Gitleaks-First Architecture**
+
+- **Added**: Raw token persistence in scan results for remediation workflow
+- **Added**: Thread-safe blob caching for improved performance
+- **Added**: ADR-023 documenting security model decisions
+- **Added**: Enhanced audit logging for compliance tracking
+- **Changed**: **BREAKING** - Gitleaks is now required for scanning (removed internal Ruby pattern detection)
+- **Changed**: Simplified architecture by delegating all pattern matching to gitleaks
+- **Removed**: Internal Ruby pattern detection (TokenPatternMatcher, GitBlobReader, ThreadSafeBlobCache)
+- **Fixed**: Repository path validation in GitRewriter
+
 ## [0.9.176] - 2025-12-20
 
 ### ace-test-runner v0.3.0

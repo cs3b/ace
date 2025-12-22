@@ -37,7 +37,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.1.0)
+    ace-git-secrets (0.2.0)
       ace-support-core (~> 0.11)
       faraday (~> 2.7, >= 2.7.4)
       faraday-retry (~> 2.2)
