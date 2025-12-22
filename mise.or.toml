@@ -1,0 +1,21 @@
+# mise configuration for ace-meta monorepo
+# This file configures the development environment for the ace-meta project
+
+[vars]
+_.file = ["~/.ace/.env"]
+
+[env]
+# Add the bin directory to PATH for executable commands
+PROJECT_ROOT_PATH = "{{ config_root }}"
+ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
+_.path = ["./bin"]
+
+ANTHROPIC_API_KEY = ""
+ANTHROPIC_AUTH_TOKEN = { value = "{{vars.OPENROUTER_API_KEY}}", redact = true }
+ANTHROPIC_BASE_URL = "{{vars.OPENROUTER_BASE_URL}}"
+API_TIMEOUT_MS = "3000000"
+
+ 
+ANTHROPIC_DEFAULT_OPUS_MODEL = "{{vars.OPENROUTER_MODEL_L}}"
+ANTHROPIC_DEFAULT_SONNET_MODEL = "{{vars.OPENROUTER_MODEL_M}}"
+ANTHROPIC_DEFAULT_HAIKU_MODEL = "{{vars.OPENROUTER_MODEL_S}}"
