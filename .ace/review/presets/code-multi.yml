@@ -11,3 +11,5 @@ models:
   - codex:gpt-5.1-codex-max  # Code-focused, implementation details
   - google:pro-preview
   - xai:fast
+  - togetherai:qwen-coder
+  - togetherai:kimi-T
