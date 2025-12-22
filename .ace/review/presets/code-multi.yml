@@ -9,6 +9,5 @@ description: "Multi-model PR review - concurrent execution across claude:opus, c
 models:
   - claude:opus              # Deep reasoning, architecture analysis
   - codex:gpt-5.1-codex-max  # Code-focused, implementation details
-  - gpro                     # Fast, broad coverage
   - google:pro-preview
   - xai:fast
