@@ -6,6 +6,7 @@ gem 'ace-docs', path: 'ace-docs'
 gem 'ace-git', path: 'ace-git'
 gem 'ace-git-commit', path: 'ace-git-commit'
 gem 'ace-git-diff', path: 'ace-git-diff'
+gem 'ace-git-secrets', path: 'ace-git-secrets'
 gem 'ace-git-worktree', path: 'ace-git-worktree'
 gem 'ace-lint', path: 'ace-lint'
 gem 'ace-llm', path: 'ace-llm'
@@ -31,6 +32,7 @@ group :development, :test do
   gem 'minitest-reporters', '~> 1.6'
   gem 'rake', '~> 13.0'
   gem 'simplecov', '~> 0.22'
+  gem 'webmock', '~> 3.19'
 
   # Temporary: dev-tools dependencies for migration period
   # TODO: Remove once dev-tools are properly isolated or ace-context handles bundler contexts

@@ -1,0 +1,16 @@
+# frozen_string_literal: true
+
+require "bundler/gem_tasks"
+require "rake/testtask"
+
+# ADR-021 compliant Rake::TestTask setup
+Rake::TestTask.new(:test) do |t|
+  t.libs << "test" << "lib"
+  t.test_files = FileList["test/**/*_test.rb"]
+end
+
+# CI compatibility alias (ADR-021)
+task spec: :test
+
+# Default task
+task default: :test

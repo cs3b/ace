@@ -1,0 +1,14 @@
+# Default gitleaks configuration for ace-git-secrets
+# ADR-022: This file provides default gitleaks rules
+# Place custom rules in .ace/git-secrets/gitleaks.toml to override
+
+# Extend gitleaks default rules
+[extend]
+useDefault = true
+
+# Add organization-wide custom rules here
+# Example:
+# [[rules]]
+# id = "internal-api-key"
+# description = "Internal API Key"
+# regex = '''INTERNAL_[A-Za-z0-9]{32}'''
