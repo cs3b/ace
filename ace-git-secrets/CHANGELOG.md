@@ -7,20 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-22
+
 ### Added
 
-- Azure Storage Key and GCP token pattern detection
+- Raw token persistence in scan results for remediation workflow
+- Thread-safe blob caching for improved performance
+- ADR-023 documenting security model decisions
+- Enhanced audit logging for compliance tracking
 - Configurable user-agent header for API client
 - Configurable binary file extensions via `binary_extensions` parameter
 - `--quiet` flag for CI-friendly minimal output
-- ReleaseGate organism tests
-- Tests for custom patterns with special characters
 
 ### Changed
 
+- **BREAKING**: Gitleaks is now required for scanning (removed internal Ruby pattern detection fallback)
+- Simplified architecture by delegating all pattern matching to gitleaks
 - Use `Ace::Core::Atoms::DeepMerger` from ace-support-core instead of local deep_merge
-- Improved error messages for empty or missing patterns files
+- Improved error messages for gitleaks validation and missing patterns files
 - Log batch fallback reason when git cat-file --batch fails
+
+### Removed
+
+- Internal Ruby pattern detection (TokenPatternMatcher) - now delegates entirely to gitleaks
+- GitBlobReader complex blob parsing - simplified to use gitleaks output
+- ThreadSafeBlobCache - no longer needed without internal pattern matching
 
 ### Fixed
 
