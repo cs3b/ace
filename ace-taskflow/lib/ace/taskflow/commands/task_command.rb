@@ -134,6 +134,12 @@ module Ace
           end
         end
 
+        # Public API: Display task details in specified format
+        # Used by ContextCommand and other callers that need formatted task output
+        # @since 0.24.0
+        # @param reference [String] Task reference (e.g., "140", "task.140", "v.0.9.0+task.140")
+        # @param display_mode [String] Display format: "path", "content", "tree", or "formatted"
+        # @return [Integer] Exit code (0 for success, 1 for not found)
         def show_task(reference, display_mode: "path")
           task = @manager.show_task(reference)
 

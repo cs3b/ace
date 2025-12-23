@@ -7,6 +7,7 @@ require_relative "support/test_factory"
 require_relative "support/llm_mock_helper"
 require_relative "support/shell_mock_helper"
 require_relative "support/tree_assertions_helper"
+require_relative "support/mock_repo_context"
 
 # Base test case for ace-taskflow tests
 class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
