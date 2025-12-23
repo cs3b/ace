@@ -6,15 +6,6 @@ require_relative "git/version"
 
 module Ace
   module Git
-    # Default timeouts for commands
-    # Local git operations (diff, status, etc.) - faster, less likely to hang
-    DEFAULT_GIT_TIMEOUT = 30
-    # Network operations (gh CLI, remote operations) - may need more time
-    DEFAULT_NETWORK_TIMEOUT = 60
-
-    # Backward compatibility alias - used by CommandExecutor, DiffConfig
-    DEFAULT_TIMEOUT = DEFAULT_GIT_TIMEOUT
-
     # Error handling pattern:
     # - Atoms: Pure functions, raise exceptions for invalid inputs
     # - Molecules: May return error hashes for "expected" errors (e.g., not in git repo)
@@ -54,7 +45,8 @@ module Ace
       end
     end
 
-    # User configuration from ace-core cascade
+    # User configuration from .ace/git/config.yml cascade
+    # Searches for git/config.yml in .ace directories (project → home)
     # Flattened to match default_config structure (see extract_git_config)
     # @return [Hash] user configuration (may be empty)
     # @example Check for user overrides
@@ -62,10 +54,33 @@ module Ace
     #     puts "Verbose mode enabled by user"
     #   end
     def self.user_config
-      raw_config = Ace::Core.config.get("ace", "git") || {}
+      require 'ace/core/organisms/config_resolver'
+
+      # Search for git/config.yml in .ace cascade
+      resolver = Ace::Core::Organisms::ConfigResolver.new(
+        file_patterns: ["git/config.yml", "git/config.yaml"]
+      )
+
+      config = resolver.resolve
+      return {} unless config&.data
+
+      # Extract git section if present (for backwards compat with ace/*.yml format)
+      raw_config = config.data["git"] || config.data
       # Flatten user config to match default_config structure
       # This ensures nested diff: keys are merged correctly
       extract_git_config(raw_config)
+    rescue Errno::ENOENT
+      # File doesn't exist - this is fine, return empty config silently
+      {}
+    rescue Psych::SyntaxError => e
+      # YAML syntax errors should be visible to help users debug
+      warn "ace-git: YAML syntax error in .ace/git/config.yml"
+      warn "  #{e.message}"
+      {}
+    rescue StandardError => e
+      # Other errors (permissions, etc.) - warn but continue
+      warn "ace-git: Failed to load config from .ace/git/config.yml: #{e.message}"
+      {}
     end
 
     # Load gem defaults from .ace.example/git/config.yml
@@ -127,7 +142,7 @@ module Ace
       normalized = normalize_keys(git_section)
 
       # Copy top-level settings
-      %w[default_branch remote verbose timeout].each do |key|
+      %w[default_branch remote verbose timeout network_timeout].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 
@@ -139,8 +154,8 @@ module Ace
         end
       end
 
-      # Copy other sections as-is (rebase, pr, squash, etc.)
-      %w[rebase pr squash].each do |key|
+      # Copy other sections as-is (rebase, pr, squash, context, etc.)
+      %w[rebase pr squash context].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 
@@ -157,9 +172,45 @@ module Ace
     end
 
     # Reset configuration cache (mainly for testing)
+    # Thread-safe: uses mutex to prevent race conditions
     def self.reset_config!
-      @config = nil
-      @default_config = nil
+      @config_mutex.synchronize do
+        @config = nil
+        @default_config = nil
+      end
+    end
+
+    # ---- Configuration Helper Methods (ADR-022 compliant) ----
+    # These read from config instead of using hardcoded constants
+
+    # Timeout for local git operations (diff, status, log)
+    # @return [Integer] Timeout in seconds (default: 30)
+    def self.git_timeout
+      config["timeout"] || 30
+    end
+
+    # Timeout for network operations (gh CLI, remote operations)
+    # @return [Integer] Timeout in seconds (default: 60)
+    def self.network_timeout
+      config["network_timeout"] || 60
+    end
+
+    # Number of recent commits to show in context output
+    # @return [Integer] Limit (default: 3)
+    def self.commits_limit
+      config.dig("context", "commits_limit") || 3
+    end
+
+    # Number of recently merged PRs to show in context output
+    # @return [Integer] Limit (default: 3)
+    def self.merged_prs_limit
+      config.dig("context", "merged_prs_limit") || 3
+    end
+
+    # Number of open PRs to show in context output
+    # @return [Integer] Limit (default: 10)
+    def self.open_prs_limit
+      config.dig("context", "open_prs_limit") || 10
     end
   end
 end
@@ -174,6 +225,8 @@ require_relative "git/atoms/pr_identifier_parser"
 require_relative "git/atoms/repository_state_detector"
 require_relative "git/atoms/repository_checker"
 require_relative "git/atoms/git_scope_filter"
+require_relative "git/atoms/git_status_fetcher"
+require_relative "git/atoms/time_formatter"
 require_relative "git/atoms/context_formatter"
 
 require_relative "git/molecules/diff_generator"
@@ -181,6 +234,7 @@ require_relative "git/molecules/config_loader"
 require_relative "git/molecules/diff_filter"
 require_relative "git/molecules/branch_reader"
 require_relative "git/molecules/pr_metadata_fetcher"
+require_relative "git/molecules/recent_commits_fetcher"
 
 require_relative "git/organisms/diff_orchestrator"
 require_relative "git/organisms/repo_context_loader"

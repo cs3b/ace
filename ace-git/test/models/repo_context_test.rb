@@ -148,10 +148,10 @@ class RepoContextTest < AceGitTestCase
 
     assert_instance_of String, result
     assert_includes result, "# Repository Context"
-    assert_includes result, "Branch: 140-feature"
-    assert_includes result, "Task Pattern: 140"
-    # Compact PR format: ## PR #75: Add feature [open]
-    assert_includes result, "## PR #75"
+    assert_includes result, "## Position (task: 140)"
+    # New format: ## Current PR with #75 [open] Title
+    assert_includes result, "## Current PR"
+    assert_includes result, "#75"
   end
 
   def test_from_data_creates_instance
@@ -166,5 +166,155 @@ class RepoContextTest < AceGitTestCase
     assert_equal "main", context.branch
     assert_nil context.task_pattern
     refute context.has_pr?
+  end
+
+  # PR Activity tests
+
+  def test_has_pr_activity_returns_true_with_merged_prs
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      pr_activity: {
+        merged: [{ "number" => 84, "title" => "Test PR" }],
+        open: []
+      }
+    )
+    assert context.has_pr_activity?
+  end
+
+  def test_has_pr_activity_returns_true_with_open_prs
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      pr_activity: {
+        merged: [],
+        open: [{ "number" => 85, "title" => "Open PR" }]
+      }
+    )
+    assert context.has_pr_activity?
+  end
+
+  def test_has_pr_activity_returns_false_when_both_empty
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      pr_activity: { merged: [], open: [] }
+    )
+    refute context.has_pr_activity?
+  end
+
+  def test_has_pr_activity_returns_false_when_nil
+    context = Ace::Git::Models::RepoContext.new(branch: "main")
+    refute context.has_pr_activity?
+  end
+
+  def test_has_pr_activity_handles_string_keys
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      pr_activity: {
+        "merged" => [{ "number" => 84 }],
+        "open" => []
+      }
+    )
+    assert context.has_pr_activity?
+  end
+
+  def test_to_h_includes_pr_activity
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      pr_activity: { merged: [{ "number" => 84 }], open: [] }
+    )
+    result = context.to_h
+
+    assert_includes result.keys, :pr_activity
+    assert_includes result.keys, :has_pr_activity
+    assert result[:has_pr_activity]
+  end
+
+  def test_from_data_accepts_pr_activity
+    context = Ace::Git::Models::RepoContext.from_data(
+      branch_info: { name: "main", tracking: nil, ahead: 0, behind: 0 },
+      pr_activity: {
+        merged: [{ "number" => 84 }],
+        open: [{ "number" => 85 }]
+      }
+    )
+
+    assert context.has_pr_activity?
+    assert_equal 1, context.pr_activity[:merged].length
+  end
+
+  # Recent commits tests
+
+  def test_has_recent_commits_returns_true_when_present
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      recent_commits: [
+        { hash: "a7404e9", subject: "feat: Add feature" }
+      ]
+    )
+    assert context.has_recent_commits?
+  end
+
+  def test_has_recent_commits_returns_false_when_empty
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      recent_commits: []
+    )
+    refute context.has_recent_commits?
+  end
+
+  def test_has_recent_commits_returns_false_when_nil
+    context = Ace::Git::Models::RepoContext.new(branch: "main")
+    refute context.has_recent_commits?
+  end
+
+  # Git status tests
+
+  def test_has_git_status_returns_true_when_present
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      git_status_sb: "## main...origin/main"
+    )
+    assert context.has_git_status?
+  end
+
+  def test_has_git_status_returns_false_when_empty
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      git_status_sb: ""
+    )
+    refute context.has_git_status?
+  end
+
+  def test_has_git_status_returns_false_when_nil
+    context = Ace::Git::Models::RepoContext.new(branch: "main")
+    refute context.has_git_status?
+  end
+
+  def test_to_h_includes_git_status_and_commits
+    context = Ace::Git::Models::RepoContext.new(
+      branch: "main",
+      git_status_sb: "## main",
+      recent_commits: [{ hash: "abc123", subject: "test" }]
+    )
+    result = context.to_h
+
+    assert_includes result.keys, :git_status_sb
+    assert_includes result.keys, :recent_commits
+    assert_includes result.keys, :has_git_status
+    assert_includes result.keys, :has_recent_commits
+    assert result[:has_git_status]
+    assert result[:has_recent_commits]
+  end
+
+  def test_from_data_accepts_git_status_and_commits
+    context = Ace::Git::Models::RepoContext.from_data(
+      branch_info: { name: "main", tracking: nil, ahead: 0, behind: 0 },
+      git_status_sb: "## main...origin/main",
+      recent_commits: [{ hash: "abc123", subject: "test" }]
+    )
+
+    assert context.has_git_status?
+    assert context.has_recent_commits?
+    assert_equal "## main...origin/main", context.git_status_sb
+    assert_equal 1, context.recent_commits.length
   end
 end

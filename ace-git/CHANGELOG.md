@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CLI Command Rename**: Primary command `context` renamed to `status`
+  - `ace-git status` is now the primary human-facing command
+  - `ace-git context` remains as a backward-compatible alias (for automation/LLM)
+  - Internal classes (ContextCommand, ContextFormatter, RepoContextLoader) unchanged
+  - Output format and JSON structure unchanged
+
+## [0.3.5] - 2025-12-24
+
+### Fixed
+
+- **TimeFormatter "0y ago" Bug**: Fixed relative time display for 11-12 month intervals
+  - Previously showed "0y ago" for 360-364 day intervals due to rounding error
+  - Now correctly shows "12mo ago" for intervals less than 365 days
+  - Added regression tests for month/year boundary cases
+
+- **Nil Title Handling**: ContextFormatter now handles missing PR titles gracefully
+  - Shows "(no title)" instead of empty string when PR title is nil
+
+- **Git Color Output**: GitStatusFetcher now disables colors with `-c color.status=false`
+  - Ensures clean output for LLM context regardless of user's git configuration
+
+### Added
+
+- **CLI Alias**: Added `-n` alias for `--no-pr` option in `ace-git context`
+- **Open PR Limit**: `fetch_open_prs` now accepts `limit` parameter (default: 10)
+  - Keeps latency predictable on repositories with many open PRs
+
+### Changed
+
+- **Constants**: Extracted `DEFAULT_COMMITS_LIMIT` constant for consistency
+  - Referenced by both CLI options and RepoContextLoader defaults
+- **Hash Key Normalization**: ContextFormatter now expects symbol keys for pr_activity
+  - Documented expected key types in method comments
+
+## [0.3.4] - 2025-12-24
+
+### Changed
+
+- **PR Workflow Improvements**: Enhanced create-pr and update-pr-description workflows
+  - Added target branch detection based on task hierarchy from `ace-taskflow context`
+  - Subtasks now correctly target parent task branch instead of main
+  - PR title format: `<task-id>: <description>` when task ID present (e.g., `140.10: Add feature`)
+  - Auto-fix for PRs incorrectly targeting main when parent branch exists
+
+## [0.3.3] - 2025-12-24
+
+### Added
+
+- **PR Activity Awareness**: `ace-git context` now shows recent PR activity
+  - Recently merged PRs (last 3) with relative timestamps (e.g., "1d ago")
+  - Open PRs from other team members (excluding current branch)
+  - New `--no-pr` flag to skip PR lookups for faster output
+  - TimeFormatter atom for relative time display
+
+- **Enhanced Context Output**: Improved UX and readability
+  - Git status (`git status -sb`) displayed in Position section
+  - Recent commits section (configurable via `--commits N`, default: 3)
+  - Task ID shown in Position header: `## Position (task: 140.10)`
+
+### Changed
+
+- **Simplified Position Section**: Combined Position and Working Tree into single section
+  - Raw `git status -sb` output used directly (no custom formatting)
+  - Cleaner, more compact output matching git conventions
+
+### Fixed
+
+- Removed code fences from status output that confused display
+- Added proper spacing after section headers for readability
+
 ## [0.3.2] - 2025-12-22
 
 ### Fixed

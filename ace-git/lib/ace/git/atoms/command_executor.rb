@@ -12,10 +12,10 @@ module Ace
         class << self
           # Execute a command safely using array arguments to prevent command injection
           # @param command_parts [Array<String>] Command parts to execute
-          # @param timeout [Integer] Timeout in seconds (default: Ace::Git::DEFAULT_TIMEOUT)
+          # @param timeout [Integer] Timeout in seconds (default from config)
           # @param env [Hash] Optional environment variables to set for the command
           # @return [Hash] Result with output, error, and success status
-          def execute(*command_parts, timeout: Ace::Git::DEFAULT_TIMEOUT, env: nil)
+          def execute(*command_parts, timeout: Ace::Git.git_timeout, env: nil)
             # Using Timeout to prevent hanging on network issues or stuck git operations
             Timeout.timeout(timeout) do
               # Using Open3.capture3 to avoid shell injection

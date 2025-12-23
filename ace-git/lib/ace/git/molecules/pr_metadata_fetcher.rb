@@ -34,9 +34,9 @@ module Ace
 
           # Fetch PR diff content
           # @param identifier [String] PR identifier (number, URL, or owner/repo#number)
-          # @param timeout [Integer] Timeout in seconds (default: network timeout for gh CLI)
+          # @param timeout [Integer] Timeout in seconds (default from config)
           # @return [Hash] Result with :success, :diff, :error
-          def fetch_diff(identifier, timeout: Ace::Git::DEFAULT_NETWORK_TIMEOUT)
+          def fetch_diff(identifier, timeout: Ace::Git.network_timeout)
             parsed = Atoms::PrIdentifierParser.parse(identifier)
             raise ArgumentError, "Invalid PR identifier: #{identifier}" if parsed.nil?
 
@@ -61,9 +61,9 @@ module Ace
 
           # Fetch PR metadata (state, draft status, title, etc.)
           # @param identifier [String] PR identifier
-          # @param timeout [Integer] Timeout in seconds (default: network timeout for gh CLI)
+          # @param timeout [Integer] Timeout in seconds (default from config)
           # @return [Hash] Result with :success, :metadata, :error
-          def fetch_metadata(identifier, timeout: Ace::Git::DEFAULT_NETWORK_TIMEOUT)
+          def fetch_metadata(identifier, timeout: Ace::Git.network_timeout)
             parsed = Atoms::PrIdentifierParser.parse(identifier)
             raise ArgumentError, "Invalid PR identifier: #{identifier}" if parsed.nil?
 
@@ -98,9 +98,9 @@ module Ace
 
           # Fetch both diff and metadata
           # @param identifier [String] PR identifier
-          # @param timeout [Integer] Timeout in seconds (default: network timeout for gh CLI)
+          # @param timeout [Integer] Timeout in seconds (default from config)
           # @return [Hash] Result with :success, :diff, :metadata, :error
-          def fetch_pr(identifier, timeout: Ace::Git::DEFAULT_NETWORK_TIMEOUT)
+          def fetch_pr(identifier, timeout: Ace::Git.network_timeout)
             diff_result = fetch_diff(identifier, timeout: timeout)
             return diff_result unless diff_result[:success]
 
@@ -117,9 +117,9 @@ module Ace
           end
 
           # Find PR number for current branch
-          # @param timeout [Integer] Timeout in seconds (default: network timeout for gh CLI)
+          # @param timeout [Integer] Timeout in seconds (default from config)
           # @return [String|nil] PR number or nil
-          def find_pr_for_branch(timeout: Ace::Git::DEFAULT_NETWORK_TIMEOUT)
+          def find_pr_for_branch(timeout: Ace::Git.network_timeout)
             result = execute_gh_command(
               ["gh", "pr", "view", "--json", "number"],
               timeout: timeout
@@ -131,6 +131,57 @@ module Ace
             data["number"]&.to_s
           rescue JSON::ParserError, Errno::ENOENT
             nil
+          end
+
+          # Fetch recently merged PRs
+          # @param limit [Integer] Maximum number of PRs to return (default from config)
+          # @param timeout [Integer] Timeout in seconds
+          # @return [Hash] Result with :success, :prs array, or :error
+          def fetch_recently_merged(limit: Ace::Git.merged_prs_limit, timeout: Ace::Git.network_timeout)
+            result = execute_gh_command(
+              ["gh", "pr", "list", "--state", "merged", "--limit", limit.to_s,
+               "--json", "number,title,mergedAt,author"],
+              timeout: timeout
+            )
+
+            if result[:success]
+              prs = JSON.parse(result[:output])
+              { success: true, prs: prs }
+            else
+              { success: false, error: result[:error], prs: [] }
+            end
+          rescue JSON::ParserError => e
+            { success: false, error: "Failed to parse merged PRs: #{e.message}", prs: [] }
+          rescue Errno::ENOENT
+            { success: false, error: "GitHub CLI (gh) not installed", prs: [] }
+          end
+
+          # Fetch open PRs
+          # @param exclude_branch [String, nil] Branch name to exclude from results
+          # @param limit [Integer] Maximum number of PRs to return (default from config)
+          # @param timeout [Integer] Timeout in seconds
+          # @return [Hash] Result with :success, :prs array, or :error
+          def fetch_open_prs(exclude_branch: nil, limit: Ace::Git.open_prs_limit, timeout: Ace::Git.network_timeout)
+            result = execute_gh_command(
+              ["gh", "pr", "list", "--state", "open", "--limit", limit.to_s,
+               "--json", "number,title,author,headRefName"],
+              timeout: timeout
+            )
+
+            if result[:success]
+              prs = JSON.parse(result[:output])
+              # Filter out current branch if specified
+              if exclude_branch
+                prs = prs.reject { |pr| pr["headRefName"] == exclude_branch }
+              end
+              { success: true, prs: prs }
+            else
+              { success: false, error: result[:error], prs: [] }
+            end
+          rescue JSON::ParserError => e
+            { success: false, error: "Failed to parse open PRs: #{e.message}", prs: [] }
+          rescue Errno::ENOENT
+            { success: false, error: "GitHub CLI (gh) not installed", prs: [] }
           end
 
           private

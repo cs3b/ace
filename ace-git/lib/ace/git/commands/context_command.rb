@@ -8,10 +8,17 @@ module Ace
       # Command for showing repository context
       class ContextCommand
         def execute(options)
+          # Determine PR settings based on --no-pr flag
+          skip_pr = options[:no_pr]
+          commits_limit = options[:commits] || Ace::Git.commits_limit
+
           # Load context
           context_options = {
-            include_pr: true,
-            timeout: 30
+            include_pr: !skip_pr,
+            include_pr_activity: !skip_pr,
+            include_commits: commits_limit > 0,
+            commits_limit: commits_limit,
+            timeout: Ace::Git.network_timeout
           }
 
           context = Organisms::RepoContextLoader.load(context_options)

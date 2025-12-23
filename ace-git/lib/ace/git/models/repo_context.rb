@@ -7,7 +7,8 @@ module Ace
       # Includes branch info, task pattern, PR metadata, and repository state
       class RepoContext
         attr_reader :branch, :tracking, :ahead, :behind, :task_pattern,
-                    :pr_metadata, :repository_type, :repository_state
+                    :pr_metadata, :pr_activity, :git_status_sb, :recent_commits,
+                    :repository_type, :repository_state
 
         # @param branch [String] Current branch name
         # @param tracking [String, nil] Remote tracking branch
@@ -15,6 +16,9 @@ module Ace
         # @param behind [Integer] Commits behind remote
         # @param task_pattern [String, nil] Detected task pattern from branch
         # @param pr_metadata [Hash, nil] PR metadata if available
+        # @param pr_activity [Hash, nil] PR activity (merged and open PRs)
+        # @param git_status_sb [String, nil] Output of git status -sb
+        # @param recent_commits [Array, nil] Recent commits array
         # @param repository_type [Symbol] :normal, :detached, :bare, :worktree, :not_git
         # @param repository_state [Symbol] :clean, :dirty, :rebasing, :merging
         def initialize(
@@ -24,6 +28,9 @@ module Ace
           behind: 0,
           task_pattern: nil,
           pr_metadata: nil,
+          pr_activity: nil,
+          git_status_sb: nil,
+          recent_commits: nil,
           repository_type: :normal,
           repository_state: :clean
         )
@@ -33,6 +40,9 @@ module Ace
           @behind = behind
           @task_pattern = task_pattern
           @pr_metadata = pr_metadata
+          @pr_activity = pr_activity
+          @git_status_sb = git_status_sb
+          @recent_commits = recent_commits
           @repository_type = repository_type
           @repository_state = repository_state
         end
@@ -65,6 +75,28 @@ module Ace
         # @return [Boolean] True if task pattern found
         def has_task_pattern?
           !task_pattern.nil? && !task_pattern.empty?
+        end
+
+        # Check if has PR activity data
+        # @return [Boolean] True if any merged or open PRs present
+        def has_pr_activity?
+          return false if pr_activity.nil?
+
+          merged = pr_activity[:merged] || pr_activity["merged"] || []
+          open = pr_activity[:open] || pr_activity["open"] || []
+          !merged.empty? || !open.empty?
+        end
+
+        # Check if has recent commits data
+        # @return [Boolean] True if recent commits present
+        def has_recent_commits?
+          !recent_commits.nil? && !recent_commits.empty?
+        end
+
+        # Check if has git status output
+        # @return [Boolean] True if git status output present
+        def has_git_status?
+          !git_status_sb.nil? && !git_status_sb.empty?
         end
 
         # Check if repository is clean
@@ -100,10 +132,16 @@ module Ace
             up_to_date: up_to_date?,
             task_pattern: task_pattern,
             pr_metadata: pr_metadata,
+            pr_activity: pr_activity,
+            git_status_sb: git_status_sb,
+            recent_commits: recent_commits,
             repository_type: repository_type,
             repository_state: repository_state,
             detached: detached?,
             has_pr: has_pr?,
+            has_pr_activity: has_pr_activity?,
+            has_recent_commits: has_recent_commits?,
+            has_git_status: has_git_status?,
             has_task_pattern: has_task_pattern?,
             clean: clean?
           }
@@ -126,10 +164,14 @@ module Ace
         # @param branch_info [Hash] Branch information
         # @param task_pattern [String, nil] Detected task pattern
         # @param pr_metadata [Hash, nil] PR metadata
+        # @param pr_activity [Hash, nil] PR activity (merged and open PRs)
+        # @param git_status_sb [String, nil] Output of git status -sb
+        # @param recent_commits [Array, nil] Recent commits array
         # @param repo_type [Symbol] Repository type
         # @param repo_state [Symbol] Repository state
         # @return [RepoContext] New instance
         def self.from_data(branch_info:, task_pattern: nil, pr_metadata: nil,
+                           pr_activity: nil, git_status_sb: nil, recent_commits: nil,
                            repo_type: :normal, repo_state: :clean)
           new(
             branch: branch_info[:name] || branch_info["name"],
@@ -138,6 +180,9 @@ module Ace
             behind: branch_info[:behind] || branch_info["behind"] || 0,
             task_pattern: task_pattern,
             pr_metadata: pr_metadata,
+            pr_activity: pr_activity,
+            git_status_sb: git_status_sb,
+            recent_commits: recent_commits,
             repository_type: repo_type,
             repository_state: repo_state
           )

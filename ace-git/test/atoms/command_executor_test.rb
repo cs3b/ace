@@ -97,9 +97,9 @@ class CommandExecutorTest < AceGitTestCase
     assert_includes result[:output], "test"
   end
 
-  def test_execute_uses_shared_default_timeout_constant
-    # DEFAULT_TIMEOUT is now a shared constant in Ace::Git module
-    assert_equal 30, Ace::Git::DEFAULT_TIMEOUT
+  def test_execute_uses_config_default_timeout
+    # git_timeout method reads from config (per ADR-022)
+    assert_equal 30, Ace::Git.git_timeout
   end
 
   def test_execute_returns_timeout_error_with_custom_timeout_value

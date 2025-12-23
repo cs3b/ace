@@ -55,30 +55,44 @@ ace-git diff --raw
 - `--config, -c` - Load config from specific file
 - `--raw` - Raw unfiltered output (no exclusions)
 
-### `ace-git context`
+### `ace-git status`
 
-Display comprehensive repository context including current branch, associated PR information, and detected task pattern.
+Display comprehensive repository context including current branch, associated PR information, recent commits, and PR activity (merged/open PRs).
+
+**Alias:** `ace-git context` (for automation/LLM consumption)
 
 ```bash
 # Full context output (markdown)
-ace-git context
+ace-git status
+
+# Skip PR lookups (faster, local-only)
+ace-git status --no-pr
+ace-git status -n
+
+# Control recent commits shown
+ace-git status --commits 5    # Show 5 recent commits
+ace-git status --commits 0    # Disable recent commits
 
 # JSON output
-ace-git context --format json
+ace-git status --format json
 
 # Include PR diff in output
-ace-git context --with-diff
+ace-git status --with-diff
 ```
 
 **Options:**
 - `--format, -f` - Output format: `markdown` (default), `json`
+- `--no-pr, -n` - Skip PR metadata and activity lookups (faster)
+- `--commits N` - Number of recent commits to show (default: 3 from config)
 - `--with-diff` - Include PR diff in output
 
 **Output includes:**
-- Current branch name
-- Remote tracking status
+- Current branch name with git status -sb output
+- Remote tracking status (ahead/behind)
 - Detected task pattern (from branch name)
+- Recent commits (configurable count)
 - Associated PR metadata (if found)
+- PR activity: recently merged PRs and open PRs
 
 ### `ace-git branch`
 
