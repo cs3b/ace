@@ -8,10 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ['Michal Czyz']
   spec.email = ['mc@cs3b.com']
 
-  spec.summary = 'Git workflow instructions for ACE projects'
-  spec.description = 'Workflow-focused gem providing comprehensive git operation workflows: ' \
-                     'changelog-preserving rebase, PR creation with templates, and version-based ' \
-                     'commit squashing. Workflows accessible via ace-nav protocol (wfi://). ' \
+  spec.summary = 'Unified git operations for ACE projects'
+  spec.description = 'Comprehensive git integration for ACE ecosystem: unified diff generation, ' \
+                     'branch/PR information, repository context loading, and workflow instructions. ' \
+                     'Consolidates ace-git-diff functionality with new context/PR/branch commands. ' \
                      'Requires Git >= 2.23.0.'
   spec.homepage = 'https://github.com/cs3b/ace-meta/tree/main/ace-git'
   spec.license = 'MIT'
@@ -24,9 +24,10 @@ Gem::Specification.new do |spec|
   spec.metadata['changelog_uri'] = 'https://github.com/cs3b/ace-meta/blob/main/ace-git/CHANGELOG.md'
 
   # Specify which files should be added to the gem when it is released.
-  # Include lib, handbook (workflows and templates), and config examples
+  # Include lib, exe, handbook (workflows and templates), and config examples
   spec.files = Dir.glob(%w[
                           lib/**/*
+                          exe/*
                           handbook/**/*
                           .ace.example/**/*
                           *.md
@@ -35,11 +36,15 @@ Gem::Specification.new do |spec|
                         ]).select { |f| File.file?(f) }
 
   spec.bindir = 'exe'
-  spec.executables = []  # No CLI executables - workflow-only package
+  spec.executables = ['ace-git']
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-core', '~> 0.10'
+  spec.add_dependency 'ace-support-core', '~> 0.11'
+  spec.add_dependency 'thor', '~> 1.3'
 
-  # Development dependencies managed in root Gemfile
+  # Development dependencies
+  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9'
+  spec.add_development_dependency 'minitest', '~> 5.0'
+  spec.add_development_dependency 'rake', '~> 13.0'
 end

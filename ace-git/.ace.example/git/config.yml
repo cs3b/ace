@@ -1,12 +1,45 @@
 # ACE Git Configuration
-# Minimal configuration for user preferences only
-# Workflows contain sensible defaults inline
+# Complete default configuration - users only need to override what differs
+# This is the single source of truth for ace-git defaults (per ADR-022)
 
 git:
   # General preferences
   default_branch: main  # Your preferred main branch name (main/master/develop)
   remote: origin       # Your preferred remote name
   verbose: false       # Enable verbose output
+
+  # Diff configuration
+  diff:
+    # Glob patterns to exclude from diff output
+    exclude_patterns:
+      # Lock files (always safe to exclude)
+      - "**/*.lock"
+      - "package-lock.json"
+      - "yarn.lock"
+      - "Gemfile.lock"
+      # Vendored dependencies
+      - "vendor/**/*"
+      - "node_modules/**/*"
+      # Build artifacts and coverage
+      - "coverage/**/*"
+      - "dist/**/*"
+      - "build/**/*"
+      - ".cache/**/*"
+      # Test fixtures (static test data, not tests themselves)
+      - "**/fixtures/**/*"
+      - "**/testdata/**/*"
+      # NOTE: test/**/* and spec/**/* are NOT excluded by default
+      # because users often want to see test changes in diffs
+    # Ignore whitespace-only changes (default: true)
+    exclude_whitespace: true
+    # Exclude renamed files from diff (default: false)
+    exclude_renames: false
+    # Exclude moved files from diff (default: false)
+    exclude_moves: false
+    # Maximum lines in diff output (default: 10000)
+    max_lines: 10000
+    # Command timeout in seconds (default: 30)
+    timeout: 30
 
   # Rebase configuration (optional - workflows have defaults)
   # rebase:
