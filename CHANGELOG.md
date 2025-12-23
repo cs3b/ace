@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.179] - 2025-12-22
+
+### ace-git v0.1.0 → v0.3.2
+
+**Complete ace-git Package with CLI and Workflows**
+
+#### CLI Commands (v0.3.0+)
+- `ace-git diff [RANGE]` - Generate git diff with filtering
+- `ace-git context` - Show repository context (branch, PR, task pattern)
+- `ace-git branch` - Show current branch with tracking status
+- `ace-git pr [NUMBER]` - Fetch and display PR metadata via GitHub CLI
+
+#### Workflows (v0.1.0+)
+- `wfi://rebase` - CHANGELOG-preserving rebase operations
+- `wfi://create-pr` - Pull request creation with templates
+- `wfi://squash-pr` - Version-based commit squashing (with logical grouping strategy)
+- `wfi://update-pr-description` - Automated PR title/description generation
+
+#### Version History
+- **v0.3.2**: Error propagation for invalid diff ranges
+- **v0.3.1**: CLI help improvements, compact PR output format
+- **v0.3.0**: Full CLI executable with diff, context, branch, pr commands
+- **v0.2.2**: Squash workflow enhancement (logical grouping over single-commit)
+- **v0.2.1**: Dependency update (ace-support-core ~> 0.11)
+- **v0.2.0**: PR description workflow (`wfi://update-pr-description`)
+- **v0.1.0**: Initial release with rebase, create-pr, squash-pr workflows
+
 ## [0.9.177] - 2025-12-22
 
 ### ace-git-secrets v0.2.0
