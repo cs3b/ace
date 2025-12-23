@@ -20,6 +20,26 @@ update:
 - Access to ace-git-worktree for worktree management
 - Understanding of the parent-subtask relationship
 
+## Critical: Branch Management
+
+**DO NOT merge between subtask branches.** The workflow handles dependencies automatically:
+
+1. Each subtask PR targets the orchestrator branch
+2. When a PR is merged, the orchestrator branch has those changes
+3. New worktrees created via `ace-git-worktree create` branch from the orchestrator
+4. Therefore, new worktrees automatically include all previously merged subtask work
+
+**Anti-pattern to avoid:**
+```bash
+# WRONG - Do not do this!
+git merge 140.01-branch into 140.02-branch
+```
+
+**Correct flow:**
+1. Complete subtask 140.01, create PR, merge to orchestrator branch
+2. Create worktree for 140.02 - it already has 140.01 changes
+3. No manual merging needed
+
 ## Project Context Loading
 
 - Read and follow: `ace-nav wfi://load-project-context`

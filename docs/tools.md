@@ -15,6 +15,7 @@ update:
 |------|---------|--------------|
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list`, `ace-context --embed-source` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
+| **ace-git** | Repository context and diff | `ace-git context`, `ace-git diff`, `ace-git branch` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
 | **ace-git-secrets** | Detect and remove tokens | `ace-git-secrets scan`, `ace-git-secrets revoke`, `ace-git-secrets rewrite-history` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
@@ -60,6 +61,14 @@ ace-lint "**/*.md" --type markdown      # Lint all markdown files
 ace-git-commit                          # Generate commit for all changes
 ace-git-commit --staged                 # Commit only staged files
 ace-git-commit --path "src/**"          # Commit only matching paths
+
+# Repository context
+ace-git context                         # Full context (branch, PR, task pattern)
+ace-git context --no-pr                 # Skip PR lookup (faster)
+ace-git context --json                  # JSON output
+ace-git branch                          # Branch name with tracking status
+ace-git diff HEAD~5..HEAD               # Generate diff between refs
+ace-git diff --since "7d"               # Diff from time reference
 
 # Security scanning
 ace-git-secrets scan                    # Scan git history for tokens

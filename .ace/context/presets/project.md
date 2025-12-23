@@ -17,10 +17,11 @@ context:
   commands:
     - pwd
     - date
-    - git status --short
     - ace-taskflow tasks recent --limit 3
-    - ace-taskflow tasks next --limit 3
-    - ace-taskflow release
+    - ace-git context
+    - git status --short
+    - ace-taskflow context
+    - ace-taskflow tasks next --limit 1
     - eza -R -1 -L 3 -git-ignore --absolute $PROJECT_ROOT_PATH
 ---
 
