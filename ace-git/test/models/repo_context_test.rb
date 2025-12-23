@@ -148,8 +148,8 @@ class RepoContextTest < AceGitTestCase
 
     assert_instance_of String, result
     assert_includes result, "# Repository Context"
-    assert_includes result, "**Branch:** 140-feature"
-    assert_includes result, "**Task Pattern:** 140"
+    assert_includes result, "Branch: 140-feature"
+    assert_includes result, "Task Pattern: 140"
     # Compact PR format: ## PR #75: Add feature [open]
     assert_includes result, "## PR #75"
   end

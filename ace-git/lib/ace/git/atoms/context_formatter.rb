@@ -14,17 +14,19 @@ module Ace
             lines = []
             lines << "# Repository Context"
             lines << ""
-            lines << "**Branch:** #{context.branch}#{context.detached? ? ' (detached HEAD)' : ''}"
 
+            # Combine Branch and Remote into single line when tracking
             if context.tracking?
-              lines << "**Remote:** #{context.tracking} (#{context.tracking_status})"
+              lines << "Branch: #{context.branch} => #{context.tracking} (#{context.tracking_status})"
+            else
+              lines << "Branch: #{context.branch}#{context.detached? ? ' (detached HEAD)' : ''}"
             end
 
             if context.has_task_pattern?
-              lines << "**Task Pattern:** #{context.task_pattern}"
+              lines << "Task Pattern: #{context.task_pattern}"
             end
 
-            lines << "**State:** #{context.repository_state}"
+            lines << "State: #{context.repository_state}"
 
             if context.has_pr?
               lines.concat(format_pr_section(context.pr_metadata))
