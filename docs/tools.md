@@ -39,6 +39,12 @@ ace-taskflow tasks all                  # All tasks in current release
 ace-taskflow task move 139 --child-of self    # Convert task to orchestrator
 ace-taskflow task move 156 --child-of 139     # Demote task to subtask
 
+# Context with git and taskflow info
+ace-taskflow context                    # Show task-aware repository context
+ace-taskflow context --no-pr            # Skip PR metadata lookup (faster)
+ace-taskflow context --json             # Output as JSON
+ace-taskflow context --timeout 60       # Set PR fetch timeout
+
 # Documentation management
 ace-docs status --needs-update          # Check documents needing updates
 ace-docs update file.md --set last-updated=today  # Update document metadata
