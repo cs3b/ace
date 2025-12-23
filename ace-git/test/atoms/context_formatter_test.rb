@@ -13,7 +13,7 @@ class ContextFormatterTest < AceGitTestCase
     markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
 
     assert_match(/# Repository Context/, markdown)
-    assert_match(/\*\*Branch:\*\* feature-123/, markdown)
+    assert_match(/Branch: feature-123/, markdown)
   end
 
   def test_to_markdown_shows_detached_head
@@ -39,8 +39,10 @@ class ContextFormatterTest < AceGitTestCase
 
     markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
 
-    assert_match(/\*\*Remote:\*\* origin\/main/, markdown)
-    assert_match(/2 ahead/, markdown)
+    # Combined branch and remote format
+    assert_match(/Branch: main => origin\/main \(2 ahead\)/, markdown)
+    # No separate Remote line
+    refute_match(/Remote:/, markdown)
   end
 
   def test_to_markdown_includes_task_pattern
@@ -52,7 +54,7 @@ class ContextFormatterTest < AceGitTestCase
 
     markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
 
-    assert_match(/\*\*Task Pattern:\*\* 140/, markdown)
+    assert_match(/Task Pattern: 140/, markdown)
   end
 
   def test_to_markdown_includes_pr_metadata
