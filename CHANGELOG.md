@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.180] - 2025-12-23
+
+### ace-taskflow v0.23.1 → v0.24.0
+
+**Added**
+- Parent task context display for subtasks in `ace-taskflow context` command
+  - Shows parent orchestrator task with full details when current task is a subtask
+  - Adds `### Parent Task` header for clear visual separation
+  - Automatically extracts parent number from `parent_id` field
+
+**Fixed**
+- Parent task context not showing for subtasks (incorrect field access: `task[:parent]` → `task[:parent_id]`)
+- Regex pattern bug for end-of-string matching (`\\z` → `\z`)
+- Private method access for task command invocation using `send(:show_task)`
+
 ## [0.9.179] - 2025-12-22
 
 ### ace-git v0.1.0 → v0.3.2
