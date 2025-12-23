@@ -68,7 +68,7 @@ class IdeaCommandTest < AceTaskflowTestCase
           assert_match(/Idea captured/, output)
 
           # Git operations are mocked - we verify the command succeeded
-          # The actual git integration is tested in git_executor_test.rb
+          # The actual git integration is tested in git_committer_test.rb
         end
       end
     end

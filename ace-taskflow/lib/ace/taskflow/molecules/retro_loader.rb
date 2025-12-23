@@ -112,7 +112,7 @@ module Ace
             date: extract_date_from_filename(file_path),
             metadata: metadata,
             content: body,
-            is_done: file_path.include?("/done/")
+            is_done: file_path.include?("/#{Ace::Taskflow.configuration.done_dir}/")
           }
         end
 
@@ -152,7 +152,7 @@ module Ace
               filename: File.basename(path),
               title: extract_title_from_filename(path),
               date: extract_date_from_filename(path),
-              is_done: path.include?("/done/")
+              is_done: path.include?("/#{Ace::Taskflow.configuration.done_dir}/")
             }
           end
         end

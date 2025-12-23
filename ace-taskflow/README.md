@@ -245,6 +245,32 @@ taskflow:
 **Default**: `retros`
 **Applies to**: All releases, doctor validation, and CLI commands
 
+### Context Information
+
+Get task-aware repository context combining git state with taskflow information:
+
+```bash
+# Get current context (markdown output)
+ace-taskflow context
+
+# Get context without PR lookup (faster)
+ace-taskflow context --no-pr
+
+# Get context as JSON
+ace-taskflow context --json
+
+# Specify PR fetch timeout (default: 30 seconds)
+ace-taskflow context --timeout 60
+```
+
+The context command provides:
+- **Repository info**: Current branch, tracking status, ahead/behind counts
+- **Task info**: Resolved task from branch pattern (ID, title, status, estimate)
+- **Release info**: Active release progress (name, completion percentage)
+- **PR info**: Associated pull request details (number, title, state, URL)
+
+Requires the `ace-git` gem for git operations.
+
 ### Release Management (Coming Soon)
 
 Future releases will include release management features:

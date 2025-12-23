@@ -5,7 +5,62 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.24.0] - 2025-12-23
+
+### Added
+
+- **Context Command**: Parent task context display for subtasks
+  - When current task is a subtask, shows parent orchestrator task with full details
+  - Adds `### Parent Task` header for clear visual separation
+  - Automatically extracts parent number from `parent_id` field (e.g., "v.0.9.0+task.140" → "140")
+
+- **Context Command**: `ace-taskflow context` provides task-aware repository context
+  - Combines git state from ace-git with taskflow information
+  - Resolves current task from branch pattern
+  - Includes release progress and PR metadata
+  - Supports `--json` and `--no-pr` options
+  - **Compact output format**: Uses inline key-value format instead of markdown tables (matches ace-git context style)
+  - **Integrated task details**: Displays full `ace-taskflow task` command output for complete task information
+  - **Status icons**: Uses emoji indicators (🟡, 🟢, ⚪, etc.) instead of text status in headers
+  - **Smart PR formatting**: Shows PR author as "login (name)" instead of raw hash
+  - **Subtask awareness**: Shows parent task context when current task is a subtask
+
+- **TaskflowContextLoader Organism**: Orchestrates loading complete taskflow context
+  - Uses Ace::Git::Organisms::RepoContextLoader for repository context
+  - Passes through RepoContext objects directly instead of converting to hashes (code reuse)
+  - Resolves task from branch pattern via TaskLoader
+  - Calculates release progress from statistics
+  - Added `parent` field to task data for subtask context
+
+- **GitCommitter Molecule**: Thin wrapper around ace-git for commit operations
+  - Backward-compatible Result struct matching former GitExecutor interface
+  - Uses Ace::Git::Atoms::CommandExecutor for git operations
+
+### Changed
+
+- **Context Command**: Refactored to reuse ace-git ContextFormatter
+  - Uses `Ace::Git::Atoms::ContextFormatter.to_markdown` for git section formatting
+  - Injects release progress info into repository display
+  - Removed duplicate formatting code (~60 lines reduced)
+  - Extracted subprocess calls into mockable `fetch_task_output` method for testability
+
+- **Dependencies**: Added ace-git (~> 0.3) as runtime dependency for git operations
+
+- **Tests**: Made context command tests deterministic and faster
+  - Tests now mock subprocess calls instead of running real `ace-taskflow task` commands
+  - 65x faster test execution (13ms vs 860ms)
+  - Updated organism tests to work with RepoContext objects instead of hash structures
+
+- **IdeaWriter**: Updated to use GitCommitter instead of GitExecutor
+  - Improved path handling (supports directories)
+  - Same functional behavior with ace-git backend
+  - **Breaking (Internal)**: GitExecutor → GitCommitter - internal API change only
+
+### Removed
+
+- **GitExecutor Molecule**: Removed in favor of ace-git dependency
+  - Functionality replaced by GitCommitter using ace-git
+  - Associated tests migrated to git_committer_test.rb
 
 ## [0.23.1] - 2025-12-13
 
