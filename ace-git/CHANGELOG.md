@@ -7,6 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-12-22
+
+### Fixed
+
+- **Error Propagation**: `ace-git diff` now properly reports git errors for invalid ranges
+  - Previously returned "(no changes)" silently when git failed
+  - Now shows actual git error message and exits with code 1
+  - Added `handle_result` helper in DiffGenerator for consistent error handling
+
+## [0.3.1] - 2025-12-22
+
+### Added
+
+- **Examples in Main Help**: `ace-git --help` now shows common usage examples
+- **Explicit Diff Command**: `ace-git diff --help` shows full help with options
+- **SYNTAX Section**: Clear `[RANGE] [OPTIONS]` documentation in diff help
+
+### Changed
+
+- **Compact PR Output**: Reduced PR section from ~11 lines to ~4 lines
+  - Header line with PR #, title, and status in brackets
+  - Key-value lines for branch, author, URL
+  - Applies to both `ace-git context` and `ace-git pr` commands
+
+## [0.3.0] - 2025-12-22
+
+### Added
+
+- **CLI Executable** (`ace-git`): Full CLI with Thor for all git operations
+  - `ace-git diff [RANGE]` - Generate git diff with filtering (migrated from ace-git-diff)
+  - `ace-git context` - Show repository context (branch, PR, task pattern)
+  - `ace-git branch` - Show current branch information with tracking status
+  - `ace-git pr [NUMBER]` - Fetch and display PR metadata via GitHub CLI
+  - All commands support `--format json` for machine-readable output
+
+- **Migrated Components** (from ace-git-diff):
+  - Atoms: CommandExecutor, DateResolver, DiffParser, PatternFilter
+  - Molecules: ConfigLoader, DiffFilter, DiffGenerator
+  - Organisms: DiffOrchestrator
+  - Models: DiffConfig, DiffResult
+  - Full backward compatibility with ace-git-diff functionality
+
+- **New Components**:
+  - `TaskPatternExtractor` atom: Extract task IDs from branch names (e.g., "140-feature" -> "140")
+  - `PrIdentifierParser` atom: Parse PR identifiers (number, owner/repo#number, GitHub URLs)
+  - `RepositoryStateDetector` atom: Detect repository state (:clean, :dirty, :rebasing, :merging)
+  - `RepositoryChecker` atom: Check repository type (normal, detached, bare, worktree)
+  - `GitScopeFilter` atom: Filter files by git scope (staged, tracked, changed)
+  - `BranchReader` molecule: Read branch info with tracking status
+  - `PrMetadataFetcher` molecule: Fetch PR metadata via gh CLI
+  - `RepoContextLoader` organism: Orchestrate complete context loading
+  - `RepoContext` model: Structured repository context with markdown/JSON output
+
+- **Dependencies**:
+  - Added `thor` (~> 1.3) for CLI framework
+  - Updated `ace-support-core` to ~> 0.11
+
+### Changed
+
+- Package now includes CLI executable (previously workflow-only)
+- Updated gemspec to include exe directory and thor dependency
+- Summary updated to reflect unified git operations
+
+### Migration Notes
+
+- This version consolidates functionality from ace-git-diff
+- ace-git-diff will be deprecated in favor of ace-git
+- Use `ace-git diff` instead of `ace-git-diff` for equivalent functionality
+- Existing ace-git workflows (wfi://rebase, wfi://create-pr, wfi://squash-pr) remain unchanged
+
 ## [0.2.2] - 2025-12-13
 
 ### Changed
