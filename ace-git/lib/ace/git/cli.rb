@@ -32,7 +32,7 @@ module Ace
         shell.say "  ace-git HEAD~5..HEAD                   # Last 5 commits (magic routing)"
         shell.say "  ace-git HEAD~5..HEAD --format summary  # With options"
         shell.say "  ace-git origin/main...HEAD --paths 'lib/**/*.rb'"
-        shell.say "  ace-git context                        # Branch + PR info"
+        shell.say "  ace-git status                         # Branch + PR info"
         shell.say "  ace-git pr 123                         # PR details"
       end
 
@@ -115,41 +115,56 @@ module Ace
         1
       end
 
-      desc "context", "Show repository context (branch, PR, task pattern)"
+      desc "status", "Show repository context (branch, PR, activity)"
       long_desc <<~DESC
         Display comprehensive repository context including current branch,
         associated PR information, and detected task pattern.
 
+        ALIAS: 'context' is available for automation/LLM consumption.
+
         EXAMPLES:
 
           # Full context output
-          $ ace-git context
+          $ ace-git status
 
           # JSON output
-          $ ace-git context --format json
+          $ ace-git status --format json
 
           # Include PR diff in output
-          $ ace-git context --with-diff
+          $ ace-git status --with-diff
+
+          # Skip PR lookups (faster, no network)
+          $ ace-git status --no-pr
+
+          # Show more recent commits
+          $ ace-git status --commits 5
 
         OUTPUT:
 
           Markdown-formatted context including:
-          - Current branch name
-          - Remote tracking status
-          - Detected task pattern (from branch name)
-          - Associated PR metadata (if found)
+          - Current branch and remote tracking status
+          - Git status (working tree changes)
+          - Recent commits
+          - Current PR metadata (if found)
+          - PR activity (recently merged and open PRs)
       DESC
       option :format, type: :string, aliases: "-f", default: "markdown",
                       desc: "Output format: markdown, json"
       option :with_diff, type: :boolean, default: false,
                          desc: "Include PR diff in output"
-      def context
+      option :no_pr, type: :boolean, default: false, aliases: "-n",
+                     desc: "Skip all PR lookups (faster, no network)"
+      option :commits, type: :numeric, aliases: "-c",
+                       desc: "Number of recent commits to show (0 to disable, default: config)"
+      def status
         require_relative "commands/context_command"
         Commands::ContextCommand.new.execute(options)
       rescue Ace::Git::Error => e
         warn "Error: #{e.message}"
         1
       end
+
+      map %w[context] => :status
 
       desc "branch", "Show current branch information"
       long_desc <<~DESC

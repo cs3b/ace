@@ -18,7 +18,7 @@ module Ace
         # @param paths [Array<String>] Path patterns to include
         # @param since [String] Date or commit to diff from
         # @param format [Symbol] Output format (:diff or :summary)
-        # @param timeout [Integer] Command timeout in seconds (default: Ace::Git::DEFAULT_TIMEOUT)
+        # @param timeout [Integer] Command timeout in seconds (default from config)
         def initialize(
           exclude_patterns: [],
           exclude_whitespace: true,
@@ -29,7 +29,7 @@ module Ace
           paths: [],
           since: nil,
           format: :diff,
-          timeout: Ace::Git::DEFAULT_TIMEOUT
+          timeout: Ace::Git.git_timeout
         )
           @exclude_patterns = Array(exclude_patterns)
           @exclude_whitespace = exclude_whitespace
@@ -40,7 +40,7 @@ module Ace
           @paths = Array(paths)
           @since = since
           @format = format&.to_sym || :diff
-          @timeout = timeout || Ace::Git::DEFAULT_TIMEOUT
+          @timeout = timeout || Ace::Git.git_timeout
         end
 
         # Check if diff should exclude whitespace changes
@@ -126,7 +126,7 @@ module Ace
             paths: hash["paths"] || hash[:paths] || [],
             since: hash["since"] || hash[:since],
             format: hash["format"] || hash[:format] || :diff,
-            timeout: hash.fetch("timeout", hash.fetch(:timeout, Ace::Git::DEFAULT_TIMEOUT))
+            timeout: hash.fetch("timeout", hash.fetch(:timeout, Ace::Git.git_timeout))
           )
         end
 

@@ -38,12 +38,29 @@ class CliRoutingTest < AceGitTestCase
     end
   end
 
-  def test_cli_routes_context_command
+  def test_cli_routes_status_command
+    Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
+      output = capture_io do
+        Ace::Git::CLI.start(["status"])
+      end
+      assert_match(/main/, output.first)
+    end
+  end
+
+  def test_cli_routes_context_alias_to_status
     Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
       output = capture_io do
         Ace::Git::CLI.start(["context"])
       end
       assert_match(/main/, output.first)
+    end
+  end
+
+  def test_cli_status_and_context_produce_identical_output
+    Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
+      status_output = capture_io { Ace::Git::CLI.start(["status"]) }
+      context_output = capture_io { Ace::Git::CLI.start(["context"]) }
+      assert_equal status_output.first, context_output.first
     end
   end
 
@@ -194,10 +211,10 @@ class CliRoutingTest < AceGitTestCase
     end
   end
 
-  def test_cli_passes_json_format_to_context
+  def test_cli_passes_json_format_to_status
     Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
       output = capture_io do
-        Ace::Git::CLI.start(["context", "--format", "json"])
+        Ace::Git::CLI.start(["status", "--format", "json"])
       end
       json = JSON.parse(output.first)
       assert_equal "main", json["branch"]
@@ -220,15 +237,8 @@ class CliRoutingTest < AceGitTestCase
   # Thor raises errors for unknown commands, which is the expected behavior -
   # these words should NOT match the magic git range patterns.
 
-  def test_cli_does_not_route_status_to_diff
-    # "status" should NOT be caught by magic routing as a git range
-    # It should raise an error because 'status' is not a valid ace-git command
-    assert_raises(NoMethodError) do
-      capture_io do
-        Ace::Git::CLI.start(["status"])
-      end
-    end
-  end
+  # Note: 'status' is now a valid command (alias for context/status)
+  # See test_cli_routes_status_command above
 
   def test_cli_does_not_route_log_to_diff
     # "log" should NOT be caught by magic routing

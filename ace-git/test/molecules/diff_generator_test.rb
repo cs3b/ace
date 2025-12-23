@@ -225,6 +225,6 @@ class DiffGeneratorTest < AceGitTestCase
     end
 
     Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
-    assert_equal Ace::Git::DEFAULT_TIMEOUT, executor.timeout, "Should use DEFAULT_TIMEOUT when not specified"
+    assert_equal Ace::Git.git_timeout, executor.timeout, "Should use config timeout when not specified"
   end
 end

@@ -63,7 +63,42 @@ bundle exec rake test
 - [ ] Documentation updated
 - [ ] No sensitive data in commits
 
-### 2. Push Branch
+### 2. Determine Target Branch
+
+Use `ace-taskflow context` to identify task hierarchy:
+
+```bash
+ace-taskflow context
+```
+
+**Target Branch Rules:**
+
+| Task Type | Example | Target Branch |
+|-----------|---------|---------------|
+| Subtask (has Parent Task) | `140.10` | Parent task branch `140-*` |
+| Main task (no parent) | `140` | `main` |
+| No task context | - | `main` |
+
+**Detection from taskflow context:**
+
+If `ace-taskflow context` shows "Parent Task" section:
+1. Get parent task ID (e.g., `140` from `v.0.9.0+task.140`)
+2. Find branch matching `<parent-id>-*` pattern
+3. Use as target branch
+
+```bash
+# Check if subtask has parent (using JSON for robustness)
+parent_id=$(ace-taskflow context --json | jq -r '.parent_task.id // empty' | sed 's/.*\.//')
+
+# Find parent branch if parent exists
+if [ -n "$parent_id" ]; then
+  target_branch=$(git branch -r | grep -E "origin/${parent_id}-" | head -1 | sed 's/origin\///' | xargs)
+fi
+```
+
+**Important:** Always verify parent branch exists before creating PR.
+
+### 3. Push Branch
 
 ```bash
 # Push feature branch to origin
@@ -73,7 +108,7 @@ git push -u origin $(git branch --show-current)
 git status
 ```
 
-### 3. Select PR Template
+### 4. Select PR Template
 
 Choose template based on change type:
 
@@ -86,7 +121,18 @@ Templates available via ace-git package:
 - `handbook/templates/pr/bugfix.template.md`
 - `handbook/templates/pr/default.template.md`
 
-### 4. Create PR with GitHub CLI
+### 5. Create PR with GitHub CLI
+
+**PR Title Format:**
+
+When `ace-git context` shows a task pattern, use task ID prefix:
+
+| Context | Title Format | Example |
+|---------|--------------|---------|
+| Has task pattern | `<task-id>: <description>` | `140.10: Add PR activity awareness` |
+| No task pattern | `<type>(<scope>): <description>` | `feat(auth): Add OAuth support` |
+
+This keeps PR titles consistent with task tracking and PR Activity display.
 
 #### Option A: Interactive Creation
 
@@ -260,7 +306,7 @@ gh pr create \
   --base main
 ```
 
-### 5. Set PR Properties
+### 6. Set PR Properties
 
 After creation, enhance PR with additional metadata:
 
@@ -281,7 +327,7 @@ gh pr edit --milestone "v2.0.0"
 gh pr ready --undo
 ```
 
-### 6. Link Issues
+### 7. Link Issues
 
 ```bash
 # Link PR to issue (closes issue when PR merges)
@@ -294,7 +340,7 @@ Closes #123"
 # Resolves #456
 ```
 
-### 7. Verify PR
+### 8. Verify PR
 
 ```bash
 # View PR in terminal

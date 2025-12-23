@@ -8,6 +8,16 @@ git:
   remote: origin       # Your preferred remote name
   verbose: false       # Enable verbose output
 
+  # Timeout settings (in seconds)
+  timeout: 30          # Local git operations (diff, status, log)
+  network_timeout: 60  # Network operations (gh CLI, remote operations)
+
+  # Context command settings
+  context:
+    commits_limit: 3      # Number of recent commits to show
+    merged_prs_limit: 3   # Number of recently merged PRs to show
+    open_prs_limit: 10    # Number of open PRs from others to show
+
   # Diff configuration
   diff:
     # Glob patterns to exclude from diff output
@@ -38,8 +48,6 @@ git:
     exclude_moves: false
     # Maximum lines in diff output (default: 10000)
     max_lines: 10000
-    # Command timeout in seconds (default: 30)
-    timeout: 30
 
   # Rebase configuration (optional - workflows have defaults)
   # rebase:

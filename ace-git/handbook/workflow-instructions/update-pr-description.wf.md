@@ -48,7 +48,49 @@ gh pr view --json number -q .number
 
 If no PR exists for current branch, ask user for PR number.
 
-### 2. Extract Change Information
+### 2. Verify Target Branch
+
+Check if PR target is correct based on task hierarchy:
+
+```bash
+# Get current PR info
+gh pr view $pr_number --json baseRefName,headRefName,title
+
+# Check task hierarchy
+ace-taskflow context
+```
+
+**Validation Rules:**
+
+| Task Context | Current Target | Correct Target | Action |
+|--------------|----------------|----------------|--------|
+| Has "Parent Task" | `main` | Parent branch | Fix target |
+| Has "Parent Task" | Parent branch | ✓ Correct | No action |
+| No parent | `main` | ✓ Correct | No action |
+
+**Auto-fix target if subtask targeting main:**
+
+If `ace-taskflow context` shows "Parent Task" section but PR targets `main`:
+
+```bash
+current_base=$(gh pr view $pr_number --json baseRefName -q .baseRefName)
+
+# Check for parent task
+parent_info=$(ace-taskflow context | grep -A1 "Parent Task")
+if [[ -n "$parent_info" && "$current_base" == "main" ]]; then
+  # Extract parent task ID from context
+  parent_id=$(echo "$parent_info" | grep -oE 'task\.[0-9]+' | head -1 | sed 's/task\.//')
+  correct_base=$(git branch -r | grep -E "origin/${parent_id}-" | head -1 | sed 's/origin\///' | xargs)
+
+  if [[ -n "$correct_base" ]]; then
+    echo "⚠️  Subtask targeting main instead of parent branch"
+    echo "   Correcting: main → $correct_base"
+    gh pr edit $pr_number --base "$correct_base"
+  fi
+fi
+```
+
+### 3. Extract Change Information
 
 Analyze the PR diff to gather information:
 
@@ -62,7 +104,7 @@ gh pr diff $pr_number --name-only
 # - .ace-taskflow/*/tasks/done/**/*.md (completed tasks)
 ```
 
-### 3. Read Changelog Entries
+### 4. Read Changelog Entries
 
 If CHANGELOG files in diff:
 
@@ -77,7 +119,7 @@ Extract:
 - Change descriptions
 - Breaking changes markers
 
-### 4. Read Task Files
+### 5. Read Task Files
 
 If task files in diff:
 
@@ -90,7 +132,7 @@ Extract from task frontmatter:
 - `status`: Task status
 - Acceptance criteria
 
-### 5. Analyze Commits
+### 6. Analyze Commits
 
 Get all commits in the PR:
 
@@ -103,24 +145,36 @@ Identify patterns:
 - Common themes across commits
 - Scope of changes (which packages/modules)
 
-### 6. Generate PR Title
+### 7. Generate PR Title
 
-Create title following conventional commits format:
+**Title Format Rules:**
 
-**Pattern:** `<type>(<scope>): <description>`
+| Context | Format | Example |
+|---------|--------|---------|
+| Has task ID (from `ace-git context`) | `<task-id>: <description>` | `140.10: Add PR activity awareness` |
+| No task ID | `<type>(<scope>): <description>` | `feat(auth): Add OAuth support` |
+
+**Get task ID from context:**
+```bash
+# Check ace-git context for task pattern
+ace-git context --no-pr | grep "Position (task:"
+```
 
 **Guidelines:**
-- Use most prominent change type (feat > fix > refactor > chore)
-- Include scope if changes focused on specific package
-- Keep description concise (< 72 chars)
+- If task ID present, use `<task-id>: <description>` format
+- Keep description concise (< 60 chars after task ID)
 - Focus on user-facing impact
 
-**Examples:**
-- `feat(ace-taskflow): enforce folder structure for ideas with validation`
-- `fix(ace-git): resolve merge conflict in rebase workflow`
-- `chore(ace-test): migrate test suite to new framework`
+**Examples with task ID:**
+- `140.10: Add PR activity awareness to context command`
+- `140.02: Update ace-taskflow to use ace-git`
+- `135.03: Fix validation error in form submission`
 
-### 7. Generate PR Description
+**Examples without task ID:**
+- `feat(ace-taskflow): enforce folder structure for ideas`
+- `fix(ace-git): resolve merge conflict in rebase workflow`
+
+### 8. Generate PR Description
 
 Create structured markdown description:
 
@@ -165,7 +219,7 @@ Create structured markdown description:
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-### 8. Update PR
+### 9. Update PR
 
 Use GitHub CLI to update:
 
@@ -187,7 +241,7 @@ EOF
 )"
 ```
 
-### 9. Confirm Update
+### 10. Confirm Update
 
 Show updated PR URL:
 

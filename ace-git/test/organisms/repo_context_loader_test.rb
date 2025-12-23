@@ -257,4 +257,284 @@ class RepoContextLoaderTest < AceGitTestCase
       end
     end
   end
+
+  # PR Activity tests
+
+  def test_load_fetches_pr_activity_by_default
+    mock_merged_prs = [{ "number" => 84, "title" => "Merged PR" }]
+    mock_open_prs = [{ "number" => 85, "title" => "Open PR" }]
+
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: mock_merged_prs } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: mock_open_prs } do
+                    context = Ace::Git::Organisms::RepoContextLoader.load
+
+                    assert context.has_pr_activity?
+                    assert_equal 1, context.pr_activity[:merged].length
+                    assert_equal 1, context.pr_activity[:open].length
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_skips_pr_activity_when_include_pr_activity_false
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                # Should NOT call fetch_recently_merged or fetch_open_prs
+                context = Ace::Git::Organisms::RepoContextLoader.load(include_pr_activity: false)
+
+                assert_nil context.pr_activity
+                refute context.has_pr_activity?
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_excludes_current_branch_from_open_prs
+    captured_exclude = nil
+
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, ->(exclude_branch:, **_opts) {
+                    captured_exclude = exclude_branch
+                    { success: true, prs: [] }
+                  } do
+                    Ace::Git::Organisms::RepoContextLoader.load
+
+                    assert_equal "feature-branch", captured_exclude
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_minimal_skips_pr_activity
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              context = Ace::Git::Organisms::RepoContextLoader.load_minimal
+
+              assert_nil context.pr_activity
+              refute context.has_pr_activity?
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_handles_pr_activity_failure_gracefully
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                # Both fetches fail
+                Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: false, prs: [] } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: false, prs: [] } do
+                    context = Ace::Git::Organisms::RepoContextLoader.load
+
+                    # Should have nil pr_activity when both fail
+                    assert_nil context.pr_activity
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_includes_pr_activity_when_partial_success
+    mock_merged_prs = [{ "number" => 84 }]
+
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                # Merged succeeds, open fails
+                Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: mock_merged_prs } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: false, prs: [] } do
+                    context = Ace::Git::Organisms::RepoContextLoader.load
+
+                    # Should have pr_activity with merged but empty open
+                    assert context.has_pr_activity?
+                    assert_equal 1, context.pr_activity[:merged].length
+                    assert_empty context.pr_activity[:open]
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # Git status and recent commits tests
+
+  def test_load_fetches_git_status
+    mock_status = "## feature-branch...origin/feature-branch\n M file.rb"
+
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: mock_status } do
+                Ace::Git::Molecules::RecentCommitsFetcher.stub :fetch, { success: true, commits: [] } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                    Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
+                      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: [] } do
+                        context = Ace::Git::Organisms::RepoContextLoader.load
+
+                        assert context.has_git_status?
+                        assert_equal mock_status, context.git_status_sb
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_fetches_recent_commits
+    mock_commits = [
+      { hash: "a7404e9", subject: "feat: Add feature" },
+      { hash: "74e8f77", subject: "chore: Update config" }
+    ]
+
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+                Ace::Git::Molecules::RecentCommitsFetcher.stub :fetch, { success: true, commits: mock_commits } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                    Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
+                      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: [] } do
+                        context = Ace::Git::Organisms::RepoContextLoader.load
+
+                        assert context.has_recent_commits?
+                        assert_equal 2, context.recent_commits.length
+                        assert_equal "a7404e9", context.recent_commits[0][:hash]
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_respects_commits_limit
+    captured_limit = nil
+
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+                Ace::Git::Molecules::RecentCommitsFetcher.stub :fetch, ->(limit:) {
+                  captured_limit = limit
+                  { success: true, commits: [] }
+                } do
+                  Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                    Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
+                      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: [] } do
+                        Ace::Git::Organisms::RepoContextLoader.load(commits_limit: 5)
+
+                        assert_equal 5, captured_limit
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_skips_commits_when_include_commits_false
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+                Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
+                  # Should NOT call fetch on RecentCommitsFetcher
+                  context = Ace::Git::Organisms::RepoContextLoader.load(include_commits: false)
+
+                  refute context.has_recent_commits?
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_load_minimal_skips_commits_and_status
+    Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :normal do
+      Ace::Git::Atoms::RepositoryChecker.stub :usable?, true do
+        Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
+          Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
+            Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
+              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+                context = Ace::Git::Organisms::RepoContextLoader.load_minimal
+
+                refute context.has_recent_commits?
+                refute context.has_pr_activity?
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 end

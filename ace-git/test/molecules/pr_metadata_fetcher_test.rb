@@ -148,6 +148,133 @@ class PrMetadataFetcherTest < AceGitTestCase
     end
   end
 
+  # Tests for fetch_recently_merged
+
+  def test_fetch_recently_merged_returns_prs_on_success
+    mock_json = [
+      { "number" => 84, "title" => "Test PR", "mergedAt" => "2025-12-23T12:00:00Z" },
+      { "number" => 82, "title" => "Other PR", "mergedAt" => "2025-12-22T12:00:00Z" }
+    ].to_json
+
+    Open3.stub :capture3, [mock_json, "", stub_status(true)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_recently_merged(limit: 3, timeout: 5)
+      assert result[:success]
+      assert_equal 2, result[:prs].length
+      assert_equal 84, result[:prs][0]["number"]
+    end
+  end
+
+  def test_fetch_recently_merged_returns_empty_on_failure
+    Open3.stub :capture3, ["", "error", stub_status(false)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_recently_merged(timeout: 5)
+      refute result[:success]
+      assert_empty result[:prs]
+    end
+  end
+
+  def test_fetch_recently_merged_handles_json_parse_error
+    Open3.stub :capture3, ["not valid json", "", stub_status(true)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_recently_merged(timeout: 5)
+      refute result[:success]
+      assert_match(/Failed to parse/, result[:error])
+      assert_empty result[:prs]
+    end
+  end
+
+  def test_fetch_recently_merged_respects_limit
+    mock_json = [{ "number" => 1 }].to_json
+
+    # Capture the args to verify limit is passed
+    captured_cmd = nil
+    Open3.stub :capture3, ->(*args) {
+      # args format: [env_hash, *cmd_parts] or just cmd parts
+      captured_cmd = args.is_a?(Array) ? args.flatten.join(" ") : args.to_s
+      [mock_json, "", stub_status(true)]
+    } do
+      Ace::Git::Molecules::PrMetadataFetcher.fetch_recently_merged(limit: 5, timeout: 5)
+      assert_includes captured_cmd, "--limit 5"
+    end
+  end
+
+  # Tests for fetch_open_prs
+
+  def test_fetch_open_prs_returns_prs_on_success
+    mock_json = [
+      { "number" => 85, "title" => "Open PR", "author" => { "login" => "user1" }, "headRefName" => "feature-1" },
+      { "number" => 86, "title" => "Other PR", "author" => { "login" => "user2" }, "headRefName" => "feature-2" }
+    ].to_json
+
+    Open3.stub :capture3, [mock_json, "", stub_status(true)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_open_prs(timeout: 5)
+      assert result[:success]
+      assert_equal 2, result[:prs].length
+    end
+  end
+
+  def test_fetch_open_prs_excludes_specified_branch
+    mock_json = [
+      { "number" => 85, "title" => "Open PR", "headRefName" => "feature-1" },
+      { "number" => 86, "title" => "Current PR", "headRefName" => "current-branch" }
+    ].to_json
+
+    Open3.stub :capture3, [mock_json, "", stub_status(true)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_open_prs(
+        exclude_branch: "current-branch",
+        timeout: 5
+      )
+      assert result[:success]
+      assert_equal 1, result[:prs].length
+      assert_equal 85, result[:prs][0]["number"]
+    end
+  end
+
+  def test_fetch_open_prs_with_nil_exclude_branch_returns_all
+    mock_json = [
+      { "number" => 85, "title" => "Open PR", "headRefName" => "feature-1" },
+      { "number" => 86, "title" => "Other PR", "headRefName" => "feature-2" }
+    ].to_json
+
+    Open3.stub :capture3, [mock_json, "", stub_status(true)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_open_prs(
+        exclude_branch: nil,
+        timeout: 5
+      )
+      assert result[:success]
+      assert_equal 2, result[:prs].length
+    end
+  end
+
+  def test_fetch_open_prs_returns_empty_on_failure
+    Open3.stub :capture3, ["", "error", stub_status(false)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_open_prs(timeout: 5)
+      refute result[:success]
+      assert_empty result[:prs]
+    end
+  end
+
+  def test_fetch_open_prs_handles_json_parse_error
+    Open3.stub :capture3, ["invalid json", "", stub_status(true)] do
+      result = Ace::Git::Molecules::PrMetadataFetcher.fetch_open_prs(timeout: 5)
+      refute result[:success]
+      assert_match(/Failed to parse/, result[:error])
+      assert_empty result[:prs]
+    end
+  end
+
+  def test_fetch_open_prs_respects_limit
+    mock_json = [{ "number" => 1 }].to_json
+
+    # Capture the args to verify limit is passed
+    captured_cmd = nil
+    Open3.stub :capture3, ->(*args) {
+      captured_cmd = args.is_a?(Array) ? args.flatten.join(" ") : args.to_s
+      [mock_json, "", stub_status(true)]
+    } do
+      Ace::Git::Molecules::PrMetadataFetcher.fetch_open_prs(limit: 5, timeout: 5)
+      assert_includes captured_cmd, "--limit 5"
+    end
+  end
+
   private
 
   def stub_status(success)
