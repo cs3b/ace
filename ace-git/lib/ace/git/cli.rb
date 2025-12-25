@@ -120,8 +120,6 @@ module Ace
         Display comprehensive repository context including current branch,
         associated PR information, and detected task pattern.
 
-        ALIAS: 'context' is available for automation/LLM consumption.
-
         EXAMPLES:
 
           # Full context output
@@ -163,8 +161,6 @@ module Ace
         warn "Error: #{e.message}"
         1
       end
-
-      map %w[context] => :status
 
       desc "branch", "Show current branch information"
       long_desc <<~DESC

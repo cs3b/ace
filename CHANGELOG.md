@@ -9,8 +9,8 @@ All notable changes to this project will be documented in this file.
 ### ace-taskflow v0.24.1 → v0.24.2
 
 **Changed**
-- Renamed `context` subcommand to `status` for semantic clarity
-- Added deprecation alias: `ace-taskflow context` still works but shows warning
+- **BREAKING**: Renamed `context` subcommand to `status` for semantic clarity
+- **BREAKING**: Config keys renamed from `context.activity.*` to `status.activity.*`
 
 **Fixed**
 - Zero-limit CLI options now correctly propagate (using `options.key?` instead of truthiness)
@@ -38,7 +38,7 @@ All notable changes to this project will be documented in this file.
 ### ace-taskflow v0.23.1 → v0.24.0
 
 **Added**
-- Parent task context display for subtasks in `ace-taskflow context` command
+- Parent task context display for subtasks in `ace-taskflow status` command
   - Shows parent orchestrator task with full details when current task is a subtask
   - Adds `### Parent Task` header for clear visual separation
   - Automatically extracts parent number from `parent_id` field

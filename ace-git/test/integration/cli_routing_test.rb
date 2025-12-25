@@ -47,23 +47,6 @@ class CliRoutingTest < AceGitTestCase
     end
   end
 
-  def test_cli_routes_context_alias_to_status
-    Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
-      output = capture_io do
-        Ace::Git::CLI.start(["context"])
-      end
-      assert_match(/main/, output.first)
-    end
-  end
-
-  def test_cli_status_and_context_produce_identical_output
-    Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
-      status_output = capture_io { Ace::Git::CLI.start(["status"]) }
-      context_output = capture_io { Ace::Git::CLI.start(["context"]) }
-      assert_equal status_output.first, context_output.first
-    end
-  end
-
   def test_cli_routes_branch_command
     Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
       output = capture_io do
@@ -237,7 +220,7 @@ class CliRoutingTest < AceGitTestCase
   # Thor raises errors for unknown commands, which is the expected behavior -
   # these words should NOT match the magic git range patterns.
 
-  # Note: 'status' is now a valid command (alias for context/status)
+  # Note: 'status' is a valid command
   # See test_cli_routes_status_command above
 
   def test_cli_does_not_route_log_to_diff

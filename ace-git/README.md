@@ -12,8 +12,6 @@ ace-git is a workflow-first gem that provides essential git workflows and contex
 - **Branch** (`ace-git branch`): Current branch with tracking status
 - **PR** (`ace-git pr`): PR metadata lookup
 
-Note: `ace-git context` is available as an alias for automation/LLM consumption.
-
 **Workflows:**
 - **Rebase Workflow** (`wfi://rebase`): Changelog-preserving rebase operations
 - **PR Creation Workflow** (`wfi://create-pr`): Pull request creation with structured templates

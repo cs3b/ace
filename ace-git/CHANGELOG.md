@@ -9,9 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **CLI Command Rename**: Primary command `context` renamed to `status`
-  - `ace-git status` is now the primary human-facing command
-  - `ace-git context` remains as a backward-compatible alias (for automation/LLM)
+- **BREAKING**: Renamed `context` subcommand to `status`
+  - `ace-git status` is now the only command (no alias)
   - Internal classes (ContextCommand, ContextFormatter, RepoContextLoader) unchanged
   - Output format and JSON structure unchanged
 
@@ -39,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **CLI Alias**: Added `-n` alias for `--no-pr` option in `ace-git context`
+- **CLI Alias**: Added `-n` alias for `--no-pr` option in `ace-git status`
 - **Open PR Limit**: `fetch_open_prs` now accepts `limit` parameter (default: 10)
   - Keeps latency predictable on repositories with many open PRs
 
@@ -55,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **PR Workflow Improvements**: Enhanced create-pr and update-pr-description workflows
-  - Added target branch detection based on task hierarchy from `ace-taskflow context`
+  - Added target branch detection based on task hierarchy from `ace-taskflow status`
   - Subtasks now correctly target parent task branch instead of main
   - PR title format: `<task-id>: <description>` when task ID present (e.g., `140.10: Add feature`)
   - Auto-fix for PRs incorrectly targeting main when parent branch exists
@@ -64,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **PR Activity Awareness**: `ace-git context` now shows recent PR activity
+- **PR Activity Awareness**: `ace-git status` now shows recent PR activity
   - Recently merged PRs (last 3) with relative timestamps (e.g., "1d ago")
   - Open PRs from other team members (excluding current branch)
   - New `--no-pr` flag to skip PR lookups for faster output

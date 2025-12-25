@@ -38,18 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Debug logging now uses `Ace::Core.logger.debug` for consistency across the codebase
-- Added documentation for config key naming (context vs status) backward compatibility
 
 ## [0.24.2] - 2025-12-25
 
 ### Changed
 
-- **CLI Rename**: Renamed `context` subcommand to `status`
+- **BREAKING**: Renamed `context` subcommand to `status`
   - Better reflects the command's purpose of showing live operational state
-  - Usage: `ace-taskflow status` (was `ace-taskflow context`)
-  - Added deprecation alias: `ace-taskflow context` still works with warning
+  - Usage: `ace-taskflow status`
   - All options remain the same: `--json`, `--recently-done-limit`, `--up-next-limit`, `--include-drafts`
-  - Internal constructs unchanged (TaskflowContextLoader, configuration keys)
 - **Limit=0 Behavior**: Sections now skip entirely when limit is set to 0
   - `--recently-done-limit 0` hides Recently Done section (no empty message)
   - `--up-next-limit 0` hides Up Next section (no empty message)
@@ -72,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Release Stats**: Context command now uses accurate release statistics
+- **Release Stats**: Status command now uses accurate release statistics
   - Reuses StatsFormatter from tasks command for consistent done/total counts
   - Shows "## Release: v.X.Y.Z: done/total tasks • Codename" format
   - Previously showed incorrect 0% progress due to different counting methodology
@@ -81,12 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Context Command**: Parent task context display for subtasks
+- **Status Command**: Parent task context display for subtasks
   - When current task is a subtask, shows parent orchestrator task with full details
   - Adds `### Parent Task` header for clear visual separation
   - Automatically extracts parent number from `parent_id` field (e.g., "v.0.9.0+task.140" → "140")
 
-- **Context Command**: `ace-taskflow context` provides task-aware repository context
+- **Status Command**: `ace-taskflow status` provides task-aware repository context
   - Combines git state from ace-git with taskflow information
   - Resolves current task from branch pattern
   - Includes release progress and PR metadata
