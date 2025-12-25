@@ -12,8 +12,8 @@ git:
   timeout: 30          # Local git operations (diff, status, log)
   network_timeout: 60  # Network operations (gh CLI, remote operations)
 
-  # Context command settings
-  context:
+  # Status command settings
+  status:
     commits_limit: 3      # Number of recent commits to show
     merged_prs_limit: 3   # Number of recently merged PRs to show
     open_prs_limit: 10    # Number of open PRs from others to show

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ace-git status` is now the only command (no alias)
   - Internal classes (ContextCommand, ContextFormatter, RepoContextLoader) unchanged
   - Output format and JSON structure unchanged
+- **BREAKING**: Config key renamed from `context` to `status`
+  - Update `.ace/git/config.yml` to use `git.status.*` instead of `git.context.*`
 
 ### Removed
 

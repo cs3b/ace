@@ -125,7 +125,7 @@ Templates available via ace-git package:
 
 **PR Title Format:**
 
-When `ace-git context` shows a task pattern, use task ID prefix:
+When `ace-git status` shows a task pattern, use task ID prefix:
 
 | Context | Title Format | Example |
 |---------|--------------|---------|

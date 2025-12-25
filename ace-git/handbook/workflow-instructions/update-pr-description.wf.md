@@ -151,13 +151,13 @@ Identify patterns:
 
 | Context | Format | Example |
 |---------|--------|---------|
-| Has task ID (from `ace-git context`) | `<task-id>: <description>` | `140.10: Add PR activity awareness` |
+| Has task ID (from `ace-git status`) | `<task-id>: <description>` | `140.10: Add PR activity awareness` |
 | No task ID | `<type>(<scope>): <description>` | `feat(auth): Add OAuth support` |
 
-**Get task ID from context:**
+**Get task ID from status:**
 ```bash
-# Check ace-git context for task pattern
-ace-git context --no-pr | grep "Position (task:"
+# Check ace-git status for task pattern
+ace-git status --no-pr | grep "Position (task:"
 ```
 
 **Guidelines:**
@@ -166,7 +166,7 @@ ace-git context --no-pr | grep "Position (task:"
 - Focus on user-facing impact
 
 **Examples with task ID:**
-- `140.10: Add PR activity awareness to context command`
+- `140.10: Add PR activity awareness to status command`
 - `140.02: Update ace-taskflow to use ace-git`
 - `135.03: Fix validation error in form submission`
 

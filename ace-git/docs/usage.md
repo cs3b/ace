@@ -59,10 +59,8 @@ ace-git diff --raw
 
 Display comprehensive repository context including current branch, associated PR information, recent commits, and PR activity (merged/open PRs).
 
-**Alias:** `ace-git context` (for automation/LLM consumption)
-
 ```bash
-# Full context output (markdown)
+# Full status output (markdown)
 ace-git status
 
 # Skip PR lookups (faster, local-only)

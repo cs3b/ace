@@ -154,8 +154,8 @@ module Ace
         end
       end
 
-      # Copy other sections as-is (rebase, pr, squash, context, etc.)
-      %w[rebase pr squash context].each do |key|
+      # Copy other sections as-is (rebase, pr, squash, status, etc.)
+      %w[rebase pr squash status].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 
@@ -195,22 +195,22 @@ module Ace
       config["network_timeout"] || 60
     end
 
-    # Number of recent commits to show in context output
+    # Number of recent commits to show in status output
     # @return [Integer] Limit (default: 3)
     def self.commits_limit
-      config.dig("context", "commits_limit") || 3
+      config.dig("status", "commits_limit") || 3
     end
 
-    # Number of recently merged PRs to show in context output
+    # Number of recently merged PRs to show in status output
     # @return [Integer] Limit (default: 3)
     def self.merged_prs_limit
-      config.dig("context", "merged_prs_limit") || 3
+      config.dig("status", "merged_prs_limit") || 3
     end
 
-    # Number of open PRs to show in context output
+    # Number of open PRs to show in status output
     # @return [Integer] Limit (default: 10)
     def self.open_prs_limit
-      config.dig("context", "open_prs_limit") || 10
+      config.dig("status", "open_prs_limit") || 10
     end
   end
 end
