@@ -33,7 +33,7 @@ context:
 
   commands:
     - date
-    - ace-git context --no-pr
+    - ace-git context
 ---
 
 # Project Context
