@@ -3,57 +3,57 @@
 module Ace
   module Git
     module Atoms
-      # Pure functions for formatting repository context as various output formats
-      # Extracted from Models::RepoContext.to_markdown for ATOM purity
-      module ContextFormatter
+      # Pure functions for formatting repository status as various output formats
+      # Extracted from Models::RepoStatus.to_markdown for ATOM purity
+      module StatusFormatter
         class << self
-          # Format repository context as markdown
-          # @param context [Models::RepoContext] Repository context
+          # Format repository status as markdown
+          # @param status [Models::RepoStatus] Repository status
           # @return [String] Markdown-formatted output
-          def to_markdown(context)
+          def to_markdown(status)
             lines = []
-            lines << "# Repository Context"
+            lines << "# Repository Status"
 
             # 1. Position section (includes git status -sb)
-            lines.concat(format_position_section(context))
+            lines.concat(format_position_section(status))
 
             # 2. Recent commits section
-            if context.has_recent_commits?
-              lines.concat(format_recent_commits_section(context.recent_commits))
+            if status.has_recent_commits?
+              lines.concat(format_recent_commits_section(status.recent_commits))
             end
 
             # 3. Current PR section (for current branch)
-            if context.has_pr?
-              lines.concat(format_current_pr_section(context.pr_metadata))
+            if status.has_pr?
+              lines.concat(format_current_pr_section(status.pr_metadata))
             end
 
             # 4. PR Activity section (other PRs)
-            if context.has_pr_activity?
-              lines.concat(format_pr_activity_section(context.pr_activity))
+            if status.has_pr_activity?
+              lines.concat(format_pr_activity_section(status.pr_activity))
             end
 
             lines.join("\n")
           end
 
           # Format position section with raw git status -sb output
-          # @param context [Models::RepoContext] Repository context
+          # @param status [Models::RepoStatus] Repository status
           # @return [Array<String>] Lines of markdown
-          def format_position_section(context)
+          def format_position_section(status)
             lines = []
             lines << ""
 
             # Header with optional task pattern
             header = "## Position"
-            header += " (task: #{context.task_pattern})" if context.has_task_pattern?
+            header += " (task: #{status.task_pattern})" if status.has_task_pattern?
             lines << header
             lines << ""
 
             # Raw git status -sb output
-            if context.has_git_status?
-              lines << context.git_status_sb
-            elsif context.branch
+            if status.has_git_status?
+              lines << status.git_status_sb
+            elsif status.branch
               # Fallback if no git status available
-              lines << "Branch: #{context.branch}#{context.detached? ? ' (detached HEAD)' : ''}"
+              lines << "Branch: #{status.branch}#{status.detached? ? ' (detached HEAD)' : ''}"
             end
 
             lines
@@ -119,7 +119,7 @@ module Ace
             # Handle nil pr_activity for defensive programming
             return lines << "No recent PR activity" if pr_activity.nil?
 
-            # pr_activity uses symbol keys (from RepoContextLoader)
+            # pr_activity uses symbol keys (from RepoStatusLoader)
             # PR data within uses string keys (from JSON parsing)
             merged = pr_activity[:merged] || []
             open_prs = pr_activity[:open] || []

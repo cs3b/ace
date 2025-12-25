@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/organisms/repo_context_loader"
+require "ace/git/organisms/repo_status_loader"
 
-class RepoContextLoaderTest < AceGitTestCase
+class RepoStatusLoaderTest < AceGitTestCase
   def setup
     super
     @mock_branch_info = {
@@ -22,7 +22,7 @@ class RepoContextLoaderTest < AceGitTestCase
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
               Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
-                context = Ace::Git::Organisms::RepoContextLoader.load
+                context = Ace::Git::Organisms::RepoStatusLoader.load
 
                 assert_equal "feature-branch", context.branch
                 assert_equal "origin/feature-branch", context.tracking
@@ -45,7 +45,7 @@ class RepoContextLoaderTest < AceGitTestCase
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, task_pattern do
               Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
-                context = Ace::Git::Organisms::RepoContextLoader.load
+                context = Ace::Git::Organisms::RepoStatusLoader.load
 
                 assert_equal task_pattern, context.task_pattern
               end
@@ -60,7 +60,7 @@ class RepoContextLoaderTest < AceGitTestCase
     Ace::Git::Atoms::RepositoryChecker.stub :repository_type, :not_git do
       Ace::Git::Atoms::RepositoryChecker.stub :usable?, false do
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :no_repository do
-          context = Ace::Git::Organisms::RepoContextLoader.load
+          context = Ace::Git::Organisms::RepoStatusLoader.load
 
           assert_nil context.branch
           assert_equal :not_git, context.repository_type
@@ -77,7 +77,7 @@ class RepoContextLoaderTest < AceGitTestCase
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
               # Should NOT call fetch_pr_for_branch
-              context = Ace::Git::Organisms::RepoContextLoader.load(include_pr: false)
+              context = Ace::Git::Organisms::RepoStatusLoader.load(include_pr: false)
 
               assert_nil context.pr_metadata
               refute context.has_pr?
@@ -97,7 +97,7 @@ class RepoContextLoaderTest < AceGitTestCase
           Ace::Git::Molecules::BranchReader.stub :full_info, detached_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
               # Should NOT call fetch_pr_for_branch because branch is detached
-              context = Ace::Git::Organisms::RepoContextLoader.load
+              context = Ace::Git::Organisms::RepoStatusLoader.load
 
               assert_nil context.pr_metadata
             end
@@ -117,7 +117,7 @@ class RepoContextLoaderTest < AceGitTestCase
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
               Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, "42" do
                 Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, { success: true, metadata: mock_pr_metadata } do
-                  context = Ace::Git::Organisms::RepoContextLoader.load
+                  context = Ace::Git::Organisms::RepoStatusLoader.load
 
                   assert context.has_pr?
                   assert_equal mock_pr_metadata, context.pr_metadata
@@ -136,7 +136,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              context = Ace::Git::Organisms::RepoContextLoader.load_minimal
+              context = Ace::Git::Organisms::RepoStatusLoader.load_minimal
 
               assert_equal "feature-branch", context.branch
               assert_nil context.pr_metadata
@@ -158,7 +158,7 @@ class RepoContextLoaderTest < AceGitTestCase
               Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(id, **_opts) {
                 { success: true, metadata: mock_pr_metadata } if id == "99"
               } do
-                context = Ace::Git::Organisms::RepoContextLoader.load_for_pr("99")
+                context = Ace::Git::Organisms::RepoStatusLoader.load_for_pr("99")
 
                 assert context.has_pr?
                 assert_equal mock_pr_metadata, context.pr_metadata
@@ -180,7 +180,7 @@ class RepoContextLoaderTest < AceGitTestCase
                 raise Ace::Git::GhNotInstalledError, "gh not installed"
               } do
                 # Should not raise, just skip PR metadata
-                context = Ace::Git::Organisms::RepoContextLoader.load
+                context = Ace::Git::Organisms::RepoStatusLoader.load
 
                 assert_equal "feature-branch", context.branch
                 assert_nil context.pr_metadata
@@ -202,7 +202,7 @@ class RepoContextLoaderTest < AceGitTestCase
                 raise Ace::Git::PrNotFoundError, "No PR"
               } do
                 # Should not raise, just skip PR metadata
-                context = Ace::Git::Organisms::RepoContextLoader.load
+                context = Ace::Git::Organisms::RepoStatusLoader.load
 
                 assert_equal "feature-branch", context.branch
                 assert_nil context.pr_metadata
@@ -224,7 +224,7 @@ class RepoContextLoaderTest < AceGitTestCase
                 raise Ace::Git::TimeoutError, "Timeout"
               } do
                 # Should not raise, just skip PR metadata
-                context = Ace::Git::Organisms::RepoContextLoader.load
+                context = Ace::Git::Organisms::RepoStatusLoader.load
 
                 assert_equal "feature-branch", context.branch
                 assert_nil context.pr_metadata
@@ -247,7 +247,7 @@ class RepoContextLoaderTest < AceGitTestCase
                 captured_timeout = timeout
                 nil
               } do
-                Ace::Git::Organisms::RepoContextLoader.load(timeout: 60)
+                Ace::Git::Organisms::RepoStatusLoader.load(timeout: 60)
 
                 assert_equal 60, captured_timeout
               end
@@ -272,7 +272,7 @@ class RepoContextLoaderTest < AceGitTestCase
               Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                 Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: mock_merged_prs } do
                   Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: mock_open_prs } do
-                    context = Ace::Git::Organisms::RepoContextLoader.load
+                    context = Ace::Git::Organisms::RepoStatusLoader.load
 
                     assert context.has_pr_activity?
                     assert_equal 1, context.pr_activity[:merged].length
@@ -295,7 +295,7 @@ class RepoContextLoaderTest < AceGitTestCase
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
               Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                 # Should NOT call fetch_recently_merged or fetch_open_prs
-                context = Ace::Git::Organisms::RepoContextLoader.load(include_pr_activity: false)
+                context = Ace::Git::Organisms::RepoStatusLoader.load(include_pr_activity: false)
 
                 assert_nil context.pr_activity
                 refute context.has_pr_activity?
@@ -321,7 +321,7 @@ class RepoContextLoaderTest < AceGitTestCase
                     captured_exclude = exclude_branch
                     { success: true, prs: [] }
                   } do
-                    Ace::Git::Organisms::RepoContextLoader.load
+                    Ace::Git::Organisms::RepoStatusLoader.load
 
                     assert_equal "feature-branch", captured_exclude
                   end
@@ -340,7 +340,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              context = Ace::Git::Organisms::RepoContextLoader.load_minimal
+              context = Ace::Git::Organisms::RepoStatusLoader.load_minimal
 
               assert_nil context.pr_activity
               refute context.has_pr_activity?
@@ -361,7 +361,7 @@ class RepoContextLoaderTest < AceGitTestCase
                 # Both fetches fail
                 Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: false, prs: [] } do
                   Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: false, prs: [] } do
-                    context = Ace::Git::Organisms::RepoContextLoader.load
+                    context = Ace::Git::Organisms::RepoStatusLoader.load
 
                     # Should have nil pr_activity when both fail
                     assert_nil context.pr_activity
@@ -387,7 +387,7 @@ class RepoContextLoaderTest < AceGitTestCase
                 # Merged succeeds, open fails
                 Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: mock_merged_prs } do
                   Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: false, prs: [] } do
-                    context = Ace::Git::Organisms::RepoContextLoader.load
+                    context = Ace::Git::Organisms::RepoStatusLoader.load
 
                     # Should have pr_activity with merged but empty open
                     assert context.has_pr_activity?
@@ -418,7 +418,7 @@ class RepoContextLoaderTest < AceGitTestCase
                   Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                     Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
                       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: [] } do
-                        context = Ace::Git::Organisms::RepoContextLoader.load
+                        context = Ace::Git::Organisms::RepoStatusLoader.load
 
                         assert context.has_git_status?
                         assert_equal mock_status, context.git_status_sb
@@ -450,7 +450,7 @@ class RepoContextLoaderTest < AceGitTestCase
                   Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                     Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
                       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: [] } do
-                        context = Ace::Git::Organisms::RepoContextLoader.load
+                        context = Ace::Git::Organisms::RepoStatusLoader.load
 
                         assert context.has_recent_commits?
                         assert_equal 2, context.recent_commits.length
@@ -483,7 +483,7 @@ class RepoContextLoaderTest < AceGitTestCase
                   Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                     Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
                       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, { success: true, prs: [] } do
-                        Ace::Git::Organisms::RepoContextLoader.load(commits_limit: 5)
+                        Ace::Git::Organisms::RepoStatusLoader.load(commits_limit: 5)
 
                         assert_equal 5, captured_limit
                       end
@@ -507,7 +507,7 @@ class RepoContextLoaderTest < AceGitTestCase
               Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
                 Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                   # Should NOT call fetch on RecentCommitsFetcher
-                  context = Ace::Git::Organisms::RepoContextLoader.load(include_commits: false)
+                  context = Ace::Git::Organisms::RepoStatusLoader.load(include_commits: false)
 
                   refute context.has_recent_commits?
                 end
@@ -526,7 +526,7 @@ class RepoContextLoaderTest < AceGitTestCase
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
               Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
-                context = Ace::Git::Organisms::RepoContextLoader.load_minimal
+                context = Ace::Git::Organisms::RepoStatusLoader.load_minimal
 
                 refute context.has_recent_commits?
                 refute context.has_pr_activity?

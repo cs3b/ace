@@ -2,66 +2,66 @@
 
 require_relative "../test_helper"
 
-class ContextFormatterTest < AceGitTestCase
+class StatusFormatterTest < AceGitTestCase
   def test_to_markdown_includes_header_and_position_section
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       tracking: "origin/feature-123",
       repository_state: :clean
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
-    assert_match(/# Repository Context/, markdown)
+    assert_match(/# Repository Status/, markdown)
     assert_match(/## Position/, markdown)
     assert_match(/Branch: feature-123/, markdown)
   end
 
   def test_to_markdown_shows_detached_head
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "HEAD",
       repository_type: :detached,
       repository_state: :clean
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/\(detached HEAD\)/, markdown)
   end
 
   def test_to_markdown_includes_git_status_in_position
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       repository_state: :clean,
       git_status_sb: "## main...origin/main"
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Position/, markdown)
     assert_match(/## main\.\.\.origin\/main/, markdown)
   end
 
   def test_to_markdown_includes_task_pattern_in_header
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "140-feature",
       task_pattern: "140",
       repository_state: :clean
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Position \(task: 140\)/, markdown)
   end
 
   def test_to_markdown_includes_file_changes_in_position
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       repository_state: :clean,
       git_status_sb: "## main...origin/main\n M file.rb"
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Position/, markdown)
     # Raw git status output including branch line
@@ -70,7 +70,7 @@ class ContextFormatterTest < AceGitTestCase
   end
 
   def test_to_markdown_includes_recent_commits_section
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       repository_state: :clean,
       recent_commits: [
@@ -79,7 +79,7 @@ class ContextFormatterTest < AceGitTestCase
       ]
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Recent Commits/, markdown)
     assert_match(/a7404e9 feat: Add feature/, markdown)
@@ -87,7 +87,7 @@ class ContextFormatterTest < AceGitTestCase
   end
 
   def test_to_markdown_includes_current_pr_section
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
       pr_metadata: {
@@ -102,7 +102,7 @@ class ContextFormatterTest < AceGitTestCase
       }
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Current PR/, markdown)
     assert_match(/#82 \[OPEN\] Add new feature/, markdown)
@@ -111,7 +111,7 @@ class ContextFormatterTest < AceGitTestCase
   end
 
   def test_to_markdown_handles_missing_pr_fields
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
       pr_metadata: {
@@ -119,7 +119,7 @@ class ContextFormatterTest < AceGitTestCase
       }
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Current PR/, markdown)
     assert_match(/#82/, markdown)
@@ -128,7 +128,7 @@ class ContextFormatterTest < AceGitTestCase
   # PR Activity tests
 
   def test_to_markdown_includes_pr_activity_section
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
       pr_activity: {
@@ -141,7 +141,7 @@ class ContextFormatterTest < AceGitTestCase
       }
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## PR Activity/, markdown)
     assert_match(/Merged:/, markdown)
@@ -152,7 +152,7 @@ class ContextFormatterTest < AceGitTestCase
 
   def test_to_markdown_shows_merged_relative_time
     merged_at = (Time.now - (2 * 60 * 60)).iso8601 # 2 hours ago
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
       pr_activity: {
@@ -161,13 +161,13 @@ class ContextFormatterTest < AceGitTestCase
       }
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/#84 Fix bug \(2h ago\)/, markdown)
   end
 
   def test_to_markdown_omits_sections_when_no_prs
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
       pr_activity: {
@@ -176,7 +176,7 @@ class ContextFormatterTest < AceGitTestCase
       }
     )
 
-    markdown = Ace::Git::Atoms::ContextFormatter.to_markdown(context)
+    markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     refute context.has_pr_activity?
     refute_match(/## PR Activity/, markdown)
@@ -188,7 +188,7 @@ class ContextFormatterTest < AceGitTestCase
       open: []
     }
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_pr_activity_section(activity)
+    lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
     output = lines.join("\n")
 
     assert_match(/Merged:/, output)
@@ -202,7 +202,7 @@ class ContextFormatterTest < AceGitTestCase
       open: [{ "number" => 85, "title" => "PR Two", "author" => { "login" => "dev" } }]
     }
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_pr_activity_section(activity)
+    lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
     output = lines.join("\n")
 
     refute_match(/Merged:/, output)
@@ -216,7 +216,7 @@ class ContextFormatterTest < AceGitTestCase
       open: [{ "number" => 85, "title" => "PR Without Author" }]
     }
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_pr_activity_section(activity)
+    lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
     output = lines.join("\n")
 
     assert_match(/#85 PR Without Author/, output)
@@ -224,14 +224,14 @@ class ContextFormatterTest < AceGitTestCase
   end
 
   def test_format_pr_activity_section_with_symbol_keys
-    # RepoContextLoader uses symbol keys for the structure (:merged, :open)
+    # RepoStatusLoader uses symbol keys for the structure (:merged, :open)
     # PR data within uses string keys from JSON parsing ("number", "title")
     activity = {
       merged: [{ "number" => 84, "title" => "Symbol Keys" }],
       open: []
     }
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_pr_activity_section(activity)
+    lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
     output = lines.join("\n")
 
     assert_match(/#84 Symbol Keys/, output)
@@ -240,13 +240,13 @@ class ContextFormatterTest < AceGitTestCase
   # New section format tests
 
   def test_format_position_section_with_git_status
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       task_pattern: "123",
       git_status_sb: "## feature-123...origin/feature-123 [ahead 1]\n M file.rb"
     )
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_position_section(context)
+    lines = Ace::Git::Atoms::StatusFormatter.format_position_section(context)
     output = lines.join("\n")
 
     assert_match(/## Position \(task: 123\)/, output)
@@ -255,12 +255,12 @@ class ContextFormatterTest < AceGitTestCase
   end
 
   def test_format_position_section_without_task
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       git_status_sb: "## main...origin/main"
     )
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_position_section(context)
+    lines = Ace::Git::Atoms::StatusFormatter.format_position_section(context)
     output = lines.join("\n")
 
     assert_match(/## Position$/, output)
@@ -269,11 +269,11 @@ class ContextFormatterTest < AceGitTestCase
   end
 
   def test_format_position_section_fallback_without_git_status
-    context = Ace::Git::Models::RepoContext.new(
+    context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123"
     )
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_position_section(context)
+    lines = Ace::Git::Atoms::StatusFormatter.format_position_section(context)
     output = lines.join("\n")
 
     assert_match(/## Position/, output)
@@ -286,7 +286,7 @@ class ContextFormatterTest < AceGitTestCase
       { hash: "def5678", subject: "Second commit" }
     ]
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_recent_commits_section(commits)
+    lines = Ace::Git::Atoms::StatusFormatter.format_recent_commits_section(commits)
     output = lines.join("\n")
 
     assert_match(/## Recent Commits/, output)
@@ -306,7 +306,7 @@ class ContextFormatterTest < AceGitTestCase
       "url" => "https://github.com/o/r/pull/85"
     }
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_current_pr_section(pr)
+    lines = Ace::Git::Atoms::StatusFormatter.format_current_pr_section(pr)
     output = lines.join("\n")
 
     assert_match(/## Current PR/, output)
@@ -321,7 +321,7 @@ class ContextFormatterTest < AceGitTestCase
       { "hash" => "abc1234", "subject" => "String keys" }
     ]
 
-    lines = Ace::Git::Atoms::ContextFormatter.format_recent_commits_section(commits)
+    lines = Ace::Git::Atoms::StatusFormatter.format_recent_commits_section(commits)
     output = lines.join("\n")
 
     assert_match(/abc1234 String keys/, output)

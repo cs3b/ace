@@ -12,7 +12,7 @@ class CliRoutingTest < AceGitTestCase
       files: [],
       stats: {}
     )
-    @mock_context = Ace::Git::Models::RepoContext.new(
+    @mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       repository_type: :normal,
       repository_state: :clean
@@ -39,7 +39,7 @@ class CliRoutingTest < AceGitTestCase
   end
 
   def test_cli_routes_status_command
-    Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, @mock_context do
       output = capture_io do
         Ace::Git::CLI.start(["status"])
       end
@@ -195,7 +195,7 @@ class CliRoutingTest < AceGitTestCase
   end
 
   def test_cli_passes_json_format_to_status
-    Ace::Git::Organisms::RepoContextLoader.stub :load, @mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, @mock_context do
       output = capture_io do
         Ace::Git::CLI.start(["status", "--format", "json"])
       end

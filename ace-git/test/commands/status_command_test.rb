@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/context_command"
+require "ace/git/commands/status_command"
 
-class ContextCommandTest < AceGitTestCase
+class StatusCommandTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::ContextCommand.new
+    @command = Ace::Git::Commands::StatusCommand.new
   end
 
   def test_execute_returns_success_with_context
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "main",
       repository_type: :normal,
       repository_state: :clean
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: nil)
         assert_equal 0, result
@@ -27,12 +27,12 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_returns_error_when_not_git_repo
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: nil,
       repository_type: :not_git
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: nil)
         assert_equal 1, result
@@ -42,13 +42,13 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_outputs_json_format
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :dirty
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: "json")
         assert_equal 0, result
@@ -60,13 +60,13 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_outputs_markdown_format
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "develop",
       repository_type: :worktree,
       repository_state: :clean
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: "markdown")
         assert_equal 0, result
@@ -77,7 +77,7 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_handles_ace_git_error
-    Ace::Git::Organisms::RepoContextLoader.stub :load, ->(_opts){ raise Ace::Git::Error, "Context loading failed" } do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(_opts){ raise Ace::Git::Error, "Context loading failed" } do
       output = capture_io do
         result = @command.execute(format: nil)
         assert_equal 1, result
@@ -87,7 +87,7 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_with_diff_option_and_pr
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/pr-test",
       repository_type: :normal,
       repository_state: :clean,
@@ -96,7 +96,7 @@ class ContextCommandTest < AceGitTestCase
 
     mock_diff_result = { success: true, diff: "+added line\n-removed line" }
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, mock_diff_result do
         output = capture_io do
           result = @command.execute(format: nil, with_diff: true)
@@ -109,14 +109,14 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_with_diff_option_silently_handles_diff_error
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/pr-test",
       repository_type: :normal,
       repository_state: :clean,
       pr_metadata: { "number" => 123, "title" => "Test PR" }
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, ->(_pr){ raise Ace::Git::Error, "Diff failed" } do
         output = capture_io do
           result = @command.execute(format: nil, with_diff: true)
@@ -130,7 +130,7 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_with_no_pr_flag_skips_pr_lookups
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean
@@ -138,7 +138,7 @@ class ContextCommandTest < AceGitTestCase
     )
 
     captured_options = nil
-    Ace::Git::Organisms::RepoContextLoader.stub :load, ->(opts) {
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(opts) {
       captured_options = opts
       mock_context
     } do
@@ -154,14 +154,14 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_without_no_pr_flag_includes_pr_lookups
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean
     )
 
     captured_options = nil
-    Ace::Git::Organisms::RepoContextLoader.stub :load, ->(opts) {
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(opts) {
       captured_options = opts
       mock_context
     } do
@@ -176,7 +176,7 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_includes_pr_activity_in_output
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean,
@@ -186,7 +186,7 @@ class ContextCommandTest < AceGitTestCase
       }
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: nil)
         assert_equal 0, result
@@ -199,7 +199,7 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_includes_pr_activity_in_json_output
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean,
@@ -209,7 +209,7 @@ class ContextCommandTest < AceGitTestCase
       }
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: "json")
         assert_equal 0, result
@@ -223,14 +223,14 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_passes_commits_limit_to_loader
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean
     )
 
     captured_options = nil
-    Ace::Git::Organisms::RepoContextLoader.stub :load, ->(opts) {
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(opts) {
       captured_options = opts
       mock_context
     } do
@@ -244,14 +244,14 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_disables_commits_when_limit_zero
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean
     )
 
     captured_options = nil
-    Ace::Git::Organisms::RepoContextLoader.stub :load, ->(opts) {
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(opts) {
       captured_options = opts
       mock_context
     } do
@@ -264,14 +264,14 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_includes_git_status_in_position
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean,
       git_status_sb: "## feature/test...origin/feature/test\n M file.rb"
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: nil)
         assert_equal 0, result
@@ -284,7 +284,7 @@ class ContextCommandTest < AceGitTestCase
   end
 
   def test_execute_includes_recent_commits_in_output
-    mock_context = Ace::Git::Models::RepoContext.new(
+    mock_context = Ace::Git::Models::RepoStatus.new(
       branch: "feature/test",
       repository_type: :normal,
       repository_state: :clean,
@@ -293,7 +293,7 @@ class ContextCommandTest < AceGitTestCase
       ]
     )
 
-    Ace::Git::Organisms::RepoContextLoader.stub :load, mock_context do
+    Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.execute(format: nil)
         assert_equal 0, result

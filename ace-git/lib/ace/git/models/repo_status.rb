@@ -3,9 +3,9 @@
 module Ace
   module Git
     module Models
-      # Data structure representing repository context
+      # Data structure representing repository status
       # Includes branch info, task pattern, PR metadata, and repository state
-      class RepoContext
+      class RepoStatus
         attr_reader :branch, :tracking, :ahead, :behind, :task_pattern,
                     :pr_metadata, :pr_activity, :git_status_sb, :recent_commits,
                     :repository_type, :repository_state
@@ -154,10 +154,10 @@ module Ace
         end
 
         # Generate markdown output
-        # @return [String] Markdown-formatted context
-        # @note Delegates to Atoms::ContextFormatter for ATOM pattern compliance
+        # @return [String] Markdown-formatted status
+        # @note Delegates to Atoms::StatusFormatter for ATOM pattern compliance
         def to_markdown
-          Atoms::ContextFormatter.to_markdown(self)
+          Atoms::StatusFormatter.to_markdown(self)
         end
 
         # Create from loaded data
@@ -169,7 +169,7 @@ module Ace
         # @param recent_commits [Array, nil] Recent commits array
         # @param repo_type [Symbol] Repository type
         # @param repo_state [Symbol] Repository state
-        # @return [RepoContext] New instance
+        # @return [RepoStatus] New instance
         def self.from_data(branch_info:, task_pattern: nil, pr_metadata: nil,
                            pr_activity: nil, git_status_sb: nil, recent_commits: nil,
                            repo_type: :normal, repo_state: :clean)

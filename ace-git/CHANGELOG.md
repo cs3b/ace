@@ -9,18 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING**: Renamed `context` subcommand to `status`
-  - `ace-git status` is now the only command (no alias)
-  - Internal classes (ContextCommand, ContextFormatter, RepoContextLoader) unchanged
+- **BREAKING**: Renamed `context` to `status` throughout
+  - CLI: `ace-git status` (no `context` alias)
+  - Config: `git.status.*` (not `git.context.*`)
+  - Classes: `StatusCommand`, `StatusFormatter`, `RepoStatus`, `RepoStatusLoader`
+  - Files: `status_command.rb`, `status_formatter.rb`, `repo_status.rb`, `repo_status_loader.rb`
+  - Output header: "# Repository Status" (was "# Repository Context")
   - Output format and JSON structure unchanged
-- **BREAKING**: Config key renamed from `context` to `status`
-  - Update `.ace/git/config.yml` to use `git.status.*` instead of `git.context.*`
 
 ### Removed
 
 - **TimeFormatter.add_relative_times**: Removed unused method (YAGNI cleanup)
   - Method was marked "kept for potential future use" but never used in production
-  - ContextFormatter.format_merged_time_compact is the actual method used
+  - StatusFormatter.format_merged_time_compact is the actual method used
   - Related tests removed: test_add_relative_times_adds_merged_ago_field, test_add_relative_times_handles_missing_merged_at
 
 ## [0.3.5] - 2025-12-24

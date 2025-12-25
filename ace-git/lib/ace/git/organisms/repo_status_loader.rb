@@ -3,18 +3,18 @@
 module Ace
   module Git
     module Organisms
-      # Orchestrates loading complete repository context
+      # Orchestrates loading complete repository status
       # Combines branch info, task pattern detection, and PR metadata
-      class RepoContextLoader
+      class RepoStatusLoader
         class << self
-          # Load complete repository context
-          # @param options [Hash] Options for context loading
+          # Load complete repository status
+          # @param options [Hash] Options for status loading
           # @option options [Boolean] :include_pr Whether to fetch PR metadata (default: true)
           # @option options [Boolean] :include_pr_activity Whether to fetch PR activity (default: true)
           # @option options [Boolean] :include_commits Whether to fetch recent commits (default: true)
           # @option options [Integer] :commits_limit Number of recent commits to fetch (default: 3)
           # @option options [Integer] :timeout Timeout for network operations like PR fetch (default: network_timeout)
-          # @return [Models::RepoContext] Complete repository context
+          # @return [Models::RepoStatus] Complete repository status
           def load(options = {})
             include_pr = options.fetch(:include_pr, true)
             include_pr_activity = options.fetch(:include_pr_activity, true)
@@ -28,7 +28,7 @@ module Ace
 
             # Check if we can proceed
             unless Atoms::RepositoryChecker.usable?
-              return Models::RepoContext.new(
+              return Models::RepoStatus.new(
                 branch: nil,
                 repository_type: repo_type,
                 repository_state: repo_state
@@ -68,8 +68,8 @@ module Ace
               )
             end
 
-            # Build and return context
-            Models::RepoContext.from_data(
+            # Build and return status
+            Models::RepoStatus.from_data(
               branch_info: branch_info,
               task_pattern: task_pattern,
               pr_metadata: pr_metadata,
@@ -81,15 +81,15 @@ module Ace
             )
           end
 
-          # Load context for a specific PR
+          # Load status for a specific PR
           # @param pr_identifier [String] PR identifier
           # @param options [Hash] Options
-          # @return [Models::RepoContext] Context with PR data
+          # @return [Models::RepoStatus] Status with PR data
           def load_for_pr(pr_identifier, options = {})
             timeout = options.fetch(:timeout, Ace::Git.network_timeout)
 
-            # Get basic context
-            context = load(include_pr: false)
+            # Get basic status
+            status = load(include_pr: false)
 
             # Fetch specific PR metadata
             begin
@@ -99,23 +99,23 @@ module Ace
               pr_metadata = nil
             end
 
-            # Return context with PR data
-            Models::RepoContext.from_data(
+            # Return status with PR data
+            Models::RepoStatus.from_data(
               branch_info: {
-                name: context.branch,
-                tracking: context.tracking,
-                ahead: context.ahead,
-                behind: context.behind
+                name: status.branch,
+                tracking: status.tracking,
+                ahead: status.ahead,
+                behind: status.behind
               },
-              task_pattern: context.task_pattern,
+              task_pattern: status.task_pattern,
               pr_metadata: pr_metadata,
-              repo_type: context.repository_type,
-              repo_state: context.repository_state
+              repo_type: status.repository_type,
+              repo_state: status.repository_state
             )
           end
 
-          # Load minimal context (branch only, no PR)
-          # @return [Models::RepoContext] Minimal context
+          # Load minimal status (branch only, no PR)
+          # @return [Models::RepoStatus] Minimal status
           def load_minimal
             load(include_pr: false, include_pr_activity: false, include_commits: false)
           end

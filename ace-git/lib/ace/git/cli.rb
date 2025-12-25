@@ -155,8 +155,8 @@ module Ace
       option :commits, type: :numeric, aliases: "-c",
                        desc: "Number of recent commits to show (0 to disable, default: config)"
       def status
-        require_relative "commands/context_command"
-        Commands::ContextCommand.new.execute(options)
+        require_relative "commands/status_command"
+        Commands::StatusCommand.new.execute(options)
       rescue Ace::Git::Error => e
         warn "Error: #{e.message}"
         1
