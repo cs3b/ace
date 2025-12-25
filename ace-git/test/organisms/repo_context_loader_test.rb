@@ -413,7 +413,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: mock_status } do
+              Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: mock_status } do
                 Ace::Git::Molecules::RecentCommitsFetcher.stub :fetch, { success: true, commits: [] } do
                   Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                     Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
@@ -445,7 +445,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+              Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
                 Ace::Git::Molecules::RecentCommitsFetcher.stub :fetch, { success: true, commits: mock_commits } do
                   Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                     Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, { success: true, prs: [] } do
@@ -475,7 +475,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+              Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
                 Ace::Git::Molecules::RecentCommitsFetcher.stub :fetch, ->(limit:) {
                   captured_limit = limit
                   { success: true, commits: [] }
@@ -504,7 +504,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+              Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
                 Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
                   # Should NOT call fetch on RecentCommitsFetcher
                   context = Ace::Git::Organisms::RepoContextLoader.load(include_commits: false)
@@ -525,7 +525,7 @@ class RepoContextLoaderTest < AceGitTestCase
         Ace::Git::Atoms::RepositoryStateDetector.stub :detect, :clean do
           Ace::Git::Molecules::BranchReader.stub :full_info, @mock_branch_info do
             Ace::Git::Atoms::TaskPatternExtractor.stub :extract, nil do
-              Ace::Git::Atoms::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
+              Ace::Git::Molecules::GitStatusFetcher.stub :fetch_status_sb, { success: true, output: "" } do
                 context = Ace::Git::Organisms::RepoContextLoader.load_minimal
 
                 refute context.has_recent_commits?

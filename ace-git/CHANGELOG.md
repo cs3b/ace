@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Internal classes (ContextCommand, ContextFormatter, RepoContextLoader) unchanged
   - Output format and JSON structure unchanged
 
+### Removed
+
+- **TimeFormatter.add_relative_times**: Removed unused method (YAGNI cleanup)
+  - Method was marked "kept for potential future use" but never used in production
+  - ContextFormatter.format_merged_time_compact is the actual method used
+  - Related tests removed: test_add_relative_times_adds_merged_ago_field, test_add_relative_times_handles_missing_merged_at
+
 ## [0.3.5] - 2025-12-24
 
 ### Fixed

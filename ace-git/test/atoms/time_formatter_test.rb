@@ -76,27 +76,6 @@ class TimeFormatterTest < AceGitTestCase
     assert_equal "", result
   end
 
-  def test_add_relative_times_adds_merged_ago_field
-    now = Time.parse("2025-12-23T15:00:00Z")
-    prs = [
-      { "number" => 84, "title" => "Test PR", "mergedAt" => "2025-12-23T13:00:00Z" },
-      { "number" => 82, "title" => "Other PR", "mergedAt" => "2025-12-22T15:00:00Z" }
-    ]
-
-    result = Ace::Git::Atoms::TimeFormatter.add_relative_times(prs, reference_time: now)
-
-    assert_equal 2, result.length
-    assert_equal "2h ago", result[0]["merged_ago"]
-    assert_equal "1d ago", result[1]["merged_ago"]
-  end
-
-  def test_add_relative_times_handles_missing_merged_at
-    prs = [{ "number" => 84, "title" => "Test PR" }]
-    result = Ace::Git::Atoms::TimeFormatter.add_relative_times(prs)
-
-    assert_equal "", result[0]["merged_ago"]
-  end
-
   def test_boundary_59_seconds_is_just_now
     now = Time.now
     timestamp = now - 59

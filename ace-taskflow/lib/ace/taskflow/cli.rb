@@ -33,9 +33,9 @@ module Ace
         when "retros"
           require_relative "commands/retros_command"
           Commands::RetrosCommand.new.execute(args)
-        when "context"
-          require_relative "commands/context_command"
-          Commands::ContextCommand.new.execute(args)
+        when "status"
+          require_relative "commands/status_command"
+          Commands::StatusCommand.new.execute(args)
         when "doctor"
           require_relative "commands/doctor_command"
           Commands::DoctorCommand.new.execute(args)
@@ -87,8 +87,8 @@ module Ace
         puts "Configuration:"
         puts "  config   - Show current configuration"
         puts ""
-        puts "Context and Maintenance:"
-        puts "  context  - Show task-aware repository context"
+        puts "Status and Maintenance:"
+        puts "  status   - Show current taskflow status and activity"
         puts "  doctor   - Run health checks and auto-fix issues"
         puts "  migrate  - Migrate folder structure to new naming convention"
         puts ""

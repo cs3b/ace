@@ -65,10 +65,10 @@ bundle exec rake test
 
 ### 2. Determine Target Branch
 
-Use `ace-taskflow context` to identify task hierarchy:
+Use `ace-taskflow status` to identify task hierarchy:
 
 ```bash
-ace-taskflow context
+ace-taskflow status
 ```
 
 **Target Branch Rules:**
@@ -79,16 +79,16 @@ ace-taskflow context
 | Main task (no parent) | `140` | `main` |
 | No task context | - | `main` |
 
-**Detection from taskflow context:**
+**Detection from taskflow status:**
 
-If `ace-taskflow context` shows "Parent Task" section:
+If `ace-taskflow status` shows "Parent Task" section:
 1. Get parent task ID (e.g., `140` from `v.0.9.0+task.140`)
 2. Find branch matching `<parent-id>-*` pattern
 3. Use as target branch
 
 ```bash
 # Check if subtask has parent (using JSON for robustness)
-parent_id=$(ace-taskflow context --json | jq -r '.parent_task.id // empty' | sed 's/.*\.//')
+parent_id=$(ace-taskflow status --json | jq -r '.parent_task.id // empty' | sed 's/.*\.//')
 
 # Find parent branch if parent exists
 if [ -n "$parent_id" ]; then

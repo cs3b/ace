@@ -125,7 +125,7 @@ module Ace
           # Fetch git status in short branch format
           # @return [String, nil] Git status output or nil
           def fetch_git_status
-            result = Atoms::GitStatusFetcher.fetch_status_sb
+            result = Molecules::GitStatusFetcher.fetch_status_sb
             result[:success] ? result[:output] : nil
           rescue StandardError
             nil

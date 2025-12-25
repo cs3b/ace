@@ -33,7 +33,8 @@ context:
 
   commands:
     - date
-    - ace-git context
+    - ace-git status
+    - ace-taskflow status
 ---
 
 # Project Context

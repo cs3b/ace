@@ -8,6 +8,15 @@ module Ace
       # Pure functions for formatting timestamps as relative time strings
       # Examples: "2h ago", "1d ago", "3w ago"
       module TimeFormatter
+        # Time constants for format_duration calculations
+        SECONDS_PER_MINUTE = 60
+        MINUTES_PER_HOUR = 60
+        HOURS_PER_DAY = 24
+        DAYS_PER_WEEK = 7
+        DAYS_PER_MONTH = 30  # Simplified (actual avg ~30.44)
+        DAYS_PER_YEAR = 365
+        MONTHS_PER_YEAR = 12
+
         class << self
           # Convert an ISO8601 timestamp to relative time
           # @param timestamp [String, Time] ISO8601 timestamp or Time object
@@ -24,20 +33,6 @@ module Ace
             return "" if seconds_ago < 0
 
             format_duration(seconds_ago)
-          end
-
-          # Format an array of merged PR data with relative times
-          # @api private
-          # @note Currently unused in production code - kept for potential future use.
-          #   The ContextFormatter.format_merged_time_compact method is used instead
-          #   for inline formatting during output generation.
-          # @param prs [Array<Hash>] PRs with mergedAt field
-          # @param reference_time [Time] Time to compare against
-          # @return [Array<Hash>] PRs with merged_ago field added
-          def add_relative_times(prs, reference_time: Time.now)
-            prs.map do |pr|
-              pr.merge("merged_ago" => relative_time(pr["mergedAt"], reference_time: reference_time))
-            end
           end
 
           private
@@ -57,29 +52,29 @@ module Ace
           # @param seconds [Integer] Duration in seconds
           # @return [String] Formatted duration
           def format_duration(seconds)
-            return "just now" if seconds < 60
+            return "just now" if seconds < SECONDS_PER_MINUTE
 
-            minutes = seconds / 60
-            return "#{minutes}m ago" if minutes < 60
+            minutes = seconds / SECONDS_PER_MINUTE
+            return "#{minutes}m ago" if minutes < MINUTES_PER_HOUR
 
-            hours = minutes / 60
-            return "#{hours}h ago" if hours < 24
+            hours = minutes / MINUTES_PER_HOUR
+            return "#{hours}h ago" if hours < HOURS_PER_DAY
 
-            days = hours / 24
-            return "#{days}d ago" if days < 7
+            days = hours / HOURS_PER_DAY
+            return "#{days}d ago" if days < DAYS_PER_WEEK
 
-            weeks = days / 7
-            return "#{weeks}w ago" if days < 30
+            weeks = days / DAYS_PER_WEEK
+            return "#{weeks}w ago" if days < DAYS_PER_MONTH
 
             # Use months until we hit a full year (365 days)
             # This avoids "0y ago" for 360-364 day intervals
             # Note: Using 30 days/month is a simplification (actual avg is ~30.44)
             # but is acceptable for relative time display purposes
             # Use floor with minimum 1 to avoid "0mo ago" for 30-day intervals
-            months = [(days * 12.0 / 365).floor, 1].max
-            return "#{months}mo ago" if days < 365
+            months = [(days * MONTHS_PER_YEAR.to_f / DAYS_PER_YEAR).floor, 1].max
+            return "#{months}mo ago" if days < DAYS_PER_YEAR
 
-            years = days / 365
+            years = days / DAYS_PER_YEAR
             "#{years}y ago"
           end
         end

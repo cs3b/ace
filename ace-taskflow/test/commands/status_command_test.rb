@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require_relative "../../lib/ace/taskflow/commands/context_command"
+require_relative "../../lib/ace/taskflow/commands/status_command"
 
-class ContextCommandTest < AceTaskflowTestCase
+class StatusCommandTest < AceTaskflowTestCase
   def setup
     super
-    @command = Ace::Taskflow::Commands::ContextCommand.new
+    @command = Ace::Taskflow::Commands::StatusCommand.new
   end
 
   def test_execute_returns_zero_on_success
@@ -26,9 +26,11 @@ class ContextCommandTest < AceTaskflowTestCase
     Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, mock_context do
       output = capture_io { @command.execute([]) }.first
 
-      assert_includes output, "# Taskflow Context"
+      assert_includes output, "# Taskflow Status"
       # Only taskflow info (release, task) - no git state
-      assert_includes output, "Release:"
+      # Release line format: "v.0.9.0: X/Y tasks • Codename"
+      assert_includes output, "v.0.9.0:"
+      assert_includes output, "tasks"
       refute_includes output, "Branch:"
       refute_includes output, "## Repository"
       refute_includes output, "| Field |"  # No tables
@@ -96,16 +98,19 @@ class ContextCommandTest < AceTaskflowTestCase
         name: "v.0.9.0",
         progress: 75,
         done_tasks: 15,
-        total_tasks: 20
+        total_tasks: 20,
+        codename: "Test Release"
       }
     )
 
+    # Release header is formatted inline by status_command (no StatsFormatter needed)
     Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, mock_context do
       output = capture_io { @command.execute([]) }.first
 
-      assert_includes output, "v.0.9.0"
-      assert_includes output, "75%"
-      assert_includes output, "15/20"
+      # Release header includes done/total as promised in CHANGELOG
+      assert_includes output, "v.0.9.0:"
+      assert_includes output, "15/20 tasks"
+      assert_includes output, "Test Release"
     end
   end
 
@@ -126,7 +131,7 @@ class ContextCommandTest < AceTaskflowTestCase
       assert_equal 0, exit_code, "--help should exit with code 0"
     end
 
-    assert_includes output, "Usage: ace-taskflow context"
+    assert_includes output, "Usage: ace-taskflow status"
     # No longer includes --no-pr (PR is now in ace-git context)
     assert_includes output, "--json"
     assert_includes output, "ace-git context"  # Reference to git context command
@@ -196,6 +201,137 @@ class ContextCommandTest < AceTaskflowTestCase
     end
   end
 
+  def test_execute_outputs_task_activity_section
+    mock_context = create_mock_context(
+      task_activity: {
+        recently_done: [
+          { id: "v.0.9.0+task.001", title: "Completed task" }
+        ],
+        in_progress: [
+          { id: "v.0.9.0+task.143", title: "Other work" }
+        ],
+        up_next: [
+          { id: "v.0.9.0+task.140.03", title: "Next task" }
+        ]
+      }
+    )
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, mock_context do
+      output = capture_io { @command.execute([]) }.first
+
+      assert_includes output, "## Task Activity"
+      assert_includes output, "### Recently Done"
+      assert_includes output, "001: Completed task"
+      assert_includes output, "### In Progress"
+      assert_includes output, "143: Other work"
+      assert_includes output, "### Up Next"
+      assert_includes output, "140.03: Next task"
+    end
+  end
+
+  def test_execute_outputs_empty_messages_for_no_activity
+    mock_context = create_mock_context(
+      task_activity: {
+        recently_done: [],
+        in_progress: [],
+        up_next: []
+      }
+    )
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, mock_context do
+      output = capture_io { @command.execute([]) }.first
+
+      assert_includes output, "No recently completed tasks"
+      assert_includes output, "No other tasks in progress"
+      assert_includes output, "No pending tasks"
+    end
+  end
+
+  def test_json_output_includes_task_activity
+    mock_context = create_mock_context(
+      task_activity: {
+        recently_done: [{ id: "v.0.9.0+task.001", title: "Done task" }],
+        in_progress: [],
+        up_next: []
+      }
+    )
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, mock_context do
+      output = capture_io { @command.execute(["--json"]) }.first
+
+      require "json"
+      parsed = JSON.parse(output)
+
+      assert parsed.key?("task_activity")
+      assert_kind_of Array, parsed["task_activity"]["recently_done"]
+      assert_equal 1, parsed["task_activity"]["recently_done"].length
+    end
+  end
+
+  # --- CLI override flags propagation tests ---
+
+  def test_execute_passes_recently_done_limit_to_loader
+    # Verify CLI flags propagate through to TaskflowContextLoader
+    options_received = nil
+
+    loader_mock = lambda do |options|
+      options_received = options
+      create_mock_context
+    end
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, loader_mock do
+      capture_io { @command.execute(["--recently-done-limit", "5"]) }
+    end
+
+    assert_equal 5, options_received[:recently_done_limit]
+  end
+
+  def test_execute_passes_up_next_limit_to_loader
+    options_received = nil
+
+    loader_mock = lambda do |options|
+      options_received = options
+      create_mock_context
+    end
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, loader_mock do
+      capture_io { @command.execute(["--up-next-limit", "10"]) }
+    end
+
+    assert_equal 10, options_received[:up_next_limit]
+  end
+
+  def test_execute_passes_include_drafts_to_loader
+    options_received = nil
+
+    loader_mock = lambda do |options|
+      options_received = options
+      create_mock_context
+    end
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, loader_mock do
+      capture_io { @command.execute(["--include-drafts"]) }
+    end
+
+    assert_equal true, options_received[:include_drafts]
+  end
+
+  def test_execute_passes_zero_limit_to_loader
+    # Verify that explicit 0 values are passed through (not collapsed to config default)
+    options_received = nil
+
+    loader_mock = lambda do |options|
+      options_received = options
+      create_mock_context
+    end
+
+    Ace::Taskflow::Organisms::TaskflowContextLoader.stub :load, loader_mock do
+      capture_io { @command.execute(["--recently-done-limit", "0"]) }
+    end
+
+    assert_equal 0, options_received[:recently_done_limit]
+  end
+
   # Create mock context hash for testing
   private
 
@@ -207,6 +343,11 @@ class ContextCommandTest < AceTaskflowTestCase
         progress: 50,
         done_tasks: 5,
         total_tasks: 10
+      },
+      task_activity: overrides.key?(:task_activity) ? overrides[:task_activity] : {
+        recently_done: [],
+        in_progress: [],
+        up_next: []
       }
     }
   end

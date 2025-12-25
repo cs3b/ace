@@ -57,7 +57,7 @@ Check if PR target is correct based on task hierarchy:
 gh pr view $pr_number --json baseRefName,headRefName,title
 
 # Check task hierarchy
-ace-taskflow context
+ace-taskflow status
 ```
 
 **Validation Rules:**
@@ -70,13 +70,13 @@ ace-taskflow context
 
 **Auto-fix target if subtask targeting main:**
 
-If `ace-taskflow context` shows "Parent Task" section but PR targets `main`:
+If `ace-taskflow status` shows "Parent Task" section but PR targets `main`:
 
 ```bash
 current_base=$(gh pr view $pr_number --json baseRefName -q .baseRefName)
 
 # Check for parent task
-parent_info=$(ace-taskflow context | grep -A1 "Parent Task")
+parent_info=$(ace-taskflow status | grep -A1 "Parent Task")
 if [[ -n "$parent_info" && "$current_base" == "main" ]]; then
   # Extract parent task ID from context
   parent_id=$(echo "$parent_info" | grep -oE 'task\.[0-9]+' | head -1 | sed 's/task\.//')

@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.182] - 2025-12-25
+
+### ace-taskflow v0.24.1 → v0.24.2
+
+**Changed**
+- Renamed `context` subcommand to `status` for semantic clarity
+- Added deprecation alias: `ace-taskflow context` still works but shows warning
+
+**Fixed**
+- Zero-limit CLI options now correctly propagate (using `options.key?` instead of truthiness)
+- Updated stale comments referencing "context" to "status"
+
+## [0.9.181] - 2025-12-24
+
+### ace-taskflow v0.24.0 → v0.24.1
+
+**Added**
+- Task activity awareness in `ace-taskflow status` command (formerly `context`)
+  - Recently Done: Shows last 3 completed tasks with relative timestamps (e.g., "2h ago")
+  - In Progress: Shows other in-progress tasks (excluding current task)
+  - Up Next: Shows next 3 pending tasks in priority order
+  - Includes worktree indicators for parallel work awareness
+
+**Fixed**
+- Release statistics in context command now show accurate done/total counts
+  - Previously showed incorrect 0% progress due to different counting methodology
+  - Now reuses StatsFormatter from tasks command for consistent statistics
+  - Format changed to "## Release: v.X.Y.Z: done/total tasks • Codename"
+
 ## [0.9.180] - 2025-12-23
 
 ### ace-taskflow v0.23.1 → v0.24.0

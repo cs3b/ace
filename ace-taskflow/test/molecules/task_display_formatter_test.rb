@@ -283,4 +283,270 @@ class TaskDisplayFormatterTest < Minitest::Test
     assert_includes result, "Task 042 completed"
     assert_includes result, "Completed at:"
   end
+
+  # --- format_relative_time tests ---
+
+  def test_format_relative_time_returns_unknown_for_nil
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(nil)
+
+    assert_equal "unknown", result
+  end
+
+  def test_format_relative_time_returns_just_now_for_recent
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - 30, now)
+
+    assert_equal "just now", result
+  end
+
+  def test_format_relative_time_returns_minutes_ago
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - (5 * 60), now)
+
+    assert_equal "5m ago", result
+  end
+
+  def test_format_relative_time_boundary_at_60_seconds
+    # Boundary test: exactly 60 seconds should transition from "just now" to "1m ago"
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - 60, now)
+
+    assert_equal "1m ago", result
+  end
+
+  def test_format_relative_time_returns_hours_ago
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - (3 * 60 * 60), now)
+
+    assert_equal "3h ago", result
+  end
+
+  def test_format_relative_time_returns_days_ago
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - (2 * 24 * 60 * 60), now)
+
+    assert_equal "2d ago", result
+  end
+
+  def test_format_relative_time_returns_days_for_two_weeks
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - (14 * 24 * 60 * 60), now)
+
+    assert_equal "14d ago", result
+  end
+
+  def test_format_relative_time_returns_months_ago
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - (60 * 24 * 60 * 60), now)
+
+    assert_equal "2mo ago", result
+  end
+
+  def test_format_relative_time_returns_years_ago
+    now = Time.now
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(now - (400 * 24 * 60 * 60), now)
+
+    assert_equal "1y ago", result
+  end
+
+  def test_format_relative_time_returns_unknown_for_non_time_type
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time("not a time")
+
+    assert_equal "unknown", result
+  end
+
+  def test_format_relative_time_returns_unknown_for_integer
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(12345)
+
+    assert_equal "unknown", result
+  end
+
+  def test_format_relative_time_returns_just_now_for_future_time
+    now = Time.now
+    future = now + 3600 # 1 hour in the future
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_relative_time(future, now)
+
+    assert_equal "just now", result
+  end
+
+  # --- format_activity_section tests ---
+
+  def test_format_activity_section_returns_empty_for_nil
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(nil)
+
+    assert_equal "", result
+  end
+
+  def test_format_activity_section_includes_all_sections
+    activity = {
+      recently_done: [],
+      in_progress: [],
+      up_next: []
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(activity)
+
+    assert_includes result, "## Task Activity"
+    assert_includes result, "### Recently Done"
+    assert_includes result, "### In Progress"
+    assert_includes result, "### Up Next"
+  end
+
+  def test_format_activity_section_shows_empty_messages
+    activity = {
+      recently_done: [],
+      in_progress: [],
+      up_next: []
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(activity)
+
+    assert_includes result, "No recently completed tasks"
+    assert_includes result, "No other tasks in progress"
+    assert_includes result, "No pending tasks"
+  end
+
+  def test_format_activity_section_formats_recently_done_tasks
+    activity = {
+      recently_done: [
+        { id: "v.0.9.0+task.140.02", title: "Update ace-taskflow" }
+      ],
+      in_progress: [],
+      up_next: []
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(activity, show_time: false)
+
+    assert_includes result, "- 140.02: Update ace-taskflow"
+  end
+
+  def test_format_activity_section_formats_in_progress_tasks
+    activity = {
+      recently_done: [],
+      in_progress: [
+        { id: "v.0.9.0+task.143", title: "Unified configuration" }
+      ],
+      up_next: []
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(activity)
+
+    assert_includes result, "- 143: Unified configuration"
+  end
+
+  def test_format_activity_section_formats_up_next_tasks
+    activity = {
+      recently_done: [],
+      in_progress: [],
+      up_next: [
+        { id: "v.0.9.0+task.140.03", title: "Update ace-review" }
+      ]
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(activity)
+
+    assert_includes result, "- 140.03: Update ace-review"
+  end
+
+  def test_format_activity_section_shows_worktree_indicator
+    activity = {
+      recently_done: [],
+      in_progress: [
+        { id: "v.0.9.0+task.143", title: "Config work", worktree: { branch: "143-config" } }
+      ],
+      up_next: []
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_section(activity)
+
+    assert_includes result, "(@worktree)"
+  end
+
+  # --- format_activity_task_line tests ---
+
+  def test_format_activity_task_line_basic
+    task = { id: "v.0.9.0+task.140", title: "Add git context" }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_task_line(task)
+
+    assert_equal "140: Add git context", result
+  end
+
+  def test_format_activity_task_line_with_worktree
+    task = { id: "v.0.9.0+task.140", title: "Add git context", worktree: { branch: "140-git" } }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_task_line(task, show_worktree: true)
+
+    assert_includes result, "(@worktree)"
+  end
+
+  def test_format_activity_task_line_handles_missing_title
+    task = { id: "v.0.9.0+task.140" }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_task_line(task)
+
+    assert_includes result, "Untitled"
+  end
+
+  def test_format_activity_task_line_with_completed_at
+    now = Time.now
+    task = {
+      id: "v.0.9.0+task.140",
+      title: "Completed task",
+      completed_at: now - (2 * 60 * 60) # 2 hours ago
+    }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.format_activity_task_line(
+      task,
+      show_time: true
+    )
+
+    assert_includes result, "140: Completed task"
+    assert_includes result, "(done 2h ago)"
+  end
+
+  # --- extract_task_number tests ---
+
+  def test_extract_task_number_from_full_id
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.extract_task_number("v.0.9.0+task.140.02")
+
+    assert_equal "140.02", result
+  end
+
+  def test_extract_task_number_from_simple_id
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.extract_task_number("v.0.9.0+task.140")
+
+    assert_equal "140", result
+  end
+
+  def test_extract_task_number_returns_nil_for_invalid
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.extract_task_number("invalid")
+
+    assert_nil result
+  end
+
+  def test_extract_task_number_returns_nil_for_nil
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.extract_task_number(nil)
+
+    assert_nil result
+  end
+
+  # --- has_worktree? tests ---
+
+  def test_has_worktree_returns_false_for_no_worktree
+    task = { id: "task.001" }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.has_worktree?(task)
+
+    refute result
+  end
+
+  def test_has_worktree_returns_true_for_worktree_hash
+    task = { id: "task.001", worktree: { branch: "001-feature" } }
+
+    result = Ace::Taskflow::Molecules::TaskDisplayFormatter.has_worktree?(task)
+
+    assert result
+  end
 end

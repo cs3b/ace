@@ -5,6 +5,78 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.4] - TBD
+
+### Changed
+
+- **BREAKING**: Config keys renamed from `context.activity.*` to `status.activity.*`
+  - Update `.ace/taskflow/config.yml` to use `status` instead of `context`
+  - Consistent with command name (`ace-taskflow status`)
+
+### Fixed
+
+- Remove redundant string prefix check in status_command relative path formatting
+  - Simplified to use Pathname#relative_path_from consistently
+  - More robust for case-insensitive filesystems and symlinks
+
+## [0.24.3] - 2025-12-25
+
+### Added
+
+- **`--[no-]include-activity` CLI flag**: Disable entire activity section for simpler output
+  - `ace-taskflow status --no-include-activity` hides Recently Done, In Progress, and Up Next
+  - Works with both markdown and JSON output formats
+- **"completed" status support**: Recently Done section now includes both "done" and "completed" statuses
+  - Ensures comprehensive activity tracking for projects using either convention
+
+### Changed
+
+- **Performance optimization**: Short-circuit evaluation when limits are zero
+  - `find_recently_done` and `find_up_next` return early when limit=0, avoiding unnecessary filtering/sorting
+- **UTF-8 BOM handling**: CodenameExtractor now strips UTF-8 BOM from README.md files
+
+### Fixed
+
+- Debug logging now uses `Ace::Core.logger.debug` for consistency across the codebase
+- Added documentation for config key naming (context vs status) backward compatibility
+
+## [0.24.2] - 2025-12-25
+
+### Changed
+
+- **CLI Rename**: Renamed `context` subcommand to `status`
+  - Better reflects the command's purpose of showing live operational state
+  - Usage: `ace-taskflow status` (was `ace-taskflow context`)
+  - Added deprecation alias: `ace-taskflow context` still works with warning
+  - All options remain the same: `--json`, `--recently-done-limit`, `--up-next-limit`, `--include-drafts`
+  - Internal constructs unchanged (TaskflowContextLoader, configuration keys)
+- **Limit=0 Behavior**: Sections now skip entirely when limit is set to 0
+  - `--recently-done-limit 0` hides Recently Done section (no empty message)
+  - `--up-next-limit 0` hides Up Next section (no empty message)
+
+### Fixed
+
+- Zero-limit CLI options now correctly propagate (using `options.key?` instead of truthiness)
+- Updated stale comments referencing "context" to "status" in source and config
+- Clarified ADR-022 fallback defaults in TaskActivityAnalyzer documentation
+
+## [0.24.1] - 2025-12-24
+
+### Added
+
+- **Task Activity Awareness**: Status command (formerly context) shows task activity section
+  - Recently Done: Last 3 completed tasks with relative timestamps
+  - In Progress: Other in-progress tasks (excluding current)
+  - Up Next: Next 3 pending tasks in priority order
+  - Includes worktree indicators for parallel work awareness
+
+### Fixed
+
+- **Release Stats**: Context command now uses accurate release statistics
+  - Reuses StatsFormatter from tasks command for consistent done/total counts
+  - Shows "## Release: v.X.Y.Z: done/total tasks • Codename" format
+  - Previously showed incorrect 0% progress due to different counting methodology
+
 ## [0.24.0] - 2025-12-23
 
 ### Added

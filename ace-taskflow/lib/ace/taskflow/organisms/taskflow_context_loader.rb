@@ -2,6 +2,8 @@
 
 require_relative "../molecules/task_loader"
 require_relative "../molecules/release_resolver"
+require_relative "../molecules/task_activity_analyzer"
+require_relative "../molecules/codename_extractor"
 require_relative "../atoms/task_reference_parser"
 
 module Ace
@@ -13,34 +15,61 @@ module Ace
       class TaskflowContextLoader
         # Load taskflow context
         # @since 0.24.0
-        # @param options [Hash] Options (currently unused, kept for compatibility)
+        # @param options [Hash] Options
+        # @option options [Boolean] :include_activity Include task activity (default: true)
         # @return [Hash] Taskflow context with task and release info
         def self.load(options = {})
           new.load(options)
         end
 
+        # Initialize the loader
+        # @param root_path [String, nil] Root path for taskflow (defaults to configured root)
+        # @note The @primary_release cache persists for the loader instance lifetime.
+        #   Each load() call reuses the cached release. If you need fresh release data,
+        #   create a new loader instance. This is the expected behavior for single
+        #   context loads, but be aware if reusing loader instances across operations.
         def initialize(root_path: nil)
           @root_path = root_path || default_root_path
+          @primary_release = nil # Cache for release to avoid duplicate lookups
         end
 
         # Load taskflow context (task and release information)
         # @since 0.24.0
-        # @param options [Hash] Options (currently unused, kept for API compatibility)
+        # @param options [Hash] Options
+        # @option options [Boolean] :include_activity Include task activity (default: true)
+        # @option options [Integer] :recently_done_limit Override config for recently done limit
+        # @option options [Integer] :up_next_limit Override config for up next limit
+        # @option options [Boolean] :include_drafts Override config for including drafts
         # @return [Hash] Taskflow context with task and release info
         def load(options = {})
+          include_activity = options.fetch(:include_activity, true)
+
           # Detect task pattern from current branch name
           task_pattern = detect_task_pattern_from_branch
 
           # Resolve task from pattern if found
           resolved_task = resolve_task(task_pattern) if task_pattern
 
-          # Get current release info
+          # Get current release info (caches @primary_release for reuse)
           release_info = load_release_info
 
-          {
+          result = {
             task: resolved_task,
             release: release_info
           }
+
+          # Load task activity if requested (reuses cached @primary_release)
+          # Pass through activity options for CLI override support (ADR-022)
+          if include_activity
+            activity_options = options.slice(
+              :recently_done_limit,
+              :up_next_limit,
+              :include_drafts
+            )
+            result[:task_activity] = load_task_activity(resolved_task, activity_options)
+          end
+
+          result
         end
 
         private
@@ -69,26 +98,35 @@ module Ace
         end
 
         def load_release_info
-          resolver = Molecules::ReleaseResolver.new(@root_path)
-          primary = resolver.find_primary_active
+          # Cache the primary release for reuse in load_task_activity
+          @primary_release ||= begin
+            resolver = Molecules::ReleaseResolver.new(@root_path)
+            resolver.find_primary_active
+          end
 
-          return nil unless primary
+          return nil unless @primary_release
 
           # ReleaseResolver returns consistent symbol keys
-          stats = primary[:statistics]
+          stats = @primary_release[:statistics]
           total = stats[:total]
           statuses = stats[:statuses]
           done = (statuses[:done] || 0) + (statuses[:completed] || 0)
           progress = total > 0 ? ((done.to_f / total) * 100).round : 0
 
+          # Extract codename from release directory (e.g., "Mono-Repo Multiple Gems")
+          codename = extract_codename_from_path(@primary_release[:path])
+
           {
-            name: primary[:name],
-            version: primary[:version],
-            path: primary[:path],
-            status: primary[:status],
+            name: @primary_release[:name],
+            version: @primary_release[:version],
+            path: @primary_release[:path],
+            status: @primary_release[:status],
             total_tasks: total,
             done_tasks: done,
-            progress: progress
+            progress: progress,
+            codename: codename,
+            # Include stats for ContextCommand to avoid TaskManager re-instantiation
+            stats: statuses
           }
         end
 
@@ -116,6 +154,48 @@ module Ace
         def extract_parent_number(parent_id)
           return nil unless parent_id
           Atoms::TaskReferenceParser.extract_number(parent_id)
+        end
+
+        # Extract codename from release directory's main markdown file
+        # Delegates to CodenameExtractor molecule for better testability
+        # @param release_path [String] Path to release directory
+        # @return [String, nil] Codename or nil if not found
+        def extract_codename_from_path(release_path)
+          Molecules::CodenameExtractor.extract(release_path)
+        end
+
+        # Load task activity (recently done, in progress, up next)
+        # Uses cached @primary_release to avoid duplicate ReleaseResolver calls
+        # Configuration is loaded from Ace::Taskflow.configuration (ADR-022)
+        # @param current_task [Hash, nil] Current task to exclude from in_progress
+        # @param options [Hash] Override options (from CLI flags)
+        # @return [Hash] Activity data with :recently_done, :in_progress, :up_next
+        def load_task_activity(current_task, options = {})
+          loader = Molecules::TaskLoader.new(@root_path)
+
+          # Load tasks from current release only (performance optimization)
+          # Uses load_tasks_from_release instead of load_all_tasks to avoid
+          # loading historical releases as the project grows
+          all_tasks = if @primary_release
+                        loader.load_tasks_from_release(@primary_release[:path])
+                      else
+                        loader.load_all_tasks
+                      end
+
+          current_task_id = current_task ? current_task[:id] : nil
+
+          # Get configuration values (ADR-022: config > hardcoded defaults)
+          config = Ace::Taskflow.configuration
+
+          # Use options.key? pattern to allow explicit 0/false values from CLI to override config
+          # The || pattern would ignore 0/false, collapsing back to config defaults
+          Molecules::TaskActivityAnalyzer.categorize_activities(
+            all_tasks,
+            current_task_id: current_task_id,
+            recently_done_limit: options.key?(:recently_done_limit) ? options[:recently_done_limit] : config.recently_done_limit,
+            up_next_limit: options.key?(:up_next_limit) ? options[:up_next_limit] : config.up_next_limit,
+            include_drafts: options.key?(:include_drafts) ? options[:include_drafts] : config.include_drafts_in_up_next?
+          )
         end
       end
     end
