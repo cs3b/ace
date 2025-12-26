@@ -180,6 +180,46 @@ class CommandExecutorTest < AceGitTestCase
     end
   end
 
+  def test_current_branch_returns_sha_when_detached
+    # When git rev-parse --abbrev-ref HEAD returns "HEAD", we're detached
+    # and should return the commit SHA instead
+    call_count = 0
+    mock_execute = lambda do |*args, **_opts|
+      call_count += 1
+      if call_count == 1
+        # First call: abbrev-ref returns "HEAD" (detached)
+        { success: true, output: "HEAD\n", error: "", exit_code: 0 }
+      else
+        # Second call: rev-parse HEAD returns SHA
+        { success: true, output: "abc123def456789\n", error: "", exit_code: 0 }
+      end
+    end
+
+    @executor.stub :execute, mock_execute do
+      result = @executor.current_branch
+      assert_equal "abc123def456789", result, "Should return SHA when detached"
+    end
+  end
+
+  def test_current_branch_returns_nil_when_detached_sha_fails
+    call_count = 0
+    mock_execute = lambda do |*args, **_opts|
+      call_count += 1
+      if call_count == 1
+        # First call: abbrev-ref returns "HEAD" (detached)
+        { success: true, output: "HEAD\n", error: "", exit_code: 0 }
+      else
+        # Second call: rev-parse HEAD fails
+        { success: false, output: "", error: "error", exit_code: 1 }
+      end
+    end
+
+    @executor.stub :execute, mock_execute do
+      result = @executor.current_branch
+      assert_nil result, "Should return nil when SHA lookup fails"
+    end
+  end
+
   def test_repo_root_with_stubbed_response
     mock_result = { success: true, output: "/path/to/repo\n", error: "", exit_code: 0 }
 

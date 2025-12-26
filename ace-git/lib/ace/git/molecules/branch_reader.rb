@@ -7,15 +7,21 @@ module Ace
       # Consolidated from ace-review GitBranchReader (adapted to use CommandExecutor)
       class BranchReader
         class << self
-          # Get current git branch name
+          # Get current git branch name or commit SHA if detached
           # @param executor [Module] Command executor
-          # @return [String|nil] branch name, "HEAD" (detached), or nil if not in git repo
+          # @return [String|nil] branch name, commit SHA (if detached), or nil if not in git repo
           def current_branch(executor: Atoms::CommandExecutor)
-            result = executor.execute("git", "rev-parse", "--abbrev-ref", "HEAD")
-            return nil unless result[:success]
+            executor.current_branch
+          end
 
-            branch = result[:output].strip
-            branch.empty? ? nil : branch
+          # Check if HEAD is detached
+          # @param executor [Module] Command executor
+          # @return [Boolean] true if HEAD is detached
+          def detached?(executor: Atoms::CommandExecutor)
+            result = executor.execute("git", "rev-parse", "--abbrev-ref", "HEAD")
+            return false unless result[:success]
+
+            result[:output].strip == "HEAD"
           end
 
           # Get remote tracking branch
@@ -55,7 +61,7 @@ module Ace
 
             {
               name: branch,
-              detached: branch == "HEAD",
+              detached: detached?(executor: executor),
               tracking: tracking,
               ahead: status[:ahead],
               behind: status[:behind],
