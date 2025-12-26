@@ -86,11 +86,18 @@ module Ace
             result[:success]
           end
 
-          # Get current branch name
-          # @return [String, nil] Current branch name or nil on error
+          # Get current branch name or commit SHA if detached
+          # @return [String, nil] Current branch name, commit SHA (if detached), or nil on error
           def current_branch
             result = execute("git", "rev-parse", "--abbrev-ref", "HEAD")
-            result[:success] ? result[:output].strip : nil
+            return nil unless result[:success]
+
+            branch = result[:output].strip
+            return branch unless branch == "HEAD"
+
+            # Detached HEAD - return commit SHA instead
+            sha_result = execute("git", "rev-parse", "HEAD")
+            sha_result[:success] ? sha_result[:output].strip : nil
           end
 
           # Get repository root path
