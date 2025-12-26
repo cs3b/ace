@@ -73,4 +73,29 @@ class GitSecretsTestCase < Minitest::Test
 
     yield
   end
+
+  # Path to test-specific gitleaks config with test token patterns
+  # @return [String] Absolute path to test gitleaks.toml
+  def test_gitleaks_config
+    File.join(File.dirname(__FILE__), "gitleaks.toml")
+  end
+
+  # Set test gitleaks config via environment variable
+  # Resets Ace::Git::Secrets config cache to pick up new value
+  # @yield Block to execute with test config active
+  def with_test_gitleaks_config
+    config_path = test_gitleaks_config
+    original_env = ENV["ACE_GITLEAKS_CONFIG_PATH"]
+
+    begin
+      ENV["ACE_GITLEAKS_CONFIG_PATH"] = config_path
+      # Reset config cache to pick up new environment variable
+      Ace::Git::Secrets.reset_config!
+      yield
+    ensure
+      ENV["ACE_GITLEAKS_CONFIG_PATH"] = original_env
+      # Reset config cache again to restore original state
+      Ace::Git::Secrets.reset_config!
+    end
+  end
 end

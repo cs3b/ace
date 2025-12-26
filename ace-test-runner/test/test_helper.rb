@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/test_runner"
+require "ace/test_support"  # Load shared test helpers and fixtures
 require "minitest/autorun"
 
 # Try to use spec reporter for better output if available

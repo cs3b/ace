@@ -1,0 +1,17 @@
+# Test-specific gitleaks configuration
+# Detects the test token patterns used in ace-git-secrets tests
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "test-literal-token"
+description = "Test token for ace-git-secrets"
+regex = '''literal:\[REDACTED:[^\]]+\]'''
+entropy = 0
+
+[[rules]]
+id = "test-github-pat"
+description = "Test GitHub PAT for ace-git-secrets"
+regex = '''ghp_test[_a-z0-9]+'''
+entropy = 0

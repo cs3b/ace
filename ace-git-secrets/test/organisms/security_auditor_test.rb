@@ -8,6 +8,7 @@ class SecurityAuditorTest < GitSecretsTestCase
     @temp_repo = create_temp_repo
     @original_dir = Dir.pwd
     Dir.chdir(@temp_repo)
+    @gitleaks_config = test_gitleaks_config
   end
 
   def teardown
@@ -28,6 +29,7 @@ class SecurityAuditorTest < GitSecretsTestCase
 
     auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
       repository_path: @temp_repo,
+      gitleaks_config: @gitleaks_config,
       whitelist: whitelist
     )
     report = auditor.audit
@@ -47,6 +49,7 @@ class SecurityAuditorTest < GitSecretsTestCase
 
     auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
       repository_path: @temp_repo,
+      gitleaks_config: @gitleaks_config,
       whitelist: whitelist
     )
     report = auditor.audit
@@ -67,6 +70,7 @@ class SecurityAuditorTest < GitSecretsTestCase
 
     auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
       repository_path: @temp_repo,
+      gitleaks_config: @gitleaks_config,
       whitelist: whitelist
     )
     report = auditor.audit
@@ -82,7 +86,8 @@ class SecurityAuditorTest < GitSecretsTestCase
     system("git commit -q -m 'Add secret'")
 
     auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo
+      repository_path: @temp_repo,
+      gitleaks_config: @gitleaks_config
     )
     report = auditor.audit
 
@@ -98,6 +103,7 @@ class SecurityAuditorTest < GitSecretsTestCase
 
     auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
       repository_path: @temp_repo,
+      gitleaks_config: @gitleaks_config,
       whitelist: []
     )
     report = auditor.audit
@@ -123,6 +129,7 @@ class SecurityAuditorTest < GitSecretsTestCase
 
     auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
       repository_path: @temp_repo,
+      gitleaks_config: @gitleaks_config,
       whitelist: whitelist
     )
     report = auditor.audit
