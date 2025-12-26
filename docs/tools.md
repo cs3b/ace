@@ -24,7 +24,7 @@ update:
 | **ace-review** | Code review | `ace-review --preset pr`, `ace-review --task 121`, `ace-review --auto-execute` |
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
-| **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
+| **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree create --pr 26`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
 | **ace-prompt** | Prompt workspace | `ace-prompt`, `ace-prompt --enhance`, `ace-prompt --task 121` |
 | **ace-test** | Run tests | `ace-test`, `ace-test atoms`, `ace-test ace-context`, `ace-test ace-nav atoms` |
 
