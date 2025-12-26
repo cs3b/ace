@@ -2,7 +2,7 @@
 # Uses multiple models to get diverse perspectives on code changes
 
 presets:
-  - code-pr
+  - code
 
 description: "Multi-model PR review - concurrent execution across claude:opus, codex, and gpro"
 
