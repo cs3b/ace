@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.190] - 2025-12-26
+
+### ace-review v0.26.2
+
+**Technical**
+- Add timeout guidance for Claude Code agents in workflow instructions
+  - Recommended: 10-minute timeout (600000ms), inline mode (not background)
+  - Prevents race conditions with TaskOutput when review takes 3-5 minutes
+
+## [0.9.189] - 2025-12-26
+
+### ace-git v0.3.6
+
+**Added**
+- `PrMetadataFetcher`: Fork detection fields (`isCrossRepository`, `headRepositoryOwner`)
+- `BranchReader.detached?`: Explicit method to check if HEAD is detached
+
+**Changed**
+- `CommandExecutor.current_branch`: Now returns commit SHA when in detached HEAD state
+  - Previously returned literal "HEAD", requiring consumer workarounds
+  - Consumers should use `BranchReader.detached?` to detect detached state
+
+### ace-git-worktree v0.5.0 → v0.6.0
+
+**Added**
+- Fork PR detection with warning when creating worktree for fork PRs
+- `PR_NUMBER_PATTERN` constant for consistent PR number validation
+- `ENV["DEBUG"]` support for unexpected error diagnostics
+- CLI integration tests for `--pr` flag and timeout parameter tests
+
+**Changed**
+- Migrated from ace-git-diff to ace-git dependency (~> 0.3)
+- Simplified `GitCommand.current_branch` - now delegates directly to ace-git
+- Updated to Ruby 3 keyword argument forwarding syntax
+- Promoted `with_git_stubs` test helper to shared `test_helper.rb`
+
+**Removed**
+- `molecules/pr_fetcher.rb` - replaced by ace-git's `PrMetadataFetcher`
+
 ## [0.9.188] - 2025-12-26
 
 ### ace-git v0.3.5

@@ -42,6 +42,8 @@ ace-review --subject "$2" --auto-execute
 ace-review --subject pr:76 --subject files:CHANGELOG.md --auto-execute
 ```
 
+**Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
+
 Wait for the review to complete. Note the synthesis report path from the output.
 
 The review generates:
