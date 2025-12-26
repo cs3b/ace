@@ -150,10 +150,10 @@ class CreateCommandTest < Minitest::Test
   end
 
   def test_handles_worktree_manager_errors
-    # Mock worktree manager throwing an error
+    # Mock worktree manager throwing an ace-git error
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:create_task, nil) do
-      raise StandardError, "Git command failed"
+      raise Ace::Git::GitError, "Git command failed"
     end
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
@@ -358,6 +358,212 @@ class CreateCommandTest < Minitest::Test
         assert_equal 0, result, "Should handle commit message: #{commit_message}"
         mock_worktree_manager.verify
       end
+    end
+  end
+
+  # PR worktree creation tests using PrMetadataFetcher
+  def test_run_with_pr_argument_success
+    # Mock gh CLI availability
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+        # Mock PR metadata fetch
+        mock_metadata_result = {
+          success: true,
+          metadata: {
+            "number" => 26,
+            "title" => "Add authentication feature",
+            "headRefName" => "feature/auth",
+            "baseRefName" => "main",
+            "isCrossRepository" => false,
+            "headRepositoryOwner" => { "login" => "owner" }
+          }
+        }
+        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+          # Mock worktree creation
+          mock_worktree_manager = Minitest::Mock.new
+          mock_worktree_manager.expect(:create_pr, {
+            success: true,
+            pr_number: 26,
+            pr_title: "Add authentication feature",
+            worktree_path: "/path/to/worktree",
+            branch: "pr-26",
+            tracking: "origin/feature/auth",
+            directory_name: "ace-pr-26"
+          }, [Integer, Hash, Hash])
+
+          @command.instance_variable_set(:@manager, mock_worktree_manager)
+          result = @command.run(["--pr", "26"])
+
+          assert_equal 0, result
+          mock_worktree_manager.verify
+        end
+      end
+    end
+  end
+
+  def test_run_with_pr_fork_warning
+    # Mock gh CLI availability
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+        # Mock PR metadata for a fork
+        mock_metadata_result = {
+          success: true,
+          metadata: {
+            "number" => 42,
+            "title" => "Fork contribution",
+            "headRefName" => "fix/issue",
+            "baseRefName" => "main",
+            "isCrossRepository" => true,
+            "headRepositoryOwner" => { "login" => "contributor" }
+          }
+        }
+        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+          mock_worktree_manager = Minitest::Mock.new
+          mock_worktree_manager.expect(:create_pr, {
+            success: true,
+            pr_number: 42,
+            pr_title: "Fork contribution",
+            worktree_path: "/path/to/worktree",
+            branch: "pr-42",
+            tracking: "origin/fix/issue",
+            directory_name: "ace-pr-42"
+          }, [Integer, Hash, Hash])
+
+          @command.instance_variable_set(:@manager, mock_worktree_manager)
+          # Capture output to verify fork warning
+          output = capture_io do
+            result = @command.run(["--pr", "42"])
+            assert_equal 0, result
+          end.first
+
+          assert_match(/fork/, output.downcase)
+          assert_match(/contributor/, output)
+          mock_worktree_manager.verify
+        end
+      end
+    end
+  end
+
+  def test_run_with_pr_not_found_error
+    # Mock gh CLI availability
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+        # Mock PR not found error
+        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, ->(id, **_opts) {
+          raise Ace::Git::PrNotFoundError, "PR not found: #{id}"
+        }) do
+          output = capture_io do
+            result = @command.run(["--pr", "99999"])
+            assert_equal 1, result
+          end.first
+
+          assert_match(/PR not found/, output)
+          assert_match(/Suggestions/, output)
+        end
+      end
+    end
+  end
+
+  def test_run_with_pr_auth_error
+    # Mock gh CLI availability
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+        # Mock auth error during fetch
+        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, ->(*_args) {
+          raise Ace::Git::GhAuthenticationError, "Not authenticated with GitHub"
+        }) do
+          output = capture_io do
+            result = @command.run(["--pr", "26"])
+            assert_equal 1, result
+          end.first
+
+          assert_match(/Not authenticated/, output)
+          assert_match(/gh auth status/, output)
+        end
+      end
+    end
+  end
+
+  def test_run_with_pr_gh_not_installed
+    # Mock gh CLI not installed
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, false) do
+      output = capture_io do
+        result = @command.run(["--pr", "26"])
+        assert_equal 1, result
+      end.first
+
+      assert_match(/gh CLI is required/, output)
+    end
+  end
+
+  def test_run_with_pr_not_authenticated
+    # Mock gh CLI installed but not authenticated
+    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, false) do
+        output = capture_io do
+          result = @command.run(["--pr", "26"])
+          assert_equal 1, result
+        end.first
+
+        assert_match(/not authenticated/, output.downcase)
+        assert_match(/gh auth login/, output)
+      end
+    end
+  end
+
+  def test_run_with_invalid_pr_number
+    result = @command.run(["--pr", "abc"])
+    assert_equal 1, result
+  end
+
+  def test_run_with_empty_pr_number
+    result = @command.run(["--pr", ""])
+    assert_equal 1, result
+  end
+
+  def test_pr_and_task_conflict
+    result = @command.run(["--pr", "26", "--task", "081"])
+    assert_equal 1, result
+  end
+
+  def test_run_with_pr_upper_bound_validation
+    # Test that PR numbers above 999999 are rejected
+    result = @command.run(["--pr", "1000000"])
+    assert_equal 1, result
+  end
+
+  def test_run_with_pr_negative_number
+    # Test that negative PR numbers are rejected (after to_i conversion, pattern matches digits only)
+    result = @command.run(["--pr", "-1"])
+    assert_equal 1, result
+  end
+
+  def test_debug_output_on_error
+    # Test that DEBUG mode provides additional error info without crashing
+    # Note: TimeoutError has specific handling, so we use GitError to test the generic debug path
+    original_debug = ENV["DEBUG"]
+    ENV["DEBUG"] = "1"
+
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_task, nil) do
+      raise Ace::Git::GitError, "Unexpected git operation failed"
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    output = capture_io do
+      result = @command.run(["--task", "081"])
+      assert_equal 1, result
+    end.first
+
+    # Debug mode should show the exception class for generic errors
+    assert_match(/Debug:.*Ace::Git::GitError/, output)
+    mock_worktree_manager.verify
+  ensure
+    if original_debug.nil?
+      ENV.delete("DEBUG")
+    else
+      ENV["DEBUG"] = original_debug
     end
   end
 end

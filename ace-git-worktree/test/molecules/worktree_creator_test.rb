@@ -12,6 +12,8 @@ class WorktreeCreatorTest < Minitest::Test
     teardown_temp_dir
   end
 
+  # with_git_stubs helper is now in test_helper.rb
+
   def test_create_worktree_success
     # Mock successful git worktree creation
     mock_result = {
@@ -21,10 +23,12 @@ class WorktreeCreatorTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
-      result = @creator.create_traditional("feature-branch", @temp_dir)
+    worktree_path = File.join(@temp_dir, "feature-worktree")
 
-      assert result[:success]
+    with_git_stubs(worktree_result: mock_result) do
+      result = @creator.create_traditional("feature-branch", worktree_path)
+
+      assert result[:success], "Expected success but got error: #{result[:error]}"
     end
   end
 
@@ -42,7 +46,7 @@ class WorktreeCreatorTest < Minitest::Test
       exit_code: 128
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    with_git_stubs(worktree_result: mock_result) do
       result = @creator.create_traditional("invalid-branch", @temp_dir)
 
       refute result[:success]
@@ -153,16 +157,18 @@ class WorktreeCreatorTest < Minitest::Test
       "branch.with.dots"
     ]
 
-    valid_branches.each do |valid_branch|
-      mock_result = {
-        success: true,
-        output: "Preparing worktree",
-        error: "",
-        exit_code: 0
-      }
+    mock_result = {
+      success: true,
+      output: "Preparing worktree",
+      error: "",
+      exit_code: 0
+    }
 
-      Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
-        result = @creator.create_traditional(valid_branch, @temp_dir)
+    valid_branches.each do |valid_branch|
+      worktree_path = File.join(@temp_dir, "worktree-#{valid_branch.gsub('/', '-')}")
+
+      with_git_stubs(worktree_result: mock_result) do
+        result = @creator.create_traditional(valid_branch, worktree_path)
 
         assert result[:success], "Should accept valid branch: #{valid_branch}"
       end
@@ -170,8 +176,15 @@ class WorktreeCreatorTest < Minitest::Test
   end
 
   def test_handles_timeout_during_creation
-    # Mock command timeout
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, -> (*args) { raise StandardError, "Command timed out" }) do
+    # Mock command timeout by returning error result
+    mock_result = {
+      success: false,
+      output: "",
+      error: "Command timed out",
+      exit_code: -1
+    }
+
+    with_git_stubs(worktree_result: mock_result) do
       result = @creator.create_traditional("feature-branch", @temp_dir)
 
       refute result[:success]
@@ -201,8 +214,10 @@ class WorktreeCreatorTest < Minitest::Test
     }
 
     slash_branches.each do |slash_branch|
-      Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
-        result = @creator.create_traditional(slash_branch, @temp_dir)
+      worktree_path = File.join(@temp_dir, "worktree-#{slash_branch.gsub('/', '-')}")
+
+      with_git_stubs(worktree_result: mock_result) do
+        result = @creator.create_traditional(slash_branch, worktree_path)
         assert result[:success], "Should accept branch with slash: #{slash_branch}"
       end
     end
@@ -220,8 +235,10 @@ class WorktreeCreatorTest < Minitest::Test
     }
 
     mainline_branches.each do |mainline_branch|
-      Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
-        result = @creator.create_traditional(mainline_branch, @temp_dir)
+      worktree_path = File.join(@temp_dir, "worktree-#{mainline_branch}")
+
+      with_git_stubs(worktree_result: mock_result) do
+        result = @creator.create_traditional(mainline_branch, worktree_path)
         assert result[:success], "Should accept mainline branch: #{mainline_branch}"
       end
     end
@@ -295,17 +312,11 @@ class WorktreeCreatorTest < Minitest::Test
 
     # Mock git command success
     git_result = { success: true, output: "", error: nil }
-    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, git_result) do
-      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
-        Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "main") do
-          Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
-            result = creator.create_traditional("test-branch", nil, git_root: @temp_dir)
+    with_git_stubs(worktree_result: git_result) do
+      result = creator.create_traditional("test-branch", nil, git_root: @temp_dir)
 
-            assert result[:success]
-            assert_match %r{custom-worktrees/test-branch}, result[:worktree_path]
-          end
-        end
-      end
+      assert result[:success]
+      assert_match %r{custom-worktrees/test-branch}, result[:worktree_path]
     end
   end
 
@@ -871,6 +882,46 @@ class WorktreeCreatorTest < Minitest::Test
             assert_includes captured_args, "feature-x", "Should use current branch as default start-point"
           end
         end
+      end
+    end
+  end
+
+  # Regression test for local branch creation bug (codex-max finding)
+  # Previously, an array was passed as a single argument to GitCommand.execute
+  # instead of splatted arguments, causing local branch validation to fail.
+  def test_create_for_local_branch_passes_correct_arguments
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      @creator.stub(:detect_remote_branch, nil) do
+        # Capture the arguments passed to GitCommand.execute
+        captured_execute_args = []
+        execute_stub = lambda do |*args, **opts|
+          captured_execute_args << args
+          # Return success for show-ref check
+          { success: true, output: "", error: "", exit_code: 0 }
+        end
+
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, { success: true, output: "", error: nil }) do
+            @creator.create_for_local_branch("my-feature", config, @temp_dir)
+          end
+        end
+
+        # Verify that show-ref was called with individual arguments (not an array)
+        showref_call = captured_execute_args.find { |args| args.include?("show-ref") }
+        assert_not_nil showref_call, "Should call show-ref for local branch validation"
+
+        # Ensure arguments are individual strings, not a single array
+        showref_call.each do |arg|
+          refute arg.is_a?(Array), "Arguments should be individual strings, not arrays: #{arg.inspect}"
+        end
+
+        # Verify the correct arguments are passed
+        assert_includes showref_call, "show-ref", "Should include show-ref command"
+        assert_includes showref_call, "--verify", "Should include --verify flag"
+        assert_includes showref_call, "--quiet", "Should include --quiet flag"
+        assert showref_call.any? { |arg| arg.include?("refs/heads/my-feature") }, "Should include branch ref"
       end
     end
   end

@@ -200,6 +200,33 @@ class CliTest < Minitest::Test
     end
   end
 
+  # Test --pr flag integration with CLI
+  def test_create_pr_worktree_cli_integration
+    skip "Integration test requires gh CLI and network access"
+
+    # This test verifies the CLI correctly routes --pr to PR worktree creation
+    # When run manually (without skip), it tests end-to-end:
+    #
+    # cli = Ace::Git::Worktree::CLI.new(["create", "--pr", "123", "--dry-run"])
+    # result = cli.run
+    #
+    # Expected behavior:
+    # 1. CLI parses --pr flag correctly
+    # 2. Routes to create_pr_worktree
+    # 3. Validates PR number
+    # 4. Attempts to fetch PR metadata (requires gh CLI)
+    # 5. Returns appropriate exit code
+  end
+
+  def test_create_pr_worktree_cli_routes_correctly
+    # Test that --pr flag routes to PR creation (no network needed)
+    cli = Ace::Git::Worktree::CLI.new(["create", "--pr", "invalid-not-numeric"])
+    result = cli.run
+
+    # Should fail validation (PR number must be numeric)
+    assert_equal 1, result
+  end
+
   private
 
   def stub_git_command(output = "", error = "", exit_status = 0)
