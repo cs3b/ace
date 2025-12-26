@@ -15,6 +15,14 @@ rescue LoadError
   # Will raise MissingDependencyError when needed
 end
 
+# Try to load ace-git if available (required for git operations)
+begin
+  require "ace/git"
+rescue LoadError
+  # ace-git is required for git operations
+  # Will raise MissingDependencyError when needed
+end
+
 require_relative "review/version"
 require_relative "review/errors"
 
@@ -34,7 +42,6 @@ require_relative "review/molecules/nav_prompt_resolver"
 require_relative "review/molecules/prompt_resolver"  # Keep for backwards compatibility
 require_relative "review/molecules/subject_extractor"
 require_relative "review/molecules/gh_cli_executor"
-require_relative "review/molecules/pr_identifier_parser"
 require_relative "review/molecules/gh_pr_fetcher"
 require_relative "review/molecules/gh_pr_comment_fetcher"
 require_relative "review/molecules/gh_comment_poster"

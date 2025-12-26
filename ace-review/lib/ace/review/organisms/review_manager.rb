@@ -961,18 +961,16 @@ module Ace
           return nil if @task_reference
 
           begin
-            require_relative '../atoms/task_auto_detector'
-            require_relative '../molecules/git_branch_reader'
             require_relative '../molecules/task_resolver'
             require_relative '../molecules/task_report_saver'
 
-            # Get current branch
-            branch_name = Molecules::GitBranchReader.current_branch
+            # Get current branch using ace-git
+            branch_name = Ace::Git::Molecules::BranchReader.current_branch
             return auto_save_to_release(review_file, review_data) unless branch_name
 
-            # Extract task ID from branch
+            # Extract task ID from branch using ace-git
             patterns = Ace::Review.get("defaults", "auto_save_branch_patterns")
-            task_id = Atoms::TaskAutoDetector.extract_from_branch(branch_name, patterns: patterns)
+            task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch_name, patterns: patterns)
 
             if task_id
               # Try to save to detected task
