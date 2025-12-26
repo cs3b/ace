@@ -17,7 +17,7 @@ aliases:
     oacodex: openai:codex
     oamax: openai:max
   model:
-    gpt: gpt-5.1
+    gpt: gpt-5.2
     codex: gpt-5.1-codex
     max: gpt-5.1-codex-max
 api_key:
