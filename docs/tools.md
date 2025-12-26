@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-01'
+  last-updated: '2025-12-24'
 ---
 
 # ACE Tools Reference
@@ -15,6 +15,7 @@ update:
 |------|---------|--------------|
 | **ace-context** | Load project context | `ace-context project`, `ace-context --list`, `ace-context --embed-source` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
+| **ace-git** | Repository context, PR activity, diff | `ace-git status`, `ace-git status --no-pr`, `ace-git diff` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
 | **ace-git-secrets** | Detect and remove tokens | `ace-git-secrets scan`, `ace-git-secrets revoke`, `ace-git-secrets rewrite-history` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
@@ -39,6 +40,11 @@ ace-taskflow tasks all                  # All tasks in current release
 ace-taskflow task move 139 --child-of self    # Convert task to orchestrator
 ace-taskflow task move 156 --child-of 139     # Demote task to subtask
 
+# Taskflow status
+ace-taskflow status                     # Show taskflow status with activity awareness
+ace-taskflow status --json              # Output as JSON
+# Shows: Release (name, count, codename), Current task, Task Activity (Recently Done, In Progress, Up Next)
+
 # Documentation management
 ace-docs status --needs-update          # Check documents needing updates
 ace-docs update file.md --set last-updated=today  # Update document metadata
@@ -54,6 +60,16 @@ ace-lint "**/*.md" --type markdown      # Lint all markdown files
 ace-git-commit                          # Generate commit for all changes
 ace-git-commit --staged                 # Commit only staged files
 ace-git-commit --path "src/**"          # Commit only matching paths
+
+# Repository context
+ace-git status                          # Full context (branch, status, PR, activity)
+ace-git status --no-pr                  # Skip PR lookups (faster)
+ace-git status --commits 5              # Show 5 recent commits (default: 3)
+ace-git status --commits 0              # Disable recent commits
+ace-git status --json                   # JSON output
+ace-git branch                          # Branch name with tracking status
+ace-git diff HEAD~5..HEAD               # Generate diff between refs
+ace-git diff --since "7d"               # Diff from time reference
 
 # Security scanning
 ace-git-secrets scan                    # Scan git history for tokens
