@@ -236,16 +236,32 @@ EOF
 
 ```
 For each PR:
-  1. Run ace-review on PR
-  2. If approved -> continue to validation
-  3. If feedback:
+  1. Get PR number from `ace-git status` (Current PR section)
+  2. Verify target branch is orchestrator (not main)
+  3. Run: `ace-review --preset code --pr <number> --auto-execute`
+  4. If approved -> continue to validation
+  5. If feedback:
      a. Delegate to subagent: apply review feedback
-     b. Re-run ace-review
+     b. Re-run ace-review with same --pr flag
      c. Repeat up to 2 times (max_review_cycles)
-  4. If still not approved after 2 cycles:
+  6. If still not approved after 2 cycles:
      a. Summarize issues
      b. Ask user how to proceed
 ```
+
+**Review command:**
+```bash
+# In worktree directory - get PR info from ace-git status
+ace-git status
+# Look for "Current PR" section:
+#   #88 [OPEN] 140.04: Update ace-prompt to use ace-git
+#     Target: 140-enhance-ace-context-with-dynamic-git-branch-and-pr-information
+
+# Review the PR (compares against PR's target branch)
+ace-review --preset code --pr 88 --auto-execute
+```
+
+**Why --pr is required:** Without `--pr`, ace-review compares against main branch. Subtask PRs target the orchestrator branch, so `--pr` ensures the review only covers the subtask's changes.
 
 **Review delegation prompt:**
 ```markdown
